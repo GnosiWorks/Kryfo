@@ -3009,24 +3009,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString bekliyor · şimdi gönderiliyor',
-      one: '$countString bekliyor · şimdi gönderiliyor',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'Yeniden dene';
-
-  @override
   String get homeNoKryfosYet => 'Henüz Kryfo yok.';
 
   @override
@@ -3937,6 +3919,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingAboutASecondWorks =>
       'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Yaklaşık bir saniye ve Tor’u atlar.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Otomatik, engeli aşmanın yolunu kendisi bulur.';
 
   @override
   String get onboardingFast => 'Hızlı';
@@ -6889,7 +6879,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor burada engelli';
 
   @override
+  String get torBootSplashRelayLine =>
+      'Daha hızlı ve Tor’u atlar. Aktarıcımız IP adresini görür, ne yazdığını asla görmez.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Engeli aşmanın yolunu kendisi bulur, gerekirse bir köprüyle.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Engeli aşmanın iki yolu';
+
+  @override
+  String get bridgesRecommended => 'Önerilen';
+
+  @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
+
+  @override
+  String get bridgesFindingAWayIn => 'Bir yol aranıyor…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -6973,7 +6980,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktarıcımız tek ve sıradan bir bağlantıdır, genelde geçer. Ya da yolu Kryfo kendisi bulsun.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Bu köprüyü kullan';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6982,7 +6992,6 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Bu $countString köprüyü kullan',
-      one: 'Bu köprüyü kullan',
     );
     return '$_temp0';
   }
@@ -7776,7 +7785,7 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7824,7 +7833,7 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7839,7 +7848,7 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

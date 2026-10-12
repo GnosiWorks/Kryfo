@@ -156,7 +156,7 @@ class _VoucherRowState extends State<_VoucherRow> {
               const SizedBox(width: 10),
               Text(
                 widget.when(r['created_at'] as int),
-                style: HaloType.mono(size: 10, color: HaloColors.text3),
+                style: HaloType.mono(size: 10, color: HaloColors.text2),
               ),
             ],
           ),

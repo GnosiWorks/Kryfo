@@ -325,7 +325,7 @@ class _PickRow extends StatelessWidget {
                             l10n.homeMembers(c.members),
                             style: HaloType.mono(
                               size: 10,
-                              color: HaloColors.text3,
+                              color: HaloColors.text2,
                             ),
                           ),
                         ],

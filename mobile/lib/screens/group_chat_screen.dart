@@ -2559,7 +2559,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 const SizedBox(height: 4),
                 Text(
                   l10n.groupChatNewMessagesDisappearOnceRead,
-                  style: HaloType.mono(size: 11, color: HaloColors.text3),
+                  style: HaloType.mono(size: 11, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 12),
                 for (final opt in options)
@@ -3624,7 +3624,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                       l10n.groupChatThisMessageCanT,
                                       style: HaloType.sans(
                                         size: 12,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   );
@@ -3953,7 +3953,7 @@ class _Header extends StatelessWidget {
                                     ),
                                     style: HaloType.mono(
                                       size: 10,
-                                      color: HaloColors.text3,
+                                      color: HaloColors.text2,
                                     ),
                                   )
                                 : Text(
@@ -3963,7 +3963,7 @@ class _Header extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: HaloType.mono(
                                       size: 10,
-                                      color: HaloColors.text3,
+                                      color: HaloColors.text2,
                                     ),
                                   ),
                           ),
@@ -4475,7 +4475,7 @@ class _MentionPicker extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   ),

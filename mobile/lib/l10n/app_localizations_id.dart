@@ -2997,23 +2997,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString menunggu · sedang dikirim',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'Coba lagi';
-
-  @override
   String get homeNoKryfosYet => 'Belum ada Kryfo.';
 
   @override
@@ -3916,6 +3899,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingAboutASecondWorks =>
       'Sekitar satu detik. Tetap jalan di tempat tor diblokir.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Sekitar satu detik, dan tanpa Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Otomatis mencari sendiri jalan melewati blokir.';
 
   @override
   String get onboardingFast => 'Cepat';
@@ -6864,7 +6855,24 @@ class AppLocalizationsId extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor diblokir di sini';
 
   @override
+  String get torBootSplashRelayLine =>
+      'Lebih cepat dan tanpa Tor. Relay kami melihat alamat IP-mu, tidak pernah isi obrolanmu.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Mencari sendiri jalan melewati blokir, lewat jembatan bila perlu.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Dua cara melewati blokir';
+
+  @override
+  String get bridgesRecommended => 'Disarankan';
+
+  @override
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
+
+  @override
+  String get bridgesFindingAWayIn => 'Mencari jalan masuk…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -6948,7 +6956,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Pakai jembatan ini';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6957,7 +6968,6 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Pakai $countString jembatan ini',
-      one: 'Pakai jembatan ini',
     );
     return '$_temp0';
   }
@@ -7746,7 +7756,7 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7794,7 +7804,7 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7809,7 +7819,7 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

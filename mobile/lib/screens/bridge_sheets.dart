@@ -20,7 +20,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
@@ -46,17 +46,17 @@ class _Fokia extends StatelessWidget {
   );
 }
 
-Widget _sheetFrame(BuildContext ctx, List<Widget> children) => ShutOnLock(
-  guard: lockGuard,
-  child: SafeArea(
-    top: false,
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [const SheetHandle(), const SizedBox(height: 6), ...children],
-      ),
+Widget _sheetFrame(BuildContext ctx, List<Widget> children) =>
+    ShutOnLock(guard: lockGuard, child: _sheetBody(children));
+
+Widget _sheetBody(List<Widget> children) => SafeArea(
+  top: false,
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [const SheetHandle(), const SizedBox(height: 6), ...children],
     ),
   ),
 );
@@ -145,6 +145,184 @@ Future<void> showTorBlockedSheet(
     return;
   }
   await appState.answerBridgeAsk(yes, asked: asked);
+}
+
+/// how a new install that says tor is blocked starts: automatic first and
+/// picked already, relay next with what it costs. "auto", "relay", or null
+/// when closed without an answer
+Future<String?> showBlockedStartSheet(BuildContext context) =>
+    showHaloSheet<String>(context, builder: (ctx) => const _BlockedStart());
+
+class _BlockedStart extends StatefulWidget {
+  const _BlockedStart();
+  @override
+  State<_BlockedStart> createState() => _BlockedStartState();
+}
+
+class _BlockedStartState extends State<_BlockedStart> {
+  String _pick = 'auto';
+
+  @override
+  // a new install before its first start: nothing to hide yet, and the
+  // lock is not known, so it does not shut on it
+  Widget build(BuildContext context) => _sheetBody([
+    Text(
+      l10n.torBootSplashTwoWaysAround,
+      style: HaloType.serif(size: 22, color: HaloColors.text),
+    ),
+    const SizedBox(height: 14),
+    _StartWay(
+      key: const ValueKey('auto'),
+      title: l10n.bridgesAutomatic,
+      line: l10n.torBootSplashAutoLine,
+      tag: l10n.bridgesRecommended,
+      on: _pick == 'auto',
+      onTap: () => setState(() => _pick = 'auto'),
+    ),
+    const SizedBox(height: 10),
+    _StartWay(
+      key: const ValueKey('relay'),
+      title: l10n.onboardingRelay,
+      line: l10n.torBootSplashRelayLine,
+      on: _pick == 'relay',
+      onTap: () => setState(() => _pick = 'relay'),
+    ),
+    const SizedBox(height: 18),
+    HaloPrimaryButton(
+      label: l10n.commonContinue,
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        Navigator.pop(context, _pick);
+      },
+    ),
+  ]);
+}
+
+// one way to start, read as one radio
+class _StartWay extends StatelessWidget {
+  const _StartWay({
+    super.key,
+    required this.title,
+    required this.line,
+    required this.on,
+    required this.onTap,
+    this.tag,
+  });
+  final String title;
+  final String line;
+  final String? tag;
+  final bool on;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 220);
+    return MergeSemantics(
+      child: Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: on,
+        child: PressScale(
+          scale: 0.98,
+          onTap: () {
+            if (!on) HapticFeedback.selectionClick();
+            onTap();
+          },
+          child: AnimatedContainer(
+            duration: d,
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 13, 14, 14),
+            decoration: BoxDecoration(
+              color: on
+                  ? Color.alphaBlend(
+                      HaloColors.amber.withValues(alpha: 0.10),
+                      HaloColors.surface3,
+                    )
+                  : HaloColors.surface3,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: on ? HaloColors.amber : HaloColors.line,
+                width: on ? 1.2 : 0.5,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: AnimatedContainer(
+                    duration: d,
+                    curve: Curves.easeOutCubic,
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: on ? HaloColors.amber : HaloColors.line2,
+                        width: on ? 5 : 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: HaloType.sans(
+                              size: 15,
+                              weight: FontWeight.w600,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                          if (tag != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amber,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                tag!,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.onAmber,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        line,
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text2,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// the yes to asking the tor project, from "more"
@@ -402,7 +580,9 @@ class _FriendSheetState extends State<_FriendSheet> {
             ),
             const SizedBox(height: 12),
             HaloPrimaryButton(
-              label: l10n.bridgesUseThisBridge(n == 0 ? 1 : n),
+              label: n < 2
+                  ? l10n.bridgesUseThisBridge
+                  : l10n.bridgesUseTheseBridges(n),
               busy: _busy,
               onTap: n == 0 ? null : _use,
             ),

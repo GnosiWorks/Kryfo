@@ -534,7 +534,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
 
   Widget _head(String t) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
-    child: Text(t, style: HaloType.mono(size: 11, color: HaloColors.text3)),
+    child: Text(t, style: HaloType.mono(size: 11, color: HaloColors.text2)),
   );
 
   Widget _item(String t, {bool strong = false}) => Padding(

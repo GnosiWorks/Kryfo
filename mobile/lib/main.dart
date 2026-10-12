@@ -13423,7 +13423,12 @@ class AppState extends ChangeNotifier {
 
   /// the first-run answer: connect as usual, or tor is blocked here and
   /// automatic starts without trying it
-  Future<void> pickFirstRun({required bool risky}) async {
+  // relay was picked on the first-run question: the send step offers it
+  bool _firstRunRelay = false;
+  bool get firstRunRelay => _firstRunRelay;
+
+  Future<void> pickFirstRun({required bool risky, bool relay = false}) async {
+    _firstRunRelay = relay;
     _bridge = _bridge.copyWith(skipDirect: risky);
     await _writeBridgeSetup(_bridge);
     await _bridgeDelete('bridge_fresh');
@@ -23103,7 +23108,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
               const SizedBox(height: 14),
               Text(
                 l10n.appOrPaste,
-                style: HaloType.sans(size: 11, color: HaloColors.text3),
+                style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -23372,7 +23377,7 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 4),
               Text(
                 engine.version(),
-                style: HaloType.sans(size: 11, color: HaloColors.text3),
+                style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               const SizedBox(height: 16),
               Text(

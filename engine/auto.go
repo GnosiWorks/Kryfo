@@ -1094,9 +1094,11 @@ func autoLoop(gen int64) {
 			case result == passInterrupted:
 				start = "again"
 			// awake with no way in place, as after a wake: a pass finds one,
-			// and one that keeps finding the hold backs off
-			case result == seenOK && networkHold() != "" && !now.Before(heldAt):
+			// and one that keeps finding the hold backs off. a retry from the
+			// app, as on coming to the front, does not wait the backoff out
+			case result == seenOK && networkHold() != "" && (!now.Before(heldAt) || autoRetryNow.Load()):
 				start = "held"
+				autoRetryNow.Store(false)
 				heldAt = now.Add(autoLostGap(heldN))
 				heldN++
 			case v != valid && result != seenOK:
@@ -1445,8 +1447,10 @@ func bridgeStatus() bridgeStatusView {
 		}
 	}
 	// tor held off the network: why, in its own code. a bridge whose
-	// listeners would not start, one tor refused, or no mode yet
-	if c := holdCode(); c != "" && phase != "connected" && v.ErrorCode == "" {
+	// listeners would not start, one tor refused, no mode yet, or
+	// automatic with no way in yet, which a wake can leave under a pass
+	// that once connected
+	if c := holdCode(); c != "" && v.ErrorCode == "" && (phase != "connected" || (c == codeWait && !v.CanSend)) {
 		v.ErrorCode = c
 	}
 	switch why := autoIdleWhy(); {

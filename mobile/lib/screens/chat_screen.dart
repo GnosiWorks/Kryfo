@@ -5189,7 +5189,7 @@ class _ChatScreenState extends State<ChatScreen>
                                       l10n.chatThisMessageCanT,
                                       style: HaloType.sans(
                                         size: 12,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   );
@@ -6269,7 +6269,7 @@ class _SearchHeadState extends State<SearchHead> {
                                         text: l10n.chatNoMatches,
                                         style: HaloType.mono(
                                           size: 10,
-                                          color: HaloColors.text3,
+                                          color: HaloColors.text2,
                                           weight: FontWeight.w500,
                                         ),
                                       ),
@@ -8018,7 +8018,7 @@ class MediaGalleryScreen extends StatelessWidget {
             ),
             Text(
               l10n.chatSharedPhotoCount(paths.length, title),
-              style: HaloType.mono(size: 10, color: HaloColors.text3),
+              style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
           ],
         ),

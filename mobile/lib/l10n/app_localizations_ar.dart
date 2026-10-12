@@ -3093,23 +3093,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ في الانتظار · جارٍ الإرسال الآن',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'أعد المحاولة';
-
-  @override
   String get homeNoKryfosYet => 'لا جهات اتصال بعد.';
 
   @override
@@ -4019,6 +4002,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب tor.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor => 'نحو ثانية، ولا يمر عبر Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
 
   @override
   String get onboardingFast => 'سريع';
@@ -6981,7 +6971,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor محجوب هنا';
 
   @override
+  String get torBootSplashRelayLine =>
+      'أسرع، ولا يمر عبر Tor. يرى مُرحِّلنا عنوان IP الخاص بك، ولا يرى أبدًا ما تقوله.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'يجد طريقًا لتجاوز الحجب بنفسه، عبر جسر عند الحاجة.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'طريقتان لتجاوز الحجب';
+
+  @override
+  String get bridgesRecommended => 'موصى به';
+
+  @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';
+
+  @override
+  String get bridgesFindingAWayIn => 'جارٍ البحث عن طريقة للاتصال…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -7068,7 +7075,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'استخدام هذا الجسر';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7080,8 +7090,6 @@ class AppLocalizationsAr extends AppLocalizations {
       many: 'استخدام هذه الجسور (⁨$countString⁩)',
       few: 'استخدام هذه الجسور (⁨$countString⁩)',
       two: 'استخدام هذين الجسرين',
-      one: 'استخدام هذا الجسر',
-      zero: 'استخدام هذه الجسور (⁨$countString⁩)',
     );
     return '$_temp0';
   }
@@ -7882,7 +7890,7 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7930,7 +7938,7 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7945,7 +7953,7 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

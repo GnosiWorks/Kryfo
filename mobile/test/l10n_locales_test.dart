@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // generated from lib/l10n/app_en.arb by the l10n tools: every key renders
 // in every language, and prints what the english prints.
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/app_localizations.dart';
+import 'package:kryfo/l10n/l10n.dart' show l10nDev, setL10nLocale;
 
 typedef _Call = (String, List<String>, String Function(AppLocalizations));
 
@@ -1237,13 +1239,6 @@ final _calls = <_Call>[
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(5)),
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(21)),
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(1000)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(0)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(1)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(2)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(5)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(21)),
-  ('homeWaitingSendingNow', [], (l) => l.homeWaitingSendingNow(1000)),
-  ('commonRetry', [], (l) => l.commonRetry),
   ('homeNoKryfosYet', [], (l) => l.homeNoKryfosYet),
   ('homeScanTheirCodeSend', [], (l) => l.homeScanTheirCodeSend),
   ('homeAddSomeone', [], (l) => l.homeAddSomeone),
@@ -2979,7 +2974,12 @@ final _calls = <_Call>[
   ('bridgesTooLongForTor', [], (l) => l.bridgesTooLongForTor),
   ('bridgesPasteABridgeLine', [], (l) => l.bridgesPasteABridgeLine),
   ('bridgesScanACode', [], (l) => l.bridgesScanACode),
-  ('bridgesUseThisBridge', [], (l) => l.bridgesUseThisBridge(1000)),
+  ('bridgesUseThisBridge', [], (l) => l.bridgesUseThisBridge),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(2)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(3)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(5)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(21)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(1000)),
   ('bridgesNoneOfTheseAre', [], (l) => l.bridgesNoneOfTheseAre),
   ('bridgesThisLineIsTooLong', [], (l) => l.bridgesThisLineIsTooLong),
   ('bridgesKryfoCouldNotRead', [], (l) => l.bridgesKryfoCouldNotRead(1000)),
@@ -3068,6 +3068,58 @@ final _calls = <_Call>[
   ('appNoRelayReached', [], (l) => l.appNoRelayReached),
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
+  ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
+  ('bridgesRecommended', [], (l) => l.bridgesRecommended),
+  ('torBootSplashTwoWaysAround', [], (l) => l.torBootSplashTwoWaysAround),
+  ('torBootSplashAutoLine', [], (l) => l.torBootSplashAutoLine),
+  ('torBootSplashRelayLine', ["Tor", "IP"], (l) => l.torBootSplashRelayLine),
+  ('onboardingAutoFindsAWay', [], (l) => l.onboardingAutoFindsAWay),
+  (
+    'onboardingAboutASecondSkipsTor',
+    ["Tor"],
+    (l) => l.onboardingAboutASecondSkipsTor,
+  ),
+  ('supportTitle', [], (l) => l.supportTitle),
+  ('supportWaiting', [], (l) => l.supportWaiting(0)),
+  ('supportWaiting', [], (l) => l.supportWaiting(1)),
+  ('supportWaiting', [], (l) => l.supportWaiting(2)),
+  ('supportWaiting', [], (l) => l.supportWaiting(5)),
+  ('supportWaiting', [], (l) => l.supportWaiting(21)),
+  ('supportWaiting', [], (l) => l.supportWaiting(1000)),
+  ('supportSectionWaiting', [], (l) => l.supportSectionWaiting),
+  ('supportSectionAnswered', [], (l) => l.supportSectionAnswered),
+  ('supportSectionDone', [], (l) => l.supportSectionDone),
+  ('supportEmpty', [], (l) => l.supportEmpty),
+  ('supportEmptyLine', [], (l) => l.supportEmptyLine),
+  ('supportMarkDone', [], (l) => l.supportMarkDone),
+  ('supportReopen', [], (l) => l.supportReopen),
+  ('supportMarkAllDone', [], (l) => l.supportMarkAllDone),
+  ('supportMenu', [], (l) => l.supportMenu),
+  ('supportDeleteLine', [], (l) => l.supportDeleteLine),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(0)),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(1)),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(2)),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(5)),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(21)),
+  ('supportNotifNewChats', [], (l) => l.supportNotifNewChats(1000)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(0)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(1)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(2)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(5)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(21)),
+  ('supportNotifNewMessages', [], (l) => l.supportNotifNewMessages(1000)),
+  ('supportChannelName', [], (l) => l.supportChannelName),
+  ('supportChannelLine', [], (l) => l.supportChannelLine),
+  ('supportResetPinned', [], (l) => l.supportResetPinned),
+  ('supportViaDev', [], (l) => l.supportViaDev),
+  ('supportMoveAsk', [], (l) => l.supportMoveAsk),
+  ('supportMoveLine', [], (l) => l.supportMoveLine),
+  ('supportMove', [], (l) => l.supportMove),
+  ('supportKeepApart', [], (l) => l.supportKeepApart),
+  ('supportMoveToChats', [], (l) => l.supportMoveToChats),
+  ('supportMovedToChats', [], (l) => l.supportMovedToChats),
+  ('supportMoveToInbox', [], (l) => l.supportMoveToInbox),
+  ('supportMovedToInbox', [], (l) => l.supportMovedToInbox),
 ];
 
 void main() {
@@ -3090,6 +3142,110 @@ void main() {
         }
       }
       expect(bad, isEmpty);
+    });
+  }
+
+  // words a review settled: "this bridge" at one, the number from two on
+  // (gen-l10n reads =1 as one, so ru and uk 21 would say "this")
+  final pinned = <String, List<(String Function(AppLocalizations), String)>>{
+    'ru': [
+      ((l) => l.bridgesUseThisBridge, 'Использовать этот мост'),
+      ((l) => l.bridgesUseTheseBridges(2), 'Использовать эти 2 моста'),
+      ((l) => l.bridgesUseTheseBridges(5), 'Использовать эти 5 мостов'),
+      ((l) => l.bridgesUseTheseBridges(21), 'Использовать эти 21 мост'),
+    ],
+    'uk': [
+      ((l) => l.bridgesUseThisBridge, 'Використати цей міст'),
+      ((l) => l.bridgesUseTheseBridges(2), 'Використати ці 2 мости'),
+      ((l) => l.bridgesUseTheseBridges(5), 'Використати ці 5 мостів'),
+      ((l) => l.bridgesUseTheseBridges(21), 'Використати ці 21 міст'),
+      ((l) => l.bridgesAskTorProject, 'Запитати проєкт Tor'),
+    ],
+    'ar': [
+      ((l) => l.bridgesUseThisBridge, 'استخدام هذا الجسر'),
+      ((l) => l.bridgesUseTheseBridges(2), 'استخدام هذين الجسرين'),
+    ],
+    'fr': [
+      ((l) => l.bridgesUseThisBridge, 'Utiliser ce pont'),
+      ((l) => l.bridgesAskTorProject, 'Demander au Projet Tor'),
+      ((l) => l.bridgesFromTheTorProjectLower, 'du Projet Tor'),
+    ],
+    'it': [
+      ((l) => l.bridgesAskTorProject, 'Chiedi al Progetto Tor'),
+      ((l) => l.bridgesFromTheTorProjectLower, 'dal Progetto Tor'),
+    ],
+    'tr': [
+      ((l) => l.bridgesFromTheTorProject, 'Tor Projesinden'),
+      ((l) => l.bridgesAskTorProject, 'Tor Projesine sor'),
+    ],
+    'zh': [
+      ((l) => l.bridgesUseThisBridge, '使用这个网桥'),
+      ((l) => l.bridgesAskTorProject, '询问 Tor 项目'),
+    ],
+    'fa': [
+      ((l) => l.bridgesRecommended, 'پیشنهادی'),
+      (
+        (l) => l.torBootSplashRelayLine,
+        'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.',
+      ),
+    ],
+    'de': [
+      ((l) => l.torBootSplashTwoWaysAround, 'Zwei Wege um die Sperre herum'),
+      (
+        (l) => l.onboardingAboutASecondSkipsTor,
+        'Etwa eine Sekunde, ganz ohne Tor.',
+      ),
+    ],
+    'zh_Hant': [
+      ((l) => l.bridgesAskTorProject, '詢問 Tor 專案'),
+      ((l) => l.bridgesFindingAWayIn, '正在尋找連線方式…'),
+    ],
+    'vi': [((l) => l.bridgesAskTorProject, 'Hỏi Dự án Tor')],
+  };
+  // what only the developer's own phone shows stays in english everywhere,
+  // its plurals read through the english rules
+  test('the support inbox reads in english in every language', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+    for (final locale in AppLocalizations.supportedLocales) {
+      setL10nLocale(locale);
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      expect(l10nDev.supportNotifNewChats(21), '21 new chats');
+      expect(l10nDev.supportNotifNewMessages(1), '1 new message');
+      expect(l10nDev.supportWaiting(0), 'No one waiting');
+      final l = lookupAppLocalizations(locale);
+      for (final call in <String Function(AppLocalizations)>[
+        (l) => l.supportTitle,
+        (l) => l.supportEmptyLine,
+        (l) => l.supportMoveLine,
+        (l) => l.supportViaDev,
+        (l) => l.supportWaiting(0),
+        (l) => l.supportWaiting(1),
+        (l) => l.supportWaiting(21),
+        (l) => l.supportNotifNewChats(2),
+        (l) => l.supportNotifNewMessages(5),
+      ]) {
+        // the words stay english; the digits are the language's own
+        String plain(String s) => s.replaceAllMapped(
+          RegExp('[۰-۹٠-٩]'),
+          (m) => '${'۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!) % 10}',
+        );
+        expect(plain(call(l)), call(en), reason: '$locale');
+      }
+    }
+  });
+
+  for (final e in pinned.entries) {
+    test('settled words in ${e.key}', () {
+      final parts = e.key.split('_');
+      final l = lookupAppLocalizations(
+        Locale.fromSubtags(
+          languageCode: parts[0],
+          scriptCode: parts.length > 1 ? parts[1] : null,
+        ),
+      );
+      for (final (call, want) in e.value) {
+        expect(call(l), want);
+      }
     });
   }
 }

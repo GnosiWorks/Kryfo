@@ -91,4 +91,52 @@ void main() {
     expect(keys, contains('bridgesAskTorProject'));
     expect(bad, isEmpty);
   });
+
+  // one name for the tor project in each language, the site follows it
+  test('the Tor Project has one name per language', () {
+    final name = {
+      'ar': RegExp('مشروع Tor'),
+      'de': RegExp(r'Tor-Projekts?\b'),
+      'en': RegExp('the Tor Project|The Tor Project'),
+      'es': RegExp('Proyecto Tor'),
+      'fa': RegExp('پروژه‌ی Tor'),
+      'fr': RegExp('Projet Tor'),
+      'id': RegExp('Tor Project'),
+      'it': RegExp('Progetto Tor'),
+      'pt': RegExp('Projeto Tor'),
+      'ru': RegExp(r'[Пп]роект[а-я]* Tor'),
+      'tr': RegExp(r"Tor Projesi(nin|nden|ne)?(?!['’])\b"),
+      'uk': RegExp(r'[Пп]роєкт[а-яієї]* Tor'),
+      'vi': RegExp('Dự án Tor'),
+      'zh': RegExp('Tor 项目'),
+      'zh_Hant': RegExp('Tor 專案'),
+    };
+    final en =
+        jsonDecode(File('lib/l10n/app_en.arb').readAsStringSync()) as Map;
+    final keys = [
+      for (final e in en.entries)
+        if (!(e.key as String).startsWith('@') &&
+            (e.value as String).contains('Tor Project'))
+          e.key as String,
+    ];
+    expect(keys.length, greaterThan(10));
+    final bad = <String>[];
+    for (final e in name.entries) {
+      final arb =
+          jsonDecode(File('lib/l10n/app_${e.key}.arb').readAsStringSync())
+              as Map;
+      for (final k in keys) {
+        if (!e.value.hasMatch(arb[k] as String)) bad.add('${e.key} $k');
+      }
+    }
+    expect(bad, isEmpty);
+    final it = File('lib/l10n/app_it.arb').readAsStringSync();
+    final fr = File('lib/l10n/app_fr.arb').readAsStringSync();
+    expect(it, isNot(contains('progetto Tor')));
+    expect(fr, isNot(contains('projet Tor')));
+    expect(
+      File('lib/l10n/app_tr.arb').readAsStringSync(),
+      isNot(contains("Projesi'")),
+    );
+  });
 }

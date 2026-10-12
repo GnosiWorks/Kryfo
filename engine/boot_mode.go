@@ -39,6 +39,7 @@ const (
 	codePTDown  = "pt_failed"
 	codeNoMode  = "no_mode"
 	codeNoConf  = "not_applied"
+	codeWait    = "auto_wait"
 )
 
 func bridgeModeKnown() bool { return modeSet.Load() }
@@ -97,6 +98,8 @@ func holdCode() string {
 		return codePTDown
 	case errNoConf:
 		return codeNoConf
+	case errAutoWait:
+		return codeWait
 	}
 	return ""
 }

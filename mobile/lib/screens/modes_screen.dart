@@ -441,7 +441,7 @@ class _Meta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(k, style: HaloType.mono(size: 10, color: HaloColors.text3)),
+        Text(k, style: HaloType.mono(size: 10, color: HaloColors.text2)),
         const SizedBox(width: 4),
         Text(
           v,
@@ -466,7 +466,7 @@ class _Footnote extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       l10n.modesOnionIsTheDefault,
-      style: HaloType.mono(size: 10, color: HaloColors.text3),
+      style: HaloType.mono(size: 10, color: HaloColors.text2),
     );
   }
 }

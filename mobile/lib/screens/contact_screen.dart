@@ -699,7 +699,7 @@ class _StatCard extends StatelessWidget {
               label,
               style: HaloType.mono(
                 size: 9.5,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
                 letter: 0.12,
               ),
             ),

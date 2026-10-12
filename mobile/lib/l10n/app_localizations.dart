@@ -4722,18 +4722,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · sending now}}'**
-  String homeWaitingSendingNow(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get commonRetry;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'No Kryfos yet.'**
   String get homeNoKryfosYet;
 
@@ -6200,6 +6188,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About a second. Works where tor is blocked.'**
   String get onboardingAboutASecondWorks;
+
+  /// screens/onboarding_screen.dart: on the Relay card when the person said Tor is blocked at the start
+  ///
+  /// In en, this message translates to:
+  /// **'About a second, and it skips Tor.'**
+  String get onboardingAboutASecondSkipsTor;
+
+  /// screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic finds a way around the block by itself.'**
+  String get onboardingAutoFindsAWay;
 
   /// screens/onboarding_screen.dart
   ///
@@ -11037,11 +11037,41 @@ abstract class AppLocalizations {
   /// **'Tor is blocked here'**
   String get torBootSplashTorIsBlockedHere;
 
+  /// screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Faster, and it skips Tor. Our relay sees your IP address, never what you say.'**
+  String get torBootSplashRelayLine;
+
+  /// screens/bridge_sheets.dart: under Automatic, the first and recommended way to start where Tor is blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Finds a way around the block by itself, through a bridge when it needs one.'**
+  String get torBootSplashAutoLine;
+
+  /// screens/bridge_sheets.dart: title of the sheet after Tor is blocked here on a new install's first start
+  ///
+  /// In en, this message translates to:
+  /// **'Two ways around the block'**
+  String get torBootSplashTwoWaysAround;
+
+  /// screens/bridge_sheets.dart, screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get bridgesRecommended;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Trying another way…'**
   String get bridgesTryingAnotherWay;
+
+  /// bridge_mode.dart: the status line's detail while automatic has no way in yet, as after a wake, under Connecting…
+  ///
+  /// In en, this message translates to:
+  /// **'Finding a way in…'**
+  String get bridgesFindingAWayIn;
 
   /// screens/bridges_screen.dart
   ///
@@ -11169,11 +11199,17 @@ abstract class AppLocalizations {
   /// **'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.'**
   String get bridgesOurRelayUsuallyGets;
 
-  /// screens/bridges_screen.dart
+  /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{Use this bridge} other{Use these {count} bridges}}'**
-  String bridgesUseThisBridge(int count);
+  /// **'Use this bridge'**
+  String get bridgesUseThisBridge;
+
+  /// screens/bridge_sheets.dart: the button when two or more bridge lines are pasted or scanned; count is 2 or more
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{Use these {count} bridges}}'**
+  String bridgesUseTheseBridges(int count);
 
   /// screens/bridges_screen.dart
   ///
@@ -12480,7 +12516,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}'**
+  /// **'{count, plural, =0{No one waiting} one{{count} waiting} other{{count} waiting}}'**
   String supportWaiting(int count);
 
   /// screens/support_screen.dart: a section: chats with no answer yet. Only the developer's own phone shows it, in English.
@@ -12546,13 +12582,13 @@ abstract class AppLocalizations {
   /// notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{1 new chat} other{{count} new chats}}'**
+  /// **'{count, plural, one{{count} new chat} other{{count} new chats}}'**
   String supportNotifNewChats(int count);
 
   /// notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{1 new message} other{{count} new messages}}'**
+  /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
   String supportNotifNewMessages(int count);
 
   /// notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English.

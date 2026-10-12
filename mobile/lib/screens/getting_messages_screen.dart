@@ -170,7 +170,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   l10n.gettingMessagesOnTheLockScreen,
                   style: HaloType.mono(
                     size: 10.5,
-                    color: HaloColors.text3,
+                    color: HaloColors.text2,
                     letter: 0.06,
                   ),
                 ),

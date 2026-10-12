@@ -216,6 +216,46 @@ void main() {
       expect(l.tone, BridgeTone.amber);
     });
 
+    test('no way in yet, as after a wake: connecting, calmly', () {
+      for (final phase in ['trying', 'connected']) {
+        final l = line(
+          BridgeStatus(mode: 'auto', phase: phase, errorCode: 'auto_wait'),
+        );
+        expect(l.head, l10n.bridgesConnectingDots, reason: phase);
+        expect(l.detail, l10n.bridgesFindingAWayIn, reason: phase);
+        expect(l.detailKind, 'wait');
+        expect(l.tone, BridgeTone.amber);
+        expect(l.moving, isTrue);
+      }
+      // a pass past the usual way says what it tries instead
+      final a = line(
+        const BridgeStatus(
+          mode: 'auto',
+          phase: 'trying',
+          attempt: 2,
+          attempts: 3,
+          errorCode: 'auto_wait',
+        ),
+      );
+      expect(a.detailKind, 'another');
+      // a picked bridge never says it
+      final p = line(
+        const BridgeStatus(
+          mode: 'own',
+          phase: 'trying',
+          method: 'obfs4',
+          errorCode: 'auto_wait',
+        ),
+      );
+      expect(p.detail, isNot(l10n.bridgesFindingAWayIn));
+      // and the engine's json carries it through
+      final app = AppState()..bridgeSetupForTest = const BridgeSetup();
+      app.takeBridgeStatus(
+        '{"mode":"auto","phase":"connected","error_code":"auto_wait"}',
+      );
+      expect(app.bridgeLine.detailKind, 'wait');
+    });
+
     test('the usual way, with the percent tor knows', () {
       final l = line(
         const BridgeStatus(mode: 'auto', phase: 'trying', progress: 40),
@@ -418,6 +458,15 @@ void main() {
       }
       setL10nLocale(const Locale('fa'));
       expect(line(_another).detail, contains('۲'));
+      // a middle dot next to their digits reads as a zero: their comma
+      for (final lang in ['ar', 'fa']) {
+        setL10nLocale(Locale(lang));
+        expect(line(_another).detail, isNot(contains('·')));
+        expect(line(_another).detail, contains('، '));
+      }
+      setL10nLocale(const Locale('de'));
+      expect(line(_another).detail, contains(' · '));
+      setL10nLocale(const Locale('en'));
     });
   });
 
@@ -495,7 +544,7 @@ void main() {
         ..answer = 'error: lines_bad'
         ..checks = '[{"i":0,"state":"broken","why":"bad port"}]';
       await paste(t, 'obfs4 1.2.3.4:99999 AAAA cert=x');
-      await t.tap(find.text(l10n.bridgesUseThisBridge(1)));
+      await t.tap(find.text(l10n.bridgesUseThisBridge));
       await _in(t);
       expect(_eng.calls.single, startsWith('own '));
       expect(find.text(l10n.bridgesNoneOfTheseAre), findsOneWidget);
@@ -511,7 +560,7 @@ void main() {
         t,
         'Bridge obfs4 192.0.2.1:443 AAAA cert=x\nobfs4 192.0.2.2:99999 BB',
       );
-      await t.tap(find.text(l10n.bridgesUseThisBridge(2)));
+      await t.tap(find.text(l10n.bridgesUseTheseBridges(2)));
       await _in(t);
       // the torrc word goes before the engine sees it
       expect(_eng.calls.single, contains('"obfs4 192.0.2.1:443 AAAA cert=x"'));
@@ -1152,7 +1201,7 @@ void main() {
       await _in(t);
       await t.tap(find.text(l10n.bridgesPasteFromClipboard));
       await _in(t);
-      await t.tap(find.text(l10n.bridgesUseThisBridge(1)));
+      await t.tap(find.text(l10n.bridgesUseThisBridge));
       await _in(t);
       expect(appState.bridgeChoice, BridgeChoice.friend);
       expect(clip, '');
