@@ -27,4 +27,12 @@ class HandedNameTest {
         assertEquals(80, Shred.leaf(long).length)
         assertEquals(true, Shred.leaf(long).endsWith(".jpg"))
     }
+
+    @Test
+    fun aShareFromAHiddenChatOrTheDecoyGoesWithTheLock() {
+        assertEquals("share", Shred.shareInto(backup = false, quiet = false))
+        assertEquals("share_q", Shred.shareInto(backup = false, quiet = true))
+        assertEquals(Shred.BACKUP_OUT, Shred.shareInto(backup = true, quiet = true))
+        assertEquals(true, Shred.HANDED.contains("share_q"))
+    }
 }

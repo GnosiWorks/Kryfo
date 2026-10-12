@@ -543,6 +543,7 @@ class MainActivity : FlutterFragmentActivity() {
                                 call.argument<String>("text"),
                                 call.argument<String>("subject"),
                                 call.argument<Boolean>("backup") == true,
+                                call.argument<Boolean>("quiet") == true,
                                 result
                             )
                         }
@@ -572,7 +573,8 @@ class MainActivity : FlutterFragmentActivity() {
     // that gets the intent. some apps read theirs only after this one is
     // back, or keep reading in the background, so a copy is given a while
     // first and shredded once it is older, by a job that comes back while
-    // one is young. a lock unlinks an open or shared copy (dart's lockingUp).
+    // one is young. a lock unlinks an open copy, and one shared from a
+    // hidden chat or the decoy (dart's lockingUp).
     private fun clearOpenCopies() {
         Thread {
             if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
@@ -670,10 +672,11 @@ class MainActivity : FlutterFragmentActivity() {
         text: String?,
         subject: String?,
         backup: Boolean,
+        quiet: Boolean,
         result: MethodChannel.Result
     ) {
         Thread {
-            val dst = handOut(File(path), name, if (backup) Shred.BACKUP_OUT else "share")
+            val dst = handOut(File(path), name, Shred.shareInto(backup, quiet))
             if (dst == null) {
                 runOnUiThread { result.success(false) }
                 return@Thread

@@ -135,31 +135,42 @@ void main() {
       return f;
     }
 
-    for (final top in ['share', 'share_plus']) {
-      test('$top: a lock unlinks one still being read and shreds an old one, '
-          'the rest of the cache stays', () async {
-        final young = copy(top, 'sent just now', Duration.zero);
-        final reader = young.openSync();
-        addTearDown(reader.closeSync);
-        final old = File('${tmp.path}/$top/7c6d/old.jpg')
-          ..createSync(recursive: true)
-          ..writeAsStringSync('sent long ago', flush: true)
-          ..setLastModifiedSync(DateTime.now().subtract(kHandedGrace * 2));
-        final twin = twinOf(old.path, twins);
-        final other = File('${tmp.path}/vn_1.wav')..writeAsStringSync('keep');
-        await dropOpenCopies(cache: tmp);
-        expect(Directory('${tmp.path}/$top').existsSync(), isFalse);
-        expect(String.fromCharCodes(reader.readSync(64)), 'sent just now');
-        expect(zeroed(twin), isTrue);
-        expect(other.existsSync(), isTrue);
-      });
+    test('from a hidden chat or the decoy: a lock unlinks one still being '
+        'read and shreds an old one, the rest of the cache stays', () async {
+      final young = copy('share_q', 'sent just now', Duration.zero);
+      final reader = young.openSync();
+      addTearDown(reader.closeSync);
+      final old = File('${tmp.path}/share_q/7c6d/old.jpg')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('sent long ago', flush: true)
+        ..setLastModifiedSync(DateTime.now().subtract(kHandedGrace * 2));
+      final twin = twinOf(old.path, twins);
+      final other = File('${tmp.path}/vn_1.wav')..writeAsStringSync('keep');
+      await dropOpenCopies(cache: tmp);
+      expect(Directory('${tmp.path}/share_q').existsSync(), isFalse);
+      expect(String.fromCharCodes(reader.readSync(64)), 'sent just now');
+      expect(zeroed(twin), isTrue);
+      expect(other.existsSync(), isTrue);
+    });
 
-      test('$top: a switch of pin or a wipe shreds every one', () async {
-        final f = copy(top, 'sent just now', Duration.zero);
+    test(
+      'from a hidden chat or the decoy: a switch of pin shreds every one',
+      () async {
+        final f = copy('share_q', 'sent just now', Duration.zero);
         final twin = twinOf(f.path, twins);
         await dropOpenCopies(all: true, cache: tmp);
-        expect(Directory('${tmp.path}/$top').existsSync(), isFalse);
+        expect(Directory('${tmp.path}/share_q').existsSync(), isFalse);
         expect(zeroed(twin), isTrue);
+      },
+    );
+
+    for (final top in kSharedFolders) {
+      test('$top: what the everyday side shared keeps its grace across a '
+          'lock and a switch, for an app that reads late', () async {
+        final young = copy(top, 'sent just now', Duration.zero);
+        await dropOpenCopies(cache: tmp);
+        await dropOpenCopies(all: true, cache: tmp);
+        expect(young.readAsStringSync(), 'sent just now');
       });
     }
   });

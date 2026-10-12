@@ -79,7 +79,7 @@ import 'outbox.dart';
 import 'supporter.dart';
 import 'message_envelope.dart';
 import 'polls.dart';
-import 'open_file.dart' show nameSaysVideo;
+import 'open_file.dart' show nameSaysVideo, shareGoesWithLock;
 import 'search.dart';
 import 'search_bench.dart';
 import 'session.dart';
@@ -9055,49 +9055,16 @@ HaloContainer containerFor(PinResult r, {String? vaultKey}) => switch (r) {
   _ => HaloContainer.everyday,
 };
 
-// a file handed to the share sheet is a plain copy in cache/share/, or the
-// share plugin's folder from before. the app it went to may read it only
-// once this one is back, so a copy younger than the grace stays, as on the
-// native side (Shred.kt), whose job looks again. a time far ahead is a clock
-// that moved, and counts as old
+// a file handed to the share sheet is a plain copy in cache/share/ or
+// cache/share_q/, or the share plugin's folder from before. the app it went
+// to may read it only once this one is back, so a copy younger than the
+// grace stays, as on the native side (Shred.kt), whose job looks again
 const kShareGrace = kHandedGrace;
-const _clockSkew = Duration(minutes: 1);
 
 @visibleForTesting
 Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
-  final at = now ?? DateTime.now();
-  final cutoff = at.subtract(kShareGrace);
-  final ahead = at.add(_clockSkew);
-  bool old(DateTime t) => t.isBefore(cutoff) || t.isAfter(ahead);
-  for (final name in const ['share', 'share_plus']) {
-    final dir = Directory('${cache.path}/$name');
-    if (!await dir.exists()) continue;
-    // a folder's time moves as its files go, so it is read first
-    final folders = <(Directory, DateTime)>[];
-    await for (final e in dir.list(recursive: true, followLinks: false)) {
-      try {
-        if (e is Directory) {
-          folders.add((e, (await e.stat()).modified));
-        } else if (e is Link) {
-          await e.delete();
-        } else if (e is File && old(await e.lastModified())) {
-          await shredFile(e.path);
-        }
-      } on FileSystemException {
-        // gone meanwhile
-      }
-    }
-    // only an emptied folder goes, and only one old itself, the deepest
-    // first
-    folders.sort((a, b) => b.$1.path.length.compareTo(a.$1.path.length));
-    for (final (d, t) in [...folders, (dir, cutoff)]) {
-      if (!identical(d, dir) && !old(t)) continue;
-      try {
-        await d.delete();
-      } on FileSystemException {
-        // a young copy is still in it
-      }
-    }
+  for (final name in [...kSharedFolders, 'share_q']) {
+    await sweepHanded(Directory('${cache.path}/$name'), now: now);
   }
 }
 
@@ -16422,8 +16389,8 @@ class AppState extends ChangeNotifier {
   // the lock is going up: a vault session shuts at once, and the key of a
   // vault made by a setup that did not finish goes
   void lockingUp() {
-    // a file opened or shared with another app goes with the session that
-    // handed it
+    // a file opened with another app, or shared from a hidden chat or the
+    // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
     unawaited(
@@ -22122,6 +22089,8 @@ void main() async {
   // a draft is written down for a restart only for a chat that is still
   // there
   everydayChats = () => live.draftChats();
+  // what a hidden chat or the decoy shares goes with the next lock
+  shareGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
   unawaited(sweepBackupLeftovers());

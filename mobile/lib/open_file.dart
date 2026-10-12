@@ -7,6 +7,10 @@ import 'l10n/numbers.dart';
 
 const _channel = MethodChannel('halo/platform');
 
+/// whether what is shared now is from a hidden chat or the decoy: its copy
+/// then goes with the next lock or switch of pin. the app sets it
+bool Function() shareGoesWithLock = () => false;
+
 /// hands [path] to whichever app the person picks for that kind of file.
 /// [name] is the name the sender gave it; ours on disk has a prefix. false
 /// when nothing on the phone opens it, and the caller falls back to share.
@@ -40,6 +44,7 @@ Future<bool> shareFileOut(
           'text': text,
           'subject': subject,
           'backup': backup,
+          'quiet': !backup && shareGoesWithLock(),
         }) ??
         false;
   } catch (e) {
