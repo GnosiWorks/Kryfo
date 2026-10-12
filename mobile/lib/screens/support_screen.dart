@@ -113,7 +113,7 @@ class SupportPin extends StatelessWidget {
     return HomePin(
       icon: Icons.support_agent,
       title: l10n.supportTitle,
-      line: l10n.supportWaiting(waiting),
+      line: l10nDev.supportWaiting(waiting),
       lit: on,
       onTap: onTap,
       mark: on
@@ -380,7 +380,7 @@ class _SupportScreenState extends State<SupportScreen> {
               MenuSheetRow(
                 icon: Icons.done_all_rounded,
                 label: l10n.supportMarkAllDone,
-                sub: waiting == 0 ? l10n.supportWaiting(0) : null,
+                sub: waiting == 0 ? l10nDev.supportWaiting(0) : null,
                 onTap: waiting == 0 ? null : () => Navigator.pop(ctx, true),
               ),
             ],
@@ -542,7 +542,7 @@ class _Head extends StatelessWidget {
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               child: Text(
-                l10n.supportWaiting(waiting),
+                l10nDev.supportWaiting(waiting),
                 key: ValueKey(waiting),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

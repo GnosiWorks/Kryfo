@@ -341,8 +341,8 @@ List<Map<String, Object?>> withoutSupport(
 
 // what the summary says: how many chats and messages, and nothing of them
 String supportSummaryLine(int chats, int messages) =>
-    '${l10n.supportNotifNewChats(chats)} · '
-    '${l10n.supportNotifNewMessages(messages)}';
+    '${l10nDev.supportNotifNewChats(chats)} · '
+    '${l10nDev.supportNotifNewMessages(messages)}';
 
 // a frame someone wrote, as opposed to a control riding along: a receipt,
 // a reaction, an edit, an unsend, a pin, a vote or a need

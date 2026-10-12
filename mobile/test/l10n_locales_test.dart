@@ -4,6 +4,7 @@
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/app_localizations.dart';
+import 'package:kryfo/l10n/l10n.dart' show l10nDev, setL10nLocale;
 
 typedef _Call = (String, List<String>, String Function(AppLocalizations));
 
@@ -3201,10 +3202,16 @@ void main() {
     ],
     'vi': [((l) => l.bridgesAskTorProject, 'Hỏi Dự án Tor')],
   };
-  // what only the developer's own phone shows stays in english everywhere
+  // what only the developer's own phone shows stays in english everywhere,
+  // its plurals read through the english rules
   test('the support inbox reads in english in every language', () {
     final en = lookupAppLocalizations(const Locale('en'));
     for (final locale in AppLocalizations.supportedLocales) {
+      setL10nLocale(locale);
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      expect(l10nDev.supportNotifNewChats(21), '21 new chats');
+      expect(l10nDev.supportNotifNewMessages(1), '1 new message');
+      expect(l10nDev.supportWaiting(0), 'No one waiting');
       final l = lookupAppLocalizations(locale);
       for (final call in <String Function(AppLocalizations)>[
         (l) => l.supportTitle,
@@ -3215,9 +3222,7 @@ void main() {
         (l) => l.supportWaiting(1),
         (l) => l.supportWaiting(21),
         (l) => l.supportNotifNewChats(2),
-        (l) => l.supportNotifNewChats(21),
         (l) => l.supportNotifNewMessages(5),
-        (l) => l.supportNotifNewMessages(21),
       ]) {
         // the words stay english; the digits are the language's own
         String plain(String s) => s.replaceAllMapped(
