@@ -124,6 +124,8 @@ bool reconnectFailedWith(String r, {int ctrlSilent = 0}) {
     'error: one already running',
     'error: too soon',
     'error: no data dir',
+    // off the network for want of one, which comes back by itself
+    'error: no network',
   }.contains(r)) {
     return false;
   }

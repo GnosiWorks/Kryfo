@@ -179,6 +179,7 @@ void main() {
         'error: tor is asleep',
         'error: superseded',
         'error: one already running',
+        'error: no network',
       ]) {
         expect(reconnectFailedWith(r, ctrlSilent: 5), isFalse, reason: r);
       }

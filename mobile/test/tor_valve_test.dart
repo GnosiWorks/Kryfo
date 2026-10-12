@@ -129,6 +129,16 @@ void main() {
     expect(v.triedFailed, isFalse);
   });
 
+  test('no network is not a failure either', () async {
+    final v = TorValve(
+      reconnect: () async => 'error: no network',
+      restart: () async {},
+      clock: () => t0,
+    );
+    await v.tryReconnect();
+    expect(v.triedFailed, isFalse);
+  });
+
   test('the restart keeps the drafts first, and waits for files', () async {
     final order = <String>[];
     var moving = true;

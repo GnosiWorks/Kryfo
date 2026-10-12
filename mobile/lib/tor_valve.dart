@@ -116,8 +116,12 @@ class TorValve extends ChangeNotifier {
     }
     _busy = false;
     _triedAt = _clock();
-    // asleep on purpose is the check-ins mode's doing, not a stuck tor
-    _triedFailed = r.startsWith('error') && r != 'error: tor is asleep';
+    // asleep on purpose is the check-ins mode's doing, not a stuck tor, and
+    // with no network tor waits for one
+    _triedFailed =
+        r.startsWith('error') &&
+        r != 'error: tor is asleep' &&
+        r != 'error: no network';
     notifyListeners();
   }
 
