@@ -5,7 +5,9 @@
 // rename and a new roster for a group here come only from its admin, and
 // never past the member cap; leave takes out its sender and no one else. a
 // burner room's roster changes only by its creator's key, within the room's
-// cap. the databases, signal and the engine are stand-ins
+// cap. someone a list names under words held here on another key is seated
+// as someone else, and whoever holds the words gets no seat from it. the
+// databases, signal and the engine are stand-ins
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -15,7 +17,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        unboundIdOf,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart'
@@ -427,6 +434,59 @@ void main() {
       );
       expect(w.members, contains('new-face-here'));
       expect(w.live.people['new-face-here'], containsPair('xpub', 'x-new'));
+    });
+
+    test('words held here on another key: the list\'s person is seated as '
+        'someone else, and the holder stays as they were', () async {
+      final w = await _World.make();
+      const held = 'held-words-here';
+      final mine = 'a1' * 32, theirs = 'b2' * 32;
+      w.live.person(held, onion: 'o-held', xpub: mine, accepted: 0);
+      final other = unboundIdOf([
+        5,
+        for (var i = 0; i < 64; i += 2)
+          int.parse(theirs.substring(i, i + 2), radix: 16),
+      ]);
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'add',
+          members: const [held],
+          participants: [
+            {'h': held, 'o': 'o-real', 'x': theirs},
+          ],
+        ),
+      );
+      expect(w.members, isNot(contains(held)));
+      expect(w.members, contains(other));
+      expect(w.live.people[other], containsPair('xpub', theirs));
+      expect(w.live.people[held], containsPair('xpub', mine));
+      expect(w.live.people[held], containsPair('onion', 'o-held'));
+      // a new roster seats them the same way
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'create',
+          name: 'two',
+          members: const ['me', _a, held],
+          participants: [
+            {'h': held, 'o': 'o-real', 'x': theirs},
+          ],
+        ),
+      );
+      expect(w.members, ['me', _a, other]);
+      // on the key held here, the words are theirs
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'add',
+          members: const [held],
+          participants: [
+            {'h': held, 'o': 'o-held', 'x': mine},
+          ],
+        ),
+      );
+      expect(w.members, contains(held));
     });
 
     test('an add past the member cap is not taken', () async {

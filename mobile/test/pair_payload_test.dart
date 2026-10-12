@@ -3,8 +3,10 @@
 // a second copy of a part, or anything after the link, would show one key's
 // number while the add built on another. the number on the card is the
 // number of the key the add then uses, read off the real invite. an old
-// card with no bundle is no code's invite
+// card with no bundle is no code's invite. the decoy's invite carries its
+// bundle encoded, so any byte of it reads back as it was
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +18,8 @@ import 'package:kryfo/main.dart'
         haloUriV3,
         inviteKeyNumber,
         makePreKeyBundleB64,
-        parseHaloUri;
+        parseHaloUri,
+        quietInviteUri;
 import 'package:kryfo/rooms.dart' show firstKryfoLink;
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/pair_join.dart';
@@ -174,5 +177,33 @@ void main() {
     await t.pumpAndSettle();
     expect(added, [invite]);
     expect(inviteKeyNumber(added.single), own);
+  });
+
+  test('the decoy\'s invite reads back the bundle it was made with', () {
+    // every byte base64 has that a query reads as something else
+    const bundle = 'ab+cd/ef==';
+    for (final fc in ['ab' * 32, 'error: none']) {
+      final uri = quietInviteUri(_w, 'q.onion', bundle, fc);
+      expect(uri, isNot(contains(' ')));
+      final p = parseHaloUri(uri);
+      expect(p?['bundle'], bundle, reason: fc);
+      expect(p?['v'], fc.startsWith('error') ? '2' : '3');
+    }
+    // and it is what the decoy hands out
+    final src = File('lib/main.dart').readAsStringSync();
+    expect(src, contains('invite: quietInviteUri(id, onion, bundle, fc)'));
+  });
+
+  test('one proof-of-work check for a first contact, shared', () {
+    final src = File('lib/main.dart').readAsStringSync();
+    // the gate and a deleted chat's words ask the same thing
+    expect(RegExp(r'verifyPow\(').allMatches(src), hasLength(1));
+    expect(
+      RegExp(
+        r'!vouched && fromBackPair && !firstPowHolds\(env\)',
+      ).hasMatch(src),
+      isTrue,
+    );
+    expect(RegExp(r'firstPowHolds\(env\) &&').hasMatch(src), isTrue);
   });
 }

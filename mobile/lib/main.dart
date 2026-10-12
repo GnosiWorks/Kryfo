@@ -9467,6 +9467,15 @@ Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
 String haloUriV3(String id, String onion, String bundle, String fc) =>
     'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
 
+/// the decoy's invite. its bundle is encoded for the query, so no byte of
+/// it can read as something else; an fc that did not come is left out
+String quietInviteUri(String id, String onion, String bundle, String fc) {
+  final b = Uri.encodeQueryComponent(bundle);
+  return fc.startsWith('error')
+      ? 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$b'
+      : 'kryfo://share?id=$id&onion=$onion&v=3&bundle=$b&fc=$fc';
+}
+
 // an invite's id is three words, as every version has made them: anything
 // else would be shown to the person as if it were someone's name
 Map<String, String>? parseHaloUri(String raw) {
@@ -9532,9 +9541,14 @@ String? inviteKeyNumber(String invite) {
 // the old one is left, so the cap counts from none and no vouch spares it
 // the proof
 bool _firstWouldPass(UnwrappedMessage env) =>
-    env.powNonce != null &&
-    verifyPow(env.powText ?? env.message, env.powNonce!, powBits) &&
+    firstPowHolds(env) &&
     !strangerCapHolds(accepted: false, vouched: false, have: 0, cap: 2);
+
+/// a first contact's proof of work: the one check the gate and a deleted
+/// chat's words both ask of an opener
+bool firstPowHolds(UnwrappedMessage env) =>
+    env.powNonce != null &&
+    verifyPow(env.powText ?? env.message, env.powNonce!, powBits);
 
 /// what is wrong with a card's prekey bundle, null when a session can be
 /// built on it: it reads, and its signed prekey is signed by its identity
@@ -14901,7 +14915,10 @@ class AppState extends ChangeNotifier {
       }
       if (fromAdmin &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
-        await db.syncGroupMembers(env.groupId!, roster);
+        final seats = await _seats(env.rosterParticipants, db, room: isRoom);
+        await db.syncGroupMembers(env.groupId!, [
+          for (final h in roster) seats[h] ?? h,
+        ]);
         await _subscribeRoomMembers(env.groupId!);
         if (isRoom) await _roomLetIn(env.groupId!, roster, db);
         // contact stubs for self-healed members so we can encrypt to them:
@@ -14917,7 +14934,7 @@ class AppState extends ChangeNotifier {
                 h != myId &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
-              await db.upsertContactStub(h, o, x);
+              await db.upsertContactStub(seats[h] ?? h, o, x);
             }
           }
           await refreshContacts();
@@ -14933,10 +14950,7 @@ class AppState extends ChangeNotifier {
       // valid nonce, the one lane a cold stranger can arrive on. a whisper
       // through an existing session already paid once. dropped silently so
       // the spammer learns nothing.
-      if (!vouched &&
-          fromBackPair &&
-          (env.powNonce == null ||
-              !verifyPow(env.powText ?? env.message, env.powNonce!, powBits))) {
+      if (!vouched && fromBackPair && !firstPowHolds(env)) {
         dlog(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );
@@ -15853,6 +15867,33 @@ class AppState extends ChangeNotifier {
       if (h == myId || wireIdShaped(h, room: room)) h,
   ];
 
+  // where a member list seats each of its people. one whose words are held
+  // here on another key than the list gives them is someone else, on an id
+  // of their own as a first contact under those words would be: whoever
+  // holds the words keeps their row and gets no seat from the list. a room
+  // seats keys, not words
+  Future<Map<String, String>> _seats(
+    List<Map<String, String>>? people,
+    HaloDb db, {
+    required bool room,
+  }) async {
+    final out = <String, String>{};
+    if (room || people == null) return out;
+    for (final p in people) {
+      final h = p['h'];
+      final key = _xIdentity((p['x'] ?? '').trim().toLowerCase());
+      if (h == null || key == null || h == myId) continue;
+      // the everyday side or the vault, whichever session is on screen
+      final held = await _boundIdentity(
+        h,
+        ss: signalSession,
+        row: db.getContact,
+      );
+      if (held != null && !_eqBytes(held, key)) out[h] = unboundIdOf(key);
+    }
+    return out;
+  }
+
   // whether a group or room of [n] people fits its cap
   Future<bool> _fitsCap(String groupId, int n, HaloDb db) async {
     if (n > kGroupMemberCap) return false;
@@ -15912,6 +15953,8 @@ class AppState extends ChangeNotifier {
           ];
         }
         if (!await _fitsCap(groupId, members.toSet().length, db)) return;
+        final seats = await _seats(gc.participants, db, room: isRoom);
+        members = [for (final h in members) seats[h] ?? h];
         // rosters can land out of order, a catch-up's most of all: one
         // older than the last taken changes nothing
         final stamp = gc.stamp;
@@ -15954,7 +15997,7 @@ class AppState extends ChangeNotifier {
                 h != myId &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
-              await db.upsertContactStub(h, o, x);
+              await db.upsertContactStub(seats[h] ?? h, o, x);
             }
           }
         }
@@ -15967,9 +16010,10 @@ class AppState extends ChangeNotifier {
         if (gc.members == null || !fromAdmin) return;
         final isRoom = await _roomOf(groupId, db) != null;
         final have = await db.getGroupMembers(groupId);
+        final seats = await _seats(gc.participants, db, room: isRoom);
         final adds = {
           for (final h in _members(gc.members!, room: isRoom))
-            if (!have.contains(h)) h,
+            if (!have.contains(seats[h] ?? h)) seats[h] ?? h,
         };
         if (!await _fitsCap(groupId, have.length + adds.length, db)) return;
         for (final h in adds) {
@@ -15986,7 +16030,7 @@ class AppState extends ChangeNotifier {
                 h != myId &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
-              await db.upsertContactStub(h, o, x);
+              await db.upsertContactStub(seats[h] ?? h, o, x);
             }
           }
         }
@@ -16197,9 +16241,7 @@ class AppState extends ChangeNotifier {
       edPub: q['ed_pub'] as String,
       xPub: q['x_pub'] as String,
       onion: onion,
-      invite: fc.startsWith('error')
-          ? 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$bundle'
-          : 'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc',
+      invite: quietInviteUri(id, onion, bundle, fc),
     );
   }
 
