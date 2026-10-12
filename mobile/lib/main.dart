@@ -2085,6 +2085,11 @@ class HaloDb implements GroupOwedStore {
       Future<void>.delayed(const Duration(seconds: 30), () async {
         if (_retired || !identical(_db, db)) return;
         try {
+          await searchForgetsOnce(db);
+        } catch (e) {
+          dlog('search: marks not merged (${e.runtimeType})');
+        }
+        try {
           await wipeFreedOnce(db);
         } catch (e) {
           dlog('freed pages: not wiped (${e.runtimeType})');
@@ -7174,6 +7179,12 @@ Future<void> searchTables(Database db, {bool fresh = false}) async {
     'CREATE TRIGGER IF NOT EXISTS msg_fts_follow AFTER DELETE ON messages '
     'BEGIN DELETE FROM msg_fts WHERE rowid = old.id; END',
   );
+  // a new index forgets from its first delete (searchForgetsOnce)
+  if (fresh) {
+    await db.execute(
+      "INSERT INTO msg_fts(msg_fts, rank) VALUES('secure-delete', 1)",
+    );
+  }
   await db.execute('''
     CREATE TABLE IF NOT EXISTS search_meta (
       k TEXT PRIMARY KEY,
@@ -7412,6 +7423,23 @@ String _keyHex(List<int> b) {
 // the file. the cost is a few percent on writes
 Future<void> eraseFreedPages(DatabaseExecutor db) async {
   await db.rawQuery('PRAGMA secure_delete = 1');
+}
+
+// a message's words leave the search index with it, not as a mark laid
+// over them, and the marks laid before are merged away. once per database.
+// the index then needs sqlite 3.42, which every build since 0.2.9 bundles
+Future<void> searchForgetsOnce(DatabaseExecutor db) async {
+  if (await RouterRows.meta(db, 'fts_forgets') != null) return;
+  final fts = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msg_fts'",
+  );
+  if (fts.isNotEmpty) {
+    await db.execute(
+      "INSERT INTO msg_fts(msg_fts, rank) VALUES('secure-delete', 1)",
+    );
+    await db.execute("INSERT INTO msg_fts(msg_fts) VALUES('optimize')");
+  }
+  await RouterRows.putMeta(db, 'fts_forgets', '1');
 }
 
 // pages freed before that held old rows: one vacuum per database rewrites

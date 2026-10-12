@@ -815,12 +815,12 @@ class BackupSide {
   // the hidden chats' database copied whole. its key
   Future<String> copyHidden(HaloDb vault, String to) => vault.copyWithKey(to);
 
-  // the copy of halo.db made to carry nothing of hidden chats. who the list
-  // named
+  // the copy of halo.db made to carry nothing of hidden chats, tidied on
+  // the same connection. who the list named
   Future<Set<String>> scrub(String copy, String key) async {
     final db = await openDatabase(copy, password: key, singleInstance: false);
     try {
-      final people = await scrubHidden(db);
+      final people = await scrubCopy(db);
       // every change in the file itself before it is read as bytes
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
       return people;
@@ -842,12 +842,11 @@ class BackupSide {
     }
   }
 
-  // the copy rebuilt without its free pages: how many there are says
-  // nothing of what was taken out
+  // a copy that is not scrubbed, tidied (tidyCopy)
   Future<void> compact(String copy, String key) async {
     final db = await openDatabase(copy, password: key, singleInstance: false);
     try {
-      await db.execute('VACUUM');
+      await tidyCopy(db);
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
     } finally {
       await db.close();
@@ -865,6 +864,28 @@ class BackupSide {
       await db.close();
     }
   }
+}
+
+/// a copy that leaves the phone: its search index merged into one, so no
+/// word of a message gone stays in it, then the file rebuilt without free
+/// pages, whose count would say how much was taken out. the rebuild's
+/// scratch stays in memory, as the library is built to keep it
+Future<void> tidyCopy(Database db) async {
+  final fts = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msg_fts'",
+  );
+  if (fts.isNotEmpty) {
+    await db.execute("INSERT INTO msg_fts(msg_fts) VALUES('optimize')");
+  }
+  await db.execute('VACUUM');
+}
+
+/// the copy of halo.db made to carry nothing of hidden chats, then tidied.
+/// who the list named
+Future<Set<String>> scrubCopy(Database db) async {
+  final people = await scrubHidden(db);
+  await tidyCopy(db);
+  return people;
 }
 
 // a timed message that came in and has not been read has no clock on the
@@ -910,6 +931,7 @@ Future<String> _carryHidden(
   await Directory(p.dirname(to)).create(recursive: true);
   final key = await side.copyHidden(vault, to);
   await side.settleBurns(to, "x'$key'", at);
+  await side.compact(to, "x'$key'");
   files.add(BackupFileEntry(kHiddenDb, await File(to).length()));
   sources[kHiddenDb] = to;
   await _addFolders(
@@ -995,8 +1017,8 @@ Future<BackupDraft> draftBackup(
       }
     }
   }
-  // no free pages left where the scrub took rows out
-  await side.compact(dbCopy, dbKey);
+  // a scrubbed copy was tidied on the scrub's connection
+  if (hidden) await side.compact(dbCopy, dbKey);
   final files = <BackupFileEntry>[];
   Future<void> add(String name, String from) async {
     final f = File(from);

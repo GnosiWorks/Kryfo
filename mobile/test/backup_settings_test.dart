@@ -428,10 +428,10 @@ void main() {
         expect(some['catchUp'], isEmpty);
         expect(some, none, reason: fc);
       }
-      // the scrub's free pages do not stay behind in the copy
+      // the scrub tidies the copy on its own connection (scrub_copy_test)
       final steps = <String>[];
       await draftBackup(stage, side: _Steps(steps));
-      expect(steps, ['scrub', 'compact halo.db']);
+      expect(steps, ['scrub']);
       // restored, every address reads its relays whole
       final d = await draftBackup(stage, side: const _HiddenLeftOut());
       final out = await write(d.manifest, d.sources);
