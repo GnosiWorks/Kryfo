@@ -562,7 +562,9 @@ func TestDirectModesUnchanged(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for _, lane := range append(mainLanes(), roomLane("ab"), pairLane("cd"), laneServices) {
+			// every lane but the services one shares the route's direct
+			// client; that one is tor on every route (services.go)
+			for _, lane := range append(mainLanes(), roomLane("ab"), pairLane("cd")) {
 				c, err := torNostrClientFor(lane)
 				if err != nil {
 					t.Fatal(err)

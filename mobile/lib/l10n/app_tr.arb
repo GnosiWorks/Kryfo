@@ -1353,6 +1353,7 @@
   "restoreMoving": "Taşınıyor… {progress}",
   "restoreRestoring": "Geri yükleniyor…",
   "restoreNotThisOne": "Bu değil",
+  "restoreStopRestore": "Geri yüklemeyi durdur",
   "restoreDateUnknown": "Tarih bilinmiyor",
   "restoreAnIdentity": "Bir kimlik",
   "restoreMessagesSentOrReceived": "O tarihten sonra gönderilen ya da alınan mesajlar bu dosyada yok.",

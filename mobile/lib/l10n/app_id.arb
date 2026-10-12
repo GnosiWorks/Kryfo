@@ -1353,6 +1353,7 @@
   "restoreMoving": "Memindahkan… {progress}",
   "restoreRestoring": "Memulihkan…",
   "restoreNotThisOne": "Bukan yang ini",
+  "restoreStopRestore": "Hentikan pemulihan",
   "restoreDateUnknown": "Tanggal tak dikenal",
   "restoreAnIdentity": "Sebuah identitas",
   "restoreMessagesSentOrReceived": "Pesan yang dikirim atau diterima setelah tanggal itu tidak ada di file ini.",

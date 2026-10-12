@@ -4815,6 +4815,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restoreNotThisOne => 'Не этот';
 
   @override
+  String get restoreStopRestore => 'Остановить восстановление';
+
+  @override
   String get restoreDateUnknown => 'Дата неизвестна';
 
   @override

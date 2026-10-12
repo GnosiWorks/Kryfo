@@ -724,6 +724,8 @@ const kIdentitySecureKeys = [
   'my_handle_name',
   'fc_counter',
   'peer_fc',
+  'peer_fc_swept',
+  'pair_read',
   'my_avatar',
 ];
 
@@ -1014,6 +1016,16 @@ Future<BackupDraft> draftBackup(
         secure['peer_fc'] = jsonEncode(m);
       } catch (_) {
         secure.remove('peer_fc');
+      }
+    }
+    final seen = secure['pair_read'];
+    if (seen != null) {
+      try {
+        final l = (jsonDecode(seen) as List).cast<String>()
+          ..removeWhere(people.contains);
+        secure['pair_read'] = jsonEncode(l);
+      } catch (_) {
+        secure.remove('pair_read');
       }
     }
   }

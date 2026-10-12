@@ -1353,6 +1353,7 @@
   "restoreMoving": "Ziehe um… {progress}",
   "restoreRestoring": "Stelle wieder her…",
   "restoreNotThisOne": "Nicht diese",
+  "restoreStopRestore": "Wiederherstellen abbrechen",
   "restoreDateUnknown": "Datum unbekannt",
   "restoreAnIdentity": "Eine Identität",
   "restoreMessagesSentOrReceived": "Nachrichten, die nach diesem Datum gesendet oder empfangen wurden, sind nicht in dieser Datei.",

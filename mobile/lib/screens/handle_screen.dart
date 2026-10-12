@@ -157,9 +157,7 @@ class _HandleScreenState extends State<HandleScreen> {
     _asking(true);
     final r = sessionQuiet
         ? await unreachedLater(_unreached)
-        : await engine.handleRelease(h);
-    // forgotten even when the page is gone, or the next check claims it again
-    if (r == 'ok') await appState.setMyHandle(null);
+        : await appState.releaseHandle(h);
     if (!mounted) return;
     _asking(false);
     setState(() => _busy = false);

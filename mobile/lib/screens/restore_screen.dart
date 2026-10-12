@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState, engine, navRevision, rootNavKey, shredFile;
+import '../main.dart' show appState, navRevision, rootNavKey, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -156,6 +156,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
   String? _path;
   double _progress = 0;
   bool _releasing = false;
+  // left while the handle was being released: the release finishes, and
+  // the restore does not follow it
+  bool _stopped = false;
   // a file of either kind is picked
   bool get _hasFile => _blob != null || _path != null;
   final _passCtrl = TextEditingController();
@@ -313,14 +316,19 @@ class _RestoreScreenState extends State<RestoreScreen> {
       });
       var r = 'error: timeout';
       try {
-        r = await engine
-            .handleRelease(mine)
-            .timeout(const Duration(seconds: 40), onTimeout: () => r);
+        // waited for as it really goes, behind a claim already on its way:
+        // each registry call is bounded on its own (registryWait), so the
+        // answer shown is the one the registry gave
+        r = await appState.releaseHandle(mine);
       } catch (e) {
         // read as not released: the sheet below says so
         dlog('restore: handle release (${e.runtimeType})');
       }
-      if (r == 'ok') await appState.setMyHandle(null);
+      // left on the way: the release has gone as it would, nothing more
+      if (_stopped) {
+        _running = false;
+        return _dropOwnCopy();
+      }
       // a handle released goes on to the restore, with the screen or
       // without it. one kept leaves the phone as it was
       if (r != 'ok' && !mounted) {
@@ -580,9 +588,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
   Widget build(BuildContext context) {
     final s = _summary;
     final moving = _busy && !_releasing && s != null;
-    final hold = _busy || _running;
+    // the release may wait on a claim already on its way: the screen can be
+    // left meanwhile, and the restore is then not made
+    final hold = (_busy || _running) && !_releasing;
     return PopScope(
       canPop: !hold,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop && _releasing) _stopped = true;
+      },
       child: Scaffold(
         backgroundColor: HaloColors.surface,
         appBar: AppBar(
@@ -742,6 +755,31 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   busy: _busy,
                   onTap: _restore,
                 ),
+              EaseSize(
+                child: !_releasing
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Center(
+                          child: PressScale(
+                            scale: 0.97,
+                            label: l10n.restoreStopRestore,
+                            onTap: () => Navigator.of(context).maybePop(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Text(
+                                l10n.restoreStopRestore,
+                                semanticsLabel: '',
+                                style: HaloType.sans(
+                                  size: 13.5,
+                                  color: HaloColors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
               // the move, as far as it has got
               EaseSize(
                 child: !moving || _path == null

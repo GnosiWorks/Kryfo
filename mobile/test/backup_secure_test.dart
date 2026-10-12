@@ -14,6 +14,8 @@ void main() {
       'my_handle_listed',
       'my_handle_name',
       'peer_fc',
+      'peer_fc_swept',
+      'pair_read',
       'my_avatar',
     ]);
   });

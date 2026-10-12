@@ -30,6 +30,59 @@ String handleRefusalLine(String r, String h) => switch (r) {
   _ => l10n.handleRegistryFailed,
 };
 
+/// between two claims: the registry orders them by their second, and takes
+/// no two in one
+const repointApart = Duration(milliseconds: 1100);
+
+/// the wait before a repoint that got no answer is tried again, after [n]
+/// that failed: a minute, doubling to a quarter of an hour
+Duration repointRetry(int n) =>
+    Duration(minutes: min(15, 1 << min(max(n, 1) - 1, 4)));
+
+/// when the phone puts its handle's invite to the registry: only while tor
+/// carries traffic, since the registry is reached over tor on every route,
+/// and until the registry has answered. a try that got no answer is never
+/// taken as done
+class RepointGate {
+  bool _done = false;
+  bool _going = false;
+  int _fails = 0;
+
+  /// whether a try may be armed now
+  bool want({required bool torUp}) => !_done && !_going && torUp;
+
+  /// a try is armed
+  void going() => _going = true;
+
+  /// a try that did not get going, a decoy open say: armed again later
+  void putBack() => _going = false;
+
+  /// what the try came to: null when nothing had to be sent, else the
+  /// engine's answer. the wait before the next try, or null for none
+  Duration? settled(String? r) {
+    _going = false;
+    // an answer the registry will give again is final too
+    if (r == null ||
+        r == 'ok' ||
+        r.contains('taken') ||
+        r.contains('not yours')) {
+      _done = true;
+      _fails = 0;
+      return null;
+    }
+    _done = false;
+    _fails++;
+    return repointRetry(_fails);
+  }
+
+  /// the handle or the invite changed: the registry is asked again
+  void reset() {
+    _done = false;
+    _going = false;
+    _fails = 0;
+  }
+}
+
 enum HandleAtRegistry { mine, stale, foreign, missing, unknown }
 
 /// what a lookup answer says of our handle: held by our key at our invite,
@@ -82,12 +135,19 @@ class HandleRepoint {
   final Future<void> Function(String key, String? value) write;
 
   /// claims [h] when the invite is not the one the registry last took, or
-  /// always with [force]. null when nothing was sent, else the engine's answer
-  Future<String?> repoint(String h, {bool force = false}) async {
+  /// always with [force]. null when nothing was sent, else the engine's
+  /// answer. [still] is asked just before the claim: a handle let go of
+  /// meanwhile is not claimed again
+  Future<String?> repoint(
+    String h, {
+    bool force = false,
+    bool Function()? still,
+  }) async {
     final inv = await invite();
     final mark = claimMark(h, inv);
     if (!force && await read(kHandleClaimedKey) == mark) return null;
     final bio = await read('my_handle_bio') ?? '';
+    if (still != null && !still()) return null;
     final r = await claim(h, inv, bio);
     if (r == 'ok') await write(kHandleClaimedKey, mark);
     return r;

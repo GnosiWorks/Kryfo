@@ -246,14 +246,9 @@ func probeFilter(rcvPk string, now time.Time) nostr.Filter {
 
 // how long a socket waits before it answers a kick, drawn per socket, so the
 // sockets of different lanes do not all ask their relays in one instant
-var kickSpread = 15 * time.Second
+var kickSpread = time.Minute
 
-func kickDelay() time.Duration {
-	if kickSpread <= 0 {
-		return 0
-	}
-	return time.Duration(mrand.Int64N(int64(kickSpread)))
-}
+func kickDelay() time.Duration { return spreadDelay(kickSpread, autoNow()) }
 
 // the quiet timer, spread a quarter either way, so sockets that opened
 // together do not probe together
@@ -587,7 +582,7 @@ func catchupCapFor(key string) (time.Duration, bool) {
 		// one longer turn, then back to the usual
 		catchupDrops[key] = 0
 		catchupLong[key] = true
-		return catchupLongCap, true
+		return checkInBound(catchupLongCap, checkInLongCap), true
 	}
 	catchupLong[key] = false
 	return catchupCap, false
@@ -1064,7 +1059,7 @@ func relayDialCtx(parent context.Context, u string) (context.Context, context.Ca
 	if strings.Contains(u, ".onion") {
 		d = onionDialWait
 	}
-	return context.WithTimeout(parent, d)
+	return context.WithTimeout(parent, checkInBound(d, checkInDialWait))
 }
 
 const (
@@ -1442,7 +1437,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
+			turn := subTurn{tag: tag}
+			defer turn.done()
 			for {
+				// nothing is counted while it parks or waits for tor below:
+				// the turn counts again from take
+				turn.done()
 				select {
 				case <-ctx.Done():
 					return
@@ -1491,9 +1491,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKick(wait)
 					continue
 				}
+				if !turn.take(ctx) {
+					return
+				}
 				// the client may be the new mode's, the relay the old list's
 				select {
 				case <-routeC:
+					turn.done()
 					continue
 				default:
 				}
@@ -1510,6 +1514,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				err = r.ConnectWithClient(dctx, client)
 				dcancel()
 				rcancel()
+				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
 					sleepOrKick(rejoin)
@@ -1856,7 +1861,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if kickC == nil {
 							kickT = time.NewTimer(kickDelay())
 							kickC = kickT.C
+							// a check-in waits for the probe, and for the
+							// redial if it goes unanswered
+							turn.hold()
 						}
+						turn.skip()
 					case <-kickC:
 						kickT, kickC = nil, nil
 						// a socket that is still answering does not need
@@ -1865,6 +1874,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// tearing down.
 						if relayResponds(conn, r, rcvPk) {
 							aliveNow()
+							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
 							if !idle.Stop() {
@@ -1910,6 +1920,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					youngDrops = 0
 				} else if dropped {
 					youngDrops++
+				}
+				// a kick's hold lasts through its own redial only
+				if !kicked {
+					turn.done()
 				}
 				switch {
 				case kicked:
@@ -2835,12 +2849,15 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 }
 
 // the app's only callers are people search and the badge service, so the
-// services lane carries it
+// services lane carries it, over tor on every route
 func torPost(url, body string) string {
 	if url == "" {
 		return "error: empty url"
 	}
-	client, err := torNostrClientFor(laneServices)
+	// one bound for the wait on tor and the request
+	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
+	defer cancel()
+	client, err := servicesClient(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
@@ -2849,8 +2866,6 @@ func torPost(url, body string) string {
 		return fmt.Sprintf("error: req: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Sprintf("error: post: %v", err)
@@ -2879,7 +2894,9 @@ func torGetJSON(url string) string {
 	if url == "" {
 		return "error: empty url"
 	}
-	client, err := torNostrClientFor(laneServices)
+	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
+	defer cancel()
+	client, err := servicesClient(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
@@ -2887,8 +2904,6 @@ func torGetJSON(url string) string {
 	if err != nil {
 		return fmt.Sprintf("error: req: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Sprintf("error: get: %v", err)

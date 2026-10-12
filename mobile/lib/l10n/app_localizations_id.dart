@@ -4715,6 +4715,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get restoreNotThisOne => 'Bukan yang ini';
 
   @override
+  String get restoreStopRestore => 'Hentikan pemulihan';
+
+  @override
   String get restoreDateUnknown => 'Tanggal tak dikenal';
 
   @override

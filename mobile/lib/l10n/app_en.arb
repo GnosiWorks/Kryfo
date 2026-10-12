@@ -5918,6 +5918,10 @@
   "@restoreNotThisOne": {
     "description": "screens/restore_screen.dart"
   },
+  "restoreStopRestore": "Stop the restore",
+  "@restoreStopRestore": {
+    "description": "screens/restore_screen.dart: while the handle is released before a restore, leaves the screen; the release still finishes"
+  },
   "restoreDateUnknown": "Date unknown",
   "@restoreDateUnknown": {
     "description": "screens/restore_screen.dart"

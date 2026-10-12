@@ -1148,6 +1148,21 @@ void main() {
       expect(w.router.route(_v, null), RouteTo.everyday);
     });
 
+    test(
+      'the list of who read our pair address keeps no hidden chat',
+      () async {
+        final w = await _World.make(docs);
+        await const FlutterSecureStorage().write(
+          key: 'pair_read',
+          value: jsonEncode([_h, _v]),
+        );
+        await w.app.createVault('246810');
+        await w.app.hideChats(people: [_h]);
+        final kept = await const FlutterSecureStorage().read(key: 'pair_read');
+        expect(jsonDecode(kept!), [_v]);
+      },
+    );
+
     test('with the vault open, its session owns them at once', () async {
       final w = await _World.make(docs);
       await w.app.createVault('246810');

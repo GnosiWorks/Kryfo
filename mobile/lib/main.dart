@@ -276,6 +276,21 @@ class HaloEngine {
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => engineTake(_nostrKick());
 
+  // the open chat's peer key, '' for none: its address asks first after a
+  // start or wake, with no turn. looked up on first use so older engines load
+  late final OneArgFnDart _nostrFirst = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrFirst');
+  void nostrFirst(String peerXPubHex) {
+    final p = peerXPubHex.toNativeUtf8();
+    try {
+      engineTake(_nostrFirst(p));
+    } catch (_) {
+      // an older engine without the call
+    } finally {
+      malloc.free(p);
+    }
+  }
+
   // looked up on first use so older engines still load
   late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloCatchupState',
@@ -562,9 +577,11 @@ class HaloEngine {
   // a check-in begins or ends: automatic starts no pass inside one
   late final CounterFnDart _checkInWindow = _lib
       .lookupFunction<CounterFn, CounterFnDart>('HaloCheckIn');
-  void checkInWindow(bool on) {
+  // [ago]: seconds since the job began, so the engine times the check-in's
+  // turns from the job
+  void checkInWindow(bool on, {int ago = 0}) {
     try {
-      _take(_checkInWindow(on ? 1 : 0));
+      _take(_checkInWindow(on ? 1 + ago : 0));
     } catch (_) {
       // an older engine without the call
     }
@@ -1186,6 +1203,19 @@ Future<String> _startListenerOnIsolate(String dataDir) {
 /// handleWait): the engine's answer comes back, never a give-up here while
 /// a claim may still land
 const registryWait = Duration(seconds: 75);
+
+// a check-in's budget, in seconds from its job's start: tor carries by this,
+// the boot's listeners are up by this, the relays are kicked by this or not
+// at all, and their answers are waited for until this. the tail, about ten
+// seconds, and tor's sleep, six at most, follow. the job stops at 170
+const kCheckReadyBy = 90;
+const kCheckListenedBy = 95;
+const kCheckKickBy = 105;
+const kCheckLoopBy = 120;
+// less than this left before kCheckReadyBy, and tor is not woken at all
+const kCheckWakeLeast = Duration(seconds: 5);
+// a job older than this is someone else's clock
+const kCheckJobOldest = Duration(minutes: 10);
 
 Future<String> _ffiOnIsolate(
   String symbol,
@@ -9938,12 +9968,14 @@ String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
 void claimChat(String id) {
   _chatOnScreen = id;
   _chatOnScreenIn = session.container;
+  appState.chatFirst(id);
 }
 
 void releaseChat(String id) {
   if (_chatOnScreen != id) return;
   _chatOnScreen = null;
   _chatOnScreenIn = null;
+  appState.chatFirst(null);
 }
 
 // whether [id] is being read where the rows of [c] show: the chat on
@@ -11827,7 +11859,16 @@ class AppState extends ChangeNotifier {
             try {
               // noted before it goes: a death half way is a try, not a loop
               await d.noteOpenerAgain(uid, tries + 1, now);
-              await _openerAgain(r, peer, d, wire: was?.wire);
+              // the last goes to the pair address alone, a day after the
+              // one before: their first-contact address may be one they
+              // have reset, and once they add us back they read this one
+              await _openerAgain(
+                r,
+                peer,
+                d,
+                wire: was?.wire,
+                pairOnly: tries + 1 == kOpenerAgain.length,
+              );
             } finally {
               _outboxInflight.remove(uid);
             }
@@ -11847,6 +11888,7 @@ class AppState extends ChangeNotifier {
     String peer,
     HaloDb d, {
     String? wire,
+    bool pairOnly = false,
   }) async {
     final uid = r['msg_uid'] as String;
     try {
@@ -11863,7 +11905,7 @@ class AppState extends ChangeNotifier {
             sender: _mySender(),
             badge: await sharedBadge(),
           );
-      final ok = await _sendOneEnvelope(peer, wrapped);
+      final ok = await _sendOneEnvelope(peer, wrapped, pairOnly: pairOnly);
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
       dlog('openers: $uid did not go again ($e)');
@@ -12562,15 +12604,38 @@ class AppState extends ChangeNotifier {
   // and the first-contact counter are loaded, and at a random moment rather
   // than with the rest of start's traffic.
   bool _fcLoaded = false;
-  bool _repointed = false;
+  final _repoint = RepointGate();
+  Timer? _repointTimer;
+  // the registry is reached over tor on every route: tor stopped between
+  // check-ins, or still starting, is waited for (_noteTorStatus arms it)
+  bool get _torCarries =>
+      !_torHeld &&
+      (_torStatus == TorStatus.bootstrapped ||
+          _torStatus == TorStatus.publishing ||
+          _torStatus == TorStatus.reachable);
   void _maybeRepoint() {
-    if (_repointed || _myHandle == null) return;
-    if (myOnion.isEmpty || !_fcLoaded) return;
-    _repointed = true;
-    Timer(repointDelay(Random.secure()), () => unawaited(_repointHandle()));
+    if (_myHandle == null || myOnion.isEmpty || !_fcLoaded) return;
+    if (!_repoint.want(torUp: _torCarries)) return;
+    _repoint.going();
+    _repointTimer?.cancel();
+    _repointTimer = Timer(
+      repointDelay(Random.secure()),
+      () => unawaited(_repointHandle()),
+    );
   }
 
-  late final _handleRepoint = HandleRepoint(
+  // a try that got no answer goes again later, never taken as done
+  void _repointLater(String? r) {
+    final wait = _repoint.settled(r);
+    if (wait == null) return;
+    _repointTimer?.cancel();
+    _repointTimer = Timer(wait, _maybeRepoint);
+  }
+
+  @visibleForTesting
+  set handleRepointForTest(HandleRepoint r) => _handleRepoint = r;
+
+  late HandleRepoint _handleRepoint = HandleRepoint(
     invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
@@ -12601,6 +12666,11 @@ class AppState extends ChangeNotifier {
       await st.write(key: 'my_handle_bio', value: bio);
       if (invite != null) await _handleRepoint.claimed(h, invite);
     }
+    // a new handle is put to the registry as any changed invite is, the
+    // same after a restore
+    _repointTimer?.cancel();
+    _repoint.reset();
+    _maybeRepoint();
     notifyListeners();
   }
 
@@ -13269,23 +13339,53 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   set checkClockForTest(DateTime Function() c) => _checkClock = c;
 
-  Future<int> checkIn({String why = 'job'}) async {
+  // [jobAt]: when the job began, which may be a while before this runs. the
+  // job is stopped 170 s after it began (HaloPeriodicJobService), and all of
+  // this, tor's sleep too, is over by about 137 s into it (kCheck*)
+  Future<int> checkIn({String why = 'job', DateTime? jobAt}) async {
     if (_checking) return 0;
     _checking = true;
-    final started = _checkClock();
+    final now0 = _checkClock();
+    final started =
+        jobAt != null &&
+            !jobAt.isAfter(now0) &&
+            now0.difference(jobAt) <= kCheckJobOldest
+        ? jobAt
+        : now0;
+    // what is left of the job's budget until [secs] into it
+    Duration left(int secs) {
+      final l = started.add(Duration(seconds: secs)).difference(_checkClock());
+      return l.isNegative ? Duration.zero : l;
+    }
+
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     // tor asleep in the background: a check-in proper, not the app in use
     final window = wasHeld && !_inFront;
-    if (window) engine.checkInWindow(true);
+    if (window) {
+      engine.checkInWindow(
+        true,
+        ago: now0.difference(started).inSeconds.clamp(0, 600),
+      );
+    }
     var how = 'started';
     try {
-      if (!await _torWake()) {
+      // too little of the job left to wake tor and be heard: nothing starts
+      if (left(kCheckReadyBy) < kCheckWakeLeast) {
+        how = 'late';
+        return 0;
+      }
+      final woke = await _torWake().timeout(
+        left(kCheckReadyBy),
+        onTimeout: () => false,
+      );
+      if (!woke) {
         how = 'nowake';
         return 0;
       }
       // ready means the engine has a route a relay can be reached over
-      for (var i = 0; i < 75 && !torReady; i++) {
+      final readyWait = min(75, left(kCheckReadyBy).inSeconds);
+      for (var i = 0; i < readyWait && !torReady; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
       if (!torReady) {
@@ -13293,47 +13393,58 @@ class AppState extends ChangeNotifier {
         dlog('checkin($why): tor never became ready');
         return 0;
       }
-      await _listenedFirst();
-      final begunBefore = engine.catchupState().$2;
-      _needRouteUp();
-      try {
-        engine.nostrKick();
-      } catch (e) {
-        dlog('checkin: kick: $e');
-      }
-      // the relays get their time from the kick, not from a slow wake
-      final kicked = _checkClock();
-      // wait for the relays to be asked, then for every answer to be in. the
-      // engine caps each relay at catchupCap (30s), so this ends when all
-      // have finished or been given up on. the two escapes are for no relay
-      // ever getting going.
-      var quiet = 0;
-      var began = false;
+      final listenWait = left(kCheckListenedBy);
+      await _listenedFirst(
+        wait: listenWait < const Duration(seconds: 30)
+            ? listenWait
+            : const Duration(seconds: 30),
+      );
+      // too late in the job for the relays' answers: what is owed goes,
+      // and nothing counts as checked
+      final late = left(kCheckKickBy) == Duration.zero;
       var tail = '';
-      while (true) {
-        final now = _checkClock();
-        final secs = now.difference(kicked).inSeconds;
-        final (active, begun) = engine.catchupState();
-        if (begun > begunBefore) began = true;
-        if (began && active == 0) {
-          quiet++;
-          if (quiet >= 4) break;
-        } else {
-          quiet = 0;
+      if (late) {
+        tail = '_late';
+      } else {
+        final begunBefore = engine.catchupState().$2;
+        _needRouteUp();
+        try {
+          engine.nostrKick();
+        } catch (e) {
+          dlog('checkin: kick: $e');
         }
-        if (!began && secs >= 45) {
-          tail = '_norelay';
-          break;
+        // the relays get their time from the kick, not from a slow wake
+        final kicked = _checkClock();
+        // wait for the relays to be asked, then for every answer to be in.
+        // the engine caps each relay's catch-up, its dial and a socket's
+        // turn, so this ends when all have finished or been given up on. a
+        // socket waiting its turn counts as active, not as begun. the two
+        // escapes are for no relay ever getting going.
+        var quiet = 0;
+        var began = false;
+        while (true) {
+          final now = _checkClock();
+          final secs = now.difference(kicked).inSeconds;
+          final (active, begun) = engine.catchupState();
+          if (begun > begunBefore) began = true;
+          if (began && active == 0) {
+            quiet++;
+            if (quiet >= 4) break;
+          } else {
+            quiet = 0;
+          }
+          if (!began && active == 0 && secs >= 45) {
+            tail = '_norelay';
+            break;
+          }
+          // the job's budget, whatever holds catchupActive up: the line on
+          // the transport screen will say which relay
+          if (left(kCheckLoopBy) == Duration.zero) {
+            tail = '_capped';
+            break;
+          }
+          await Future.delayed(const Duration(seconds: 1));
         }
-        // relays are capped at 30s each, so this should never bite. if it
-        // ever does, something is holding catchupActive up and the line on
-        // the transport screen will say which relay. the job's three
-        // minutes bound it from the start too
-        if (secs >= 90 || now.difference(started).inSeconds >= 160) {
-          tail = '_capped';
-          break;
-        }
-        await Future.delayed(const Duration(seconds: 1));
       }
       _lastCheckRelays = _relayCatchupData();
       // no relay ever got going, most often no network: nothing was
@@ -13344,11 +13455,20 @@ class AppState extends ChangeNotifier {
         return 0;
       }
       // what came in is drained by the one-second poll. let it finish, and
-      // let receipts and slice requests that answer it get out.
-      await Future.delayed(const Duration(seconds: 3));
-      await askForMissingSlices(walked: true);
-      for (var i = 0; i < 10 && _q.n > 0 && !everydayHeld; i++) {
+      // let receipts and slice requests that answer it get out, briefly:
+      // the job's stop is near
+      await Future.delayed(const Duration(seconds: 2));
+      if (!late) {
+        await askForMissingSlices(
+          walked: true,
+        ).timeout(const Duration(seconds: 3), onTimeout: () {});
+      }
+      for (var i = 0; i < 5 && _q.n > 0 && !everydayHeld; i++) {
         await Future.delayed(const Duration(seconds: 1));
+      }
+      if (late) {
+        how = 'late';
+        return 0;
       }
       how = 'ok$tail';
       _lastCheckAt = DateTime.now().millisecondsSinceEpoch;
@@ -13361,14 +13481,26 @@ class AppState extends ChangeNotifier {
         // shown on screen only: a miss shows an older time
       }
       dlog(
-        'checkin($why): done in ${DateTime.now().difference(started).inSeconds}s',
+        'checkin($why): done in ${_checkClock().difference(started).inSeconds}s',
       );
       return _lastDrainAt != drainBefore ? 1 : 0;
     } finally {
+      // tor back to sleep and the window shut first: a job stopped during
+      // the writes below must not leave tor awake. only put it back to
+      // sleep if it was asleep: a check-in that ran while the person had
+      // the app open leaves tor alone
+      if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
+        try {
+          await _torSleep().timeout(const Duration(seconds: 6));
+        } on TimeoutException {
+          dlog('checkin: tor slow to sleep');
+        }
+      }
+      if (window) engine.checkInWindow(false);
       _checking = false;
       _lastCheckHow = jsonEncode({
         'how': how,
-        'secs': DateTime.now().difference(started).inSeconds,
+        'secs': _checkClock().difference(started).inSeconds,
         'why': why,
       });
       _lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
@@ -13380,25 +13512,21 @@ class AppState extends ChangeNotifier {
       } catch (_) {
         // shown on screen only: a miss shows an older time
       }
-      // only put it back to sleep if it was asleep: a check-in that ran
-      // while the person had the app open leaves tor alone
-      if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
-        await _torSleep();
-      }
-      if (window) engine.checkInWindow(false);
       notifyListeners();
     }
   }
 
   // [serviceUp]: the job found the listener service already running
-  Future<int> drainNow({bool serviceUp = false}) async {
+  // [jobAgo]: how long ago the job that asks began, by the job's clock
+  Future<int> drainNow({bool serviceUp = false, Duration? jobAgo}) async {
+    final jobAt = jobAgo == null ? null : _checkClock().subtract(jobAgo);
     // the job can knock before a cold boot has read the mode. wait for that,
     // or the first check-in after a kill does nothing
     for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
     if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
-      return checkIn();
+      return checkIn(jobAt: jobAt);
     }
     if (jobMayRest(
       mode: _deliveryMode,
@@ -14107,6 +14235,12 @@ class AppState extends ChangeNotifier {
     _fcCounterTimer = null;
     // a counter that does not read leaves the invite address unheard, never
     // moved or taken as 0, and is read again a while later
+    // the list of who read our pair address never holds up the listener
+    try {
+      await _loadPairSeen();
+    } catch (e) {
+      dlog('pair read: not loaded (${e.runtimeType})');
+    }
     try {
       _fcCounter = int.tryParse(await readFcCounter() ?? '') ?? 0;
     } catch (e) {
@@ -14133,10 +14267,37 @@ class AppState extends ChangeNotifier {
       _peerFcUnread = true;
       dlog('peer fc map unreadable, kept as it is: ${e.runtimeType}');
     }
+    await _sweepPeerFc();
     _fcLoaded = true;
     await _listenFirstContact();
     _maybeRepoint();
     notifyListeners();
+  }
+
+  // once: a first-contact address kept for someone who has added us back, or
+  // who came on a card, is let go. the first is spent, the second second
+  // hand, and neither may be handed on in a card
+  Future<void> _sweepPeerFc() async {
+    if (_peerFcUnread || _peerFc.isEmpty) return;
+    const st = secureStore;
+    try {
+      if (await st.read(key: 'peer_fc_swept') == '1') return;
+      final drop = <String>[];
+      for (final id in _peerFc.keys) {
+        if (isDevId(id)) continue;
+        final d = _ownerOf(id);
+        if (await d.isBackPaired(id) || await d.isVouched(id)) drop.add(id);
+      }
+      for (final id in drop) {
+        _peerFc.remove(id);
+      }
+      if (drop.isNotEmpty) {
+        await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
+      }
+      await st.write(key: 'peer_fc_swept', value: '1');
+    } catch (e) {
+      dlog('peer fc: not swept (${e.runtimeType})');
+    }
   }
 
   var _fcCounterTries = 0;
@@ -14210,6 +14371,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> forgetPeerFc(String haloId) async {
+    await _forgetPairSeen({haloId});
     if (_peerFc.remove(haloId) == null || _peerFcUnread) return;
     await secureStore.write(key: 'peer_fc', value: jsonEncode(_peerFc));
   }
@@ -14225,21 +14387,81 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // nothing is sent while the invite is the one the registry last took
+  // one claim at a time: the registry takes one a second, so two never
+  // share one
+  Future<void>? _repointRun;
+  @visibleForTesting
+  Future<void> repointForTest() => _repointHandle();
+
   Future<void> _repointHandle() async {
+    final before = _repointRun;
+    final run = _repointRun = () async {
+      if (before != null) {
+        await before;
+        await Future.delayed(repointApart);
+      }
+      await _repointHandleNow();
+    }();
+    try {
+      await run;
+    } finally {
+      if (identical(_repointRun, run)) _repointRun = null;
+    }
+  }
+
+  /// lets the registry have [h] back, in turn with any claim of it already
+  /// on its way, so that claim cannot land after the release
+  Future<String> releaseHandle(String h) async {
+    _repointTimer?.cancel();
+    final before = _repointRun;
+    var r = 'error: not sent';
+    final run = _repointRun = () async {
+      if (before != null) {
+        await before;
+        await Future.delayed(repointApart);
+      }
+      r = await engine.handleRelease(h);
+      if (r == 'ok' && _myHandle == h) await setMyHandle(null);
+    }();
+    try {
+      await run;
+    } finally {
+      if (identical(_repointRun, run)) _repointRun = null;
+    }
+    return r;
+  }
+
+  /// a wipe has begun: no repoint goes after it, whatever was armed
+  void stopRepoint() {
+    _repointTimer?.cancel();
+    _myHandle = null;
+  }
+
+  // nothing is sent while the invite is the one the registry last took
+  Future<void> _repointHandleNow() async {
+    if (haloWiping) return;
     final h = _myHandle;
-    if (h == null || myOnion.isEmpty) return;
-    // a decoy open: armed again once it is left
-    if (everydayHeld) {
-      _repointed = false;
+    if (h == null || myOnion.isEmpty) {
+      _repoint.putBack();
+      return;
+    }
+    // a decoy open, or tor gone back to sleep: armed again once it is
+    // left, or once tor is up
+    if (everydayHeld || !_torCarries) {
+      _repoint.putBack();
       return;
     }
     try {
-      final r = await _handleRepoint.repoint(h);
+      final r = await _handleRepoint.repoint(
+        h,
+        still: () => _myHandle == h && !haloWiping,
+      );
       if (r != null) _setHandleForeign(r.contains('taken'));
-    } catch (_) {
+      _repointLater(r);
+    } catch (e) {
       // offline, or the registry is down. the handle stays claimed and
-      // stale rather than lost, and the next claim fixes it.
+      // stale rather than lost, and a later try fixes it
+      _repointLater('error: ${e.runtimeType}');
     }
   }
 
@@ -14275,6 +14497,13 @@ class AppState extends ChangeNotifier {
     _fcCounter++;
     await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
     unawaited(_listenFirstContact());
+    // the new invite goes to the registry now, after any claim already on
+    // its way and a second apart from it, and again later if this one gets
+    // no answer
+    _repointTimer?.cancel();
+    _repoint
+      ..reset()
+      ..going();
     await _repointHandle();
     notifyListeners();
   }
@@ -14636,6 +14865,9 @@ class AppState extends ChangeNotifier {
       final was = await db.isBackPaired(senderHaloId);
       await db.markBackPaired(senderHaloId);
       if (!was) {
+        // their first-contact address is spent, and a card must never hand
+        // on one they may reset
+        unawaited(forgetPeerFc(senderHaloId));
         // the door just opened: rows parked for them go now, not when the
         // backoff runs out
         _outboxTries.clear();
@@ -15859,11 +16091,9 @@ class AppState extends ChangeNotifier {
     // them back as a request, as their own message would
     await db.unparkIfArchived(who);
     if (card.avatar != null) await db.setContactAvatar(who, card.avatar);
-    // the first-contact addresses are kept for the phone, so only the
-    // everyday side's go there
-    if (everyday && card.fc != null && card.fc!.isNotEmpty) {
-      await rememberPeerFc(who, card.fc!);
-    }
+    // a card's first-contact address is second hand and may be one they
+    // have reset since. they take our card too and read the pair address,
+    // so that is the way to them (pairRead)
     // a card is keys, not a session. listen for them and swap prekey bundles
     // now, so the first message either side types has a session to ride.
     if (everyday) {
@@ -16804,6 +17034,7 @@ class AppState extends ChangeNotifier {
     for (final id in ids) {
       if (_peerFc.remove(id) != null) fc = true;
     }
+    await _forgetPairSeen(ids);
     if (fc && !_peerFcUnread) {
       await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
     }
@@ -17342,6 +17573,8 @@ class AppState extends ChangeNotifier {
       _bootstrapPct = pct;
       _noteTorProgress(at);
       changed = true;
+      // a repoint waiting on tor goes once tor carries
+      if (_torCarries) _maybeRepoint();
     }
     if (fresh) _torTryingSince = torReady ? null : at;
     // relays through tor while the watch says none: the engine tried and
@@ -17571,6 +17804,47 @@ class AppState extends ChangeNotifier {
   // the support inbox and its notifications
   final SupportBell _bell;
   final Map<String, String> _xPubToHaloId = {};
+
+  // the chat on screen's address asks first after a start or a wake
+  String _firstKey = '';
+  String? _firstChat;
+  void chatFirst(String? haloId) {
+    // the dev chat's lane is its own, and nothing of it goes before it starts
+    if (haloId != null && isDevId(haloId)) haloId = null;
+    _firstChat = haloId;
+    unawaited(_tellFirst());
+  }
+
+  // the key from the contact's row, else from what is listened on. told
+  // again when the chat's key comes later (subscribePeer)
+  Future<void> _tellFirst() async {
+    final id = _firstChat;
+    var key = '';
+    if (id != null) {
+      try {
+        key = (await _reach(id))?.xpub ?? '';
+      } catch (e) {
+        dlog('first: no row (${e.runtimeType})');
+      }
+      if (key.isEmpty) {
+        for (final e in _xPubToHaloId.entries) {
+          if (e.value == id) {
+            key = e.key;
+            break;
+          }
+        }
+      }
+    }
+    // another chat opened while this read
+    if (_firstChat != id || key == _firstKey) return;
+    _firstKey = key;
+    try {
+      engine.nostrFirst(key);
+    } catch (e) {
+      dlog('first: not told (${e.runtimeType})');
+    }
+  }
+
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with
   // every peer ever seen
@@ -18216,11 +18490,13 @@ class AppState extends ChangeNotifier {
 
   // a job's kick asks the relays for what they hold on the keys listened
   // on, so those are all in first
-  Future<void> _listenedFirst() async {
+  Future<void> _listenedFirst({
+    Duration wait = const Duration(seconds: 30),
+  }) async {
     // a boot still under way arms it soon: the job can knock before that
     if (!_listenArmed && !_booting) return;
     await _listened.future.timeout(
-      const Duration(seconds: 30),
+      wait,
       onTimeout: () => dlog('listen: not done before the kick'),
     );
   }
@@ -19481,6 +19757,7 @@ class AppState extends ChangeNotifier {
     // key takes them (NameHold.free)
     dropChatDraft(haloId);
     await session.deleteConversation(haloId);
+    await _forgetPairSeen({haloId});
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
     await refreshContacts();
@@ -20407,7 +20684,7 @@ class AppState extends ChangeNotifier {
     Future<bool> one(String c) async {
       final fc = t.fc;
       if (fc != null && fc.isNotEmpty) {
-        if (await _io.firstContactSend(t.xPub, fc, c) == 'ok') return true;
+        return await _io.firstContactSend(t.xPub, fc, c) == 'ok';
       }
       return await _io.relaySend(t.xPub, c) == 'ok' && t.backPaired;
     }
@@ -20816,6 +21093,12 @@ class AppState extends ChangeNotifier {
         dlog('bundle ctl: identity mismatch for $from, dropped');
         return;
       }
+      // their frame came over the pair address: they read ours too
+      // only the everyday side's: the list is kept for the phone, and goes
+      // into everyday backups
+      if (!to.backPaired && identical(to.on, live)) {
+        unawaited(_notePairSeen(from));
+      }
       // kept on the row, where there is one: a hidden chat's card holds no
       // bundle while the vault is shut
       await to.on?.setPeerBundle(from, bundle);
@@ -20912,11 +21195,14 @@ class AppState extends ChangeNotifier {
 
   // [member]: a group's frame, which the group's own rules send.
   // [takeBack]: an unsend, which only withdraws and goes to anyone
+  // [pairOnly]: the onion and the pair address, as an opener's last try
+  // goes, and true when a copy went rather than when it was delivered
   Future<bool> _sendOneEnvelope(
     String memberId,
     String wrapped, {
     bool member = false,
     bool takeBack = false,
+    bool pairOnly = false,
   }) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
@@ -20973,33 +21259,60 @@ class AppState extends ChangeNotifier {
       final backPaired = to.backPaired;
       final xpub = to.xpub;
       final onion = to.onion;
+      final pairWay = await pairRead(memberId, backPaired: backPaired);
 
-      // back-paired: onion-only, already fast and leaks the least.
+      // the onion and a fresh pair copy at its own time, never the
+      // first-contact address beside it. true when either took it: the one
+      // caller only says whether it went
+      if (pairOnly) {
+        final rs = await Future.wait([
+          if (!backPaired && onion.isNotEmpty)
+            Future(
+              () => _io.onionSend(onion, cipher),
+            ).catchError((Object _) => 'err'),
+          Future(
+            () => _io.relaySend(xpub, cipher),
+          ).catchError((Object _) => 'err'),
+        ]);
+        if (!rs.contains('ok')) dlog('send: no copy went ($rs)');
+        return rs.contains('ok');
+      }
+
+      // back-paired: the pair address only
       if (backPaired || onion.isEmpty) {
         // no onion and not added back yet: their first-contact address is
-        // the one relay route that reaches them, as the chat's own send has
+        // the one relay route that reaches them, as the chat's own send has.
+        // the pair address is not written beside it, so no relay sees the
+        // two together. a failed one goes again from the outbox
         final fc = backPaired ? null : peerFcFor(memberId);
         if (fc != null && fc.isNotEmpty) {
           final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
           if (f == 'ok') return true;
           dlog('send: first-contact failed ($f)');
+          return false;
         }
         final n = await Future(() => _io.relaySend(xpub, cipher));
         // the pair address is a drop box they read only once they add us
-        // back. stored there is parked, not delivered.
-        if (n == 'ok') return backPaired;
+        // back, or once they took our card. stored there is parked, not
+        // delivered, until one of those
+        if (n == 'ok') return backPaired || pairWay;
         dlog('send: nostr failed ($n)');
         return false;
       }
 
-      // not back-paired: race onion and relay, so a slow or dead onion does
-      // not cost the full 15s
+      // not back-paired: race onion and one relay copy, so a slow or dead
+      // onion does not cost the full 15s. the relay copy goes to their
+      // first-contact address, or to the pair address when there is none,
+      // never to both
+      final fc = _peerFc[memberId] ?? '';
+      final viaFirst = fc.isNotEmpty;
       final done = Completer<bool>();
       var pending = 2;
       void settle(String tag, String r) {
         // a relay taking it for the pair address is not delivery here:
-        // they read that address only after adding us back
-        if (r == 'ok' && tag != 'nostr') {
+        // they read that address only after adding us back, or taking our
+        // card
+        if (r == 'ok' && (tag != 'nostr' || pairWay)) {
           if (!done.isCompleted) done.complete(true);
         } else {
           if (r != 'ok') dlog('send: $tag failed ($r)');
@@ -21012,30 +21325,137 @@ class AppState extends ChangeNotifier {
             .then((r) => settle('onion', r))
             .catchError((_) => settle('onion', 'err')),
       );
-      unawaited(
-        Future(() => _io.relaySend(xpub, cipher))
-            .then((r) => settle('nostr', r))
-            .catchError((_) => settle('nostr', 'err')),
-      );
-      final fc = _peerFc[memberId];
       dlog(
-        fc == null || fc.isEmpty
-            ? 'send: no first-contact addr for $memberId (v2 invite?)'
-            : 'send: racing onion + relay + first-contact for $memberId',
+        viaFirst
+            ? 'send: racing onion + first-contact for $memberId'
+            : 'send: no first-contact addr for $memberId (v2 invite?)',
       );
-      if (fc != null && fc.isNotEmpty) {
-        pending++;
+      if (viaFirst) {
         unawaited(
           _io
               .firstContactSend(xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
-              .catchError((_) => settle('Firstcontact', 'err')),
+              .catchError((_) => settle('firstcontact', 'err')),
+        );
+      } else {
+        unawaited(
+          Future(() => _io.relaySend(xpub, cipher))
+              .then((r) => settle('nostr', r))
+              .catchError((_) => settle('nostr', 'err')),
         );
       }
       return done.future;
     } catch (e) {
       dlog('send to $memberId failed: $e');
       return false;
+    }
+  }
+
+  /// [id] has not added us back but reads our pair address already: we came
+  /// to them on a friend's card, as they came to us, and no first-contact
+  /// address of theirs is known. that address is the way to them then
+  Future<bool> pairRead(String id, {required bool backPaired}) async =>
+      !backPaired && !_hasFc(id) && _pairSeen.contains(id);
+
+  /// [id] came on a friend's card and no first-contact address of theirs is
+  /// known: copies go to the pair address, which they read if they took our
+  /// card too. an ok there counts only once they showed it (pairRead)
+  Future<bool> pairRoute(String id, {required bool backPaired}) async {
+    if (backPaired || _hasFc(id)) return false;
+    try {
+      return await _ownerOf(id).isVouched(id);
+    } catch (e) {
+      dlog('send: vouch not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  bool _hasFc(String id) {
+    final fc = peerFcFor(id);
+    return fc != null && fc.isNotEmpty;
+  }
+
+  // people who showed they read our pair address before adding us back: a
+  // bundle frame of theirs came over it. kept for the phone, beside peer_fc
+  final Set<String> _pairSeen = <String>{};
+  // the stored list was read; until then nothing is written over it
+  bool _pairSeenRead = false;
+  // the read under way, shared by everyone who waits on it
+  Future<void>? _pairSeenLoad;
+  // let go of before the list could be read: taken out once it is
+  final Set<String> _pairForgot = <String>{};
+
+  Future<void> _loadPairSeen() async {
+    if (_pairSeenRead) return;
+    final load = _pairSeenLoad ??= _readPairSeen();
+    try {
+      await load;
+    } finally {
+      // a read that failed is tried again by the next caller
+      if (!_pairSeenRead && identical(_pairSeenLoad, load)) {
+        _pairSeenLoad = null;
+      }
+    }
+  }
+
+  Future<void> _readPairSeen() async {
+    final List<String> stored;
+    try {
+      final raw = await secureStore.read(key: 'pair_read');
+      stored = raw == null || raw.isEmpty
+          ? const []
+          : (jsonDecode(raw) as List).cast<String>();
+    } catch (e) {
+      dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
+      return;
+    }
+    // what the list should never hold, whatever an earlier process missed:
+    // someone the vault keeps, or who added us back. the read stays undone
+    // meanwhile, so every other caller waits on this one
+    final drop = <String>{...stored.where(_router.keeps)};
+    for (final id in stored) {
+      if (drop.contains(id)) continue;
+      try {
+        if (await live.isBackPaired(id)) drop.add(id);
+      } catch (e) {
+        dlog('pair read: not checked (${e.runtimeType})');
+      }
+    }
+    // and what was let go of before the read could be made
+    drop.addAll(_pairForgot);
+    _pairForgot.clear();
+    _pairSeen.addAll(stored.where((id) => !drop.contains(id)));
+    if (stored.any(drop.contains)) await _keepPairSeen();
+    _pairSeenRead = true;
+  }
+
+  Future<void> _notePairSeen(String id) async {
+    await _loadPairSeen();
+    if (!_pairSeenRead || !_pairSeen.add(id)) return;
+    await _keepPairSeen();
+  }
+
+  // added us back, deleted, or moved into the vault
+  Future<void> _forgetPairSeen(Set<String> ids) async {
+    await _loadPairSeen();
+    if (!_pairSeenRead) {
+      _pairForgot.addAll(ids);
+      return;
+    }
+    final before = _pairSeen.length;
+    _pairSeen.removeAll(ids);
+    if (_pairSeen.length == before) return;
+    await _keepPairSeen();
+  }
+
+  Future<void> _keepPairSeen() async {
+    try {
+      await secureStore.write(
+        key: 'pair_read',
+        value: jsonEncode(_pairSeen.toList()),
+      );
+    } catch (e) {
+      dlog('pair read: not kept (${e.runtimeType})');
     }
   }
 
@@ -21069,7 +21489,9 @@ class AppState extends ChangeNotifier {
       onion: (c['onion'] as String?) ?? '',
       xPub: x,
       avatar: (c['avatar'] as num?)?.toInt(),
-      fc: peerFcFor(haloId),
+      fc: await _ownerOf(haloId).isBackPaired(haloId)
+          ? null
+          : peerFcFor(haloId),
       note: note.isEmpty ? null : note,
     );
   }
@@ -22962,6 +23384,8 @@ class AppState extends ChangeNotifier {
     if (xPub == null || xPub.isEmpty) return;
     _xPubToHaloId[xPub] = haloId;
     _io.listen(xPub);
+    // the chat on screen whose key was not known when it opened
+    if (haloId == _firstChat) unawaited(_tellFirst());
   }
 
   // a backup reads the databases while no hide, show or close runs, so its
@@ -23092,7 +23516,11 @@ void main() async {
     dlog('job: drain asked');
     appState.noteJobRun();
     final args = call.arguments;
-    return appState.drainNow(serviceUp: args is Map && args['up'] == true);
+    final ago = args is Map ? args['ago'] : null;
+    return appState.drainNow(
+      serviceUp: args is Map && args['up'] == true,
+      jobAgo: ago is int ? Duration(milliseconds: ago) : null,
+    );
   });
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started

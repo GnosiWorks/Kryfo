@@ -120,7 +120,10 @@ bool waitsForReceipt({
 /// their drain runs the back-pair, and their first-contact address is the
 /// relay route that reaches them. an onion ack is only their engine
 /// holding it in memory: the relay copy goes as well, behind the ok, and
-/// [bothWent] hears when it did. [copied] is that copy, for whoever waits
+/// [bothWent] hears when it did. [copied] is that copy, for whoever waits.
+/// [pairRoute]: with no first-contact address, they came on a friend's card
+/// and the copy goes to the pair address, which they read if they took ours.
+/// [pairRead]: they showed they do, so a copy there is delivered
 Future<String> routeText({
   required bool backPaired,
   required String onion,
@@ -132,19 +135,27 @@ Future<String> routeText({
   void Function(String line)? log,
   void Function()? bothWent,
   void Function(Future<void> copy)? copied,
+  bool pairRoute = false,
+  bool pairRead = false,
 }) async {
   final first = !backPaired && fc != null && fc.isNotEmpty;
+  final pair = !backPaired && !first && (pairRoute || pairRead);
+  final pairSeen = pair && pairRead;
   String? tor;
   if (!backPaired && onion.isNotEmpty) {
     tor = await viaOnion();
     if (tor == 'ok') {
-      if (first) {
+      if (first || pair) {
         final copy = () async {
           try {
             final x = await xPub();
-            final f = x == null ? 'error: no key' : await viaFirst(x, fc);
+            final f = x == null
+                ? 'error: no key'
+                : first
+                ? await viaFirst(x, fc)
+                : await viaRelay(x);
             if (f == 'ok') {
-              bothWent?.call();
+              if (first || pairSeen) bothWent?.call();
               return;
             }
             firstFails.note('copy');
@@ -166,10 +177,13 @@ Future<String> routeText({
     final f = await viaFirst(x, fc);
     if (f == 'ok') return 'ok';
     log?.call('first-contact failed ($f)');
+    // never the pair address beside it, or a relay sees the two together.
+    // the outbox puts it out again
+    return f;
   }
   final r = await viaRelay(x);
   // the pair address is a drop box they read only once they add us back.
   // stored there is not delivered
-  if (r == 'ok' && !backPaired) return 'parked';
+  if (r == 'ok' && !backPaired && !pairSeen) return 'parked';
   return r;
 }

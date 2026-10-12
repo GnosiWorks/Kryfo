@@ -1353,6 +1353,7 @@
   "restoreMoving": "正在迁移… {progress}",
   "restoreRestoring": "正在恢复…",
   "restoreNotThisOne": "不是这个",
+  "restoreStopRestore": "停止恢复",
   "restoreDateUnknown": "日期未知",
   "restoreAnIdentity": "一个身份",
   "restoreMessagesSentOrReceived": "在那个日期之后收发的消息不在这个文件里。",

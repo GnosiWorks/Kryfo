@@ -1353,6 +1353,7 @@
   "restoreMoving": "Đang chuyển… {progress}",
   "restoreRestoring": "Đang khôi phục…",
   "restoreNotThisOne": "Không phải tệp này",
+  "restoreStopRestore": "Dừng khôi phục",
   "restoreDateUnknown": "Không rõ ngày",
   "restoreAnIdentity": "Một danh tính",
   "restoreMessagesSentOrReceived": "Tin nhắn gửi hoặc nhận sau ngày đó không có trong tệp này.",
