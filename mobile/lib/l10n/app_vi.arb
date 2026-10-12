@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Bạn có trong tìm kiếm là @{handle}",
   "handleRegistryFailed": "Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.",
   "handleStillReaching": "Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.",
+  "handleSearchNeedsTor": "Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.",
   "handleCheckClock": "Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.",
   "searchPeople": "Mọi người",
   "searchPeopleAsk": "Tìm “{query}” trong các tên người dùng công khai",

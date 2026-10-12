@@ -7378,6 +7378,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Still reaching the registry. Over Tor this can take up to a minute.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Handle search needs Tor. Add by QR or link meanwhile.';
+
+  @override
   String get handleCheckClock =>
       'Check the phone\'s date and time, then try again.';
 

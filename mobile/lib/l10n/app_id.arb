@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Kamu ada di pencarian sebagai @{handle}",
   "handleRegistryFailed": "Tidak bisa menghubungi registri. Coba lagi semenit lagi.",
   "handleStillReaching": "Masih menghubungi registri. Lewat Tor ini bisa makan waktu hingga semenit.",
+  "handleSearchNeedsTor": "Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.",
   "handleCheckClock": "Periksa tanggal dan jam di ponsel, lalu coba lagi.",
   "searchPeople": "Orang",
   "searchPeopleAsk": "Cari “{query}” di antara nama pengguna publik",

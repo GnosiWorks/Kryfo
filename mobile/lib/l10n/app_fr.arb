@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Vous êtes dans la recherche en tant que @{handle}",
   "handleRegistryFailed": "Le registre n’a pas répondu. Réessayez dans une minute.",
   "handleStillReaching": "Le registre n’a pas encore répondu. Via Tor, cela peut prendre jusqu’à une minute.",
+  "handleSearchNeedsTor": "La recherche de pseudo a besoin de Tor. En attendant, ajoutez par QR ou par lien.",
   "handleCheckClock": "Vérifiez la date et l’heure du téléphone, puis réessayez.",
   "searchPeople": "Personnes",
   "searchPeopleAsk": "Chercher « {query} » parmi les pseudos publics",

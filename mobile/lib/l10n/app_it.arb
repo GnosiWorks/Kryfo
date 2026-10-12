@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Sei nella ricerca come @{handle}",
   "handleRegistryFailed": "Il registro non ha risposto. Riprova tra un minuto.",
   "handleStillReaching": "Sto ancora raggiungendo il registro. Via Tor può volerci fino a un minuto.",
+  "handleSearchNeedsTor": "La ricerca per nome utente richiede Tor. Nel frattempo, aggiungi tramite QR o link.",
   "handleCheckClock": "Controlla data e ora del telefono, poi riprova.",
   "searchPeople": "Persone",
   "searchPeopleAsk": "Cerca «{query}» tra i nomi utente pubblici",

@@ -29,6 +29,7 @@ import '../widgets/halo_bar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/notice_banner.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
 import '../widgets/photo_viewer.dart' show PhotoTileFade;
@@ -121,12 +122,35 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _peopleBusy = false;
   List<PublicHandle> _people = const [];
   PeopleError _peopleErr = PeopleError.none;
+  // an ask past [peopleSlowAfter] says it is still on its way: over a cold
+  // circuit it can take most of a minute
+  bool _peopleSlow = false;
+  Timer? _peopleSlowTimer;
+  static const peopleSlowAfter = Duration(seconds: 10);
+  // the route as last seen: people search waits for it, never goes round
+  bool _torUp = appState.torReady;
 
   @override
   void initState() {
     super.initState();
     _ctrl.addListener(_changed);
     _focus.addListener(() => setState(() {}));
+    appState.addListener(_torMoved);
+  }
+
+  // the route back: what it could not ask before is asked again
+  void _torMoved() {
+    final up = appState.torReady;
+    if (up == _torUp || !mounted) return;
+    setState(() => _torUp = up);
+    final q = peopleQuery(_ctrl.text);
+    if (up &&
+        q != null &&
+        _peopleAsked == q &&
+        !_peopleBusy &&
+        _peopleErr != PeopleError.none) {
+      _askPeople();
+    }
   }
 
   bool _focusAsked = false;
@@ -177,8 +201,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void dispose() {
     _around?.dispose();
+    appState.removeListener(_torMoved);
     _wait?.cancel();
     _peopleWait?.cancel();
+    _peopleSlowTimer?.cancel();
     _ctrl.dispose();
     _focus.dispose();
     super.dispose();
@@ -198,14 +224,34 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _askPeople() async {
     final q = peopleQuery(_ctrl.text);
     if (q == null || (_peopleBusy && _peopleAsked == q)) return;
+    _peopleSlowTimer?.cancel();
+    // the route not up: nothing goes out, nor another way. the line says
+    // how to add someone meanwhile
+    if (!sessionQuiet && !appState.torReady) {
+      setState(() {
+        _torUp = false;
+        _peopleAsked = q;
+        _peopleBusy = false;
+        _peopleSlow = false;
+        _people = const [];
+        _peopleErr = PeopleError.offline;
+      });
+      return;
+    }
+    _peopleSlowTimer = Timer(peopleSlowAfter, () {
+      if (mounted && _peopleAsked == q) setState(() => _peopleSlow = true);
+    });
     setState(() {
       _peopleAsked = q;
       _peopleBusy = true;
+      _peopleSlow = false;
     });
     final r = await searchPeople(q, _peoplePost);
     if (!mounted || _peopleAsked != q) return;
+    _peopleSlowTimer?.cancel();
     setState(() {
       _peopleBusy = false;
+      _peopleSlow = false;
       _people = r.people;
       _peopleErr = r.error;
     });
@@ -389,10 +435,17 @@ class _SearchScreenState extends State<SearchScreen> {
             query: pq,
             asked: _peopleAsked == pq,
             busy: _peopleBusy,
+            slow: _peopleSlow,
+            torDown: !sessionQuiet && !_torUp,
             people: _people,
             error: _peopleErr,
             onAsk: _askPeople,
             onOpen: _openPerson,
+            onAdd: () {
+              HapticFeedback.selectionClick();
+              _focus.unfocus();
+              showAddContact(context);
+            },
           );
     if (ftsMatch(q) == null && _kind == SearchKind.all) {
       body = const _Intro();
@@ -1082,18 +1135,27 @@ class _People extends StatelessWidget {
   final String query;
   final bool asked;
   final bool busy;
+  // still asking past the wait a warm circuit takes
+  final bool slow;
+  // the route cannot carry it: a calm line in place of a wait or an error
+  final bool torDown;
   final List<PublicHandle> people;
   final PeopleError error;
   final VoidCallback onAsk;
   final ValueChanged<PublicHandle> onOpen;
+  // the qr and link ways in
+  final VoidCallback onAdd;
   const _People({
     required this.query,
     required this.asked,
     required this.busy,
+    this.slow = false,
+    this.torDown = false,
     required this.people,
     required this.error,
     required this.onAsk,
     required this.onOpen,
+    required this.onAdd,
   });
 
   @override
@@ -1143,11 +1205,35 @@ class _People extends StatelessWidget {
           ),
         ),
       );
+    } else if (torDown && (busy || error != PeopleError.none)) {
+      inner = Semantics(
+        key: const ValueKey('needs-tor'),
+        button: true,
+        child: NoticeBanner(
+          glyph: NoticeGlyph.link,
+          text: l10n.handleSearchNeedsTor,
+          color: HaloColors.amber,
+          onTap: onAdd,
+          margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        ),
+      );
     } else if (busy) {
-      inner = const Padding(
-        key: ValueKey('busy'),
-        padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-        child: HaloBar(value: null, height: 3),
+      inner = Padding(
+        key: ValueKey(slow ? 'slow' : 'busy'),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const HaloBar(value: null, height: 3),
+            if (slow) ...[
+              const SizedBox(height: 10),
+              Text(
+                l10n.handleStillReaching,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
+            ],
+          ],
+        ),
       );
     } else if (error != PeopleError.none || people.isEmpty) {
       inner = Padding(

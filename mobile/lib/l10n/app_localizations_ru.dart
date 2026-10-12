@@ -7525,6 +7525,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Связываемся с реестром. Через Tor это может занять до минуты.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Поиску по имени пользователя нужен Tor. Пока добавляй по QR или ссылке.';
+
+  @override
   String get handleCheckClock =>
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 

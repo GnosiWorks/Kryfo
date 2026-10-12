@@ -7515,6 +7515,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ще звертаємося до реєстру. Через Tor це може тривати до хвилини.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Пошуку за ім’ям користувача потрібен Tor. Поки що додавай за QR або посиланням.';
+
+  @override
   String get handleCheckClock =>
       'Перевір дату й час на телефоні та спробуй ще раз.';
 

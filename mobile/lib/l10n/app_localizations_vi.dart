@@ -7371,6 +7371,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.';
+
+  @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 

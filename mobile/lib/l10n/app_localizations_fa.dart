@@ -7395,6 +7395,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'هنوز در حال رسیدن به دفتر ثبت است. از طریق Tor ممکن است تا یک دقیقه طول بکشد.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'جست‌وجوی نام کاربری به Tor نیاز دارد. تا آن موقع، با QR یا پیوند اضافه کنید.';
+
+  @override
   String get handleCheckClock =>
       'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 

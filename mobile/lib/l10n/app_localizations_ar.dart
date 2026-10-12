@@ -7511,6 +7511,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'ما زال الاتصال بالسجل جاريًا. عبر Tor قد يستغرق ذلك حتى دقيقة.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
+
+  @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
 
   @override

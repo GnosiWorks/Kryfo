@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Du bist in der Suche als @{handle}",
   "handleRegistryFailed": "Das Verzeichnis war nicht erreichbar. Versuch es gleich noch mal.",
   "handleStillReaching": "Das Verzeichnis wird noch erreicht. Über Tor kann das bis zu einer Minute dauern.",
+  "handleSearchNeedsTor": "Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.",
   "handleCheckClock": "Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.",
   "searchPeople": "Personen",
   "searchPeopleAsk": "„{query}“ unter öffentlichen Benutzernamen suchen",

@@ -7406,6 +7406,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kayıt defterine hâlâ ulaşılıyor. Tor üzerinden bu bir dakikayı bulabilir.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Kullanıcı adı araması Tor gerektirir. Bu arada QR ya da bağlantıyla ekle.';
+
+  @override
   String get handleCheckClock =>
       'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 

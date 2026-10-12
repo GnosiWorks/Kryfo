@@ -9375,6 +9375,10 @@
   "@handleStillReaching": {
     "description": "handle page, while a registry call has taken more than a few seconds"
   },
+  "handleSearchNeedsTor": "Handle search needs Tor. Add by QR or link meanwhile.",
+  "@handleSearchNeedsTor": {
+    "description": "screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor"
+  },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {
     "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"

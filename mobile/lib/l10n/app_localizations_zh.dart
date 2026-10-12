@@ -7075,6 +7075,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleStillReaching => '仍在联系登记处。通过 Tor 可能需要一分钟左右。';
 
   @override
+  String get handleSearchNeedsTor => '按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -14915,6 +14918,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleStillReaching => '仍在聯絡註冊處。透過 Tor 可能需要約一分鐘。';
+
+  @override
+  String get handleSearchNeedsTor => '以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。';
 
   @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';

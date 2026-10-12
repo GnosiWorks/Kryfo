@@ -9087,6 +9087,8 @@ Future<(String, bool)> handleHaloUriAdded(
   if (h != null) {
     // a quiet session never reaches the registry
     if (sessionQuiet) return (l10n.handleRegistryFailed, false);
+    // the route not up: nothing goes to the registry, nor another way
+    if (!appState.torReady) return (l10n.handleSearchNeedsTor, false);
     // the invite has to be the claimer's own: its id is the words of the
     // key the handle was claimed with
     final r = await resolveHandle(

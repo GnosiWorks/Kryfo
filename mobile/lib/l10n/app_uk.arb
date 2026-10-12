@@ -1963,6 +1963,7 @@
   "handleSearchOn": "Ти в пошуку як @{handle}",
   "handleRegistryFailed": "Реєстр не відповів. Спробуй за хвилину.",
   "handleStillReaching": "Ще звертаємося до реєстру. Через Tor це може тривати до хвилини.",
+  "handleSearchNeedsTor": "Пошуку за ім’ям користувача потрібен Tor. Поки що додавай за QR або посиланням.",
   "handleCheckClock": "Перевір дату й час на телефоні та спробуй ще раз.",
   "searchPeople": "Люди",
   "searchPeopleAsk": "Шукати «{query}» серед публічних імен користувачів",

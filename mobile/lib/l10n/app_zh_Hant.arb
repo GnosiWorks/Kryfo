@@ -1963,6 +1963,7 @@
   "handleSearchOn": "你以 @{handle} 出現在搜尋中",
   "handleRegistryFailed": "聯絡不上註冊處。請一分鐘後再試。",
   "handleStillReaching": "仍在聯絡註冊處。透過 Tor 可能需要約一分鐘。",
+  "handleSearchNeedsTor": "以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。",
   "handleCheckClock": "請檢查手機的日期和時間，然後再試一次。",
   "searchPeople": "人",
   "searchPeopleAsk": "在公開使用者名稱中尋找「{query}」",

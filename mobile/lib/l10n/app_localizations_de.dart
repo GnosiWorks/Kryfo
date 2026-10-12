@@ -7462,6 +7462,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Verzeichnis wird noch erreicht. Über Tor kann das bis zu einer Minute dauern.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.';
+
+  @override
   String get handleCheckClock =>
       'Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.';
 

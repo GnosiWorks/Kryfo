@@ -11901,6 +11901,12 @@ abstract class AppLocalizations {
   /// **'Still reaching the registry. Over Tor this can take up to a minute.'**
   String get handleStillReaching;
 
+  /// screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor
+  ///
+  /// In en, this message translates to:
+  /// **'Handle search needs Tor. Add by QR or link meanwhile.'**
+  String get handleSearchNeedsTor;
+
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///
   /// In en, this message translates to:

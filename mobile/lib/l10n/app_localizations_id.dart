@@ -7378,6 +7378,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Masih menghubungi registri. Lewat Tor ini bisa makan waktu hingga semenit.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.';
+
+  @override
   String get handleCheckClock =>
       'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 

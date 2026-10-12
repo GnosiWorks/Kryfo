@@ -7457,6 +7457,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le registre n’a pas encore répondu. Via Tor, cela peut prendre jusqu’à une minute.';
 
   @override
+  String get handleSearchNeedsTor =>
+      'La recherche de pseudo a besoin de Tor. En attendant, ajoutez par QR ou par lien.';
+
+  @override
   String get handleCheckClock =>
       'Vérifiez la date et l’heure du téléphone, puis réessayez.';
 
