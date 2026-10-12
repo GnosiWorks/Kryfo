@@ -16047,7 +16047,9 @@ class AppState extends ChangeNotifier {
       }
       marks = marks.done(c);
       await m.putMarks(marks);
-      // its unsent words are not kept outside the vault
+      // its unsent words are not kept outside the vault, nor written back
+      // by a screen of it still open
+      c.group ? dropGroupDraft(c.id) : dropChatDraft(c.id);
       dropDraft(from.chatKey(c.id), group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       went.add(c);
@@ -21022,6 +21024,7 @@ class AppState extends ChangeNotifier {
     }
     // what it put in the shade goes with it, while its tag is still here
     await _io.unnotify('group:$groupId');
+    dropGroupDraft(groupId);
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
     // the line in the list is only for a room of the session on screen: an
@@ -21912,6 +21915,7 @@ class AppState extends ChangeNotifier {
         ? const <String>[]
         : await d.getGroupMembers(groupId);
     await _io.unnotify('group:$groupId');
+    dropGroupDraft(groupId);
     await session.clearGroupConversation(groupId);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
@@ -21931,6 +21935,7 @@ class AppState extends ChangeNotifier {
   // what it left in the shade
   Future<void> _dropGroup(String groupId, HaloDb db) async {
     await _io.unnotify('group:$groupId');
+    dropGroupDraft(groupId);
     await db.clearGroupConversation(groupId);
     await db.deleteGroup(groupId);
   }

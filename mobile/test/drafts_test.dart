@@ -10,6 +10,7 @@ import 'package:kryfo/main.dart' show HaloDb;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 class _Rows extends HaloDb {
   _Rows(this.mem, [super.container]);
@@ -114,4 +115,19 @@ void main() {
       expect(await const FlutterSecureStorage().readAll(), isEmpty);
     },
   );
+
+  test('every way a group goes, and a hide, empties an open composer', () {
+    final main = sourceOf('lib/main.dart');
+    for (final f in [
+      'Future<void> leaveGroupAndAnnounce(',
+      'Future<void> _dropGroup(',
+      'Future<void> _destroyRoomTurn(',
+    ]) {
+      expect(bodyOf(main, f), contains('dropGroupDraft(groupId);'), reason: f);
+    }
+    expect(
+      bodyOf(main, 'Future<List<ChatRef>> _hide('),
+      contains('c.group ? dropGroupDraft(c.id) : dropChatDraft(c.id);'),
+    );
+  });
 }
