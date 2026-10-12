@@ -132,7 +132,7 @@ void main() {
     }
   });
 
-  test('a lock and an unlock unlink an open copy; a switch of pin and a '
+  test('a lock and an unlock unlink a handed copy; a switch of pin and a '
       'wipe shred it', () {
     final main = sourceOf('lib/main.dart');
     final lock = bodyOf(main, 'void lockingUp(');
@@ -148,9 +148,10 @@ void main() {
         'all: from != null && from != containerFor(r, vaultKey: vaultKey)',
       ),
     );
+    // a wipe shreds them with every other plaintext (wipe_order_test)
     expect(
       bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> _erase('),
-      contains('await dropOpenCopies(all: true);'),
+      contains('entry.rename('),
     );
   });
 
@@ -178,7 +179,26 @@ void main() {
     expect(out, contains('if (!backup) JobSetup.scheduleCopySweep(this)'));
     expect(
       bodyOf(act, 'private fun shareFile('),
-      contains('if (backup) Shred.BACKUP_OUT else "share"'),
+      contains('handOut(File(path), name, Shred.shareInto(backup, quiet))'),
+    );
+    final into = bodyOf(shred, 'fun shareInto(');
+    expect(into, contains('backup -> BACKUP_OUT'));
+    expect(into, contains('quiet -> SHARE_QUIET'));
+    expect(into, contains('else -> "share"'));
+    expect(shred, contains('const val SHARE_QUIET = "share_q"'));
+    expect(
+      sourceOf('android/app/src/main/res/xml/open_paths.xml'),
+      contains('<cache-path name="share_q" path="share_q/" />'),
+    );
+    expect(
+      sourceOf('lib/open_file.dart'),
+      contains("'quiet': !backup && shareGoesWithLock(),"),
+    );
+    expect(
+      sourceOf('lib/main.dart'),
+      contains(
+        'shareGoesWithLock = () => sessionQuiet || session.vault != null;',
+      ),
     );
     expect(
       sourceOf('$kt/HaloApplication.kt'),
@@ -209,7 +229,9 @@ void main() {
       final shred = sourceOf('$kt/Shred.kt');
       expect(
         shred,
-        contains('val HANDED = listOf("open", "share", "share_plus")'),
+        contains(
+          'val HANDED = listOf("open", "share", "share_plus", SHARE_QUIET)',
+        ),
       );
       expect(shred, contains('const val GRACE_MS = 10 * 60 * 1000L'));
       expect(kShareGrace, const Duration(minutes: 10));

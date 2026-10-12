@@ -744,6 +744,46 @@ void main() {
     expect(row('burns')?['peer_id'], q.name);
   });
 
+  test('a text of theirs taken back, on screen or before it came, never '
+      'shows again on a phone started anew', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await app.subscribeKnown();
+    Future<void> takeBack(String uid) async {
+      final un = await wrapMessage(
+        '',
+        unsend: uid,
+        sender: SenderInfo(
+          haloId: p.name,
+          edPub: 'ed-${p.name}',
+          onion: '',
+          xPub: p.xpub,
+        ),
+      );
+      await app.receiveRelay([(peer: p.xpub, cipher: await _fromPeer(p, un))]);
+      await _settle();
+    }
+
+    await came(p, 'shown', 'oops');
+    expect(row('shown'), isNotNull);
+    await takeBack('shown');
+    // the take-back first, as the relays hand the newest first
+    await takeBack('early');
+    expect(row('shown'), isNull);
+    expect(await rows.goneFrom(p.name, 'shown'), isTrue);
+    expect(await rows.goneFrom(p.name, 'early'), isTrue);
+    // nothing of either held in memory any more
+    app = AppState(io: io, router: router)
+      ..myId = 'me'
+      ..sendModeForTest = 'fast';
+    await app.subscribeKnown();
+    await came(p, 'shown', 'oops');
+    await came(p, 'early', 'not meant');
+    expect(row('shown'), isNull);
+    expect(row('early'), isNull);
+  });
+
   test('a receipt that cannot be sealed while the session waits on their '
       'card waits with it, and goes once the card is here', () async {
     final p = await _peer();

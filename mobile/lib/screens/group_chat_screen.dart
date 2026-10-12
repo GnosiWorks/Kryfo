@@ -189,6 +189,15 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// a group's unsent words go with it, from an open composer too: its screen
+/// closing would write them back
+void dropGroupDraft(String id) {
+  for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
+    if (s.mounted) s._msgCtrl.clear();
+  }
+  draftPerGroup.remove(session.chatKey(id));
+}
+
 /// pops [nav] back to [groupId]'s open screen. false when it is not open
 /// there
 bool backToOpenGroup(NavigatorState nav, String groupId) =>

@@ -5,7 +5,7 @@
 // holds over them if they are added again. the move's own sql, run on real
 // sqlite with the vault attached; with no sqlite the tests are skipped
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show HaloDb, blockTables;
+import 'package:kryfo/main.dart' show HaloDb, blockTables, goneKey;
 import 'package:kryfo/vault_life.dart';
 
 import 'sqlite_ffi.dart';
@@ -56,6 +56,8 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
     'CREATE TABLE $s.notif_tags (chat TEXT PRIMARY KEY, tag TEXT NOT NULL '
         'UNIQUE)',
+    'CREATE TABLE $s.gone_in (msg_uid TEXT, peer_id TEXT, at INTEGER, '
+        'PRIMARY KEY (msg_uid, peer_id))',
     'CREATE TABLE $s.group_resent (group_id TEXT, member TEXT, since '
         'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
   ]) {
@@ -166,6 +168,32 @@ void main() {
     ];
     expect(await ids('v'), ['in-group']);
     expect(await ids('main'), ['her-own']);
+  }, skip: skip);
+
+  test('what came in from a hidden group and went goes with it, its '
+      'members\' own and another group\'s stay', () async {
+    final db = await _world();
+    for (final (uid, key) in [
+      ('in-group', goneKey(_f, group: _g)),
+      ('from-him', goneKey(_m, group: _g)),
+      ('her-own', goneKey(_f)),
+      ('elsewhere', goneKey(_f, group: '${_g}x')),
+    ]) {
+      await db.execute(
+        'INSERT INTO main.gone_in (msg_uid, peer_id, at) VALUES (?, ?, 1)',
+        [uid, key],
+      );
+    }
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    Future<List<Object?>> uids(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT msg_uid FROM $s.gone_in ORDER BY msg_uid',
+      ))
+        r['msg_uid'],
+    ];
+    expect(await uids('v'), ['from-him', 'in-group']);
+    expect(await uids('main'), ['elsewhere', 'her-own']);
   }, skip: skip);
 
   test('and back out again, the same the other way', () async {

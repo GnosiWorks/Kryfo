@@ -83,6 +83,7 @@ void main() {
     restartHolds.clear();
     draftPerPeer.clear();
     draftPerGroup.clear();
+    everydayChats = () async => (people: {'alice'}, groups: <String>{});
   });
 
   group('when', () {

@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/drafts.dart' show draftPerGroup;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
@@ -481,6 +482,23 @@ void main() {
   });
 
   group('group chat', () {
+    testWidgets('a group that goes takes its unsent words, also from a '
+        'screen of it still open', (t) async {
+      _use(t, _Db(members: ['me', _anna]));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.enterText(find.byType(TextField), 'see you at nine');
+      await t.pump();
+      final key = HaloContainer.everyday.chatKey(_group);
+      expect(draftPerGroup[key], 'see you at nine');
+      dropGroupDraft(_group);
+      await t.pump();
+      expect(draftPerGroup.containsKey(key), isFalse);
+      // the screen closing does not write them back
+      await _close(t);
+      expect(draftPerGroup.containsKey(key), isFalse);
+    });
+
     for (final room in [true, false]) {
       testWidgets(
         room

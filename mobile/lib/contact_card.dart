@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'open_file.dart' show shareFileOut;
+import 'shred.dart' show shredFile;
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
@@ -147,15 +148,10 @@ Future<void> shareContactCard({
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes == null) throw Exception('could not encode the card');
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/kryfo-$haloId.png');
-    await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-
-    await lockState.hold(
-      () => shareFileOut(
-        file.path,
-        text: l10n.contactCardMessageMeOnKryfo(haloId),
-      ),
+    await _handOutCard(
+      'kryfo-$haloId.png',
+      (f) => f.writeAsBytes(bytes.buffer.asUint8List(), flush: true),
+      text: l10n.contactCardMessageMeOnKryfo(haloId),
     );
   } finally {
     overlay.remove();
@@ -175,8 +171,39 @@ Future<void> shareContactVcf({
       'NOTE:message me on Kryfo: $uri\r\n'
       'URL:$uri\r\n'
       'END:VCARD\r\n';
+  await _handOutCard(
+    'kryfo-$haloId.vcf',
+    (f) => f.writeAsString(vcf, flush: true),
+  );
+}
+
+// a card goes out as any shared file does: a copy the share rules keep and
+// shred, a decoy's or a hidden chat's with the lock. the one written here,
+// under a name that says nothing, is shredded once it is handed over
+Future<void> _handOutCard(
+  String name,
+  Future<void> Function(File f) write, {
+  String? text,
+}) async {
   final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/kryfo-$haloId.vcf');
-  await file.writeAsString(vcf, flush: true);
-  await lockState.hold(() => shareFileOut(file.path));
+  final file = File(
+    '${dir.path}/card_${DateTime.now().microsecondsSinceEpoch}',
+  );
+  try {
+    await write(file);
+    await lockState.hold(() => shareFileOut(file.path, name: name, text: text));
+  } finally {
+    await shredFile(file.path);
+  }
+}
+
+/// cards an older version left in the cache, named after the identity
+Future<void> sweepCardLeftovers(Directory cache) async {
+  if (!await cache.exists()) return;
+  await for (final e in cache.list(followLinks: false)) {
+    final n = e.uri.pathSegments.last;
+    if (e is File && RegExp(r'^(kryfo-.+\.(png|vcf)|card_\d+)$').hasMatch(n)) {
+      await shredFile(e.path);
+    }
+  }
 }
