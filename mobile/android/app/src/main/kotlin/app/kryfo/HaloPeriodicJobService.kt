@@ -18,12 +18,11 @@ import io.flutter.plugin.common.MethodChannel
 // relay socket, drains what arrives, and reports back. then the job ends.
 class HaloPeriodicJobService : JobService() {
     private val main = Handler(Looper.getMainLooper())
-    private var done = false
+    // the same instance serves every firing in a warm process, the
+    // come-back job's beside the periodic one's: each run has its own end
+    private val runs = JobRuns()
 
     override fun onStartJob(params: JobParameters?): Boolean {
-        // the same service instance serves every firing in a warm process,
-        // so this has to be reset here or the second run never finishes
-        done = false
         // wiped: this job outlived the data it was for. end it for good
         // instead of booting a fresh identity nobody asked for.
         if (!KryfoState.hasData(this)) {
@@ -52,18 +51,13 @@ class HaloPeriodicJobService : JobService() {
             Log.i("halo-engine", "periodic job: no engine")
             return false
         }
-        val finish = Runnable {
-            if (!done) {
-                done = true
-                jobFinished(params, false)
-            }
-        }
-        // a hard stop so a wedged drain cannot hold the job open. a check-in
-        // has to bring tor up, fetch and take it down again inside its one
-        // window, so it gets longer than a knock on sockets that are already
-        // there. android allows a job ten minutes.
-        main.postDelayed(finish, if (staysOn) 60_000 else 170_000)
-        ask(engine, params, finish, if (staysOn) 0 else 15, up)
+        val run = runs.start(params?.jobId ?: 0) { jobFinished(params, false) }
+        // a hard stop of its own, so a wedged drain cannot hold the job
+        // open. a check-in has to bring tor up, fetch and take it down again
+        // inside its one window, so it gets longer than a knock on sockets
+        // that are already there. android allows a job ten minutes.
+        main.postDelayed(run.finish, if (staysOn) 60_000 else 170_000)
+        ask(engine, run, if (staysOn) 0 else 15, up)
         return true
     }
 
@@ -74,11 +68,11 @@ class HaloPeriodicJobService : JobService() {
     // listening all along, there is nothing for the job to do
     private fun ask(
         engine: io.flutter.embedding.engine.FlutterEngine,
-        params: JobParameters?,
-        finish: Runnable,
+        run: JobRuns.Run,
         retries: Int,
         up: Boolean
     ) {
+        val finish = run.finish
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
                 .invokeMethod("drain", mapOf("up" to up), object : MethodChannel.Result {
@@ -93,8 +87,8 @@ class HaloPeriodicJobService : JobService() {
                         finish.run()
                     }
                     override fun notImplemented() {
-                        if (retries > 0 && !done) {
-                            main.postDelayed({ ask(engine, params, finish, retries - 1, up) }, 2_000)
+                        if (retries > 0 && !run.finished) {
+                            main.postDelayed({ ask(engine, run, retries - 1, up) }, 2_000)
                             return
                         }
                         Log.i("halo-engine", "periodic job: dart not listening yet")
@@ -109,8 +103,9 @@ class HaloPeriodicJobService : JobService() {
         }
     }
 
+    // only the run of the job android stopped
     override fun onStopJob(params: JobParameters?): Boolean {
-        done = true
+        runs.stop(params?.jobId ?: 0)?.let { main.removeCallbacks(it.finish) }
         return true
     }
 }
