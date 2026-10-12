@@ -10,7 +10,7 @@ import (
 )
 
 // puts bridge lines in place with no mode, as the tests set them up
-func setLines(raw string, on bool) string {
+func setBridgeLines(raw string, on bool) string {
 	good, bad, checks := sortBridgeLines(raw)
 	lineChecksMu.Lock()
 	lineChecks = checks

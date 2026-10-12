@@ -280,7 +280,7 @@ func TestSnowflakeBrokerMustBeHTTPS(t *testing.T) {
 func TestBridgeCacheKeepsOnlyLinesInUse(t *testing.T) {
 	resetBuiltinState(t)
 	defer decoyState.Store(decoyUnknown)
-	defer setLines("", false)
+	defer setBridgeLines("", false)
 	settings, err := readMoatSettings(fixture(t, "settings-ir"), 200)
 	if err != nil {
 		t.Fatal(err)
@@ -300,7 +300,7 @@ func TestBridgeCacheKeepsOnlyLinesInUse(t *testing.T) {
 	}
 	// the old call waits for the decoy to be known closed
 	setDecoy(false)
-	setLines(obfs[0], true)
+	setBridgeLines(obfs[0], true)
 
 	setDecoy(true)
 	if r := reply(t, bridgeCacheJSON()); r["error"] != "decoy" {

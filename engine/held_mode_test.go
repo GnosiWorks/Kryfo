@@ -441,9 +441,9 @@ func TestNewModeEndsAutomaticsDirectStep(t *testing.T) {
 func TestLegacyNewLinesAreNotApplied(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
-	setLines("", false)
+	setBridgeLines("", false)
 	noteLinesApplied(linesGen.Load())
-	setLines(tbObfs4, true)
+	setBridgeLines(tbObfs4, true)
 	if bridgesApplied() {
 		t.Fatal("new lines look applied")
 	}

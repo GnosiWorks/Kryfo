@@ -406,7 +406,7 @@ func TestBridgeFailsResetAndFade(t *testing.T) {
 	if !bridgeIsDead(key) {
 		t.Fatal("four failures in a row did not count")
 	}
-	setLines(tbObfs4, true)
+	setBridgeLines(tbObfs4, true)
 	if bridgeIsDead(key) {
 		t.Fatal("new lines kept the old failures")
 	}
