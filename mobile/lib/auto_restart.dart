@@ -118,8 +118,9 @@ AutoStep autoStepAt(
 }
 
 /// what the engine answers while tor waits on purpose: asleep, replaced by
-/// another, turned away by a guard, no network, no mode or bridges yet, or
-/// automatic finding its way in, which on a blocked network takes long.
+/// another, turned away by a guard, no network, bridges not taken yet, or
+/// automatic finding its way in, which on a blocked network takes long. no
+/// mode yet is no wait: only a new process hands the kept mode over again.
 /// [passRuns]: automatic is trying, and starts the listeners again itself
 bool torWaitsWith(String r, {bool passRuns = false}) {
   if (const {
@@ -131,7 +132,6 @@ bool torWaitsWith(String r, {bool passRuns = false}) {
     'error: no network',
     'error: automatic is connecting',
     'error: automatic has no way in yet',
-    'error: no bridge mode yet',
     'error: bridges not applied',
   }.contains(r)) {
     return true;
