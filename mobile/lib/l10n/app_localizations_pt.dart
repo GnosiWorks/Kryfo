@@ -1047,6 +1047,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'Quando o arquivo estiver pronto, você vai escolher onde salvá-lo.';
+
+  @override
   String get backupCreating => 'Criando…';
 
   @override

@@ -251,6 +251,7 @@
   "backupPassphrase": "密碼短語",
   "backupConfirmPassphrase": "確認密碼短語",
   "backupWriting": "寫入中… {progress}",
+  "backupSaveComesAfter": "檔案準備好後，你再選擇儲存位置。",
   "backupCreating": "建立中…",
   "backupMakeTheFileAnd": "建立檔案並搬移",
   "backupCreateBackup": "建立備份",

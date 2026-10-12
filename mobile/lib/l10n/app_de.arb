@@ -251,6 +251,7 @@
   "backupPassphrase": "Passphrase",
   "backupConfirmPassphrase": "Passphrase bestätigen",
   "backupWriting": "Schreibe… {progress}",
+  "backupSaveComesAfter": "Wenn die Datei fertig ist, wählst du, wo du sie speicherst.",
   "backupCreating": "Erstelle…",
   "backupMakeTheFileAnd": "Datei erstellen und umziehen",
   "backupCreateBackup": "Backup erstellen",

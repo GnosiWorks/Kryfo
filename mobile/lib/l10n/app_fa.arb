@@ -251,6 +251,7 @@
   "backupPassphrase": "عبارت عبور",
   "backupConfirmPassphrase": "تکرار عبارت عبور",
   "backupWriting": "در حال نوشتن… ⁨{progress}⁩",
+  "backupSaveComesAfter": "وقتی فایل آماده شد، انتخاب می‌کنید کجا ذخیره‌اش کنید.",
   "backupCreating": "در حال ساختن…",
   "backupMakeTheFileAnd": "ساختن فایل و انتقال",
   "backupCreateBackup": "ساختن نسخه‌ی پشتیبان",

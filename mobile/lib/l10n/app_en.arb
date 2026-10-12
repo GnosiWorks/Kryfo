@@ -1303,6 +1303,10 @@
       }
     }
   },
+  "backupSaveComesAfter": "When it's ready, you'll choose where to save it.",
+  "@backupSaveComesAfter": {
+    "description": "screens/backup_screen.dart. under the progress while the backup file is written: the system save dialog opens only once it is done"
+  },
   "backupCreating": "Creating…",
   "@backupCreating": {
     "description": "screens/backup_screen.dart"

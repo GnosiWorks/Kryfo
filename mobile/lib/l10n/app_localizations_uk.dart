@@ -1067,6 +1067,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'Коли файл буде готовий, ти обереш, куди його зберегти.';
+
+  @override
   String get backupCreating => 'Створення…';
 
   @override

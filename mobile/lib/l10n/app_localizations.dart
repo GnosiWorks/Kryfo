@@ -1629,6 +1629,12 @@ abstract class AppLocalizations {
   /// **'Writing… {progress}'**
   String backupWriting(Object progress);
 
+  /// screens/backup_screen.dart. under the progress while the backup file is written: the system save dialog opens only once it is done
+  ///
+  /// In en, this message translates to:
+  /// **'When it\'s ready, you\'ll choose where to save it.'**
+  String get backupSaveComesAfter;
+
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:

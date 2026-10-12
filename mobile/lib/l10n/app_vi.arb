@@ -251,6 +251,7 @@
   "backupPassphrase": "Cụm mật khẩu",
   "backupConfirmPassphrase": "Xác nhận cụm mật khẩu",
   "backupWriting": "Đang ghi… {progress}",
+  "backupSaveComesAfter": "Khi tệp đã sẵn sàng, bạn sẽ chọn nơi lưu tệp.",
   "backupCreating": "Đang tạo…",
   "backupMakeTheFileAnd": "Tạo tệp và chuyển đi",
   "backupCreateBackup": "Tạo bản sao lưu",

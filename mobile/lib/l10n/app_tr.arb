@@ -251,6 +251,7 @@
   "backupPassphrase": "Parola ifadesi",
   "backupConfirmPassphrase": "Parola ifadesini doğrula",
   "backupWriting": "Yazılıyor… {progress}",
+  "backupSaveComesAfter": "Dosya hazır olduğunda nereye kaydedeceğini seçeceksin.",
   "backupCreating": "Oluşturuluyor…",
   "backupMakeTheFileAnd": "Dosyayı oluştur ve taşı",
   "backupCreateBackup": "Yedek oluştur",

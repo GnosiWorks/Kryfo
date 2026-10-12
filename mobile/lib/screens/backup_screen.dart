@@ -29,7 +29,8 @@ import '../dlog.dart';
 
 // a test's backup, in place of the engine's
 @visibleForTesting
-Future<void> Function(String path)? backupForTest;
+Future<void> Function(String path, void Function(int done, int total) progress)?
+backupForTest;
 
 class BackupScreen extends StatefulWidget {
   // from the hidden chats setup: a copy to keep that holds the chats just
@@ -65,6 +66,8 @@ class _BackupScreenState extends State<BackupScreen> {
   // that retires this phone once the file is made
   bool _move = false;
   double _progress = 0;
+  // the file is being written. the save dialog only opens after
+  bool _writing = false;
   // both fields show what was typed, or neither
   bool _shown = false;
 
@@ -82,6 +85,7 @@ class _BackupScreenState extends State<BackupScreen> {
     setState(() {
       _error = null;
       _busy = true;
+      _writing = true;
     });
     // where it began: a lock that takes the screen away is told by a new
     // navigator
@@ -101,19 +105,22 @@ class _BackupScreenState extends State<BackupScreen> {
       final name = 'kryfo-backup-$ts.kryfo';
       final path = p.join(tempDir.path, name);
       final move = _move && !widget.withHiddenChats;
+      void onProgress(int a, int b) {
+        if (mounted && b > 0) setState(() => _progress = a / b);
+      }
+
       if (backupForTest case final make?) {
-        await make(path);
+        await make(path, onProgress);
       } else {
         await createBackupFile(
           pw,
           path,
           move: move,
           withHiddenChats: widget.withHiddenChats,
-          onProgress: (a, b) {
-            if (mounted && b > 0) setState(() => _progress = a / b);
-          },
+          onProgress: onProgress,
         );
       }
+      if (mounted) setState(() => _writing = false);
       var out = (tried: false, handed: false);
       try {
         out = await _handOver(path, name);
@@ -140,6 +147,7 @@ class _BackupScreenState extends State<BackupScreen> {
         setState(() {
           _error = backupFailLine(e);
           _busy = false;
+          _writing = false;
         });
       }
     }
@@ -281,6 +289,33 @@ class _BackupScreenState extends State<BackupScreen> {
                       padding: const EdgeInsets.only(top: 12),
                       child: HaloBar(value: _progress, height: 3),
                     ),
+            ),
+            // the folder stays empty until the file is done and saved
+            EaseSize(
+              child: RiseSwap(
+                alignment: Alignment.topCenter,
+                child: !_writing || _progress <= 0
+                    ? const SizedBox(
+                        key: ValueKey(false),
+                        width: double.infinity,
+                      )
+                    : Padding(
+                        key: const ValueKey(true),
+                        padding: const EdgeInsets.only(top: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Text(
+                            l10n.backupSaveComesAfter,
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              color: HaloColors.text2,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
             ),
             const SizedBox(height: 8),
           ]),

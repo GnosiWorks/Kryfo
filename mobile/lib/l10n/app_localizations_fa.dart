@@ -1041,6 +1041,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'وقتی فایل آماده شد، انتخاب می‌کنید کجا ذخیره‌اش کنید.';
+
+  @override
   String get backupCreating => 'در حال ساختن…';
 
   @override

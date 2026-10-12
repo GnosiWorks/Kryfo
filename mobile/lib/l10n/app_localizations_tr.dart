@@ -1044,6 +1044,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'Dosya hazır olduğunda nereye kaydedeceğini seçeceksin.';
+
+  @override
   String get backupCreating => 'Oluşturuluyor…';
 
   @override
