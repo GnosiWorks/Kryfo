@@ -2,6 +2,6 @@ Yeni: Tor engellendiğinde devreye giren köprüler, sohbet başına daha anlaş
 
 Düzeltildi: yeni birine giden ilk mesajların kaybolması, bir ağ değişikliğinden sonra Tor’un takılması ve bazı yeni telefonlarda açılışta çökme.
 
-Parmak izi mi kullanıyorsun? Güncellemeden sonra PIN’ini bir kez gir.
+Güncellemeden sonra, parmak iziyle kilit açma yeniden çalışmadan önce PIN’ini bir kez girmen gerekebilir.
 
 Her yerde kararlılık ve gizlilik iyileştirmeleri. Fırsat bulunca güncelle.

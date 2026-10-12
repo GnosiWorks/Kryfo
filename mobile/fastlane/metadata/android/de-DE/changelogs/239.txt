@@ -2,6 +2,6 @@ Neu: Brücken, die einspringen, wenn Tor blockiert ist, klarere Stimmverfremdung
 
 Behoben: verlorene erste Nachrichten an neue Kontakte, ein hängendes Tor nach einem Netzwechsel und ein Absturz beim Start auf einigen neueren Handys.
 
-Mit Fingerabdruck? Gib nach dem Update einmal deine PIN ein.
+Nach dem Update musst du eventuell einmal deine PIN eingeben, bevor das Entsperren mit Fingerabdruck wieder geht.
 
 Mehr Stabilität und Privatsphäre überall. Aktualisiere, wenn du kannst.

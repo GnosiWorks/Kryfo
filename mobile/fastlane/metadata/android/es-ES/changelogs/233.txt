@@ -2,6 +2,6 @@ Nuevo: puentes que se activan cuando Tor está bloqueado, una voz disfrazada má
 
 Corregido: primeros mensajes perdidos a alguien nuevo, Tor atascado tras un cambio de red y un cierre al abrir en algunos móviles recientes.
 
-¿Usas tu huella? Escribe tu PIN una vez después de actualizar.
+Después de actualizar, puede que tengas que escribir tu PIN una vez antes de que el desbloqueo con huella vuelva a funcionar.
 
 Mejoras de estabilidad y privacidad en toda la app. Actualiza cuando puedas.

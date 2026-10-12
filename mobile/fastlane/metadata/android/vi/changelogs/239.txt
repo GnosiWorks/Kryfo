@@ -2,6 +2,6 @@ Mới: cầu nối tự hoạt động khi Tor bị chặn, đổi giọng rõ h
 
 Đã sửa: tin nhắn đầu tiên gửi cho người mới có thể bị mất, Tor có thể bị kẹt sau khi đổi mạng, và ứng dụng bị văng khi mở trên một số điện thoại mới.
 
-Dùng vân tay? Hãy nhập mã PIN một lần sau khi cập nhật.
+Sau khi cập nhật, có thể bạn cần nhập mã PIN một lần trước khi mở khóa bằng vân tay hoạt động trở lại.
 
 Cải thiện độ ổn định và quyền riêng tư ở khắp nơi. Hãy cập nhật khi có thể.

@@ -2,6 +2,6 @@ Novo: pontes que entram em ação quando o Tor está bloqueado, disfarce de voz 
 
 Corrigido: primeiras mensagens perdidas para alguém novo, Tor travado depois de uma troca de rede e o app fechando ao abrir em alguns celulares novos.
 
-Usa a digital? Digite seu PIN uma vez depois de atualizar.
+Depois de atualizar, talvez você precise digitar seu PIN uma vez antes que o desbloqueio com a digital volte a funcionar.
 
 Mais estabilidade e privacidade em todo o app. Atualize quando puder.

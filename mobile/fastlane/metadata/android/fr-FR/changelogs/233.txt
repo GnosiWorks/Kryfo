@@ -2,6 +2,6 @@ Nouveau : des ponts automatiques quand Tor est bloqué, une voix déguisée plus
 
 Corrigé : premiers messages perdus vers un nouveau contact, Tor coincé après un changement de réseau et plantage au lancement sur des téléphones récents.
 
-Empreinte digitale ? Saisissez votre PIN une fois après la mise à jour.
+Après la mise à jour, vous devrez peut-être saisir votre PIN une fois avant que le déverrouillage par empreinte fonctionne à nouveau.
 
 Plus de stabilité et de confidentialité. Mettez à jour dès que possible.

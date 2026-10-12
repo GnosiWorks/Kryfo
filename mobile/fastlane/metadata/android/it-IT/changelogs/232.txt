@@ -2,6 +2,6 @@ Novità: bridge che entrano in azione quando Tor è bloccato, una voce camuffata
 
 Corretto: primi messaggi persi verso chi è appena stato aggiunto, Tor bloccato dopo un cambio di rete e un crash all'avvio su alcuni telefoni recenti.
 
-Usi l'impronta? Digita il PIN una volta dopo l'aggiornamento.
+Dopo l'aggiornamento potresti dover digitare il PIN una volta prima che lo sblocco con l'impronta torni a funzionare.
 
 Miglioramenti a stabilità e privacy ovunque. Aggiorna appena puoi.

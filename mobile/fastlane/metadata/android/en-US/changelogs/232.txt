@@ -2,6 +2,6 @@ New: bridges that step in when Tor is blocked, a clearer voice disguise per chat
 
 Fixed: lost first messages to someone new, Tor stuck after a network change, and a crash at launch on some newer phones.
 
-Using a fingerprint? Type your PIN once after updating.
+After updating, you may need to type your PIN once before fingerprint unlock works again.
 
 Stability and privacy improvements throughout. Update when you can.

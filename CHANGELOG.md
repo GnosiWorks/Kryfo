@@ -29,7 +29,7 @@
 - Kryfo uses the whole screen on newer android, and sheets stay clear of the navigation bar and the keyboard.
 - the language choice is the first thing you see when you set up Kryfo.
 - in arabic and persian, pair codes take your own digits, and replies and bios follow the direction they're written in.
-- if you unlock with your fingerprint, Kryfo asks for your pin once after updating.
+- After updating, you may need to type your PIN once before fingerprint unlock works again.
 
 ### Fixed
 - a rare case where the first messages to someone you had just added never arrived. Kryfo now sends them again until they do.
