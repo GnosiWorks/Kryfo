@@ -18214,13 +18214,17 @@ class AppState extends ChangeNotifier {
     // to trip the anr watchdog on weak phones.
     await Future.delayed(const Duration(milliseconds: 16));
     dlog('LAUNCH boot after yield');
-    // a decoy left open by the run before: held until a pin says otherwise
-    final quiet = await quietNow();
-    if (!_pinOpened) _quietMarked = quiet;
     unawaited(_openContainers());
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await live.loadIdentity();
     dlog('LAUNCH identity loaded');
+    // a decoy left open by the run before: held until a pin says otherwise.
+    // read once the store has answered for the database key
+    final quiet = await quietNow().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => true,
+    );
+    if (!_pinOpened) _quietMarked = quiet;
     // the hidden chats' list, before anything can arrive: without it an
     // arrival for one would land in the everyday container
     await _router.load();

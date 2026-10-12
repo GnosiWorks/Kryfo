@@ -141,7 +141,7 @@ void main() {
       lock,
       contains('_lockedIn = (_session.vault ?? _session.primary).container;'),
     );
-    final unlock = bodyOf(main, 'Future<void> sessionFor(');
+    final unlock = bodyOf(main, 'Future<void> _sessionFor(');
     expect(
       unlock,
       contains(
