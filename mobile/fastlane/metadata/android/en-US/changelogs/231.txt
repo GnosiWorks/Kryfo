@@ -1,5 +1,7 @@
-New: bridges that step in by themselves when Tor is blocked, a voice disguise you set per chat, a wave to say hi after adding someone, sharing text and links to Kryfo, private GIF search, and notes grouped by day.
+New: bridges that step in when Tor is blocked, a clearer voice disguise per chat, a wave to say hi, sharing from other apps, and private GIF search.
 
-Fixed: first messages to someone new could go missing, Tor could get stuck after a network change, and a crash at launch on some newer phones.
+Fixed: lost first messages to someone new, Tor stuck after a network change, and a crash at launch on some newer phones.
+
+Using a fingerprint? Type your PIN once after updating.
 
 Stability and privacy improvements throughout. Update when you can.

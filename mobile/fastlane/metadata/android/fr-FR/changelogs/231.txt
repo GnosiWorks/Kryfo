@@ -1,5 +1,7 @@
-Nouveau : des ponts qui prennent le relais seuls quand Tor est bloqué, une voix déguisée par discussion, un coucou après l’ajout d’un contact, le partage de textes et liens vers Kryfo, une recherche de GIF privée et des notes groupées par jour.
+Nouveau : des ponts automatiques quand Tor est bloqué, une voix déguisée plus claire par discussion, un petit coucou, le partage depuis d’autres apps et une recherche de GIF privée.
 
-Corrigé : des premiers messages perdus vers un nouveau contact, Tor coincé après un changement de réseau, et un plantage au lancement sur des téléphones récents.
+Corrigé : premiers messages perdus vers un nouveau contact, Tor coincé après un changement de réseau et plantage au lancement sur des téléphones récents.
 
-Plus de stabilité et de confidentialité partout. Mettez à jour dès que possible.
+Empreinte digitale ? Saisissez votre PIN une fois après la mise à jour.
+
+Plus de stabilité et de confidentialité. Mettez à jour dès que possible.

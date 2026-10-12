@@ -1,5 +1,7 @@
-Novità: bridge che entrano in azione da soli quando Tor è bloccato, una voce camuffata per chat, un saluto con la mano dopo aver aggiunto qualcuno, condivisione di testo e link verso Kryfo, ricerca GIF privata e note raggruppate per giorno.
+Novità: bridge che entrano in azione quando Tor è bloccato, una voce camuffata più chiara per chat, un saluto con la mano, condivisione da altre app e ricerca GIF privata.
 
-Corretto: i primi messaggi a qualcuno appena aggiunto potevano andare persi, Tor poteva incepparsi dopo un cambio di rete, e l'app si chiudeva all'avvio su alcuni telefoni recenti.
+Corretto: primi messaggi persi verso chi è appena stato aggiunto, Tor bloccato dopo un cambio di rete e un crash all'avvio su alcuni telefoni recenti.
+
+Usi l'impronta? Digita il PIN una volta dopo l'aggiornamento.
 
 Miglioramenti a stabilità e privacy ovunque. Aggiorna appena puoi.
