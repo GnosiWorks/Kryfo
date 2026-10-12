@@ -38,7 +38,10 @@ void main() {
 
   test('a resume leaves a running service alone', () {
     final resume = _body(_code('MainActivity.kt'), 'override fun onResume');
-    final start = RegExp(r'^\s*(.*)startListenerService\(', multiLine: true);
+    final start = RegExp(
+      r'^\s*(.*)(startListenerService|resumeListener)\(',
+      multiLine: true,
+    );
     final calls = start.allMatches(resume).toList();
     expect(calls, isNotEmpty);
     for (final c in calls) {

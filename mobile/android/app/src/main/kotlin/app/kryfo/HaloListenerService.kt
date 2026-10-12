@@ -7,9 +7,12 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class HaloListenerService : Service() {
@@ -26,19 +29,25 @@ class HaloListenerService : Service() {
         // set on a foreground start, which has a deadline to meet
         const val EXTRA_FRONT = "front"
 
+        // when start() last ran, for the timing line of a debug build
+        @Volatile
+        private var askedAt = 0L
+
         // a plain start has no deadline. android allows one for a service
-        // that is already up, or while a screen of the app is in front.
+        // that is already up, while a screen of the app is in front, and
+        // inside the allowlist window of a boot or update broadcast.
         // throws what android throws when it refuses
         fun start(
             context: Context,
-            inFront: Boolean = QuietRestart.onScreen(QuietRestart.importance())
+            plainFirst: Boolean = QuietRestart.onScreen(QuietRestart.importance())
         ) {
+            askedAt = SystemClock.elapsedRealtime()
             val intent = Intent(context, HaloListenerService::class.java)
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 context.startService(intent)
                 return
             }
-            if (running || inFront) {
+            if (running || plainFirst) {
                 try {
                     context.startService(intent)
                     return
@@ -75,6 +84,10 @@ class HaloListenerService : Service() {
     // what the notification says now, and the words it was built from
     private var note: Notification? = null
     private var noteWords: List<String>? = null
+
+    // startForeground went through. a second call re-checks the background
+    // rules on android 14+, so a service in front only updates its words
+    private var inFront = false
 
     private fun words(): List<String> {
         val words = AppLocale.context(this)
@@ -120,23 +133,39 @@ class HaloListenerService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
+        inFront = true
+    }
+
+    private fun reword(notification: Notification) {
+        getSystemService(NotificationManager::class.java)
+            ?.notify(NOTIFICATION_ID, notification)
     }
 
     override fun onCreate() {
         super.onCreate()
         // to the front before anything else: the deadline of a foreground
         // start runs from the call, and this thread is dart's too
+        val created = SystemClock.elapsedRealtime()
         try {
             nameChannel(this)
             front(build(words()))
         } catch (e: Exception) {
             // onStartCommand tries again and decides
         }
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            val asked = askedAt
+            val wait = if (asked > 0) "${created - asked}" else "-"
+            Log.i(
+                "halo-engine",
+                "listener: start to create $wait ms, create to front " +
+                    "${SystemClock.elapsedRealtime() - created} ms, front $inFront"
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
-            front(note ?: build(words()))
+            if (!inFront) front(note ?: build(words()))
         } catch (e: Exception) {
             // a foreground start that cannot go to the front fails loudly.
             // a sticky restart or a plain start android will not let into
@@ -148,16 +177,20 @@ class HaloListenerService : Service() {
             return START_NOT_STICKY
         }
         // started again after a language switch too: the channel and the
-        // notification take the new words
-        nameChannel(this)
-        val words = words()
-        if (words != noteWords) front(build(words))
+        // notification take the new words. the old ones stay on a failure
+        try {
+            nameChannel(this)
+            val words = words()
+            if (words != noteWords) reword(build(words))
+        } catch (e: Exception) {
+        }
         // wiped, or never opened: nothing to stay connected for. a foreground
         // service that stops before startForeground takes the process down,
         // so it leaves only after that call and asks not to come back.
         if (!KryfoState.hasData(this)) {
             running = false
             stopForeground(STOP_FOREGROUND_REMOVE)
+            inFront = false
             stopSelf()
             return START_NOT_STICKY
         }

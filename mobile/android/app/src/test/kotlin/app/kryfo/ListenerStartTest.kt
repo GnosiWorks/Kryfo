@@ -4,8 +4,10 @@ package app.kryfo
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo
 import android.app.Application
+import android.app.BackgroundServiceStartNotAllowedException
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.ContextWrapper
@@ -136,9 +138,11 @@ class ListenerStartTest {
         app.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             .edit().putString("flutter.app_locale", "de").commit()
         c.startCommand(0, 2)
+        val nm = shadowOf(app.getSystemService(NotificationManager::class.java))
         assertEquals(
             "Kryfo ist an",
-            shown(c)!!.extras.getCharSequence(Notification.EXTRA_TITLE).toString()
+            nm.getNotification(HaloListenerService.NOTIFICATION_ID)
+                .extras.getCharSequence(Notification.EXTRA_TITLE).toString()
         )
         app.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             .edit().clear().commit()
@@ -154,6 +158,36 @@ class ListenerStartTest {
         c.create().withIntent(Intent(app, HaloListenerService::class.java)).startCommand(0, 1)
         assertTrue(shadowOf(c.get()).isStoppedBySelf)
         assertFalse(HaloListenerService.running)
+    }
+
+    @Test
+    fun aServiceInFrontIsNotAskedAgain() {
+        // a second startForeground re-checks the background rules
+        withData()
+        val c = service().create()
+        assertNotNull(shown(c))
+        shadowOf(c.get()).setThrowInStartForeground(
+            ForegroundServiceStartNotAllowedException("refused")
+        )
+        c.withIntent(frontStart()).startCommand(0, 1)
+        c.withIntent(Intent(app, HaloListenerService::class.java)).startCommand(0, 2)
+        assertTrue(HaloListenerService.running)
+        assertFalse(shadowOf(c.get()).isStoppedBySelf)
+    }
+
+    @Test
+    fun aRefusalAtOnCreateIsDecidedAtOnStartCommand() {
+        withData()
+        val c = service()
+        shadowOf(c.get()).setThrowInStartForeground(
+            ForegroundServiceStartNotAllowedException("refused")
+        )
+        c.create()
+        assertNull(shown(c))
+        shadowOf(c.get()).setThrowInStartForeground(null)
+        c.withIntent(frontStart()).startCommand(0, 1)
+        assertNotNull(shown(c))
+        assertTrue(HaloListenerService.running)
     }
 
     @Test(expected = ForegroundServiceStartNotAllowedException::class)
@@ -187,21 +221,46 @@ class ListenerStartTest {
         assertFalse(startedFront(shadowOf(app).nextStartedService))
     }
 
+    // what a context was asked, in order
+    private class Asked(base: Context, val plain: Boolean, val front: Boolean) :
+        ContextWrapper(base) {
+        val calls = mutableListOf<String>()
+        override fun startService(service: Intent): ComponentName? {
+            calls.add("plain")
+            if (!plain) throw BackgroundServiceStartNotAllowedException("refused")
+            return super.startService(service)
+        }
+        override fun startForegroundService(service: Intent): ComponentName? {
+            calls.add("front")
+            if (!front) throw ForegroundServiceStartNotAllowedException("refused")
+            return super.startForegroundService(service)
+        }
+    }
+
     @Test
-    fun theBootReceiverStartsItInTheFront() {
+    fun theBootReceiverTriesAPlainStartFirst() {
         withData()
-        BootReceiver().onReceive(app, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+        val ctx = Asked(app, plain = true, front = true)
+        BootReceiver().onReceive(ctx, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+        assertEquals(listOf("plain"), ctx.calls)
+        assertFalse(startedFront(shadowOf(app).nextStartedService))
+    }
+
+    @Test
+    fun theBootReceiverFallsBackToAForegroundStart() {
+        withData()
+        val ctx = Asked(app, plain = false, front = true)
+        BootReceiver().onReceive(ctx, Intent(Intent.ACTION_BOOT_COMPLETED))
+        assertEquals(listOf("plain", "front"), ctx.calls)
         assertTrue(startedFront(shadowOf(app).nextStartedService))
     }
 
     @Test
     fun theBootReceiverTakesARefusalQuietly() {
         withData()
-        val refusing = object : ContextWrapper(app) {
-            override fun startForegroundService(service: Intent): ComponentName? =
-                throw ForegroundServiceStartNotAllowedException("refused")
-        }
-        BootReceiver().onReceive(refusing, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+        val ctx = Asked(app, plain = false, front = false)
+        BootReceiver().onReceive(ctx, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+        assertEquals(listOf("plain", "front"), ctx.calls)
         assertNull(shadowOf(app).nextStartedService)
     }
 

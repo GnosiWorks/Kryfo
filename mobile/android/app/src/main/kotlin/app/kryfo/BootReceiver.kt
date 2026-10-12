@@ -15,9 +15,11 @@ class BootReceiver : BroadcastReceiver() {
         if (!KryfoState.hasData(context)) return
         JobSetup.schedule(context)
         if (!DeliveryPrefs.staysOn(context)) return
-        // a refusal is quiet: opening the app starts it again
+        // these broadcasts come with a short allowlist window, which lets a
+        // plain start through without a deadline. a refusal is quiet:
+        // opening the app starts it again
         try {
-            HaloListenerService.start(context)
+            HaloListenerService.start(context, plainFirst = true)
         } catch (e: Exception) {
             Log.i("halo-engine", "boot: listener not started: ${e.javaClass.simpleName}")
         }
