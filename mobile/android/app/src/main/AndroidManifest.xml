@@ -20,7 +20,7 @@
          a picked file arrives through the picker's own copy -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" tools:ignore="ScopedStorage" />
     <application
-        android:label="Kryfo"
+        android:label="${appLabel}"
         android:name=".HaloApplication"
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"

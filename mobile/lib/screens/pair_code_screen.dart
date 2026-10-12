@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart' hide live;
+import '../quiet_wait.dart';
 import '../theme.dart';
 import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
@@ -157,8 +158,9 @@ class _JoinSide extends StatelessWidget {
     return PairJoin(
       // a quiet session never reaches the relays: it answers as unreachable
       // ones would
-      fetch: (code) async =>
-          sessionQuiet ? pairUnreached : await engine.pairCodeFetch(code),
+      fetch: (code) async => sessionQuiet
+          ? await unreachedLater(pairUnreached)
+          : await engine.pairCodeFetch(code),
       add: (invite) async {
         final status = await handleHaloUri(invite);
         await appState.refreshContacts();

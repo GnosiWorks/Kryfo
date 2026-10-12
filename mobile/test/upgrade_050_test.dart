@@ -101,11 +101,12 @@ class _Finger implements LockBio {
   @override
   Future<String> state() async => 'ok';
   @override
-  Future<bool> enable() async => true;
+  Future<String?> seal(String opens) async => 'seal:$opens';
   @override
   Future<void> disable() async => dropped++;
   @override
-  Future<String> unlock(String title, String cancel) async => 'ok';
+  Future<BioOpened> unlock(String title, String cancel, String seal) async =>
+      BioOpened('ok', seal.startsWith('seal:') ? seal.substring(5) : null);
 }
 
 // what the file holds, as sqlite describes it: each table's columns by

@@ -7,7 +7,7 @@ import 'dart:typed_data';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 
-import 'main.dart' show engine;
+import 'main.dart' show engine, sessionQuiet;
 
 // changing the key invalidates existing receipts
 const String kBadgeOnion =
@@ -45,9 +45,9 @@ class BadgeReceipt {
 }
 
 /// null when tor or the service is unreachable: the caller shows the
-/// manual address instead
+/// manual address instead. a quiet session asks nothing and reads as that
 Future<BadgeInvoice?> createInvoice(String tier) async {
-  if (!kBadgeTiersShown) return null;
+  if (!kBadgeTiersShown || sessionQuiet) return null;
   final raw = await engine.torPost(
     '$kBadgeOnion/invoice',
     jsonEncode({'tier': tier}),
@@ -72,6 +72,7 @@ Future<BadgeInvoice?> createInvoice(String tier) async {
 /// paid only when the signature verifies against the pinned key; an
 /// unsigned or badly signed "paid" is an error
 Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
+  if (sessionQuiet) return const BadgeReceipt(ReceiptState.error);
   final raw = await engine.torGetJson('$kBadgeOnion/receipt?id=$invoiceId');
   if (raw.startsWith('error:')) return const BadgeReceipt(ReceiptState.error);
   try {

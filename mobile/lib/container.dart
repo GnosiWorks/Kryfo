@@ -272,6 +272,7 @@ const containerKeys = {
   'kryfo.update.on',
   'notif_hide_content',
   'sticker_recents',
+  'notes_hold_told',
   // drafts written down for a restart the person asked for, read back once
   'kept_drafts',
 };

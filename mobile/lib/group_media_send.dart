@@ -143,6 +143,8 @@ Future<void> resendGroupOwed(
   send,
   // a member whose key is held: what they are owed waits, using no try
   Future<bool> Function(String member)? held,
+  // a decoy open: nothing goes and no try is used
+  bool Function()? hold,
 }) async {
   final byFile = <String, List<GroupOwed>>{};
   final heldNow = <String, bool>{};
@@ -162,6 +164,7 @@ Future<void> resendGroupOwed(
         if (o.tries < kGroupOwedTries) o,
     ];
     if (go.isEmpty) continue;
+    if (hold?.call() ?? false) return;
     // stamped before it goes: a send takes a while, and the tick it ends
     // on must not start the same one again
     await store.triedGroupOwed(uid, [for (final o in go) o.member], now);
@@ -217,6 +220,8 @@ Future<String> sendGroupSlices({
   Future<void> Function(Map<String, Set<int>> short, int total)? onShort,
   // a send to members owed the file: the slices each has already
   Map<String, Set<int>>? owed,
+  // a decoy open: the send stops where it is and says 'parked'
+  bool Function()? hold,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -232,6 +237,7 @@ Future<String> sendGroupSlices({
       retryPause: retryPause,
       onShort: onShort,
       owed: owed,
+      hold: hold ?? () => false,
     );
   } finally {
     mediaCancelled.remove(msgUid);
@@ -253,6 +259,7 @@ Future<String> _send({
   required Future<void> Function(Map<String, Set<int>> short, int total)?
   onShort,
   required Map<String, Set<int>>? owed,
+  required bool Function() hold,
 }) async {
   // nobody to send to is not a send that went
   if (members.isEmpty) return 'error: no members';
@@ -307,10 +314,22 @@ Future<String> _send({
   }
 
   bool cancelled() => mediaCancelled.contains(msgUid);
+
   Map<String, Set<int>> shortNow() => {
     for (final m in members)
       if (has(m).length < total) m: {...has(m)},
   };
+
+  // stopped by a hold: what landed is kept however long it lasts, and the
+  // owed keep what they took
+  Future<String> parked() async {
+    if (owed == null) {
+      groupSliceDoneAt.remove(msgUid);
+    } else {
+      await onShort?.call(shortNow(), total);
+    }
+    return 'parked';
+  }
 
   // the members of [to] that did not take it
   Future<List<String>> push(int i, String wrapped, List<String> to) async {
@@ -351,6 +370,7 @@ Future<String> _send({
   }
   for (var i = 0; i < total; i++) {
     if (cancelled()) return 'cancelled';
+    if (hold()) return parked();
     var left = [
       for (final m in members)
         if (!has(m).contains(i)) m,
@@ -385,7 +405,7 @@ Future<String> _send({
   Future<void> catchUp(String m) async {
     var misses = 0;
     for (var i = 0; i < total && misses < kGroupMemberMisses; i++) {
-      if (has(m).contains(i) || cancelled()) continue;
+      if (has(m).contains(i) || cancelled() || hold()) continue;
       final wrapped = await envelope(i);
       if (wrapped == null) return;
       final left = await push(i, wrapped, [m]);
@@ -402,6 +422,7 @@ Future<String> _send({
     if (short.isEmpty) break;
     await Future.delayed(retryPause * (2 * (pass + 1)));
     if (cancelled()) return 'cancelled';
+    if (hold()) return parked();
     // one member at a time would make everyone wait on the slowest
     await Future.wait([for (final m in short) catchUp(m)]);
     if (cancelled()) return 'cancelled';

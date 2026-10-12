@@ -64,14 +64,57 @@ func TestCensorNeverInRelease(t *testing.T) {
 	if !strings.Contains(string(gradle), "censor-scan.sh") {
 		t.Error("gradle does not scan the engine it packs")
 	}
-	// build.sh says no before it looks for anything
+	// level 2 is a test engine like level 1, so the scan finds it too
+	two, _ := os.ReadFile("censor_two.go")
+	if !strings.Contains(string(two), "//go:build torblocked && torblocked2") {
+		t.Error("censor_two.go builds without censor_on.go")
+	}
+}
+
+// build.sh says no before it looks for anything
+func TestBuildShCensorGuard(t *testing.T) {
+	for _, c := range []struct{ level, testID, want string }{
+		{"1", "", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
+		{"2", "", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
+		{"2", "0", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
+		{"3", "1", "HALO_TOR_BLOCKED is 1 or 2"},
+		{"yes", "1", "HALO_TOR_BLOCKED is 1 or 2"},
+	} {
+		out, err := runBuildSh(t, c.level, c.testID)
+		if err == nil || !strings.Contains(out, c.want) || strings.Contains(out, "censor level") {
+			t.Errorf("HALO_TOR_BLOCKED=%s HALO_TEST_ID=%s: %v %s", c.level, c.testID, err, out)
+		}
+	}
+}
+
+// each level picks its tags. with no ndk to be found build.sh stops
+// right after, so nothing is built
+func TestBuildShCensorLevels(t *testing.T) {
+	for level, want := range map[string]string{
+		"":  "",
+		"0": "",
+		"1": "censor level 1: -tags torblocked\n",
+		"2": "censor level 2: -tags torblocked,torblocked2\n",
+	} {
+		out, err := runBuildSh(t, level, "1")
+		if err == nil || !strings.Contains(out, "android ndk not found") {
+			t.Fatalf("HALO_TOR_BLOCKED=%s went past the ndk: %v %s", level, err, out)
+		}
+		if want == "" && strings.Contains(out, "censor level") || !strings.Contains(out, want) {
+			t.Errorf("HALO_TOR_BLOCKED=%s: %s", level, out)
+		}
+	}
+}
+
+func runBuildSh(t *testing.T, level, testID string) (string, error) {
+	t.Helper()
 	sh, _ := filepath.Abs("build.sh")
 	cmd := exec.Command("bash", sh)
-	cmd.Env = append(os.Environ(), "HALO_TOR_BLOCKED=1", "HALO_TEST_ID=", "JNI_LIBS_DIR="+t.TempDir())
+	cmd.Env = append(os.Environ(), "HALO_TOR_BLOCKED="+level, "HALO_TEST_ID="+testID,
+		"JNI_LIBS_DIR="+t.TempDir(), "ANDROID_NDK_HOME=", "ANDROID_NDK_ROOT=", "NDK_HOME=",
+		"ANDROID_HOME="+t.TempDir(), "ANDROID_SDK_ROOT=")
 	out, err := cmd.CombinedOutput()
-	if err == nil || !strings.Contains(string(out), "HALO_TOR_BLOCKED needs HALO_TEST_ID=1") {
-		t.Fatalf("build.sh took the censor outside the test app: %v %s", err, out)
-	}
+	return string(out), err
 }
 
 // the scan says no to a test engine, to a missing one, and to none at all

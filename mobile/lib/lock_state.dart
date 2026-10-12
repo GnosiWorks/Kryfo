@@ -67,13 +67,17 @@ final everydayContainer = HaloContainer.everyday.id;
 // a decoy session is open: nothing of kryfo's may show. read from storage
 // every time, so a process the job starts honours it too. an unreadable
 // value counts as quiet: a missed notification over one in a decoy
-Future<bool> quietNow([LockStore? store]) async {
+Future<bool> quietNow([LockStore? store]) async =>
+    await quietRead(store) ?? true;
+
+// the same, null when it could not be read
+Future<bool?> quietRead([LockStore? store]) async {
   try {
     final s = await (store ?? SecureLockStore()).read('halo.lock.state');
     if (s == null) return false;
     return (jsonDecode(s) as Map<String, dynamic>)['q'] == true;
   } catch (_) {
-    return true;
+    return null;
   }
 }
 

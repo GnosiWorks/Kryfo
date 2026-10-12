@@ -93,6 +93,7 @@ func TestCensorResetsAndStalls(t *testing.T) {
 func TestCensorLevelTwoCutsBuiltinObfs4(t *testing.T) {
 	old := censorLevel
 	defer func() { censorLevel = old }()
+	censorLevel = 1
 	b, _ := parseBridgeLine(builtinBundled["obfs4"][0])
 	if err := censorPTDial("obfs4", b.addr); err != nil {
 		t.Fatalf("level 1 cut a bridge: %v", err)

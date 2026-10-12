@@ -3451,7 +3451,10 @@ class HaloDb implements GroupOwedStore {
         where: 'group_id = ? AND member = ?',
         whereArgs: [groupId, haloId],
       )) {
-        if (groupFrameOf(r['ctl']) == null) continue;
+        if (groupFrameOf(r['ctl']) == null &&
+            groupWrappedOf(r['ctl']) == null) {
+          continue;
+        }
         await t.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
       }
     });
@@ -6295,6 +6298,29 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  /// a frame sealed for all of [members], each to get it in their lane
+  Future<void> queueGroupWrapped(
+    String groupId,
+    Iterable<String> members,
+    String wrapped, {
+    required int now,
+  }) async {
+    final body = jsonEncode(groupWrappedRow(wrapped));
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+    });
+  }
+
   /// the take-back of [uid] for each of [members], in the same lanes as the
   /// controls. a member it already waits for gets no second one
   Future<void> queueGroupUnsend(
@@ -8223,6 +8249,21 @@ String? groupUnsendOf(Object? ctl) {
     final raw = jsonDecode(ctl);
     final uid = raw is Map ? raw['un'] : null;
     return uid is String && uid.isNotEmpty ? uid : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// a group pin, vote or poll close held by a decoy waits in each member's
+// lane as it was sealed for them all, and goes once the decoy is left
+Map<String, String> groupWrappedRow(String wrapped) => {'wr': wrapped};
+
+String? groupWrappedOf(Object? ctl) {
+  if (ctl is! String || !ctl.startsWith('{"wr":')) return null;
+  try {
+    final raw = jsonDecode(ctl);
+    final w = raw is Map ? raw['wr'] : null;
+    return w is String && w.isNotEmpty ? w : null;
   } catch (_) {
     return null;
   }
@@ -10237,6 +10278,153 @@ class AppState extends ChangeNotifier {
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
 
+  // a decoy open, here or in the run before that the lock still holds:
+  // nothing of the everyday account leaves. what arrives still lands,
+  // unseen, and what waits goes once a pin opens the everyday side
+  bool get everydayHeld => sessionQuiet || _quietMarked;
+  // storage said a decoy was open as this run started, and no pin has
+  // opened a session since
+  bool _quietMarked = false;
+  bool _pinOpened = false;
+  // the stored mark was read, or a pin made it moot
+  bool _markKnown = false;
+  // prekey bundles owed to people while a decoy was open: true asks back
+  final Map<String, bool> _ctlOwed = {};
+  // receipts to a shut vault's people held by a decoy, by when they were
+  // held: kept sealed too, so a restart loses none, but sent with the rest
+  // once the decoy is left. past kReceiptKeptFor they go, as queued ones do
+  final Map<(String, String), int> _receiptsOwed = {};
+  // slice resends a hold stopped or kept from starting, by file
+  final Map<String, Future<void> Function()> _resendsOwed = {};
+
+  @visibleForTesting
+  set quietMarkedForTest(bool v) => _quietMarked = v;
+
+  @visibleForTesting
+  bool get ctlOwedForTest => _ctlOwed.isNotEmpty;
+  @visibleForTesting
+  Future<bool> bundleCtlForTest(String id, {required bool want}) =>
+      _sendBundleCtl(id, want: want);
+  // the card a bundle ctl carries; tests stand one in, signal needs a store
+  Future<String> Function() _myBundle = makePreKeyBundleB64;
+  @visibleForTesting
+  set myBundleForTest(Future<String> Function() f) => _myBundle = f;
+  @visibleForTesting
+  Future<void> replayForTest() => _replayHeld();
+  Duration _bundleGap = const Duration(minutes: 1);
+  @visibleForTesting
+  set bundleGapForTest(Duration d) => _bundleGap = d;
+  @visibleForTesting
+  int get receiptsOwedForTest => _receiptsOwed.length;
+
+  // the stored mark of a decoy left open, read as a run starts. it holds
+  // only where a decoy can be, a phone with a pin table. a read that does
+  // not answer in [wait] holds there for now, and its answer, when it
+  // comes, decides; one that fails is tried again
+  @visibleForTesting
+  Future<void> readDecoyMark({
+    LockStore? store,
+    Duration wait = const Duration(seconds: 10),
+    Duration retry = const Duration(seconds: 2),
+  }) async {
+    final reading = _readMark(store, retry);
+    final answered = await reading
+        .then((_) => true)
+        .timeout(wait, onTimeout: () => false);
+    if (answered || _markKnown || _pinOpened) return;
+    final table = await pinTableKept(store);
+    if (!_markKnown && !_pinOpened) _quietMarked = table;
+  }
+
+  Future<void> _readMark(LockStore? store, Duration retry) async {
+    for (var tries = 1; ; tries++) {
+      final q = await quietRead(store);
+      if (q != null) {
+        _takeMark(q && await pinTableKept(store));
+        return;
+      }
+      dlog('decoy mark: not read');
+      // no pin table, no decoy: nothing to hold
+      if (!await pinTableKept(store)) {
+        _takeMark(false);
+        return;
+      }
+      // tried for good, a few seconds apart and then a minute at most
+      await Future<void>.delayed(retry * min(tries, 30));
+      if (_pinOpened) return;
+    }
+  }
+
+  void _takeMark(bool q) {
+    if (_pinOpened) return;
+    _markKnown = true;
+    final was = _quietMarked;
+    _quietMarked = q;
+    if (was && !q) _resumeEveryday();
+  }
+
+  // what was held goes on: the queues, the asks and what was owed
+  void _resumeEveryday() {
+    if (everydayHeld || haloWiping) return;
+    unawaited(drainOutbox());
+    unawaited(askForMissingSlices());
+    _maybeRepoint();
+  }
+
+  // what a hold left owed in memory, a few a pass once the link is up, an
+  // entry kept until its send went
+  static const _kReplayPerPass = 12;
+  bool _replaying = false;
+  Future<void> _replayHeld() async {
+    if (_replaying) return;
+    _replaying = true;
+    try {
+      var left = _kReplayPerPass;
+      bool stop() => left-- <= 0 || everydayHeld || haloWiping || !linkUp;
+      for (final id in [..._ctlOwed.keys]) {
+        final want = _ctlOwed[id];
+        if (want == null) continue;
+        if (stop()) return;
+        // an ask back is answered by their card, healed as any other
+        if (want) _wantHeal(id);
+        if (await _sendBundleCtl(id, want: want) && _ctlOwed[id] == want) {
+          _ctlOwed.remove(id);
+        }
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      _receiptsOwed.removeWhere(
+        (_, at) => now - at > kReceiptKeptFor.inMilliseconds,
+      );
+      for (final k in [..._receiptsOwed.keys]) {
+        if (stop()) return;
+        if (await _receiptGoes(k.$1, k.$2)) _receiptsOwed.remove(k);
+      }
+      for (final mid in [..._resendsOwed.keys]) {
+        if (stop()) return;
+        if (mediaInflight.contains(mid)) continue;
+        final go = _resendsOwed.remove(mid);
+        if (go != null) unawaited(go());
+      }
+    } finally {
+      _replaying = false;
+    }
+  }
+
+  // one receipt, now. true when a route that reaches them took it
+  Future<bool> _receiptGoes(String to, String uid) async {
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        deliveredUid: uid,
+        sender: _mySender(),
+      );
+      return await _sendOneEnvelope(to, wrapped);
+    } catch (e) {
+      dlog('receipt: not sent (${e.runtimeType})');
+      return false;
+    }
+  }
+
   // start the outbox drainer. safe to call more than once.
   void startOutboxDrain() {
     _outboxTimer?.cancel();
@@ -10290,6 +10478,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _askPassNow(bool walked) async {
+    // a decoy open: the asks wait, and none is counted
+    if (everydayHeld) return;
     // an ask sent with no network still counts toward the cap
     if (!linkUp) {
       _needHold.down(DateTime.now().millisecondsSinceEpoch);
@@ -10384,6 +10574,7 @@ class AppState extends ChangeNotifier {
       if (missing.isEmpty) continue;
       // an ask sealed for no one uses none of the asks
       if (await keyHeld(peer)) continue;
+      if (everydayHeld) return;
       dlog('NEED $mid: asking for ${missing.length} of $total');
       // stamped before it goes, with the time it was decided on: a send
       // takes seconds, and the tick its backoff ends on would miss it
@@ -10408,6 +10599,11 @@ class AppState extends ChangeNotifier {
   // read off this phone, so it is answered only for a row we sent, to the
   // one person it was sent to, a bounded number of times.
   Future<void> _answerNeed(String from, NeedFrame need, HaloDb db) async {
+    // a decoy open: answered once it is left, no round used till then
+    if (everydayHeld) {
+      _resendsOwed[need.mediaId] = () => _answerNeed(from, need, db);
+      return;
+    }
     final row = await db.sentMediaRow(need.mediaId);
     final now = DateTime.now().millisecondsSinceEpoch;
     // a file a block kept from going is not finished off on their word
@@ -10513,6 +10709,9 @@ class AppState extends ChangeNotifier {
       return;
     }
     _outboxWasReady = true;
+    // a decoy open: all of it waits for the session that wrote it
+    if (everydayHeld) return;
+    unawaited(_replayHeld());
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
@@ -10545,6 +10744,8 @@ class AppState extends ChangeNotifier {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
+      // a decoy opened while this pass read: the rest waits, its tries kept
+      if (everydayHeld) break;
       // to someone blocked in the row's own container: not sent, and it
       // waits for a tap, never for the unblock. a block in the other one
       // only holds it back, and it goes once that block is lifted
@@ -10810,6 +11011,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _drainEdits() async {
+    if (everydayHeld) return;
     final blocked = _blockedInPass();
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
@@ -10837,6 +11039,7 @@ class AppState extends ChangeNotifier {
         if (held.contains(r['peer_id'])) continue;
         // its row a block kept from going: the edit waits for the tap
         if (await _heldRow(d, uid)) continue;
+        if (everydayHeld) return;
         // stamped before it goes: a send cut short is a try too
         try {
           await d.triedEdit(
@@ -10879,7 +11082,7 @@ class AppState extends ChangeNotifier {
       sendEdit(peer, uid, newText, on: on, writtenAt: writtenAt).whenComplete(
         () async {
           _editsInflight.remove(uid);
-          if (!_editAgain.remove(uid) || sessionQuiet) return;
+          if (!_editAgain.remove(uid) || everydayHeld) return;
           try {
             final d = on ?? _ownerOf(peer);
             final q = await d.queuedEdit(uid);
@@ -10902,6 +11105,7 @@ class AppState extends ChangeNotifier {
 
   final Set<String> _pinsInflight = {};
   Future<void> _drainPins() async {
+    if (everydayHeld) return;
     final blocked = _blockedInPass();
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
@@ -10926,6 +11130,7 @@ class AppState extends ChangeNotifier {
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
         if (await _heldRow(d, uid)) continue;
+        if (everydayHeld) return;
         if (!_pinsInflight.add(uid)) continue;
         try {
           await d.triedPin(
@@ -10964,7 +11169,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     // a quiet session keeps it queued here: nothing leaves. on a row a
     // block kept from going it waits for the tap
-    if (sessionQuiet || await session.heldBack(uid)) return;
+    if (everydayHeld || await session.heldBack(uid)) return;
     _pinsInflight.add(uid);
     unawaited(
       _sendPin(peer, uid, pinned).whenComplete(() => _pinsInflight.remove(uid)),
@@ -10997,6 +11202,7 @@ class AppState extends ChangeNotifier {
 
   final Set<String> _framesInflight = {};
   Future<void> _drainFrames() async {
+    if (everydayHeld) return;
     final blocked = _blockedInPass();
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
@@ -11032,6 +11238,7 @@ class AppState extends ChangeNotifier {
         }
         if (held.contains(peer)) continue;
         if (kind == kFrameReaction && await _heldRow(d, uid)) continue;
+        if (everydayHeld) return;
         if (!_framesInflight.add('$kind $uid')) continue;
         // stamped before it goes: its next turn waits its gap, on disk
         try {
@@ -11076,7 +11283,7 @@ class AppState extends ChangeNotifier {
     if (await blockedAnywhere(peer)) return;
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet || await session.heldBack(uid)) return;
+    if (everydayHeld || await session.heldBack(uid)) return;
     _editGo(peer, uid, newText);
   }
 
@@ -11097,7 +11304,7 @@ class AppState extends ChangeNotifier {
     String body,
   ) async {
     // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet) return;
+    if (everydayHeld) return;
     if (!_framesInflight.add('$kind $uid')) return;
     unawaited(
       _sendFrame(
@@ -11262,7 +11469,7 @@ class AppState extends ChangeNotifier {
       _againPass ??= _openersAgain().whenComplete(() => _againPass = null);
 
   Future<void> _openersAgain() async {
-    if (haloWiping || sessionQuiet || !linkUp) return;
+    if (haloWiping || everydayHeld || !linkUp) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     for (final d in [live, ?_openVault]) {
       try {
@@ -11291,6 +11498,8 @@ class AppState extends ChangeNotifier {
               tries: tries,
             );
             if (due == null || due > now) continue;
+            // a decoy opened while this pass read: no try is noted
+            if (everydayHeld) return;
             if (!_outboxInflight.add(uid)) continue;
             try {
               // noted before it goes: a death half way is a try, not a loop
@@ -11407,7 +11616,7 @@ class AppState extends ChangeNotifier {
   Future<void> _owedRound() async {
     for (final d in [live, ?_openVault]) {
       // a quiet session sends nothing, and a wipe takes the rows with it
-      if (haloWiping || sessionQuiet) return;
+      if (haloWiping || everydayHeld) return;
       try {
         await resendGroupOwed(
           d,
@@ -11416,6 +11625,7 @@ class AppState extends ChangeNotifier {
               _sendOwed(d, uid, groupId, have, total),
           // a read that fails holds: it uses no try
           held: (m) => keyHeld(m, strict: true),
+          hold: () => everydayHeld,
         );
       } catch (e) {
         dlog('GRP MEDIA owed: ${e.runtimeType}');
@@ -11433,7 +11643,7 @@ class AppState extends ChangeNotifier {
     int total,
   ) async {
     // a wipe or a quiet session that began during the pass starts nothing
-    if (haloWiping || sessionQuiet) return 'error: quiet';
+    if (haloWiping || everydayHeld) return 'error: quiet';
     if (!identical(_ownerOf(groupId), d)) return 'later';
     final r = await d.sentMediaRow(uid);
     if (r == null || r['direction'] != 'out' || r['group_id'] != groupId) {
@@ -11575,7 +11785,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _ctlLanesDue() async {
     for (final d in [live, ?_openVault]) {
-      if (haloWiping || sessionQuiet) return;
+      if (haloWiping || everydayHeld) return;
       final List<Map<String, Object?>> rows;
       try {
         rows = await d.groupCtlOut();
@@ -11627,7 +11837,7 @@ class AppState extends ChangeNotifier {
     try {
       while (true) {
         // a wipe or a quiet session sends nothing more
-        if (haloWiping || sessionQuiet) return false;
+        if (haloWiping || everydayHeld) return false;
         final rows = await d.groupCtlFor(groupId, member);
         if (rows.isEmpty) break;
         final r = rows.first;
@@ -11636,7 +11846,8 @@ class AppState extends ChangeNotifier {
         if (!force && (r['next_at'] as int? ?? 0) > now) return false;
         final un = groupUnsendOf(r['ctl']);
         final fr = un != null ? null : groupFrameOf(r['ctl']);
-        final gc = un != null || fr != null
+        final wr = un != null || fr != null ? null : groupWrappedOf(r['ctl']);
+        final gc = un != null || fr != null || wr != null
             ? null
             : GroupControl.fromWire(_jsonOf(r['ctl']));
         // no longer theirs to get: the next one goes. a take-back is kept
@@ -11647,6 +11858,7 @@ class AppState extends ChangeNotifier {
         final owed =
             un != null ||
             fr != null && await _frameStillOwed(d, groupId, member, fr.uid) ||
+            wr != null && await _memberStill(d, groupId, member) ||
             gc != null && await _ctlStillOwed(d, groupId, member, gc);
         if (!owed) {
           await d.dropGroupCtl(id);
@@ -11667,7 +11879,7 @@ class AppState extends ChangeNotifier {
           // a slice of the file it takes back may still be on its way: the
           // take-back goes once the stopped send let go, so it lands last
           await whenMediaFree(un);
-          if (haloWiping || sessionQuiet) return false;
+          if (haloWiping || everydayHeld) return false;
           continue;
         }
         // only a pass on the lane's own schedule costs a try. one a send
@@ -11677,25 +11889,31 @@ class AppState extends ChangeNotifier {
         if (!force) await d.triedGroupCtl(id, now);
         final edit = fr?.edit;
         final emoji = fr?.emoji;
-        final wrapped = await wrapMessage(
-          '',
-          groupId: groupId,
-          groupControl: gc,
-          unsend: un,
-          edit: edit == null
-              ? null
-              : EditFrame(targetUid: fr!.uid, newText: edit),
-          reaction: emoji == null
-              ? null
-              : ReactionFrame(targetUid: fr!.uid, emoji: emoji),
-          sender: _mySender(),
-          // when it was queued
-          writtenAt: (r['since'] as num?)?.toInt(),
-        );
+        final wrapped =
+            wr ??
+            await wrapMessage(
+              '',
+              groupId: groupId,
+              groupControl: gc,
+              unsend: un,
+              edit: edit == null
+                  ? null
+                  : EditFrame(targetUid: fr!.uid, newText: edit),
+              reaction: emoji == null
+                  ? null
+                  : ReactionFrame(targetUid: fr!.uid, emoji: emoji),
+              sender: _mySender(),
+              // when it was queued
+              writtenAt: (r['since'] as num?)?.toInt(),
+            );
         if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
           final what =
               gc?.type ??
-              (un != null ? 'unsend' : (edit != null ? 'edit' : 'reaction'));
+              (un != null
+                  ? 'unsend'
+                  : wr != null
+                  ? 'frame'
+                  : (edit != null ? 'edit' : 'reaction'));
           dlog('group ctl $what to $member: waits');
           return false;
         }
@@ -11736,6 +11954,10 @@ class AppState extends ChangeNotifier {
     if (!(await d.getGroupMembers(groupId)).contains(member)) return false;
     return d.messageExists(uid);
   }
+
+  Future<bool> _memberStill(HaloDb d, String groupId, String member) async =>
+      await d.groupExists(groupId) &&
+      (await d.getGroupMembers(groupId)).contains(member);
 
   // a leave goes once the group went from here; a remove to the member it
   // takes out too; anything else only to a member of a group still here
@@ -11806,7 +12028,7 @@ class AppState extends ChangeNotifier {
       now: DateTime.now().millisecondsSinceEpoch,
     );
     // the first try goes now, whatever the route says
-    if (!haloWiping && !sessionQuiet) unawaited(_drainGroupCtl());
+    if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
   }
 
   Future<void> _drainMedia(
@@ -11849,6 +12071,11 @@ class AppState extends ChangeNotifier {
     );
     if (only != null) {
       dlog('NEED $uid: resend ended $res');
+      // a hold stopped it: the rest goes once the decoy is left
+      if (res == 'parked' && everydayHeld) {
+        _resendsOwed[uid] = () =>
+            _drainMedia(r, peer, uid, path, isFile: isFile, only: only, on: on);
+      }
       return;
     }
     if (res == 'ok') {
@@ -12796,7 +13023,7 @@ class AppState extends ChangeNotifier {
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
       await askForMissingSlices(walked: true);
-      for (var i = 0; i < 10 && _q.n > 0; i++) {
+      for (var i = 0; i < 10 && _q.n > 0 && !everydayHeld; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
       how = 'ok$tail';
@@ -13673,6 +13900,11 @@ class AppState extends ChangeNotifier {
   Future<void> _repointHandle() async {
     final h = _myHandle;
     if (h == null || myOnion.isEmpty) return;
+    // a decoy open: armed again once it is left
+    if (everydayHeld) {
+      _repointed = false;
+      return;
+    }
     try {
       final r = await _handleRepoint.repoint(h);
       if (r != null) _setHandleForeign(r.contains('taken'));
@@ -16226,6 +16458,18 @@ class AppState extends ChangeNotifier {
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
   Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
+    final wasHeld = everydayHeld;
+    _pinOpened = true;
+    _markKnown = true;
+    if (r != PinResult.decoy) _quietMarked = false;
+    try {
+      await _sessionFor(r, vaultKey: vaultKey);
+    } finally {
+      if (wasHeld) _resumeEveryday();
+    }
+  }
+
+  Future<void> _sessionFor(PinResult r, {String? vaultKey}) async {
     // nothing opened under one pin is left for another, not even unlinked
     final from = _lockedIn;
     _lockedIn = null;
@@ -18382,6 +18626,9 @@ class AppState extends ChangeNotifier {
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await live.loadIdentity();
     dlog('LAUNCH identity loaded');
+    // a decoy left open by the run before: held until a pin says otherwise.
+    // read once the store has answered for the database key
+    await readDecoyMark();
     // the hidden chats' list, before anything can arrive: without it an
     // arrival for one would land in the everyday container
     await _router.load();
@@ -19788,15 +20035,21 @@ class AppState extends ChangeNotifier {
       _ackedAt.removeWhere((_, t) => now - t > 300000);
     }
     try {
-      final wrapped = await wrapMessage(
-        '',
-        deliveredUid: uid,
-        sender: _mySender(),
-      );
-      if (await _sendOneEnvelope(toHaloId, wrapped)) return;
+      // a decoy open: it waits with their chat's rows, as below, and goes
+      // once the everyday side may send again. held past kReceiptKeptFor it
+      // goes unsent, as any queued receipt or reaction does
+      final held = everydayHeld;
+      if (!held) {
+        final wrapped = await wrapMessage(
+          '',
+          deliveredUid: uid,
+          sender: _mySender(),
+        );
+        if (await _sendOneEnvelope(toHaloId, wrapped)) return;
+      }
       // the seal waits on their card: the receipt waits with it, where
       // their chat's rows are, and goes once the session is fresh
-      if (_waitingCard.contains(toHaloId) || await keyHeld(toHaloId)) {
+      if (held || _waitingCard.contains(toHaloId) || await keyHeld(toHaloId)) {
         final on = (await _reach(toHaloId))?.on;
         if (on != null) {
           await on.queueFrame(uid, kFrameReceipt, toHaloId, '');
@@ -19810,6 +20063,11 @@ class AppState extends ChangeNotifier {
               Unsealed(toHaloId, '', false, now, receipt: uid),
               uid: rc,
             );
+          }
+          // held by a decoy, it goes with the everyday ones as it is left,
+          // not only once the vault opens. a second tick changes nothing
+          if (held && _receiptsOwed.length < 500) {
+            _receiptsOwed[(toHaloId, uid)] ??= now;
           }
         }
       }
@@ -19887,6 +20145,7 @@ class AppState extends ChangeNotifier {
   ).whenComplete(() => _afreshPass = null);
 
   Future<void> _askAfreshRound(int now) async {
+    if (everydayHeld) return;
     if (!signalSession.ready || !signalSession.hasRestored) return;
     if (now - _afreshLookedAt < 10 * 60 * 1000) return;
     _afreshLookedAt = now;
@@ -19915,7 +20174,7 @@ class AppState extends ChangeNotifier {
         continue;
       }
       for (final r in people) {
-        if (left == 0) return;
+        if (left == 0 || everydayHeld) return;
         final id = r['halo_id'] as String;
         if (isDevId(id) || !await signalSession.askDue(id, now)) continue;
         if (await _askOnce(id, now)) left--;
@@ -19989,9 +20248,16 @@ class AppState extends ChangeNotifier {
   }) async {
     // the dev chat's bundle is pinned: nothing goes to him in the clear
     if (isDevId(memberId)) return false;
+    // a decoy open: owed, and sent once the everyday side may send again
+    if (everydayHeld) {
+      if (since == null) {
+        _ctlOwed[memberId] = want || (_ctlOwed[memberId] ?? false);
+      }
+      return false;
+    }
     final key = '$memberId:$want';
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
+    if (now - (_bundleCtlSentAt[key] ?? 0) < _bundleGap.inMilliseconds) {
       return false; // 1/min, not 1/chunk
     }
     _pruneHeal();
@@ -20005,7 +20271,7 @@ class AppState extends ChangeNotifier {
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
         'from': myId,
-        'bundle': await makePreKeyBundleB64(),
+        'bundle': await _myBundle(),
         'want': want,
         'since': ?since,
       });
@@ -20165,6 +20431,8 @@ class AppState extends ChangeNotifier {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
     // failed and the user gets tap-to-retry.
+    // nothing of the everyday account leaves while a decoy is open
+    if (everydayHeld) return false;
     try {
       final to = await _reach(memberId);
       if (to == null) {
@@ -20376,6 +20644,7 @@ class AppState extends ChangeNotifier {
     String memberId,
     String wrapped,
   ) async {
+    if (everydayHeld) return false;
     final room = await _roomOf(groupId);
     if (room == null) return _sendOneEnvelope(memberId, wrapped, member: true);
     if (memberId == room.pub) return false;
@@ -20829,7 +21098,7 @@ class AppState extends ChangeNotifier {
   // before the word waits on as it did
   Future<void> _sayRoomFull(String groupId, String who) async {
     // nothing of the everyday account leaves while a decoy is open
-    if (haloWiping || sessionQuiet) return;
+    if (haloWiping || everydayHeld) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final said = (_fullSaid[groupId] ?? const <int>[])
         .where((at) => now - at < 60000)
@@ -21442,8 +21711,9 @@ class AppState extends ChangeNotifier {
         )) {
       return false;
     }
-    // a quiet session keeps the row here, unsent: nothing leaves
-    if (sessionQuiet) {
+    // a quiet session keeps the row here, unsent: nothing leaves. one held
+    // by a decoy goes from the outbox once it is left
+    if (everydayHeld) {
       notifyListeners();
       return false;
     }
@@ -21511,8 +21781,9 @@ class AppState extends ChangeNotifier {
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both would send the whole file.
     if (mediaInflight.contains(msgUid)) return 'busy';
-    // a quiet session keeps the row here, unsent: nothing leaves
-    if (sessionQuiet) return 'error: quiet';
+    // a quiet session keeps the row here, unsent: nothing leaves, and one
+    // a decoy holds goes from the outbox once it is left
+    if (everydayHeld) return 'error: quiet';
     final d = _ownerOf(groupId);
     // a room not let in yet: nobody reads this phone's key
     if (await _roomWaiting(d.getGroup(groupId))) return 'error: waiting';
@@ -21578,6 +21849,7 @@ class AppState extends ChangeNotifier {
       // a send to the owed is behind a row that already reads sent
       progressKey: owed == null ? d.container.chatKey(groupId) : null,
       owed: owed,
+      hold: () => everydayHeld,
       // a member left short is sent the rest later, from the outbox
       onShort: (short, total) async {
         // the send went either way: a row not written costs that member
@@ -21650,10 +21922,37 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
     );
     final members = await session.getGroupMembers(groupId);
-    await Future.wait([
+    await _toMembers(groupId, [
       for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
+        if (memberId != myId) memberId,
+    ], wrapped);
+  }
+
+  // one frame to each of [to]. one a decoy kept from going waits in their
+  // lane, never dropped
+  Future<void> _toMembers(
+    String groupId,
+    List<String> to,
+    String wrapped,
+  ) async {
+    final held = <String>[];
+    await Future.wait([
+      for (final m in to)
+        _sendGroupEnvelope(groupId, m, wrapped).then((ok) {
+          if (!ok && everydayHeld) held.add(m);
+        }),
     ]);
+    if (held.isEmpty) return;
+    try {
+      await _ownerOf(groupId).queueGroupWrapped(
+        groupId,
+        held,
+        wrapped,
+        now: DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      dlog('group frame: not kept (${e.runtimeType})');
+    }
   }
 
   // pairwise reaction multicast for group messages.
@@ -21687,7 +21986,7 @@ class AppState extends ChangeNotifier {
     );
     // due now, behind what each lane still waits out: a lane backing off
     // keeps its gap
-    if (haloWiping || sessionQuiet) return;
+    if (haloWiping || everydayHeld) return;
     unawaited(_drainGroupCtl());
   }
 
@@ -21730,10 +22029,10 @@ class AppState extends ChangeNotifier {
     );
     final members = await session.getGroupMembers(groupId);
     unawaited(
-      Future.wait([
+      _toMembers(groupId, [
         for (final m in members)
-          if (m != myId && m != me) _sendGroupEnvelope(groupId, m, wrapped),
-      ]),
+          if (m != myId && m != me) m,
+      ], wrapped),
     );
   }
 
@@ -21766,10 +22065,10 @@ class AppState extends ChangeNotifier {
     );
     final me = await meIn(groupId);
     final members = await session.getGroupMembers(groupId);
-    await Future.wait([
+    await _toMembers(groupId, [
       for (final m in members)
-        if (m != myId && m != me) _sendGroupEnvelope(groupId, m, wrapped),
-    ]);
+        if (m != myId && m != me) m,
+    ], wrapped);
   }
 
   // a vote from a member. members write to us separately, so a vote can
