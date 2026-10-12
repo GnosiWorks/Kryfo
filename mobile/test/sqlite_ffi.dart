@@ -65,6 +65,27 @@ final _errmsg = _lib
 final _changes = _lib.lookupFunction<Int32 Function(_Db), int Function(_Db)>(
   'sqlite3_changes',
 );
+final _commitHook = _lib
+    .lookupFunction<
+      Pointer<Void> Function(
+        _Db,
+        Pointer<NativeFunction<Int32 Function(Pointer<Void>)>>,
+        Pointer<Void>,
+      ),
+      Pointer<Void> Function(
+        _Db,
+        Pointer<NativeFunction<Int32 Function(Pointer<Void>)>>,
+        Pointer<Void>,
+      )
+    >('sqlite3_commit_hook');
+
+// every commit on any database opened here, as sqlite reports it
+var _commits = 0;
+int _onCommit(Pointer<Void> _) {
+  _commits++;
+  return 0;
+}
+
 final _lastId = _lib.lookupFunction<Int64 Function(_Db), int Function(_Db)>(
   'sqlite3_last_insert_rowid',
 );
@@ -145,6 +166,11 @@ class SqliteMem implements Database, Transaction {
       // read, write, create
       final rc = _open(name, out, 0x2 | 0x4, nullptr);
       if (rc != 0) throw StateError('open $path: $rc');
+      _commitHook(
+        out.value,
+        Pointer.fromFunction<Int32 Function(Pointer<Void>)>(_onCommit, 0),
+        nullptr,
+      );
       return SqliteMem._(path, out.value);
     } finally {
       calloc.free(name);
@@ -156,6 +182,11 @@ class SqliteMem implements Database, Transaction {
   final String path;
   final _Db _db;
   bool _alive = true;
+  // inside a transaction: a batch then commits with it
+  bool _inTxn = false;
+
+  /// how many times sqlite has committed, on every database opened here
+  static int get commits => _commits;
 
   // the file as it lies on disk, for one opened on a path
   Uint8List bytes() => File(path).readAsBytesSync();
@@ -335,6 +366,7 @@ class SqliteMem implements Database, Transaction {
     bool? exclusive,
   }) async {
     _run('BEGIN');
+    _inTxn = true;
     try {
       final r = await action(this);
       _run('COMMIT');
@@ -342,8 +374,13 @@ class SqliteMem implements Database, Transaction {
     } catch (_) {
       _run('ROLLBACK');
       rethrow;
+    } finally {
+      _inTxn = false;
     }
   }
+
+  @override
+  Batch batch() => _Batch(this);
 
   @override
   Database get database => this;
@@ -431,4 +468,67 @@ Future<void> appSchemaOn(SqliteMem db) async {
       // made already, a piece of a longer one, or a column already there
     }
   }
+}
+
+// what is queued, run in one go: in a transaction of its own, or in the
+// one it was made in
+class _Batch implements Batch {
+  _Batch(this._db);
+  final SqliteMem _db;
+  final _ops = <Future<Object?> Function()>[];
+
+  @override
+  void insert(
+    String table,
+    Map<String, Object?> values, {
+    String? nullColumnHack,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) => _ops.add(
+    () => _db.insert(table, values, conflictAlgorithm: conflictAlgorithm),
+  );
+
+  @override
+  void rawInsert(String sql, [List<Object?>? arguments]) =>
+      _ops.add(() => _db.rawInsert(sql, arguments));
+
+  @override
+  void update(
+    String table,
+    Map<String, Object?> values, {
+    String? where,
+    List<Object?>? whereArgs,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) => _ops.add(
+    () => _db.update(table, values, where: where, whereArgs: whereArgs),
+  );
+
+  @override
+  void delete(String table, {String? where, List<Object?>? whereArgs}) =>
+      _ops.add(() => _db.delete(table, where: where, whereArgs: whereArgs));
+
+  @override
+  void execute(String sql, [List<Object?>? arguments]) =>
+      _ops.add(() => _db.execute(sql, arguments));
+
+  @override
+  Future<List<Object?>> commit({
+    bool? exclusive,
+    bool? noResult,
+    bool? continueOnError,
+  }) async {
+    final own = !_db._inTxn;
+    if (own) _db._run('BEGIN');
+    try {
+      final out = [for (final op in _ops) await op()];
+      if (own) _db._run('COMMIT');
+      return out;
+    } catch (_) {
+      if (own) _db._run('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('not here: ${i.memberName}');
 }

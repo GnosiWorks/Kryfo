@@ -4027,18 +4027,25 @@ class HaloDb implements GroupOwedStore {
     final now = DateTime.now().millisecondsSinceEpoch;
     final from =
         now - kGoneFor.inMilliseconds - const Duration(days: 1).inMilliseconds;
+    // one commit for all of them: a busy group cleared is thousands
+    final b = db.batch();
+    var any = false;
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       final peer = r['peer_id'] as String?;
+      final group = r['group_id'] as String?;
       final sent = (r['sent_at'] as num?)?.toInt();
       if (uid == null || peer == null || r['direction'] != 'in') continue;
       if (sent != null && sent < from) continue;
-      await db.insert('gone_in', {
+      if (!goneKept(group)) continue;
+      b.insert('gone_in', {
         'msg_uid': uid,
-        'peer_id': goneKey(peer, group: r['group_id'] as String?),
+        'peer_id': goneKey(peer, group: group),
         'at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      any = true;
     }
+    if (any) await b.commit(noResult: true);
   }
 
   /// [msgUid] came in from [peer] and burned or was deleted here lately
@@ -4391,7 +4398,11 @@ class HaloDb implements GroupOwedStore {
     await _scrubMedia(media);
   }
 
-  Future<void> clearGroupConversation(String groupId) async {
+  // [noteGone] false for a group about to go: its delete drops the records
+  Future<void> clearGroupConversation(
+    String groupId, {
+    bool noteGone = true,
+  }) async {
     final db = await open();
     final media = await db.query(
       'messages',
@@ -4399,7 +4410,7 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
-    await _noteGone(db, media);
+    if (noteGone) await _noteGone(db, media);
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
@@ -8268,6 +8279,10 @@ String goneKey(String sender, {String? group}) =>
 
 /// the gone_in rows of [group]: its own, every sender's
 String goneGroupPrefix(String group) => 'group:$group:';
+
+/// whether what of [group] went is written down. an id with a ':' in it
+/// could read as another group's start, so its records stay in memory
+bool goneKept(String? group) => group == null || !group.contains(':');
 
 // an unsend or a reaction in a 1:1 chat that has not reached the other
 // person yet, one of each kind a message and person: the latest word
@@ -14268,8 +14283,13 @@ class AppState extends ChangeNotifier {
         await db.forgetFirstOf(senderHaloId, uid: env.unsend!);
       }
       // a member's word in a group or a room: its copy the relays still
-      // hold stays away after a restart or a restore
-      if (env.groupId != null && !await db.messageExists(env.unsend!)) {
+      // hold stays away after a restart or a restore. anyone else's, or a
+      // group this phone is not in, is held in memory only, as a stranger's
+      if (env.groupId != null &&
+          goneKept(env.groupId) &&
+          !await db.messageExists(env.unsend!) &&
+          await db.getGroup(env.groupId!) != null &&
+          (await db.getGroupMembers(env.groupId!)).contains(senderHaloId)) {
         await db.noteTakenBack(
           goneKey(senderHaloId, group: env.groupId),
           env.unsend!,
@@ -22053,7 +22073,7 @@ class AppState extends ChangeNotifier {
         : await d.getGroupMembers(groupId);
     await _io.unnotify('group:$groupId');
     dropGroupDraft(groupId);
-    await session.clearGroupConversation(groupId);
+    await session.clearGroupConversation(groupId, noteGone: false);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
     if (!sessionQuiet) {
@@ -22073,7 +22093,7 @@ class AppState extends ChangeNotifier {
   Future<void> _dropGroup(String groupId, HaloDb db) async {
     await _io.unnotify('group:$groupId');
     dropGroupDraft(groupId);
-    await db.clearGroupConversation(groupId);
+    await db.clearGroupConversation(groupId, noteGone: false);
     await db.deleteGroup(groupId);
   }
 

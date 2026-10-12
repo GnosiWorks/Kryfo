@@ -13,6 +13,7 @@ import 'package:kryfo/main.dart'
         AppState,
         HaloDb,
         HaloEngine,
+        goneKept,
         goneKey,
         searchTables,
         useDatabasesForTest,
@@ -25,6 +26,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 class _Rows extends HaloDb {
@@ -197,5 +199,104 @@ void main() {
     );
     await db.deleteGroup('g1');
     expect(await s.rawQuery('SELECT 1 FROM gone_in'), isEmpty);
+  }, skip: skip);
+
+  Future<List<Object?>> goneRows() async => [
+    for (final r in await s.rawQuery('SELECT peer_id FROM gone_in'))
+      r['peer_id'],
+  ];
+
+  test('a word from someone not in the group, or about a group this phone '
+      'is not in, is never written down', () async {
+    for (final (from, group) in [
+      ('dave', 'g1'),
+      ('mallory', 'made-up'),
+      ('bob', 'made-up'),
+    ]) {
+      await comes(
+        from,
+        await wrapMessage(
+          '',
+          unsend: 'u-$from-$group',
+          groupId: group,
+          sender: asSender(from),
+        ),
+      );
+    }
+    expect(await goneRows(), isEmpty);
+  }, skip: skip);
+
+  // a busy group's messages, all in from bob, as many as it had
+  Future<void> busy(int count, {int? burnAt}) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await s.transaction((t) async {
+      for (var i = 0; i < count; i++) {
+        await t.insert('messages', {
+          'peer_id': 'bob',
+          'direction': 'in',
+          'plaintext': 'line $i',
+          'sent_at': now,
+          'msg_uid': 'busy-$i',
+          'group_id': 'g1',
+          'burn_at': burnAt,
+        });
+      }
+    });
+  }
+
+  test('a busy group cleared writes down what went in one go', () async {
+    await busy(2000);
+    final before = SqliteMem.commits;
+    await db.clearGroupConversation('g1');
+    expect(SqliteMem.commits - before, lessThan(20));
+    expect(await goneRows(), hasLength(2000));
+  }, skip: skip);
+
+  test('and a burn sweep the same', () async {
+    await busy(2000, burnAt: 1);
+    final before = SqliteMem.commits;
+    await db.purgeExpired();
+    expect(SqliteMem.commits - before, lessThan(20));
+    expect(await goneRows(), hasLength(2000));
+  }, skip: skip);
+
+  test('a group about to go writes nothing down on its way out', () async {
+    await busy(50);
+    await db.clearGroupConversation('g1', noteGone: false);
+    expect(await goneRows(), isEmpty);
+    final main = sourceOf('lib/main.dart');
+    for (final f in [
+      'Future<void> leaveGroupAndAnnounce(',
+      'Future<void> _dropGroup(',
+    ]) {
+      expect(
+        bodyOf(main, f),
+        contains('clearGroupConversation(groupId, noteGone: false)'),
+        reason: f,
+      );
+    }
+  }, skip: skip);
+
+  test('a group id with a colon in it is kept in memory only, so no record '
+      'reads as another group\'s', () async {
+    expect(goneKept('g1'), isTrue);
+    expect(goneKept('g1:bob'), isFalse);
+    await s.insert('groups', {
+      'group_id': 'g1:bob',
+      'name': 'odd',
+      'created_at': 1,
+      'is_admin': 0,
+      'admin_id': 'someone-else',
+    });
+    await s.insert('messages', {
+      'peer_id': 'x',
+      'direction': 'in',
+      'plaintext': 'odd one',
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'msg_uid': 'odd-1',
+      'group_id': 'g1:bob',
+    });
+    await db.deleteMessage('odd-1');
+    expect(await goneRows(), isEmpty);
   }, skip: skip);
 }
