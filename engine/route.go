@@ -404,9 +404,13 @@ func netParked() {
 	}
 }
 
+// DisableNetwork 0 commands tor took, counted under the control lock
+var netOns atomic.Int64
+
 // tor went on the network. a park that came meanwhile found it parked
-// still and left it, so it is looked at again
+// still and left it, so it is looked at again. under the control lock
 func netWentOn() {
+	netOns.Add(1)
 	torParked.Store(false)
 	if netAway() {
 		go netPark()
@@ -507,7 +511,7 @@ func networkChanged() {
 	// check-in under way puts this network's way back at once. both wait on
 	// tor's control port, so neither holds up the caller
 	if autoDirectOK.Swap(false) {
-		go netLeaveDirect()
+		go netLeaveDirect(netOns.Load())
 	}
 	if inCheckIn() {
 		putCheckInStepSoon()
@@ -565,8 +569,8 @@ func netBounceWorker() {
 // network at once, as this one may be where direct is blocked, and the
 // bounce or automatic's pass puts it back with this network's way. a var
 // for the tests
-var netLeaveDirect = func() {
-	if mode, _, _ := bridgeMode(); mode != bmAuto || bridgesEnabled() || !modeNeedsTor() || torIsPaused() {
+var netLeaveDirect = func(ons int64) {
+	if mode, _, _ := bridgeMode(); mode != bmAuto || !modeNeedsTor() || torIsPaused() {
 		return
 	}
 	mu.Lock()
@@ -576,8 +580,9 @@ var netLeaveDirect = func() {
 		return
 	}
 	err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
-		// a direct step put back meanwhile is this network's own
-		if autoDirectOK.Load() {
+		// tor went on since the change, with this network's own step,
+		// or a direct step was put back for it
+		if netOns.Load() != ons || autoDirectOK.Load() {
 			return nil
 		}
 		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)

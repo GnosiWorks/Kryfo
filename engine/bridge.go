@@ -488,13 +488,21 @@ func networkOn(t *tor.Tor, before func()) (string, error) {
 		if before != nil {
 			before()
 		}
-		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+		if err := c.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+			return err
+		}
+		// here, not after ctrlDo: a fallback call that timed out can still
+		// land later, and tor is on the network then all the same
+		netWentOn()
+		return nil
 	})
-	if err != nil || why != "" {
-		return why, err
-	}
-	netWentOn()
-	return "", nil
+	return why, err
+}
+
+// tor answered and said no, as against a control port that did not answer
+func torRefused(err error) bool {
+	var te *textproto.Error
+	return errors.As(err, &te)
 }
 
 // no network: tor holds its config and stays off until one comes, so it

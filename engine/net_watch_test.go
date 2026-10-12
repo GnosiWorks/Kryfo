@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -491,5 +492,49 @@ func TestAutomaticWithNoWayInParksForTheValve(t *testing.T) {
 	}
 	if !netValveDue(time.Now().Add(2 * time.Minute)) {
 		t.Fatal("the valve never comes for automatic")
+	}
+}
+
+// tor goes on with a bridge step before the direct step's exit lands: the
+// exit is not sent. the exit first, then the bridge step: tor ends on
+func TestADirectExitAndABridgeStepInEitherOrder(t *testing.T) {
+	for _, exitFirst := range []bool{false, true} {
+		t.Run(fmt.Sprint(exitFirst), func(t *testing.T) {
+			resetAuto(t)
+			t.Cleanup(func() { resetAuto(t) })
+			f := overlapRig(t)
+			f.slow.Store(0)
+			keepNetDetail(t)
+			autoMu.Lock()
+			bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+			autoMu.Unlock()
+			mu.Lock()
+			tn := torNode
+			mu.Unlock()
+			ons := netOns.Load()
+			bridgeStep := func() {
+				useLines([]string{tbObfs4})
+				noteLinesApplied(linesGen.Load())
+				if why, err := networkOn(tn, nil); why != "" || err != nil {
+					t.Fatalf("bridge step on: %q %v", why, err)
+				}
+			}
+			if exitFirst {
+				netLeaveDirect(ons)
+				bridgeStep()
+			} else {
+				bridgeStep()
+				netLeaveDirect(ons)
+			}
+			var last string
+			for _, c := range f.sent() {
+				if strings.Contains(c, "DISABLENETWORK") {
+					last = c
+				}
+			}
+			if !strings.Contains(last, netOn) {
+				t.Fatalf("tor left off the network with a bridge step in place: %v", f.sent())
+			}
+		})
 	}
 }
