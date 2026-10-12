@@ -270,3 +270,34 @@ func TestASleepBeforeTheNetworkOnHolds(t *testing.T) {
 		t.Fatalf("tor woke for a reconnect after it was put to sleep: %v", f.sent())
 	}
 }
+
+// a sleep that lands while a wake waits on the control port: the wake says
+// so, and tor is not shown as starting
+func TestASleepDuringAWakeKeepsItAsleep(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	f.slow.Store(0)
+	atomicPaused(t)
+	setTestStatus("off", 0)
+	before := len(f.sent())
+	ctrlMu.Lock()
+	done := make(chan string, 1)
+	go func() { done <- torResume() }()
+	time.Sleep(200 * time.Millisecond)
+	// what torStop does first, while the wake waits for the control port
+	atomic.StoreInt32(&torPaused, 1)
+	ctrlMu.Unlock()
+	if r := <-done; r != "error: tor is asleep" {
+		t.Fatalf("wake: %q", r)
+	}
+	if netOnIn(sentAfter(f, before)) {
+		t.Fatalf("woken after the sleep: %v", f.sent())
+	}
+	if st := statusNow(); st == "starting" {
+		t.Fatal("shown as starting while asleep")
+	}
+	if !torIsPaused() {
+		t.Fatal("no longer marked asleep")
+	}
+}
