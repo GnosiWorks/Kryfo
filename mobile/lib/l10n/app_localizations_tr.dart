@@ -355,6 +355,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appOkNoRelayBegan => 'Tamam, aktarıcı başlamadı';
 
   @override
+  String get appNoRelayReached => 'Hiçbir aktarıcıya ulaşılamadı';
+
+  @override
   String get appOkCapped => 'Tamam, kesildi';
 
   @override
@@ -645,6 +648,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Bağlanıyor';
+
+  @override
+  String get appWaitingForARelay => 'Aktarıcı bekleniyor';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3473,6 +3479,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Parmak izi kullan';
 
   @override
+  String get lockSetupTurningOn => 'Açılıyor…';
+
+  @override
   String get lockSetupPinOnly => 'Yalnızca PIN';
 
   @override
@@ -3528,6 +3537,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Kullandığın her aktarıcı, yalnızca bizimki değil, bağlandığın adresi bilir. Mesajlar yine mühürlüdür, ama mesaj gönderdiğin gerçeği değil. Varsayılan olarak kapalı, yeniden kurulumdan sonra da yine kapalı.';
+
+  @override
+  String get modesNotChanged => 'Mod değişmedi. Yeniden dene.';
+
+  @override
+  String get modesSwitching => 'Değiştiriliyor…';
 
   @override
   String get modesSpeed => 'Hız';
@@ -7350,6 +7365,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kayıt defterine ulaşılamadı. Bir dakika sonra yeniden dene.';
 
   @override
+  String get handleStillReaching =>
+      'Kayıt defterine hâlâ ulaşılıyor. Tor üzerinden bu bir dakikayı bulabilir.';
+
+  @override
   String get handleCheckClock =>
       'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 
@@ -7482,8 +7501,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flowDecoy1 => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Yem PIN’i ayarlıyken parmak iziyle kilit açma kapalıdır.';
+  String get flowDecoyFinger =>
+      'Yem PIN’i ayarlıyken bu uygulama yalnızca PIN’inle açılır. Yemde parmak izi açıksa parmak yemi açar, bu uygulamayı asla açmaz.';
 
   @override
   String get flowDecoyDigits =>

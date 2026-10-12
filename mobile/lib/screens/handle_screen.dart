@@ -36,6 +36,21 @@ class _HandleScreenState extends State<HandleScreen> {
   String _state = ''; // '', checking, free, taken, error text
   bool _busy = false;
   String? _claimed;
+  // a registry call past [slowAfter]: over a cold circuit it can take most
+  // of a minute, and the page says so rather than look stuck
+  bool _slow = false;
+  Timer? _slowTimer;
+  static const slowAfter = Duration(seconds: 10);
+
+  void _asking(bool on) {
+    _slowTimer?.cancel();
+    _slow = false;
+    if (on) {
+      _slowTimer = Timer(slowAfter, () {
+        if (mounted) setState(() => _slow = true);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -53,6 +68,7 @@ class _HandleScreenState extends State<HandleScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _slowTimer?.cancel();
     _ctrl.dispose();
     _bio.dispose();
     super.dispose();
@@ -60,6 +76,7 @@ class _HandleScreenState extends State<HandleScreen> {
 
   void _onTyped(String v) {
     _debounce?.cancel();
+    _asking(false);
     final h = v.trim().toLowerCase();
     if (h.isEmpty) {
       setState(() => _state = '');
@@ -75,8 +92,12 @@ class _HandleScreenState extends State<HandleScreen> {
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       // a quiet session never reaches the registry: it answers as an
       // unreachable one would
+      _asking(true);
       final r = sessionQuiet ? _unreached : await engine.handleCheck(h);
       if (!mounted) return;
+      // typed on since: the answer is for a name no longer in the field
+      if (_ctrl.text.trim().toLowerCase() != h) return;
+      _asking(false);
       setState(() => _state = r);
     });
   }
@@ -85,6 +106,7 @@ class _HandleScreenState extends State<HandleScreen> {
     final h = _ctrl.text.trim().toLowerCase();
     if (h.isEmpty || _state != 'free') return;
     setState(() => _busy = true);
+    _asking(true);
     // same invite the qr code carries, so the registry only holds what is
     // already public
     final uri = await appState.sessionInvite();
@@ -93,6 +115,7 @@ class _HandleScreenState extends State<HandleScreen> {
     // kept even when the page is gone: the registry already holds it
     if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
     if (!mounted) return;
+    _asking(false);
     setState(() => _busy = false);
     if (r == 'ok') {
       setState(() => _claimed = h);
@@ -126,10 +149,12 @@ class _HandleScreenState extends State<HandleScreen> {
     );
     if (!sure || !mounted || _claimed != h) return;
     setState(() => _busy = true);
+    _asking(true);
     final r = sessionQuiet ? _unreached : await engine.handleRelease(h);
     // forgotten even when the page is gone, or the next check claims it again
     if (r == 'ok') await appState.setMyHandle(null);
     if (!mounted) return;
+    _asking(false);
     setState(() => _busy = false);
     if (r == 'ok') {
       setState(() {
@@ -194,6 +219,7 @@ class _HandleScreenState extends State<HandleScreen> {
     if (_claimed != null) {
       return [
         _ClaimedCard(handle: _claimed!, busy: _busy, onRelease: _release),
+        _SlowLine(show: _busy && _slow),
         const SizedBox(height: 14),
         _ListingCard(handle: _claimed!),
         const SizedBox(height: 22),
@@ -213,7 +239,7 @@ class _HandleScreenState extends State<HandleScreen> {
         max: 20,
       ),
       const SizedBox(height: 8),
-      _Availability(state: _state),
+      _Availability(state: _state, slow: _slow),
       const SizedBox(height: 18),
       _Field(ctrl: _bio, hint: l10n.handleALineAboutYou, max: 200, lines: 2),
       const SizedBox(height: 22),
@@ -225,6 +251,7 @@ class _HandleScreenState extends State<HandleScreen> {
         busy: _busy,
         onTap: free ? _claim : null,
       ),
+      _SlowLine(show: _busy && _slow),
     ];
   }
 }
@@ -480,9 +507,41 @@ class _ClaimedCardState extends State<_ClaimedCard> {
   }
 }
 
+// a registry call that is taking its time, said calmly. it opens its room
+// and fades in, and folds away when the answer comes
+class _SlowLine extends StatelessWidget {
+  final bool show;
+  const _SlowLine({required this.show});
+
+  @override
+  Widget build(BuildContext context) => EaseSize(
+    child: AnimatedSwitcher(
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      child: show
+          ? Padding(
+              key: const ValueKey('slow'),
+              padding: const EdgeInsetsDirectional.only(top: 10, start: 2),
+              child: Text(
+                l10n.handleStillReaching,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.4,
+                ),
+              ),
+            )
+          : const SizedBox(key: ValueKey('none'), width: double.infinity),
+    ),
+  );
+}
+
 class _Availability extends StatelessWidget {
   final String state;
-  const _Availability({required this.state});
+  // the check is taking its time
+  final bool slow;
+  const _Availability({required this.state, this.slow = false});
 
   @override
   Widget build(BuildContext context) {
@@ -490,8 +549,8 @@ class _Availability extends StatelessWidget {
     late final String txt;
     late final Color c;
     if (state == 'checking') {
-      txt = l10n.handleChecking;
-      c = HaloColors.text3;
+      txt = slow ? l10n.handleStillReaching : l10n.handleChecking;
+      c = HaloColors.text2;
     } else if (state == 'free') {
       txt = l10n.handleAvailable;
       c = HaloColors.green;

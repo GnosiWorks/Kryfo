@@ -1159,6 +1159,21 @@ void main() {
       await _done(t);
     });
 
+    // tor is not in use: nothing on the page may say it is connected
+    testWidgets('relay or fast mode: no card says connected', (t) async {
+      for (final mode in ['balanced', 'fast']) {
+        appState.sendModeForTest = mode;
+        await _open(
+          t,
+          status: const BridgeStatus(mode: 'auto', phase: 'not_tor_mode'),
+        );
+        expect(find.text(l10n.bridgesNotNeededRightNow), findsOneWidget);
+        expect(find.text(l10n.bridgesConnected), findsNothing);
+        expect(find.text(l10n.bridgesConnecting), findsNothing);
+        await _done(t);
+      }
+    });
+
     testWidgets('a wi-fi sign-in: its tag and the way to the wi-fi page', (
       t,
     ) async {

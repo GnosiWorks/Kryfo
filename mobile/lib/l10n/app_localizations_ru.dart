@@ -371,6 +371,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appOkNoRelayBegan => 'ОК, ретрансляторы молчат';
 
   @override
+  String get appNoRelayReached => 'Ретрансляторы недоступны';
+
+  @override
   String get appOkCapped => 'ОК, прервано';
 
   @override
@@ -663,6 +666,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Подключение';
+
+  @override
+  String get appWaitingForARelay => 'Ждём ретранслятор';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3555,6 +3561,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lockSetupUseFingerprint => 'По отпечатку';
 
   @override
+  String get lockSetupTurningOn => 'Включение…';
+
+  @override
   String get lockSetupPinOnly => 'Только PIN-код';
 
   @override
@@ -3609,6 +3618,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Каждый ретранслятор, которым ты пользуешься, знает адрес, с которого ты подключаешься, — не только наш. Сообщения по-прежнему зашифрованы, а вот сам факт отправки — нет. По умолчанию выключено и снова выключается после переустановки.';
+
+  @override
+  String get modesNotChanged => 'Режим не сменился. Попробуй ещё раз.';
+
+  @override
+  String get modesSwitching => 'Переключаем…';
 
   @override
   String get modesSpeed => 'Скорость';
@@ -7467,6 +7482,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Реестр не ответил. Попробуй через минуту.';
 
   @override
+  String get handleStillReaching =>
+      'Связываемся с реестром. Через Tor это может занять до минуты.';
+
+  @override
   String get handleCheckClock =>
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 
@@ -7602,8 +7621,8 @@ class AppLocalizationsRu extends AppLocalizations {
       'Открывает пустой Kryfo, как будто его только что установили.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Разблокировка отпечатком выключается, пока задана PIN-приманка.';
+  String get flowDecoyFinger =>
+      'Пока задана PIN-приманка, это приложение открывается только по PIN-коду. Если в приманке включён отпечаток, палец откроет приманку, но никогда не это приложение.';
 
   @override
   String get flowDecoyDigits =>

@@ -19,7 +19,9 @@ found a security problem? SECURITY.md says how to tell me privately.
 - encrypted backups and moving to a new phone
 - tools that work offline: see what a photo gives away, clean photos and
   videos, qr codes, file encryption with age
-- tor bridges (obfs4), and a check-ins mode that is easier on the battery
+- tor bridges: snowflake, webtunnel and obfs4. automatic mode tries one when
+  tor is blocked, PRIVACY.md says what they connect to
+- a check-ins mode that is easier on the battery
 - 15 languages, including persian and arabic
 - no contact upload, no analytics, no push service
 

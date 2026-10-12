@@ -1,0 +1,33 @@
+{
+  "bridges on, from the tor project": {
+    "onboarding_done": "true",
+    "bridge_source": "moat",
+    "bridge_lines": "obfs4 192.0.2.10:443 0A1B2C3D4E5F60718293A4B5C6D7E8F901234567 cert=abc iat-mode=0",
+    "bridges_on": "1"
+  },
+  "bridges on, pasted": {
+    "onboarding_done": "true",
+    "bridge_source": "paste",
+    "bridge_lines": "obfs4 198.51.100.7:9001 1234567890ABCDEF1234567890ABCDEF12345678 cert=xyz iat-mode=0",
+    "bridges_on": "1"
+  },
+  "bridges off, lines kept": {
+    "onboarding_done": "true",
+    "bridge_source": "moat",
+    "bridge_lines": "obfs4 192.0.2.10:443 0A1B2C3D4E5F60718293A4B5C6D7E8F901234567 cert=abc iat-mode=0",
+    "bridges_on": "0"
+  },
+  "never touched": {
+    "onboarding_done": "true"
+  },
+  "locked, a finger and a decoy": {
+    "onboarding_done": "true",
+    "halo.lock.table": "{\"v\":2,\"n\":15,\"e\":{\"0\":{\"p\":\"1234\",\"k\":1,\"c\":\"00000000000000000000000000000001\",\"w\":\"\"},\"2\":{\"p\":\"5555\",\"k\":3,\"c\":\"00000000000000000000000000000002\",\"w\":\"\"}}}",
+    "halo.lock.enabled": "true",
+    "halo.lock.biometric": "true",
+    "halo.containers": "00000000000000000000000000000002",
+    "halo.lock.state": "{\"r\":1,\"b\":1,\"hs\":0,\"hl\":0,\"hb\":-1,\"q\":false}",
+    "halo.lock.d.bio": "true",
+    "prefs:notif_hide_content": "true"
+  }
+}

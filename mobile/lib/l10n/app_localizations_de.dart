@@ -356,6 +356,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, kein Relais antwortete';
 
   @override
+  String get appNoRelayReached => 'Kein Relais erreicht';
+
+  @override
   String get appOkCapped => 'OK, gekappt';
 
   @override
@@ -647,6 +650,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Verbinde';
+
+  @override
+  String get appWaitingForARelay => 'Warte auf Relais';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3502,6 +3508,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Fingerabdruck nutzen';
 
   @override
+  String get lockSetupTurningOn => 'Wird eingeschaltet…';
+
+  @override
   String get lockSetupPinOnly => 'Nur PIN';
 
   @override
@@ -3557,6 +3566,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Jedes Relais, das du nutzt, kennt die Adresse, von der aus du dich verbindest, nicht nur unseres. Nachrichten bleiben versiegelt, aber dass du eine gesendet hast, nicht. Standardmäßig aus, und nach einer Neuinstallation wieder aus.';
+
+  @override
+  String get modesNotChanged =>
+      'Der Modus hat sich nicht geändert. Versuch es noch mal.';
+
+  @override
+  String get modesSwitching => 'Wechsle…';
 
   @override
   String get modesSpeed => 'Tempo';
@@ -7405,6 +7421,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Verzeichnis war nicht erreichbar. Versuch es gleich noch mal.';
 
   @override
+  String get handleStillReaching =>
+      'Das Verzeichnis wird noch erreicht. Über Tor kann das bis zu einer Minute dauern.';
+
+  @override
   String get handleCheckClock =>
       'Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.';
 
@@ -7540,8 +7560,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get flowDecoy1 => 'Öffnet ein leeres Kryfo, wie frisch installiert.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Das Entsperren mit Fingerabdruck ist aus, solange eine Tarn-PIN gesetzt ist.';
+  String get flowDecoyFinger =>
+      'Solange eine Tarn-PIN gesetzt ist, öffnet sich diese App nur mit deiner PIN. Ist in der Tarnung der Fingerabdruck an, öffnet ein Finger die Tarnung, nie diese App.';
 
   @override
   String get flowDecoyDigits =>

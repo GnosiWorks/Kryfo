@@ -354,6 +354,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, no relay began';
 
   @override
+  String get appNoRelayReached => 'No relay reached';
+
+  @override
   String get appOkCapped => 'OK, capped';
 
   @override
@@ -642,6 +645,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Connecting';
+
+  @override
+  String get appWaitingForARelay => 'Waiting for a relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3457,6 +3463,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Use fingerprint';
 
   @override
+  String get lockSetupTurningOn => 'Turning on…';
+
+  @override
   String get lockSetupPinOnly => 'PIN only';
 
   @override
@@ -3512,6 +3521,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.';
+
+  @override
+  String get modesNotChanged => 'The mode didn\'t change. Try again.';
+
+  @override
+  String get modesSwitching => 'Switching…';
 
   @override
   String get modesSpeed => 'Speed';
@@ -7320,6 +7335,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t reach the registry. Try again in a minute.';
 
   @override
+  String get handleStillReaching =>
+      'Still reaching the registry. Over Tor this can take up to a minute.';
+
+  @override
   String get handleCheckClock =>
       'Check the phone\'s date and time, then try again.';
 
@@ -7451,8 +7470,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flowDecoy1 => 'Opens an empty Kryfo, as if just installed.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Fingerprint unlock turns off while a decoy PIN is set.';
+  String get flowDecoyFinger =>
+      'While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.';
 
   @override
   String get flowDecoyDigits =>

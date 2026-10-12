@@ -225,6 +225,7 @@ String checkInLine(String stored) {
     'notready' => l10n.appTorNotReadyIn,
     'ok' => l10n.appOk,
     'ok_norelay' => l10n.appOkNoRelayBegan,
+    'norelay' => l10n.appNoRelayReached,
     'ok_capped' => l10n.appOkCapped,
     _ => l10n.appCheckStarted,
   };

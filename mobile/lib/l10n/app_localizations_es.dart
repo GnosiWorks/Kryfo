@@ -357,6 +357,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, ningún repetidor empezó';
 
   @override
+  String get appNoRelayReached => 'No se alcanzó ningún repetidor';
+
+  @override
   String get appOkCapped => 'OK, al límite';
 
   @override
@@ -647,6 +650,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Conectando';
+
+  @override
+  String get appWaitingForARelay => 'Esperando un repetidor';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3495,6 +3501,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Usar huella';
 
   @override
+  String get lockSetupTurningOn => 'Activando…';
+
+  @override
   String get lockSetupPinOnly => 'Solo PIN';
 
   @override
@@ -3550,6 +3559,12 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Cada repetidor que usas conoce la dirección desde la que te conectas, no solo el nuestro. Los mensajes siguen sellados, pero el hecho de haber enviado uno no lo está. Desactivado por defecto, y desactivado de nuevo tras reinstalar.';
+
+  @override
+  String get modesNotChanged => 'El modo no cambió. Inténtalo de nuevo.';
+
+  @override
+  String get modesSwitching => 'Cambiando…';
 
   @override
   String get modesSpeed => 'Velocidad';
@@ -7385,6 +7400,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo contactar con el registro. Inténtalo en un minuto.';
 
   @override
+  String get handleStillReaching =>
+      'Todavía contactando con el registro. Por Tor puede tardar hasta un minuto.';
+
+  @override
   String get handleCheckClock =>
       'Revisa la fecha y la hora del teléfono y vuelve a intentarlo.';
 
@@ -7517,8 +7536,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get flowDecoy1 => 'Abre un Kryfo vacío, como recién instalado.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'El desbloqueo con huella se desactiva mientras haya un PIN señuelo.';
+  String get flowDecoyFinger =>
+      'Mientras haya un PIN señuelo, esta app se abre solo con tu PIN. Si la huella está activada en el señuelo, un dedo abre el señuelo, nunca esta app.';
 
   @override
   String get flowDecoyDigits =>

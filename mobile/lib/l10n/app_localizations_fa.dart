@@ -354,6 +354,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appOkNoRelayBegan => 'موفق، هیچ رله‌ای پاسخ نداد';
 
   @override
+  String get appNoRelayReached => 'به هیچ رله‌ای وصل نشد';
+
+  @override
   String get appOkCapped => 'موفق، سقف زمان';
 
   @override
@@ -642,6 +645,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'در حال اتصال';
+
+  @override
+  String get appWaitingForARelay => 'در انتظار رله';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3471,6 +3477,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockSetupUseFingerprint => 'استفاده از اثر انگشت';
 
   @override
+  String get lockSetupTurningOn => 'در حال روشن کردن…';
+
+  @override
   String get lockSetupPinOnly => 'فقط PIN';
 
   @override
@@ -3525,6 +3534,12 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'هر رله‌ای که استفاده می‌کنید نشانی‌ای را که از آن وصل می‌شوید می‌داند، نه فقط رله‌ی ما. پیام‌ها همچنان مهروموم‌شده‌اند، اما اینکه پیامی فرستاده‌اید، نه. به‌طور پیش‌فرض خاموش است و بعد از نصب دوباره هم خاموش می‌شود.';
+
+  @override
+  String get modesNotChanged => 'حالت تغییر نکرد. دوباره امتحان کنید.';
+
+  @override
+  String get modesSwitching => 'در حال تغییر…';
 
   @override
   String get modesSpeed => 'سرعت';
@@ -7337,6 +7352,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'دفتر ثبت پاسخ نداد. یک دقیقهٔ دیگر دوباره امتحان کنید.';
 
   @override
+  String get handleStillReaching =>
+      'هنوز در حال رسیدن به دفتر ثبت است. از طریق Tor ممکن است تا یک دقیقه طول بکشد.';
+
+  @override
   String get handleCheckClock =>
       'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 
@@ -7469,8 +7488,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flowDecoy1 => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'تا وقتی PIN فریب تنظیم شده، باز کردن قفل با اثر انگشت خاموش است.';
+  String get flowDecoyFinger =>
+      'تا وقتی PIN فریب تنظیم شده، این برنامه فقط با PIN شما باز می‌شود. اگر اثر انگشت در فریب روشن باشد، انگشت فریب را باز می‌کند، هرگز این برنامه را.';
 
   @override
   String get flowDecoyDigits =>

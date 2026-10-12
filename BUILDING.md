@@ -5,7 +5,7 @@ two parts: the go engine (libhalo.so), then the flutter app that bundles it.
 ## toolchain
 
 - flutter 3.41.7
-- go 1.25.14
+- go 1.26.9
 - android ndk r28c (28.2.13676358)
 - jdk 17
 
@@ -35,6 +35,26 @@ them.
 gradle runs offline. a fresh machine needs one online run first:
 
     cd mobile/android && ./gradlew :app:lintDebug
+
+## test build for blocked networks
+
+    cd engine && HALO_TOR_BLOCKED=1 HALO_TEST_ID=1 ./build.sh
+    cd ../mobile && HALO_TEST_ID=1 flutter build apk --debug
+
+the engine then acts as if a censor sat on the network (engine/censor_on.go):
+tor's connections to relays are reset or stall, bridges get through. it is
+for driving blocked detection and automatic mode on any phone.
+
+HALO_TEST_ID=1 makes the debug app app.kryfo.bridgetest, which installs next
+to the real one with its own data. build.sh refuses HALO_TOR_BLOCKED without
+it, and the censor stays off in any other app. every gradle build except
+that debug app runs engine/censor-scan.sh on jniLibs and stops on a test
+engine, and repro/release.sh scans the engines in each apk the same way. run
+`./build.sh` again before any other build.
+
+the tor tests behind the censor:
+
+    cd engine && ./torconf-tests.sh TestBlockedDirectIsJudged TestBlockedAutomaticMovesOn
 
 ## signing
 

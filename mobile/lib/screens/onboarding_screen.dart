@@ -1174,8 +1174,22 @@ class _TransportScreenState extends State<_TransportScreen> {
     setState(() => _busy = true);
     // written whatever was picked, onion too: a value left in storage by a
     // half-done wipe or an earlier install must not win over this choice
-    await appState.setSendMode(_pick);
+    if (!await _save(_pick)) return;
     if (mounted) widget.onContinue();
+  }
+
+  // a mode that did not save is not in use: say so and stay on this step
+  Future<bool> _save(String m) async {
+    try {
+      await appState.setSendMode(m);
+      return true;
+    } catch (_) {
+      if (mounted) {
+        setState(() => _busy = false);
+        showHaloToast(context, l10n.modesNotChanged);
+      }
+      return false;
+    }
   }
 
   @override
@@ -1194,7 +1208,7 @@ class _TransportScreenState extends State<_TransportScreen> {
             label: l10n.onboardingSkipOnionIsA,
             onTap: () async {
               // skip means onion. make it so rather than assume it.
-              await appState.setSendMode('private');
+              if (!await _save('private')) return;
               if (mounted) widget.onContinue();
             },
           ),

@@ -165,7 +165,7 @@ vars, redo the patch against it, then `./vendor.sh`.
 
 lyrebird-0.8.1, commit 0b10edbb61e0. its tags are not go semver tags, so
 go.mod names the tag's commit as a pseudo-version. 0.9.0 asks for go
-1.26.0 and the engine builds with 1.25.14. the engine imports the obfs4,
+1.26.0 and is not taken in yet. the engine imports the obfs4,
 webtunnel and meek_lite transports one by one, never `transports.Init()`.
 
 lyrebird 0.8.1's own go.mod replaces utls with a temporary fork for the

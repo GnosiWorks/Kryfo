@@ -44,6 +44,21 @@ class _PinsScreenState extends State<PinsScreen> {
   // the decoy row, as this session should show it
   bool get _decoyOn => _lock.inDecoy ? _lock.decoyPinOn : _host.hasDecoy;
 
+  // the fingerprint switch moves as it is tapped, and goes back if the
+  // phone would not take it
+  bool? _fingerTo;
+  Future<void> _flipFinger() async {
+    if (_fingerTo != null) return;
+    HapticFeedback.selectionClick();
+    final to = !_lock.biometric;
+    setState(() => _fingerTo = to);
+    try {
+      await _lock.setBiometric(to);
+    } finally {
+      if (mounted) setState(() => _fingerTo = null);
+    }
+  }
+
   Future<void> _turnOff() async {
     // hidden chats need the lock: they come back to the chat list first
     if (_lock.inVault) {
@@ -217,11 +232,8 @@ class _PinsScreenState extends State<PinsScreen> {
                 extra: on && _lock.fingerOffered
                     ? _Toggle(
                         label: l10n.pinsUnlockWithFingerprint,
-                        on: _lock.biometric,
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          _lock.setBiometric(!_lock.biometric);
-                        },
+                        on: _fingerTo ?? _lock.biometric,
+                        onTap: _flipFinger,
                       )
                     : null,
               ),
@@ -503,7 +515,8 @@ class _HowRow extends StatelessWidget {
 }
 
 // what the extra pins do, what they do not, and the law. the finger line
-// only on a phone that has one
+// only on a phone that has one. the same sheet in every app, the decoy's
+// included
 void _showHow(BuildContext context, {required bool finger}) {
   HapticFeedback.selectionClick();
   showHaloSheet<void>(
@@ -532,7 +545,7 @@ void _showHow(BuildContext context, {required bool finger}) {
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
               (Icons.visibility_off_outlined, HaloColors.violet, l10n.howVault),
               if (finger)
-                (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFingerOff),
+                (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
               (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),
             ]) ...[

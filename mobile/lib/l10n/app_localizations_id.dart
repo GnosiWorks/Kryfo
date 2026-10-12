@@ -347,6 +347,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, tak ada relay mulai';
 
   @override
+  String get appNoRelayReached => 'Tak ada relay terjangkau';
+
+  @override
   String get appOkCapped => 'OK, dibatasi';
 
   @override
@@ -636,6 +639,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Menghubungkan';
+
+  @override
+  String get appWaitingForARelay => 'Menunggu relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3454,6 +3460,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Pakai sidik jari';
 
   @override
+  String get lockSetupTurningOn => 'Menyalakan…';
+
+  @override
   String get lockSetupPinOnly => 'PIN saja';
 
   @override
@@ -3509,6 +3518,12 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Setiap relay yang kamu pakai tahu alamat asal koneksimu, bukan hanya relay kami. Pesan tetap tersegel, tapi fakta bahwa kamu mengirimnya tidak. Mati secara bawaan, dan mati lagi setelah instal ulang.';
+
+  @override
+  String get modesNotChanged => 'Mode tidak berubah. Coba lagi.';
+
+  @override
+  String get modesSwitching => 'Mengganti…';
 
   @override
   String get modesSpeed => 'Kecepatan';
@@ -7320,6 +7335,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak bisa menghubungi registri. Coba lagi semenit lagi.';
 
   @override
+  String get handleStillReaching =>
+      'Masih menghubungi registri. Lewat Tor ini bisa makan waktu hingga semenit.';
+
+  @override
   String get handleCheckClock =>
       'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 
@@ -7452,8 +7471,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get flowDecoy1 => 'Membuka Kryfo kosong, seperti baru dipasang.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Buka kunci dengan sidik jari mati selama PIN umpan dipasang.';
+  String get flowDecoyFinger =>
+      'Selama PIN umpan dipasang, aplikasi ini hanya terbuka dengan PIN-mu. Jika sidik jari aktif di umpan, jari membuka umpan, tidak pernah aplikasi ini.';
 
   @override
   String get flowDecoyDigits =>

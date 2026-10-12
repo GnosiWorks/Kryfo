@@ -355,6 +355,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, aucun relais n’a démarré';
 
   @override
+  String get appNoRelayReached => 'Aucun relais joint';
+
+  @override
   String get appOkCapped => 'OK, écourté';
 
   @override
@@ -646,6 +649,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Connexion';
+
+  @override
+  String get appWaitingForARelay => 'En attente d’un relais';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3495,6 +3501,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Utiliser l’empreinte';
 
   @override
+  String get lockSetupTurningOn => 'Activation…';
+
+  @override
   String get lockSetupPinOnly => 'Code PIN seul';
 
   @override
@@ -3551,6 +3560,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Chaque relais que vous utilisez connaît l’adresse d’où vous vous connectez, pas seulement le nôtre. Les messages restent scellés, mais le fait que vous en ayez envoyé un ne l’est pas. Désactivé par défaut, et de nouveau désactivé après une réinstallation.';
+
+  @override
+  String get modesNotChanged => 'Le mode n’a pas changé. Réessayez.';
+
+  @override
+  String get modesSwitching => 'Changement…';
 
   @override
   String get modesSpeed => 'Vitesse';
@@ -7398,6 +7413,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le registre n’a pas répondu. Réessayez dans une minute.';
 
   @override
+  String get handleStillReaching =>
+      'Le registre n’a pas encore répondu. Via Tor, cela peut prendre jusqu’à une minute.';
+
+  @override
   String get handleCheckClock =>
       'Vérifiez la date et l’heure du téléphone, puis réessayez.';
 
@@ -7531,8 +7550,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowDecoy1 => 'Ouvre un Kryfo vide, comme tout juste installé.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Le déverrouillage par empreinte est désactivé tant qu’un code leurre est défini.';
+  String get flowDecoyFinger =>
+      'Tant qu’un code leurre est défini, cette app s’ouvre seulement avec votre code PIN. Si l’empreinte est activée dans le leurre, un doigt ouvre le leurre, jamais cette app.';
 
   @override
   String get flowDecoyDigits =>

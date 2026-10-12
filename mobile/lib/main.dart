@@ -117,6 +117,7 @@ import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
+import 'widgets/owned_text.dart';
 import 'bidi_safe.dart';
 import 'engine_strings.dart';
 import 'net_detail.dart';
@@ -419,6 +420,17 @@ class HaloEngine {
     }
   }
 
+  // the route the engine is on now
+  late final CStrFnDart _transportMode = _lib
+      .lookupFunction<CStrFn, CStrFnDart>('HaloTransportMode');
+  String transportMode() {
+    try {
+      return engineTake(_transportMode());
+    } on ArgumentError {
+      return '';
+    }
+  }
+
   // automatic tries again now, after it gave up
   late final CStrFnDart _bridgeRetry = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloBridgeRetry',
@@ -545,16 +557,21 @@ class HaloEngine {
   static String _take(Pointer<Utf8> p) => engineTake(p);
 
   // the registry is a request over tor, so it runs off the ui thread
-  Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
+  Future<String> handleCheck(String h) =>
+      _ffiOnIsolate('HaloHandleCheck', [h], wait: registryWait);
 
   Future<String> handleClaim(String h, String invite, String bio) =>
-      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio]);
+      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio], wait: registryWait);
 
   Future<String> handleRelease(String h) =>
-      _ffiOnIsolate('HaloHandleRelease', [h]);
+      _ffiOnIsolate('HaloHandleRelease', [h], wait: registryWait);
 
   Future<String> handleListing(String h, bool listed, String name) =>
-      _ffiOnIsolate('HaloHandleListing', [h, listed ? '1' : '0', name]);
+      _ffiOnIsolate('HaloHandleListing', [
+        h,
+        listed ? '1' : '0',
+        name,
+      ], wait: registryWait);
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -1149,6 +1166,11 @@ Future<String> _startListenerOnIsolate(String dataDir) {
 
 // one, two or three strings in, one string out, on a background isolate
 // with a ceiling so a registry that never answers cannot hold a screen
+/// past the engine's own bound on a registry call (engine/handle.go,
+/// handleWait): the engine's answer comes back, never a give-up here while
+/// a claim may still land
+const registryWait = Duration(seconds: 75);
+
 Future<String> _ffiOnIsolate(
   String symbol,
   List<String> args, {
@@ -2462,14 +2484,32 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
-      // the name given them goes with the chat. the verified mark stays on
-      // its key, so a re-add on another key is still held
+      // what was set for the chat goes with it, so they come back as a new
+      // person. the block, the verified mark on its key and the vouches for
+      // them stay
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0, 'nickname': null},
+        {
+          'accepted': 0,
+          'archived': 1,
+          'unread': 0,
+          'nickname': null,
+          'note': null,
+          'atmosphere': null,
+          'voice_disguise': null,
+          'muted': 0,
+          'pinned': 0,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
+      // a first message after this is checked afresh, and rings under a
+      // new tag the shade never ties to the old chat
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      // nothing queued for the old chat goes after it. a take-back still
+      // goes, it only withdraws
+      await _dropQueuedTo(t, haloId);
       return rows;
     });
     await _scrubMedia(files);
@@ -10363,9 +10403,18 @@ class AppState extends ChangeNotifier {
 
   // re-send anything the wire never confirmed. cheap when there's nothing to
   // do (one indexed query). skipped entirely while tor can't carry traffic.
-  Future<void> drainOutbox() async {
-    // count first, wire or no wire: the strip and the rows say what is
-    // waiting whether or not anything can move yet
+  // what waits, here and in the open vault, read and shown
+  Future<
+    ({
+      Set<String> held,
+      List<Map<String, Object?>> rows,
+      List<Map<String, Object?>> vRows,
+      _Queue q,
+      _Queue vq,
+      HaloDb? v,
+    })
+  >
+  _countOutbox() async {
     var held = await _heldOf(live);
     final rows = await live.unsentOutbox(skip: held);
     final q = await _queueOf(rows, live);
@@ -10393,6 +10442,15 @@ class AppState extends ChangeNotifier {
       _vq = vq;
       notifyListeners();
     }
+    return (held: held, rows: rows, vRows: vRows, q: q, vq: vq, v: v);
+  }
+
+  // [wait]: back once the sends this pass starts are done, or have had a
+  // while, rather than as they start
+  Future<void> drainOutbox({bool wait = false}) async {
+    // count first, wire or no wire: the strip and the rows say what is
+    // waiting whether or not anything can move yet
+    final (:held, :rows, :vRows, :q, :vq, :v) = await _countOutbox();
     // torReady already knows the mode: outside onion there is nothing to
     // wait for and a queued message should just go. with no network a try
     // only uses up the cap
@@ -10497,17 +10555,24 @@ class AppState extends ChangeNotifier {
     // an open chat that kept its pills while they ran reads them again,
     // once the pass is done
     if (going.isEmpty) return;
-    unawaited(
-      Future.wait(going)
-          .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
-          .whenComplete(() {
-            if (chats.isEmpty) return;
-            for (final p in chats) {
-              _bumpChatRev(p);
-            }
-            notifyListeners();
-          }),
-    );
+    final all = Future.wait(going)
+        .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
+        .whenComplete(() {
+          if (chats.isEmpty) return;
+          for (final p in chats) {
+            _bumpChatRev(p);
+          }
+          notifyListeners();
+        });
+    if (!wait) {
+      unawaited(all);
+      return;
+    }
+    try {
+      await all.timeout(flushWait);
+    } on TimeoutException {
+      dlog('outbox: still sending after the wait');
+    }
   }
 
   // people a seal to waits on their card, after a restore: the outbox and
@@ -11756,8 +11821,22 @@ class AppState extends ChangeNotifier {
   // is the default; 'normal' is an old name for it, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
+  // the mode the engine routes by, asked of it once and then kept as it is
+  // told. private when it cannot say, as the engine starts
+  String? _engineModeKept;
+  String get _engineMode => _engineModeKept ??= _askEngineMode();
+  set _engineMode(String m) => _engineModeKept = m;
+  String _askEngineMode() {
+    try {
+      final m = engine.transportMode();
+      return const {'private', 'balanced', 'fast'}.contains(m) ? m : 'private';
+    } catch (_) {
+      return 'private';
+    }
+  }
+
   @visibleForTesting
-  set sendModeForTest(String m) => _sendMode = m;
+  set sendModeForTest(String m) => _sendMode = _engineMode = m;
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
@@ -11977,9 +12056,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _switchSendMode(String m) async {
-    final changed = _sendMode != m;
-    _sendMode = m;
-    notifyListeners();
+    // saved first: a mode that was not saved is gone at the next start, so
+    // a failed save moves nothing and the caller hears of it
     await secureStore.write(key: 'send_mode', value: m);
     if (m == 'fast') {
       try {
@@ -11988,7 +12066,16 @@ class AppState extends ChangeNotifier {
         dlog('fast marker: $e');
       }
     }
-    if (!changed) return;
+    // measured against the engine, not the screen: the two only part when
+    // something failed half way, and then the engine still has to move
+    if (_engineMode == m) {
+      if (_sendMode != m) {
+        _sendMode = m;
+        notifyListeners();
+      }
+      if (_resubscribeDue) await _moveListeners(m);
+      return;
+    }
     // an outage seen on another mode is not this one's
     _relayDownSince = null;
     _fastHintShown = false;
@@ -11998,12 +12085,31 @@ class AppState extends ChangeNotifier {
     // one. the list is in place before anything subscribes: each runner
     // copies it once, as it starts
     engine.setTransportMode(m);
+    _engineMode = m;
     engine.nostrInit(relaysFor(m));
-    await resubscribe();
+    // the app follows the engine: nothing reads the new mode while the
+    // engine still routes the old way
+    _sendMode = m;
+    notifyListeners();
+    await _moveListeners(m);
+  }
+
+  // the runners onto the new mode's relays. the mode has landed whatever
+  // happens here: a failure is kept for the next switch to the same mode,
+  // and never told as a mode not saved
+  bool _resubscribeDue = false;
+  Future<void> _moveListeners(String m) async {
+    try {
+      await resubscribe();
+      _resubscribeDue = false;
+      dlog('mode: $m, relays rebuilt');
+    } catch (e) {
+      _resubscribeDue = true;
+      dlog('mode: $m, runners not moved (${e.runtimeType})');
+    }
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
     if (_fcLoaded) unawaited(_listenFirstContact());
-    dlog('mode: $m, relays rebuilt');
   }
 
   // every key listened on, never the screen's list, on the relays of a new
@@ -12159,6 +12265,7 @@ class AppState extends ChangeNotifier {
   bool _inFront = false;
   Timer? _sleepTimer;
   Timer? _wakeAgain;
+  Timer? _sleepAgain;
   int _lastCheckAt = 0;
   int _lastWakeAt = 0;
   // how the last check-in ended, for the transport screen, including one
@@ -12415,13 +12522,24 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
+    if (front) {
+      // tor may be asleep or the status a beat old: automatic is looked at
+      // again as the status comes in, for a little while
+      _stuckLookUntil = DateTime.now().add(stuckLookFor);
+      retryStuckAuto();
+    }
     if (_deliveryMode == DeliveryMode.always) {
       if (front) backInFront();
       return;
     }
     if (front) {
       _sleepTimer?.cancel();
-      unawaited(_torWake());
+      // awake, automatic is looked at again: held, it was passed over above
+      unawaited(
+        _torWake().then((up) {
+          if (up) retryStuckAuto();
+        }),
+      );
     } else {
       _scheduleSleep();
     }
@@ -12469,17 +12587,41 @@ class AppState extends ChangeNotifier {
     // back in front while it waited its turn: the wake behind it wins
     if (haloWiping || _inFront) return;
     _wakeAgain?.cancel();
+    _sleepAgain?.cancel();
     // held is only the app's word: a wake that failed half way has let the
     // engine run again, and then it is stopped once more
     if (_torHeld && engine.torPaused()) return;
     _torHeld = true;
     final r = await engine.torStop();
     dlog('delivery: tor stopped ($r)');
+    // a stop the control port refused leaves tor on the network, and the
+    // watchdog leaves a held tor alone: the stop is tried again
+    if (r.startsWith('error')) {
+      _sleepLater();
+    } else {
+      _sleepTries = 0;
+    }
     notifyListeners();
+  }
+
+  // for as long as tor is meant to sleep, half a minute and then twice as
+  // long each time, up to ten minutes
+  int _sleepTries = 0;
+  void _sleepLater() {
+    _sleepAgain?.cancel();
+    final wait = Duration(seconds: min(600, 30 << min(_sleepTries, 5)));
+    _sleepTries++;
+    _sleepAgain = Timer(wait, () {
+      if (!_torHeld || haloWiping || _inFront) return;
+      if (_deliveryMode == DeliveryMode.always) return;
+      unawaited(_torSleep());
+    });
   }
 
   Future<bool> _torWakeNow() async {
     _wakeAgain?.cancel();
+    _sleepAgain?.cancel();
+    _sleepTries = 0;
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below hands back the address
@@ -12516,10 +12658,15 @@ class AppState extends ChangeNotifier {
   // one check-in: tor up, every relay asked for what it holds, tor down.
   // returns how many drains brought something. bounded all the way: the job
   // that calls this is given under three minutes.
+  // the check-in's clock, which a test moves on its own
+  DateTime Function() _checkClock = DateTime.now;
+  @visibleForTesting
+  set checkClockForTest(DateTime Function() c) => _checkClock = c;
+
   Future<int> checkIn({String why = 'job'}) async {
     if (_checking) return 0;
     _checking = true;
-    final started = DateTime.now();
+    final started = _checkClock();
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     // tor asleep in the background: a check-in proper, not the app in use
@@ -12547,6 +12694,8 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('checkin: kick: $e');
       }
+      // the relays get their time from the kick, not from a slow wake
+      final kicked = _checkClock();
       // wait for the relays to be asked, then for every answer to be in. the
       // engine caps each relay at catchupCap (30s), so this ends when all
       // have finished or been given up on. the two escapes are for no relay
@@ -12555,7 +12704,8 @@ class AppState extends ChangeNotifier {
       var began = false;
       var tail = '';
       while (true) {
-        final secs = DateTime.now().difference(started).inSeconds;
+        final now = _checkClock();
+        final secs = now.difference(kicked).inSeconds;
         final (active, begun) = engine.catchupState();
         if (begun > begunBefore) began = true;
         if (began && active == 0) {
@@ -12570,14 +12720,22 @@ class AppState extends ChangeNotifier {
         }
         // relays are capped at 30s each, so this should never bite. if it
         // ever does, something is holding catchupActive up and the line on
-        // the transport screen will say which relay.
-        if (secs >= 90) {
+        // the transport screen will say which relay. the job's three
+        // minutes bound it from the start too
+        if (secs >= 90 || now.difference(started).inSeconds >= 160) {
           tail = '_capped';
           break;
         }
         await Future.delayed(const Duration(seconds: 1));
       }
       _lastCheckRelays = _relayCatchupData();
+      // no relay ever got going, most often no network: nothing was
+      // checked, and the last check-in stays the one that was. no slices
+      // are asked for either: with no relay, the ask could not go
+      if (tail == '_norelay') {
+        how = 'norelay';
+        return 0;
+      }
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
@@ -13193,6 +13351,33 @@ class AppState extends ChangeNotifier {
     _newTorTry();
   }
 
+  // back in front with automatic stuck, out of ways or held with none in
+  // place: it tries again, as it would on a tap. at most once a minute, so
+  // flicking between apps does not restart its passes. a decoy never asks
+  static const stuckRetryGap = Duration(minutes: 1);
+  static const stuckLookFor = Duration(seconds: 30);
+  DateTime? _stuckRetryAt;
+  DateTime? _stuckLookUntil;
+
+  @visibleForTesting
+  void retryStuckAuto({DateTime? now}) {
+    if (inDecoyView || _sendMode != 'private' || !_online || _torHeld) return;
+    if (_bridge.choice != BridgeChoice.auto) return;
+    final s = _bridgeStatus;
+    final held =
+        s.phase == 'trying' &&
+        !s.canSend &&
+        const {'pt_failed', 'not_applied', 'no_mode'}.contains(s.errorCode);
+    if (s.mode != 'auto' || !(s.exhausted || held)) return;
+    final at = now ?? DateTime.now();
+    final last = _stuckRetryAt;
+    if (last != null && at.difference(last) < stuckRetryGap) return;
+    _stuckRetryAt = at;
+    _stuckLookUntil = null;
+    dlog('bridges: stuck on coming back, trying again');
+    bridgeRetry();
+  }
+
   // the tor-is-blocked sheet is wanted: automatic found tor blocked on a
   // new install that was never asked. once a process
   bool _askDue = false;
@@ -13260,6 +13445,14 @@ class AppState extends ChangeNotifier {
     // what automatic learnt is kept once something gets through
     if (s.phase == 'connected' && was.phase != 'connected') {
       unawaited(_keepBridgeMemory());
+    }
+    final look = _stuckLookUntil;
+    if (look != null) {
+      if (DateTime.now().isAfter(look)) {
+        _stuckLookUntil = null;
+      } else {
+        retryStuckAuto();
+      }
     }
     notifyListeners();
   }
@@ -15424,10 +15617,13 @@ class AppState extends ChangeNotifier {
         'k': 'onion_key',
         'v': q['onion_key'] as String,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      // an everyday finger goes before the list says there is a decoy
+      await lockState.parkFingerForDecoy();
       await listContainer(HaloContainer.decoy, true);
       final id = await _quietOf(d);
       if (id == null || !await lockState.setupDecoyPin(pin)) {
         await _dropDecoyFiles(d);
+        await lockState.decoyNotMade();
         return false;
       }
       _decoyDb = d;
@@ -15440,6 +15636,7 @@ class AppState extends ChangeNotifier {
       // anything but a clash: nothing is left behind, and the flow says so
       dlog('decoy: not made ($e)');
       await _dropDecoyFiles(d);
+      await lockState.decoyNotMade();
       rethrow;
     }
   }
@@ -16517,6 +16714,9 @@ class AppState extends ChangeNotifier {
   // blocks tor looks exactly like a slow one for the first
   // minute or two, so we wait before suggesting anything.
   DateTime? _torTryingSince;
+  DateTime? get torTryingSince => _torTryingSince;
+  @visibleForTesting
+  set torTryingSinceForTest(DateTime? t) => _torTryingSince = t;
   bool _bridgeHintOff = false;
   // when the bootstrap percentage last moved. a climbing bar is a slow
   // network; a stuck one under half way is a blocked one.
@@ -18145,6 +18345,7 @@ class AppState extends ChangeNotifier {
     // the modes screen means the rest of the app never sees it.
     if (_sendMode == 'normal') await setSendMode('private');
     engine.setTransportMode(_sendMode);
+    _engineMode = _sendMode;
     dlog('transport: booting in $_sendMode');
     // only takes a lock in the engine, so it is set right here, before the
     // first-contact runner: that snapshots the list on start and gives up
@@ -18408,6 +18609,7 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
+    dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
@@ -19359,11 +19561,29 @@ class AppState extends ChangeNotifier {
 
   // user tapped retry. clears the backoff so the next sweep goes out now
   // rather than waiting out the doubling gap.
+  // how long send now waits on its sends before it counts what is left
+  static const flushWait = Duration(seconds: 30);
+
+  // the count after it is what still waits once the sends are done: the
+  // pass counts before it sends
   Future<void> flushOutboxNow() async {
-    _outboxNextAt.clear();
-    _outboxTries.clear();
-    await drainOutbox();
+    // one at a time: a second tap while it waits would only stack passes
+    if (_flushing) return;
+    _flushing = true;
+    notifyListeners();
+    try {
+      _outboxNextAt.clear();
+      _outboxTries.clear();
+      await drainOutbox(wait: true);
+      await _countOutbox();
+    } finally {
+      _flushing = false;
+      notifyListeners();
+    }
   }
+
+  bool _flushing = false;
+  bool get flushing => _flushing;
 
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.
@@ -22407,6 +22627,82 @@ class DevScreen extends StatefulWidget {
   State<DevScreen> createState() => _DevScreenState();
 }
 
+/// scan, pairing code or a pasted link: the choice and the words pasted.
+/// null when cancelled or dismissed
+@visibleForTesting
+Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
+    showDialog<(String, String)>(
+      context: context,
+      builder: (_) => OwnedText(
+        builder: (ctx, ctrl) => AlertDialog(
+          backgroundColor: HaloColors.surface2,
+          title: Text(
+            l10n.appAddAKryfo,
+            style: HaloType.sans(color: HaloColors.amber),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.maxFinite,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('scan', ctrl.text)),
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: Text(l10n.appScanQr),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HaloColors.amber,
+                    foregroundColor: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('code', ctrl.text)),
+                  icon: const Icon(Icons.dialpad, size: 18),
+                  label: Text(l10n.appPairingCode),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: HaloColors.text2,
+                    side: BorderSide(color: HaloColors.line),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                l10n.appOrPaste,
+                style: HaloType.sans(size: 11, color: HaloColors.text3),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                textDirection: TextDirection.ltr,
+                controller: ctrl,
+                maxLines: 4,
+                style: HaloType.mono(size: 11, color: HaloColors.text),
+                decoration: InputDecoration(
+                  hintText: 'kryfo://share?...',
+                  hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ('paste', ctrl.text)),
+              child: Text(
+                l10n.appImport,
+                style: HaloType.sans(color: HaloColors.amber),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
 class _DevScreenState extends State<DevScreen> {
   final _msgCtrl = TextEditingController(text: l10n.appHelloFromTheOther);
   String _myAddr = '';
@@ -22569,76 +22865,8 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _importPeer() async {
-    final ctrl = TextEditingController();
-    final action = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          l10n.appAddAKryfo,
-          style: HaloType.sans(color: HaloColors.amber),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.maxFinite,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, 'scan'),
-                icon: const Icon(Icons.qr_code_scanner),
-                label: Text(l10n.appScanQr),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: HaloColors.amber,
-                  foregroundColor: HaloColors.onAmber,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.maxFinite,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context, 'code'),
-                icon: const Icon(Icons.dialpad, size: 18),
-                label: Text(l10n.appPairingCode),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: HaloColors.text2,
-                  side: BorderSide(color: HaloColors.line),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              l10n.appOrPaste,
-              style: HaloType.sans(size: 11, color: HaloColors.text3),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              textDirection: TextDirection.ltr,
-              controller: ctrl,
-              maxLines: 4,
-              style: HaloType.mono(size: 11, color: HaloColors.text),
-              decoration: InputDecoration(
-                hintText: 'kryfo://share?...',
-                hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'paste'),
-            child: Text(
-              l10n.appImport,
-              style: HaloType.sans(color: HaloColors.amber),
-            ),
-          ),
-        ],
-      ),
-    );
+    final picked = await showImportPeerDialog(context);
+    final action = picked?.$1;
     if (action == null || !mounted) return;
 
     if (action == 'code') {
@@ -22655,7 +22883,7 @@ class _DevScreenState extends State<DevScreen> {
       if (result == null) return;
       uri = result;
     } else {
-      uri = ctrl.text;
+      uri = picked!.$2;
     }
 
     if (!mounted) return;
@@ -23106,8 +23334,46 @@ class TorHalo extends StatefulWidget {
   State<TorHalo> createState() => TorHaloState();
 }
 
+/// how long a bare connecting may stand before the pill says what it waits
+/// for
+const pillPatience = Duration(seconds: 30);
+
+/// what the home pill says, and which kind of line it is: the words change
+/// in place within a kind and cross over between kinds. offline is offline
+/// in every mode. a decoy hears connected, connecting or offline
+@visibleForTesting
+({String text, String kind}) pillWords({
+  required String mode,
+  required TorStatus status,
+  required bool online,
+  required bool ready,
+  required int pct,
+  required Duration waited,
+  required bool decoy,
+}) {
+  final off = status == TorStatus.off;
+  if (!online && !(mode == 'private' && off)) {
+    return (text: l10n.appOffline, kind: 'offline');
+  }
+  if (mode == 'balanced') return (text: l10n.appViaRelay, kind: 'relay');
+  if (mode == 'fast') return (text: l10n.appFast, kind: 'fast');
+  if (off) return (text: l10n.appTorOff, kind: 'off');
+  if (ready) return (text: l10n.appTorReady, kind: 'ready');
+  if (decoy || waited < pillPatience) {
+    return (text: l10n.appConnecting2, kind: 'connecting');
+  }
+  // still building its route: how far along. up with no relay through:
+  // that it waits for one
+  if (status == TorStatus.starting) {
+    return (text: l10n.appConnecting(percent(pct / 100)), kind: 'climbing');
+  }
+  return (text: l10n.appWaitingForARelay, kind: 'relay-wait');
+}
+
 class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
+  // wakes the pill when a bare connecting has stood long enough
+  Timer? _patience;
 
   // pulses only while tor is still coming up. once it is usable the chip
   // says so and rests, even when the onion is never confirmed reachable
@@ -23135,7 +23401,35 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   bool _pulsed = false;
   int _attempt = 0;
 
+  // how long tor has been trying, as the app keeps it
+  Duration get _waited {
+    final t = appState.torTryingSince;
+    return t == null ? Duration.zero : DateTime.now().difference(t);
+  }
+
+  void _armPatience() {
+    final waiting =
+        appState.sendMode == 'private' &&
+        appState.online &&
+        appState.torStatus != TorStatus.off &&
+        !appState.torUsable;
+    final left = pillPatience - _waited;
+    if (!waiting || left <= Duration.zero) {
+      _patience?.cancel();
+      _patience = null;
+      return;
+    }
+    if (_patience?.isActive ?? false) return;
+    _patience = Timer(left + const Duration(milliseconds: 50), () {
+      _patience = null;
+      if (!mounted) return;
+      setState(() {});
+      _armPatience();
+    });
+  }
+
   void _sync() {
+    _armPatience();
     if (!_isConnecting) {
       _pulsed = false;
       if (_c.isAnimating) _c.stop();
@@ -23165,6 +23459,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     appState.removeListener(_sync);
+    _patience?.cancel();
     _c.dispose();
     super.dispose();
   }
@@ -23287,9 +23582,21 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           final ready = appState.torUsable;
           final secured = ready && s == TorStatus.reachable;
           final connecting = _isConnecting;
+          final still = motionStill(context);
+          final said = pillWords(
+            mode: appState.sendMode,
+            status: s,
+            online: appState.online,
+            ready: ready,
+            pct: appState.bootstrapPct,
+            waited: _waited,
+            decoy: appState.inDecoyView,
+          );
           const torGreen = Color(0xFF34D399);
           final accent = off
-              ? HaloColors.text3
+              ? HaloColors.text2
+              : said.kind == 'offline'
+              ? HaloColors.amber
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
               : appState.sendMode == 'balanced'
@@ -23338,7 +23645,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           Widget tinted(Widget Function(Color) build) =>
               TweenAnimationBuilder<Color?>(
                 tween: ColorTween(end: accent),
-                duration: const Duration(milliseconds: 260),
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
                 builder: (_, c, _) => build(c ?? accent),
               );
@@ -23348,16 +23657,6 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   SizedBox(width: 20, height: 20, child: Center(child: dot(c))),
             );
           }
-          final mode = appState.sendMode;
-          final txt = mode == 'balanced'
-              ? (appState.linkUp ? l10n.appViaRelay : l10n.appOffline)
-              : mode == 'fast'
-              ? (appState.linkUp ? l10n.appFast : l10n.appOffline)
-              : off
-              ? l10n.appTorOff
-              : ready
-              ? l10n.appTorReady
-              : l10n.appConnecting2;
           return tinted(
             (c) => Row(
               mainAxisSize: MainAxisSize.min,
@@ -23365,7 +23664,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                 dot(c),
                 const SizedBox(width: 6),
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, anim) => FadeTransition(
@@ -23379,8 +23680,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   child: Text(
-                    txt,
-                    key: ValueKey(txt),
+                    said.text,
+                    key: ValueKey(said.kind),
                     style: HaloType.mono(size: 11, color: c),
                   ),
                 ),

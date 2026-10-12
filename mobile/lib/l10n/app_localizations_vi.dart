@@ -345,6 +345,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, không relay nào trả lời';
 
   @override
+  String get appNoRelayReached => 'Không liên lạc được relay nào';
+
+  @override
   String get appOkCapped => 'OK, bị cắt ngang';
 
   @override
@@ -636,6 +639,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Đang kết nối';
+
+  @override
+  String get appWaitingForARelay => 'Đang chờ relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3449,6 +3455,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Dùng vân tay';
 
   @override
+  String get lockSetupTurningOn => 'Đang bật…';
+
+  @override
   String get lockSetupPinOnly => 'Chỉ mã PIN';
 
   @override
@@ -3504,6 +3513,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Mọi relay bạn dùng đều biết địa chỉ bạn kết nối từ đó, không chỉ relay của chúng tôi. Tin nhắn vẫn được mã hóa kín, nhưng việc bạn đã gửi tin thì không được che giấu. Mặc định tắt, và tắt lại sau khi cài đặt lại.';
+
+  @override
+  String get modesNotChanged => 'Chế độ chưa đổi. Hãy thử lại.';
+
+  @override
+  String get modesSwitching => 'Đang chuyển…';
 
   @override
   String get modesSpeed => 'Tốc độ';
@@ -7314,6 +7329,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.';
 
   @override
+  String get handleStillReaching =>
+      'Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.';
+
+  @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 
@@ -7443,8 +7462,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get flowDecoy1 => 'Mở một Kryfo trống, như vừa mới cài.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Mở khóa bằng vân tay sẽ tắt khi đã đặt mã PIN ngụy trang.';
+  String get flowDecoyFinger =>
+      'Khi đã đặt mã PIN ngụy trang, ứng dụng này chỉ mở bằng mã PIN của bạn. Nếu phần ngụy trang bật vân tay, ngón tay sẽ mở phần ngụy trang, không bao giờ mở ứng dụng này.';
 
   @override
   String get flowDecoyDigits =>

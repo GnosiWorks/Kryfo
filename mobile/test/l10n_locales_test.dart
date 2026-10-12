@@ -1459,6 +1459,7 @@ final _calls = <_Call>[
   ),
   ('lockSetupThePinStillWorks', [], (l) => l.lockSetupThePinStillWorks),
   ('lockSetupUseFingerprint', [], (l) => l.lockSetupUseFingerprint),
+  ('lockSetupTurningOn', [], (l) => l.lockSetupTurningOn),
   ('lockSetupPinOnly', [], (l) => l.lockSetupPinOnly),
   ('lockSetupOnceMore', [], (l) => l.lockSetupOnceMore),
   ('lockSetupSetAPin', [], (l) => l.lockSetupSetAPin),
@@ -2854,7 +2855,7 @@ final _calls = <_Call>[
   ('flowVault1', [], (l) => l.flowVault1),
   ('flowVault2', [], (l) => l.flowVault2),
   ('flowVaultFinger', [], (l) => l.flowVaultFinger),
-  ('flowDecoyFingerOff', [], (l) => l.flowDecoyFingerOff),
+  ('flowDecoyFinger', [], (l) => l.flowDecoyFinger),
   ('flowVaultDigits', [], (l) => l.flowVaultDigits),
   ('flowVaultReplace', [], (l) => l.flowVaultReplace),
   ('flowVaultChoose', [], (l) => l.flowVaultChoose),
@@ -3062,6 +3063,11 @@ final _calls = <_Call>[
   ('voiceNotDisguised', [], (l) => l.voiceNotDisguised),
   ('settingsDisguiseByDefault', [], (l) => l.settingsDisguiseByDefault),
   ('settingsDisguiseByDefaultHint', [], (l) => l.settingsDisguiseByDefaultHint),
+  ('modesNotChanged', [], (l) => l.modesNotChanged),
+  ('modesSwitching', [], (l) => l.modesSwitching),
+  ('appNoRelayReached', [], (l) => l.appNoRelayReached),
+  ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
+  ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
 ];
 
 void main() {

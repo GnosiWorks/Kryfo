@@ -355,6 +355,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, sem retransmissor';
 
   @override
+  String get appNoRelayReached => 'Nenhum retransmissor alcançado';
+
+  @override
   String get appOkCapped => 'OK, cortada';
 
   @override
@@ -647,6 +650,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Conectando';
+
+  @override
+  String get appWaitingForARelay => 'Aguardando retransmissor';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3488,6 +3494,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Usar digital';
 
   @override
+  String get lockSetupTurningOn => 'Ativando…';
+
+  @override
   String get lockSetupPinOnly => 'Só o PIN';
 
   @override
@@ -3542,6 +3551,12 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Cada retransmissor que você usa sabe o endereço de onde você se conecta, não só o nosso. As mensagens continuam lacradas, mas o fato de você ter enviado uma, não. Desativado por padrão, e desativado de novo depois de reinstalar.';
+
+  @override
+  String get modesNotChanged => 'O modo não mudou. Tente de novo.';
+
+  @override
+  String get modesSwitching => 'Mudando…';
 
   @override
   String get modesSpeed => 'Velocidade';
@@ -7377,6 +7392,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível falar com o registro. Tente de novo em um minuto.';
 
   @override
+  String get handleStillReaching =>
+      'Ainda falando com o registro. Pelo Tor isso pode levar até um minuto.';
+
+  @override
   String get handleCheckClock =>
       'Confira a data e a hora do celular e tente de novo.';
 
@@ -7511,8 +7530,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abre um Kryfo vazio, como se acabasse de ser instalado.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'O desbloqueio com a digital fica desativado enquanto houver um PIN de disfarce.';
+  String get flowDecoyFinger =>
+      'Enquanto houver um PIN de disfarce, este app abre só com o seu PIN. Se a digital estiver ativada no disfarce, um dedo abre o disfarce, nunca este app.';
 
   @override
   String get flowDecoyDigits =>

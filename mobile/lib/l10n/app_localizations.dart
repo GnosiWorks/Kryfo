@@ -531,6 +531,12 @@ abstract class AppLocalizations {
   /// **'OK, no relay began'**
   String get appOkNoRelayBegan;
 
+  /// delivery_mode.dart. a check-in where no relay could be reached, most often with no network
+  ///
+  /// In en, this message translates to:
+  /// **'No relay reached'**
+  String get appNoRelayReached;
+
   /// main.dart: a check-in that was cut off at 90s
   ///
   /// In en, this message translates to:
@@ -1046,6 +1052,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connecting'**
   String get appConnecting2;
+
+  /// main.dart. the home pill, when tor is up but no relay has answered for a while. keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a relay'**
+  String get appWaitingForARelay;
 
   /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
@@ -5391,6 +5403,12 @@ abstract class AppLocalizations {
   /// **'Use fingerprint'**
   String get lockSetupUseFingerprint;
 
+  /// the fingerprint offer after a PIN is set: the button while fingerprint unlock is being turned on
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on…'**
+  String get lockSetupTurningOn;
+
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
@@ -5492,6 +5510,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.'**
   String get modesEveryRelayYouUse;
+
+  /// toast when a mode could not be saved and nothing changed
+  ///
+  /// In en, this message translates to:
+  /// **'The mode didn\'t change. Try again.'**
+  String get modesNotChanged;
+
+  /// the pill on a mode card while the app moves onto it
+  ///
+  /// In en, this message translates to:
+  /// **'Switching…'**
+  String get modesSwitching;
 
   /// screens/modes_screen.dart
   ///
@@ -11781,6 +11811,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the registry. Try again in a minute.'**
   String get handleRegistryFailed;
 
+  /// handle page, while a registry call has taken more than a few seconds
+  ///
+  /// In en, this message translates to:
+  /// **'Still reaching the registry. Over Tor this can take up to a minute.'**
+  String get handleStillReaching;
+
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///
   /// In en, this message translates to:
@@ -12009,11 +12045,11 @@ abstract class AppLocalizations {
   /// **'Opens an empty Kryfo, as if just installed.'**
   String get flowDecoy1;
 
-  /// decoy PIN setup and the how App lock works sheet, only on phones with fingerprint unlock
+  /// decoy PIN setup and the how App lock works sheet, only on phones with fingerprint unlock: while a decoy PIN is set the real app takes its PIN only, and a fingerprint opens only the decoy, if fingerprint was turned on inside the decoy
   ///
   /// In en, this message translates to:
-  /// **'Fingerprint unlock turns off while a decoy PIN is set.'**
-  String get flowDecoyFingerOff;
+  /// **'While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.'**
+  String get flowDecoyFinger;
 
   /// decoy PIN setup; also under the pad when choosing it
   ///
