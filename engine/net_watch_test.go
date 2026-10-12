@@ -562,6 +562,9 @@ func TestAValveProofOutlivesTheSameNone(t *testing.T) {
 	}
 	valveProves(t, f)
 	networkDetail(`{"on":false,"kind":"other"}`)
+	if netOffline.Load() {
+		t.Fatal("the watch's same none was taken again")
+	}
 	networkChangedTo(true)
 	time.Sleep(100 * time.Millisecond)
 	if netOffline.Load() || torParked.Load() {
@@ -636,9 +639,14 @@ func TestAValveTrialLearnsNothing(t *testing.T) {
 	if st := bridgeStatus(); st.AskConsent {
 		t.Fatalf("asked with no network: %+v", st)
 	}
+	// a checked network where the censor resets direct, all in the trial
+	setNetInfo(wifi())
 	f.applied = nil
 	f.script["direct"] = resetByCensor
 	pass(t, modeOpts{Consent: "ask"})
+	if !strings.Contains(strings.Join(f.applied, " "), "direct/") {
+		t.Fatalf("tried %v", f.applied)
+	}
 	if _, b := memSnapshot().Blocked["wifi"]; b {
 		t.Fatal("direct remembered blocked with no network")
 	}
