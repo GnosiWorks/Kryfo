@@ -538,3 +538,25 @@ func TestADirectExitAndABridgeStepInEitherOrder(t *testing.T) {
 		})
 	}
 }
+
+// tor never answering the bridge config is a stuck control port, not a
+// hold: the app's restart is for that
+func TestAStuckBridgeConfigSaysSo(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	if r := setBridgeMode(bmOwn, `{"lines":["`+tbObfs4+`"]}`); r != "ok" {
+		t.Fatal(r)
+	}
+	f := overlapRig(t)
+	old := ctrlDeadline
+	ctrlDeadline = 300 * time.Millisecond
+	t.Cleanup(func() { ctrlDeadline = old })
+	f.slow.Store(int64(time.Second))
+	r := reconnectNow()
+	if !strings.HasPrefix(r, "error: control port timeout") {
+		t.Fatalf("reconnect: %q", r)
+	}
+	if sentNetworkOn(f) {
+		t.Fatalf("on the network without its bridges: %v", f.sent())
+	}
+}

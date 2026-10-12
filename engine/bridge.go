@@ -16,11 +16,13 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/scrypt"
 	"io"
 	"log"
 	"net"
+	"net/textproto"
 	"os"
 	"strings"
 	"sync"
@@ -997,9 +999,10 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		return superseded
 	}
 	confOK := true
-	if err := applyBridgeConf(t); err != nil {
+	confErr := applyBridgeConf(t)
+	if confErr != nil {
 		log.Println("halo: bridge config not applied")
-		bridgeConfErr.Store(err.Error())
+		bridgeConfErr.Store(confErr.Error())
 		confOK = false
 	} else {
 		bridgeConfErr.Store("")
@@ -1021,6 +1024,11 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	why := networkHold()
 	if why == "" && !confOK && bridgesEnabled() {
 		why = errNoConf
+	}
+	// tor never answered the config: a control port that is stuck, not
+	// bridges tor refused, and the app's restart is for that
+	if why == errNoConf && confErr != nil && !torRefused(confErr) {
+		why = "error: " + confErr.Error()
 	}
 	if why != "" {
 		log.Printf("halo: leaving tor off the network (%s)", why)
