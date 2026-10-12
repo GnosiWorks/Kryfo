@@ -62,10 +62,15 @@ import 'dev_about_sheet.dart'
         showDevAboutSheet,
         startNewDevChat;
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/name_check_mark.dart';
 import '../main.dart'
     show
         engine,
+        kNameAsk,
         kNotSent,
+        nameAsks,
+        nameCheckOf,
+        nameUnchecked,
         session,
         sessionQuiet,
         signalEncrypt,
@@ -913,6 +918,13 @@ class _ChatScreenState extends State<ChatScreen>
   bool _keyReading = false;
   // a read asked for while one runs runs again after it
   bool _keyAgain = false;
+  // their words came with a request, an introduction or a group and
+  // nothing has checked them
+  bool _nameUnchecked = false;
+  // the chat asks for the safety number: added by a code or a link, or
+  // taken in from a request, and not verified
+  bool _nameAsks = false;
+  int _nameFlags = 0;
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
@@ -927,12 +939,24 @@ class _ChatScreenState extends State<ChatScreen>
       final changed = await session.keyChanged(widget.peerHaloId);
       final verified = await session.isVerified(widget.peerHaloId);
       final held = await session.keyHeld(widget.peerHaloId);
+      final row = await session.getContact(widget.peerHaloId);
+      final unchecked = nameUnchecked(row);
+      // no key held, no number to compare: nothing to ask for yet
+      final asks =
+          nameAsks(row) && await session.heldKey(widget.peerHaloId) != null;
       if (!mounted) return;
-      if (changed != _keyChanged || verified != _verified || held != _keyHeld) {
+      _nameFlags = nameCheckOf(row);
+      if (changed != _keyChanged ||
+          verified != _verified ||
+          held != _keyHeld ||
+          unchecked != _nameUnchecked ||
+          asks != _nameAsks) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
+          _nameUnchecked = unchecked;
+          _nameAsks = asks;
         });
       }
     } catch (e) {
@@ -956,6 +980,13 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _dismissKeyChanged() async {
     await session.setKeyChanged(widget.peerHaloId, false);
     if (mounted) setState(() => _keyChanged = false);
+  }
+
+  // the compare card put away for this chat. the words stay not checked
+  Future<void> _compareLater() async {
+    setState(() => _nameAsks = false);
+    await session.setNameCheck(widget.peerHaloId, _nameFlags & ~kNameAsk);
+    await _readKeyState();
   }
 
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
@@ -5037,6 +5068,7 @@ class _ChatScreenState extends State<ChatScreen>
                       nickname: _nickname,
                       note: _note,
                       verified: _verified,
+                      nameUnchecked: _nameUnchecked,
                       supporterBadge: _peerBadge,
                       onBlock: _openContact,
                       onMore: _chatActions,
@@ -5106,6 +5138,25 @@ class _ChatScreenState extends State<ChatScreen>
                               onDismiss: _dismissKeyChanged,
                             )
                           : const SizedBox(key: ValueKey('key-none'), width: 0),
+                    ),
+                    // added by a code or a link, or taken in from a request:
+                    // the safety number is what says who they are
+                    _Fold(
+                      _nameAsks &&
+                              !_keyChanged &&
+                              !_keyHeld &&
+                              !_isDev &&
+                              !widget.support
+                          ? _CompareCard(
+                              key: const ValueKey('compare'),
+                              peerName: _nickname ?? widget.peerHaloId,
+                              onVerify: _openKeyVerification,
+                              onLater: _compareLater,
+                            )
+                          : const SizedBox(
+                              key: ValueKey('compare-none'),
+                              width: 0,
+                            ),
                     ),
                   ],
                 ),
@@ -5907,6 +5958,7 @@ class _ChatHead extends StatelessWidget {
   final int pinnedCount;
   final VoidCallback onPinned;
   final bool verified;
+  final bool nameUnchecked;
   final String? note;
   final String? supporterBadge;
   const _ChatHead({
@@ -5923,6 +5975,7 @@ class _ChatHead extends StatelessWidget {
     this.pinnedCount = 0,
     required this.onPinned,
     this.verified = false,
+    this.nameUnchecked = false,
     this.note,
     this.supporterBadge,
   });
@@ -5999,6 +6052,10 @@ class _ChatHead extends StatelessWidget {
                           size: 13,
                           color: HaloColors.amber,
                         ),
+                      ],
+                      if (nameUnchecked && !verified) ...[
+                        const SizedBox(width: 6),
+                        const NameCheckMark(),
                       ],
                       if (supporterBadge != null) ...[
                         const SizedBox(width: 6),
@@ -8086,6 +8143,89 @@ PrivacyMode _pmFrom(String m) => m == 'fast'
     : m == 'balanced'
     ? PrivacyMode.normal
     : PrivacyMode.private;
+
+// at the top of a chat added by a code or a link, or taken in from a
+// request: three words prove nothing, the safety number does. it goes once
+// they are verified, or for later
+class _CompareCard extends StatelessWidget {
+  final String peerName;
+  final VoidCallback onVerify;
+  final VoidCallback onLater;
+  const _CompareCard({
+    super.key,
+    required this.peerName,
+    required this.onVerify,
+    required this.onLater,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 14,
+                color: HaloColors.amber,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  l10n.chatCompareTitle,
+                  style: HaloType.serif(size: 13, color: HaloColors.text),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            l10n.chatCompareLine(peerName),
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _barBtn(
+                  l10n.chatCompareLater,
+                  HaloColors.text,
+                  HaloColors.surface,
+                  onLater,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: _barBtn(
+                  l10n.chatVerify,
+                  HaloColors.onAmber,
+                  HaloColors.amber,
+                  onVerify,
+                  bold: true,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead

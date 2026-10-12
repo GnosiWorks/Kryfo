@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the joining side of a pairing code. six digits in, the invite they point
-// at out, and nothing added until the person has matched its face and three
-// words against the other phone's screen. a code that points at more than
-// one invite is refused outright.
+// at out, and nothing added until the person has matched its key number
+// against the other phone's screen. the three words only name them: anyone
+// can put them in an invite. a code that points at more than one invite is
+// refused outright.
 import 'dart:async';
 import 'dart:convert';
 
@@ -11,14 +12,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../main.dart' show inviteKeyNumber, parseHaloUri;
+import '../rooms.dart' show firstKryfoLink;
 import '../theme.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'pair_code_panel.dart' show kPairCodeLife;
 import 'halo_buttons.dart';
 import 'press_scale.dart';
-
-final _words = RegExp(r'^[a-z]+-[a-z]+-[a-z]+$');
 
 /// the engine's answer when no relay took a share or answered a lookup
 const pairUnreached = 'error: unreached';
@@ -27,15 +28,21 @@ const pairUnreached = 'error: unreached';
 String pairErrorText(String res) =>
     res == pairUnreached ? l10n.pairCodeUnreached : l10n.pairCodeFailed;
 
+/// what a code's address held, if it is one invite and nothing else: the
+/// number shown and the add both read this one string, so nothing after it
+/// can name another key. an old card with no bundle is no code's invite
+String? pairInviteExact(String payload) {
+  if (payload.contains(RegExp(r'\s'))) return null;
+  if (firstKryfoLink(payload) != payload) return null;
+  final parsed = parseHaloUri(payload);
+  if (parsed == null || parsed['bundle'] == null) return null;
+  return payload;
+}
+
 /// the three words a fetched invite names, or null when it names none
 String? pairInviteWords(String invite) {
-  if (!invite.startsWith('kryfo://share')) return null;
-  try {
-    final id = Uri.parse(invite).queryParameters['id'];
-    return id != null && _words.hasMatch(id) ? id : null;
-  } catch (_) {
-    return null;
-  }
+  final exact = pairInviteExact(invite);
+  return exact == null ? null : parseHaloUri(exact)?['id'];
 }
 
 /// the clock codes are counted on. tests set it to the fake one
@@ -82,12 +89,15 @@ class PairJoin extends StatefulWidget {
   final void Function(String status) onAdded;
   // between looks while the other side has not shared yet
   final Duration retryGap;
+  // the key number of a fetched invite, from the key its session runs on
+  final String? Function(String invite) numberOf;
   const PairJoin({
     super.key,
     required this.fetch,
     required this.add,
     required this.onAdded,
     this.retryGap = const Duration(seconds: 4),
+    this.numberOf = inviteKeyNumber,
   });
 
   @override
@@ -103,6 +113,7 @@ class _PairJoinState extends State<PairJoin> {
   bool _adding = false;
   String? _invite;
   String? _words;
+  String? _number;
   String? _code;
 
   @override
@@ -143,12 +154,16 @@ class _PairJoinState extends State<PairJoin> {
         return;
       }
       if (res.startsWith('kryfo://')) {
-        final words = pairInviteWords(res);
-        if (words == null) {
+        // words, number and add all from this one exact string
+        final exact = pairInviteExact(res);
+        final words = exact == null ? null : pairInviteWords(exact);
+        // no key that reads is no number to match, and nothing to add
+        final number = words == null ? null : widget.numberOf(exact!);
+        if (exact == null || words == null || number == null) {
           _say(l10n.pairCodeNothingAtThatCode);
           return;
         }
-        if (_wasRefused(code, res)) {
+        if (_wasRefused(code, exact)) {
           HapticFeedback.heavyImpact();
           _ctrl.clear();
           _say(l10n.pairCodeNotAdded, warn: true);
@@ -158,8 +173,9 @@ class _PairJoinState extends State<PairJoin> {
         setState(() {
           _busy = false;
           _status = '';
-          _invite = res;
+          _invite = exact;
           _words = words;
+          _number = number;
           _code = code;
         });
         return;
@@ -203,6 +219,7 @@ class _PairJoinState extends State<PairJoin> {
     setState(() {
       _invite = null;
       _words = null;
+      _number = null;
       _code = null;
       _status = l10n.pairCodeNotAdded;
       _warn = false;
@@ -239,6 +256,7 @@ class _PairJoinState extends State<PairJoin> {
               ? PairConfirm(
                   key: const ValueKey('confirm'),
                   words: _words!,
+                  number: _number!,
                   busy: _adding,
                   onAdd: _add,
                   onNotThem: _notThem,
@@ -333,16 +351,18 @@ class _PairJoinState extends State<PairJoin> {
   }
 }
 
-/// the invite a code led to, before anything is added: its face and three
-/// words, to be matched against the other phone
+/// the invite a code led to, before anything is added: who it names, and
+/// its key number to be matched against the other phone
 class PairConfirm extends StatelessWidget {
   final String words;
+  final String number;
   final bool busy;
   final VoidCallback onAdd;
   final VoidCallback onNotThem;
   const PairConfirm({
     super.key,
     required this.words,
+    required this.number,
     required this.onAdd,
     required this.onNotThem,
     this.busy = false,
@@ -352,7 +372,7 @@ class PairConfirm extends StatelessWidget {
   Widget build(BuildContext context) {
     final still = motionStill(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 28, 22, 14),
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 16),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         borderRadius: BorderRadius.circular(20),
@@ -360,35 +380,32 @@ class PairConfirm extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // the face settles a beat after the card, so the eye lands on it
+          // the face settles a beat after the card
           TweenAnimationBuilder<double>(
             tween: Tween(begin: still ? 1 : 0.86, end: 1),
             duration: still ? Duration.zero : kHouseTime,
             curve: kHouseCurve,
             builder: (_, v, child) => Transform.scale(scale: v, child: child),
-            child: KryfoAvatar(seed: words, size: 84),
+            child: KryfoAvatar(seed: words, size: 64),
           ),
-          const SizedBox(height: 18),
-          Text(
-            l10n.pairCodeIsThisThem,
-            textAlign: TextAlign.center,
-            style: HaloType.serif(size: 24, weight: FontWeight.w400),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          // a name, as they gave it
           Text(
             words,
             textAlign: TextAlign.center,
             textDirection: TextDirection.ltr,
             style: HaloType.mono(
-              size: 18,
+              size: 15,
               weight: FontWeight.w600,
-              color: HaloColors.amber,
+              color: HaloColors.text,
               letter: 0.02,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
+          PairKeyNumber(number: number, size: 22),
+          const SizedBox(height: 12),
           Text(
-            l10n.pairCodeCheckMatches,
+            l10n.pairCodeNumberMatches,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 13.5, color: HaloColors.text2),
           ),
@@ -402,10 +419,22 @@ class PairConfirm extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
                 child: Text(
-                  l10n.pairCodeNotThem,
+                  l10n.pairCodeNumberDiffers,
+                  textAlign: TextAlign.center,
                   style: HaloType.sans(size: 13.5, color: HaloColors.text2),
                 ),
               ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // an older Kryfo on the other side shows no number
+          Text(
+            l10n.pairCodeNoNumberThere,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(
+              size: 12,
+              color: HaloColors.text2,
+              height: 1.45,
             ),
           ),
         ],
@@ -414,16 +443,68 @@ class PairConfirm extends StatelessWidget {
   }
 }
 
-/// the sharer's own three words under the code, so the other side has
-/// something to match what it fetched against
-class PairWordsTag extends StatelessWidget {
-  final String words;
-  const PairWordsTag({super.key, required this.words});
+/// a key number, four groups of five. digits in the same order on every
+/// phone whatever its language, so two people can read them side by side
+class PairKeyNumber extends StatelessWidget {
+  final String number;
+  final double size;
+  const PairKeyNumber({super.key, required this.number, this.size = 18});
 
   @override
   Widget build(BuildContext context) {
+    final groups = number.split(' ');
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          l10n.pairCodeKeyNumber,
+          textAlign: TextAlign.center,
+          style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+        ),
+        const SizedBox(height: 6),
+        Semantics(
+          label: number,
+          textDirection: TextDirection.ltr,
+          excludeSemantics: true,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: size * 0.6,
+              runSpacing: 6,
+              children: [
+                for (final g in groups)
+                  Text(
+                    g,
+                    style: HaloType.mono(
+                      size: size,
+                      weight: FontWeight.w600,
+                      color: HaloColors.amber,
+                      letter: 0.06,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// the sharer's own three words under the code, and the key number the
+/// other side matches what it fetched against. no number when it did not
+/// read: then there is nothing to match
+class PairWordsTag extends StatelessWidget {
+  final String words;
+  final String? number;
+  const PairWordsTag({super.key, required this.words, this.number});
+
+  @override
+  Widget build(BuildContext context) {
+    final n = number;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 9),
+      padding: const EdgeInsets.fromLTRB(16, 9, 16, 11),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         borderRadius: BorderRadius.circular(12),
@@ -449,6 +530,16 @@ class PairWordsTag extends StatelessWidget {
               letter: 0.02,
             ),
           ),
+          if (n != null) ...[
+            const SizedBox(height: 10),
+            PairKeyNumber(number: n),
+            const SizedBox(height: 8),
+            Text(
+              l10n.pairCodeNumberMatches,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            ),
+          ],
         ],
       ),
     );

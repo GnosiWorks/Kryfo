@@ -294,11 +294,11 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 76 with the schema of a new install', () async {
+    test('$f opens at 77 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();
-      expect(await raw.getVersion(), 76);
+      expect(await raw.getVersion(), 77);
       final got = await _schema(raw);
       // key by key, so a miss names the table and the column
       for (final k in {...fresh[f]!.keys, ...got.keys}) {
@@ -317,6 +317,7 @@ void main() {
         'CREATE TABLE IF NOT EXISTS group_resent',
         'ALTER TABLE block_spans ADD COLUMN listen_from',
         'ALTER TABLE contacts ADD COLUMN voice_disguise',
+        'ALTER TABLE contacts ADD COLUMN name_check',
       ];
       final at = [
         for (final s in steps) sql!.said.indexWhere((x) => x.startsWith(s)),
@@ -364,7 +365,7 @@ void main() {
       final again = _files[f]!();
       final raw = await again.open();
       final said = sql!.said.sublist(from);
-      expect(await raw.getVersion(), 76);
+      expect(await raw.getVersion(), 77);
       expect(
         said.where(
           (s) => RegExp(
@@ -378,6 +379,25 @@ void main() {
       await again.close();
     });
   }
+
+  test('a request or a card still waiting comes up with its words not '
+      'checked, and nobody else does', () async {
+    if (skip()) return;
+    final db = HaloDb();
+    final raw = await db.open();
+    final rows = await raw.query('contacts');
+    var waiting = 0;
+    for (final r in rows) {
+      final open =
+          r['accepted'] == 0 && r['archived'] == 0 && r['verified'] == 0;
+      if (open) waiting++;
+      expect(r['name_check'], open ? 3 : 0, reason: '${r['halo_id']}');
+    }
+    // a check of the check: the file holds both kinds
+    expect(waiting, greaterThan(0));
+    expect(rows.length, greaterThan(waiting));
+    await db.close();
+  });
 
   test('the hidden chats keep their verified mark, tied to the card', () async {
     if (skip()) return;
@@ -555,7 +575,7 @@ void main() {
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);
     final otherRaw = await other.open();
-    expect(await otherRaw.getVersion(), 76);
+    expect(await otherRaw.getVersion(), 77);
     final mine = await _store(raw, (await peerIdentityHex(otherRaw, _me))!);
     final hers = await _store(
       otherRaw,

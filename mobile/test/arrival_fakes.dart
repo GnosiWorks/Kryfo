@@ -459,6 +459,8 @@ class ArrivalRows implements HaloDb {
         xpub: xpub,
         backPaired: 0,
       );
+      // someone who wrote first gave their name themselves
+      if (accepted == 0) people[haloId]!['name_check'] = 3;
       return;
     }
     // a parked row comes back on any touch, as the real one does
@@ -477,6 +479,61 @@ class ArrivalRows implements HaloDb {
     _hit('upsertContactStub', haloId, null);
     if (people.containsKey(haloId)) return;
     person(haloId, accepted: 0, onion: onion, xpub: xpub, backPaired: 0);
+    people[haloId]!['name_check'] = 3;
+  }
+
+  @override
+  Future<void> setNameCheck(String haloId, int flags) async {
+    _hit('setNameCheck', haloId, null);
+    people[haloId]?['name_check'] = flags;
+  }
+
+  // as the real ones leave the row: parked, and for a name let go, its key
+  // and what was said about it gone
+  void _park(String haloId) {
+    msgs.removeWhere((m) => m['peer_id'] == haloId && m['group_id'] == null);
+    heldRows.remove(haloId);
+    final p = people[haloId];
+    if (p == null) return;
+    p['accepted'] = 0;
+    p['archived'] = 1;
+    p['unread'] = 0;
+  }
+
+  @override
+  Future<void> declineRequest(String haloId) async {
+    _hit('declineRequest', haloId, null);
+    _park(haloId);
+  }
+
+  @override
+  Future<void> deleteConversation(String haloId) async {
+    _hit('deleteConversation', haloId, null);
+    _park(haloId);
+    people[haloId]?.remove('nickname');
+  }
+
+  @override
+  Future<bool> inAnyGroup(String haloId) async =>
+      _hit('inAnyGroup', haloId, members.values.any((m) => m.contains(haloId)));
+
+  @override
+  Future<void> forgetName(String haloId) async {
+    _hit('forgetName', haloId, null);
+    final p = people[haloId];
+    if (p == null) return;
+    p['xpub'] = '';
+    p['verified'] = 0;
+    p['back_paired'] = 0;
+    p['name_check'] = 3;
+    p.remove('peer_bundle');
+    p.remove('avatar');
+    p.remove('nickname');
+    vouches.remove(haloId);
+    for (final v in vouches.values) {
+      v.remove(haloId);
+    }
+    shields.remove(haloId);
   }
 
   @override

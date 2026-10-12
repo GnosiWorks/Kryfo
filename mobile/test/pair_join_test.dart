@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // joining with a pairing code: nothing is added until the person has seen
-// the face and three words the code led to and said they match. not them
-// adds nothing, a code that points at two invites is refused outright, the
-// card springs in under 300 ms or simply appears with less movement, and
-// the words stay left to right in a right-to-left language. the sharing
-// side shows its own three words under the code.
+// the key number of the invite the code led to and said it matches. the
+// three words are shown as a name, never as the thing to check. a different
+// number adds nothing, a code that points at two invites is refused
+// outright, the card springs in under 300 ms or simply appears with less
+// movement, and words and digits stay left to right in a right-to-left
+// language. the sharing side shows its own words and key number.
 import 'dart:io';
 import 'dart:math';
 
@@ -21,6 +22,7 @@ import 'pin_flow_fakes.dart' show app, phone;
 
 const _words = 'thumb-behave-boring';
 const _invite = 'kryfo://share?id=$_words&onion=x.onion&v=3&bundle=zz&fc=ab';
+const _number = '04821 99130 55102 73318';
 
 class _Pair {
   _Pair(this.answers);
@@ -43,6 +45,7 @@ class _Pair {
       },
       onAdded: done.add,
       retryGap: Duration.zero,
+      numberOf: (invite) => invite == _invite ? _number : null,
     ),
   );
 }
@@ -80,7 +83,7 @@ void main() {
     expect(pairInviteWords('kryfo://share?id=a-b'), isNull);
   });
 
-  testWidgets('the face and words come first, and add only on Add', (t) async {
+  testWidgets('the key number comes first, and add only on Add', (t) async {
     phone(t);
     final p = _Pair([_invite]);
     await t.pumpWidget(app(p.widget()));
@@ -89,9 +92,18 @@ void main() {
 
     expect(p.looked, ['482913']);
     expect(find.byType(PairConfirm), findsOneWidget);
-    expect(find.text(l10n.pairCodeIsThisThem), findsOneWidget);
+    expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);
+    for (final g in _number.split(' ')) {
+      expect(find.text(g), findsOneWidget);
+    }
+    expect(find.text(l10n.pairCodeNumberMatches), findsOneWidget);
+    expect(find.text(l10n.pairCodeNoNumberThere), findsOneWidget);
+    // the words name them, and nothing asks to match them
     expect(find.text(_words), findsOneWidget);
-    expect(find.text(l10n.pairCodeCheckMatches), findsOneWidget);
+    expect(
+      t.widget<Text>(find.text(_words)).style!.color,
+      isNot(HaloColors.amber),
+    );
     expect(t.widget<KryfoAvatar>(find.byType(KryfoAvatar)).seed, _words);
     expect(find.byType(TextField), findsNothing);
     expect(p.added, isEmpty);
@@ -102,14 +114,16 @@ void main() {
     expect(p.done, ['added']);
   });
 
-  testWidgets('not them adds nothing and asks for a new code', (t) async {
+  testWidgets('a different number adds nothing and asks for a new code', (
+    t,
+  ) async {
     phone(t);
     final p = _Pair([_invite]);
     await t.pumpWidget(app(p.widget()));
     await _look(t);
     await t.pumpAndSettle();
 
-    await t.tap(find.text(l10n.pairCodeNotThem));
+    await t.tap(find.text(l10n.pairCodeNumberDiffers));
     await t.pumpAndSettle();
     expect(find.byType(PairConfirm), findsNothing);
     expect(find.text(l10n.pairCodeNotAdded), findsOneWidget);
@@ -226,26 +240,33 @@ void main() {
     await _look(t);
     await t.pumpAndSettle();
 
-    expect(find.text(l10n.pairCodeIsThisThem), findsOneWidget);
-    expect(l10n.pairCodeIsThisThem, isNot('Is this them?'));
+    expect(find.text(l10n.pairCodeNumberMatches), findsOneWidget);
+    expect(l10n.pairCodeKeyNumber, isNot('Key number'));
     final words = find.text(_words);
     expect(t.widget<Text>(words).textDirection, TextDirection.ltr);
+    // the digits read in the same order on both phones
     expect(
-      Directionality.of(t.element(find.text(l10n.pairCodeCheckMatches))),
+      Directionality.of(t.element(find.text(_number.split(' ').first))),
+      TextDirection.ltr,
+    );
+    expect(
+      Directionality.of(t.element(find.text(l10n.pairCodeNumberMatches))),
       TextDirection.rtl,
     );
-    await t.tap(find.text(l10n.pairCodeNotThem));
+    await t.tap(find.text(l10n.pairCodeNumberDiffers));
     await t.pumpAndSettle();
     expect(find.text(l10n.pairCodeNotAdded), findsOneWidget);
     expect(p.added, isEmpty);
   });
 
-  testWidgets('the sharing side shows its own three words', (t) async {
+  testWidgets('the sharing side shows its own words and key number', (t) async {
     phone(t);
     await t.pumpWidget(
       app(
         const Scaffold(
-          body: Center(child: PairWordsTag(words: _words)),
+          body: Center(
+            child: PairWordsTag(words: _words, number: _number),
+          ),
         ),
       ),
     );
@@ -253,6 +274,25 @@ void main() {
     expect(find.text(l10n.pairCodePanelYourWords), findsOneWidget);
     expect(find.text(_words), findsOneWidget);
     expect(t.widget<Text>(find.text(_words)).textDirection, TextDirection.ltr);
+    expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);
+    expect(find.text(l10n.pairCodeNumberMatches), findsOneWidget);
+    for (final g in _number.split(' ')) {
+      expect(find.text(g), findsOneWidget);
+    }
+  });
+
+  testWidgets('an invite with no key that reads shows nothing to match', (
+    t,
+  ) async {
+    phone(t);
+    const other = 'kryfo://share?id=$_words&onion=x.onion&v=3&bundle=yy';
+    final p = _Pair([other]);
+    await t.pumpWidget(app(p.widget()));
+    await _look(t);
+    await t.pumpAndSettle();
+    expect(find.byType(PairConfirm), findsNothing);
+    expect(find.text(l10n.pairCodeNothingAtThatCode), findsOneWidget);
+    expect(p.added, isEmpty);
   });
 
   testWidgets('no relay answering is not a wrong code', (t) async {
@@ -362,7 +402,8 @@ void main() {
       await t.pumpWidget(
         app(
           PairCodePanel(
-            publish: (code) async {
+            invite: () async => _invite,
+            publish: (code, invite) async {
               codes.add(code);
               return res;
             },
@@ -412,7 +453,7 @@ void main() {
     await t.pumpWidget(app(p.widget()));
     await _look(t);
     await t.pumpAndSettle();
-    await t.tap(find.text(l10n.pairCodeNotThem));
+    await t.tap(find.text(l10n.pairCodeNumberDiffers));
     await t.pumpAndSettle();
 
     // the same code again, here or on the screen opened anew

@@ -75,8 +75,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get contactCardMessageMeOn => 'به من پیام دهید در';
 
   @override
-  String get contactCardScanItOrType =>
-      'آن را اسکن کنید یا سه واژه را در Kryfo وارد کنید.\nاین کارت جز این، چیزی درباره‌ی شما نمی‌داند.';
+  String get contactCardScanToAdd =>
+      'آن را با Kryfo اسکن کنید تا مرا اضافه کنید.\nاین کارت جز این، چیزی درباره‌ی شما نمی‌داند.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -864,6 +864,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'شبیه کلاهبرداری';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'خود را ⁨$shown⁩ معرفی می‌کند، نامی که کس دیگری اینجا دارد';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1746,6 +1751,17 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'کد امنیتی تغییر کرد';
+
+  @override
+  String get chatCompareTitle => 'شماره‌ی امنیتی را مقایسه کنید';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'سه واژه را می‌شود کپی کرد. برای اینکه بدانید این گفت‌وگو واقعاً با ⁨$peerName⁩ است، شماره‌ی امنیتی را با او مقایسه کنید، حضوری یا در یک تماس.';
+  }
+
+  @override
+  String get chatCompareLater => 'بعداً';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3242,8 +3258,8 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'اگر ⁨$peerName⁩ همین شماره را ببیند، پیام‌های شما فقط میان شما دو نفر خصوصی است. مقایسه‌ی حضوری یا در تماسی که به آن اعتماد دارید مطمئن‌ترین راه است - اما اختیاری است و برای گفت‌وگو هرگز لازم نیست.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'هر ۱۲ گروه را با ⁨$peerName⁩ مقایسه کنید، حضوری یا در تماسی که به آن اعتماد دارید. اگر همه‌ی گروه‌ها یکی باشند، کسی در میان نیست و پیام‌های شما فقط برای شما دو نفر است.';
   }
 
   @override
@@ -4114,13 +4130,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'این کد دو بار استفاده شده. یک کد تازه بخواهید.';
 
   @override
-  String get pairCodeIsThisThem => 'همین شخص است؟';
+  String get pairCodeKeyNumber => 'شماره‌ی کلید';
 
   @override
-  String get pairCodeCheckMatches => 'بررسی کنید که با صفحه‌ی او یکی باشد';
+  String get pairCodeNumberMatches =>
+      'بررسی کنید هر چهار گروه روی هر دو گوشی یکی باشند';
 
   @override
-  String get pairCodeNotThem => 'این شخص نیست';
+  String get pairCodeNumberDiffers => 'شماره فرق دارد';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'روی صفحه‌ی او شماره‌ای نیست؟ او را اضافه کنید، بعد شماره‌ی امنیتی را در گفت‌وگو مقایسه کنید.';
 
   @override
   String get pairCodeNotAdded => 'افزوده نشد. یک کد تازه بخواهید.';
@@ -6135,11 +6156,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'این ⁨$who⁩ گفت‌وگوهای شما نیست';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'شما کسی را در گفت‌وگوهایتان ⁨$who⁩ نامیده‌اید. این پیوند از کس دیگری است. فقط وقتی اضافه‌اش کنید که بدانید از کجا آمده.';
   }
@@ -6361,6 +6377,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pairCodePanelYourWords => 'سه واژه‌ی شما';
+
+  @override
+  String get pairCodePanelAcceptOnce =>
+      'درخواست او پس از اینکه شما را اضافه کند می‌رسد. فقط وقتی بپذیرید که بگوید هر چهار گروه یکی بودند.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7954,21 +7974,41 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devChatOptions => 'گزینه‌های گفت‌وگو';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'این پیوند خود را ⁨$id⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'خود را ⁨$shown⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد';
-  }
-
-  @override
   String get requestsSomeoneNew => 'فردی تازه';
+
+  @override
+  String get nameNotChecked => 'بررسی‌نشده';
+
+  @override
+  String get nameTakenTitle => 'کس دیگری از این واژه‌ها استفاده می‌کند';
+
+  @override
+  String get nameTakenLine =>
+      'کسی اینجا این واژه‌ها را از یک درخواست، یک معرفی یا یک گروه گرفته، با کلیدی دیگر، و کسی آن‌ها را بررسی نکرده است. واژه‌ها را می‌شود کپی کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید و بعد شماره‌ی امنیتی را با او مقایسه کنید.';
+
+  @override
+  String get nameTakenChatLine =>
+      'گفت‌وگوی شما با این واژه‌ها از یک درخواست، یک معرفی یا یک گروه آمده، با کلیدی دیگر، و کسی آن را بررسی نکرده است. واژه‌ها را می‌شود کپی کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید: آن گفت‌وگو پاک می‌شود و شماره‌ی امنیتی را در گفت‌وگوی تازه مقایسه می‌کنید. مطمئن نیستید پیوند از کجا آمده؟ همان قبلی را نگه دارید.';
+
+  @override
+  String get nameTakenUse => 'استفاده از این پیوند';
+
+  @override
+  String get nameTakenKeep => 'همان قبلی بماند';
 
   @override
   String get appYourOwnInvite =>
       'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'کسی از قبل با نام ⁨$id⁩ اینجاست، با کلیدی دیگر. شماره‌ی امنیتی را با او مقایسه کنید تا بدانید چه کسی کیست. چیزی افزوده نشد.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'شما ⁨$id⁩ را با کلیدی دیگر تأیید کرده‌اید. چیزی افزوده نشد.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

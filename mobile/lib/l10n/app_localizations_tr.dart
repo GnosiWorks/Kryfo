@@ -74,8 +74,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get contactCardMessageMeOn => 'Bana şuradan yaz';
 
   @override
-  String get contactCardScanItOrType =>
-      'Kodu tara ya da üç kelimeyi Kryfo’ya yaz.\nBu kart senin hakkında bundan başka bir şey bilmiyor.';
+  String get contactCardScanToAdd =>
+      'Beni eklemek için kodu Kryfo ile tara.\nBu kart senin hakkında bundan başka bir şey bilmiyor.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -867,6 +867,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'Dolandırıcılığa benziyor';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return '$shown olduğunu söylüyor, bu adı burada zaten başka biri kullanıyor';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1745,6 +1750,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'Güvenlik kodu değişti';
+
+  @override
+  String get chatCompareTitle => 'Güvenlik numarasını karşılaştır';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'Üç kelime kopyalanabilir. Bu sohbetin gerçekten $peerName ile olduğunu bilmek için güvenlik numarasını onunla yüz yüze ya da bir aramada karşılaştır.';
+  }
+
+  @override
+  String get chatCompareLater => 'Sonra';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3241,8 +3257,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return '$peerName de aynı numarayı görüyorsa mesajların yalnızca ikinize özeldir. Yüz yüze ya da güvendiğin bir aramada karşılaştırmak emin olmanın en sağlam yoludur - ama isteğe bağlıdır, sohbet etmek için asla gerekmez.';
+  String keyVerificationCompareAll(Object peerName) {
+    return '12 grubun hepsini $peerName ile yüz yüze ya da güvendiğin bir aramada karşılaştır. Her grup aynıysa aranızda kimse yoktur ve mesajlarınız yalnızca ikinize özeldir.';
   }
 
   @override
@@ -4117,14 +4133,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodeUsedTwice => 'Bu kod iki kez kullanıldı. Yenisini iste.';
 
   @override
-  String get pairCodeIsThisThem => 'Bu o kişi mi?';
+  String get pairCodeKeyNumber => 'Anahtar numarası';
 
   @override
-  String get pairCodeCheckMatches =>
-      'Karşındakinin ekranıyla aynı mı, kontrol et';
+  String get pairCodeNumberMatches =>
+      'Dört grubun da iki telefonda aynı olduğunu kontrol et';
 
   @override
-  String get pairCodeNotThem => 'O kişi değil';
+  String get pairCodeNumberDiffers => 'Numara farklı';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Ekranında numara yok mu? Ekle, sonra sohbette güvenlik numarasını karşılaştır.';
 
   @override
   String get pairCodeNotAdded => 'Eklenmedi. Yeni bir kod iste.';
@@ -6145,11 +6165,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'Bu, sohbetlerindeki $who değil';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'Sohbetlerindeki birine $who diyorsun. Bu bağlantı başka birinden. Yalnızca nereden geldiğini biliyorsan ekle.';
   }
@@ -6373,6 +6388,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pairCodePanelYourWords => 'Üç kelimen';
+
+  @override
+  String get pairCodePanelAcceptOnce =>
+      'Seni eklediğinde isteği gelir. Yalnızca dört grubun da aynı olduğunu söylediğinde kabul et.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7964,21 +7983,41 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devChatOptions => 'Sohbet seçenekleri';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'Bu bağlantı $id olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return '$shown olduğunu söylüyor ama anahtarı eşleşmiyor';
-  }
-
-  @override
   String get requestsSomeoneNew => 'Yeni biri';
+
+  @override
+  String get nameNotChecked => 'Kontrol edilmedi';
+
+  @override
+  String get nameTakenTitle => 'Bu kelimeleri başka biri kullanıyor';
+
+  @override
+  String get nameTakenLine =>
+      'Buradaki biri bu kelimeleri bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla aldı ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra onunla güvenlik numarasını karşılaştır.';
+
+  @override
+  String get nameTakenChatLine =>
+      'Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın. Bağlantının nereden geldiğinden emin değil misin? Mevcut olanı tut.';
+
+  @override
+  String get nameTakenUse => 'Bu bağlantıyı kullan';
+
+  @override
+  String get nameTakenKeep => 'Mevcut olanı tut';
 
   @override
   String get appYourOwnInvite =>
       'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'Burada zaten $id adıyla biri var, farklı bir anahtarla. Kimin kim olduğunu anlamak için güvenlik numarasını onunla karşılaştır. Hiçbir şey eklenmedi.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return '$id kişisini farklı bir anahtarla doğruladın. Hiçbir şey eklenmedi.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

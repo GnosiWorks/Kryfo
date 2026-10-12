@@ -2,7 +2,9 @@
 // a kryfo link from another app, a web page or a cold start asks before it
 // adds or joins anything, never under the lock, and a no changes nothing.
 // an invite's id has to be three words and is held up against the people
-// here, and a room's name is cleaned before it is shown. the door the link
+// here, and a room's name is cleaned before it is shown. words a request,
+// an introduction or a group gave someone here, never checked, go on to the
+// door, which asks which one keeps them. the door the link
 // would go through is a stand-in that counts its calls
 import 'dart:io';
 
@@ -11,7 +13,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
-import 'package:kryfo/main.dart' show LinkKin;
+import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/main.dart' show LinkKin, rootNavKey;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
@@ -272,8 +275,8 @@ void main() {
     final w = _World()..kin = (LinkKin.otherKey, 'Ana');
     await w.start(t);
     await w.open(t, _invite);
-    expect(find.text(l10n.kryfoLinkTextNotTheOne('Ana')), findsOne);
-    expect(find.text(l10n.appLinkOtherKey('tourist-admit-sun')), findsOne);
+    expect(find.text(l10n.nameTakenTitle), findsOne);
+    expect(find.text(l10n.appLinkWordsTaken('tourist-admit-sun')), findsOne);
     expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
     await t.tap(find.text(l10n.appOk));
     await t.pumpAndSettle();
@@ -361,7 +364,7 @@ void main() {
     final w = _World()..kin = (LinkKin.otherKey, 'Ana');
     await w.start(t);
     await w.tap(t, _invite);
-    expect(find.text(l10n.kryfoLinkTextNotTheOne('Ana')), findsOne);
+    expect(find.text(l10n.nameTakenTitle), findsOne);
     expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
     await t.tap(find.text(l10n.appOk));
     await t.pumpAndSettle();
@@ -402,5 +405,71 @@ void main() {
       ),
       'abcdefghijklmn',
     );
+  });
+
+  testWidgets('words nobody checked go on to the door unasked: the door '
+      'asks which one keeps them', (t) async {
+    final w = _World()..kin = (LinkKin.claimed, 'tourist-admit-sun');
+    await w.start(t);
+    await w.open(t, _invite);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+    expect(find.text(l10n.nameTakenTitle), findsNothing);
+    expect(w.door.taken, [_invite]);
+    expect(w.result, 'done');
+  });
+
+  testWidgets('the question names the words, says the other chat goes when '
+      'there is one, answers as tapped, and never comes under the lock', (
+    t,
+  ) async {
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (_) async => null,
+    );
+    await t.pumpWidget(
+      MaterialApp(
+        navigatorKey: rootNavKey,
+        theme: buildHaloTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(),
+      ),
+    );
+    // under the lock nothing is asked, and nothing is let go
+    if (lockGuard.isLocked()) {
+      expect(await askTakeNameSheet('tourist-admit-sun', chat: false), isFalse);
+      await t.pump();
+      expect(find.text(l10n.nameTakenTitle), findsNothing);
+    }
+    lockState.openForTest();
+    for (final (chat, tap, want) in [
+      (false, l10n.nameTakenUse, true),
+      (true, l10n.nameTakenKeep, false),
+    ]) {
+      bool? got;
+      askTakeNameSheet('tourist-admit-sun', chat: chat).then((r) => got = r);
+      await t.pumpAndSettle();
+      expect(find.text(l10n.nameTakenTitle), findsOneWidget);
+      expect(find.text('tourist-admit-sun'), findsOneWidget);
+      expect(
+        find.text(chat ? l10n.nameTakenChatLine : l10n.nameTakenLine),
+        findsOneWidget,
+      );
+      // a chat goes with a yes: said in the warning colour
+      expect(
+        t.widget<Text>(find.text(l10n.nameTakenTitle)).style?.color,
+        chat ? HaloColors.rose : isNot(HaloColors.rose),
+      );
+      if (chat) {
+        expect(
+          l10n.nameTakenChatLine,
+          endsWith('Not sure where the link came from? Keep the one you have.'),
+        );
+      }
+      await t.tap(find.text(tap));
+      await t.pumpAndSettle();
+      expect(got, want);
+      expect(find.text(l10n.nameTakenTitle), findsNothing);
+    }
   });
 }

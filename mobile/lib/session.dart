@@ -221,6 +221,8 @@ class Session {
   Future<bool> isBlocked(String haloId) => _ofPeer(haloId).isBlocked(haloId);
   Future<bool> isMuted(String haloId) => _ofPeer(haloId).isMuted(haloId);
   Future<bool> isVerified(String haloId) => _ofPeer(haloId).isVerified(haloId);
+  Future<void> setNameCheck(String haloId, int flags) =>
+      _ofPeer(haloId).setNameCheck(haloId, flags);
   Future<bool> keyChanged(String haloId) => _ofPeer(haloId).keyChanged(haloId);
   Future<List<Map<String, Object?>>> mediaFor(String peerId) =>
       _ofPeer(peerId).mediaFor(peerId);
