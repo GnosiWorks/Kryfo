@@ -201,9 +201,7 @@ func TestRelayThroughTorCorrectsOff(t *testing.T) {
 // them grows to fifteen minutes. on the ground the network is new, and the
 // first rescue must not wait out the gap the flight built up
 func TestLandingIsNotHeldByTheFlightsBackoff(t *testing.T) {
-	oldQ, oldB := netQuiet, netBounce
-	defer underNetMu(func() { netQuiet, netBounce = oldQ, oldB })
-	underNetMu(func() { netQuiet, netBounce = 10*time.Millisecond, func() {} })
+	quietBounce(t)
 	resetRoute(t, "publishing", 100)
 	routeNoteOK()
 	now := time.Now()

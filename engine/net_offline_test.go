@@ -16,10 +16,10 @@ import (
 
 func offlineRig(t *testing.T) *fakeControl {
 	t.Helper()
+	keepBounceKnobs(t)
 	f := newFakeControl(t, 100)
 	fakeTor(t, f.port())
 	resetRoute(t, "publishing", 100)
-	oq, og, op, ot, os := netQuiet, netGap, netProof, netProofTries, netProofStep
 	underNetMu(func() {
 		netQuiet, netGap = 10*time.Millisecond, 10*time.Millisecond
 		netProof, netProofTries, netProofStep = 50*time.Millisecond, 1, time.Millisecond
@@ -42,7 +42,6 @@ func offlineRig(t *testing.T) *fakeControl {
 		netInfoMu.Unlock()
 		setOffline(false)
 		torParked.Store(false)
-		underNetMu(func() { netQuiet, netGap, netProof, netProofTries, netProofStep = oq, og, op, ot, os })
 	})
 	return f
 }
@@ -52,6 +51,35 @@ func underNetMu(f func()) {
 	netMu.Lock()
 	defer netMu.Unlock()
 	f()
+}
+
+// the bounce's settings put back after the test, once a worker it left has
+// finished: one asleep on a long gap would hold every later change
+func keepBounceKnobs(t *testing.T) {
+	t.Helper()
+	netMu.Lock()
+	oq, og, ob := netQuiet, netGap, netBounce
+	or, op, ot, os := netReconnect, netProof, netProofTries, netProofStep
+	netMu.Unlock()
+	t.Cleanup(func() {
+		underNetMu(func() { netQuiet, netGap = time.Millisecond, time.Millisecond })
+		waitUntil(5*time.Second, func() bool {
+			netMu.Lock()
+			defer netMu.Unlock()
+			return !netWorker
+		})
+		underNetMu(func() {
+			netQuiet, netGap, netBounce = oq, og, ob
+			netReconnect, netProof, netProofTries, netProofStep = or, op, ot, os
+		})
+	})
+}
+
+// the bounce stubbed and the debounce in milliseconds
+func quietBounce(t *testing.T) {
+	t.Helper()
+	keepBounceKnobs(t)
+	underNetMu(func() { netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond })
 }
 
 func countSent(cmds []string, sub string) int {

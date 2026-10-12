@@ -550,12 +550,7 @@ func TestAWakeWithNoWayInStartsAPass(t *testing.T) {
 func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
-	oldB, oldQ := netBounce, netQuiet
-	underNetMu(func() { netBounce, netQuiet = func() {}, time.Millisecond })
-	t.Cleanup(func() {
-		time.Sleep(50 * time.Millisecond)
-		underNetMu(func() { netBounce, netQuiet = oldB, oldQ })
-	})
+	quietBounce(t)
 	setNetInfo(wifi())
 	today := dayOf(autoNow())
 	memMu.Lock()

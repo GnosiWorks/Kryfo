@@ -29,15 +29,10 @@ func (r *flipRig) n() int {
 
 func rigFlips(t *testing.T, quiet, gap, proof time.Duration) *flipRig {
 	t.Helper()
-	oq, og, ob := netQuiet, netGap, netBounce
-	or, op, ot, ost := netReconnect, netProof, netProofTries, netProofStep
+	keepBounceKnobs(t)
 	t.Cleanup(func() {
 		// let a worker still sleeping finish against the stand-in
 		time.Sleep(2 * (quiet + gap + proof))
-		underNetMu(func() {
-			netQuiet, netGap, netBounce = oq, og, ob
-			netReconnect, netProof, netProofTries, netProofStep = or, op, ot, ost
-		})
 	})
 	underNetMu(func() {
 		netQuiet, netGap = quiet, gap

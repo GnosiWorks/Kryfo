@@ -184,21 +184,7 @@ func TestTokenScrubbed(t *testing.T) {
 }
 
 func TestNetworkChangeDropsSnowflakeClients(t *testing.T) {
-	oldBounce, oldQuiet, oldGap := netBounce, netQuiet, netGap
-	underNetMu(func() { netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond })
-	t.Cleanup(func() {
-		// the debounce worker finishes before the real bounce is back
-		for {
-			netMu.Lock()
-			busy := netWorker
-			netMu.Unlock()
-			if !busy {
-				break
-			}
-			time.Sleep(5 * time.Millisecond)
-		}
-		underNetMu(func() { netBounce, netQuiet, netGap = oldBounce, oldQuiet, oldGap })
-	})
+	quietBounce(t)
 	dropSnowflakeClients()
 	if _, err := snowflakeFor(snowflakeTestConfig(t)); err != nil {
 		t.Fatal(err)

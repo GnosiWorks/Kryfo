@@ -16,22 +16,6 @@ import (
 // the way back. no tor here: a fake control port that records what tor was
 // told.
 
-// the bounce stubbed and the debounce in milliseconds. the worker it leaves
-// is waited out before the real bounce is put back
-func quietBounce(t *testing.T) {
-	t.Helper()
-	ob, oq, og := netBounce, netQuiet, netGap
-	underNetMu(func() { netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond })
-	t.Cleanup(func() {
-		waitUntil(5*time.Second, func() bool {
-			netMu.Lock()
-			defer netMu.Unlock()
-			return !netWorker
-		})
-		underNetMu(func() { netBounce, netQuiet, netGap = ob, oq, og })
-	})
-}
-
 // android's word not had yet, and put back as it was after
 func keepNetDetail(t *testing.T) {
 	t.Helper()
