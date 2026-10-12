@@ -6,32 +6,56 @@
 import 'bidi_safe.dart';
 import 'place_link.dart';
 
+final _url = RegExp(r'https?://[^\s]+', caseSensitive: false);
+
 // the first http(s) url in a message, scheme lowercased. keyboards
 // capitalise the first letter of a message, so "Https://" has to count.
 // a link inside a geo: label is part of the place and is never fetched
 String? firstUrl(String text) {
-  final geo = geoSpans(text).toList();
-  final m = RegExp(r'https?://[^\s]+', caseSensitive: false)
-      .allMatches(text)
-      .where((m) => !geo.any((g) => m.start >= g.$1 && m.start < g.$2))
-      .firstOrNull;
-  if (m == null) return null;
-  var raw = m.group(0)!;
-  // a sentence's own punctuation after the link: "see https://x.y/z."
-  // a closing bracket stays only when the link opened one
-  while (raw.isNotEmpty) {
-    final last = raw[raw.length - 1];
-    final closes = last == ')' || last == ']';
-    final opens = last == ')' ? '(' : '[';
-    if ('.,;:!?\'"'.contains(last) || (closes && !raw.contains(opens))) {
-      raw = raw.substring(0, raw.length - 1);
-    } else {
-      break;
+  final geo = geoSpans(text).iterator;
+  var more = geo.moveNext();
+  // the furthest a geo: link that starts before the url reaches
+  var reach = -1;
+  for (final m in _url.allMatches(text)) {
+    while (more && geo.current.$1 <= m.start) {
+      if (geo.current.$2 > reach) reach = geo.current.$2;
+      more = geo.moveNext();
     }
+    if (m.start < reach) continue;
+    // a sentence's own punctuation after the link: "see https://x.y/z."
+    final raw = trimTail(m.group(0)!);
+    if (!raw.contains('://')) return null;
+    final colon = raw.indexOf('://');
+    return raw.substring(0, colon).toLowerCase() + raw.substring(colon);
   }
-  if (!raw.contains('://')) return null;
-  final colon = raw.indexOf('://');
-  return raw.substring(0, colon).toLowerCase() + raw.substring(colon);
+  return null;
+}
+
+/// a message's first link and place, read again only when its words change:
+/// a bubble is built far more often than it is edited
+mixin WordLinks {
+  String get text;
+  String? _readFor;
+  String? _url;
+  Place? _place;
+
+  String? get url {
+    _read();
+    return _url;
+  }
+
+  Place? get place {
+    _read();
+    return _place;
+  }
+
+  void _read() {
+    final t = text;
+    if (_readFor != null && _readFor == t) return;
+    _url = firstUrl(t);
+    _place = firstPlace(t);
+    _readFor = t;
+  }
 }
 
 // what a sender ships inside the message: the url, its title on one line
