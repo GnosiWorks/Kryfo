@@ -100,7 +100,7 @@ class _ShieldSheet extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               l10n.shieldCheckedOnThisPhone,
-              style: HaloType.mono(size: 10, color: HaloColors.text3),
+              style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
             // three even buttons: long words shrink to fit, never break

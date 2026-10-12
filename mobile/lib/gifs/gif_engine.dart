@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the app's gif source: the engine's gif lane, the route people search
-// takes. a quiet session gets nothing from it
+// takes. a quiet session shows the tab and gets nothing from it
 import '../main.dart' show appState, engine, session, sessionQuiet;
 import '../stickers/sticker_sheet.dart' show GifTabs;
 import 'gif_panel.dart' show gifRouteOf;
@@ -26,9 +26,9 @@ final appGifSource = RelayGifSource(
   overTor: () => appState.sendMode == 'private',
 );
 
-/// the picker's gif tabs for the open session
+/// the picker's gif tabs for the open session, its own switch included
 GifTabs appGifTabs() => GifTabs(
-  source: sessionQuiet ? null : appGifSource,
+  source: appGifSource,
   route: gifRouteOf(appState.sendMode),
   loadOn: () => loadGifSearchOn(session.container),
   saveOn: (on) => saveGifSearchOn(on, session.container),

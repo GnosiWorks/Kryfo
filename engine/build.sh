@@ -14,15 +14,25 @@ cd "$(dirname "$0")"
 ENGINE_DIR="$(pwd)"
 
 # HALO_TOR_BLOCKED=1 builds a test engine that acts as if tor were blocked
-# (censor_on.go). only for the test app, never a release.
+# (censor_on.go), 2 one that cuts the built-in obfs4 bridges off as well
+# (censor_two.go). only for the test app, never a release.
 TAGS=""
-if [ "${HALO_TOR_BLOCKED:-}" = 1 ]; then
-  if [ "${HALO_TEST_ID:-}" != 1 ]; then
-    echo "error: HALO_TOR_BLOCKED needs HALO_TEST_ID=1"
+case "${HALO_TOR_BLOCKED:-}" in
+  ""|0) ;;
+  1|2)
+    if [ "${HALO_TEST_ID:-}" != 1 ]; then
+      echo "error: HALO_TOR_BLOCKED needs HALO_TEST_ID=1"
+      exit 1
+    fi
+    TAGS="-tags torblocked"
+    [ "$HALO_TOR_BLOCKED" = 2 ] && TAGS="-tags torblocked,torblocked2"
+    echo "censor level $HALO_TOR_BLOCKED: $TAGS"
+    ;;
+  *)
+    echo "error: HALO_TOR_BLOCKED is 1 or 2"
     exit 1
-  fi
-  TAGS="-tags torblocked"
-fi
+    ;;
+esac
 
 # ── locate the ndk ──
 NDK_ROOT="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${NDK_HOME:-}}}"

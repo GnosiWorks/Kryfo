@@ -473,7 +473,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                         ),
                         style: HaloType.mono(
                           size: 11,
-                          color: HaloColors.text3,
+                          color: HaloColors.text2,
                           letter: 0.1,
                         ),
                       ),
@@ -854,7 +854,7 @@ class _MembersCardState extends State<MembersCard> {
                     m,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
                   ),
                 KeyHeldMark(on: held),
                 if (me)

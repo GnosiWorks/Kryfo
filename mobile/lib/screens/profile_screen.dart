@@ -616,7 +616,7 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(2, 0, 0, 10),
       child: Text(
         label,
-        style: HaloType.mono(size: 10, color: HaloColors.text3),
+        style: HaloType.mono(size: 10, color: HaloColors.text2),
       ),
     );
   }

@@ -566,30 +566,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await saveScamShieldOn(v, session.container);
                 },
               ),
-              // off by default: turning it on says first what it does. a
-              // quiet session never searches, so it has no switch for it
-              if (!sessionQuiet)
-                HaloRow(
-                  icon: Icons.gif_box_outlined,
-                  label: l10n.settingsGifSearch,
-                  hint: l10n.settingsGifSearchHint,
-                  toggled: _gifOn ?? false,
-                  pending: _gifOn == null,
-                  onTap: () async {
-                    if (_gifOn ?? false) {
-                      setState(() => _gifOn = false);
-                      await saveGifSearchOn(false, session.container);
-                      return;
-                    }
-                    final yes = await showGifOptInSheet(
-                      context,
-                      overTor: appState.sendMode == 'private',
-                    );
-                    if (!yes || !mounted) return;
-                    setState(() => _gifOn = true);
-                    await saveGifSearchOn(true, session.container);
-                  },
-                ),
+              // off by default: turning it on says first what it does. each
+              // identity has its own, and a quiet session's never searches
+              HaloRow(
+                icon: Icons.gif_box_outlined,
+                label: l10n.settingsGifSearch,
+                hint: l10n.settingsGifSearchHint,
+                toggled: _gifOn ?? false,
+                pending: _gifOn == null,
+                onTap: () async {
+                  if (_gifOn ?? false) {
+                    setState(() => _gifOn = false);
+                    await saveGifSearchOn(false, session.container);
+                    return;
+                  }
+                  final yes = await showGifOptInSheet(
+                    context,
+                    overTor: appState.sendMode == 'private',
+                  );
+                  if (!yes || !mounted) return;
+                  setState(() => _gifOn = true);
+                  await saveGifSearchOn(true, session.container);
+                },
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -740,9 +739,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.settingsVersion,
                 value: l10n.settings030Alpha,
               ),
-              // f-droid and play keep their copies updated, and a quiet
-              // session asks nothing
-              if (_updateOffered && !sessionQuiet)
+              // f-droid and play keep their copies updated. a quiet
+              // session keeps a switch of its own and asks nothing
+              if (_updateOffered)
                 HaloRow(
                   icon: Icons.system_update_outlined,
                   label: l10n.settingsCheckForUpdates,
@@ -806,7 +805,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               l10n.settingsNotIndependentlyAuditedPre,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
                 height: 1.4,
               ),
             ),

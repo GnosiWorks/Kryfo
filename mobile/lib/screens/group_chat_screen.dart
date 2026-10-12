@@ -189,6 +189,15 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// a group's unsent words go with it, from an open composer too: its screen
+/// closing would write them back
+void dropGroupDraft(String id) {
+  for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
+    if (s.mounted) s._msgCtrl.clear();
+  }
+  draftPerGroup.remove(session.chatKey(id));
+}
+
 /// pops [nav] back to [groupId]'s open screen. false when it is not open
 /// there
 bool backToOpenGroup(NavigatorState nav, String groupId) =>
@@ -1503,7 +1512,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet) return;
+    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+      return;
+    }
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
@@ -2557,7 +2568,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 const SizedBox(height: 4),
                 Text(
                   l10n.groupChatNewMessagesDisappearOnceRead,
-                  style: HaloType.mono(size: 11, color: HaloColors.text3),
+                  style: HaloType.mono(size: 11, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 12),
                 for (final opt in options)
@@ -3622,7 +3633,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                       l10n.groupChatThisMessageCanT,
                                       style: HaloType.sans(
                                         size: 12,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   );
@@ -3951,7 +3962,7 @@ class _Header extends StatelessWidget {
                                     ),
                                     style: HaloType.mono(
                                       size: 10,
-                                      color: HaloColors.text3,
+                                      color: HaloColors.text2,
                                     ),
                                   )
                                 : Text(
@@ -3961,7 +3972,7 @@ class _Header extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: HaloType.mono(
                                       size: 10,
-                                      color: HaloColors.text3,
+                                      color: HaloColors.text2,
                                     ),
                                   ),
                           ),
@@ -4473,7 +4484,7 @@ class _MentionPicker extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   ),

@@ -3011,23 +3011,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ در انتظار · در حال ارسال',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'تلاش دوباره';
-
-  @override
   String get homeNoKryfosYet => 'هنوز هیچ مخاطبی نیست.';
 
   @override
@@ -3931,6 +3914,14 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get onboardingAboutASecondWorks =>
       'حدود یک ثانیه. جایی که tor مسدود است هم کار می‌کند.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor =>
+      'حدود یک ثانیه، و از Tor نمی‌گذرد.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
 
   @override
   String get onboardingFast => 'سریع';
@@ -6877,7 +6868,24 @@ class AppLocalizationsFa extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود است';
 
   @override
+  String get torBootSplashRelayLine =>
+      'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'خودش راهی برای دور زدن مسدودسازی پیدا می‌کند و اگر لازم باشد از یک پل کمک می‌گیرد.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'دو راه برای دور زدن مسدودسازی';
+
+  @override
+  String get bridgesRecommended => 'پیشنهادی';
+
+  @override
   String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';
+
+  @override
+  String get bridgesFindingAWayIn => 'در حال پیدا کردن راهی برای اتصال…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -6962,7 +6970,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'رله‌ی ما یک اتصال ساده است و معمولاً راه پیدا می‌کند. یا بگذارید Kryfo خودش راهی پیدا کند.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'استفاده از این پل';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6971,7 +6982,6 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: 'استفاده از این ⁨$countString⁩ پل',
-      one: 'استفاده از این پل',
     );
     return '$_temp0';
   }
@@ -7765,7 +7775,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7813,7 +7823,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7828,7 +7838,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

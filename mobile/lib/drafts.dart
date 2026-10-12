@@ -19,15 +19,35 @@ final _kept = HaloContainer.everyday.key(_keptKey);
 // written anywhere
 bool _everyday(String key) => key.startsWith('${HaloContainer.everyday.id}|');
 
+/// a chat's unsent words go with the chat, deleted or hidden. [key] is the
+/// one they are kept under (chatKey)
+void dropDraft(String key, {required bool group}) =>
+    (group ? draftPerGroup : draftPerPeer).remove(key);
+
+/// the people and groups the everyday side still holds a chat with: a draft
+/// of any other is never written down. the app sets it; unset, none is
+Future<({Set<String> people, Set<String> groups})> Function()? everydayChats;
+
 Future<void> keepDrafts({FlutterSecureStorage store = secureStore}) async {
+  final ({Set<String> people, Set<String> groups}) chats;
+  try {
+    final read = everydayChats;
+    if (read == null) return;
+    chats = await read();
+  } catch (_) {
+    return;
+  }
+  String id(String key) => key.substring(key.indexOf('|') + 1);
+  bool keep(MapEntry<String, String> e, Set<String> held) =>
+      _everyday(e.key) && held.contains(id(e.key)) && e.value.trim().isNotEmpty;
   final kept = {
     'p': {
       for (final e in draftPerPeer.entries)
-        if (_everyday(e.key) && e.value.trim().isNotEmpty) e.key: e.value,
+        if (keep(e, chats.people)) e.key: e.value,
     },
     'g': {
       for (final e in draftPerGroup.entries)
-        if (_everyday(e.key) && e.value.trim().isNotEmpty) e.key: e.value,
+        if (keep(e, chats.groups)) e.key: e.value,
     },
   };
   if (kept['p']!.isEmpty && kept['g']!.isEmpty) return;

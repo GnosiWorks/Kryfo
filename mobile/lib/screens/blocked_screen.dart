@@ -146,7 +146,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     c.haloId,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
                   ),
               ],
             ),

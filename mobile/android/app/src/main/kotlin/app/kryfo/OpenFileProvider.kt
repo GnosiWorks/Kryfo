@@ -5,6 +5,6 @@ import androidx.core.content.FileProvider
 
 // hands a file to whichever app the person picks to open it.
 // its own class so its manifest entry can never collide with a plugin's.
-// it serves cache/open/, cache/share/ and cache/tools_out/, see
-// res/xml/open_paths.xml.
+// it serves the cache folders res/xml/open_paths.xml names: open/, share/,
+// share_q/, backup_out/ and tools_out/.
 class OpenFileProvider : FileProvider()

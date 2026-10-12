@@ -42,6 +42,10 @@ TextAlign startOf(BuildContext context) =>
     ? TextAlign.right
     : TextAlign.left;
 
+/// the words only the developer's own phone shows. they stay english, and
+/// so do their plurals: another language's rules would say "21 new chat"
+final AppLocalizations l10nDev = lookupAppLocalizations(const Locale('en'));
+
 /// MaterialApp is given it too, so material's own words and the text
 /// direction follow
 Locale get l10nLocale => _locale;

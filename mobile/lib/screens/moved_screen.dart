@@ -99,7 +99,7 @@ class MovedScreen extends StatelessWidget {
                   ),
                   child: Text(
                     l10n.movedIMNotMoving,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text3),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                   ),
                 ),
               ),

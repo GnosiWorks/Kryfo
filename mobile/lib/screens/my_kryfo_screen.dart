@@ -591,7 +591,7 @@ class _Way3Card extends StatelessWidget {
               children: [
                 Text(
                   '@',
-                  style: HaloType.mono(size: 14, color: HaloColors.text3),
+                  style: HaloType.mono(size: 14, color: HaloColors.text2),
                 ),
                 const SizedBox(width: 2),
                 Expanded(
@@ -808,7 +808,7 @@ class _Ghost extends StatelessWidget {
                   if (sub != null)
                     Text(
                       sub!,
-                      style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+                      style: HaloType.mono(size: 9.5, color: HaloColors.text2),
                     ),
                 ],
               ),

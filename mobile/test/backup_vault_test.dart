@@ -506,6 +506,10 @@ class _Side extends BackupSide {
   String? Function()? madeKey;
   String? docs;
 
+  // the stand-in files are no databases: nothing to rebuild
+  @override
+  Future<void> compact(String copy, String key) async {}
+
   @override
   ({String ed, String x, String id}) identity() =>
       (ed: 'everyday-ed', x: 'everyday-x', id: 'me-me-me');

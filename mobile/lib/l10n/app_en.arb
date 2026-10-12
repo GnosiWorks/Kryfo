@@ -3743,20 +3743,6 @@
       }
     }
   },
-  "homeWaitingSendingNow": "{count, plural, other{{count} waiting · sending now}}",
-  "@homeWaitingSendingNow": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
-  "commonRetry": "Retry",
-  "@commonRetry": {
-    "description": "screens/home_screen.dart"
-  },
   "homeNoKryfosYet": "No Kryfos yet.",
   "@homeNoKryfosYet": {
     "description": "screens/home_screen.dart"
@@ -4893,6 +4879,14 @@
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingAboutASecondWorks": "About a second. Works where tor is blocked.",
+  "onboardingAboutASecondSkipsTor": "About a second, and it skips Tor.",
+  "@onboardingAboutASecondSkipsTor": {
+    "description": "screens/onboarding_screen.dart: on the Relay card when the person said Tor is blocked at the start"
+  },
+  "onboardingAutoFindsAWay": "Automatic finds a way around the block by itself.",
+  "@onboardingAutoFindsAWay": {
+    "description": "screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start"
+  },
   "@onboardingAboutASecondWorks": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -8745,7 +8739,27 @@
     "description": "screens/bridges_screen.dart"
   },
   "torBootSplashTorIsBlockedHere": "Tor is blocked here",
+  "torBootSplashRelayLine": "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
+  "@torBootSplashRelayLine": {
+    "description": "screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked"
+  },
+  "torBootSplashAutoLine": "Finds a way around the block by itself, through a bridge when it needs one.",
+  "@torBootSplashAutoLine": {
+    "description": "screens/bridge_sheets.dart: under Automatic, the first and recommended way to start where Tor is blocked"
+  },
+  "torBootSplashTwoWaysAround": "Two ways around the block",
+  "@torBootSplashTwoWaysAround": {
+    "description": "screens/bridge_sheets.dart: title of the sheet after Tor is blocked here on a new install's first start"
+  },
+  "bridgesRecommended": "Recommended",
+  "@bridgesRecommended": {
+    "description": "screens/bridge_sheets.dart, screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked"
+  },
   "bridgesTryingAnotherWay": "Trying another way…",
+  "bridgesFindingAWayIn": "Finding a way in…",
+  "@bridgesFindingAWayIn": {
+    "description": "bridge_mode.dart: the status line's detail while automatic has no way in yet, as after a wake, under Connecting…"
+  },
   "@bridgesFoundAVolunteer": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8813,13 +8827,7 @@
     "description": "screens/bridges_screen.dart"
   },
   "@bridgesUseThisBridge": {
-    "description": "screens/bridges_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
+    "description": "screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned"
   },
   "bridgesCheckingForMessages": "Checking for messages…",
   "bridgesSavedLines": "Saved lines",
@@ -8845,7 +8853,17 @@
   "@bridgesFastestWhereTorIsnt": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesUseThisBridge": "{count, plural, one{Use this bridge} other{Use these {count} bridges}}",
+  "bridgesUseThisBridge": "Use this bridge",
+  "bridgesUseTheseBridges": "{count, plural, other{Use these {count} bridges}}",
+  "@bridgesUseTheseBridges": {
+    "description": "screens/bridge_sheets.dart: the button when two or more bridge lines are pasted or scanned; count is 2 or more",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "@bridgesLookingForAVolunteer": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9791,7 +9809,7 @@
   "@supportTitle": {
     "description": "screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English."
   },
-  "supportWaiting": "{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}",
+  "supportWaiting": "{count, plural, =0{No one waiting} one{{count} waiting} other{{count} waiting}}",
   "@supportWaiting": {
     "description": "screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.",
     "placeholders": {
@@ -9841,7 +9859,7 @@
   "@supportDeleteLine": {
     "description": "screens/support_screen.dart: asked before a support chat is deleted. Only the developer's own phone shows it, in English."
   },
-  "supportNotifNewChats": "{count, plural, one{1 new chat} other{{count} new chats}}",
+  "supportNotifNewChats": "{count, plural, one{{count} new chat} other{{count} new chats}}",
   "@supportNotifNewChats": {
     "description": "notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.",
     "placeholders": {
@@ -9851,7 +9869,7 @@
       }
     }
   },
-  "supportNotifNewMessages": "{count, plural, one{1 new message} other{{count} new messages}}",
+  "supportNotifNewMessages": "{count, plural, one{{count} new message} other{{count} new messages}}",
   "@supportNotifNewMessages": {
     "description": "notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.",
     "placeholders": {

@@ -98,7 +98,7 @@ class BootFailedScreen extends StatelessWidget {
     onPressed: () => Clipboard.setData(ClipboardData(text: error)),
     child: Text(
       l10n.commonCopy,
-      style: HaloType.mono(size: 12, color: HaloColors.text3),
+      style: HaloType.mono(size: 12, color: HaloColors.text2),
     ),
   );
 

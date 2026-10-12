@@ -1166,7 +1166,10 @@ class _TransportScreen extends StatefulWidget {
 }
 
 class _TransportScreenState extends State<_TransportScreen> {
-  String _pick = 'private';
+  // said tor is blocked at the start: onion through automatic leads, relay
+  // next. relay picked there is picked here
+  final bool _blocked = appState.bridge.skipDirect;
+  late String _pick = appState.firstRunRelay ? 'balanced' : 'private';
   bool _busy = false;
 
   Future<void> _go() async {
@@ -1222,8 +1225,11 @@ class _TransportScreenState extends State<_TransportScreen> {
         ...staggerAll([
           _ModeCard(
             title: l10n.onboardingOnion,
+            tag: _blocked ? l10n.bridgesRecommended : null,
             cost: l10n.onboardingSlowerAMessageTakes,
-            gain: l10n.onboardingHidesYourAddressFrom,
+            gain: _blocked
+                ? l10n.onboardingAutoFindsAWay
+                : l10n.onboardingHidesYourAddressFrom,
             on: _pick == 'private',
             onTap: () => setState(() => _pick = 'private'),
           ),
@@ -1231,7 +1237,9 @@ class _TransportScreenState extends State<_TransportScreen> {
           _ModeCard(
             title: l10n.onboardingRelay,
             cost: l10n.onboardingOurRelaySeesYour,
-            gain: l10n.onboardingAboutASecondWorks,
+            gain: _blocked
+                ? l10n.onboardingAboutASecondSkipsTor
+                : l10n.onboardingAboutASecondWorks,
             on: _pick == 'balanced',
             onTap: () => setState(() => _pick = 'balanced'),
           ),
@@ -1251,12 +1259,15 @@ class _TransportScreenState extends State<_TransportScreen> {
 
 class _ModeCard extends StatelessWidget {
   final String title;
+  // a short word beside the title, the way to start where tor is blocked
+  final String? tag;
   final String cost;
   final String gain;
   final bool on;
   final VoidCallback onTap;
   const _ModeCard({
     required this.title,
+    this.tag,
     required this.cost,
     required this.gain,
     required this.on,
@@ -1310,9 +1321,38 @@ class _ModeCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: HaloType.serif(size: 18, color: HaloColors.text),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: HaloType.serif(
+                              size: 18,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                          if (tag != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amber,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                tag!,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.onAmber,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 5),
                       // the cost first, then what it buys: a card that lists

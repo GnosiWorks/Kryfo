@@ -197,12 +197,16 @@ class UpdateNotice extends ChangeNotifier {
   String? _running;
   String? _latest;
   String? _dismissed;
-  bool _on = true;
+  // read once, then followed per session: each identity keeps its switch
+  SharedPreferences? _prefs;
   bool _busy = false;
   DateTime? _lastTry;
 
   /// whether this copy gets the notice and the switch
   bool get eligible => _eligible;
+
+  // the open session's switch, whichever one was open at the first read
+  bool get _on => _prefs?.getBool(container().key(_onKey)) ?? true;
 
   /// the version the card offers, null when there is none to show
   String? get shown {
@@ -223,7 +227,7 @@ class UpdateNotice extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _latest = prefs.getString(_latestKey);
     _dismissed = prefs.getString(_dismissedKey);
-    _on = prefs.getBool(container().key(_onKey)) ?? true;
+    _prefs = prefs;
     notifyListeners();
   }
 
@@ -235,7 +239,6 @@ class UpdateNotice extends ChangeNotifier {
   Future<void> setOn(bool on) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(container().key(_onKey), on);
-    _on = on;
     notifyListeners();
     if (on) unawaited(check());
   }

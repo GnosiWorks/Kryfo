@@ -207,22 +207,43 @@ func moatGate(o moatOpts) (string, error) {
 	return via, nil
 }
 
-func moatTLS() *tls.Config {
-	return &tls.Config{
-		ServerName: moatHost,
-		RootCAs:    moatRoots,
-		MinVersion: tls.VersionTLS12,
-	}
-}
-
 // the raw connections one moat call made. they all close when the call
 // ends, and none is made after: meek_lite polls and retries on its own and
 // would otherwise keep reaching the cdn after a give-up.
+//
+// host, targets, roots, fronts and dial are taken when the call starts. a
+// dial meek or net/http makes late reads only these, never the package
+// values a later call or a test may change.
 type moatDials struct {
-	ctx   context.Context
+	ctx     context.Context
+	host    string
+	targets string
+	roots   *x509.CertPool
+	fronts  []string
+	dial    func(context.Context, string, string) (net.Conn, error)
+
 	mu    sync.Mutex
 	conns []net.Conn
 	shut  bool
+}
+
+func newMoatDials(ctx context.Context) *moatDials {
+	d := &moatDials{ctx: ctx, host: moatHost, targets: moatTargets,
+		roots: moatRoots, dial: meekNetDial}
+	for _, h := range meekHosts(d.targets) {
+		if hostAllowed(h) {
+			d.fronts = append(d.fronts, h)
+		}
+	}
+	return d
+}
+
+func (d *moatDials) tlsConfig() *tls.Config {
+	return &tls.Config{
+		ServerName: d.host,
+		RootCAs:    d.roots,
+		MinVersion: tls.VersionTLS12,
+	}
 }
 
 func (d *moatDials) keep(c net.Conn) (net.Conn, error) {
@@ -249,13 +270,13 @@ func (d *moatDials) closeAll() {
 // meek's own dials go to a front on the allowlist and nowhere else
 func (d *moatDials) front(network, addr string) (net.Conn, error) {
 	host, _, err := net.SplitHostPort(addr)
-	if err != nil || !moatFrontAllowed(host) {
+	if err != nil || !d.frontAllowed(host) {
 		return nil, fmt.Errorf("meek: not an allowed front")
 	}
 	if d.ctx.Err() != nil {
 		return nil, d.ctx.Err()
 	}
-	c, err := meekNetDial(d.ctx, network, addr)
+	c, err := d.dial(d.ctx, network, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -265,9 +286,9 @@ func (d *moatDials) front(network, addr string) (net.Conn, error) {
 // tests reach the front another way
 var meekNetDial = (&net.Dialer{Timeout: 20 * time.Second}).DialContext
 
-func moatFrontAllowed(host string) bool {
-	for _, h := range meekHosts(moatTargets) {
-		if strings.EqualFold(h, host) && hostAllowed(h) {
+func (d *moatDials) frontAllowed(host string) bool {
+	for _, h := range d.fronts {
+		if strings.EqualFold(h, host) {
 			return true
 		}
 	}
@@ -306,13 +327,13 @@ func meekDial(d *moatDials) (net.Conn, error) {
 		return nil, err
 	}
 	args := pt.Args{}
-	args.Add("targets", moatTargets)
+	args.Add("targets", d.targets)
 	args.Add("utls", meekHello)
 	parsed, err := f.ParseArgs(&args)
 	if err != nil {
 		return nil, err
 	}
-	return f.Dial("tcp", net.JoinHostPort(moatHost, "443"), d.front, parsed)
+	return f.Dial("tcp", net.JoinHostPort(d.host, "443"), d.front, parsed)
 }
 
 // tests replace this to count and to stand in for the network
@@ -321,7 +342,7 @@ var moatTransport = moatTransportFor
 func moatTransportFor(via string, d *moatDials) (*http.Transport, error) {
 	tr := &http.Transport{
 		DisableKeepAlives:   true,
-		TLSClientConfig:     moatTLS(),
+		TLSClientConfig:     d.tlsConfig(),
 		TLSHandshakeTimeout: 30 * time.Second,
 		MaxIdleConns:        1,
 	}
@@ -335,7 +356,7 @@ func moatTransportFor(via string, d *moatDials) (*http.Transport, error) {
 			if c, err = d.keep(c); err != nil {
 				return nil, err
 			}
-			tc := tls.Client(c, moatTLS())
+			tc := tls.Client(c, d.tlsConfig())
 			if err := tc.HandshakeContext(ctx); err != nil {
 				c.Close()
 				return nil, err
@@ -344,7 +365,7 @@ func moatTransportFor(via string, d *moatDials) (*http.Transport, error) {
 		}
 	case viaPlain:
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			if host, _, _ := net.SplitHostPort(addr); host != moatHost {
+			if host, _, _ := net.SplitHostPort(addr); host != d.host {
 				return nil, fmt.Errorf("moat: not the moat host")
 			}
 			c, err := (&net.Dialer{Timeout: 20 * time.Second}).DialContext(ctx, network, addr)
@@ -394,7 +415,7 @@ func moatDo(o moatOpts, method, path string, body any) ([]byte, int, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), moatTimeout)
 	untrack := trackMoatCall(cancel)
-	dials := &moatDials{ctx: ctx}
+	dials := newMoatDials(ctx)
 	// a give-up, a timeout or a decoy opening shuts every socket at once
 	unhook := context.AfterFunc(ctx, dials.closeAll)
 	defer func() {
@@ -412,7 +433,7 @@ func moatDo(o moatOpts, method, path string, body any) ([]byte, int, error) {
 		return nil, 0, err
 	}
 	defer tr.CloseIdleConnections()
-	req, err := http.NewRequestWithContext(ctx, method, "https://"+moatHost+moatPath+path, rd)
+	req, err := http.NewRequestWithContext(ctx, method, "https://"+dials.host+moatPath+path, rd)
 	if err != nil {
 		return nil, 0, errMoatArgs
 	}

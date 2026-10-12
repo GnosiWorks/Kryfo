@@ -2994,23 +2994,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString đang chờ · đang gửi',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'Thử lại';
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
@@ -3912,6 +3895,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingAboutASecondWorks =>
       'Khoảng một giây. Hoạt động cả ở nơi tor bị chặn.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Khoảng một giây, và không qua Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
 
   @override
   String get onboardingFast => 'Nhanh';
@@ -6859,7 +6850,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor bị chặn ở đây';
 
   @override
+  String get torBootSplashRelayLine =>
+      'Nhanh hơn và không qua Tor. Relay của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Tự tìm cách vượt qua việc chặn, dùng cầu nối khi cần.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Hai cách vượt qua việc chặn';
+
+  @override
+  String get bridgesRecommended => 'Nên dùng';
+
+  @override
   String get bridgesTryingAnotherWay => 'Đang thử cách khác…';
+
+  @override
+  String get bridgesFindingAWayIn => 'Đang tìm cách kết nối…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -6942,7 +6950,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Dùng cầu nối này';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6951,7 +6962,6 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Dùng $countString cầu nối này',
-      one: 'Dùng cầu nối này',
     );
     return '$_temp0';
   }
@@ -7736,7 +7746,7 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7784,7 +7794,7 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7799,7 +7809,7 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

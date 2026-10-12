@@ -220,7 +220,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   suffixText: _noteCtrl.text.isEmpty
                       ? null
                       : '${_noteCtrl.text.length}/$_noteMax',
-                  suffixStyle: HaloType.mono(size: 9, color: HaloColors.text3),
+                  suffixStyle: HaloType.mono(size: 9, color: HaloColors.text2),
                   isDense: true,
                   filled: true,
                   fillColor: HaloColors.surface,

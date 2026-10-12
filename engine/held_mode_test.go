@@ -742,3 +742,65 @@ func TestCheckInWithNoBuiltinLineHolds(t *testing.T) {
 		t.Fatalf("direct ok %v bridges %v hold %q", autoDirectOK.Load(), bridgesEnabled(), networkHold())
 	}
 }
+
+// the app's retry on coming to the front starts a held pass at once
+// instead of waiting the backoff out, and is used up by it
+func TestResumeRetrySkipsTheHeldBackoff(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	f.up = func() bool {
+		f.sleep(time.Minute)
+		return true
+	}
+	t.Cleanup(func() { autoRetryNow.Store(false) })
+	calls := runLoop(t, f, func(n int, why string) string {
+		switch n {
+		case 3:
+			// the backoff is ten minutes now: the app comes to the front
+			autoRetryNow.Store(true)
+		case 5:
+			stopLoop()
+		}
+		autoDirectOK.Store(false)
+		return seenOK
+	})
+	if len(calls) != 5 {
+		t.Fatalf("passes %v", calls)
+	}
+	if calls[3].why != "held" || calls[3].at-calls[2].at > autoPassFloor+time.Minute {
+		t.Fatalf("the retry waited the backoff: %v", calls)
+	}
+	if calls[4].at-calls[3].at < autoLostAfter {
+		t.Fatalf("the retry was not used up: %v", calls)
+	}
+}
+
+// automatic with no way in yet says so in its own code, also under a
+// pass that once connected
+func TestAutoWaitHasItsOwnCode(t *testing.T) {
+	useFakeAuto(t, wifi())
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	modeSet.Store(true)
+	autoDirectOK.Store(false)
+	t.Cleanup(func() { stSet(func() { autoSt.phase, autoSt.errCode = "", "" }) })
+	if why := networkHold(); why != errAutoWait {
+		t.Fatalf("hold: %q", why)
+	}
+	for _, ph := range []string{"trying", "connected"} {
+		stSet(func() { autoSt.phase, autoSt.errCode = ph, "" })
+		if v := bridgeStatus(); v.ErrorCode != codeWait || v.CanSend {
+			t.Fatalf("%s: %+v", ph, v)
+		}
+	}
+	// a pass that gave up keeps its own word
+	stSet(func() { autoSt.phase, autoSt.errCode = "exhausted", "exhausted" })
+	if v := bridgeStatus(); v.ErrorCode != "exhausted" {
+		t.Fatalf("exhausted: %+v", v)
+	}
+	autoDirectOK.Store(true)
+	stSet(func() { autoSt.phase, autoSt.errCode = "trying", "" })
+	if v := bridgeStatus(); v.ErrorCode != "" {
+		t.Fatalf("a way in: %+v", v)
+	}
+}

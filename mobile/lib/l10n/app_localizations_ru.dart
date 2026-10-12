@@ -3085,23 +3085,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString в очереди · отправляем',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => 'Повторить';
-
-  @override
   String get homeNoKryfosYet => 'Пока ни одного Kryfo.';
 
   @override
@@ -4019,6 +4002,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingAboutASecondWorks =>
       'Около секунды. Работает там, где tor заблокирован.';
+
+  @override
+  String get onboardingAboutASecondSkipsTor => 'Около секунды, и без Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Режим «Авто» сам находит способ обойти блокировку.';
 
   @override
   String get onboardingFast => 'Быстрый';
@@ -6997,7 +6987,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor здесь заблокирован';
 
   @override
+  String get torBootSplashRelayLine =>
+      'Быстрее и без Tor. Наш ретранслятор видит твой IP-адрес, но никогда не видит, что ты пишешь.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Сам находит способ обойти блокировку, если нужно, через мост.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Два способа обойти блокировку';
+
+  @override
+  String get bridgesRecommended => 'Рекомендуем';
+
+  @override
   String get bridgesTryingAnotherWay => 'Пробуем другой способ…';
+
+  @override
+  String get bridgesFindingAWayIn => 'Ищем способ подключиться…';
 
   @override
   String get bridgesGoesThroughAVolunteer =>
@@ -7083,7 +7090,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Наш ретранслятор использует одно простое подключение и обычно пробивается. Или пусть Kryfo сам найдёт путь.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Использовать этот мост';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7091,10 +7101,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Использовать $countString моста',
-      many: 'Использовать $countString мостов',
-      few: 'Использовать $countString моста',
-      one: 'Использовать $countString мост',
+      other: 'Использовать эти $countString моста',
+      many: 'Использовать эти $countString мостов',
+      few: 'Использовать эти $countString моста',
+      one: 'Использовать эти $countString мост',
     );
     return '$_temp0';
   }
@@ -7901,7 +7911,7 @@ class AppLocalizationsRu extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7949,7 +7959,7 @@ class AppLocalizationsRu extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7964,7 +7974,7 @@ class AppLocalizationsRu extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

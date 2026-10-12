@@ -296,7 +296,7 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final action = widget.onAction == null ? null : line.action;
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
-    final detail = [?line.detail, ?clock].join(' · ');
+    final detail = [?line.detail, ?clock].join(bridgeSep);
     return AnimatedContainer(
       duration: still ? Duration.zero : const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,

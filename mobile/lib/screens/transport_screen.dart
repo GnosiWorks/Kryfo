@@ -67,7 +67,7 @@ class TransportScreen extends StatelessWidget {
             children: staggerAll([
               Text(
                 l10n.transportNothingHereLeavesThe,
-                style: HaloType.mono(size: 12, color: HaloColors.text3),
+                style: HaloType.mono(size: 12, color: HaloColors.text2),
               ),
               const SizedBox(height: 24),
 
@@ -252,7 +252,7 @@ class _Head extends StatelessWidget {
       text,
       style: HaloType.mono(
         size: 11,
-        color: HaloColors.text3,
+        color: HaloColors.text2,
         weight: FontWeight.w600,
         letter: 0.14,
       ),
@@ -602,7 +602,7 @@ class _AliveState extends State<_Alive> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
                 l10n.transportClearThisRecord,
-                style: HaloType.mono(size: 11, color: HaloColors.text3),
+                style: HaloType.mono(size: 11, color: HaloColors.text2),
               ),
             ),
           ),

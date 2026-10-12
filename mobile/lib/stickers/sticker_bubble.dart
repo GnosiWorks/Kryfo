@@ -378,7 +378,7 @@ class StickerPlaceholder extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: HaloType.mono(
                     size: 10,
-                    color: HaloColors.text3,
+                    color: HaloColors.text2,
                   ).copyWith(height: 1.3),
                 ),
               ),

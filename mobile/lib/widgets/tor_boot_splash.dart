@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../dlog.dart';
 import '../main.dart' show appState;
+import '../screens/bridge_sheets.dart' show showBlockedStartSheet;
 import '../screens/bridges_screen.dart';
 import '../reopen.dart';
 import '../secure_store.dart';
@@ -269,9 +270,13 @@ class _TorBootSplashState extends State<TorBootSplash>
       HaloGhostButton(
         label: l10n.torBootSplashTorIsBlockedHere,
         onTap: () async {
+          // automatic first and picked already, relay next. closed without
+          // an answer, the question stays
           final nav = Navigator.of(context);
-          await appState.pickFirstRun(risky: true);
-          nav.push(haloRoute(const BridgesScreen()));
+          final way = await showBlockedStartSheet(context);
+          if (way == null) return;
+          await appState.pickFirstRun(risky: true, relay: way == 'relay');
+          if (way == 'auto') nav.push(haloRoute(const BridgesScreen()));
         },
       ),
     ],

@@ -89,8 +89,10 @@ class _NotesScreenState extends State<NotesScreen> {
   final Set<Object> _leaving = {};
   // how far the notes run up under the bar, for its hairline
   final _under = ValueNotifier<double>(0);
-  // a note can be held: said under the notes until the first hold
+  // a note can be held: said under the notes until the first hold, in each
+  // identity's own notes
   static const _kHoldTold = 'notes_hold_told';
+  late final String _holdKey = session.container.key(_kHoldTold);
   bool _holdTold = true;
   // long notes opened past their fold, by note. in memory only
   final Set<Object> _open = {};
@@ -111,7 +113,7 @@ class _NotesScreenState extends State<NotesScreen> {
     super.initState();
     _load();
     SharedPreferences.getInstance().then((p) {
-      if (mounted && p.getBool(_kHoldTold) != true) {
+      if (mounted && p.getBool(_holdKey) != true) {
         setState(() => _holdTold = false);
       }
     });
@@ -120,7 +122,7 @@ class _NotesScreenState extends State<NotesScreen> {
   void _heldOnce() {
     if (_holdTold) return;
     setState(() => _holdTold = true);
-    SharedPreferences.getInstance().then((p) => p.setBool(_kHoldTold, true));
+    SharedPreferences.getInstance().then((p) => p.setBool(_holdKey, true));
   }
 
   // every note at once, asked first, folding away together

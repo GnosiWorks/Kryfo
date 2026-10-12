@@ -1017,7 +1017,7 @@ class _Label extends StatelessWidget {
       text,
       style: HaloType.mono(
         size: 10,
-        color: HaloColors.text3,
+        color: HaloColors.text2,
         weight: FontWeight.w500,
         letter: 0.14,
       ),

@@ -2708,7 +2708,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<String> _routeText(String cipher, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
-    if (sessionQuiet) return 'parked';
+    if (sessionQuiet || appState.everydayHeld) return 'parked';
     if (await appState.blockedAnywhere(widget.peerHaloId)) {
       return await session.isBlocked(widget.peerHaloId)
           ? kSendBlocked
@@ -3444,7 +3444,7 @@ class _ChatScreenState extends State<ChatScreen>
     required int writtenAt,
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
-    if (sessionQuiet) return 'parked';
+    if (sessionQuiet || appState.everydayHeld) return 'parked';
     return sendChunkedMediaTo(
       peerId: widget.peerHaloId,
       peerOnion: widget.peerOnion,
@@ -3711,7 +3711,9 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet) return;
+    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+      return;
+    }
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
@@ -5187,7 +5189,7 @@ class _ChatScreenState extends State<ChatScreen>
                                       l10n.chatThisMessageCanT,
                                       style: HaloType.sans(
                                         size: 12,
-                                        color: HaloColors.text3,
+                                        color: HaloColors.text2,
                                       ),
                                     ),
                                   );
@@ -6267,7 +6269,7 @@ class _SearchHeadState extends State<SearchHead> {
                                         text: l10n.chatNoMatches,
                                         style: HaloType.mono(
                                           size: 10,
-                                          color: HaloColors.text3,
+                                          color: HaloColors.text2,
                                           weight: FontWeight.w500,
                                         ),
                                       ),
@@ -8016,7 +8018,7 @@ class MediaGalleryScreen extends StatelessWidget {
             ),
             Text(
               l10n.chatSharedPhotoCount(paths.length, title),
-              style: HaloType.mono(size: 10, color: HaloColors.text3),
+              style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
           ],
         ),

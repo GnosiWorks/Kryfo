@@ -18,9 +18,10 @@ import 'package:kryfo/widgets/chat_parts.dart' show DayChip;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Db implements HaloDb {
+  _Db([this.container = HaloContainer.everyday]);
   List<Map<String, Object?>> notes = [];
   @override
-  HaloContainer get container => HaloContainer.everyday;
+  final HaloContainer container;
   @override
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
       peerId == kNotesPeerId ? [...notes] : [];
@@ -408,4 +409,34 @@ void main() {
       await _drain(t);
     });
   }
+
+  group('the hold hint', () {
+    for (final c in [HaloContainer.everyday, HaloContainer.decoy]) {
+      testWidgets(
+        'is ${c == HaloContainer.decoy ? 'the decoy' : 'the everyday app'}\'s own',
+        (t) async {
+          _phone(t);
+          // the everyday notes were held once already
+          SharedPreferences.setMockInitialValues({'notes_hold_told': true});
+          final d = _Db(c)
+            ..notes = [_note('one note', DateTime(2026, 10, 15, 9))];
+          useDatabasesForTest(_Db(), Session(d));
+          await t.pumpWidget(_framed());
+          await t.pump(const Duration(seconds: 1));
+          final decoy = c == HaloContainer.decoy;
+          expect(
+            find.text(l10n.notesHoldHint),
+            decoy ? findsOne : findsNothing,
+          );
+          if (decoy) {
+            await t.longPress(find.text('one note'));
+            await t.pump(const Duration(seconds: 1));
+            final prefs = await SharedPreferences.getInstance();
+            expect(prefs.getBool('d.notes_hold_told'), isTrue);
+          }
+          await _drain(t);
+        },
+      );
+    }
+  });
 }

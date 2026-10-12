@@ -2887,23 +2887,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · 正在发送',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => '重试';
-
-  @override
   String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
@@ -3758,6 +3741,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks => '大约一秒。在 tor 被封锁的地方也能用。';
+
+  @override
+  String get onboardingAboutASecondSkipsTor => '大约一秒，不经过 Tor。';
+
+  @override
+  String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
 
   @override
   String get onboardingFast => '快速';
@@ -6585,7 +6574,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁';
 
   @override
+  String get torBootSplashRelayLine =>
+      '更快，不经过 Tor。我们的中继能看到你的 IP 地址，但永远看不到你说了什么。';
+
+  @override
+  String get torBootSplashAutoLine => '自己找到绕过封锁的方法，需要时通过网桥。';
+
+  @override
+  String get torBootSplashTwoWaysAround => '两种绕过封锁的方式';
+
+  @override
+  String get bridgesRecommended => '推荐';
+
+  @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
+
+  @override
+  String get bridgesFindingAWayIn => '正在寻找连接方式…';
 
   @override
   String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
@@ -6663,7 +6668,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => '使用这个网桥';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6672,7 +6680,6 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '使用这 $countString 个网桥',
-      one: '使用这个网桥',
     );
     return '$_temp0';
   }
@@ -7422,7 +7429,7 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7470,7 +7477,7 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7485,7 +7492,7 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }
@@ -10678,23 +10685,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · 正在傳送',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get commonRetry => '重試';
-
-  @override
   String get homeNoKryfosYet => '還沒有 Kryfo 聯絡人。';
 
   @override
@@ -11549,6 +11539,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
+
+  @override
+  String get onboardingAboutASecondSkipsTor => '大約一秒，不經過 Tor。';
+
+  @override
+  String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
 
   @override
   String get onboardingFast => '快速';
@@ -14375,7 +14371,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖';
 
   @override
+  String get torBootSplashRelayLine =>
+      '更快，不經過 Tor。我們的中繼看得到你的 IP 位址，但永遠看不到你說了什麼。';
+
+  @override
+  String get torBootSplashAutoLine => '自己找到繞過封鎖的方法，需要時透過橋接。';
+
+  @override
+  String get torBootSplashTwoWaysAround => '兩種繞過封鎖的方式';
+
+  @override
+  String get bridgesRecommended => '推薦';
+
+  @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
+
+  @override
+  String get bridgesFindingAWayIn => '正在尋找連線方式…';
 
   @override
   String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';
@@ -14453,7 +14465,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => '使用這個橋接';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -14462,7 +14477,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       count,
       locale: localeName,
       other: '使用這 $countString 個橋接',
-      one: '使用這個橋接',
     );
     return '$_temp0';
   }

@@ -14,7 +14,7 @@ class HaloSection extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(6, 4, 4, 8),
       child: Text(
         label,
-        style: HaloType.mono(size: 10.5, color: HaloColors.text3, letter: 0.06),
+        style: HaloType.mono(size: 10.5, color: HaloColors.text2, letter: 0.06),
       ),
     );
   }
