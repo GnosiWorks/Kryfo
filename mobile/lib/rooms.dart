@@ -230,6 +230,16 @@ class RoomLink {
   }
 }
 
+/// doors a person said join to on the sheet, for a join of theirs that
+/// waits on another one gone unanswered or full. the join takes each once
+class TakenDoors {
+  final _byRoom = <String, String>{};
+  void take(RoomLink link) => _byRoom[link.roomId] = link.fcPk;
+  bool taken(RoomLink link) => _byRoom.remove(link.roomId) == link.fcPk;
+}
+
+final takenDoors = TakenDoors();
+
 // every control and format mark but the joiners: persian spells with the
 // non-joiner, and emoji are built with the joiner. the direction marks go
 final _unseen = RegExp(r'(?![\u200C\u200D])[\p{Cc}\p{Cf}]', unicode: true);

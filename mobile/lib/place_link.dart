@@ -36,26 +36,41 @@ final _q = RegExp('^($_num),($_num)\\s*(?:\\((.*)\\))?\$', dotAll: true);
 
 /// where each geo: link in [text] starts and ends
 Iterable<(int, int)> geoSpans(String text) sync* {
+  // links in one run of text end where it ends: found once for all of them
+  var run = -1;
   for (final m in _start.allMatches(text)) {
-    yield (m.start, _end(text, m.start));
+    if (run < m.start) run = _runEnd(text, m.start);
+    yield (m.start, _end(text, m.start, run));
   }
 }
 
-int _end(String text, int from) {
+int _runEnd(String text, int from) {
   var i = from;
   while (i < text.length && !_space(text.codeUnitAt(i))) {
     i++;
   }
+  return i;
+}
+
+// nothing past the cap is read: a link that long is none
+int _end(String text, int from, int run) {
+  final cap = from + _tokenCap < text.length ? from + _tokenCap : text.length;
+  if (run >= cap) return run;
+  var open = 0;
+  for (var j = from; j < run; j++) {
+    final c = text.codeUnitAt(j);
+    if (c == 0x28) open++;
+    if (c == 0x29) open--;
+  }
   // a label written with its spaces: "(eiffel tower)" runs to its bracket
-  final head = text.substring(from, i);
-  if ('('.allMatches(head).length > ')'.allMatches(head).length) {
-    final close = text.indexOf(')', i);
-    final line = text.indexOf('\n', i);
-    if (close > 0 && (line < 0 || close < line) && close - from < _tokenCap) {
-      i = close + 1;
+  if (open > 0) {
+    for (var j = run; j < cap; j++) {
+      final c = text.codeUnitAt(j);
+      if (c == 0x0A) break;
+      if (c == 0x29) return j + 1;
     }
   }
-  return i;
+  return run;
 }
 
 bool _space(int c) =>
@@ -64,25 +79,30 @@ bool _space(int c) =>
 /// the first geo: link in [text] that names a real place, or null
 Place? firstPlace(String text) {
   for (final (s, e) in geoSpans(text)) {
-    final p = _parse(_trimTail(text.substring(s, e)));
+    if (e - s > _tokenCap) continue;
+    final p = _parse(trimTail(text.substring(s, e)));
     if (p != null) return p;
   }
   return null;
 }
 
-// a sentence's own punctuation after the link, as firstUrl does it
-String _trimTail(String raw) {
-  while (raw.isNotEmpty) {
-    final last = raw[raw.length - 1];
-    final closes = last == ')' || last == ']';
-    final opens = last == ')' ? '(' : '[';
-    if ('.,;:!?\'"'.contains(last) || (closes && !raw.contains(opens))) {
-      raw = raw.substring(0, raw.length - 1);
+/// [raw] without a sentence's own punctuation after it: "see geo:1,2."
+/// a closing bracket stays only when the link opened one
+String trimTail(String raw) {
+  // only closers go, so whether an opener is in it never changes
+  final paren = raw.contains('('), square = raw.contains('[');
+  var n = raw.length;
+  while (n > 0) {
+    final last = raw[n - 1];
+    if ('.,;:!?\'"'.contains(last) ||
+        (last == ')' && !paren) ||
+        (last == ']' && !square)) {
+      n--;
     } else {
       break;
     }
   }
-  return raw;
+  return n == raw.length ? raw : raw.substring(0, n);
 }
 
 Place? _parse(String raw) {
