@@ -1029,6 +1029,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'Khi tệp đã sẵn sàng, bạn sẽ chọn nơi lưu tệp.';
+
+  @override
   String get backupCreating => 'Đang tạo…';
 
   @override

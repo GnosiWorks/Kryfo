@@ -73,7 +73,7 @@ void main() {
     useDatabasesForTest(live, Session(live));
     lockState.openForTest(enabled: true);
     lockState.inDecoy = false;
-    backupForTest = (path) async => File(path).writeAsStringSync('made');
+    backupForTest = (path, _) async => File(path).writeAsStringSync('made');
     await t.pumpWidget(
       ValueListenableBuilder<int>(
         valueListenable: navRevision,

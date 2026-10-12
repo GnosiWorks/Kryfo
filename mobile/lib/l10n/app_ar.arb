@@ -251,6 +251,7 @@
   "backupPassphrase": "عبارة المرور",
   "backupConfirmPassphrase": "تأكيد عبارة المرور",
   "backupWriting": "جارٍ الكتابة… ⁨{progress}⁩",
+  "backupSaveComesAfter": "عندما يصبح الملف جاهزًا، ستختار أين تحفظه.",
   "backupCreating": "جارٍ الإنشاء…",
   "backupMakeTheFileAnd": "إنشاء الملف والانتقال",
   "backupCreateBackup": "إنشاء نسخة احتياطية",

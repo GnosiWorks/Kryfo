@@ -1001,6 +1001,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter => '文件准备好后，你再选择保存位置。';
+
+  @override
   String get backupCreating => '正在创建…';
 
   @override
@@ -8841,6 +8844,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String backupWriting(Object progress) {
     return '寫入中… $progress';
   }
+
+  @override
+  String get backupSaveComesAfter => '檔案準備好後，你再選擇儲存位置。';
 
   @override
   String get backupCreating => '建立中…';

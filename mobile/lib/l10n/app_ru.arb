@@ -251,6 +251,7 @@
   "backupPassphrase": "Парольная фраза",
   "backupConfirmPassphrase": "Повтори парольную фразу",
   "backupWriting": "Запись… {progress}",
+  "backupSaveComesAfter": "Когда файл будет готов, ты выберешь, куда его сохранить.",
   "backupCreating": "Создание…",
   "backupMakeTheFileAnd": "Создать файл и перенести",
   "backupCreateBackup": "Создать копию",

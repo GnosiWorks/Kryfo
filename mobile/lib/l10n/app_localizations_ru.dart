@@ -1068,6 +1068,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'Когда файл будет готов, ты выберешь, куда его сохранить.';
+
+  @override
   String get backupCreating => 'Создание…';
 
   @override

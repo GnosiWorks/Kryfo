@@ -251,6 +251,7 @@
   "backupPassphrase": "Frasa sandi",
   "backupConfirmPassphrase": "Konfirmasi frasa sandi",
   "backupWriting": "Menulis… {progress}",
+  "backupSaveComesAfter": "Setelah file siap, kamu akan memilih tempat menyimpannya.",
   "backupCreating": "Membuat…",
   "backupMakeTheFileAnd": "Buat file dan pindah",
   "backupCreateBackup": "Buat cadangan",

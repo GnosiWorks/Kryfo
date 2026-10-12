@@ -1079,6 +1079,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get backupSaveComesAfter =>
+      'عندما يصبح الملف جاهزًا، ستختار أين تحفظه.';
+
+  @override
   String get backupCreating => 'جارٍ الإنشاء…';
 
   @override

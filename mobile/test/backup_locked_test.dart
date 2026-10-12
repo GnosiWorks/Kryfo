@@ -115,7 +115,7 @@ void main() {
     haloToastOverlay = () => rootNavKey.currentState?.overlay;
     addTearDown(() => haloToastOverlay = null);
     final running = Completer<void>();
-    backupForTest = (path) async {
+    backupForTest = (path, _) async {
       await running.future;
       File(path).writeAsStringSync('made');
     };
