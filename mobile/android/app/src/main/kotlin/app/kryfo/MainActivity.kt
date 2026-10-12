@@ -400,15 +400,30 @@ class MainActivity : FlutterFragmentActivity() {
                     // fingerprint unlock on a key a new finger invalidates
                     "bioReady" -> result.success(BioKey.ready())
                     "bioState" -> result.success(BioKey.state())
-                    "bioEnable" -> result.success(BioKey.create())
+                    "bioSeal" -> {
+                        val opens = call.argument<String>("opens")
+                        if (opens.isNullOrEmpty()) {
+                            result.success(null)
+                        } else {
+                            BioKey.work.execute {
+                                val s = BioKey.seal(opens)
+                                runOnUiThread { result.success(s) }
+                            }
+                        }
+                    }
                     "bioDisable" -> {
-                        BioKey.delete()
-                        result.success(true)
+                        BioKey.work.execute {
+                            BioKey.delete()
+                            runOnUiThread { result.success(true) }
+                        }
                     }
                     "bioUnlock" -> {
                         val title = call.argument<String>("title") ?: "kryfo"
                         val cancel = call.argument<String>("cancel") ?: "Cancel"
-                        BioKey.unlock(this, title, cancel) { result.success(it) }
+                        val seal = call.argument<String>("seal") ?: ""
+                        BioKey.unlock(this, title, cancel, seal) { r, opens ->
+                            result.success(mapOf("r" to r, "p" to opens))
+                        }
                     }
                     // the pin hold runs on these: time since boot, which a
                     // change of date does not move, and which boot this is

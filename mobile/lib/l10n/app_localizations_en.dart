@@ -3463,6 +3463,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Use fingerprint';
 
   @override
+  String get lockSetupTurningOn => 'Turning on…';
+
+  @override
   String get lockSetupPinOnly => 'PIN only';
 
   @override
@@ -7467,8 +7470,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flowDecoy1 => 'Opens an empty Kryfo, as if just installed.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Fingerprint unlock turns off while a decoy PIN is set.';
+  String get flowDecoyFinger =>
+      'While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.';
 
   @override
   String get flowDecoyDigits =>

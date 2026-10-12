@@ -3479,6 +3479,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Parmak izi kullan';
 
   @override
+  String get lockSetupTurningOn => 'Açılıyor…';
+
+  @override
   String get lockSetupPinOnly => 'Yalnızca PIN';
 
   @override
@@ -7498,8 +7501,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flowDecoy1 => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Yem PIN’i ayarlıyken parmak iziyle kilit açma kapalıdır.';
+  String get flowDecoyFinger =>
+      'Yem PIN’i ayarlıyken bu uygulama yalnızca PIN’inle açılır. Yemde parmak izi açıksa parmak yemi açar, bu uygulamayı asla açmaz.';
 
   @override
   String get flowDecoyDigits =>

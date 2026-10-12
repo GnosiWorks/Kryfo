@@ -131,6 +131,14 @@ Future<void> _release(String h) async {
 // already gone, are unlinked. everything else leaves its folder by a
 // rename, at once, and is shredded behind
 Future<void> _erase({Set<String> keep = const {}}) async {
+  // the fingerprint key, so nothing it sealed opens again
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('bioDisable').timeout(const Duration(seconds: 1));
+  } catch (e) {
+    dlog('wipe: finger key left (${e.runtimeType})');
+  }
   try {
     // identity markers go first. if anything below fails the next launch
     // still starts at onboarding instead of an empty home screen.

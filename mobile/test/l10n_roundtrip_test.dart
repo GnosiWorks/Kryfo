@@ -1667,6 +1667,7 @@ void main() {
       "The PIN still works whenever you want it. This is just faster.",
     );
     expect(l.lockSetupUseFingerprint, "Use fingerprint");
+    expect(l.lockSetupTurningOn, "Turning on…");
     expect(l.lockSetupPinOnly, "PIN only");
     expect(l.lockSetupOnceMore, "Once more");
     expect(l.lockSetupSetAPin, "Set a PIN");
@@ -2057,8 +2058,8 @@ void main() {
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
     expect(
-      l.flowDecoyFingerOff,
-      "Fingerprint unlock turns off while a decoy PIN is set.",
+      l.flowDecoyFinger,
+      "While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.",
     );
     expect(l.pinsWipePin, "Wipe PIN");
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");

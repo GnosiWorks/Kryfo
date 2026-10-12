@@ -38,11 +38,12 @@ class _Bio implements LockBio {
   @override
   Future<String> state() async => 'ok';
   @override
-  Future<bool> enable() async => true;
+  Future<String?> seal(String opens) async => 'ab' * 257;
   @override
   Future<void> disable() async {}
   @override
-  Future<String> unlock(String title, String cancel) async => 'none';
+  Future<BioOpened> unlock(String title, String cancel, String seal) async =>
+      const BioOpened('none');
 }
 
 class _Engine implements HaloEngine {

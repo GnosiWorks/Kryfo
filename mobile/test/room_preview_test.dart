@@ -71,6 +71,10 @@ class _World {
     return held.contains(id);
   }
 
+  // held rooms whose waiting join may move to the door a link names
+  final movable = <String>{};
+  Future<bool> moves(RoomLink room) async => movable.contains(room.roomId);
+
   Future<void> start(WidgetTester t, {bool still = false}) async {
     t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -110,7 +114,14 @@ class _World {
   Future<void> own(WidgetTester t, String raw) async {
     finished = false;
     result = null;
-    takeOwnLink(ctx, raw, guard: guard, act: door.call, here: here).then((r) {
+    takeOwnLink(
+      ctx,
+      raw,
+      guard: guard,
+      act: door.call,
+      here: here,
+      movable: moves,
+    ).then((r) {
       result = r;
       finished = true;
     });
@@ -128,6 +139,7 @@ class _World {
       act: door.call,
       kin: (_) async => (LinkKin.stranger, ''),
       here: here,
+      movable: moves,
     ).then((r) {
       result = r;
       finished = true;
@@ -146,6 +158,7 @@ class _World {
       act: door.call,
       kin: (_) async => (LinkKin.stranger, ''),
       here: here,
+      movable: moves,
     ).then((_) => finished = true);
     await t.pumpAndSettle();
   }
@@ -419,6 +432,52 @@ void main() {
     expect(w.watch.sheets, isEmpty);
     expect(w.askedHere, ['room-one', 'room-one', 'room-one']);
     expect(w.door.taken, [link, link, link]);
+  });
+
+  testWidgets('a waiting join moves to the door a link names only on the '
+      'sheet\'s join, from every way in', (t) async {
+    final w = _World()
+      ..held.add('room-one')
+      ..movable.add('room-one');
+    await w.start(t);
+    final room = _link();
+    final link = room.encode();
+    final ways = [w.own, w.outside, w.tap];
+    for (final open in ways) {
+      await open(t, link);
+      expect(find.text(l10n.kryfoLinkTextJoin2), findsOneWidget);
+      await t.tap(find.text(l10n.kryfoLinkTextNotNow));
+      await t.pumpAndSettle();
+      expect(w.door.taken, isEmpty);
+      expect(takenDoors.taken(room), isFalse);
+    }
+    for (final open in ways) {
+      await open(t, link);
+      await t.tap(find.text(l10n.kryfoLinkTextJoin2));
+      await t.pumpAndSettle();
+      expect(w.door.taken.last, link);
+      expect(takenDoors.taken(room), isTrue);
+    }
+    await t.pump(const Duration(seconds: 10));
+    await t.pumpAndSettle();
+    expect(w.watch.sheets, hasLength(6));
+    expect(w.door.taken, hasLength(3));
+  });
+
+  testWidgets('a room already here takes no other door with no sheet', (
+    t,
+  ) async {
+    final w = _World()..held.add('room-one');
+    await w.start(t);
+    final room = _link();
+    for (final open in [w.own, w.outside, w.tap]) {
+      await open(t, room.encode());
+      expect(takenDoors.taken(room), isFalse);
+    }
+    await t.pump(const Duration(seconds: 10));
+    await t.pumpAndSettle();
+    expect(w.watch.sheets, isEmpty);
+    expect(w.door.taken, hasLength(3));
   });
 
   testWidgets('a room not here is asked about first', (t) async {

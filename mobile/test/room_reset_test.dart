@@ -638,8 +638,13 @@ void main() {
     expect(await _relay(maker, a.engine.knocks.last), isNull);
     expect(said, isEmpty);
 
-    // the new link, while still waiting, knocks on the new door
+    // the new link knocks on the new door once that wait runs out too, and
+    // join is said on its sheet
     a.use();
+    expect(await a.app.roomDoorMovable(link), isFalse);
+    a.room!['joining_at'] = DateTime.now().millisecondsSinceEpoch - wait - 1;
+    expect(await a.app.roomDoorMovable(link), isTrue);
+    takenDoors.take(link);
     expect(await a.app.joinRoom(link), '');
     await _settle();
     expect(a.engine.knocks.last.fc, _fc2);

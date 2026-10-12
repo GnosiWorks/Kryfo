@@ -45,6 +45,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
   int? exited;
+  final platform = <String>[];
 
   String dir(String name) => p.join(root.path, name);
 
@@ -78,10 +79,13 @@ void main() {
         _ => dir('tmp'),
       },
     );
-    m.setMockMethodCallHandler(
-      const MethodChannel('halo/platform'),
-      (call) async => call.method == 'wipe' ? false : null,
-    );
+    platform.clear();
+    m.setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+      call,
+    ) async {
+      platform.add(call.method);
+      return call.method == 'wipe' ? false : null;
+    });
     for (final f in [
       'docs/halo.db',
       'docs/onion.key',
@@ -336,6 +340,19 @@ void main() {
     expect(clock.elapsed.inSeconds, lessThan(6));
     expect(engine.calls, ['release wren', 'hold']);
     expect(left('docs'), isEmpty);
+    expect(exited, 0);
+  });
+
+  test('the fingerprint key goes before the seal and the rest', () async {
+    useEngineForTest(_Engine());
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.biometric': 'true',
+      'halo.lock.biometric.seal': 'ab' * 257,
+    });
+    await wipeHalo();
+    expect(platform.first, 'bioDisable');
+    expect(platform, contains('wipe'));
+    expect(await const FlutterSecureStorage().readAll(), isEmpty);
     expect(exited, 0);
   });
 

@@ -143,43 +143,56 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     }
     HapticFeedback.mediumImpact();
     if (mounted && _lock.fingerOffered && !_lock.biometric) {
-      final useBio = await showHaloSheet<bool>(
+      // the key takes a moment to make: the button says so, and the sheet
+      // closes once the finger is on
+      var sealing = false;
+      await showHaloSheet<bool>(
         context,
-        builder: (ctx) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.lockSetupUnlockWithFingerprint,
-                  style: HaloType.serif(size: 20, color: HaloColors.text),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.lockSetupThePinStillWorks,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
-                ),
-                const SizedBox(height: 16),
-                HaloPrimaryButton(
-                  label: l10n.lockSetupUseFingerprint,
-                  onTap: () => Navigator.pop(ctx, true),
-                ),
-                const SizedBox(height: 8),
-                HaloGhostButton(
-                  label: l10n.lockSetupPinOnly,
-                  quiet: true,
-                  onTap: () => Navigator.pop(ctx, false),
-                ),
-              ],
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setSheet) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SheetHandle(),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.lockSetupUnlockWithFingerprint,
+                    style: HaloType.serif(size: 20, color: HaloColors.text),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.lockSetupThePinStillWorks,
+                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  ),
+                  const SizedBox(height: 16),
+                  HaloPrimaryButton(
+                    label: sealing
+                        ? l10n.lockSetupTurningOn
+                        : l10n.lockSetupUseFingerprint,
+                    busy: sealing,
+                    onTap: sealing
+                        ? null
+                        : () async {
+                            setSheet(() => sealing = true);
+                            await _lock.setBiometric(true);
+                            if (ctx.mounted) Navigator.pop(ctx, true);
+                          },
+                  ),
+                  const SizedBox(height: 8),
+                  HaloGhostButton(
+                    label: l10n.lockSetupPinOnly,
+                    quiet: true,
+                    onTap: sealing ? null : () => Navigator.pop(ctx, false),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
-      if (useBio == true) await _lock.setBiometric(true);
     }
     if (mounted) Navigator.of(context).pop();
   }

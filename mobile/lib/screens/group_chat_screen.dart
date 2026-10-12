@@ -92,9 +92,8 @@ import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
-import '../place_link.dart' show firstPlace;
 import 'camera_screen.dart';
-import '../link_preview.dart' show titleFromHtml, senderPreview;
+import '../link_preview.dart' show titleFromHtml, senderPreview, WordLinks;
 import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
@@ -1419,8 +1418,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     onShield: shieldFlag == null
                         ? null
                         : () => _openShield(m.sender),
-                    linkTitle: m.preview?['title'],
-                    linkBySender: m.preview?['by'] == 'sender',
+                    linkTitle: _linkPreview(m)?['title'],
+                    linkBySender: _linkPreview(m)?['by'] == 'sender',
                     quotedText: quoted,
                     quotedAuthor: quotedAuthor,
                     onLongPress: (ctx) => _showEmojiPickerAt(
@@ -3262,6 +3261,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     Navigator.of(context).push(route);
   }
 
+  // a page title only while the words still lead with its link: an edit
+  // to another link leaves it behind
+  static Map<String, String>? _linkPreview(_GMsg m) {
+    final pv = m.preview;
+    return pv != null && pv['url'] == m.url ? pv : null;
+  }
+
   Future<void> _editGroupMessage(_GMsg m) async {
     if (m.msgUid == null) return;
     final result = await showGroupEditSheet(context, m.text);
@@ -3761,10 +3767,11 @@ Widget _groupStamp(_GMsg m) => Container(
   ),
 );
 
-class _GMsg {
+class _GMsg with WordLinks {
   final String sender;
   final String senderName;
   final String direction;
+  @override
   String text;
   final DateTime when;
   int? burnAt;
@@ -5120,7 +5127,7 @@ class _GroupBubble extends StatelessWidget {
                                                     ),
                                             ),
                                           ),
-                                        if (firstUrl(m.text) case final u?) ...[
+                                        if (m.url case final u?) ...[
                                           const SizedBox(height: 6),
                                           LinkStub(
                                             url: u,
@@ -5129,8 +5136,7 @@ class _GroupBubble extends StatelessWidget {
                                             bySender: linkBySender,
                                           ),
                                         ],
-                                        if (firstPlace(m.text)
-                                            case final p?) ...[
+                                        if (m.place case final p?) ...[
                                           const SizedBox(height: 6),
                                           PlaceStub(place: p, isOut: isOut),
                                         ],
