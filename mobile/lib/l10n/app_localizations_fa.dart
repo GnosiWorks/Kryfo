@@ -3460,6 +3460,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockSetupUseFingerprint => 'استفاده از اثر انگشت';
 
   @override
+  String get lockSetupTurningOn => 'در حال روشن کردن…';
+
+  @override
   String get lockSetupPinOnly => 'فقط PIN';
 
   @override
@@ -7495,8 +7498,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flowDecoy1 => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'تا وقتی PIN فریب تنظیم شده، باز کردن قفل با اثر انگشت خاموش است.';
+  String get flowDecoyFinger =>
+      'تا وقتی PIN فریب تنظیم شده، این برنامه فقط با PIN شما باز می‌شود. اگر اثر انگشت در فریب روشن باشد، انگشت فریب را باز می‌کند، هرگز این برنامه را.';
 
   @override
   String get flowDecoyDigits =>

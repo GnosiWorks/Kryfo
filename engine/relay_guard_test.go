@@ -182,7 +182,7 @@ func TestPollIsOneEntryPerEvent(t *testing.T) {
 	}
 	want := []pollEntry{{T: "firstcontact", C: "AAAA"}, {T: "room:ab:cd", C: `{"t":"x"}`}, {T: "abc", C: "a|b"}, {T: "abc", C: ""}}
 	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("poll entries %q, want %q", got, want)
+		t.Fatalf("poll entries %+v, want %+v", got, want)
 	}
 	if pollJSON(nil) != "" || pollJSON([]string{"x|a\nb"}) != "" {
 		t.Fatal("a poll with nothing to hand over is empty")
@@ -239,7 +239,7 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 	want := []pollEntry{{T: friendTag, C: "from a friend"}, {T: "firstcontact", C: "hello"}}
 	sort.Slice(want, func(i, j int) bool { return want[i].T < want[j].T })
 	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("the app got %q, want %q", got, want)
+		t.Fatalf("the app got %+v, want %+v", got, want)
 	}
 }
 
@@ -279,7 +279,7 @@ func TestEventsAreRememberedOnceHandedOver(t *testing.T) {
 	go nostrSubscribeRunner(ctx2, tag, peer.pub, rcv)
 	waitFor(t, "the event came again", 10*time.Second, func() bool { return inboxLen() == 1 })
 	if got := pollEntries(t); len(got) != 1 || got[0].C != "hi" {
-		t.Fatalf("the app got %q", got)
+		t.Fatalf("the app got %+v", got)
 	}
 	if !holds() {
 		t.Fatal("not remembered after the app took it")

@@ -17,6 +17,7 @@ import '../sent_name.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
+import '../widgets/owned_text.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
@@ -193,6 +194,88 @@ final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 /// there
 bool backToOpenGroup(NavigatorState nav, String groupId) =>
     backToPage(nav, [...?_openGroups[groupId]]);
+
+/// a group message's words to edit. null when cancelled or dismissed
+@visibleForTesting
+Future<String?> showGroupEditSheet(BuildContext context, String text) =>
+    showHaloSheet<String>(
+      context,
+      scroll: true,
+      builder: (_) => OwnedText(
+        initial: text,
+        builder: (ctx, ctrl) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            // the keyboard, or the navigation bar when it is down
+            bottom:
+                math.max(
+                  MediaQuery.paddingOf(ctx).bottom,
+                  MediaQuery.viewInsetsOf(ctx).bottom,
+                ) +
+                20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SheetHandle(),
+              Text(
+                l10n.groupChatEditMessage,
+                style: HaloType.serif(
+                  size: 20,
+                  italic: true,
+                  color: HaloColors.amber,
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                // a long message scrolls in the field, so save stays in view
+                minLines: 1,
+                maxLines: 6,
+                cursorColor: HaloColors.amber,
+                style: HaloType.sans(size: 15),
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.line2),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.amber),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      l10n.commonCancel,
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, ctrl.text),
+                    child: Text(
+                      l10n.commonSave,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w500,
+                        color: HaloColors.amber,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
@@ -3172,82 +3255,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _editGroupMessage(_GMsg m) async {
     if (m.msgUid == null) return;
-    final ctrl = TextEditingController(text: m.text);
-    final result = await showHaloSheet<String>(
-      context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          // the keyboard, or the navigation bar when it is down
-          bottom:
-              math.max(
-                MediaQuery.paddingOf(ctx).bottom,
-                MediaQuery.viewInsetsOf(ctx).bottom,
-              ) +
-              20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Text(
-              l10n.groupChatEditMessage,
-              style: HaloType.serif(
-                size: 20,
-                italic: true,
-                color: HaloColors.amber,
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              // a long message scrolls in the field, so save stays in view
-              minLines: 1,
-              maxLines: 6,
-              cursorColor: HaloColors.amber,
-              style: HaloType.sans(size: 15),
-              decoration: InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.line2),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.amber),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    l10n.commonCancel,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, ctrl.text),
-                  child: Text(
-                    l10n.commonSave,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    final result = await showGroupEditSheet(context, m.text);
     if (result == null) return;
     final newText = result.trim();
     if (newText.isEmpty || newText == m.text) return;

@@ -3311,6 +3311,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupUseFingerprint => '使用指纹';
 
   @override
+  String get lockSetupTurningOn => '正在开启…';
+
+  @override
   String get lockSetupPinOnly => '仅用 PIN 码';
 
   @override
@@ -7169,7 +7172,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoy1 => '打开一个空的 Kryfo，就像刚装好一样。';
 
   @override
-  String get flowDecoyFingerOff => '设置伪装 PIN 后，指纹解锁会关闭。';
+  String get flowDecoyFinger =>
+      '设置伪装 PIN 后，这个应用只能用 PIN 码打开。如果在伪装里开启了指纹，手指只会打开伪装，绝不会打开这个应用。';
 
   @override
   String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
@@ -11098,6 +11102,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockSetupUseFingerprint => '使用指紋';
 
   @override
+  String get lockSetupTurningOn => '正在開啟…';
+
+  @override
   String get lockSetupPinOnly => '只用 PIN 碼';
 
   @override
@@ -14955,7 +14962,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoy1 => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
 
   @override
-  String get flowDecoyFingerOff => '設定偽裝 PIN 後，指紋解鎖會關閉。';
+  String get flowDecoyFinger =>
+      '設定偽裝 PIN 後，這個應用程式只能用 PIN 碼開啟。如果在偽裝裡開啟了指紋，手指只會開啟偽裝，絕不會開啟這個應用程式。';
 
   @override
   String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';

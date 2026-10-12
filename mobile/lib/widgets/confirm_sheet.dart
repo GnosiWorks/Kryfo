@@ -8,6 +8,7 @@ import '../bidi_safe.dart';
 import '../lock_guard.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
+import 'owned_text.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'written_field.dart';
@@ -256,12 +257,12 @@ Future<String?> showInputSheet(
   int maxLength = 60,
   // a message rather than a name: it wraps, keeps its line breaks, no cap
   bool multiline = false,
-}) {
-  final ctrl = TextEditingController(text: initial ?? '');
-  return showHaloSheet<String>(
-    context,
-    scroll: true,
-    builder: (ctx) => _frame(ctx, [
+}) => showHaloSheet<String>(
+  context,
+  scroll: true,
+  builder: (_) => OwnedText(
+    initial: initial ?? '',
+    builder: (ctx, ctrl) => _frame(ctx, [
       _title(title),
       if (line != null) ...[const SizedBox(height: 6), _line(line)],
       const SizedBox(height: 14),
@@ -308,8 +309,8 @@ Future<String?> showInputSheet(
       const SizedBox(height: 6),
       _quiet(l10n.confirmSheetCancel, () => Navigator.pop(ctx)),
     ]),
-  ).whenComplete(ctrl.dispose);
-}
+  ),
+);
 
 class SheetChoice<T> {
   final T value;
