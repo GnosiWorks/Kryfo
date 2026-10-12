@@ -353,13 +353,11 @@ func netAway() bool { return netOffline.Load() && !netValveOpen.Load() }
 func networkChangedTo(online bool) {
 	// android's watch on the default network has the say once it has
 	// spoken: this older call can say none while a network is there
-	if online {
-		connSaid.Store(connOn)
-	} else {
-		connSaid.Store(connOff)
-	}
-	if n, ok := netDetailTrusted(); ok {
-		online = n.On
+	connectivitySaw(online)
+	// the watch has the say: a word of the plain call that differs is a
+	// dispute for the valve, not a change of network
+	if n, ok := netDetailTrusted(); ok && n.On != online {
+		return
 	}
 	was := setOffline(!online)
 	networkChanged()
@@ -441,15 +439,41 @@ var (
 // set while the valve tries tor with no network said to be there
 var netValveOpen atomic.Bool
 
+// the least wait for a valve while the plain call has said nothing: the
+// watch alone saying none is believed for longer
+var netValveUnsaid = 30 * time.Minute
+
+// the watch says none while the plain call sees a network
+func netDisputed() bool {
+	d, ok := netDetailTrusted()
+	return ok && !d.On && connSaid.Load() == connOn
+}
+
+// what connectivity sees, from the app on every event: whether the two
+// calls disagree, and no change of its own
+func connectivitySaw(on bool) {
+	if on {
+		connSaid.Store(connOn)
+	} else {
+		connSaid.Store(connOff)
+	}
+}
+
 // whether the valve tries now. records the try it allows
 func netValveDue(now time.Time) bool {
 	if !netOffline.Load() || !torParked.Load() || netValveOpen.Load() || !modeNeedsTor() || torIsPaused() {
 		return false
 	}
 	// each try marks guards down: only when the two calls disagree, or
-	// android's watch never spoke. none by both is none
-	if _, ok := netDetailTrusted(); ok && connSaid.Load() != connOn {
-		return false
+	// one of them never spoke. none by both is none
+	least := time.Duration(0)
+	if _, ok := netDetailTrusted(); ok {
+		switch connSaid.Load() {
+		case connOff:
+			return false
+		case connUnsaid:
+			least = netValveUnsaid
+		}
 	}
 	netGoneMu.Lock()
 	defer netGoneMu.Unlock()
@@ -459,6 +483,9 @@ func netValveDue(now time.Time) bool {
 	wait := netValveAfter << uint(netValveN)
 	if netValveN > 6 || wait > netValveMost {
 		wait = netValveMost
+	}
+	if wait < least {
+		wait = least
 	}
 	from := netGoneAt
 	if !netValveLast.IsZero() {

@@ -936,6 +936,15 @@ func HaloNetworkChanged() *C.char {
 	return C.CString("ok")
 }
 
+// what connectivity sees, sent on every event of it: it changes nothing
+// but whether the network is disputed
+//
+//export HaloConnectivitySeen
+func HaloConnectivitySeen(on C.int) *C.char {
+	connectivitySaw(on != 0)
+	return C.CString("ok")
+}
+
 // the same, saying whether a network is there after the change
 //
 //export HaloNetworkState

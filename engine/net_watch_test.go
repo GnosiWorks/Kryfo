@@ -717,3 +717,70 @@ func TestAStuckBridgeConfigSaysSo(t *testing.T) {
 		t.Fatalf("on the network without its bridges: %v", f.sent())
 	}
 }
+
+// a cold start with the watch wrongly saying none: the app made no plain
+// call, so the watch is believed for longer, then the valve tries
+func TestAColdStartWrongWatchGetsAValve(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	now := time.Now()
+	if netValveDue(now.Add(20 * time.Minute)) {
+		t.Fatal("the valve opened before the longer wait")
+	}
+	if !netValveDue(now.Add(31 * time.Minute)) {
+		t.Fatal("cold start, watch wrong: valve never due")
+	}
+}
+
+// the watch wrongly says none while connectivity sees wifi: the app passes
+// connectivity's own word, the watch keeps the say, the valve may try
+func TestAWatchWrongConnRightGetsAValve(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	oa := netValveAfter
+	netValveAfter = time.Minute
+	t.Cleanup(func() { netValveAfter = oa })
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi"}`)
+	connectivitySaw(true)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	connectivitySaw(true)
+	networkChangedTo(true)
+	if !netOffline.Load() {
+		t.Fatal("the plain call outranked the watch")
+	}
+	if !netValveDue(time.Now().Add(2 * time.Minute)) {
+		t.Fatalf("watch wrong, connectivity right: valve never due (connSaid %d)", connSaid.Load())
+	}
+}
+
+// fix connection, tapped while the two calls disagree: the valve tries now
+func TestFixConnectionTriesTheValveWhenDisputed(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(true)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if r := reconnectNow(); r != "ok" {
+		t.Fatalf("reconnect by hand: %q", r)
+	}
+	if !waitUntil(3*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
+		t.Fatalf("no try: %v", f.sent())
+	}
+	for end := time.Now().Add(5 * time.Second); time.Now().Before(end) && netOffline.Load(); {
+		routeNoteOK()
+		time.Sleep(20 * time.Millisecond)
+	}
+	if netOffline.Load() {
+		t.Fatal("a relay got through and still offline")
+	}
+	waitUntil(3*time.Second, func() bool { return !netValveOpen.Load() })
+}

@@ -790,6 +790,13 @@ func reconnectNow() string {
 	if torIsPaused() {
 		return "error: tor is asleep"
 	}
+	// asked for by hand while the two calls disagree on the network: the
+	// valve tries tor now
+	if netOffline.Load() && netDisputed() && modeNeedsTor() && !netValveOpen.Load() {
+		log.Println("halo: a reconnect by hand while the network is disputed")
+		go netValveTry()
+		return "ok"
+	}
 	if autoGateHeld() {
 		log.Println("halo: reconnect deferred - automatic is trying a way in")
 		return "error: automatic is connecting"
