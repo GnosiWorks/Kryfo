@@ -724,6 +724,8 @@ const kIdentitySecureKeys = [
   'my_handle_name',
   'fc_counter',
   'peer_fc',
+  'peer_fc_swept',
+  'pair_read',
   'my_avatar',
 ];
 
