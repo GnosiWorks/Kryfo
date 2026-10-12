@@ -895,6 +895,12 @@ Future<Set<String>> scrubHidden(Database db) async {
     await t.delete('hidden_chats');
     await t.delete('vault_meta');
     await t.delete('vault_inbox');
+    // its counter would say the inbox ever held something
+    await t.delete(
+      'sqlite_sequence',
+      where: 'name = ?',
+      whereArgs: ['vault_inbox'],
+    );
     final ids = people.toList();
     for (var i = 0; i < ids.length; i += 400) {
       final part = ids.sublist(i, i + 400 > ids.length ? ids.length : i + 400);

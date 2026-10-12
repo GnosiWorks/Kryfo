@@ -360,7 +360,7 @@ func TestMeekWorkerEndsWithoutReader(t *testing.T) {
 	base := runtime.NumGoroutine()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	d := &moatDials{ctx: ctx}
+	d := newMoatDials(ctx)
 	c, err := meekDial(d)
 	if err != nil {
 		t.Fatal(err)

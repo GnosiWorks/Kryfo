@@ -155,6 +155,7 @@ void main() {
     'drafts kept for a restart: the everyday ones only, read back once',
     () async {
       FlutterSecureStorage.setMockInitialValues({});
+      everydayChats = () async => (people: {'alice'}, groups: {'g1'});
       final every = '${HaloContainer.everyday.id}|alice';
       final hidden = '${HaloContainer.vault.id}|bob';
       final decoy = '${HaloContainer.decoy.id}|carol';
@@ -180,6 +181,7 @@ void main() {
     'a restart that does not happen takes the drafts back off disk',
     () async {
       FlutterSecureStorage.setMockInitialValues({});
+      everydayChats = () async => (people: {'alice'}, groups: <String>{});
       final every = '${HaloContainer.everyday.id}|alice';
       draftPerPeer
         ..clear()

@@ -41,7 +41,8 @@ import 'in_front.dart';
 import 'reopen.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
-import 'drafts.dart' show restartKeepingDrafts, restoreKeptDrafts;
+import 'drafts.dart'
+    show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -59,6 +60,7 @@ import 'screens/modes_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'contact_card.dart' show sweepCardLeftovers;
 import 'container.dart';
 import 'lock_state.dart';
 import 'app_shell.dart';
@@ -78,7 +80,7 @@ import 'outbox.dart';
 import 'supporter.dart';
 import 'message_envelope.dart';
 import 'polls.dart';
-import 'open_file.dart' show nameSaysVideo;
+import 'open_file.dart' show nameSaysVideo, shareGoesWithLock;
 import 'search.dart';
 import 'search_bench.dart';
 import 'session.dart';
@@ -1383,6 +1385,24 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  // the people and groups a chat is held with: a deleted chat's row stays,
+  // archived and not accepted, and is none
+  Future<({Set<String> people, Set<String> groups})> draftChats() async {
+    final d = await open();
+    final people = await d.query(
+      'contacts',
+      columns: ['halo_id', 'accepted', 'archived'],
+    );
+    final groups = await d.query('groups', columns: ['group_id']);
+    return (
+      people: {
+        for (final r in people)
+          if (r['accepted'] != 0 || r['archived'] != 1) r['halo_id'] as String,
+      },
+      groups: {for (final r in groups) r['group_id'] as String},
+    );
+  }
+
   // a wrapped container copied for a backup, and the key it opens with,
   // which the backup carries inside its own encryption
   Future<String> copyWithKey(String to) async {
@@ -2065,6 +2085,11 @@ class HaloDb implements GroupOwedStore {
     unawaited(
       Future<void>.delayed(const Duration(seconds: 30), () async {
         if (_retired || !identical(_db, db)) return;
+        try {
+          await searchForgetsOnce(db);
+        } catch (e) {
+          dlog('search: marks not merged (${e.runtimeType})');
+        }
         try {
           await wipeFreedOnce(db);
         } catch (e) {
@@ -3446,6 +3471,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<void> deleteGroup(String groupId) async {
+    dropDraft(container.chatKey(groupId), group: true);
     final db = await open();
     final room = (await getGroup(groupId))?['room_pub'] != null;
     // what its members were still sending goes with it
@@ -3463,6 +3489,14 @@ class HaloDb implements GroupOwedStore {
       'group_resent',
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
+    }
+    // what of it came in and went is known no longer
+    final gone = goneGroupPrefix(groupId);
+    for (final k in {
+      for (final r in await db.query('gone_in', columns: ['peer_id']))
+        if (r['peer_id'] case final String k when k.startsWith(gone)) k,
+    }) {
+      await db.delete('gone_in', where: 'peer_id = ?', whereArgs: [k]);
     }
     // a take-back still goes to members who may hold the message, after
     // a leave or a remove too: they act on it without the group. a room's
@@ -3986,8 +4020,10 @@ class HaloDb implements GroupOwedStore {
   // after a restore reads again. other relays keep what they choose
   static const kGoneFor = Duration(days: 15);
 
-  // the 1:1 rows of these that came in, kept by uid as they go. only what
-  // a resend could still bring: sent within kGoneFor and a day for clocks
+  // the rows of these that came in, kept by uid as they go: a 1:1 one by
+  // its sender, a group's or a room's by its group and sender (goneKey).
+  // only what a resend or the relays could still bring: sent within
+  // kGoneFor and a day for clocks
   static Future<void> _noteGone(
     DatabaseExecutor db,
     Iterable<Map<String, Object?>> rows,
@@ -3995,18 +4031,25 @@ class HaloDb implements GroupOwedStore {
     final now = DateTime.now().millisecondsSinceEpoch;
     final from =
         now - kGoneFor.inMilliseconds - const Duration(days: 1).inMilliseconds;
+    // one commit for all of them: a busy group cleared is thousands
+    final b = db.batch();
+    var any = false;
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       final peer = r['peer_id'] as String?;
+      final group = r['group_id'] as String?;
       final sent = (r['sent_at'] as num?)?.toInt();
       if (uid == null || peer == null || r['direction'] != 'in') continue;
-      if (r['group_id'] != null || (sent != null && sent < from)) continue;
-      await db.insert('gone_in', {
+      if (sent != null && sent < from) continue;
+      if (!goneKept(group)) continue;
+      b.insert('gone_in', {
         'msg_uid': uid,
-        'peer_id': peer,
+        'peer_id': goneKey(peer, group: group),
         'at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      any = true;
     }
+    if (any) await b.commit(noResult: true);
   }
 
   /// [msgUid] came in from [peer] and burned or was deleted here lately
@@ -4359,14 +4402,19 @@ class HaloDb implements GroupOwedStore {
     await _scrubMedia(media);
   }
 
-  Future<void> clearGroupConversation(String groupId) async {
+  // [noteGone] false for a group about to go: its delete drops the records
+  Future<void> clearGroupConversation(
+    String groupId, {
+    bool noteGone = true,
+  }) async {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: _kFileCols,
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
+    if (noteGone) await _noteGone(db, media);
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
@@ -7180,6 +7228,12 @@ Future<void> searchTables(Database db, {bool fresh = false}) async {
     'CREATE TRIGGER IF NOT EXISTS msg_fts_follow AFTER DELETE ON messages '
     'BEGIN DELETE FROM msg_fts WHERE rowid = old.id; END',
   );
+  // a new index forgets from its first delete (searchForgetsOnce)
+  if (fresh) {
+    await db.execute(
+      "INSERT INTO msg_fts(msg_fts, rank) VALUES('secure-delete', 1)",
+    );
+  }
   await db.execute('''
     CREATE TABLE IF NOT EXISTS search_meta (
       k TEXT PRIMARY KEY,
@@ -7418,6 +7472,23 @@ String _keyHex(List<int> b) {
 // the file. the cost is a few percent on writes
 Future<void> eraseFreedPages(DatabaseExecutor db) async {
   await db.rawQuery('PRAGMA secure_delete = 1');
+}
+
+// a message's words leave the search index with it, not as a mark laid
+// over them, and the marks laid before are merged away. once per database.
+// the index then needs sqlite 3.42, which every build since 0.2.9 bundles
+Future<void> searchForgetsOnce(DatabaseExecutor db) async {
+  if (await RouterRows.meta(db, 'fts_forgets') != null) return;
+  final fts = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msg_fts'",
+  );
+  if (fts.isNotEmpty) {
+    await db.execute(
+      "INSERT INTO msg_fts(msg_fts, rank) VALUES('secure-delete', 1)",
+    );
+    await db.execute("INSERT INTO msg_fts(msg_fts) VALUES('optimize')");
+  }
+  await RouterRows.putMeta(db, 'fts_forgets', '1');
 }
 
 // pages freed before that held old rows: one vacuum per database rewrites
@@ -8228,7 +8299,9 @@ Map<String, String> groupReactRow(String uid, String emoji) => {
 
 // a 1:1 message that came in and burned or was deleted here (kGoneFor).
 // a copy sent again, after a restore on the far side say, is known by its
-// uid and sender: acked again and never shown again
+// uid and sender: acked again and never shown again. a group's or a room's
+// is known by its group and sender, read again from the relays after a
+// restore too
 Future<void> _goneTable(DatabaseExecutor db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS gone_in (
@@ -8239,6 +8312,19 @@ Future<void> _goneTable(DatabaseExecutor db) async {
     )
   ''');
 }
+
+/// what a message that came in and went is kept under in gone_in: its
+/// sender, or in a group its group and sender. a hidden group's rows move
+/// with it, and one member's word never stands for another's
+String goneKey(String sender, {String? group}) =>
+    group == null ? sender : 'group:$group:$sender';
+
+/// the gone_in rows of [group]: its own, every sender's
+String goneGroupPrefix(String group) => 'group:$group:';
+
+/// whether what of [group] went is written down. an id with a ':' in it
+/// could read as another group's start, so its records stay in memory
+bool goneKept(String? group) => group == null || !group.contains(':');
 
 // an unsend or a reaction in a 1:1 chat that has not reached the other
 // person yet, one of each kind a message and person: the latest word
@@ -9048,49 +9134,16 @@ HaloContainer containerFor(PinResult r, {String? vaultKey}) => switch (r) {
   _ => HaloContainer.everyday,
 };
 
-// a file handed to the share sheet is a plain copy in cache/share/, or the
-// share plugin's folder from before. the app it went to may read it only
-// once this one is back, so a copy younger than the grace stays, as on the
-// native side (Shred.kt), whose job looks again. a time far ahead is a clock
-// that moved, and counts as old
+// a file handed to the share sheet is a plain copy in cache/share/ or
+// cache/share_q/, or the share plugin's folder from before. the app it went
+// to may read it only once this one is back, so a copy younger than the
+// grace stays, as on the native side (Shred.kt), whose job looks again
 const kShareGrace = kHandedGrace;
-const _clockSkew = Duration(minutes: 1);
 
 @visibleForTesting
 Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
-  final at = now ?? DateTime.now();
-  final cutoff = at.subtract(kShareGrace);
-  final ahead = at.add(_clockSkew);
-  bool old(DateTime t) => t.isBefore(cutoff) || t.isAfter(ahead);
-  for (final name in const ['share', 'share_plus']) {
-    final dir = Directory('${cache.path}/$name');
-    if (!await dir.exists()) continue;
-    // a folder's time moves as its files go, so it is read first
-    final folders = <(Directory, DateTime)>[];
-    await for (final e in dir.list(recursive: true, followLinks: false)) {
-      try {
-        if (e is Directory) {
-          folders.add((e, (await e.stat()).modified));
-        } else if (e is Link) {
-          await e.delete();
-        } else if (e is File && old(await e.lastModified())) {
-          await shredFile(e.path);
-        }
-      } on FileSystemException {
-        // gone meanwhile
-      }
-    }
-    // only an emptied folder goes, and only one old itself, the deepest
-    // first
-    folders.sort((a, b) => b.$1.path.length.compareTo(a.$1.path.length));
-    for (final (d, t) in [...folders, (dir, cutoff)]) {
-      if (!identical(d, dir) && !old(t)) continue;
-      try {
-        await d.delete();
-      } on FileSystemException {
-        // a young copy is still in it
-      }
-    }
+  for (final name in [...kSharedFolders, 'share_q']) {
+    await sweepHanded(Directory('${cache.path}/$name'), now: now);
   }
 }
 
@@ -14468,6 +14521,19 @@ class AppState extends ChangeNotifier {
         await db.noteTakenBack(senderHaloId, env.unsend!);
         await db.forgetFirstOf(senderHaloId, uid: env.unsend!);
       }
+      // a member's word in a group or a room: its copy the relays still
+      // hold stays away after a restart or a restore. anyone else's, or a
+      // group this phone is not in, is held in memory only, as a stranger's
+      if (env.groupId != null &&
+          goneKept(env.groupId) &&
+          !await db.messageExists(env.unsend!) &&
+          await db.getGroup(env.groupId!) != null &&
+          (await db.getGroupMembers(env.groupId!)).contains(senderHaloId)) {
+        await db.noteTakenBack(
+          goneKey(senderHaloId, group: env.groupId),
+          env.unsend!,
+        );
+      }
       await db.deleteMessage(env.unsend!);
       changed();
       // the delete took its unread mark; its notification goes too
@@ -14672,7 +14738,10 @@ class AppState extends ChangeNotifier {
       // again. buffering it would start a copy that never finishes. one
       // receipt per pass, on the first slice, so the sender can stop. one
       // that went here, deleted or burned, stays gone the same way
-      final gone = !isGroup && await db.goneFrom(senderHaloId, mid);
+      final gone = await db.goneFrom(
+        goneKey(senderHaloId, group: env.groupId),
+        mid,
+      );
       if (gone || await db.messageExists(mid)) {
         if (!isGroup &&
             !unsealing &&
@@ -14776,7 +14845,7 @@ class AppState extends ChangeNotifier {
       final known =
           _inflightUids.contains(uid) ||
           await db.messageExists(uid) ||
-          (!isGroup && await db.goneFrom(senderHaloId, uid));
+          await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
       final previewOnly =
@@ -16245,6 +16314,10 @@ class AppState extends ChangeNotifier {
       }
       marks = marks.done(c);
       await m.putMarks(marks);
+      // its unsent words are not kept outside the vault, nor written back
+      // by a screen of it still open
+      c.group ? dropGroupDraft(c.id) : dropChatDraft(c.id);
+      dropDraft(from.chatKey(c.id), group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       went.add(c);
     }
@@ -16628,7 +16701,8 @@ class AppState extends ChangeNotifier {
   // the lock is going up: a vault session shuts at once, and the key of a
   // vault made by a setup that did not finish goes
   void lockingUp() {
-    // a file opened with another app goes with the session that opened it
+    // a file opened with another app, or shared from a hidden chat or the
+    // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
     unawaited(
@@ -21389,6 +21463,7 @@ class AppState extends ChangeNotifier {
     }
     // what it put in the shade goes with it, while its tag is still here
     await _io.unnotify('group:$groupId');
+    dropGroupDraft(groupId);
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
     // the line in the list is only for a room of the session on screen: an
@@ -22309,7 +22384,8 @@ class AppState extends ChangeNotifier {
         ? const <String>[]
         : await d.getGroupMembers(groupId);
     await _io.unnotify('group:$groupId');
-    await session.clearGroupConversation(groupId);
+    dropGroupDraft(groupId);
+    await session.clearGroupConversation(groupId, noteGone: false);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
     if (!sessionQuiet) {
@@ -22328,7 +22404,8 @@ class AppState extends ChangeNotifier {
   // what it left in the shade
   Future<void> _dropGroup(String groupId, HaloDb db) async {
     await _io.unnotify('group:$groupId');
-    await db.clearGroupConversation(groupId);
+    dropGroupDraft(groupId);
+    await db.clearGroupConversation(groupId, noteGone: false);
     await db.deleteGroup(groupId);
   }
 
@@ -22511,6 +22588,11 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
+  // a draft is written down for a restart only for a chat that is still
+  // there
+  everydayChats = () => live.draftChats();
+  // what a hidden chat or the decoy shares goes with the next lock
+  shareGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
   unawaited(sweepBackupLeftovers());
@@ -24148,6 +24230,14 @@ Future<void> _sweepPlaintextLeftovers() async {
     dlog('sweep: voice leftovers (${e.runtimeType})');
   }
   await sweepGifParts();
+  // what a wipe moved aside and did not live to shred
+  await sweepWipeLeftovers();
+  // a contact card written for a share and left
+  try {
+    await sweepCardLeftovers(await getTemporaryDirectory());
+  } catch (e) {
+    dlog('sweep: card leftovers (${e.runtimeType})');
+  }
 }
 
 // every raw recording in [dir]: one that will not go is logged and the

@@ -14,10 +14,13 @@ put you in danger, read all of it.
   at a time: what the tor project suggests (only after you say yes), the
   built-in obfs4 bridges, snowflake and saved webtunnel lines. it keeps the
   first that carries tor and remembers it per network type for 30 days.
-- the relays. offline messages sit on nostr relays sealed with nip-44/59. a
-  relay learns neither who is talking nor what is said.
+- the relays. messages travel through nostr relays, sealed twice with
+  nip-44/59 and sent from a throwaway key to a mailbox address that belongs
+  to one conversation and to nobody's identity. no relay can read them. on
+  the onion route the relays never learn your ip address or who you are. on
+  the relay and fast routes they see your ip address, never what you say.
 - server seizure. there is no central server holding a contact graph or
-  message history. direct messages go device to device over onion services.
+  message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, the app can
   require a pin or biometrics, and panic wipe removes everything including
   media on disk.

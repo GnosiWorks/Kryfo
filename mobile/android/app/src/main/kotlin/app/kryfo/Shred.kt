@@ -15,7 +15,24 @@ object Shred {
     const val GRACE_MS = 10 * 60 * 1000L
     // a time this far ahead is a clock that moved, not a young copy
     const val SKEW_MS = 60 * 1000L
-    val HANDED = listOf("open", "share", "share_plus")
+    val HANDED = listOf("open", "share", "share_plus", SHARE_QUIET)
+
+    // what a hidden chat or the decoy shares: dart drops it at the next lock
+    const val SHARE_QUIET = "share_q"
+
+    // the folder a shared copy goes into
+    fun shareInto(backup: Boolean, quiet: Boolean): String = when {
+        backup -> BACKUP_OUT
+        quiet -> SHARE_QUIET
+        else -> "share"
+    }
+
+    // the name a handed copy is given: plain characters only, at most 80,
+    // and never one of dots alone, which names the folder or the one above
+    fun leaf(name: String): String {
+        val safe = name.replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+        return if (safe.all { it == '.' || it == ' ' }) "file" else safe
+    }
 
     fun isLink(f: File): Boolean = try {
         OsConstants.S_ISLNK(Os.lstat(f.path).st_mode)
