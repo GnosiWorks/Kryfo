@@ -14235,7 +14235,12 @@ class AppState extends ChangeNotifier {
     _fcCounterTimer = null;
     // a counter that does not read leaves the invite address unheard, never
     // moved or taken as 0, and is read again a while later
-    await _loadPairSeen();
+    // the list of who read our pair address never holds up the listener
+    try {
+      await _loadPairSeen();
+    } catch (e) {
+      dlog('pair read: not loaded (${e.runtimeType})');
+    }
     try {
       _fcCounter = int.tryParse(await readFcCounter() ?? '') ?? 0;
     } catch (e) {
@@ -21394,22 +21399,21 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _readPairSeen() async {
+    final List<String> stored;
     try {
       final raw = await secureStore.read(key: 'pair_read');
-      if (raw != null && raw.isNotEmpty) {
-        _pairSeen.addAll((jsonDecode(raw) as List).cast<String>());
-      }
-      _pairSeenRead = true;
+      stored = raw == null || raw.isEmpty
+          ? const []
+          : (jsonDecode(raw) as List).cast<String>();
     } catch (e) {
       dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
       return;
     }
-    // what was let go of before the read, and what the list should never
-    // hold whatever was missed: someone the vault keeps, or who added us
-    // back. a process that never read the list leaves it right here
-    final drop = <String>{..._pairForgot, ..._pairSeen.where(_router.keeps)};
-    _pairForgot.clear();
-    for (final id in _pairSeen) {
+    // what the list should never hold, whatever an earlier process missed:
+    // someone the vault keeps, or who added us back. the read stays undone
+    // meanwhile, so every other caller waits on this one
+    final drop = <String>{...stored.where(_router.keeps)};
+    for (final id in stored) {
       if (drop.contains(id)) continue;
       try {
         if (await live.isBackPaired(id)) drop.add(id);
@@ -21417,9 +21421,12 @@ class AppState extends ChangeNotifier {
         dlog('pair read: not checked (${e.runtimeType})');
       }
     }
-    final before = _pairSeen.length;
-    _pairSeen.removeAll(drop);
-    if (_pairSeen.length != before) await _keepPairSeen();
+    // and what was let go of before the read could be made
+    drop.addAll(_pairForgot);
+    _pairForgot.clear();
+    _pairSeen.addAll(stored.where((id) => !drop.contains(id)));
+    if (stored.any(drop.contains)) await _keepPairSeen();
+    _pairSeenRead = true;
   }
 
   Future<void> _notePairSeen(String id) async {
