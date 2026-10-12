@@ -4,8 +4,13 @@
 // reads at once are one read. secure storage's channel is a stand-in
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show AppState;
+import 'package:kryfo/container.dart';
+import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
+import 'package:kryfo/router.dart';
+import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'arrival_fakes.dart';
 
 const _channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
 
@@ -67,6 +72,27 @@ void main() {
       app.forgetPeerFc('someone-else'),
     ]);
     expect(pairReads, 1);
+    expect(kept['pair_read'], '["stays-here"]');
+  });
+
+  test('a read that works drops whoever the vault keeps or added us back, '
+      'whatever a process before missed', () async {
+    kept['pair_read'] = '["hidden-one","paired-one","stays-here"]';
+    final store = ArrivalStore();
+    await store.putHidden(
+      'hidden-one',
+      kHiddenPeer,
+      peerCard(RouterCard('hidden-one', 'o-h', 'x-h', backPaired: false)),
+      1,
+    );
+    final router = VaultRouter(store, ArrivalSeal());
+    await router.load();
+    final rows = ArrivalRows(HaloContainer.everyday)
+      ..person('paired-one')
+      ..person('stays-here', backPaired: 0);
+    useDatabasesForTest(rows, Session(rows));
+    final app = AppState(io: ArrivalIo(), router: router);
+    await app.forgetPeerFc('someone-else');
     expect(kept['pair_read'], '["stays-here"]');
   });
 }

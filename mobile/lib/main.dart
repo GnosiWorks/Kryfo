@@ -21325,10 +21325,21 @@ class AppState extends ChangeNotifier {
       dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
       return;
     }
-    if (_pairForgot.isEmpty) return;
-    final before = _pairSeen.length;
-    _pairSeen.removeAll(_pairForgot);
+    // what was let go of before the read, and what the list should never
+    // hold whatever was missed: someone the vault keeps, or who added us
+    // back. a process that never read the list leaves it right here
+    final drop = <String>{..._pairForgot, ..._pairSeen.where(_router.keeps)};
     _pairForgot.clear();
+    for (final id in _pairSeen) {
+      if (drop.contains(id)) continue;
+      try {
+        if (await live.isBackPaired(id)) drop.add(id);
+      } catch (e) {
+        dlog('pair read: not checked (${e.runtimeType})');
+      }
+    }
+    final before = _pairSeen.length;
+    _pairSeen.removeAll(drop);
     if (_pairSeen.length != before) await _keepPairSeen();
   }
 
