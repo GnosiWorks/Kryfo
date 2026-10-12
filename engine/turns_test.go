@@ -16,6 +16,9 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// the free turn after the current kick, used up
+func spendFirstTurn() { takeFirstTurn(kickChan()) }
+
 // when each address first asked the relay, from start
 func firstAsks(r *relayStandIn, start time.Time) []time.Duration {
 	var out []time.Duration
@@ -28,9 +31,8 @@ func firstAsks(r *relayStandIn, start time.Time) []time.Duration {
 	return out
 }
 
-// how long from start until every address asked, and how far apart the
-// first and last were
-func measureStart(t *testing.T, spread time.Duration) (all, apart time.Duration) {
+// how long from start until the first and until every address asked
+func measureStart(t *testing.T, spread time.Duration) (first, all time.Duration) {
 	t.Helper()
 	old := subSpread
 	subSpread = spread
@@ -39,13 +41,15 @@ func measureStart(t *testing.T, spread time.Duration) (all, apart time.Duration)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	// a start as a fresh process has it: no socket has asked since the kick
+	kickRelays()
 	start := time.Now()
 	l := startLanes(t, ctx, 11, 0)
 	waitFor(t, "every address asked", spread+15*time.Second, func() bool {
 		return len(firstAsks(relay, start)) >= l.subs()
 	})
 	at := firstAsks(relay, start)
-	return at[len(at)-1], at[len(at)-1] - at[0]
+	return at[0], at[len(at)-1]
 }
 
 // the window is cut to a few seconds here. the real one, slow:
@@ -56,11 +60,12 @@ func TestTurnsSpreadTheStart(t *testing.T) {
 	if d, err := time.ParseDuration(os.Getenv("HALO_TURN_WINDOW")); err == nil && d > 0 {
 		w = d
 	}
-	allBefore, apartBefore := measureStart(t, 0)
-	allAfter, apartAfter := measureStart(t, w)
-	t.Logf("start to all subscribed: %s with no turns (%s apart), %s with turns over %s (%s apart)",
-		allBefore.Round(time.Millisecond), apartBefore.Round(time.Millisecond),
-		allAfter.Round(time.Millisecond), w, apartAfter.Round(time.Millisecond))
+	firstBefore, allBefore := measureStart(t, 0)
+	firstAfter, allAfter := measureStart(t, w)
+	t.Logf("start to first and to all subscribed: %s and %s with no turns, %s and %s with turns over %s",
+		firstBefore.Round(time.Millisecond), allBefore.Round(time.Millisecond),
+		firstAfter.Round(time.Millisecond), allAfter.Round(time.Millisecond), w)
+	apartBefore, apartAfter := allBefore-firstBefore, allAfter-firstAfter
 	if apartBefore > w/4 {
 		t.Fatalf("with no turns the asks were %s apart", apartBefore)
 	}
@@ -71,6 +76,10 @@ func TestTurnsSpreadTheStart(t *testing.T) {
 	if allAfter > w+5*time.Second {
 		t.Fatalf("every address asked only %s after the start", allAfter)
 	}
+	// the first goes at once, so the route is up as soon as before
+	if firstAfter > firstBefore+time.Second {
+		t.Fatalf("the first address asked %s after the start", firstAfter)
+	}
 }
 
 // a socket waiting its turn is a catch-up under way: a check-in that saw
@@ -79,6 +88,7 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
 	defer func() { subSpread = old }()
+	spendFirstTurn()
 	active, begun := atomic.LoadInt32(&catchupActive), atomic.LoadInt64(&catchupStarted)
 	ctx, cancel := context.WithCancel(context.Background())
 	var tn subTurn
@@ -113,15 +123,16 @@ func TestOneTurnPerWake(t *testing.T) {
 		tn.done()
 		return ok
 	}
+	spendFirstTurn()
 	var tn subTurn
 	if quick(&tn) {
 		t.Fatal("the first subscribe went without a turn")
 	}
-	tn.kick = kickChan()
 	if !quick(&tn) {
 		t.Fatal("a redial with no wake waited a turn")
 	}
 	kickRelays()
+	spendFirstTurn()
 	if quick(&tn) {
 		t.Fatal("a wake went without a turn")
 	}
@@ -129,6 +140,15 @@ func TestOneTurnPerWake(t *testing.T) {
 	tn.skip()
 	if !quick(&tn) {
 		t.Fatal("a kick answered on the live socket gave a second turn")
+	}
+	// the first to ask after a wake goes at once, the next waits
+	kickRelays()
+	var a, b subTurn
+	if !quick(&a) {
+		t.Fatal("the first socket after a wake waited")
+	}
+	if quick(&b) {
+		t.Fatal("a second socket after a wake went at once too")
 	}
 }
 

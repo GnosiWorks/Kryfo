@@ -3,11 +3,12 @@ package main
 
 // every relay socket waits a turn of its own before it subscribes, at the
 // start and after each wake, so a relay does not see all of one phone's
-// addresses ask in the same instant.
+// addresses ask in the same instant. only the first goes at once.
 
 import (
 	"context"
 	mrand "math/rand/v2"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -19,6 +20,25 @@ var subSpread = time.Minute
 // the catch-up behind the last one still fit before the app stops waiting
 // (160 s, its checkIn)
 var checkInTurnsBy = 75 * time.Second
+
+// the first socket to ask after a start or a wake goes at once. the route
+// counts as up only once a relay has answered (routeOK), and the outbox and
+// a check-in wait for that
+var firstTurn struct {
+	sync.Mutex
+	kick chan struct{}
+}
+
+// true for the first caller after the kick kc
+func takeFirstTurn(kc chan struct{}) bool {
+	firstTurn.Lock()
+	defer firstTurn.Unlock()
+	if firstTurn.kick == kc {
+		return false
+	}
+	firstTurn.kick = kc
+	return true
+}
 
 // one socket's turn
 type subTurn struct {
@@ -41,6 +61,9 @@ func (t *subTurn) take(ctx context.Context) bool {
 		t.held = true
 		atomic.AddInt32(&catchupActive, 1)
 		atomic.AddInt64(&catchupStarted, 1)
+	}
+	if takeFirstTurn(kc) {
+		return ctx.Err() == nil
 	}
 	d := turnDelay(autoNow())
 	if d <= 0 {
