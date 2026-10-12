@@ -439,6 +439,31 @@ void main() {
     expect(quits, 1);
   });
 
+  testWidgets('a release slower than forty seconds is waited for, and its '
+      'answer is the one acted on', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({'my_handle': 'amberfox'});
+    await appState.loadMyHandle();
+    final releasing = Completer<String>();
+    useEngineForTest(_Releasing(releasing.future));
+    var restored = false;
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t);
+    await t.pump(const Duration(seconds: 45));
+    expect(find.text(l10n.restoreNotYet), findsNothing);
+    releasing.complete('ok');
+    await t.pumpAndSettle();
+    expect(appState.myHandle, isNull);
+    expect(restored, isTrue);
+  });
+
   testWidgets('the lock taking the screen away while the handle is released '
       'still restores, then says so and closes', (t) async {
     phone(t);

@@ -313,9 +313,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
       });
       var r = 'error: timeout';
       try {
-        r = await appState
-            .releaseHandle(mine)
-            .timeout(const Duration(seconds: 40), onTimeout: () => r);
+        // waited for as it really goes, behind a claim already on its way:
+        // each registry call is bounded on its own (registryWait), so the
+        // answer shown is the one the registry gave
+        r = await appState.releaseHandle(mine);
       } catch (e) {
         // read as not released: the sheet below says so
         dlog('restore: handle release (${e.runtimeType})');

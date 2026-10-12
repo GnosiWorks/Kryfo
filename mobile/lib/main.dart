@@ -12620,7 +12620,10 @@ class AppState extends ChangeNotifier {
     _repointTimer = Timer(wait, _maybeRepoint);
   }
 
-  late final _handleRepoint = HandleRepoint(
+  @visibleForTesting
+  set handleRepointForTest(HandleRepoint r) => _handleRepoint = r;
+
+  late HandleRepoint _handleRepoint = HandleRepoint(
     invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
@@ -14369,6 +14372,9 @@ class AppState extends ChangeNotifier {
   // one claim at a time: the registry takes one a second, so two never
   // share one
   Future<void>? _repointRun;
+  @visibleForTesting
+  Future<void> repointForTest() => _repointHandle();
+
   Future<void> _repointHandle() async {
     final before = _repointRun;
     final run = _repointRun = () async {
@@ -14407,8 +14413,15 @@ class AppState extends ChangeNotifier {
     return r;
   }
 
+  /// a wipe has begun: no repoint goes after it, whatever was armed
+  void stopRepoint() {
+    _repointTimer?.cancel();
+    _myHandle = null;
+  }
+
   // nothing is sent while the invite is the one the registry last took
   Future<void> _repointHandleNow() async {
+    if (haloWiping) return;
     final h = _myHandle;
     if (h == null || myOnion.isEmpty) {
       _repoint.putBack();
@@ -14421,7 +14434,10 @@ class AppState extends ChangeNotifier {
       return;
     }
     try {
-      final r = await _handleRepoint.repoint(h, still: () => _myHandle == h);
+      final r = await _handleRepoint.repoint(
+        h,
+        still: () => _myHandle == h && !haloWiping,
+      );
       if (r != null) _setHandleForeign(r.contains('taken'));
       _repointLater(r);
     } catch (e) {
@@ -21280,9 +21296,25 @@ class AppState extends ChangeNotifier {
   final Set<String> _pairSeen = <String>{};
   // the stored list was read; until then nothing is written over it
   bool _pairSeenRead = false;
+  // the read under way, shared by everyone who waits on it
+  Future<void>? _pairSeenLoad;
+  // let go of before the list could be read: taken out once it is
+  final Set<String> _pairForgot = <String>{};
 
   Future<void> _loadPairSeen() async {
     if (_pairSeenRead) return;
+    final load = _pairSeenLoad ??= _readPairSeen();
+    try {
+      await load;
+    } finally {
+      // a read that failed is tried again by the next caller
+      if (!_pairSeenRead && identical(_pairSeenLoad, load)) {
+        _pairSeenLoad = null;
+      }
+    }
+  }
+
+  Future<void> _readPairSeen() async {
     try {
       final raw = await secureStore.read(key: 'pair_read');
       if (raw != null && raw.isNotEmpty) {
@@ -21291,7 +21323,13 @@ class AppState extends ChangeNotifier {
       _pairSeenRead = true;
     } catch (e) {
       dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
+      return;
     }
+    if (_pairForgot.isEmpty) return;
+    final before = _pairSeen.length;
+    _pairSeen.removeAll(_pairForgot);
+    _pairForgot.clear();
+    if (_pairSeen.length != before) await _keepPairSeen();
   }
 
   Future<void> _notePairSeen(String id) async {
@@ -21303,9 +21341,13 @@ class AppState extends ChangeNotifier {
   // added us back, deleted, or moved into the vault
   Future<void> _forgetPairSeen(Set<String> ids) async {
     await _loadPairSeen();
+    if (!_pairSeenRead) {
+      _pairForgot.addAll(ids);
+      return;
+    }
     final before = _pairSeen.length;
     _pairSeen.removeAll(ids);
-    if (!_pairSeenRead || _pairSeen.length == before) return;
+    if (_pairSeen.length == before) return;
     await _keepPairSeen();
   }
 

@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'main.dart' show engine, session, sessionQuiet;
+import 'main.dart' show appState, engine, session, sessionQuiet;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
 import 'shred.dart' show shredFile;
@@ -63,6 +63,9 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  // a repoint armed before this must not claim the handle back after the
+  // release below
+  appState.stopRepoint();
   wipeForget();
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
@@ -118,6 +121,9 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   wipeExit(0);
 }
 
+// straight to the engine, not in turn behind a claim on its way: the wipe
+// waits seconds, not a claim's minute, and a claim signed before this
+// release is refused once the release is in (server/handle, ts <= gone)
 Future<void> _release(String h) async {
   try {
     await engine.handleRelease(h);
