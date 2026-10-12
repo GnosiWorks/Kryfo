@@ -17,7 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'main.dart' show engine, session, sessionQuiet;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
-import 'shred.dart' show shredTree;
+import 'shred.dart' show shredFile;
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -43,9 +43,12 @@ const kWipeShredWait = Duration(seconds: 2);
 
 // the shred of one held entry, a stand-in in tests
 @visibleForTesting
-Future<void> Function(String path) wipeShred = shredTree;
+Future<void> Function(String path) wipeShred = shredHeld;
 
 Future<void> _shredding = Future<void>.value();
+
+// what this process moved aside and is shredding: a start sweep leaves it
+final _moving = <String>{};
 
 // every shred the wipe started, done
 @visibleForTesting
@@ -142,20 +145,24 @@ Future<void> _erase({Set<String> keep = const {}}) async {
       await getTemporaryDirectory(),
     ];
     final behind = <String>[];
+    // the ones that would not move
+    final stuck = <FileSystemEntity>[];
     for (final d in dirs) {
       if (!await d.exists()) continue;
       await for (final entry in d.list(followLinks: false)) {
         final name = p.basename(entry.path);
         if (d.path == docs.path && keep.contains(name)) continue;
         if (!_sealed(name) && entry is! Link) {
+          final to = p.join(held, _rnd());
+          _moving.add(to);
           try {
             await Directory(held).create(recursive: true);
-            behind.add((await entry.rename(p.join(held, _rnd()))).path);
+            behind.add((await entry.rename(to)).path);
             continue;
           } catch (e) {
-            // shredded where it lies, a while longer under its name
             dlog('wipe: an entry not moved (${e.runtimeType})');
-            behind.add(entry.path);
+            _moving.remove(to);
+            stuck.add(entry);
             continue;
           }
         }
@@ -169,6 +176,23 @@ Future<void> _erase({Set<String> keep = const {}}) async {
       }
     }
     _shredBehind(behind, held);
+    if (stuck.isNotEmpty) {
+      // shredded where they lie, for a moment at most, then unlinked with
+      // whatever is left: nothing stays under its name
+      await Future.any([
+        Future.wait([for (final e in stuck) _shredOne(e.path)]),
+        Future<void>.delayed(kWipeShredWait),
+      ]);
+      for (final e in stuck) {
+        try {
+          await e.delete(recursive: true);
+        } on PathNotFoundException {
+          // shredded already
+        } catch (err) {
+          dlog('wipe: an entry stayed (${err.runtimeType})');
+        }
+      }
+    }
     dlog('wipe: files gone');
   } catch (e) {
     // never rethrow: the keys are already gone, and a half-wiped app left
@@ -191,27 +215,69 @@ String _rnd() => [
   for (var i = 0; i < 16; i++) _random.nextInt(256).toRadixString(16),
 ].map((h) => h.padLeft(2, '0')).join();
 
+Future<void> _shredOne(String path) => wipeShred(path).catchError((Object e) {
+  dlog('wipe: not shredded (${e.runtimeType})');
+});
+
 void _shredBehind(List<String> paths, String held) {
   final before = _shredding;
   _shredding = () async {
     await Future.wait([
       before,
-      for (final x in paths)
-        wipeShred(x).catchError((Object e) {
-          dlog('wipe: not shredded (${e.runtimeType})');
-        }),
+      for (final x in paths) _shredOne(x).whenComplete(() => _moving.remove(x)),
     ]);
-    try {
-      // only an emptied one
-      await Directory(held).delete();
-    } catch (_) {}
+    await _dropIfEmpty(held);
   }();
 }
 
-/// what a wipe held and its process did not live to shred. at every start
-Future<void> sweepWipeLeftovers() async {
+Future<void> _dropIfEmpty(String held) async {
   try {
-    await shredTree(_heldIn(await getApplicationDocumentsDirectory()));
+    await Directory(held).delete();
+  } catch (_) {
+    // something is still in it
+  }
+}
+
+/// what a held entry was: every file zeroed, but a database's, which is
+/// ciphertext under keys already gone and only unlinked. a link is unlinked,
+/// never followed
+Future<void> shredHeld(String path) async {
+  final type = await FileSystemEntity.type(path, followLinks: false);
+  if (type == FileSystemEntityType.notFound) return;
+  if (type != FileSystemEntityType.directory) {
+    await _shredOrUnlink(path);
+    return;
+  }
+  await for (final e in Directory(
+    path,
+  ).list(recursive: true, followLinks: false)) {
+    if (e is File) await _shredOrUnlink(e.path);
+  }
+  await Directory(path).delete(recursive: true);
+}
+
+Future<void> _shredOrUnlink(String path) async {
+  if (!_sealed(p.basename(path))) return shredFile(path);
+  try {
+    await File(path).delete();
+  } catch (e) {
+    dlog('wipe: not unlinked (${e.runtimeType})');
+  }
+}
+
+/// what a wipe held and its process did not live to shred, at every start.
+/// what a wipe running now is moving is its own
+Future<void> sweepWipeLeftovers() async {
+  if (haloWiping) return;
+  try {
+    final held = _heldIn(await getApplicationDocumentsDirectory());
+    final d = Directory(held);
+    if (!await d.exists()) return;
+    await for (final e in d.list(followLinks: false)) {
+      if (_moving.contains(e.path)) continue;
+      await shredHeld(e.path);
+    }
+    await _dropIfEmpty(held);
   } catch (e) {
     dlog('wipe: leftovers stayed (${e.runtimeType})');
   }

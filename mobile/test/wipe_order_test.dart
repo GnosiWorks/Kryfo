@@ -17,7 +17,6 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/session.dart';
 import 'package:kryfo/wipe.dart';
 import 'package:path/path.dart' as p;
-import 'package:kryfo/shred.dart' show shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shred_twin.dart';
@@ -108,7 +107,8 @@ void main() {
   tearDown(() {
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
-    wipeShred = shredTree;
+    wipeShred = shredHeld;
+    haloWiping = false;
     root.deleteSync(recursive: true);
   });
 
@@ -153,7 +153,7 @@ void main() {
       wipeShred = (path) async {
         await gate.future;
         shredded.add(path);
-        await shredTree(path);
+        await shredHeld(path);
       };
       final clock = Stopwatch()..start();
       final done = wipeHalo();
@@ -187,6 +187,91 @@ void main() {
       for (final MapEntry(key: f, value: twin) in files.entries) {
         expect(zeroed(twin), isTrue, reason: f);
       }
+      expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
+    });
+
+    test('an entry that will not move is shredded where it lies, and never '
+        'left under its name', () async {
+      useEngineForTest(_Engine());
+      final files = plain();
+      // nothing can be moved aside
+      File(dir(kWipeHeld)).writeAsStringSync('in the way');
+      await wipeHalo();
+      await wipeShredding;
+      expect(exited, 0);
+      for (final MapEntry(key: f, value: twin) in files.entries) {
+        expect(File(dir(f)).existsSync(), isFalse, reason: f);
+        expect(zeroed(twin), isTrue, reason: f);
+      }
+    });
+
+    test('one that will not move and whose shred never ends is unlinked a '
+        'moment later', () async {
+      useEngineForTest(_Engine());
+      final files = plain();
+      File(dir(kWipeHeld)).writeAsStringSync('in the way');
+      final stuck = Completer<void>();
+      addTearDown(stuck.complete);
+      wipeShred = (_) => stuck.future;
+      final clock = Stopwatch()..start();
+      await wipeHalo();
+      expect(exited, 0);
+      for (final f in files.keys) {
+        expect(File(dir(f)).existsSync(), isFalse, reason: f);
+      }
+      expect(left('support'), isEmpty);
+      expect(left('tmp'), isEmpty);
+      expect(clock.elapsed, lessThan(kWipeShredWait * 3));
+    });
+
+    test('a database copy in a stage is ciphertext: unlinked, never given '
+        'shred time', () async {
+      useEngineForTest(_Engine());
+      final copy = File(dir('support/backup_stage/halo.db'))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(List.filled(30000, 7), flush: true);
+      final twin = twinOf(copy.path, twins);
+      final key = File(dir('support/backup_stage/onion.key'))
+        ..writeAsBytesSync(List.filled(64, 7), flush: true);
+      final keyTwin = twinOf(key.path, twins);
+      await wipeHalo();
+      await wipeShredding;
+      expect(copy.existsSync(), isFalse);
+      expect(twin.readAsBytesSync(), List.filled(30000, 7));
+      expect(zeroed(keyTwin), isTrue);
+    });
+
+    test('a start sweep leaves what a wipe running now is moving', () async {
+      useEngineForTest(_Engine());
+      plain();
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+      });
+      wipeShred = (path) async {
+        await gate.future;
+        await shredHeld(path);
+      };
+      final done = wipeHalo();
+      final clock = Stopwatch()..start();
+      while (!Directory(dir(kWipeHeld)).existsSync() ||
+          Directory(dir(kWipeHeld)).listSync().length < 3) {
+        if (clock.elapsed.inSeconds > 3) fail('nothing moved aside');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      Set<String> held() => {
+        for (final e in Directory(dir(kWipeHeld)).listSync()) e.path,
+      };
+      final moved = held();
+      await sweepWipeLeftovers();
+      expect(held(), containsAll(moved));
+      // and one that does not know a wipe is on
+      haloWiping = false;
+      await sweepWipeLeftovers();
+      expect(held(), containsAll(moved));
+      gate.complete();
+      await done;
+      await wipeShredding;
       expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
     });
 
