@@ -4,4 +4,4 @@ Diperbaiki: pesan pertama ke orang baru yang hilang, Tor macet setelah jaringan 
 
 Setelah memperbarui, kamu mungkin perlu mengetik PIN sekali sebelum buka kunci dengan sidik jari berfungsi lagi.
 
-Peningkatan stabilitas dan privasi di seluruh aplikasi. Perbarui kalau sempat.
+Peningkatan stabilitas dan privasi. Perbarui kalau sempat.

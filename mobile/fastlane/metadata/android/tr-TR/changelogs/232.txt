@@ -4,4 +4,4 @@ Düzeltildi: yeni birine giden ilk mesajların kaybolması, bir ağ değişikli�
 
 Güncellemeden sonra, parmak iziyle kilit açma yeniden çalışmadan önce PIN’ini bir kez girmen gerekebilir.
 
-Her yerde kararlılık ve gizlilik iyileştirmeleri. Fırsat bulunca güncelle.
+Kararlılık ve gizlilik iyileştirmeleri. Fırsat bulunca güncelle.

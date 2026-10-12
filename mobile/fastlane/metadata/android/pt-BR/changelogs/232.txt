@@ -1,7 +1,7 @@
 Novo: pontes que entram em ação quando o Tor está bloqueado, disfarce de voz mais claro por conversa, um aceno de oi, compartilhar de outros apps e busca privada de GIFs.
 
-Corrigido: primeiras mensagens perdidas para alguém novo, Tor travado depois de uma troca de rede e o app fechando ao abrir em alguns celulares novos.
+Corrigido: primeiras mensagens perdidas para alguém novo, Tor travado após uma troca de rede e o app fechando ao abrir em alguns celulares novos.
 
 Depois de atualizar, talvez você precise digitar seu PIN uma vez antes que o desbloqueio com a digital volte a funcionar.
 
-Mais estabilidade e privacidade em todo o app. Atualize quando puder.
+Mais estabilidade e privacidade. Atualize quando puder.

@@ -4,4 +4,4 @@ Behoben: verlorene erste Nachrichten an neue Kontakte, ein hängendes Tor nach e
 
 Nach dem Update musst du eventuell einmal deine PIN eingeben, bevor das Entsperren mit Fingerabdruck wieder geht.
 
-Mehr Stabilität und Privatsphäre überall. Aktualisiere, wenn du kannst.
+Mehr Stabilität und Privatsphäre. Aktualisiere, wenn du kannst.

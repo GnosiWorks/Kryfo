@@ -4,4 +4,4 @@ Corretto: primi messaggi persi verso chi è appena stato aggiunto, Tor bloccato 
 
 Dopo l'aggiornamento potresti dover digitare il PIN una volta prima che lo sblocco con l'impronta torni a funzionare.
 
-Miglioramenti a stabilità e privacy ovunque. Aggiorna appena puoi.
+Più stabilità e privacy ovunque. Aggiorna appena puoi.
