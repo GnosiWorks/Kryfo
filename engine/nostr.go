@@ -19,6 +19,7 @@ import (
 	"log"
 	"math"
 	mrand "math/rand/v2"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -1098,18 +1099,28 @@ func torNostrClientFor(lane string) (*http.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
-	c := &http.Client{
-		Transport: &http.Transport{
-			DialContext:           d.DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-		},
-		Timeout: 60 * time.Second,
-	}
+	c := torLaneClient(d.DialContext)
 	cachedNostrClients[key] = c
 	log.Printf("nostr: %s client built over tor's socks listener", laneKind(lane))
 	return c, nil
 }
+
+// a lane's client over tor
+func torLaneClient(dial func(ctx context.Context, network, addr string) (net.Conn, error)) *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			DialContext:           dial,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+		},
+		Timeout:       60 * time.Second,
+		CheckRedirect: noRedirect,
+	}
+}
+
+// a relay, the gif service and the registry answer where they are asked: a
+// redirect is not followed to another host
+func noRedirect(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 
 func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int) {
 	for {

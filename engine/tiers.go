@@ -61,7 +61,8 @@ func directNostrClient() *http.Client {
 			ForceAttemptHTTP2: false,
 			TLSNextProto:      map[string]func(string, *tls.Conn) http.RoundTripper{},
 		},
-		Timeout: 60 * time.Second,
+		Timeout:       60 * time.Second,
+		CheckRedirect: noRedirect,
 	}
 }
 
