@@ -84,15 +84,14 @@ func TestADetailOnlyOutageBouncesBack(t *testing.T) {
 	}
 }
 
-// a park with no network said to be there for long: the valve tries tor,
-// and a relay through it ends the outage
+// a park with no network said to be there for long: the valve takes the
+// network as there, the bounce puts tor on, and a relay through it ends
+// the outage
 func TestTheValveTakesARelayAsANetwork(t *testing.T) {
 	f := offlineRig(t)
 	keepNetDetail(t)
-	quietBounce(t)
 	oa := netValveAfter
 	netValveAfter = time.Minute
-	netProof = 3 * time.Second
 	t.Cleanup(func() { netValveAfter = oa })
 	networkChangedTo(false)
 	if !waitUntil(2*time.Second, func() bool { return torParked.Load() }) {
@@ -106,11 +105,11 @@ func TestTheValveTakesARelayAsANetwork(t *testing.T) {
 	}
 	done := make(chan struct{})
 	go func() { netValveTry(); close(done) }()
-	if !waitUntil(2*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
+	if !waitUntil(3*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
 		t.Fatalf("the valve did not put tor on: %v", f.sent())
 	}
 	// a relay through the tor that came back
-	for end := time.Now().Add(3 * time.Second); time.Now().Before(end); {
+	for end := time.Now().Add(5 * time.Second); time.Now().Before(end); {
 		routeNoteOK()
 		select {
 		case <-done:
@@ -129,10 +128,9 @@ func TestTheValveTakesARelayAsANetwork(t *testing.T) {
 func TestTheValveParksAgainAndBacksOff(t *testing.T) {
 	f := offlineRig(t)
 	keepNetDetail(t)
-	quietBounce(t)
-	oa := netValveAfter
-	netValveAfter = time.Minute
-	t.Cleanup(func() { netValveAfter = oa })
+	oa, of := netValveAfter, netValveFor
+	netValveAfter, netValveFor = time.Minute, 1500*time.Millisecond
+	t.Cleanup(func() { netValveAfter, netValveFor = oa, of })
 	networkChangedTo(false)
 	if !waitUntil(2*time.Second, func() bool { return torParked.Load() }) {
 		t.Fatal("not parked")
@@ -141,10 +139,20 @@ func TestTheValveParksAgainAndBacksOff(t *testing.T) {
 	if !netValveDue(now.Add(61 * time.Second)) {
 		t.Fatal("the valve did not open")
 	}
-	offs := countSent(f.sent(), netOff)
 	netValveTry()
-	if !netOffline.Load() || !torParked.Load() || countSent(f.sent(), netOff) <= offs {
-		t.Fatalf("not parked again: offline %v parked %v %v", netOffline.Load(), torParked.Load(), f.sent())
+	if !waitUntil(3*time.Second, func() bool {
+		var last string
+		for _, c := range f.sent() {
+			if strings.Contains(c, "DISABLENETWORK") {
+				last = c
+			}
+		}
+		return strings.Contains(last, netOff) && torParked.Load() && countSent(f.sent(), netOn) > 0
+	}) {
+		t.Fatalf("not tried and parked again: offline %v parked %v %v", netOffline.Load(), torParked.Load(), f.sent())
+	}
+	if !netOffline.Load() {
+		t.Fatal("taken as online with nothing through")
 	}
 	if netValveDue(now.Add(61*time.Second + 90*time.Second)) {
 		t.Fatal("the valve opened again before its back-off")
@@ -440,5 +448,41 @@ func TestAModeChangeBeforeTheNetworkOnHolds(t *testing.T) {
 	}
 	if netOnIn(sentAfter(f, before)) {
 		t.Fatalf("tor went on the network after the mode changed: %v", f.sent())
+	}
+}
+
+// while the valve is open automatic may try too: the network is taken as
+// there
+func TestTheValveLetsAutomaticTry(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	keepNetDetail(t)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	if why := autoIdleWhy(); why != "no_internet" {
+		t.Fatalf("offline: %q", why)
+	}
+	netValveOpen.Store(true)
+	t.Cleanup(func() { netValveOpen.Store(false) })
+	if why := autoIdleWhy(); why != "" {
+		t.Fatalf("valve open: %q", why)
+	}
+}
+
+// parked for want of a network, the status says so, and a decoy says
+// offline
+func TestAParkedTorSaysNoInternet(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	t.Cleanup(func() { decoyState.Store(decoyOff) })
+	networkChangedTo(false)
+	if !waitUntil(2*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if v := bridgeStatus(); v.Phase != "no_internet" || v.Network != "none" {
+		t.Fatalf("parked: %+v", v)
+	}
+	decoyState.Store(decoyOn)
+	if v := bridgeStatus(); v.Phase != "offline" {
+		t.Fatalf("decoy parked: %+v", v)
 	}
 }

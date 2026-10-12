@@ -449,10 +449,14 @@ func netValveDue(now time.Time) bool {
 	return true
 }
 
-// tor on the network with none said to be there, for as long as a network
-// change gets to prove itself. a relay through it means the network was
-// there: taken as there. otherwise tor is parked again. a var for the
-// tests, set in init as the others
+// how long the valve takes a network as there: a bounce or automatic's
+// pass gets that long to bring a relay through
+var netValveFor = 3 * time.Minute
+
+// the network taken as there for netValveFor, as on any change: the bounce
+// or automatic's pass tries tor. a relay through it means the network was
+// there after all. otherwise tor is parked again. a var for the tests, set
+// in init as the others
 var netValveTry func()
 
 func init() { netValveTry = valveTryTor }
@@ -462,8 +466,9 @@ func valveTryTor() {
 		return
 	}
 	log.Println("halo: no network for long, trying tor anyway")
-	epoch := netEpoch.Load()
-	ok := netReconnect() == "ok" && netValveProven(epoch)
+	networkChanged()
+	autoKick()
+	ok := netValveProven()
 	netValveOpen.Store(false)
 	if ok {
 		log.Println("halo: a relay got through, the network is there")
@@ -476,15 +481,19 @@ func valveTryTor() {
 	}
 }
 
-// a relay through the tor the valve put on, before netProof is out, while
-// nothing else changed
-func netValveProven(epoch int64) bool {
-	end := time.Now().Add(netProof)
+// a relay through tor while the valve is open, before netValveFor is out
+// and while the app has not spoken
+func netValveProven() bool {
+	gen := routeBump()
+	end := time.Now().Add(netValveFor)
 	for time.Now().Before(end) {
-		if netEpoch.Load() != epoch || !netOffline.Load() || !modeNeedsTor() || torIsPaused() {
+		if !netOffline.Load() || !modeNeedsTor() || torIsPaused() {
 			return false
 		}
-		if routeProven() {
+		routeMu.Lock()
+		ok := okGen >= gen
+		routeMu.Unlock()
+		if ok {
 			return true
 		}
 		time.Sleep(netProofStep)
@@ -537,7 +546,7 @@ func netBounceWorker() {
 
 		// floors and back-offs were reset with the change. offline, the
 		// bounce and its check wait for the change that brings a network
-		if !modeNeedsTor() || torIsPaused() || netOffline.Load() {
+		if !modeNeedsTor() || torIsPaused() || netAway() {
 			return
 		}
 		// automatic starts its own pass on the new network
@@ -632,7 +641,7 @@ func netCheck(epoch int64) string {
 	for try := 1; ; try++ {
 		end := time.Now().Add(netProof)
 		for time.Now().Before(end) {
-			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netOffline.Load() {
+			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netAway() {
 				return "superseded"
 			}
 			if routeProven() {

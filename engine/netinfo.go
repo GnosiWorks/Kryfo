@@ -86,8 +86,9 @@ func currentNet() netInfo {
 	netInfoMu.Lock()
 	defer netInfoMu.Unlock()
 	n := netInfoNow
-	// the older call says only whether a network is there
-	if netOffline.Load() {
+	// the older call says only whether a network is there. the valve
+	// takes one as there while it tries
+	if netAway() {
 		n.On, n.Validated, n.Limited = false, false, false
 	} else if !n.On {
 		// a network after all, of which android has said nothing yet
