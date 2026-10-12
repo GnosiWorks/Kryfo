@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../back_on_top.dart' show backToPage;
 import '../lock_guard.dart' show lockGuard;
-import '../main.dart' show session, appState;
+import '../main.dart' show session, appState, nameUnchecked;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
@@ -18,6 +18,7 @@ import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/name_check_mark.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
 import '../widgets/notice_banner.dart';
@@ -299,6 +300,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 order: i,
                 haloId: id,
                 avatar: (row['avatar'] as num?)?.toInt(),
+                unchecked: nameUnchecked(row),
                 preview: _previews[id] ?? '',
                 introducer: _introducers[id],
                 flag: _flags[id],
@@ -408,6 +410,8 @@ class _RequestCard extends StatelessWidget {
   final int order;
   final String haloId;
   final int? avatar;
+  // the words they gave, not checked: said beside them
+  final bool unchecked;
   final String preview;
   final _Introducer? introducer;
   final ShieldFlag? flag;
@@ -421,6 +425,7 @@ class _RequestCard extends StatelessWidget {
     required this.order,
     required this.haloId,
     this.avatar,
+    this.unchecked = false,
     required this.preview,
     this.introducer,
     this.flag,
@@ -460,21 +465,33 @@ class _RequestCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        requestTitle(haloId),
-                        style: requestTitle(haloId) == haloId
-                            ? HaloType.mono(
-                                size: 12,
-                                color: HaloColors.text,
-                                weight: FontWeight.w500,
-                              )
-                            : HaloType.sans(
-                                size: 14,
-                                color: HaloColors.text,
-                                weight: FontWeight.w600,
-                              ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              requestTitle(haloId),
+                              style: requestTitle(haloId) == haloId
+                                  ? HaloType.mono(
+                                      size: 12,
+                                      color: HaloColors.text,
+                                      weight: FontWeight.w500,
+                                    )
+                                  : HaloType.sans(
+                                      size: 14,
+                                      color: HaloColors.text,
+                                      weight: FontWeight.w600,
+                                    ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // "someone new" names nobody: its shield line
+                          // says which words it gave
+                          if (unchecked && requestTitle(haloId) == haloId) ...[
+                            const SizedBox(width: 6),
+                            const NameCheckMark(),
+                          ],
+                        ],
                       ),
                       if (introducer != null) ...[
                         const SizedBox(height: 6),

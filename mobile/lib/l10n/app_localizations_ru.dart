@@ -76,8 +76,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contactCardMessageMeOn => 'Пиши мне в';
 
   @override
-  String get contactCardScanItOrType =>
-      'Отсканируй или введи три слова в Kryfo.\nБольше эта карточка ничего о тебе не знает.';
+  String get contactCardScanToAdd =>
+      'Отсканируй в Kryfo, чтобы добавить меня.\nБольше эта карточка ничего о тебе не знает.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -892,6 +892,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'Похоже на мошенничество';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'Представляется как $shown, но это имя здесь уже занято';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1783,6 +1788,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'Код безопасности изменился';
+
+  @override
+  String get chatCompareTitle => 'Сверь код безопасности';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'Три слова можно скопировать. Чтобы знать, что этот чат правда с $peerName, сверь с ним код безопасности лично или по звонку.';
+  }
+
+  @override
+  String get chatCompareLater => 'Позже';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3325,8 +3341,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'Если $peerName видит тот же код, ваши сообщения видны только вам двоим. Сверить его лично или по звонку, которому ты доверяешь, — самый надёжный способ убедиться. Но это необязательно: для переписки это никогда не требуется.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'Сверь все 12 групп с $peerName лично или по звонку, которому ты доверяешь. Если совпадает каждая группа, между вами никого нет и ваши сообщения только для вас двоих.';
   }
 
   @override
@@ -4200,13 +4216,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот код использовали дважды. Попроси новый.';
 
   @override
-  String get pairCodeIsThisThem => 'Это тот человек?';
+  String get pairCodeKeyNumber => 'Номер ключа';
 
   @override
-  String get pairCodeCheckMatches => 'Сверь с экраном собеседника';
+  String get pairCodeNumberMatches =>
+      'Проверь, что все четыре группы совпадают на обоих телефонах';
 
   @override
-  String get pairCodeNotThem => 'Не тот человек';
+  String get pairCodeNumberDiffers => 'Номер не совпадает';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'На экране собеседника нет номера? Добавь его, а потом сверь код безопасности в чате.';
 
   @override
   String get pairCodeNotAdded => 'Не добавлено. Попроси новый код.';
@@ -6248,11 +6269,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'Это не $who из твоих чатов';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'В твоих чатах под именем $who записан другой человек. Эта ссылка от кого-то ещё. Добавляй, только если знаешь, откуда она.';
   }
@@ -6478,6 +6494,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairCodePanelYourWords => 'Твои три слова';
+
+  @override
+  String get pairCodePanelAcceptOnce =>
+      'Запрос придёт, когда собеседник тебя добавит. Принимай его, только когда он скажет, что все четыре группы совпали.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -8090,21 +8110,41 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devChatOptions => 'Настройки чата';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'Эта ссылка выдаёт себя за $id, но её ключ не совпадает. Ничего не добавлено.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'Представляется как $shown, но ключ не совпадает';
-  }
-
-  @override
   String get requestsSomeoneNew => 'Кто-то новый';
+
+  @override
+  String get nameNotChecked => 'Не проверено';
+
+  @override
+  String get nameTakenTitle => 'Эти слова использует кто-то другой';
+
+  @override
+  String get nameTakenLine =>
+      'Кто-то здесь получил эти слова через запрос, знакомство или группу, с другим ключом, и их никто не проверял. Слова можно скопировать. Если эта ссылка от человека, которого ты знаешь, используй её, а потом сверь с ним код безопасности.';
+
+  @override
+  String get nameTakenChatLine =>
+      'Твой чат с этими словами появился через запрос, знакомство или группу, с другим ключом, и его никто не проверял. Слова можно скопировать. Если эта ссылка от человека, которого ты знаешь, используй её: тот чат удалится, а код безопасности ты сверишь в новом. Не уверен, откуда ссылка? Оставь того, кто есть.';
+
+  @override
+  String get nameTakenUse => 'Использовать ссылку';
+
+  @override
+  String get nameTakenKeep => 'Оставить того, кто есть';
 
   @override
   String get appYourOwnInvite =>
       'Это твоё собственное приглашение. Поделись им с кем-нибудь, чтобы связаться.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'Здесь уже есть $id с другим ключом. Сверь с ним код безопасности, чтобы понять, кто есть кто. Ничего не добавлено.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'Контакт $id уже проверен с другим ключом. Ничего не добавлено.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

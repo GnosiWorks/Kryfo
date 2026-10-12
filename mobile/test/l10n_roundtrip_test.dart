@@ -37,10 +37,6 @@ void main() {
     expect(l.backupCouldNotMakeThe, "Could not make the key");
     expect(l.contactCardMessageMeOn, "Message me on");
     expect(
-      l.contactCardScanItOrType,
-      "Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.",
-    );
-    expect(
       l.contactCardMessageMeOnKryfo("<haloId>"),
       "Message me on Kryfo · <haloId>",
     );
@@ -1544,10 +1540,6 @@ void main() {
     expect(l.introduceIntroduce, "Introduce");
     expect(l.keyVerificationSafetyNumber, "Safety number");
     expect(l.keyVerificationWith("<peerName>"), "With <peerName>");
-    expect(
-      l.keyVerificationIfSeesTheSame("<peerName>"),
-      "If <peerName> sees the same number, your messages are private to just the two of you. Comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.",
-    );
     expect(l.keyVerificationVerified, "Verified");
     expect(l.keyVerificationMarkAsVerified, "Mark as verified");
     expect(l.lockFileThatPasswordDoesNot, "That password does not open it.");
@@ -3555,6 +3547,58 @@ void main() {
     expect(
       l.onboardingAboutASecondSkipsTor,
       "About a second, and it skips Tor.",
+    );
+    expect(l.pairCodeKeyNumber, "Key number");
+    expect(l.pairCodeNumberDiffers, "The number is different");
+    expect(
+      l.pairCodeNoNumberThere,
+      "No number on their screen? Add them, then compare the safety number in your chat.",
+    );
+    expect(
+      l.contactCardScanToAdd,
+      "Scan it with Kryfo to add me.\nThis card knows nothing about you beyond that.",
+    );
+    expect(
+      l.keyVerificationCompareAll("<peerName>"),
+      "Compare all 12 groups with <peerName>, in person or on a call you trust. If every group matches, no one is in between and your messages are for the two of you alone.",
+    );
+    expect(
+      l.appLinkWordsTaken("<id>"),
+      "Someone here already goes by <id>, with a different key. Compare the safety number with them to know who is who. Nothing was added.",
+    );
+    expect(
+      l.appLinkWordsVerified("<id>"),
+      "You verified <id> with a different key. Nothing was added.",
+    );
+    expect(
+      l.scamShieldGivesUsedName("<shown>"),
+      "Says it is <shown>, a name someone here already goes by",
+    );
+    expect(l.nameNotChecked, "Not checked");
+    expect(l.nameTakenTitle, "Someone else uses these words");
+    expect(
+      l.nameTakenLine,
+      "Someone here got these words from a request, an introduction or a group, with a different key, and nobody checked them. Words can be copied. If this link came from the person you know, use it, then compare the safety number with them.",
+    );
+    expect(l.nameTakenUse, "Use this link");
+    expect(l.nameTakenKeep, "Keep the one I have");
+    expect(l.chatCompareTitle, "Compare the safety number");
+    expect(
+      l.chatCompareLine("<peerName>"),
+      "Three words can be copied. To know this chat is really with <peerName>, compare the safety number with them, in person or on a call.",
+    );
+    expect(l.chatCompareLater, "Later");
+    expect(
+      l.nameTakenChatLine,
+      "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.",
+    );
+    expect(
+      l.pairCodeNumberMatches,
+      "Check all four groups match on both phones",
+    );
+    expect(
+      l.pairCodePanelAcceptOnce,
+      "Their request comes once they add you. Accept it only once they say all four groups matched.",
     );
   });
 }

@@ -72,8 +72,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactCardMessageMeOn => '给我发消息，请用';
 
   @override
-  String get contactCardScanItOrType =>
-      '扫一扫，或者把这三个词输入 Kryfo。\n除此之外，这张卡片对你一无所知。';
+  String get contactCardScanToAdd => '用 Kryfo 扫一扫就能加我。\n除此之外，这张卡片对你一无所知。';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -837,6 +836,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => '疑似诈骗';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return '自称是 $shown，这里已有人用这个名字';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1680,6 +1684,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => '安全码已变更';
+
+  @override
+  String get chatCompareTitle => '核对安全码';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return '三个词可以照抄。要确认这个聊天真的是和 $peerName，请当面或通过通话和对方核对安全码。';
+  }
+
+  @override
+  String get chatCompareLater => '稍后';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3107,8 +3122,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return '如果 $peerName 看到的是同一串数字，你们的消息就只有你们两个人能看到。当面比对，或者通过你信任的通话比对，是最可靠的确认方式——但这是可选的，聊天从不要求这一步。';
+  String keyVerificationCompareAll(Object peerName) {
+    return '和 $peerName 核对全部 12 组数字，当面或通过你信任的通话。每一组都一致，就说明中间没有别人，你们的消息只属于你们两个人。';
   }
 
   @override
@@ -3924,13 +3939,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
 
   @override
-  String get pairCodeIsThisThem => '是这个人吗？';
+  String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeCheckMatches => '核对一下，是否和对方屏幕上的一致';
+  String get pairCodeNumberMatches => '核对两部手机上的四组数字是否全部一致';
 
   @override
-  String get pairCodeNotThem => '不是这个人';
+  String get pairCodeNumberDiffers => '号码不一致';
+
+  @override
+  String get pairCodeNoNumberThere => '对方屏幕上没有号码？先添加，再在聊天里核对安全码。';
 
   @override
   String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
@@ -5872,11 +5890,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return '不是你聊天里的 $who';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return '你聊天里有一个人被你叫作 $who。这个链接来自另一个人。只有在你知道链接来源时才添加。';
   }
@@ -6088,6 +6101,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodePanelYourWords => '你的三个词';
+
+  @override
+  String get pairCodePanelAcceptOnce => '对方添加你后，你会收到请求。等对方说四组数字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7599,20 +7615,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devChatOptions => '聊天选项';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return '此链接自称是 $id，但其密钥不匹配。未添加。';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return '自称是 $shown，但密钥不匹配';
-  }
-
-  @override
   String get requestsSomeoneNew => '陌生人';
 
   @override
+  String get nameNotChecked => '未核对';
+
+  @override
+  String get nameTakenTitle => '有别人在用这三个词';
+
+  @override
+  String get nameTakenLine =>
+      '这里有人通过请求、介绍或群组得到了这三个词，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+
+  @override
+  String get nameTakenChatLine =>
+      '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。不确定链接从哪来？就保留现有的。';
+
+  @override
+  String get nameTakenUse => '使用这个链接';
+
+  @override
+  String get nameTakenKeep => '保留现有的';
+
+  @override
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return '这里已经有人叫 $id，密钥不同。和对方核对安全码，就知道谁是谁。未添加。';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return '你已用另一个密钥验证过 $id。未添加。';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {
@@ -7869,8 +7905,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get contactCardMessageMeOn => '傳訊息給我，請用';
 
   @override
-  String get contactCardScanItOrType =>
-      '掃描它，或在 Kryfo 裡輸入這三個詞。\n除此之外，這張卡片對你一無所知。';
+  String get contactCardScanToAdd => '用 Kryfo 掃描即可加我。\n除此之外，這張卡片對你一無所知。';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -8634,6 +8669,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get scamShieldLooksLikeAScam => '看起來像詐騙';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return '自稱是 $shown，這裡已有人用這個名字';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -9476,6 +9516,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatSecurityCodeChanged => '安全碼已變更';
+
+  @override
+  String get chatCompareTitle => '核對安全碼';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return '三個詞可以照抄。要確認這個聊天真的是和 $peerName，請當面或透過通話和對方核對安全碼。';
+  }
+
+  @override
+  String get chatCompareLater => '稍後';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -10905,8 +10956,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return '如果 $peerName 看到的是同一組號碼，你們的訊息就只有你們兩個人看得到。當面比對，或透過你信任的通話比對，是最可靠的確認方式，但這是選擇性的，聊天從來不需要它。';
+  String keyVerificationCompareAll(Object peerName) {
+    return '和 $peerName 核對全部 12 組數字，當面或透過你信任的通話。每一組都一致，就代表中間沒有別人，你們的訊息只屬於你們兩個人。';
   }
 
   @override
@@ -11722,13 +11773,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
 
   @override
-  String get pairCodeIsThisThem => '是這個人嗎？';
+  String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeCheckMatches => '核對一下，是否和對方螢幕上的一致';
+  String get pairCodeNumberMatches => '核對兩支手機上的四組數字是否全部一致';
 
   @override
-  String get pairCodeNotThem => '不是這個人';
+  String get pairCodeNumberDiffers => '號碼不一致';
+
+  @override
+  String get pairCodeNoNumberThere => '對方螢幕上沒有號碼？先加入，再在聊天裡核對安全碼。';
 
   @override
   String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';
@@ -13669,11 +13723,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return '不是你聊天裡的 $who';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return '你聊天裡有一個人被你叫作 $who。這個連結來自另一個人。只有在你知道連結從哪裡來時，才新增。';
   }
@@ -13885,6 +13934,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelYourWords => '你的三個詞';
+
+  @override
+  String get pairCodePanelAcceptOnce => '對方加入你之後，你會收到請求。等對方說四組數字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -15276,20 +15328,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devChatOptions => '聊天選項';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return '此連結自稱是 $id，但其金鑰不相符。未新增。';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return '自稱是 $shown，但金鑰不相符';
-  }
-
-  @override
   String get requestsSomeoneNew => '陌生人';
 
   @override
+  String get nameNotChecked => '未核對';
+
+  @override
+  String get nameTakenTitle => '有別人在用這三個詞';
+
+  @override
+  String get nameTakenLine =>
+      '這裡有人透過請求、介紹或群組得到了這三個詞，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+
+  @override
+  String get nameTakenChatLine =>
+      '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。不確定連結從哪來？就保留現有的。';
+
+  @override
+  String get nameTakenUse => '使用這個連結';
+
+  @override
+  String get nameTakenKeep => '保留現有的';
+
+  @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return '這裡已經有人叫 $id，金鑰不同。和對方核對安全碼，就知道誰是誰。未新增。';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return '你已用另一組金鑰驗證過 $id。未新增。';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

@@ -219,7 +219,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     StaggerIn(
                       index: 4,
                       child: Text(
-                        l10n.keyVerificationIfSeesTheSame(widget.peerName),
+                        l10n.keyVerificationCompareAll(widget.peerName),
                         style: HaloType.sans(
                           size: 13,
                           color: HaloColors.text2,

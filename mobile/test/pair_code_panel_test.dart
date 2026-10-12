@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the sharing side of a pairing code counts down as long as the engine
-// keeps the invite at the code, and a share no relay took is said in the
-// person's language, never in the engine's words. signal is real over rows
+// keeps the invite at the code, shows the key number of its own identity
+// key, the one in the invite it put there, and a share no relay took is
+// said in the person's language, never in the engine's words. signal is real over rows
 // kept in maps; the engine and the relays are stand-ins
 import 'dart:async';
 import 'dart:typed_data';
@@ -10,9 +11,15 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/key_number.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        inviteKeyNumber,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/widgets/pair_code_panel.dart';
@@ -28,11 +35,13 @@ class _Engine implements HaloEngine {
   // holds the answer back, as a slow route does
   Completer<void>? hold;
   final shared = <String>[];
+  final payloads = <String>[];
   @override
   String firstContactPk(int counter) => 'ab' * 32;
   @override
   Future<String> pairCodePublish(String code, String payload) async {
     shared.add(code);
+    payloads.add(payload);
     await hold?.future;
     return answer;
   }
@@ -120,6 +129,28 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text(l10n.pairCodeUnreached), findsOneWidget);
     expect(find.textContaining('unreached'), findsNothing);
+  });
+
+  testWidgets('the code shows the key number of the invite it put there', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    await t.pump(const Duration(milliseconds: 400));
+    final own = keyNumber(
+      signalSession.identityKeyPair.getPublicKey().serialize(),
+    )!;
+    // the joiner reads the same off what it fetches
+    expect(inviteKeyNumber(e.payloads.last), own);
+    expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);
+    expect(find.text(l10n.pairCodeNumberMatches), findsOneWidget);
+    // their request is taken in on their word that the numbers matched
+    expect(find.text(l10n.pairCodePanelAcceptOnce), findsOneWidget);
+    for (final g in own.split(' ')) {
+      expect(find.text(g), findsOneWidget);
+    }
+    await t.pumpWidget(const SizedBox());
   });
 
   // the panel's own swap, not one inside the code

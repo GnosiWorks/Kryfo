@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // six digits you read out loud. the code points at your invite for ten
 // minutes, works once, then the address is gone. your three words sit under
-// it, for the other phone to match before it adds you. shared by the invite
-// page and the pairing screen.
+// it, and the key number of the invite, for the other phone to match before
+// it adds you. shared by the invite page and the pairing screen.
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, engine, sessionQuiet;
+import '../main.dart' show appState, engine, inviteKeyNumber, sessionQuiet;
 import '../quiet_wait.dart';
 import '../theme.dart';
 import 'ease_size.dart';
@@ -25,20 +25,28 @@ const kPairCodeLife = Duration(minutes: 10);
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
   final bool compact;
-  // puts the session's invite at a code and gives the engine's answer.
-  // tests stand in for it
-  final Future<String> Function(String code)? publish;
-  const PairCodePanel({super.key, this.compact = false, this.publish});
+  // puts [invite] at a code and gives the engine's answer. tests stand in
+  // for it
+  final Future<String> Function(String code, String invite)? publish;
+  // the invite a code points at: the session's own
+  final Future<String> Function()? invite;
+  const PairCodePanel({
+    super.key,
+    this.compact = false,
+    this.publish,
+    this.invite,
+  });
   @override
   State<PairCodePanel> createState() => _PairCodePanelState();
 }
 
-// a code and when it burns
+// a code, when it burns, and the key number of the invite it points at
 class PairCodeLive {
-  PairCodeLive(this.box, this.code, this.burns);
+  PairCodeLive(this.box, this.code, this.burns, [this.number]);
   final String box;
   final String code;
   final DateTime burns;
+  final String? number;
   // the engine took it: until then the panel says it is working
   bool shown = false;
   // its burning was said once, on a panel opened after it went
@@ -53,8 +61,8 @@ class PairCodes extends ChangeNotifier {
 
   PairCodeLive? of(String box) => _live[box];
 
-  PairCodeLive begin(String box, String code) {
-    final c = PairCodeLive(box, code, pairNow().add(kPairCodeLife));
+  PairCodeLive begin(String box, String code, [String? number]) {
+    final c = PairCodeLive(box, code, pairNow().add(kPairCodeLife), number);
     _live[box] = c;
     notifyListeners();
     return c;
@@ -140,8 +148,11 @@ class _PairCodePanelState extends State<PairCodePanel> {
     if (!first && (changed || c != null)) setState(() {});
   }
 
+  // reading the invite, before the store holds the code
+  bool _making = false;
+
   Future<void> _make() async {
-    if (_busy) return;
+    if (_busy || _making) return;
     HapticFeedback.selectionClick();
     // Random.secure: a guessable code is one someone else can stand in
     // front of
@@ -158,12 +169,20 @@ class _PairCodePanelState extends State<PairCodePanel> {
       _failed = false;
       _status = l10n.pairCodePanelPuttingYourInviteIn;
     });
+    // the number shown is read off the very invite put at the code
+    _making = true;
+    final String invite;
+    try {
+      invite = await (widget.invite ?? appState.sessionInvite)();
+    } finally {
+      _making = false;
+    }
     // the engine stamps the invite's life as it builds it, and a publish
     // over a slow route takes a while: the count starts now, not on the
     // answer, so it never runs past the invite. the code is the store's,
     // so a panel left before the answer still leaves it live
-    final c = _codes.begin(appState.pairBox, code);
-    final res = await (widget.publish ?? _publish)(code);
+    final c = _codes.begin(appState.pairBox, code, inviteKeyNumber(invite));
+    final res = await (widget.publish ?? _publish)(code, invite);
     if (res.startsWith('error')) {
       _codes.drop(c);
       if (!mounted) return;
@@ -177,14 +196,11 @@ class _PairCodePanelState extends State<PairCodePanel> {
     if (mounted) setState(() => _status = '');
   }
 
-  static Future<String> _publish(String code) async {
-    final uri = await appState.sessionInvite();
-    // a quiet session never reaches the relays: it answers as unreachable
-    // ones would
-    return sessionQuiet
-        ? unreachedLater(pairUnreached)
-        : engine.pairCodePublish(code, uri);
-  }
+  // a quiet session never reaches the relays: it answers as unreachable
+  // ones would
+  static Future<String> _publish(String code, String invite) => sessionQuiet
+      ? unreachedLater(pairUnreached)
+      : engine.pairCodePublish(code, invite);
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +309,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
           ),
         ),
         const SizedBox(height: 12),
-        PairWordsTag(words: appState.sessionId),
+        PairWordsTag(words: appState.sessionId, number: _on?.number),
         const SizedBox(height: 12),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -314,6 +330,16 @@ class _PairCodePanelState extends State<PairCodePanel> {
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 12.5, color: HaloColors.text2),
         ),
+        // what comes to this side is their request: taken in on their word
+        // that the numbers matched
+        if (_on?.number != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.pairCodePanelAcceptOnce,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          ),
+        ],
       ],
     );
   }

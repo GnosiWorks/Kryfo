@@ -29,7 +29,6 @@ final _calls = <_Call>[
   ('backupThisFileIsDamaged', [], (l) => l.backupThisFileIsDamaged),
   ('backupCouldNotMakeThe', [], (l) => l.backupCouldNotMakeThe),
   ('contactCardMessageMeOn', [], (l) => l.contactCardMessageMeOn),
-  ('contactCardScanItOrType', [], (l) => l.contactCardScanItOrType),
   (
     'contactCardMessageMeOnKryfo',
     ["⟨haloId⟩"],
@@ -1361,11 +1360,6 @@ final _calls = <_Call>[
     ["⟨peerName⟩"],
     (l) => l.keyVerificationWith("⟨peerName⟩"),
   ),
-  (
-    'keyVerificationIfSeesTheSame',
-    ["⟨peerName⟩"],
-    (l) => l.keyVerificationIfSeesTheSame("⟨peerName⟩"),
-  ),
   ('keyVerificationVerified', [], (l) => l.keyVerificationVerified),
   ('keyVerificationMarkAsVerified', [], (l) => l.keyVerificationMarkAsVerified),
   ('lockFileThatPasswordDoesNot', [], (l) => l.lockFileThatPasswordDoesNot),
@@ -1695,9 +1689,6 @@ final _calls = <_Call>[
   ('pairCodeTypeTheSixDigits', [], (l) => l.pairCodeTypeTheSixDigits),
   ('pairCodeAddThem', [], (l) => l.pairCodeAddThem),
   ('pairCodeUsedTwice', [], (l) => l.pairCodeUsedTwice),
-  ('pairCodeIsThisThem', [], (l) => l.pairCodeIsThisThem),
-  ('pairCodeCheckMatches', [], (l) => l.pairCodeCheckMatches),
-  ('pairCodeNotThem', [], (l) => l.pairCodeNotThem),
   ('pairCodeNotAdded', [], (l) => l.pairCodeNotAdded),
   (
     'panicSetupThoseWereDifferentFrom',
@@ -3120,6 +3111,33 @@ final _calls = <_Call>[
   ('supportMovedToChats', [], (l) => l.supportMovedToChats),
   ('supportMoveToInbox', [], (l) => l.supportMoveToInbox),
   ('supportMovedToInbox', [], (l) => l.supportMovedToInbox),
+  ('pairCodeKeyNumber', [], (l) => l.pairCodeKeyNumber),
+  ('pairCodeNumberDiffers', [], (l) => l.pairCodeNumberDiffers),
+  ('pairCodeNoNumberThere', [], (l) => l.pairCodeNoNumberThere),
+  ('contactCardScanToAdd', [], (l) => l.contactCardScanToAdd),
+  (
+    'keyVerificationCompareAll',
+    ["⟨peerName⟩"],
+    (l) => l.keyVerificationCompareAll("⟨peerName⟩"),
+  ),
+  ('appLinkWordsTaken', ["⟨id⟩"], (l) => l.appLinkWordsTaken("⟨id⟩")),
+  ('appLinkWordsVerified', ["⟨id⟩"], (l) => l.appLinkWordsVerified("⟨id⟩")),
+  (
+    'scamShieldGivesUsedName',
+    ["⟨shown⟩"],
+    (l) => l.scamShieldGivesUsedName("⟨shown⟩"),
+  ),
+  ('nameNotChecked', [], (l) => l.nameNotChecked),
+  ('nameTakenTitle', [], (l) => l.nameTakenTitle),
+  ('nameTakenLine', [], (l) => l.nameTakenLine),
+  ('nameTakenUse', [], (l) => l.nameTakenUse),
+  ('nameTakenKeep', [], (l) => l.nameTakenKeep),
+  ('chatCompareTitle', [], (l) => l.chatCompareTitle),
+  ('chatCompareLine', ["⟨peerName⟩"], (l) => l.chatCompareLine("⟨peerName⟩")),
+  ('chatCompareLater', [], (l) => l.chatCompareLater),
+  ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
+  ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
+  ('pairCodePanelAcceptOnce', [], (l) => l.pairCodePanelAcceptOnce),
 ];
 
 void main() {

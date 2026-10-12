@@ -29,7 +29,7 @@ class ShieldHit {
     'lookalike_url' => l10n.scamShieldLinksToALookalike,
     'long_opener' => l10n.scamShieldALongOpenerFrom,
     'secret_ask' => l10n.scamShieldAsksForACode,
-    'other_key' => l10n.scamShieldSaysItIs(who ?? ''),
+    'other_key' => l10n.scamShieldGivesUsedName(who ?? ''),
     _ => l10n.scamShieldLooksLikeAScam,
   };
 
@@ -58,7 +58,7 @@ String requestTitle(String id) =>
 String shieldHeadline(ShieldHit lead) => switch (lead.code) {
   'name_match' => l10n.scamShieldThisNameMatches(lead.who ?? ''),
   // a name bound here to another key: its sender was filed on its own id
-  'other_key' => l10n.scamShieldSaysItIs(lead.who ?? ''),
+  'other_key' => l10n.scamShieldGivesUsedName(lead.who ?? ''),
   _ => l10n.scamShieldLooksLikeAScam,
 };
 
