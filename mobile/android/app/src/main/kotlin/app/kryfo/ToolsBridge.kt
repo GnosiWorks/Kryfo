@@ -69,6 +69,15 @@ class ToolsBridge(private val activity: Activity) {
         fun isText(type: String) =
             type.substringBefore(';').trim().lowercase() == "text/plain"
 
+        // one of our own providers, also with the user id a content uri may
+        // carry before its authority ("0@app.kryfo.open")
+        fun ours(authority: String, pkg: String): Boolean =
+            authority.substringAfterLast('@').lowercase().startsWith(pkg.lowercase())
+
+        // each text share takes a turn. a stream read that ends after a
+        // newer share is let go
+        private val textTurns = Turns()
+
         // [all] at start: no copy in is being read then. a result may have
         // been shared with another app that still reads it, so it waits out
         // its age either way
@@ -127,6 +136,7 @@ class ToolsBridge(private val activity: Activity) {
     // as a stream is read when it is small and really text; its name alone
     // is never taken
     private fun offerText(intent: Intent) {
+        val turn = textTurns.next()
         val (text, subject) = try {
             Pair(
                 intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(),
@@ -152,7 +162,7 @@ class ToolsBridge(private val activity: Activity) {
         if (uri == null || !acceptable(uri)) return
         Thread {
             val read = readSmallText(uri) ?: return@Thread
-            activity.runOnUiThread { keepText(read, null) }
+            activity.runOnUiThread { if (textTurns.latest(turn)) keepText(read, null) }
         }.start()
     }
 
@@ -182,7 +192,7 @@ class ToolsBridge(private val activity: Activity) {
     private fun acceptable(uri: Uri): Boolean {
         if (uri.scheme != "content") return false
         val auth = uri.authority ?: return false
-        return !auth.startsWith(activity.packageName)
+        return !ours(auth, activity.packageName)
     }
 
     private fun isMediaStore(uri: Uri) =
@@ -661,3 +671,10 @@ data class SharedWords(
     val subject: String?,
     val seen: String? = null
 )
+
+// a counter of turns: only the last one taken is still current
+class Turns {
+    private val n = java.util.concurrent.atomic.AtomicLong()
+    fun next(): Long = n.incrementAndGet()
+    fun latest(turn: Long): Boolean = n.get() == turn
+}
