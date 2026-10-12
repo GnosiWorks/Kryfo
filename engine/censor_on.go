@@ -33,7 +33,7 @@ const censorMarker = "kryfo test censor build"
 // reset, stall, or mixed: each relay gets one of the two, the same every time
 var censorHow = "mixed"
 
-// 1 cuts direct tor off, 2 the built-in obfs4 bridges too
+// 1 cuts direct tor off, 2 the built-in obfs4 bridges too (censor_two.go)
 var censorLevel = 1
 
 var (
@@ -55,7 +55,7 @@ func censorStart() string {
 		return ""
 	}
 	censorAddr = ln.Addr().String()
-	log.Printf("censor: %s, tor is cut off (%s)", censorMarker, censorHow)
+	log.Printf("censor: %s, tor is cut off (%s, level %d)", censorMarker, censorHow, censorLevel)
 	go func() {
 		for {
 			c, err := ln.Accept()
