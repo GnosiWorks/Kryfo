@@ -60,6 +60,7 @@ import 'screens/modes_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'contact_card.dart' show sweepCardLeftovers;
 import 'container.dart';
 import 'lock_state.dart';
 import 'app_shell.dart';
@@ -23920,6 +23921,12 @@ Future<void> _sweepPlaintextLeftovers() async {
   await sweepGifParts();
   // what a wipe moved aside and did not live to shred
   await sweepWipeLeftovers();
+  // a contact card written for a share and left
+  try {
+    await sweepCardLeftovers(await getTemporaryDirectory());
+  } catch (e) {
+    dlog('sweep: card leftovers (${e.runtimeType})');
+  }
 }
 
 // every raw recording in [dir]: one that will not go is logged and the
