@@ -1194,6 +1194,10 @@ func applyBridgeMode(mode, raw string) string {
 	case bmAuto, bmDirect:
 	case bmSnowflake:
 		lines = builtinLines("snowflake")
+		// no lines would be direct
+		if len(lines) == 0 {
+			return "error: lines_bad"
+		}
 	case bmWebtunnel, bmMoat, bmOwn:
 		good, _, checks := sortBridgeLines(strings.Join(o.Lines, "\n"))
 		lineChecksMu.Lock()
@@ -1352,6 +1356,12 @@ func putCheckInStep() string {
 		s = autoStep{Method: "direct"}
 		if d, b := mem.Blocked[kind]; opts.SkipDirect || (b && fresh(d, today)) {
 			s = autoStep{Method: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")}
+			// no line to use is a hold: no lines and no direct step
+			if len(s.Lines) == 0 {
+				stSet(func() { autoSt.method, autoSt.source = "", "" })
+				autoUseStep(gen, autoStep{})
+				return "error: lines_bad"
+			}
 		}
 	}
 	// these lines are what tor has from now on, whatever ran before

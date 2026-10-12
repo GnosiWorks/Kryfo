@@ -726,3 +726,45 @@ func TestCheckInStepAndANewModeDoNotInterleave(t *testing.T) {
 		t.Fatal("a check-in's direct mark landed over the new mode")
 	}
 }
+
+// no built-in line left for a transport, for the tests
+func noBuiltin(t *testing.T, tr string) {
+	t.Helper()
+	old := builtinBundled[tr]
+	builtinBundled[tr] = nil
+	t.Cleanup(func() { builtinBundled[tr] = old })
+}
+
+// snowflake with no line to use is refused, never direct
+func TestSnowflakeWithNoLineIsRefused(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	unknownMode(t)
+	noBuiltin(t, "snowflake")
+	if r := setBridgeMode(bmSnowflake, ""); r != "error: lines_bad" {
+		t.Fatalf("snowflake with no lines: %q", r)
+	}
+	if bridgeModeKnown() || networkHold() == "" {
+		t.Fatalf("known %v hold %q", bridgeModeKnown(), networkHold())
+	}
+}
+
+// a check-in where only the built-in bridges may go, and there are none:
+// a hold, never direct
+func TestCheckInWithNoBuiltinLineHolds(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	setNetInfo(wifi())
+	noBuiltin(t, "obfs4")
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no", SkipDirect: true}
+	autoMu.Unlock()
+	autoDirectOK.Store(true)
+	if r := checkIn(true); r != "error: lines_bad" {
+		t.Fatalf("check-in: %q", r)
+	}
+	t.Cleanup(func() { checkIn(false) })
+	if autoDirectOK.Load() || bridgesEnabled() || networkHold() != errAutoWait {
+		t.Fatalf("direct ok %v bridges %v hold %q", autoDirectOK.Load(), bridgesEnabled(), networkHold())
+	}
+}
