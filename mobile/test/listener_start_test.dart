@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the listener service is started only when it is not up: a start of one
 // that is up posts its notification again, on every resume and every job
-// run. read off the kotlin source, which has no tests of its own.
+// run. read off the kotlin source.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -38,7 +38,7 @@ void main() {
 
   test('a resume leaves a running service alone', () {
     final resume = _body(_code('MainActivity.kt'), 'override fun onResume');
-    final start = RegExp(r'^\s*(.*)startListenerService\(\)', multiLine: true);
+    final start = RegExp(r'^\s*(.*)startListenerService\(', multiLine: true);
     final calls = start.allMatches(resume).toList();
     expect(calls, isNotEmpty);
     for (final c in calls) {
