@@ -75,8 +75,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get contactCardMessageMeOn => 'Kirimi aku pesan di';
 
   @override
-  String get contactCardScanItOrType =>
-      'Pindai, atau ketik tiga katanya di Kryfo.\nKartu ini tidak tahu apa pun tentangmu selain itu.';
+  String get contactCardScanToAdd =>
+      'Pindai dengan Kryfo untuk menambahkanku.\nKartu ini tidak tahu apa pun tentangmu selain itu.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -855,6 +855,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'Sepertinya penipuan';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'Mengaku sebagai $shown, nama yang sudah dipakai orang lain di sini';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1731,6 +1736,17 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'Kode keamanan berubah';
+
+  @override
+  String get chatCompareTitle => 'Bandingkan nomor keamanan';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'Tiga kata bisa disalin. Untuk tahu obrolan ini benar dengan $peerName, bandingkan nomor keamanan dengannya, secara tatap muka atau lewat panggilan.';
+  }
+
+  @override
+  String get chatCompareLater => 'Nanti';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3224,8 +3240,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'Kalau $peerName melihat nomor yang sama, pesan kalian hanya untuk kalian berdua. Membandingkan secara tatap muka atau lewat panggilan yang kamu percaya adalah cara paling pasti - tapi ini opsional, tidak pernah wajib untuk mengobrol.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'Bandingkan ke-12 kelompok dengan $peerName, secara tatap muka atau lewat panggilan yang kamu percaya. Kalau semua kelompok sama, tidak ada orang di tengah dan pesan kalian hanya untuk kalian berdua.';
   }
 
   @override
@@ -6127,11 +6143,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'Bukan $who yang ada di obrolanmu';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'Kamu menyebut seseorang di obrolanmu $who. Tautan ini dari orang lain. Tambahkan hanya kalau kamu tahu dari mana asalnya.';
   }
@@ -7939,21 +7950,41 @@ class AppLocalizationsId extends AppLocalizations {
   String get devChatOptions => 'Opsi obrolan';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'Tautan ini mengaku sebagai $id, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'Mengaku sebagai $shown, tapi kuncinya tidak cocok';
-  }
-
-  @override
   String get requestsSomeoneNew => 'Orang baru';
+
+  @override
+  String get nameNotChecked => 'Belum dicek';
+
+  @override
+  String get nameTakenTitle => 'Orang lain memakai kata-kata ini';
+
+  @override
+  String get nameTakenLine =>
+      'Seseorang di sini mendapat kata-kata ini dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
+
+  @override
+  String get nameTakenChatLine =>
+      'Obrolanmu dengan kata-kata ini datang dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja: obrolan itu dihapus, dan kamu membandingkan nomor keamanan di obrolan yang baru.';
+
+  @override
+  String get nameTakenUse => 'Pakai tautan ini';
+
+  @override
+  String get nameTakenKeep => 'Tetap yang sudah ada';
 
   @override
   String get appYourOwnInvite =>
       'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'Sudah ada seseorang di sini sebagai $id, dengan kunci lain. Bandingkan nomor keamanan dengannya untuk tahu siapa yang mana. Tidak ada yang ditambahkan.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'Kamu sudah memverifikasi $id dengan kunci lain. Tidak ada yang ditambahkan.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

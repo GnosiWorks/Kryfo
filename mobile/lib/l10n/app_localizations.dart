@@ -249,11 +249,11 @@ abstract class AppLocalizations {
   /// **'Message me on'**
   String get contactCardMessageMeOn;
 
-  /// contact_card.dart
+  /// contact_card.dart: under the qr on the shared card. the qr is the invite; typing the three words adds no one
   ///
   /// In en, this message translates to:
-  /// **'Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.'**
-  String get contactCardScanItOrType;
+  /// **'Scan it with Kryfo to add me.\nThis card knows nothing about you beyond that.'**
+  String get contactCardScanToAdd;
 
   /// contact_card.dart
   ///
@@ -1334,6 +1334,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looks like a scam'**
   String get scamShieldLooksLikeAScam;
+
+  /// scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key. it says nothing about which of the two is who they say
+  ///
+  /// In en, this message translates to:
+  /// **'Says it is {shown}, a name someone here already goes by'**
+  String scamShieldGivesUsedName(Object shown);
 
   /// scam_shield.dart
   ///
@@ -2792,6 +2798,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Security code changed'**
   String get chatSecurityCodeChanged;
+
+  /// screens/chat_screen.dart: card at the top of a chat added by a pairing code or a link, or taken in from a request, until the safety number is verified
+  ///
+  /// In en, this message translates to:
+  /// **'Compare the safety number'**
+  String get chatCompareTitle;
+
+  /// screens/chat_screen.dart: under chatCompareTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Three words can be copied. To know this chat is really with {peerName}, compare the safety number with them, in person or on a call.'**
+  String chatCompareLine(Object peerName);
+
+  /// screens/chat_screen.dart: button on the compare card, puts it away for this chat
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get chatCompareLater;
 
   /// screens/chat_screen.dart
   ///
@@ -5013,11 +5037,11 @@ abstract class AppLocalizations {
   /// **'With {peerName}'**
   String keyVerificationWith(Object peerName);
 
-  /// screens/key_verification_screen.dart
+  /// screens/key_verification_screen.dart: under the safety number. the whole number has to be compared, not its first groups
   ///
   /// In en, this message translates to:
-  /// **'If {peerName} sees the same number, your messages are private to just the two of you. Comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.'**
-  String keyVerificationIfSeesTheSame(Object peerName);
+  /// **'Compare all 12 groups with {peerName}, in person or on a call you trust. If every group matches, no one is in between and your messages are for the two of you alone.'**
+  String keyVerificationCompareAll(Object peerName);
 
   /// screens/key_verification_screen.dart
   ///
@@ -9777,12 +9801,6 @@ abstract class AppLocalizations {
   /// **'You already have {who}'**
   String kryfoLinkTextYouAlreadyHave(Object who);
 
-  /// widgets/kryfo_link_text.dart: sheet title, an invite opened from outside gives the words of a contact here with another key
-  ///
-  /// In en, this message translates to:
-  /// **'Not the {who} in your chats'**
-  String kryfoLinkTextNotTheOne(Object who);
-
   /// widgets/kryfo_link_text.dart: an invite opened from outside gives words the person uses as the name of another contact
   ///
   /// In en, this message translates to:
@@ -12795,29 +12813,65 @@ abstract class AppLocalizations {
   /// **'Chat options'**
   String get devChatOptions;
 
-  /// a scanned or pasted card, or the one behind a handle, that names someone already here with another key (main.dart, handleHaloUriAdded)
-  ///
-  /// In en, this message translates to:
-  /// **'This link says it is {id}, but its key does not match. It was not added.'**
-  String appLinkOtherKey(Object id);
-
-  /// scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key
-  ///
-  /// In en, this message translates to:
-  /// **'Says it is {shown}, but its key does not match'**
-  String scamShieldSaysItIs(Object shown);
-
   /// screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave
   ///
   /// In en, this message translates to:
   /// **'Someone new'**
   String get requestsSomeoneNew;
 
+  /// widgets/name_check_mark.dart: a small mark beside three words a request, an introduction or a group gave, until a qr scan or the safety number settles them
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked'**
+  String get nameNotChecked;
+
+  /// widgets/kryfo_link_text.dart: sheet title, a link gives three words someone here already goes by, with another key
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else uses these words'**
+  String get nameTakenTitle;
+
+  /// widgets/kryfo_link_text.dart: the words of a link are held here by someone a request, an introduction or a group gave them to, never checked, with no chat yet
+  ///
+  /// In en, this message translates to:
+  /// **'Someone here got these words from a request, an introduction or a group, with a different key, and nobody checked them. Words can be copied. If this link came from the person you know, use it, then compare the safety number with them.'**
+  String get nameTakenLine;
+
+  /// widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat
+  ///
+  /// In en, this message translates to:
+  /// **'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one.'**
+  String get nameTakenChatLine;
+
+  /// widgets/kryfo_link_text.dart: button, the link takes the words over
+  ///
+  /// In en, this message translates to:
+  /// **'Use this link'**
+  String get nameTakenUse;
+
+  /// widgets/kryfo_link_text.dart: button, nothing is added and the one here keeps the words
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the one I have'**
+  String get nameTakenKeep;
+
   /// main.dart: a link, card or handle that is your own was added
   ///
   /// In en, this message translates to:
   /// **'This is your own invite. Share it with someone else to connect.'**
   String get appYourOwnInvite;
+
+  /// main.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
+  ///
+  /// In en, this message translates to:
+  /// **'Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.'**
+  String appLinkWordsTaken(Object id);
+
+  /// main.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced
+  ///
+  /// In en, this message translates to:
+  /// **'You verified {id} with a different key. Nothing was added.'**
+  String appLinkWordsVerified(Object id);
 
   /// main.dart: adding someone who is blocked; the Blocked page in Settings lets them back
   ///

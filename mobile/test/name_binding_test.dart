@@ -5,6 +5,9 @@
 // id of its own, with a line saying the name it gave. a first message opens
 // under a name only with the key that name is bound to, and a name with a
 // key but no session yet takes a first message only with its proof of work.
+// words a request, an introduction or a group gave, never checked, do not
+// turn a link away: the person chooses which one keeps them, a verified one
+// is never replaced, and a deleted chat holds no name at all.
 // real libsignal over rows kept in maps; the engine derives an id from an
 // ed key the way the app asks it to
 import 'dart:async';
@@ -27,6 +30,9 @@ import 'package:kryfo/main.dart'
         askInboxMove,
         HaloEngine,
         LinkKin,
+        askTakeName,
+        kNameAsk,
+        nameCheckOf,
         buildHaloUri,
         haloUriV3,
         handleHaloUriAdded,
@@ -94,6 +100,8 @@ class _Engine implements HaloEngine {
   @override
   void nostrSubscribeBg(String peerXPubHex) {}
   @override
+  void nostrUnsubscribeBg(String peerXPubHex) => dropped.add(peerXPubHex);
+  @override
   dynamic noSuchMethod(Invocation i) {
     engineAsked.add(i.memberName);
     throw UnimplementedError('engine: ${i.memberName}');
@@ -102,6 +110,8 @@ class _Engine implements HaloEngine {
 
 // what the engine was asked for that it does not do here, sends among them
 final engineAsked = <Symbol>[];
+// the addresses the app stopped listening on
+final dropped = <String>[];
 const _sends = {#sendTo, #nostrSend, #sendFirstContact};
 
 // the addresses let go of
@@ -485,7 +495,7 @@ void main() {
     );
     expect(
       ShieldFlag.fromRow(live.shields[own])?.headline,
-      l10n.scamShieldSaysItIs(_amber),
+      l10n.scamShieldGivesUsedName(_amber),
     );
     // and the next message from them opens there too
     final again = await other.ss.encryptTo(
@@ -725,13 +735,13 @@ void main() {
       'ab' * 32,
     );
     expect(await handleHaloUriAdded(link), (
-      l10n.appLinkOtherKey(_amber),
+      l10n.appLinkWordsTaken(_amber),
       false,
     ));
     // the older card, by its x key alone
     expect(
       (await handleHaloUriAdded(buildHaloUri(_amber, 'o-other', other.xPub))),
-      (l10n.appLinkOtherKey(_amber), false),
+      (l10n.appLinkWordsTaken(_amber), false),
     );
     expect(live.people[_amber], containsPair('onion', 'o-amber'));
     expect(live.people[_amber], containsPair('xpub', amber.xPub));
@@ -1151,7 +1161,7 @@ void main() {
           await card(_amber, await _phone()),
           hidden: app.hiddenWhileShut,
         ),
-        (l10n.appLinkOtherKey(_amber), false),
+        (l10n.appLinkWordsTaken(_amber), false),
       );
     });
 
@@ -1207,7 +1217,7 @@ void main() {
     expect(live.msgs.where((m) => m['peer_id'] == own), hasLength(1));
     expect(
       ShieldFlag.fromRow(live.shields[own])?.headline,
-      l10n.scamShieldSaysItIs(_hidden),
+      l10n.scamShieldGivesUsedName(_hidden),
     );
     // the member's own first message is sealed for the vault
     await app.receiveOnion([
@@ -1291,6 +1301,207 @@ void main() {
       await opener();
       expect(live.people[newcomer], containsPair('accepted', 0));
       expect(await hasSessionWith(newcomer), isFalse);
+    });
+  });
+
+  group('words nobody checked', () {
+    // each test its own words: the signal store outlives a test
+    const ends = [
+      'ash',
+      'bay',
+      'cove',
+      'dune',
+      'elm',
+      'fern',
+      'glen',
+      'hill',
+      'isle',
+      'jade',
+      'kelp',
+      'lake',
+    ];
+    var round = -1;
+    late String words;
+    late _Phone mallory;
+    late _Phone alice;
+    late String aliceEd;
+    final asked = <(String, bool)>[];
+    var answer = true;
+
+    setUp(() async {
+      words = 'calm-river-${ends[++round]}';
+      mallory = await _phone();
+      alice = await _phone();
+      aliceEd = _rndHex(32);
+      _idOf[aliceEd] = words;
+      asked.clear();
+      dropped.clear();
+      answer = true;
+      final was = askTakeName;
+      askTakeName = (id, {required chat}) async {
+        asked.add((id, chat));
+        return answer;
+      };
+      addTearDown(() => askTakeName = was);
+    });
+
+    // a stranger's request under alice's words
+    Future<void> squat() async {
+      final ed = _rndHex(32);
+      _idOf[ed] = words;
+      await app.receiveOnion([
+        await _opener(mallory, words, ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(nameCheckOf(live.people[words]), 3);
+    }
+
+    Future<String> link(_Phone p) async => haloUriV3(
+      words,
+      'o-real',
+      Uri.encodeQueryComponent(await makePreKeyBundleB64(p.ss)),
+      'ab' * 32,
+    );
+
+    Future<void> sessionIsWith(_Phone who, _Phone not) async {
+      final next = await signalSession.encryptTo(words, 'for the one kept');
+      expect(await _reads(not.ss, next), isNull);
+      expect(await _reads(who.ss, next), 'for the one kept');
+    }
+
+    test('a request\'s words go to the link the person chooses', () async {
+      await squat();
+      expect(await linkKinOf(await link(alice)), (LinkKin.claimed, words));
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(asked, [(words, false)]);
+      expect(live.people[words], containsPair('accepted', 1));
+      // the chat asks for the safety number, and the words are not the
+      // request's any more
+      expect(nameCheckOf(live.people[words]), kNameAsk);
+      expect(live.msgs.where((m) => m['peer_id'] == words), isEmpty);
+      expect(dropped, contains(mallory.xPub));
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('kept, the request stays as it was', () async {
+      await squat();
+      answer = false;
+      expect(await handleHaloUriAdded(await link(alice)), ('', false));
+      expect(asked, [(words, false)]);
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(live.msgs.where((m) => m['peer_id'] == words), hasLength(1));
+      await sessionIsWith(mallory, alice);
+    });
+
+    test('a request taken in is asked about with its chat', () async {
+      await squat();
+      live.people[words]!['accepted'] = 1;
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(asked, [(words, true)]);
+      expect(live.msgs.where((m) => m['peer_id'] == words), isEmpty);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('a verified name is never replaced, and nothing is asked', () async {
+      await squat();
+      live.people[words]!['verified'] = 1;
+      expect(await linkKinOf(await link(alice)), (LinkKin.verified, words));
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsVerified(words),
+        false,
+      ));
+      expect(asked, isEmpty);
+      await sessionIsWith(mallory, alice);
+    });
+
+    test('words added by a scan stay, and nothing is asked', () async {
+      expect(await handleHaloUriAdded(await link(mallory), scanned: true), (
+        '',
+        true,
+      ));
+      expect(nameCheckOf(live.people[words]), 0);
+      expect(await linkKinOf(await link(alice)), (LinkKin.otherKey, words));
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsTaken(words),
+        false,
+      ));
+      expect(asked, isEmpty);
+    });
+
+    test('a deleted chat keeps no name: a link takes it unasked', () async {
+      await squat();
+      await app.deleteConversation(words);
+      expect(await linkKinOf(await link(alice)), (LinkKin.stranger, words));
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(asked, isEmpty);
+      expect(live.people[words], containsPair('accepted', 1));
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('a deleted chat keeps no name: the real one writing lands under '
+        'their words', () async {
+      await squat();
+      await app.deleteConversation(words);
+      await app.receiveOnion([
+        await _opener(alice, words, aliceEd, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isFalse);
+      expect(
+        [
+          for (final m in live.msgs)
+            if (m['peer_id'] == words) m['plaintext'],
+        ],
+        [_said],
+      );
+      // a request again, its words not checked
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(nameCheckOf(live.people[words]), 3);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('in the decoy nothing is let go, and the everyday side is not '
+        'touched', () async {
+      await squat();
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      decoy.person(words, xpub: mallory.xPub, accepted: 0);
+      decoy.people[words]!['name_check'] = 3;
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      expect(await linkKinOf(await link(alice)), (LinkKin.otherKey, words));
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsTaken(words),
+        false,
+      ));
+      expect(asked, isEmpty);
+      expect(decoy.people[words], containsPair('xpub', mallory.xPub));
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(dropped, isEmpty);
+      await sessionIsWith(mallory, alice);
+    });
+
+    test('a scan settles a request\'s words, any other add asks for the '
+        'safety number', () async {
+      await squat();
+      expect(await handleHaloUriAdded(await link(mallory)), ('', true));
+      // still the words the request gave, and the chat asks
+      expect(nameCheckOf(live.people[words]), 3);
+      expect(await handleHaloUriAdded(await link(mallory), scanned: true), (
+        l10n.appAlreadySaved(words),
+        true,
+      ));
+      expect(nameCheckOf(live.people[words]), 0);
+      // someone new by a link: the chat asks, nothing more
+      const fresh = 'brand-new-words';
+      final link2 = haloUriV3(
+        fresh,
+        'o',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(alice.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(link2), ('', true));
+      expect(nameCheckOf(live.people[fresh]), kNameAsk);
     });
   });
 }

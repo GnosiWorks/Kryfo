@@ -74,8 +74,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactCardMessageMeOn => 'راسلني على';
 
   @override
-  String get contactCardScanItOrType =>
-      'اقرأ رمزها بالكاميرا، أو اكتب الكلمات الثلاث في Kryfo.\nلا تعرف هذه البطاقة عنك شيئًا سوى ذلك.';
+  String get contactCardScanToAdd =>
+      'امسح الرمز في Kryfo لإضافتي.\nلا تعرف هذه البطاقة عنك شيئًا سوى ذلك.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -908,6 +908,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'يبدو احتيالًا';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'يقول إنه ⁨$shown⁩، وهو اسم يحمله شخص آخر هنا';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1791,6 +1796,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'تغيّر رمز الأمان';
+
+  @override
+  String get chatCompareTitle => 'قارن رقم الأمان';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'يمكن نسخ الكلمات الثلاث. لتتأكد أن هذه المحادثة مع ⁨$peerName⁩ فعلًا، قارن رقم الأمان معه، وجهًا لوجه أو في مكالمة.';
+  }
+
+  @override
+  String get chatCompareLater => 'لاحقًا';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3340,8 +3356,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'إن رأى ⁨$peerName⁩ الرقم نفسه، فرسائلكما خاصة بكما وحدكما. المقارنة وجهًا لوجه أو عبر مكالمة تثق بها هي أضمن طريقة للتأكد - لكنها اختيارية، وليست شرطًا للمراسلة أبدًا.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'قارن المجموعات الاثنتي عشرة كلها مع ⁨$peerName⁩، وجهًا لوجه أو عبر مكالمة تثق بها. إن تطابقت كل مجموعة، فلا أحد بينكما ورسائلكما لكما وحدكما.';
   }
 
   @override
@@ -6248,11 +6264,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'ليس ⁨$who⁩ الموجود في محادثاتك';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'تسمّي شخصًا في محادثاتك ⁨$who⁩. هذا الرابط من شخص آخر. لا تضفه إلا إن كنت تعرف مصدره.';
   }
@@ -8070,20 +8081,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devChatOptions => 'خيارات المحادثة';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'يدّعي هذا الرابط أنه ⁨$id⁩، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'يقول إنه ⁨$shown⁩، لكن مفتاحه غير مطابق';
-  }
-
-  @override
   String get requestsSomeoneNew => 'شخص جديد';
 
   @override
+  String get nameNotChecked => 'لم يُتحقَّق منه';
+
+  @override
+  String get nameTakenTitle => 'شخص آخر يستخدم هذه الكلمات';
+
+  @override
+  String get nameTakenLine =>
+      'شخص هنا حصل على هذه الكلمات من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+
+  @override
+  String get nameTakenChatLine =>
+      'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة.';
+
+  @override
+  String get nameTakenUse => 'استخدم هذا الرابط';
+
+  @override
+  String get nameTakenKeep => 'أبقِ على الموجود';
+
+  @override
   String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'هناك من يحمل ⁨$id⁩ هنا بالفعل، بمفتاح مختلف. قارن رقم الأمان معه لتعرف من هو من. لم تتم إضافة شيء.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'لقد تحقّقت من ⁨$id⁩ بمفتاح مختلف. لم تتم إضافة شيء.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

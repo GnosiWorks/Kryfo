@@ -29,7 +29,6 @@ final _calls = <_Call>[
   ('backupThisFileIsDamaged', [], (l) => l.backupThisFileIsDamaged),
   ('backupCouldNotMakeThe', [], (l) => l.backupCouldNotMakeThe),
   ('contactCardMessageMeOn', [], (l) => l.contactCardMessageMeOn),
-  ('contactCardScanItOrType', [], (l) => l.contactCardScanItOrType),
   (
     'contactCardMessageMeOnKryfo',
     ["⟨haloId⟩"],
@@ -1360,11 +1359,6 @@ final _calls = <_Call>[
     'keyVerificationWith',
     ["⟨peerName⟩"],
     (l) => l.keyVerificationWith("⟨peerName⟩"),
-  ),
-  (
-    'keyVerificationIfSeesTheSame',
-    ["⟨peerName⟩"],
-    (l) => l.keyVerificationIfSeesTheSame("⟨peerName⟩"),
   ),
   ('keyVerificationVerified', [], (l) => l.keyVerificationVerified),
   ('keyVerificationMarkAsVerified', [], (l) => l.keyVerificationMarkAsVerified),
@@ -3121,6 +3115,28 @@ final _calls = <_Call>[
   ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
   ('pairCodeNumberDiffers', [], (l) => l.pairCodeNumberDiffers),
   ('pairCodeNoNumberThere', [], (l) => l.pairCodeNoNumberThere),
+  ('contactCardScanToAdd', [], (l) => l.contactCardScanToAdd),
+  (
+    'keyVerificationCompareAll',
+    ["⟨peerName⟩"],
+    (l) => l.keyVerificationCompareAll("⟨peerName⟩"),
+  ),
+  ('appLinkWordsTaken', ["⟨id⟩"], (l) => l.appLinkWordsTaken("⟨id⟩")),
+  ('appLinkWordsVerified', ["⟨id⟩"], (l) => l.appLinkWordsVerified("⟨id⟩")),
+  (
+    'scamShieldGivesUsedName',
+    ["⟨shown⟩"],
+    (l) => l.scamShieldGivesUsedName("⟨shown⟩"),
+  ),
+  ('nameNotChecked', [], (l) => l.nameNotChecked),
+  ('nameTakenTitle', [], (l) => l.nameTakenTitle),
+  ('nameTakenLine', [], (l) => l.nameTakenLine),
+  ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
+  ('nameTakenUse', [], (l) => l.nameTakenUse),
+  ('nameTakenKeep', [], (l) => l.nameTakenKeep),
+  ('chatCompareTitle', [], (l) => l.chatCompareTitle),
+  ('chatCompareLine', ["⟨peerName⟩"], (l) => l.chatCompareLine("⟨peerName⟩")),
+  ('chatCompareLater', [], (l) => l.chatCompareLater),
 ];
 
 void main() {

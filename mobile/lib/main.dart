@@ -98,7 +98,8 @@ import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'widgets/pair_join.dart' show pairUnreached;
 import 'widgets/pair_code_panel.dart' show PairCodes;
-import 'widgets/kryfo_link_text.dart' show takeOutsideLink, takeOwnLink;
+import 'widgets/kryfo_link_text.dart'
+    show addScanned, askTakeNameSheet, takeOutsideLink, takeOwnLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
@@ -1413,7 +1414,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 76,
+      version: 77,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1449,7 +1450,8 @@ class HaloDb implements GroupOwedStore {
             avatar INTEGER,
             vouched_by TEXT,
             vouched_at INTEGER,
-            voice_disguise INTEGER
+            voice_disguise INTEGER,
+            name_check INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -1579,7 +1581,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 76
+        // they add. 66 runs after it: it reads what they all make. 67 to 77
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2055,6 +2057,10 @@ class HaloDb implements GroupOwedStore {
           // a chat's own choice to disguise the voice
           await voiceDisguiseColumns(db);
         }
+        if (oldV < 77) {
+          // whether the name someone goes by here was checked
+          await nameCheckColumn(db);
+        }
       },
     );
     // retired while it was opening
@@ -2182,6 +2188,8 @@ class HaloDb implements GroupOwedStore {
       // so their messages decrypt; the row stays out of the contact list
       // until you add them yourself.
       'accepted': 0,
+      // and the name is whatever the card said
+      'name_check': kNameAsk | kNameSays,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -2599,6 +2607,42 @@ class HaloDb implements GroupOwedStore {
   Future<bool> isVerified(String haloId) async {
     final c = await getContact(haloId);
     return (c?['verified'] as int? ?? 0) == 1;
+  }
+
+  // a name let go (AppState.releaseName): the key the row held and what
+  // came with it go. what is left is a name nobody checked
+  Future<void> forgetName(String haloId) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {
+        'xpub': '',
+        'peer_bundle': null,
+        'key_changed': 0,
+        'verified': 0,
+        'verified_key': null,
+        'back_paired': 0,
+        'avatar': null,
+        'supporter_badge': null,
+        'vouched_by': null,
+        'vouched_at': null,
+        'name_check': kNameAsk | kNameSays,
+      },
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+    await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  Future<void> setNameCheck(String haloId, int flags) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'name_check': flags},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   // no key when it could not be read: no number shows
@@ -3022,6 +3066,8 @@ class HaloDb implements GroupOwedStore {
         'first_seen': now,
         'last_seen': now,
         'accepted': accepted,
+        // someone who wrote first gave their name themselves
+        if (accepted == 0) 'name_check': kNameAsk | kNameSays,
       });
     } else {
       // xpub changed on someone we already know = they reinstalled, or its a
@@ -7609,6 +7655,45 @@ Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE groups ADD COLUMN voice_disguise INTEGER');
 }
 
+/// a name's flags (contacts.name_check). ask: their chat asks for the
+/// safety number. says: the name came with a request, an introduction or
+/// a group, and shows as not checked. a verified key outranks both, and an
+/// add from a scanned qr clears them
+const kNameAsk = 1;
+const kNameSays = 2;
+
+// the upgrade to 77. a request or a card from a group or an introduction
+// still waiting is a name nobody checked
+Future<void> nameCheckColumn(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN name_check INTEGER NOT NULL DEFAULT 0',
+  );
+  await db.update('contacts', {
+    'name_check': kNameAsk | kNameSays,
+  }, where: 'accepted = 0 AND IFNULL(archived, 0) = 0 AND verified = 0');
+}
+
+int nameCheckOf(Map<String, Object?>? row) =>
+    (row?['name_check'] as num?)?.toInt() ?? 0;
+
+/// the name on [row] was given, not checked: a request, an introduction or
+/// a group named them, and no qr or safety number has settled it since
+bool nameUnchecked(Map<String, Object?>? row) =>
+    row != null &&
+    (nameCheckOf(row) & kNameSays) != 0 &&
+    (row['verified'] as num?)?.toInt() != 1 &&
+    !isDevId(row['halo_id'] as String? ?? '');
+
+/// [row]'s chat asks for the safety number: added by a code or a link, or
+/// taken in from a request, and not verified yet
+bool nameAsks(Map<String, Object?>? row) =>
+    row != null &&
+    (nameCheckOf(row) & kNameAsk) != 0 &&
+    (row['verified'] as num?)?.toInt() != 1 &&
+    (row['accepted'] as num?)?.toInt() == 1 &&
+    !isDevId(row['halo_id'] as String? ?? '');
+
 // the upgrade to 65: when a room joined off a link sent its join, until
 // its creator lets this phone in
 Future<void> roomJoiningColumn(DatabaseExecutor db) =>
@@ -8806,17 +8891,73 @@ bool _takeOpenedBefore(String wireB64) =>
 
 int _outboxGrind(String seed) => grindPow(seed, powBits);
 
-Future<String> handleHaloUri(String raw) async =>
-    (await handleHaloUriAdded(raw)).$1;
+Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
+    (await handleHaloUriAdded(raw, scanned: scanned)).$1;
+
+/// asked when a link names someone here under a name a request, an
+/// introduction or a group gave, never checked, on another key: true lets
+/// the link take the name. [chat] says the other one has a chat that goes
+@visibleForTesting
+Future<bool> Function(String id, {required bool chat}) askTakeName =
+    askTakeNameSheet;
+
+/// what a link may do about the one here its name is bound to on another
+/// key
+enum NameHold {
+  // a verified, blocked or checked name stays theirs
+  kept,
+  // given by a request, an introduction or a group and never checked: the
+  // link takes it if the person says so
+  ask,
+  // the same, with its chat deleted: nothing here holds it any more
+  free,
+}
+
+NameHold nameHoldOf(Map<String, Object?>? row) {
+  if (!nameUnchecked(row) || (row!['blocked'] as num?)?.toInt() == 1) {
+    return NameHold.kept;
+  }
+  final parked =
+      (row['accepted'] as num?)?.toInt() != 1 &&
+      (row['archived'] as num?)?.toInt() == 1;
+  return parked ? NameHold.free : NameHold.ask;
+}
+
+// an add leaves the name settled when it was a scan off their screen.
+// any other add asks for the safety number in their chat; a re-add leaves
+// what was there, and a name taken over starts afresh
+Future<void> _noteHowAdded(
+  String id, {
+  required bool scanned,
+  required bool already,
+  required bool taken,
+}) async {
+  try {
+    final was = nameCheckOf(await session.getContact(id));
+    final now = scanned
+        ? 0
+        : taken
+        ? kNameAsk
+        : already
+        ? was
+        : was | kNameAsk;
+    if (now != was) await session.setNameCheck(id, now);
+  } catch (e) {
+    dlog('name check: not kept (${e.runtimeType})');
+  }
+}
 
 // the result line, and whether the link left the person in the contacts
 // (added now, or already there). a caller that acts on that asks this; the
 // line is in the app's language and is not compared with anything, and
 // empty when a chat opening is the answer.
-// [hidden] says who a shut vault holds, the app's state when not given
+// [hidden] says who a shut vault holds, the app's state when not given.
+// [scanned]: read off their screen with the camera, the one add that
+// settles who they are
 Future<(String, bool)> handleHaloUriAdded(
   String raw, {
   bool Function(String id)? hidden,
+  bool scanned = false,
 }) async {
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
@@ -8918,8 +9059,31 @@ Future<(String, bool)> handleHaloUriAdded(
     ss: sessionQuiet ? null : signalSession,
     row: session.getContact,
   );
+  // a name a request, an introduction or a group gave, never checked, is
+  // no reason to turn the link away: the person keeps the one they choose.
+  // a verified one, or one they checked, stays
+  var taken = false;
   if (bound != null && !_eqBytes(bound, cardKey)) {
-    return (l10n.appLinkOtherKey(parsed['id']!), false);
+    final id = parsed['id']!;
+    final row = await session.getContact(id);
+    final hold = appState._nameHold(id, row);
+    if (hold == NameHold.kept) {
+      return (
+        (row?['verified'] as num?)?.toInt() == 1
+            ? l10n.appLinkWordsVerified(id)
+            : l10n.appLinkWordsTaken(id),
+        false,
+      );
+    }
+    if (hold == NameHold.ask &&
+        !await askTakeName(
+          id,
+          chat: (row?['accepted'] as num?)?.toInt() == 1,
+        )) {
+      return ('', false);
+    }
+    await appState.releaseName(id);
+    taken = true;
   }
   // someone blocked stays blocked: an add would say they can be written to
   // while nothing of theirs is kept. the blocked list lets them back
@@ -8943,6 +9107,7 @@ Future<(String, bool)> handleHaloUriAdded(
     }
     await session.upsertContact(parsed['id']!, parsed['onion']!, '');
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    await _noteHowAdded(id, scanned: scanned, already: already, taken: taken);
     // nothing reaches them until a first message does: their chat opens,
     // and says so while it is empty
     if (sessionQuiet) {
@@ -8979,6 +9144,7 @@ Future<(String, bool)> handleHaloUriAdded(
     final wasIn = await session.isAccepted(id);
     final asked = !wasIn && await session.askedBefore(id);
     await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
+    await _noteHowAdded(id, scanned: scanned, already: wasIn, taken: taken);
     if (!sessionQuiet) await appState.subscribePeer(id);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
     // home and the pickers show them now, and their chat opens as a v2
@@ -9260,8 +9426,14 @@ enum LinkKin {
   stranger,
   // a contact on the same key: an add would add no one
   kept,
-  // a contact by these words on another key: the link is not them
+  // someone here by these words on another key, checked: the link does
+  // not take their place
   otherKey,
+  // the same, and verified
+  verified,
+  // someone here by these words on another key that a request, an
+  // introduction or a group gave and nobody checked: the person chooses
+  claimed,
   // a contact under other words that the person calls by these
   lookalike,
 }
@@ -9310,7 +9482,17 @@ Future<(LinkKin, String)> _linkKin(
   final nick = (row?['nickname'] as String?)?.trim();
   final name = nick == null || nick.isEmpty ? id : nick;
   if (bound != null && (cardKey == null || !_eqBytes(bound, cardKey))) {
-    return (LinkKin.otherKey, name);
+    return switch (cardKey == null
+        ? NameHold.kept
+        : appState._nameHold(id, row)) {
+      NameHold.kept =>
+        (row?['verified'] as num?)?.toInt() == 1
+            ? (LinkKin.verified, name)
+            : (LinkKin.otherKey, name),
+      NameHold.ask => (LinkKin.claimed, name),
+      // their chat was deleted: nobody here goes by it
+      NameHold.free => (LinkKin.stranger, id),
+    };
   }
   if (row != null && row['accepted'] == 1 && row['blocked'] != 1) {
     return (LinkKin.kept, name);
@@ -9766,7 +9948,14 @@ class AppIo {
         ss: signalSession,
         row: live.getContact,
       );
-      if (bound != null && !_eqBytes(bound, key)) {
+      // unless the name came with a request, an introduction or a group,
+      // nobody checked it and its chat was deleted: then it is free
+      if (bound != null &&
+          !_eqBytes(bound, key) &&
+          appState._nameFree(h, await live.getContact(h))) {
+        await appState.releaseName(h);
+        dlog('back-pair: a deleted name let go');
+      } else if (bound != null && !_eqBytes(bound, key)) {
         at = unboundIdOf(key);
         final held = await _boundIdentity(
           at,
@@ -19002,6 +19191,49 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // what a link may do about [id] held here on another key. only the
+  // everyday side's people are let go: a hidden chat's name, and anything
+  // in the decoy, stays as it is
+  NameHold _nameHold(String id, Map<String, Object?>? row) =>
+      sessionQuiet || _router.cardOf(id) != null
+      ? NameHold.kept
+      : nameHoldOf(row);
+
+  // an everyday name whose chat was deleted, as a first contact finds it:
+  // the same whichever session is on screen
+  bool _nameFree(String id, Map<String, Object?>? row) =>
+      _router.cardOf(id) == null && nameHoldOf(row) == NameHold.free;
+
+  // a name a request, an introduction or a group gave, let go so the one
+  // the person chose can have it: the chat or request goes as a delete or a
+  // decline takes it, and the session, the key and the address it was
+  // heard on go with it
+  Future<void> releaseName(String id) async {
+    final row = await live.getContact(id);
+    if (row == null) return;
+    final addr = SignalProtocolAddress(id, 1);
+    final xs = {
+      ((row['xpub'] as String?) ?? '').trim().toLowerCase(),
+      (await signalSession.peerXPubHex(id)) ?? '',
+    }..remove('');
+    if ((row['accepted'] as num?)?.toInt() == 1) {
+      await deleteConversation(id);
+    } else {
+      await live.declineRequest(id);
+    }
+    await signalSession.serial<void>(id, () async {
+      await signalSession.sessionStore.deleteSession(addr);
+      await signalSession.identityStore.removePeerIdentity(addr);
+    });
+    for (final x in xs) {
+      if (_xPubToHaloId[x] == id) _xPubToHaloId.remove(x);
+      _io.unlisten(x);
+    }
+    await forgetPeerFc(id);
+    await live.forgetName(id);
+    dlog('name: let go for the one chosen');
+  }
+
   Future<void> archive(String haloId) async {
     await session.setArchived(haloId, true);
     await refreshContacts();
@@ -22767,7 +22999,11 @@ Future<void> showAddContact(BuildContext context) async {
 
   if (!context.mounted) return;
   // a room shows what its link says first: put away, nothing happened
-  final status = await takeOwnLink(context, uri);
+  final status = await takeOwnLink(
+    context,
+    uri,
+    act: action == 'scan' ? addScanned : handleHaloUri,
+  );
   if (status == null) return;
   await appState.refreshContacts();
   if (!context.mounted) return;
@@ -23346,7 +23582,11 @@ class _DevScreenState extends State<DevScreen> {
     }
 
     if (!mounted) return;
-    final status = await takeOwnLink(context, uri);
+    final status = await takeOwnLink(
+      context,
+      uri,
+      act: action == 'scan' ? addScanned : handleHaloUri,
+    );
     if (status == null) return;
     await appState.refreshContacts();
     final parsed = parseHaloUri(uri);

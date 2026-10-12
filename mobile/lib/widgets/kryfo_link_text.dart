@@ -10,7 +10,14 @@ import 'package:flutter/services.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart';
 import '../main.dart'
-    show LinkKin, appState, handleHaloUri, linkKinOf, parseHaloUri, session;
+    show
+        LinkKin,
+        appState,
+        handleHaloUri,
+        linkKinOf,
+        parseHaloUri,
+        rootNavKey,
+        session;
 import '../rooms.dart';
 import '../screens/room_preview_sheet.dart';
 import '../theme.dart';
@@ -156,17 +163,25 @@ Future<String?> takeOutsideLink(
         // their chat is here: the card goes nowhere near the door again
         return l10n.kryfoLinkTextYouAlreadyHave(unmarked(name));
       case LinkKin.otherKey:
-        // the words of someone here on another key: never shown as them,
-        // and the door would turn it away
+      case LinkKin.verified:
+        // the words of someone here on another key, verified or checked:
+        // the door would turn it away. which of the two is who they say
+        // only the safety number tells
         await showNoticeSheet(
           context,
-          title: l10n.kryfoLinkTextNotTheOne(unmarked(name)),
-          line: l10n.appLinkOtherKey(who!),
+          title: l10n.nameTakenTitle,
+          line: k == LinkKin.verified
+              ? l10n.appLinkWordsVerified(who!)
+              : l10n.appLinkWordsTaken(who!),
           ok: l10n.appOk,
           shutOnLock: g,
           titleLines: 2,
         );
         return null;
+      case LinkKin.claimed:
+        // the words a request, an introduction or a group gave someone
+        // here, never checked: the door asks which one keeps them
+        ok = true;
       case LinkKin.lookalike:
         ok = await _askAdd(
           context,
@@ -183,6 +198,29 @@ Future<String?> takeOutsideLink(
   if (moves) takenDoors.take(room!);
   HapticFeedback.selectionClick();
   return act(link);
+}
+
+/// an invite read off the other phone's screen with the camera: the one
+/// add that settles who they are
+Future<String> addScanned(String link) => handleHaloUri(link, scanned: true);
+
+/// the question when a link names someone here whose words a request, an
+/// introduction or a group gave, on another key, and nobody checked them:
+/// true lets the link have them. [chat]: the other one's chat goes too
+Future<bool> askTakeNameSheet(String id, {required bool chat}) async {
+  final ctx = rootNavKey.currentContext;
+  if (ctx == null || !ctx.mounted || lockGuard.isLocked()) return false;
+  return showConfirmSheet(
+    ctx,
+    title: l10n.nameTakenTitle,
+    figure: id,
+    line: chat ? l10n.nameTakenChatLine : l10n.nameTakenLine,
+    yes: l10n.nameTakenUse,
+    keep: l10n.nameTakenKeep,
+    rose: false,
+    shutOnLock: lockGuard,
+    titleLines: 2,
+  );
 }
 
 /// a link scanned or pasted here. a room shows what its link says and

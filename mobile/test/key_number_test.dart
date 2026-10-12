@@ -41,7 +41,12 @@ List<int> _own(SignalSession ss) =>
     ss.identityKeyPair.getPublicKey().serialize();
 
 Future<String> _inviteOf(SignalSession ss, {String id = _words}) async =>
-    haloUriV3(id, 'o.onion', await makePreKeyBundleB64(ss), 'ab' * 32);
+    haloUriV3(
+      id,
+      'o.onion',
+      Uri.encodeQueryComponent(await makePreKeyBundleB64(ss)),
+      'ab' * 32,
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -74,8 +74,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactCardMessageMeOn => 'Nhắn tôi trên';
 
   @override
-  String get contactCardScanItOrType =>
-      'Quét mã, hoặc nhập ba từ vào Kryfo.\nNgoài ba từ đó, thẻ này không biết gì về bạn.';
+  String get contactCardScanToAdd =>
+      'Quét mã bằng Kryfo để thêm tôi.\nNgoài ba từ đó, thẻ này không biết gì về bạn.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -853,6 +853,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'Có vẻ là lừa đảo';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'Tự nhận là $shown, một cái tên đã có người khác dùng ở đây';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1731,6 +1736,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'Mã bảo mật đã thay đổi';
+
+  @override
+  String get chatCompareTitle => 'So sánh số an toàn';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'Ba từ có thể bị sao chép. Để biết cuộc trò chuyện này đúng là với $peerName, hãy so sánh số an toàn với họ, trực tiếp hoặc qua một cuộc gọi.';
+  }
+
+  @override
+  String get chatCompareLater => 'Để sau';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3222,8 +3238,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'Nếu $peerName thấy cùng một số, tin nhắn của bạn chỉ riêng hai người biết. So sánh trực tiếp hoặc qua một cuộc gọi bạn tin tưởng là cách chắc chắn nhất - nhưng việc này không bắt buộc, không bao giờ là điều kiện để trò chuyện.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'So sánh cả 12 nhóm số với $peerName, trực tiếp hoặc qua một cuộc gọi bạn tin tưởng. Nếu nhóm nào cũng khớp, không ai đứng giữa và tin nhắn chỉ dành cho hai người.';
   }
 
   @override
@@ -6119,11 +6135,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'Đây không phải $who trong các cuộc trò chuyện của bạn';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'Bạn đặt tên $who cho một người trong các cuộc trò chuyện. Liên kết này là của người khác. Chỉ thêm nếu bạn biết nó đến từ đâu.';
   }
@@ -7931,21 +7942,41 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devChatOptions => 'Tùy chọn trò chuyện';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'Liên kết này tự nhận là $id, nhưng khóa không khớp. Không có gì được thêm.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'Tự nhận là $shown, nhưng khóa không khớp';
-  }
-
-  @override
   String get requestsSomeoneNew => 'Người mới';
+
+  @override
+  String get nameNotChecked => 'Chưa kiểm tra';
+
+  @override
+  String get nameTakenTitle => 'Người khác đang dùng ba từ này';
+
+  @override
+  String get nameTakenLine =>
+      'Một người ở đây có ba từ này qua một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
+
+  @override
+  String get nameTakenChatLine =>
+      'Cuộc trò chuyện của bạn dưới ba từ này đến từ một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó: cuộc trò chuyện kia sẽ bị xóa, và bạn so sánh số an toàn trong cuộc trò chuyện mới.';
+
+  @override
+  String get nameTakenUse => 'Dùng liên kết này';
+
+  @override
+  String get nameTakenKeep => 'Giữ người đang có';
 
   @override
   String get appYourOwnInvite =>
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'Ở đây đã có người mang tên $id, với một khóa khác. Hãy so sánh số an toàn với họ để biết ai là ai. Không có gì được thêm.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'Bạn đã xác minh $id với một khóa khác. Không có gì được thêm.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

@@ -81,7 +81,7 @@ class ContactCard extends StatelessWidget {
           Container(height: 1, color: const Color(0xFF2F2922)),
           const SizedBox(height: 14),
           Text(
-            l10n.contactCardScanItOrType,
+            l10n.contactCardScanToAdd,
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 11,
