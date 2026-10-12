@@ -185,6 +185,17 @@ void main() {
       }
     });
 
+    test('automatic finding a way in is no failed reconnect', () {
+      for (final r in [
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+      ]) {
+        expect(reconnectFailedWith(r, ctrlSilent: 5), isFalse, reason: r);
+      }
+      // no mode yet still is: a new process hands the kept mode over
+      expect(reconnectFailedWith('error: no bridge mode yet'), isTrue);
+    });
+
     test('half an hour on the clock since boot', () {
       const last = BootTime(100 * min, 7);
       expect(autoRestartDue(null, const BootTime(5 * min, 7)), isTrue);
@@ -297,6 +308,33 @@ void main() {
       up = const BootTime(110 * min, 7);
       expect(await life(), [AutoStep.reconnect, AutoStep.none]);
       expect(log.where((e) => e == 'restart').length, 1);
+    });
+
+    test('never restarts while automatic is connecting', () async {
+      answer = 'error: automatic is connecting';
+      seen = _view(stuckSince: t0);
+      var now = t0;
+      final p = AutoRestart(
+        view: () => seen,
+        reconnect: () async {
+          log.add('reconnect');
+          return answer;
+        },
+        restart: () async {
+          log.add('restart');
+          return reopens;
+        },
+        clock: () async => up,
+        now: () => now,
+      );
+      final steps = <AutoStep>[];
+      // a tick a minute, past the first reconnect and past the next ones
+      for (var m = 0; m <= 30; m++) {
+        now = at(m);
+        steps.add(await p.tick());
+      }
+      expect(steps, isNot(contains(AutoStep.restart)));
+      expect(log, ['reconnect', 'reconnect', 'reconnect']);
     });
 
     test('back on screen while the stamp was written: no restart', () async {

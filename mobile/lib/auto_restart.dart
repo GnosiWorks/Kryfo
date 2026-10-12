@@ -114,8 +114,10 @@ AutoStep autoStepAt(
 }
 
 /// errors that say tor could not be reached in this process. asleep on
-/// purpose, replaced by another or turned away by a guard is no failure,
-/// and one control call left unanswered is not yet a dead port
+/// purpose, replaced by another, turned away by a guard or left to
+/// automatic while it finds a way in is no failure, and one control call
+/// left unanswered is not yet a dead port. no mode yet is: only a new
+/// process hands the kept mode over again
 bool reconnectFailedWith(String r, {int ctrlSilent = 0}) {
   if (!r.startsWith('error')) return false;
   if (const {
@@ -124,6 +126,8 @@ bool reconnectFailedWith(String r, {int ctrlSilent = 0}) {
     'error: one already running',
     'error: too soon',
     'error: no data dir',
+    'error: automatic is connecting',
+    'error: automatic has no way in yet',
   }.contains(r)) {
     return false;
   }
