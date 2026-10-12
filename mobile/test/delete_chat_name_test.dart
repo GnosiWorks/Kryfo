@@ -99,6 +99,9 @@ void main() {
     expect(nameHoldOf(r(flags: 0, archived: 1)), NameHold.kept);
     expect(nameHoldOf(r(flags: kNameAsk, accepted: 1)), NameHold.kept);
     expect(nameHoldOf(null), NameHold.kept);
+    // a seat in a group or a room is never handed over with the words
+    expect(nameHoldOf(r(), seated: true), NameHold.kept);
+    expect(nameHoldOf(r(archived: 1), seated: true), NameHold.kept);
     // nor is the developer's ever let go
     expect(nameHoldOf(r(id: 'dev:marios')), NameHold.kept);
   });
@@ -116,14 +119,31 @@ void main() {
       'peer_bundle': 'b',
       'avatar': 4,
       'name_check': 3,
+      'nickname': 'Mum',
+      'note': 'from the cafe',
+      'pinned': 1,
+      'muted': 1,
+      'voice_disguise': 1,
     });
     await db.mem.insert('vouches', {
       'halo_id': _peer,
       'voucher_id': 'a-friend-here',
       'created_at': 1,
     });
+    // a vouch they gave someone else goes too
+    await db.mem.insert('vouches', {
+      'halo_id': 'someone-they-named',
+      'voucher_id': _peer,
+      'created_at': 1,
+    });
     await db.forgetName(_peer);
     final row = db.mem.rows('contacts').single;
+    expect(row['nickname'], isNull);
+    expect(row['note'], isNull);
+    expect(row['pinned'], 0);
+    expect(row['muted'], 0);
+    expect(row['voice_disguise'], isNull);
+    expect(await db.inAnyGroup(_peer), isFalse);
     expect(row['xpub'], '');
     expect(row['peer_bundle'], isNull);
     expect(row['avatar'], isNull);

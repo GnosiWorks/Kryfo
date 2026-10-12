@@ -2651,13 +2651,40 @@ class HaloDb implements GroupOwedStore {
         'supporter_badge': null,
         'vouched_by': null,
         'vouched_at': null,
+        'nickname': null,
+        'note': null,
+        'atmosphere': null,
+        'pinned': 0,
+        'muted': 0,
+        'voice_disguise': null,
         'name_check': kNameAsk | kNameSays,
       },
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
+    // vouches for them, and the ones they gave
     await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  // a member of a group or a room here
+  Future<bool> inAnyGroup(String haloId) async {
+    final db = await open();
+    for (final (t, c) in const [
+      ('group_members', 'halo_id'),
+      ('room_keys', 'member'),
+    ]) {
+      final r = await db.query(
+        t,
+        columns: [c],
+        where: '$c = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      if (r.isNotEmpty) return true;
+    }
+    return false;
   }
 
   Future<void> setNameCheck(String haloId, int flags) async {
@@ -8999,8 +9026,12 @@ enum NameHold {
   free,
 }
 
-NameHold nameHoldOf(Map<String, Object?>? row) {
-  if (!nameUnchecked(row) || (row!['blocked'] as num?)?.toInt() == 1) {
+/// [seated]: they are in a group or a room here. whoever took the words
+/// would take that seat as well, so the name stays
+NameHold nameHoldOf(Map<String, Object?>? row, {bool seated = false}) {
+  if (seated ||
+      !nameUnchecked(row) ||
+      (row!['blocked'] as num?)?.toInt() == 1) {
     return NameHold.kept;
   }
   final parked =
@@ -9151,15 +9182,21 @@ Future<(String, bool)> handleHaloUriAdded(
   var taken = false;
   if (bound != null && !_eqBytes(bound, cardKey)) {
     final id = parsed['id']!;
+    (String, bool) refused(Map<String, Object?>? row) => (
+      (row?['verified'] as num?)?.toInt() == 1
+          ? l10n.appLinkWordsVerified(id)
+          : l10n.appLinkWordsTaken(id),
+      false,
+    );
     final row = await session.getContact(id);
-    final hold = appState._nameHold(id, row);
-    if (hold == NameHold.kept) {
-      return (
-        (row?['verified'] as num?)?.toInt() == 1
-            ? l10n.appLinkWordsVerified(id)
-            : l10n.appLinkWordsTaken(id),
-        false,
-      );
+    final hold = await appState._nameHold(id, row);
+    if (hold == NameHold.kept) return refused(row);
+    // the card has to be one a session can be built on before anything
+    // here is let go for it
+    final bundle = parsed['bundle'];
+    if (bundle != null) {
+      final bad = bundleFault(bundle);
+      if (bad != null) return (l10n.appBundleError(bad), false);
     }
     if (hold == NameHold.ask &&
         !await askTakeName(
@@ -9168,8 +9205,21 @@ Future<(String, bool)> handleHaloUriAdded(
         )) {
       return ('', false);
     }
-    await appState.releaseName(id);
-    taken = true;
+    // the question can stay up a while: what holds the name is read again
+    final now = await _boundIdentity(
+      id,
+      ss: sessionQuiet ? null : signalSession,
+      row: session.getContact,
+    );
+    if (now != null && !_eqBytes(now, cardKey)) {
+      final row2 = await session.getContact(id);
+      final hold2 = await appState._nameHold(id, row2);
+      if (hold2 == NameHold.kept || (hold2 == NameHold.ask && hold != hold2)) {
+        return refused(row2);
+      }
+      await appState.releaseName(id);
+      taken = true;
+    }
   }
   // someone blocked stays blocked: an add would say they can be written to
   // while nothing of theirs is kept. the blocked list lets them back
@@ -9477,6 +9527,37 @@ String? inviteKeyNumber(String invite) {
   return k == null ? null : keyNumber(k);
 }
 
+// an opener the proof-of-work gate and the stranger cap will take, read
+// before a deleted chat's words are let go for it. once let go nothing of
+// the old one is left, so the cap counts from none and no vouch spares it
+// the proof
+bool _firstWouldPass(UnwrappedMessage env) =>
+    env.powNonce != null &&
+    verifyPow(env.powText ?? env.message, env.powNonce!, powBits) &&
+    !strangerCapHolds(accepted: false, vouched: false, have: 0, cap: 2);
+
+/// what is wrong with a card's prekey bundle, null when a session can be
+/// built on it: it reads, and its signed prekey is signed by its identity
+Object? bundleFault(String bundleB64) {
+  try {
+    final b = preKeyBundleOf(bundleB64);
+    final spk = b.getSignedPreKey();
+    final sig = b.getSignedPreKeySignature();
+    if (spk == null ||
+        sig == null ||
+        !Curve.verifySignature(
+          b.getIdentityKey().publicKey,
+          spk.serialize(),
+          sig,
+        )) {
+      return const FormatException('signed prekey');
+    }
+    return null;
+  } catch (e) {
+    return e;
+  }
+}
+
 /// what an invite's id is to the people here
 enum LinkKin {
   // no one here goes by it
@@ -9541,7 +9622,7 @@ Future<(LinkKin, String)> _linkKin(
   if (bound != null && (cardKey == null || !_eqBytes(bound, cardKey))) {
     return switch (cardKey == null
         ? NameHold.kept
-        : appState._nameHold(id, row)) {
+        : await appState._nameHold(id, row)) {
       NameHold.kept =>
         (row?['verified'] as num?)?.toInt() == 1
             ? (LinkKin.verified, name)
@@ -10009,7 +10090,8 @@ class AppIo {
       // nobody checked it and its chat was deleted: then it is free
       if (bound != null &&
           !_eqBytes(bound, key) &&
-          appState._nameFree(h, await live.getContact(h))) {
+          _firstWouldPass(env) &&
+          await appState._nameFree(h, await live.getContact(h))) {
         await appState.releaseName(h);
         dlog('back-pair: a deleted name let go');
       } else if (bound != null && !_eqBytes(bound, key)) {
@@ -19275,15 +19357,24 @@ class AppState extends ChangeNotifier {
   // what a link may do about [id] held here on another key. only the
   // everyday side's people are let go: a hidden chat's name, and anything
   // in the decoy, stays as it is
-  NameHold _nameHold(String id, Map<String, Object?>? row) =>
-      sessionQuiet || _router.cardOf(id) != null
+  Future<NameHold> _nameHold(String id, Map<String, Object?>? row) async =>
+      sessionQuiet || _router.keeps(id)
       ? NameHold.kept
-      : nameHoldOf(row);
+      : nameHoldOf(row, seated: await _seated(id));
+
+  // in a group or a room here: on the everyday side, or in the open vault
+  Future<bool> _seated(String id) async {
+    for (final d in [live, ?_openVault]) {
+      if (await d.inAnyGroup(id)) return true;
+    }
+    return false;
+  }
 
   // an everyday name whose chat was deleted, as a first contact finds it:
   // the same whichever session is on screen
-  bool _nameFree(String id, Map<String, Object?>? row) =>
-      _router.cardOf(id) == null && nameHoldOf(row) == NameHold.free;
+  Future<bool> _nameFree(String id, Map<String, Object?>? row) async =>
+      !_router.keeps(id) &&
+      nameHoldOf(row, seated: await _seated(id)) == NameHold.free;
 
   // a name a request, an introduction or a group gave, let go so the one
   // the person chose can have it: the chat or request goes as a delete or a

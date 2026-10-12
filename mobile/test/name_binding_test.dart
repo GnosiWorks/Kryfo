@@ -1319,6 +1319,12 @@ void main() {
       'jade',
       'kelp',
       'lake',
+      'moor',
+      'nook',
+      'oak',
+      'pond',
+      'quay',
+      'reed',
     ];
     var round = -1;
     late String words;
@@ -1460,6 +1466,96 @@ void main() {
       expect(nameCheckOf(live.people[words]), 3);
       await sessionIsWith(alice, mallory);
     });
+
+    test('someone a group holds keeps their words: no link takes their '
+        'seat', () async {
+      // a card from a group's member list
+      live.group('g-seat', [words]);
+      await live.upsertContactStub(words, 'o-m', mallory.xPub);
+      expect(nameCheckOf(live.people[words]), 3);
+      expect(await linkKinOf(await link(alice)), (LinkKin.otherKey, words));
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsTaken(words),
+        false,
+      ));
+      expect(asked, isEmpty);
+      expect(live.people[words], containsPair('xpub', mallory.xPub));
+      expect(live.members['g-seat'], [words]);
+    });
+
+    test('a deleted chat whose person sits in a group keeps its words, '
+        'for a link and for a first contact', () async {
+      await squat();
+      await app.deleteConversation(words);
+      live.group('g-seat2', [words]);
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsTaken(words),
+        false,
+      ));
+      await app.receiveOnion([
+        await _opener(alice, words, aliceEd, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isTrue);
+      expect(live.people[words], containsPair('xpub', mallory.xPub));
+      expect(dropped, isEmpty);
+    });
+
+    test('a card no session can be built on lets nothing go', () async {
+      await squat();
+      final j =
+          jsonDecode(
+                utf8.decode(base64Decode(await makePreKeyBundleB64(alice.ss))),
+              )
+              as Map<String, dynamic>;
+      j['signedPreKeySignature'] = base64Encode(List.filled(64, 1));
+      final bad = haloUriV3(
+        words,
+        'o-real',
+        Uri.encodeQueryComponent(base64Encode(utf8.encode(jsonEncode(j)))),
+        'ab' * 32,
+      );
+      final (line, added) = await handleHaloUriAdded(bad);
+      expect(added, isFalse);
+      expect(line, isNot(''));
+      expect(asked, isEmpty);
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(live.people[words], containsPair('xpub', mallory.xPub));
+      expect(live.msgs.where((m) => m['peer_id'] == words), hasLength(1));
+      await sessionIsWith(mallory, alice);
+    });
+
+    test('what changed while the question was up is read again before '
+        'anything goes', () async {
+      await squat();
+      askTakeName = (id, {required chat}) async {
+        asked.add((id, chat));
+        // verified meanwhile, from their chat
+        live.people[words]!['verified'] = 1;
+        return true;
+      };
+      expect(await handleHaloUriAdded(await link(alice)), (
+        l10n.appLinkWordsVerified(words),
+        false,
+      ));
+      expect(asked, hasLength(1));
+      expect(live.people[words], containsPair('xpub', mallory.xPub));
+      await sessionIsWith(mallory, alice);
+    });
+
+    test(
+      'a deleted chat\'s words go only to an opener the gate takes',
+      () async {
+        await squat();
+        await app.deleteConversation(words);
+        // no proof of work: dropped at the gate, so nothing is let go for it
+        await app.receiveOnion([await _opener(alice, words, aliceEd, _said)]);
+        await _settle();
+        expect(live.people[words], containsPair('xpub', mallory.xPub));
+        expect(dropped, isEmpty);
+        expect(live.msgs.where((m) => m['peer_id'] == words), isEmpty);
+      },
+    );
 
     test('in the decoy nothing is let go, and the everyday side is not '
         'touched', () async {

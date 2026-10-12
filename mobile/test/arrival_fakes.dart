@@ -514,6 +514,10 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<bool> inAnyGroup(String haloId) async =>
+      _hit('inAnyGroup', haloId, members.values.any((m) => m.contains(haloId)));
+
+  @override
   Future<void> forgetName(String haloId) async {
     _hit('forgetName', haloId, null);
     final p = people[haloId];
@@ -524,7 +528,11 @@ class ArrivalRows implements HaloDb {
     p['name_check'] = 3;
     p.remove('peer_bundle');
     p.remove('avatar');
+    p.remove('nickname');
     vouches.remove(haloId);
+    for (final v in vouches.values) {
+      v.remove(haloId);
+    }
     shields.remove(haloId);
   }
 
