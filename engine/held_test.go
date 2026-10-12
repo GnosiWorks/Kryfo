@@ -694,3 +694,28 @@ func TestAFreeLeavesANewInviteAddressAlone(t *testing.T) {
 	}
 }
 
+// let go of after the ack checked and before it held: the hold is not
+// taken, and the line goes to the app again
+func TestAFreeDuringAnAckComesAgain(t *testing.T) {
+	pollAckReset(t)
+	set := loadSeen(filepath.Join(t.TempDir(), "seen"))
+	pollAckPut(t, set, "a")
+	nostrMu.Lock()
+	nostrInboxDone[0].at = nostr.Timestamp(time.Now().Unix())
+	nostrMu.Unlock()
+	b := pollRaw(t)
+	ackHook = func() { markHeldFile(set.path, seenFreeMark) }
+	t.Cleanup(func() { ackHook = nil })
+	if r := nostrAck(b.K, `{"f":[],"h":[0],"g":[""]}`); r != "ok" {
+		t.Fatal(r)
+	}
+	ackHook = nil
+	if set.heldCount() != 0 || loadSeen(set.path).heldCount() != 0 {
+		t.Fatal("held past the mark")
+	}
+	got := pollRaw(t)
+	if bodies(got) != "a" {
+		t.Fatalf("not offered again: %q", bodies(got))
+	}
+	nostrAck(got.K, "")
+}

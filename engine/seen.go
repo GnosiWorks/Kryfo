@@ -347,20 +347,37 @@ func (s *seenIDs) claim(id nostr.ID) bool {
 // address has no room for it or the relay no longer keeps it, and the
 // caller takes it as kept
 func (s *seenIDs) hold(id nostr.ID, at nostr.Timestamp, name string, now time.Time, from, until int64) bool {
+	held, _ := s.holdIf(id, at, name, now, from, until, nil)
+	return held
+}
+
+// as hold, unless the address was let go of since heldGen was freed: then
+// nothing is held and stale is true. the check and the line are one step
+// against markHeldFile, so a hold lands wholly before a "!" or not at all
+func (s *seenIDs) holdSince(id nostr.ID, at nostr.Timestamp, name string, now time.Time, from, until int64, freed uint64) (held, stale bool) {
+	return s.holdIf(id, at, name, now, from, until, &freed)
+}
+
+func (s *seenIDs) holdIf(id nostr.ID, at nostr.Timestamp, name string, now time.Time, from, until int64, freed *uint64) (held, stale bool) {
 	group := heldGroup(id, name)
+	seenFileMu.Lock()
+	defer seenFileMu.Unlock()
+	if freed != nil && heldGen(s.path) != *freed {
+		return false, true
+	}
 	s.mu.Lock()
 	delete(s.queued, id)
 	s.pruneHeld(now)
 	_, had := s.held[id]
 	if heldGone(at, now) || (!had && !heldRoom(s.held, group)) {
 		s.mu.Unlock()
-		return false
+		return false, false
 	}
 	h := heldAt{at: at, group: group, from: from, until: until}
 	s.held[id] = h
 	s.mu.Unlock()
-	s.write([]string{heldLine(id, h)})
-	return true
+	s.writeLocked([]string{heldLine(id, h)})
+	return true, false
 }
 
 // freed ids a relay asked for, by its own answer, did not have: by file,
@@ -480,7 +497,12 @@ func (s *seenIDs) write(lines []string) {
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
-	if fileGone(s.path) {
+	s.writeLocked(lines)
+}
+
+// seenFileMu held
+func (s *seenIDs) writeLocked(lines []string) {
+	if s.path == "" || len(lines) == 0 || engineHeld.Load() || fileGone(s.path) {
 		return
 	}
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
@@ -627,17 +649,19 @@ func seenWhileRunning(ctx context.Context, s *seenIDs) {
 // a runner asks for what it lets go of on its next connection or probe,
 // never because of the mark
 func markHeldFile(path, mark string) {
-	markHeldRunning(path, mark)
+	// the file first, then the running sets: a hold that got in before the
+	// mark is then marked with the rest
+	defer markHeldRunning(path, mark)
 	if path == "" || engineHeld.Load() {
 		return
 	}
+	seenFileMu.Lock()
+	defer seenFileMu.Unlock()
 	if mark == seenFreeMark {
 		heldFreedMu.Lock()
 		heldFreed[path]++
 		heldFreedMu.Unlock()
 	}
-	seenFileMu.Lock()
-	defer seenFileMu.Unlock()
 	if fileGone(path) {
 		return
 	}

@@ -2414,7 +2414,7 @@ func nostrAck(token, failed string) string {
 		left[i] = g
 	}
 	var kept, held []inboxDone
-	var names []string
+	var names, heldL []string
 	var backL []string
 	var backD []inboxDone
 	for i, l := range b.lines {
@@ -2431,15 +2431,35 @@ func nostrAck(token, failed string) string {
 		case isHeld:
 			held = append(held, d)
 			names = append(names, g)
+			heldL = append(heldL, l)
 		default:
 			kept = append(kept, d)
 		}
 	}
 	pollRequeueLocked(backL, backD)
 	nostrMu.Unlock()
-	markHandedOver(append(kept, markHeld(held, names, time.Now())...))
+	if h := ackHook; h != nil {
+		h()
+	}
+	took, stale := markHeld(held, names, time.Now())
+	markHandedOver(append(kept, took...))
+	// let go of while this ran: to the app again, as above
+	if len(stale) > 0 {
+		var l []string
+		var d []inboxDone
+		for _, i := range stale {
+			l = append(l, heldL[i])
+			d = append(d, held[i])
+		}
+		nostrMu.Lock()
+		pollRequeueLocked(l, d)
+		nostrMu.Unlock()
+	}
 	return "ok"
 }
+
+// called between nostrAck's check and its holds, for the tests
+var ackHook func()
 
 // the app's list of places it could not keep, "[...]", or that list, the
 // places it leaves on the relay until it has room and the group each of
@@ -2463,12 +2483,21 @@ func ackLists(raw string) (failed, held []int, groups []string, err error) {
 
 // events the app left on the relay, each in the group named for it: held
 // where there is room, the rest returned to be taken as kept. the anchor
-// moves past them either way, a held one comes back by its id
-func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
-	var kept []inboxDone
+// moves past them either way, a held one comes back by its id. stale: the
+// places of those let go of since the poll, which are not held
+func markHeld(done []inboxDone, names []string, now time.Time) (kept []inboxDone, stale []int) {
 	saves := map[*seenIDs]func(int64){}
 	for i, d := range done {
-		if d.set == nil || !d.set.hold(d.id, d.at, names[i], now, d.from, d.until) {
+		if d.set == nil {
+			kept = append(kept, d)
+			continue
+		}
+		held, late := d.set.holdSince(d.id, d.at, names[i], now, d.from, d.until, d.freed)
+		if late {
+			stale = append(stale, i)
+			continue
+		}
+		if !held {
 			kept = append(kept, d)
 			continue
 		}
@@ -2479,7 +2508,7 @@ func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
 	for _, save := range saves {
 		save(0)
 	}
-	return kept
+	return kept, stale
 }
 
 // a walk brings its stored wraps a page at a time, and each page is a random
