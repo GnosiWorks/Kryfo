@@ -63,13 +63,16 @@ func TestReportedFlightStaysOff(t *testing.T) {
 	if !routeOK() {
 		t.Skipf("the route never came up before the flight: %s", routeLine())
 	}
-	sampled0, used0 := guardCount(t)
-	t.Logf("before the flight: %s, guards %d sampled %d used", routeLine(), sampled0, used0)
+	t.Logf("before the flight: %s", routeLine())
 
 	plane.cut(true)
 	networkChangedTo(false)
 	took := time.Now()
 	time.Sleep(5 * time.Second)
+	// counted once tor is off: the dials cut in the moment before it went
+	// off may sample a guard or two, and the flight is what is judged
+	sampled0, used0 := guardCount(t)
+	t.Logf("parked: guards %d sampled %d used", sampled0, used0)
 	runs := reconnectRuns.Load()
 	for time.Since(took) < flightTime() {
 		time.Sleep(30 * time.Second)
