@@ -69,6 +69,18 @@ void main() {
     expect(p.claims, hasLength(2));
   });
 
+  test('a handle let go of while the claim was being made is not claimed '
+      'again', () async {
+    final p = _Phone();
+    var held = true;
+    // the release lands while the invite and the bio are read
+    p.store['my_handle_bio'] = 'hi';
+    final r = p.repoint.repoint('wren', still: () => held);
+    held = false;
+    expect(await r, isNull);
+    expect(p.claims, isEmpty);
+  });
+
   test('a claim the registry refused is sent again next time', () async {
     final p = _Phone(answer: 'error: refused');
     expect(await p.repoint.repoint('wren'), 'error: refused');

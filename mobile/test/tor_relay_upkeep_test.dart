@@ -766,6 +766,31 @@ void main() {
       expect(app.lastCheckHow, contains('"how":"ok_capped"'));
     });
 
+    testWidgets('with almost none of its job left, wakes nothing', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      log.clear();
+      var n = -1;
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 88)),
+            )
+            .then((v) => n = v),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(n, 0);
+      expect(app.lastCheckHow, contains('"how":"late"'));
+      expect(log, isNot(contains('resume')));
+      expect(log, isNot(contains('kick')));
+    });
+
     testWidgets('waits for tor no further than its job allows', (t) async {
       final live = _Flaky();
       useDatabasesForTest(live, Session(live));

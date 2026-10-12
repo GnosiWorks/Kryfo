@@ -37,6 +37,7 @@ const _k = 'blocked-once-before'; // blocked from a request
 const _n = 'someone-new-here'; // never seen
 const _h = 'hidden-wreck-tone'; // a hidden chat, who introduces
 const _d = 'deleted-chat-here'; // deleted here before
+const _f = 'fresh-face-here'; // met on a card in one test only
 
 class _Engine implements HaloEngine {
   @override
@@ -317,4 +318,54 @@ void main() {
       expect(await w.app.pairRead(_n, backPaired: true), isFalse);
     },
   );
+
+  test('a hidden chat\'s frame over the pair address is never noted outside '
+      'the vault', () async {
+    final w = await _World.make(hidden: true);
+    final k = await _keysOf();
+    w.vault.people[_h]!['xpub'] = k.x;
+    w.vault.people[_h]!['back_paired'] = 0;
+    await w.app.receiveRelay([
+      (
+        peer: k.x,
+        cipher: jsonEncode({
+          'halo_ctl': 'bundle',
+          'from': _h,
+          'bundle': k.card,
+          'want': false,
+        }),
+      ),
+    ]);
+    await _settle();
+    expect(await w.app.pairRead(_h, backPaired: false), isFalse);
+    final kept = await const FlutterSecureStorage().read(key: 'pair_read');
+    expect(kept == null || !kept.contains(_h), isTrue, reason: kept);
+  });
+
+  test('a frame noted before the first-contact keys were read keeps what '
+      'was stored', () async {
+    // the counter did not read, so nothing of first contact was loaded. a
+    // face no other test here has met: the signal store is the process's
+    await const FlutterSecureStorage().write(
+      key: 'pair_read',
+      value: jsonEncode(['someone-before']),
+    );
+    final w = await _World.make();
+    final k = await _keysOf();
+    await w.introduce(_f, xPub: k.x);
+    await w.app.receiveRelay([
+      (
+        peer: k.x,
+        cipher: jsonEncode({
+          'halo_ctl': 'bundle',
+          'from': _f,
+          'bundle': k.card,
+          'want': false,
+        }),
+      ),
+    ]);
+    await _settle();
+    final kept = await const FlutterSecureStorage().read(key: 'pair_read');
+    expect((jsonDecode(kept!) as List).toSet(), {'someone-before', _f});
+  });
 }

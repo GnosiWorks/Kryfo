@@ -1200,6 +1200,8 @@ const kCheckReadyBy = 90;
 const kCheckListenedBy = 95;
 const kCheckKickBy = 105;
 const kCheckLoopBy = 120;
+// less than this left before kCheckReadyBy, and tor is not woken at all
+const kCheckWakeLeast = Duration(seconds: 5);
 // a job older than this is someone else's clock
 const kCheckJobOldest = Duration(minutes: 10);
 
@@ -13352,6 +13354,11 @@ class AppState extends ChangeNotifier {
     }
     var how = 'started';
     try {
+      // too little of the job left to wake tor and be heard: nothing starts
+      if (left(kCheckReadyBy) < kCheckWakeLeast) {
+        how = 'late';
+        return 0;
+      }
       final woke = await _torWake().timeout(
         left(kCheckReadyBy),
         onTimeout: () => false,
@@ -14212,6 +14219,7 @@ class AppState extends ChangeNotifier {
     _fcCounterTimer = null;
     // a counter that does not read leaves the invite address unheard, never
     // moved or taken as 0, and is read again a while later
+    await _loadPairSeen();
     try {
       _fcCounter = int.tryParse(await readFcCounter() ?? '') ?? 0;
     } catch (e) {
@@ -14237,15 +14245,6 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       _peerFcUnread = true;
       dlog('peer fc map unreadable, kept as it is: ${e.runtimeType}');
-    }
-    try {
-      final raw = await st.read(key: 'pair_read');
-      if (raw != null && raw.isNotEmpty) {
-        _pairSeen.addAll((jsonDecode(raw) as List).cast<String>());
-      }
-    } catch (e) {
-      _pairSeenUnread = true;
-      dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
     }
     await _sweepPeerFc();
     _fcLoaded = true;
@@ -14351,6 +14350,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> forgetPeerFc(String haloId) async {
+    await _forgetPairSeen({haloId});
     if (_peerFc.remove(haloId) == null || _peerFcUnread) return;
     await secureStore.write(key: 'peer_fc', value: jsonEncode(_peerFc));
   }
@@ -14385,6 +14385,28 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// lets the registry have [h] back, in turn with any claim of it already
+  /// on its way, so that claim cannot land after the release
+  Future<String> releaseHandle(String h) async {
+    _repointTimer?.cancel();
+    final before = _repointRun;
+    var r = 'error: not sent';
+    final run = _repointRun = () async {
+      if (before != null) {
+        await before;
+        await Future.delayed(repointApart);
+      }
+      r = await engine.handleRelease(h);
+      if (r == 'ok' && _myHandle == h) await setMyHandle(null);
+    }();
+    try {
+      await run;
+    } finally {
+      if (identical(_repointRun, run)) _repointRun = null;
+    }
+    return r;
+  }
+
   // nothing is sent while the invite is the one the registry last took
   Future<void> _repointHandleNow() async {
     final h = _myHandle;
@@ -14399,7 +14421,7 @@ class AppState extends ChangeNotifier {
       return;
     }
     try {
-      final r = await _handleRepoint.repoint(h);
+      final r = await _handleRepoint.repoint(h, still: () => _myHandle == h);
       if (r != null) _setHandleForeign(r.contains('taken'));
       _repointLater(r);
     } catch (e) {
@@ -16977,8 +16999,8 @@ class AppState extends ChangeNotifier {
     var fc = false;
     for (final id in ids) {
       if (_peerFc.remove(id) != null) fc = true;
-      _pairSeen.remove(id);
     }
+    await _forgetPairSeen(ids);
     if (fc && !_peerFcUnread) {
       await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
     }
@@ -19635,6 +19657,7 @@ class AppState extends ChangeNotifier {
     // key takes them (NameHold.free)
     dropChatDraft(haloId);
     await session.deleteConversation(haloId);
+    await _forgetPairSeen({haloId});
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
     await refreshContacts();
@@ -20971,7 +20994,11 @@ class AppState extends ChangeNotifier {
         return;
       }
       // their frame came over the pair address: they read ours too
-      if (!to.backPaired) unawaited(_notePairSeen(from));
+      // only the everyday side's: the list is kept for the phone, and goes
+      // into everyday backups
+      if (!to.backPaired && identical(to.on, live)) {
+        unawaited(_notePairSeen(from));
+      }
       // kept on the row, where there is one: a hidden chat's card holds no
       // bundle while the vault is shut
       await to.on?.setPeerBundle(from, bundle);
@@ -21251,10 +21278,38 @@ class AppState extends ChangeNotifier {
   // people who showed they read our pair address before adding us back: a
   // bundle frame of theirs came over it. kept for the phone, beside peer_fc
   final Set<String> _pairSeen = <String>{};
-  bool _pairSeenUnread = false;
+  // the stored list was read; until then nothing is written over it
+  bool _pairSeenRead = false;
+
+  Future<void> _loadPairSeen() async {
+    if (_pairSeenRead) return;
+    try {
+      final raw = await secureStore.read(key: 'pair_read');
+      if (raw != null && raw.isNotEmpty) {
+        _pairSeen.addAll((jsonDecode(raw) as List).cast<String>());
+      }
+      _pairSeenRead = true;
+    } catch (e) {
+      dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
+    }
+  }
 
   Future<void> _notePairSeen(String id) async {
-    if (!_pairSeen.add(id) || _pairSeenUnread) return;
+    await _loadPairSeen();
+    if (!_pairSeenRead || !_pairSeen.add(id)) return;
+    await _keepPairSeen();
+  }
+
+  // added us back, deleted, or moved into the vault
+  Future<void> _forgetPairSeen(Set<String> ids) async {
+    await _loadPairSeen();
+    final before = _pairSeen.length;
+    _pairSeen.removeAll(ids);
+    if (!_pairSeenRead || _pairSeen.length == before) return;
+    await _keepPairSeen();
+  }
+
+  Future<void> _keepPairSeen() async {
     try {
       await secureStore.write(
         key: 'pair_read',

@@ -135,12 +135,19 @@ class HandleRepoint {
   final Future<void> Function(String key, String? value) write;
 
   /// claims [h] when the invite is not the one the registry last took, or
-  /// always with [force]. null when nothing was sent, else the engine's answer
-  Future<String?> repoint(String h, {bool force = false}) async {
+  /// always with [force]. null when nothing was sent, else the engine's
+  /// answer. [still] is asked just before the claim: a handle let go of
+  /// meanwhile is not claimed again
+  Future<String?> repoint(
+    String h, {
+    bool force = false,
+    bool Function()? still,
+  }) async {
     final inv = await invite();
     final mark = claimMark(h, inv);
     if (!force && await read(kHandleClaimedKey) == mark) return null;
     final bio = await read('my_handle_bio') ?? '';
+    if (still != null && !still()) return null;
     final r = await claim(h, inv, bio);
     if (r == 'ok') await write(kHandleClaimedKey, mark);
     return r;

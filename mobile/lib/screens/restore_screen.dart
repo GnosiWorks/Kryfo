@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState, engine, navRevision, rootNavKey, shredFile;
+import '../main.dart' show appState, navRevision, rootNavKey, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -313,8 +313,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
       });
       var r = 'error: timeout';
       try {
-        r = await engine
-            .handleRelease(mine)
+        r = await appState
+            .releaseHandle(mine)
             .timeout(const Duration(seconds: 40), onTimeout: () => r);
       } catch (e) {
         // read as not released: the sheet below says so

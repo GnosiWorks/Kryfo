@@ -1018,6 +1018,16 @@ Future<BackupDraft> draftBackup(
         secure.remove('peer_fc');
       }
     }
+    final seen = secure['pair_read'];
+    if (seen != null) {
+      try {
+        final l = (jsonDecode(seen) as List).cast<String>()
+          ..removeWhere(people.contains);
+        secure['pair_read'] = jsonEncode(l);
+      } catch (_) {
+        secure.remove('pair_read');
+      }
+    }
   }
   // a scrubbed copy was tidied on the scrub's connection
   if (hidden) await side.compact(dbCopy, dbKey);
