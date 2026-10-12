@@ -4719,6 +4719,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get restoreNotThisOne => 'Không phải tệp này';
 
   @override
+  String get restoreStopRestore => 'Dừng khôi phục';
+
+  @override
   String get restoreDateUnknown => 'Không rõ ngày';
 
   @override

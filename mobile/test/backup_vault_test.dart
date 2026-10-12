@@ -655,6 +655,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({
       'halo.db.passphrase': _dbPass,
       'peer_fc': jsonEncode({_v: 'fc-v', _h: 'fc-h', _m: 'fc-m'}),
+      'pair_read': jsonEncode([_v, _h, _m]),
       'my_handle': 'wren',
     });
     live = _Db(
@@ -728,6 +729,9 @@ void main() {
       // nor their first-contact keys
       final fc = jsonDecode((m['secure'] as Map)['peer_fc'] as String);
       expect(fc, {_v: 'fc-v'});
+      // nor that they read our pair address
+      final seen = jsonDecode((m['secure'] as Map)['pair_read'] as String);
+      expect(seen, [_v]);
       // the phone's own database keeps its list
       final own = await _read(p.join(docs, 'halo.db'));
       expect(own['hidden_chats']!.length, 3);

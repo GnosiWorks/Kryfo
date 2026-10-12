@@ -58,7 +58,7 @@ the engine uses, through `libtorCreator`.
 the relay library lives in `third_party/nostr` and go.mod points at it with
 a `replace`, so `go mod vendor` copies it into vendor/ like any other module
 and this one survives a re-vendor. it holds upstream's files for the two
-packages the engine imports, tests left out, and upstream's go.mod. six
+packages the engine imports, tests left out, and upstream's go.mod. seven
 files differ, the new lines marked `kryfo:`:
 
 - `relay.go`: subscription ids are counted per connection. upstream numbers
@@ -73,6 +73,13 @@ files differ, the new lines marked `kryfo:`:
 - `relay.go`: a publish that sees its connection end clears the OK
   callbacks under their lock. upstream clears them without it, which races
   with other publishes on the same connection.
+- `relay.go`: the connection and its closed flag are set and read under
+  a lock, and a relay closed while it dials closes the new connection.
+  upstream sets them while the goroutine that closes on the context may
+  read them, and then leaves that connection open.
+- `event.go`: the json string writers read eight bytes at a time through
+  a byte slice, not a uintptr into the string, which `-race` refuses and
+  which can be an unaligned load.
 - `helpers.go`, `envelopes.go`, `relay.go`: length checks in the frame
   pre-parsers and the OK envelope.
 - `signature.go`, `signature_libsecp256k1.go`: `VerifySignature` also
@@ -105,7 +112,7 @@ the change against upstream:
 
     go mod download fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee
     up="$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee"
-    for f in relay.go helpers.go envelopes.go signature.go signature_libsecp256k1.go subscription.go; do
+    for f in relay.go event.go helpers.go envelopes.go signature.go signature_libsecp256k1.go subscription.go; do
         diff -u "$up/$f" "third_party/nostr/$f"
     done
 

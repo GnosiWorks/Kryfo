@@ -150,7 +150,9 @@ func resetAuto(t *testing.T) {
 	dropMoatSettings()
 	netInfoMu.Lock()
 	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
+	netDisproved = nil
 	netInfoMu.Unlock()
+	connSaid.Store(connUnsaid)
 	netOffline.Store(false)
 	bridgeMu.Lock()
 	bridgeList, bridgeOn = nil, false

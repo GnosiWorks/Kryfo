@@ -76,6 +76,8 @@ type relayStandIn struct {
 	asked    int
 	// the most stored events one req brings, as a relay may cap a filter
 	capAt int
+	// a probe (limit 0) gets no answer, as over a dead circuit
+	probesQuiet bool
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -163,6 +165,8 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if !f.LimitZero {
 				s.asked++
 				stall = s.asked == s.stallAt || (s.stallAll && s.stallAt > 0 && s.asked > s.stallAt)
+			} else if s.probesQuiet {
+				stall = true
 			}
 			s.mu.Unlock()
 			if stall {

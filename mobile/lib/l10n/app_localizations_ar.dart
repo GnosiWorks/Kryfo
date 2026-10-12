@@ -4808,6 +4808,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreNotThisOne => 'ليس هذا';
 
   @override
+  String get restoreStopRestore => 'إيقاف الاستعادة';
+
+  @override
   String get restoreDateUnknown => 'تاريخ غير معروف';
 
   @override

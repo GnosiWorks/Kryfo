@@ -76,7 +76,7 @@ func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Ev
 	if err != nil {
 		return nostr2.Event{}, err
 	}
-	exp := fmt.Sprintf("%d", time.Now().Add(14*24*time.Hour).Unix())
+	exp := wrapExpiry(time.Now())
 	return nip59.GiftWrap(rumor, fcPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },

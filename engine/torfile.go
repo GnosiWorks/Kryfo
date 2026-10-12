@@ -74,6 +74,9 @@ func gifRequest(method, url, body string) (*http.Request, error) {
 	return req, nil
 }
 
+// the largest answer gifAsk takes
+const gifAskMax = 256 << 10
+
 func gifAsk(method, url, body string) string {
 	if url == "" {
 		return "error: empty url"
@@ -93,9 +96,13 @@ func gifAsk(method, url, body string) string {
 		return fmt.Sprintf("error: get: %v", err)
 	}
 	defer resp.Body.Close()
-	out, err := io.ReadAll(io.LimitReader(resp.Body, 256*1024))
+	out, err := io.ReadAll(io.LimitReader(resp.Body, gifAskMax+1))
 	if err != nil {
 		return fmt.Sprintf("error: read: %v", err)
+	}
+	// cut short it would read as a whole answer
+	if len(out) > gifAskMax {
+		return "error: read: too big"
 	}
 	if resp.StatusCode >= 300 {
 		return fmt.Sprintf("error: status %d", resp.StatusCode)

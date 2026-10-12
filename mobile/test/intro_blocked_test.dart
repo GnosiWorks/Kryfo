@@ -37,6 +37,7 @@ const _k = 'blocked-once-before'; // blocked from a request
 const _n = 'someone-new-here'; // never seen
 const _h = 'hidden-wreck-tone'; // a hidden chat, who introduces
 const _d = 'deleted-chat-here'; // deleted here before
+const _f = 'fresh-face-here'; // met on a card in one test only
 
 class _Engine implements HaloEngine {
   @override
@@ -81,7 +82,12 @@ class _World {
     return w;
   }
 
-  Future<void> introduce(String who, {String by = _v, String? xPub}) async {
+  Future<void> introduce(
+    String who, {
+    String by = _v,
+    String? xPub,
+    String? fc,
+  }) async {
     final c = 'c${_c++}';
     io.opens[c] = (
       by,
@@ -92,6 +98,7 @@ class _World {
           onion: 'o-$who',
           xPub: xPub ?? 'x-$who',
           avatar: 3,
+          fc: fc,
         ),
         sender: SenderInfo(
           haloId: by,
@@ -266,4 +273,99 @@ void main() {
       expect(w.bundlesTo('x-$_n').single.containsKey('since'), isFalse);
     },
   );
+
+  test('someone met on a card is reached on the pair address, not on a '
+      'first-contact address they may have reset', () async {
+    final w = await _World.make();
+    await w.introduce(_n, fc: 'fc-they-reset-since');
+    expect(w.app.peerFcFor(_n), isNull);
+    w.io.sent.clear();
+    await w.app.sendAcceptAck(_n);
+    await _settle();
+    final went = [
+      for (final (to, c) in w.io.sent)
+        if (!c.startsWith('{')) to,
+    ];
+    expect(went, contains('relay x-$_n'));
+    expect(went.where((t) => t.startsWith('fc')), isEmpty);
+  });
+
+  test(
+    'a copy on the pair address counts as delivered only once they have '
+    'shown they read it: someone with introductions off never does',
+    () async {
+      final w = await _World.make();
+      final k = await _keysOf();
+      await w.introduce(_n, xPub: k.x);
+      // with introductions off they never took our card, so nothing of theirs
+      // comes over the pair address: the copy goes there, uncounted
+      expect(await w.app.pairRoute(_n, backPaired: false), isTrue);
+      expect(await w.app.pairRead(_n, backPaired: false), isFalse);
+      // with them on, their bundle frame comes over it
+      await w.app.receiveRelay([
+        (
+          peer: k.x,
+          cipher: jsonEncode({
+            'halo_ctl': 'bundle',
+            'from': _n,
+            'bundle': k.card,
+            'want': false,
+          }),
+        ),
+      ]);
+      await _settle();
+      expect(await w.app.pairRead(_n, backPaired: false), isTrue);
+      expect(await w.app.pairRead(_n, backPaired: true), isFalse);
+    },
+  );
+
+  test('a hidden chat\'s frame over the pair address is never noted outside '
+      'the vault', () async {
+    final w = await _World.make(hidden: true);
+    final k = await _keysOf();
+    w.vault.people[_h]!['xpub'] = k.x;
+    w.vault.people[_h]!['back_paired'] = 0;
+    await w.app.receiveRelay([
+      (
+        peer: k.x,
+        cipher: jsonEncode({
+          'halo_ctl': 'bundle',
+          'from': _h,
+          'bundle': k.card,
+          'want': false,
+        }),
+      ),
+    ]);
+    await _settle();
+    expect(await w.app.pairRead(_h, backPaired: false), isFalse);
+    final kept = await const FlutterSecureStorage().read(key: 'pair_read');
+    expect(kept == null || !kept.contains(_h), isTrue, reason: kept);
+  });
+
+  test('a frame noted before the first-contact keys were read keeps what '
+      'was stored', () async {
+    // the counter did not read, so nothing of first contact was loaded. a
+    // face no other test here has met: the signal store is the process's
+    await const FlutterSecureStorage().write(
+      key: 'pair_read',
+      value: jsonEncode(['someone-before']),
+    );
+    final w = await _World.make();
+    final k = await _keysOf();
+    await w.introduce(_f, xPub: k.x);
+    await w.app.receiveRelay([
+      (
+        peer: k.x,
+        cipher: jsonEncode({
+          'halo_ctl': 'bundle',
+          'from': _f,
+          'bundle': k.card,
+          'want': false,
+        }),
+      ),
+    ]);
+    await _settle();
+    final kept = await const FlutterSecureStorage().read(key: 'pair_read');
+    expect((jsonDecode(kept!) as List).toSet(), {'someone-before', _f});
+  });
 }

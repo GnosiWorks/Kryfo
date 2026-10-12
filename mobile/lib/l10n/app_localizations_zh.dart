@@ -4516,6 +4516,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreNotThisOne => '不是这个';
 
   @override
+  String get restoreStopRestore => '停止恢复';
+
+  @override
   String get restoreDateUnknown => '日期未知';
 
   @override
@@ -12359,6 +12362,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreNotThisOne => '不是這個';
+
+  @override
+  String get restoreStopRestore => '停止還原';
 
   @override
   String get restoreDateUnknown => '日期不明';

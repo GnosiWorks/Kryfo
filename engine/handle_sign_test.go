@@ -101,7 +101,8 @@ func TestHandleReleaseBody(t *testing.T) {
 // whatever the registry writes in a refusal, the app gets one of a few
 // fixed answers
 func TestHandleRefusalsAreFixed(t *testing.T) {
-	useStandIns(t, modeBalanced, nil)
+	// the registry is reached over tor on every route
+	useStandIns(t, modeBalanced, newSocksStandIn(t))
 	var answer string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

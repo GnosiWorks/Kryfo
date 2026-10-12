@@ -27,8 +27,7 @@ import (
 	"github.com/cretz/bine/control"
 )
 
-// the bridge modes the app picks from. legacy is HaloSetBridges driving,
-// as before modes existed.
+// the bridge modes the app picks from. legacy is none picked yet.
 const (
 	bmLegacy    = ""
 	bmAuto      = "auto"
@@ -790,7 +789,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 				steps = spliceMoat(steps, i, extra)
 				gateExtend(p.id, passBudget(extra))
 				stSet(func() { autoSt.attempts = autoSt.attempt + attemptCount(steps[i+1:]) })
-			} else if consentNow() == "ask" && blocked {
+			} else if consentNow() == "ask" && blocked && !netValveOpen.Load() {
 				stSet(func() { autoSt.askConsent = true })
 			}
 			continue
@@ -811,7 +810,8 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			log.Printf("auto: %s gets through", s.Method)
 			return seenOK
 		case seenBlocked:
-			if s.Method == "direct" {
+			// with no network said to be there, nothing is learned of it
+			if s.Method == "direct" && !netValveOpen.Load() {
 				blocked = true
 				memBlocked(kind, dayOf(autoNow()))
 				stSet(func() { autoSt.blocked, autoSt.errCode = true, "blocked" })
@@ -822,14 +822,14 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		case seenLimited:
 			blocked = true
 			stSet(func() { autoSt.limited, autoSt.errCode = true, "limited" })
-			if consentNow() == "ask" {
+			if consentNow() == "ask" && !netValveOpen.Load() {
 				stSet(func() { autoSt.askConsent = true })
 			}
 		case passInterrupted:
 			return passInterrupted
 		}
 		// a bridge that did not get through here is not one to check in by
-		if v == seenFailed && s.Method != "direct" {
+		if v == seenFailed && s.Method != "direct" && !netValveOpen.Load() {
 			memForget(kind, s.Method)
 		}
 		// consent came while this pass was past the ask: ask now
@@ -1196,6 +1196,10 @@ func applyBridgeMode(mode, raw string) string {
 	case bmAuto, bmDirect:
 	case bmSnowflake:
 		lines = builtinLines("snowflake")
+		// no lines would be direct
+		if len(lines) == 0 {
+			return "error: lines_bad"
+		}
 	case bmWebtunnel, bmMoat, bmOwn:
 		good, _, checks := sortBridgeLines(strings.Join(o.Lines, "\n"))
 		lineChecksMu.Lock()
@@ -1273,23 +1277,6 @@ func optsEqual(a, b modeOpts) bool {
 	return string(x) == string(y)
 }
 
-// HaloSetBridges hands the lines over the old way. a decoy changes
-// nothing, and neither does the old call once the app has picked a mode:
-// the upgrade moves the old setting to a mode, see HaloSetBridgeMode.
-// "" when the old call may go on, else why not.
-func legacyMode() string {
-	// a decoy open, or not yet known to be closed
-	if !decoyClosed() {
-		return "error: decoy"
-	}
-	autoMu.Lock()
-	defer autoMu.Unlock()
-	if bmMode != bmLegacy {
-		return "error: a mode is set"
-	}
-	return ""
-}
-
 // the method a check-in uses: the one that worked here last. if that is
 // snowflake and obfs4 or webtunnel also worked here in the last 30 days,
 // that one, so check-ins do not rendezvous with the broker every quarter
@@ -1346,7 +1333,13 @@ func putCheckInStep() string {
 	if mode != bmAuto {
 		return "ok"
 	}
-	kind, mem, today := currentNet().Kind, memSnapshot(), dayOf(autoNow())
+	// no network, or one android has not named yet: its kind is not known,
+	// and the detail that names it puts the step
+	n := currentNet()
+	if d, ok := netDetailTrusted(); !n.On || (ok && !d.On) {
+		return "ok"
+	}
+	kind, mem, today := n.Kind, memSnapshot(), dayOf(autoNow())
 	s, ok := checkInStep(kind, mem, opts, today)
 	if !ok {
 		// nothing remembered here: tor alone where that is welcome, else
@@ -1354,6 +1347,12 @@ func putCheckInStep() string {
 		s = autoStep{Method: "direct"}
 		if d, b := mem.Blocked[kind]; opts.SkipDirect || (b && fresh(d, today)) {
 			s = autoStep{Method: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")}
+			// no line to use is a hold: no lines and no direct step
+			if len(s.Lines) == 0 {
+				stSet(func() { autoSt.method, autoSt.source = "", "" })
+				autoUseStep(gen, autoStep{})
+				return "error: lines_bad"
+			}
 		}
 	}
 	// these lines are what tor has from now on, whatever ran before
@@ -1370,6 +1369,40 @@ func putCheckInStep() string {
 		}
 	}
 	return "ok"
+}
+
+// putCheckInStep off the caller's thread, one at a time, the last change
+// always looked at
+var (
+	ciStepMu    sync.Mutex
+	ciStepBusy  bool
+	ciStepAgain bool
+)
+
+func putCheckInStepSoon() {
+	ciStepMu.Lock()
+	if ciStepBusy {
+		ciStepAgain = true
+		ciStepMu.Unlock()
+		return
+	}
+	ciStepBusy = true
+	ciStepMu.Unlock()
+	go func() {
+		for {
+			if inCheckIn() {
+				putCheckInStep()
+			}
+			ciStepMu.Lock()
+			if !ciStepAgain {
+				ciStepBusy = false
+				ciStepMu.Unlock()
+				return
+			}
+			ciStepAgain = false
+			ciStepMu.Unlock()
+		}
+	}()
 }
 
 // ---- the status line ----
@@ -1581,5 +1614,6 @@ func HaloSetAutoMemory(cJSON *C.char) *C.char {
 //
 //export HaloCheckIn
 func HaloCheckIn(on C.int) *C.char {
+	noteCheckIn(int(on))
 	return C.CString(checkIn(on != 0))
 }

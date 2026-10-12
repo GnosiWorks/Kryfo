@@ -160,7 +160,7 @@ func first(s string, _ bool) string { return s }
 
 func TestBridgeCacheRoundTrip(t *testing.T) {
 	resetBuiltinState(t)
-	defer setBridges("", false)
+	defer setBridgeLines("", false)
 	o4 := builtinBundled["obfs4"][0]
 	o4b, _ := parseBridgeLine(o4)
 	newCert := "cert=" + strings.Repeat("C", 70)
@@ -180,7 +180,7 @@ func TestBridgeCacheRoundTrip(t *testing.T) {
 			inUse = s.Lines
 		}
 	}
-	setBridges(strings.Join(inUse, "\n"), true)
+	setBridgeLines(strings.Join(inUse, "\n"), true)
 	blob := bridgeCacheOut()
 
 	resetBuiltinState(t)

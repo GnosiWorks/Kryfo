@@ -4733,6 +4733,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get restoreNotThisOne => 'این یکی نه';
 
   @override
+  String get restoreStopRestore => 'توقف بازیابی';
+
+  @override
   String get restoreDateUnknown => 'تاریخ نامعلوم';
 
   @override

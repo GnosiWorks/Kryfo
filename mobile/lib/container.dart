@@ -319,6 +319,8 @@ const deviceKeys = {
   'moved.at',
   'fc_counter',
   'peer_fc',
+  'peer_fc_swept',
+  'pair_read',
   'xpub_cache',
   'helper_endpoints',
   'helper_slots',

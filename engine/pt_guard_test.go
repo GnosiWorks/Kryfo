@@ -184,21 +184,7 @@ func TestTokenScrubbed(t *testing.T) {
 }
 
 func TestNetworkChangeDropsSnowflakeClients(t *testing.T) {
-	oldBounce, oldQuiet, oldGap := netBounce, netQuiet, netGap
-	netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond
-	t.Cleanup(func() {
-		// the debounce worker finishes before the real bounce is back
-		for {
-			netMu.Lock()
-			busy := netWorker
-			netMu.Unlock()
-			if !busy {
-				break
-			}
-			time.Sleep(5 * time.Millisecond)
-		}
-		netBounce, netQuiet, netGap = oldBounce, oldQuiet, oldGap
-	})
+	quietBounce(t)
 	dropSnowflakeClients()
 	if _, err := snowflakeFor(snowflakeTestConfig(t)); err != nil {
 		t.Fatal(err)
@@ -406,7 +392,7 @@ func TestBridgeFailsResetAndFade(t *testing.T) {
 	if !bridgeIsDead(key) {
 		t.Fatal("four failures in a row did not count")
 	}
-	setBridges(tbObfs4, true)
+	setBridgeLines(tbObfs4, true)
 	if bridgeIsDead(key) {
 		t.Fatal("new lines kept the old failures")
 	}

@@ -8,9 +8,11 @@ package main
 // stock nip-17 puts your one real pubkey on every wrap.
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	nostr2 "github.com/nbd-wtf/go-nostr"
@@ -125,12 +127,28 @@ func nip17WrapAs(me xid, peer [32]byte, msg string) (nostr2.Event, error) {
 	if err != nil {
 		return nostr2.Event{}, err
 	}
-	exp := fmt.Sprintf("%d", time.Now().Add(14*24*time.Hour).Unix())
+	exp := wrapExpiry(time.Now())
 	return nip59.GiftWrap(rumor, rcvPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },
 		func(e *nostr2.Event) { e.Tags = append(e.Tags, nostr2.Tag{"expiration", exp}) },
 	)
+}
+
+const (
+	// relays keep a wrap at least this long
+	wrapKeep = 14 * 24 * time.Hour
+	// on top of that, so the tag does not give away the send second
+	wrapKeepSpread = 24 * time.Hour
+)
+
+// a wrap's expiration tag: two weeks plus a random part of a day
+func wrapExpiry(now time.Time) string {
+	extra := int64(0)
+	if n, err := rand.Int(rand.Reader, big.NewInt(int64(wrapKeepSpread/time.Second)+1)); err == nil {
+		extra = n.Int64()
+	}
+	return fmt.Sprintf("%d", now.Add(wrapKeep).Unix()+extra)
 }
 
 // unwrap a gift wrap from this peer. anything not sealed by the peer's

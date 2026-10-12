@@ -49,9 +49,32 @@ func setNetInfo(n netInfo) {
 	n.known = true
 	netInfoMu.Lock()
 	prev := netInfoNow
+	// the word a relay through tor proved wrong, said again: not taken
+	stale := netDisproved != nil && sameNet(n, *netDisproved)
+	if !stale {
+		netDisproved = nil
+	}
 	netInfoNow = n
 	netInfoMu.Unlock()
-	netOffline.Store(!n.On)
+	if stale {
+		return
+	}
+	was := setOffline(!n.On)
+	switch {
+	case was && n.On:
+		netBack()
+		// a network back is a new one: what was proved on the one that
+		// went, a direct step above all, does not hold for it, parked or not
+		networkChanged()
+	case !was && !n.On:
+		// what proved the network that went proves nothing now
+		routeBump()
+		go netPark()
+	}
+	// a check-in puts the way of the network that is there now
+	if n.On && (was || prev.Kind != n.Kind) && inCheckIn() {
+		putCheckInStepSoon()
+	}
 	// signed in past a portal, or android got its answer at last: what
 	// failed before may get through now
 	if prev.known && n.On && n.Validated && !n.Limited && (!prev.Validated || prev.Limited) {
@@ -60,12 +83,47 @@ func setNetInfo(n netInfo) {
 	autoKick()
 }
 
+// what android last said of the default network, and whether it has said
+// anything yet
+func netDetailNow() (netInfo, bool) {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	return netInfoNow, netInfoNow.known
+}
+
+// what the watch said that a relay through tor then proved wrong. the
+// same word again is not taken, a new one is. netInfoMu
+var netDisproved *netInfo
+
+func sameNet(a, b netInfo) bool {
+	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.Kind == b.Kind
+}
+
+// android's word on the default network, and whether it is to be taken:
+// it has spoken, and not the word a relay through tor proved wrong
+func netDetailTrusted() (netInfo, bool) {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	n := netInfoNow
+	return n, n.known && (netDisproved == nil || !sameNet(n, *netDisproved))
+}
+
+// a relay got through while the watch says there is no network
+func netDisprove() {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	if n := netInfoNow; n.known && !n.On {
+		netDisproved = &n
+	}
+}
+
 func currentNet() netInfo {
 	netInfoMu.Lock()
 	defer netInfoMu.Unlock()
 	n := netInfoNow
-	// the older call says only whether a network is there
-	if netOffline.Load() {
+	// the older call says only whether a network is there. the valve
+	// takes one as there while it tries
+	if netAway() {
 		n.On, n.Validated, n.Limited = false, false, false
 	} else if !n.On {
 		// a network after all, of which android has said nothing yet
@@ -76,8 +134,9 @@ func currentNet() netInfo {
 
 // the default network as android sees it, as json:
 // {"on":true,"validated":true,"limited":false,"vpn":false,"kind":"wifi"}.
-// it changes no state of tor: the bounce on a network change stays with
-// HaloNetworkState.
+// once it has come, whether there is a network is its word, not
+// HaloNetworkState's. tor leaves the network when it says none, and a
+// network back is bounced on if nothing else will.
 //
 //export HaloNetworkDetail
 func HaloNetworkDetail(cJSON *C.char) *C.char {

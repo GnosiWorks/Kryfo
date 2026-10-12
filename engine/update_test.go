@@ -71,12 +71,17 @@ func TestUpdateGetAnswers(t *testing.T) {
 			http.NotFound(w, r)
 		case "/moved":
 			http.Redirect(w, r, "/version.json", http.StatusFound)
+		case "/full":
+			fmt.Fprint(w, strings.Repeat("x", updateGetMax))
 		default:
 			fmt.Fprint(w, strings.Repeat("x", 9000))
 		}
 	})
-	if out := updateGet(srv.URL + "/big"); len(out) != 4096 {
-		t.Fatalf("not capped: %d bytes", len(out))
+	if out := updateGet(srv.URL + "/big"); out != "error: read: too big" {
+		t.Fatalf("past the cap: %d bytes", len(out))
+	}
+	if out := updateGet(srv.URL + "/full"); len(out) != updateGetMax {
+		t.Fatalf("at the cap: %q", out)
 	}
 	if out := updateGet(srv.URL + "/gone"); out != "error: status 404" {
 		t.Fatalf("got %q", out)

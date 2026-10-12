@@ -212,11 +212,10 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 // a network that flaps five times in a minute gets one bounce once it has
 // settled, not five, and the last change always gets one.
 func TestFlappingNetworkBouncedOnce(t *testing.T) {
-	oldQ, oldG, oldB := netQuiet, netGap, netBounce
-	defer func() { netQuiet, netGap, netBounce = oldQ, oldG, oldB }()
-	netQuiet, netGap = 50*time.Millisecond, 800*time.Millisecond
+	keepBounceKnobs(t)
+	underNetMu(func() { netQuiet, netGap = 50*time.Millisecond, 800*time.Millisecond })
 	var n int32
-	netBounce = func() { atomic.AddInt32(&n, 1) }
+	underNetMu(func() { netBounce = func() { atomic.AddInt32(&n, 1) } })
 	atomic.StoreInt32(&torPaused, 0)
 	netMu.Lock()
 	lastNetBounce = time.Time{}

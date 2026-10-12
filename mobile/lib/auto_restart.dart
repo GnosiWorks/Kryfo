@@ -65,6 +65,7 @@ class AutoView {
     required this.torReady,
     required this.ctrlSilent,
     required this.stuckSince,
+    this.passRuns = false,
   });
 
   final bool inFront;
@@ -86,6 +87,9 @@ class AutoView {
 
   /// since when the bootstrap has not climbed, null when it is not trying
   final DateTime? stuckSince;
+
+  /// automatic is trying a way in
+  final bool passRuns;
 }
 
 /// what is done about tor now. only a route stalled for minutes is looked
@@ -113,20 +117,38 @@ AutoStep autoStepAt(
   return reconnectFailed && due && !v.held ? AutoStep.restart : AutoStep.none;
 }
 
-/// errors that say tor could not be reached in this process. asleep on
-/// purpose, replaced by another or turned away by a guard is no failure,
-/// and one control call left unanswered is not yet a dead port
-bool reconnectFailedWith(String r, {int ctrlSilent = 0}) {
-  if (!r.startsWith('error')) return false;
+/// what the engine answers while tor waits on purpose: asleep, replaced by
+/// another, turned away by a guard, no network, bridges not taken yet, or
+/// automatic finding its way in, which on a blocked network takes long. no
+/// mode yet is no wait: only a new process hands the kept mode over again.
+/// [passRuns]: automatic is trying, and starts the listeners again itself
+bool torWaitsWith(String r, {bool passRuns = false}) {
   if (const {
     'error: tor is asleep',
     'error: superseded',
     'error: one already running',
     'error: too soon',
     'error: no data dir',
+    'error: no network',
+    'error: automatic is connecting',
+    'error: automatic has no way in yet',
+    'error: bridges not applied',
   }.contains(r)) {
-    return false;
+    return true;
   }
+  return passRuns && r == 'error: bridges could not start';
+}
+
+/// errors that say tor could not be reached in this process. a wait on
+/// purpose is no failure, and one control call left unanswered is not yet
+/// a dead port
+bool reconnectFailedWith(
+  String r, {
+  int ctrlSilent = 0,
+  bool passRuns = false,
+}) {
+  if (!r.startsWith('error')) return false;
+  if (torWaitsWith(r, passRuns: passRuns)) return false;
   if (r.contains('control port timeout')) return ctrlSilent >= kCtrlSilentDead;
   return true;
 }
@@ -199,9 +221,11 @@ class AutoRestart {
             r = 'error: $e';
           }
           _reconnectedAt = _now();
+          final v = view();
           _reconnectFailed = reconnectFailedWith(
             r,
-            ctrlSilent: view().ctrlSilent,
+            ctrlSilent: v.ctrlSilent,
+            passRuns: v.passRuns,
           );
           dlog('auto restart: reconnect $r');
         case AutoStep.restart:

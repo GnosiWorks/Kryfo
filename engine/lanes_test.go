@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -560,7 +562,9 @@ func TestDirectModesUnchanged(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for _, lane := range append(mainLanes(), roomLane("ab"), pairLane("cd"), laneServices) {
+			// every lane but the services one shares the route's direct
+			// client; that one is tor on every route (services.go)
+			for _, lane := range append(mainLanes(), roomLane("ab"), pairLane("cd")) {
 				c, err := torNostrClientFor(lane)
 				if err != nil {
 					t.Fatal(err)
@@ -702,5 +706,23 @@ func TestNewFirstContactAddressGetsANewCircuit(t *testing.T) {
 	}
 	if after != laneName(laneFirstContact) {
 		t.Error("the new first-contact address is not on the first-contact lane")
+	}
+}
+
+// a socks name is always a lane's random one, never a word tor would see
+func TestNoFixedSocksName(t *testing.T) {
+	files, _ := filepath.Glob("*.go")
+	re := regexp.MustCompile(`torDialerAs\([^\n]*"[^"\n]+"`)
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+		b, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m := re.Find(b); m != nil {
+			t.Fatalf("%s: %s", f, m)
+		}
 	}
 }

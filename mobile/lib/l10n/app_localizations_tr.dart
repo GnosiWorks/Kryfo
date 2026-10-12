@@ -4739,6 +4739,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get restoreNotThisOne => 'Bu değil';
 
   @override
+  String get restoreStopRestore => 'Geri yüklemeyi durdur';
+
+  @override
   String get restoreDateUnknown => 'Tarih bilinmiyor';
 
   @override

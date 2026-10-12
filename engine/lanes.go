@@ -70,6 +70,10 @@ const laneGifs = "gifs"
 // site sees a check and nothing it could tie to it
 const laneUpdate = "update"
 
+// moat, the tor project's bridge service: a socks name of its own like
+// every other lane
+const laneMoat = "moat"
+
 // a room is a name that exists only inside the room.
 func roomLane(pubHex string) string { return "room:" + pubHex }
 

@@ -114,6 +114,10 @@ class _Engine implements HaloEngine {
   void networkChanged({bool online = true}) =>
       log.add(online ? 'network' : 'offline');
   @override
+  void networkDetail(String json) => log.add('detail');
+  @override
+  void connectivitySeen(bool on) => log.add('seen:$on');
+  @override
   Future<String> reconnectNow() async {
     log.add('now');
     return 'ok';
@@ -694,6 +698,168 @@ void main() {
     });
   });
 
+  group('a check-in with sockets on their turns', () {
+    testWidgets('waits for the last one, a minute and its catch-up after '
+        'the kick', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      Object? err;
+      unawaited(
+        app.checkIn(why: 'job').then((v) => n = v, onError: (e) => err = e),
+      );
+      int? kicked;
+      int? done;
+      for (var i = 0; i < 170 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // every socket counted from the kick, the last done 100 s on
+          eng.catchup = (3, 4);
+        }
+        if (kicked != null && i == kicked + 100) eng.catchup = (0, 4);
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        if (n >= 0) done = i;
+      }
+      expect(n, isNot(-1), reason: '$err ${app.lastCheckHow}');
+      expect(kicked, isNotNull, reason: app.lastCheckHow);
+      expect(done! - kicked!, greaterThanOrEqualTo(100));
+      expect(app.lastCheckHow, contains('"how":"ok"'));
+    });
+
+    testWidgets('that starts late after its job ends by the job\'s budget, '
+        'not its own', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      // the job began 40 s before dart was asked: a cold boot's wait
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 40)),
+            )
+            .then((v) => n = v),
+      );
+      int? kicked;
+      var took = 0;
+      for (var i = 0; i < 200 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // a socket that never finishes
+          eng.catchup = (1, 2);
+        }
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        took = i;
+      }
+      expect(n, isNot(-1));
+      // the wait ends 120 s into the job and the tail follows: all of it by
+      // about 137, well before the job's stop at 170
+      expect(took + 40, lessThanOrEqualTo(137));
+      expect(app.lastCheckHow, contains('"how":"ok_capped"'));
+    });
+
+    testWidgets('with almost none of its job left, wakes nothing', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      log.clear();
+      var n = -1;
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 88)),
+            )
+            .then((v) => n = v),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(n, 0);
+      expect(app.lastCheckHow, contains('"how":"late"'));
+      expect(log, isNot(contains('resume')));
+      expect(log, isNot(contains('kick')));
+    });
+
+    testWidgets('waits for tor no further than its job allows', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      app.setTorStatusForTest(TorStatus.starting);
+      app.setRouteOKForTest(false);
+      addTearDown(() {
+        app.setTorStatusForTest(TorStatus.off);
+        app.setRouteOKForTest(true);
+      });
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 40)),
+            )
+            .then((v) => n = v),
+      );
+      var took = 0;
+      for (var i = 0; i < 200 && n < 0; i++) {
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        took = i;
+      }
+      expect(n, 0);
+      // tor has until 90 s into the job
+      expect(took + 40, lessThanOrEqualTo(92));
+      expect(log, isNot(contains('kick')));
+    });
+
+    testWidgets('is not taken for no relay while one still waits its '
+        'turn', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      unawaited(app.checkIn(why: 'job').then((v) => n = v));
+      int? kicked;
+      for (var i = 0; i < 170 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // one socket waits its turn, nothing has begun yet
+          eng.catchup = (1, 1);
+        }
+        // its turn ends a minute on and its catch-up runs ten seconds
+        if (kicked != null && i == kicked + 60) eng.catchup = (1, 2);
+        if (kicked != null && i == kicked + 70) eng.catchup = (0, 2);
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+      }
+      expect(n, isNot(-1));
+      expect(app.lastCheckHow, contains('"how":"ok"'));
+      expect(app.lastCheckAt, isNot(0));
+    });
+  });
+
   group('a check-in on a slow wake', () {
     testWidgets('gives the relays their own time from the kick', (t) async {
       final live = _Flaky();
@@ -1057,6 +1223,10 @@ void main() {
     const mobile = ConnectivityResult.mobile;
     const vpn = ConnectivityResult.vpn;
     const none = ConnectivityResult.none;
+    // what the engine heard of the network
+    List<String> net() => log
+        .where((e) => const {'network', 'offline', 'detail'}.contains(e))
+        .toList();
 
     test('reaches the engine, and nothing that is not a change does', () {
       final app = AppState()..sendModeForTest = 'private';
@@ -1084,6 +1254,64 @@ void main() {
       }
       expect(log.where((e) => e == 'network').length, 11);
       expect(log.where((e) => e == 'offline').length, 10);
+    });
+
+    test('a none while android\'s watch sees a network is not taken', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      log.clear();
+      // the engine hears connectivity's own word and weighs it itself
+      app.connectivityEvent([none]);
+      expect(log, contains('seen:false'));
+      expect(net(), ['offline']);
+      expect(app.online, isTrue);
+      // seen again, the network is bounced
+      app.connectivityEvent([wifi]);
+      expect(net(), ['offline', 'network']);
+      // the watch says none: offline whatever connectivity says
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.connectivityEvent([mobile]);
+      expect(app.online, isFalse);
+    });
+
+    test('connectivity seeing a network reaches the engine as it is', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      app.connectivityEvent([none]);
+      log.clear();
+      // the watch wrongly says none, connectivity sees wifi: the engine
+      // hears online, so it can tell the dispute
+      app.connectivityEvent([wifi]);
+      expect(log, contains('seen:true'));
+      expect(net(), ['network']);
+      expect(app.online, isFalse);
+    });
+
+    test('relays through tor outrank the watch saying none', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.takeTorStatus('publishing|100|1|1|0');
+      expect(app.online, isTrue);
+      // a recheck that brings the same none is no news
+      log.clear();
+      app.recheckNetDetail('{"on":false,"kind":"other"}');
+      expect(app.online, isTrue);
+      expect(net(), isEmpty);
+      app.recheckNetDetail('{"on":false,"kind":"wifi"}');
+      expect(app.online, isFalse);
+    });
+
+    test('the watch alone bringing the network back brings the app online', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([none]);
+      expect(app.online, isFalse);
+      log.clear();
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      expect(app.online, isTrue);
+      expect(net(), ['detail', 'network']);
     });
   });
 }

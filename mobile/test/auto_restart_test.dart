@@ -39,6 +39,7 @@ AutoView _view({
   bool torReady = false,
   int ctrlSilent = 0,
   DateTime? stuckSince,
+  bool passRuns = false,
 }) => AutoView(
   inFront: inFront,
   alwaysOn: alwaysOn,
@@ -50,6 +51,7 @@ AutoView _view({
   torReady: torReady,
   ctrlSilent: ctrlSilent,
   stuckSince: stuckSince,
+  passRuns: passRuns,
 );
 
 class _Engine implements HaloEngine {
@@ -180,9 +182,24 @@ void main() {
         'error: tor is asleep',
         'error: superseded',
         'error: one already running',
+        'error: no network',
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+        'error: bridges not applied',
       ]) {
         expect(reconnectFailedWith(r, ctrlSilent: 5), isFalse, reason: r);
       }
+    });
+
+    test('automatic finding a way in is no failed reconnect', () {
+      for (final r in [
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+      ]) {
+        expect(reconnectFailedWith(r, ctrlSilent: 5), isFalse, reason: r);
+      }
+      // no mode yet still is: a new process hands the kept mode over
+      expect(reconnectFailedWith('error: no bridge mode yet'), isTrue);
     });
 
     test('half an hour on the clock since boot', () {
@@ -259,6 +276,21 @@ void main() {
       expect(log, ['reconnect', 'restart']);
     });
 
+    test('automatic stalled behind a censor is never restarted', () async {
+      seen = _view(stuckSince: t0, passRuns: true);
+      for (final a in [
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+        'error: bridges could not start',
+      ]) {
+        answer = a;
+        expect(await life(), [AutoStep.reconnect, AutoStep.none], reason: a);
+      }
+      expect(log.where((e) => e == 'restart'), isEmpty);
+      // listeners down with no pass to start them: a restart may help
+      expect(reconnectFailedWith('error: bridges could not start'), isTrue);
+    });
+
     test('one unanswered call is not a failed reconnect', () async {
       seen = _view(ctrlSilent: 1, stuckSince: t0);
       expect(await life(), [AutoStep.reconnect, AutoStep.none]);
@@ -297,6 +329,33 @@ void main() {
       up = const BootTime(110 * min, 7);
       expect(await life(), [AutoStep.reconnect, AutoStep.none]);
       expect(log.where((e) => e == 'restart').length, 1);
+    });
+
+    test('never restarts while automatic is connecting', () async {
+      answer = 'error: automatic is connecting';
+      seen = _view(stuckSince: t0);
+      var now = t0;
+      final p = AutoRestart(
+        view: () => seen,
+        reconnect: () async {
+          log.add('reconnect');
+          return answer;
+        },
+        restart: () async {
+          log.add('restart');
+          return reopens;
+        },
+        clock: () async => up,
+        now: () => now,
+      );
+      final steps = <AutoStep>[];
+      // a tick a minute, past the first reconnect and past the next ones
+      for (var m = 0; m <= 30; m++) {
+        now = at(m);
+        steps.add(await p.tick());
+      }
+      expect(steps, isNot(contains(AutoStep.restart)));
+      expect(log, ['reconnect', 'reconnect', 'reconnect']);
     });
 
     test('back on screen while the stamp was written: no restart', () async {

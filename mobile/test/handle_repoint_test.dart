@@ -69,6 +69,18 @@ void main() {
     expect(p.claims, hasLength(2));
   });
 
+  test('a handle let go of while the claim was being made is not claimed '
+      'again', () async {
+    final p = _Phone();
+    var held = true;
+    // the release lands while the invite and the bio are read
+    p.store['my_handle_bio'] = 'hi';
+    final r = p.repoint.repoint('wren', still: () => held);
+    held = false;
+    expect(await r, isNull);
+    expect(p.claims, isEmpty);
+  });
+
   test('a claim the registry refused is sent again next time', () async {
     final p = _Phone(answer: 'error: refused');
     expect(await p.repoint.repoint('wren'), 'error: refused');
@@ -201,5 +213,62 @@ void main() {
         }
       });
     }
+  });
+
+  group('the repoint after start', () {
+    test('waits for tor, which carries every registry call', () {
+      final g = RepointGate();
+      expect(g.want(torUp: false), isFalse);
+      expect(g.want(torUp: true), isTrue);
+      g.going();
+      expect(g.want(torUp: true), isFalse);
+    });
+
+    test('a try with no answer is never taken as done, and goes again later '
+        'each time', () {
+      final g = RepointGate()..going();
+      expect(g.settled('error: context deadline exceeded'), repointRetry(1));
+      expect(g.want(torUp: true), isTrue);
+      final waits = <Duration?>[];
+      for (var i = 0; i < 6; i++) {
+        g.going();
+        waits.add(g.settled('error: tor client: tor not started'));
+      }
+      expect(waits, [
+        for (final m in [2, 4, 8, 15, 15, 15]) Duration(minutes: m),
+      ]);
+      expect(g.want(torUp: true), isTrue);
+    });
+
+    test('a new invite or handle is put to the registry again, even after '
+        'one was taken', () {
+      final g = RepointGate()..going();
+      expect(g.settled('ok'), isNull);
+      expect(g.want(torUp: true), isFalse);
+      g.reset();
+      expect(g.want(torUp: true), isTrue);
+      g.going();
+      // and its failure is retried, never left as done
+      expect(g.settled('error: registry not reached'), repointRetry(1));
+      expect(g.want(torUp: true), isTrue);
+    });
+
+    test('claims are a second apart, as the registry orders them', () {
+      expect(repointApart, greaterThan(const Duration(seconds: 1)));
+    });
+
+    test('an answer, or nothing to send, is done for the run', () {
+      for (final r in [null, 'ok', 'error: taken', 'error: not yours']) {
+        final g = RepointGate()..going();
+        expect(g.settled(r), isNull, reason: '$r');
+        expect(g.want(torUp: true), isFalse, reason: '$r');
+      }
+    });
+
+    test('one put back, as a decoy opens, is armed again', () {
+      final g = RepointGate()..going();
+      g.putBack();
+      expect(g.want(torUp: true), isTrue);
+    });
   });
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // an opener of ours that never came back delivered is not left at one try.
 // while they have not added us back it goes again after ten minutes, an
-// hour, six hours and a day, by its first-contact address too, until a
+// hour, six hours and a day, by its first-contact address too and the last
+// time by its onion and the pair address, until a
 // receipt, a block, a new key or their add stops it. the moment they add
 // us back, what went to them with no receipt goes once more on the lane
 // they read now, its uid the same, a row a block kept back never. the
@@ -217,7 +218,17 @@ void main() {
         await lastWent('o1', now - wait * _min);
         await app.sendOpenersAgain();
         await settle();
-        expect(went('o1'), contains('fc'), reason: 'try ${tries + 1}');
+        if (tries + 1 < 4) {
+          expect(went('o1'), contains('fc'), reason: 'try ${tries + 1}');
+        } else {
+          // the last goes by her onion and the pair address, never her
+          // first-contact address, which may be one she has reset since
+          expect(
+            went('o1'),
+            unorderedEquals(['onion', 'relay']),
+            reason: 'try ${tries + 1}',
+          );
+        }
         expect(again('o1')!['tries'], tries + 1);
         io.sent.clear();
       }
@@ -419,6 +430,16 @@ void main() {
       await hears('p2', 'a2');
       expect(went('o1'), ['relay']);
     });
+
+    test(
+      'lets go of her first-contact address, so no card hands it on',
+      () async {
+        expect(app.peerFcFor(_amy), 'fc-$_amy');
+        await hears('p1', 'a1');
+        await settle();
+        expect(app.peerFcFor(_amy), isNull);
+      },
+    );
 
     test('reaches no further back than a copy is known as gone', () async {
       const day = 24 * 60 * _min;

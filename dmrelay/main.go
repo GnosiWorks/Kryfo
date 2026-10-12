@@ -6,18 +6,17 @@ package main
 // scraped in bulk. 10050 reads stay open, they exist to be discovered.
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"log"
 	"net/http"
-	"context"
 	"strconv"
 	"time"
 
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/fiatjaf/khatru"
 	"github.com/nbd-wtf/go-nostr"
-	
 )
 
 var (
@@ -29,10 +28,12 @@ var (
 
 const (
 	maxContentBytes = 128 * 1024
-	// we sweep at 14 days; the extra day absorbs clock skew so a phone an
-	// hour fast does not have its mail refused.
-	maxExpiry       = wrapTTL + 24*time.Hour
-	maxFutureSkew   = 15 * time.Minute
+	// we sweep at 14 days. the app stamps 14 days plus up to a day so the
+	// tag does not give away the send time, and a phone's clock may run
+	// fast on top of that
+	maxExpiry     = wrapTTL + 24*time.Hour + maxExpirySkew
+	maxExpirySkew = 2 * time.Hour
+	maxFutureSkew = 15 * time.Minute
 	// wraps jitter created_at into the past, spec allows up to 2 days
 	maxPastSkew = 3 * 24 * time.Hour
 )

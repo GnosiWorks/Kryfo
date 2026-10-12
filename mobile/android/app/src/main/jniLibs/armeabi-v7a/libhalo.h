@@ -213,12 +213,6 @@ extern int HaloSealChunk(char* cKey, unsigned long long index, unsigned char typ
 //
 extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ, unsigned char* in, int inLen, unsigned char* out);
 
-// takes newline separated bridge lines and whether to use them. the caller
-// calls HaloRestartTor afterwards, which hands the new config to the running
-// tor and bounces its network so it takes.
-//
-extern char* HaloSetBridges(char* cLines, int on);
-
 // a json list with one entry per line of the last HaloSetBridges, in the
 // order given: {"i":0,"state":"ok|fixed|broken","why":"..."}. it never
 // repeats a line, the app has them.

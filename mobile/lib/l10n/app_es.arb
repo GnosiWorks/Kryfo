@@ -1356,6 +1356,7 @@
   "restoreMoving": "Trasladando… {progress}",
   "restoreRestoring": "Restaurando…",
   "restoreNotThisOne": "Este no",
+  "restoreStopRestore": "Detener la restauración",
   "restoreDateUnknown": "Fecha desconocida",
   "restoreAnIdentity": "Una identidad",
   "restoreMessagesSentOrReceived": "Los mensajes enviados o recibidos después de esa fecha no están en este archivo.",

@@ -1356,6 +1356,7 @@
   "restoreMoving": "جارٍ النقل… ⁨{progress}⁩",
   "restoreRestoring": "جارٍ الاستعادة…",
   "restoreNotThisOne": "ليس هذا",
+  "restoreStopRestore": "إيقاف الاستعادة",
   "restoreDateUnknown": "تاريخ غير معروف",
   "restoreAnIdentity": "هوية",
   "restoreMessagesSentOrReceived": "الرسائل المُرسلة أو المستلمة بعد ذلك التاريخ ليست في هذا الملف.",

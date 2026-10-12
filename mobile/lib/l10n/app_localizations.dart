@@ -7611,6 +7611,12 @@ abstract class AppLocalizations {
   /// **'Not this one'**
   String get restoreNotThisOne;
 
+  /// screens/restore_screen.dart: while the handle is released before a restore, leaves the screen; the release still finishes
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the restore'**
+  String get restoreStopRestore;
+
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
