@@ -1,0 +1,444 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package main
+
+import (
+	"context"
+	"encoding/hex"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+)
+
+// android's default-network watch and the plain online call, the park and
+// the way back. no tor here: a fake control port that records what tor was
+// told.
+
+// the bounce stubbed and the debounce in milliseconds. the worker it leaves
+// is waited out before the real bounce is put back
+func quietBounce(t *testing.T) {
+	t.Helper()
+	ob, oq, og := netBounce, netQuiet, netGap
+	netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond
+	t.Cleanup(func() {
+		waitUntil(5*time.Second, func() bool {
+			netMu.Lock()
+			defer netMu.Unlock()
+			return !netWorker
+		})
+		netBounce, netQuiet, netGap = ob, oq, og
+	})
+}
+
+// android's word not had yet, and put back as it was after
+func keepNetDetail(t *testing.T) {
+	t.Helper()
+	netInfoMu.Lock()
+	saved := netInfoNow
+	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
+	netInfoMu.Unlock()
+	t.Cleanup(func() {
+		netInfoMu.Lock()
+		netInfoNow = saved
+		netInfoMu.Unlock()
+		setOffline(false)
+	})
+}
+
+// a none from the plain call while android's watch says a network is there
+// is not taken: tor stays on the network
+func TestNetWatchOutranksANone(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	quietBounce(t)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi"}`)
+	networkChangedTo(false)
+	time.Sleep(100 * time.Millisecond)
+	if netOffline.Load() || torParked.Load() || countSent(f.sent(), netOff) != 0 {
+		t.Fatalf("parked on a none the watch did not say: offline %v parked %v %v",
+			netOffline.Load(), torParked.Load(), f.sent())
+	}
+	// and the watch saying none is taken whatever the plain call says
+	networkDetail(`{"on":false,"kind":"other"}`)
+	networkChangedTo(true)
+	if !netOffline.Load() {
+		t.Fatal("online by the plain call while the watch says none")
+	}
+}
+
+// the watch alone says none, then a network: tor leaves the network and
+// is bounced back on, with no word from the plain call
+func TestADetailOnlyOutageBouncesBack(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi"}`)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	if !waitUntil(2*time.Second, func() bool { return torParked.Load() && countSent(f.sent(), netOff) > 0 }) {
+		t.Fatalf("not parked on the watch's none: %v", f.sent())
+	}
+	networkDetail(`{"on":true,"validated":true,"kind":"cellular"}`)
+	if !waitUntil(3*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 && !torParked.Load() }) {
+		t.Fatalf("not back on the network after the watch's return: %v", f.sent())
+	}
+}
+
+// a park with no network said to be there for long: the valve tries tor,
+// and a relay through it ends the outage
+func TestTheValveTakesARelayAsANetwork(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	quietBounce(t)
+	oa := netValveAfter
+	netValveAfter = time.Minute
+	netProof = 3 * time.Second
+	t.Cleanup(func() { netValveAfter = oa })
+	networkChangedTo(false)
+	if !waitUntil(2*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if netValveDue(time.Now()) {
+		t.Fatal("the valve opened at once")
+	}
+	if !netValveDue(time.Now().Add(2 * time.Minute)) {
+		t.Fatal("the valve did not open")
+	}
+	done := make(chan struct{})
+	go func() { netValveTry(); close(done) }()
+	if !waitUntil(2*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
+		t.Fatalf("the valve did not put tor on: %v", f.sent())
+	}
+	// a relay through the tor that came back
+	for end := time.Now().Add(3 * time.Second); time.Now().Before(end); {
+		routeNoteOK()
+		select {
+		case <-done:
+			end = time.Now()
+		case <-time.After(20 * time.Millisecond):
+		}
+	}
+	<-done
+	if netOffline.Load() || torParked.Load() {
+		t.Fatalf("a relay got through and still offline %v parked %v", netOffline.Load(), torParked.Load())
+	}
+}
+
+// the valve proves nothing: tor is parked again, and the next try waits
+// twice as long
+func TestTheValveParksAgainAndBacksOff(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	quietBounce(t)
+	oa := netValveAfter
+	netValveAfter = time.Minute
+	t.Cleanup(func() { netValveAfter = oa })
+	networkChangedTo(false)
+	if !waitUntil(2*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	now := time.Now()
+	if !netValveDue(now.Add(61 * time.Second)) {
+		t.Fatal("the valve did not open")
+	}
+	offs := countSent(f.sent(), netOff)
+	netValveTry()
+	if !netOffline.Load() || !torParked.Load() || countSent(f.sent(), netOff) <= offs {
+		t.Fatalf("not parked again: offline %v parked %v %v", netOffline.Load(), torParked.Load(), f.sent())
+	}
+	if netValveDue(now.Add(61*time.Second + 90*time.Second)) {
+		t.Fatal("the valve opened again before its back-off")
+	}
+	if !netValveDue(now.Add(61*time.Second + 121*time.Second)) {
+		t.Fatal("the valve did not open after its back-off")
+	}
+}
+
+// a start that saw a network, then a park before its DisableNetwork 0
+// reached tor: tor is not put on the network with none
+func TestAStartAfterAParkStaysOff(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
+	mu.Lock()
+	tn := torNode
+	mu.Unlock()
+	ctrlMu.Lock()
+	done := make(chan struct{})
+	go func() { networkOnAtStart(tn); close(done) }()
+	time.Sleep(50 * time.Millisecond)
+	setOffline(true)
+	ctrlMu.Unlock()
+	<-done
+	if n := countSent(f.sent(), netOn); n != 0 {
+		t.Fatalf("a start put tor on the network with none: %v", f.sent())
+	}
+	if !torParked.Load() {
+		t.Fatal("not marked off the network")
+	}
+}
+
+// a start with no network parks tor at once
+func TestAStartWithNoNetworkParks(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	setOffline(true)
+	mu.Lock()
+	tn := torNode
+	mu.Unlock()
+	networkOnAtStart(tn)
+	if countSent(f.sent(), netOn) != 0 || !torParked.Load() {
+		t.Fatalf("parked %v: %v", torParked.Load(), f.sent())
+	}
+}
+
+// the network goes while tor takes a wake's DisableNetwork 0, and the
+// park finds tor parked still: tor ends off the network all the same
+func TestAWakeRacingAParkEndsOff(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	if r := torStop(); r != "ok" {
+		t.Fatalf("stop: %s", r)
+	}
+	torParked.Store(true)
+	f.slowNet.Store(int64(300 * time.Millisecond))
+	t.Cleanup(func() { f.slowNet.Store(0) })
+	done := make(chan string, 1)
+	go func() { done <- torResume() }()
+	if !waitUntil(time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
+		t.Fatalf("no wake sent: %v", f.sent())
+	}
+	setOffline(true)
+	go netPark()
+	if r := <-done; r != "ok" {
+		t.Fatalf("wake: %s", r)
+	}
+	f.slowNet.Store(0)
+	if !waitUntil(3*time.Second, func() bool {
+		var last string
+		for _, c := range f.sent() {
+			if strings.Contains(c, "DISABLENETWORK") {
+				last = c
+			}
+		}
+		return strings.Contains(last, netOff) && torParked.Load()
+	}) {
+		t.Fatalf("left on the network with none: %v", f.sent())
+	}
+}
+
+// no network: a park when the network is back already does nothing
+func TestAParkAfterTheNetworkCameDoesNothing(t *testing.T) {
+	f := offlineRig(t)
+	netPark()
+	time.Sleep(100 * time.Millisecond)
+	if n := countSent(f.sent(), netOff); n != 0 {
+		t.Fatalf("parked with a network there: %v", f.sent())
+	}
+}
+
+// in tor mode the network back wakes the runners only once tor is on it
+// again: the bounce kicks them
+func TestNetworkBackLeavesTheKickToTheBounce(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	quietBounce(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
+	networkChangedTo(false)
+	torParked.Store(true)
+	var kicked atomic.Bool
+	kc := kickChan()
+	go func() { kicked.Store(sleepOrKickOn(kc, 200*time.Millisecond)) }()
+	networkChangedTo(true)
+	time.Sleep(300 * time.Millisecond)
+	if kicked.Load() {
+		t.Fatal("runners kicked to dial through a tor still off the network")
+	}
+}
+
+// automatic's direct step on the old network: tor leaves the network at
+// once on a change, not after the quiet window
+func TestADirectStepLeavesTheNetworkOnAChange(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	keepNetDetail(t)
+	// the bounce does nothing here: what leaves the network is the change
+	quietBounce(t)
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	autoDirectOK.Store(true)
+	setNetInfo(wifi())
+	networkChangedTo(true)
+	if !waitUntil(time.Second, func() bool { return countSent(f.sent(), netOff) > 0 }) {
+		t.Fatalf("direct stayed on the network after the change: %v", f.sent())
+	}
+	if why := networkHold(); why != errAutoWait {
+		t.Fatalf("hold %q", why)
+	}
+}
+
+// a network change inside a check-in, with tor's control port slow: the
+// call returns at once and the step is put behind it
+func TestNetworkStateReturnsWhileTheControlPortWaits(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	f.slow.Store(int64(3 * time.Second))
+	keepNetDetail(t)
+	quietBounce(t)
+	atomicPaused(t)
+	setNetInfo(wifi())
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no", SkipDirect: true}
+	autoMu.Unlock()
+	checkInMu.Lock()
+	checkInUntil = autoNow().Add(time.Minute)
+	checkInMu.Unlock()
+	t.Cleanup(func() {
+		checkInMu.Lock()
+		checkInUntil = time.Time{}
+		checkInMu.Unlock()
+		waitUntil(10*time.Second, func() bool {
+			ciStepMu.Lock()
+			defer ciStepMu.Unlock()
+			return !ciStepBusy
+		})
+	})
+	t0 := time.Now()
+	networkChangedTo(true)
+	networkChangedTo(true)
+	if d := time.Since(t0); d > 500*time.Millisecond {
+		t.Fatalf("the network change took %s", d)
+	}
+	if !waitUntil(10*time.Second, func() bool {
+		l := bridgeLines()
+		return bridgesEnabled() && len(l) > 0 && strings.HasPrefix(l[0], "obfs4 ")
+	}) {
+		t.Fatal("the check-in step was not put")
+	}
+}
+
+// a check-in, and the plain call says online before android's watch names
+// the network: no step for a network nobody has named
+func TestACheckInWaitsForTheNetworksKind(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	keepNetDetail(t)
+	quietBounce(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
+	today := dayOf(autoNow())
+	memMu.Lock()
+	autoMem.Last = map[string]autoUse{"wifi": {Method: "direct", Day: today}}
+	autoMem.Blocked = map[string]int64{"other": today}
+	memMu.Unlock()
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	networkDetail(`{"on":false,"kind":"other"}`)
+	checkIn(true)
+	t.Cleanup(func() { checkIn(false) })
+	networkChangedTo(true)
+	time.Sleep(100 * time.Millisecond)
+	if bridgesEnabled() || autoDirectOK.Load() {
+		t.Fatalf("a step for an unnamed network: bridges %v direct %v", bridgesEnabled(), autoDirectOK.Load())
+	}
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi"}`)
+	if !waitUntil(2*time.Second, func() bool { return autoDirectOK.Load() && !bridgesEnabled() }) {
+		t.Fatalf("the wifi step was not put: bridges %v direct %v", bridgesEnabled(), autoDirectOK.Load())
+	}
+}
+
+// a runner that finds tor off the network hears a kick that comes between
+// its look and its sleep
+func TestAParkedRunnerHearsAKickBeforeItSleeps(t *testing.T) {
+	si := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, nil, si)
+	keepNetDetail(t)
+	setOffline(true)
+	var looks atomic.Int32
+	runnerParkHook = func() {
+		if looks.Add(1) == 1 {
+			kickRelays()
+		}
+	}
+	t.Cleanup(func() { runnerParkHook = nil })
+	peer := newXid(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	if !waitUntil(3*time.Second, func() bool { return looks.Load() >= 2 }) {
+		t.Fatalf("the runner slept through a kick, %d looks", looks.Load())
+	}
+}
+
+// a parked runner ends with its subscription, not fifteen minutes on
+func TestAParkedRunnerEndsWithItsContext(t *testing.T) {
+	si := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, nil, si)
+	keepNetDetail(t)
+	setOffline(true)
+	var looks atomic.Int32
+	runnerParkHook = func() { looks.Add(1) }
+	t.Cleanup(func() { runnerParkHook = nil })
+	before := fcRelaysLive.Load()
+	ctx, cancel := context.WithCancel(context.Background())
+	go nostrSubscribeRunnerMode(ctx, "firstcontact", [32]byte{}, strings.Repeat("ab", 32), true, 3)
+	if !waitUntil(3*time.Second, func() bool { return looks.Load() > 0 }) {
+		t.Fatal("the runner never parked")
+	}
+	cancel()
+	if !waitUntil(2*time.Second, func() bool { return fcRelaysLive.Load() == before }) {
+		t.Fatal("a parked runner outlived its subscription")
+	}
+}
+
+// a mode with no way out lands after a reconnect looked at the hold and
+// before its DisableNetwork 0: tor stays off the network
+func TestAModeChangeBeforeTheNetworkOnHolds(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	f.slow.Store(0)
+	release := make(chan struct{})
+	locked := make(chan struct{})
+	var once sync.Once
+	reconnectStepHook = func(_ int64, name string) {
+		if name != "network on" {
+			return
+		}
+		once.Do(func() {
+			go func() {
+				ctrlMu.Lock()
+				close(locked)
+				<-release
+				ctrlMu.Unlock()
+			}()
+			<-locked
+		})
+	}
+	t.Cleanup(func() { reconnectStepHook = nil })
+	before := len(f.sent())
+	done := make(chan string, 1)
+	go func() { done <- reconnectNow() }()
+	<-locked
+	time.Sleep(100 * time.Millisecond)
+	autoMu.Lock()
+	bmMode = bmAuto
+	autoMu.Unlock()
+	autoDirectOK.Store(false)
+	close(release)
+	if r := <-done; r != errAutoWait {
+		t.Fatalf("reconnect: %q", r)
+	}
+	if netOnIn(sentAfter(f, before)) {
+		t.Fatalf("tor went on the network after the mode changed: %v", f.sent())
+	}
+}

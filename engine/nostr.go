@@ -175,13 +175,26 @@ func sleepOrKick(d time.Duration) bool { return sleepOrKickOn(kickChan(), d) }
 // as sleepOrKick, on a kick channel taken before the check that led here, so
 // a kick between the two is not missed
 func sleepOrKickOn(kc chan struct{}, d time.Duration) bool {
+	return sleepOrKickCtx(context.Background(), kc, d)
+}
+
+// as sleepOrKickOn, and over when ctx is
+func sleepOrKickCtx(ctx context.Context, kc chan struct{}, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
 	select {
-	case <-time.After(d):
+	case <-t.C:
 		return false
 	case <-kc:
 		return true
+	case <-ctx.Done():
+		return false
 	}
 }
+
+// called when a runner finds tor off the network, before it sleeps, for
+// the tests
+var runnerParkHook func()
 
 // a req shaped like any other this socket sends: its own address, nothing
 // older than now and no stored events. the relay answers eose, which is the
@@ -1451,8 +1464,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// network. do not poll for it every ten seconds: the kick that
 				// follows a resume or the network coming back wakes this.
 				kc := kickChan()
-				if modeNeedsTor() && (torIsPaused() || netOffline.Load()) {
-					sleepOrKickOn(kc, 15*time.Minute)
+				if modeNeedsTor() && (torIsPaused() || netAway()) {
+					if h := runnerParkHook; h != nil {
+						h()
+					}
+					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
 				client, err := torNostrClientFor(lane)

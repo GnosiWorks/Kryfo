@@ -1330,7 +1330,13 @@ func putCheckInStep() string {
 	if mode != bmAuto {
 		return "ok"
 	}
-	kind, mem, today := currentNet().Kind, memSnapshot(), dayOf(autoNow())
+	// no network, or one android has not named yet: its kind is not known,
+	// and the detail that names it puts the step
+	n := currentNet()
+	if d, known := netDetailNow(); !n.On || (known && !d.On) {
+		return "ok"
+	}
+	kind, mem, today := n.Kind, memSnapshot(), dayOf(autoNow())
 	s, ok := checkInStep(kind, mem, opts, today)
 	if !ok {
 		// nothing remembered here: tor alone where that is welcome, else
@@ -1360,6 +1366,40 @@ func putCheckInStep() string {
 		}
 	}
 	return "ok"
+}
+
+// putCheckInStep off the caller's thread, one at a time, the last change
+// always looked at
+var (
+	ciStepMu    sync.Mutex
+	ciStepBusy  bool
+	ciStepAgain bool
+)
+
+func putCheckInStepSoon() {
+	ciStepMu.Lock()
+	if ciStepBusy {
+		ciStepAgain = true
+		ciStepMu.Unlock()
+		return
+	}
+	ciStepBusy = true
+	ciStepMu.Unlock()
+	go func() {
+		for {
+			if inCheckIn() {
+				putCheckInStep()
+			}
+			ciStepMu.Lock()
+			if !ciStepAgain {
+				ciStepBusy = false
+				ciStepMu.Unlock()
+				return
+			}
+			ciStepAgain = false
+			ciStepMu.Unlock()
+		}
+	}()
 }
 
 // ---- the status line ----

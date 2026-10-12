@@ -26,11 +26,19 @@ func offlineRig(t *testing.T) *fakeControl {
 	lastNetBounce = time.Time{}
 	netMu.Unlock()
 	torParked.Store(false)
-	netOffline.Store(false)
+	setOffline(false)
+	// android's watch has said nothing: the plain call decides
+	netInfoMu.Lock()
+	saved := netInfoNow
+	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
+	netInfoMu.Unlock()
 	t.Cleanup(func() {
 		// a worker still on its way out runs against the fake
 		time.Sleep(300 * time.Millisecond)
-		netOffline.Store(false)
+		netInfoMu.Lock()
+		netInfoNow = saved
+		netInfoMu.Unlock()
+		setOffline(false)
 		torParked.Store(false)
 		netQuiet, netGap, netProof, netProofTries, netProofStep = oq, og, op, ot, os
 	})
@@ -169,10 +177,11 @@ func TestWakeWithNoNetworkStaysOff(t *testing.T) {
 // relay runners sleep through an outage and wake when the network is back,
 // even when the change lands between their look at it and their sleep
 func TestNetworkBackWakesSleepingRunners(t *testing.T) {
-	ob, op := netBounce, netPark
-	netBounce, netPark = func() {}, func() {}
-	defer func() { netBounce, netPark = ob, op }()
-	defer netOffline.Store(false)
+	quietBounce(t)
+	keepNetDetail(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
 
 	networkChangedTo(false)
 	kc := kickChan()
@@ -188,14 +197,6 @@ func TestNetworkBackWakesSleepingRunners(t *testing.T) {
 		t.Fatal("a runner asleep through the outage was not woken by the network")
 	}
 	// the detail call can be the first to say the network is back
-	netInfoMu.Lock()
-	saved := netInfoNow
-	netInfoMu.Unlock()
-	defer func() {
-		netInfoMu.Lock()
-		netInfoNow = saved
-		netInfoMu.Unlock()
-	}()
 	networkDetail(`{"on":false,"kind":"wifi"}`)
 	kc = kickChan()
 	go func() { woke <- sleepOrKickOn(kc, 5*time.Second) }()

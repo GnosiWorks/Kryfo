@@ -567,8 +567,8 @@ func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
 	checkIn(true)
 	t.Cleanup(func() { checkIn(false) })
 	networkChanged()
-	if why := networkHold(); why != "" {
-		t.Fatalf("a check-in left held by a network change: %q", why)
+	if !waitUntil(2*time.Second, func() bool { return networkHold() == "" }) {
+		t.Fatalf("a check-in left held by a network change: %q", networkHold())
 	}
 }
 
@@ -679,7 +679,7 @@ func TestHeldPassReappliesAndClearsTheHold(t *testing.T) {
 // a check-in's step and a new mode never interleave: the new mode's end
 // of direct is the last word
 func TestCheckInStepAndANewModeDoNotInterleave(t *testing.T) {
-	useFakeAuto(t, netInfo{On: false, Kind: "wifi"})
+	useFakeAuto(t, wifi())
 	today := dayOf(autoNow())
 	memMu.Lock()
 	autoMem.Last = map[string]autoUse{"wifi": {Method: "direct", Day: today}}

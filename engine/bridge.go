@@ -459,18 +459,57 @@ func networkOnAtStart(t *tor.Tor) {
 		}
 		return
 	}
-	if netOffline.Load() {
-		log.Println("halo: tor stays off the network until there is one")
-		torParked.Store(true)
-		return
-	}
-	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
-	}); err != nil {
+	why, err := networkOn(t, nil)
+	switch {
+	case err != nil:
 		log.Printf("halo: enable network: %v", err)
-		return
+	case why == errOffline:
+		log.Println("halo: tor stays off the network until there is one")
+		netParked()
+	case why != "":
+		log.Printf("halo: tor stays off the network (%s)", why)
 	}
-	torParked.Store(false)
+}
+
+// DisableNetwork 0, unless there is no network or tor may not go out now.
+// both are looked at under the control port's lock, so a park or a mode
+// change that comes later goes to tor after this. before runs just ahead
+// of the command. why it was not sent, or "" once it was
+func networkOn(t *tor.Tor, before func()) (string, error) {
+	why := ""
+	err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		if netAway() {
+			why = errOffline
+			return nil
+		}
+		if why = networkHold(); why != "" {
+			return nil
+		}
+		if before != nil {
+			before()
+		}
+		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+	})
+	if err != nil || why != "" {
+		return why, err
+	}
+	netWentOn()
+	return "", nil
+}
+
+// no network: tor holds its config and stays off until one comes, so it
+// does not mark every guard down trying to reach them. told again, as a
+// start or a wake may have put it on since this reconnect took it off
+func reconnectParks(t *tor.Tor) string {
+	log.Println("halo: leaving tor off the network (no network)")
+	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+	}); err != nil {
+		log.Printf("halo: tor would not leave the network: %v", err)
+	}
+	atomic.StoreInt32(&bounceOff, 0)
+	netParked()
+	return errOffline
 }
 
 // bine writes a fresh torrc and control-port file per run and does not always
@@ -962,13 +1001,8 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
-	// no network: tor holds its config and stays off until one comes, so it
-	// does not mark every guard down trying to reach them
-	if netOffline.Load() {
-		log.Println("halo: leaving tor off the network (no network)")
-		torParked.Store(true)
-		atomic.StoreInt32(&bounceOff, 0)
-		return errOffline
+	if netAway() {
+		return reconnectParks(t)
 	}
 	// an unknown mode is never direct, and neither are bridges tor did not
 	// take: it would go out on whatever it had before
@@ -982,11 +1016,11 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		return why
 	}
 	// what tor says from here on is about the switch an attempt waits on
-	obsArm()
-	bounceEpoch.Store(netEpoch.Load())
-	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
-	}); err != nil {
+	why, err := networkOn(t, func() {
+		obsArm()
+		bounceEpoch.Store(netEpoch.Load())
+	})
+	if err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		if !reconnectMine(me) {
 			return superseded
@@ -995,7 +1029,14 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		setStatus("off")
 		return "error: " + err.Error()
 	}
-	torParked.Store(false)
+	if why == errOffline {
+		return reconnectParks(t)
+	}
+	if why != "" {
+		log.Printf("halo: leaving tor off the network (%s)", why)
+		atomic.StoreInt32(&bounceOff, 0)
+		return why
+	}
 	if !step("watchers") {
 		return superseded
 	}
@@ -1121,21 +1162,26 @@ func torResume() string {
 		atomic.StoreInt32(&torPaused, was)
 		return why
 	}
-	// awake, but off the network until there is one: the change that
-	// brings it bounces tor on
-	if netOffline.Load() {
-		log.Println("halo: awake, off the network until there is one")
-		torParked.Store(true)
-		setStatus("starting")
-		return "ok"
-	}
-	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
-	}); err != nil {
+	why, err := networkOn(t, nil)
+	if err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		return "error: " + err.Error()
 	}
-	torParked.Store(false)
+	switch why {
+	case "":
+	case errOffline:
+		// awake, but off the network until there is one: the change that
+		// brings it bounces tor on
+		log.Println("halo: awake, off the network until there is one")
+		netParked()
+		setStatus("starting")
+		return "ok"
+	default:
+		// a mode that came meanwhile puts its own way in place
+		log.Printf("halo: awake, off the network (%s)", why)
+		setStatus("starting")
+		return "ok"
+	}
 	statusMu.Lock()
 	hsdirUploads = 0
 	statusMu.Unlock()
@@ -1543,7 +1589,7 @@ func watchBootstrap(t *tor.Tor) {
 		}
 		// with no network there is nothing to climb: ask less often
 		wait := bootPoll
-		if time.Since(began) > bootFast || netOffline.Load() {
+		if time.Since(began) > bootFast || netAway() {
 			wait = bootPollSlow
 		}
 		time.Sleep(wait)

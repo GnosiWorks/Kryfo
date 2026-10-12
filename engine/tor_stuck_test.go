@@ -27,6 +27,8 @@ type fakeControl struct {
 	pct atomic.Int32
 	// how long a bridge command takes to answer, nanoseconds
 	slow atomic.Int64
+	// how long a DisableNetwork takes to answer, nanoseconds
+	slowNet atomic.Int64
 	// how many times the bootstrap phase was asked for
 	polls atomic.Int64
 	// what status/circuit-established says
@@ -91,6 +93,9 @@ func (f *fakeControl) handle(c net.Conn) {
 			}
 			if strings.Contains(cmd, "BRIDGE") {
 				time.Sleep(time.Duration(f.slow.Load()))
+			}
+			if strings.Contains(cmd, "DISABLENETWORK") {
+				time.Sleep(time.Duration(f.slowNet.Load()))
 			}
 			if fakeBridgeFail.Load() && strings.HasPrefix(cmd, "SETCONF") && strings.Contains(cmd, "USEBRIDGES=1") {
 				fmt.Fprint(c, "552 nope\r\n")

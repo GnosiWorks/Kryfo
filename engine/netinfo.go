@@ -51,9 +51,20 @@ func setNetInfo(n netInfo) {
 	prev := netInfoNow
 	netInfoNow = n
 	netInfoMu.Unlock()
-	// runners asleep through an outage dial again, whichever call says so first
-	if netOffline.Swap(!n.On) && n.On {
-		kickRelays()
+	was := setOffline(!n.On)
+	switch {
+	case was && n.On:
+		netBack()
+		// parked by this call alone, nothing else would bounce tor back on
+		if torParked.Load() {
+			networkChanged()
+		}
+	case !was && !n.On:
+		go netPark()
+	}
+	// a check-in puts the way of the network that is there now
+	if n.On && (was || prev.Kind != n.Kind) && inCheckIn() {
+		putCheckInStepSoon()
 	}
 	// signed in past a portal, or android got its answer at last: what
 	// failed before may get through now
@@ -61,6 +72,14 @@ func setNetInfo(n netInfo) {
 		autoValidFlips.Add(1)
 	}
 	autoKick()
+}
+
+// what android last said of the default network, and whether it has said
+// anything yet
+func netDetailNow() (netInfo, bool) {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	return netInfoNow, netInfoNow.known
 }
 
 func currentNet() netInfo {
@@ -79,8 +98,9 @@ func currentNet() netInfo {
 
 // the default network as android sees it, as json:
 // {"on":true,"validated":true,"limited":false,"vpn":false,"kind":"wifi"}.
-// it changes no state of tor: the bounce on a network change stays with
-// HaloNetworkState.
+// once it has come, whether there is a network is its word, not
+// HaloNetworkState's. tor leaves the network when it says none, and a
+// network back is bounced on if nothing else will.
 //
 //export HaloNetworkDetail
 func HaloNetworkDetail(cJSON *C.char) *C.char {
