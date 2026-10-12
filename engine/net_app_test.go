@@ -105,6 +105,38 @@ func TestAWatchAloneOnLeavesNoDispute(t *testing.T) {
 	waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() })
 }
 
+// automatic proved direct on wifi; wifi goes, connectivity sees mobile
+// before the watch does, and the park is still under way when the watch
+// says cellular
+func TestAHandoverDropsTheDirectStep(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	keepNetDetail(t)
+	quietBounce(t)
+	torParked.Store(false)
+	t.Cleanup(func() { torParked.Store(false); setOffline(false) })
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	setNetInfo(wifi())
+	time.Sleep(300 * time.Millisecond)
+	autoDirectOK.Store(true)
+	before := len(f.sent())
+	setNetInfo(netInfo{On: false, Kind: "other"})
+	time.Sleep(30 * time.Millisecond)
+	connectivitySaw(true)
+	networkChangedTo(true)
+	setNetInfo(netInfo{On: true, Validated: true, Kind: "cellular"})
+	waitUntil(5*time.Second, func() bool { return atomic.LoadInt32(&torRestarting) == 0 })
+	time.Sleep(500 * time.Millisecond)
+	sent := f.sent()[before:]
+	t.Logf("autoDirectOK=%v hold=%q last=%q sent=%v", autoDirectOK.Load(), networkHold(), lastNetCmd(sent), sent)
+	if autoDirectOK.Load() && strings.Contains(lastNetCmd(sent), "=0") {
+		t.Error("tor back on cellular by the direct step proved on wifi")
+	}
+}
+
 // wifi drop, mobile up, wifi back, in several orders: tor must end on the
 // network and the engine online
 func TestFlapOrdersEndOnTheNetwork(t *testing.T) {

@@ -63,10 +63,9 @@ func setNetInfo(n netInfo) {
 	switch {
 	case was && n.On:
 		netBack()
-		// parked by this call alone, nothing else would bounce tor back on
-		if torParked.Load() {
-			networkChanged()
-		}
+		// a network back is a new one: what was proved on the one that
+		// went, a direct step above all, does not hold for it, parked or not
+		networkChanged()
 	case !was && !n.On:
 		// what proved the network that went proves nothing now
 		routeBump()
