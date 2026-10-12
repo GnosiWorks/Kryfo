@@ -31,6 +31,8 @@ class HaloPeriodicJobService : JobService() {
             return false
         }
         Log.i("halo-engine", "periodic job: start")
+        // a check-in's budget runs from here, not from when dart answers
+        val startedAt = System.currentTimeMillis()
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine
         // in this process does the actual work either way. one that is up
@@ -57,7 +59,7 @@ class HaloPeriodicJobService : JobService() {
         // inside its one window, so it gets longer than a knock on sockets
         // that are already there. android allows a job ten minutes.
         main.postDelayed(run.finish, if (staysOn) 60_000 else 170_000)
-        ask(engine, run, if (staysOn) 0 else 15, up)
+        ask(engine, run, if (staysOn) 0 else 15, up, startedAt)
         return true
     }
 
@@ -70,14 +72,15 @@ class HaloPeriodicJobService : JobService() {
         engine: io.flutter.embedding.engine.FlutterEngine,
         run: JobRuns.Run,
         retries: Int,
-        up: Boolean
+        up: Boolean,
+        startedAt: Long
     ) {
         // stopped while a retry waited: android has taken the job back
         if (run.finished) return
         val finish = run.finish
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
-                .invokeMethod("drain", mapOf("up" to up), object : MethodChannel.Result {
+                .invokeMethod("drain", mapOf("up" to up, "at" to startedAt), object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         Log.i("halo-engine", "periodic job: drained $result")
                         main.removeCallbacks(finish)
@@ -90,7 +93,7 @@ class HaloPeriodicJobService : JobService() {
                     }
                     override fun notImplemented() {
                         if (retries > 0 && !run.finished) {
-                            val again = Runnable { ask(engine, run, retries - 1, up) }
+                            val again = Runnable { ask(engine, run, retries - 1, up, startedAt) }
                             run.retry = again
                             main.postDelayed(again, 2_000)
                             return

@@ -1581,5 +1581,6 @@ func HaloSetAutoMemory(cJSON *C.char) *C.char {
 //
 //export HaloCheckIn
 func HaloCheckIn(on C.int) *C.char {
+	noteCheckIn(int(on))
 	return C.CString(checkIn(on != 0))
 }

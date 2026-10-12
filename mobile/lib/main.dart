@@ -274,6 +274,21 @@ class HaloEngine {
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => engineTake(_nostrKick());
 
+  // the open chat's peer key, '' for none: its address asks first after a
+  // start or wake, with no turn. looked up on first use so older engines load
+  late final OneArgFnDart _nostrFirst = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrFirst');
+  void nostrFirst(String peerXPubHex) {
+    final p = peerXPubHex.toNativeUtf8();
+    try {
+      engineTake(_nostrFirst(p));
+    } catch (_) {
+      // an older engine without the call
+    } finally {
+      malloc.free(p);
+    }
+  }
+
   // looked up on first use so older engines still load
   late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloCatchupState',
@@ -548,9 +563,11 @@ class HaloEngine {
   // a check-in begins or ends: automatic starts no pass inside one
   late final CounterFnDart _checkInWindow = _lib
       .lookupFunction<CounterFn, CounterFnDart>('HaloCheckIn');
-  void checkInWindow(bool on) {
+  // [ago]: seconds since the job began, so the engine times the check-in's
+  // turns from the job
+  void checkInWindow(bool on, {int ago = 0}) {
     try {
-      _take(_checkInWindow(on ? 1 : 0));
+      _take(_checkInWindow(on ? 1 + ago : 0));
     } catch (_) {
       // an older engine without the call
     }
@@ -9623,12 +9640,14 @@ String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
 void claimChat(String id) {
   _chatOnScreen = id;
   _chatOnScreenIn = session.container;
+  appState.chatFirst(id);
 }
 
 void releaseChat(String id) {
   if (_chatOnScreen != id) return;
   _chatOnScreen = null;
   _chatOnScreenIn = null;
+  appState.chatFirst(null);
 }
 
 // whether [id] is being read where the rows of [c] show: the chat on
@@ -12945,15 +12964,20 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   set checkClockForTest(DateTime Function() c) => _checkClock = c;
 
-  Future<int> checkIn({String why = 'job'}) async {
+  // [jobAt]: when the job began, which may be a while before this runs. the
+  // job is stopped 170 s after it began (HaloPeriodicJobService)
+  Future<int> checkIn({String why = 'job', DateTime? jobAt}) async {
     if (_checking) return 0;
     _checking = true;
-    final started = _checkClock();
+    final now0 = _checkClock();
+    final started = jobAt != null && jobAt.isBefore(now0) ? jobAt : now0;
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     // tor asleep in the background: a check-in proper, not the app in use
     final window = wasHeld && !_inFront;
-    if (window) engine.checkInWindow(true);
+    if (window) {
+      engine.checkInWindow(true, ago: now0.difference(started).inSeconds);
+    }
     var how = 'started';
     try {
       if (!await _torWake()) {
@@ -13004,9 +13028,9 @@ class AppState extends ChangeNotifier {
         }
         // turns, dials and catch-ups are capped, so this should never bite.
         // if it ever does, something is holding catchupActive up and the
-        // line on the transport screen will say which relay. the job's
-        // three minutes bound it from the start too
-        if (secs >= 150 || now.difference(started).inSeconds >= 160) {
+        // line on the transport screen will say which relay. the job bounds
+        // it from its start too, leaving room for what follows
+        if (secs >= 150 || now.difference(started).inSeconds >= 150) {
           tail = '_capped';
           break;
         }
@@ -13023,7 +13047,10 @@ class AppState extends ChangeNotifier {
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
-      await askForMissingSlices(walked: true);
+      // a few seconds at most: the job's stop is near
+      await askForMissingSlices(
+        walked: true,
+      ).timeout(const Duration(seconds: 5), onTimeout: () {});
       for (var i = 0; i < 10 && _q.n > 0 && !everydayHeld; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
@@ -13068,14 +13095,15 @@ class AppState extends ChangeNotifier {
   }
 
   // [serviceUp]: the job found the listener service already running
-  Future<int> drainNow({bool serviceUp = false}) async {
+  // [jobAt]: when the job that asks began
+  Future<int> drainNow({bool serviceUp = false, DateTime? jobAt}) async {
     // the job can knock before a cold boot has read the mode. wait for that,
     // or the first check-in after a kill does nothing
     for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
     if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
-      return checkIn();
+      return checkIn(jobAt: jobAt);
     }
     if (jobMayRest(
       mode: _deliveryMode,
@@ -17196,6 +17224,25 @@ class AppState extends ChangeNotifier {
   // the support inbox and its notifications
   final SupportBell _bell;
   final Map<String, String> _xPubToHaloId = {};
+
+  // the chat on screen's address asks first after a start or a wake
+  void chatFirst(String? haloId) {
+    var key = '';
+    if (haloId != null) {
+      for (final e in _xPubToHaloId.entries) {
+        if (e.value == haloId) {
+          key = e.key;
+          break;
+        }
+      }
+    }
+    try {
+      engine.nostrFirst(key);
+    } catch (e) {
+      dlog('first: not told (${e.runtimeType})');
+    }
+  }
+
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with
   // every peer ever seen
@@ -22613,7 +22660,11 @@ void main() async {
     dlog('job: drain asked');
     appState.noteJobRun();
     final args = call.arguments;
-    return appState.drainNow(serviceUp: args is Map && args['up'] == true);
+    final at = args is Map ? args['at'] : null;
+    return appState.drainNow(
+      serviceUp: args is Map && args['up'] == true,
+      jobAt: at is int ? DateTime.fromMillisecondsSinceEpoch(at) : null,
+    );
   });
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started

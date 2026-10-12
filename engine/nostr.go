@@ -230,12 +230,7 @@ func probeFilter(rcvPk string, now time.Time) nostr.Filter {
 // sockets of different lanes do not all ask their relays in one instant
 var kickSpread = time.Minute
 
-func kickDelay() time.Duration {
-	if kickSpread <= 0 {
-		return 0
-	}
-	return time.Duration(mrand.Int64N(int64(kickSpread)))
-}
+func kickDelay() time.Duration { return spreadDelay(kickSpread, autoNow()) }
 
 // the quiet timer, spread a quarter either way, so sockets that opened
 // together do not probe together
@@ -1414,7 +1409,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
-			var turn subTurn
+			turn := subTurn{tag: tag}
 			defer turn.done()
 			for {
 				select {
@@ -1483,7 +1478,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				err = r.ConnectWithClient(dctx, client)
 				dcancel()
 				rcancel()
-				turn.done()
+				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
 					sleepOrKick(rejoin)
@@ -1830,6 +1825,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if kickC == nil {
 							kickT = time.NewTimer(kickDelay())
 							kickC = kickT.C
+							// a check-in waits for the probe, and for the
+							// redial if it goes unanswered
+							turn.hold()
 						}
 						turn.skip()
 					case <-kickC:
@@ -1840,6 +1838,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// tearing down.
 						if relayResponds(conn, r, rcvPk) {
 							aliveNow()
+							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
 							if !idle.Stop() {
@@ -1885,6 +1884,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					youngDrops = 0
 				} else if dropped {
 					youngDrops++
+				}
+				// a kick's hold lasts through its own redial only
+				if !kicked {
+					turn.done()
 				}
 				switch {
 				case kicked:

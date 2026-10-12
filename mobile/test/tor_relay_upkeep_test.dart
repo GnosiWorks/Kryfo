@@ -728,6 +728,42 @@ void main() {
       expect(app.lastCheckHow, contains('"how":"ok"'));
     });
 
+    testWidgets('that starts late after its job ends by the job\'s budget, '
+        'not its own', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      // the job began 40 s before dart was asked: a cold boot's wait
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 40)),
+            )
+            .then((v) => n = v),
+      );
+      int? kicked;
+      var took = 0;
+      for (var i = 0; i < 200 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // a socket that never finishes
+          eng.catchup = (1, 2);
+        }
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        took = i;
+      }
+      expect(n, isNot(-1));
+      // 150 s from the job leaves room for the tail before its 170 s
+      expect(took + 40, lessThanOrEqualTo(152));
+    });
+
     testWidgets('is not taken for no relay while one still waits its '
         'turn', (t) async {
       final live = _Flaky();

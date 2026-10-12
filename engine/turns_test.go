@@ -112,8 +112,9 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 }
 
 // one turn per start and per wake: a socket that redials without a kick in
-// between goes at once, and a kick it answered on its live socket gives it
-// no second turn
+// between goes at once, one that has not got through since its last turn
+// takes no new one, and a kick it answered on its live socket gives it no
+// second turn. the open chat's address asks with no turn at all
 func TestOneTurnPerWake(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
@@ -130,6 +131,7 @@ func TestOneTurnPerWake(t *testing.T) {
 	if quick(&tn) {
 		t.Fatal("the first subscribe went without a turn")
 	}
+	tn.dialed(true)
 	if !quick(&tn) {
 		t.Fatal("a redial with no wake waited a turn")
 	}
@@ -138,6 +140,13 @@ func TestOneTurnPerWake(t *testing.T) {
 	if quick(&tn) {
 		t.Fatal("a wake went without a turn")
 	}
+	// no dial got through since that turn: the next kick is no new one
+	kickRelays()
+	spendFirstTurn()
+	if !quick(&tn) {
+		t.Fatal("a kick before the socket got through cost it a second turn")
+	}
+	tn.dialed(true)
 	kickRelays()
 	tn.skip()
 	if !quick(&tn) {
@@ -147,19 +156,45 @@ func TestOneTurnPerWake(t *testing.T) {
 	kickRelays()
 	var a, b subTurn
 	if !quick(&a) {
-		t.Fatal("the first socket after a wake waited")
+		t.Fatal("the first socket after a wake went with a turn")
 	}
 	if quick(&b) {
 		t.Fatal("a second socket after a wake went at once too")
 	}
+	// the open chat's address goes at once
+	firstTag.Store("peer-on-screen")
+	defer firstTag.Store("")
+	kickRelays()
+	spendFirstTurn()
+	open := subTurn{tag: "peer-on-screen"}
+	if !quick(&open) {
+		t.Fatal("the open chat's address waited a turn")
+	}
+	other := subTurn{tag: "someone-else"}
+	if quick(&other) {
+		t.Fatal("another address went at once with the open chat's")
+	}
 }
 
-// turns cover the whole minute, and inside a check-in end in time for the
-// dials and catch-ups behind them
+// the app's tail after the catch-ups, in its checkIn: a wait for the drain,
+// the missing-slice asks and the outbox
+const (
+	checkInDrainWait = 3 * time.Second
+	checkInAskWait   = 5 * time.Second
+	checkInOutbox    = 10 * time.Second
+	// the job's hard stop, HaloPeriodicJobService
+	checkInJobStop = 170 * time.Second
+)
+
+// out of a check-in turns cover the whole minute. in one they are a few
+// seconds and over soon after the job began, however late the app opened
+// the window, so the dial, the longest catch-up and the tail behind the
+// last one end before the job is stopped. a kick's delay follows the same
+// bound
 func TestTurnsFitACheckIn(t *testing.T) {
-	old := subSpread
-	subSpread = time.Minute
-	defer func() { subSpread = old }()
+	old, oldKick := subSpread, kickSpread
+	subSpread, kickSpread = time.Minute, time.Minute
+	defer func() { subSpread, kickSpread = old, oldKick }()
 	now := time.Date(2026, 10, 12, 12, 0, 0, 0, time.UTC)
 	oldNow := autoNow
 	autoNow = func() time.Time { return now }
@@ -171,34 +206,114 @@ func TestTurnsFitACheckIn(t *testing.T) {
 		checkInMu.Lock()
 		checkInUntil = oldUntil
 		checkInMu.Unlock()
+		noteCheckIn(0)
 	}()
-	spread := func() (lo, hi time.Duration) {
+	spread := func(draw func() time.Duration) (lo, hi time.Duration) {
 		lo = time.Hour
 		for i := 0; i < 2000; i++ {
-			d := turnDelay(now)
+			d := draw()
 			lo, hi = min(lo, d), max(hi, d)
 		}
 		return
 	}
+	turn := func() time.Duration { return turnDelay(now) }
 	checkInMu.Lock()
 	checkInUntil = time.Time{}
 	checkInMu.Unlock()
-	if lo, hi := spread(); lo > 3*time.Second || hi < 57*time.Second || hi >= time.Minute {
-		t.Fatalf("turns out of a check-in from %s to %s", lo, hi)
-	}
-	for _, ago := range []time.Duration{0, 30 * time.Second, 70 * time.Second, 2 * time.Minute} {
-		checkInMu.Lock()
-		checkInUntil = now.Add(-ago).Add(checkInMax)
-		checkInMu.Unlock()
-		left := max(0, min(time.Minute, checkInTurnsBy-ago))
-		_, hi := spread()
-		if hi > left {
-			t.Fatalf("%s into a check-in a turn of %s, past the %s left", ago, hi, left)
+	noteCheckIn(0)
+	for name, draw := range map[string]func() time.Duration{"turn": turn, "kick": kickDelay} {
+		if lo, hi := spread(draw); lo > 3*time.Second || hi < 57*time.Second || hi >= time.Minute {
+			t.Fatalf("%s out of a check-in from %s to %s", name, lo, hi)
 		}
 	}
-	// the dial and the catch-up after the last turn, inside the app's 160 s
-	// from the check-in's start
-	if checkInTurnsBy+onionDialWait+catchupCap > 160*time.Second {
-		t.Fatal("the last catch-up of a check-in could end past 160 s")
+	// the job began [job] before the app opened the window, which was
+	// [open] ago
+	for _, job := range []time.Duration{0, 5 * time.Second, 40 * time.Second} {
+		for _, open := range []time.Duration{0, 5 * time.Second, 12 * time.Second, time.Minute} {
+			checkInMu.Lock()
+			checkInUntil = now.Add(-open).Add(checkInMax)
+			checkInMu.Unlock()
+			autoNow = func() time.Time { return now.Add(-open) }
+			noteCheckIn(1 + int(job/time.Second))
+			autoNow = func() time.Time { return now }
+			since := job + open
+			for name, draw := range map[string]func() time.Duration{"turn": turn, "kick": kickDelay} {
+				_, hi := spread(draw)
+				if hi > checkInSpread {
+					t.Fatalf("a %s of %s in a check-in", name, hi)
+				}
+				if end := since + hi; hi > 0 && end > checkInTurnsBy {
+					t.Fatalf("%s %s after the job began, past %s", name, end, checkInTurnsBy)
+				}
+			}
+		}
+	}
+	if checkInTurnsBy+onionDialWait+catchupLongCap+checkInDrainWait+checkInAskWait+checkInOutbox > checkInJobStop {
+		t.Fatal("the last catch-up and the tail of a check-in could pass the job's stop")
+	}
+}
+
+// the catch-up count once nothing has moved it for half a second
+func settledActive(t *testing.T) int32 {
+	t.Helper()
+	v := atomic.LoadInt32(&catchupActive)
+	still := time.Now()
+	for end := time.Now().Add(10 * time.Second); time.Now().Before(end); {
+		time.Sleep(50 * time.Millisecond)
+		if n := atomic.LoadInt32(&catchupActive); n != v {
+			v, still = n, time.Now()
+		} else if time.Since(still) >= 500*time.Millisecond {
+			return v
+		}
+	}
+	t.Fatal("the catch-up count never settled")
+	return 0
+}
+
+// with real turns, against a relay: the first address asks at once and the
+// rest over the window, each counted as a catch-up until it is in. a kick
+// then counts every live socket from the moment its delay is drawn until
+// its probe is answered
+func TestRealTurnsAndKicks(t *testing.T) {
+	old, oldKick := subSpread, kickSpread
+	subSpread, kickSpread = 2*time.Second, 2*time.Second
+	defer func() { subSpread, kickSpread = old, oldKick }()
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, relay)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	base := settledActive(t)
+	kickRelays()
+	start := time.Now()
+	l := startLanes(t, ctx, 7, 0)
+	waitFor(t, "the turns counted", time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) > base
+	})
+	waitFor(t, "every address asked", 10*time.Second, func() bool {
+		return len(firstAsks(relay, start)) >= l.subs()
+	})
+	at := firstAsks(relay, start)
+	if at[0] > 500*time.Millisecond {
+		t.Fatalf("the first address asked %s after the start", at[0])
+	}
+	if at[len(at)-1]-at[0] < 500*time.Millisecond {
+		t.Fatalf("the addresses asked only %s apart", at[len(at)-1]-at[0])
+	}
+	waitFor(t, "every catch-up in", 10*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) == base
+	})
+	base = settledActive(t)
+
+	kickRelays()
+	waitFor(t, "every live socket counted after the kick", time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) >= base+int32(l.subs())
+	})
+	waitFor(t, "every probe answered", 10*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) == base
+	})
+	for _, c := range relay.snapshot() {
+		if c.closed.IsZero() && len(c.subIDs) < 2 {
+			t.Fatal("a live socket was not asked after the kick")
+		}
 	}
 }
