@@ -20,7 +20,7 @@ put you in danger, read all of it.
   the onion route the relays never learn your ip address or who you are. on
   the relay and fast routes they see your ip address, never what you say.
 - server seizure. there is no central server holding a contact graph or
-  message history. relays keep sealed messages for 14 days at most.
+  message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, the app can
   require a pin or biometrics, and panic wipe removes everything including
   media on disk.
