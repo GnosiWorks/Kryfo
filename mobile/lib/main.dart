@@ -12268,12 +12268,32 @@ class AppState extends ChangeNotifier {
   // and the first-contact counter are loaded, and at a random moment rather
   // than with the rest of start's traffic.
   bool _fcLoaded = false;
-  bool _repointed = false;
+  final _repoint = RepointGate();
+  Timer? _repointTimer;
+  // the registry is reached over tor on every route: tor stopped between
+  // check-ins, or still starting, is waited for (_noteTorStatus arms it)
+  bool get _torCarries =>
+      !_torHeld &&
+      (_torStatus == TorStatus.bootstrapped ||
+          _torStatus == TorStatus.publishing ||
+          _torStatus == TorStatus.reachable);
   void _maybeRepoint() {
-    if (_repointed || _myHandle == null) return;
-    if (myOnion.isEmpty || !_fcLoaded) return;
-    _repointed = true;
-    Timer(repointDelay(Random.secure()), () => unawaited(_repointHandle()));
+    if (_myHandle == null || myOnion.isEmpty || !_fcLoaded) return;
+    if (!_repoint.want(torUp: _torCarries)) return;
+    _repoint.going();
+    _repointTimer?.cancel();
+    _repointTimer = Timer(
+      repointDelay(Random.secure()),
+      () => unawaited(_repointHandle()),
+    );
+  }
+
+  // a try that got no answer goes again later, never taken as done
+  void _repointLater(String? r) {
+    final wait = _repoint.settled(r);
+    if (wait == null) return;
+    _repointTimer?.cancel();
+    _repointTimer = Timer(wait, _maybeRepoint);
   }
 
   late final _handleRepoint = HandleRepoint(
@@ -13943,18 +13963,24 @@ class AppState extends ChangeNotifier {
   // nothing is sent while the invite is the one the registry last took
   Future<void> _repointHandle() async {
     final h = _myHandle;
-    if (h == null || myOnion.isEmpty) return;
-    // a decoy open: armed again once it is left
-    if (everydayHeld) {
-      _repointed = false;
+    if (h == null || myOnion.isEmpty) {
+      _repoint.putBack();
+      return;
+    }
+    // a decoy open, or tor gone back to sleep: armed again once it is
+    // left, or once tor is up
+    if (everydayHeld || !_torCarries) {
+      _repoint.putBack();
       return;
     }
     try {
       final r = await _handleRepoint.repoint(h);
       if (r != null) _setHandleForeign(r.contains('taken'));
-    } catch (_) {
+      _repointLater(r);
+    } catch (e) {
       // offline, or the registry is down. the handle stays claimed and
-      // stale rather than lost, and the next claim fixes it.
+      // stale rather than lost, and a later try fixes it
+      _repointLater('error: ${e.runtimeType}');
     }
   }
 
@@ -17012,6 +17038,8 @@ class AppState extends ChangeNotifier {
       _bootstrapPct = pct;
       _noteTorProgress(at);
       changed = true;
+      // a repoint waiting on tor goes once tor carries
+      if (_torCarries) _maybeRepoint();
     }
     if (fresh) _torTryingSince = torReady ? null : at;
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));

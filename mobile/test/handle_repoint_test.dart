@@ -202,4 +202,44 @@ void main() {
       });
     }
   });
+
+  group('the repoint after start', () {
+    test('waits for tor, which carries every registry call', () {
+      final g = RepointGate();
+      expect(g.want(torUp: false), isFalse);
+      expect(g.want(torUp: true), isTrue);
+      g.going();
+      expect(g.want(torUp: true), isFalse);
+    });
+
+    test('a try with no answer is never taken as done, and goes again later '
+        'each time', () {
+      final g = RepointGate()..going();
+      expect(g.settled('error: context deadline exceeded'), repointRetry(1));
+      expect(g.want(torUp: true), isTrue);
+      final waits = <Duration?>[];
+      for (var i = 0; i < 6; i++) {
+        g.going();
+        waits.add(g.settled('error: tor client: tor not started'));
+      }
+      expect(waits, [
+        for (final m in [2, 4, 8, 15, 15, 15]) Duration(minutes: m),
+      ]);
+      expect(g.want(torUp: true), isTrue);
+    });
+
+    test('an answer, or nothing to send, is done for the run', () {
+      for (final r in [null, 'ok', 'error: taken']) {
+        final g = RepointGate()..going();
+        expect(g.settled(r), isNull, reason: '$r');
+        expect(g.want(torUp: true), isFalse, reason: '$r');
+      }
+    });
+
+    test('one put back, as a decoy opens, is armed again', () {
+      final g = RepointGate()..going();
+      g.putBack();
+      expect(g.want(torUp: true), isTrue);
+    });
+  });
 }
