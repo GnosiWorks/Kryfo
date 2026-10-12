@@ -1192,6 +1192,17 @@ Future<String> _startListenerOnIsolate(String dataDir) {
 /// a claim may still land
 const registryWait = Duration(seconds: 75);
 
+// a check-in's budget, in seconds from its job's start: tor carries by this,
+// the boot's listeners are up by this, the relays are kicked by this or not
+// at all, and their answers are waited for until this. the tail, about ten
+// seconds, and tor's sleep, six at most, follow. the job stops at 170
+const kCheckReadyBy = 90;
+const kCheckListenedBy = 95;
+const kCheckKickBy = 105;
+const kCheckLoopBy = 120;
+// a job older than this is someone else's clock
+const kCheckJobOldest = Duration(minutes: 10);
+
 Future<String> _ffiOnIsolate(
   String symbol,
   List<String> args, {
@@ -13306,27 +13317,47 @@ class AppState extends ChangeNotifier {
   set checkClockForTest(DateTime Function() c) => _checkClock = c;
 
   // [jobAt]: when the job began, which may be a while before this runs. the
-  // job is stopped 170 s after it began (HaloPeriodicJobService)
+  // job is stopped 170 s after it began (HaloPeriodicJobService), and all of
+  // this, tor's sleep too, is over by about 137 s into it (kCheck*)
   Future<int> checkIn({String why = 'job', DateTime? jobAt}) async {
     if (_checking) return 0;
     _checking = true;
     final now0 = _checkClock();
-    final started = jobAt != null && jobAt.isBefore(now0) ? jobAt : now0;
+    final started =
+        jobAt != null &&
+            !jobAt.isAfter(now0) &&
+            now0.difference(jobAt) <= kCheckJobOldest
+        ? jobAt
+        : now0;
+    // what is left of the job's budget until [secs] into it
+    Duration left(int secs) {
+      final l = started.add(Duration(seconds: secs)).difference(_checkClock());
+      return l.isNegative ? Duration.zero : l;
+    }
+
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     // tor asleep in the background: a check-in proper, not the app in use
     final window = wasHeld && !_inFront;
     if (window) {
-      engine.checkInWindow(true, ago: now0.difference(started).inSeconds);
+      engine.checkInWindow(
+        true,
+        ago: now0.difference(started).inSeconds.clamp(0, 600),
+      );
     }
     var how = 'started';
     try {
-      if (!await _torWake()) {
+      final woke = await _torWake().timeout(
+        left(kCheckReadyBy),
+        onTimeout: () => false,
+      );
+      if (!woke) {
         how = 'nowake';
         return 0;
       }
       // ready means the engine has a route a relay can be reached over
-      for (var i = 0; i < 75 && !torReady; i++) {
+      final readyWait = min(75, left(kCheckReadyBy).inSeconds);
+      for (var i = 0; i < readyWait && !torReady; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
       if (!torReady) {
@@ -13334,48 +13365,58 @@ class AppState extends ChangeNotifier {
         dlog('checkin($why): tor never became ready');
         return 0;
       }
-      await _listenedFirst();
-      final begunBefore = engine.catchupState().$2;
-      _needRouteUp();
-      try {
-        engine.nostrKick();
-      } catch (e) {
-        dlog('checkin: kick: $e');
-      }
-      // the relays get their time from the kick, not from a slow wake
-      final kicked = _checkClock();
-      // wait for the relays to be asked, then for every answer to be in. the
-      // engine caps each relay at catchupCap (30s), so this ends when all
-      // have finished or been given up on. a socket waiting its turn (up to
-      // a minute, see the engine's subSpread) counts as active, not as
-      // begun. the two escapes are for no relay ever getting going.
-      var quiet = 0;
-      var began = false;
+      final listenWait = left(kCheckListenedBy);
+      await _listenedFirst(
+        wait: listenWait < const Duration(seconds: 30)
+            ? listenWait
+            : const Duration(seconds: 30),
+      );
+      // too late in the job for the relays' answers: what is owed goes,
+      // and nothing counts as checked
+      final late = left(kCheckKickBy) == Duration.zero;
       var tail = '';
-      while (true) {
-        final now = _checkClock();
-        final secs = now.difference(kicked).inSeconds;
-        final (active, begun) = engine.catchupState();
-        if (begun > begunBefore) began = true;
-        if (began && active == 0) {
-          quiet++;
-          if (quiet >= 4) break;
-        } else {
-          quiet = 0;
+      if (late) {
+        tail = '_late';
+      } else {
+        final begunBefore = engine.catchupState().$2;
+        _needRouteUp();
+        try {
+          engine.nostrKick();
+        } catch (e) {
+          dlog('checkin: kick: $e');
         }
-        if (!began && active == 0 && secs >= 45) {
-          tail = '_norelay';
-          break;
+        // the relays get their time from the kick, not from a slow wake
+        final kicked = _checkClock();
+        // wait for the relays to be asked, then for every answer to be in.
+        // the engine caps each relay's catch-up, its dial and a socket's
+        // turn, so this ends when all have finished or been given up on. a
+        // socket waiting its turn counts as active, not as begun. the two
+        // escapes are for no relay ever getting going.
+        var quiet = 0;
+        var began = false;
+        while (true) {
+          final now = _checkClock();
+          final secs = now.difference(kicked).inSeconds;
+          final (active, begun) = engine.catchupState();
+          if (begun > begunBefore) began = true;
+          if (began && active == 0) {
+            quiet++;
+            if (quiet >= 4) break;
+          } else {
+            quiet = 0;
+          }
+          if (!began && active == 0 && secs >= 45) {
+            tail = '_norelay';
+            break;
+          }
+          // the job's budget, whatever holds catchupActive up: the line on
+          // the transport screen will say which relay
+          if (left(kCheckLoopBy) == Duration.zero) {
+            tail = '_capped';
+            break;
+          }
+          await Future.delayed(const Duration(seconds: 1));
         }
-        // turns, dials and catch-ups are capped, so this should never bite.
-        // if it ever does, something is holding catchupActive up and the
-        // line on the transport screen will say which relay. the job bounds
-        // it from its start too, leaving room for what follows
-        if (secs >= 150 || now.difference(started).inSeconds >= 150) {
-          tail = '_capped';
-          break;
-        }
-        await Future.delayed(const Duration(seconds: 1));
       }
       _lastCheckRelays = _relayCatchupData();
       // no relay ever got going, most often no network: nothing was
@@ -13386,14 +13427,20 @@ class AppState extends ChangeNotifier {
         return 0;
       }
       // what came in is drained by the one-second poll. let it finish, and
-      // let receipts and slice requests that answer it get out.
-      await Future.delayed(const Duration(seconds: 3));
-      // a few seconds at most: the job's stop is near
-      await askForMissingSlices(
-        walked: true,
-      ).timeout(const Duration(seconds: 5), onTimeout: () {});
-      for (var i = 0; i < 10 && _q.n > 0 && !everydayHeld; i++) {
+      // let receipts and slice requests that answer it get out, briefly:
+      // the job's stop is near
+      await Future.delayed(const Duration(seconds: 2));
+      if (!late) {
+        await askForMissingSlices(
+          walked: true,
+        ).timeout(const Duration(seconds: 3), onTimeout: () {});
+      }
+      for (var i = 0; i < 5 && _q.n > 0 && !everydayHeld; i++) {
         await Future.delayed(const Duration(seconds: 1));
+      }
+      if (late) {
+        how = 'late';
+        return 0;
       }
       how = 'ok$tail';
       _lastCheckAt = DateTime.now().millisecondsSinceEpoch;
@@ -13406,14 +13453,26 @@ class AppState extends ChangeNotifier {
         // shown on screen only: a miss shows an older time
       }
       dlog(
-        'checkin($why): done in ${DateTime.now().difference(started).inSeconds}s',
+        'checkin($why): done in ${_checkClock().difference(started).inSeconds}s',
       );
       return _lastDrainAt != drainBefore ? 1 : 0;
     } finally {
+      // tor back to sleep and the window shut first: a job stopped during
+      // the writes below must not leave tor awake. only put it back to
+      // sleep if it was asleep: a check-in that ran while the person had
+      // the app open leaves tor alone
+      if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
+        try {
+          await _torSleep().timeout(const Duration(seconds: 6));
+        } on TimeoutException {
+          dlog('checkin: tor slow to sleep');
+        }
+      }
+      if (window) engine.checkInWindow(false);
       _checking = false;
       _lastCheckHow = jsonEncode({
         'how': how,
-        'secs': DateTime.now().difference(started).inSeconds,
+        'secs': _checkClock().difference(started).inSeconds,
         'why': why,
       });
       _lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
@@ -13425,19 +13484,14 @@ class AppState extends ChangeNotifier {
       } catch (_) {
         // shown on screen only: a miss shows an older time
       }
-      // only put it back to sleep if it was asleep: a check-in that ran
-      // while the person had the app open leaves tor alone
-      if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
-        await _torSleep();
-      }
-      if (window) engine.checkInWindow(false);
       notifyListeners();
     }
   }
 
   // [serviceUp]: the job found the listener service already running
-  // [jobAt]: when the job that asks began
-  Future<int> drainNow({bool serviceUp = false, DateTime? jobAt}) async {
+  // [jobAgo]: how long ago the job that asks began, by the job's clock
+  Future<int> drainNow({bool serviceUp = false, Duration? jobAgo}) async {
+    final jobAt = jobAgo == null ? null : _checkClock().subtract(jobAgo);
     // the job can knock before a cold boot has read the mode. wait for that,
     // or the first check-in after a kill does nothing
     for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
@@ -18283,11 +18337,13 @@ class AppState extends ChangeNotifier {
 
   // a job's kick asks the relays for what they hold on the keys listened
   // on, so those are all in first
-  Future<void> _listenedFirst() async {
+  Future<void> _listenedFirst({
+    Duration wait = const Duration(seconds: 30),
+  }) async {
     // a boot still under way arms it soon: the job can knock before that
     if (!_listenArmed && !_booting) return;
     await _listened.future.timeout(
-      const Duration(seconds: 30),
+      wait,
       onTimeout: () => dlog('listen: not done before the kick'),
     );
   }
@@ -23147,10 +23203,10 @@ void main() async {
     dlog('job: drain asked');
     appState.noteJobRun();
     final args = call.arguments;
-    final at = args is Map ? args['at'] : null;
+    final ago = args is Map ? args['ago'] : null;
     return appState.drainNow(
       serviceUp: args is Map && args['up'] == true,
-      jobAt: at is int ? DateTime.fromMillisecondsSinceEpoch(at) : null,
+      jobAgo: ago is int ? Duration(milliseconds: ago) : null,
     );
   });
   // the language, before anything says a word: the first frame, or a

@@ -21,12 +21,23 @@ import "C"
 var subSpread = time.Minute
 
 // in a check-in the turns are short and over this long after the job
-// began. the dial and the longest catch-up behind the last one, then the
-// app's tail, still fit inside the job's 170 s (HaloPeriodicJobService)
+// began, and a dial and a long catch-up are cut, so the last answer is in
+// well before the app stops waiting, 120 s into the job (main.dart,
+// kCheckLoopBy). the job stops at 170 (HaloPeriodicJobService)
 var (
-	checkInSpread  = 10 * time.Second
-	checkInTurnsBy = 15 * time.Second
+	checkInSpread   = 10 * time.Second
+	checkInTurnsBy  = 15 * time.Second
+	checkInDialWait = 30 * time.Second
+	checkInLongCap  = 40 * time.Second
 )
+
+// d, or limit if that is shorter and a check-in is under way
+func checkInBound(d, limit time.Duration) time.Duration {
+	if inCheckIn() {
+		return min(d, limit)
+	}
+	return d
+}
 
 // when the job of the check-in under way began, unix nanoseconds, 0 for none
 var checkInJob atomic.Int64
@@ -89,10 +100,12 @@ type subTurn struct {
 }
 
 // waits the socket's turn, unless it has had one since the last kick or has
-// not got through since its last. from the turn until the dial is over it
+// not got through since its last. from here until the dial is over it
 // counts as a catch-up under way, so a check-in waits for it, but not as one
 // begun: with no network none ever begins. false once ctx is over
 func (t *subTurn) take(ctx context.Context) bool {
+	// every dial is counted until it is over (dialed), turn or none
+	t.hold()
 	kc := kickChan()
 	if t.kick == kc {
 		return ctx.Err() == nil
@@ -103,7 +116,6 @@ func (t *subTurn) take(ctx context.Context) bool {
 		return ctx.Err() == nil
 	}
 	t.up = false
-	t.hold()
 	if takeFirstTurn(kc) {
 		return ctx.Err() == nil
 	}

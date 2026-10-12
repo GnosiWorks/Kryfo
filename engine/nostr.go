@@ -564,7 +564,7 @@ func catchupCapFor(key string) (time.Duration, bool) {
 		// one longer turn, then back to the usual
 		catchupDrops[key] = 0
 		catchupLong[key] = true
-		return catchupLongCap, true
+		return checkInBound(catchupLongCap, checkInLongCap), true
 	}
 	catchupLong[key] = false
 	return catchupCap, false
@@ -1041,7 +1041,7 @@ func relayDialCtx(parent context.Context, u string) (context.Context, context.Ca
 	if strings.Contains(u, ".onion") {
 		d = onionDialWait
 	}
-	return context.WithTimeout(parent, d)
+	return context.WithTimeout(parent, checkInBound(d, checkInDialWait))
 }
 
 const (
@@ -1412,6 +1412,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			turn := subTurn{tag: tag}
 			defer turn.done()
 			for {
+				// nothing is counted while it parks or waits for tor below:
+				// the turn counts again from take
+				turn.done()
 				select {
 				case <-ctx.Done():
 					return

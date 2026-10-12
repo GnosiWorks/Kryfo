@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
@@ -31,8 +32,9 @@ class HaloPeriodicJobService : JobService() {
             return false
         }
         Log.i("halo-engine", "periodic job: start")
-        // a check-in's budget runs from here, not from when dart answers
-        val startedAt = System.currentTimeMillis()
+        // a check-in's budget runs from here, not from when dart answers.
+        // the boot clock, which a change of the wall clock does not move
+        val startedAt = SystemClock.elapsedRealtime()
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine
         // in this process does the actual work either way. one that is up
@@ -80,7 +82,7 @@ class HaloPeriodicJobService : JobService() {
         val finish = run.finish
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
-                .invokeMethod("drain", mapOf("up" to up, "at" to startedAt), object : MethodChannel.Result {
+                .invokeMethod("drain", mapOf("up" to up, "ago" to SystemClock.elapsedRealtime() - startedAt), object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         Log.i("halo-engine", "periodic job: drained $result")
                         main.removeCallbacks(finish)

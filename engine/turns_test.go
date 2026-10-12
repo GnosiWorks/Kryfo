@@ -176,14 +176,57 @@ func TestOneTurnPerWake(t *testing.T) {
 	}
 }
 
-// the app's tail after the catch-ups, in its checkIn: a wait for the drain,
-// the missing-slice asks and the outbox
+// a socket that goes with no turn, as the open chat's or one that has not
+// got through since its last, is counted until its dial is over too
+func TestNoTurnStillCounts(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	ctx := context.Background()
+	base := settledActive(t)
+	firstTag.Store("peer-on-screen")
+	defer firstTag.Store("")
+	open := subTurn{tag: "peer-on-screen"}
+	kickRelays()
+	spendFirstTurn()
+	if !open.take(ctx) {
+		t.Fatal("the open chat's address waited")
+	}
+	if atomic.LoadInt32(&catchupActive) != base+1 {
+		t.Fatal("the open chat's dial was not counted")
+	}
+	open.dialed(true)
+	// one that took a turn and never got through goes again at once on the
+	// next kick, counted
+	var tn subTurn
+	tn.kick = kickChan()
+	kickRelays()
+	if !tn.take(ctx) {
+		t.Fatal("a socket that never got through waited a second turn")
+	}
+	if atomic.LoadInt32(&catchupActive) != base+1 {
+		t.Fatal("a redial with no turn was not counted")
+	}
+	tn.dialed(false)
+	if atomic.LoadInt32(&catchupActive) != base {
+		t.Fatal("a dial over left a count behind")
+	}
+}
+
+// the app's check-in budget from its job's start (main.dart, kCheck*): tor
+// carries by 90, the listeners by 95, the kick by 105 or never, the answers
+// are waited for until 120. then the tail: a wait for the drain, the
+// missing-slice asks and the outbox, and tor's sleep
 const (
-	checkInDrainWait = 3 * time.Second
-	checkInAskWait   = 5 * time.Second
-	checkInOutbox    = 10 * time.Second
-	// the job's hard stop, HaloPeriodicJobService
-	checkInJobStop = 170 * time.Second
+	checkInKickBy    = 105 * time.Second
+	checkInLoopBy    = 120 * time.Second
+	checkInDrainWait = 2 * time.Second
+	checkInAskWait   = 3 * time.Second
+	checkInOutbox    = 5 * time.Second
+	checkInSleep     = 6 * time.Second
+	// all of it done by about here, well inside the job's hard stop at 170
+	// (HaloPeriodicJobService)
+	checkInAllDone = 137 * time.Second
 )
 
 // out of a check-in turns cover the whole minute. in one they are a few
@@ -248,8 +291,23 @@ func TestTurnsFitACheckIn(t *testing.T) {
 			}
 		}
 	}
-	if checkInTurnsBy+onionDialWait+catchupLongCap+checkInDrainWait+checkInAskWait+checkInOutbox > checkInJobStop {
-		t.Fatal("the last catch-up and the tail of a check-in could pass the job's stop")
+	// a socket's last turn, its dial and its longest catch-up are in before
+	// the app stops waiting
+	checkInMu.Lock()
+	checkInUntil = now.Add(checkInMax)
+	checkInMu.Unlock()
+	dial := checkInBound(onionDialWait, checkInDialWait)
+	long := checkInBound(catchupLongCap, checkInLongCap)
+	if checkInTurnsBy+dial+long > checkInLoopBy {
+		t.Fatalf("the last turn, a %s dial and a %s catch-up end past %s", dial, long, checkInLoopBy)
+	}
+	// a live socket kicked as late as the app kicks: no delay, the probe,
+	// the redial and a usual catch-up, or the app's wait ends first
+	if checkInKickBy > checkInLoopBy {
+		t.Fatal("the kick can come after the wait")
+	}
+	if checkInLoopBy+checkInDrainWait+checkInAskWait+checkInOutbox+checkInSleep > checkInAllDone {
+		t.Fatal("the tail and tor's sleep end past the budget")
 	}
 }
 
@@ -270,13 +328,39 @@ func settledActive(t *testing.T) int32 {
 	return 0
 }
 
+// the highest the catch-up count reaches while run runs, sampled tightly
+func peakActive(run func()) int32 {
+	var peak atomic.Int32
+	peak.Store(atomic.LoadInt32(&catchupActive))
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			if n := atomic.LoadInt32(&catchupActive); n > peak.Load() {
+				peak.Store(n)
+			}
+			select {
+			case <-stop:
+				return
+			default:
+				time.Sleep(100 * time.Microsecond)
+			}
+		}
+	}()
+	run()
+	close(stop)
+	<-done
+	return peak.Load()
+}
+
 // with real turns, against a relay: the first address asks at once and the
 // rest over the window, each counted as a catch-up until it is in. a kick
 // then counts every live socket from the moment its delay is drawn until
 // its probe is answered
 func TestRealTurnsAndKicks(t *testing.T) {
 	old, oldKick := subSpread, kickSpread
-	subSpread, kickSpread = 2*time.Second, 2*time.Second
+	subSpread, kickSpread = 2*time.Second, 8*time.Second
 	defer func() { subSpread, kickSpread = old, oldKick }()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
@@ -304,11 +388,16 @@ func TestRealTurnsAndKicks(t *testing.T) {
 	})
 	base = settledActive(t)
 
-	kickRelays()
-	waitFor(t, "every live socket counted after the kick", time.Second, func() bool {
-		return atomic.LoadInt32(&catchupActive) >= base+int32(l.subs())
+	// every live socket arms its delay at once; the first probe goes a
+	// random part of eight seconds later
+	peak := peakActive(func() {
+		kickRelays()
+		time.Sleep(300 * time.Millisecond)
 	})
-	waitFor(t, "every probe answered", 10*time.Second, func() bool {
+	if peak < base+int32(l.subs()) {
+		t.Fatalf("after the kick the count reached %d, want %d", peak, base+int32(l.subs()))
+	}
+	waitFor(t, "every probe answered", 15*time.Second, func() bool {
 		return atomic.LoadInt32(&catchupActive) == base
 	})
 	for _, c := range relay.snapshot() {
@@ -316,4 +405,44 @@ func TestRealTurnsAndKicks(t *testing.T) {
 			t.Fatal("a live socket was not asked after the kick")
 		}
 	}
+}
+
+// a socket whose probe went unanswered after a kick redials counted, but
+// once it finds tor asleep and parks, it counts no more: a check-in would
+// otherwise wait out its whole budget on it. slow: the probe waits 30 s
+func TestAParkedSocketCountsNothing(t *testing.T) {
+	oldKick := kickSpread
+	kickSpread = 50 * time.Millisecond
+	defer func() { kickSpread = oldKick }()
+	socks := newSocksStandIn(t)
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, relay)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		atomic.StoreInt32(&torPaused, 0)
+		cancel()
+		kickRelays()
+	}()
+	l := startLanes(t, ctx, 1, 0)
+	waitFor(t, "every address asked", 10*time.Second, func() bool {
+		n := 0
+		for _, c := range relay.snapshot() {
+			if len(c.subIDs) > 0 {
+				n++
+			}
+		}
+		return n >= l.subs()
+	})
+	base := settledActive(t)
+	relay.mu.Lock()
+	relay.probesQuiet = true
+	relay.mu.Unlock()
+	kickRelays()
+	waitFor(t, "the kicked sockets counted", 2*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) >= base+int32(l.subs())
+	})
+	atomic.StoreInt32(&torPaused, 1)
+	waitFor(t, "the parked sockets let go", 45*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) == base
+	})
 }

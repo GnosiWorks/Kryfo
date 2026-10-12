@@ -760,8 +760,45 @@ void main() {
         took = i;
       }
       expect(n, isNot(-1));
-      // 150 s from the job leaves room for the tail before its 170 s
-      expect(took + 40, lessThanOrEqualTo(152));
+      // the wait ends 120 s into the job and the tail follows: all of it by
+      // about 137, well before the job's stop at 170
+      expect(took + 40, lessThanOrEqualTo(137));
+      expect(app.lastCheckHow, contains('"how":"ok_capped"'));
+    });
+
+    testWidgets('waits for tor no further than its job allows', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      app.setTorStatusForTest(TorStatus.starting);
+      app.setRouteOKForTest(false);
+      addTearDown(() {
+        app.setTorStatusForTest(TorStatus.off);
+        app.setRouteOKForTest(true);
+      });
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      unawaited(
+        app
+            .checkIn(
+              why: 'job',
+              jobAt: at.subtract(const Duration(seconds: 40)),
+            )
+            .then((v) => n = v),
+      );
+      var took = 0;
+      for (var i = 0; i < 200 && n < 0; i++) {
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        took = i;
+      }
+      expect(n, 0);
+      // tor has until 90 s into the job
+      expect(took + 40, lessThanOrEqualTo(92));
+      expect(log, isNot(contains('kick')));
     });
 
     testWidgets('is not taken for no relay while one still waits its '
