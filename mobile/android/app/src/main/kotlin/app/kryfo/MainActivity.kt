@@ -405,15 +405,17 @@ class MainActivity : FlutterFragmentActivity() {
                         if (opens.isNullOrEmpty()) {
                             result.success(null)
                         } else {
-                            Thread {
+                            BioKey.work.execute {
                                 val s = BioKey.seal(opens)
                                 runOnUiThread { result.success(s) }
-                            }.start()
+                            }
                         }
                     }
                     "bioDisable" -> {
-                        BioKey.delete()
-                        result.success(true)
+                        BioKey.work.execute {
+                            BioKey.delete()
+                            runOnUiThread { result.success(true) }
+                        }
                     }
                     "bioUnlock" -> {
                         val title = call.argument<String>("title") ?: "kryfo"

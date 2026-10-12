@@ -11,6 +11,8 @@ import android.security.keystore.KeyProperties
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.crypto.Cipher
 
 // fingerprint unlock: what a finger opens is sealed (BioSeal) to a key pair
@@ -24,6 +26,10 @@ object BioKey {
 
     fun ready(): Boolean = Build.VERSION.SDK_INT >= 28
 
+    // every key change in the order asked for, off the main thread: a
+    // delete never lands between another seal's delete and its new key
+    val work: ExecutorService = Executors.newSingleThreadExecutor()
+
     private fun store(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
     // a new key, and [opens] sealed to it. the seal, or null. the key takes
@@ -32,10 +38,8 @@ object BioKey {
         if (!ready()) return null
         return try {
             delete()
-            val b = KeyGenParameterSpec.Builder(
-                ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-            )
+            // sealing uses the public half outside the keystore
+            val b = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_DECRYPT)
                 .setKeySize(2048)
                 .setDigests(KeyProperties.DIGEST_SHA256)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
@@ -125,10 +129,15 @@ object BioKey {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
                     // the key opens only right after a finger it was made for.
-                    // a seal it cannot open was made for another key
+                    // a seal it cannot open was made for another key. rsa
+                    // takes a moment, so not on the main thread
                     val cipher = r.cryptoObject?.cipher
-                    val opens = if (cipher == null) null else BioSeal.open(cipher, sealed)
-                    if (opens == null) once("none", null) else once("ok", opens)
+                    Thread {
+                        val opens = if (cipher == null) null else BioSeal.open(cipher, sealed)
+                        exec.execute {
+                            if (opens == null) once("none", null) else once("ok", opens)
+                        }
+                    }.start()
                 }
 
                 override fun onAuthenticationError(code: Int, msg: CharSequence?) {
