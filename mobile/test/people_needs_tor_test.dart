@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// people search goes over tor or not at all. with tor not up a calm line
-// takes the place of the wait or the error and leads to the qr and link
-// ways in; tor coming up asks again. a slow but working tor says it is
-// still reaching the registry, and a ready one searches as before. nothing
-// in the app reaches the registry any other way
+// people search goes over tor or not at all, on every route. with tor not
+// up a calm line takes the place of the wait or the error and leads to the
+// qr and link ways in; tor coming up asks again. a slow but working tor
+// says it is still reaching the registry, and a ready one searches as
+// before. on balanced and fast it is tor that counts, not the direct route.
+// nothing in the app or the engine reaches the registry any other way
 import 'dart:async';
 import 'dart:io';
 
@@ -104,9 +105,10 @@ void main() {
     appState.sendModeForTest = 'balanced';
   });
 
-  void tor(bool up) {
+  // [route]: the engine's verdict on the send route, tor's own on onion
+  void tor(bool up, {bool? route}) {
     appState.setTorStatusForTest(up ? TorStatus.reachable : TorStatus.starting);
-    appState.setRouteOKForTest(up);
+    appState.setRouteOKForTest(route ?? up);
   }
 
   Future<void> open(WidgetTester t) async {
@@ -207,13 +209,41 @@ void main() {
     await close(t);
   });
 
-  test('adding by a handle with tor not up says the same line', () async {
-    tor(false);
-    final (line, added) = await handleHaloUriAdded('@wren');
-    expect(line, l10n.handleSearchNeedsTor);
-    expect(added, isFalse);
-    expect(engine.asks, isEmpty);
-  });
+  for (final mode in ['private', 'balanced', 'fast']) {
+    group('on $mode', () {
+      setUp(() => appState.sendModeForTest = mode);
+
+      testWidgets('tor down shows the calm line, the direct route up or '
+          'not', (t) async {
+        // off onion the route's relays can be up with tor still starting
+        tor(false, route: mode != 'private');
+        await open(t);
+        await ask(t);
+        expect(find.text(l10n.handleSearchNeedsTor), findsOneWidget);
+        expect(engine.asks, isEmpty);
+        await close(t);
+      });
+
+      testWidgets('tor up searches, the direct route up or not', (t) async {
+        // off onion tor carries the search while the direct route is down
+        tor(true, route: mode == 'private');
+        await open(t);
+        await ask(t);
+        expect(engine.asks.single, endsWith('/handle/search'));
+        expect(find.text(l10n.handleSearchNeedsTor), findsNothing);
+        expect(find.text('@wren'), findsWidgets);
+        await close(t);
+      });
+
+      test('adding by a handle with tor down says the line', () async {
+        tor(false, route: mode != 'private');
+        final (line, added) = await handleHaloUriAdded('@wren');
+        expect(line, l10n.handleSearchNeedsTor);
+        expect(added, isFalse);
+        expect(engine.asks, isEmpty);
+      });
+    });
+  }
 
   test('nothing reaches the registry but through tor', () {
     // no http of its own anywhere in the app: every request is the engine's
@@ -234,32 +264,58 @@ void main() {
     // a handle's lookup goes the same way
     final main = File('lib/main.dart').readAsStringSync();
     expect(main, contains('_torGetJsonOnIsolate,\n      idOf:'));
-    // in the engine the registry calls take the services lane's client,
-    // which with onion on is tor's or an error, never a plain one
+    // in the engine the registry, search and badge calls take the services
+    // client, built from tor's socks port whatever the route
+    String fn(String src, String head) {
+      final at = src.indexOf(head);
+      expect(at, isNonNegative, reason: head);
+      return src.substring(at, src.indexOf('\n}\n', at));
+    }
+
     final nostr = File('../engine/nostr.go').readAsStringSync();
-    for (final fn in ['func torPost(', 'func torGetJSON(']) {
-      final at = nostr.indexOf(fn);
-      expect(at, isNonNegative, reason: fn);
-      final body = nostr.substring(at, nostr.indexOf('\n}\n', at));
-      expect(body, contains('torNostrClientFor(laneServices)'), reason: fn);
-      expect(body, isNot(contains('directNostrClient')), reason: fn);
+    for (final head in ['func torPost(', 'func torGetJSON(']) {
+      final body = fn(nostr, head);
+      expect(body, contains('servicesClient(ctx)'), reason: head);
+      expect(body, isNot(contains('torNostrClientFor')), reason: head);
+      expect(body, isNot(contains('directNostrClient')), reason: head);
     }
     final handle = File('../engine/handle.go').readAsStringSync();
+    final reg = fn(handle, 'var handleHTTP = func()');
+    expect(reg, contains('servicesClient(ctx)'));
+    expect(reg, isNot(contains('torNostrClientFor')));
+    final services = File('../engine/services.go').readAsStringSync();
     expect(
-      handle,
-      contains(
-        'var handleHTTP = func() (*http.Client, error) '
-        '{ return torNostrClientFor(laneServices) }',
-      ),
+      fn(services, 'func servicesClient('),
+      contains('servicesTorClient()'),
     );
-    final at = nostr.indexOf('func torNostrClientFor(');
-    final client = nostr.substring(at, nostr.indexOf('\n}\n', at));
-    // the one plain client is behind the modes that chose it
-    expect('directNostrClient()'.allMatches(client).length, 1);
-    final plain = client.indexOf('directNostrClient()');
-    final gate = client.lastIndexOf('if !modeNeedsTor() {', plain);
-    expect(gate, isNonNegative);
-    expect(client.substring(gate, plain), isNot(contains('}')));
+    final client = fn(services, 'func servicesTorClient(');
+    expect(client, contains('torDialerAs('));
+    expect(client, contains('torLaneClient('));
     expect(client, contains('return nil, fmt.Errorf("tor not started")'));
+    // no mode decides anything in it, and nothing plain is built
+    for (final bad in [
+      'directNostrClient',
+      'modeNeedsTor',
+      'currentMode',
+      'torNostrClientFor',
+      'http.DefaultClient',
+      'net.Dialer',
+    ]) {
+      expect(client, isNot(contains(bad)), reason: bad);
+    }
+    // and no other engine code hands the services lane a route's client
+    for (final f in Directory('../engine').listSync()) {
+      if (f is! File ||
+          !f.path.endsWith('.go') ||
+          f.path.endsWith('_test.go')) {
+        continue;
+      }
+      final src = f.readAsStringSync();
+      expect(
+        src,
+        isNot(contains('torNostrClientFor(laneServices)')),
+        reason: f.path,
+      );
+    }
   });
 }

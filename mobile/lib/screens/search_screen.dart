@@ -127,8 +127,8 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _peopleSlow = false;
   Timer? _peopleSlowTimer;
   static const peopleSlowAfter = Duration(seconds: 10);
-  // the route as last seen: people search waits for it, never goes round
-  bool _torUp = appState.torReady;
+  // tor as last seen: people search waits for it, never goes round
+  bool _torUp = appState.servicesReady;
 
   @override
   void initState() {
@@ -138,9 +138,9 @@ class _SearchScreenState extends State<SearchScreen> {
     appState.addListener(_torMoved);
   }
 
-  // the route back: what it could not ask before is asked again
+  // tor back: what it could not ask before is asked again
   void _torMoved() {
-    final up = appState.torReady;
+    final up = appState.servicesReady;
     if (up == _torUp || !mounted) return;
     setState(() => _torUp = up);
     final q = peopleQuery(_ctrl.text);
@@ -225,9 +225,9 @@ class _SearchScreenState extends State<SearchScreen> {
     final q = peopleQuery(_ctrl.text);
     if (q == null || (_peopleBusy && _peopleAsked == q)) return;
     _peopleSlowTimer?.cancel();
-    // the route not up: nothing goes out, nor another way. the line says
-    // how to add someone meanwhile
-    if (!sessionQuiet && !appState.torReady) {
+    // tor not up: nothing goes out, nor another way. the line says how to
+    // add someone meanwhile
+    if (!sessionQuiet && !appState.servicesReady) {
       setState(() {
         _torUp = false;
         _peopleAsked = q;
@@ -1137,7 +1137,7 @@ class _People extends StatelessWidget {
   final bool busy;
   // still asking past the wait a warm circuit takes
   final bool slow;
-  // the route cannot carry it: a calm line in place of a wait or an error
+  // tor cannot carry it: a calm line in place of a wait or an error
   final bool torDown;
   final List<PublicHandle> people;
   final PeopleError error;

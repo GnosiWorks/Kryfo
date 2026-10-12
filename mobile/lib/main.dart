@@ -9129,8 +9129,8 @@ Future<(String, bool)> handleHaloUriAdded(
   if (h != null) {
     // a quiet session never reaches the registry
     if (sessionQuiet) return (l10n.handleRegistryFailed, false);
-    // the route not up: nothing goes to the registry, nor another way
-    if (!appState.torReady) return (l10n.handleSearchNeedsTor, false);
+    // tor not up: nothing goes to the registry, nor another way
+    if (!appState.servicesReady) return (l10n.handleSearchNeedsTor, false);
     // the invite has to be the claimer's own: its id is the words of the
     // key the handle was claimed with
     final r = await resolveHandle(
@@ -17611,6 +17611,11 @@ class AppState extends ChangeNotifier {
       (_torStatus == TorStatus.bootstrapped ||
           _torStatus == TorStatus.publishing ||
           _torStatus == TorStatus.reachable);
+  // tor can carry the services lane: the registry, people search and the
+  // badges go over it on every route. on onion the route's verdict is about
+  // tor and counts; elsewhere it is about the direct route, so tor's own
+  // word, and not held asleep, is what there is
+  bool get servicesReady => _torCarries && (_sendMode != 'private' || _routeOK);
   int get bootstrapPct => _bootstrapPct;
 
   // what every screen means by connected: a network, and the route the send
