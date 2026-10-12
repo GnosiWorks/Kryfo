@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
+import '../quiet_wait.dart';
 import '../theme.dart';
 import 'ease_size.dart';
 import 'halo_buttons.dart';
@@ -180,7 +181,9 @@ class _PairCodePanelState extends State<PairCodePanel> {
     final uri = await appState.sessionInvite();
     // a quiet session never reaches the relays: it answers as unreachable
     // ones would
-    return sessionQuiet ? pairUnreached : engine.pairCodePublish(code, uri);
+    return sessionQuiet
+        ? unreachedLater(pairUnreached)
+        : engine.pairCodePublish(code, uri);
   }
 
   @override

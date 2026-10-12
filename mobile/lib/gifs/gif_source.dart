@@ -19,6 +19,7 @@ import '../dlog.dart';
 import '../handle_lookup.dart' show kHandleRegistry;
 import '../l10n/l10n.dart';
 import '../lock_guard.dart';
+import '../quiet_wait.dart';
 import '../shred.dart';
 
 /// our server, the same host the handle registry answers on
@@ -184,7 +185,9 @@ class RelayGifSource implements GifSource {
 
   @override
   Future<GifPage> search(String q, {int offset = 0, String? provider}) async {
-    if (quiet()) return const GifPage.failed(GifError.unreachable);
+    if (quiet()) {
+      return unreachedLater(const GifPage.failed(GifError.unreachable));
+    }
     final body = jsonEncode({
       'q': q,
       'lang': gifLang(),
@@ -197,7 +200,9 @@ class RelayGifSource implements GifSource {
 
   @override
   Future<GifPage> trending({int offset = 0, String? provider}) async {
-    if (quiet()) return const GifPage.failed(GifError.unreachable);
+    if (quiet()) {
+      return unreachedLater(const GifPage.failed(GifError.unreachable));
+    }
     final q = Uri(
       queryParameters: {
         'lang': gifLang(),

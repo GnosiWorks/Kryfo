@@ -104,10 +104,10 @@ import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
-import '../place_link.dart' show firstPlace;
 import '../widgets/preview_strip.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart' show titleFromHtml, firstUrl, senderPreview;
+import '../link_preview.dart'
+    show titleFromHtml, firstUrl, senderPreview, WordLinks;
 export '../link_preview.dart' show firstUrl;
 export '../atmosphere.dart'
     show
@@ -302,8 +302,9 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _Msg {
+class _Msg with WordLinks {
   final String direction;
+  @override
   String text;
   final DateTime when;
   int? burnAt;
@@ -2707,7 +2708,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<String> _routeText(String cipher, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
-    if (sessionQuiet) return 'parked';
+    if (sessionQuiet || appState.everydayHeld) return 'parked';
     if (await appState.blockedAnywhere(widget.peerHaloId)) {
       return await session.isBlocked(widget.peerHaloId)
           ? kSendBlocked
@@ -3443,7 +3444,7 @@ class _ChatScreenState extends State<ChatScreen>
     required int writtenAt,
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
-    if (sessionQuiet) return 'parked';
+    if (sessionQuiet || appState.everydayHeld) return 'parked';
     return sendChunkedMediaTo(
       peerId: widget.peerHaloId,
       peerOnion: widget.peerOnion,
@@ -3710,7 +3711,9 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet) return;
+    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+      return;
+    }
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
@@ -4068,7 +4071,7 @@ class _ChatScreenState extends State<ChatScreen>
   // to another link leaves it behind
   static Map<String, String>? _linkPreview(_Msg m) {
     final pv = m.preview;
-    return pv != null && pv['url'] == firstUrl(m.text) ? pv : null;
+    return pv != null && pv['url'] == m.url ? pv : null;
   }
 
   static String _rowKey(_Msg m) =>
@@ -6942,8 +6945,7 @@ class _Bubble extends StatelessWidget {
                                               msg.text.isEmpty &&
                                               msg.mediaPath != null)
                                             GifSentLine(path: msg.mediaPath!),
-                                          if (firstUrl(msg.text)
-                                              case final u?) ...[
+                                          if (msg.url case final u?) ...[
                                             const SizedBox(height: 6),
                                             LinkStub(
                                               url: u,
@@ -6952,8 +6954,7 @@ class _Bubble extends StatelessWidget {
                                               bySender: linkBySender,
                                             ),
                                           ],
-                                          if (firstPlace(msg.text)
-                                              case final p?) ...[
+                                          if (msg.place case final p?) ...[
                                             const SizedBox(height: 6),
                                             PlaceStub(place: p, isOut: isOut),
                                           ],
