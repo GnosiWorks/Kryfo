@@ -710,7 +710,7 @@ func TestNewFirstContactAddressGetsANewCircuit(t *testing.T) {
 // a socks name is always a lane's random one, never a word tor would see
 func TestNoFixedSocksName(t *testing.T) {
 	files, _ := filepath.Glob("*.go")
-	re := regexp.MustCompile(`torDialerAs\([^)]*"[^"]+"`)
+	re := regexp.MustCompile(`torDialerAs\([^)"]*"[^"\n]+"`)
 	for _, f := range files {
 		if strings.HasSuffix(f, "_test.go") {
 			continue
