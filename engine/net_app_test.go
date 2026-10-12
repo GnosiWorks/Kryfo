@@ -217,6 +217,9 @@ func TestAValveByHandCountsAsATry(t *testing.T) {
 	if r := reconnectNow(); r != "ok" {
 		t.Fatalf("reconnect by hand: %q", r)
 	}
+	if !waitUntil(3*time.Second, func() bool { return netValveOpen.Load() }) {
+		t.Fatal("no try by hand")
+	}
 	if !waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() && torParked.Load() }) {
 		t.Fatal("the try did not end parked")
 	}
