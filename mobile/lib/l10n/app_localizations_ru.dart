@@ -7899,7 +7899,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devDeleteFailed => 'Не удалось удалить чат. Попробуйте ещё раз.';
 
   @override
-  String get supportTitle => 'Входящие';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7910,46 +7910,44 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString ждут',
-      many: '$countString ждут',
-      few: '$countString ждут',
-      one: '$countString ждёт',
-      zero: 'Никто не ждёт',
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Ждут ответа';
+  String get supportSectionWaiting => 'Waiting';
 
   @override
-  String get supportSectionAnswered => 'Отвеченные';
+  String get supportSectionAnswered => 'Answered';
 
   @override
-  String get supportSectionDone => 'Готово';
+  String get supportSectionDone => 'Done';
 
   @override
-  String get supportEmpty => 'Пока никто не написал';
+  String get supportEmpty => 'No one has written yet';
 
   @override
   String get supportEmptyLine =>
-      'Чаты, которые начинают со строки Marios, попадают сюда, а не в запросы.';
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
-  String get supportMarkDone => 'Готово';
+  String get supportMarkDone => 'Done';
 
   @override
-  String get supportReopen => 'Открыть снова';
+  String get supportReopen => 'Reopen';
 
   @override
-  String get supportMarkAllDone => 'Отметить все ждущие ответа как готовые';
+  String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Настройки входящих';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
-      'Все сообщения этого чата удаляются с телефона. Если человек напишет снова, чат вернётся сюда.';
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7960,10 +7958,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString нового чата',
-      many: '$countString новых чатов',
-      few: '$countString новых чата',
-      one: '$countString новый чат',
+      other: '$countString new chats',
+      one: '1 new chat',
     );
     return '$_temp0';
   }
@@ -7977,52 +7973,49 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString нового сообщения',
-      many: '$countString новых сообщений',
-      few: '$countString новых сообщения',
-      one: '$countString новое сообщение',
+      other: '$countString new messages',
+      one: '1 new message',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Входящие';
+  String get supportChannelName => 'Inbox';
 
   @override
-  String get supportChannelLine => 'Чаты, начатые со строки Marios';
+  String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
   String get supportResetPinned =>
-      'Этот профиль встроен в Kryfo. Новая ссылка оборвала бы все чаты с ним.';
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
-  String get supportViaDev => 'Через чат разработчика';
+  String get supportViaDev => 'Via developer chat';
 
   @override
-  String get supportMoveAsk =>
-      'Перенести твой чат с этим человеком из входящих в этот чат?';
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
   String get supportMoveLine =>
-      'Он уйдёт из входящих и появится в разделе «Чаты». «Оставить раздельно» оставит оба как есть.';
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
-  String get supportMove => 'Перенести';
+  String get supportMove => 'Move';
 
   @override
-  String get supportKeepApart => 'Оставить раздельно';
+  String get supportKeepApart => 'Keep apart';
 
   @override
-  String get supportMoveToChats => 'Перенести в «Чаты»';
+  String get supportMoveToChats => 'Move to Chats';
 
   @override
-  String get supportMovedToChats => 'Перенесено в «Чаты»';
+  String get supportMovedToChats => 'Moved to Chats';
 
   @override
-  String get supportMoveToInbox => 'Перенести во входящие';
+  String get supportMoveToInbox => 'Move to inbox';
 
   @override
-  String get supportMovedToInbox => 'Перенесено во входящие';
+  String get supportMovedToInbox => 'Moved to inbox';
 
   @override
   String get settingsWriteToMarios => 'Написать Marios';

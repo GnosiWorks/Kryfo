@@ -7734,7 +7734,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devDeleteFailed => 'Không xóa được cuộc trò chuyện. Hãy thử lại.';
 
   @override
-  String get supportTitle => 'Hộp thư đến';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7745,43 +7745,44 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString đang chờ',
-      zero: 'Không ai đang chờ',
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Đang chờ';
+  String get supportSectionWaiting => 'Waiting';
 
   @override
-  String get supportSectionAnswered => 'Đã trả lời';
+  String get supportSectionAnswered => 'Answered';
 
   @override
-  String get supportSectionDone => 'Xong';
+  String get supportSectionDone => 'Done';
 
   @override
-  String get supportEmpty => 'Chưa có ai nhắn';
+  String get supportEmpty => 'No one has written yet';
 
   @override
   String get supportEmptyLine =>
-      'Các cuộc trò chuyện người khác bắt đầu từ dòng Marios sẽ đến đây, không vào mục yêu cầu.';
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
-  String get supportMarkDone => 'Xong';
+  String get supportMarkDone => 'Done';
 
   @override
-  String get supportReopen => 'Mở lại';
+  String get supportReopen => 'Reopen';
 
   @override
-  String get supportMarkAllDone => 'Đánh dấu tất cả đang chờ là xong';
+  String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Tùy chọn hộp thư đến';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
-      'Mọi tin nhắn trong cuộc trò chuyện này sẽ bị xóa khỏi điện thoại này. Nếu họ nhắn lại, cuộc trò chuyện sẽ quay lại đây.';
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7792,7 +7793,8 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString cuộc trò chuyện mới',
+      other: '$countString new chats',
+      one: '1 new chat',
     );
     return '$_temp0';
   }
@@ -7806,50 +7808,49 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString tin nhắn mới',
+      other: '$countString new messages',
+      one: '1 new message',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Hộp thư đến';
+  String get supportChannelName => 'Inbox';
 
   @override
-  String get supportChannelLine =>
-      'Cuộc trò chuyện người khác bắt đầu từ dòng Marios';
+  String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
   String get supportResetPinned =>
-      'Danh tính này được gắn sẵn trong Kryfo. Một liên kết mới sẽ cắt đứt mọi cuộc trò chuyện với nó.';
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
-  String get supportViaDev => 'Qua cuộc trò chuyện với nhà phát triển';
+  String get supportViaDev => 'Via developer chat';
 
   @override
-  String get supportMoveAsk =>
-      'Chuyển cuộc trò chuyện với họ trong hộp thư đến vào cuộc trò chuyện này?';
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
   String get supportMoveLine =>
-      'Nó sẽ rời hộp thư đến và hiện trong Trò chuyện. “Để riêng” giữ nguyên cả hai.';
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
-  String get supportMove => 'Chuyển';
+  String get supportMove => 'Move';
 
   @override
-  String get supportKeepApart => 'Để riêng';
+  String get supportKeepApart => 'Keep apart';
 
   @override
-  String get supportMoveToChats => 'Chuyển sang Trò chuyện';
+  String get supportMoveToChats => 'Move to Chats';
 
   @override
-  String get supportMovedToChats => 'Đã chuyển sang Trò chuyện';
+  String get supportMovedToChats => 'Moved to Chats';
 
   @override
-  String get supportMoveToInbox => 'Chuyển vào hộp thư đến';
+  String get supportMoveToInbox => 'Move to inbox';
 
   @override
-  String get supportMovedToInbox => 'Đã chuyển vào hộp thư đến';
+  String get supportMovedToInbox => 'Moved to inbox';
 
   @override
   String get settingsWriteToMarios => 'Nhắn cho Marios';

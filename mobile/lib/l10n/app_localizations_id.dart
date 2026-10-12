@@ -7744,7 +7744,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get devDeleteFailed => 'Obrolan tidak bisa dihapus. Coba lagi.';
 
   @override
-  String get supportTitle => 'Kotak masuk';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7755,43 +7755,44 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString menunggu',
-      zero: 'Tak ada yang menunggu',
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Menunggu';
+  String get supportSectionWaiting => 'Waiting';
 
   @override
-  String get supportSectionAnswered => 'Sudah dijawab';
+  String get supportSectionAnswered => 'Answered';
 
   @override
-  String get supportSectionDone => 'Selesai';
+  String get supportSectionDone => 'Done';
 
   @override
-  String get supportEmpty => 'Belum ada yang menulis';
+  String get supportEmpty => 'No one has written yet';
 
   @override
   String get supportEmptyLine =>
-      'Obrolan yang dimulai orang dari baris Marios masuk ke sini, bukan ke permintaan.';
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
-  String get supportMarkDone => 'Selesai';
+  String get supportMarkDone => 'Done';
 
   @override
-  String get supportReopen => 'Buka lagi';
+  String get supportReopen => 'Reopen';
 
   @override
-  String get supportMarkAllDone => 'Tandai semua yang menunggu sebagai selesai';
+  String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Opsi kotak masuk';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
-      'Semua pesan di obrolan ini terhapus dari ponsel ini. Kalau dia menulis lagi, obrolannya kembali ke sini.';
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7802,7 +7803,8 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString obrolan baru',
+      other: '$countString new chats',
+      one: '1 new chat',
     );
     return '$_temp0';
   }
@@ -7816,50 +7818,49 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString pesan baru',
+      other: '$countString new messages',
+      one: '1 new message',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Kotak masuk';
+  String get supportChannelName => 'Inbox';
 
   @override
-  String get supportChannelLine =>
-      'Obrolan yang dimulai orang dari baris Marios';
+  String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
   String get supportResetPinned =>
-      'Identitas ini tertanam di Kryfo. Tautan baru akan memutus semua obrolan dengannya.';
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
-  String get supportViaDev => 'Lewat obrolan pengembang';
+  String get supportViaDev => 'Via developer chat';
 
   @override
-  String get supportMoveAsk =>
-      'Pindahkan obrolanmu dengannya di kotak masuk ke obrolan ini?';
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
   String get supportMoveLine =>
-      'Obrolan itu keluar dari kotak masuk dan muncul di Obrolan. “Biarkan terpisah” membiarkan keduanya apa adanya.';
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
-  String get supportMove => 'Pindahkan';
+  String get supportMove => 'Move';
 
   @override
-  String get supportKeepApart => 'Biarkan terpisah';
+  String get supportKeepApart => 'Keep apart';
 
   @override
-  String get supportMoveToChats => 'Pindahkan ke Obrolan';
+  String get supportMoveToChats => 'Move to Chats';
 
   @override
-  String get supportMovedToChats => 'Dipindahkan ke Obrolan';
+  String get supportMovedToChats => 'Moved to Chats';
 
   @override
-  String get supportMoveToInbox => 'Pindahkan ke kotak masuk';
+  String get supportMoveToInbox => 'Move to inbox';
 
   @override
-  String get supportMovedToInbox => 'Dipindahkan ke kotak masuk';
+  String get supportMovedToInbox => 'Moved to inbox';
 
   @override
   String get settingsWriteToMarios => 'Kirim pesan ke Marios';

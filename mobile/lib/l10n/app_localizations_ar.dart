@@ -7878,7 +7878,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devDeleteFailed => 'تعذّر حذف المحادثة. حاول مرة أخرى.';
 
   @override
-  String get supportTitle => 'صندوق الوارد';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7889,47 +7889,44 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '⁨$countString⁩ في الانتظار',
-      many: '⁨$countString⁩ في الانتظار',
-      few: '⁨$countString⁩ في الانتظار',
-      two: 'اثنان في الانتظار',
-      one: 'واحد في الانتظار',
-      zero: 'لا أحد في الانتظار',
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'في الانتظار';
+  String get supportSectionWaiting => 'Waiting';
 
   @override
-  String get supportSectionAnswered => 'تمّ الرد';
+  String get supportSectionAnswered => 'Answered';
 
   @override
-  String get supportSectionDone => 'منتهية';
+  String get supportSectionDone => 'Done';
 
   @override
-  String get supportEmpty => 'لم يكتب أحد بعد';
+  String get supportEmpty => 'No one has written yet';
 
   @override
   String get supportEmptyLine =>
-      'المحادثات التي يبدؤها الناس من صف Marios تصل إلى هنا، لا إلى الطلبات.';
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
-  String get supportMarkDone => 'تم';
+  String get supportMarkDone => 'Done';
 
   @override
-  String get supportReopen => 'إعادة فتح';
+  String get supportReopen => 'Reopen';
 
   @override
-  String get supportMarkAllDone => 'تعليم كل المحادثات المنتظرة كمنتهية';
+  String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'خيارات صندوق الوارد';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
-      'تُحذف كل رسالة في هذه المحادثة من هذا الهاتف. إذا كتب الشخص مجددًا، تعود المحادثة إلى هنا.';
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7940,12 +7937,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '⁨$countString⁩ محادثة جديدة',
-      many: '⁨$countString⁩ محادثة جديدة',
-      few: '⁨$countString⁩ محادثات جديدة',
-      two: 'محادثتان جديدتان',
-      one: 'محادثة جديدة واحدة',
-      zero: '⁨$countString⁩ محادثة جديدة',
+      other: '$countString new chats',
+      one: '1 new chat',
     );
     return '$_temp0';
   }
@@ -7959,54 +7952,49 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '⁨$countString⁩ رسالة جديدة',
-      many: '⁨$countString⁩ رسالة جديدة',
-      few: '⁨$countString⁩ رسائل جديدة',
-      two: 'رسالتان جديدتان',
-      one: 'رسالة جديدة واحدة',
-      zero: '⁨$countString⁩ رسالة جديدة',
+      other: '$countString new messages',
+      one: '1 new message',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'صندوق الوارد';
+  String get supportChannelName => 'Inbox';
 
   @override
-  String get supportChannelLine => 'محادثات يبدؤها الناس من صف Marios';
+  String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
   String get supportResetPinned =>
-      'هذه الهوية مدمجة في Kryfo. رابط جديد سيقطع كل المحادثات معها.';
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
-  String get supportViaDev => 'عبر محادثة المطوّر';
+  String get supportViaDev => 'Via developer chat';
 
   @override
-  String get supportMoveAsk =>
-      'نقل محادثتك مع هذا الشخص من صندوق الوارد إلى هذه المحادثة؟';
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
   String get supportMoveLine =>
-      'تغادر صندوق الوارد وتظهر في المحادثات. «إبقاؤهما منفصلتين» يترك الاثنتين كما هما.';
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
-  String get supportMove => 'نقل';
+  String get supportMove => 'Move';
 
   @override
-  String get supportKeepApart => 'إبقاؤهما منفصلتين';
+  String get supportKeepApart => 'Keep apart';
 
   @override
-  String get supportMoveToChats => 'نقل إلى المحادثات';
+  String get supportMoveToChats => 'Move to Chats';
 
   @override
-  String get supportMovedToChats => 'نُقلت إلى المحادثات';
+  String get supportMovedToChats => 'Moved to Chats';
 
   @override
-  String get supportMoveToInbox => 'نقل إلى صندوق الوارد';
+  String get supportMoveToInbox => 'Move to inbox';
 
   @override
-  String get supportMovedToInbox => 'نُقلت إلى صندوق الوارد';
+  String get supportMovedToInbox => 'Moved to inbox';
 
   @override
   String get settingsWriteToMarios => 'مراسلة Marios';

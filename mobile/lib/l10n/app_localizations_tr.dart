@@ -7773,7 +7773,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devDeleteFailed => 'Sohbet silinemedi. Yeniden dene.';
 
   @override
-  String get supportTitle => 'Gelen kutusu';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7784,45 +7784,44 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString bekliyor',
-      one: '$countString bekliyor',
-      zero: 'Bekleyen yok',
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Bekleyenler';
+  String get supportSectionWaiting => 'Waiting';
 
   @override
-  String get supportSectionAnswered => 'Yanıtlananlar';
+  String get supportSectionAnswered => 'Answered';
 
   @override
-  String get supportSectionDone => 'Bitenler';
+  String get supportSectionDone => 'Done';
 
   @override
-  String get supportEmpty => 'Henüz kimse yazmadı';
+  String get supportEmpty => 'No one has written yet';
 
   @override
   String get supportEmptyLine =>
-      'Marios satırından başlatılan sohbetler isteklere değil, buraya düşer.';
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
-  String get supportMarkDone => 'Bitti';
+  String get supportMarkDone => 'Done';
 
   @override
-  String get supportReopen => 'Yeniden aç';
+  String get supportReopen => 'Reopen';
 
   @override
-  String get supportMarkAllDone =>
-      'Bekleyenlerin hepsini bitti olarak işaretle';
+  String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Gelen kutusu seçenekleri';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
-      'Bu sohbetteki her mesaj bu telefondan gider. Yeniden yazarsa sohbet buraya geri gelir.';
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7833,8 +7832,8 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString yeni sohbet',
-      one: '$countString yeni sohbet',
+      other: '$countString new chats',
+      one: '1 new chat',
     );
     return '$_temp0';
   }
@@ -7848,50 +7847,49 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString yeni mesaj',
-      one: '$countString yeni mesaj',
+      other: '$countString new messages',
+      one: '1 new message',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Gelen kutusu';
+  String get supportChannelName => 'Inbox';
 
   @override
-  String get supportChannelLine => 'Marios satırından başlatılan sohbetler';
+  String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
   String get supportResetPinned =>
-      'Bu kimlik Kryfo’ya gömülü. Yeni bir bağlantı onunla olan tüm sohbetleri koparır.';
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
-  String get supportViaDev => 'Geliştirici sohbeti üzerinden';
+  String get supportViaDev => 'Via developer chat';
 
   @override
-  String get supportMoveAsk =>
-      'Gelen kutusundaki onunla olan sohbetin bu sohbete taşınsın mı?';
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
   String get supportMoveLine =>
-      'Gelen kutusundan çıkar ve Sohbetler’de görünür. “Ayrı tut” ikisini de olduğu gibi bırakır.';
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
-  String get supportMove => 'Taşı';
+  String get supportMove => 'Move';
 
   @override
-  String get supportKeepApart => 'Ayrı tut';
+  String get supportKeepApart => 'Keep apart';
 
   @override
-  String get supportMoveToChats => 'Sohbetler’e taşı';
+  String get supportMoveToChats => 'Move to Chats';
 
   @override
-  String get supportMovedToChats => 'Sohbetler’e taşındı';
+  String get supportMovedToChats => 'Moved to Chats';
 
   @override
-  String get supportMoveToInbox => 'Gelen kutusuna taşı';
+  String get supportMoveToInbox => 'Move to inbox';
 
   @override
-  String get supportMovedToInbox => 'Gelen kutusuna taşındı';
+  String get supportMovedToInbox => 'Moved to inbox';
 
   @override
   String get settingsWriteToMarios => 'Marios’a yaz';
