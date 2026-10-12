@@ -52,23 +52,21 @@ void main() {
     everydayChats = null;
   });
 
-  test('a deleted chat and a deleted group take their drafts along', () async {
+  // a deleted 1:1 chat's draft goes in AppState (delete_chat_settings_test)
+  test('a deleted group takes its draft along', () async {
     final db = await _seeded();
-    draftPerPeer.addAll({_every('ann'): 'see you at', _every('ben'): 'hi'});
     draftPerGroup.addAll({_every('g1'): 'who brings', _every('g2'): 'ok'});
-    await db.deleteConversation('ann');
     await db.deleteGroup('g1');
-    expect(draftPerPeer, {_every('ben'): 'hi'});
     expect(draftPerGroup, {_every('g2'): 'ok'});
   });
 
   test('a decoy\'s delete takes the decoy\'s draft, never the everyday '
       'one', () async {
     final db = await _seeded(HaloContainer.decoy);
-    final decoy = HaloContainer.decoy.chatKey('ann');
-    draftPerPeer.addAll({decoy: 'x', _every('ann'): 'y'});
-    await db.deleteConversation('ann');
-    expect(draftPerPeer, {_every('ann'): 'y'});
+    final decoy = HaloContainer.decoy.chatKey('g1');
+    draftPerGroup.addAll({decoy: 'x', _every('g1'): 'y'});
+    await db.deleteGroup('g1');
+    expect(draftPerGroup, {_every('g1'): 'y'});
   });
 
   test('a restart writes down only drafts of chats the everyday side still '

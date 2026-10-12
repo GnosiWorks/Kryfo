@@ -2484,7 +2484,6 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<void> deleteConversation(String haloId) async {
-    dropDraft(container.chatKey(haloId), group: false);
     final d = await open();
     final files = await d.transaction((t) async {
       final rows = await t.query(
