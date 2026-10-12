@@ -29,10 +29,14 @@ class HaloListenerService : Service() {
         // set on a foreground start, which has a deadline to meet
         const val EXTRA_FRONT = "front"
 
-        // when start() first ran for the next onCreate, for the timing
-        // line of a debug build
+        // when a start went out that onCreate has not seen yet. a second
+        // one meanwhile adds nothing, and a foreground one adds a deadline
         @Volatile
         private var askedAt = 0L
+        private const val PENDING_MS = 30_000L
+
+        fun pending(running: Boolean, askedAt: Long, now: Long): Boolean =
+            !running && askedAt != 0L && now - askedAt < PENDING_MS
 
         fun debugLog(context: Context, line: String) {
             if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
@@ -48,15 +52,21 @@ class HaloListenerService : Service() {
             context: Context,
             plainFirst: Boolean = QuietRestart.onScreen(QuietRestart.importance())
         ) {
-            if (askedAt == 0L) askedAt = SystemClock.elapsedRealtime()
+            if (pending(running, askedAt, SystemClock.elapsedRealtime())) {
+                debugLog(context, "listener: start on its way")
+                return
+            }
+            val up = running
             val intent = Intent(context, HaloListenerService::class.java)
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 context.startService(intent)
+                if (!up) askedAt = SystemClock.elapsedRealtime()
                 return
             }
-            if (running || plainFirst) {
+            if (up || plainFirst) {
                 try {
                     context.startService(intent)
+                    if (!up) askedAt = SystemClock.elapsedRealtime()
                     debugLog(context, "listener: plain start")
                     return
                 } catch (e: IllegalStateException) {
@@ -65,6 +75,7 @@ class HaloListenerService : Service() {
                 }
             }
             context.startForegroundService(intent.putExtra(EXTRA_FRONT, true))
+            if (!up) askedAt = SystemClock.elapsedRealtime()
             debugLog(context, "listener: foreground start")
         }
 
@@ -209,6 +220,7 @@ class HaloListenerService : Service() {
 
     override fun onDestroy() {
         running = false
+        askedAt = 0L
         super.onDestroy()
     }
 

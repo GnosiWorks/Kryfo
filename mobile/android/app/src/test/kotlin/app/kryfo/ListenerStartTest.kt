@@ -42,6 +42,8 @@ class ListenerStartTest {
     @Before
     fun setUp() {
         inFront(false)
+        // onCreate forgets a start still on its way from another test
+        Robolectric.buildService(HaloListenerService::class.java).create().destroy()
     }
 
     @After
@@ -219,6 +221,34 @@ class ListenerStartTest {
         assertTrue(HaloListenerService.running)
         HaloListenerService.start(app)
         assertFalse(startedFront(shadowOf(app).nextStartedService))
+    }
+
+    @Test
+    fun aStartOnItsWayIsNotRepeated() {
+        HaloListenerService.start(app)
+        assertTrue(startedFront(shadowOf(app).nextStartedService))
+        HaloListenerService.start(app)
+        HaloListenerService.start(app, plainFirst = true)
+        assertNull(shadowOf(app).nextStartedService)
+    }
+
+    @Test
+    fun aRefusedStartIsNotOnItsWay() {
+        val ctx = Asked(app, plain = false, front = false)
+        try {
+            HaloListenerService.start(ctx)
+        } catch (e: ForegroundServiceStartNotAllowedException) {
+        }
+        HaloListenerService.start(app, plainFirst = true)
+        assertFalse(startedFront(shadowOf(app).nextStartedService))
+    }
+
+    @Test
+    fun onItsWayForHalfAMinuteAtMost() {
+        assertTrue(HaloListenerService.pending(false, 1_000L, 30_999L))
+        assertFalse(HaloListenerService.pending(false, 1_000L, 31_000L))
+        assertFalse(HaloListenerService.pending(false, 0L, 5_000L))
+        assertFalse(HaloListenerService.pending(true, 1_000L, 2_000L))
     }
 
     // what a context was asked, in order
