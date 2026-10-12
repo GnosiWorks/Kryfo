@@ -4001,6 +4001,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Около секунды. Работает там, где tor заблокирован.';
 
   @override
+  String get onboardingAboutASecondSkipsTor => 'Около секунды, и без Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Режим «Авто» сам находит способ обойти блокировку.';
+
+  @override
   String get onboardingFast => 'Быстрый';
 
   @override
@@ -6975,6 +6982,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor здесь заблокирован';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'Быстрее и без Tor. Наш ретранслятор видит твой IP-адрес, но никогда не видит, что ты пишешь.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Сам находит способ обойти блокировку, если нужно, через мост.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Два способа обойти блокировку';
+
+  @override
+  String get bridgesRecommended => 'Рекомендуем';
 
   @override
   String get bridgesTryingAnotherWay => 'Пробуем другой способ…';

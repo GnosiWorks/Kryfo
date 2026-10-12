@@ -3894,6 +3894,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khoảng một giây. Hoạt động cả ở nơi tor bị chặn.';
 
   @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Khoảng một giây, và không qua Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
+
+  @override
   String get onboardingFast => 'Nhanh';
 
   @override
@@ -6837,6 +6845,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor bị chặn ở đây';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'Nhanh hơn và không qua Tor. Relay của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Tự tìm cách vượt qua việc chặn, dùng cầu nối khi cần.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Hai cách vượt qua việc chặn';
+
+  @override
+  String get bridgesRecommended => 'Nên dùng';
 
   @override
   String get bridgesTryingAnotherWay => 'Đang thử cách khác…';

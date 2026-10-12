@@ -3913,6 +3913,14 @@ class AppLocalizationsFa extends AppLocalizations {
       'حدود یک ثانیه. جایی که tor مسدود است هم کار می‌کند.';
 
   @override
+  String get onboardingAboutASecondSkipsTor =>
+      'حدود یک ثانیه، و از Tor نمی‌گذرد.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
+
+  @override
   String get onboardingFast => 'سریع';
 
   @override
@@ -6855,6 +6863,20 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود است';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'خودش راهی برای دور زدن مسدودسازی پیدا می‌کند و اگر لازم باشد از یک پل کمک می‌گیرد.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'دو راه برای دور زدن مسدودسازی';
+
+  @override
+  String get bridgesRecommended => 'پیشنهادی';
 
   @override
   String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';

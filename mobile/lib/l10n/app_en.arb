@@ -4875,6 +4875,14 @@
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingAboutASecondWorks": "About a second. Works where tor is blocked.",
+  "onboardingAboutASecondSkipsTor": "About a second, and it skips Tor.",
+  "@onboardingAboutASecondSkipsTor": {
+    "description": "screens/onboarding_screen.dart: on the Relay card when the person said Tor is blocked at the start"
+  },
+  "onboardingAutoFindsAWay": "Automatic finds a way around the block by itself.",
+  "@onboardingAutoFindsAWay": {
+    "description": "screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start"
+  },
   "@onboardingAboutASecondWorks": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -8727,6 +8735,22 @@
     "description": "screens/bridges_screen.dart"
   },
   "torBootSplashTorIsBlockedHere": "Tor is blocked here",
+  "torBootSplashRelayLine": "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
+  "@torBootSplashRelayLine": {
+    "description": "screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked"
+  },
+  "torBootSplashAutoLine": "Finds a way around the block by itself, through a bridge when it needs one.",
+  "@torBootSplashAutoLine": {
+    "description": "screens/bridge_sheets.dart: under Automatic, the first and recommended way to start where Tor is blocked"
+  },
+  "torBootSplashTwoWaysAround": "Two ways around the block",
+  "@torBootSplashTwoWaysAround": {
+    "description": "screens/bridge_sheets.dart: title of the sheet after Tor is blocked here on a new install's first start"
+  },
+  "bridgesRecommended": "Recommended",
+  "@bridgesRecommended": {
+    "description": "screens/bridge_sheets.dart, screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked"
+  },
   "bridgesTryingAnotherWay": "Trying another way…",
   "bridgesFindingAWayIn": "Finding a way in…",
   "@bridgesFindingAWayIn": {

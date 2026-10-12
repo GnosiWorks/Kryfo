@@ -3931,6 +3931,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Cerca de um segundo. Funciona onde o tor está bloqueado.';
 
   @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Cerca de um segundo, e sem passar pelo Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'O Automático encontra sozinho um jeito de contornar o bloqueio.';
+
+  @override
   String get onboardingFast => 'Rápido';
 
   @override
@@ -6894,6 +6902,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Aqui o Tor está bloqueado';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'Mais rápido e sem passar pelo Tor. Nosso retransmissor vê seu endereço IP, nunca o que você diz.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Encontra sozinho um jeito de contornar o bloqueio, com uma ponte se precisar.';
+
+  @override
+  String get torBootSplashTwoWaysAround =>
+      'Dois jeitos de contornar o bloqueio';
+
+  @override
+  String get bridgesRecommended => 'Recomendado';
 
   @override
   String get bridgesTryingAnotherWay => 'Tentando outro jeito…';

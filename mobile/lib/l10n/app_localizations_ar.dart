@@ -4001,6 +4001,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب tor.';
 
   @override
+  String get onboardingAboutASecondSkipsTor => 'نحو ثانية، ولا يمر عبر Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
+
+  @override
   String get onboardingFast => 'سريع';
 
   @override
@@ -6959,6 +6966,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor محجوب هنا';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'أسرع، ولا يمر عبر Tor. يرى مُرحِّلنا عنوان IP الخاص بك، ولا يرى أبدًا ما تقوله.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'يجد طريقًا لتجاوز الحجب بنفسه، عبر جسر عند الحاجة.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'طريقتان لتجاوز الحجب';
+
+  @override
+  String get bridgesRecommended => 'موصى به';
 
   @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';

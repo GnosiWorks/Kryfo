@@ -3740,6 +3740,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingAboutASecondWorks => '大约一秒。在 tor 被封锁的地方也能用。';
 
   @override
+  String get onboardingAboutASecondSkipsTor => '大约一秒，不经过 Tor。';
+
+  @override
+  String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
+
+  @override
   String get onboardingFast => '快速';
 
   @override
@@ -6563,6 +6569,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁';
+
+  @override
+  String get torBootSplashRelayLine =>
+      '更快，不经过 Tor。我们的中继能看到你的 IP 地址，但永远看不到你说了什么。';
+
+  @override
+  String get torBootSplashAutoLine => '自己找到绕过封锁的方法，需要时通过网桥。';
+
+  @override
+  String get torBootSplashTwoWaysAround => '两种绕过封锁的方式';
+
+  @override
+  String get bridgesRecommended => '推荐';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -11508,6 +11527,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
 
   @override
+  String get onboardingAboutASecondSkipsTor => '大約一秒，不經過 Tor。';
+
+  @override
+  String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
+
+  @override
   String get onboardingFast => '快速';
 
   @override
@@ -14330,6 +14355,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖';
+
+  @override
+  String get torBootSplashRelayLine =>
+      '更快，不經過 Tor。我們的中繼看得到你的 IP 位址，但永遠看不到你說了什麼。';
+
+  @override
+  String get torBootSplashAutoLine => '自己找到繞過封鎖的方法，需要時透過橋接。';
+
+  @override
+  String get torBootSplashTwoWaysAround => '兩種繞過封鎖的方式';
+
+  @override
+  String get bridgesRecommended => '推薦';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';

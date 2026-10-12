@@ -3898,6 +3898,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Sekitar satu detik. Tetap jalan di tempat tor diblokir.';
 
   @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Sekitar satu detik, dan tanpa Tor.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Otomatis mencari sendiri jalan melewati blokir.';
+
+  @override
   String get onboardingFast => 'Cepat';
 
   @override
@@ -6842,6 +6850,20 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor diblokir di sini';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'Lebih cepat dan tanpa Tor. Relay kami melihat alamat IP-mu, tidak pernah isi obrolanmu.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Mencari sendiri jalan melewati blokir, lewat jembatan bila perlu.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Dua cara melewati blokir';
+
+  @override
+  String get bridgesRecommended => 'Disarankan';
 
   @override
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';

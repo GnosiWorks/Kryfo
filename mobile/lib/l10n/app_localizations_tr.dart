@@ -3918,6 +3918,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
 
   @override
+  String get onboardingAboutASecondSkipsTor =>
+      'Yaklaşık bir saniye ve Tor’u atlar.';
+
+  @override
+  String get onboardingAutoFindsAWay =>
+      'Otomatik, engeli aşmanın yolunu kendisi bulur.';
+
+  @override
   String get onboardingFast => 'Hızlı';
 
   @override
@@ -6866,6 +6874,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get torBootSplashTorIsBlockedHere => 'Tor burada engelli';
+
+  @override
+  String get torBootSplashRelayLine =>
+      'Daha hızlı ve Tor’u atlar. Aktarıcımız IP adresini görür, ne yazdığını asla görmez.';
+
+  @override
+  String get torBootSplashAutoLine =>
+      'Engeli aşmanın yolunu kendisi bulur, gerekirse bir köprüyle.';
+
+  @override
+  String get torBootSplashTwoWaysAround => 'Engeli aşmanın iki yolu';
+
+  @override
+  String get bridgesRecommended => 'Önerilen';
 
   @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';

@@ -3537,5 +3537,23 @@ void main() {
     expect(l.supportMoveToInbox, "Move to inbox");
     expect(l.supportMovedToInbox, "Moved to inbox");
     expect(l.bridgesFindingAWayIn, "Finding a way in…");
+    expect(l.bridgesRecommended, "Recommended");
+    expect(l.torBootSplashTwoWaysAround, "Two ways around the block");
+    expect(
+      l.torBootSplashAutoLine,
+      "Finds a way around the block by itself, through a bridge when it needs one.",
+    );
+    expect(
+      l.torBootSplashRelayLine,
+      "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
+    );
+    expect(
+      l.onboardingAutoFindsAWay,
+      "Automatic finds a way around the block by itself.",
+    );
+    expect(
+      l.onboardingAboutASecondSkipsTor,
+      "About a second, and it skips Tor.",
+    );
   });
 }
