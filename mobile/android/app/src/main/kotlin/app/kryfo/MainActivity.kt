@@ -568,8 +568,8 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // "open with" and share. another app cannot read our files, and must
-    // not be able to: the file is copied to cache/open/ or cache/share/,
-    // folders the provider serves, and the uri is granted to the one app
+    // not be able to: the file is copied to cache/open/, cache/share/ or
+    // cache/share_q/, folders the provider serves, and the uri is granted to the one app
     // that gets the intent. some apps read theirs only after this one is
     // back, or keep reading in the background, so a copy is given a while
     // first and shredded once it is older, by a job that comes back while
