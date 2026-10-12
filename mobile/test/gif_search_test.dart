@@ -18,6 +18,7 @@ import 'package:kryfo/gifs/gif_picture.dart';
 import 'package:kryfo/gifs/gif_source.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart';
+import 'package:kryfo/quiet_wait.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
@@ -210,6 +211,7 @@ void main() {
   setUp(() {
     FlutterSecureStorage.setMockInitialValues({});
     SharedPreferences.setMockInitialValues({});
+    quietWait = () => Duration.zero;
   });
 
   group('the relay answer', () {
@@ -473,15 +475,24 @@ void main() {
       await h.tab('GIFs');
       expect(find.text('Search GIFs, privately'), findsOneWidget);
       await h.reveal('Turn on GIF search');
+      // the answer comes after a wait like one that went out, never at once
+      quietWait = () => const Duration(seconds: 3);
       await t.tap(find.text('Turn on GIF search'));
       await h.frames(30);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('d.kryfo.gif.on'), isTrue);
       expect(prefs.getBool('kryfo.gif.on'), isNull);
-      expect(find.text("Couldn't reach Kryfo's GIF service."), findsOneWidget);
+      const calm = "Couldn't reach Kryfo's GIF service.";
+      expect(find.text(calm), findsNothing);
+      await t.pump(const Duration(seconds: 3));
+      await h.frames(10);
+      expect(find.text(calm), findsOneWidget);
       await t.enterText(find.byType(TextField), 'cats');
       await h.frames(40);
-      expect(find.text("Couldn't reach Kryfo's GIF service."), findsOneWidget);
+      expect(find.text(calm), findsNothing);
+      await t.pump(const Duration(seconds: 3));
+      await h.frames(10);
+      expect(find.text(calm), findsOneWidget);
       expect(wire.calls, isEmpty);
       Navigator.of(h.home).pop();
       await h.frames(20);
