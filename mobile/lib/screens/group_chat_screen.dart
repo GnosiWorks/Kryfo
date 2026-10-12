@@ -91,9 +91,8 @@ import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
-import '../place_link.dart' show firstPlace;
 import 'camera_screen.dart';
-import '../link_preview.dart' show titleFromHtml, senderPreview;
+import '../link_preview.dart' show titleFromHtml, senderPreview, WordLinks;
 import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
@@ -3744,10 +3743,11 @@ Widget _groupStamp(_GMsg m) => Container(
   ),
 );
 
-class _GMsg {
+class _GMsg with WordLinks {
   final String sender;
   final String senderName;
   final String direction;
+  @override
   String text;
   final DateTime when;
   int? burnAt;
@@ -5103,7 +5103,7 @@ class _GroupBubble extends StatelessWidget {
                                                     ),
                                             ),
                                           ),
-                                        if (firstUrl(m.text) case final u?) ...[
+                                        if (m.url case final u?) ...[
                                           const SizedBox(height: 6),
                                           LinkStub(
                                             url: u,
@@ -5112,8 +5112,7 @@ class _GroupBubble extends StatelessWidget {
                                             bySender: linkBySender,
                                           ),
                                         ],
-                                        if (firstPlace(m.text)
-                                            case final p?) ...[
+                                        if (m.place case final p?) ...[
                                           const SizedBox(height: 6),
                                           PlaceStub(place: p, isOut: isOut),
                                         ],
