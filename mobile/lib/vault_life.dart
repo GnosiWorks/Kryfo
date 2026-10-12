@@ -311,6 +311,8 @@ const _groupRows = {
   'room_keys': 'group_id = ?1',
   // which of its texts went again to a member after their restore
   'group_resent': 'group_id = ?1',
+  // what came in from its members and went (goneKey)
+  'gone_in': "substr(peer_id, 1, length(?1) + 7) = 'group:' || ?1 || ':'",
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its

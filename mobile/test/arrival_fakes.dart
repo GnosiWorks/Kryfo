@@ -1577,7 +1577,10 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> clearGroupConversation(String groupId) async {
+  Future<void> clearGroupConversation(
+    String groupId, {
+    bool noteGone = true,
+  }) async {
     _hit('clearGroupConversation', groupId, null);
     _dropGroupRows(groupId);
   }

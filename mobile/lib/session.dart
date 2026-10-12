@@ -309,8 +309,8 @@ class Session {
   // ---- one group ----
   Future<void> addGroupMember(String groupId, String haloId) =>
       _ofGroup(groupId).addGroupMember(groupId, haloId);
-  Future<void> clearGroupConversation(String groupId) =>
-      _ofGroup(groupId).clearGroupConversation(groupId);
+  Future<void> clearGroupConversation(String groupId, {bool noteGone = true}) =>
+      _ofGroup(groupId).clearGroupConversation(groupId, noteGone: noteGone);
   Future<void> clearGroupUnread(String groupId) =>
       _ofGroup(groupId).clearGroupUnread(groupId);
   Future<void> deleteGroup(String groupId) =>

@@ -558,6 +558,7 @@ class MainActivity : FlutterFragmentActivity() {
                                 call.argument<String>("text"),
                                 call.argument<String>("subject"),
                                 call.argument<Boolean>("backup") == true,
+                                call.argument<Boolean>("quiet") == true,
                                 result
                             )
                         }
@@ -582,12 +583,13 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // "open with" and share. another app cannot read our files, and must
-    // not be able to: the file is copied to cache/open/ or cache/share/,
-    // folders the provider serves, and the uri is granted to the one app
+    // not be able to: the file is copied to cache/open/, cache/share/ or
+    // cache/share_q/, folders the provider serves, and the uri is granted to the one app
     // that gets the intent. some apps read theirs only after this one is
     // back, or keep reading in the background, so a copy is given a while
     // first and shredded once it is older, by a job that comes back while
-    // one is young. a lock unlinks an open copy (dart's lockingUp).
+    // one is young. a lock unlinks an open copy, and one shared from a
+    // hidden chat or the decoy (dart's lockingUp).
     private fun clearOpenCopies() {
         Thread {
             if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
@@ -623,8 +625,7 @@ class MainActivity : FlutterFragmentActivity() {
         val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
             .joinToString("") { "%02x".format(it) }
         val dir = File(top, rnd)
-        val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
-        val dst = File(dir, if (safe.isBlank()) "file" else safe)
+        val dst = File(dir, Shred.leaf(name ?: src.name))
         return try {
             dir.mkdirs()
             src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
@@ -686,10 +687,11 @@ class MainActivity : FlutterFragmentActivity() {
         text: String?,
         subject: String?,
         backup: Boolean,
+        quiet: Boolean,
         result: MethodChannel.Result
     ) {
         Thread {
-            val dst = handOut(File(path), name, if (backup) Shred.BACKUP_OUT else "share")
+            val dst = handOut(File(path), name, Shred.shareInto(backup, quiet))
             if (dst == null) {
                 runOnUiThread { result.success(false) }
                 return@Thread

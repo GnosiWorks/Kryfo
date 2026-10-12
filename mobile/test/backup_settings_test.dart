@@ -121,6 +121,9 @@ class _Side extends BackupSide {
 
   @override
   Future<void> settleBurns(String copy, String key, int at) async {}
+
+  @override
+  Future<void> compact(String copy, String key) async {}
 }
 
 // every PIN, the hidden chats' key, the wipe and the lock's counters, as
@@ -190,6 +193,22 @@ class _HiddenLeftOut extends _Side {
   const _HiddenLeftOut();
   @override
   Future<Set<String>> scrub(String copy, String key) async => {'kept-apart'};
+}
+
+// the steps a copy of the database goes through, in order
+class _Steps extends _Side {
+  _Steps(this.steps);
+  final List<String> steps;
+  @override
+  Future<Set<String>> scrub(String copy, String key) async {
+    steps.add('scrub');
+    return {'kept-apart'};
+  }
+
+  @override
+  Future<void> compact(String copy, String key) async {
+    steps.add('compact ${p.basename(copy)}');
+  }
 }
 
 void main() {
@@ -352,8 +371,9 @@ void main() {
       );
     });
 
-    test('restored, each address reads its relays from where the old phone '
-        'had, and nothing of this phone\'s reading is left', () async {
+    test('restored from a file that carries anchors, each address reads its '
+        'relays from where the old phone had, and nothing of this phone\'s '
+        'reading is left', () async {
       oldPhone();
       // the engine's anchors on the old phone, one still owing its backlog
       put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
@@ -361,10 +381,13 @@ void main() {
       put('nostr_last_cccccccccccccccc', '0');
       put('nostr_seen_aaaaaaaaaaaaaaaa', 'ids');
       final d = await draftBackup(stage, side: const _Side());
-      expect(d.manifest['catchUp'], {
+      // as a file made with the hidden chats open has them
+      final anchors = await catchUpAnchors(docs);
+      expect(anchors, {
         'nostr_last_aaaaaaaaaaaaaaaa': 1791400000,
         'nostr_last_bbbbbbbbbbbbbbbb': 1791500000,
       });
+      d.manifest['catchUp'] = anchors;
       final out = await write(d.manifest, d.sources);
       newPhone();
       // what this phone had read, of another identity or a later time
@@ -385,14 +408,44 @@ void main() {
       });
     });
 
-    test('a file that leaves hidden chats out names none of their '
-        'addresses: it carries no anchors', () async {
+    test('a file that leaves hidden chats out carries no anchors and reads '
+        'the same whether or not there were any', () async {
       oldPhone();
+      const st = FlutterSecureStorage();
       put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
+      Future<Map<String, dynamic>> drafted(BackupSide side) async {
+        final m = Map<String, dynamic>.of(
+          (await draftBackup(stage, side: side)).manifest,
+        )..remove('ts');
+        return jsonDecode(jsonEncode(m)) as Map<String, dynamic>;
+      }
+
+      for (final fc in ['{"a-a-a":2}', 'not json']) {
+        await st.write(key: 'peer_fc', value: fc);
+        final none = await drafted(const _Side());
+        final some = await drafted(const _HiddenLeftOut());
+        expect(none['catchUp'], isEmpty);
+        expect(some['catchUp'], isEmpty);
+        expect(some, none, reason: fc);
+      }
+      // the scrub tidies the copy on its own connection (scrub_copy_test)
+      final steps = <String>[];
+      await draftBackup(stage, side: _Steps(steps));
+      expect(steps, ['scrub']);
+      // restored, every address reads its relays whole
       final d = await draftBackup(stage, side: const _HiddenLeftOut());
-      expect(d.manifest['catchUp'], isEmpty);
-      final with_ = await draftBackup(stage, side: const _Side());
-      expect(with_.manifest['catchUp'], isNotEmpty);
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      put('nostr_last_dddddddddddddddd', '1799999999');
+      put('nostr_seen_dddddddddddddddd', 'ids');
+      await restore(out, inDecoy: false);
+      expect(engine.restored, ['everyday-ed']);
+      expect(
+        Directory(
+          docs,
+        ).listSync().where((f) => p.basename(f.path).startsWith('nostr_')),
+        isEmpty,
+      );
     });
 
     test('a file without anchors, or with odd ones, leaves every address to '
