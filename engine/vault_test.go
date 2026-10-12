@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -245,14 +246,31 @@ func TestVaultSealPadsToBuckets(t *testing.T) {
 	}
 }
 
-// a header that claims more than the row holds does not open
-func TestVaultUnpadRefusesShortRows(t *testing.T) {
-	bad := append(append([]byte{}, vaultPadMagic...), 0, 0, 1, 0, 'x')
-	if _, err := vaultUnpad(bad); !errors.Is(err, errVaultOpen) {
-		t.Fatalf("a short padded row: %v", err)
+// a row sealed before the padding opens as it was, even one that starts
+// like the header, and a padded row opens to its bytes
+func TestVaultUnpadTellsOldRowsApart(t *testing.T) {
+	head := func(n uint32, rest ...byte) []byte {
+		b := append([]byte{}, vaultPadMagic...)
+		b = binary.BigEndian.AppendUint32(b, n)
+		return append(b, rest...)
 	}
-	old := []byte(`{"f":"a"}`)
-	if got, _ := vaultUnpad(old); !bytes.Equal(got, old) {
-		t.Fatal("a row sealed before the padding changed")
+	short := head(256, 'x')
+	tail := append(head(2, 'h', 'i'), make([]byte, 1024-10)...)
+	tail[len(tail)-1] = 1
+	sized := head(2, 'h', 'i', 'x')
+	for name, old := range map[string][]byte{
+		"plain":                     []byte(`{"f":"a"}`),
+		"claims more than it holds": short,
+		"not zero past its bytes":   tail,
+		"not a bucket's size":       sized,
+	} {
+		got, err := vaultUnpad(old)
+		if err != nil || !bytes.Equal(got, old) {
+			t.Fatalf("%s: %q %v", name, got, err)
+		}
+	}
+	padded := vaultPad([]byte("hi"))
+	if got, err := vaultUnpad(padded); err != nil || string(got) != "hi" {
+		t.Fatalf("a padded row: %q %v", got, err)
 	}
 }
