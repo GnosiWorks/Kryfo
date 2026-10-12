@@ -2096,15 +2096,23 @@ func nostrLetHeld(peerHex, how string) error {
 	if how == "mark" {
 		return nil
 	}
+	if h := letHeldHook; h != nil {
+		h()
+	}
 	// a runner reads the mark as it starts
 	if own && on {
 		nostrSubscribeAt(peerHex, peer, rcvPk)
 	}
 	if lane {
-		return subscribeFirstContact(fc)
+		// only the listener read above: a new invite address may have
+		// replaced it since
+		return restartFirstContact(fc)
 	}
 	return nil
 }
+
+// called before nostrLetHeld starts listeners again, for the tests
+var letHeldHook func()
 
 // stop listening for a peer, and take what its receive address kept on
 // disk with it
@@ -2180,7 +2188,12 @@ func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
 	return C.CString("ok")
 }
 
-func subscribeFirstContact(counter int) error {
+func subscribeFirstContact(counter int) error { return firstContactOn(counter, false) }
+
+// the first-contact listener on counter started again, if it still runs
+func restartFirstContact(counter int) error { return firstContactOn(counter, true) }
+
+func firstContactOn(counter int, again bool) error {
 	_, fcPk, err := nip17FirstContactKeys(counter)
 	if err != nil {
 		return err
@@ -2188,6 +2201,10 @@ func subscribeFirstContact(counter int) error {
 
 	nostrMu.Lock()
 	old, replaced := nostrSubs["firstcontact"]
+	if again && (!replaced || fcCounterNow != counter) {
+		nostrMu.Unlock()
+		return nil
+	}
 	if replaced {
 		old()
 		delete(nostrSubs, "firstcontact")
