@@ -95,9 +95,11 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 	done := make(chan bool)
 	go func() { done <- tn.take(ctx) }()
 	waitFor(t, "the turn counted", 5*time.Second, func() bool {
-		return atomic.LoadInt32(&catchupActive) == active+1 &&
-			atomic.LoadInt64(&catchupStarted) > begun
+		return atomic.LoadInt32(&catchupActive) == active+1
 	})
+	if atomic.LoadInt64(&catchupStarted) != begun {
+		t.Fatal("a turn counted as a catch-up begun")
+	}
 	cancel()
 	if <-done {
 		t.Fatal("a turn ended by its context said go")

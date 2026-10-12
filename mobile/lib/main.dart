@@ -12929,8 +12929,8 @@ class AppState extends ChangeNotifier {
       // wait for the relays to be asked, then for every answer to be in. the
       // engine caps each relay at catchupCap (30s), so this ends when all
       // have finished or been given up on. a socket waiting its turn (up to
-      // a minute, see the engine's subSpread) counts as asked and not done.
-      // the two escapes are for no relay ever getting going.
+      // a minute, see the engine's subSpread) counts as active, not as
+      // begun. the two escapes are for no relay ever getting going.
       var quiet = 0;
       var began = false;
       var tail = '';
@@ -12945,7 +12945,7 @@ class AppState extends ChangeNotifier {
         } else {
           quiet = 0;
         }
-        if (!began && secs >= 45) {
+        if (!began && active == 0 && secs >= 45) {
           tail = '_norelay';
           break;
         }

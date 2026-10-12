@@ -727,6 +727,35 @@ void main() {
       expect(done! - kicked!, greaterThanOrEqualTo(100));
       expect(app.lastCheckHow, contains('"how":"ok"'));
     });
+
+    testWidgets('is not taken for no relay while one still waits its '
+        'turn', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      unawaited(app.checkIn(why: 'job').then((v) => n = v));
+      int? kicked;
+      for (var i = 0; i < 170 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // one socket waits its turn, nothing has begun yet
+          eng.catchup = (1, 1);
+        }
+        // its turn ends a minute on and its catch-up runs ten seconds
+        if (kicked != null && i == kicked + 60) eng.catchup = (1, 2);
+        if (kicked != null && i == kicked + 70) eng.catchup = (0, 2);
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+      }
+      expect(n, isNot(-1));
+      expect(app.lastCheckHow, contains('"how":"ok"'));
+      expect(app.lastCheckAt, isNot(0));
+    });
   });
 
   group('a check-in on a slow wake', () {

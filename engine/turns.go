@@ -50,7 +50,8 @@ type subTurn struct {
 
 // waits the socket's turn, unless it has had one since the last kick. from
 // the turn until the dial is over it counts as a catch-up under way, so a
-// check-in waits for it. false once ctx is over
+// check-in waits for it, but not as one begun: with no network none ever
+// begins. false once ctx is over
 func (t *subTurn) take(ctx context.Context) bool {
 	kc := kickChan()
 	if t.kick == kc {
@@ -60,7 +61,6 @@ func (t *subTurn) take(ctx context.Context) bool {
 	if !t.held {
 		t.held = true
 		atomic.AddInt32(&catchupActive, 1)
-		atomic.AddInt64(&catchupStarted, 1)
 	}
 	if takeFirstTurn(kc) {
 		return ctx.Err() == nil
