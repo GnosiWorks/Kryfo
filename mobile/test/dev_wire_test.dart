@@ -1105,7 +1105,7 @@ void main() {
       final boot = src.substring(src.indexOf('await _subscribeRooms();'));
       expect(
         boot.indexOf('await subscribeDevLane();'),
-        lessThan(boot.indexOf('await subscribeKnown();')),
+        lessThan(boot.indexOf('await _listenKnown(cache: true);')),
       );
       final re = src.substring(
         src.indexOf('Future<void> resubscribe() async {'),
