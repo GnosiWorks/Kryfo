@@ -1,6 +1,6 @@
 module halo-relay
 
-go 1.25.0
+go 1.26.9
 
 require (
 	github.com/fasthttp/websocket v1.5.12
@@ -43,8 +43,8 @@ require (
 	github.com/valyala/fasthttp v1.59.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 )
 
 replace github.com/fiatjaf/khatru => ./third_party/khatru
