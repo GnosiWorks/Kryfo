@@ -8,10 +8,14 @@ put you in danger, read all of it.
 - network observers. by default everything goes through tor. your isp sees
   a tor connection, not who you talk to or what you say. relay and fast
   modes, which you can choose, skip tor for speed.
-- the relays. offline messages sit on nostr relays sealed with nip-44/59. a
-  relay learns neither who is talking nor what is said.
+- the relays. messages waiting for an offline phone sit on nostr relays,
+  sealed with nip-44/59, so no relay can read them. on the onion route, the
+  relays never learn your ip address or who you are. in relay and fast
+  mode, the relays see your ip address, never what you say.
 - server seizure. there is no central server holding a contact graph or
-  message history. direct messages go device to device over onion services.
+  message history. on the default route, two phones that are both online
+  can talk directly over onion services; otherwise messages wait, sealed, on
+  relays.
 - casual device access. the database is sqlcipher encrypted, the app can
   require a pin or biometrics, and panic wipe removes everything including
   media on disk.
