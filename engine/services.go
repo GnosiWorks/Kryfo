@@ -39,11 +39,9 @@ func servicesClient(ctx context.Context) (*http.Client, error) {
 	}
 }
 
+// built from tor's socks port in every mode, never from the route's client,
+// so a mode switch under the call cannot hand it a direct one
 func servicesTorClient() (*http.Client, error) {
-	// the onion route's own lane client is tor already
-	if modeNeedsTor() {
-		return torNostrClientFor(laneServices)
-	}
 	// kept beside the route's clients, so a mode switch or a new tor drops
 	// it with them
 	key := "tor:" + laneServices
