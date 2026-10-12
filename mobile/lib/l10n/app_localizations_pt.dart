@@ -3494,6 +3494,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Usar digital';
 
   @override
+  String get lockSetupTurningOn => 'Ativando…';
+
+  @override
   String get lockSetupPinOnly => 'Só o PIN';
 
   @override
@@ -7527,8 +7530,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abre um Kryfo vazio, como se acabasse de ser instalado.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'O desbloqueio com a digital fica desativado enquanto houver um PIN de disfarce.';
+  String get flowDecoyFinger =>
+      'Enquanto houver um PIN de disfarce, este app abre só com o seu PIN. Se a digital estiver ativada no disfarce, um dedo abre o disfarce, nunca este app.';
 
   @override
   String get flowDecoyDigits =>
