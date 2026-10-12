@@ -20428,13 +20428,35 @@ class AppState extends ChangeNotifier {
   // rooms a link is joining right now, by room id
   final Set<String> _joiningRooms = {};
 
+  /// whether [link] may move a waiting join here to the door it names: the
+  /// same room from the same maker, its own door gone unanswered or full.
+  /// even then only on the join sheet
+  Future<bool> roomDoorMovable(RoomLink link) async {
+    final g = await session.getGroup(link.roomId);
+    return g != null && _doorMovable(g, link);
+  }
+
+  bool _doorMovable(Map<String, Object?> g, RoomLink link) {
+    if (g['room_pub'] == null || g['joining_at'] == null) return false;
+    if (g['creator_pub'] != link.creatorPub || g['fc_pk'] == link.fcPk) {
+      return false;
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return roomJoinState(g['joining_at'] as int?, now) == RoomJoin.silent ||
+        roomFull(link.roomId);
+  }
+
   Future<String> _joinRoom(RoomLink link, int now) async {
     final had = await session.getGroup(link.roomId);
     if (had != null) {
-      // not let in yet: the link knocks again, on the door it names
+      // not let in yet: the link knocks again
       if (had['room_pub'] != null && had['joining_at'] != null) {
-        if (had['creator_pub'] == link.creatorPub &&
-            had['fc_pk'] != link.fcPk) {
+        final yes = takenDoors.taken(link);
+        if (had['fc_pk'] != link.fcPk) {
+          // anyone can write a link with another door in it: one is taken
+          // only once this one went unanswered or said full, and only on
+          // the sheet's join. else the room opens and nothing is sent
+          if (!yes || !_doorMovable(had, link)) return '';
           await session.setRoomFc(link.roomId, link.fcPk);
         }
         await retryRoomJoin(link.roomId);

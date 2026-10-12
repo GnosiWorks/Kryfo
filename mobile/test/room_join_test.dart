@@ -831,4 +831,92 @@ void main() {
     expect(me.rows.groupRows, isEmpty);
     expect(me.app.groups, isEmpty);
   });
+
+  test('a link with another door moves a waiting join only once its own '
+      'went unanswered, and only on the sheet\'s join', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    final other = RoomLink(
+      roomId: _room,
+      name: 'Friday',
+      expiresAt: DateTime.now().millisecondsSinceEpoch + 3600000,
+      creatorPub: _creator,
+      fcPk: 'f9' * 32,
+    );
+    Future<void> unmoved() async {
+      expect(await me.app.joinRoom(other), '');
+      await _settle();
+      expect(me.room!['fc_pk'], _fc);
+      expect(me.engine.knocks, hasLength(1));
+    }
+
+    // still waiting: nothing moves, a yes on the sheet or not
+    expect(await me.app.roomDoorMovable(other), isFalse);
+    takenDoors.take(other);
+    await unmoved();
+    // unanswered, with no yes: still nothing, and the old yes is spent
+    final wait = kRoomJoinWait.inMilliseconds;
+    me.room!['joining_at'] = DateTime.now().millisecondsSinceEpoch - wait - 1;
+    expect(await me.app.roomDoorMovable(other), isTrue);
+    await unmoved();
+    // the same room with another maker's key moves nothing either
+    final forged = RoomLink(
+      roomId: _room,
+      name: 'Friday',
+      expiresAt: other.expiresAt,
+      creatorPub: _other,
+      fcPk: other.fcPk,
+    );
+    expect(await me.app.roomDoorMovable(forged), isFalse);
+    takenDoors.take(forged);
+    expect(await me.app.joinRoom(forged), '');
+    await _settle();
+    expect(me.room!['fc_pk'], _fc);
+    expect(me.engine.knocks, hasLength(1));
+    // join said on the sheet: it knocks on the new door
+    takenDoors.take(other);
+    expect(await me.app.joinRoom(other), '');
+    await _settle();
+    expect(me.room!['fc_pk'], other.fcPk);
+    expect(me.engine.knocks, hasLength(2));
+    expect(me.engine.knocks.last.fc, other.fcPk);
+    expect(_stateOf(me), RoomJoin.waiting);
+  });
+
+  test('a join the room said full for may move to another door on the '
+      'sheet\'s join', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    await _fromRoom(
+      me,
+      _creator,
+      roomFrame(
+        await wrapMessage(
+          '',
+          groupId: _room,
+          groupControl: const GroupControl(type: 'full'),
+          sender: SenderInfo(haloId: _creator, edPub: '', onion: '', xPub: ''),
+        ),
+        _creator,
+      )!,
+    );
+    expect(me.app.roomFull(_room), isTrue);
+    expect(_stateOf(me), RoomJoin.waiting);
+    final other = RoomLink(
+      roomId: _room,
+      name: 'Friday',
+      expiresAt: DateTime.now().millisecondsSinceEpoch + 3600000,
+      creatorPub: _creator,
+      fcPk: 'f9' * 32,
+    );
+    expect(await me.app.roomDoorMovable(other), isTrue);
+    takenDoors.take(other);
+    expect(await me.app.joinRoom(other), '');
+    await _settle();
+    expect(me.room!['fc_pk'], other.fcPk);
+    expect(me.engine.knocks.last.fc, other.fcPk);
+    expect(me.app.roomFull(_room), isFalse);
+  });
 }

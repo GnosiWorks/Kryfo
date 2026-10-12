@@ -29,6 +29,7 @@ Future<void> followKryfoLink(
   Future<String> Function(String link) act = handleHaloUri,
   Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
   Future<bool> Function(String roomId) here = roomHere,
+  Future<bool> Function(RoomLink room) movable = roomDoorMovable,
 }) async {
   final r = await takeOutsideLink(
     context,
@@ -38,6 +39,7 @@ Future<void> followKryfoLink(
     act: act,
     kin: kin,
     here: here,
+    movable: movable,
   );
   if (r != null && context.mounted) showHaloToast(context, r);
 }
@@ -55,23 +57,38 @@ Future<bool> roomHere(String roomId) async {
   }
 }
 
-// whether a room link goes on to the door. one already here opens as it
-// did, and a join still waiting knocks again; anything else shows what its
-// link says and goes only on join
-Future<bool> _roomGoes(
+/// a waiting join here whose own door went unanswered or full, and a link
+/// to the same room with another door: asked about as a room not here
+Future<bool> roomDoorMovable(RoomLink room) async {
+  try {
+    return await appState.roomDoorMovable(room);
+  } catch (e) {
+    return false;
+  }
+}
+
+// whether a room link goes on to the door, and whether on the sheet's join
+// to another door. one already here opens as it did, and a join still
+// waiting knocks again; a join gone unanswered or full moves to another
+// door only on join. anything else shows what its link says and goes only
+// on join
+Future<(bool, bool)> _roomGoes(
   BuildContext context,
   RoomLink room,
   LockGuard g,
   Future<bool> Function(String roomId) here,
+  Future<bool> Function(RoomLink room) movable,
 ) async {
-  if (await here(room.roomId)) return true;
-  if (!context.mounted || g.isLocked()) return false;
-  return showRoomPreviewSheet(
+  final held = await here(room.roomId);
+  if (held && !await movable(room)) return (true, false);
+  if (!context.mounted || g.isLocked()) return (false, false);
+  final ok = await showRoomPreviewSheet(
     context,
     room,
     shutOnLock: g,
     ended: _endedHere(room),
   );
+  return (ok, ok && held);
 }
 
 // a room this phone made and left: over, whatever its link says
@@ -110,6 +127,7 @@ Future<String?> takeOutsideLink(
   Future<String> Function(String link) act = handleHaloUri,
   Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
   Future<bool> Function(String roomId) here = roomHere,
+  Future<bool> Function(RoomLink room) movable = roomDoorMovable,
 }) async {
   // the link alone, as the door reads it, so the question is about what
   // the door then does
@@ -122,10 +140,11 @@ Future<String?> takeOutsideLink(
   final g = guard ?? lockGuard;
   if (g.isLocked()) return null;
   final bool ok;
+  var moves = false;
   if (room != null) {
     // what the link says, and nothing sent before join. a closed room
     // has no join
-    ok = await _roomGoes(context, room, g, here);
+    (ok, moves) = await _roomGoes(context, room, g, here, movable);
   } else if (who == selfId) {
     // one's own invite adds no one: the door only says so
     ok = true;
@@ -161,6 +180,7 @@ Future<String?> takeOutsideLink(
   }
   // a no, or the lock came up while it asked
   if (!ok || g.isLocked()) return null;
+  if (moves) takenDoors.take(room!);
   HapticFeedback.selectionClick();
   return act(link);
 }
@@ -174,6 +194,7 @@ Future<String?> takeOwnLink(
   LockGuard? guard,
   Future<String> Function(String link) act = handleHaloUri,
   Future<bool> Function(String roomId) here = roomHere,
+  Future<bool> Function(RoomLink room) movable = roomDoorMovable,
 }) async {
   // the same reading the door makes of it
   final link = firstKryfoLink(raw.trim());
@@ -181,8 +202,9 @@ Future<String?> takeOwnLink(
   if (room == null) return act(raw);
   final g = guard ?? lockGuard;
   if (g.isLocked()) return null;
-  if (!await _roomGoes(context, room, g, here)) return null;
-  if (g.isLocked()) return null;
+  final (ok, moves) = await _roomGoes(context, room, g, here, movable);
+  if (!ok || g.isLocked()) return null;
+  if (moves) takenDoors.take(room);
   HapticFeedback.selectionClick();
   return act(link!);
 }
