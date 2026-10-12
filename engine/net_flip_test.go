@@ -34,27 +34,34 @@ func rigFlips(t *testing.T, quiet, gap, proof time.Duration) *flipRig {
 	t.Cleanup(func() {
 		// let a worker still sleeping finish against the stand-in
 		time.Sleep(2 * (quiet + gap + proof))
-		netQuiet, netGap, netBounce = oq, og, ob
-		netReconnect, netProof, netProofTries, netProofStep = or, op, ot, ost
+		underNetMu(func() {
+			netQuiet, netGap, netBounce = oq, og, ob
+			netReconnect, netProof, netProofTries, netProofStep = or, op, ot, ost
+		})
 	})
-	netQuiet, netGap = quiet, gap
-	netProof, netProofTries, netProofStep = proof, 2, time.Millisecond
+	underNetMu(func() {
+		netQuiet, netGap = quiet, gap
+		netProof, netProofTries, netProofStep = proof, 2, time.Millisecond
+	})
 	netMu.Lock()
 	lastNetBounce = time.Time{}
 	netMu.Unlock()
 	resetRoute(t, "publishing", 100)
 	r := &flipRig{}
-	netReconnect = func() string {
-		r.mu.Lock()
-		r.calls = append(r.calls, time.Now())
-		r.mu.Unlock()
-		routeFreshNetwork()
-		routeBump()
-		if r.prove.Load() {
-			routeNoteOK()
+	underNetMu(func() {
+		netReconnect = func() string {
+			r.mu.Lock()
+			r.calls = append(r.calls, time.Now())
+			r.mu.Unlock()
+			routeFreshNetwork()
+			routeBump()
+			if r.prove.Load() {
+				routeNoteOK()
+			}
+			return "ok"
 		}
-		return "ok"
-	}
+	})
+
 	return r
 }
 

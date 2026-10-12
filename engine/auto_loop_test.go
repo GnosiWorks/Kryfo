@@ -79,10 +79,10 @@ func TestLoopWaitsOutAFlappingNetwork(t *testing.T) {
 // the proof of the old network is no proof of the new one
 func TestNetworkChangeDropsTheProof(t *testing.T) {
 	oldB, oldQ := netBounce, netQuiet
-	netBounce, netQuiet = func() {}, time.Millisecond
+	underNetMu(func() { netBounce, netQuiet = func() {}, time.Millisecond })
 	defer func() {
 		time.Sleep(50 * time.Millisecond)
-		netBounce, netQuiet = oldB, oldQ
+		underNetMu(func() { netBounce, netQuiet = oldB, oldQ })
 	}()
 	resetRoute(t, "publishing", 100)
 	routeNoteOK()

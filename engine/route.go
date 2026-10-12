@@ -485,6 +485,7 @@ func valveTryTor() {
 // and while the app has not spoken
 func netValveProven() bool {
 	gen := routeBump()
+	step := netKnobsNow().step
 	end := time.Now().Add(netValveFor)
 	for time.Now().Before(end) {
 		if !netOffline.Load() || !modeNeedsTor() || torIsPaused() {
@@ -496,7 +497,7 @@ func netValveProven() bool {
 		if ok {
 			return true
 		}
-		time.Sleep(netProofStep)
+		time.Sleep(step)
 	}
 	return false
 }
@@ -542,6 +543,7 @@ func netBounceWorker() {
 		}
 		lastNetBounce = time.Now()
 		netWorker = false
+		bounce := netBounce
 		netMu.Unlock()
 
 		// floors and back-offs were reset with the change. offline, the
@@ -554,7 +556,7 @@ func netBounceWorker() {
 			log.Println("halo: network bounce left to automatic")
 			return
 		}
-		netBounce()
+		bounce()
 		return
 	}
 }
@@ -594,7 +596,7 @@ func init() { netBounce = bounceForNetwork }
 func bounceForNetwork() {
 	log.Println("halo: network changed, bouncing tor")
 	epoch := netEpoch.Load()
-	netReconnect()
+	netKnobsNow().reconnect()
 	netCheck(epoch)
 }
 
@@ -617,6 +619,21 @@ var (
 	netProofStep  = 2 * time.Second
 )
 
+// the bounce's settings as they are now. the tests change them under
+// netMu, while a bounce of an earlier test may still be running
+type netKnobs struct {
+	proof     time.Duration
+	tries     int
+	step      time.Duration
+	reconnect func() string
+}
+
+func netKnobsNow() netKnobs {
+	netMu.Lock()
+	defer netMu.Unlock()
+	return netKnobs{netProof, netProofTries, netProofStep, netReconnect}
+}
+
 // a relay connected through the route the last bounce built
 func routeProven() bool {
 	routeMu.Lock()
@@ -637,9 +654,10 @@ func lastNetCheck() string {
 // the relays the bounce kicked are the proof. "ok", "unproven", or
 // "superseded" when a newer change took over
 func netCheck(epoch int64) string {
+	k := netKnobsNow()
 	began := time.Now()
 	for try := 1; ; try++ {
-		end := time.Now().Add(netProof)
+		end := time.Now().Add(k.proof)
 		for time.Now().Before(end) {
 			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netAway() {
 				return "superseded"
@@ -648,14 +666,14 @@ func netCheck(epoch int64) string {
 				netCheckOutcome.Store(fmt.Sprintf("ok after %s", time.Since(began).Round(time.Second)))
 				return "ok"
 			}
-			time.Sleep(netProofStep)
+			time.Sleep(k.step)
 		}
-		if try >= netProofTries {
+		if try >= k.tries {
 			netCheckOutcome.Store(fmt.Sprintf("no relay through tor in %s", time.Since(began).Round(time.Second)))
 			log.Printf("halo: tor not proven on the new network after %d bounces", try)
 			return "unproven"
 		}
-		log.Printf("halo: no relay through tor %s after the bounce, bouncing again", netProof)
-		netReconnect()
+		log.Printf("halo: no relay through tor %s after the bounce, bouncing again", k.proof)
+		k.reconnect()
 	}
 }

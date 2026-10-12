@@ -213,10 +213,10 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 // settled, not five, and the last change always gets one.
 func TestFlappingNetworkBouncedOnce(t *testing.T) {
 	oldQ, oldG, oldB := netQuiet, netGap, netBounce
-	defer func() { netQuiet, netGap, netBounce = oldQ, oldG, oldB }()
-	netQuiet, netGap = 50*time.Millisecond, 800*time.Millisecond
+	defer underNetMu(func() { netQuiet, netGap, netBounce = oldQ, oldG, oldB })
+	underNetMu(func() { netQuiet, netGap = 50*time.Millisecond, 800*time.Millisecond })
 	var n int32
-	netBounce = func() { atomic.AddInt32(&n, 1) }
+	underNetMu(func() { netBounce = func() { atomic.AddInt32(&n, 1) } })
 	atomic.StoreInt32(&torPaused, 0)
 	netMu.Lock()
 	lastNetBounce = time.Time{}

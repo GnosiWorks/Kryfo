@@ -551,10 +551,10 @@ func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
 	oldB, oldQ := netBounce, netQuiet
-	netBounce, netQuiet = func() {}, time.Millisecond
+	underNetMu(func() { netBounce, netQuiet = func() {}, time.Millisecond })
 	t.Cleanup(func() {
 		time.Sleep(50 * time.Millisecond)
-		netBounce, netQuiet = oldB, oldQ
+		underNetMu(func() { netBounce, netQuiet = oldB, oldQ })
 	})
 	setNetInfo(wifi())
 	today := dayOf(autoNow())

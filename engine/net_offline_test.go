@@ -20,8 +20,10 @@ func offlineRig(t *testing.T) *fakeControl {
 	fakeTor(t, f.port())
 	resetRoute(t, "publishing", 100)
 	oq, og, op, ot, os := netQuiet, netGap, netProof, netProofTries, netProofStep
-	netQuiet, netGap = 10*time.Millisecond, 10*time.Millisecond
-	netProof, netProofTries, netProofStep = 50*time.Millisecond, 1, time.Millisecond
+	underNetMu(func() {
+		netQuiet, netGap = 10*time.Millisecond, 10*time.Millisecond
+		netProof, netProofTries, netProofStep = 50*time.Millisecond, 1, time.Millisecond
+	})
 	netMu.Lock()
 	lastNetBounce = time.Time{}
 	netMu.Unlock()
@@ -40,9 +42,16 @@ func offlineRig(t *testing.T) *fakeControl {
 		netInfoMu.Unlock()
 		setOffline(false)
 		torParked.Store(false)
-		netQuiet, netGap, netProof, netProofTries, netProofStep = oq, og, op, ot, os
+		underNetMu(func() { netQuiet, netGap, netProof, netProofTries, netProofStep = oq, og, op, ot, os })
 	})
 	return f
+}
+
+// the bounce's settings are changed under netMu, as the worker reads them
+func underNetMu(f func()) {
+	netMu.Lock()
+	defer netMu.Unlock()
+	f()
 }
 
 func countSent(cmds []string, sub string) int {

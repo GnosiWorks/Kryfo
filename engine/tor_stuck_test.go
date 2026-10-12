@@ -202,9 +202,8 @@ func TestRelayThroughTorCorrectsOff(t *testing.T) {
 // first rescue must not wait out the gap the flight built up
 func TestLandingIsNotHeldByTheFlightsBackoff(t *testing.T) {
 	oldQ, oldB := netQuiet, netBounce
-	defer func() { netQuiet, netBounce = oldQ, oldB }()
-	netQuiet = 10 * time.Millisecond
-	netBounce = func() {}
+	defer underNetMu(func() { netQuiet, netBounce = oldQ, oldB })
+	underNetMu(func() { netQuiet, netBounce = 10*time.Millisecond, func() {} })
 	resetRoute(t, "publishing", 100)
 	routeNoteOK()
 	now := time.Now()

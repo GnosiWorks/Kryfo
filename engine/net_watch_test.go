@@ -21,14 +21,14 @@ import (
 func quietBounce(t *testing.T) {
 	t.Helper()
 	ob, oq, og := netBounce, netQuiet, netGap
-	netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond
+	underNetMu(func() { netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond })
 	t.Cleanup(func() {
 		waitUntil(5*time.Second, func() bool {
 			netMu.Lock()
 			defer netMu.Unlock()
 			return !netWorker
 		})
-		netBounce, netQuiet, netGap = ob, oq, og
+		underNetMu(func() { netBounce, netQuiet, netGap = ob, oq, og })
 	})
 }
 
