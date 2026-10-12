@@ -6,6 +6,7 @@
 // listened on again until an answer says ok, and a counter that does not
 // read is read again rather than taken as 0
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -56,8 +57,10 @@ class _Wire {
     String? fc = 'fc-them',
     String cipher = 'c1',
     bool pairRead = false,
+    bool pairRoute = false,
   }) => routeText(
     pairRead: pairRead,
+    pairRoute: pairRoute,
     bothWent: () => both++,
     copied: copies.add,
     backPaired: backPaired,
@@ -177,6 +180,20 @@ void main() {
         expect(dead.went, ['onion c1', 'relay x-them c1']);
       },
     );
+
+    test('a pair copy to someone met on a card who never showed they read '
+        'it is parked, not delivered', () async {
+      final w = _Wire();
+      expect(await w.send(backPaired: false, fc: null, pairRoute: true), 'ok');
+      await Future.wait(w.copies);
+      expect(w.went, ['onion c1', 'relay x-them c1']);
+      expect(w.both, 0);
+      final dead = _Wire()..onion = 'error: timeout';
+      expect(
+        await dead.send(backPaired: false, fc: null, pairRoute: true),
+        'parked',
+      );
+    });
 
     test('no key and no onion is no transport', () async {
       final w = _Wire()..xPub = null;
@@ -343,6 +360,36 @@ void main() {
       expect(app.fcCounter, 3);
       await tester.pump(const Duration(minutes: 10));
       expect(e.asked, [3]);
+    });
+
+    testWidgets('once, a kept first-contact address of someone who added '
+        'us back or came on a card is let go', (tester) async {
+      FlutterSecureStorage.setMockInitialValues({
+        'fc_counter': '3',
+        'peer_fc': jsonEncode({
+          'added-us-back': 'fc-a',
+          'came-on-a-card': 'fc-b',
+          'still-a-stranger': 'fc-c',
+        }),
+      });
+      final rows = ArrivalRows(HaloContainer.everyday)
+        ..person('added-us-back')
+        ..person('came-on-a-card', backPaired: 0)
+        ..person('still-a-stranger', backPaired: 0);
+      rows.vouches['came-on-a-card'] = {'a-friend'};
+      useDatabasesForTest(rows, Session(rows));
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      final fresh = AppState(io: ArrivalIo(), router: router);
+      await fresh.loadFirstContact();
+      expect(fresh.peerFcFor('added-us-back'), isNull);
+      expect(fresh.peerFcFor('came-on-a-card'), isNull);
+      expect(fresh.peerFcFor('still-a-stranger'), 'fc-c');
+      // and only once: one remembered since stays
+      await fresh.rememberPeerFc('came-on-a-card', 'fc-own-invite');
+      final again = AppState(io: ArrivalIo(), router: router);
+      await again.loadFirstContact();
+      expect(again.peerFcFor('came-on-a-card'), 'fc-own-invite');
     });
 
     testWidgets('a listener on no relay starts again; one on a relay is '

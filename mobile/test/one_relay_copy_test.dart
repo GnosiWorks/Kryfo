@@ -59,6 +59,10 @@ class _Io extends ArrivalIo {
 }
 
 class _Engine implements HaloEngine {
+  // the keys told to ask first, in order
+  final first = <String>[];
+  @override
+  void nostrFirst(String peerXPubHex) => first.add(peerXPubHex);
   @override
   void nostrSubscribeBg(String peerXPubHex) {}
   @override
@@ -74,6 +78,8 @@ void main() {
   late _Io io;
   late AppState app;
 
+  late _Engine engine;
+
   setUpAll(() {
     docs = Directory.systemTemp.createTempSync('one_relay_copy');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -81,7 +87,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    useEngineForTest(_Engine());
+    useEngineForTest(engine = _Engine());
   });
 
   tearDownAll(() => docs.deleteSync(recursive: true));
@@ -177,5 +183,25 @@ void main() {
       ],
       ['a1'],
     );
+  });
+
+  test('the chat on screen asks first by the key on its row, told again '
+      'when a key comes later, and let go when it closes', () async {
+    engine.first.clear();
+    app.chatFirst(_amy);
+    await settle();
+    expect(engine.first, ['x-$_amy']);
+    app.chatFirst(null);
+    await settle();
+    expect(engine.first, ['x-$_amy', '']);
+    // a chat whose key is not on its row yet
+    await contact({'xpub': ''});
+    app.chatFirst(_amy);
+    await settle();
+    expect(engine.first, ['x-$_amy', '']);
+    await contact({'xpub': 'x-later'});
+    await app.subscribePeer(_amy);
+    await settle();
+    expect(engine.first.last, 'x-later');
   });
 }

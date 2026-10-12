@@ -2759,6 +2759,10 @@ class _ChatScreenState extends State<ChatScreen>
         return xpub;
       },
       fc: appState.peerFcFor(widget.peerHaloId),
+      pairRoute: await appState.pairRoute(
+        widget.peerHaloId,
+        backPaired: _backPaired,
+      ),
       pairRead: await appState.pairRead(
         widget.peerHaloId,
         backPaired: _backPaired,

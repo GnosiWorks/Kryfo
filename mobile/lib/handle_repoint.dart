@@ -30,6 +30,10 @@ String handleRefusalLine(String r, String h) => switch (r) {
   _ => l10n.handleRegistryFailed,
 };
 
+/// between two claims: the registry orders them by their second, and takes
+/// no two in one
+const repointApart = Duration(milliseconds: 1100);
+
 /// the wait before a repoint that got no answer is tried again, after [n]
 /// that failed: a minute, doubling to a quarter of an hour
 Duration repointRetry(int n) =>
@@ -57,11 +61,16 @@ class RepointGate {
   /// engine's answer. the wait before the next try, or null for none
   Duration? settled(String? r) {
     _going = false;
-    if (r == null || r == 'ok' || r.contains('taken')) {
+    // an answer the registry will give again is final too
+    if (r == null ||
+        r == 'ok' ||
+        r.contains('taken') ||
+        r.contains('not yours')) {
       _done = true;
       _fails = 0;
       return null;
     }
+    _done = false;
     _fails++;
     return repointRetry(_fails);
   }

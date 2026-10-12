@@ -121,8 +121,9 @@ bool waitsForReceipt({
 /// relay route that reaches them. an onion ack is only their engine
 /// holding it in memory: the relay copy goes as well, behind the ok, and
 /// [bothWent] hears when it did. [copied] is that copy, for whoever waits.
-/// [pairRead]: they read our pair address before adding us back (they took
-/// our card), so with no first-contact address that is where it goes
+/// [pairRoute]: with no first-contact address, they came on a friend's card
+/// and the copy goes to the pair address, which they read if they took ours.
+/// [pairRead]: they showed they do, so a copy there is delivered
 Future<String> routeText({
   required bool backPaired,
   required String onion,
@@ -134,10 +135,12 @@ Future<String> routeText({
   void Function(String line)? log,
   void Function()? bothWent,
   void Function(Future<void> copy)? copied,
+  bool pairRoute = false,
   bool pairRead = false,
 }) async {
   final first = !backPaired && fc != null && fc.isNotEmpty;
-  final pair = !backPaired && !first && pairRead;
+  final pair = !backPaired && !first && (pairRoute || pairRead);
+  final pairSeen = pair && pairRead;
   String? tor;
   if (!backPaired && onion.isNotEmpty) {
     tor = await viaOnion();
@@ -152,7 +155,7 @@ Future<String> routeText({
                 ? await viaFirst(x, fc)
                 : await viaRelay(x);
             if (f == 'ok') {
-              bothWent?.call();
+              if (first || pairSeen) bothWent?.call();
               return;
             }
             firstFails.note('copy');
@@ -181,6 +184,6 @@ Future<String> routeText({
   final r = await viaRelay(x);
   // the pair address is a drop box they read only once they add us back.
   // stored there is not delivered
-  if (r == 'ok' && !backPaired && !pair) return 'parked';
+  if (r == 'ok' && !backPaired && !pairSeen) return 'parked';
   return r;
 }

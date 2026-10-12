@@ -228,8 +228,25 @@ void main() {
       expect(g.want(torUp: true), isTrue);
     });
 
+    test('a new invite or handle is put to the registry again, even after '
+        'one was taken', () {
+      final g = RepointGate()..going();
+      expect(g.settled('ok'), isNull);
+      expect(g.want(torUp: true), isFalse);
+      g.reset();
+      expect(g.want(torUp: true), isTrue);
+      g.going();
+      // and its failure is retried, never left as done
+      expect(g.settled('error: registry not reached'), repointRetry(1));
+      expect(g.want(torUp: true), isTrue);
+    });
+
+    test('claims are a second apart, as the registry orders them', () {
+      expect(repointApart, greaterThan(const Duration(seconds: 1)));
+    });
+
     test('an answer, or nothing to send, is done for the run', () {
-      for (final r in [null, 'ok', 'error: taken']) {
+      for (final r in [null, 'ok', 'error: taken', 'error: not yours']) {
         final g = RepointGate()..going();
         expect(g.settled(r), isNull, reason: '$r');
         expect(g.want(torUp: true), isFalse, reason: '$r');

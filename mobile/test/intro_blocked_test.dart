@@ -288,4 +288,33 @@ void main() {
     expect(went, contains('relay x-$_n'));
     expect(went.where((t) => t.startsWith('fc')), isEmpty);
   });
+
+  test(
+    'a copy on the pair address counts as delivered only once they have '
+    'shown they read it: someone with introductions off never does',
+    () async {
+      final w = await _World.make();
+      final k = await _keysOf();
+      await w.introduce(_n, xPub: k.x);
+      // with introductions off they never took our card, so nothing of theirs
+      // comes over the pair address: the copy goes there, uncounted
+      expect(await w.app.pairRoute(_n, backPaired: false), isTrue);
+      expect(await w.app.pairRead(_n, backPaired: false), isFalse);
+      // with them on, their bundle frame comes over it
+      await w.app.receiveRelay([
+        (
+          peer: k.x,
+          cipher: jsonEncode({
+            'halo_ctl': 'bundle',
+            'from': _n,
+            'bundle': k.card,
+            'want': false,
+          }),
+        ),
+      ]);
+      await _settle();
+      expect(await w.app.pairRead(_n, backPaired: false), isTrue);
+      expect(await w.app.pairRead(_n, backPaired: true), isFalse);
+    },
+  );
 }

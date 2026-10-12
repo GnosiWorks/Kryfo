@@ -12649,6 +12649,11 @@ class AppState extends ChangeNotifier {
       await st.write(key: 'my_handle_bio', value: bio);
       if (invite != null) await _handleRepoint.claimed(h, invite);
     }
+    // a new handle is put to the registry as any changed invite is, the
+    // same after a restore
+    _repointTimer?.cancel();
+    _repoint.reset();
+    _maybeRepoint();
     notifyListeners();
   }
 
@@ -14233,10 +14238,46 @@ class AppState extends ChangeNotifier {
       _peerFcUnread = true;
       dlog('peer fc map unreadable, kept as it is: ${e.runtimeType}');
     }
+    try {
+      final raw = await st.read(key: 'pair_read');
+      if (raw != null && raw.isNotEmpty) {
+        _pairSeen.addAll((jsonDecode(raw) as List).cast<String>());
+      }
+    } catch (e) {
+      _pairSeenUnread = true;
+      dlog('pair read: unreadable, kept as it is (${e.runtimeType})');
+    }
+    await _sweepPeerFc();
     _fcLoaded = true;
     await _listenFirstContact();
     _maybeRepoint();
     notifyListeners();
+  }
+
+  // once: a first-contact address kept for someone who has added us back, or
+  // who came on a card, is let go. the first is spent, the second second
+  // hand, and neither may be handed on in a card
+  Future<void> _sweepPeerFc() async {
+    if (_peerFcUnread || _peerFc.isEmpty) return;
+    const st = secureStore;
+    try {
+      if (await st.read(key: 'peer_fc_swept') == '1') return;
+      final drop = <String>[];
+      for (final id in _peerFc.keys) {
+        if (isDevId(id)) continue;
+        final d = _ownerOf(id);
+        if (await d.isBackPaired(id) || await d.isVouched(id)) drop.add(id);
+      }
+      for (final id in drop) {
+        _peerFc.remove(id);
+      }
+      if (drop.isNotEmpty) {
+        await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
+      }
+      await st.write(key: 'peer_fc_swept', value: '1');
+    } catch (e) {
+      dlog('peer fc: not swept (${e.runtimeType})');
+    }
   }
 
   var _fcCounterTries = 0;
@@ -14325,8 +14366,27 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // nothing is sent while the invite is the one the registry last took
+  // one claim at a time: the registry takes one a second, so two never
+  // share one
+  Future<void>? _repointRun;
   Future<void> _repointHandle() async {
+    final before = _repointRun;
+    final run = _repointRun = () async {
+      if (before != null) {
+        await before;
+        await Future.delayed(repointApart);
+      }
+      await _repointHandleNow();
+    }();
+    try {
+      await run;
+    } finally {
+      if (identical(_repointRun, run)) _repointRun = null;
+    }
+  }
+
+  // nothing is sent while the invite is the one the registry last took
+  Future<void> _repointHandleNow() async {
     final h = _myHandle;
     if (h == null || myOnion.isEmpty) {
       _repoint.putBack();
@@ -14381,6 +14441,13 @@ class AppState extends ChangeNotifier {
     _fcCounter++;
     await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
     unawaited(_listenFirstContact());
+    // the new invite goes to the registry now, after any claim already on
+    // its way and a second apart from it, and again later if this one gets
+    // no answer
+    _repointTimer?.cancel();
+    _repoint
+      ..reset()
+      ..going();
     await _repointHandle();
     notifyListeners();
   }
@@ -16910,6 +16977,7 @@ class AppState extends ChangeNotifier {
     var fc = false;
     for (final id in ids) {
       if (_peerFc.remove(id) != null) fc = true;
+      _pairSeen.remove(id);
     }
     if (fc && !_peerFcUnread) {
       await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
@@ -17671,19 +17739,36 @@ class AppState extends ChangeNotifier {
 
   // the chat on screen's address asks first after a start or a wake
   String _firstKey = '';
+  String? _firstChat;
   void chatFirst(String? haloId) {
     // the dev chat's lane is its own, and nothing of it goes before it starts
     if (haloId != null && isDevId(haloId)) haloId = null;
+    _firstChat = haloId;
+    unawaited(_tellFirst());
+  }
+
+  // the key from the contact's row, else from what is listened on. told
+  // again when the chat's key comes later (subscribePeer)
+  Future<void> _tellFirst() async {
+    final id = _firstChat;
     var key = '';
-    if (haloId != null) {
-      for (final e in _xPubToHaloId.entries) {
-        if (e.value == haloId) {
-          key = e.key;
-          break;
+    if (id != null) {
+      try {
+        key = (await _reach(id))?.xpub ?? '';
+      } catch (e) {
+        dlog('first: no row (${e.runtimeType})');
+      }
+      if (key.isEmpty) {
+        for (final e in _xPubToHaloId.entries) {
+          if (e.value == id) {
+            key = e.key;
+            break;
+          }
         }
       }
     }
-    if (key == _firstKey) return;
+    // another chat opened while this read
+    if (_firstChat != id || key == _firstKey) return;
     _firstKey = key;
     try {
       engine.nostrFirst(key);
@@ -20885,6 +20970,8 @@ class AppState extends ChangeNotifier {
         dlog('bundle ctl: identity mismatch for $from, dropped');
         return;
       }
+      // their frame came over the pair address: they read ours too
+      if (!to.backPaired) unawaited(_notePairSeen(from));
       // kept on the row, where there is one: a hidden chat's card holds no
       // bundle while the vault is shut
       await to.on?.setPeerBundle(from, bundle);
@@ -20981,7 +21068,8 @@ class AppState extends ChangeNotifier {
 
   // [member]: a group's frame, which the group's own rules send.
   // [takeBack]: an unsend, which only withdraws and goes to anyone
-  // [pairOnly]: to the pair address alone, as an opener's last try goes
+  // [pairOnly]: the onion and the pair address, as an opener's last try
+  // goes, and true when a copy went rather than when it was delivered
   Future<bool> _sendOneEnvelope(
     String memberId,
     String wrapped, {
@@ -21044,17 +21132,23 @@ class AppState extends ChangeNotifier {
       final backPaired = to.backPaired;
       final xpub = to.xpub;
       final onion = to.onion;
-      final pairWay = await pairRead(
-        memberId,
-        backPaired: backPaired,
-        on: to.on,
-      );
+      final pairWay = await pairRead(memberId, backPaired: backPaired);
 
-      // a fresh copy at its own time, never beside another of the same
+      // the onion and a fresh pair copy at its own time, never the
+      // first-contact address beside it. true when either took it: the one
+      // caller only says whether it went
       if (pairOnly) {
-        final n = await Future(() => _io.relaySend(xpub, cipher));
-        if (n != 'ok') dlog('send: nostr failed ($n)');
-        return n == 'ok' && (backPaired || pairWay);
+        final rs = await Future.wait([
+          if (!backPaired && onion.isNotEmpty)
+            Future(
+              () => _io.onionSend(onion, cipher),
+            ).catchError((Object _) => 'err'),
+          Future(
+            () => _io.relaySend(xpub, cipher),
+          ).catchError((Object _) => 'err'),
+        ]);
+        if (!rs.contains('ok')) dlog('send: no copy went ($rs)');
+        return rs.contains('ok');
       }
 
       // back-paired: the pair address only
@@ -21133,19 +21227,41 @@ class AppState extends ChangeNotifier {
   /// [id] has not added us back but reads our pair address already: we came
   /// to them on a friend's card, as they came to us, and no first-contact
   /// address of theirs is known. that address is the way to them then
-  Future<bool> pairRead(
-    String id, {
-    required bool backPaired,
-    HaloDb? on,
-  }) async {
-    if (backPaired) return false;
-    final fc = peerFcFor(id);
-    if (fc != null && fc.isNotEmpty) return false;
+  Future<bool> pairRead(String id, {required bool backPaired}) async =>
+      !backPaired && !_hasFc(id) && _pairSeen.contains(id);
+
+  /// [id] came on a friend's card and no first-contact address of theirs is
+  /// known: copies go to the pair address, which they read if they took our
+  /// card too. an ok there counts only once they showed it (pairRead)
+  Future<bool> pairRoute(String id, {required bool backPaired}) async {
+    if (backPaired || _hasFc(id)) return false;
     try {
-      return await (on ?? _ownerOf(id)).isVouched(id);
+      return await _ownerOf(id).isVouched(id);
     } catch (e) {
       dlog('send: vouch not read (${e.runtimeType})');
       return false;
+    }
+  }
+
+  bool _hasFc(String id) {
+    final fc = peerFcFor(id);
+    return fc != null && fc.isNotEmpty;
+  }
+
+  // people who showed they read our pair address before adding us back: a
+  // bundle frame of theirs came over it. kept for the phone, beside peer_fc
+  final Set<String> _pairSeen = <String>{};
+  bool _pairSeenUnread = false;
+
+  Future<void> _notePairSeen(String id) async {
+    if (!_pairSeen.add(id) || _pairSeenUnread) return;
+    try {
+      await secureStore.write(
+        key: 'pair_read',
+        value: jsonEncode(_pairSeen.toList()),
+      );
+    } catch (e) {
+      dlog('pair read: not kept (${e.runtimeType})');
     }
   }
 
@@ -23074,6 +23190,8 @@ class AppState extends ChangeNotifier {
     if (xPub == null || xPub.isEmpty) return;
     _xPubToHaloId[xPub] = haloId;
     _io.listen(xPub);
+    // the chat on screen whose key was not known when it opened
+    if (haloId == _firstChat) unawaited(_tellFirst());
   }
 
   // a backup reads the databases while no hide, show or close runs, so its
