@@ -84,9 +84,9 @@
   "@contactCardMessageMeOn": {
     "description": "contact_card.dart"
   },
-  "contactCardScanItOrType": "Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.",
-  "@contactCardScanItOrType": {
-    "description": "contact_card.dart"
+  "contactCardScanToAdd": "Scan it with Kryfo to add me.\nThis card knows nothing about you beyond that.",
+  "@contactCardScanToAdd": {
+    "description": "contact_card.dart: under the qr on the shared card. the qr is the invite; typing the three words adds no one"
   },
   "contactCardMessageMeOnKryfo": "Message me on Kryfo · {haloId}",
   "@contactCardMessageMeOnKryfo": {
@@ -1076,6 +1076,15 @@
   "scamShieldLooksLikeAScam": "Looks like a scam",
   "@scamShieldLooksLikeAScam": {
     "description": "scam_shield.dart"
+  },
+  "scamShieldGivesUsedName": "Says it is {shown}, a name someone here already goes by",
+  "@scamShieldGivesUsedName": {
+    "description": "scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key. it says nothing about which of the two is who they say",
+    "placeholders": {
+      "shown": {
+        "type": "Object"
+      }
+    }
   },
   "scamShieldThisNameMatches": "This name matches {shown}",
   "@scamShieldThisNameMatches": {
@@ -2212,6 +2221,23 @@
   "chatSecurityCodeChanged": "Security code changed",
   "@chatSecurityCodeChanged": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatCompareTitle": "Compare the safety number",
+  "@chatCompareTitle": {
+    "description": "screens/chat_screen.dart: card at the top of a chat added by a pairing code or a link, or taken in from a request, until the safety number is verified"
+  },
+  "chatCompareLine": "Three words can be copied. To know this chat is really with {peerName}, compare the safety number with them, in person or on a call.",
+  "@chatCompareLine": {
+    "description": "screens/chat_screen.dart: under chatCompareTitle",
+    "placeholders": {
+      "peerName": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatCompareLater": "Later",
+  "@chatCompareLater": {
+    "description": "screens/chat_screen.dart: button on the compare card, puts it away for this chat"
   },
   "chatKeyHeldLine": "You verified {peerName} before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.",
   "@chatKeyHeldLine": {
@@ -4036,9 +4062,9 @@
       }
     }
   },
-  "keyVerificationIfSeesTheSame": "If {peerName} sees the same number, your messages are private to just the two of you. Comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.",
-  "@keyVerificationIfSeesTheSame": {
-    "description": "screens/key_verification_screen.dart",
+  "keyVerificationCompareAll": "Compare all 12 groups with {peerName}, in person or on a call you trust. If every group matches, no one is in between and your messages are for the two of you alone.",
+  "@keyVerificationCompareAll": {
+    "description": "screens/key_verification_screen.dart: under the safety number. the whole number has to be compared, not its first groups",
     "placeholders": {
       "peerName": {
         "type": "Object"
@@ -5119,17 +5145,21 @@
   "@pairCodeUsedTwice": {
     "description": "widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added"
   },
-  "pairCodeIsThisThem": "Is this them?",
-  "@pairCodeIsThisThem": {
-    "description": "widgets/pair_join.dart: title over the face and three words a code led to, before anything is added"
+  "pairCodeKeyNumber": "Key number",
+  "@pairCodeKeyNumber": {
+    "description": "widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use"
   },
-  "pairCodeCheckMatches": "Check this matches their screen",
-  "@pairCodeCheckMatches": {
-    "description": "widgets/pair_join.dart: under the face and three words: compare them with what the other person's phone shows"
+  "pairCodeNumberMatches": "Check all four groups match on both phones",
+  "@pairCodeNumberMatches": {
+    "description": "widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones"
   },
-  "pairCodeNotThem": "Not them",
-  "@pairCodeNotThem": {
-    "description": "widgets/pair_join.dart: button, the face and words do not match the other phone; nothing is added"
+  "pairCodeNumberDiffers": "The number is different",
+  "@pairCodeNumberDiffers": {
+    "description": "widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added"
+  },
+  "pairCodeNoNumberThere": "No number on their screen? Add them, then compare the safety number in your chat.",
+  "@pairCodeNoNumberThere": {
+    "description": "widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number"
   },
   "pairCodeNotAdded": "Not added. Ask them for a new code.",
   "@pairCodeNotAdded": {
@@ -7736,15 +7766,6 @@
       }
     }
   },
-  "kryfoLinkTextNotTheOne": "Not the {who} in your chats",
-  "@kryfoLinkTextNotTheOne": {
-    "description": "widgets/kryfo_link_text.dart: sheet title, an invite opened from outside gives the words of a contact here with another key",
-    "placeholders": {
-      "who": {
-        "type": "Object"
-      }
-    }
-  },
   "kryfoLinkTextSomeoneElse": "You call someone in your chats {who}. This link is from someone else. Add them only if you know where it came from.",
   "@kryfoLinkTextSomeoneElse": {
     "description": "widgets/kryfo_link_text.dart: an invite opened from outside gives words the person uses as the name of another contact",
@@ -8041,6 +8062,10 @@
   "pairCodePanelYourWords": "Your three words",
   "@pairCodePanelYourWords": {
     "description": "widgets/pair_join.dart: label over the sharer's own three words under the six digit code"
+  },
+  "pairCodePanelAcceptOnce": "Their request comes once they add you. Accept it only once they say all four groups matched.",
+  "@pairCodePanelAcceptOnce": {
+    "description": "widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add"
   },
   "pinsPinnedMessages": "Pinned messages · {count}",
   "@pinsPinnedMessages": {
@@ -10011,31 +10036,55 @@
   "@devChatOptions": {
     "description": "widgets/dev_note.dart: the menu button in the developer chat's header"
   },
-  "appLinkOtherKey": "This link says it is {id}, but its key does not match. It was not added.",
-  "@appLinkOtherKey": {
-    "description": "a scanned or pasted card, or the one behind a handle, that names someone already here with another key (main.dart, handleHaloUriAdded)",
+  "requestsSomeoneNew": "Someone new",
+  "@requestsSomeoneNew": {
+    "description": "screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave"
+  },
+  "nameNotChecked": "Not checked",
+  "@nameNotChecked": {
+    "description": "widgets/name_check_mark.dart: a small mark beside three words a request, an introduction or a group gave, until a qr scan or the safety number settles them"
+  },
+  "nameTakenTitle": "Someone else uses these words",
+  "@nameTakenTitle": {
+    "description": "widgets/kryfo_link_text.dart: sheet title, a link gives three words someone here already goes by, with another key"
+  },
+  "nameTakenLine": "Someone here got these words from a request, an introduction or a group, with a different key, and nobody checked them. Words can be copied. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenLine": {
+    "description": "widgets/kryfo_link_text.dart: the words of a link are held here by someone a request, an introduction or a group gave them to, never checked, with no chat yet"
+  },
+  "nameTakenChatLine": "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.",
+  "@nameTakenChatLine": {
+    "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat"
+  },
+  "nameTakenUse": "Use this link",
+  "@nameTakenUse": {
+    "description": "widgets/kryfo_link_text.dart: button, the link takes the words over"
+  },
+  "nameTakenKeep": "Keep the one I have",
+  "@nameTakenKeep": {
+    "description": "widgets/kryfo_link_text.dart: button, nothing is added and the one here keeps the words"
+  },
+  "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
+  "@appYourOwnInvite": {
+    "description": "main.dart: a link, card or handle that is your own was added"
+  },
+  "appLinkWordsTaken": "Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.",
+  "@appLinkWordsTaken": {
+    "description": "main.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells",
     "placeholders": {
       "id": {
         "type": "Object"
       }
     }
   },
-  "scamShieldSaysItIs": "Says it is {shown}, but its key does not match",
-  "@scamShieldSaysItIs": {
-    "description": "scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key",
+  "appLinkWordsVerified": "You verified {id} with a different key. Nothing was added.",
+  "@appLinkWordsVerified": {
+    "description": "main.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced",
     "placeholders": {
-      "shown": {
+      "id": {
         "type": "Object"
       }
     }
-  },
-  "requestsSomeoneNew": "Someone new",
-  "@requestsSomeoneNew": {
-    "description": "screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave"
-  },
-  "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
-  "@appYourOwnInvite": {
-    "description": "main.dart: a link, card or handle that is your own was added"
   },
   "appTheyAreBlocked": "You blocked {id}. Unblock them under Blocked in Settings to add them again.",
   "@appTheyAreBlocked": {

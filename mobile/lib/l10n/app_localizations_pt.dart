@@ -75,8 +75,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contactCardMessageMeOn => 'Fale comigo no';
 
   @override
-  String get contactCardScanItOrType =>
-      'Escaneie ou digite as três palavras no Kryfo.\nEste cartão não sabe mais nada sobre você.';
+  String get contactCardScanToAdd =>
+      'Escaneie com o Kryfo para me adicionar.\nEste cartão não sabe mais nada sobre você.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -870,6 +870,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scamShieldLooksLikeAScam => 'Parece golpe';
+
+  @override
+  String scamShieldGivesUsedName(Object shown) {
+    return 'Diz que é $shown, um nome que alguém aqui já usa';
+  }
 
   @override
   String scamShieldThisNameMatches(Object shown) {
@@ -1751,6 +1756,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatSecurityCodeChanged => 'O código de segurança mudou';
+
+  @override
+  String get chatCompareTitle => 'Compare o número de segurança';
+
+  @override
+  String chatCompareLine(Object peerName) {
+    return 'Três palavras podem ser copiadas. Para saber que esta conversa é mesmo com $peerName, compare o número de segurança com a pessoa, pessoalmente ou numa ligação.';
+  }
+
+  @override
+  String get chatCompareLater => 'Depois';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -3259,8 +3275,8 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String keyVerificationIfSeesTheSame(Object peerName) {
-    return 'Se $peerName vir o mesmo número, suas mensagens são privadas só entre vocês dois. Comparar pessoalmente ou numa ligação de confiança é o jeito mais seguro de ter certeza - mas é opcional, nunca obrigatório para conversar.';
+  String keyVerificationCompareAll(Object peerName) {
+    return 'Compare os 12 grupos com $peerName, pessoalmente ou numa ligação de confiança. Se todos os grupos baterem, não há ninguém no meio e suas mensagens são só de vocês dois.';
   }
 
   @override
@@ -4133,13 +4149,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Este código foi usado duas vezes. Peça um novo.';
 
   @override
-  String get pairCodeIsThisThem => 'É essa pessoa?';
+  String get pairCodeKeyNumber => 'Número da chave';
 
   @override
-  String get pairCodeCheckMatches => 'Confira se bate com a tela da pessoa';
+  String get pairCodeNumberMatches =>
+      'Confira se os quatro grupos são iguais nos dois celulares';
 
   @override
-  String get pairCodeNotThem => 'Não é essa pessoa';
+  String get pairCodeNumberDiffers => 'O número é diferente';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Nenhum número na tela da pessoa? Adicione e depois compare o número de segurança na conversa.';
 
   @override
   String get pairCodeNotAdded => 'Nada foi adicionado. Peça um código novo.';
@@ -6171,11 +6192,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String kryfoLinkTextNotTheOne(Object who) {
-    return 'Não é $who das suas conversas';
-  }
-
-  @override
   String kryfoLinkTextSomeoneElse(Object who) {
     return 'Você chama alguém das suas conversas de $who. Este link é de outra pessoa. Só adicione se você souber de onde ele veio.';
   }
@@ -6398,6 +6414,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pairCodePanelYourWords => 'Suas três palavras';
+
+  @override
+  String get pairCodePanelAcceptOnce =>
+      'O pedido chega quando a pessoa te adicionar. Aceite só quando ela disser que os quatro grupos eram iguais.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7998,21 +8018,41 @@ class AppLocalizationsPt extends AppLocalizations {
   String get devChatOptions => 'Opções da conversa';
 
   @override
-  String appLinkOtherKey(Object id) {
-    return 'Este link diz que é $id, mas a chave dele não corresponde. Não foi adicionado.';
-  }
-
-  @override
-  String scamShieldSaysItIs(Object shown) {
-    return 'Diz que é $shown, mas a chave não corresponde';
-  }
-
-  @override
   String get requestsSomeoneNew => 'Alguém novo';
+
+  @override
+  String get nameNotChecked => 'Não conferido';
+
+  @override
+  String get nameTakenTitle => 'Outra pessoa usa estas palavras';
+
+  @override
+  String get nameTakenLine =>
+      'Alguém aqui recebeu estas palavras por um pedido, uma apresentação ou um grupo, com outra chave, e ninguém as conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o e depois compare o número de segurança com ela.';
+
+  @override
+  String get nameTakenChatLine =>
+      'Sua conversa com estas palavras veio de um pedido, uma apresentação ou um grupo, com outra chave, e ninguém a conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o: aquela conversa é apagada e você compara o número de segurança na nova. Não sabe de onde veio o link? Fique com o que você já tem.';
+
+  @override
+  String get nameTakenUse => 'Usar este link';
+
+  @override
+  String get nameTakenKeep => 'Manter o que já tenho';
 
   @override
   String get appYourOwnInvite =>
       'Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.';
+
+  @override
+  String appLinkWordsTaken(Object id) {
+    return 'Já tem alguém aqui como $id, com outra chave. Compare o número de segurança com a pessoa para saber quem é quem. Nada foi adicionado.';
+  }
+
+  @override
+  String appLinkWordsVerified(Object id) {
+    return 'Você verificou $id com outra chave. Nada foi adicionado.';
+  }
 
   @override
   String appTheyAreBlocked(Object id) {

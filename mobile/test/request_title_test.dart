@@ -2,7 +2,8 @@
 // a request filed on an id of its own, because the name it gave is bound
 // here to another key, is called by a short name rather than its id, with
 // the shield line saying which name it gave. every other request keeps its
-// three words. the database is a stand-in
+// three words, marked as not checked: anyone can give any words. the
+// database is a stand-in
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:kryfo/scam_shield.dart';
 import 'package:kryfo/screens/requests_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/name_check_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Db implements HaloDb {
@@ -69,8 +71,19 @@ void main() {
     final db = _Db();
     final hit = const ShieldHit('other_key', _amber).toJson();
     db.requests.addAll([
-      {'halo_id': own, 'nickname': null, 'last_seen': 0, 'blocked': 0},
-      {'halo_id': 'slow-kite-moss', 'nickname': null, 'last_seen': 0},
+      {
+        'halo_id': own,
+        'nickname': null,
+        'last_seen': 0,
+        'blocked': 0,
+        'name_check': 3,
+      },
+      {
+        'halo_id': 'slow-kite-moss',
+        'nickname': null,
+        'last_seen': 0,
+        'name_check': 3,
+      },
     ]);
     db.shields[own] = {
       'halo_id': own,
@@ -91,8 +104,20 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     expect(find.text(own), findsNothing);
     expect(find.text(l10n.requestsSomeoneNew), findsOneWidget);
-    expect(find.text(l10n.scamShieldSaysItIs(_amber)), findsOneWidget);
+    expect(find.text(l10n.scamShieldGivesUsedName(_amber)), findsOneWidget);
     expect(find.text('slow-kite-moss'), findsOneWidget);
+    // the words they gave are marked, someone new says them in its line
+    expect(find.byType(NameCheckMark), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('slow-kite-moss'),
+          matching: find.byType(Row),
+        ),
+        matching: find.byType(NameCheckMark),
+      ),
+      findsWidgets,
+    );
     for (var i = 0; i < 12; i++) {
       await t.pump(const Duration(seconds: 1));
     }

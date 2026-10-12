@@ -14,7 +14,7 @@ import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../main.dart' show appState, AppState;
-import '../widgets/kryfo_link_text.dart' show takeOwnLink;
+import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
@@ -1797,7 +1797,7 @@ class _AddSomeoneScreen extends StatelessWidget {
               // the scanner only hands the code back; takeOwnLink is what
               // adds the contact, and a room shows its link first
               if (raw != null && context.mounted) {
-                final status = await takeOwnLink(context, raw);
+                final status = await takeOwnLink(context, raw, act: addScanned);
                 await appState.refreshContacts();
                 if (status != null && context.mounted) {
                   showHaloToast(context, status);

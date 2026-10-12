@@ -2,8 +2,9 @@
 // someone blocked stays blocked whoever introduces them: their row takes no
 // vouch and no picture, nobody listens for them, and no prekey bundle goes
 // to them, asked for or not. a block on the everyday side holds for a card
-// a hidden chat brings in too. the databases and the engine are stand-ins,
-// signal is real
+// a hidden chat brings in too. a card under words held here on another key
+// is someone else, on an id of their own, and the holder gets no vouch. the
+// databases and the engine are stand-ins, signal is real
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,6 +18,7 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         makePreKeyBundleB64,
         processPeerBundle,
+        unboundIdOf,
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
@@ -79,7 +81,7 @@ class _World {
     return w;
   }
 
-  Future<void> introduce(String who, {String by = _v}) async {
+  Future<void> introduce(String who, {String by = _v, String? xPub}) async {
     final c = 'c${_c++}';
     io.opens[c] = (
       by,
@@ -88,7 +90,7 @@ class _World {
         intro: IntroFrame(
           haloId: who,
           onion: 'o-$who',
-          xPub: 'x-$who',
+          xPub: xPub ?? 'x-$who',
           avatar: 3,
         ),
         sender: SenderInfo(
@@ -170,6 +172,28 @@ void main() {
     expect(w.io.listened, contains('x-$_n'));
     expect(w.bundlesTo('x-$_n'), hasLength(1));
     expect(w.bundlesTo('x-$_n').single['want'], isTrue);
+  });
+
+  test('a card under words held here on another key is someone else: the '
+      'holder gets no vouch', () async {
+    final w = await _World.make();
+    const held = 'held-words-two';
+    final mine = 'a1' * 32, theirs = 'b2' * 32;
+    w.live.person(held, onion: 'o-held', xpub: mine, accepted: 0);
+    await w.introduce(held, xPub: theirs);
+    final other = unboundIdOf([
+      5,
+      for (var i = 0; i < 64; i += 2)
+        int.parse(theirs.substring(i, i + 2), radix: 16),
+    ]);
+    expect(w.live.vouches.containsKey(held), isFalse);
+    expect(w.live.vouches[other], {_v});
+    expect(w.live.people[other], containsPair('xpub', theirs));
+    expect(w.live.people[held], containsPair('xpub', mine));
+    expect(w.live.people[held], containsPair('onion', 'o-held'));
+    // on the key held here, the card is theirs
+    await w.introduce(held, xPub: mine);
+    expect(w.live.vouches[held], {_v});
   });
 
   test('an introduction brings back someone deleted, as a request', () async {
