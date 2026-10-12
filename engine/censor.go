@@ -4,7 +4,7 @@ package main
 // a test build can make tor act as if a censor sat on the network, so
 // blocked detection and automatic can be driven on any phone or desk. it
 // exists only with -tags torblocked (censor_on.go), which build.sh adds
-// for HALO_TOR_BLOCKED=1 with HALO_TEST_ID=1 and nothing else. even then
+// for HALO_TOR_BLOCKED=1 or 2 with HALO_TEST_ID=1 and nothing else. even then
 // it stays off in any process that is not the test app, so a test engine
 // that slipped into the real app would do nothing.
 

@@ -77,6 +77,8 @@ android {
         // to +3, room left to +8) and below the next version's
         versionCode = if (playStore) flutter.versionCode * 10 + 9 else flutter.versionCode
         versionName = flutter.versionName
+        // the launcher name, see the label check below
+        manifestPlaceholders["appLabel"] = "Kryfo"
     }
 
     if (playStore) {
@@ -96,8 +98,12 @@ android {
     buildTypes {
         debug {
             // HALO_TEST_ID=1 installs a debug build beside the real app, with
-            // its own data, for tests on a phone that keeps its kryfo
-            if (System.getenv("HALO_TEST_ID") == "1") applicationIdSuffix = ".bridgetest"
+            // its own data and its own name, for tests on a phone that keeps
+            // its kryfo
+            if (System.getenv("HALO_TEST_ID") == "1") {
+                applicationIdSuffix = ".bridgetest"
+                manifestPlaceholders["appLabel"] = "Kryfo test"
+            }
         }
         release {
             // HALO_UNSIGNED=1 leaves the apk unsigned for the repro container,
@@ -161,6 +167,40 @@ android.applicationVariants.configureEach {
                 }
             }
         }
+    }
+}
+
+// the launcher shows "Kryfo test" for the bridgetest app and "Kryfo" for
+// every other build, so the two are never mixed up on a phone
+abstract class LabelCheck : DefaultTask() {
+    @get:InputFile
+    abstract val manifest: RegularFileProperty
+
+    @get:Input
+    abstract val appId: Property<String>
+
+    @TaskAction
+    fun check() {
+        val want = if (appId.get() == "app.kryfo.bridgetest") "Kryfo test" else "Kryfo"
+        val doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+            .newDocumentBuilder().parse(manifest.get().asFile)
+        val app = doc.getElementsByTagName("application").item(0) as org.w3c.dom.Element
+        val got = app.getAttribute("android:label")
+        if (got != want) {
+            throw GradleException("${appId.get()} is labelled \"$got\", want \"$want\"")
+        }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val name = variant.name.replaceFirstChar { it.uppercase() }
+        val labelCheck = tasks.register<LabelCheck>("check${name}Label") {
+            manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+            appId.set(variant.applicationId)
+        }
+        tasks.matching { it.name == "assemble$name" || it.name == "bundle$name" }
+            .configureEach { dependsOn(labelCheck) }
     }
 }
 
