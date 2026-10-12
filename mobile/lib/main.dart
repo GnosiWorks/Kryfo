@@ -9422,8 +9422,12 @@ String haloUriV3(String id, String onion, String bundle, String fc) =>
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
   if (!raw.startsWith('kryfo://share')) return null;
+  // one link, each part once: a second copy of a part would be read in one
+  // place and not in another
+  if (raw.contains(RegExp(r'\s'))) return null;
   try {
     final uri = Uri.parse(raw);
+    if (uri.queryParametersAll.values.any((v) => v.length > 1)) return null;
     final id = uri.queryParameters['id'];
     final onion = uri.queryParameters['onion'];
     if (id == null || onion == null) return null;

@@ -12,15 +12,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
-import '../main.dart' show inviteKeyNumber;
+import '../main.dart' show inviteKeyNumber, parseHaloUri;
+import '../rooms.dart' show firstKryfoLink;
 import '../theme.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'pair_code_panel.dart' show kPairCodeLife;
 import 'halo_buttons.dart';
 import 'press_scale.dart';
-
-final _words = RegExp(r'^[a-z]+-[a-z]+-[a-z]+$');
 
 /// the engine's answer when no relay took a share or answered a lookup
 const pairUnreached = 'error: unreached';
@@ -29,15 +28,21 @@ const pairUnreached = 'error: unreached';
 String pairErrorText(String res) =>
     res == pairUnreached ? l10n.pairCodeUnreached : l10n.pairCodeFailed;
 
+/// what a code's address held, if it is one invite and nothing else: the
+/// number shown and the add both read this one string, so nothing after it
+/// can name another key. an old card with no bundle is no code's invite
+String? pairInviteExact(String payload) {
+  if (payload.contains(RegExp(r'\s'))) return null;
+  if (firstKryfoLink(payload) != payload) return null;
+  final parsed = parseHaloUri(payload);
+  if (parsed == null || parsed['bundle'] == null) return null;
+  return payload;
+}
+
 /// the three words a fetched invite names, or null when it names none
 String? pairInviteWords(String invite) {
-  if (!invite.startsWith('kryfo://share')) return null;
-  try {
-    final id = Uri.parse(invite).queryParameters['id'];
-    return id != null && _words.hasMatch(id) ? id : null;
-  } catch (_) {
-    return null;
-  }
+  final exact = pairInviteExact(invite);
+  return exact == null ? null : parseHaloUri(exact)?['id'];
 }
 
 /// the clock codes are counted on. tests set it to the fake one
@@ -149,14 +154,16 @@ class _PairJoinState extends State<PairJoin> {
         return;
       }
       if (res.startsWith('kryfo://')) {
-        final words = pairInviteWords(res);
+        // words, number and add all from this one exact string
+        final exact = pairInviteExact(res);
+        final words = exact == null ? null : pairInviteWords(exact);
         // no key that reads is no number to match, and nothing to add
-        final number = words == null ? null : widget.numberOf(res);
-        if (words == null || number == null) {
+        final number = words == null ? null : widget.numberOf(exact!);
+        if (exact == null || words == null || number == null) {
           _say(l10n.pairCodeNothingAtThatCode);
           return;
         }
-        if (_wasRefused(code, res)) {
+        if (_wasRefused(code, exact)) {
           HapticFeedback.heavyImpact();
           _ctrl.clear();
           _say(l10n.pairCodeNotAdded, warn: true);
@@ -166,7 +173,7 @@ class _PairJoinState extends State<PairJoin> {
         setState(() {
           _busy = false;
           _status = '';
-          _invite = res;
+          _invite = exact;
           _words = words;
           _number = number;
           _code = code;
