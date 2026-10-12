@@ -2,6 +2,7 @@ package nostr
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"hash"
 	"strconv"
 	"unsafe"
@@ -186,14 +187,15 @@ func appendJSONString(dst []byte, s string) []byte {
 		return append(dst, '"')
 	}
 
-	base := uintptr(unsafe.Pointer(unsafe.StringData(s)))
 	start, i := 0, 0
 
 	// consume 8 bytes at a time;
 	// if the whole word is clean, advance without touching dst at all;
 	// but when a word is dirty, fall back to the byte loop only for that 8-byte window
 	for i+8 <= n {
-		w := *(*uint64)(unsafe.Pointer(base + uintptr(i)))
+		// kryfo: a byte slice, not a uintptr into the string, which -race's
+		// pointer checks refuse and which can be an unaligned load
+		w := binary.LittleEndian.Uint64(unsafe.Slice(unsafe.StringData(s[i:]), 8))
 		if hasSpecial(w) {
 			for end := i + 8; i < end; i++ {
 				if escTable[s[i]] {
@@ -238,11 +240,12 @@ func writeJSONString(h hash.Hash, s string) {
 		return
 	}
 
-	base := uintptr(unsafe.Pointer(unsafe.StringData(s)))
 	start, i := 0, 0
 
 	for i+8 <= n {
-		w := *(*uint64)(unsafe.Pointer(base + uintptr(i)))
+		// kryfo: a byte slice, not a uintptr into the string, which -race's
+		// pointer checks refuse and which can be an unaligned load
+		w := binary.LittleEndian.Uint64(unsafe.Slice(unsafe.StringData(s[i:]), 8))
 		// apply same logic as of appendJSONString()
 		if hasSpecial(w) {
 			for end := i + 8; i < end; i++ {

@@ -53,6 +53,8 @@ type Relay struct {
 	conn       *ws.Conn
 	writeQueue chan writeRequest
 	closed     *atomic.Bool
+	// kryfo: conn and closed are set while the close on ctx may be reading them
+	connMu sync.Mutex
 
 	Subscriptions *xsync.MapOf[int64, *Subscription]
 
@@ -106,11 +108,17 @@ func NewRelay(ctx context.Context, url string, opts RelayOptions) *Relay {
 	go func() {
 		<-ctx.Done()
 
-		if wasClosed := r.closed.Swap(true); wasClosed {
+		// kryfo: under connMu, so a connection set up meanwhile is closed
+		// either here or by newConnection
+		r.connMu.Lock()
+		wasClosed := r.closed.Swap(true)
+		conn := r.conn
+		r.connMu.Unlock()
+		if wasClosed {
 			return
 		}
 
-		if r.conn != nil {
+		if conn != nil {
 			cause := context.Cause(ctx)
 			code := ws.StatusNormalClosure
 			reason := ""
@@ -122,7 +130,7 @@ func NewRelay(ctx context.Context, url string, opts RelayOptions) *Relay {
 				reason = cause.Error()
 			}
 
-			_ = r.conn.Close(code, reason)
+			_ = conn.Close(code, reason)
 		}
 	}()
 
@@ -177,10 +185,13 @@ func (r *Relay) Context() context.Context { return r.connectionContext }
 
 // IsConnected returns true if the connection to this relay seems to be active.
 func (r *Relay) IsConnected() bool {
-	if r.closed.Load() {
+	r.connMu.Lock()
+	closed, conn := r.closed.Load(), r.conn
+	r.connMu.Unlock()
+	if closed {
 		return false
 	}
-	if r.conn == nil {
+	if conn == nil {
 		return false
 	}
 	if r.connectionContext == nil {
@@ -269,9 +280,18 @@ func (r *Relay) newConnection(ctx context.Context, httpClient *http.Client) erro
 	// main websocket loop
 	readQueue := make(chan string, 64 /* add some buffer to account for processing/IO mismatches */)
 
+	// kryfo: closed is the one NewRelay made, and a relay closed during
+	// the dial closes this connection here
+	r.connMu.Lock()
+	if r.closed.Load() {
+		r.connMu.Unlock()
+		ticker.Stop()
+		_ = c.CloseNow()
+		return errors.New("relay closed while connecting")
+	}
 	r.conn = c
 	r.writeQueue = make(chan writeRequest, 64 /* idem */)
-	r.closed = &atomic.Bool{}
+	r.connMu.Unlock()
 
 	connCtx := r.connectionContext
 	go func() {
