@@ -2764,12 +2764,15 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 }
 
 // the app's only callers are people search and the badge service, so the
-// services lane carries it
+// services lane carries it, over tor on every route
 func torPost(url, body string) string {
 	if url == "" {
 		return "error: empty url"
 	}
-	client, err := torNostrClientFor(laneServices)
+	// one bound for the wait on tor and the request
+	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
+	defer cancel()
+	client, err := servicesClient(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
@@ -2778,8 +2781,6 @@ func torPost(url, body string) string {
 		return fmt.Sprintf("error: req: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Sprintf("error: post: %v", err)
@@ -2808,7 +2809,9 @@ func torGetJSON(url string) string {
 	if url == "" {
 		return "error: empty url"
 	}
-	client, err := torNostrClientFor(laneServices)
+	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
+	defer cancel()
+	client, err := servicesClient(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
@@ -2816,8 +2819,6 @@ func torGetJSON(url string) string {
 	if err != nil {
 		return fmt.Sprintf("error: req: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Sprintf("error: get: %v", err)

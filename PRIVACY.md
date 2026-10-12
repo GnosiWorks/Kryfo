@@ -36,7 +36,7 @@ a handle (@name) is optional. without one, nothing about you sits anywhere centr
 
 people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
 
-the app reaches the registry the same way it sends messages, so over tor in private mode. the registry keeps no record of who looked anyone up or what was searched for.
+the app reaches the registry, people search and the badge service over tor on every route, also in relay and fast modes. the registry keeps no record of who looked anyone up or what was searched for.
 
 ## the developer chat
 

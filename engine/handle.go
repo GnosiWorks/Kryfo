@@ -29,9 +29,8 @@ import (
 
 import "C"
 
-// the service lives on the same box as the relay. reached through whatever
-// route the current mode uses, so it works where tor does not. a var so
-// tests can point it at a stand-in.
+// the service lives on the same box as the relay, and is reached over tor
+// on every route (services.go). a var so tests can point it at a stand-in.
 var handleBase = "https://relay.kryfo.app"
 
 // lowercase, digits and underscore, 3-20. no unicode: a handle that can be
@@ -82,9 +81,14 @@ func handleKey() ed25519.PrivateKey {
 	return myEdPriv
 }
 
-// the registry's own lane, apart from the circuits that carry the contacts.
-// a var so the tests can stand in for it
-var handleHTTP = func() (*http.Client, error) { return torNostrClientFor(laneServices) }
+// the registry's own lane, apart from the circuits that carry the contacts,
+// over tor on every route. a tor still starting is waited for inside the
+// call's bound. a var so the tests can stand in for it
+var handleHTTP = func() (*http.Client, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
+	defer cancel()
+	return servicesClient(ctx)
+}
 
 // a cold circuit can take most of a minute to answer. one bound for the
 // whole call, from before the client is fetched: building it can wait on
