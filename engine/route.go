@@ -466,7 +466,7 @@ func netValveDue(now time.Time) bool {
 	// each try marks guards down: only when the two calls disagree, or
 	// one of them never spoke. none by both is none
 	least := time.Duration(0)
-	if _, ok := netDetailTrusted(); ok {
+	if _, known := netDetailNow(); known {
 		switch connSaid.Load() {
 		case connOff:
 			return false

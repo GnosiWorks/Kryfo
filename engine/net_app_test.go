@@ -105,6 +105,28 @@ func TestAWatchAloneOnLeavesNoDispute(t *testing.T) {
 	waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() })
 }
 
+// a valve proof, then the person really goes offline: the watch repeats the
+// none the proof disproved, connectivity says none
+func TestBothNoneAfterAProofGetsNoValve(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(true)
+	// as valveTryTor does on a proof
+	netDisprove()
+	setOffline(false)
+	// airplane: the same none from the watch, none from connectivity
+	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(false)
+	networkChangedTo(false)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if netValveDue(time.Now().Add(11 * time.Minute)) {
+		t.Error("both calls say none after a proof, the valve is due after 10 min")
+	}
+}
+
 // automatic proved direct on wifi; wifi goes, connectivity sees mobile
 // before the watch does, and the park is still under way when the watch
 // says cellular
