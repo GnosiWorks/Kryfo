@@ -16652,6 +16652,12 @@ class AppState extends ChangeNotifier {
       changed = true;
     }
     if (fresh) _torTryingSince = torReady ? null : at;
+    // relays through tor while the watch says none: the engine tried and
+    // found a network, and the app goes by that until the watch speaks
+    if (_netWatchOn == false && _sendMode == 'private' && torUsable) {
+      _netWatchOn = null;
+      noteOnline(true);
+    }
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;

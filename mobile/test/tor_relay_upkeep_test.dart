@@ -1110,6 +1110,14 @@ void main() {
       expect(app.online, isFalse);
     });
 
+    test('relays through tor outrank the watch saying none', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.takeTorStatus('publishing|100|1|1|0');
+      expect(app.online, isTrue);
+    });
+
     test('the watch alone bringing the network back brings the app online', () {
       final app = AppState()..sendModeForTest = 'private';
       app.connectivityEvent([none]);
