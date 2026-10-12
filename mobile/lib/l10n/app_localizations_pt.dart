@@ -3494,6 +3494,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Usar digital';
 
   @override
+  String get lockSetupTurningOn => 'Ativando…';
+
+  @override
   String get lockSetupPinOnly => 'Só o PIN';
 
   @override

@@ -165,9 +165,13 @@ class SealBio implements LockBio {
   Future<bool> ready() async => true;
   @override
   Future<String> state() async => key;
+  // what each seal was asked to hold, in order
+  final sealedFor = <String>[];
+
   @override
   Future<String?> seal(String opens) async {
     calls.add('seal');
+    sealedFor.add(opens);
     _opens.clear();
     key = 'ok';
     final s = List.generate(
@@ -234,6 +238,7 @@ Future<Lock> makeLock(
   bool wipeOn = false,
   LockBio? bio,
   Map<String, String> stored = const {},
+  Duration revealAfter = Duration.zero,
 }) async {
   final store = MemStore()..m.addAll(stored);
   if (pins != null) {
@@ -262,7 +267,7 @@ Future<Lock> makeLock(
     engine: MemEngine(),
     clock: StillClock(),
     bio: bio ?? NoBio(),
-    revealAfter: Duration.zero,
+    revealAfter: revealAfter,
   );
   await s.load();
   if (inDecoy) s.inDecoy = true;

@@ -4335,6 +4335,10 @@
   "@lockSetupUseFingerprint": {
     "description": "screens/lock_setup_screen.dart"
   },
+  "lockSetupTurningOn": "Turning on…",
+  "@lockSetupTurningOn": {
+    "description": "the fingerprint offer after a PIN is set: the button while fingerprint unlock is being turned on"
+  },
   "lockSetupPinOnly": "PIN only",
   "@lockSetupPinOnly": {
     "description": "screens/lock_setup_screen.dart"

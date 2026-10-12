@@ -3328,6 +3328,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupUseFingerprint => '使用指纹';
 
   @override
+  String get lockSetupTurningOn => '正在开启…';
+
+  @override
   String get lockSetupPinOnly => '仅用 PIN 码';
 
   @override
@@ -11114,6 +11117,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lockSetupUseFingerprint => '使用指紋';
+
+  @override
+  String get lockSetupTurningOn => '正在開啟…';
 
   @override
   String get lockSetupPinOnly => '只用 PIN 碼';

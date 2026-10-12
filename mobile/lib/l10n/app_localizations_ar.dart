@@ -3571,6 +3571,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'استخدام البصمة';
 
   @override
+  String get lockSetupTurningOn => 'جارٍ التفعيل…';
+
+  @override
   String get lockSetupPinOnly => 'رمز PIN فقط';
 
   @override

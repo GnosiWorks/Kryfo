@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Buka kunci dengan sidik jari?",
   "lockSetupThePinStillWorks": "PIN tetap bisa dipakai kapan pun kamu mau. Ini hanya lebih cepat.",
   "lockSetupUseFingerprint": "Pakai sidik jari",
+  "lockSetupTurningOn": "Menyalakan…",
   "lockSetupPinOnly": "PIN saja",
   "lockSetupOnceMore": "Sekali lagi",
   "lockSetupSetAPin": "Buat PIN",

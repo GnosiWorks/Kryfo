@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "باز کردن قفل با اثر انگشت؟",
   "lockSetupThePinStillWorks": "PIN هر وقت بخواهید همچنان کار می‌کند. این فقط سریع‌تر است.",
   "lockSetupUseFingerprint": "استفاده از اثر انگشت",
+  "lockSetupTurningOn": "در حال روشن کردن…",
   "lockSetupPinOnly": "فقط PIN",
   "lockSetupOnceMore": "یک بار دیگر",
   "lockSetupSetAPin": "تعیین PIN",

@@ -3508,6 +3508,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Fingerabdruck nutzen';
 
   @override
+  String get lockSetupTurningOn => 'Wird eingeschaltet…';
+
+  @override
   String get lockSetupPinOnly => 'Nur PIN';
 
   @override

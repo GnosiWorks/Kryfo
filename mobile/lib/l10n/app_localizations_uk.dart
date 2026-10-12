@@ -3547,6 +3547,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Використати відбиток';
 
   @override
+  String get lockSetupTurningOn => 'Вмикання…';
+
+  @override
   String get lockSetupPinOnly => 'Лише PIN-код';
 
   @override

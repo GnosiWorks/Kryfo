@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Разблокировать отпечатком?",
   "lockSetupThePinStillWorks": "PIN-код работает всегда, когда захочешь. Так просто быстрее.",
   "lockSetupUseFingerprint": "По отпечатку",
+  "lockSetupTurningOn": "Включение…",
   "lockSetupPinOnly": "Только PIN-код",
   "lockSetupOnceMore": "Ещё раз",
   "lockSetupSetAPin": "Задай PIN-код",

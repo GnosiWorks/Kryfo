@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Desbloquear com a digital?",
   "lockSetupThePinStillWorks": "O PIN continua funcionando sempre que você quiser. Isso só é mais rápido.",
   "lockSetupUseFingerprint": "Usar digital",
+  "lockSetupTurningOn": "Ativando…",
   "lockSetupPinOnly": "Só o PIN",
   "lockSetupOnceMore": "Mais uma vez",
   "lockSetupSetAPin": "Novo PIN",

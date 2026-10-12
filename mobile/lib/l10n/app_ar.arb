@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "فتح القفل بالبصمة؟",
   "lockSetupThePinStillWorks": "يبقى رمز PIN صالحًا متى أردته. هذا أسرع فقط.",
   "lockSetupUseFingerprint": "استخدام البصمة",
+  "lockSetupTurningOn": "جارٍ التفعيل…",
   "lockSetupPinOnly": "رمز PIN فقط",
   "lockSetupOnceMore": "مرة أخرى",
   "lockSetupSetAPin": "تعيين رمز PIN",

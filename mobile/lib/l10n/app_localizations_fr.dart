@@ -3501,6 +3501,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Utiliser l’empreinte';
 
   @override
+  String get lockSetupTurningOn => 'Activation…';
+
+  @override
   String get lockSetupPinOnly => 'Code PIN seul';
 
   @override

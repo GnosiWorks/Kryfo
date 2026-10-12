@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "要用指紋解鎖嗎？",
   "lockSetupThePinStillWorks": "你隨時都還是可以用 PIN 碼解鎖。這只是比較快。",
   "lockSetupUseFingerprint": "使用指紋",
+  "lockSetupTurningOn": "正在開啟…",
   "lockSetupPinOnly": "只用 PIN 碼",
   "lockSetupOnceMore": "再一次",
   "lockSetupSetAPin": "設定 PIN 碼",

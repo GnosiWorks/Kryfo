@@ -450,6 +450,8 @@ void main() {
     expect(s.biometric, isFalse);
     expect(s.fingerUnlock, isFalse);
     expect(lock.store.m.containsKey(_sealKey), isFalse);
+    // the switch goes, as turning the lock off takes it anywhere
+    expect(lock.store.m.containsKey(_bioKey), isFalse);
     expect(await s.setupPin('8642'), isTrue);
     expect(s.lockOn, isTrue);
     expect(s.biometric, isFalse);

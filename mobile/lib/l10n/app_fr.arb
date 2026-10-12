@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Déverrouiller par empreinte ?",
   "lockSetupThePinStillWorks": "Le code PIN marche toujours, quand vous voulez. C’est juste plus rapide.",
   "lockSetupUseFingerprint": "Utiliser l’empreinte",
+  "lockSetupTurningOn": "Activation…",
   "lockSetupPinOnly": "Code PIN seul",
   "lockSetupOnceMore": "Encore une fois",
   "lockSetupSetAPin": "Créer un code PIN",

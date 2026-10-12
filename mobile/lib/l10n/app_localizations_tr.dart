@@ -3479,6 +3479,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Parmak izi kullan';
 
   @override
+  String get lockSetupTurningOn => 'Açılıyor…';
+
+  @override
   String get lockSetupPinOnly => 'Yalnızca PIN';
 
   @override

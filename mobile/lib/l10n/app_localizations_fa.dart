@@ -3477,6 +3477,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockSetupUseFingerprint => 'استفاده از اثر انگشت';
 
   @override
+  String get lockSetupTurningOn => 'در حال روشن کردن…';
+
+  @override
   String get lockSetupPinOnly => 'فقط PIN';
 
   @override

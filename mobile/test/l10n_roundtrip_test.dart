@@ -1667,6 +1667,7 @@ void main() {
       "The PIN still works whenever you want it. This is just faster.",
     );
     expect(l.lockSetupUseFingerprint, "Use fingerprint");
+    expect(l.lockSetupTurningOn, "Turning on…");
     expect(l.lockSetupPinOnly, "PIN only");
     expect(l.lockSetupOnceMore, "Once more");
     expect(l.lockSetupSetAPin, "Set a PIN");

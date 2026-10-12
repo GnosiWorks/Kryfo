@@ -5403,6 +5403,12 @@ abstract class AppLocalizations {
   /// **'Use fingerprint'**
   String get lockSetupUseFingerprint;
 
+  /// the fingerprint offer after a PIN is set: the button while fingerprint unlock is being turned on
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on…'**
+  String get lockSetupTurningOn;
+
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:

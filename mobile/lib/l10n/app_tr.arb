@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Parmak iziyle kilit açılsın mı?",
   "lockSetupThePinStillWorks": "PIN istediğin zaman yine çalışır. Bu sadece daha hızlı.",
   "lockSetupUseFingerprint": "Parmak izi kullan",
+  "lockSetupTurningOn": "Açılıyor…",
   "lockSetupPinOnly": "Yalnızca PIN",
   "lockSetupOnceMore": "Bir kez daha",
   "lockSetupSetAPin": "PIN belirle",

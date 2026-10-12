@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Mở khóa bằng vân tay?",
   "lockSetupThePinStillWorks": "Mã PIN vẫn dùng được bất cứ khi nào bạn muốn. Cách này chỉ nhanh hơn thôi.",
   "lockSetupUseFingerprint": "Dùng vân tay",
+  "lockSetupTurningOn": "Đang bật…",
   "lockSetupPinOnly": "Chỉ mã PIN",
   "lockSetupOnceMore": "Thêm lần nữa",
   "lockSetupSetAPin": "Đặt mã PIN",

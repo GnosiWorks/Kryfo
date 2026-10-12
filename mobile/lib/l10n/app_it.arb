@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Sbloccare con l'impronta?",
   "lockSetupThePinStillWorks": "Il PIN funziona sempre, quando vuoi. Questo è solo più veloce.",
   "lockSetupUseFingerprint": "Usa l'impronta",
+  "lockSetupTurningOn": "Attivazione…",
   "lockSetupPinOnly": "Solo PIN",
   "lockSetupOnceMore": "Ancora una volta",
   "lockSetupSetAPin": "Imposta un PIN",

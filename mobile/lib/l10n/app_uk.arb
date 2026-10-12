@@ -982,6 +982,7 @@
   "lockSetupUnlockWithFingerprint": "Розблоковувати відбитком?",
   "lockSetupThePinStillWorks": "PIN-код і далі працюватиме, коли захочеш. Так просто швидше.",
   "lockSetupUseFingerprint": "Використати відбиток",
+  "lockSetupTurningOn": "Вмикання…",
   "lockSetupPinOnly": "Лише PIN-код",
   "lockSetupOnceMore": "Ще раз",
   "lockSetupSetAPin": "Задати PIN-код",

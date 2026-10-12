@@ -3455,6 +3455,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Dùng vân tay';
 
   @override
+  String get lockSetupTurningOn => 'Đang bật…';
+
+  @override
   String get lockSetupPinOnly => 'Chỉ mã PIN';
 
   @override

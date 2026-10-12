@@ -3501,6 +3501,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Usar huella';
 
   @override
+  String get lockSetupTurningOn => 'Activando…';
+
+  @override
   String get lockSetupPinOnly => 'Solo PIN';
 
   @override

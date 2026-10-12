@@ -1459,6 +1459,7 @@ final _calls = <_Call>[
   ),
   ('lockSetupThePinStillWorks', [], (l) => l.lockSetupThePinStillWorks),
   ('lockSetupUseFingerprint', [], (l) => l.lockSetupUseFingerprint),
+  ('lockSetupTurningOn', [], (l) => l.lockSetupTurningOn),
   ('lockSetupPinOnly', [], (l) => l.lockSetupPinOnly),
   ('lockSetupOnceMore', [], (l) => l.lockSetupOnceMore),
   ('lockSetupSetAPin', [], (l) => l.lockSetupSetAPin),

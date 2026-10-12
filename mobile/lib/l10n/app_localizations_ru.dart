@@ -3561,6 +3561,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lockSetupUseFingerprint => 'По отпечатку';
 
   @override
+  String get lockSetupTurningOn => 'Включение…';
+
+  @override
   String get lockSetupPinOnly => 'Только PIN-код';
 
   @override

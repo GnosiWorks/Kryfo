@@ -3460,6 +3460,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Pakai sidik jari';
 
   @override
+  String get lockSetupTurningOn => 'Menyalakan…';
+
+  @override
   String get lockSetupPinOnly => 'PIN saja';
 
   @override
