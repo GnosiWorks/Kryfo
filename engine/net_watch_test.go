@@ -470,3 +470,26 @@ func TestAParkedTorSaysNoInternet(t *testing.T) {
 		t.Fatalf("decoy parked: %+v", v)
 	}
 }
+
+// automatic before any step, and no network: parked like any other mode,
+// so the valve can try it later
+func TestAutomaticWithNoWayInParksForTheValve(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	offlineRig(t)
+	keepNetDetail(t)
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	autoDirectOK.Store(false)
+	oa := netValveAfter
+	netValveAfter = time.Minute
+	t.Cleanup(func() { netValveAfter = oa })
+	networkChangedTo(false)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatalf("offline %v parked %v", netOffline.Load(), torParked.Load())
+	}
+	if !netValveDue(time.Now().Add(2 * time.Minute)) {
+		t.Fatal("the valve never comes for automatic")
+	}
+}

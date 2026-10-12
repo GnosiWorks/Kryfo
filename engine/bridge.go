@@ -974,6 +974,10 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	}
 	// let it drop what it had before it is told anything else
 	time.Sleep(bounceSettle)
+	// no network: parked whatever the mode, so the outage valve can find it
+	if netAway() && !torIsPaused() {
+		return reconnectParks(t)
+	}
 	// no bridge wanted and none allowed out: nothing to configure, and
 	// the network stays off
 	if why := networkHold(); why == errNoMode || why == errAutoWait {

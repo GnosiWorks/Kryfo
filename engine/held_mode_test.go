@@ -166,7 +166,8 @@ func TestAutomaticBeforeAnyStepNeverBouncesDirect(t *testing.T) {
 		t.Fatal(r)
 	}
 	time.Sleep(100 * time.Millisecond)
-	if r := reconnectNow(); r != errAutoWait {
+	// no network as well: parked, so the valve can find it
+	if r := reconnectNow(); r != errOffline {
 		t.Fatalf("reconnect: %q", r)
 	}
 	if sentNetworkOn(f) {
