@@ -267,7 +267,7 @@ func TestMoatRootsArePinned(t *testing.T) {
 		t.Errorf("roots %v, want %s", names, want)
 	}
 	// the system pool is never used
-	if moatTLS().RootCAs != moatRoots {
+	if newMoatDials(context.Background()).tlsConfig().RootCAs != moatRoots {
 		t.Error("moat tls is not pinned")
 	}
 }
