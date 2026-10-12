@@ -228,7 +228,7 @@ func probeFilter(rcvPk string, now time.Time) nostr.Filter {
 
 // how long a socket waits before it answers a kick, drawn per socket, so the
 // sockets of different lanes do not all ask their relays in one instant
-var kickSpread = 15 * time.Second
+var kickSpread = time.Minute
 
 func kickDelay() time.Duration {
 	if kickSpread <= 0 {
@@ -1414,6 +1414,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
+			var turn subTurn
+			defer turn.done()
 			for {
 				select {
 				case <-ctx.Done():
@@ -1458,9 +1460,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKick(wait)
 					continue
 				}
+				if !turn.take(ctx) {
+					return
+				}
 				// the client may be the new mode's, the relay the old list's
 				select {
 				case <-routeC:
+					turn.done()
 					continue
 				default:
 				}
@@ -1477,6 +1483,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				err = r.ConnectWithClient(dctx, client)
 				dcancel()
 				rcancel()
+				turn.done()
 				if err != nil && routeGone(routeC) {
 					connDone()
 					sleepOrKick(rejoin)
@@ -1824,6 +1831,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							kickT = time.NewTimer(kickDelay())
 							kickC = kickT.C
 						}
+						turn.skip()
 					case <-kickC:
 						kickT, kickC = nil, nil
 						// a socket that is still answering does not need

@@ -12928,8 +12928,9 @@ class AppState extends ChangeNotifier {
       final kicked = _checkClock();
       // wait for the relays to be asked, then for every answer to be in. the
       // engine caps each relay at catchupCap (30s), so this ends when all
-      // have finished or been given up on. the two escapes are for no relay
-      // ever getting going.
+      // have finished or been given up on. a socket waiting its turn (up to
+      // a minute, see the engine's subSpread) counts as asked and not done.
+      // the two escapes are for no relay ever getting going.
       var quiet = 0;
       var began = false;
       var tail = '';
@@ -12948,11 +12949,11 @@ class AppState extends ChangeNotifier {
           tail = '_norelay';
           break;
         }
-        // relays are capped at 30s each, so this should never bite. if it
-        // ever does, something is holding catchupActive up and the line on
-        // the transport screen will say which relay. the job's three
-        // minutes bound it from the start too
-        if (secs >= 90 || now.difference(started).inSeconds >= 160) {
+        // turns, dials and catch-ups are capped, so this should never bite.
+        // if it ever does, something is holding catchupActive up and the
+        // line on the transport screen will say which relay. the job's
+        // three minutes bound it from the start too
+        if (secs >= 150 || now.difference(started).inSeconds >= 160) {
           tail = '_capped';
           break;
         }

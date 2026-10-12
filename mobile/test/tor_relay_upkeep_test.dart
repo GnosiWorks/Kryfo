@@ -694,6 +694,41 @@ void main() {
     });
   });
 
+  group('a check-in with sockets on their turns', () {
+    testWidgets('waits for the last one, a minute and its catch-up after '
+        'the kick', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      Object? err;
+      unawaited(
+        app.checkIn(why: 'job').then((v) => n = v, onError: (e) => err = e),
+      );
+      int? kicked;
+      int? done;
+      for (var i = 0; i < 170 && n < 0; i++) {
+        if (kicked == null && log.contains('kick')) {
+          kicked = i;
+          // every socket counted from the kick, the last done 100 s on
+          eng.catchup = (3, 4);
+        }
+        if (kicked != null && i == kicked + 100) eng.catchup = (0, 4);
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+        if (n >= 0) done = i;
+      }
+      expect(n, isNot(-1), reason: '$err ${app.lastCheckHow}');
+      expect(kicked, isNotNull, reason: app.lastCheckHow);
+      expect(done! - kicked!, greaterThanOrEqualTo(100));
+      expect(app.lastCheckHow, contains('"how":"ok"'));
+    });
+  });
+
   group('a check-in on a slow wake', () {
     testWidgets('gives the relays their own time from the kick', (t) async {
       final live = _Flaky();
