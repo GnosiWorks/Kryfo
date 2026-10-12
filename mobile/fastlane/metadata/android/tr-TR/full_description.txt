@@ -4,9 +4,9 @@ sohbetlerini gerçek bir kimliğe bağlayamaz. Ancak genel bir kullanıcı adı
 alırsan aranıp bulunabilirsin.
 
 Varsayılan olarak her şey Tor üzerinden gider. İçerik, Signal protokolüyle
-uçtan uca şifrelenir. Bir kişi çevrimdışıyken mesajlar aktarıcılarda bekler;
-mühürlüdürler, böylece aktarıcı kimin konuştuğu ya da ne söylendiği hakkında
-hiçbir şey öğrenmez. Rehber asla yüklenmez.
+uçtan uca şifrelenir. Mesajlar aktarıcılar üzerinden gider; hiçbir aktarıcı
+okuyamasın diye mühürlenirler ve varsayılan rotada aktarıcılar IP adresini ya
+da kim olduğunu asla öğrenmez. Rehber asla yüklenmez.
 
 Özellikler:
 
@@ -14,7 +14,7 @@ hiçbir şey öğrenmez. Rehber asla yüklenmez.
 * Uçtan uca şifreleme (Signal protokolü)
 * Varsayılan olarak tüm trafik gömülü bir Tor istemcisinden geçer
 * Tor’un engellendiği yerde çalışır: Kryfo engeli aşmanın bir yolunu kendiliğinden bulur
-* Doğrudan onion teslimi, karşı taraf çevrimdışıysa aktarıcı üzerinden
+* Nostr aktarıcıları üzerinden teslim, böylece mesajlar çevrimdışı olan bir telefona da ulaşır
 * Fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
 * Ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz
 * Tüm sohbetlerinde arama, dizini şifreli veritabanında tutulur

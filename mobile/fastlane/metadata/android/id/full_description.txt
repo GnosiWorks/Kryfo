@@ -4,9 +4,9 @@ termasuk kami, yang bisa mengaitkan obrolanmu dengan identitas asli, dan
 kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik.
 
 Secara bawaan, semuanya berjalan lewat Tor. Isi pesan terenkripsi ujung
-ke ujung dengan protokol Signal. Saat kontak sedang offline, pesan
-menunggu di relay, tersegel sehingga relay tidak tahu apa pun tentang
-siapa yang bicara atau apa yang dikatakan. Buku alamat tidak pernah
+ke ujung dengan protokol Signal. Pesan berjalan lewat relay, tersegel
+sehingga tidak ada relay yang bisa membacanya, dan di jalur bawaan relay
+tidak pernah tahu alamat IP-mu atau siapa kamu. Buku alamat tidak pernah
 diunggah.
 
 Fitur:
@@ -15,7 +15,7 @@ Fitur:
 * Enkripsi ujung ke ujung (protokol Signal)
 * Secara bawaan, semua lalu lintas lewat klien Tor yang tertanam
 * Tetap jalan di tempat Tor diblokir: Kryfo menemukan sendiri cara menembusnya
-* Pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
+* Pengiriman lewat relay Nostr, jadi pesan sampai ke ponsel yang tadinya offline
 * Grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
 * Stiker animasi yang dikirim sebagai nama, jadi tidak ada gambar yang meninggalkan ponsel
 * Pencarian di semua obrolanmu, indeksnya disimpan di database terenkripsi

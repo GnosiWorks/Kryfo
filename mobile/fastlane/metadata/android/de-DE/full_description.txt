@@ -4,9 +4,9 @@ deine Chats mit einer echten Identität verknüpfen, und suchen kann man dich
 nur, wenn du dir einen öffentlichen Benutzernamen sicherst.
 
 Standardmäßig läuft alles über Tor. Inhalte sind mit dem Signal-Protokoll
-Ende-zu-Ende-verschlüsselt. Ist ein Kontakt offline, warten Nachrichten auf
-Relais, versiegelt, sodass das Relais nichts darüber erfährt, wer spricht oder
-was gesagt wird. Kein Hochladen des Adressbuchs, niemals.
+Ende-zu-Ende-verschlüsselt. Nachrichten laufen über Relais, versiegelt, sodass
+kein Relais sie lesen kann, und auf dem Standardweg erfahren die Relais nie
+deine IP-Adresse oder wer du bist. Kein Hochladen des Adressbuchs, niemals.
 
 Funktionen:
 
@@ -14,7 +14,7 @@ Funktionen:
 * Ende-zu-Ende-Verschlüsselung (Signal-Protokoll)
 * Aller Datenverkehr standardmäßig über einen eingebauten Tor-Client
 * Funktioniert, wo Tor blockiert ist: Kryfo findet von selbst einen Weg um die Sperre herum
-* Direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
+* Zustellung über Nostr-Relais, sodass Nachrichten ein Handy erreichen, das offline war
 * Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen, angehefteten Nachrichten und Umfragen
 * Animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt
 * Suche in allen deinen Chats, der Index liegt in der verschlüsselten Datenbank

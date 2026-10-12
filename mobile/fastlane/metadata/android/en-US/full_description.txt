@@ -4,9 +4,9 @@ a real identity, and no one can look you up unless you claim a public
 handle.
 
 By default everything travels over Tor. Content is end to end encrypted with
-the Signal protocol. When a contact is offline, messages wait on relays,
-sealed so the relay learns nothing about who is talking or what is said. No
-address book upload, ever.
+the Signal protocol. Messages travel through relays, sealed so no relay can
+read them, and on the default route the relays never learn your IP address
+or who you are. No address book upload, ever.
 
 Features:
 
@@ -14,7 +14,7 @@ Features:
 * End to end encryption (Signal protocol)
 * All traffic through an embedded Tor client by default
 * Works where Tor is blocked: Kryfo finds a way around it by itself
-* Direct onion delivery, relay fallback when a peer is offline
+* Delivery through Nostr relays, so messages reach a phone that was offline
 * Groups with photos, files, voice messages, replies, reactions, pins and polls
 * Animated stickers that travel as a name, so no picture leaves the phone
 * Search across all your chats, kept in the encrypted database

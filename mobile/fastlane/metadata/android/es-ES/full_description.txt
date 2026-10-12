@@ -4,9 +4,9 @@ puede vincular tus chats a una identidad real, y solo pueden buscarte si
 reservas un nombre de usuario público.
 
 Por defecto, todo viaja por Tor. El contenido va cifrado de extremo a extremo
-con el protocolo Signal. Cuando un contacto no tiene conexión, los mensajes
-esperan en repetidores, sellados para que el repetidor no sepa nada de quién
-habla ni de qué se dice. Tu agenda no se sube nunca.
+con el protocolo Signal. Los mensajes viajan por repetidores, sellados para que
+ningún repetidor pueda leerlos, y en la ruta predeterminada los repetidores
+nunca llegan a saber tu dirección IP ni quién eres. Tu agenda no se sube nunca.
 
 Funciones:
 
@@ -14,7 +14,7 @@ Funciones:
 * Cifrado de extremo a extremo (protocolo Signal)
 * Por defecto, todo el tráfico pasa por un cliente Tor integrado
 * Funciona donde Tor está bloqueado: Kryfo encuentra por sí solo cómo sortear el bloqueo
-* Entrega directa por onion y, si el otro no tiene conexión, por repetidor
+* Entrega a través de repetidores Nostr, para que los mensajes lleguen a un teléfono que estaba sin conexión
 * Grupos con fotos, archivos, mensajes de voz, respuestas, reacciones, fijados y encuestas
 * Stickers animados que viajan como un nombre, así ninguna imagen sale del teléfono
 * Búsqueda en todos tus chats, con el índice guardado en la base de datos cifrada

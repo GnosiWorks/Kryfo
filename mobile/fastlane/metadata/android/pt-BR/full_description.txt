@@ -4,10 +4,10 @@ suas conversas a uma identidade real, e só dá para buscar você se você reser
 um nome de usuário público.
 
 Por padrão, tudo passa pelo Tor. O conteúdo é criptografado de ponta a ponta com
-o protocolo Signal. Quando um contato está offline, as mensagens esperam em
-retransmissores, lacradas para que o retransmissor não fique sabendo nada sobre
-quem está falando nem sobre o que é dito. A sua agenda de contatos nunca é
-enviada.
+o protocolo Signal. As mensagens passam por retransmissores, lacradas para que
+nenhum retransmissor consiga lê-las, e na rota padrão os retransmissores nunca
+ficam sabendo o seu endereço IP nem quem você é. A sua agenda de contatos nunca
+é enviada.
 
 Recursos:
 
@@ -15,7 +15,7 @@ Recursos:
 * Criptografia de ponta a ponta (protocolo Signal)
 * Por padrão, todo o tráfego por um cliente Tor embutido
 * Funciona onde o Tor está bloqueado: o Kryfo encontra sozinho um jeito de contornar o bloqueio
-* Entrega direta por onion, com retransmissores como reserva quando o contato está offline
+* Entrega por retransmissores Nostr, para que as mensagens cheguem a um celular que estava offline
 * Grupos com fotos, arquivos, mensagens de voz, respostas, reações, mensagens fixadas e enquetes
 * Figurinhas animadas que viajam como um nome, então nenhuma imagem sai do aparelho
 * Pesquisa em todas as suas conversas, com o índice guardado no banco de dados criptografado

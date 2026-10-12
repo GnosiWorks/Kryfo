@@ -5,9 +5,9 @@ và chỉ khi bạn đăng ký tên người dùng công khai, người khác m�
 bạn.
 
 Theo mặc định, mọi thứ đều đi qua Tor. Nội dung được mã hóa đầu cuối bằng
-giao thức Signal. Khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các
-relay, được mã hóa kín để relay không biết gì về việc ai đang nói chuyện hay
-nói gì. Không bao giờ tải danh bạ lên.
+giao thức Signal. Tin nhắn đi qua các relay, được mã hóa kín để không relay
+nào đọc được, và trên đường đi mặc định, các relay không bao giờ biết địa
+chỉ IP của bạn hay bạn là ai. Không bao giờ tải danh bạ lên.
 
 Tính năng:
 
@@ -15,7 +15,7 @@ Tính năng:
 * Mã hóa đầu cuối (giao thức Signal)
 * Theo mặc định, mọi lưu lượng đi qua một Tor client tích hợp sẵn
 * Hoạt động cả ở nơi Tor bị chặn: Kryfo tự tìm cách vượt qua
-* Gửi trực tiếp qua onion, dùng relay dự phòng khi người kia ngoại tuyến
+* Gửi qua các relay Nostr, nên tin nhắn vẫn đến được điện thoại đã ngoại tuyến
 * Nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
 * Nhãn dán động được gửi đi dưới dạng một cái tên, nên không có hình ảnh nào rời khỏi điện thoại
 * Tìm kiếm trong mọi cuộc trò chuyện, chỉ mục nằm trong cơ sở dữ liệu được mã hóa
