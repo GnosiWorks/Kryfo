@@ -1326,8 +1326,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     onShield: shieldFlag == null
                         ? null
                         : () => _openShield(m.sender),
-                    linkTitle: m.preview?['title'],
-                    linkBySender: m.preview?['by'] == 'sender',
+                    linkTitle: _linkPreview(m)?['title'],
+                    linkBySender: _linkPreview(m)?['by'] == 'sender',
                     quotedText: quoted,
                     quotedAuthor: quotedAuthor,
                     onLongPress: (ctx) => _showEmojiPickerAt(
@@ -3167,6 +3167,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final route = await wordsRoute(id, m.text);
     if (route == null || !mounted) return;
     Navigator.of(context).push(route);
+  }
+
+  // a page title only while the words still lead with its link: an edit
+  // to another link leaves it behind
+  static Map<String, String>? _linkPreview(_GMsg m) {
+    final pv = m.preview;
+    return pv != null && pv['url'] == m.url ? pv : null;
   }
 
   Future<void> _editGroupMessage(_GMsg m) async {
