@@ -166,6 +166,9 @@ Future<String> routeText({
     final f = await viaFirst(x, fc);
     if (f == 'ok') return 'ok';
     log?.call('first-contact failed ($f)');
+    // never the pair address beside it, or a relay sees the two together.
+    // the outbox puts it out again
+    return f;
   }
   final r = await viaRelay(x);
   // the pair address is a drop box they read only once they add us back.

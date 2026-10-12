@@ -350,21 +350,19 @@ Future<String> _sendChunkedMediaInner({
           dlog('MEDIA onion gave up for this send: $tor');
         }
         xpub ??= await signalSession.peerXPubHex(peerId);
-        if (xpub != null) {
-          if (!backPaired) {
-            // their first-contact address is the one relay route that
-            // reaches them before they add us back
-            final fc = appState.peerFcFor(peerId);
-            if (fc != null && fc.isNotEmpty) {
-              final fr = await engine.sendFirstContact(xpub!, fc, cipher);
-              if (fr == 'ok') {
-                sent = true;
-                route = 'first-contact';
-                break;
-              }
-              lastErr = fr;
-            }
+        // their first-contact address is the one relay route that reaches
+        // them before they add us back, and the pair address is not
+        // written beside it
+        final fc = backPaired ? null : appState.peerFcFor(peerId);
+        if (xpub != null && fc != null && fc.isNotEmpty) {
+          final fr = await engine.sendFirstContact(xpub!, fc, cipher);
+          if (fr == 'ok') {
+            sent = true;
+            route = 'first-contact';
+            break;
           }
+          lastErr = fr;
+        } else if (xpub != null) {
           final r = await engine.nostrSend(xpub!, cipher);
           if (r == 'ok') {
             if (!backPaired) {

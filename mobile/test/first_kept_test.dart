@@ -82,8 +82,9 @@ class _Engine implements HaloEngine {
   String firstContactPk(int counter) => 'fc$counter';
   @override
   Future<String> subscribeFirstContact(int counter) async => 'ok';
+  var onion = 'ok';
   @override
-  Future<String> sendTo(String addr, String msg) async => 'ok';
+  Future<String> sendTo(String addr, String msg) async => onion;
   // the first-contact copies, and when they may answer
   final firsts = <String>[];
   Completer<String>? firstGate;
@@ -91,6 +92,14 @@ class _Engine implements HaloEngine {
   Future<String> sendFirstContact(String x, String fc, String c) {
     firsts.add(c);
     return firstGate?.future ?? Future.value('ok');
+  }
+
+  // what went to a pair address
+  final pairs = <String>[];
+  @override
+  Future<String> nostrSend(String x, String c) async {
+    pairs.add(c);
+    return 'ok';
   }
 
   @override
@@ -644,6 +653,43 @@ void main() {
     expect(_engine.firsts, hasLength(1));
     _engine.firstGate!.complete('ok');
   });
+
+  test('a file\'s slice the first-contact address does not take is not '
+      'put at the pair address instead', () async {
+    final s = await stranger('stray-no-pair-copy');
+    await app.receiveOnion([
+      await s.p.ss.encryptTo(_me, await wrap(s, 'u-np')),
+    ]);
+    await _settle();
+    appState.sendModeForTest = 'fast';
+    await appState.rememberPeerFc(s.id, 'fc-${s.id}');
+    final f = File('${docs.path}/slice2.bin')..writeAsBytesSync([1, 2, 3]);
+    _engine
+      ..onion = 'error: timeout'
+      ..firsts.clear()
+      ..pairs.clear()
+      ..firstGate = (Completer<String>()..complete('error: no relays'));
+    addTearDown(() {
+      _engine
+        ..firstGate = null
+        ..onion = 'ok';
+    });
+    final r = await sendChunkedMediaTo(
+      peerId: s.id,
+      peerOnion: 'o-${s.id}',
+      peerXPub: s.p.xPub,
+      backPaired: false,
+      needPow: false,
+      path: f.path,
+      msgUid: 'f-np',
+      fileName: 'slice2.bin',
+      sender: SenderInfo(haloId: _me, edPub: 'ed', onion: 'o', xPub: 'x'),
+      progressKey: s.id,
+    ).timeout(const Duration(seconds: 40));
+    expect(r, 'error: no relays');
+    expect(_engine.firsts, isNotEmpty);
+    expect(_engine.pairs, isEmpty);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   test('two phones: the onion acks, the first filing fails, and the '
       'message still arrives once and comes back delivered', () async {

@@ -19848,7 +19848,7 @@ class AppState extends ChangeNotifier {
     Future<bool> one(String c) async {
       final fc = t.fc;
       if (fc != null && fc.isNotEmpty) {
-        if (await _io.firstContactSend(t.xPub, fc, c) == 'ok') return true;
+        return await _io.firstContactSend(t.xPub, fc, c) == 'ok';
       }
       return await _io.relaySend(t.xPub, c) == 'ok' && t.backPaired;
     }
@@ -20415,15 +20415,18 @@ class AppState extends ChangeNotifier {
       final xpub = to.xpub;
       final onion = to.onion;
 
-      // back-paired: onion-only, already fast and leaks the least.
+      // back-paired: the pair address only
       if (backPaired || onion.isEmpty) {
         // no onion and not added back yet: their first-contact address is
-        // the one relay route that reaches them, as the chat's own send has
+        // the one relay route that reaches them, as the chat's own send has.
+        // the pair address is not written beside it, so no relay sees the
+        // two together. a failed one goes again from the outbox
         final fc = backPaired ? null : peerFcFor(memberId);
         if (fc != null && fc.isNotEmpty) {
           final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
           if (f == 'ok') return true;
           dlog('send: first-contact failed ($f)');
+          return false;
         }
         final n = await Future(() => _io.relaySend(xpub, cipher));
         // the pair address is a drop box they read only once they add us
@@ -20433,8 +20436,12 @@ class AppState extends ChangeNotifier {
         return false;
       }
 
-      // not back-paired: race onion and relay, so a slow or dead onion does
-      // not cost the full 15s
+      // not back-paired: race onion and one relay copy, so a slow or dead
+      // onion does not cost the full 15s. the relay copy goes to their
+      // first-contact address, or to the pair address when there is none,
+      // never to both
+      final fc = _peerFc[memberId] ?? '';
+      final viaFirst = fc.isNotEmpty;
       final done = Completer<bool>();
       var pending = 2;
       void settle(String tag, String r) {
@@ -20453,24 +20460,23 @@ class AppState extends ChangeNotifier {
             .then((r) => settle('onion', r))
             .catchError((_) => settle('onion', 'err')),
       );
-      unawaited(
-        Future(() => _io.relaySend(xpub, cipher))
-            .then((r) => settle('nostr', r))
-            .catchError((_) => settle('nostr', 'err')),
-      );
-      final fc = _peerFc[memberId];
       dlog(
-        fc == null || fc.isEmpty
-            ? 'send: no first-contact addr for $memberId (v2 invite?)'
-            : 'send: racing onion + relay + first-contact for $memberId',
+        viaFirst
+            ? 'send: racing onion + first-contact for $memberId'
+            : 'send: no first-contact addr for $memberId (v2 invite?)',
       );
-      if (fc != null && fc.isNotEmpty) {
-        pending++;
+      if (viaFirst) {
         unawaited(
           _io
               .firstContactSend(xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
-              .catchError((_) => settle('Firstcontact', 'err')),
+              .catchError((_) => settle('firstcontact', 'err')),
+        );
+      } else {
+        unawaited(
+          Future(() => _io.relaySend(xpub, cipher))
+              .then((r) => settle('nostr', r))
+              .catchError((_) => settle('nostr', 'err')),
         );
       }
       return done.future;

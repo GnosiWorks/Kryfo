@@ -140,6 +140,15 @@ void main() {
       expect(w.copies, isEmpty);
     });
 
+    test('a first-contact address that does not take it is not followed '
+        'by the pair address', () async {
+      final w = _Wire()
+        ..onion = 'error: timeout'
+        ..first = 'error: no relays accepted';
+      expect(await w.send(backPaired: false), 'error: no relays accepted');
+      expect(w.went, ['onion c1', 'fc x-them fc-them c1']);
+    });
+
     test('with no first-contact address the pair address only parks '
         'it', () async {
       final w = _Wire()..onion = 'error: timeout';
