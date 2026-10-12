@@ -166,7 +166,8 @@ func TestAutomaticBeforeAnyStepNeverBouncesDirect(t *testing.T) {
 		t.Fatal(r)
 	}
 	time.Sleep(100 * time.Millisecond)
-	if r := reconnectNow(); r != errAutoWait {
+	// no network as well: parked, so the valve can find it
+	if r := reconnectNow(); r != errOffline {
 		t.Fatalf("reconnect: %q", r)
 	}
 	if sentNetworkOn(f) {
@@ -337,27 +338,6 @@ func TestCheckInRespectsRiskyAndBlocked(t *testing.T) {
 	}
 }
 
-// the old call says nothing before the decoy is known closed, and lines
-// it cannot read set no mode
-func TestLegacyCallNeedsAClosedDecoyAndALine(t *testing.T) {
-	resetAuto(t)
-	t.Cleanup(func() { resetAuto(t) })
-	unknownMode(t)
-	decoyState.Store(decoyUnknown)
-	if r := setBridges(tbObfs4, true); r != "error: decoy" {
-		t.Fatalf("decoy unknown: %q", r)
-	}
-	decoyState.Store(decoyOff)
-	setBridges("obfs4 mangled", true)
-	if bridgeModeKnown() {
-		t.Fatal("unreadable lines set a mode")
-	}
-	setBridges("", false)
-	if !bridgeModeKnown() {
-		t.Fatal("bridges off is a mode")
-	}
-}
-
 // a decoy reads no line checks
 func TestDecoyReadsNoLineChecks(t *testing.T) {
 	resetAuto(t)
@@ -458,13 +438,13 @@ func TestNewModeEndsAutomaticsDirectStep(t *testing.T) {
 	}
 }
 
-// the old call with new lines: tor does not hold them yet
+// new lines with no mode: tor does not hold them yet
 func TestLegacyNewLinesAreNotApplied(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
-	setBridges("", false)
+	setBridgeLines("", false)
 	noteLinesApplied(linesGen.Load())
-	setBridges(tbObfs4, true)
+	setBridgeLines(tbObfs4, true)
 	if bridgesApplied() {
 		t.Fatal("new lines look applied")
 	}
@@ -571,12 +551,7 @@ func TestAWakeWithNoWayInStartsAPass(t *testing.T) {
 func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
-	oldB, oldQ := netBounce, netQuiet
-	netBounce, netQuiet = func() {}, time.Millisecond
-	t.Cleanup(func() {
-		time.Sleep(50 * time.Millisecond)
-		netBounce, netQuiet = oldB, oldQ
-	})
+	quietBounce(t)
 	setNetInfo(wifi())
 	today := dayOf(autoNow())
 	memMu.Lock()
@@ -588,8 +563,8 @@ func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
 	checkIn(true)
 	t.Cleanup(func() { checkIn(false) })
 	networkChanged()
-	if why := networkHold(); why != "" {
-		t.Fatalf("a check-in left held by a network change: %q", why)
+	if !waitUntil(2*time.Second, func() bool { return networkHold() == "" }) {
+		t.Fatalf("a check-in left held by a network change: %q", networkHold())
 	}
 }
 
@@ -700,7 +675,7 @@ func TestHeldPassReappliesAndClearsTheHold(t *testing.T) {
 // a check-in's step and a new mode never interleave: the new mode's end
 // of direct is the last word
 func TestCheckInStepAndANewModeDoNotInterleave(t *testing.T) {
-	useFakeAuto(t, netInfo{On: false, Kind: "wifi"})
+	useFakeAuto(t, wifi())
 	today := dayOf(autoNow())
 	memMu.Lock()
 	autoMem.Last = map[string]autoUse{"wifi": {Method: "direct", Day: today}}
@@ -724,6 +699,48 @@ func TestCheckInStepAndANewModeDoNotInterleave(t *testing.T) {
 	<-done
 	if autoDirectOK.Load() {
 		t.Fatal("a check-in's direct mark landed over the new mode")
+	}
+}
+
+// no built-in line left for a transport, for the tests
+func noBuiltin(t *testing.T, tr string) {
+	t.Helper()
+	old := builtinBundled[tr]
+	builtinBundled[tr] = nil
+	t.Cleanup(func() { builtinBundled[tr] = old })
+}
+
+// snowflake with no line to use is refused, never direct
+func TestSnowflakeWithNoLineIsRefused(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	unknownMode(t)
+	noBuiltin(t, "snowflake")
+	if r := setBridgeMode(bmSnowflake, ""); r != "error: lines_bad" {
+		t.Fatalf("snowflake with no lines: %q", r)
+	}
+	if bridgeModeKnown() || networkHold() == "" {
+		t.Fatalf("known %v hold %q", bridgeModeKnown(), networkHold())
+	}
+}
+
+// a check-in where only the built-in bridges may go, and there are none:
+// a hold, never direct
+func TestCheckInWithNoBuiltinLineHolds(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	setNetInfo(wifi())
+	noBuiltin(t, "obfs4")
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no", SkipDirect: true}
+	autoMu.Unlock()
+	autoDirectOK.Store(true)
+	if r := checkIn(true); r != "error: lines_bad" {
+		t.Fatalf("check-in: %q", r)
+	}
+	t.Cleanup(func() { checkIn(false) })
+	if autoDirectOK.Load() || bridgesEnabled() || networkHold() != errAutoWait {
+		t.Fatalf("direct ok %v bridges %v hold %q", autoDirectOK.Load(), bridgesEnabled(), networkHold())
 	}
 }
 

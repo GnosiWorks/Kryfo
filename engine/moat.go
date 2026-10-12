@@ -381,7 +381,7 @@ func moatTransportFor(via string, d *moatDials) (*http.Transport, error) {
 		if t == nil || !torReadyNow() {
 			return nil, errMoatNoTor
 		}
-		td, err := torDialerAs(context.Background(), t, "moat")
+		td, err := torDialerAs(context.Background(), t, laneName(laneMoat))
 		if err != nil {
 			return nil, errMoatNoTor
 		}

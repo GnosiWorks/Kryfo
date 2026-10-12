@@ -545,6 +545,18 @@ class HaloEngine {
     }
   }
 
+  // what connectivity sees, on every event: with the watch's word the
+  // engine tells a dispute from an outage. looked up on first use
+  late final CounterFnDart _connectivitySeen = _lib
+      .lookupFunction<CounterFn, CounterFnDart>('HaloConnectivitySeen');
+  void connectivitySeen(bool on) {
+    try {
+      _take(_connectivitySeen(on ? 1 : 0));
+    } catch (_) {
+      // an older engine without the call
+    }
+  }
+
   // android's word on the default network as json (validated, captive
   // portal, vpn, type), for automatic bridges. looked up on first use
   late final OneArgFnDart _networkDetail = _lib
@@ -13186,6 +13198,7 @@ class AppState extends ChangeNotifier {
   void appInFront(bool front) {
     _inFront = front;
     if (front) {
+      unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
       // again as the status comes in, for a little while
       _stuckLookUntil = DateTime.now().add(stuckLookFor);
@@ -17471,6 +17484,11 @@ class AppState extends ChangeNotifier {
     return engine.reconnectNow();
   }
 
+  // automatic is trying a way in: a long wait is its work, not a dead tor
+  bool get autoPassRuns =>
+      _bridgeStatus.mode == 'auto' &&
+      const {'trying', 'asking'}.contains(_bridgeStatus.phase);
+
   // what the restart out of sight reads. the engine is asked only out of
   // sight, in always-on, with tor meant to be up and not
   @visibleForTesting
@@ -17497,6 +17515,7 @@ class AppState extends ChangeNotifier {
       torHeld: _torHeld,
       torReady: ready,
       ctrlSilent: silent,
+      passRuns: autoPassRuns,
       stuckSince: ready ? null : (_pctMovedAt ?? _torTryingSince),
     );
   }
@@ -17553,6 +17572,12 @@ class AppState extends ChangeNotifier {
       if (_torCarries) _maybeRepoint();
     }
     if (fresh) _torTryingSince = torReady ? null : at;
+    // relays through tor while the watch says none: the engine tried and
+    // found a network, and the app goes by that until the watch speaks
+    if (_netWatchOn == false && _sendMode == 'private' && torUsable) {
+      _netWatchOn = null;
+      noteOnline(true);
+    }
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;
@@ -19552,7 +19577,9 @@ class AppState extends ChangeNotifier {
     var lastKinds = '';
     try {
       final init = await Connectivity().checkConnectivity();
-      _online = init.any((r) => r != ConnectivityResult.none);
+      _connSeen = init.any((r) => r != ConnectivityResult.none);
+      _online = _netWatchOn ?? _connSeen;
+      engine.connectivitySeen(_connSeen);
       lastKinds = (init.map((r) => r.name).toList()..sort()).join(',');
       notifyListeners();
     } catch (e) {
@@ -19560,7 +19587,51 @@ class AppState extends ChangeNotifier {
     }
     _lastKinds = lastKinds;
     Connectivity().onConnectivityChanged.listen(connectivityEvent);
-    unawaited(listenNetDetail(engine.networkDetail));
+    unawaited(listenNetDetail(netDetailEvent));
+  }
+
+  // the watch's last word as it came: the same again on a recheck is no
+  // news, and would undo what the engine proved since
+  String? _lastNetDetail;
+
+  @visibleForTesting
+  void recheckNetDetail(String? json) {
+    if (json != null && json != _lastNetDetail) netDetailEvent(json);
+  }
+
+  // whether android's default-network watch says a network is there, null
+  // until it has said. once it has, its word decides online: connectivity
+  // can say none while a network is there, and miss it coming back
+  bool? _netWatchOn;
+
+  // the watch's word on the default network, as json: to the engine, and
+  // online follows it
+  @visibleForTesting
+  void netDetailEvent(String json) {
+    _lastNetDetail = json;
+    engine.networkDetail(json);
+    bool? on;
+    try {
+      final m = jsonDecode(json);
+      if (m is Map && m['on'] is bool) on = m['on'] as bool;
+    } catch (_) {}
+    if (on == null) return;
+    _netWatchOn = on;
+    if (on == _online) return;
+    // back on a network connectivity may not have reported
+    if (on) networkMoved();
+    noteOnline(on);
+  }
+
+  // back in front: connectivity and the watch are asked again, as either
+  // may have missed a change while the app slept
+  Future<void> _recheckNetwork() async {
+    recheckNetDetail(await readNetDetail());
+    try {
+      connectivityEvent(await Connectivity().checkConnectivity());
+    } catch (e) {
+      dlog('connectivity recheck: $e');
+    }
   }
 
   // the kinds of network the last event named, sorted: "mobile,vpn"
@@ -19573,19 +19644,27 @@ class AppState extends ChangeNotifier {
   // it bounces, so a burst of flips is one reconnect after the last
   @visibleForTesting
   void connectivityEvent(List<ConnectivityResult> results) {
-    final on = results.any((r) => r != ConnectivityResult.none);
+    final seen = results.any((r) => r != ConnectivityResult.none);
     final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
+    // connectivity's own word goes to the engine, which weighs it against
+    // the watch's: a word the watch outranks is a dispute, not a change
+    engine.connectivitySeen(seen);
     final flip = networkFlip(
-      wasOnline: _online,
+      wasOnline: _connSeen,
       lastKinds: _lastKinds,
-      on: on,
+      on: seen,
       kinds: kinds,
     );
+    _connSeen = seen;
     _lastKinds = kinds;
     if (flip == true) networkMoved();
     if (flip == false) engine.networkChanged(online: false);
-    noteOnline(on);
+    // online goes by the watch once it has spoken, as the engine does
+    noteOnline(_netWatchOn ?? seen);
   }
+
+  // what connectivity last said, apart from what the app goes by
+  bool _connSeen = true;
 
   // tor's connections belong to the network that went
   @visibleForTesting
@@ -23359,6 +23438,7 @@ final torValve = TorValve(
   busyElsewhere: () =>
       mediaInflight.isNotEmpty ||
       incomingMediaProgress.keys.any((k) => !incomingMediaStalled.contains(k)),
+  passRuns: () => appState.autoPassRuns,
 );
 
 // a tor dead in this process, out of sight: a new process, now and then

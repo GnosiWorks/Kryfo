@@ -90,16 +90,23 @@ func vaultPad(plain []byte) []byte {
 	return out
 }
 
-// the bytes a padded row carries, or the row itself when it has no header
+// the bytes a padded row carries, or the row itself when it is not one. a
+// padded row is its bucket's size exactly and zero past its bytes, so an
+// older row that only starts like the header opens as it was
 func vaultUnpad(b []byte) ([]byte, error) {
 	if len(b) < vaultPadHead || !bytes.Equal(b[:4], vaultPadMagic) {
 		return b, nil
 	}
-	n := int(binary.BigEndian.Uint32(b[4:vaultPadHead]))
-	if n > len(b)-vaultPadHead {
-		return nil, errVaultOpen
+	n := uint64(binary.BigEndian.Uint32(b[4:vaultPadHead]))
+	if n > uint64(len(b)-vaultPadHead) || vaultBucket(vaultPadHead+int(n)) != len(b) {
+		return b, nil
 	}
-	return b[vaultPadHead : vaultPadHead+n], nil
+	for _, c := range b[vaultPadHead+int(n):] {
+		if c != 0 {
+			return b, nil
+		}
+	}
+	return b[vaultPadHead : vaultPadHead+int(n)], nil
 }
 
 func vaultSeal(r *age.X25519Recipient, plain []byte) ([]byte, error) {

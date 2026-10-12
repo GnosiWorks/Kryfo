@@ -140,7 +140,8 @@ func HaloRoomSendFirstContact(cPriv, cPeer, cFcPk, cMsg *C.char) *C.char {
 }
 
 func roomSubKey(me xid, peerHex string) string {
-	return "room:" + hex.EncodeToString(me.pub[:]) + ":" + peerHex
+	// one key however the app writes the hex
+	return "room:" + hex.EncodeToString(me.pub[:]) + ":" + strings.ToLower(peerHex)
 }
 
 func startSub(key string, run func(ctx context.Context)) {

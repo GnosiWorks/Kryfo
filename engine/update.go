@@ -85,6 +85,8 @@ func HaloUpdateGet(cUrl *C.char) *C.char {
 	return C.CString(updateGet(goStr(cUrl)))
 }
 
+const updateGetMax = 4096
+
 func updateGet(url string) string {
 	if !strings.HasPrefix(url, updateBase) {
 		return "error: req: not " + updateBase
@@ -108,9 +110,13 @@ func updateGet(url string) string {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Sprintf("error: status %d", resp.StatusCode)
 	}
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, updateGetMax+1))
 	if err != nil {
 		return fmt.Sprintf("error: read: %v", err)
+	}
+	// cut short it would read as a whole file
+	if len(body) > updateGetMax {
+		return "error: read: too big"
 	}
 	return string(body)
 }

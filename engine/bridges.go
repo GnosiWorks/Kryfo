@@ -305,7 +305,7 @@ func validBridgeLine(s string) bool {
 	return err == nil
 }
 
-// what became of one line handed to HaloSetBridges, in the order given.
+// what became of one line a mode handed over, in the order given.
 // a line that cannot be used is kept here with its reason, so the app can
 // show it as broken instead of it quietly going missing.
 type lineCheck struct {
@@ -891,56 +891,7 @@ func dialErrKind(err error) string {
 	return "other"
 }
 
-// takes newline separated bridge lines and whether to use them. the caller
-// calls HaloRestartTor afterwards, which hands the new config to the running
-// tor and bounces its network so it takes.
-//
-//export HaloSetBridges
-func HaloSetBridges(cLines *C.char, on C.int) *C.char {
-	return C.CString(setBridges(goStr(cLines), on != 0))
-}
-
-// HaloSetBridges in plain go, for the tests
-func setBridges(raw string, on bool) string {
-	if why := legacyMode(); why != "" {
-		return why
-	}
-	good, bad, checks := sortBridgeLines(raw)
-	// the old way says it outright too: these lines, or none. lines asked
-	// for with none readable say nothing
-	lineChecksMu.Lock()
-	lineChecks = checks
-	lineChecksMu.Unlock()
-
-	noteBridgeSecrets(good)
-	dropSnowflakeClients()
-	bridgeMu.Lock()
-	bridgeList = good
-	bridgeFails = map[string]bridgeFail{}
-	bridgeOn = on && len(good) > 0
-	enabled := bridgeOn
-	bridgeMu.Unlock()
-	noteLinesChanged()
-	if !on || len(good) > 0 {
-		modeSet.Store(true)
-	}
-
-	if enabled {
-		if err := startPTListeners(); err != nil {
-			return fmt.Sprintf("error: %v", err)
-		}
-	}
-	// turning bridges off leaves the listeners up: tor keeps the ports it
-	// was given for the life of the process. a localhost socket nobody
-	// dials costs nothing.
-
-	if len(bad) > 0 {
-		return fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad))
-	}
-	return fmt.Sprintf("ok: %d bridges", len(good))
-}
-
-// a json list with one entry per line of the last HaloSetBridges, in the
+// a json list with one entry per line of the last mode's lines, in the
 // order given: {"i":0,"state":"ok|fixed|broken","why":"..."}. it never
 // repeats a line, the app has them.
 //
@@ -982,6 +933,15 @@ func HaloReconnectNow() *C.char { return C.CString(reconnectNow()) }
 //export HaloNetworkChanged
 func HaloNetworkChanged() *C.char {
 	networkChanged()
+	return C.CString("ok")
+}
+
+// what connectivity sees, sent on every event of it: it changes nothing
+// but whether the network is disputed
+//
+//export HaloConnectivitySeen
+func HaloConnectivitySeen(on C.int) *C.char {
+	connectivitySaw(on != 0)
 	return C.CString("ok")
 }
 

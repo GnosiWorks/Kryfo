@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// set by the boot restore, a pick, or the old HaloSetBridges
+	// set by the boot restore or a pick
 	modeSet atomic.Bool
 	// one mode change at a time, so a restore never lands over a pick
 	modeMu sync.Mutex
@@ -36,6 +36,7 @@ const (
 	errPTDown   = "error: bridges could not start"
 	errNoConf   = "error: bridges not applied"
 	errAutoWait = "error: automatic has no way in yet"
+	errOffline  = "error: no network"
 	codePTDown  = "pt_failed"
 	codeNoMode  = "no_mode"
 	codeNoConf  = "not_applied"

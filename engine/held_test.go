@@ -641,3 +641,81 @@ func TestAnUnlockMarkComesOnTheNextProbe(t *testing.T) {
 		t.Fatalf("it reconnected: %d sockets, was %d", c, conns)
 	}
 }
+
+// a new invite address while a free reads the files: the free leaves the
+// new listener alone
+func TestAFreeLeavesANewInviteAddressAlone(t *testing.T) {
+	_, _, tag, _, _ := heldSetUp(t)
+	now := time.Now()
+	const fc = 7
+	_, fcPk, err := nip17FirstContactKeys(fc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fcPath, _ := addressFiles(fcPk)
+	s := loadSeen(fcPath)
+	id := randomID(t)
+	s.claim(id)
+	if !s.hold(id, nostr.Timestamp(now.Unix()), "", now, 0, 0) {
+		t.Fatal("not held")
+	}
+	stopped := 0
+	nostrMu.Lock()
+	nostrSubs["firstcontact"] = func() {}
+	fcCounterNow = fc
+	nostrMu.Unlock()
+	t.Cleanup(func() {
+		letHeldHook = nil
+		nostrMu.Lock()
+		if c, ok := nostrSubs["firstcontact"]; ok {
+			c()
+			delete(nostrSubs, "firstcontact")
+		}
+		nostrMu.Unlock()
+	})
+	// the invite address moves on between the read and the restart
+	letHeldHook = func() {
+		nostrMu.Lock()
+		nostrSubs["firstcontact"] = func() { stopped++ }
+		fcCounterNow = fc + 1
+		nostrMu.Unlock()
+	}
+	if err := nostrLetHeld(tag, "free"); err != nil {
+		t.Fatal(err)
+	}
+	nostrMu.Lock()
+	cur := fcCounterNow
+	nostrMu.Unlock()
+	if cur != fc+1 || stopped != 0 {
+		t.Fatalf("the free moved the listener back to %d, %d stopped", cur, stopped)
+	}
+	if w := loadSeen(fcPath).wanted(now); len(w) != 1 {
+		t.Fatalf("the old address's held id was not let go: %v", w)
+	}
+}
+
+// let go of after the ack checked and before it held: the hold is not
+// taken, and the line goes to the app again
+func TestAFreeDuringAnAckComesAgain(t *testing.T) {
+	pollAckReset(t)
+	set := loadSeen(filepath.Join(t.TempDir(), "seen"))
+	pollAckPut(t, set, "a")
+	nostrMu.Lock()
+	nostrInboxDone[0].at = nostr.Timestamp(time.Now().Unix())
+	nostrMu.Unlock()
+	b := pollRaw(t)
+	ackHook = func() { markHeldFile(set.path, seenFreeMark) }
+	t.Cleanup(func() { ackHook = nil })
+	if r := nostrAck(b.K, `{"f":[],"h":[0],"g":[""]}`); r != "ok" {
+		t.Fatal(r)
+	}
+	ackHook = nil
+	if set.heldCount() != 0 || loadSeen(set.path).heldCount() != 0 {
+		t.Fatal("held past the mark")
+	}
+	got := pollRaw(t)
+	if bodies(got) != "a" {
+		t.Fatalf("not offered again: %q", bodies(got))
+	}
+	nostrAck(got.K, "")
+}

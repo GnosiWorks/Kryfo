@@ -193,3 +193,27 @@ func TestRoomMemberUnsubscribeTakesOnlyThatMember(t *testing.T) {
 		t.Fatal("a bad key taken")
 	}
 }
+
+// a member written in upper case by one call and lower by the other is one
+// subscription
+func TestRoomMemberKeyIgnoresHexCase(t *testing.T) {
+	useStandIns(t, modeFast, nil)
+	me, a := newXid(t), newXid(t)
+	aHex := hex.EncodeToString(a.pub[:])
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	nostrMu.Lock()
+	nostrSubs[roomSubKey(me, strings.ToUpper(aHex))] = cancel
+	nostrMu.Unlock()
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		delete(nostrSubs, roomSubKey(me, strings.ToUpper(aHex)))
+		nostrMu.Unlock()
+	})
+	if err := roomUnsubscribeMember(hex.EncodeToString(me.priv[:]), aHex); err != nil {
+		t.Fatal(err)
+	}
+	if ctx.Err() == nil {
+		t.Fatal("the member is still listened to")
+	}
+}
