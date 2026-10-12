@@ -1353,6 +1353,7 @@
   "restoreMoving": "搬移中… {progress}",
   "restoreRestoring": "還原中…",
   "restoreNotThisOne": "不是這個",
+  "restoreStopRestore": "停止還原",
   "restoreDateUnknown": "日期不明",
   "restoreAnIdentity": "一個身分",
   "restoreMessagesSentOrReceived": "在那個日期之後傳送或收到的訊息，不在這個檔案裡。",

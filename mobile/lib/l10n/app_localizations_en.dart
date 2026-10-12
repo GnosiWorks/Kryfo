@@ -4710,6 +4710,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreNotThisOne => 'Not this one';
 
   @override
+  String get restoreStopRestore => 'Stop the restore';
+
+  @override
   String get restoreDateUnknown => 'Date unknown';
 
   @override

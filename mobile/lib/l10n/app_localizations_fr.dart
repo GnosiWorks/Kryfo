@@ -4767,6 +4767,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get restoreNotThisOne => 'Pas celui-ci';
 
   @override
+  String get restoreStopRestore => 'Arrêter la restauration';
+
+  @override
   String get restoreDateUnknown => 'Date inconnue';
 
   @override

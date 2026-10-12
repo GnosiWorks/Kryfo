@@ -1353,6 +1353,7 @@
   "restoreMoving": "Переносим… {progress}",
   "restoreRestoring": "Восстанавливаем…",
   "restoreNotThisOne": "Не этот",
+  "restoreStopRestore": "Остановить восстановление",
   "restoreDateUnknown": "Дата неизвестна",
   "restoreAnIdentity": "Профиль",
   "restoreMessagesSentOrReceived": "Сообщений, отправленных или полученных после этой даты, в файле нет.",

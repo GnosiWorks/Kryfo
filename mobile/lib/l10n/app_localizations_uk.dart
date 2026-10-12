@@ -4800,6 +4800,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get restoreNotThisOne => 'Не цей';
 
   @override
+  String get restoreStopRestore => 'Зупинити відновлення';
+
+  @override
   String get restoreDateUnknown => 'Дата невідома';
 
   @override

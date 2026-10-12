@@ -464,6 +464,61 @@ void main() {
     expect(restored, isTrue);
   });
 
+  testWidgets('back during a slow release leaves the screen: the release '
+      'still finishes and lets the handle go, and nothing is restored', (
+    t,
+  ) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({'my_handle': 'amberfox'});
+    await appState.loadMyHandle();
+    final releasing = Completer<String>();
+    useEngineForTest(_Releasing(releasing.future));
+    var restored = false;
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t);
+    expect(find.text(l10n.restoreStopRestore), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.byType(RestoreScreen), findsNothing);
+    releasing.complete('ok');
+    await t.pumpAndSettle();
+    expect(appState.myHandle, isNull);
+    expect(restored, isFalse);
+  });
+
+  testWidgets('the stop line leaves the screen as back does', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({'my_handle': 'amberfox'});
+    await appState.loadMyHandle();
+    final releasing = Completer<String>();
+    useEngineForTest(_Releasing(releasing.future));
+    var restored = false;
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t);
+    await t.ensureVisible(find.text(l10n.restoreStopRestore));
+    await t.pump();
+    await t.tap(find.text(l10n.restoreStopRestore));
+    await t.pumpAndSettle();
+    expect(find.byType(RestoreScreen), findsNothing);
+    releasing.complete('ok');
+    await t.pumpAndSettle();
+    expect(restored, isFalse);
+  });
+
   testWidgets('the lock taking the screen away while the handle is released '
       'still restores, then says so and closes', (t) async {
     phone(t);

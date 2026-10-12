@@ -1353,6 +1353,7 @@
   "restoreMoving": "در حال انتقال… ⁨{progress}⁩",
   "restoreRestoring": "در حال بازیابی…",
   "restoreNotThisOne": "این یکی نه",
+  "restoreStopRestore": "توقف بازیابی",
   "restoreDateUnknown": "تاریخ نامعلوم",
   "restoreAnIdentity": "یک هویت",
   "restoreMessagesSentOrReceived": "پیام‌هایی که پس از آن تاریخ فرستاده یا دریافت شده‌اند در این فایل نیستند.",

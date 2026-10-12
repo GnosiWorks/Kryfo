@@ -1353,6 +1353,7 @@
   "restoreMoving": "Transfert… {progress}",
   "restoreRestoring": "Restauration…",
   "restoreNotThisOne": "Pas celui-ci",
+  "restoreStopRestore": "Arrêter la restauration",
   "restoreDateUnknown": "Date inconnue",
   "restoreAnIdentity": "Une identité",
   "restoreMessagesSentOrReceived": "Les messages envoyés ou reçus après cette date ne sont pas dans ce fichier.",
