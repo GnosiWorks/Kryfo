@@ -15617,10 +15617,13 @@ class AppState extends ChangeNotifier {
         'k': 'onion_key',
         'v': q['onion_key'] as String,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      // an everyday finger goes before the list says there is a decoy
+      await lockState.parkFingerForDecoy();
       await listContainer(HaloContainer.decoy, true);
       final id = await _quietOf(d);
       if (id == null || !await lockState.setupDecoyPin(pin)) {
         await _dropDecoyFiles(d);
+        await lockState.decoyNotMade();
         return false;
       }
       _decoyDb = d;
@@ -15633,6 +15636,7 @@ class AppState extends ChangeNotifier {
       // anything but a clash: nothing is left behind, and the flow says so
       dlog('decoy: not made ($e)');
       await _dropDecoyFiles(d);
+      await lockState.decoyNotMade();
       rethrow;
     }
   }

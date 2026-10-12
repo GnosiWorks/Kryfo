@@ -58,7 +58,7 @@ build, `--cache` mounts your pub cache. neither for a release.
 |---|---|---|
 | debian | bookworm, snapshot 2025-06-30 | f-droid's buildserver |
 | jdk | openjdk 17 | f-droid's buildserver, classes.dex can differ otherwise |
-| go | 1.25.14 | engine/go.mod and the recipe |
+| go | 1.26.9 | engine/go.mod and the recipe |
 | flutter | 3.41.7, commit cc0734ac | the f-droid srclib |
 | android ndk | 28.2.13676358 | ndkVersion in build.gradle.kts |
 | platforms | android-34, 35, 36 | flutter and plugins |

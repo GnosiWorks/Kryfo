@@ -3460,6 +3460,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Pakai sidik jari';
 
   @override
+  String get lockSetupTurningOn => 'Menyalakan…';
+
+  @override
   String get lockSetupPinOnly => 'PIN saja';
 
   @override
@@ -7468,8 +7471,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get flowDecoy1 => 'Membuka Kryfo kosong, seperti baru dipasang.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Buka kunci dengan sidik jari mati selama PIN umpan dipasang.';
+  String get flowDecoyFinger =>
+      'Selama PIN umpan dipasang, aplikasi ini hanya terbuka dengan PIN-mu. Jika sidik jari aktif di umpan, jari membuka umpan, tidak pernah aplikasi ini.';
 
   @override
   String get flowDecoyDigits =>

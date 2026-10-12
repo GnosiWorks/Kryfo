@@ -5,7 +5,7 @@ two parts: the go engine (libhalo.so), then the flutter app that bundles it.
 ## toolchain
 
 - flutter 3.41.7
-- go 1.25.14
+- go 1.26.9
 - android ndk r28c (28.2.13676358)
 - jdk 17
 

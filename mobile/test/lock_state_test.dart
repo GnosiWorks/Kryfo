@@ -178,22 +178,34 @@ class FakeBio implements LockBio {
   String key = 'ok';
   String answer = 'ok';
   int enables = 0;
+  // the seal the key opens, and to what
+  String? sealed;
+  String? opens;
   @override
   Future<bool> ready() async => true;
   @override
   Future<String> state() async => key;
   @override
-  Future<bool> enable() async {
+  Future<String?> seal(String what) async {
     enables++;
     key = 'ok';
-    return true;
+    sealed = '5e$enables'.padRight(514, '0');
+    opens = what;
+    return sealed;
   }
 
   @override
-  Future<void> disable() async => key = 'none';
+  Future<void> disable() async {
+    key = 'none';
+    sealed = null;
+  }
+
   @override
-  Future<String> unlock(String title, String cancel) async =>
-      key != 'ok' ? key : answer;
+  Future<BioOpened> unlock(String title, String cancel, String seal) async {
+    if (key != 'ok') return BioOpened(key);
+    if (answer != 'ok') return BioOpened(answer);
+    return seal == sealed ? BioOpened('ok', opens) : const BioOpened('none');
+  }
 }
 
 class FakeClock implements LockClock {
@@ -590,13 +602,16 @@ void main() {
     final lock = await make();
     // load can only offer a finger when local_auth says the phone has one,
     // which it cannot in a test: ask the key directly
-    expect(await bio.unlock('', ''), 'invalidated');
+    expect((await bio.unlock('', '', '')).result, 'invalidated');
     expect(await lock.tryBiometric(), isFalse);
     expect(lock.locked, isTrue);
     expect(await lock.verifyPin('1234'), PinResult.normal);
     await Future<void>.delayed(Duration.zero);
     expect(bio.enables, 1);
     expect(lock.bioStale, isFalse);
+    // sealed again, to the everyday app
+    expect(store.m['halo.lock.biometric.seal'], bio.sealed);
+    expect(bio.opens, HaloContainer.everyday.id);
   });
 
   test('turning fingerprint off throws its key away', () async {
@@ -981,6 +996,9 @@ void main() {
     );
     addTearDown(() => m.setMockMethodCallHandler(ch, null));
     store.m['halo.lock.biometric'] = 'true';
+    store.m['halo.lock.biometric.seal'] = (await bio.seal(
+      HaloContainer.everyday.id,
+    ))!;
     final lock = await make();
     expect(lock.bioSupported, isTrue);
     final seen = <(PinResult, String?)>[];

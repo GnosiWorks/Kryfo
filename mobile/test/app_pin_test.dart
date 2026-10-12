@@ -2,11 +2,12 @@
 // the pin on the App lock card. a change asks for the pin there is first,
 // as the advanced flows do. inside the decoy a turn off pauses the lock and
 // shows its wipe pin gone while its entry stays, a pin set again there
-// locks again and drops that wipe pin for good. a finger opens the everyday
-// app, so while a decoy pin is set fingerprint unlock is off: no switch and
-// no offer in either app, no finger at the lock, and the decoy setup says
-// so on a phone with a finger. a long hold reads in minutes and hours, not
-// in thousands of seconds
+// locks again and drops that wipe pin for good. while a decoy pin is set
+// the everyday app is pin only: no switch and no offer there, and a seal
+// for it opens nothing. the decoy has its own switch and offer, as any
+// install does, and the decoy setup says what a finger opens on a phone
+// with one. a long hold reads in minutes and hours, not in thousands of
+// seconds
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,27 +21,6 @@ import 'pin_flow_fakes.dart';
 
 const _newPin = '8642';
 const _decoyWipePin = '7777';
-
-class _Bio implements LockBio {
-  final calls = <String>[];
-  @override
-  Future<bool> ready() async => true;
-  @override
-  Future<String> state() async => 'ok';
-  @override
-  Future<bool> enable() async {
-    calls.add('enable');
-    return true;
-  }
-
-  @override
-  Future<void> disable() async => calls.add('disable');
-  @override
-  Future<String> unlock(String title, String cancel) async {
-    calls.add('unlock');
-    return 'ok';
-  }
-}
 
 const Map<int, (String, int)> _withDecoy = {
   ...appOnly,
@@ -183,11 +163,13 @@ void main() {
     expect(await lock.state.confirmPin(_decoyWipePin), PinResult.normal);
   });
 
-  testWidgets('while a decoy pin is set neither app shows the fingerprint '
-      'switch, and it comes back off once the decoy goes', (t) async {
+  testWidgets('while a decoy pin is set only the decoy shows the fingerprint '
+      'switch, and the everyday one comes back off once the decoy goes', (
+    t,
+  ) async {
     phone(t);
     _finger();
-    final lock = await makeLock(_withDecoy, bio: _Bio());
+    final lock = await makeLock(_withDecoy, bio: SealBio());
     final s = lock.state;
     expect(s.bioSupported, isTrue);
     expect(s.decoySet, isTrue);
@@ -197,7 +179,7 @@ void main() {
     s.inDecoy = true;
     await t.pumpAndSettle();
     expect(find.text(l10n.pinsYourPin), findsOneWidget);
-    expect(find.text(l10n.pinsUnlockWithFingerprint), findsNothing);
+    expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
 
     s.inDecoy = false;
     await s.clearDecoyPins();
@@ -209,13 +191,13 @@ void main() {
   for (final (name, pins, decoy, offered) in [
     ('with no decoy', appOnly, false, true),
     ('with a decoy, in the everyday app,', _withDecoy, false, false),
-    ('in the decoy', _withDecoy, true, false),
+    ('in the decoy', _withDecoy, true, true),
   ]) {
     testWidgets('a new pin $name '
         '${offered ? 'offers the' : 'offers no'} fingerprint', (t) async {
       phone(t);
       _finger();
-      final lock = await makeLock(pins, bio: _Bio(), inDecoy: decoy);
+      final lock = await makeLock(pins, bio: SealBio(), inDecoy: decoy);
       await _card(t, lock);
       await t.tap(find.text(l10n.pinsChangePin));
       await t.pumpAndSettle();
@@ -241,7 +223,7 @@ void main() {
 
   test('setting a decoy pin turns fingerprint unlock off', () async {
     _finger();
-    final bio = _Bio();
+    final bio = SealBio();
     final lock = await makeLock(appOnly, bio: bio);
     final s = lock.state;
     expect(await s.setBiometric(true), isTrue);
@@ -251,15 +233,16 @@ void main() {
     expect(s.biometric, isFalse);
     expect(s.fingerOffered, isFalse);
     expect(lock.store.m['halo.lock.biometric'], 'false');
-    expect(bio.calls, ['enable', 'disable']);
+    expect(lock.store.m.containsKey('halo.lock.biometric.seal'), isFalse);
+    expect(bio.calls, ['seal', 'disable']);
     expect(await s.setBiometric(true), isFalse);
-    expect(bio.calls, ['enable', 'disable']);
+    expect(bio.calls, ['seal', 'disable']);
   });
 
-  test('an install with a decoy and fingerprint on turns it off at start, '
-      'and an old decoy switch is dropped', () async {
+  test('an install with a decoy and fingerprint on from before seals turns '
+      'it off at start, and an old decoy switch is dropped', () async {
     _finger();
-    final bio = _Bio();
+    final bio = SealBio();
     final lock = await makeLock(
       _withDecoy,
       bio: bio,
@@ -271,36 +254,37 @@ void main() {
     expect(lock.state.biometric, isFalse);
   });
 
-  test('a finger opens nothing while a decoy pin is set', () async {
-    _finger();
-    final bio = _Bio();
-    final lock = await makeLock(
-      appOnly,
-      bio: bio,
-      stored: {'halo.lock.biometric': 'true'},
-    );
-    final s = lock.state;
-    // a decoy session counts as a set decoy pin
-    s.inDecoy = true;
-    expect(s.biometric, isFalse);
-    expect(await s.tryBiometric(), isFalse);
-    expect(bio.calls, isEmpty);
-    s.inDecoy = false;
-    expect(s.biometric, isTrue);
-    expect(await s.tryBiometric(), isTrue);
-    expect(bio.calls, ['unlock']);
-  });
+  test(
+    'a seal for the everyday app opens nothing in a decoy session',
+    () async {
+      _finger();
+      final bio = SealBio();
+      final lock = await makeLock(appOnly, bio: bio);
+      final s = lock.state;
+      expect(await s.setBiometric(true), isTrue);
+      final seen = <PinResult>[];
+      s.onOutcome = (r, {vaultKey}) async => seen.add(r);
+      // a decoy session counts as a set decoy pin
+      s.inDecoy = true;
+      s.lock();
+      expect(await s.tryBiometric(), isFalse);
+      expect(s.locked, isTrue);
+      expect(seen, isEmpty);
+      // and it is gone for good
+      expect(s.fingerUnlock, isFalse);
+      expect(lock.store.m.containsKey('halo.lock.biometric.seal'), isFalse);
+      expect(bio.calls, ['seal', 'unlock', 'disable']);
+    },
+  );
 
   for (final finger in [true, false]) {
     testWidgets('the decoy setup and the how sheet '
-        '${finger ? 'say' : 'skip'} that fingerprint unlock turns off', (
-      t,
-    ) async {
+        '${finger ? 'say' : 'skip'} what a finger opens', (t) async {
       phone(t);
       if (finger) _finger();
-      final lock = await makeLock(appOnly, bio: finger ? _Bio() : null);
+      final lock = await makeLock(appOnly, bio: finger ? SealBio() : null);
       expect(lock.state.bioSupported, finger);
-      final note = find.text(l10n.flowDecoyFingerOff);
+      final note = find.text(l10n.flowDecoyFinger);
       await t.pumpWidget(
         app(
           PinFlowScreen(

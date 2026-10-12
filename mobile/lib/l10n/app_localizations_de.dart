@@ -3508,6 +3508,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Fingerabdruck nutzen';
 
   @override
+  String get lockSetupTurningOn => 'Wird eingeschaltet…';
+
+  @override
   String get lockSetupPinOnly => 'Nur PIN';
 
   @override
@@ -7557,8 +7560,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get flowDecoy1 => 'Öffnet ein leeres Kryfo, wie frisch installiert.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Das Entsperren mit Fingerabdruck ist aus, solange eine Tarn-PIN gesetzt ist.';
+  String get flowDecoyFinger =>
+      'Solange eine Tarn-PIN gesetzt ist, öffnet sich diese App nur mit deiner PIN. Ist in der Tarnung der Fingerabdruck an, öffnet ein Finger die Tarnung, nie diese App.';
 
   @override
   String get flowDecoyDigits =>

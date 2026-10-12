@@ -3571,6 +3571,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'استخدام البصمة';
 
   @override
+  String get lockSetupTurningOn => 'جارٍ التفعيل…';
+
+  @override
   String get lockSetupPinOnly => 'رمز PIN فقط';
 
   @override
@@ -7598,8 +7601,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowDecoy1 => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'يتوقف فتح القفل بالبصمة ما دام رمز PIN للتمويه مضبوطًا.';
+  String get flowDecoyFinger =>
+      'ما دام رمز PIN للتمويه مضبوطًا، يُفتح هذا التطبيق برمز PIN فقط. وإذا كانت البصمة مفعّلة في التمويه، فالإصبع يفتح التمويه، ولا يفتح هذا التطبيق أبدًا.';
 
   @override
   String get flowDecoyDigits =>

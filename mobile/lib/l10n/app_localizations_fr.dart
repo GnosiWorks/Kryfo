@@ -3501,6 +3501,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lockSetupUseFingerprint => 'Utiliser l’empreinte';
 
   @override
+  String get lockSetupTurningOn => 'Activation…';
+
+  @override
   String get lockSetupPinOnly => 'Code PIN seul';
 
   @override
@@ -7547,8 +7550,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowDecoy1 => 'Ouvre un Kryfo vide, comme tout juste installé.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Le déverrouillage par empreinte est désactivé tant qu’un code leurre est défini.';
+  String get flowDecoyFinger =>
+      'Tant qu’un code leurre est défini, cette app s’ouvre seulement avec votre code PIN. Si l’empreinte est activée dans le leurre, un doigt ouvre le leurre, jamais cette app.';
 
   @override
   String get flowDecoyDigits =>

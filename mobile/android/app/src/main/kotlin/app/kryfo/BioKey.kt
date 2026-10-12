@@ -8,49 +8,64 @@ import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.PrivateKey
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
 
-// fingerprint unlock tied to a key the phone drops when a finger is added,
-// so only fingers enrolled before it was turned on open kryfo. the key
-// guards nothing, using it is the proof. android 9 and later.
+// fingerprint unlock: what a finger opens is sealed (BioSeal) to a key pair
+// whose private half only a finger unlocks, and which the phone drops when
+// a finger is added. only fingers enrolled before the seal open it, and
+// what it opens is known only once one has. android 9 and later.
 object BioKey {
-    private const val ALIAS = "kryfo_bio_unlock"
+    private const val ALIAS = "kryfo_bio_seal"
+    // the key from before seals: nothing opens with it any more
+    private const val OLD_ALIAS = "kryfo_bio_unlock"
 
     fun ready(): Boolean = Build.VERSION.SDK_INT >= 28
 
+    // every key change in the order asked for, off the main thread: a
+    // delete never lands between another seal's delete and its new key
+    val work: ExecutorService = Executors.newSingleThreadExecutor()
+
     private fun store(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
-    fun create(): Boolean {
-        if (!ready()) return false
+    // a new key, and [opens] sealed to it. the seal, or null. the key takes
+    // a moment to make, so never on the main thread
+    fun seal(opens: String): String? {
+        if (!ready()) return null
         return try {
             delete()
-            val b = KeyGenParameterSpec.Builder(
-                ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            // sealing uses the public half outside the keystore
+            val b = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_DECRYPT)
+                .setKeySize(2048)
+                .setDigests(KeyProperties.DIGEST_SHA256)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
                 .setUserAuthenticationRequired(true)
                 .setInvalidatedByBiometricEnrollment(true)
             if (Build.VERSION.SDK_INT >= 30) {
                 b.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
             }
-            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-                .apply { init(b.build()) }
-                .generateKey()
-            true
+            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
+                .apply { initialize(b.build()) }
+                .generateKeyPair()
+            val pub = store().getCertificate(ALIAS)?.publicKey
+                ?: throw IllegalStateException("no public key")
+            BioSeal.seal(BioSeal.plain(pub), opens)
         } catch (e: Exception) {
-            false
+            delete()
+            null
         }
     }
 
     fun delete() {
-        try {
-            store().deleteEntry(ALIAS)
-        } catch (_: Exception) {
+        for (a in listOf(ALIAS, OLD_ALIAS)) {
+            try {
+                store().deleteEntry(a)
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -59,9 +74,9 @@ object BioKey {
     fun cipher(): Pair<Cipher?, String> {
         if (!ready()) return null to "none"
         return try {
-            val key = store().getKey(ALIAS, null) as? SecretKey ?: return null to "none"
-            val c = Cipher.getInstance("AES/GCM/NoPadding")
-            c.init(Cipher.ENCRYPT_MODE, key)
+            val key = store().getKey(ALIAS, null) as? PrivateKey ?: return null to "none"
+            val c = Cipher.getInstance(BioSeal.TRANSFORM)
+            c.init(Cipher.DECRYPT_MODE, key, BioSeal.OAEP)
             c to "ok"
         } catch (e: KeyPermanentlyInvalidatedException) {
             delete()
@@ -73,27 +88,39 @@ object BioKey {
 
     fun state(): String = cipher().second
 
-    // the prompt, with the key: "ok", "cancel", "invalidated", "none", "error"
-    fun unlock(activity: Activity, title: String, cancel: String, done: (String) -> Unit) {
+    // the prompt, then the seal opened: "ok" with what it opens, or
+    // "cancel", "lockout", "invalidated", "none", "error"
+    fun unlock(
+        activity: Activity,
+        title: String,
+        cancel: String,
+        seal: String,
+        done: (String, String?) -> Unit,
+    ) {
         if (Build.VERSION.SDK_INT < 28) {
-            done("none")
+            done("none", null)
+            return
+        }
+        val sealed = BioSeal.parse(seal)
+        if (sealed == null) {
+            done("none", null)
             return
         }
         val (c, why) = cipher()
         if (c == null) {
-            done(why)
+            done(why, null)
             return
         }
         var answered = false
-        fun once(s: String) {
+        fun once(s: String, opens: String?) {
             if (answered) return
             answered = true
-            done(s)
+            done(s, opens)
         }
         val exec = activity.mainExecutor
         val prompt = BiometricPrompt.Builder(activity)
             .setTitle(title)
-            .setNegativeButton(cancel, exec) { _, _ -> once("cancel") }
+            .setNegativeButton(cancel, exec) { _, _ -> once("cancel", null) }
             .build()
         prompt.authenticate(
             BiometricPrompt.CryptoObject(c),
@@ -101,18 +128,20 @@ object BioKey {
             exec,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
-                    // using the key is the proof: it only works right after
-                    // a finger the key was made for
-                    val ok = try {
-                        r.cryptoObject?.cipher?.doFinal(ByteArray(16)) != null
-                    } catch (e: Exception) {
-                        false
-                    }
-                    once(if (ok) "ok" else "error")
+                    // the key opens only right after a finger it was made for.
+                    // a seal it cannot open was made for another key. rsa
+                    // takes a moment, so not on the main thread
+                    val cipher = r.cryptoObject?.cipher
+                    Thread {
+                        val opens = if (cipher == null) null else BioSeal.open(cipher, sealed)
+                        exec.execute {
+                            if (opens == null) once("none", null) else once("ok", opens)
+                        }
+                    }.start()
                 }
 
                 override fun onAuthenticationError(code: Int, msg: CharSequence?) {
-                    once("cancel")
+                    once(BioSeal.closed(code), null)
                 }
             },
         )

@@ -15,10 +15,10 @@ so later tags are picked up without another merge request.
 
 ## go
 
-go is 1.25.14 from 0.3.0 on. the v0.2.10 blocks pin `go@go1.25.0` and must
-keep it. `AutoUpdateMode` copies the last block, so the v0.3.2 block needs
-`go@go1.25.14` and `checkout -f go1.25.14` in both places, or the offline
-buildserver fails to fetch the toolchain. every go bump moves go.mod, both
+go is 1.26.9 from 0.5.1 on, 1.25.14 from 0.3.0 to 0.5.0. the v0.2.10 blocks
+pin `go@go1.25.0` and must keep it. `AutoUpdateMode` copies the last block,
+so the first version after a go bump needs a merge request that moves the
+`go@` srclib to the new tag, or the build fails. every go bump moves go.mod, both
 dockerfiles, prep-offline.sh and the recipe together.
 
 ## what can go wrong
