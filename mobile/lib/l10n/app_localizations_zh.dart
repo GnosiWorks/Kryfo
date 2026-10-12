@@ -3924,13 +3924,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
 
   @override
-  String get pairCodeIsThisThem => '是这个人吗？';
+  String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeCheckMatches => '核对一下，是否和对方屏幕上的一致';
+  String get pairCodeNumberMatches => '核对两部手机上的这串号码是否一致';
 
   @override
-  String get pairCodeNotThem => '不是这个人';
+  String get pairCodeNumberDiffers => '号码不一致';
+
+  @override
+  String get pairCodeNoNumberThere => '对方屏幕上没有号码？先添加，再在聊天里核对安全码。';
 
   @override
   String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
@@ -11722,13 +11725,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
 
   @override
-  String get pairCodeIsThisThem => '是這個人嗎？';
+  String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeCheckMatches => '核對一下，是否和對方螢幕上的一致';
+  String get pairCodeNumberMatches => '核對兩支手機上的這組號碼是否一致';
 
   @override
-  String get pairCodeNotThem => '不是這個人';
+  String get pairCodeNumberDiffers => '號碼不一致';
+
+  @override
+  String get pairCodeNoNumberThere => '對方螢幕上沒有號碼？先加入，再在聊天裡核對安全碼。';
 
   @override
   String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';

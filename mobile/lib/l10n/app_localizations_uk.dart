@@ -4184,13 +4184,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pairCodeUsedTwice => 'Цей код використали двічі. Попроси новий.';
 
   @override
-  String get pairCodeIsThisThem => 'Це та людина?';
+  String get pairCodeKeyNumber => 'Номер ключа';
 
   @override
-  String get pairCodeCheckMatches => 'Звір з екраном співрозмовника';
+  String get pairCodeNumberMatches =>
+      'Перевір, що цей номер збігається на обох телефонах';
 
   @override
-  String get pairCodeNotThem => 'Не та людина';
+  String get pairCodeNumberDiffers => 'Номер не збігається';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'На екрані співрозмовника немає номера? Додай його, а потім звір номер безпеки в чаті.';
 
   @override
   String get pairCodeNotAdded => 'Не додано. Попроси новий код.';

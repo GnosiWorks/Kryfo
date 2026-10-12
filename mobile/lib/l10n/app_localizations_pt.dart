@@ -4133,13 +4133,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Este código foi usado duas vezes. Peça um novo.';
 
   @override
-  String get pairCodeIsThisThem => 'É essa pessoa?';
+  String get pairCodeKeyNumber => 'Número da chave';
 
   @override
-  String get pairCodeCheckMatches => 'Confira se bate com a tela da pessoa';
+  String get pairCodeNumberMatches =>
+      'Confira se este número é igual nos dois celulares';
 
   @override
-  String get pairCodeNotThem => 'Não é essa pessoa';
+  String get pairCodeNumberDiffers => 'O número é diferente';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Nenhum número na tela da pessoa? Adicione e depois compare o número de segurança na conversa.';
 
   @override
   String get pairCodeNotAdded => 'Nada foi adicionado. Peça um código novo.';

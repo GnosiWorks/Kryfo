@@ -4096,13 +4096,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'This code was used twice. Ask for a new one.';
 
   @override
-  String get pairCodeIsThisThem => 'Is this them?';
+  String get pairCodeKeyNumber => 'Key number';
 
   @override
-  String get pairCodeCheckMatches => 'Check this matches their screen';
+  String get pairCodeNumberMatches =>
+      'Check this number matches on both phones';
 
   @override
-  String get pairCodeNotThem => 'Not them';
+  String get pairCodeNumberDiffers => 'The number is different';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'No number on their screen? Add them, then compare the safety number in your chat.';
 
   @override
   String get pairCodeNotAdded => 'Not added. Ask them for a new code.';

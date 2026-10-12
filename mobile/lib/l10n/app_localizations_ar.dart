@@ -4197,13 +4197,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeUsedTwice => 'استُخدم هذا الرمز مرتين. اطلب رمزًا جديدًا.';
 
   @override
-  String get pairCodeIsThisThem => 'هل هذا هو الشخص؟';
+  String get pairCodeKeyNumber => 'رقم المفتاح';
 
   @override
-  String get pairCodeCheckMatches => 'تحقّق من أنه يطابق ما على شاشته';
+  String get pairCodeNumberMatches => 'تحقّق من أن هذا الرقم نفسه على الهاتفين';
 
   @override
-  String get pairCodeNotThem => 'ليس هذا الشخص';
+  String get pairCodeNumberDiffers => 'الرقم مختلف';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'لا يظهر رقم على شاشته؟ أضِفه، ثم قارن رقم الأمان في المحادثة.';
 
   @override
   String get pairCodeNotAdded => 'لم تتم الإضافة. اطلب رمزًا جديدًا.';

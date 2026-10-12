@@ -1695,9 +1695,6 @@ final _calls = <_Call>[
   ('pairCodeTypeTheSixDigits', [], (l) => l.pairCodeTypeTheSixDigits),
   ('pairCodeAddThem', [], (l) => l.pairCodeAddThem),
   ('pairCodeUsedTwice', [], (l) => l.pairCodeUsedTwice),
-  ('pairCodeIsThisThem', [], (l) => l.pairCodeIsThisThem),
-  ('pairCodeCheckMatches', [], (l) => l.pairCodeCheckMatches),
-  ('pairCodeNotThem', [], (l) => l.pairCodeNotThem),
   ('pairCodeNotAdded', [], (l) => l.pairCodeNotAdded),
   (
     'panicSetupThoseWereDifferentFrom',
@@ -3120,6 +3117,10 @@ final _calls = <_Call>[
   ('supportMovedToChats', [], (l) => l.supportMovedToChats),
   ('supportMoveToInbox', [], (l) => l.supportMoveToInbox),
   ('supportMovedToInbox', [], (l) => l.supportMovedToInbox),
+  ('pairCodeKeyNumber', [], (l) => l.pairCodeKeyNumber),
+  ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
+  ('pairCodeNumberDiffers', [], (l) => l.pairCodeNumberDiffers),
+  ('pairCodeNoNumberThere', [], (l) => l.pairCodeNoNumberThere),
 ];
 
 void main() {

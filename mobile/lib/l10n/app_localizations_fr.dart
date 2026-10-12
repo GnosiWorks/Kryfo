@@ -4145,13 +4145,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce code a été utilisé deux fois. Demandez-en un nouveau.';
 
   @override
-  String get pairCodeIsThisThem => 'Est-ce bien cette personne ?';
+  String get pairCodeKeyNumber => 'Numéro de clé';
 
   @override
-  String get pairCodeCheckMatches => 'Vérifiez que cela correspond à son écran';
+  String get pairCodeNumberMatches =>
+      'Vérifiez que ce numéro est le même sur les deux téléphones';
 
   @override
-  String get pairCodeNotThem => 'Pas cette personne';
+  String get pairCodeNumberDiffers => 'Le numéro est différent';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Aucun numéro sur son écran ? Ajoutez cette personne, puis comparez le numéro de sécurité dans la discussion.';
 
   @override
   String get pairCodeNotAdded =>

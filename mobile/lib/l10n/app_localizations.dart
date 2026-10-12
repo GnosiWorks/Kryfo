@@ -6537,23 +6537,29 @@ abstract class AppLocalizations {
   /// **'This code was used twice. Ask for a new one.'**
   String get pairCodeUsedTwice;
 
-  /// widgets/pair_join.dart: title over the face and three words a code led to, before anything is added
+  /// widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use
   ///
   /// In en, this message translates to:
-  /// **'Is this them?'**
-  String get pairCodeIsThisThem;
+  /// **'Key number'**
+  String get pairCodeKeyNumber;
 
-  /// widgets/pair_join.dart: under the face and three words: compare them with what the other person's phone shows
+  /// widgets/pair_join.dart: under the key number on both pair-code screens: the two phones must show the same digits
   ///
   /// In en, this message translates to:
-  /// **'Check this matches their screen'**
-  String get pairCodeCheckMatches;
+  /// **'Check this number matches on both phones'**
+  String get pairCodeNumberMatches;
 
-  /// widgets/pair_join.dart: button, the face and words do not match the other phone; nothing is added
+  /// widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added
   ///
   /// In en, this message translates to:
-  /// **'Not them'**
-  String get pairCodeNotThem;
+  /// **'The number is different'**
+  String get pairCodeNumberDiffers;
+
+  /// widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number
+  ///
+  /// In en, this message translates to:
+  /// **'No number on their screen? Add them, then compare the safety number in your chat.'**
+  String get pairCodeNoNumberThere;
 
   /// widgets/pair_join.dart: status line after Not them
   ///

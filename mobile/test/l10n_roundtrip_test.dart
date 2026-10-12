@@ -3556,5 +3556,12 @@ void main() {
       l.onboardingAboutASecondSkipsTor,
       "About a second, and it skips Tor.",
     );
+    expect(l.pairCodeKeyNumber, "Key number");
+    expect(l.pairCodeNumberMatches, "Check this number matches on both phones");
+    expect(l.pairCodeNumberDiffers, "The number is different");
+    expect(
+      l.pairCodeNoNumberThere,
+      "No number on their screen? Add them, then compare the safety number in your chat.",
+    );
   });
 }

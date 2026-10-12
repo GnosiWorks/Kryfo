@@ -4099,13 +4099,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodeUsedTwice => 'Kode ini dipakai dua kali. Minta kode baru.';
 
   @override
-  String get pairCodeIsThisThem => 'Benar dia orangnya?';
+  String get pairCodeKeyNumber => 'Nomor kunci';
 
   @override
-  String get pairCodeCheckMatches => 'Cocokkan dengan layar orang itu';
+  String get pairCodeNumberMatches => 'Pastikan nomor ini sama di kedua ponsel';
 
   @override
-  String get pairCodeNotThem => 'Bukan dia';
+  String get pairCodeNumberDiffers => 'Nomornya berbeda';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Tidak ada nomor di layarnya? Tambahkan dia, lalu bandingkan nomor keamanan di obrolan.';
 
   @override
   String get pairCodeNotAdded => 'Tidak ditambahkan. Minta kode baru.';

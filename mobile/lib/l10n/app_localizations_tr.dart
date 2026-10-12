@@ -4117,14 +4117,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodeUsedTwice => 'Bu kod iki kez kullanıldı. Yenisini iste.';
 
   @override
-  String get pairCodeIsThisThem => 'Bu o kişi mi?';
+  String get pairCodeKeyNumber => 'Anahtar numarası';
 
   @override
-  String get pairCodeCheckMatches =>
-      'Karşındakinin ekranıyla aynı mı, kontrol et';
+  String get pairCodeNumberMatches =>
+      'Bu numaranın iki telefonda da aynı olduğunu kontrol et';
 
   @override
-  String get pairCodeNotThem => 'O kişi değil';
+  String get pairCodeNumberDiffers => 'Numara farklı';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Ekranında numara yok mu? Ekle, sonra sohbette güvenlik numarasını karşılaştır.';
 
   @override
   String get pairCodeNotAdded => 'Eklenmedi. Yeni bir kod iste.';

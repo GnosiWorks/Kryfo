@@ -4141,13 +4141,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este código se usó dos veces. Pide uno nuevo.';
 
   @override
-  String get pairCodeIsThisThem => '¿Es esta persona?';
+  String get pairCodeKeyNumber => 'Número de clave';
 
   @override
-  String get pairCodeCheckMatches => 'Comprueba que coincide con su pantalla';
+  String get pairCodeNumberMatches =>
+      'Comprueba que este número coincide en los dos teléfonos';
 
   @override
-  String get pairCodeNotThem => 'No es esta persona';
+  String get pairCodeNumberDiffers => 'El número es distinto';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      '¿No sale ningún número en su pantalla? Añádelo y luego compara el número de seguridad en el chat.';
 
   @override
   String get pairCodeNotAdded => 'No se añadió. Pide un código nuevo.';

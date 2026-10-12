@@ -4152,14 +4152,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Code wurde zweimal verwendet. Bitte um einen neuen.';
 
   @override
-  String get pairCodeIsThisThem => 'Ist das die Person?';
+  String get pairCodeKeyNumber => 'Schlüsselnummer';
 
   @override
-  String get pairCodeCheckMatches =>
-      'Vergleich es mit dem Bildschirm der Person';
+  String get pairCodeNumberMatches =>
+      'Prüf, ob diese Nummer auf beiden Handys gleich ist';
 
   @override
-  String get pairCodeNotThem => 'Nicht die Person';
+  String get pairCodeNumberDiffers => 'Die Nummer ist anders';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Keine Nummer auf dem anderen Bildschirm? Füg die Person hinzu und vergleich dann die Sicherheitsnummer im Chat.';
 
   @override
   String get pairCodeNotAdded =>

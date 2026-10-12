@@ -5119,17 +5119,21 @@
   "@pairCodeUsedTwice": {
     "description": "widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added"
   },
-  "pairCodeIsThisThem": "Is this them?",
-  "@pairCodeIsThisThem": {
-    "description": "widgets/pair_join.dart: title over the face and three words a code led to, before anything is added"
+  "pairCodeKeyNumber": "Key number",
+  "@pairCodeKeyNumber": {
+    "description": "widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use"
   },
-  "pairCodeCheckMatches": "Check this matches their screen",
-  "@pairCodeCheckMatches": {
-    "description": "widgets/pair_join.dart: under the face and three words: compare them with what the other person's phone shows"
+  "pairCodeNumberMatches": "Check this number matches on both phones",
+  "@pairCodeNumberMatches": {
+    "description": "widgets/pair_join.dart: under the key number on both pair-code screens: the two phones must show the same digits"
   },
-  "pairCodeNotThem": "Not them",
-  "@pairCodeNotThem": {
-    "description": "widgets/pair_join.dart: button, the face and words do not match the other phone; nothing is added"
+  "pairCodeNumberDiffers": "The number is different",
+  "@pairCodeNumberDiffers": {
+    "description": "widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added"
+  },
+  "pairCodeNoNumberThere": "No number on their screen? Add them, then compare the safety number in your chat.",
+  "@pairCodeNoNumberThere": {
+    "description": "widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number"
   },
   "pairCodeNotAdded": "Not added. Ask them for a new code.",
   "@pairCodeNotAdded": {

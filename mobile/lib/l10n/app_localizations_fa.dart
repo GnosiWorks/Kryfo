@@ -4114,13 +4114,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'این کد دو بار استفاده شده. یک کد تازه بخواهید.';
 
   @override
-  String get pairCodeIsThisThem => 'همین شخص است؟';
+  String get pairCodeKeyNumber => 'شماره‌ی کلید';
 
   @override
-  String get pairCodeCheckMatches => 'بررسی کنید که با صفحه‌ی او یکی باشد';
+  String get pairCodeNumberMatches =>
+      'بررسی کنید این شماره روی هر دو گوشی یکی باشد';
 
   @override
-  String get pairCodeNotThem => 'این شخص نیست';
+  String get pairCodeNumberDiffers => 'شماره فرق دارد';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'روی صفحه‌ی او شماره‌ای نیست؟ او را اضافه کنید، بعد شماره‌ی امنیتی را در گفت‌وگو مقایسه کنید.';
 
   @override
   String get pairCodeNotAdded => 'افزوده نشد. یک کد تازه بخواهید.';

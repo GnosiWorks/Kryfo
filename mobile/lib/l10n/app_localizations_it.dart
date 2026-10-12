@@ -4144,13 +4144,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo codice è stato usato due volte. Chiedine uno nuovo.';
 
   @override
-  String get pairCodeIsThisThem => 'È questa persona?';
+  String get pairCodeKeyNumber => 'Numero della chiave';
 
   @override
-  String get pairCodeCheckMatches => 'Controlla che corrisponda al suo schermo';
+  String get pairCodeNumberMatches =>
+      'Controlla che questo numero sia uguale su entrambi i telefoni';
 
   @override
-  String get pairCodeNotThem => 'Non è questa persona';
+  String get pairCodeNumberDiffers => 'Il numero è diverso';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Nessun numero sul suo schermo? Aggiungilo, poi confronta il numero di sicurezza nella chat.';
 
   @override
   String get pairCodeNotAdded => 'Non aggiunto. Chiedi un nuovo codice.';

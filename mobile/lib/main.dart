@@ -102,6 +102,7 @@ import 'widgets/kryfo_link_text.dart' show takeOutsideLink, takeOwnLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
+import 'key_number.dart';
 import 'signal_stores.dart'
     show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
@@ -9230,6 +9231,27 @@ Map<String, String>? parseHaloUri(String raw) {
   } catch (_) {
     return null;
   }
+}
+
+/// the identity key a session built from [invite] runs on: the one its
+/// bundle carries, as processPeerBundle reads it, or an old card's x key.
+/// null when the invite does not read
+List<int>? inviteSessionKey(String invite) {
+  final parsed = parseHaloUri(invite);
+  if (parsed == null) return null;
+  final bundle = parsed['bundle'];
+  if (bundle == null) return _xIdentity((parsed['xpub'] ?? '').toLowerCase());
+  try {
+    return preKeyBundleOf(bundle).getIdentityKey().serialize();
+  } catch (_) {
+    return null;
+  }
+}
+
+/// the key number of [invite]: what the phone that shared it shows
+String? inviteKeyNumber(String invite) {
+  final k = inviteSessionKey(invite);
+  return k == null ? null : keyNumber(k);
 }
 
 /// what an invite's id is to the people here

@@ -4092,14 +4092,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã này đã được dùng hai lần. Hãy xin mã mới.';
 
   @override
-  String get pairCodeIsThisThem => 'Có phải người này không?';
+  String get pairCodeKeyNumber => 'Số khóa';
 
   @override
-  String get pairCodeCheckMatches =>
-      'Kiểm tra xem có khớp với màn hình của họ không';
+  String get pairCodeNumberMatches =>
+      'Kiểm tra số này giống nhau trên cả hai điện thoại';
 
   @override
-  String get pairCodeNotThem => 'Không phải họ';
+  String get pairCodeNumberDiffers => 'Số không giống';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'Màn hình của họ không có số? Hãy thêm họ, rồi so sánh số an toàn trong cuộc trò chuyện.';
 
   @override
   String get pairCodeNotAdded => 'Chưa thêm. Hãy xin họ mã mới.';

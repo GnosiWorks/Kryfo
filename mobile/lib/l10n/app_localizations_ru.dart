@@ -4200,13 +4200,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот код использовали дважды. Попроси новый.';
 
   @override
-  String get pairCodeIsThisThem => 'Это тот человек?';
+  String get pairCodeKeyNumber => 'Номер ключа';
 
   @override
-  String get pairCodeCheckMatches => 'Сверь с экраном собеседника';
+  String get pairCodeNumberMatches =>
+      'Проверь, что этот номер совпадает на обоих телефонах';
 
   @override
-  String get pairCodeNotThem => 'Не тот человек';
+  String get pairCodeNumberDiffers => 'Номер не совпадает';
+
+  @override
+  String get pairCodeNoNumberThere =>
+      'На экране собеседника нет номера? Добавь его, а потом сверь код безопасности в чате.';
 
   @override
   String get pairCodeNotAdded => 'Не добавлено. Попроси новый код.';
