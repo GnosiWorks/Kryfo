@@ -15817,39 +15817,51 @@ class AppState extends ChangeNotifier {
       dlog('intro: dropped');
       return;
     }
-    final existing = await db.getContact(h);
+    // a card under words held here on another key is someone else, on an
+    // id of their own as a group's list seats them: the one holding the
+    // words gets no vouch from it
+    final who =
+        (await _seats(
+          [
+            {'h': h, 'x': card.xPub},
+          ],
+          db,
+          room: false,
+        ))[h] ??
+        h;
+    final existing = await db.getContact(who);
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
     // someone blocked stays blocked: no vouch, no card, nothing sent. a
     // block on the everyday side holds for a hidden chat's card too, or a
     // card for them here would undo it
-    if (await db.isBlocked(h) || (!everyday && await live.isBlocked(h))) {
+    if (await db.isBlocked(who) || (!everyday && await live.isBlocked(who))) {
       dlog('intro: names someone blocked, dropped');
       return;
     }
-    await db.upsertContactStub(h, card.onion, card.xPub);
+    await db.upsertContactStub(who, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
     // vouch, so two introducers can each say their piece.
-    await db.addVouch(h, senderHaloId, card.note, at: at);
+    await db.addVouch(who, senderHaloId, card.note, at: at);
     // someone deleted here is parked out of sight: a friend's card brings
     // them back as a request, as their own message would
-    await db.unparkIfArchived(h);
-    if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
+    await db.unparkIfArchived(who);
+    if (card.avatar != null) await db.setContactAvatar(who, card.avatar);
     // the first-contact addresses are kept for the phone, so only the
     // everyday side's go there
     if (everyday && card.fc != null && card.fc!.isNotEmpty) {
-      await rememberPeerFc(h, card.fc!);
+      await rememberPeerFc(who, card.fc!);
     }
     // a card is keys, not a session. listen for them and swap prekey bundles
     // now, so the first message either side types has a session to ride.
     if (everyday) {
-      await subscribePeer(h);
+      await subscribePeer(who);
     } else if (card.xPub.isNotEmpty) {
-      _xPubToHaloId[card.xPub] = h;
+      _xPubToHaloId[card.xPub] = who;
       _io.listen(card.xPub);
     }
-    _wantHeal(h);
-    unawaited(_sendBundleCtl(h, want: true));
-    dlog('intro: $senderHaloId introduced $h');
+    _wantHeal(who);
+    unawaited(_sendBundleCtl(who, want: true));
+    dlog('intro: $senderHaloId introduced $who');
     await refreshContacts();
   }
 
