@@ -60,16 +60,8 @@ func servicesTorClient() (*http.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
-	c := &http.Client{
-		Transport: &http.Transport{
-			DialContext:           d.DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-		},
-		Timeout: 60 * time.Second,
-		// the registry answers where it is asked
-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}
+	// as every lane's over tor: no redirect is followed
+	c := torLaneClient(d.DialContext)
 	cachedNostrClients[key] = c
 	return c, nil
 }

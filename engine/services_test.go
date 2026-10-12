@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -246,6 +247,43 @@ func TestServicesFollowNoRedirect(t *testing.T) {
 			}
 			if n := len(other.remotes()); n != 0 {
 				t.Fatalf("%d calls followed the redirect", n)
+			}
+		})
+	}
+}
+
+// the services client is a lane client like any other over tor, built by
+// torLaneClient: the same timeouts and the same refusal to follow a
+// redirect, on every route, and never the route's own client
+func TestServicesClientIsATorLaneClient(t *testing.T) {
+	want := torLaneClient(nil)
+	wantT := want.Transport.(*http.Transport)
+	for _, m := range []string{modePrivate, modeBalanced, modeFast} {
+		t.Run(m, func(t *testing.T) {
+			socks := newSocksStandIn(t)
+			useStandIns(t, m, socks, newRelayStandIn(t, 0))
+			c, err := servicesTorClient()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if reflect.ValueOf(c.CheckRedirect).Pointer() != reflect.ValueOf(noRedirect).Pointer() {
+				t.Fatal("the services client has a redirect rule of its own")
+			}
+			got, ok := c.Transport.(*http.Transport)
+			if !ok {
+				t.Fatalf("transport %T", c.Transport)
+			}
+			if c.Timeout != want.Timeout ||
+				got.TLSHandshakeTimeout != wantT.TLSHandshakeTimeout ||
+				got.ResponseHeaderTimeout != wantT.ResponseHeaderTimeout {
+				t.Fatal("the services client's timeouts are not a lane client's")
+			}
+			route, err := torNostrClientFor(laneEveryday)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if route == c {
+				t.Fatalf("the services client is the route's own in %s mode", m)
 			}
 		})
 	}
