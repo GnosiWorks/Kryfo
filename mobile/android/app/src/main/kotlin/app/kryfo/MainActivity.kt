@@ -608,8 +608,7 @@ class MainActivity : FlutterFragmentActivity() {
         val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
             .joinToString("") { "%02x".format(it) }
         val dir = File(top, rnd)
-        val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
-        val dst = File(dir, if (safe.isBlank()) "file" else safe)
+        val dst = File(dir, Shred.leaf(name ?: src.name))
         return try {
             dir.mkdirs()
             src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }

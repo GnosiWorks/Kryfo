@@ -17,6 +17,13 @@ object Shred {
     const val SKEW_MS = 60 * 1000L
     val HANDED = listOf("open", "share", "share_plus")
 
+    // the name a handed copy is given: plain characters only, at most 80,
+    // and never one of dots alone, which names the folder or the one above
+    fun leaf(name: String): String {
+        val safe = name.replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+        return if (safe.all { it == '.' || it == ' ' }) "file" else safe
+    }
+
     fun isLink(f: File): Boolean = try {
         OsConstants.S_ISLNK(Os.lstat(f.path).st_mode)
     } catch (e: Exception) {
