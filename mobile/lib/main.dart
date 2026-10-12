@@ -17265,7 +17265,10 @@ class AppState extends ChangeNotifier {
   final Map<String, String> _xPubToHaloId = {};
 
   // the chat on screen's address asks first after a start or a wake
+  String _firstKey = '';
   void chatFirst(String? haloId) {
+    // the dev chat's lane is its own, and nothing of it goes before it starts
+    if (haloId != null && isDevId(haloId)) haloId = null;
     var key = '';
     if (haloId != null) {
       for (final e in _xPubToHaloId.entries) {
@@ -17275,6 +17278,8 @@ class AppState extends ChangeNotifier {
         }
       }
     }
+    if (key == _firstKey) return;
+    _firstKey = key;
     try {
       engine.nostrFirst(key);
     } catch (e) {
