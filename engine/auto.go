@@ -789,7 +789,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 				steps = spliceMoat(steps, i, extra)
 				gateExtend(p.id, passBudget(extra))
 				stSet(func() { autoSt.attempts = autoSt.attempt + attemptCount(steps[i+1:]) })
-			} else if consentNow() == "ask" && blocked {
+			} else if consentNow() == "ask" && blocked && !netValveOpen.Load() {
 				stSet(func() { autoSt.askConsent = true })
 			}
 			continue
@@ -810,7 +810,8 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			log.Printf("auto: %s gets through", s.Method)
 			return seenOK
 		case seenBlocked:
-			if s.Method == "direct" {
+			// with no network said to be there, nothing is learned of it
+			if s.Method == "direct" && !netValveOpen.Load() {
 				blocked = true
 				memBlocked(kind, dayOf(autoNow()))
 				stSet(func() { autoSt.blocked, autoSt.errCode = true, "blocked" })
@@ -821,14 +822,14 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		case seenLimited:
 			blocked = true
 			stSet(func() { autoSt.limited, autoSt.errCode = true, "limited" })
-			if consentNow() == "ask" {
+			if consentNow() == "ask" && !netValveOpen.Load() {
 				stSet(func() { autoSt.askConsent = true })
 			}
 		case passInterrupted:
 			return passInterrupted
 		}
 		// a bridge that did not get through here is not one to check in by
-		if v == seenFailed && s.Method != "direct" {
+		if v == seenFailed && s.Method != "direct" && !netValveOpen.Load() {
 			memForget(kind, s.Method)
 		}
 		// consent came while this pass was past the ask: ask now
@@ -1335,7 +1336,7 @@ func putCheckInStep() string {
 	// no network, or one android has not named yet: its kind is not known,
 	// and the detail that names it puts the step
 	n := currentNet()
-	if d, known := netDetailNow(); !n.On || (known && !d.On) {
+	if d, ok := netDetailTrusted(); !n.On || (ok && !d.On) {
 		return "ok"
 	}
 	kind, mem, today := n.Kind, memSnapshot(), dayOf(autoNow())

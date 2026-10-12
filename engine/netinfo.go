@@ -49,8 +49,16 @@ func setNetInfo(n netInfo) {
 	n.known = true
 	netInfoMu.Lock()
 	prev := netInfoNow
+	// the word a relay through tor proved wrong, said again: not taken
+	stale := netDisproved != nil && sameNet(n, *netDisproved)
+	if !stale {
+		netDisproved = nil
+	}
 	netInfoNow = n
 	netInfoMu.Unlock()
+	if stale {
+		return
+	}
 	was := setOffline(!n.On)
 	switch {
 	case was && n.On:
@@ -60,6 +68,8 @@ func setNetInfo(n netInfo) {
 			networkChanged()
 		}
 	case !was && !n.On:
+		// what proved the network that went proves nothing now
+		routeBump()
 		go netPark()
 	}
 	// a check-in puts the way of the network that is there now
@@ -80,6 +90,32 @@ func netDetailNow() (netInfo, bool) {
 	netInfoMu.Lock()
 	defer netInfoMu.Unlock()
 	return netInfoNow, netInfoNow.known
+}
+
+// what the watch said that a relay through tor then proved wrong. the
+// same word again is not taken, a new one is. netInfoMu
+var netDisproved *netInfo
+
+func sameNet(a, b netInfo) bool {
+	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.Kind == b.Kind
+}
+
+// android's word on the default network, and whether it is to be taken:
+// it has spoken, and not the word a relay through tor proved wrong
+func netDetailTrusted() (netInfo, bool) {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	n := netInfoNow
+	return n, n.known && (netDisproved == nil || !sameNet(n, *netDisproved))
+}
+
+// a relay got through while the watch says there is no network
+func netDisprove() {
+	netInfoMu.Lock()
+	defer netInfoMu.Unlock()
+	if n := netInfoNow; n.known && !n.On {
+		netDisproved = &n
+	}
 }
 
 func currentNet() netInfo {

@@ -33,13 +33,17 @@ func offlineRig(t *testing.T) *fakeControl {
 	netInfoMu.Lock()
 	saved := netInfoNow
 	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
+	netDisproved = nil
 	netInfoMu.Unlock()
+	connSaid.Store(connUnsaid)
 	t.Cleanup(func() {
 		// a worker still on its way out runs against the fake
 		time.Sleep(300 * time.Millisecond)
 		netInfoMu.Lock()
 		netInfoNow = saved
+		netDisproved = nil
 		netInfoMu.Unlock()
+		connSaid.Store(connUnsaid)
 		setOffline(false)
 		torParked.Store(false)
 	})

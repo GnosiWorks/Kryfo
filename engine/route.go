@@ -337,6 +337,15 @@ func setOffline(off bool) (was bool) {
 	return was
 }
 
+// what the plain call said last
+const (
+	connUnsaid int32 = iota
+	connOn
+	connOff
+)
+
+var connSaid atomic.Int32
+
 // tor stays off the network for want of one, unless the valve is trying it
 func netAway() bool { return netOffline.Load() && !netValveOpen.Load() }
 
@@ -344,7 +353,12 @@ func netAway() bool { return netOffline.Load() && !netValveOpen.Load() }
 func networkChangedTo(online bool) {
 	// android's watch on the default network has the say once it has
 	// spoken: this older call can say none while a network is there
-	if n, known := netDetailNow(); known {
+	if online {
+		connSaid.Store(connOn)
+	} else {
+		connSaid.Store(connOff)
+	}
+	if n, ok := netDetailTrusted(); ok {
 		online = n.On
 	}
 	was := setOffline(!online)
@@ -432,6 +446,11 @@ func netValveDue(now time.Time) bool {
 	if !netOffline.Load() || !torParked.Load() || netValveOpen.Load() || !modeNeedsTor() || torIsPaused() {
 		return false
 	}
+	// each try marks guards down: only when the two calls disagree, or
+	// android's watch never spoke. none by both is none
+	if _, ok := netDetailTrusted(); ok && connSaid.Load() != connOn {
+		return false
+	}
 	netGoneMu.Lock()
 	defer netGoneMu.Unlock()
 	if netGoneAt.IsZero() {
@@ -476,6 +495,7 @@ func valveTryTor() {
 	netValveOpen.Store(false)
 	if ok {
 		log.Println("halo: a relay got through, the network is there")
+		netDisprove()
 		setOffline(false)
 		kickRelays()
 		return

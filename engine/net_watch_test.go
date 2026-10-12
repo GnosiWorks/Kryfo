@@ -23,11 +23,15 @@ func keepNetDetail(t *testing.T) {
 	netInfoMu.Lock()
 	saved := netInfoNow
 	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
+	netDisproved = nil
 	netInfoMu.Unlock()
+	connSaid.Store(connUnsaid)
 	t.Cleanup(func() {
 		netInfoMu.Lock()
 		netInfoNow = saved
+		netDisproved = nil
 		netInfoMu.Unlock()
+		connSaid.Store(connUnsaid)
 		setOffline(false)
 	})
 }
@@ -472,6 +476,28 @@ func TestAParkedTorSaysNoInternet(t *testing.T) {
 	}
 }
 
+// a valve try: the network taken as there until a relay comes through
+func valveProves(t *testing.T, f *fakeControl) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() { netValveTry(); close(done) }()
+	if !waitUntil(3*time.Second, func() bool { return countSent(f.sent(), netOn) > 0 }) {
+		t.Fatalf("the valve did not put tor on: %v", f.sent())
+	}
+	for end := time.Now().Add(5 * time.Second); time.Now().Before(end); {
+		routeNoteOK()
+		select {
+		case <-done:
+			end = time.Now()
+		case <-time.After(20 * time.Millisecond):
+		}
+	}
+	<-done
+	if netOffline.Load() {
+		t.Fatal("a relay got through and still offline")
+	}
+}
+
 // automatic before any step, and no network: parked like any other mode,
 // so the valve can try it later
 func TestAutomaticWithNoWayInParksForTheValve(t *testing.T) {
@@ -492,6 +518,129 @@ func TestAutomaticWithNoWayInParksForTheValve(t *testing.T) {
 	}
 	if !netValveDue(time.Now().Add(2 * time.Minute)) {
 		t.Fatal("the valve never comes for automatic")
+	}
+}
+
+// the watch and the plain call both say none: no valve. the plain call
+// saying a network is there: the valve may try
+func TestTheValveOnlyWhenTheCallsDisagree(t *testing.T) {
+	f := offlineRig(t)
+	_ = f
+	keepNetDetail(t)
+	quietBounce(t)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	networkChangedTo(false)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if netValveDue(time.Now().Add(24 * time.Hour)) {
+		t.Fatal("the valve opened with none by both")
+	}
+	networkChangedTo(true)
+	if !netOffline.Load() {
+		t.Fatal("the plain call outranked the watch")
+	}
+	if !netValveDue(time.Now().Add(24 * time.Hour)) {
+		t.Fatal("no valve while the calls disagree")
+	}
+}
+
+// a valve proof stands against the same stale none, and falls to a new word
+func TestAValveProofOutlivesTheSameNone(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	oa := netValveAfter
+	netValveAfter = time.Minute
+	t.Cleanup(func() { netValveAfter = oa })
+	networkDetail(`{"on":false,"kind":"other"}`)
+	networkChangedTo(true)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	if !netValveDue(time.Now().Add(2 * time.Minute)) {
+		t.Fatal("the valve did not open")
+	}
+	valveProves(t, f)
+	networkDetail(`{"on":false,"kind":"other"}`)
+	networkChangedTo(true)
+	time.Sleep(100 * time.Millisecond)
+	if netOffline.Load() || torParked.Load() {
+		t.Fatalf("the same stale none undid the proof: offline %v parked %v", netOffline.Load(), torParked.Load())
+	}
+	if n := currentNet(); !n.On {
+		t.Fatalf("current %+v", n)
+	}
+	// a new word from the watch is taken
+	networkDetail(`{"on":false,"kind":"wifi"}`)
+	if !netOffline.Load() {
+		t.Fatal("a new none was not taken")
+	}
+}
+
+// a check-in around a valve proof puts a step for the network that is there
+func TestACheckInAfterAValveProofPutsAStep(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	keepNetDetail(t)
+	quietBounce(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
+	networkDetail(`{"on":false,"kind":"other"}`)
+	netDisprove()
+	setOffline(false)
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	checkIn(true)
+	t.Cleanup(func() { checkIn(false) })
+	if !autoDirectOK.Load() {
+		t.Fatalf("no step around the proof: direct %v bridges %v", autoDirectOK.Load(), bridgesEnabled())
+	}
+}
+
+// a network the watch says went: what proved the old route proves nothing
+func TestADetailNoneDropsTheProof(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	op := netPark
+	netPark = func() {}
+	t.Cleanup(func() { netPark = op })
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi"}`)
+	routeNoteOK()
+	networkDetail(`{"on":false,"kind":"other"}`)
+	if routeProven() {
+		t.Fatal("the old route still counts as proven")
+	}
+}
+
+// during a valve try with no real network, automatic learns nothing and
+// asks nothing
+func TestAValveTrialLearnsNothing(t *testing.T) {
+	f := useFakeAuto(t, netInfo{On: true, Validated: false, Kind: "wifi"})
+	netValveOpen.Store(true)
+	t.Cleanup(func() { netValveOpen.Store(false) })
+	today := dayOf(f.now)
+	memRemember("wifi", autoStep{Method: "obfs4", Source: "builtin"}, today)
+	f.script["direct"] = never
+	f.script["obfs4"] = never
+	f.script["snowflake"] = never
+	pass(t, modeOpts{Consent: "ask"})
+	m := memSnapshot()
+	if _, b := m.Blocked["wifi"]; b {
+		t.Fatalf("direct judged blocked with no network: %+v", m)
+	}
+	if m.Last["wifi"].Method != "obfs4" {
+		t.Fatalf("a bridge forgotten with no network: %+v", m)
+	}
+	if st := bridgeStatus(); st.AskConsent {
+		t.Fatalf("asked with no network: %+v", st)
+	}
+	f.applied = nil
+	f.script["direct"] = resetByCensor
+	pass(t, modeOpts{Consent: "ask"})
+	if _, b := memSnapshot().Blocked["wifi"]; b {
+		t.Fatal("direct remembered blocked with no network")
 	}
 }
 
