@@ -19183,6 +19183,9 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
+    // words a request, an introduction or a group gave, never checked, hold
+    // nothing once the chat is gone: a link or a first contact on another
+    // key takes them (NameHold.free)
     dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
