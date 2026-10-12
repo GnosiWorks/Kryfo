@@ -794,6 +794,11 @@ func reconnectNow() string {
 	// valve tries tor now
 	if netOffline.Load() && netDisputed() && modeNeedsTor() && !netValveOpen.Load() {
 		log.Println("halo: a reconnect by hand while the network is disputed")
+		// counted as a try, so a scheduled one waits its back-off after it
+		netGoneMu.Lock()
+		netValveN++
+		netValveLast = time.Now()
+		netGoneMu.Unlock()
 		go netValveTry()
 		return "ok"
 	}

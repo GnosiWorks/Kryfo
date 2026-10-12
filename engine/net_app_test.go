@@ -198,3 +198,31 @@ func TestFlapOrdersEndOnTheNetwork(t *testing.T) {
 		}
 	}
 }
+
+// fix connection opened a valve try: a scheduled one waits its back-off
+// after it, not the time since the network went
+func TestAValveByHandCountsAsATry(t *testing.T) {
+	offlineRig(t)
+	keepNetDetail(t)
+	oa, of := netValveAfter, netValveFor
+	netValveAfter, netValveFor = time.Minute, 300*time.Millisecond
+	t.Cleanup(func() { netValveAfter, netValveFor = oa, of })
+	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(true)
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	now := time.Now()
+	if r := reconnectNow(); r != "ok" {
+		t.Fatalf("reconnect by hand: %q", r)
+	}
+	if !waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() && torParked.Load() }) {
+		t.Fatal("the try did not end parked")
+	}
+	if netValveDue(now.Add(70 * time.Second)) {
+		t.Fatal("a scheduled try right after the one by hand")
+	}
+	if !netValveDue(now.Add(3 * time.Minute)) {
+		t.Fatal("no scheduled try after the back-off")
+	}
+}
