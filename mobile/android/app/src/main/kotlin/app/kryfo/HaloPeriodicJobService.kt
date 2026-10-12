@@ -72,6 +72,8 @@ class HaloPeriodicJobService : JobService() {
         retries: Int,
         up: Boolean
     ) {
+        // stopped while a retry waited: android has taken the job back
+        if (run.finished) return
         val finish = run.finish
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
@@ -88,7 +90,9 @@ class HaloPeriodicJobService : JobService() {
                     }
                     override fun notImplemented() {
                         if (retries > 0 && !run.finished) {
-                            main.postDelayed({ ask(engine, run, retries - 1, up) }, 2_000)
+                            val again = Runnable { ask(engine, run, retries - 1, up) }
+                            run.retry = again
+                            main.postDelayed(again, 2_000)
                             return
                         }
                         Log.i("halo-engine", "periodic job: dart not listening yet")
@@ -105,7 +109,10 @@ class HaloPeriodicJobService : JobService() {
 
     // only the run of the job android stopped
     override fun onStopJob(params: JobParameters?): Boolean {
-        runs.stop(params?.jobId ?: 0)?.let { main.removeCallbacks(it.finish) }
+        runs.stop(params?.jobId ?: 0)?.let { run ->
+            main.removeCallbacks(run.finish)
+            run.retry?.let { main.removeCallbacks(it) }
+        }
         return true
     }
 }

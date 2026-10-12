@@ -24,6 +24,10 @@ class SharedInTest {
         assertFalse(ToolsBridge.ours("10@com.android.providers.media", pkg))
         assertFalse(ToolsBridge.ours("media", pkg))
         assertFalse(ToolsBridge.ours("app.kryfo@com.example", pkg))
+        // a name that only starts like ours
+        assertFalse(ToolsBridge.ours("app.kryfother.open", pkg))
+        assertFalse(ToolsBridge.ours("0@app.kryfox", pkg))
+        assertTrue(ToolsBridge.ours("app.kryfo", pkg))
     }
 
     @Test

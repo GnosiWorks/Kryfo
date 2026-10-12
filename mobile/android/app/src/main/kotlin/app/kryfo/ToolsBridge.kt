@@ -71,8 +71,11 @@ class ToolsBridge(private val activity: Activity) {
 
         // one of our own providers, also with the user id a content uri may
         // carry before its authority ("0@app.kryfo.open")
-        fun ours(authority: String, pkg: String): Boolean =
-            authority.substringAfterLast('@').lowercase().startsWith(pkg.lowercase())
+        fun ours(authority: String, pkg: String): Boolean {
+            val host = authority.substringAfterLast('@').lowercase()
+            val own = pkg.lowercase()
+            return host == own || host.startsWith("$own.")
+        }
 
         // each text share takes a turn. a stream read that ends after a
         // newer share is let go
@@ -136,7 +139,6 @@ class ToolsBridge(private val activity: Activity) {
     // as a stream is read when it is small and really text; its name alone
     // is never taken
     private fun offerText(intent: Intent) {
-        val turn = textTurns.next()
         val (text, subject) = try {
             Pair(
                 intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(),
@@ -146,6 +148,7 @@ class ToolsBridge(private val activity: Activity) {
             return
         }
         if (!text.isNullOrBlank() || !subject.isNullOrBlank()) {
+            textTurns.next()
             keepText(text, subject)
             return
         }
@@ -160,6 +163,8 @@ class ToolsBridge(private val activity: Activity) {
             null
         }
         if (uri == null || !acceptable(uri)) return
+        // a refused or empty share took no turn; this one holds its place
+        val turn = textTurns.next()
         Thread {
             val read = readSmallText(uri) ?: return@Thread
             activity.runOnUiThread { if (textTurns.latest(turn)) keepText(read, null) }

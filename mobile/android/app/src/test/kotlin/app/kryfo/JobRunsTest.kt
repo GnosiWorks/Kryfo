@@ -59,4 +59,15 @@ class JobRunsTest {
         assertEquals(null, runs.stop(periodic))
         assertEquals(null, runs.stop(comeBack))
     }
+
+    @Test
+    fun aStopHandsBackTheRetryStillWaiting() {
+        val runs = JobRuns()
+        val a = runs.start(periodic) {}
+        val again = Runnable {}
+        a.retry = again
+        val stopped = runs.stop(periodic)
+        assertTrue(stopped?.retry === again)
+        assertTrue(stopped!!.finished)
+    }
 }

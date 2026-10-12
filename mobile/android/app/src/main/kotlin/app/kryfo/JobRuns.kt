@@ -15,6 +15,10 @@ class JobRuns {
         // the first call ends the run, any later one does nothing
         val finish = Runnable { if (done.compareAndSet(false, true)) end() }
 
+        // the ask waiting to be tried again, taken off the queue by a stop
+        @Volatile
+        var retry: Runnable? = null
+
         internal fun stop() = done.set(true)
     }
 
