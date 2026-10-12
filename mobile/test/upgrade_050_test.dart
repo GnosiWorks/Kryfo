@@ -42,9 +42,14 @@ const _hush = 'hush-pine-rill';
 const _gid = 'g0a1b2c3d4e5f60718293a4b5c6d7e8f9';
 const _rid = 'r0f1e2d3c4b5a69788796a5b4c3d2e1f0';
 
-final _keys =
+// the keys each file opens with, under the names the app keeps them by
+final _keyFile =
     (jsonDecode(File('$_fixtures/keys.json').readAsStringSync()) as Map)
         .cast<String, String>();
+final _keys = {
+  'halo.db.passphrase': _keyFile['everyday']!,
+  'halo.d.key': _keyFile['decoy']!,
+};
 final _settings =
     (jsonDecode(File('$_fixtures/settings.json').readAsStringSync()) as Map)
         .map(
@@ -55,7 +60,7 @@ final _settings =
 final _files = <String, HaloDb Function()>{
   'halo.db': HaloDb.new,
   'halo_d.db': () => HaloDb(HaloContainer.decoy),
-  'halo_v.db': () => HaloDb.withKey(HaloContainer.vault, _keys['vault']!),
+  'halo_v.db': () => HaloDb.withKey(HaloContainer.vault, _keyFile['vault']!),
 };
 
 class _Engine implements HaloEngine {
