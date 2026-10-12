@@ -1213,6 +1213,11 @@ func torResume() string {
 		netParked()
 		setStatus("starting")
 		return "ok"
+	case "error: tor is asleep":
+		// put back to sleep while this woke it: it stays asleep, and the
+		// app keeps it held
+		log.Println("halo: put back to sleep during the wake")
+		return why
 	default:
 		// a mode that came meanwhile puts its own way in place
 		log.Printf("halo: awake, off the network (%s)", why)
