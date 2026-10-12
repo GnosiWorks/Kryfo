@@ -6,13 +6,15 @@
 // waits with the rest. once the everyday side is back each goes once. the
 // database methods are the real ones over rows kept in maps; the wire and
 // signal are stand-ins
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/lock_state.dart' show PinResult;
+import 'package:kryfo/lock_state.dart' show LockStore, PinResult;
 import 'package:kryfo/main.dart'
     show
         AppState,
@@ -31,6 +33,36 @@ import 'arrival_fakes.dart';
 import 'mem_db.dart';
 
 const _bob = 'bob-who-writes';
+// someone a shut vault keeps
+const _vic = 'vic-kept-hidden';
+
+// the lock's storage: the mark of a decoy open and the pin table, with a
+// read of the mark that fails or does not answer
+class _Lock implements LockStore {
+  _Lock({bool table = true, bool? quiet}) {
+    if (table) kept['halo.lock.table'] = 't';
+    if (quiet != null) kept['halo.lock.state'] = jsonEncode({'q': quiet});
+  }
+  final kept = <String, String>{};
+  var fails = 0;
+  Completer<void>? hang;
+  @override
+  Future<String?> read(String key) async {
+    if (key == 'halo.lock.state') {
+      await hang?.future;
+      if (fails > 0) {
+        fails--;
+        throw StateError('no read');
+      }
+    }
+    return kept[key];
+  }
+
+  @override
+  Future<void> write(String key, String value) async => kept[key] = value;
+  @override
+  Future<void> delete(String key) async => kept.remove(key);
+}
 
 class _Rows extends HaloDb {
   _Rows(this.mem, [super.container]);
@@ -80,6 +112,8 @@ void main() {
   late _Rows decoy;
   late ArrivalIo io;
   late AppState app;
+  late ArrivalStore list;
+  late VaultRouter router;
 
   setUp(() async {
     docs = Directory.systemTemp.createTempSync('decoy_hold');
@@ -95,7 +129,8 @@ void main() {
     decoy = _Rows(MemDb(), HaloContainer.decoy);
     io = ArrivalIo();
     await _person(mem, _bob);
-    final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+    list = ArrivalStore();
+    router = VaultRouter(list, ArrivalSeal());
     await router.load();
     app = AppState(io: io, router: router)
       ..myId = 'me'
@@ -263,5 +298,230 @@ void main() {
       'receipt m1',
       'text t1',
     ]);
+  });
+
+  group('the mark a run starts with', () {
+    // a text waiting, so a hold and its end are seen on the wire
+    Future<void> waiting() => _out(mem, 't1', _bob);
+
+    Future<void> released() async {
+      await settle();
+      expect(app.everydayHeld, isFalse);
+      expect(went(), ['text t1']);
+    }
+
+    test('a decoy left open, with the lock on, holds until a pin', () async {
+      await waiting();
+      await app.readDecoyMark(store: _Lock(quiet: true));
+      expect(app.everydayHeld, isTrue);
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      app.revealGap = Duration.zero;
+      await app.sessionFor(PinResult.normal);
+      await released();
+    });
+
+    test('none left open holds nothing', () async {
+      await app.readDecoyMark(store: _Lock(quiet: false));
+      expect(app.everydayHeld, isFalse);
+    });
+
+    test('a read that fails with the lock off holds nothing', () async {
+      final lock = _Lock(table: false)..fails = 1000;
+      await app.readDecoyMark(store: lock, retry: Duration.zero);
+      expect(app.everydayHeld, isFalse);
+    });
+
+    test('a read that hangs with the lock off holds nothing', () async {
+      final lock = _Lock(table: false)..hang = Completer();
+      await app.readDecoyMark(
+        store: lock,
+        wait: const Duration(milliseconds: 20),
+      );
+      expect(app.everydayHeld, isFalse);
+    });
+
+    test('a read that fails with the lock on holds, is tried again, and its '
+        'answer lets go', () async {
+      await waiting();
+      final lock = _Lock(quiet: false)..fails = 3;
+      await app.readDecoyMark(
+        store: lock,
+        wait: const Duration(milliseconds: 20),
+        retry: const Duration(milliseconds: 30),
+      );
+      expect(app.everydayHeld, isTrue);
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await released();
+    });
+
+    test('a read that hangs with the lock on holds, and the late answer '
+        'lets go', () async {
+      await waiting();
+      final lock = _Lock(quiet: false)..hang = Completer();
+      await app.readDecoyMark(
+        store: lock,
+        wait: const Duration(milliseconds: 20),
+      );
+      expect(app.everydayHeld, isTrue);
+      lock.hang!.complete();
+      await released();
+    });
+
+    test('a late answer that a decoy is open keeps the hold', () async {
+      await waiting();
+      final lock = _Lock(quiet: true)..hang = Completer();
+      await app.readDecoyMark(
+        store: lock,
+        wait: const Duration(milliseconds: 20),
+      );
+      lock.hang!.complete();
+      await settle();
+      expect(app.everydayHeld, isTrue);
+      expect(io.sent, isEmpty);
+    });
+  });
+
+  test('killed while held: the next run holds what waits until a pin, '
+      'then each goes once', () async {
+    await _out(mem, 't1', _bob);
+    app.quietMarkedForTest = true;
+    await app.receiptForTest(_bob, 'm1');
+    await settle();
+    expect(io.sent, isEmpty);
+    // the process goes; a new one starts over the same database
+    final next = AppState(io: io, router: router)
+      ..myId = 'me'
+      ..sendModeForTest = 'fast'
+      ..revealGap = Duration.zero;
+    await next.readDecoyMark(store: _Lock(quiet: true));
+    await next.drainOutbox();
+    await settle();
+    expect(io.sent, isEmpty);
+    await next.sessionFor(PinResult.normal);
+    await settle();
+    await next.drainOutbox();
+    await settle();
+    expect(went(), ['receipt m1', 'text t1']);
+  });
+
+  group('owed in memory', () {
+    Future<void> hidden() async {
+      await list.putHidden(
+        _vic,
+        'peer',
+        jsonEncode({'h': _vic, 'o': '', 'x': 'x-$_vic', 'bp': 1, 'vk': ''}),
+        1,
+      );
+      await router.load();
+    }
+
+    test('a receipt to a shut vault\'s person goes once the decoy is left, '
+        'and waits while the link is down', () async {
+      await hidden();
+      useDatabasesForTest(db, Session(decoy));
+      await app.receiptForTest(_vic, 'h1');
+      await settle();
+      expect(io.sent, isEmpty);
+      expect(app.receiptsOwedForTest, 1);
+
+      useDatabasesForTest(db, Session(db));
+      app.noteOnline(false);
+      await app.drainOutbox();
+      await app.replayForTest();
+      await settle();
+      expect(io.sent, isEmpty);
+      expect(app.receiptsOwedForTest, 1);
+
+      // a send that does not get through keeps it
+      app.noteOnline(true);
+      io.down = true;
+      await app.replayForTest();
+      await settle();
+      expect(app.receiptsOwedForTest, 1);
+
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(io.ticksFor('h1'), hasLength(1));
+      expect(app.receiptsOwedForTest, 0);
+      await app.replayForTest();
+      await settle();
+      expect(io.ticksFor('h1'), hasLength(1));
+    });
+
+    test('a card owed goes once the decoy is left, kept until it went, and '
+        'waits while the link is down', () async {
+      app.myBundleForTest = () async => 'card';
+      useDatabasesForTest(db, Session(decoy));
+      expect(await app.bundleCtlForTest(_bob, want: true), isFalse);
+      expect(app.ctlOwedForTest, isTrue);
+      expect(io.sent, isEmpty);
+
+      useDatabasesForTest(db, Session(db));
+      app.noteOnline(false);
+      await app.replayForTest();
+      await settle();
+      expect(io.sent, isEmpty);
+      expect(app.ctlOwedForTest, isTrue);
+
+      app.noteOnline(true);
+      io.down = true;
+      await app.replayForTest();
+      await settle();
+      expect(app.ctlOwedForTest, isTrue);
+
+      io.down = false;
+      // a minute past the try that did not go
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      app.bundleGapForTest = Duration.zero;
+      await app.replayForTest();
+      await settle();
+      final asks = [
+        for (final (_, c) in io.sent)
+          if (c.contains('"halo_ctl":"bundle"')) c,
+      ];
+      expect(asks, hasLength(1));
+      expect(asks.single, contains('"want":true'));
+      expect(app.ctlOwedForTest, isFalse);
+    });
+  });
+
+  test('a group pin a hold refuses waits in the lane and goes once', () async {
+    await mem.insert('groups', {
+      'group_id': 'g1',
+      'name': 'G',
+      'created_at': 1,
+      'is_admin': 1,
+    });
+    await mem.insert('group_members', {
+      'group_id': 'g1',
+      'halo_id': _bob,
+      'joined_at': 1,
+    });
+    await mem.insert('group_members', {
+      'group_id': 'g1',
+      'halo_id': 'me',
+      'joined_at': 0,
+    });
+    app.quietMarkedForTest = true;
+    await app.pinInGroup('g1', 'gm1', true);
+    await settle();
+    expect(io.sent, isEmpty);
+    expect(mem.rows('group_ctl_out'), hasLength(1));
+
+    app.revealGap = Duration.zero;
+    await app.sessionFor(PinResult.normal);
+    await settle();
+    final pins = [
+      for (final m in wire())
+        if (m.pin != null) m.pin!.targetUid,
+    ];
+    expect(pins, ['gm1']);
+    expect(mem.rows('group_ctl_out'), isEmpty);
   });
 }

@@ -1535,4 +1535,30 @@ void main() {
       expect(screen, contains('groupOwedTick.removeListener(_reachMoved);'));
     });
   });
+
+  test('a hold uses no try of what is owed', () async {
+    final store = _AllDue([
+      GroupOwed(
+        msgUid: 'f1',
+        groupId: 'g1',
+        member: 'carol',
+        have: const {0},
+        total: 3,
+        since: 0,
+        tries: 0,
+      ),
+    ]);
+    var sent = 0;
+    await resendGroupOwed(
+      store,
+      now: 1,
+      send: (uid, group, have, total) async {
+        sent++;
+        return 'ok';
+      },
+      hold: () => true,
+    );
+    expect(store.tried, isEmpty);
+    expect(sent, 0);
+  });
 }

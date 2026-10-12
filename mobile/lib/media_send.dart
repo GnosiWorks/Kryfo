@@ -223,6 +223,8 @@ Future<String> _sendChunkedMediaInner({
   var onionDead = false;
   String? failure;
   var parked = false;
+  // parked by a decoy opening, not by a route
+  var held = false;
   var blocked = false;
   var next = 0;
 
@@ -253,6 +255,7 @@ Future<String> _sendChunkedMediaInner({
       // a decoy opened part way: the rest waits with the row
       if (appState.everydayHeld) {
         parked = true;
+        held = true;
         return;
       }
       // blocked part way, here: the rest is not sent, and waits for a tap.
@@ -410,6 +413,9 @@ Future<String> _sendChunkedMediaInner({
     for (var w = 0; w < math.min(parallel, total); w++) worker(),
   ]);
   if (blocked) return kSendBlocked;
+  // what landed before a hold is kept however long it lasts: unstamped,
+  // the next send resumes from it
+  if (held && only == null) chunkDoneAt.remove(msgUid);
   if (parked) return 'parked';
   if (failure != null) return failure!;
   if (only == null) {

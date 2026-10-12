@@ -1504,7 +1504,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet) return;
+    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+      return;
+    }
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
