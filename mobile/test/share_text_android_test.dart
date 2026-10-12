@@ -41,7 +41,7 @@ void main() {
     // no label or icon of its own: the share sheet shows the app's
     expect(text, isNot(contains('android:label')));
     expect(text, isNot(contains('android:icon')));
-    expect(manifest, contains('android:label="Kryfo"'));
+    expect(manifest, contains(r'android:label="${appLabel}"'));
   });
 
   test('text is taken before the photo and video path, which reads as it '
