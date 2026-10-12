@@ -530,6 +530,18 @@ class HaloEngine {
     }
   }
 
+  // what connectivity sees, on every event: with the watch's word the
+  // engine tells a dispute from an outage. looked up on first use
+  late final CounterFnDart _connectivitySeen = _lib
+      .lookupFunction<CounterFn, CounterFnDart>('HaloConnectivitySeen');
+  void connectivitySeen(bool on) {
+    try {
+      _take(_connectivitySeen(on ? 1 : 0));
+    } catch (_) {
+      // an older engine without the call
+    }
+  }
+
   // android's word on the default network as json (validated, captive
   // portal, vpn, type), for automatic bridges. looked up on first use
   late final OneArgFnDart _networkDetail = _lib
@@ -19294,7 +19306,9 @@ class AppState extends ChangeNotifier {
     var lastKinds = '';
     try {
       final init = await Connectivity().checkConnectivity();
-      _online = init.any((r) => r != ConnectivityResult.none);
+      _connSeen = init.any((r) => r != ConnectivityResult.none);
+      _online = _netWatchOn ?? _connSeen;
+      engine.connectivitySeen(_connSeen);
       lastKinds = (init.map((r) => r.name).toList()..sort()).join(',');
       notifyListeners();
     } catch (e) {
@@ -19361,24 +19375,25 @@ class AppState extends ChangeNotifier {
   void connectivityEvent(List<ConnectivityResult> results) {
     final seen = results.any((r) => r != ConnectivityResult.none);
     final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
-    final on = _netWatchOn ?? seen;
-    // none while the watch says a network is there: not taken. the next
-    // kinds are a change, so the network seen again is bounced
-    if (!seen && on) {
-      _lastKinds = kinds;
-      return;
-    }
+    // connectivity's own word goes to the engine, which weighs it against
+    // the watch's: a word the watch outranks is a dispute, not a change
+    engine.connectivitySeen(seen);
     final flip = networkFlip(
-      wasOnline: _online,
+      wasOnline: _connSeen,
       lastKinds: _lastKinds,
-      on: on,
+      on: seen,
       kinds: kinds,
     );
+    _connSeen = seen;
     _lastKinds = kinds;
     if (flip == true) networkMoved();
     if (flip == false) engine.networkChanged(online: false);
-    noteOnline(on);
+    // online goes by the watch once it has spoken, as the engine does
+    noteOnline(_netWatchOn ?? seen);
   }
+
+  // what connectivity last said, apart from what the app goes by
+  bool _connSeen = true;
 
   // tor's connections belong to the network that went
   @visibleForTesting

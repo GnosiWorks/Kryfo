@@ -116,6 +116,8 @@ class _Engine implements HaloEngine {
   @override
   void networkDetail(String json) => log.add('detail');
   @override
+  void connectivitySeen(bool on) => log.add('seen:$on');
+  @override
   Future<String> reconnectNow() async {
     log.add('now');
     return 'ok';
@@ -1097,16 +1099,31 @@ void main() {
       app.connectivityEvent([wifi]);
       app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
       log.clear();
+      // the engine hears connectivity's own word and weighs it itself
       app.connectivityEvent([none]);
-      expect(net(), isEmpty);
+      expect(log, contains('seen:false'));
+      expect(net(), ['offline']);
       expect(app.online, isTrue);
       // seen again, the network is bounced
       app.connectivityEvent([wifi]);
-      expect(net(), ['network']);
+      expect(net(), ['offline', 'network']);
       // the watch says none: offline whatever connectivity says
       app.netDetailEvent('{"on":false,"kind":"other"}');
       expect(app.online, isFalse);
       app.connectivityEvent([mobile]);
+      expect(app.online, isFalse);
+    });
+
+    test('connectivity seeing a network reaches the engine as it is', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      app.connectivityEvent([none]);
+      log.clear();
+      // the watch wrongly says none, connectivity sees wifi: the engine
+      // hears online, so it can tell the dispute
+      app.connectivityEvent([wifi]);
+      expect(log, contains('seen:true'));
+      expect(net(), ['network']);
       expect(app.online, isFalse);
     });
 
