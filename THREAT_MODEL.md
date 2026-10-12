@@ -26,7 +26,7 @@ put you in danger, read all of it.
 - someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
   just installed. while it is open your own account sends nothing, not even
   delivery ticks. what arrives for it is still kept, unseen, and what waits
-  goes once your own PIN or fingerprint opens Kryfo again. ticks for hidden
+  goes once your own PIN opens Kryfo again. ticks for hidden
   chats may wait until the hidden chats are opened. hidden chats open only
   with their own pin and show no trace in the everyday app: no row, no
   count, no notification while they are shut. a wipe pin removes Kryfo
