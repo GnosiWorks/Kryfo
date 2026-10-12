@@ -23,6 +23,7 @@ import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show ImageCaptionScreen, VoiceBubble;
 import '../widgets/voice_mic.dart';
+import '../widgets/owned_text.dart';
 import '../voice_mask.dart' show maskWavOff;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
@@ -151,6 +152,116 @@ bool landInOpenChat(String id, String words) {
     }
   }
   return false;
+}
+
+/// a deleted chat's unsent words go with it, from an open composer too
+void dropChatDraft(String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted) s._msgCtrl.clear();
+  }
+  draftPerPeer.remove(session.chatKey(id));
+}
+
+/// the note on a contact. [save] runs before the sheet goes; true when it
+/// did
+@visibleForTesting
+Future<bool> showNoteSheet(
+  BuildContext context, {
+  required String initial,
+  required Future<void> Function(String note) save,
+}) async {
+  final r = await showHaloSheet<bool>(
+    context,
+    scroll: true,
+    builder: (_) => OwnedText(
+      initial: initial,
+      builder: (ctx, ctrl) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 18,
+          // the keyboard, or the navigation bar when it is down
+          bottom:
+              math.max(
+                MediaQuery.paddingOf(ctx).bottom,
+                MediaQuery.viewInsetsOf(ctx).bottom,
+              ) +
+              22,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SheetHandle(),
+            Text(
+              l10n.chatNoteOnThisContact,
+              style: HaloType.serif(size: 18, color: HaloColors.text),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.chatJustForYouNever,
+              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 4,
+              cursorColor: HaloColors.amber,
+              style: HaloType.serif(
+                size: 16,
+                italic: true,
+                color: HaloColors.text,
+              ),
+              decoration: InputDecoration(
+                hintText: l10n.chatAQuietReminder,
+                hintStyle: HaloType.serif(
+                  size: 16,
+                  italic: true,
+                  color: HaloColors.text3,
+                ),
+                border: InputBorder.none,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: GestureDetector(
+                onTap: () async {
+                  await save(ctrl.text.trim());
+                  // a second tap while it saved must not close the chat
+                  if (!ctx.mounted) return;
+                  if (ModalRoute.of(ctx)?.isCurrent ?? false) {
+                    Navigator.pop(ctx, true);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    l10n.commonSave,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.amber,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  return r == true;
 }
 
 // newest message ms seen when the chat was last left, keyed by
@@ -4522,94 +4633,13 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _editNote() async {
     final contact = await session.getContact(widget.peerHaloId);
     final current = (contact?['note'] as String?) ?? '';
-    final ctrl = TextEditingController(text: current);
     if (!mounted) return;
-    await showHaloSheet<void>(
+    final saved = await showNoteSheet(
       context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 18,
-          // the keyboard, or the navigation bar when it is down
-          bottom:
-              math.max(
-                MediaQuery.paddingOf(ctx).bottom,
-                MediaQuery.viewInsetsOf(ctx).bottom,
-              ) +
-              22,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Text(
-              l10n.chatNoteOnThisContact,
-              style: HaloType.serif(size: 18, color: HaloColors.text),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.chatJustForYouNever,
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              minLines: 1,
-              maxLines: 4,
-              cursorColor: HaloColors.amber,
-              style: HaloType.serif(
-                size: 16,
-                italic: true,
-                color: HaloColors.text,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.chatAQuietReminder,
-                hintStyle: HaloType.serif(
-                  size: 16,
-                  italic: true,
-                  color: HaloColors.text3,
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: GestureDetector(
-                onTap: () async {
-                  await session.setNote(widget.peerHaloId, ctrl.text.trim());
-                  if (!ctx.mounted) return;
-                  Navigator.pop(ctx);
-                  if (mounted) showHaloToast(context, l10n.chatNoteSaved);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.amber.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    l10n.commonSave,
-                    style: HaloType.sans(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      initial: current,
+      save: (t) => session.setNote(widget.peerHaloId, t),
     );
+    if (saved && mounted) showHaloToast(context, l10n.chatNoteSaved);
   }
 
   // the sheet previews live: each swatch changes the room behind it, and
