@@ -12111,7 +12111,7 @@ class AppState extends ChangeNotifier {
     // stranger who back-paired, a card filed in the vault, a chat deleted
     // while its runner lives on. once each, and no block grown old
     await unlistenOldBlocks();
-    final done = await _listenKnown();
+    final done = (await _listenKnown()).keys;
     for (final e in _xPubToHaloId.entries.toList()) {
       if (done.contains(e.key) || isDevId(e.value) || devIdClaim(e.key)) {
         continue;
@@ -17464,8 +17464,20 @@ class AppState extends ChangeNotifier {
   Duration noFrameWait = const Duration(seconds: 2);
   @visibleForTesting
   Future<void> get listenedAtStart => _listened.future;
-
+  // a start that missed someone tries them again once, this much later
   @visibleForTesting
+  Duration listenRetryGap = const Duration(seconds: 30);
+  // how long the contacts wait for signal, whose store holds the keys of
+  // those paired by bundle
+  @visibleForTesting
+  Duration signalWait = const Duration(seconds: 20);
+  @visibleForTesting
+  set bootingForTest(bool b) => _booting = b;
+  @visibleForTesting
+  void signalReadyForTest() {
+    if (!_signalReady.isCompleted) _signalReady.complete();
+  }
+
   void listenAtStart() {
     if (_listenArmed) return;
     _listenArmed = true;
@@ -17483,7 +17495,8 @@ class AppState extends ChangeNotifier {
   // a job's kick asks the relays for what they hold on the keys listened
   // on, so those are all in first
   Future<void> _listenedFirst() async {
-    if (!_listenArmed) return;
+    // a boot still under way arms it soon: the job can knock before that
+    if (!_listenArmed && !_booting) return;
     await _listened.future.timeout(
       const Duration(seconds: 30),
       onTimeout: () => dlog('listen: not done before the kick'),
@@ -17506,13 +17519,38 @@ class AppState extends ChangeNotifier {
     }
     unawaited(sweepCaptures());
     await markHeldAtStart();
+    await _signalReady.future.timeout(
+      signalWait,
+      onTimeout: () => dlog('listen: signal not ready, contacts go on'),
+    );
+    var heard = <String>{};
+    var short = true;
     try {
-      await subscribeKnown();
+      final r = await _listenKnown(cache: true);
+      heard = r.keys;
+      short = r.short;
     } catch (e) {
       dlog('contacts: boot subscribe failed: $e');
     }
+    if (short) _listenAgainLater(heard);
     // openers kept from before this start
     unawaited(retryFirsts(all: true));
+  }
+
+  // once, for whoever the start missed. still short after that, the next
+  // mode switch listens to everyone again
+  void _listenAgainLater(Set<String> heard) {
+    Timer(listenRetryGap, () async {
+      if (haloWiping) return;
+      try {
+        final r = await _listenKnown(cache: true, skip: heard);
+        if (r.short) _resubscribeDue = true;
+        dlog('contacts: listened again${r.short ? ', still short' : ''}');
+      } catch (e) {
+        _resubscribeDue = true;
+        dlog('contacts: listen again failed: $e');
+      }
+    });
   }
 
   // listen for everyone who can write: accepted contacts, people a friend
@@ -17523,8 +17561,12 @@ class AppState extends ChangeNotifier {
     await _listenKnown(cache: true);
   }
 
-  // the keys it listened on
-  Future<Set<String>> _listenKnown({bool cache = false}) async {
+  // the keys it listened on, and whether anyone was missed. [skip]: keys
+  // already listened on, their runners left as they are
+  Future<({Set<String> keys, bool short})> _listenKnown({
+    bool cache = false,
+    Set<String> skip = const {},
+  }) async {
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
@@ -17547,38 +17589,65 @@ class AppState extends ChangeNotifier {
       ],
     );
     final fresh = <String, String>{};
+    var short = false;
+    // each on its own: one that throws leaves the rest listened on
     for (final r in rows) {
       final haloId = r['halo_id'] as String?;
       if (haloId == null) continue;
-      var xPub = r['xpub'] as String?;
-      // v2 bundle pairing stores an empty xpub on the row: the key only
-      // lands in the signal store, which processPeerBundle fills at pair
-      // time. v1 stores it on the row and has no session yet. take
-      // whichever exists, then backfill the row so the next boot is cheap.
-      if (xPub == null || xPub.isEmpty) {
-        xPub = await signalSession.peerXPubHex(haloId);
-        if (xPub != null && xPub.isNotEmpty) {
-          await live.setContactXPub(haloId, xPub);
+      try {
+        var xPub = r['xpub'] as String?;
+        // v2 bundle pairing stores an empty xpub on the row: the key only
+        // lands in the signal store, which processPeerBundle fills at pair
+        // time. v1 stores it on the row and has no session yet. take
+        // whichever exists, then backfill the row so the next boot is cheap.
+        if (xPub == null || xPub.isEmpty) {
+          // with no signal yet the store says nothing: tried again later
+          if (!signalSession.ready) short = true;
+          xPub = await signalSession.peerXPubHex(haloId);
+          if (xPub != null && xPub.isNotEmpty) {
+            try {
+              await live.setContactXPub(haloId, xPub);
+            } catch (e) {
+              // a saving only: the key is listened on all the same
+              dlog('listen: key not kept on the row (${e.runtimeType})');
+            }
+          }
         }
+        if (xPub == null || xPub.isEmpty) continue;
+        // a key someone else is heard on stays theirs
+        if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
+        _xPubToHaloId[xPub] = haloId;
+        if (!skip.contains(xPub)) _io.listen(xPub);
+        fresh[xPub] = haloId;
+      } catch (e) {
+        short = true;
+        dlog('listen: one not listened for (${e.runtimeType})');
       }
-      if (xPub == null || xPub.isEmpty) continue;
-      // a key someone else is heard on stays theirs
-      if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
-      _xPubToHaloId[xPub] = haloId;
-      _io.listen(xPub);
-      fresh[xPub] = haloId;
     }
     final hidden = {
       for (final e in _router.listenFor.entries)
         if (!_router.blocks(e.value) || !_heardAsOther(e.key, e.value))
           e.key: e.value,
     };
-    for (final e in hidden.entries) {
-      _xPubToHaloId[e.key] = e.value;
-      _io.listen(e.key);
+    final heard = <String>{};
+    for (final h in hidden.entries) {
+      try {
+        _xPubToHaloId[h.key] = h.value;
+        if (!skip.contains(h.key)) _io.listen(h.key);
+        heard.add(h.key);
+      } catch (e) {
+        short = true;
+        dlog('listen: a hidden one not listened for (${e.runtimeType})');
+      }
     }
-    if (cache) await _saveXPubCache(fresh);
-    return {...fresh.keys, ...hidden.keys};
+    if (cache) {
+      try {
+        await _saveXPubCache(fresh);
+      } catch (e) {
+        dlog('listen: cache not saved (${e.runtimeType})');
+      }
+    }
+    return (keys: {...fresh.keys, ...heard}, short: short);
   }
 
   bool _heardAsOther(String xPub, String haloId) {
