@@ -1771,6 +1771,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatCompareLater => 'Später';
 
   @override
+  String get chatCompareFolded => 'Sicherheitsnummer noch nicht verglichen';
+
+  @override
+  String get chatCompareNow => 'Vergleichen';
+
+  @override
+  String get chatCompareDismiss => 'Ausblenden';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Du hast $peerName schon verifiziert. Nichts wird gesendet, bis du die neue Nummer prüfst oder den neuen Schlüssel annimmst. Nachrichten von $peerName kommen weiter an.';
   }

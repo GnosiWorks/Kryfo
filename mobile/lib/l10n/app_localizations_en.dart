@@ -1756,6 +1756,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCompareLater => 'Later';
 
   @override
+  String get chatCompareFolded => 'Safety number not compared yet';
+
+  @override
+  String get chatCompareNow => 'Compare';
+
+  @override
+  String get chatCompareDismiss => 'Dismiss';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'You verified $peerName before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.';
   }

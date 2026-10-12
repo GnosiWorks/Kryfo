@@ -1749,6 +1749,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCompareLater => 'Nanti';
 
   @override
+  String get chatCompareFolded => 'Nomor keamanan belum dibandingkan';
+
+  @override
+  String get chatCompareNow => 'Bandingkan';
+
+  @override
+  String get chatCompareDismiss => 'Sembunyikan';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Kamu sudah memverifikasi $peerName sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomor yang baru atau menerima kunci yang baru. Pesan darinya tetap masuk.';
   }

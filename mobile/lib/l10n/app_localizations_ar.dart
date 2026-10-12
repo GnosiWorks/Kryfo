@@ -1809,6 +1809,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCompareLater => 'لاحقًا';
 
   @override
+  String get chatCompareFolded => 'لم يُقارَن رقم الأمان بعد';
+
+  @override
+  String get chatCompareNow => 'قارن';
+
+  @override
+  String get chatCompareDismiss => 'إخفاء';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'سبق أن تحققت من ⁨$peerName⁩. لن يُرسل شيء حتى تتحقق من الرقم الجديد أو تقبل المفتاح الجديد. رسائله ما زالت تصل.';
   }

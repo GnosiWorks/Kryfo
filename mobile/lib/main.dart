@@ -7755,10 +7755,12 @@ Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
 
 /// a name's flags (contacts.name_check). ask: their chat asks for the
 /// safety number. says: the name came with a request, an introduction or
-/// a group, and shows as not checked. a verified key outranks both, and an
-/// add from a qr read with the camera clears them
+/// a group, and shows as not checked. later: the ask is put off, a quiet
+/// line in place of the card. a verified key outranks them all, and an add
+/// from a qr read with the camera clears them
 const kNameAsk = 1;
 const kNameSays = 2;
+const kNameLater = 4;
 
 // the upgrade to 77. a request or a card from a group or an introduction
 // still waiting is a name nobody checked

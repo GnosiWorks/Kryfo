@@ -1764,6 +1764,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCompareLater => 'بعداً';
 
   @override
+  String get chatCompareFolded => 'شماره‌ی امنیتی هنوز مقایسه نشده';
+
+  @override
+  String get chatCompareNow => 'مقایسه';
+
+  @override
+  String get chatCompareDismiss => 'پنهان کردن';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'شما پیش‌تر ⁨$peerName⁩ را تأیید کرده بودید. تا وقتی شماره‌ی تازه را بررسی نکنید یا کلید تازه را نپذیرید، چیزی فرستاده نمی‌شود. پیام‌های او همچنان می‌رسد.';
   }

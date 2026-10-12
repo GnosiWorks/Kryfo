@@ -1771,6 +1771,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatCompareLater => 'Più tardi';
 
   @override
+  String get chatCompareFolded => 'Numero di sicurezza non ancora confrontato';
+
+  @override
+  String get chatCompareNow => 'Confronta';
+
+  @override
+  String get chatCompareDismiss => 'Nascondi';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Avevi già verificato $peerName. Non parte niente finché non controlli il nuovo numero o accetti la nuova chiave. I suoi messaggi continuano ad arrivare.';
   }

@@ -1763,6 +1763,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCompareLater => 'Sonra';
 
   @override
+  String get chatCompareFolded => 'Güvenlik numarası henüz karşılaştırılmadı';
+
+  @override
+  String get chatCompareNow => 'Karşılaştır';
+
+  @override
+  String get chatCompareDismiss => 'Gizle';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return '$peerName kişisini daha önce doğruladın. Yeni numarayı kontrol edene ya da yeni anahtarı kabul edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.';
   }

@@ -67,6 +67,7 @@ import '../main.dart'
     show
         engine,
         kNameAsk,
+        kNameLater,
         kNotSent,
         nameAsks,
         nameCheckOf,
@@ -924,6 +925,8 @@ class _ChatScreenState extends State<ChatScreen>
   // the chat asks for the safety number: added by a code or a link, or
   // taken in from a request, and not verified
   bool _nameAsks = false;
+  // the ask put off for later: a quiet line in place of the card
+  bool _nameFolded = false;
   int _nameFlags = 0;
 
   // what this chat shows about their key, read again whenever a key changes
@@ -946,17 +949,20 @@ class _ChatScreenState extends State<ChatScreen>
           nameAsks(row) && await session.heldKey(widget.peerHaloId) != null;
       if (!mounted) return;
       _nameFlags = nameCheckOf(row);
+      final folded = (_nameFlags & kNameLater) != 0;
       if (changed != _keyChanged ||
           verified != _verified ||
           held != _keyHeld ||
           unchecked != _nameUnchecked ||
-          asks != _nameAsks) {
+          asks != _nameAsks ||
+          folded != _nameFolded) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
           _nameUnchecked = unchecked;
           _nameAsks = asks;
+          _nameFolded = folded;
         });
       }
     } catch (e) {
@@ -982,10 +988,24 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() => _keyChanged = false);
   }
 
-  // the compare card put away for this chat. the words stay not checked
+  // the compare card folds into a quiet line, kept until checked or closed
   Future<void> _compareLater() async {
-    setState(() => _nameAsks = false);
-    await session.setNameCheck(widget.peerHaloId, _nameFlags & ~kNameAsk);
+    setState(() => _nameFolded = true);
+    await session.setNameCheck(widget.peerHaloId, _nameFlags | kNameLater);
+    await _readKeyState();
+  }
+
+  // the line closed: nothing asks in this chat again. the words stay not
+  // checked
+  Future<void> _compareDismiss() async {
+    setState(() {
+      _nameAsks = false;
+      _nameFolded = false;
+    });
+    await session.setNameCheck(
+      widget.peerHaloId,
+      _nameFlags & ~(kNameAsk | kNameLater),
+    );
     await _readKeyState();
   }
 
@@ -5147,11 +5167,13 @@ class _ChatScreenState extends State<ChatScreen>
                               !_keyHeld &&
                               !_isDev &&
                               !widget.support
-                          ? _CompareCard(
+                          ? _CompareSlot(
                               key: const ValueKey('compare'),
+                              folded: _nameFolded,
                               peerName: _nickname ?? widget.peerHaloId,
                               onVerify: _openKeyVerification,
                               onLater: _compareLater,
+                              onDismiss: _compareDismiss,
                             )
                           : const SizedBox(
                               key: ValueKey('compare-none'),
@@ -8144,9 +8166,143 @@ PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.normal
     : PrivacyMode.private;
 
+// the compare card, or once put off the quiet line in its place. one
+// grows or shrinks into the other while it fades, at once when the phone
+// asks for no movement
+class _CompareSlot extends StatelessWidget {
+  final bool folded;
+  final String peerName;
+  final VoidCallback onVerify;
+  final VoidCallback onLater;
+  final VoidCallback onDismiss;
+  const _CompareSlot({
+    super.key,
+    required this.folded,
+    required this.peerName,
+    required this.onVerify,
+    required this.onLater,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = folded
+        ? _CompareRow(
+            key: const ValueKey('compare-row'),
+            onVerify: onVerify,
+            onDismiss: onDismiss,
+          )
+        : _CompareCard(
+            key: const ValueKey('compare-card'),
+            peerName: peerName,
+            onVerify: onVerify,
+            onLater: onLater,
+          );
+    // an animated size cannot take a zero time: with no movement the swap
+    // is plain
+    if (motionStill(context)) return shown;
+    const time = Duration(milliseconds: 280);
+    return AnimatedSize(
+      duration: time,
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: time,
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        // the one going lies under the one coming and holds no height of
+        // its own, so the size moves in one go
+        layoutBuilder: (current, previous) => Stack(
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
+          children: [
+            for (final p in previous)
+              Positioned(top: 0, left: 0, right: 0, child: p),
+            if (current != null) current,
+          ],
+        ),
+        child: shown,
+      ),
+    );
+  }
+}
+
+// the compare card put off: one slim line where it was. compare opens the
+// number, the x puts it away for good
+class _CompareRow extends StatelessWidget {
+  final VoidCallback onVerify;
+  final VoidCallback onDismiss;
+  const _CompareRow({
+    super.key,
+    required this.onVerify,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsetsDirectional.only(start: 11),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.verified_user_outlined, size: 14, color: HaloColors.amber),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                l10n.chatCompareFolded,
+                style: HaloType.sans(
+                  size: 12.5,
+                  weight: FontWeight.w500,
+                  color: HaloColors.text2,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ),
+          Semantics(
+            button: true,
+            child: _ScaleTap(
+              onTap: onVerify,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.center,
+                color: Colors.transparent,
+                child: Text(
+                  l10n.chatCompareNow,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.chatCompareDismiss,
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+            color: HaloColors.text2,
+            icon: const Icon(Icons.close_rounded),
+            onPressed: onDismiss,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // at the top of a chat added by a code or a link, or taken in from a
 // request: three words prove nothing, the safety number does. it goes once
-// they are verified, or for later
+// they are verified, and folds into a line for later
 class _CompareCard extends StatelessWidget {
   final String peerName;
   final VoidCallback onVerify;

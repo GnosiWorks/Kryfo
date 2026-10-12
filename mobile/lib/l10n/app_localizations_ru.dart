@@ -1801,6 +1801,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatCompareLater => 'Позже';
 
   @override
+  String get chatCompareFolded => 'Код безопасности ещё не сверен';
+
+  @override
+  String get chatCompareNow => 'Сверить';
+
+  @override
+  String get chatCompareDismiss => 'Скрыть';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Ты уже проверял(а) $peerName. Ничего не отправляется, пока ты не сверишь новый код или не примешь новый ключ. Сообщения от $peerName по-прежнему приходят.';
   }

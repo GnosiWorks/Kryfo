@@ -1697,6 +1697,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCompareLater => '稍后';
 
   @override
+  String get chatCompareFolded => '尚未核对安全码';
+
+  @override
+  String get chatCompareNow => '核对';
+
+  @override
+  String get chatCompareDismiss => '隐藏';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return '你之前验证过 $peerName。在你核对新的安全码或接受新密钥之前，什么都不会发出。对方的消息仍会收到。';
   }
@@ -9527,6 +9536,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatCompareLater => '稍後';
+
+  @override
+  String get chatCompareFolded => '尚未核對安全碼';
+
+  @override
+  String get chatCompareNow => '核對';
+
+  @override
+  String get chatCompareDismiss => '隱藏';
 
   @override
   String chatKeyHeldLine(Object peerName) {
