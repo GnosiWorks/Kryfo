@@ -16572,6 +16572,11 @@ class AppState extends ChangeNotifier {
     return engine.reconnectNow();
   }
 
+  // automatic is trying a way in: a long wait is its work, not a dead tor
+  bool get autoPassRuns =>
+      _bridgeStatus.mode == 'auto' &&
+      const {'trying', 'asking'}.contains(_bridgeStatus.phase);
+
   // what the restart out of sight reads. the engine is asked only out of
   // sight, in always-on, with tor meant to be up and not
   @visibleForTesting
@@ -16598,6 +16603,7 @@ class AppState extends ChangeNotifier {
       torHeld: _torHeld,
       torReady: ready,
       ctrlSilent: silent,
+      passRuns: autoPassRuns,
       stuckSince: ready ? null : (_pctMovedAt ?? _torTryingSince),
     );
   }
@@ -22204,6 +22210,7 @@ final torValve = TorValve(
   busyElsewhere: () =>
       mediaInflight.isNotEmpty ||
       incomingMediaProgress.keys.any((k) => !incomingMediaStalled.contains(k)),
+  passRuns: () => appState.autoPassRuns,
 );
 
 // a tor dead in this process, out of sight: a new process, now and then

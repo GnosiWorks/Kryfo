@@ -4,6 +4,8 @@
 // nobody should ever have to reinstall to get a message out
 import 'package:flutter/foundation.dart';
 
+import 'auto_restart.dart';
+
 enum ValveStage { hidden, offer, working, cooling, restart }
 
 /// how long a send may wait on tor before the way out is shown
@@ -58,6 +60,7 @@ class TorValve extends ChangeNotifier {
     required this.restart,
     this.beforeRestart,
     this.busyElsewhere,
+    this.passRuns,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -72,6 +75,9 @@ class TorValve extends ChangeNotifier {
 
   /// a file going out or coming in: a restart would cut it
   final bool Function()? busyElsewhere;
+
+  /// automatic is trying a way in
+  final bool Function()? passRuns;
 
   final DateTime Function() _clock;
 
@@ -116,12 +122,11 @@ class TorValve extends ChangeNotifier {
     }
     _busy = false;
     _triedAt = _clock();
-    // asleep on purpose is the check-ins mode's doing, not a stuck tor, and
-    // with no network tor waits for one
+    // a wait on purpose is not a stuck tor: asleep for the check-ins, no
+    // network, or automatic still finding its way in
     _triedFailed =
         r.startsWith('error') &&
-        r != 'error: tor is asleep' &&
-        r != 'error: no network';
+        !torWaitsWith(r, passRuns: passRuns?.call() ?? false);
     notifyListeners();
   }
 

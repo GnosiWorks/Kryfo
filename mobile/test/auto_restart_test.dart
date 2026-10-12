@@ -39,6 +39,7 @@ AutoView _view({
   bool torReady = false,
   int ctrlSilent = 0,
   DateTime? stuckSince,
+  bool passRuns = false,
 }) => AutoView(
   inFront: inFront,
   alwaysOn: alwaysOn,
@@ -50,6 +51,7 @@ AutoView _view({
   torReady: torReady,
   ctrlSilent: ctrlSilent,
   stuckSince: stuckSince,
+  passRuns: passRuns,
 );
 
 class _Engine implements HaloEngine {
@@ -180,6 +182,10 @@ void main() {
         'error: superseded',
         'error: one already running',
         'error: no network',
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+        'error: no bridge mode yet',
+        'error: bridges not applied',
       ]) {
         expect(reconnectFailedWith(r, ctrlSilent: 5), isFalse, reason: r);
       }
@@ -257,6 +263,21 @@ void main() {
     test('a reconnect first, the restart once it failed', () async {
       expect(await life(), [AutoStep.reconnect, AutoStep.restart]);
       expect(log, ['reconnect', 'restart']);
+    });
+
+    test('automatic stalled behind a censor is never restarted', () async {
+      seen = _view(stuckSince: t0, passRuns: true);
+      for (final a in [
+        'error: automatic is connecting',
+        'error: automatic has no way in yet',
+        'error: bridges could not start',
+      ]) {
+        answer = a;
+        expect(await life(), [AutoStep.reconnect, AutoStep.none], reason: a);
+      }
+      expect(log.where((e) => e == 'restart'), isEmpty);
+      // listeners down with no pass to start them: a restart may help
+      expect(reconnectFailedWith('error: bridges could not start'), isTrue);
     });
 
     test('one unanswered call is not a failed reconnect', () async {
