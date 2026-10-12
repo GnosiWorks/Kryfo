@@ -529,6 +529,7 @@ func TestTheValveOnlyWhenTheCallsDisagree(t *testing.T) {
 	keepNetDetail(t)
 	quietBounce(t)
 	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(false)
 	networkChangedTo(false)
 	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
 		t.Fatal("not parked")
@@ -536,6 +537,7 @@ func TestTheValveOnlyWhenTheCallsDisagree(t *testing.T) {
 	if netValveDue(time.Now().Add(24 * time.Hour)) {
 		t.Fatal("the valve opened with none by both")
 	}
+	connectivitySaw(true)
 	networkChangedTo(true)
 	if !netOffline.Load() {
 		t.Fatal("the plain call outranked the watch")
@@ -553,6 +555,7 @@ func TestAValveProofOutlivesTheSameNone(t *testing.T) {
 	netValveAfter = time.Minute
 	t.Cleanup(func() { netValveAfter = oa })
 	networkDetail(`{"on":false,"kind":"other"}`)
+	connectivitySaw(true)
 	networkChangedTo(true)
 	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
 		t.Fatal("not parked")

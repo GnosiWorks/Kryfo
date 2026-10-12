@@ -1,0 +1,146 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package main
+
+import (
+	"strings"
+	"sync/atomic"
+	"testing"
+	"time"
+)
+
+// the app's two network handlers, connectivity and android's watch, as
+// the app runs them: what the engine hears and in which order
+type appModel struct {
+	online, connSeen bool
+	watchOn          *bool
+	lastKinds        string
+}
+
+func newAppModel(kinds string) *appModel {
+	return &appModel{online: true, connSeen: true, lastKinds: kinds}
+}
+
+func (a *appModel) conn(kinds string) {
+	seen := kinds != "none"
+	connectivitySaw(seen)
+	flip := 0
+	if !(seen == a.connSeen && kinds == a.lastKinds) {
+		if seen {
+			flip = 1
+		} else {
+			flip = -1
+		}
+	}
+	a.connSeen, a.lastKinds = seen, kinds
+	if flip == 1 {
+		networkChangedTo(true) // networkMoved
+	}
+	if flip == -1 {
+		networkChangedTo(false)
+	}
+	on := seen
+	if a.watchOn != nil {
+		on = *a.watchOn
+	}
+	a.online = on
+}
+
+func (a *appModel) watch(kind string) {
+	on := kind != "none"
+	js := `{"on":false,"kind":"other"}`
+	if on {
+		js = `{"on":true,"validated":true,"kind":"` + kind + `"}`
+	}
+	networkDetail(js)
+	a.watchOn = &on
+	if on == a.online {
+		return
+	}
+	if on {
+		networkChangedTo(true) // networkMoved
+	}
+	a.online = on
+}
+
+func lastNetCmd(cmds []string) string {
+	last := ""
+	for _, c := range cmds {
+		if strings.Contains(c, "DISABLENETWORK") {
+			last = c
+		}
+	}
+	return last
+}
+
+// connectivity said none and then fell silent, the watch says on and then
+// none again: both say none, yet the engine has connectivity seeing a network
+func TestAWatchAloneOnLeavesNoDispute(t *testing.T) {
+	f := offlineRig(t)
+	keepNetDetail(t)
+	a := newAppModel("wifi")
+	a.watch("wifi")
+	a.conn("none")
+	a.watch("none")
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatal("not parked")
+	}
+	// the watch sees a network connectivity does not report, then loses it
+	a.watch("wifi")
+	waitUntil(2*time.Second, func() bool { return !torParked.Load() })
+	a.watch("none")
+	if !waitUntil(3*time.Second, func() bool { return torParked.Load() }) {
+		t.Fatalf("not parked again: %v", f.sent())
+	}
+	t.Logf("connSaid=%d (1 on, 2 off) disputed=%v", connSaid.Load(), netDisputed())
+	if netDisputed() {
+		t.Error("both calls say none, the engine calls it a dispute")
+	}
+	if netValveDue(time.Now().Add(11 * time.Minute)) {
+		t.Error("both calls say none, the valve is due after 10 min")
+	}
+	if r := reconnectNow(); r == "ok" && netValveOpen.Load() {
+		t.Error("fix connection opened the valve with both calls saying none")
+	}
+	waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() })
+}
+
+// wifi drop, mobile up, wifi back, in several orders: tor must end on the
+// network and the engine online
+func TestFlapOrdersEndOnTheNetwork(t *testing.T) {
+	seqs := map[string][]string{
+		"conn first":         {"c:none", "w:none", "c:mobile", "w:cellular", "c:wifi", "w:wifi"},
+		"watch first":        {"w:none", "c:none", "w:cellular", "c:mobile", "w:wifi", "c:wifi"},
+		"no none":            {"c:mobile", "w:cellular", "c:mobile,wifi", "w:wifi"},
+		"watch none conn on": {"w:none", "c:mobile", "w:cellular", "w:wifi", "c:wifi"},
+		"conn ahead":         {"c:none", "c:mobile", "w:none", "w:cellular", "c:wifi", "w:wifi"},
+		"watch ahead":        {"w:none", "w:cellular", "w:wifi", "c:none", "c:mobile", "c:wifi"},
+		"watch last none":    {"c:none", "w:none", "c:mobile", "w:cellular", "w:none", "w:wifi", "c:wifi"},
+	}
+	for name, seq := range seqs {
+		for _, gap := range []time.Duration{0, 40 * time.Millisecond, 400 * time.Millisecond} {
+			t.Run(name+"/"+gap.String(), func(t *testing.T) {
+				f := offlineRig(t)
+				keepNetDetail(t)
+				a := newAppModel("wifi")
+				a.watch("wifi")
+				connectivitySaw(true)
+				for _, ev := range seq {
+					if strings.HasPrefix(ev, "c:") {
+						a.conn(ev[2:])
+					} else {
+						a.watch(ev[2:])
+					}
+					time.Sleep(gap)
+				}
+				ok := waitUntil(4*time.Second, func() bool {
+					return !netOffline.Load() && !torParked.Load() && atomic.LoadInt32(&torRestarting) == 0 &&
+						strings.Contains(lastNetCmd(f.sent()), "=0")
+				})
+				if !ok {
+					t.Errorf("ended offline=%v parked=%v last=%q", netOffline.Load(), torParked.Load(), lastNetCmd(f.sent()))
+				}
+			})
+		}
+	}
+}

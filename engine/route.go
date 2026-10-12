@@ -353,7 +353,6 @@ func netAway() bool { return netOffline.Load() && !netValveOpen.Load() }
 func networkChangedTo(online bool) {
 	// android's watch on the default network has the say once it has
 	// spoken: this older call can say none while a network is there
-	connectivitySaw(online)
 	// the watch has the say: a word of the plain call that differs is a
 	// dispute for the valve, not a change of network
 	if n, ok := netDetailTrusted(); ok && n.On != online {
