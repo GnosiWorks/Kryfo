@@ -3201,6 +3201,34 @@ void main() {
     ],
     'vi': [((l) => l.bridgesAskTorProject, 'Hỏi Dự án Tor')],
   };
+  // what only the developer's own phone shows stays in english everywhere
+  test('the support inbox reads in english in every language', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+    for (final locale in AppLocalizations.supportedLocales) {
+      final l = lookupAppLocalizations(locale);
+      for (final call in <String Function(AppLocalizations)>[
+        (l) => l.supportTitle,
+        (l) => l.supportEmptyLine,
+        (l) => l.supportMoveLine,
+        (l) => l.supportViaDev,
+        (l) => l.supportWaiting(0),
+        (l) => l.supportWaiting(1),
+        (l) => l.supportWaiting(21),
+        (l) => l.supportNotifNewChats(2),
+        (l) => l.supportNotifNewChats(21),
+        (l) => l.supportNotifNewMessages(5),
+        (l) => l.supportNotifNewMessages(21),
+      ]) {
+        // the words stay english; the digits are the language's own
+        String plain(String s) => s.replaceAllMapped(
+          RegExp('[۰-۹٠-٩]'),
+          (m) => '${'۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!) % 10}',
+        );
+        expect(plain(call(l)), call(en), reason: '$locale');
+      }
+    }
+  });
+
   for (final e in pinned.entries) {
     test('settled words in ${e.key}', () {
       final parts = e.key.split('_');

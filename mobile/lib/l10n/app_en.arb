@@ -9809,7 +9809,7 @@
   "@supportTitle": {
     "description": "screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English."
   },
-  "supportWaiting": "{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}",
+  "supportWaiting": "{count, plural, =0{No one waiting} one{{count} waiting} other{{count} waiting}}",
   "@supportWaiting": {
     "description": "screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.",
     "placeholders": {
@@ -9859,7 +9859,7 @@
   "@supportDeleteLine": {
     "description": "screens/support_screen.dart: asked before a support chat is deleted. Only the developer's own phone shows it, in English."
   },
-  "supportNotifNewChats": "{count, plural, one{1 new chat} other{{count} new chats}}",
+  "supportNotifNewChats": "{count, plural, one{{count} new chat} other{{count} new chats}}",
   "@supportNotifNewChats": {
     "description": "notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.",
     "placeholders": {
@@ -9869,7 +9869,7 @@
       }
     }
   },
-  "supportNotifNewMessages": "{count, plural, one{1 new message} other{{count} new messages}}",
+  "supportNotifNewMessages": "{count, plural, one{{count} new message} other{{count} new messages}}",
   "@supportNotifNewMessages": {
     "description": "notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.",
     "placeholders": {

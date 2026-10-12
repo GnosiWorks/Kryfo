@@ -7840,7 +7840,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString waiting',
-      one: '1 waiting',
+      one: '$countString waiting',
       zero: 'No one waiting',
     );
     return '$_temp0';
@@ -7888,7 +7888,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new chats',
-      one: '1 new chat',
+      one: '$countString new chat',
     );
     return '$_temp0';
   }
@@ -7903,7 +7903,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString new messages',
-      one: '1 new message',
+      one: '$countString new message',
     );
     return '$_temp0';
   }

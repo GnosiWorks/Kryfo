@@ -12516,7 +12516,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}'**
+  /// **'{count, plural, =0{No one waiting} one{{count} waiting} other{{count} waiting}}'**
   String supportWaiting(int count);
 
   /// screens/support_screen.dart: a section: chats with no answer yet. Only the developer's own phone shows it, in English.
@@ -12582,13 +12582,13 @@ abstract class AppLocalizations {
   /// notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{1 new chat} other{{count} new chats}}'**
+  /// **'{count, plural, one{{count} new chat} other{{count} new chats}}'**
   String supportNotifNewChats(int count);
 
   /// notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{1 new message} other{{count} new messages}}'**
+  /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
   String supportNotifNewMessages(int count);
 
   /// notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English.
