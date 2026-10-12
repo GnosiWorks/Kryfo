@@ -8218,7 +8218,7 @@ class _CompareSlot extends StatelessWidget {
           children: [
             for (final p in previous)
               Positioned(top: 0, left: 0, right: 0, child: p),
-            if (current != null) current,
+            ?current,
           ],
         ),
         child: shown,
