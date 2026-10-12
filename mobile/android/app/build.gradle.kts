@@ -54,6 +54,11 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
+    // robolectric tests read the app's strings
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
@@ -127,6 +132,7 @@ dependencies {
     // banned by lint for old security bugs; this one is the maintained copy
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16.1")
 }
 
 // libhalo.so is gitignored, and an apk without it dies on launch with

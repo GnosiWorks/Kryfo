@@ -173,19 +173,18 @@ class MainActivity : FlutterFragmentActivity() {
         // down, so android's dialog never opens over the pin pad. one that
         // is up is left alone: starting it again only posts its
         // notification anew. a mode or language change still restarts it
-        if (!HaloListenerService.running) startListenerService()
+        if (!HaloListenerService.running) startListenerService(inFront = true)
         schedulePeriodicJob()
     }
 
-    private fun startListenerService() {
+    // from a screen in front a plain start, which has no deadline to miss
+    // while dart holds the main thread
+    private fun startListenerService(
+        inFront: Boolean = QuietRestart.onScreen(QuietRestart.importance())
+    ) {
         if (!DeliveryPrefs.staysOn(this)) return
         if (!KryfoState.hasData(this)) return
-        val intent = Intent(this, HaloListenerService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        HaloListenerService.start(this, inFront)
     }
 
     private fun schedulePeriodicJob() = JobSetup.schedule(this)
