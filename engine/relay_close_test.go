@@ -10,7 +10,7 @@ import (
 )
 
 // a relay closed while it dials: the connection the dial brings is closed
-// too, not left open with nothing reading it
+// too, and under -race nothing races on it
 func TestARelayClosedWhileDialingClosesItsSocket(t *testing.T) {
 	si := newRelayStandIn(t, 0)
 	si.mu.Lock()
