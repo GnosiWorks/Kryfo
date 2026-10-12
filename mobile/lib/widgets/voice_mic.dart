@@ -15,11 +15,11 @@ import 'package:record/record.dart';
 
 import '../dlog.dart';
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../shred.dart';
 import '../theme.dart';
 import '../tor_valve.dart' show restartHolds;
+import '../voice_length.dart';
 import '../voice_live.dart';
 import '../voice_mask.dart';
 import 'motion.dart';
@@ -72,6 +72,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
+  // the tick the first samples were in the file: the clock counts from it
+  int? _heardAt;
   bool _willCancel = false;
   // how far the finger went toward the start side, and up
   double _dragDx = 0;
@@ -205,6 +207,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         return;
       }
       _ms = 0;
+      _heardAt = null;
       _willCancel = false;
       _dragDx = 0;
       _dragUp = 0;
@@ -221,8 +224,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
             if (_levels.length > 40) _levels.removeAt(0);
           }, onError: (_) {});
       HapticFeedback.mediumImpact();
-      _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
-        _ms += 100;
+      _ticker = Timer.periodic(const Duration(milliseconds: 100), (t) {
+        // from the mic's first samples, not the press. a recorder that
+        // writes nothing two seconds in is counted from its start
+        _heardAt ??= samplesIn(path) ? t.tick : (t.tick >= 20 ? 0 : null);
+        final from = _heardAt;
+        _ms = from == null ? 0 : (t.tick - from) * 100;
         _overlay?.rebuild();
       });
       if (mounted) {
@@ -275,7 +282,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _ticker = null;
     _level?.cancel();
     _level = null;
-    final ms = _ms;
+    var ms = _ms;
     final cancel = _willCancel || ms < 400;
     // a note thrown away leaves in the rose of a cancel
     _willCancel = cancel;
@@ -307,6 +314,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       }
       HapticFeedback.mediumImpact();
       if (take == null) return;
+      // the note is as long as the samples in it
+      ms = await wavFileMs(take) ?? ms;
       final chip = _chip;
       handed = chip;
       final masked = chip ? await _finishLive(live) : null;
@@ -396,6 +405,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       return;
     }
     _peaks = wavPeaks(raw, kVoiceBars);
+    // the preview shows what the note holds, as its bubble will
+    _ms = wavMs(raw) ?? _ms;
     _overlay?.rebuild();
     // made at once, so the chip has it by the time it is touched
     handed();
@@ -595,11 +606,6 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _playing = false;
   }
 
-  String _clock(int ms) {
-    final s = ms ~/ 1000;
-    return '${whole(s ~/ 60)}:${twoDigits(s % 60)}';
-  }
-
   Widget _bar(bool leaving) {
     final bottom = _keyboardInset;
     if (_stage == VoiceStage.locked || _stage == VoiceStage.preview) {
@@ -613,7 +619,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         bottom: bottom,
         child: VoiceLockedBar(
           preview: preview,
-          time: _clock(shown),
+          time: voiceClock(shown),
           levels: List.of(_levels),
           peaks: _peaks,
           progress: preview && _ms > 0 ? _pos.inMilliseconds / _ms : 0,
@@ -638,7 +644,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
             right: 0,
             bottom: bottom,
             child: VoiceRecordBar(
-              time: _clock(_ms),
+              time: voiceClock(_ms),
               cancel: _willCancel,
               drag: -_dragDx,
               disguise: _chip,
