@@ -38,6 +38,8 @@ const erin = 'ember-larch-cove';
 const frank = 'frost-wren-glade';
 const zed = 'zinc-quail-shore';
 const hush = 'hush-pine-rill';
+final everydayKey = '0e' * 32;
+final decoyKey = "x'${'0d' * 32}'";
 final vaultKey = '1f' * 32;
 const gid = 'g0a1b2c3d4e5f60718293a4b5c6d7e8f9';
 const rid = 'r0f1e2d3c4b5a69788796a5b4c3d2e1f0';
@@ -127,7 +129,11 @@ void main() {
 
   setUp(() {
     docs = Directory.systemTemp.createTempSync('make_050');
-    FlutterSecureStorage.setMockInitialValues({});
+    // fixed test keys, which no secret scanner takes for real ones
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.db.passphrase': everydayKey,
+      'halo.d.key': decoyKey,
+    });
     SharedPreferences.setMockInitialValues({});
     m.setMockMethodCallHandler(
       const MethodChannel('plugins.flutter.io/path_provider'),
@@ -366,8 +372,8 @@ void main() {
     final keys = await settings();
     File(p.join(dir.path, 'keys.json')).writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert({
-        'halo.db.passphrase': keys['halo.db.passphrase'],
-        'halo.d.key': keys['halo.d.key'],
+        'everyday': keys['halo.db.passphrase'],
+        'decoy': keys['halo.d.key'],
         'vault': vaultKey,
       }),
     );
