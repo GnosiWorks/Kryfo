@@ -18954,6 +18954,15 @@ class AppState extends ChangeNotifier {
     unawaited(listenNetDetail(netDetailEvent));
   }
 
+  // the watch's last word as it came: the same again on a recheck is no
+  // news, and would undo what the engine proved since
+  String? _lastNetDetail;
+
+  @visibleForTesting
+  void recheckNetDetail(String? json) {
+    if (json != null && json != _lastNetDetail) netDetailEvent(json);
+  }
+
   // whether android's default-network watch says a network is there, null
   // until it has said. once it has, its word decides online: connectivity
   // can say none while a network is there, and miss it coming back
@@ -18963,6 +18972,7 @@ class AppState extends ChangeNotifier {
   // online follows it
   @visibleForTesting
   void netDetailEvent(String json) {
+    _lastNetDetail = json;
     engine.networkDetail(json);
     bool? on;
     try {
@@ -18980,8 +18990,7 @@ class AppState extends ChangeNotifier {
   // back in front: connectivity and the watch are asked again, as either
   // may have missed a change while the app slept
   Future<void> _recheckNetwork() async {
-    final s = await readNetDetail();
-    if (s != null) netDetailEvent(s);
+    recheckNetDetail(await readNetDetail());
     try {
       connectivityEvent(await Connectivity().checkConnectivity());
     } catch (e) {

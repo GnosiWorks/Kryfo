@@ -1116,6 +1116,13 @@ void main() {
       expect(app.online, isFalse);
       app.takeTorStatus('publishing|100|1|1|0');
       expect(app.online, isTrue);
+      // a recheck that brings the same none is no news
+      log.clear();
+      app.recheckNetDetail('{"on":false,"kind":"other"}');
+      expect(app.online, isTrue);
+      expect(net(), isEmpty);
+      app.recheckNetDetail('{"on":false,"kind":"wifi"}');
+      expect(app.online, isFalse);
     });
 
     test('the watch alone bringing the network back brings the app online', () {
