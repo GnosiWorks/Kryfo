@@ -29,6 +29,10 @@ const _apart = {
   'ntfy_topic',
   'ntfy_server',
   'onboarding.complete',
+  // the everyday identity's own working state, read by no other
+  'first_kept_cut',
+  'signal.restored',
+  'signal.restored_from',
 };
 
 void main() {
@@ -42,6 +46,12 @@ void main() {
     final constant = RegExp(
       r"""const\s+(?:String\s+)?(?:_?k[A-Z]\w*Key|_\w*Key)\s*=\s*'([^'$]+)'""",
     );
+    // a key named by a constant, whatever the constant is called
+    final named = RegExp(
+      r'(?:(?:read|write|delete|containsKey)\(\s*key:\s*|(?:prefs|\)|\bp)\.(?:get\w*|set\w*|remove|containsKey)\(\s*|\.key\(\s*)([A-Za-z_]\w*)\s*[,)]',
+    );
+    final consts = <String, String>{};
+    final uses = <(String, String)>[];
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart')) continue;
       if (f.path.contains('/l10n/')) continue;
@@ -52,6 +62,19 @@ void main() {
       for (final m in constant.allMatches(src)) {
         keys[m.group(1)!] = f.path;
       }
+      for (final m in RegExp(
+        r"""const\s+(?:String\s+)?(\w+)\s*=\s*'([^'$]+)'""",
+      ).allMatches(src)) {
+        consts['${f.path} ${m.group(1)}'] = m.group(2)!;
+        consts[m.group(1)!] ??= m.group(2)!;
+      }
+      for (final m in named.allMatches(src)) {
+        uses.add((f.path, m.group(1)!));
+      }
+    }
+    for (final (path, name) in uses) {
+      final k = consts['$path $name'] ?? consts[name];
+      if (k != null) keys[k] = path;
     }
     final unplaced = [
       for (final e in keys.entries)

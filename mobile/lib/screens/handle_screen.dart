@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../handle_repoint.dart' show handleRefusalLine;
 import '../main.dart' show appState, engine, sessionQuiet;
+import '../quiet_wait.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/copied_mark.dart';
@@ -93,7 +94,9 @@ class _HandleScreenState extends State<HandleScreen> {
       // a quiet session never reaches the registry: it answers as an
       // unreachable one would
       _asking(true);
-      final r = sessionQuiet ? _unreached : await engine.handleCheck(h);
+      final r = sessionQuiet
+          ? await unreachedLater(_unreached)
+          : await engine.handleCheck(h);
       if (!mounted) return;
       // typed on since: the answer is for a name no longer in the field
       if (_ctrl.text.trim().toLowerCase() != h) return;
@@ -111,7 +114,9 @@ class _HandleScreenState extends State<HandleScreen> {
     // already public
     final uri = await appState.sessionInvite();
     final bio = _bio.text.trim();
-    final r = sessionQuiet ? _unreached : await engine.handleClaim(h, uri, bio);
+    final r = sessionQuiet
+        ? await unreachedLater(_unreached)
+        : await engine.handleClaim(h, uri, bio);
     // kept even when the page is gone: the registry already holds it
     if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
     if (!mounted) return;
@@ -150,7 +155,9 @@ class _HandleScreenState extends State<HandleScreen> {
     if (!sure || !mounted || _claimed != h) return;
     setState(() => _busy = true);
     _asking(true);
-    final r = sessionQuiet ? _unreached : await engine.handleRelease(h);
+    final r = sessionQuiet
+        ? await unreachedLater(_unreached)
+        : await engine.handleRelease(h);
     // forgotten even when the page is gone, or the next check claims it again
     if (r == 'ok') await appState.setMyHandle(null);
     if (!mounted) return;

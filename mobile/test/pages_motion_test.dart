@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
+import 'package:kryfo/quiet_wait.dart';
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
@@ -102,6 +103,24 @@ void main() {
     setUp(() {
       final db = _QuietDb();
       useDatabasesForTest(db, Session(db));
+      quietWait = () => Duration.zero;
+    });
+
+    testWidgets('a decoy answers after a wait, as a registry out of reach '
+        'does', (t) async {
+      quietWait = () => const Duration(seconds: 4);
+      phone(t);
+      await t.pumpWidget(framed(const HandleScreen()));
+      await rest(t);
+      await t.enterText(find.byType(TextField).first, 'wren');
+      await t.pump();
+      await t.pump(const Duration(seconds: 2));
+      expect(find.text(l10n.handleChecking), findsOneWidget);
+      expect(find.text(l10n.handleRegistryFailed), findsNothing);
+      await t.pump(const Duration(seconds: 3));
+      await rest(t);
+      expect(find.text(l10n.handleRegistryFailed), findsOneWidget);
+      await drain(t);
     });
 
     testWidgets('each answer rises in over the last, then rests', (t) async {

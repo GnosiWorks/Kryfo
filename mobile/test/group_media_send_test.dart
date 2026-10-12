@@ -455,4 +455,44 @@ void main() {
       );
     });
   });
+
+  test('a hold stops the send where it is, keeps what landed however long '
+      'it lasts, and the next send goes on from there', () async {
+    final g = _Members();
+    var held = false;
+    g.onOffer = (m, i) {
+      if (i == 1) held = true;
+    };
+    final r = await sendGroupSlices(
+      path: path,
+      msgUid: msgUid,
+      members: ['b', 'c'],
+      wrap: (slice, i, total) async => '$i',
+      deliver: g.deliver,
+      gap: Duration.zero,
+      retryPause: Duration.zero,
+      hold: () => held,
+    );
+    expect(r, 'parked');
+    expect(g.got['b'], {0, 1});
+    // long past the four minutes a stopped send is kept
+    expect(groupSliceDoneAt[msgUid], isNull);
+    groupSliceDoneAt['other'] = 0;
+    held = false;
+    g.offered.clear();
+    expect(
+      await sendGroupSlices(
+        path: path,
+        msgUid: msgUid,
+        members: ['b', 'c'],
+        wrap: (slice, i, total) async => '$i',
+        deliver: g.deliver,
+        gap: Duration.zero,
+        retryPause: Duration.zero,
+        hold: () => held,
+      ),
+      'ok',
+    );
+    expect(g.offered.map((o) => o.$2).toSet(), {2, 3, 4});
+  });
 }

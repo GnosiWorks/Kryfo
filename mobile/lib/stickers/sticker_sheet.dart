@@ -109,8 +109,8 @@ class GifTabs {
     required this.saveOn,
   });
 
-  // null in a quiet session: no gifs tab, nothing reaches the network
-  final GifSource? source;
+  // a quiet session's refuses every question: nothing reaches the network
+  final GifSource source;
   final GifRoute route;
   final Future<bool> Function() loadOn;
   final Future<void> Function(bool on) saveOn;
@@ -193,7 +193,7 @@ class StickerSheetState extends State<StickerSheet>
     super.initState();
     _load();
     final g = widget.gifs;
-    if (g != null && g.source != null) {
+    if (g != null) {
       g.loadOn().then((v) {
         if (mounted) setState(() => _gifOn = v);
       });
@@ -205,7 +205,7 @@ class StickerSheetState extends State<StickerSheet>
 
   List<_Kind> get _kinds => [
     _Kind.stickers,
-    if (widget.gifs?.source != null) _Kind.gifs,
+    if (widget.gifs != null) _Kind.gifs,
     _Kind.phone,
   ];
 
@@ -577,7 +577,7 @@ class StickerSheetState extends State<StickerSheet>
       );
     }
     return GifPanel(
-      source: g.source!,
+      source: g.source,
       controller: controller,
       route: g.route,
       onPick: _gifPicked,
