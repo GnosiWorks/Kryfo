@@ -191,7 +191,9 @@ void main() {
 
   test('the app waits on the registry past the engine\'s own bound', () {
     final go = File('../engine/handle.go').readAsStringSync();
-    final m = RegExp(r'var handleWait = (\d+) \* time\.Second').firstMatch(go);
+    final m = RegExp(
+      r'var handleWait = (\d+) \* time\.Second',
+    ).firstMatch(go);
     expect(m, isNotNull);
     expect(registryWait, greaterThan(Duration(seconds: int.parse(m![1]!))));
     final src = File('lib/main.dart').readAsStringSync();

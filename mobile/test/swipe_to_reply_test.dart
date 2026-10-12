@@ -6,7 +6,9 @@ import 'package:kryfo/widgets/swipe_to_reply.dart';
 // unmounting, so an untouched bubble has to come and go cleanly
 
 void main() {
-  testWidgets('an unswiped bubble unmounts cleanly', (tester) async {
+  testWidgets('an unswiped bubble unmounts cleanly', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

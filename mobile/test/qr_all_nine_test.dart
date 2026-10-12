@@ -101,20 +101,23 @@ void main() {
     }
   });
 
-  test('wifi escapes every reserved character', () {
-    final b = buildQr(QrKind.wifi, {
-      'ssid': nastySsid,
-      'password': nastyPass,
-    }, lock: WifiLock.wpa2);
-    // the raw characters must not appear unescaped inside the fields
-    final body = b.data!;
-    expect(body, startsWith('WIFI:T:WPA;S:'));
-    expect(body, contains(r'\;'));
-    expect(body, contains(r'\,'));
-    expect(body, contains(r'\:'));
-    expect(body, contains(r'\"'));
-    expect(body, contains(r'\\'));
-  });
+  test(
+    'wifi escapes every reserved character',
+    () {
+      final b = buildQr(QrKind.wifi, {
+        'ssid': nastySsid,
+        'password': nastyPass,
+      }, lock: WifiLock.wpa2);
+      // the raw characters must not appear unescaped inside the fields
+      final body = b.data!;
+      expect(body, startsWith('WIFI:T:WPA;S:'));
+      expect(body, contains(r'\;'));
+      expect(body, contains(r'\,'));
+      expect(body, contains(r'\:'));
+      expect(body, contains(r'\"'));
+      expect(body, contains(r'\\'));
+    },
+  );
 
   testWidgets('renders all nine to png for a decoder', (t) async {
     final dir = Directory('build/qr_check')..createSync(recursive: true);

@@ -17,29 +17,17 @@ Uint8List box(String type, List<int> payload) {
 }
 
 // version + flags, then creation and modification stamps
-List<int> full(int version, List<int> stamps, [List<int> rest = const []]) => [
-  version,
-  0,
-  0,
-  0,
-  ...stamps,
-  ...rest,
-];
+List<int> full(int version, List<int> stamps, [List<int> rest = const []]) =>
+    [version, 0, 0, 0, ...stamps, ...rest];
 
 Uint8List sample() {
   final b = BytesBuilder();
   b.add(box('ftyp', 'isom'.codeUnits + [0, 0, 2, 0] + 'isom'.codeUnits));
-  final mvhd = box(
-    'mvhd',
-    full(0, [1, 2, 3, 4, 5, 6, 7, 8], List.filled(88, 9)),
-  );
+  final mvhd = box('mvhd', full(0, [1, 2, 3, 4, 5, 6, 7, 8], List.filled(88, 9)));
   final xyz = box('©xyz', [0, 11, 0x15, 0xc7] + '+48.13+011.5/'.codeUnits);
   final udta = box('udta', xyz);
   final tkhd = box('tkhd', full(1, List.filled(16, 0xab), List.filled(76, 1)));
-  final mdhd = box(
-    'mdhd',
-    full(0, [0, 0, 0, 0, 0, 0, 0, 0], List.filled(12, 2)),
-  );
+  final mdhd = box('mdhd', full(0, [0, 0, 0, 0, 0, 0, 0, 0], List.filled(12, 2)));
   final mdia = box('mdia', mdhd);
   final trak = box('trak', Uint8List.fromList(tkhd + mdia));
   final meta = box('meta', full(0, [], 'ilst-goes-here'.codeUnits));
