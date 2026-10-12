@@ -112,12 +112,30 @@ void main() {
     };
   }
 
-  // every live disguise's isolate has ended
-  Future<void> ended(WidgetTester t) => t.runAsync(
-    () => Future.wait([
-      for (final s in spies) s.exited,
-    ]).timeout(const Duration(seconds: 10)),
-  );
+  // real file work and the disguise's isolate run outside the test's clock:
+  // turns of real time and pumps until [done], however slow the machine
+  Future<void> until(WidgetTester t, bool Function() done) async {
+    final clock = Stopwatch()..start();
+    while (!done() && clock.elapsed < const Duration(seconds: 20)) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump(const Duration(milliseconds: 20));
+    }
+  }
+
+  // the shred is done once the name is gone
+  Future<void> shredded(WidgetTester t, String path) =>
+      until(t, () => !File(path).existsSync());
+
+  // every live disguise's isolate has ended. its exit lands in real time
+  // but is only heard on a pump, so a wait inside runAsync can miss it
+  Future<void> ended(WidgetTester t) async {
+    var done = false;
+    Future.wait([for (final s in spies) s.exited]).then((_) => done = true);
+    await until(t, () => done);
+    expect(done, isTrue, reason: 'a live disguise did not end');
+  }
 
   setUp(() {
     tmp = Directory.systemTemp.createTempSync('voice_mic');
@@ -186,22 +204,13 @@ void main() {
   HoldToTalkMicState mic(WidgetTester t) =>
       t.state<HoldToTalkMicState>(find.byType(HoldToTalkMic));
 
-  // real file work and the disguise's isolate run outside the test's clock
+  // a few turns for what has nothing to wait on
   Future<void> settle(WidgetTester t, {int turns = 20}) async {
     for (var i = 0; i < turns; i++) {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
       await t.pump(const Duration(milliseconds: 50));
-    }
-  }
-
-  Future<void> until(WidgetTester t, bool Function() done) async {
-    for (var i = 0; i < 300 && !done(); i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await t.pump(const Duration(milliseconds: 20));
     }
   }
 
@@ -262,7 +271,7 @@ void main() {
       await t.pump();
       expect(find.text(l10n.chatReleaseToCancel), findsOneWidget);
       await g.up();
-      await settle(t);
+      await shredded(t, recording!);
       expect(sent, isEmpty);
       expect(File(recording!).existsSync(), isFalse);
       await close(t);
@@ -302,7 +311,7 @@ void main() {
       await g.up();
       await t.pump();
       await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
-      await settle(t);
+      await shredded(t, recording!);
       expect(sent, isEmpty);
       expect(File(recording!).existsSync(), isFalse);
       await close(t);
@@ -318,7 +327,7 @@ void main() {
       await g.moveBy(const Offset(240, 0));
       await t.pump();
       await g.up();
-      await settle(t);
+      await shredded(t, recording!);
       expect(sent, isEmpty);
       expect(File(recording!).existsSync(), isFalse);
       // and up still locks, the lock over the mic
@@ -363,9 +372,11 @@ void main() {
       expect(t.widget<MaskChip>(find.byType(MaskChip)).busy, isFalse);
       final raw = File(recording!).readAsBytesSync();
       // both takes are there to be heard
-      final heard = tmp.listSync().whereType<File>().where(
-        (f) => f.path.endsWith('_m.wav'),
-      );
+      final heard = tmp
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('_m.wav'))
+          .toList();
       expect(heard, hasLength(1));
       await t.tap(find.bySemanticsLabel(l10n.commonSend));
       await settle(t);
@@ -376,6 +387,7 @@ void main() {
       expect(take.masked!.length, raw.length);
       expect(take.masked, isNot(raw));
       // the disguised copy made for the preview is gone
+      await shredded(t, heard.single.path);
       expect(
         tmp.listSync().whereType<File>().where(
           (f) => f.path.endsWith('_m.wav'),
@@ -471,7 +483,8 @@ void main() {
       await g.moveBy(const Offset(-60, 0));
       await t.pump();
       await g.up();
-      await settle(t);
+      // the take is shredded before the live disguise is ended
+      await until(t, () => live.isNotEmpty);
       expect(sent, isEmpty);
       expect(live, ['cancel']);
       await ended(t);
@@ -486,7 +499,8 @@ void main() {
       await settle(t, turns: 2);
       expect(mic(t).stage, VoiceStage.holding);
       await g.up();
-      await settle(t);
+      // the take is shredded before the live disguise is ended
+      await until(t, () => live.isNotEmpty);
       expect(sent, isEmpty);
       expect(live, ['cancel']);
       await ended(t);
@@ -498,7 +512,7 @@ void main() {
       await open(t, disguise: true);
       final g = await hold(t);
       lockGuard.locking();
-      await settle(t);
+      await until(t, () => live.isNotEmpty);
       expect(live, ['cancel']);
       expect(File(recording!).existsSync(), isFalse);
       await g.up();
@@ -524,13 +538,17 @@ void main() {
       spyLive();
       await open(t, disguise: true);
       final g = await hold(t);
+      // the isolate starts in real time
+      await until(t, () => spies.isNotEmpty);
       spies.single.gate = Completer<void>();
       await g.up();
-      await settle(t, turns: 4);
+      await until(t, () => live.isNotEmpty);
       expect(live, ['finish']);
       await close(t);
+      expect(File(recording!).existsSync(), isTrue);
       spies.single.gate!.complete();
-      await settle(t);
+      // the shred is the last the mic does with it
+      await shredded(t, recording!);
       expect(sent, isEmpty);
       expect(File(recording!).existsSync(), isFalse);
       await ended(t);
@@ -544,7 +562,8 @@ void main() {
       final g = await hold(t);
       stopThrows = true;
       await g.up();
-      await settle(t);
+      // the take is shredded before the live disguise is ended
+      await until(t, () => live.isNotEmpty);
       expect(sent, isEmpty);
       expect(live, ['cancel']);
       expect(File(recording!).existsSync(), isFalse);
@@ -565,8 +584,12 @@ void main() {
       await toPreview(t);
       await t.tap(find.byType(MaskChip));
       await until(t, () => mic(t).heard);
+      final takes = tmp.listSync().whereType<File>().toList();
+      expect(takes, hasLength(2));
       await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
-      await settle(t);
+      for (final f in takes) {
+        await shredded(t, f.path);
+      }
       expect(sent, isEmpty);
       expect(tmp.listSync().whereType<File>(), isEmpty);
       await close(t);
