@@ -19,6 +19,7 @@ class BootReceiver : BroadcastReceiver() {
         // plain start through without a deadline. a refusal is quiet:
         // opening the app starts it again
         try {
+            HaloListenerService.debugLog(context, "boot: ${action.substringAfterLast('.')}")
             HaloListenerService.start(context, plainFirst = true)
         } catch (e: Exception) {
             Log.i("halo-engine", "boot: listener not started: ${e.javaClass.simpleName}")

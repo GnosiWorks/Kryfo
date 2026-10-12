@@ -29,9 +29,16 @@ class HaloListenerService : Service() {
         // set on a foreground start, which has a deadline to meet
         const val EXTRA_FRONT = "front"
 
-        // when start() last ran, for the timing line of a debug build
+        // when start() first ran for the next onCreate, for the timing
+        // line of a debug build
         @Volatile
         private var askedAt = 0L
+
+        fun debugLog(context: Context, line: String) {
+            if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+                Log.i("halo-engine", line)
+            }
+        }
 
         // a plain start has no deadline. android allows one for a service
         // that is already up, while a screen of the app is in front, and
@@ -41,7 +48,7 @@ class HaloListenerService : Service() {
             context: Context,
             plainFirst: Boolean = QuietRestart.onScreen(QuietRestart.importance())
         ) {
-            askedAt = SystemClock.elapsedRealtime()
+            if (askedAt == 0L) askedAt = SystemClock.elapsedRealtime()
             val intent = Intent(context, HaloListenerService::class.java)
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 context.startService(intent)
@@ -50,12 +57,15 @@ class HaloListenerService : Service() {
             if (running || plainFirst) {
                 try {
                     context.startService(intent)
+                    debugLog(context, "listener: plain start")
                     return
                 } catch (e: IllegalStateException) {
                     // android counts the app as in the background after all
+                    debugLog(context, "listener: plain start refused")
                 }
             }
             context.startForegroundService(intent.putExtra(EXTRA_FRONT, true))
+            debugLog(context, "listener: foreground start")
         }
 
         // the channel keeps the words it was made with. a service that is
@@ -152,15 +162,14 @@ class HaloListenerService : Service() {
         } catch (e: Exception) {
             // onStartCommand tries again and decides
         }
-        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            val asked = askedAt
-            val wait = if (asked > 0) "${created - asked}" else "-"
-            Log.i(
-                "halo-engine",
-                "listener: start to create $wait ms, create to front " +
-                    "${SystemClock.elapsedRealtime() - created} ms, front $inFront"
-            )
-        }
+        val asked = askedAt
+        askedAt = 0L
+        val wait = if (asked > 0) "${created - asked}" else "-"
+        debugLog(
+            this,
+            "listener: start to create $wait ms, create to front " +
+                "${SystemClock.elapsedRealtime() - created} ms, front $inFront"
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
