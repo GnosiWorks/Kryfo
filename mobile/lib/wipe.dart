@@ -63,10 +63,14 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  wipeForget();
   // a repoint armed before this must not claim the handle back after the
   // release below
-  appState.stopRepoint();
-  wipeForget();
+  try {
+    appState.stopRepoint();
+  } catch (e) {
+    dlog('wipe: repoint not stopped (${e.runtimeType})');
+  }
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
   // the handle goes back while the key that proves it is ours is still in
