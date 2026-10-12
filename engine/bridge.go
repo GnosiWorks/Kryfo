@@ -480,6 +480,11 @@ func networkOnAtStart(t *tor.Tor) {
 func networkOn(t *tor.Tor, before func()) (string, error) {
 	why := ""
 	err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		// put to sleep after the caller looked: it stays asleep
+		if torIsPaused() {
+			why = "error: tor is asleep"
+			return nil
+		}
 		if netAway() {
 			why = errOffline
 			return nil

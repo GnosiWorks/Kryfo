@@ -4,6 +4,7 @@ package main
 
 import (
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -224,5 +225,45 @@ func TestAValveByHandCountsAsATry(t *testing.T) {
 	}
 	if !netValveDue(now.Add(3 * time.Minute)) {
 		t.Fatal("no scheduled try after the back-off")
+	}
+}
+
+// tor put to sleep after a reconnect looked and before its DisableNetwork 0:
+// it stays asleep
+func TestASleepBeforeTheNetworkOnHolds(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	f := overlapRig(t)
+	f.slow.Store(0)
+	release := make(chan struct{})
+	locked := make(chan struct{})
+	var once sync.Once
+	reconnectStepHook = func(_ int64, name string) {
+		if name != "network on" {
+			return
+		}
+		once.Do(func() {
+			go func() {
+				ctrlMu.Lock()
+				close(locked)
+				<-release
+				ctrlMu.Unlock()
+			}()
+			<-locked
+		})
+	}
+	t.Cleanup(func() { reconnectStepHook = nil })
+	before := len(f.sent())
+	done := make(chan string, 1)
+	go func() { done <- reconnectNow() }()
+	<-locked
+	time.Sleep(100 * time.Millisecond)
+	atomicPaused(t)
+	close(release)
+	if r := <-done; r != "error: tor is asleep" {
+		t.Fatalf("reconnect: %q", r)
+	}
+	if netOnIn(sentAfter(f, before)) {
+		t.Fatalf("tor woke for a reconnect after it was put to sleep: %v", f.sent())
 	}
 }
