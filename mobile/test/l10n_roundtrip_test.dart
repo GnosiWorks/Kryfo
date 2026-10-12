@@ -987,6 +987,11 @@ void main() {
       l.donateBackItAnonymouslyBadge,
       "Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*",
     );
+    expect(l.donateAuditTitle, "Help fund a security audit");
+    expect(
+      l.donateAuditLine,
+      "Donations here count toward an independent audit. The full report will be public.",
+    );
     expect(
       l.donateAddressCheckItAgainst("<coinName>"),
       "<coinName> address · check it against your wallet",

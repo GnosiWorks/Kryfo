@@ -652,6 +652,8 @@
   "donateKeepKryfo": "Halte Kryfo *unabhängig*",
   "donateNoAdsNoInvestors": "Keine Werbung, keine Investoren, nichts zu verkaufen. Es läuft mit dem, was Leute beisteuern.",
   "donateBackItAnonymouslyBadge": "Unterstütze es anonym. Abzeichen nur, wenn du willst.\n*Privatsphäre steht nie hinter einer Bezahlschranke.*",
+  "donateAuditTitle": "Hilf mit, ein Sicherheitsaudit zu finanzieren",
+  "donateAuditLine": "Spenden hier fließen in ein unabhängiges Audit. Der vollständige Bericht wird öffentlich.",
   "donateAddressCheckItAgainst": "{coinName}-Adresse · gleiche sie mit deiner Wallet ab",
   "donateAddressCopiedClearsIn": "Adresse kopiert · verschwindet in 60s",
   "donateCopyAddress": "Adresse kopieren",

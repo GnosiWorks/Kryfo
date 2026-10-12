@@ -880,6 +880,8 @@ final _calls = <_Call>[
   ('donateKeepKryfo', [], (l) => l.donateKeepKryfo),
   ('donateNoAdsNoInvestors', [], (l) => l.donateNoAdsNoInvestors),
   ('donateBackItAnonymouslyBadge', [], (l) => l.donateBackItAnonymouslyBadge),
+  ('donateAuditTitle', [], (l) => l.donateAuditTitle),
+  ('donateAuditLine', [], (l) => l.donateAuditLine),
   (
     'donateAddressCheckItAgainst',
     ["⟨coinName⟩"],

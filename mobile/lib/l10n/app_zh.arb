@@ -652,6 +652,8 @@
   "donateKeepKryfo": "让 Kryfo 保持*独立*",
   "donateNoAdsNoInvestors": "没有广告，没有投资人，没有东西要卖给你。它靠支持者的捐助运转。",
   "donateBackItAnonymouslyBadge": "匿名支持它。徽章自愿领取。\n*隐私永远不设付费门槛。*",
+  "donateAuditTitle": "帮忙资助一次安全审计",
+  "donateAuditLine": "在这里的捐款会用于一次独立审计。完整报告将会公开。",
   "donateAddressCheckItAgainst": "{coinName} 地址 · 请和你的钱包核对",
   "donateAddressCopiedClearsIn": "地址已复制 · 60 秒后清除",
   "donateCopyAddress": "复制地址",

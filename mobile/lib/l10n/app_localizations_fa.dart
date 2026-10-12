@@ -2114,6 +2114,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'ناشناس حمایت کنید. نشان اختیاری است.\n*حریم خصوصی هرگز پشت دیوار پرداخت نیست.*';
 
   @override
+  String get donateAuditTitle => 'به تأمین هزینهٔ یک ممیزی امنیتی کمک کنید';
+
+  @override
+  String get donateAuditLine =>
+      'کمک‌های مالی اینجا صرف یک ممیزی مستقل می‌شود. گزارش کامل آن عمومی خواهد شد.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'نشانی ⁨$coinName⁩ · آن را با کیف پولتان تطبیق دهید';
   }

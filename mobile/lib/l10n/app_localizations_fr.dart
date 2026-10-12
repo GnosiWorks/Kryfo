@@ -2130,6 +2130,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Soutenez-le anonymement. Badge facultatif.\n*La vie privée n’est jamais payante.*';
 
   @override
+  String get donateAuditTitle => 'Aidez à financer un audit de sécurité';
+
+  @override
+  String get donateAuditLine =>
+      'Les dons faits ici comptent pour un audit indépendant. Le rapport complet sera public.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Adresse $coinName · vérifiez-la dans votre portefeuille';
   }

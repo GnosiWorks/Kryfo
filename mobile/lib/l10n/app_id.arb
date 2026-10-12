@@ -652,6 +652,8 @@
   "donateKeepKryfo": "Jaga Kryfo tetap *mandiri*",
   "donateNoAdsNoInvestors": "Tanpa iklan, tanpa investor, tidak ada yang dijual. Kryfo hidup dari pemberian para penyokong.",
   "donateBackItAnonymouslyBadge": "Dukung secara anonim. Lencana opsional.\n*Privasi tidak pernah berbayar.*",
+  "donateAuditTitle": "Bantu danai audit keamanan",
+  "donateAuditLine": "Donasi di sini dihitung untuk audit independen. Laporan lengkapnya akan dibuka untuk publik.",
   "donateAddressCheckItAgainst": "Alamat {coinName} · cocokkan dengan dompetmu",
   "donateAddressCopiedClearsIn": "Alamat disalin · dihapus dalam 60 dtk",
   "donateCopyAddress": "Salin alamat",

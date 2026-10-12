@@ -2166,6 +2166,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поддержи анонимно. Значок — по желанию.\n*Приватность никогда не бывает платной.*';
 
   @override
+  String get donateAuditTitle => 'Помоги оплатить аудит безопасности';
+
+  @override
+  String get donateAuditLine =>
+      'Пожертвования здесь идут на независимый аудит. Полный отчёт будет опубликован.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Адрес $coinName · сверь его с кошельком';
   }

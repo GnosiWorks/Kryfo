@@ -2108,6 +2108,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Dukung secara anonim. Lencana opsional.\n*Privasi tidak pernah berbayar.*';
 
   @override
+  String get donateAuditTitle => 'Bantu danai audit keamanan';
+
+  @override
+  String get donateAuditLine =>
+      'Donasi di sini dihitung untuk audit independen. Laporan lengkapnya akan dibuka untuk publik.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Alamat $coinName · cocokkan dengan dompetmu';
   }

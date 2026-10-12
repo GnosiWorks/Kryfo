@@ -2113,6 +2113,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Anonim olarak destekle. Rozet isteğe bağlı.\n*Gizlilik hiçbir zaman ücretli olmaz.*';
 
   @override
+  String get donateAuditTitle =>
+      'Bir güvenlik denetimini finanse etmeye yardım et';
+
+  @override
+  String get donateAuditLine =>
+      'Buradaki bağışlar bağımsız bir denetime gider. Raporun tamamı herkese açık olacak.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName adresi · cüzdanındakiyle karşılaştır';
   }

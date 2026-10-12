@@ -2104,6 +2104,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ủng hộ ẩn danh. Huy hiệu tùy chọn.\n*Quyền riêng tư không bao giờ cần trả phí.*';
 
   @override
+  String get donateAuditTitle => 'Góp phần tài trợ một đợt kiểm định bảo mật';
+
+  @override
+  String get donateAuditLine =>
+      'Các khoản ủng hộ tại đây dành cho một đợt kiểm định độc lập. Toàn bộ báo cáo sẽ được công khai.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Địa chỉ $coinName · hãy đối chiếu với ví của bạn';
   }

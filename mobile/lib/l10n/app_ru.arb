@@ -652,6 +652,8 @@
   "donateKeepKryfo": "Сохрани Kryfo *независимым*",
   "donateNoAdsNoInvestors": "Без рекламы, без инвесторов, ничего не продаём. Живёт на то, что дают сторонники.",
   "donateBackItAnonymouslyBadge": "Поддержи анонимно. Значок — по желанию.\n*Приватность никогда не бывает платной.*",
+  "donateAuditTitle": "Помоги оплатить аудит безопасности",
+  "donateAuditLine": "Пожертвования здесь идут на независимый аудит. Полный отчёт будет опубликован.",
   "donateAddressCheckItAgainst": "Адрес {coinName} · сверь его с кошельком",
   "donateAddressCopiedClearsIn": "Адрес скопирован · очистится через 60 с",
   "donateCopyAddress": "Копировать адрес",

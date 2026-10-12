@@ -2162,6 +2162,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підтримай анонімно. Значок - за бажанням.\n*За приватність ніколи не треба платити.*';
 
   @override
+  String get donateAuditTitle => 'Допоможи оплатити аудит безпеки';
+
+  @override
+  String get donateAuditLine =>
+      'Внески тут ідуть на незалежний аудит. Повний звіт буде опубліковано.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Адреса $coinName · звір її з гаманцем';
   }

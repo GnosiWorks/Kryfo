@@ -3387,6 +3387,18 @@ abstract class AppLocalizations {
   /// **'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*'**
   String get donateBackItAnonymouslyBadge;
 
+  /// screens/donate_screen.dart. the row that links to kryfo.app/audit. never say or imply Kryfo is already audited
+  ///
+  /// In en, this message translates to:
+  /// **'Help fund a security audit'**
+  String get donateAuditTitle;
+
+  /// screens/donate_screen.dart. one line under donateAuditTitle. never say or imply Kryfo is already audited
+  ///
+  /// In en, this message translates to:
+  /// **'Donations here count toward an independent audit. The full report will be public.'**
+  String get donateAuditLine;
+
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
