@@ -19,6 +19,7 @@ import (
 	"log"
 	"math"
 	mrand "math/rand/v2"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -169,14 +170,31 @@ func kickChan() chan struct{} {
 
 // sleep that a kick ends early. true when it was kicked. a runner waiting
 // out a failed dial still hears the job's kick this way.
-func sleepOrKick(d time.Duration) bool {
+func sleepOrKick(d time.Duration) bool { return sleepOrKickOn(kickChan(), d) }
+
+// as sleepOrKick, on a kick channel taken before the check that led here, so
+// a kick between the two is not missed
+func sleepOrKickOn(kc chan struct{}, d time.Duration) bool {
+	return sleepOrKickCtx(context.Background(), kc, d)
+}
+
+// as sleepOrKickOn, and over when ctx is
+func sleepOrKickCtx(ctx context.Context, kc chan struct{}, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
 	select {
-	case <-time.After(d):
+	case <-t.C:
 		return false
-	case <-kickChan():
+	case <-kc:
 		return true
+	case <-ctx.Done():
+		return false
 	}
 }
+
+// called when a runner finds tor off the network, before it sleeps, for
+// the tests
+var runnerParkHook func()
 
 // a req shaped like any other this socket sends: its own address, nothing
 // older than now and no stored events. the relay answers eose, which is the
@@ -1094,18 +1112,28 @@ func torNostrClientFor(lane string) (*http.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
-	c := &http.Client{
-		Transport: &http.Transport{
-			DialContext:           d.DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-		},
-		Timeout: 60 * time.Second,
-	}
+	c := torLaneClient(d.DialContext)
 	cachedNostrClients[key] = c
 	log.Printf("nostr: %s client built over tor's socks listener", laneKind(lane))
 	return c, nil
 }
+
+// a lane's client over tor
+func torLaneClient(dial func(ctx context.Context, network, addr string) (net.Conn, error)) *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			DialContext:           dial,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+		},
+		Timeout:       60 * time.Second,
+		CheckRedirect: noRedirect,
+	}
+}
+
+// a relay, the gif service and the registry answer where they are asked: a
+// redirect is not followed to another host
+func noRedirect(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 
 func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int) {
 	for {
@@ -1432,10 +1460,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					}
 					return
 				}
-				// tor is down because it was asked to be. do not poll for it
-				// every ten seconds: the kick that follows a resume wakes this.
-				if modeNeedsTor() && torIsPaused() {
-					sleepOrKick(15 * time.Minute)
+				// tor is down because it was asked to be, or there is no
+				// network. do not poll for it every ten seconds: the kick that
+				// follows a resume or the network coming back wakes this.
+				kc := kickChan()
+				if modeNeedsTor() && (torIsPaused() || netAway()) {
+					if h := runnerParkHook; h != nil {
+						h()
+					}
+					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
 				client, err := torNostrClientFor(lane)
@@ -2090,15 +2123,23 @@ func nostrLetHeld(peerHex, how string) error {
 	if how == "mark" {
 		return nil
 	}
+	if h := letHeldHook; h != nil {
+		h()
+	}
 	// a runner reads the mark as it starts
 	if own && on {
 		nostrSubscribeAt(peerHex, peer, rcvPk)
 	}
 	if lane {
-		return subscribeFirstContact(fc)
+		// only the listener read above: a new invite address may have
+		// replaced it since
+		return restartFirstContact(fc)
 	}
 	return nil
 }
+
+// called before nostrLetHeld starts listeners again, for the tests
+var letHeldHook func()
 
 // stop listening for a peer, and take what its receive address kept on
 // disk with it
@@ -2174,7 +2215,12 @@ func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
 	return C.CString("ok")
 }
 
-func subscribeFirstContact(counter int) error {
+func subscribeFirstContact(counter int) error { return firstContactOn(counter, false) }
+
+// the first-contact listener on counter started again, if it still runs
+func restartFirstContact(counter int) error { return firstContactOn(counter, true) }
+
+func firstContactOn(counter int, again bool) error {
 	_, fcPk, err := nip17FirstContactKeys(counter)
 	if err != nil {
 		return err
@@ -2182,6 +2228,10 @@ func subscribeFirstContact(counter int) error {
 
 	nostrMu.Lock()
 	old, replaced := nostrSubs["firstcontact"]
+	if again && (!replaced || fcCounterNow != counter) {
+		nostrMu.Unlock()
+		return nil
+	}
 	if replaced {
 		old()
 		delete(nostrSubs, "firstcontact")
@@ -2391,7 +2441,7 @@ func nostrAck(token, failed string) string {
 		left[i] = g
 	}
 	var kept, held []inboxDone
-	var names []string
+	var names, heldL []string
 	var backL []string
 	var backD []inboxDone
 	for i, l := range b.lines {
@@ -2408,15 +2458,35 @@ func nostrAck(token, failed string) string {
 		case isHeld:
 			held = append(held, d)
 			names = append(names, g)
+			heldL = append(heldL, l)
 		default:
 			kept = append(kept, d)
 		}
 	}
 	pollRequeueLocked(backL, backD)
 	nostrMu.Unlock()
-	markHandedOver(append(kept, markHeld(held, names, time.Now())...))
+	if h := ackHook; h != nil {
+		h()
+	}
+	took, stale := markHeld(held, names, time.Now())
+	markHandedOver(append(kept, took...))
+	// let go of while this ran: to the app again, as above
+	if len(stale) > 0 {
+		var l []string
+		var d []inboxDone
+		for _, i := range stale {
+			l = append(l, heldL[i])
+			d = append(d, held[i])
+		}
+		nostrMu.Lock()
+		pollRequeueLocked(l, d)
+		nostrMu.Unlock()
+	}
 	return "ok"
 }
+
+// called between nostrAck's check and its holds, for the tests
+var ackHook func()
 
 // the app's list of places it could not keep, "[...]", or that list, the
 // places it leaves on the relay until it has room and the group each of
@@ -2440,12 +2510,21 @@ func ackLists(raw string) (failed, held []int, groups []string, err error) {
 
 // events the app left on the relay, each in the group named for it: held
 // where there is room, the rest returned to be taken as kept. the anchor
-// moves past them either way, a held one comes back by its id
-func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
-	var kept []inboxDone
+// moves past them either way, a held one comes back by its id. stale: the
+// places of those let go of since the poll, which are not held
+func markHeld(done []inboxDone, names []string, now time.Time) (kept []inboxDone, stale []int) {
 	saves := map[*seenIDs]func(int64){}
 	for i, d := range done {
-		if d.set == nil || !d.set.hold(d.id, d.at, names[i], now, d.from, d.until) {
+		if d.set == nil {
+			kept = append(kept, d)
+			continue
+		}
+		held, late := d.set.holdSince(d.id, d.at, names[i], now, d.from, d.until, d.freed)
+		if late {
+			stale = append(stale, i)
+			continue
+		}
+		if !held {
 			kept = append(kept, d)
 			continue
 		}
@@ -2456,7 +2535,7 @@ func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
 	for _, save := range saves {
 		save(0)
 	}
-	return kept
+	return kept, stale
 }
 
 // a walk brings its stored wraps a page at a time, and each page is a random

@@ -25,6 +25,7 @@ tests=(
 	TestSnowflakeBackoff
 	TestLateNetworkOffIsRescued
 	TestAirplaneThenLand
+	TestReportedFlightStaysOff
 	TestFlipStormSettles
 )
 # these need the test build's censor as well

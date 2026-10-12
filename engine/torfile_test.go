@@ -100,3 +100,24 @@ func TestGifAsksOnItsOwnLane(t *testing.T) {
 		t.Fatal("gifs and the services share a socks name")
 	}
 }
+
+// an answer past the cap is an error, never the part that fits
+func TestGifAskRefusesAnAnswerPastTheCap(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := gifAskMax
+		if r.URL.Path == "/big" {
+			n++
+		}
+		w.Write(bytes.Repeat([]byte("x"), n))
+	}))
+	defer srv.Close()
+	old := gifClient
+	gifClient = func() (*http.Client, error) { return srv.Client(), nil }
+	defer func() { gifClient = old }()
+	if out := gifAsk(http.MethodGet, srv.URL+"/big", ""); out != "error: read: too big" {
+		t.Fatalf("past the cap: %d bytes", len(out))
+	}
+	if out := gifAsk(http.MethodGet, srv.URL+"/full", ""); len(out) != gifAskMax {
+		t.Fatalf("at the cap: %d bytes", len(out))
+	}
+}

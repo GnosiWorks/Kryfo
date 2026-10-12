@@ -114,6 +114,10 @@ class _Engine implements HaloEngine {
   void networkChanged({bool online = true}) =>
       log.add(online ? 'network' : 'offline');
   @override
+  void networkDetail(String json) => log.add('detail');
+  @override
+  void connectivitySeen(bool on) => log.add('seen:$on');
+  @override
   Future<String> reconnectNow() async {
     log.add('now');
     return 'ok';
@@ -1057,6 +1061,10 @@ void main() {
     const mobile = ConnectivityResult.mobile;
     const vpn = ConnectivityResult.vpn;
     const none = ConnectivityResult.none;
+    // what the engine heard of the network
+    List<String> net() => log
+        .where((e) => const {'network', 'offline', 'detail'}.contains(e))
+        .toList();
 
     test('reaches the engine, and nothing that is not a change does', () {
       final app = AppState()..sendModeForTest = 'private';
@@ -1084,6 +1092,64 @@ void main() {
       }
       expect(log.where((e) => e == 'network').length, 11);
       expect(log.where((e) => e == 'offline').length, 10);
+    });
+
+    test('a none while android\'s watch sees a network is not taken', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      log.clear();
+      // the engine hears connectivity's own word and weighs it itself
+      app.connectivityEvent([none]);
+      expect(log, contains('seen:false'));
+      expect(net(), ['offline']);
+      expect(app.online, isTrue);
+      // seen again, the network is bounced
+      app.connectivityEvent([wifi]);
+      expect(net(), ['offline', 'network']);
+      // the watch says none: offline whatever connectivity says
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.connectivityEvent([mobile]);
+      expect(app.online, isFalse);
+    });
+
+    test('connectivity seeing a network reaches the engine as it is', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      app.connectivityEvent([none]);
+      log.clear();
+      // the watch wrongly says none, connectivity sees wifi: the engine
+      // hears online, so it can tell the dispute
+      app.connectivityEvent([wifi]);
+      expect(log, contains('seen:true'));
+      expect(net(), ['network']);
+      expect(app.online, isFalse);
+    });
+
+    test('relays through tor outrank the watch saying none', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.takeTorStatus('publishing|100|1|1|0');
+      expect(app.online, isTrue);
+      // a recheck that brings the same none is no news
+      log.clear();
+      app.recheckNetDetail('{"on":false,"kind":"other"}');
+      expect(app.online, isTrue);
+      expect(net(), isEmpty);
+      app.recheckNetDetail('{"on":false,"kind":"wifi"}');
+      expect(app.online, isFalse);
+    });
+
+    test('the watch alone bringing the network back brings the app online', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([none]);
+      expect(app.online, isFalse);
+      log.clear();
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      expect(app.online, isTrue);
+      expect(net(), ['detail', 'network']);
     });
   });
 }

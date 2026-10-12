@@ -8,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/cretz/bine/control"
 )
 
 // whether the route through tor actually carries anything. tor's own report
@@ -172,6 +174,9 @@ func routeWatch() {
 	for {
 		time.Sleep(10 * time.Second)
 		correctStaleStart()
+		if netValveDue(time.Now()) {
+			go netValveTry()
+		}
 		if why := routeNeedsRescue(time.Now()); why != "" {
 			log.Printf("halo: route rescue - %s", why)
 			atomic.StoreInt64(&lastTorRestart, 0)
@@ -184,6 +189,11 @@ func routeWatch() {
 // nothing should happen, otherwise the reason. records the rescue it allows.
 func routeNeedsRescue(now time.Time) string {
 	if !modeNeedsTor() || torIsPaused() {
+		return ""
+	}
+	// no network: nothing can get through, and a rescue then only spends
+	// tor's guards and the back-off. the change that brings one bounces
+	if netOffline.Load() {
 		return ""
 	}
 	// automatic owns the bounces while it tries: not counted as a rescue
@@ -303,18 +313,254 @@ var (
 // range. a bounce then proves nothing, so it waits for the network to come
 var netOffline atomic.Bool
 
+// when the network went, zero while there is one, and the tries the valve
+// made since. netGoneMu
+var (
+	netGoneMu    sync.Mutex
+	netGoneAt    time.Time
+	netValveN    int
+	netValveLast time.Time
+)
+
+// whether there is a network now, from whichever call says so. true when
+// there was none before
+func setOffline(off bool) (was bool) {
+	netGoneMu.Lock()
+	defer netGoneMu.Unlock()
+	was = netOffline.Swap(off)
+	switch {
+	case off && !was:
+		netGoneAt, netValveN, netValveLast = time.Now(), 0, time.Time{}
+	case !off:
+		netGoneAt = time.Time{}
+	}
+	return was
+}
+
+// what the plain call said last
+const (
+	connUnsaid int32 = iota
+	connOn
+	connOff
+)
+
+var connSaid atomic.Int32
+
+// tor stays off the network for want of one, unless the valve is trying it
+func netAway() bool { return netOffline.Load() && !netValveOpen.Load() }
+
 // a change the app saw, and whether a network is there after it
 func networkChangedTo(online bool) {
-	netOffline.Store(!online)
+	// android's watch on the default network has the say once it has
+	// spoken: this older call can say none while a network is there
+	// the watch has the say: a word of the plain call that differs is a
+	// dispute for the valve, not a change of network
+	if n, ok := netDetailTrusted(); ok && n.On != online {
+		return
+	}
+	was := setOffline(!online)
 	networkChanged()
+	if !online {
+		// at once, not after the quiet window: every guard tor tries with
+		// no network is marked down, and tor waits ten minutes before it
+		// tries a primary guard again
+		go netPark()
+		return
+	}
+	if was {
+		netBack()
+	}
+}
+
+// the network came back. runners that slept through the outage dial
+// again, through tor once the bounce has put it back on the network
+func netBack() {
+	if !modeNeedsTor() || !torParked.Load() {
+		kickRelays()
+	}
+}
+
+// tor off the network while there is none. reconnectOn leaves it off and
+// the network-change bounce puts it back on. a var for the tests, set in
+// init: a park reaches a reconnect, which can park
+var netPark func()
+
+func init() { netPark = parkForNoNetwork }
+
+func parkForNoNetwork() {
+	if !netAway() || !modeNeedsTor() || torIsPaused() || torParked.Load() {
+		return
+	}
+	mu.Lock()
+	up := torNode != nil && torNode.Control != nil
+	mu.Unlock()
+	if !up || !netAway() {
+		return
+	}
+	log.Println("halo: no network, taking tor off it")
+	// past automatic's gate: going off the network is safe in any mode, and
+	// an attempt under way is stopped by the outage anyway
+	reconnectTorBy(true, true)
+}
+
+// tor was left off the network because there was none
+var torParked atomic.Bool
+
+// tor left off the network for want of one. a network that came meanwhile
+// found it not parked yet and bounced nothing, so it is looked at again
+func netParked() {
+	torParked.Store(true)
+	if !netAway() {
+		networkChanged()
+	}
+}
+
+// DisableNetwork 0 commands tor took, counted under the control lock
+var netOns atomic.Int64
+
+// tor went on the network. a park that came meanwhile found it parked
+// still and left it, so it is looked at again. under the control lock
+func netWentOn() {
+	netOns.Add(1)
+	torParked.Store(false)
+	if netAway() {
+		go netPark()
+	}
+}
+
+// offline this long by the app's word, tor is tried anyway in case the
+// word was wrong, and again after each wait, twice as long up to the most
+var (
+	netValveAfter = 10 * time.Minute
+	netValveMost  = time.Hour
+)
+
+// set while the valve tries tor with no network said to be there
+var netValveOpen atomic.Bool
+
+// the least wait for a valve while the plain call has said nothing: the
+// watch alone saying none is believed for longer
+var netValveUnsaid = 30 * time.Minute
+
+// the watch says none while the plain call sees a network
+func netDisputed() bool {
+	d, ok := netDetailTrusted()
+	return ok && !d.On && connSaid.Load() == connOn
+}
+
+// what connectivity sees, from the app on every event: whether the two
+// calls disagree, and no change of its own
+func connectivitySaw(on bool) {
+	if on {
+		connSaid.Store(connOn)
+	} else {
+		connSaid.Store(connOff)
+	}
+}
+
+// whether the valve tries now. records the try it allows
+func netValveDue(now time.Time) bool {
+	if !netOffline.Load() || !torParked.Load() || netValveOpen.Load() || !modeNeedsTor() || torIsPaused() {
+		return false
+	}
+	// each try marks guards down: only when the two calls disagree, or
+	// one of them never spoke. none by both is none
+	least := time.Duration(0)
+	if _, known := netDetailNow(); known {
+		switch connSaid.Load() {
+		case connOff:
+			return false
+		case connUnsaid:
+			least = netValveUnsaid
+		}
+	}
+	netGoneMu.Lock()
+	defer netGoneMu.Unlock()
+	if netGoneAt.IsZero() {
+		return false
+	}
+	wait := netValveAfter << uint(netValveN)
+	if netValveN > 6 || wait > netValveMost {
+		wait = netValveMost
+	}
+	if wait < least {
+		wait = least
+	}
+	from := netGoneAt
+	if !netValveLast.IsZero() {
+		from = netValveLast
+	}
+	if now.Sub(from) < wait {
+		return false
+	}
+	netValveN++
+	netValveLast = now
+	return true
+}
+
+// how long the valve takes a network as there: a bounce or automatic's
+// pass gets that long to bring a relay through
+var netValveFor = 3 * time.Minute
+
+// the network taken as there for netValveFor, as on any change: the bounce
+// or automatic's pass tries tor. a relay through it means the network was
+// there after all. otherwise tor is parked again. a var for the tests, set
+// in init as the others
+var netValveTry func()
+
+func init() { netValveTry = valveTryTor }
+
+func valveTryTor() {
+	if !netValveOpen.CompareAndSwap(false, true) {
+		return
+	}
+	log.Println("halo: no network for long, trying tor anyway")
+	networkChanged()
+	autoKick()
+	ok := netValveProven()
+	netValveOpen.Store(false)
+	if ok {
+		log.Println("halo: a relay got through, the network is there")
+		netDisprove()
+		setOffline(false)
+		kickRelays()
+		return
+	}
+	if netAway() {
+		netPark()
+	}
+}
+
+// a relay through tor while the valve is open, before netValveFor is out
+// and while the app has not spoken
+func netValveProven() bool {
+	gen := routeBump()
+	step := netKnobsNow().step
+	end := time.Now().Add(netValveFor)
+	for time.Now().Before(end) {
+		if !netOffline.Load() || !modeNeedsTor() || torIsPaused() {
+			return false
+		}
+		routeMu.Lock()
+		ok := okGen >= gen
+		routeMu.Unlock()
+		if ok {
+			return true
+		}
+		time.Sleep(step)
+	}
+	return false
 }
 
 func networkChanged() {
 	// direct was welcome on the old network, maybe not on this one. a
-	// check-in under way puts this network's way back at once
-	autoDirectOK.Store(false)
+	// check-in under way puts this network's way back at once. both wait on
+	// tor's control port, so neither holds up the caller
+	if autoDirectOK.Swap(false) {
+		go netLeaveDirect(netOns.Load())
+	}
 	if inCheckIn() {
-		putCheckInStep()
+		putCheckInStepSoon()
 	}
 	// a snowflake client keeps the nat type it found on the old network
 	dropSnowflakeClients()
@@ -347,11 +593,12 @@ func netBounceWorker() {
 		}
 		lastNetBounce = time.Now()
 		netWorker = false
+		bounce := netBounce
 		netMu.Unlock()
 
 		// floors and back-offs were reset with the change. offline, the
 		// bounce and its check wait for the change that brings a network
-		if !modeNeedsTor() || torIsPaused() || netOffline.Load() {
+		if !modeNeedsTor() || torIsPaused() || netAway() {
 			return
 		}
 		// automatic starts its own pass on the new network
@@ -359,16 +606,48 @@ func netBounceWorker() {
 			log.Println("halo: network bounce left to automatic")
 			return
 		}
-		netBounce()
+		bounce()
 		return
 	}
 }
 
-// a var so the debounce can be tested without a tor.
-var netBounce = func() {
+// automatic's direct step was out on the old network: tor leaves the
+// network at once, as this one may be where direct is blocked, and the
+// bounce or automatic's pass puts it back with this network's way. a var
+// for the tests
+var netLeaveDirect = func(ons int64) {
+	if mode, _, _ := bridgeMode(); mode != bmAuto || !modeNeedsTor() || torIsPaused() {
+		return
+	}
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil || t.Control == nil {
+		return
+	}
+	err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
+		// tor went on since the change, with this network's own step,
+		// or a direct step was put back for it
+		if netOns.Load() != ons || autoDirectOK.Load() {
+			return nil
+		}
+		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+	})
+	if err != nil {
+		log.Printf("halo: tor would not leave the network: %v", err)
+	}
+}
+
+// a var so the debounce can be tested without a tor. set in init: the
+// bounce reaches a park, and a park starts the debounce again
+var netBounce func()
+
+func init() { netBounce = bounceForNetwork }
+
+func bounceForNetwork() {
 	log.Println("halo: network changed, bouncing tor")
 	epoch := netEpoch.Load()
-	netReconnect()
+	netKnobsNow().reconnect()
 	netCheck(epoch)
 }
 
@@ -391,6 +670,21 @@ var (
 	netProofStep  = 2 * time.Second
 )
 
+// the bounce's settings as they are now. the tests change them under
+// netMu, while a bounce of an earlier test may still be running
+type netKnobs struct {
+	proof     time.Duration
+	tries     int
+	step      time.Duration
+	reconnect func() string
+}
+
+func netKnobsNow() netKnobs {
+	netMu.Lock()
+	defer netMu.Unlock()
+	return netKnobs{netProof, netProofTries, netProofStep, netReconnect}
+}
+
 // a relay connected through the route the last bounce built
 func routeProven() bool {
 	routeMu.Lock()
@@ -411,25 +705,26 @@ func lastNetCheck() string {
 // the relays the bounce kicked are the proof. "ok", "unproven", or
 // "superseded" when a newer change took over
 func netCheck(epoch int64) string {
+	k := netKnobsNow()
 	began := time.Now()
 	for try := 1; ; try++ {
-		end := time.Now().Add(netProof)
+		end := time.Now().Add(k.proof)
 		for time.Now().Before(end) {
-			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netOffline.Load() {
+			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netAway() {
 				return "superseded"
 			}
 			if routeProven() {
 				netCheckOutcome.Store(fmt.Sprintf("ok after %s", time.Since(began).Round(time.Second)))
 				return "ok"
 			}
-			time.Sleep(netProofStep)
+			time.Sleep(k.step)
 		}
-		if try >= netProofTries {
+		if try >= k.tries {
 			netCheckOutcome.Store(fmt.Sprintf("no relay through tor in %s", time.Since(began).Round(time.Second)))
 			log.Printf("halo: tor not proven on the new network after %d bounces", try)
 			return "unproven"
 		}
-		log.Printf("halo: no relay through tor %s after the bounce, bouncing again", netProof)
-		netReconnect()
+		log.Printf("halo: no relay through tor %s after the bounce, bouncing again", k.proof)
+		k.reconnect()
 	}
 }
