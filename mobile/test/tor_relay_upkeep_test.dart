@@ -114,6 +114,8 @@ class _Engine implements HaloEngine {
   void networkChanged({bool online = true}) =>
       log.add(online ? 'network' : 'offline');
   @override
+  void networkDetail(String json) => log.add('detail');
+  @override
   Future<String> reconnectNow() async {
     log.add('now');
     return 'ok';
@@ -1057,6 +1059,10 @@ void main() {
     const mobile = ConnectivityResult.mobile;
     const vpn = ConnectivityResult.vpn;
     const none = ConnectivityResult.none;
+    // what the engine heard of the network
+    List<String> net() => log
+        .where((e) => const {'network', 'offline', 'detail'}.contains(e))
+        .toList();
 
     test('reaches the engine, and nothing that is not a change does', () {
       final app = AppState()..sendModeForTest = 'private';
@@ -1084,6 +1090,34 @@ void main() {
       }
       expect(log.where((e) => e == 'network').length, 11);
       expect(log.where((e) => e == 'offline').length, 10);
+    });
+
+    test('a none while android\'s watch sees a network is not taken', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      log.clear();
+      app.connectivityEvent([none]);
+      expect(net(), isEmpty);
+      expect(app.online, isTrue);
+      // seen again, the network is bounced
+      app.connectivityEvent([wifi]);
+      expect(net(), ['network']);
+      // the watch says none: offline whatever connectivity says
+      app.netDetailEvent('{"on":false,"kind":"other"}');
+      expect(app.online, isFalse);
+      app.connectivityEvent([mobile]);
+      expect(app.online, isFalse);
+    });
+
+    test('the watch alone bringing the network back brings the app online', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([none]);
+      expect(app.online, isFalse);
+      log.clear();
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi"}');
+      expect(app.online, isTrue);
+      expect(net(), ['detail', 'network']);
     });
   });
 }

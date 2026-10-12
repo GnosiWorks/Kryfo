@@ -12523,6 +12523,7 @@ class AppState extends ChangeNotifier {
   void appInFront(bool front) {
     _inFront = front;
     if (front) {
+      unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
       // again as the status comes in, for a little while
       _stuckLookUntil = DateTime.now().add(stuckLookFor);
@@ -18501,7 +18502,42 @@ class AppState extends ChangeNotifier {
     }
     _lastKinds = lastKinds;
     Connectivity().onConnectivityChanged.listen(connectivityEvent);
-    unawaited(listenNetDetail(engine.networkDetail));
+    unawaited(listenNetDetail(netDetailEvent));
+  }
+
+  // whether android's default-network watch says a network is there, null
+  // until it has said. once it has, its word decides online: connectivity
+  // can say none while a network is there, and miss it coming back
+  bool? _netWatchOn;
+
+  // the watch's word on the default network, as json: to the engine, and
+  // online follows it
+  @visibleForTesting
+  void netDetailEvent(String json) {
+    engine.networkDetail(json);
+    bool? on;
+    try {
+      final m = jsonDecode(json);
+      if (m is Map && m['on'] is bool) on = m['on'] as bool;
+    } catch (_) {}
+    if (on == null) return;
+    _netWatchOn = on;
+    if (on == _online) return;
+    // back on a network connectivity may not have reported
+    if (on) networkMoved();
+    noteOnline(on);
+  }
+
+  // back in front: connectivity and the watch are asked again, as either
+  // may have missed a change while the app slept
+  Future<void> _recheckNetwork() async {
+    final s = await readNetDetail();
+    if (s != null) netDetailEvent(s);
+    try {
+      connectivityEvent(await Connectivity().checkConnectivity());
+    } catch (e) {
+      dlog('connectivity recheck: $e');
+    }
   }
 
   // the kinds of network the last event named, sorted: "mobile,vpn"
@@ -18514,8 +18550,15 @@ class AppState extends ChangeNotifier {
   // it bounces, so a burst of flips is one reconnect after the last
   @visibleForTesting
   void connectivityEvent(List<ConnectivityResult> results) {
-    final on = results.any((r) => r != ConnectivityResult.none);
+    final seen = results.any((r) => r != ConnectivityResult.none);
     final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
+    final on = _netWatchOn ?? seen;
+    // none while the watch says a network is there: not taken. the next
+    // kinds are a change, so the network seen again is bounced
+    if (!seen && on) {
+      _lastKinds = kinds;
+      return;
+    }
     final flip = networkFlip(
       wasOnline: _online,
       lastKinds: _lastKinds,

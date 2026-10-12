@@ -19,3 +19,12 @@ Future<void> listenNetDetail(void Function(String json) onDetail) async {
     // no android side: the engine keeps the plain online signal
   }
 }
+
+// what the watch says now, null with no android side
+Future<String?> readNetDetail() async {
+  try {
+    return await _net.invokeMethod<String>('state');
+  } catch (_) {
+    return null;
+  }
+}
