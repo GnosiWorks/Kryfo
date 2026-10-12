@@ -13,7 +13,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show appState, kNameAsk, kNameSays, useDatabasesForTest, useEngineForTest;
+    show
+        appState,
+        kNameAsk,
+        kNameSays,
+        session,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/session.dart';
@@ -38,9 +44,10 @@ class _Db extends SayHiDb {
     where: 'halo_id = ?',
     whereArgs: [haloId],
   );
-  // no key from them yet: the number page says so
+  // the key held for them, none before anything came
+  String? held = 'ab' * 32;
   @override
-  Future<String?> heldKey(String haloId) async => null;
+  Future<String?> heldKey(String haloId) async => held;
 }
 
 void main() {
@@ -147,6 +154,14 @@ void main() {
     expect(find.byType(NameCheckMark), findsOneWidget);
     await devClose(t);
     // and it does not come back with the chat
+    await open(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('no key held for them yet: no number, so no card', (t) async {
+    await person(flags: kNameAsk);
+    (session.primary as _Db).held = null;
     await open(t);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
     await devClose(t);

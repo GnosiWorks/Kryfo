@@ -3942,7 +3942,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeNumberMatches => '核对两部手机上的这串号码是否一致';
+  String get pairCodeNumberMatches => '核对两部手机上的四组数字是否全部一致';
 
   @override
   String get pairCodeNumberDiffers => '号码不一致';
@@ -6103,6 +6103,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelYourWords => '你的三个词';
 
   @override
+  String get pairCodePanelAcceptOnce => '对方添加你后，你会收到请求。等对方说四组数字都一致，再接受。';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return '置顶消息 · $count';
   }
@@ -7626,7 +7629,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。';
+      '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。不确定链接从哪来？就保留现有的。';
 
   @override
   String get nameTakenUse => '使用这个链接';
@@ -11773,7 +11776,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeNumberMatches => '核對兩支手機上的這組號碼是否一致';
+  String get pairCodeNumberMatches => '核對兩支手機上的四組數字是否全部一致';
 
   @override
   String get pairCodeNumberDiffers => '號碼不一致';
@@ -13933,6 +13936,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodePanelYourWords => '你的三個詞';
 
   @override
+  String get pairCodePanelAcceptOnce => '對方加入你之後，你會收到請求。等對方說四組數字都一致，再接受。';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return '置頂訊息 · $count';
   }
@@ -15336,7 +15342,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get nameTakenChatLine =>
-      '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。';
+      '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。不確定連結從哪來？就保留現有的。';
 
   @override
   String get nameTakenUse => '使用這個連結';

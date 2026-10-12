@@ -4118,7 +4118,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodeKeyNumber => 'Nomor kunci';
 
   @override
-  String get pairCodeNumberMatches => 'Pastikan nomor ini sama di kedua ponsel';
+  String get pairCodeNumberMatches =>
+      'Pastikan keempat kelompok sama di kedua ponsel';
 
   @override
   String get pairCodeNumberDiffers => 'Nomornya berbeda';
@@ -6365,6 +6366,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodePanelYourWords => 'Tiga katamu';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Permintaannya datang setelah dia menambahkanmu. Terima hanya setelah dia bilang keempat kelompok sama.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Pesan tersemat · $count';
   }
@@ -7964,7 +7969,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Obrolanmu dengan kata-kata ini datang dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja: obrolan itu dihapus, dan kamu membandingkan nomor keamanan di obrolan yang baru.';
+      'Obrolanmu dengan kata-kata ini datang dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja: obrolan itu dihapus, dan kamu membandingkan nomor keamanan di obrolan yang baru. Tidak yakin dari mana tautan ini? Tetap pakai yang sudah ada.';
 
   @override
   String get nameTakenUse => 'Pakai tautan ini';

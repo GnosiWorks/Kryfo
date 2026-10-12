@@ -5149,9 +5149,9 @@
   "@pairCodeKeyNumber": {
     "description": "widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use"
   },
-  "pairCodeNumberMatches": "Check this number matches on both phones",
+  "pairCodeNumberMatches": "Check all four groups match on both phones",
   "@pairCodeNumberMatches": {
-    "description": "widgets/pair_join.dart: under the key number on both pair-code screens: the two phones must show the same digits"
+    "description": "widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones"
   },
   "pairCodeNumberDiffers": "The number is different",
   "@pairCodeNumberDiffers": {
@@ -8063,6 +8063,10 @@
   "@pairCodePanelYourWords": {
     "description": "widgets/pair_join.dart: label over the sharer's own three words under the six digit code"
   },
+  "pairCodePanelAcceptOnce": "Their request comes once they add you. Accept it only once they say all four groups matched.",
+  "@pairCodePanelAcceptOnce": {
+    "description": "widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add"
+  },
   "pinsPinnedMessages": "Pinned messages · {count}",
   "@pinsPinnedMessages": {
     "description": "widgets/pins.dart",
@@ -10048,7 +10052,7 @@
   "@nameTakenLine": {
     "description": "widgets/kryfo_link_text.dart: the words of a link are held here by someone a request, an introduction or a group gave them to, never checked, with no chat yet"
   },
-  "nameTakenChatLine": "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one.",
+  "nameTakenChatLine": "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.",
   "@nameTakenChatLine": {
     "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat"
   },

@@ -4112,7 +4112,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Kiểm tra số này giống nhau trên cả hai điện thoại';
+      'Kiểm tra cả bốn nhóm số giống nhau trên hai điện thoại';
 
   @override
   String get pairCodeNumberDiffers => 'Số không giống';
@@ -6358,6 +6358,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodePanelYourWords => 'Ba từ của bạn';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Yêu cầu của họ sẽ đến khi họ thêm bạn. Chỉ chấp nhận khi họ nói cả bốn nhóm số đều khớp.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Tin nhắn đã ghim · $count';
   }
@@ -7956,7 +7960,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Cuộc trò chuyện của bạn dưới ba từ này đến từ một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó: cuộc trò chuyện kia sẽ bị xóa, và bạn so sánh số an toàn trong cuộc trò chuyện mới.';
+      'Cuộc trò chuyện của bạn dưới ba từ này đến từ một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó: cuộc trò chuyện kia sẽ bị xóa, và bạn so sánh số an toàn trong cuộc trò chuyện mới. Không chắc liên kết từ đâu đến? Hãy giữ người đang có.';
 
   @override
   String get nameTakenUse => 'Dùng liên kết này';

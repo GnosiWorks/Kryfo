@@ -146,10 +146,11 @@ class MemDb implements Database, Transaction {
       if (!except.contains(e.key)) _tables[e.key] = e.value;
     }
     // sqlite's own, made with the first AUTOINCREMENT table
-    _tables['sqlite_sequence'] = _Table({
-      'name': _Col(false, null, null),
-      'seq': _Col(false, null, null),
-    }, const [], null);
+    _tables['sqlite_sequence'] = _Table(
+      {'name': _Col(false, null, null), 'seq': _Col(false, null, null)},
+      const [],
+      null,
+    );
   }
 
   Map<String, _Table> _tables = {};

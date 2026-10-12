@@ -4134,7 +4134,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'بررسی کنید این شماره روی هر دو گوشی یکی باشد';
+      'بررسی کنید هر چهار گروه روی هر دو گوشی یکی باشند';
 
   @override
   String get pairCodeNumberDiffers => 'شماره فرق دارد';
@@ -6379,6 +6379,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pairCodePanelYourWords => 'سه واژه‌ی شما';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'درخواست او پس از اینکه شما را اضافه کند می‌رسد. فقط وقتی بپذیرید که بگوید هر چهار گروه یکی بودند.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'پیام‌های سنجاق‌شده · ⁨$count⁩';
   }
@@ -7984,7 +7988,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'گفت‌وگوی شما با این واژه‌ها از یک درخواست، یک معرفی یا یک گروه آمده، با کلیدی دیگر، و کسی آن را بررسی نکرده است. واژه‌ها را می‌شود کپی کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید: آن گفت‌وگو پاک می‌شود و شماره‌ی امنیتی را در گفت‌وگوی تازه مقایسه می‌کنید.';
+      'گفت‌وگوی شما با این واژه‌ها از یک درخواست، یک معرفی یا یک گروه آمده، با کلیدی دیگر، و کسی آن را بررسی نکرده است. واژه‌ها را می‌شود کپی کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید: آن گفت‌وگو پاک می‌شود و شماره‌ی امنیتی را در گفت‌وگوی تازه مقایسه می‌کنید. مطمئن نیستید پیوند از کجا آمده؟ همان قبلی را نگه دارید.';
 
   @override
   String get nameTakenUse => 'استفاده از این پیوند';

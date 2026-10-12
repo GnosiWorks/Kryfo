@@ -3112,7 +3112,6 @@ final _calls = <_Call>[
   ('supportMoveToInbox', [], (l) => l.supportMoveToInbox),
   ('supportMovedToInbox', [], (l) => l.supportMovedToInbox),
   ('pairCodeKeyNumber', [], (l) => l.pairCodeKeyNumber),
-  ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
   ('pairCodeNumberDiffers', [], (l) => l.pairCodeNumberDiffers),
   ('pairCodeNoNumberThere', [], (l) => l.pairCodeNoNumberThere),
   ('contactCardScanToAdd', [], (l) => l.contactCardScanToAdd),
@@ -3131,12 +3130,14 @@ final _calls = <_Call>[
   ('nameNotChecked', [], (l) => l.nameNotChecked),
   ('nameTakenTitle', [], (l) => l.nameTakenTitle),
   ('nameTakenLine', [], (l) => l.nameTakenLine),
-  ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
   ('nameTakenUse', [], (l) => l.nameTakenUse),
   ('nameTakenKeep', [], (l) => l.nameTakenKeep),
   ('chatCompareTitle', [], (l) => l.chatCompareTitle),
   ('chatCompareLine', ["⟨peerName⟩"], (l) => l.chatCompareLine("⟨peerName⟩")),
   ('chatCompareLater', [], (l) => l.chatCompareLater),
+  ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
+  ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
+  ('pairCodePanelAcceptOnce', [], (l) => l.pairCodePanelAcceptOnce),
 ];
 
 void main() {

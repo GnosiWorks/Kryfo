@@ -455,6 +455,17 @@ void main() {
         find.text(chat ? l10n.nameTakenChatLine : l10n.nameTakenLine),
         findsOneWidget,
       );
+      // a chat goes with a yes: said in the warning colour
+      expect(
+        t.widget<Text>(find.text(l10n.nameTakenTitle)).style?.color,
+        chat ? HaloColors.rose : isNot(HaloColors.rose),
+      );
+      if (chat) {
+        expect(
+          l10n.nameTakenChatLine,
+          endsWith('Not sure where the link came from? Keep the one you have.'),
+        );
+      }
       await t.tap(find.text(tap));
       await t.pumpAndSettle();
       expect(got, want);

@@ -4137,7 +4137,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Bu numaranın iki telefonda da aynı olduğunu kontrol et';
+      'Dört grubun da iki telefonda aynı olduğunu kontrol et';
 
   @override
   String get pairCodeNumberDiffers => 'Numara farklı';
@@ -6390,6 +6390,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodePanelYourWords => 'Üç kelimen';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Seni eklediğinde isteği gelir. Yalnızca dört grubun da aynı olduğunu söylediğinde kabul et.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Sabitlenen mesajlar · $count';
   }
@@ -7993,7 +7997,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın.';
+      'Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın. Bağlantının nereden geldiğinden emin değil misin? Mevcut olanı tut.';
 
   @override
   String get nameTakenUse => 'Bu bağlantıyı kullan';

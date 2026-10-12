@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // beside three words a request, an introduction or a group gave. anyone
-// can give any words, so they read as not checked until a scan of their
-// qr or the safety number settles who they are
+// can give any words, so they read as not checked until they are added by
+// a camera scan or the safety number is verified
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';

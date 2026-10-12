@@ -200,8 +200,9 @@ Future<String?> takeOutsideLink(
   return act(link);
 }
 
-/// an invite read off the other phone's screen with the camera: the one
-/// add that settles who they are
+/// an invite read with the camera, the way two people add each other side
+/// by side: it clears the marks a code or a link leaves. it proves no more
+/// than the screen it was read off
 Future<String> addScanned(String link) => handleHaloUri(link, scanned: true);
 
 /// the question when a link names someone here whose words a request, an
@@ -217,7 +218,8 @@ Future<bool> askTakeNameSheet(String id, {required bool chat}) async {
     line: chat ? l10n.nameTakenChatLine : l10n.nameTakenLine,
     yes: l10n.nameTakenUse,
     keep: l10n.nameTakenKeep,
-    rose: false,
+    // a chat goes with a yes
+    rose: chat,
     shutOnLock: lockGuard,
     titleLines: 2,
   );

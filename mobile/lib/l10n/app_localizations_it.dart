@@ -4164,7 +4164,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Controlla che questo numero sia uguale su entrambi i telefoni';
+      'Controlla che tutti e quattro i gruppi siano uguali su entrambi i telefoni';
 
   @override
   String get pairCodeNumberDiffers => 'Il numero è diverso';
@@ -6433,6 +6433,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pairCodePanelYourWords => 'Le tue tre parole';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'La sua richiesta arriva quando ti aggiunge. Accettala solo quando ti dice che tutti e quattro i gruppi corrispondevano.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Messaggi fissati · $count';
   }
@@ -8040,7 +8044,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'La tua chat con queste parole è arrivata da una richiesta, una presentazione o un gruppo, con un\'altra chiave, e nessuno l\'ha verificata. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo: quella chat viene eliminata e confronti il numero di sicurezza in quella nuova.';
+      'La tua chat con queste parole è arrivata da una richiesta, una presentazione o un gruppo, con un\'altra chiave, e nessuno l\'ha verificata. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo: quella chat viene eliminata e confronti il numero di sicurezza in quella nuova. Non sei sicuro da dove arrivi il link? Tieni quello che hai.';
 
   @override
   String get nameTakenUse => 'Usa questo link';

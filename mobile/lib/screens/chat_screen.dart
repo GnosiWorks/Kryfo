@@ -941,7 +941,9 @@ class _ChatScreenState extends State<ChatScreen>
       final held = await session.keyHeld(widget.peerHaloId);
       final row = await session.getContact(widget.peerHaloId);
       final unchecked = nameUnchecked(row);
-      final asks = nameAsks(row);
+      // no key held, no number to compare: nothing to ask for yet
+      final asks =
+          nameAsks(row) && await session.heldKey(widget.peerHaloId) != null;
       if (!mounted) return;
       _nameFlags = nameCheckOf(row);
       if (changed != _keyChanged ||

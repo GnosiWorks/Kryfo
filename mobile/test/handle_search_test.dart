@@ -57,49 +57,43 @@ void main() {
     expect(parsePeople(many).length, 20);
   });
 
-  test(
-    'posts the query and sorts errors',
-    () async {
-      String? asked, sent;
-      final ok = await searchPeople('@Wren F', (url, body) async {
-        asked = url;
-        sent = body;
-        return '{"results": [{"handle": "wren", "verified": true}]}';
-      });
-      // the question travels in the body, never in the url
-      expect(asked, 'https://relay.kryfo.app/handle/search');
-      expect(jsonDecode(sent!), {'q': 'wren f'});
-      expect(ok.people.single.handle, 'wren');
-      expect(ok.error, PeopleError.none);
+  test('posts the query and sorts errors', () async {
+    String? asked, sent;
+    final ok = await searchPeople('@Wren F', (url, body) async {
+      asked = url;
+      sent = body;
+      return '{"results": [{"handle": "wren", "verified": true}]}';
+    });
+    // the question travels in the body, never in the url
+    expect(asked, 'https://relay.kryfo.app/handle/search');
+    expect(jsonDecode(sent!), {'q': 'wren f'});
+    expect(ok.people.single.handle, 'wren');
+    expect(ok.error, PeopleError.none);
 
-      var called = false;
-      final none = await searchPeople('ab', (url, body) async {
-        called = true;
-        return '';
-      });
-      expect(called, isFalse);
-      expect(none.people, isEmpty);
+    var called = false;
+    final none = await searchPeople('ab', (url, body) async {
+      called = true;
+      return '';
+    });
+    expect(called, isFalse);
+    expect(none.people, isEmpty);
 
-      expect(
-        (await searchPeople(
-          'wren',
-          (_, _) async => 'error: tor: not started',
-        )).error,
-        PeopleError.offline,
-      );
-      expect(
-        (await searchPeople('wren', (_, _) async => 'error: status 429')).error,
-        PeopleError.busy,
-      );
-      expect(
-        (await searchPeople(
-          'wren',
-          (_, _) async => throw Exception('x'),
-        )).error,
-        PeopleError.unreachable,
-      );
-    },
-  );
+    expect(
+      (await searchPeople(
+        'wren',
+        (_, _) async => 'error: tor: not started',
+      )).error,
+      PeopleError.offline,
+    );
+    expect(
+      (await searchPeople('wren', (_, _) async => 'error: status 429')).error,
+      PeopleError.busy,
+    );
+    expect(
+      (await searchPeople('wren', (_, _) async => throw Exception('x'))).error,
+      PeopleError.unreachable,
+    );
+  });
 
   // a quiet session answers without sending, and says what adding by
   // handle says there

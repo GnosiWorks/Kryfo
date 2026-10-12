@@ -3549,7 +3549,6 @@ void main() {
       "About a second, and it skips Tor.",
     );
     expect(l.pairCodeKeyNumber, "Key number");
-    expect(l.pairCodeNumberMatches, "Check this number matches on both phones");
     expect(l.pairCodeNumberDiffers, "The number is different");
     expect(
       l.pairCodeNoNumberThere,
@@ -3581,10 +3580,6 @@ void main() {
       l.nameTakenLine,
       "Someone here got these words from a request, an introduction or a group, with a different key, and nobody checked them. Words can be copied. If this link came from the person you know, use it, then compare the safety number with them.",
     );
-    expect(
-      l.nameTakenChatLine,
-      "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one.",
-    );
     expect(l.nameTakenUse, "Use this link");
     expect(l.nameTakenKeep, "Keep the one I have");
     expect(l.chatCompareTitle, "Compare the safety number");
@@ -3593,5 +3588,17 @@ void main() {
       "Three words can be copied. To know this chat is really with <peerName>, compare the safety number with them, in person or on a call.",
     );
     expect(l.chatCompareLater, "Later");
+    expect(
+      l.nameTakenChatLine,
+      "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.",
+    );
+    expect(
+      l.pairCodeNumberMatches,
+      "Check all four groups match on both phones",
+    );
+    expect(
+      l.pairCodePanelAcceptOnce,
+      "Their request comes once they add you. Accept it only once they say all four groups matched.",
+    );
   });
 }

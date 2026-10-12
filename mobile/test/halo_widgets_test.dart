@@ -123,9 +123,7 @@ void main() {
     });
   });
 
-  testWidgets('HaloGroup draws hairlines only between rows', (
-    t,
-  ) async {
+  testWidgets('HaloGroup draws hairlines only between rows', (t) async {
     await t.pumpWidget(
       host(
         const HaloGroup(

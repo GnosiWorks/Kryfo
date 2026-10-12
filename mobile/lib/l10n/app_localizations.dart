@@ -6567,10 +6567,10 @@ abstract class AppLocalizations {
   /// **'Key number'**
   String get pairCodeKeyNumber;
 
-  /// widgets/pair_join.dart: under the key number on both pair-code screens: the two phones must show the same digits
+  /// widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones
   ///
   /// In en, this message translates to:
-  /// **'Check this number matches on both phones'**
+  /// **'Check all four groups match on both phones'**
   String get pairCodeNumberMatches;
 
   /// widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added
@@ -10161,6 +10161,12 @@ abstract class AppLocalizations {
   /// **'Your three words'**
   String get pairCodePanelYourWords;
 
+  /// widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add
+  ///
+  /// In en, this message translates to:
+  /// **'Their request comes once they add you. Accept it only once they say all four groups matched.'**
+  String get pairCodePanelAcceptOnce;
+
   /// widgets/pins.dart
   ///
   /// In en, this message translates to:
@@ -12840,7 +12846,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat
   ///
   /// In en, this message translates to:
-  /// **'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one.'**
+  /// **'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.'**
   String get nameTakenChatLine;
 
   /// widgets/kryfo_link_text.dart: button, the link takes the words over

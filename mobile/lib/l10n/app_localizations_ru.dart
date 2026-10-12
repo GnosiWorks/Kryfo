@@ -4220,7 +4220,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Проверь, что этот номер совпадает на обоих телефонах';
+      'Проверь, что все четыре группы совпадают на обоих телефонах';
 
   @override
   String get pairCodeNumberDiffers => 'Номер не совпадает';
@@ -6496,6 +6496,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairCodePanelYourWords => 'Твои три слова';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Запрос придёт, когда собеседник тебя добавит. Принимай его, только когда он скажет, что все четыре группы совпали.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Закреплённые сообщения · $count';
   }
@@ -8120,7 +8124,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Твой чат с этими словами появился через запрос, знакомство или группу, с другим ключом, и его никто не проверял. Слова можно скопировать. Если эта ссылка от человека, которого ты знаешь, используй её: тот чат удалится, а код безопасности ты сверишь в новом.';
+      'Твой чат с этими словами появился через запрос, знакомство или группу, с другим ключом, и его никто не проверял. Слова можно скопировать. Если эта ссылка от человека, которого ты знаешь, используй её: тот чат удалится, а код безопасности ты сверишь в новом. Не уверен, откуда ссылка? Оставь того, кто есть.';
 
   @override
   String get nameTakenUse => 'Использовать ссылку';

@@ -330,6 +330,16 @@ class _PairCodePanelState extends State<PairCodePanel> {
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 12.5, color: HaloColors.text2),
         ),
+        // what comes to this side is their request: taken in on their word
+        // that the numbers matched
+        if (_on?.number != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.pairCodePanelAcceptOnce,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          ),
+        ],
       ],
     );
   }

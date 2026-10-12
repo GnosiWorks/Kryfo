@@ -4204,7 +4204,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Перевір, що цей номер збігається на обох телефонах';
+      'Перевір, що всі чотири групи збігаються на обох телефонах';
 
   @override
   String get pairCodeNumberDiffers => 'Номер не збігається';
@@ -6488,6 +6488,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pairCodePanelYourWords => 'Твої три слова';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Запит прийде, коли співрозмовник тебе додасть. Приймай його, лише коли він скаже, що всі чотири групи збіглися.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Закріплені повідомлення · $count';
   }
@@ -8111,7 +8115,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Твій чат із цими словами з’явився через запит, знайомство чи групу, з іншим ключем, і його ніхто не перевіряв. Слова можна скопіювати. Якщо це посилання від людини, яку ти знаєш, скористайся ним: той чат видалиться, а номер безпеки ти звіриш у новому.';
+      'Твій чат із цими словами з’явився через запит, знайомство чи групу, з іншим ключем, і його ніхто не перевіряв. Слова можна скопіювати. Якщо це посилання від людини, яку ти знаєш, скористайся ним: той чат видалиться, а номер безпеки ти звіриш у новому. Не впевнений, звідки посилання? Залиш того, хто є.';
 
   @override
   String get nameTakenUse => 'Використати посилання';

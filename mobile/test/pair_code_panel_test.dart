@@ -145,6 +145,8 @@ void main() {
     expect(inviteKeyNumber(e.payloads.last), own);
     expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);
     expect(find.text(l10n.pairCodeNumberMatches), findsOneWidget);
+    // their request is taken in on their word that the numbers matched
+    expect(find.text(l10n.pairCodePanelAcceptOnce), findsOneWidget);
     for (final g in own.split(' ')) {
       expect(find.text(g), findsOneWidget);
     }

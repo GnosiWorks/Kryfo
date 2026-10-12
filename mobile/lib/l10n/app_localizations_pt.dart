@@ -4153,7 +4153,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Confira se este número é igual nos dois celulares';
+      'Confira se os quatro grupos são iguais nos dois celulares';
 
   @override
   String get pairCodeNumberDiffers => 'O número é diferente';
@@ -6416,6 +6416,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pairCodePanelYourWords => 'Suas três palavras';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'O pedido chega quando a pessoa te adicionar. Aceite só quando ela disser que os quatro grupos eram iguais.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Mensagens fixadas · $count';
   }
@@ -8028,7 +8032,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Sua conversa com estas palavras veio de um pedido, uma apresentação ou um grupo, com outra chave, e ninguém a conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o: aquela conversa é apagada e você compara o número de segurança na nova.';
+      'Sua conversa com estas palavras veio de um pedido, uma apresentação ou um grupo, com outra chave, e ninguém a conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o: aquela conversa é apagada e você compara o número de segurança na nova. Não sabe de onde veio o link? Fique com o que você já tem.';
 
   @override
   String get nameTakenUse => 'Usar este link';

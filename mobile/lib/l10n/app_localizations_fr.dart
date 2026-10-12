@@ -4165,7 +4165,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairCodeNumberMatches =>
-      'Vérifiez que ce numéro est le même sur les deux téléphones';
+      'Vérifiez que les quatre groupes sont les mêmes sur les deux téléphones';
 
   @override
   String get pairCodeNumberDiffers => 'Le numéro est différent';
@@ -6437,6 +6437,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pairCodePanelYourWords => 'Vos trois mots';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'Sa demande arrive dès que cette personne vous ajoute. Acceptez-la seulement quand elle vous dit que les quatre groupes étaient les mêmes.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Messages épinglés · $count';
   }
@@ -8051,7 +8055,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'Votre discussion sous ces mots vient d’une demande, d’une présentation ou d’un groupe, avec une autre clé, et personne ne l’a vérifiée. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le : cette discussion est supprimée, et vous comparez le numéro de sécurité dans la nouvelle.';
+      'Votre discussion sous ces mots vient d’une demande, d’une présentation ou d’un groupe, avec une autre clé, et personne ne l’a vérifiée. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le : cette discussion est supprimée, et vous comparez le numéro de sécurité dans la nouvelle. Vous ne savez pas d’où vient le lien ? Gardez celui que vous avez.';
 
   @override
   String get nameTakenUse => 'Utiliser ce lien';

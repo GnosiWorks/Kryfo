@@ -112,9 +112,7 @@ void main() {
       expect(live(t, 'Open file'), isTrue);
     });
 
-    testWidgets('change is always live', (
-      t,
-    ) async {
+    testWidgets('change is always live', (t) async {
       await t.pumpWidget(host(const OpenLockedScreen(file: _age)));
       await t.pump(const Duration(milliseconds: 60));
       expect(live(t, 'Change'), isTrue);
@@ -152,9 +150,7 @@ void main() {
   });
 
   group('qr', () {
-    testWidgets('reaches nine kinds and share wakes on input', (
-      t,
-    ) async {
+    testWidgets('reaches nine kinds and share wakes on input', (t) async {
       await t.pumpWidget(host(const QrScreen()));
       await t.pump(const Duration(milliseconds: 60));
 

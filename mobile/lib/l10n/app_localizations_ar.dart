@@ -4216,7 +4216,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeKeyNumber => 'رقم المفتاح';
 
   @override
-  String get pairCodeNumberMatches => 'تحقّق من أن هذا الرقم نفسه على الهاتفين';
+  String get pairCodeNumberMatches =>
+      'تحقّق من تطابق المجموعات الأربع على الهاتفين';
 
   @override
   String get pairCodeNumberDiffers => 'الرقم مختلف';
@@ -6486,6 +6487,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelYourWords => 'كلماتك الثلاث';
 
   @override
+  String get pairCodePanelAcceptOnce =>
+      'يصلك طلبه بعد أن يضيفك. اقبله فقط بعد أن يقول إن المجموعات الأربع تطابقت.';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'الرسائل المثبّتة · ⁨$count⁩';
   }
@@ -8095,7 +8100,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nameTakenChatLine =>
-      'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة.';
+      'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة. لست متأكدًا من مصدر الرابط؟ أبقِ على الموجود.';
 
   @override
   String get nameTakenUse => 'استخدم هذا الرابط';

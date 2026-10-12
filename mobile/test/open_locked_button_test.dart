@@ -36,9 +36,7 @@ bool _openFileIsLive(WidgetTester t) {
 }
 
 void main() {
-  testWidgets('open file wakes once something is typed', (
-    t,
-  ) async {
+  testWidgets('open file wakes once something is typed', (t) async {
     await t.pumpWidget(host(const OpenLockedScreen(file: _file)));
     await t.pump(const Duration(milliseconds: 50));
 

@@ -7756,7 +7756,7 @@ Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
 /// a name's flags (contacts.name_check). ask: their chat asks for the
 /// safety number. says: the name came with a request, an introduction or
 /// a group, and shows as not checked. a verified key outranks both, and an
-/// add from a scanned qr clears them
+/// add from a qr read with the camera clears them
 const kNameAsk = 1;
 const kNameSays = 2;
 
@@ -9040,9 +9040,9 @@ NameHold nameHoldOf(Map<String, Object?>? row, {bool seated = false}) {
   return parked ? NameHold.free : NameHold.ask;
 }
 
-// an add leaves the name settled when it was a scan off their screen.
-// any other add asks for the safety number in their chat; a re-add leaves
-// what was there, and a name taken over starts afresh
+// an add from a camera scan clears the marks. any other add asks for the
+// safety number in their chat; a re-add leaves what was there, and a name
+// taken over starts afresh
 Future<void> _noteHowAdded(
   String id, {
   required bool scanned,
@@ -9069,8 +9069,8 @@ Future<void> _noteHowAdded(
 // line is in the app's language and is not compared with anything, and
 // empty when a chat opening is the answer.
 // [hidden] says who a shut vault holds, the app's state when not given.
-// [scanned]: read off their screen with the camera, the one add that
-// settles who they are
+// [scanned]: read with the camera, as people add each other side by side.
+// it clears the marks, and proves only as much as the screen it was read off
 Future<(String, bool)> handleHaloUriAdded(
   String raw, {
   bool Function(String id)? hidden,
