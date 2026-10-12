@@ -337,27 +337,6 @@ func TestCheckInRespectsRiskyAndBlocked(t *testing.T) {
 	}
 }
 
-// the old call says nothing before the decoy is known closed, and lines
-// it cannot read set no mode
-func TestLegacyCallNeedsAClosedDecoyAndALine(t *testing.T) {
-	resetAuto(t)
-	t.Cleanup(func() { resetAuto(t) })
-	unknownMode(t)
-	decoyState.Store(decoyUnknown)
-	if r := setBridges(tbObfs4, true); r != "error: decoy" {
-		t.Fatalf("decoy unknown: %q", r)
-	}
-	decoyState.Store(decoyOff)
-	setBridges("obfs4 mangled", true)
-	if bridgeModeKnown() {
-		t.Fatal("unreadable lines set a mode")
-	}
-	setBridges("", false)
-	if !bridgeModeKnown() {
-		t.Fatal("bridges off is a mode")
-	}
-}
-
 // a decoy reads no line checks
 func TestDecoyReadsNoLineChecks(t *testing.T) {
 	resetAuto(t)
@@ -458,13 +437,13 @@ func TestNewModeEndsAutomaticsDirectStep(t *testing.T) {
 	}
 }
 
-// the old call with new lines: tor does not hold them yet
+// new lines with no mode: tor does not hold them yet
 func TestLegacyNewLinesAreNotApplied(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })
-	setBridges("", false)
+	setLines("", false)
 	noteLinesApplied(linesGen.Load())
-	setBridges(tbObfs4, true)
+	setLines(tbObfs4, true)
 	if bridgesApplied() {
 		t.Fatal("new lines look applied")
 	}

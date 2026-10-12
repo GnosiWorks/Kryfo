@@ -464,7 +464,7 @@ func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
 		"OBFS4 192.0.2.50:443 cert=" + randomCert() + " iat-mode=1",
 		tbObfs4,
 	}, "\n")
-	if r := setBridges(stored, true); r != "ok: 3 bridges" {
+	if r := setLines(stored, true); r != "ok: 3 bridges" {
 		t.Fatalf("boot: %s", r)
 	}
 	if got := bridgeLineChecks(); got != `[{"i":0,"state":"fixed"},{"i":1,"state":"fixed"},{"i":2,"state":"ok"}]` {
@@ -494,7 +494,7 @@ func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
 		"nonsense",
 		"obfs4 bridge.example.net:443 cert=" + randomCert() + " iat-mode=0",
 	}, "\n")
-	if r := setBridges(stored, true); r != "ok: 1 accepted, 4 not understood" {
+	if r := setLines(stored, true); r != "ok: 1 accepted, 4 not understood" {
 		t.Fatalf("boot: %s", r)
 	}
 	if !bridgesEnabled() || len(bridgeLines()) != 1 {

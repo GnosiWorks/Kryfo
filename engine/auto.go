@@ -27,8 +27,7 @@ import (
 	"github.com/cretz/bine/control"
 )
 
-// the bridge modes the app picks from. legacy is HaloSetBridges driving,
-// as before modes existed.
+// the bridge modes the app picks from. legacy is none picked yet.
 const (
 	bmLegacy    = ""
 	bmAuto      = "auto"
@@ -1273,23 +1272,6 @@ func optsEqual(a, b modeOpts) bool {
 	x, _ := json.Marshal(a)
 	y, _ := json.Marshal(b)
 	return string(x) == string(y)
-}
-
-// HaloSetBridges hands the lines over the old way. a decoy changes
-// nothing, and neither does the old call once the app has picked a mode:
-// the upgrade moves the old setting to a mode, see HaloSetBridgeMode.
-// "" when the old call may go on, else why not.
-func legacyMode() string {
-	// a decoy open, or not yet known to be closed
-	if !decoyClosed() {
-		return "error: decoy"
-	}
-	autoMu.Lock()
-	defer autoMu.Unlock()
-	if bmMode != bmLegacy {
-		return "error: a mode is set"
-	}
-	return ""
 }
 
 // the method a check-in uses: the one that worked here last. if that is

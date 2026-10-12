@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// set by the boot restore, a pick, or the old HaloSetBridges
+	// set by the boot restore or a pick
 	modeSet atomic.Bool
 	// one mode change at a time, so a restore never lands over a pick
 	modeMu sync.Mutex

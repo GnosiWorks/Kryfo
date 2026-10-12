@@ -227,24 +227,12 @@ func TestCheckInForgetsAFailedMethod(t *testing.T) {
 	}
 }
 
-// the old call changes nothing in a decoy, or once a mode is set
-func TestOldBridgeCallRefused(t *testing.T) {
+// memory from a decoy is never taken
+func TestDecoyMemoryRefused(t *testing.T) {
 	useFakeAuto(t, wifi())
-	decoyState.Store(decoyOn)
-	if r := setBridges(builtinLines("obfs4")[0], true); r != "error: decoy" {
-		t.Fatalf("decoy: %s", r)
-	}
-	decoyState.Store(decoyOff)
 	if r := setBridgeMode(bmAuto, ""); r != "ok" {
 		t.Fatalf("auto: %s", r)
 	}
-	if r := setBridges(builtinLines("obfs4")[0], true); !strings.HasPrefix(r, "error:") {
-		t.Fatalf("the old call ended automatic: %s", r)
-	}
-	if m, _, _ := bridgeMode(); m != bmAuto {
-		t.Fatalf("mode %q", m)
-	}
-	// memory from a decoy is never taken
 	decoyState.Store(decoyOn)
 	if r := setAutoMemory(`{"v":1,"blocked":{"wifi":1}}`); !strings.Contains(r, "decoy") {
 		t.Fatalf("memory taken in a decoy: %s", r)
