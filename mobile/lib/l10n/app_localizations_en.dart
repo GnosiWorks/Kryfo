@@ -2110,6 +2110,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*';
 
   @override
+  String get donateAuditTitle => 'Help fund a security audit';
+
+  @override
+  String get donateAuditLine =>
+      'Donations here count toward an independent audit. The full report will be public.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName address · check it against your wallet';
   }

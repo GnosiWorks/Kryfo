@@ -652,6 +652,8 @@
   "donateKeepKryfo": "Kryfo *bağımsız* kalsın",
   "donateNoAdsNoInvestors": "Reklam yok, yatırımcı yok, satılacak bir şey yok. Bağışçıların verdikleriyle ayakta duruyor.",
   "donateBackItAnonymouslyBadge": "Anonim olarak destekle. Rozet isteğe bağlı.\n*Gizlilik hiçbir zaman ücretli olmaz.*",
+  "donateAuditTitle": "Bir güvenlik denetimini finanse etmeye yardım et",
+  "donateAuditLine": "Buradaki bağışlar bağımsız bir denetime gider. Raporun tamamı herkese açık olacak.",
   "donateAddressCheckItAgainst": "{coinName} adresi · cüzdanındakiyle karşılaştır",
   "donateAddressCopiedClearsIn": "Adres kopyalandı · 60 sn içinde silinir",
   "donateCopyAddress": "Adresi kopyala",

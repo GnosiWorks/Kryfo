@@ -652,6 +652,8 @@
   "donateKeepKryfo": "Kryfo را *مستقل* نگه دارید",
   "donateNoAdsNoInvestors": "نه تبلیغ، نه سرمایه‌گذار، نه چیزی برای فروش. با کمک دوستدارانش می‌چرخد.",
   "donateBackItAnonymouslyBadge": "ناشناس حمایت کنید. نشان اختیاری است.\n*حریم خصوصی هرگز پشت دیوار پرداخت نیست.*",
+  "donateAuditTitle": "به تأمین هزینهٔ یک ممیزی امنیتی کمک کنید",
+  "donateAuditLine": "کمک‌های مالی اینجا صرف یک ممیزی مستقل می‌شود. گزارش کامل آن عمومی خواهد شد.",
   "donateAddressCheckItAgainst": "نشانی ⁨{coinName}⁩ · آن را با کیف پولتان تطبیق دهید",
   "donateAddressCopiedClearsIn": "نشانی کپی شد · ۶۰ ثانیه‌ی دیگر از بریده‌دان حذف می‌شود",
   "donateCopyAddress": "کپی نشانی",

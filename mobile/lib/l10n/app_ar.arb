@@ -652,6 +652,8 @@
   "donateKeepKryfo": "أبقِ Kryfo *مستقلًا*",
   "donateNoAdsNoInvestors": "لا إعلانات، ولا مستثمرون، ولا شيء للبيع. يعيش على ما يقدّمه الداعمون.",
   "donateBackItAnonymouslyBadge": "ادعمه دون أن تكشف هويتك. الشارة اختيارية.\n*الخصوصية لن تكون أبدًا خلف جدار دفع.*",
+  "donateAuditTitle": "ساعد في تمويل تدقيق أمني",
+  "donateAuditLine": "التبرعات هنا تُحسب ضمن تمويل تدقيق مستقل. سيُنشر التقرير الكامل للجميع.",
   "donateAddressCheckItAgainst": "عنوان ⁨{coinName}⁩ · طابقه مع محفظتك",
   "donateAddressCopiedClearsIn": "نُسخ العنوان · يُزال من الحافظة بعد ٦٠ ث",
   "donateCopyAddress": "نسخ العنوان",

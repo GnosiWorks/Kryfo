@@ -2172,6 +2172,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'ادعمه دون أن تكشف هويتك. الشارة اختيارية.\n*الخصوصية لن تكون أبدًا خلف جدار دفع.*';
 
   @override
+  String get donateAuditTitle => 'ساعد في تمويل تدقيق أمني';
+
+  @override
+  String get donateAuditLine =>
+      'التبرعات هنا تُحسب ضمن تمويل تدقيق مستقل. سيُنشر التقرير الكامل للجميع.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'عنوان ⁨$coinName⁩ · طابقه مع محفظتك';
   }

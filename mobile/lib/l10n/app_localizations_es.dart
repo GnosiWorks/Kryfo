@@ -2135,6 +2135,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Apóyalo de forma anónima. La insignia es opcional.\n*La privacidad nunca va detrás de un muro de pago.*';
 
   @override
+  String get donateAuditTitle => 'Ayuda a financiar una auditoría de seguridad';
+
+  @override
+  String get donateAuditLine =>
+      'Las donaciones que hagas aquí cuentan para una auditoría independiente. El informe completo será público.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Dirección de $coinName · compruébala con tu billetera';
   }

@@ -2134,6 +2134,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sostienilo in modo anonimo. Badge solo se vuoi.\n*La privacy non è mai a pagamento.*';
 
   @override
+  String get donateAuditTitle => 'Aiuta a finanziare un audit di sicurezza';
+
+  @override
+  String get donateAuditLine =>
+      'Le donazioni fatte qui vanno a un audit indipendente. Il rapporto completo sarà pubblico.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Indirizzo $coinName · confrontalo con il tuo wallet';
   }

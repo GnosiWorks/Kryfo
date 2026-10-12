@@ -2134,6 +2134,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unterstütze es anonym. Abzeichen nur, wenn du willst.\n*Privatsphäre steht nie hinter einer Bezahlschranke.*';
 
   @override
+  String get donateAuditTitle =>
+      'Hilf mit, ein Sicherheitsaudit zu finanzieren';
+
+  @override
+  String get donateAuditLine =>
+      'Spenden hier fließen in ein unabhängiges Audit. Der vollständige Bericht wird öffentlich.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName-Adresse · gleiche sie mit deiner Wallet ab';
   }

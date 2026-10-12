@@ -2031,6 +2031,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBackItAnonymouslyBadge => '匿名支持它。徽章自愿领取。\n*隐私永远不设付费门槛。*';
 
   @override
+  String get donateAuditTitle => '帮忙资助一次安全审计';
+
+  @override
+  String get donateAuditLine => '在这里的捐款会用于一次独立审计。完整报告将会公开。';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName 地址 · 请和你的钱包核对';
   }
@@ -9864,6 +9870,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateBackItAnonymouslyBadge => '匿名支持。徽章自由選擇。\n*隱私永遠不設付費門檻。*';
+
+  @override
+  String get donateAuditTitle => '幫忙資助一次安全稽核';
+
+  @override
+  String get donateAuditLine => '在這裡的捐款會用於一次獨立稽核。完整報告將會公開。';
 
   @override
   String donateAddressCheckItAgainst(Object coinName) {

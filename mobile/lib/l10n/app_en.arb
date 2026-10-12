@@ -2687,6 +2687,14 @@
   "@donateBackItAnonymouslyBadge": {
     "description": "screens/donate_screen.dart"
   },
+  "donateAuditTitle": "Help fund a security audit",
+  "@donateAuditTitle": {
+    "description": "screens/donate_screen.dart. the row that links to kryfo.app/audit. never say or imply Kryfo is already audited"
+  },
+  "donateAuditLine": "Donations here count toward an independent audit. The full report will be public.",
+  "@donateAuditLine": {
+    "description": "screens/donate_screen.dart. one line under donateAuditTitle. never say or imply Kryfo is already audited"
+  },
   "donateAddressCheckItAgainst": "{coinName} address · check it against your wallet",
   "@donateAddressCheckItAgainst": {
     "description": "screens/donate_screen.dart",

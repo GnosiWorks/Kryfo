@@ -24,6 +24,9 @@ import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 
+// the page about the audit backers help pay for. sent as is: no query, no tag
+const kAuditUrl = 'https://kryfo.app/audit';
+
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
   @override
@@ -144,6 +147,8 @@ class _DonateScreenState extends State<DonateScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _hero(),
+              const SizedBox(height: 18),
+              _auditRow(),
               const SizedBox(height: 22),
               if (kBadgeTiersShown) ...[_tiers(), const SizedBox(height: 22)],
               // todo: card payments, once a processor is behind them
@@ -222,6 +227,81 @@ class _DonateScreenState extends State<DonateScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  // opened like the wallet link: handed to the browser, nothing added
+  Future<void> _openAudit() async {
+    if (await openOutside(Uri.parse(kAuditUrl))) return;
+    // no browser took it: the link goes on the clipboard instead
+    await Clipboard.setData(const ClipboardData(text: kAuditUrl));
+    if (mounted) showHaloToast(context, l10n.settingsLinkCopied);
+  }
+
+  Widget _auditRow() {
+    return MergeSemantics(
+      child: Semantics(
+        link: true,
+        child: PressScale(
+          key: const ValueKey('donate-audit'),
+          scale: 0.98,
+          onTap: _openAudit,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: HaloColors.surface,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: HaloColors.line),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: HaloColors.amberSoft,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.shield_outlined,
+                    size: 17,
+                    color: HaloColors.amber,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.donateAuditTitle,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: HaloColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        l10n.donateAuditLine,
+                        style: HaloType.sans(
+                          size: 12.5,
+                          color: HaloColors.text,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.open_in_new, size: 16, color: HaloColors.amber),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
