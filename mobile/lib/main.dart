@@ -118,6 +118,7 @@ import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
+import 'widgets/owned_text.dart';
 import 'bidi_safe.dart';
 import 'engine_strings.dart';
 import 'net_detail.dart';
@@ -2503,14 +2504,32 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
-      // the name given them goes with the chat. the verified mark stays on
-      // its key, so a re-add on another key is still held
+      // what was set for the chat goes with it, so they come back as a new
+      // person. the block, the verified mark on its key and the vouches for
+      // them stay
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0, 'nickname': null},
+        {
+          'accepted': 0,
+          'archived': 1,
+          'unread': 0,
+          'nickname': null,
+          'note': null,
+          'atmosphere': null,
+          'voice_disguise': null,
+          'muted': 0,
+          'pinned': 0,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
+      // a first message after this is checked afresh, and rings under a
+      // new tag the shade never ties to the old chat
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      // nothing queued for the old chat goes after it. a take-back still
+      // goes, it only withdraws
+      await _dropQueuedTo(t, haloId);
       return rows;
     });
     await _scrubMedia(files);
@@ -18610,6 +18629,7 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
+    dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
@@ -22630,6 +22650,82 @@ class DevScreen extends StatefulWidget {
   State<DevScreen> createState() => _DevScreenState();
 }
 
+/// scan, pairing code or a pasted link: the choice and the words pasted.
+/// null when cancelled or dismissed
+@visibleForTesting
+Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
+    showDialog<(String, String)>(
+      context: context,
+      builder: (_) => OwnedText(
+        builder: (ctx, ctrl) => AlertDialog(
+          backgroundColor: HaloColors.surface2,
+          title: Text(
+            l10n.appAddAKryfo,
+            style: HaloType.sans(color: HaloColors.amber),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.maxFinite,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('scan', ctrl.text)),
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: Text(l10n.appScanQr),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HaloColors.amber,
+                    foregroundColor: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('code', ctrl.text)),
+                  icon: const Icon(Icons.dialpad, size: 18),
+                  label: Text(l10n.appPairingCode),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: HaloColors.text2,
+                    side: BorderSide(color: HaloColors.line),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                l10n.appOrPaste,
+                style: HaloType.sans(size: 11, color: HaloColors.text3),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                textDirection: TextDirection.ltr,
+                controller: ctrl,
+                maxLines: 4,
+                style: HaloType.mono(size: 11, color: HaloColors.text),
+                decoration: InputDecoration(
+                  hintText: 'kryfo://share?...',
+                  hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ('paste', ctrl.text)),
+              child: Text(
+                l10n.appImport,
+                style: HaloType.sans(color: HaloColors.amber),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
 class _DevScreenState extends State<DevScreen> {
   final _msgCtrl = TextEditingController(text: l10n.appHelloFromTheOther);
   String _myAddr = '';
@@ -22792,76 +22888,8 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _importPeer() async {
-    final ctrl = TextEditingController();
-    final action = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          l10n.appAddAKryfo,
-          style: HaloType.sans(color: HaloColors.amber),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.maxFinite,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, 'scan'),
-                icon: const Icon(Icons.qr_code_scanner),
-                label: Text(l10n.appScanQr),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: HaloColors.amber,
-                  foregroundColor: HaloColors.onAmber,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.maxFinite,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context, 'code'),
-                icon: const Icon(Icons.dialpad, size: 18),
-                label: Text(l10n.appPairingCode),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: HaloColors.text2,
-                  side: BorderSide(color: HaloColors.line),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              l10n.appOrPaste,
-              style: HaloType.sans(size: 11, color: HaloColors.text3),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              textDirection: TextDirection.ltr,
-              controller: ctrl,
-              maxLines: 4,
-              style: HaloType.mono(size: 11, color: HaloColors.text),
-              decoration: InputDecoration(
-                hintText: 'kryfo://share?...',
-                hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'paste'),
-            child: Text(
-              l10n.appImport,
-              style: HaloType.sans(color: HaloColors.amber),
-            ),
-          ),
-        ],
-      ),
-    );
+    final picked = await showImportPeerDialog(context);
+    final action = picked?.$1;
     if (action == null || !mounted) return;
 
     if (action == 'code') {
@@ -22878,7 +22906,7 @@ class _DevScreenState extends State<DevScreen> {
       if (result == null) return;
       uri = result;
     } else {
-      uri = ctrl.text;
+      uri = picked!.$2;
     }
 
     if (!mounted) return;
