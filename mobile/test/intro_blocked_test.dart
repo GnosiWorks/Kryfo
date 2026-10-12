@@ -79,7 +79,7 @@ class _World {
     return w;
   }
 
-  Future<void> introduce(String who, {String by = _v}) async {
+  Future<void> introduce(String who, {String by = _v, String? fc}) async {
     final c = 'c${_c++}';
     io.opens[c] = (
       by,
@@ -90,6 +90,7 @@ class _World {
           onion: 'o-$who',
           xPub: 'x-$who',
           avatar: 3,
+          fc: fc,
         ),
         sender: SenderInfo(
           haloId: by,
@@ -242,4 +243,20 @@ void main() {
       expect(w.bundlesTo('x-$_n').single.containsKey('since'), isFalse);
     },
   );
+
+  test('someone met on a card is reached on the pair address, not on a '
+      'first-contact address they may have reset', () async {
+    final w = await _World.make();
+    await w.introduce(_n, fc: 'fc-they-reset-since');
+    expect(w.app.peerFcFor(_n), isNull);
+    w.io.sent.clear();
+    await w.app.sendAcceptAck(_n);
+    await _settle();
+    final went = [
+      for (final (to, c) in w.io.sent)
+        if (!c.startsWith('{')) to,
+    ];
+    expect(went, contains('relay x-$_n'));
+    expect(went.where((t) => t.startsWith('fc')), isEmpty);
+  });
 }

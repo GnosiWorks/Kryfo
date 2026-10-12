@@ -2728,6 +2728,10 @@ class _ChatScreenState extends State<ChatScreen>
         return xpub;
       },
       fc: appState.peerFcFor(widget.peerHaloId),
+      pairRead: await appState.pairRead(
+        widget.peerHaloId,
+        backPaired: _backPaired,
+      ),
       viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
       viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
       log: (l) => dlog('chat send: $l'),

@@ -55,7 +55,9 @@ class _Wire {
     String onionAt = 'o-them',
     String? fc = 'fc-them',
     String cipher = 'c1',
+    bool pairRead = false,
   }) => routeText(
+    pairRead: pairRead,
     bothWent: () => both++,
     copied: copies.add,
     backPaired: backPaired,
@@ -158,6 +160,23 @@ void main() {
       expect(await quiet.send(backPaired: false, fc: null), 'ok');
       expect(quiet.went, ['onion c1']);
     });
+
+    test(
+      'someone met on a card, with no first-contact address, is reached '
+      'on the pair address: as the copy behind the onion\'s ok, or alone',
+      () async {
+        final w = _Wire();
+        expect(await w.send(backPaired: false, fc: null, pairRead: true), 'ok');
+        await Future.wait(w.copies);
+        expect(w.went, ['onion c1', 'relay x-them c1']);
+        final dead = _Wire()..onion = 'error: timeout';
+        expect(
+          await dead.send(backPaired: false, fc: null, pairRead: true),
+          'ok',
+        );
+        expect(dead.went, ['onion c1', 'relay x-them c1']);
+      },
+    );
 
     test('no key and no onion is no transport', () async {
       final w = _Wire()..xPub = null;

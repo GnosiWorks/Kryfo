@@ -221,6 +221,8 @@ Future<String> _sendChunkedMediaInner({
   // once the onion fails to answer it stays skipped for the rest of this
   // send, or every slice pays the full dial timeout before the relay
   var onionDead = false;
+  // they read our pair address before adding us back, asked once
+  bool? pairWay;
   String? failure;
   var parked = false;
   // parked by a decoy opening, not by a route
@@ -365,7 +367,8 @@ Future<String> _sendChunkedMediaInner({
         } else if (xpub != null) {
           final r = await engine.nostrSend(xpub!, cipher);
           if (r == 'ok') {
-            if (!backPaired) {
+            pairWay ??= await appState.pairRead(peerId, backPaired: backPaired);
+            if (!backPaired && !pairWay!) {
               // stored where nobody reads yet. the drainer brings the whole
               // file again once a route that reaches them is up.
               dlog('MEDIA chunk $i/$total parked at the pair address');

@@ -11523,7 +11523,16 @@ class AppState extends ChangeNotifier {
             try {
               // noted before it goes: a death half way is a try, not a loop
               await d.noteOpenerAgain(uid, tries + 1, now);
-              await _openerAgain(r, peer, d, wire: was?.wire);
+              // the last goes to the pair address alone, a day after the
+              // one before: their first-contact address may be one they
+              // have reset, and once they add us back they read this one
+              await _openerAgain(
+                r,
+                peer,
+                d,
+                wire: was?.wire,
+                pairOnly: tries + 1 == kOpenerAgain.length,
+              );
             } finally {
               _outboxInflight.remove(uid);
             }
@@ -11543,6 +11552,7 @@ class AppState extends ChangeNotifier {
     String peer,
     HaloDb d, {
     String? wire,
+    bool pairOnly = false,
   }) async {
     final uid = r['msg_uid'] as String;
     try {
@@ -11559,7 +11569,7 @@ class AppState extends ChangeNotifier {
             sender: _mySender(),
             badge: await sharedBadge(),
           );
-      final ok = await _sendOneEnvelope(peer, wrapped);
+      final ok = await _sendOneEnvelope(peer, wrapped, pairOnly: pairOnly);
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
       dlog('openers: $uid did not go again ($e)');
@@ -14341,6 +14351,9 @@ class AppState extends ChangeNotifier {
       final was = await db.isBackPaired(senderHaloId);
       await db.markBackPaired(senderHaloId);
       if (!was) {
+        // their first-contact address is spent, and a card must never hand
+        // on one they may reset
+        unawaited(forgetPeerFc(senderHaloId));
         // the door just opened: rows parked for them go now, not when the
         // backoff runs out
         _outboxTries.clear();
@@ -15552,11 +15565,9 @@ class AppState extends ChangeNotifier {
     // them back as a request, as their own message would
     await db.unparkIfArchived(h);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
-    // the first-contact addresses are kept for the phone, so only the
-    // everyday side's go there
-    if (everyday && card.fc != null && card.fc!.isNotEmpty) {
-      await rememberPeerFc(h, card.fc!);
-    }
+    // a card's first-contact address is second hand and may be one they
+    // have reset since. they take our card too and read the pair address,
+    // so that is the way to them (pairRead)
     // a card is keys, not a session. listen for them and swap prekey bundles
     // now, so the first message either side types has a session to ride.
     if (everyday) {
@@ -20475,11 +20486,13 @@ class AppState extends ChangeNotifier {
 
   // [member]: a group's frame, which the group's own rules send.
   // [takeBack]: an unsend, which only withdraws and goes to anyone
+  // [pairOnly]: to the pair address alone, as an opener's last try goes
   Future<bool> _sendOneEnvelope(
     String memberId,
     String wrapped, {
     bool member = false,
     bool takeBack = false,
+    bool pairOnly = false,
   }) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
@@ -20536,6 +20549,18 @@ class AppState extends ChangeNotifier {
       final backPaired = to.backPaired;
       final xpub = to.xpub;
       final onion = to.onion;
+      final pairWay = await pairRead(
+        memberId,
+        backPaired: backPaired,
+        on: to.on,
+      );
+
+      // a fresh copy at its own time, never beside another of the same
+      if (pairOnly) {
+        final n = await Future(() => _io.relaySend(xpub, cipher));
+        if (n != 'ok') dlog('send: nostr failed ($n)');
+        return n == 'ok' && (backPaired || pairWay);
+      }
 
       // back-paired: the pair address only
       if (backPaired || onion.isEmpty) {
@@ -20552,8 +20577,9 @@ class AppState extends ChangeNotifier {
         }
         final n = await Future(() => _io.relaySend(xpub, cipher));
         // the pair address is a drop box they read only once they add us
-        // back. stored there is parked, not delivered.
-        if (n == 'ok') return backPaired;
+        // back, or once they took our card. stored there is parked, not
+        // delivered, until one of those
+        if (n == 'ok') return backPaired || pairWay;
         dlog('send: nostr failed ($n)');
         return false;
       }
@@ -20568,8 +20594,9 @@ class AppState extends ChangeNotifier {
       var pending = 2;
       void settle(String tag, String r) {
         // a relay taking it for the pair address is not delivery here:
-        // they read that address only after adding us back
-        if (r == 'ok' && tag != 'nostr') {
+        // they read that address only after adding us back, or taking our
+        // card
+        if (r == 'ok' && (tag != 'nostr' || pairWay)) {
           if (!done.isCompleted) done.complete(true);
         } else {
           if (r != 'ok') dlog('send: $tag failed ($r)');
@@ -20608,6 +20635,25 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// [id] has not added us back but reads our pair address already: we came
+  /// to them on a friend's card, as they came to us, and no first-contact
+  /// address of theirs is known. that address is the way to them then
+  Future<bool> pairRead(
+    String id, {
+    required bool backPaired,
+    HaloDb? on,
+  }) async {
+    if (backPaired) return false;
+    final fc = peerFcFor(id);
+    if (fc != null && fc.isNotEmpty) return false;
+    try {
+      return await (on ?? _ownerOf(id)).isVouched(id);
+    } catch (e) {
+      dlog('send: vouch not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
   // tells a just-accepted stranger they're in. the empty frame flips their
   // back_paired on arrival, which melts their request lock without waiting
   // for our first reply.
@@ -20638,7 +20684,9 @@ class AppState extends ChangeNotifier {
       onion: (c['onion'] as String?) ?? '',
       xPub: x,
       avatar: (c['avatar'] as num?)?.toInt(),
-      fc: peerFcFor(haloId),
+      fc: await _ownerOf(haloId).isBackPaired(haloId)
+          ? null
+          : peerFcFor(haloId),
       note: note.isEmpty ? null : note,
     );
   }
