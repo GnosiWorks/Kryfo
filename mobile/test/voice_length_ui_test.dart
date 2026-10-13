@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:kryfo/widgets/media_bubbles.dart';
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
@@ -212,6 +213,58 @@ void main() {
     await close(t);
   });
 
+  testWidgets('a tap with no samples yet is thrown away', (t) async {
+    await open(t);
+    final g = await hold(t);
+    await wait(t, 300);
+    await g.up();
+    await until(t, () => !File(recording!).existsSync());
+    expect(File(recording!).existsSync(), isFalse);
+    expect(sent, isEmpty);
+    await close(t);
+  });
+
+  testWidgets('half a second of samples is kept', (t) async {
+    await open(t);
+    final g = await hold(t);
+    // the mic warmed up for a while first: not counted, not lost
+    await wait(t, 800);
+    File(recording!).writeAsBytesSync(_wav(160, sized: false));
+    await wait(t, 500);
+    atStop = _wav(8000);
+    await g.up();
+    await until(t, () => sent.isNotEmpty);
+    expect(sent, hasLength(1));
+    expect(sent.single.ms, 500);
+    await close(t);
+  });
+
+  testWidgets('the clock is in the text colour while it records and stops', (
+    t,
+  ) async {
+    await open(t);
+    final g = await hold(t);
+    File(recording!).writeAsBytesSync(_wav(160, sized: false));
+    await wait(t, 1000);
+    Color clockColour(Type bar) => t
+        .widget<Text>(
+          find.descendant(of: find.byType(bar), matching: find.text('0:01')),
+        )
+        .style!
+        .color!;
+    expect(clockColour(VoiceRecordBar), HaloColors.text);
+    await g.moveBy(const Offset(0, -50));
+    await t.pump();
+    await g.moveBy(const Offset(0, -50));
+    await t.pump();
+    await g.up();
+    await t.pump();
+    expect(clockColour(VoiceLockedBar), HaloColors.text);
+    await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+    await until(t, () => !File(recording!).existsSync());
+    await close(t);
+  });
+
   group('a bubble shows the note length to the nearest second', () {
     Future<void> bubble(WidgetTester t, Uint8List wav, bool out) async {
       final f = File('${tmp.path}/vn_${out ? 'out' : 'in'}.wav')
@@ -248,6 +301,16 @@ void main() {
       testWidgets('$side: 4.5 s is 0:05', (t) async {
         await bubble(t, _wav(72000), out);
         await shows(t, '0:05');
+      });
+
+      testWidgets('$side: the length is not grey', (t) async {
+        await bubble(t, _wav(62400), out);
+        await until(t, () => find.text('0:04').evaluate().isNotEmpty);
+        final c = t.widget<Text>(find.text('0:04')).style!.color;
+        expect(c, out ? HaloColors.onAmber : HaloColors.text2);
+        expect(c, isNot(HaloColors.text3));
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 1));
       });
     }
 

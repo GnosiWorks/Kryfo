@@ -442,7 +442,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                                 size: 10,
                                 color: out
                                     ? HaloColors.onAmber
-                                    : HaloColors.text3,
+                                    : HaloColors.text2,
                               ),
                             ),
                             if (widget.disguised) ...[
