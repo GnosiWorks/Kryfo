@@ -173,19 +173,30 @@ class MainActivity : FlutterFragmentActivity() {
         // down, so android's dialog never opens over the pin pad. one that
         // is up is left alone: starting it again only posts its
         // notification anew. a mode or language change still restarts it
-        if (!HaloListenerService.running) startListenerService()
+        if (!HaloListenerService.running) resumeListener()
         schedulePeriodicJob()
     }
 
-    private fun startListenerService() {
+    // a refusal here is quiet: the next resume tries again
+    private fun resumeListener() {
+        try {
+            startListenerService(plainFirst = true)
+        } catch (e: Exception) {
+            android.util.Log.i(
+                "halo-engine",
+                "resume: listener not started: ${e.javaClass.simpleName}"
+            )
+        }
+    }
+
+    // from a screen in front a plain start, which has no deadline to miss
+    // while dart holds the main thread
+    private fun startListenerService(
+        plainFirst: Boolean = QuietRestart.onScreen(QuietRestart.importance())
+    ) {
         if (!DeliveryPrefs.staysOn(this)) return
         if (!KryfoState.hasData(this)) return
-        val intent = Intent(this, HaloListenerService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        HaloListenerService.start(this, plainFirst)
     }
 
     private fun schedulePeriodicJob() = JobSetup.schedule(this)
@@ -447,9 +458,7 @@ class MainActivity : FlutterFragmentActivity() {
                             if (DeliveryPrefs.staysOn(this)) {
                                 startListenerService()
                             } else {
-                                applicationContext.stopService(
-                                    Intent(applicationContext, HaloListenerService::class.java)
-                                )
+                                HaloListenerService.stop(applicationContext)
                             }
                             result.success(true)
                         } catch (e: Exception) {
@@ -488,9 +497,7 @@ class MainActivity : FlutterFragmentActivity() {
                         // the sticky listener goes first: if the clear is
                         // refused and dart exits, nothing brings the app back
                         try {
-                            applicationContext.stopService(
-                                Intent(applicationContext, HaloListenerService::class.java)
-                            )
+                            HaloListenerService.stop(applicationContext)
                         } catch (e: Exception) {
                         }
                         // and the periodic job, which survives the clear and

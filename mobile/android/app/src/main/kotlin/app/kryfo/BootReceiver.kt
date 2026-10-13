@@ -3,7 +3,7 @@ package app.kryfo
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
+import android.util.Log
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -15,11 +15,14 @@ class BootReceiver : BroadcastReceiver() {
         if (!KryfoState.hasData(context)) return
         JobSetup.schedule(context)
         if (!DeliveryPrefs.staysOn(context)) return
-        val serviceIntent = Intent(context, HaloListenerService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent)
-        } else {
-            context.startService(serviceIntent)
+        // these broadcasts come with a short allowlist window, which lets a
+        // plain start through without a deadline. a refusal is quiet:
+        // opening the app starts it again
+        try {
+            HaloListenerService.debugLog(context, "boot: ${action.substringAfterLast('.')}")
+            HaloListenerService.start(context, plainFirst = true)
+        } catch (e: Exception) {
+            Log.i("halo-engine", "boot: listener not started: ${e.javaClass.simpleName}")
         }
     }
 }

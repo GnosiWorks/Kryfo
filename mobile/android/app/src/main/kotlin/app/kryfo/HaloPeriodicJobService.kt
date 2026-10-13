@@ -3,8 +3,6 @@ package app.kryfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
-import android.content.Intent
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -43,9 +41,7 @@ class HaloPeriodicJobService : JobService() {
         val up = staysOn && HaloListenerService.running
         if (staysOn && !up) {
             try {
-                val intent = Intent(this, HaloListenerService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-                else startService(intent)
+                HaloListenerService.start(this)
             } catch (e: Exception) {
                 Log.i("halo-engine", "periodic job: listener not restarted: ${e.javaClass.simpleName}")
             }
