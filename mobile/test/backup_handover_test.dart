@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a backup is handed over by the save dialog or, when that is refused, the
-// share sheet with a copy of its own. only a hand-over that went through
-// lets the made file go and, for a move, retires this phone. one whose copy
-// could not be made, a full phone say, keeps the file and the phone. the
-// platform is a stand-in that says yes or no
+// a move backed out of the save dialog never opens the share sheet by
+// itself. shared on purpose, the made file goes and the phone is retired
+// only once the person says the file arrived. a share whose copy could not
+// be made, a full phone say, keeps the file and the phone. the platform is
+// a stand-in that says yes or no
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -67,6 +67,17 @@ void main() {
     tmp.deleteSync(recursive: true);
   });
 
+  // the file is made and handed on the disk, outside the test's clock: wait
+  // for [done], a few seconds at most
+  Future<void> until(WidgetTester t, Future<bool> Function() done) async {
+    for (var i = 0; i < 250 && !(await t.runAsync(done) ?? false); i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump();
+    }
+  }
+
   Future<void> move(WidgetTester t) async {
     phone(t);
     final live = _Db(HaloContainer.everyday);
@@ -92,17 +103,15 @@ void main() {
       await t.enterText(find.byWidget(f.widget), 'a long passphrase');
     }
     await press(t, find.text(l10n.backupMakeTheFileAnd));
-  }
-
-  // the file is made and handed on the disk, outside the test's clock: wait
-  // for [done], a few seconds at most
-  Future<void> until(WidgetTester t, Future<bool> Function() done) async {
-    for (var i = 0; i < 250 && !(await t.runAsync(done) ?? false); i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await t.pump();
-    }
+    // backed out of the save dialog: the move waits for the person
+    await until(
+      t,
+      () async => find.text(l10n.backupShareInstead).evaluate().isNotEmpty,
+    );
+    expect(asked, isNot(contains('shareFile')));
+    // the two ways on ease in
+    await t.pump(const Duration(seconds: 1));
+    await press(t, find.text(l10n.backupShareInstead));
   }
 
   List<File> made() => [
@@ -133,11 +142,15 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
-  testWidgets('a share that went lets the file go and retires the phone', (
-    t,
-  ) async {
+  testWidgets('a share that went lets the file go and, once it arrived, '
+      'retires the phone', (t) async {
     platform(shares: true);
     await move(t);
+    final arrived = find.text(l10n.backupFinishTheMove);
+    await until(t, () async => arrived.evaluate().isNotEmpty);
+    await t.pump(const Duration(milliseconds: 400));
+    expect(await t.runAsync(movedAt), isNull);
+    await t.tap(arrived);
     await until(t, () async => made().isEmpty && await movedAt() != null);
     expect(asked, containsAllInOrder(['saveDocument', 'shareFile']));
     expect(made(), isEmpty);

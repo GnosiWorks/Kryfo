@@ -1066,6 +1066,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get backupShareInstead => 'Compartir en su lugar';
 
   @override
+  String get backupSavedUnchecked =>
+      'Copia de seguridad guardada, pero Kryfo no pudo comprobar la copia';
+
+  @override
+  String get backupMoveReachedTitle => '¿Llegó el archivo a tu teléfono nuevo?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Conserva este teléfono hasta que hayas abierto el archivo allí.';
+
+  @override
+  String get backupFinishTheMove => 'Terminar la mudanza';
+
+  @override
+  String get backupNotYet => 'Todavía no';
+
+  @override
   String get backupCreating => 'Creando…';
 
   @override

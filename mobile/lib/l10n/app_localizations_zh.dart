@@ -1018,6 +1018,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupShareInstead => '改为分享';
 
   @override
+  String get backupSavedUnchecked => '备份已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get backupMoveReachedTitle => '文件已经到新手机上了吗？';
+
+  @override
+  String get backupMoveReachedLine => '在新手机上打开它之前，请留着这部手机。';
+
+  @override
+  String get backupFinishTheMove => '完成迁移';
+
+  @override
+  String get backupNotYet => '还没有';
+
+  @override
   String get backupCreating => '正在创建…';
 
   @override
@@ -8887,6 +8902,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupShareInstead => '改為分享';
+
+  @override
+  String get backupSavedUnchecked => '備份已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get backupMoveReachedTitle => '檔案已經到新手機上了嗎？';
+
+  @override
+  String get backupMoveReachedLine => '在新手機上打開它之前，請留著這支手機。';
+
+  @override
+  String get backupFinishTheMove => '完成搬移';
+
+  @override
+  String get backupNotYet => '還沒有';
 
   @override
   String get backupCreating => '建立中…';

@@ -48,7 +48,6 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StringCodec
 
 class MainActivity : FlutterFragmentActivity() {
-    private val REQ_SAVE_DOCUMENT = 7311
     private val tools = ToolsBridge(this)
     private var videos: VideoPlayers? = null
     companion object {
@@ -579,6 +578,7 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                     "saveDocumentState" -> result.success(SaveDoc.state())
+                    "saveDocumentCancel" -> result.success(SaveDoc.cancel())
                     else -> result.notImplemented()
                 }
             }
@@ -791,7 +791,7 @@ class MainActivity : FlutterFragmentActivity() {
             return
         }
         try {
-            startActivityForResult(intent, REQ_SAVE_DOCUMENT)
+            startActivityForResult(intent, p.code)
         } catch (e: Exception) {
             // no save dialog on this phone: the share sheet instead
             p.reply(SaveDoc.CANCELLED)
@@ -801,13 +801,18 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (tools.onActivityResult(requestCode, resultCode, data)) return
-        if (requestCode != REQ_SAVE_DOCUMENT) return
+        if (!SaveDoc.isCode(requestCode)) return
         val uri = data?.data
-        val p = SaveDoc.take()
+        val p = SaveDoc.take(requestCode)
         if (p == null) {
-            // the process that asked is gone: the empty file the dialog
-            // made would only puzzle someone
-            if (resultCode == RESULT_OK && uri != null) Thread { dropDocument(uri) }.start()
+            // nobody waits for this dialog any more: an empty file it made
+            // would only puzzle someone
+            if (resultCode == RESULT_OK && uri != null) {
+                Thread {
+                    val size = try { sizeOf(uri) } catch (e: Exception) { null }
+                    if (SaveDoc.mayDrop(size)) dropDocument(uri)
+                }.start()
+            }
             return
         }
         if (resultCode != RESULT_OK || uri == null) {
@@ -815,24 +820,18 @@ class MainActivity : FlutterFragmentActivity() {
             return
         }
         Thread {
+            val before = try { sizeOf(uri) } catch (e: Exception) { null }
             val state = SaveDoc.copy(
                 File(p.path),
-                open = { openForWrite(uri) },
+                open = { SaveDoc.openWith(before) { contentResolver.openOutputStream(uri, it) } },
                 sizeThere = { sizeOf(uri) },
                 readBack = { contentResolver.openInputStream(uri) },
-                onCopied = SaveDoc::progress,
             )
-            if (state != SaveDoc.SAVED) dropDocument(uri)
-            val where = if (state == SaveDoc.SAVED) placeOf(uri) else null
+            val kept = state == SaveDoc.SAVED || state == SaveDoc.UNCHECKED
+            if (!kept && SaveDoc.mayDrop(before)) dropDocument(uri)
+            val where = if (kept) placeOf(uri) else null
             runOnUiThread { p.reply(state, where) }
         }.start()
-    }
-
-    // a fresh document, so plain "w" is the same where "wt" is refused
-    private fun openForWrite(uri: Uri): java.io.OutputStream? = try {
-        contentResolver.openOutputStream(uri, "wt")
-    } catch (e: Exception) {
-        contentResolver.openOutputStream(uri, "w")
     }
 
     private fun sizeOf(uri: Uri): Long? =
@@ -845,7 +844,7 @@ class MainActivity : FlutterFragmentActivity() {
         try {
             android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
         } catch (e: Exception) {
-            // not ours to delete there: it stays empty
+            // the provider would not delete it: it stays where it is
         }
     }
 

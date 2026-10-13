@@ -4,12 +4,15 @@ package app.kryfo
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -25,15 +28,82 @@ class SaveDocTest {
     @After
     fun gone() {
         src.delete()
-        SaveDoc.take()?.reply(SaveDoc.FAILED)
+        SaveDoc.cancel()
+        SaveDoc.begin(src.path) {}
+        SaveDoc.cancel()
+    }
+
+    // a copy with nothing in the way, read back from what was written
+    private fun copyBack(
+        out: ByteArrayOutputStream = ByteArrayOutputStream(),
+        there: Long? = null,
+        back: (ByteArray) -> ByteArray? = { it },
+    ) = SaveDoc.copy(
+        src,
+        { out },
+        { there },
+        { back(out.toByteArray())?.let { ByteArrayInputStream(it) } },
+        onCopied = {},
+        stop = { false },
+        onChecking = {},
+    )
+
+    @Test
+    fun everyByteReadBackIsSaved() {
+        val out = ByteArrayOutputStream()
+        assertEquals(SaveDoc.SAVED, copyBack(out))
+        assertEquals(src.length(), out.size().toLong())
+        assertEquals(SaveDoc.SAVED, copyBack(there = src.length()))
+        // the size can lag on some providers: the read-back decides
+        assertEquals(SaveDoc.SAVED, copyBack(there = 0L))
     }
 
     @Test
-    fun everyByteThereIsSaved() {
-        val out = ByteArrayOutputStream()
-        val state = SaveDoc.copy(src, { out }, { src.length() }, { null })
-        assertEquals(SaveDoc.SAVED, state)
-        assertEquals(src.length(), out.size().toLong())
+    fun aRightSizeIsNotEnough() {
+        // no read-back: never "saved", at most unchecked
+        assertEquals(SaveDoc.UNCHECKED, copyBack(there = src.length()) { null })
+        assertEquals(SaveDoc.UNCHECKED, copyBack(there = null) { null })
+    }
+
+    @Test
+    fun noSizeStillReadsBack() {
+        // the provider says nothing about the size and kept half
+        assertEquals(
+            SaveDoc.FAILED,
+            copyBack(there = null) { it.copyOf(it.size / 2) },
+        )
+    }
+
+    @Test
+    fun aProviderThatSaysItKeptNothingIsNotSaved() {
+        assertEquals(SaveDoc.FAILED, copyBack(there = 0L) { null })
+        assertEquals(SaveDoc.FAILED, copyBack(there = 0L) { ByteArray(0) })
+    }
+
+    @Test
+    fun aProviderThatKeepsLessIsNotSaved() {
+        assertEquals(
+            SaveDoc.FAILED,
+            copyBack(there = src.length() / 2) { it.copyOf(it.size / 2) },
+        )
+    }
+
+    @Test
+    fun otherBytesOfTheSameLengthAreNotSaved() {
+        assertEquals(
+            SaveDoc.FAILED,
+            copyBack(there = src.length()) { it.copyOf().also { b -> b[b.size - 1] = 0 } },
+        )
+    }
+
+    @Test
+    fun aReadBackThatThrowsIsUnchecked() {
+        val state = SaveDoc.copy(
+            src, { ByteArrayOutputStream() }, { null },
+            { throw SecurityException("write only") },
+            onCopied = {}, stop = { false }, onChecking = {},
+        )
+        assertEquals(SaveDoc.UNCHECKED, state)
     }
 
     @Test
@@ -57,57 +127,66 @@ class SaveDocTest {
     }
 
     @Test
-    fun aProviderThatKeepsLessIsNotSaved() {
-        // takes every byte, keeps the first half
-        val half = ByteArrayOutputStream()
-        val state = SaveDoc.copy(
-            src,
-            { half },
-            { src.length() / 2 },
-            { ByteArrayInputStream(half.toByteArray().copyOf(half.size() / 2)) },
-        )
-        assertEquals(SaveDoc.FAILED, state)
-    }
-
-    @Test
-    fun aProviderThatKeepsNothingIsNotSaved() {
-        val state = SaveDoc.copy(
-            src,
-            { ByteArrayOutputStream() },
-            { 0L },
-            { ByteArrayInputStream(ByteArray(0)) },
-        )
-        assertEquals(SaveDoc.FAILED, state)
-    }
-
-    @Test
-    fun aSizeThatLagsButReadsBackWholeIsSaved() {
-        val out = ByteArrayOutputStream()
-        val state = SaveDoc.copy(
-            src,
-            { out },
-            { 0L },
-            { ByteArrayInputStream(out.toByteArray()) },
-        )
-        assertEquals(SaveDoc.SAVED, state)
-    }
-
-    @Test
     fun anEmptySourceIsNotSaved() {
         src.writeBytes(ByteArray(0))
-        assertEquals(
-            SaveDoc.FAILED,
-            SaveDoc.copy(src, { ByteArrayOutputStream() }, { 0L }, { null }),
-        )
+        assertEquals(SaveDoc.FAILED, copyBack())
+    }
+
+    @Test
+    fun aCancelStopsTheCopyAndItAnswersFailed() {
+        val got = mutableListOf<Map<String, Any?>>()
+        val p = SaveDoc.begin(src.path) { got.add(it) }!!
+        assertNotNull(SaveDoc.take(p.code))
+        var blocks = 0
+        val out = object : OutputStream() {
+            override fun write(b: Int) {}
+            override fun write(b: ByteArray, off: Int, len: Int) {
+                // dart gives up after the first block
+                if (++blocks == 1) assertEquals(SaveDoc.COPYING, SaveDoc.cancel())
+            }
+        }
+        val state = SaveDoc.copy(src, { out }, { null }, { null })
+        assertEquals(SaveDoc.FAILED, state)
+        assertEquals(1, blocks)
+        p.reply(state)
+        assertEquals(listOf(SaveDoc.FAILED), got.map { it["state"] })
+        assertEquals(SaveDoc.IDLE, SaveDoc.state()["stage"])
+    }
+
+    @Test
+    fun theCheckIsAStageOfItsOwnAndCanBeStopped() {
+        val p = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(p.code)
+        val out = ByteArrayOutputStream()
+        val state = SaveDoc.copy(src, { out }, { null }, {
+            // checking, not copying: its own bytes move, so it is no stall
+            assertEquals(SaveDoc.CHECKING, SaveDoc.state()["stage"])
+            assertEquals(0L, SaveDoc.state()["copied"])
+            assertEquals(SaveDoc.CHECKING, SaveDoc.cancel())
+            ByteArrayInputStream(out.toByteArray())
+        })
+        assertEquals(SaveDoc.FAILED, state)
+        p.reply(state)
+    }
+
+    @Test
+    fun aCancelAnswersADialogStillUp() {
+        val got = mutableListOf<Map<String, Any?>>()
+        val p = SaveDoc.begin(src.path) { got.add(it) }!!
+        assertEquals(SaveDoc.PICKING, SaveDoc.cancel())
+        assertEquals(listOf(SaveDoc.FAILED), got.map { it["state"] })
+        // its late answer finds nobody
+        assertNull(SaveDoc.take(p.code))
+        assertEquals(SaveDoc.IDLE, SaveDoc.cancel())
     }
 
     @Test
     fun theAnswerReachesTheCallEvenFromAnotherScreen() {
         // begun by one screen, answered by the one android built after it
         val got = mutableListOf<Map<String, Any?>>()
-        assertNotNull(SaveDoc.begin(src.path) { got.add(it) })
+        val p0 = SaveDoc.begin(src.path) { got.add(it) }!!
         assertEquals(SaveDoc.PICKING, SaveDoc.state()["stage"])
-        val p = SaveDoc.take()
+        val p = SaveDoc.take(p0.code)
         assertNotNull(p)
         assertEquals(src.path, p!!.path)
         assertEquals(SaveDoc.COPYING, SaveDoc.state()["stage"])
@@ -115,7 +194,22 @@ class SaveDocTest {
         p.reply(SaveDoc.FAILED)
         assertEquals(listOf(mapOf("state" to SaveDoc.SAVED, "where" to "Download")), got)
         assertEquals(SaveDoc.IDLE, SaveDoc.state()["stage"])
-        assertNull(SaveDoc.take())
+        assertNull(SaveDoc.take(p0.code))
+    }
+
+    @Test
+    fun anAnswerOnlyFitsItsOwnDialog() {
+        val first = SaveDoc.begin(src.path) {}!!
+        val second = SaveDoc.begin(src.path) {}!!
+        assertTrue(first.code != second.code)
+        assertTrue(SaveDoc.isCode(first.code) && SaveDoc.isCode(second.code))
+        // the first dialog's late answer is not the second one's
+        assertNull(SaveDoc.take(first.code))
+        assertEquals(SaveDoc.PICKING, SaveDoc.state()["stage"])
+        val p = SaveDoc.take(second.code)!!
+        // and a second answer to the same dialog finds nothing
+        assertNull(SaveDoc.take(second.code))
+        p.reply(SaveDoc.CANCELLED)
     }
 
     @Test
@@ -123,23 +217,21 @@ class SaveDocTest {
         val first = mutableListOf<Map<String, Any?>>()
         val second = mutableListOf<Map<String, Any?>>()
         SaveDoc.begin(src.path) { first.add(it) }
-        SaveDoc.begin(src.path) { second.add(it) }
+        val p = SaveDoc.begin(src.path) { second.add(it) }!!
         assertEquals(listOf(SaveDoc.FAILED), first.map { it["state"] })
         assertEquals(emptyList<Map<String, Any?>>(), second)
-        SaveDoc.take()!!.reply(SaveDoc.CANCELLED)
+        SaveDoc.take(p.code)!!.reply(SaveDoc.CANCELLED)
         assertEquals(listOf(SaveDoc.CANCELLED), second.map { it["state"] })
     }
 
     @Test
     fun aNoBeforeTheDialogCoveredTheAppIsNotABackOut() {
-        SaveDoc.begin(src.path) {}
+        val p = SaveDoc.begin(src.path) {}!!
         // answered by android at once: the picker went to a task of its own
         assertEquals(SaveDoc.FAILED, SaveDoc.backedOut())
         SaveDoc.coveredNow()
         assertEquals(SaveDoc.CANCELLED, SaveDoc.backedOut())
-        SaveDoc.take()!!.reply(SaveDoc.CANCELLED)
-        // a stop with no dialog up counts for nothing
-        SaveDoc.coveredNow()
+        SaveDoc.take(p.code)!!.reply(SaveDoc.CANCELLED)
         SaveDoc.begin(src.path) {}
         assertEquals(SaveDoc.FAILED, SaveDoc.backedOut())
     }
@@ -147,11 +239,41 @@ class SaveDocTest {
     @Test
     fun noSecondDialogWhileACopyRuns() {
         val first = mutableListOf<Map<String, Any?>>()
-        SaveDoc.begin(src.path) { first.add(it) }
-        val p = SaveDoc.take()!!
+        val p0 = SaveDoc.begin(src.path) { first.add(it) }!!
+        val p = SaveDoc.take(p0.code)!!
         assertNull(SaveDoc.begin(src.path) {})
         p.reply(SaveDoc.SAVED)
         assertEquals(listOf(SaveDoc.SAVED), first.map { it["state"] })
+    }
+
+    @Test
+    fun plainWriteOnlyOnADocumentThatHeldNothing() {
+        val modes = mutableListOf<String>()
+        val refuseWt: (String) -> OutputStream? = { mode ->
+            modes.add(mode)
+            if (mode == "wt") throw FileNotFoundException("no wt") else ByteArrayOutputStream()
+        }
+        assertNotNull(SaveDoc.openWith(0L, refuseWt))
+        assertNotNull(SaveDoc.openWith(null, refuseWt))
+        assertEquals(listOf("wt", "w", "wt", "w"), modes)
+        modes.clear()
+        // one the person chose to write over: no "w", that could leave its
+        // old tail behind
+        var threw = false
+        try {
+            SaveDoc.openWith(5000L, refuseWt)
+        } catch (e: FileNotFoundException) {
+            threw = true
+        }
+        assertTrue(threw)
+        assertEquals(listOf("wt"), modes)
+    }
+
+    @Test
+    fun onlyADocumentThatHeldNothingIsTakenAway() {
+        assertTrue(SaveDoc.mayDrop(0L))
+        assertFalse(SaveDoc.mayDrop(5000L))
+        assertFalse(SaveDoc.mayDrop(null))
     }
 
     @Test
@@ -161,7 +283,8 @@ class SaveDocTest {
         assertEquals("Download/Kryfo", SaveDoc.placeOf(ext, "primary:Download/Kryfo/b.kryfo", null))
         assertEquals("Backups", SaveDoc.placeOf(ext, "1A2B-3C4D:Backups/b.kryfo", null))
         assertNull(SaveDoc.placeOf(ext, "primary:b.kryfo", null))
-        assertEquals("Download", SaveDoc.placeOf(dl, "msf:31", "Downloads"))
+        // an msf id says nothing of the folder
+        assertNull(SaveDoc.placeOf(dl, "msf:31", "Downloads"))
         assertEquals(
             "Download/keep",
             SaveDoc.placeOf(dl, "raw:/storage/emulated/0/Download/keep/b.kryfo", null),

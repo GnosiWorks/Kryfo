@@ -13,10 +13,16 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, navRevision, rootNavKey, useDatabasesForTest;
+    show
+        HaloDb,
+        navRevision,
+        renewRootNavigator,
+        rootNavKey,
+        useDatabasesForTest;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show phone, press;
@@ -158,7 +164,11 @@ void main() {
     }
   }
 
+  Future<int?> movedAt(WidgetTester t) async =>
+      (await t.runAsync(SharedPreferences.getInstance))!.getInt('moved.at');
+
   final screen = find.byType(BackupScreen);
+  final reached = find.text(l10n.backupMoveReachedTitle);
   final notSaved = find.text(l10n.backupNotSaved);
   final tryAgain = find.text(l10n.commonTryAgain);
   final shareInstead = find.text(l10n.backupShareInstead);
@@ -217,7 +227,7 @@ void main() {
   });
 
   testWidgets('a backed-out dialog goes to the share sheet', (t) async {
-    await open(t, move: true);
+    await open(t);
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => screen.evaluate().isEmpty);
     expect(asked, containsAllInOrder(['saveDocument', 'shareFile']));
@@ -229,15 +239,14 @@ void main() {
 
   testWidgets('a backed-out dialog and no share sheet is not saved', (t) async {
     shares = false;
-    await open(t, move: true);
+    await open(t);
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => asked.contains('shareFile'));
     await beats(t);
     await t.pump(const Duration(seconds: 1));
     saysNotSaved();
     expect(made(), hasLength(1));
-    final prefs = await t.runAsync(SharedPreferences.getInstance);
-    expect(prefs!.getInt('moved.at'), isNull);
+    expect(await movedAt(t), isNull);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
@@ -271,6 +280,7 @@ void main() {
     await wait(t, 60);
     expect(notSaved, findsNothing);
     expect(find.text(l10n.backupSaving), findsOneWidget);
+    stage = () => null;
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);
     expect(screen, findsNothing);
@@ -285,6 +295,202 @@ void main() {
     await wait(t, 20);
     saysNotSaved();
     expect(made(), hasLength(1));
+    // android stops it
+    stage = () => null;
+    await wait(t, 2);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a backed-out move never opens the share sheet by itself', (
+    t,
+  ) async {
+    await open(t, move: true);
+    dialogs.single.complete({'state': 'cancelled'});
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    saysNotSaved();
+    expect(asked, isNot(contains('shareFile')));
+    expect(await movedAt(t), isNull);
+    expect(made(), hasLength(1));
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move that went out by share keeps the phone until asked', (
+    t,
+  ) async {
+    await open(t, move: true);
+    dialogs.single.complete({'state': 'cancelled'});
+    await beats(t);
+    await press(t, shareInstead);
+    await until(t, () => reached.evaluate().isNotEmpty);
+    // the sheet is up
+    await t.pump(const Duration(milliseconds: 400));
+    expect(asked, contains('shareFile'));
+    expect(find.text(l10n.backupMoveReachedLine), findsOneWidget);
+    // the sheet's words are the page's own colours
+    expect(textOf(reached).style!.color, HaloColors.text);
+    expect(
+      textOf(find.text(l10n.backupMoveReachedLine)).style!.color,
+      HaloColors.text2,
+    );
+    expect(await movedAt(t), isNull);
+    await t.tap(find.text(l10n.backupNotYet));
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(screen, findsNothing);
+    expect(await movedAt(t), isNull);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move that went out by share retires once it arrived', (
+    t,
+  ) async {
+    await open(t, move: true);
+    dialogs.single.complete({'state': 'cancelled'});
+    await beats(t);
+    await press(t, shareInstead);
+    await until(t, () => reached.evaluate().isNotEmpty);
+    // the sheet is up
+    await t.pump(const Duration(milliseconds: 400));
+    await t.tap(find.text(l10n.backupFinishTheMove));
+    await until(t, () => screen.evaluate().isEmpty);
+    await beats(t);
+    expect(await movedAt(t), isNotNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a checked save of a move retires the phone', (t) async {
+    await open(t, move: true);
+    stage = () => null;
+    dialogs.single.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await beats(t);
+    expect(reached, findsNothing);
+    expect(await movedAt(t), isNotNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a save that could not be checked says so', (t) async {
+    await open(t);
+    dialogs.single.complete({'state': 'unchecked'});
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(find.text(l10n.backupSavedUnchecked), findsOneWidget);
+    expect(find.text(l10n.backupBackupSavedKeepThe), findsNothing);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move saved without a check retires nothing by itself', (
+    t,
+  ) async {
+    await open(t, move: true);
+    dialogs.single.complete({'state': 'unchecked'});
+    await until(t, () => reached.evaluate().isNotEmpty);
+    // the sheet is up
+    await t.pump(const Duration(milliseconds: 400));
+    expect(await movedAt(t), isNull);
+    await t.tap(find.text(l10n.backupNotYet));
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(await movedAt(t), isNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a copy given up on is stopped, and its file waits for it', (
+    t,
+  ) async {
+    await open(t);
+    var running = true;
+    stage = () =>
+        running ? {'stage': 'copying', 'copied': 4096} : {'stage': 'idle'};
+    await wait(t, 40);
+    saysNotSaved();
+    // android was told to stop before the screen said so
+    expect(asked, contains('saveDocumentCancel'));
+    // leaving the screen while android still reads the file keeps it
+    await t.pageBack();
+    await wait(t, 5);
+    expect(screen, findsNothing);
+    expect(made(), hasLength(1));
+    running = false;
+    await wait(t, 2);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('try again waits for a stopped copy to end', (t) async {
+    await open(t);
+    var running = true;
+    stage = () =>
+        running ? {'stage': 'copying', 'copied': 4096} : {'stage': 'idle'};
+    await wait(t, 40);
+    saysNotSaved();
+    await press(t, tryAgain);
+    await wait(t, 4);
+    // not refused at once: the button waits on the copy
+    expect(dialogs, hasLength(1));
+    expect(find.text(l10n.backupSaving), findsOneWidget);
+    expect(notSaved, findsNothing);
+    running = false;
+    await wait(t, 2);
+    expect(dialogs, hasLength(2));
+    dialogs.last.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(screen, findsNothing);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('reading the copy back is no stall', (t) async {
+    await open(t);
+    var n = 0;
+    stage = () => {'stage': 'checking', 'copied': n += 1 << 20};
+    await wait(t, 60);
+    expect(notSaved, findsNothing);
+    stage = () => null;
+    dialogs.single.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(screen, findsNothing);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move saved while the decoy opened is asked about later', (
+    t,
+  ) async {
+    haloToastOverlay = () => rootNavKey.currentState?.overlay;
+    addTearDown(() => haloToastOverlay = null);
+    await open(t, move: true);
+    final live = _Db(HaloContainer.everyday);
+    // the person leaves from inside the dialog and comes back to the decoy
+    lockState.left();
+    useDatabasesForTest(live, Session(_Db(HaloContainer.decoy)));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = true;
+    await t.pump();
+    stage = () => null;
+    dialogs.single.complete({'state': 'saved'});
+    await wait(t, 3);
+    expect(screen, findsNothing);
+    // the decoy hears nothing of it, and nothing is retired
+    expect(reached, findsNothing);
+    expect(await movedAt(t), isNull);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+
+    // the everyday pin: the move is asked about there
+    lockState.lock();
+    useDatabasesForTest(live, Session(live));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await until(t, () => reached.evaluate().isNotEmpty);
+    // the sheet is up
+    await t.pump(const Duration(milliseconds: 400));
+    expect(reached, findsOneWidget);
+    await t.tap(find.text(l10n.backupFinishTheMove));
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(await movedAt(t), isNotNull);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 }

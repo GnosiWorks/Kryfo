@@ -1087,6 +1087,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupShareInstead => 'Поделиться вместо этого';
 
   @override
+  String get backupSavedUnchecked =>
+      'Резервная копия сохранена, но Kryfo не смог её проверить';
+
+  @override
+  String get backupMoveReachedTitle => 'Файл дошёл до нового телефона?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Не расставайся с этим телефоном, пока не откроешь файл там.';
+
+  @override
+  String get backupFinishTheMove => 'Завершить перенос';
+
+  @override
+  String get backupNotYet => 'Ещё нет';
+
+  @override
   String get backupCreating => 'Создание…';
 
   @override

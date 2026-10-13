@@ -1062,6 +1062,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupShareInstead => 'Bunun yerine paylaş';
 
   @override
+  String get backupSavedUnchecked =>
+      'Yedek kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get backupMoveReachedTitle => 'Dosya yeni telefonuna ulaştı mı?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Dosyayı orada açana kadar bu telefonu bırakma.';
+
+  @override
+  String get backupFinishTheMove => 'Taşımayı bitir';
+
+  @override
+  String get backupNotYet => 'Henüz değil';
+
+  @override
   String get backupCreating => 'Oluşturuluyor…';
 
   @override
