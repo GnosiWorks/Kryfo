@@ -458,9 +458,7 @@ class MainActivity : FlutterFragmentActivity() {
                             if (DeliveryPrefs.staysOn(this)) {
                                 startListenerService()
                             } else {
-                                applicationContext.stopService(
-                                    Intent(applicationContext, HaloListenerService::class.java)
-                                )
+                                HaloListenerService.stop(applicationContext)
                             }
                             result.success(true)
                         } catch (e: Exception) {
@@ -499,9 +497,7 @@ class MainActivity : FlutterFragmentActivity() {
                         // the sticky listener goes first: if the clear is
                         // refused and dart exits, nothing brings the app back
                         try {
-                            applicationContext.stopService(
-                                Intent(applicationContext, HaloListenerService::class.java)
-                            )
+                            HaloListenerService.stop(applicationContext)
                         } catch (e: Exception) {
                         }
                         // and the periodic job, which survives the clear and

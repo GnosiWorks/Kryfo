@@ -233,6 +233,15 @@ class ListenerStartTest {
     }
 
     @Test
+    fun aStopBeforeOnCreateLetsTheNextStartOut() {
+        HaloListenerService.start(app)
+        assertNotNull(shadowOf(app).nextStartedService)
+        HaloListenerService.stop(app)
+        HaloListenerService.start(app)
+        assertNotNull(shadowOf(app).nextStartedService)
+    }
+
+    @Test
     fun aRefusedStartIsNotOnItsWay() {
         val ctx = Asked(app, plain = false, front = false)
         try {

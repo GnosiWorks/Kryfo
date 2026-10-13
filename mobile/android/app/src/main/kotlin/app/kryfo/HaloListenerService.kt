@@ -79,6 +79,12 @@ class HaloListenerService : Service() {
             debugLog(context, "listener: foreground start")
         }
 
+        // a start stopped before its onCreate never clears its own mark
+        fun stop(context: Context) {
+            askedAt = 0L
+            context.stopService(Intent(context, HaloListenerService::class.java))
+        }
+
         // the channel keeps the words it was made with. a service that is
         // not running (check-ins) never gets to say them again, so a
         // language switch renames it from here too; [onlyIfThere] leaves a
