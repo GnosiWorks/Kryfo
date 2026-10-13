@@ -21,6 +21,7 @@ import 'written_field.dart';
 import '../bidi_safe.dart';
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../voice_length.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -237,8 +238,9 @@ class VoiceBubbleState extends State<VoiceBubble> {
     });
   }
 
-  // flag missing files, and read the clip length once per file with a
-  // throwaway player, disposed right after so no bubble holds a codec handle
+  // flag missing files, and read the clip length once per file: from the
+  // wav's head, or else with a throwaway player, disposed right after so no
+  // bubble holds a codec handle
   static final Map<String, Duration> _durCache = {};
 
   Future<void> _checkExists() async {
@@ -254,6 +256,14 @@ class VoiceBubbleState extends State<VoiceBubble> {
     final cached = _durCache[widget.path];
     if (cached != null) {
       if (mounted) setState(() => _dur = cached);
+      return;
+    }
+    // the samples in the file, sent or received: no length rides the wire
+    final ms = await wavFileMs(widget.path);
+    if (ms != null) {
+      final d = Duration(milliseconds: ms);
+      _durCache[widget.path] = d;
+      if (mounted) setState(() => _dur = d);
       return;
     }
     // probe just once, off the first frame so it never blocks chat-open layout.
@@ -284,7 +294,9 @@ class VoiceBubbleState extends State<VoiceBubble> {
     // or a just-recorded note is not flushed yet, so it gets a few tries
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        _dur = await _player.setFilePath(widget.path) ?? Duration.zero;
+        final d = await _player.setFilePath(widget.path);
+        // the length read from the head stays: the number does not jump
+        _dur = _durCache[widget.path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);
         return;
       } catch (_) {
@@ -341,10 +353,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     _player.pause();
   }
 
-  String _fmt(Duration d) {
-    final s = d.inSeconds;
-    return '${whole(s ~/ 60)}:${twoDigits(s % 60)}';
-  }
+  String _fmt(Duration d) => voiceClock(d.inMilliseconds);
 
   @override
   Widget build(BuildContext context) {
@@ -433,7 +442,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                                 size: 10,
                                 color: out
                                     ? HaloColors.onAmber
-                                    : HaloColors.text3,
+                                    : HaloColors.text2,
                               ),
                             ),
                             if (widget.disguised) ...[

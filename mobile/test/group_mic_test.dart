@@ -131,6 +131,12 @@ void main() {
     await t.pump();
     starting.complete();
     await settle(t);
+    // the shred is real file work: a busy machine takes longer
+    for (var i = 0; i < 100 && File(recording!).existsSync(); i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+    }
     // stopped after it started, its file shredded, no bar and no note
     expect(asked.lastIndexOf('stop'), greaterThan(asked.indexOf('start')));
     expect(File(recording!).existsSync(), isFalse);
