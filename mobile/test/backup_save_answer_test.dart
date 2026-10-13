@@ -589,6 +589,89 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
+  testWidgets('a decoy never shreds a waiting file, the everyday app does', (
+    t,
+  ) async {
+    await lostAndLeft(t);
+    await wait(t, 70);
+    expect(made(), hasLength(1));
+    stage = () => idle;
+    final live = _Db(HaloContainer.everyday);
+    // the decoy pin: its opening does no work for the other side
+    lockState.lock();
+    useDatabasesForTest(live, Session(_Db(HaloContainer.decoy)));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = true;
+    // long enough for a shred on the disk to finish, were one started
+    await wait(t, 3);
+    await beats(t, 150);
+    expect(made(), hasLength(1));
+    // nor does a resume in the decoy
+    life(t, [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]);
+    life(t, [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]);
+    // long enough for a shred on the disk to finish, were one started
+    await wait(t, 3);
+    await beats(t, 150);
+    expect(made(), hasLength(1));
+    // the everyday pin
+    lockState.lock();
+    useDatabasesForTest(live, Session(live));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move sheet a lock took away is asked again in its session', (
+    t,
+  ) async {
+    haloToastOverlay = () => rootNavKey.currentState?.overlay;
+    addTearDown(() => haloToastOverlay = null);
+    await open(t, move: true);
+    dialogs.single.complete({'state': 'cancelled'});
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    await press(t, shareInstead);
+    await until(t, () => reached.evaluate().isNotEmpty);
+    await wait(t, 3);
+    expect(reached, findsOneWidget);
+    // the lock comes up over the sheet and the decoy pin opens the decoy
+    final live = _Db(HaloContainer.everyday);
+    lockState.lock();
+    useDatabasesForTest(live, Session(_Db(HaloContainer.decoy)));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = true;
+    await wait(t, 3);
+    expect(reached, findsNothing);
+    expect(await movedAt(t), isNull);
+    // the everyday pin: asked again there
+    lockState.lock();
+    useDatabasesForTest(live, Session(live));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await until(t, () => reached.evaluate().isNotEmpty);
+    await t.pump(const Duration(milliseconds: 400));
+    expect(reached, findsOneWidget);
+    await t.tap(find.text(l10n.backupFinishTheMove));
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(await movedAt(t), isNotNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
   testWidgets('a check may take longer than a copy before it counts as '
       'stalled', (t) async {
     await open(t);

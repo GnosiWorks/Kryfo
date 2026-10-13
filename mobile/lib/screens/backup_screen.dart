@@ -3,6 +3,7 @@
 // to the share sheet when that is refused.
 
 import 'dart:async';
+import 'dart:isolate';
 
 import '../bidi_safe.dart' show unmarked;
 import '../lock_guard.dart';
@@ -238,13 +239,7 @@ class _BackupScreenState extends State<BackupScreen> {
         // another session opened over the save: what went out is said, or
         // asked, once the chats it began in are open again
         if (made.move && !(checked && !dropped)) {
-          unawaited(
-            _inSameSessionLater(
-              decoy: decoy,
-              hidden: hidden,
-              act: (ctx, _) => unawaited(_askMoveDone(ctx)),
-            ),
-          );
+          _askMoveLater(decoy: decoy, hidden: hidden);
         } else if (made.move) {
           await appState.markMoved();
         } else if (dropped) {
@@ -269,7 +264,9 @@ class _BackupScreenState extends State<BackupScreen> {
           // from here this phone is retired, and the next screen says so
           await appState.markMoved();
         } else {
-          await _askMoveDone(context);
+          // asked over the session's own navigator, never this screen's: a
+          // lock that comes up meanwhile cannot take the question with it
+          _askMoveLater(decoy: decoy, hidden: hidden);
         }
       } else if (checked) {
         final where = answer.where == null ? '' : unmarked(answer.where!);
@@ -807,12 +804,43 @@ Future<void> _inSameSessionLater({
 }
 
 // a move file that went out without a checked save: the person says when
-// it has reached the new phone, and only then is this one retired
-Future<void> _askMoveDone(BuildContext context) async {
+// it has reached the new phone, and only then is this one retired. asked
+// once the chats it began in are open, and asked again there if a lock
+// took the sheet away unanswered
+void _askMoveLater({required bool decoy, required bool hidden}) {
+  unawaited(
+    _inSameSessionLater(
+      decoy: decoy,
+      hidden: hidden,
+      act: (ctx, _) =>
+          unawaited(_askMoveDone(ctx, decoy: decoy, hidden: hidden)),
+    ),
+  );
+}
+
+Future<void> _askMoveDone(
+  BuildContext context, {
+  required bool decoy,
+  required bool hidden,
+}) async {
+  final rev = navRevision.value;
+  var settled = false;
+  // the navigator under the sheet was replaced: it was never answered
+  void replaced() {
+    if (settled || navRevision.value == rev) return;
+    settled = true;
+    navRevision.removeListener(replaced);
+    _askMoveLater(decoy: decoy, hidden: hidden);
+  }
+
+  navRevision.addListener(replaced);
   final done = await showHaloSheet<bool>(
     context,
     builder: (_) => const _MoveDoneSheet(),
   );
+  navRevision.removeListener(replaced);
+  if (settled) return;
+  settled = true;
   if (done == true) await appState.markMoved();
 }
 
@@ -940,12 +968,16 @@ final _shredLater = <String>{};
 AppLifecycleListener? _shredOnResume;
 bool _shredRetrying = false;
 
+// only in the open everyday app or its hidden chats: never under the lock,
+// never in a decoy, whose opening must not take longer for it
+bool _mayShredNow() => !lockGuard.isLocked() && !lockState.inDecoy;
+
 void _shredOnUnlock() {
-  if (!lockGuard.isLocked()) unawaited(_retryShreds());
+  if (_mayShredNow()) unawaited(_retryShreds());
 }
 
 Future<void> _retryShreds() async {
-  if (_shredLater.isEmpty || _shredRetrying) return;
+  if (_shredLater.isEmpty || _shredRetrying || !_mayShredNow()) return;
   _shredRetrying = true;
   Object? s;
   try {
@@ -957,13 +989,21 @@ Future<void> _retryShreds() async {
   }
   final stage = s is Map ? s['stage'] : null;
   if (stage != 'idle' && stage != 'picking') return;
+  // a decoy may have opened while android was asked
+  if (!_mayShredNow()) return;
   final paths = List.of(_shredLater);
   _shredLater.clear();
   _shredOnResume?.dispose();
   _shredOnResume = null;
   lockState.removeListener(_shredOnUnlock);
+  // a large file is zeroed off the ui isolate
   for (final path in paths) {
-    await shredFile(path);
+    try {
+      await Isolate.run(() => shredFile(path));
+    } catch (e) {
+      dlog('backup: shred off the ui failed (${e.runtimeType})');
+      await shredFile(path);
+    }
   }
 }
 
