@@ -1033,6 +1033,38 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi tệp đã sẵn sàng, bạn sẽ chọn nơi lưu tệp.';
 
   @override
+  String get backupSaving => 'Đang lưu…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Đã lưu bản sao lưu vào $place · hãy giữ kỹ cụm mật khẩu';
+  }
+
+  @override
+  String get backupNotSaved => 'Bản sao lưu chưa được lưu. Tệp vẫn còn đây.';
+
+  @override
+  String get backupShareInstead => 'Chia sẻ thay vào đó';
+
+  @override
+  String get backupSavedUnchecked =>
+      'Đã lưu bản sao lưu, nhưng Kryfo không kiểm tra được bản sao';
+
+  @override
+  String get backupMoveReachedTitle =>
+      'Tệp đã tới điện thoại mới của bạn chưa?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Hãy giữ điện thoại này cho đến khi bạn đã mở tệp ở đó.';
+
+  @override
+  String get backupFinishTheMove => 'Hoàn tất việc chuyển';
+
+  @override
+  String get backupNotYet => 'Chưa';
+
+  @override
   String get backupCreating => 'Đang tạo…';
 
   @override

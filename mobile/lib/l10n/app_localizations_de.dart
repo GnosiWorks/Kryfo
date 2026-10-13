@@ -1050,6 +1050,39 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn die Datei fertig ist, wählst du, wo du sie speicherst.';
 
   @override
+  String get backupSaving => 'Speichere…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Backup gespeichert in $place · bewahre die Passphrase sicher auf';
+  }
+
+  @override
+  String get backupNotSaved =>
+      'Das Backup wurde nicht gespeichert. Die Datei ist noch da.';
+
+  @override
+  String get backupShareInstead => 'Stattdessen teilen';
+
+  @override
+  String get backupSavedUnchecked =>
+      'Backup gespeichert, aber Kryfo konnte die Kopie nicht prüfen';
+
+  @override
+  String get backupMoveReachedTitle =>
+      'Ist die Datei auf deinem neuen Handy angekommen?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Behalte dieses Handy, bis du die Datei dort geöffnet hast.';
+
+  @override
+  String get backupFinishTheMove => 'Umzug abschließen';
+
+  @override
+  String get backupNotYet => 'Noch nicht';
+
+  @override
   String get backupCreating => 'Erstelle…';
 
   @override

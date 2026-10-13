@@ -1635,6 +1635,60 @@ abstract class AppLocalizations {
   /// **'When it\'s ready, you\'ll choose where to save it.'**
   String get backupSaveComesAfter;
 
+  /// screens/backup_screen.dart. on the button while the system save dialog is up and the file is copied into the folder picked there
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get backupSaving;
+
+  /// screens/backup_screen.dart. toast once the backup is in the picked place. the placeholder is a folder path like Download/Kryfo, or the name of the app that holds it
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved in {place} · keep the passphrase safe'**
+  String backupSavedIn(String place);
+
+  /// screens/backup_screen.dart. above the buttons when the save dialog was answered but the file did not land, or no answer came back: the made file is kept for another try
+  ///
+  /// In en, this message translates to:
+  /// **'The backup wasn\'t saved. The file is still here.'**
+  String get backupNotSaved;
+
+  /// screens/backup_screen.dart. second button under the not-saved line: opens the share sheet with the made file
+  ///
+  /// In en, this message translates to:
+  /// **'Share instead'**
+  String get backupShareInstead;
+
+  /// screens/backup_screen.dart. toast when the backup was written to the picked place but that place would not let Kryfo read it back to compare
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved, but Kryfo couldn\'t check the copy'**
+  String get backupSavedUnchecked;
+
+  /// screens/backup_screen.dart. sheet title after a move file went out by the share sheet, or was saved without a check: this phone is only retired once the person says yes
+  ///
+  /// In en, this message translates to:
+  /// **'Did the file reach your new phone?'**
+  String get backupMoveReachedTitle;
+
+  /// screens/backup_screen.dart. under backupMoveReachedTitle: the old phone stays usable until the file has been opened on the new one
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this phone until you\'ve opened it there.'**
+  String get backupMoveReachedLine;
+
+  /// screens/backup_screen.dart. main button of that sheet: retires this phone, the next screen says it moved
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the move'**
+  String get backupFinishTheMove;
+
+  /// screens/backup_screen.dart. second button of that sheet: nothing is retired, the phone stays as it is
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get backupNotYet;
+
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:

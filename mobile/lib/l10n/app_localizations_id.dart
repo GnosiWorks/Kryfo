@@ -1034,6 +1034,38 @@ class AppLocalizationsId extends AppLocalizations {
       'Setelah file siap, kamu akan memilih tempat menyimpannya.';
 
   @override
+  String get backupSaving => 'Menyimpan…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Cadangan tersimpan di $place · simpan frasa sandinya dengan aman';
+  }
+
+  @override
+  String get backupNotSaved => 'Cadangan tidak tersimpan. File-nya masih ada.';
+
+  @override
+  String get backupShareInstead => 'Bagikan saja';
+
+  @override
+  String get backupSavedUnchecked =>
+      'Cadangan tersimpan, tapi Kryfo tidak bisa memeriksa salinannya';
+
+  @override
+  String get backupMoveReachedTitle =>
+      'Apakah file-nya sudah sampai di ponsel barumu?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Simpan ponsel ini sampai kamu sudah membukanya di sana.';
+
+  @override
+  String get backupFinishTheMove => 'Selesaikan pindah';
+
+  @override
+  String get backupNotYet => 'Belum';
+
+  @override
   String get backupCreating => 'Membuat…';
 
   @override

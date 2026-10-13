@@ -1051,6 +1051,38 @@ class AppLocalizationsPt extends AppLocalizations {
       'Quando o arquivo estiver pronto, você vai escolher onde salvá-lo.';
 
   @override
+  String get backupSaving => 'Salvando…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Backup salvo em $place · guarde bem a frase-senha';
+  }
+
+  @override
+  String get backupNotSaved =>
+      'O backup não foi salvo. O arquivo continua aqui.';
+
+  @override
+  String get backupShareInstead => 'Compartilhar em vez disso';
+
+  @override
+  String get backupSavedUnchecked =>
+      'Backup salvo, mas o Kryfo não conseguiu conferir a cópia';
+
+  @override
+  String get backupMoveReachedTitle => 'O arquivo chegou ao seu celular novo?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Fique com este celular até abrir o arquivo lá.';
+
+  @override
+  String get backupFinishTheMove => 'Concluir a mudança';
+
+  @override
+  String get backupNotYet => 'Ainda não';
+
+  @override
   String get backupCreating => 'Criando…';
 
   @override

@@ -1004,6 +1004,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupSaveComesAfter => '文件准备好后，你再选择保存位置。';
 
   @override
+  String get backupSaving => '正在保存…';
+
+  @override
+  String backupSavedIn(String place) {
+    return '备份已保存到 $place · 请保管好密码短语';
+  }
+
+  @override
+  String get backupNotSaved => '备份没有保存。文件还在。';
+
+  @override
+  String get backupShareInstead => '改为分享';
+
+  @override
+  String get backupSavedUnchecked => '备份已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get backupMoveReachedTitle => '文件已经到新手机上了吗？';
+
+  @override
+  String get backupMoveReachedLine => '在新手机上打开它之前，请留着这部手机。';
+
+  @override
+  String get backupFinishTheMove => '完成迁移';
+
+  @override
+  String get backupNotYet => '还没有';
+
+  @override
   String get backupCreating => '正在创建…';
 
   @override
@@ -8859,6 +8888,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupSaveComesAfter => '檔案準備好後，你再選擇儲存位置。';
+
+  @override
+  String get backupSaving => '儲存中…';
+
+  @override
+  String backupSavedIn(String place) {
+    return '備份已儲存到 $place · 請妥善保管密碼短語';
+  }
+
+  @override
+  String get backupNotSaved => '備份沒有儲存。檔案還在。';
+
+  @override
+  String get backupShareInstead => '改為分享';
+
+  @override
+  String get backupSavedUnchecked => '備份已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get backupMoveReachedTitle => '檔案已經到新手機上了嗎？';
+
+  @override
+  String get backupMoveReachedLine => '在新手機上打開它之前，請留著這支手機。';
+
+  @override
+  String get backupFinishTheMove => '完成搬移';
+
+  @override
+  String get backupNotYet => '還沒有';
 
   @override
   String get backupCreating => '建立中…';

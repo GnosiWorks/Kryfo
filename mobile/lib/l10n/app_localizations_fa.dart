@@ -1045,6 +1045,37 @@ class AppLocalizationsFa extends AppLocalizations {
       'وقتی فایل آماده شد، انتخاب می‌کنید کجا ذخیره‌اش کنید.';
 
   @override
+  String get backupSaving => 'در حال ذخیره…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'نسخه‌ی پشتیبان در ⁨$place⁩ ذخیره شد · عبارت عبور را امن نگه دارید';
+  }
+
+  @override
+  String get backupNotSaved => 'نسخه‌ی پشتیبان ذخیره نشد. فایل هنوز اینجاست.';
+
+  @override
+  String get backupShareInstead => 'هم‌رسانی به‌جای آن';
+
+  @override
+  String get backupSavedUnchecked =>
+      'نسخه‌ی پشتیبان ذخیره شد، ولی Kryfo نتوانست آن را بررسی کند';
+
+  @override
+  String get backupMoveReachedTitle => 'فایل به گوشی جدیدتان رسید؟';
+
+  @override
+  String get backupMoveReachedLine =>
+      'این گوشی را نگه دارید تا فایل را آنجا باز کنید.';
+
+  @override
+  String get backupFinishTheMove => 'پایان انتقال';
+
+  @override
+  String get backupNotYet => 'هنوز نه';
+
+  @override
   String get backupCreating => 'در حال ساختن…';
 
   @override

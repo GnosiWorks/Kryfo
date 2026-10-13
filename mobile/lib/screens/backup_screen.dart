@@ -3,7 +3,9 @@
 // to the share sheet when that is refused.
 
 import 'dart:async';
+import 'dart:isolate';
 
+import '../bidi_safe.dart' show unmarked;
 import '../lock_guard.dart';
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +21,10 @@ import '../widgets/fit_column.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/motion.dart' show houseSpring;
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/secret_field.dart';
+import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
@@ -42,12 +46,6 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
-  @override
-  void initState() {
-    super.initState();
-    appState.forceSecure(true);
-  }
-
   // the file holds the hidden chats: they are open, or were just set up. a
   // decoy's never does. a session change closes this screen, so it is read
   // once
@@ -68,8 +66,28 @@ class _BackupScreenState extends State<BackupScreen> {
   double _progress = 0;
   // the file is being written. the save dialog only opens after
   bool _writing = false;
+  // the made file while it waits to be saved or shared, and the words it
+  // was made with: other words make it stale
+  ({String path, String name, bool move, String p1, String p2})? _made;
+  // the save dialog is up or the copy after it runs
+  bool _saving = false;
+  // kryfo stopped waiting for the last save: android may still read the
+  // made file a while
+  bool _lost = false;
+  // the last hand-over did not go: a calm line and two ways on
+  bool _notSaved = false;
   // both fields show what was typed, or neither
   bool _shown = false;
+  // the two ways on, brought into view when they come
+  final _ways = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    appState.forceSecure(true);
+    _p1.addListener(_edited);
+    _p2.addListener(_edited);
+  }
 
   Future<void> _create() async {
     final pw = _p1.text.trim();
@@ -82,29 +100,21 @@ class _BackupScreenState extends State<BackupScreen> {
       setState(() => _error = l10n.backupPassphrasesDonTMatch);
       return;
     }
+    _drop();
     setState(() {
       _error = null;
       _busy = true;
       _writing = true;
     });
-    // where it began: a lock that takes the screen away is told by a new
-    // navigator
-    final rev = navRevision.value;
-    final decoy = lockState.inDecoy;
-    final hidden = sessionBackupHasHidden;
-    _notMadeGen++;
-    void sayLater() {
-      if (!mounted && navRevision.value != rev) {
-        unawaited(_sayNotMadeLater(decoy: decoy, hidden: hidden));
-      }
-    }
-
+    final sayLater = _notMadeLater();
+    final String path;
+    final String name;
+    final move = _move && !widget.withHiddenChats;
     try {
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final name = 'kryfo-backup-$ts.kryfo';
-      final path = p.join(tempDir.path, name);
-      final move = _move && !widget.withHiddenChats;
+      name = 'kryfo-backup-$ts.kryfo';
+      path = p.join(tempDir.path, name);
       void onProgress(int a, int b) {
         if (mounted && b > 0) setState(() => _progress = a / b);
       }
@@ -120,25 +130,6 @@ class _BackupScreenState extends State<BackupScreen> {
           onProgress: onProgress,
         );
       }
-      if (mounted) setState(() => _writing = false);
-      var out = (tried: false, handed: false);
-      try {
-        out = await _handOver(path, name);
-      } finally {
-        // saved, or the share sheet has a copy of its own: this one goes,
-        // as does one the lock took the screen from before it was offered.
-        // one whose hand-over failed is kept until the next start's sweep
-        if (out.handed || !out.tried) await shredFile(path);
-      }
-      final handed = out.handed;
-      if (!handed) sayLater();
-      if (move && handed) {
-        // the file is out of our hands: from here this phone is retired,
-        // and the next screen says so. one never handed over, the screen
-        // gone under a lock, retires nothing
-        await appState.markMoved();
-      }
-      if (mounted) Navigator.of(context).pop();
     } catch (e) {
       dlog('backup: not made (${e.runtimeType})');
       sayLater();
@@ -150,36 +141,174 @@ class _BackupScreenState extends State<BackupScreen> {
           _writing = false;
         });
       }
+      return;
     }
+    _made = (path: path, name: name, move: move, p1: _p1.text, p2: _p2.text);
+    if (!mounted) {
+      // the lock took the screen before the file was offered
+      _drop();
+      sayLater();
+      return;
+    }
+    setState(() => _writing = false);
+    await _handOver(save: true, sayLater: sayLater);
   }
 
-  // the system save dialog first, the share sheet when that is refused.
-  // neither reads the file into memory. tried once either was offered
-  Future<({bool tried, bool handed})> _handOver(
-    String path,
-    String name,
-  ) async {
-    const none = (tried: false, handed: false);
-    if (!mounted) return none;
-    var saved = false;
+  // a backup the lock takes the screen from before it is handed over is
+  // said not made, later. where it began: a lock that takes the screen away
+  // is told by a new navigator
+  VoidCallback _notMadeLater() {
+    final rev = navRevision.value;
+    final decoy = lockState.inDecoy;
+    final hidden = sessionBackupHasHidden;
+    _notMadeGen++;
+    return () {
+      if (!mounted && navRevision.value != rev) {
+        unawaited(_sayNotMadeLater(decoy: decoy, hidden: hidden));
+      }
+    };
+  }
+
+  // the made file goes: other words or the other way were picked
+  void _drop() {
+    final made = _made;
+    if (made == null || _saving) return;
+    _made = null;
+    unawaited(_shredMade(made.path, lost: _lost));
+    if (_notSaved && mounted) setState(() => _notSaved = false);
+  }
+
+  void _edited() {
+    final made = _made;
+    if (made == null || _busy) return;
+    if (_p1.text != made.p1 || _p2.text != made.p2) _drop();
+  }
+
+  void _choose(bool move) {
+    if (_busy || move == _move) return;
+    _drop();
+    setState(() => _move = move);
+  }
+
+  // the system save dialog first, the share sheet when it is backed out of
+  // or missing. neither reads the file into memory. a save that failed, or
+  // whose answer never came back, says so and offers both again. a move
+  // never opens the share sheet by itself, and retires this phone only on
+  // a save android read back, or once the person says the file arrived
+  Future<void> _handOver({required bool save, VoidCallback? sayLater}) async {
+    final made = _made;
+    if (made == null || _saving) return;
+    final later = sayLater ?? _notMadeLater();
+    final decoy = lockState.inDecoy;
+    final hidden = sessionBackupHasHidden;
+    setState(() {
+      _busy = true;
+      _saving = true;
+      _notSaved = false;
+      _error = null;
+    });
+    SaveAnswer answer = (state: SaveState.cancelled, where: null, lost: false);
+    var shared = false;
+    var dropped = false;
     try {
-      saved = await lockState.hold(
-        () async =>
-            await const MethodChannel('halo/platform').invokeMethod<bool>(
-              'saveDocument',
-              {'path': path, 'name': name},
-            ) ??
-            false,
-      );
-    } catch (_) {
-      saved = false;
+      if (save) {
+        await lockState.hold(() async {
+          // kept outside, so a save that went through is known even when
+          // the lock drops what comes back
+          answer = await saveDocumentOut(made.path, made.name);
+          _lost = answer.lost;
+          return answer;
+        });
+      }
+      final share =
+          !save || (answer.state == SaveState.cancelled && !made.move);
+      if (share && mounted) shared = await _share(made.path);
+    } on LockDropped {
+      dropped = true;
+    } catch (e) {
+      dlog('backup: not handed over (${e.runtimeType})');
     }
-    if (saved) {
-      if (mounted) showHaloToast(context, l10n.backupBackupSavedKeepThe);
-      return (tried: true, handed: true);
+    _saving = false;
+    final checked = answer.state == SaveState.saved;
+    final out = checked || answer.state == SaveState.unchecked || shared;
+    if (out) {
+      // saved, or the share sheet has a copy of its own: this one goes
+      _made = null;
+      unawaited(_shredMade(made.path, lost: _lost));
+      if (dropped || !mounted) {
+        // another session opened over the save: what went out is said, or
+        // asked, once the chats it began in are open again
+        if (made.move && !(checked && !dropped)) {
+          _askMoveLater(decoy: decoy, hidden: hidden);
+        } else if (made.move) {
+          await appState.markMoved();
+        } else if (dropped) {
+          unawaited(
+            _inSameSessionLater(
+              decoy: decoy,
+              hidden: hidden,
+              act: (ctx, same) => showHaloToast(
+                ctx,
+                checked
+                    ? l10n.backupBackupSavedKeepThe
+                    : l10n.backupSavedUnchecked,
+                still: same,
+              ),
+            ),
+          );
+        }
+        return;
+      }
+      if (made.move) {
+        if (checked) {
+          // from here this phone is retired, and the next screen says so
+          await appState.markMoved();
+        } else {
+          // asked over the session's own navigator, never this screen's: a
+          // lock that comes up meanwhile cannot take the question with it
+          _askMoveLater(decoy: decoy, hidden: hidden);
+        }
+      } else if (checked) {
+        final where = answer.where == null ? '' : unmarked(answer.where!);
+        showHaloToast(
+          context,
+          where.trim().isEmpty
+              ? l10n.backupBackupSavedKeepThe
+              : l10n.backupSavedIn(where),
+        );
+      } else if (!shared) {
+        showHaloToast(context, l10n.backupSavedUnchecked);
+      }
+      if (mounted) Navigator.of(context).pop();
+      return;
     }
-    if (!mounted) return (tried: true, handed: false);
-    return (tried: true, handed: await _share(path));
+    if (!mounted || dropped) {
+      // gone under a lock: nothing handed, nothing retired
+      _made = null;
+      unawaited(_shredMade(made.path, lost: _lost));
+      later();
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    HapticFeedback.lightImpact();
+    setState(() {
+      _busy = false;
+      _notSaved = true;
+    });
+    // on a short screen the buttons sit below the fold: once they have
+    // eased in, the page shows them
+    final still = MediaQuery.disableAnimationsOf(context);
+    await Future<void>.delayed(
+      still ? Duration.zero : const Duration(milliseconds: 280),
+    );
+    final ways = _ways.currentContext;
+    if (!mounted || ways == null || !ways.mounted) return;
+    await Scrollable.ensureVisible(
+      ways,
+      alignment: 1,
+      duration: still ? Duration.zero : const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   // true only once the copy is made and the sheet is up
@@ -195,6 +324,12 @@ class _BackupScreenState extends State<BackupScreen> {
   @override
   void dispose() {
     appState.forceSecure(false);
+    // one still being saved is let go when that ends
+    final made = _made;
+    if (made != null && !_saving) {
+      _made = null;
+      unawaited(_shredMade(made.path, lost: _lost));
+    }
     _p1.dispose();
     _p2.dispose();
     super.dispose();
@@ -223,14 +358,14 @@ class _BackupScreenState extends State<BackupScreen> {
                 on: !_move,
                 title: l10n.backupBackUp,
                 line: l10n.backupACopyToKeep,
-                onTap: () => setState(() => _move = false),
+                onTap: () => _choose(false),
               ),
               const SizedBox(height: 8),
               _Choice(
                 on: _move,
                 title: l10n.backupMoveToAnotherDevice,
                 line: l10n.backupTheFileTakesThis,
-                onTap: () => setState(() => _move = true),
+                onTap: () => _choose(true),
               ),
               const SizedBox(height: 16),
             ],
@@ -268,8 +403,39 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
             ),
             const Spacer(),
+            // not saved: said calmly, with the file still here to try again
+            EaseSize(
+              child: RiseSwap(
+                alignment: Alignment.topCenter,
+                child: !_notSaved
+                    ? const SizedBox(
+                        key: ValueKey(false),
+                        width: double.infinity,
+                      )
+                    : Padding(
+                        key: const ValueKey(true),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Text(
+                            l10n.backupNotSaved,
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 13,
+                              color: HaloColors.text,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
             HaloPrimaryButton(
-              label: _busy
+              label: _saving
+                  ? l10n.backupSaving
+                  : _notSaved
+                  ? l10n.commonTryAgain
+                  : _busy
                   ? (_progress > 0
                         ? l10n.backupWriting(percent(_progress))
                         : l10n.backupCreating)
@@ -277,13 +443,35 @@ class _BackupScreenState extends State<BackupScreen> {
                         ? l10n.backupMakeTheFileAnd
                         : l10n.backupCreateBackup),
               // the percent itself changes in place
-              phase: '${(_busy, _progress > 0, _move)}',
+              phase: '${(_busy, _progress > 0, _move, _saving, _notSaved)}',
               busy: _busy,
-              onTap: _create,
+              onTap: _notSaved ? () => _handOver(save: true) : _create,
+            ),
+            EaseSize(
+              child: RiseSwap(
+                alignment: Alignment.topCenter,
+                child: !_notSaved
+                    ? const SizedBox(
+                        key: ValueKey(false),
+                        width: double.infinity,
+                      )
+                    : Padding(
+                        key: const ValueKey(true),
+                        padding: const EdgeInsets.only(top: 10),
+                        child: SizedBox(
+                          key: _ways,
+                          width: double.infinity,
+                          child: HaloGhostButton(
+                            label: l10n.backupShareInstead,
+                            onTap: () => _handOver(save: false),
+                          ),
+                        ),
+                      ),
+              ),
             ),
             // the file, as far as it is written
             EaseSize(
-              child: !_busy || _progress <= 0
+              child: !_busy || _saving || _progress <= 0
                   ? const SizedBox(width: double.infinity)
                   : Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -572,9 +760,18 @@ String backupFailLine(Object e) {
 // in the everyday app it would tell of hidden chats. a newer backup drops it
 int _notMadeGen = 0;
 
-Future<void> _sayNotMadeLater({
+Future<void> _sayNotMadeLater({required bool decoy, required bool hidden}) =>
+    _inSameSessionLater(
+      decoy: decoy,
+      hidden: hidden,
+      act: (ctx, same) => showHaloToast(ctx, l10n.backupNotMade, still: same),
+    );
+
+// once the chats a backup began in are open again, and never elsewhere
+Future<void> _inSameSessionLater({
   required bool decoy,
   required bool hidden,
+  required void Function(BuildContext ctx, bool Function() same) act,
 }) async {
   final gen = _notMadeGen;
   bool same() =>
@@ -601,7 +798,316 @@ Future<void> _sayNotMadeLater({
     await WidgetsBinding.instance.endOfFrame;
     final ctx = rootNavKey.currentState?.overlay?.context;
     if (ctx == null || !ctx.mounted || !same()) continue;
-    showHaloToast(ctx, l10n.backupNotMade, still: same);
+    act(ctx, same);
     return;
+  }
+}
+
+// a move file that went out without a checked save: the person says when
+// it has reached the new phone, and only then is this one retired. asked
+// once the chats it began in are open, and asked again there if a lock
+// took the sheet away unanswered
+void _askMoveLater({required bool decoy, required bool hidden}) {
+  unawaited(
+    _inSameSessionLater(
+      decoy: decoy,
+      hidden: hidden,
+      act: (ctx, _) =>
+          unawaited(_askMoveDone(ctx, decoy: decoy, hidden: hidden)),
+    ),
+  );
+}
+
+Future<void> _askMoveDone(
+  BuildContext context, {
+  required bool decoy,
+  required bool hidden,
+}) async {
+  final rev = navRevision.value;
+  var settled = false;
+  // the navigator under the sheet was replaced: it was never answered
+  void replaced() {
+    if (settled || navRevision.value == rev) return;
+    settled = true;
+    navRevision.removeListener(replaced);
+    _askMoveLater(decoy: decoy, hidden: hidden);
+  }
+
+  navRevision.addListener(replaced);
+  final done = await showHaloSheet<bool>(
+    context,
+    builder: (_) => const _MoveDoneSheet(),
+  );
+  navRevision.removeListener(replaced);
+  if (settled) return;
+  settled = true;
+  if (done == true) await appState.markMoved();
+}
+
+class _MoveDoneSheet extends StatelessWidget {
+  const _MoveDoneSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: 12),
+            Text(
+              l10n.backupMoveReachedTitle,
+              style: HaloType.serif(size: 20, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.backupMoveReachedLine,
+              style: HaloType.sans(
+                size: 13.5,
+                color: HaloColors.text2,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 18),
+            HaloPrimaryButton(
+              label: l10n.backupFinishTheMove,
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(context, true);
+              },
+            ),
+            const SizedBox(height: 10),
+            HaloGhostButton(
+              label: l10n.backupNotYet,
+              quiet: true,
+              onTap: () => Navigator.pop(context, false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum SaveState { saved, unchecked, cancelled, failed }
+
+// lost: kryfo stopped waiting for android's answer. a copy android was
+// still running may read the made file a little longer
+typedef SaveAnswer = ({SaveState state, String? where, bool lost});
+
+// the save dialog's answer, a map from android. a plain yes or no is a
+// saved file or a dialog backed out of
+SaveAnswer _saveAnswer(Object? r) {
+  if (r == true) return (state: SaveState.saved, where: null, lost: false);
+  if (r is Map) {
+    final where = r['where'];
+    return (
+      state: switch (r['state']) {
+        'saved' => SaveState.saved,
+        'unchecked' => SaveState.unchecked,
+        'cancelled' => SaveState.cancelled,
+        _ => SaveState.failed,
+      },
+      where: where is String ? where : null,
+      lost: false,
+    );
+  }
+  return (state: SaveState.cancelled, where: null, lost: false);
+}
+
+const _platform = MethodChannel('halo/platform');
+
+// how often a missing answer is looked into, how long a copy may sit
+// without a byte moving, how long a check may (a cloud place can fetch the
+// whole file before the first byte reads back), how long android has to
+// answer once told to stop, and how long a stopped copy may take to end
+const _saveCheck = Duration(seconds: 3);
+const _copyStall = Duration(seconds: 30);
+const _checkStall = Duration(seconds: 120);
+const _answerWait = Duration(seconds: 10);
+const _stopWait = Duration(seconds: 60);
+
+// what android's copy is doing: idle, picking, copying or checking. null
+// when it could not be asked, which is not the same as idle
+Future<String?> _saveStage() async {
+  Object? s;
+  try {
+    s = await _platform.invokeMethod<Object?>('saveDocumentState');
+  } catch (_) {
+    return null;
+  }
+  final stage = s is Map ? s['stage'] : null;
+  if (stage is! String) return null;
+  if (stage == 'idle' || stage == 'picking') unawaited(_retryShreds());
+  return stage;
+}
+
+bool _running(String? stage) => stage == 'copying' || stage == 'checking';
+
+// true once android runs no copy. a copy given up on stops at its next
+// block, so this is quick unless the place itself hangs. [unknown] is what
+// a stage that cannot be read counts as
+Future<bool> _saveIdle({required bool unknown}) async {
+  var waited = Duration.zero;
+  while (true) {
+    final stage = await _saveStage();
+    if (stage == null ? unknown : !_running(stage)) return true;
+    if (waited >= _stopWait) return false;
+    await Future<void>.delayed(const Duration(seconds: 1));
+    waited += const Duration(seconds: 1);
+  }
+}
+
+// made files a copy android was told to stop may still read. each goes
+// once a stage reads idle: on the next look, the next resume, the next
+// unlock. never before, so no copy ever saves a file shredded under it
+final _shredLater = <String>{};
+AppLifecycleListener? _shredOnResume;
+bool _shredRetrying = false;
+
+// only in the open everyday app or its hidden chats: never under the lock,
+// never in a decoy, whose opening must not take longer for it
+bool _mayShredNow() => !lockGuard.isLocked() && !lockState.inDecoy;
+
+void _shredOnUnlock() {
+  if (_mayShredNow()) unawaited(_retryShreds());
+}
+
+Future<void> _retryShreds() async {
+  if (_shredLater.isEmpty || _shredRetrying || !_mayShredNow()) return;
+  _shredRetrying = true;
+  Object? s;
+  try {
+    s = await _platform.invokeMethod<Object?>('saveDocumentState');
+  } catch (_) {
+    s = null;
+  } finally {
+    _shredRetrying = false;
+  }
+  final stage = s is Map ? s['stage'] : null;
+  if (stage != 'idle' && stage != 'picking') return;
+  // a decoy may have opened while android was asked
+  if (!_mayShredNow()) return;
+  final paths = List.of(_shredLater);
+  _shredLater.clear();
+  _shredOnResume?.dispose();
+  _shredOnResume = null;
+  lockState.removeListener(_shredOnUnlock);
+  // a large file is zeroed off the ui isolate
+  for (final path in paths) {
+    try {
+      await Isolate.run(() => shredFile(path));
+    } catch (e) {
+      dlog('backup: shred off the ui failed (${e.runtimeType})');
+      await shredFile(path);
+    }
+  }
+}
+
+// the made file goes. after a save kryfo stopped waiting for, only once
+// android's copy has ended
+Future<void> _shredMade(String path, {required bool lost}) async {
+  if (!lost) return shredFile(path);
+  if (await _saveIdle(unknown: false)) return shredFile(path);
+  dlog('backup: a copy may still run, the file waits for it');
+  if (_shredLater.isEmpty) {
+    _shredOnResume = AppLifecycleListener(
+      onResume: () => unawaited(_retryShreds()),
+    );
+    lockState.addListener(_shredOnUnlock);
+  }
+  _shredLater.add(path);
+}
+
+// the system save dialog, then android's copy into what was picked.
+// android hands the answer back before kryfo is in front again, so one
+// still missing a few seconds after, with no copy running, is lost and
+// counts as not saved: never a screen left waiting
+Future<SaveAnswer> saveDocumentOut(String path, String name) async {
+  const lostOne = (state: SaveState.failed, where: null, lost: true);
+  // a copy given up on before stops first. one that cannot be asked about
+  // is left to android, which refuses a second dialog while a copy runs
+  if (!await _saveIdle(unknown: true)) return lostOne;
+  final lost = Completer<SaveAnswer>();
+  Timer? grace;
+  var strikes = 0;
+  var copied = -1;
+  String? was;
+  var still = Duration.zero;
+  var asking = false;
+  final asked = _platform
+      .invokeMethod<Object?>('saveDocument', {'path': path, 'name': name})
+      .then(_saveAnswer)
+      .catchError((Object e) {
+        dlog('backup: no save dialog (${e.runtimeType})');
+        return (
+          state: SaveState.cancelled,
+          where: null as String?,
+          lost: false,
+        );
+      });
+
+  // android is told first: a dialog still up is answered, a copy stops and
+  // answers for itself, a check stopped leaves an unchecked file. its own
+  // answer is taken if it comes in time
+  Future<void> giveUp() async {
+    try {
+      await _platform.invokeMethod<Object?>('saveDocumentCancel');
+    } catch (_) {
+      // not told: the answer it never gives counts as lost
+    }
+    if (lost.isCompleted) return;
+    grace = Timer(_answerWait, () {
+      if (!lost.isCompleted) lost.complete(lostOne);
+    });
+  }
+
+  final watch = Timer.periodic(_saveCheck, (_) async {
+    if (asking || lost.isCompleted || grace != null) return;
+    final life = WidgetsBinding.instance.lifecycleState;
+    if (life != null && life != AppLifecycleState.resumed) {
+      // the dialog is up, or the app is not shown again yet
+      strikes = 0;
+      return;
+    }
+    asking = true;
+    Object? s;
+    try {
+      s = await _platform.invokeMethod<Object?>('saveDocumentState');
+    } catch (_) {
+      s = null;
+    }
+    asking = false;
+    if (lost.isCompleted || grace != null) return;
+    final stage = s is Map ? s['stage'] : null;
+    if (stage is String && _running(stage)) {
+      strikes = 0;
+      final n = ((s as Map)['copied'] as num?)?.toInt() ?? 0;
+      if (n != copied || stage != was) {
+        copied = n;
+        was = stage;
+        still = Duration.zero;
+      } else {
+        still += _saveCheck;
+        if (still >= (stage == 'checking' ? _checkStall : _copyStall)) {
+          dlog('backup: the $stage stopped moving');
+          await giveUp();
+        }
+      }
+      return;
+    }
+    if (++strikes >= 2) {
+      dlog('backup: the save answer never came');
+      await giveUp();
+    }
+  });
+  try {
+    return await Future.any([asked, lost.future]);
+  } finally {
+    watch.cancel();
+    grace?.cancel();
   }
 }

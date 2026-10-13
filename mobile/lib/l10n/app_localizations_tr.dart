@@ -1048,6 +1048,37 @@ class AppLocalizationsTr extends AppLocalizations {
       'Dosya hazır olduğunda nereye kaydedeceğini seçeceksin.';
 
   @override
+  String get backupSaving => 'Kaydediliyor…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Yedek kaydedildi: $place · parola ifadesini güvende tut';
+  }
+
+  @override
+  String get backupNotSaved => 'Yedek kaydedilmedi. Dosya hâlâ burada.';
+
+  @override
+  String get backupShareInstead => 'Bunun yerine paylaş';
+
+  @override
+  String get backupSavedUnchecked =>
+      'Yedek kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get backupMoveReachedTitle => 'Dosya yeni telefonuna ulaştı mı?';
+
+  @override
+  String get backupMoveReachedLine =>
+      'Dosyayı orada açana kadar bu telefonu bırakma.';
+
+  @override
+  String get backupFinishTheMove => 'Taşımayı bitir';
+
+  @override
+  String get backupNotYet => 'Henüz değil';
+
+  @override
   String get backupCreating => 'Oluşturuluyor…';
 
   @override

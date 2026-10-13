@@ -1307,6 +1307,47 @@
   "@backupSaveComesAfter": {
     "description": "screens/backup_screen.dart. under the progress while the backup file is written: the system save dialog opens only once it is done"
   },
+  "backupSaving": "Saving…",
+  "@backupSaving": {
+    "description": "screens/backup_screen.dart. on the button while the system save dialog is up and the file is copied into the folder picked there"
+  },
+  "backupSavedIn": "Backup saved in {place} · keep the passphrase safe",
+  "@backupSavedIn": {
+    "description": "screens/backup_screen.dart. toast once the backup is in the picked place. the placeholder is a folder path like Download/Kryfo, or the name of the app that holds it",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNotSaved": "The backup wasn't saved. The file is still here.",
+  "@backupNotSaved": {
+    "description": "screens/backup_screen.dart. above the buttons when the save dialog was answered but the file did not land, or no answer came back: the made file is kept for another try"
+  },
+  "backupShareInstead": "Share instead",
+  "@backupShareInstead": {
+    "description": "screens/backup_screen.dart. second button under the not-saved line: opens the share sheet with the made file"
+  },
+  "backupSavedUnchecked": "Backup saved, but Kryfo couldn't check the copy",
+  "@backupSavedUnchecked": {
+    "description": "screens/backup_screen.dart. toast when the backup was written to the picked place but that place would not let Kryfo read it back to compare"
+  },
+  "backupMoveReachedTitle": "Did the file reach your new phone?",
+  "@backupMoveReachedTitle": {
+    "description": "screens/backup_screen.dart. sheet title after a move file went out by the share sheet, or was saved without a check: this phone is only retired once the person says yes"
+  },
+  "backupMoveReachedLine": "Keep this phone until you've opened it there.",
+  "@backupMoveReachedLine": {
+    "description": "screens/backup_screen.dart. under backupMoveReachedTitle: the old phone stays usable until the file has been opened on the new one"
+  },
+  "backupFinishTheMove": "Finish the move",
+  "@backupFinishTheMove": {
+    "description": "screens/backup_screen.dart. main button of that sheet: retires this phone, the next screen says it moved"
+  },
+  "backupNotYet": "Not yet",
+  "@backupNotYet": {
+    "description": "screens/backup_screen.dart. second button of that sheet: nothing is retired, the phone stays as it is"
+  },
   "backupCreating": "Creating…",
   "@backupCreating": {
     "description": "screens/backup_screen.dart"
