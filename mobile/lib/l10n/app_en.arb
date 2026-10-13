@@ -2243,6 +2243,18 @@
   "@chatCompareLater": {
     "description": "screens/chat_screen.dart: button on the compare card, puts it away for this chat"
   },
+  "chatCompareFolded": "Safety number not compared yet",
+  "@chatCompareFolded": {
+    "description": "screens/chat_screen.dart: the compare card after later, folded into one quiet line until the number is compared or the line closed"
+  },
+  "chatCompareNow": "Compare",
+  "@chatCompareNow": {
+    "description": "screens/chat_screen.dart: text button on the folded compare line, opens the safety number"
+  },
+  "chatCompareDismiss": "Dismiss",
+  "@chatCompareDismiss": {
+    "description": "screens/chat_screen.dart: screen reader label and tooltip of the x on the folded compare line, puts it away for good"
+  },
   "chatKeyHeldLine": "You verified {peerName} before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.",
   "@chatKeyHeldLine": {
     "description": "screens/chat_screen.dart",
@@ -9378,6 +9390,10 @@
   "handleStillReaching": "Still reaching the registry. Over Tor this can take up to a minute.",
   "@handleStillReaching": {
     "description": "handle page, while a registry call has taken more than a few seconds"
+  },
+  "handleSearchNeedsTor": "Handle search needs Tor. Add by QR or link meanwhile.",
+  "@handleSearchNeedsTor": {
+    "description": "screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor"
   },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {

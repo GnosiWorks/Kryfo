@@ -1773,6 +1773,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatCompareLater => 'Depois';
 
   @override
+  String get chatCompareFolded => 'Número de segurança ainda não comparado';
+
+  @override
+  String get chatCompareNow => 'Comparar';
+
+  @override
+  String get chatCompareDismiss => 'Dispensar';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Você já tinha verificado $peerName. Nada é enviado até você conferir o número novo ou aceitar a chave nova. As mensagens dessa pessoa continuam chegando.';
   }
@@ -7439,6 +7448,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Ainda falando com o registro. Pelo Tor isso pode levar até um minuto.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'A busca por nome de usuário precisa do Tor. Enquanto isso, adicione por QR ou link.';
 
   @override
   String get handleCheckClock =>

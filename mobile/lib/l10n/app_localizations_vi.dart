@@ -1753,6 +1753,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCompareLater => 'Để sau';
 
   @override
+  String get chatCompareFolded => 'Chưa so sánh số an toàn';
+
+  @override
+  String get chatCompareNow => 'So sánh';
+
+  @override
+  String get chatCompareDismiss => 'Ẩn';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Bạn đã xác minh $peerName trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số mới hoặc chấp nhận khóa mới. Tin nhắn của họ vẫn đến.';
   }
@@ -7374,6 +7383,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.';
 
   @override
   String get handleCheckClock =>

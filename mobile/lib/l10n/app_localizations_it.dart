@@ -1775,6 +1775,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatCompareLater => 'Più tardi';
 
   @override
+  String get chatCompareFolded => 'Numero di sicurezza non ancora confrontato';
+
+  @override
+  String get chatCompareNow => 'Confronta';
+
+  @override
+  String get chatCompareDismiss => 'Nascondi';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Avevi già verificato $peerName. Non parte niente finché non controlli il nuovo numero o accetti la nuova chiave. I suoi messaggi continuano ad arrivare.';
   }
@@ -7454,6 +7463,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Sto ancora raggiungendo il registro. Via Tor può volerci fino a un minuto.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'La ricerca per nome utente richiede Tor. Nel frattempo, aggiungi tramite QR o link.';
 
   @override
   String get handleCheckClock =>

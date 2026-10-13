@@ -1805,6 +1805,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatCompareLater => 'Позже';
 
   @override
+  String get chatCompareFolded => 'Код безопасности ещё не сверен';
+
+  @override
+  String get chatCompareNow => 'Сверить';
+
+  @override
+  String get chatCompareDismiss => 'Скрыть';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Ты уже проверял(а) $peerName. Ничего не отправляется, пока ты не сверишь новый код или не примешь новый ключ. Сообщения от $peerName по-прежнему приходят.';
   }
@@ -7528,6 +7537,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Связываемся с реестром. Через Tor это может занять до минуты.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'Поиску по имени пользователя нужен Tor. Пока добавляй по QR или ссылке.';
 
   @override
   String get handleCheckClock =>

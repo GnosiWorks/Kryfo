@@ -2823,6 +2823,24 @@ abstract class AppLocalizations {
   /// **'Later'**
   String get chatCompareLater;
 
+  /// screens/chat_screen.dart: the compare card after later, folded into one quiet line until the number is compared or the line closed
+  ///
+  /// In en, this message translates to:
+  /// **'Safety number not compared yet'**
+  String get chatCompareFolded;
+
+  /// screens/chat_screen.dart: text button on the folded compare line, opens the safety number
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get chatCompareNow;
+
+  /// screens/chat_screen.dart: screen reader label and tooltip of the x on the folded compare line, puts it away for good
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get chatCompareDismiss;
+
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
@@ -11906,6 +11924,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still reaching the registry. Over Tor this can take up to a minute.'**
   String get handleStillReaching;
+
+  /// screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor
+  ///
+  /// In en, this message translates to:
+  /// **'Handle search needs Tor. Add by QR or link meanwhile.'**
+  String get handleSearchNeedsTor;
 
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///

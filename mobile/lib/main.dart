@@ -7797,10 +7797,12 @@ Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
 
 /// a name's flags (contacts.name_check). ask: their chat asks for the
 /// safety number. says: the name came with a request, an introduction or
-/// a group, and shows as not checked. a verified key outranks both, and an
-/// add from a qr read with the camera clears them
+/// a group, and shows as not checked. later: the ask is put off, a quiet
+/// line in place of the card. a verified key outranks them all, and an add
+/// from a qr read with the camera clears them
 const kNameAsk = 1;
 const kNameSays = 2;
+const kNameLater = 4;
 
 // the upgrade to 77. a request or a card from a group or an introduction
 // still waiting is a name nobody checked
@@ -9127,6 +9129,8 @@ Future<(String, bool)> handleHaloUriAdded(
   if (h != null) {
     // a quiet session never reaches the registry
     if (sessionQuiet) return (l10n.handleRegistryFailed, false);
+    // tor not up: nothing goes to the registry, nor another way
+    if (!appState.servicesReady) return (l10n.handleSearchNeedsTor, false);
     // the invite has to be the claimer's own: its id is the words of the
     // key the handle was claimed with
     final r = await resolveHandle(
@@ -17607,6 +17611,11 @@ class AppState extends ChangeNotifier {
       (_torStatus == TorStatus.bootstrapped ||
           _torStatus == TorStatus.publishing ||
           _torStatus == TorStatus.reachable);
+  // tor can carry the services lane: the registry, people search and the
+  // badges go over it on every route. on onion the route's verdict is about
+  // tor and counts; elsewhere it is about the direct route, so tor's own
+  // word, and not held asleep, is what there is
+  bool get servicesReady => _torCarries && (_sendMode != 'private' || _routeOK);
   int get bootstrapPct => _bootstrapPct;
 
   // what every screen means by connected: a network, and the route the send

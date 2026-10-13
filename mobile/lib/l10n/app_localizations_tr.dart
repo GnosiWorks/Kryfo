@@ -1767,6 +1767,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCompareLater => 'Sonra';
 
   @override
+  String get chatCompareFolded => 'Güvenlik numarası henüz karşılaştırılmadı';
+
+  @override
+  String get chatCompareNow => 'Karşılaştır';
+
+  @override
+  String get chatCompareDismiss => 'Gizle';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return '$peerName kişisini daha önce doğruladın. Yeni numarayı kontrol edene ya da yeni anahtarı kabul edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.';
   }
@@ -7410,6 +7419,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Kayıt defterine hâlâ ulaşılıyor. Tor üzerinden bu bir dakikayı bulabilir.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'Kullanıcı adı araması Tor gerektirir. Bu arada QR ya da bağlantıyla ekle.';
 
   @override
   String get handleCheckClock =>

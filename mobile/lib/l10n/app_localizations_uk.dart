@@ -1800,6 +1800,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatCompareLater => 'Пізніше';
 
   @override
+  String get chatCompareFolded => 'Номер безпеки ще не звірено';
+
+  @override
+  String get chatCompareNow => 'Звірити';
+
+  @override
+  String get chatCompareDismiss => 'Сховати';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'Ти вже перевіряв(-ла) $peerName. Нічого не надсилається, доки ти не звіриш новий номер або не приймеш новий ключ. Повідомлення від $peerName і далі надходять.';
   }
@@ -7518,6 +7527,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'Ще звертаємося до реєстру. Через Tor це може тривати до хвилини.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'Пошуку за ім’ям користувача потрібен Tor. Поки що додавай за QR або посиланням.';
 
   @override
   String get handleCheckClock =>

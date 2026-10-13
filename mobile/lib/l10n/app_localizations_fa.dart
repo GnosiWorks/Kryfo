@@ -1768,6 +1768,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCompareLater => 'بعداً';
 
   @override
+  String get chatCompareFolded => 'شماره‌ی امنیتی هنوز مقایسه نشده';
+
+  @override
+  String get chatCompareNow => 'مقایسه';
+
+  @override
+  String get chatCompareDismiss => 'پنهان کردن';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'شما پیش‌تر ⁨$peerName⁩ را تأیید کرده بودید. تا وقتی شماره‌ی تازه را بررسی نکنید یا کلید تازه را نپذیرید، چیزی فرستاده نمی‌شود. پیام‌های او همچنان می‌رسد.';
   }
@@ -7398,6 +7407,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'هنوز در حال رسیدن به دفتر ثبت است. از طریق Tor ممکن است تا یک دقیقه طول بکشد.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'جست‌وجوی نام کاربری به Tor نیاز دارد. تا آن موقع، با QR یا پیوند اضافه کنید.';
 
   @override
   String get handleCheckClock =>

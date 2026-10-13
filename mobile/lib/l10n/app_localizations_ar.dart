@@ -1813,6 +1813,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCompareLater => 'لاحقًا';
 
   @override
+  String get chatCompareFolded => 'لم يُقارَن رقم الأمان بعد';
+
+  @override
+  String get chatCompareNow => 'قارن';
+
+  @override
+  String get chatCompareDismiss => 'إخفاء';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return 'سبق أن تحققت من ⁨$peerName⁩. لن يُرسل شيء حتى تتحقق من الرقم الجديد أو تقبل المفتاح الجديد. رسائله ما زالت تصل.';
   }
@@ -7514,6 +7523,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get handleStillReaching =>
       'ما زال الاتصال بالسجل جاريًا. عبر Tor قد يستغرق ذلك حتى دقيقة.';
+
+  @override
+  String get handleSearchNeedsTor =>
+      'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
 
   @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';

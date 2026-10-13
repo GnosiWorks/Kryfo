@@ -1700,6 +1700,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCompareLater => '稍后';
 
   @override
+  String get chatCompareFolded => '尚未核对安全码';
+
+  @override
+  String get chatCompareNow => '核对';
+
+  @override
+  String get chatCompareDismiss => '隐藏';
+
+  @override
   String chatKeyHeldLine(Object peerName) {
     return '你之前验证过 $peerName。在你核对新的安全码或接受新密钥之前，什么都不会发出。对方的消息仍会收到。';
   }
@@ -7078,6 +7087,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleStillReaching => '仍在联系登记处。通过 Tor 可能需要一分钟左右。';
 
   @override
+  String get handleSearchNeedsTor => '按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -9542,6 +9554,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatCompareLater => '稍後';
+
+  @override
+  String get chatCompareFolded => '尚未核對安全碼';
+
+  @override
+  String get chatCompareNow => '核對';
+
+  @override
+  String get chatCompareDismiss => '隱藏';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -14921,6 +14942,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleStillReaching => '仍在聯絡註冊處。透過 Tor 可能需要約一分鐘。';
+
+  @override
+  String get handleSearchNeedsTor => '以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。';
 
   @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';
