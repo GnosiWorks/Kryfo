@@ -1071,6 +1071,20 @@ class AppLocalizationsUk extends AppLocalizations {
       'Коли файл буде готовий, ти обереш, куди його зберегти.';
 
   @override
+  String get backupSaving => 'Збереження…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Резервну копію збережено в $place · бережи парольну фразу';
+  }
+
+  @override
+  String get backupNotSaved => 'Резервну копію не збережено. Файл усе ще тут.';
+
+  @override
+  String get backupShareInstead => 'Поділитися натомість';
+
+  @override
   String get backupCreating => 'Створення…';
 
   @override

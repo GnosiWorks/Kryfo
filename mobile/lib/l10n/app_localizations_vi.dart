@@ -1033,6 +1033,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi tệp đã sẵn sàng, bạn sẽ chọn nơi lưu tệp.';
 
   @override
+  String get backupSaving => 'Đang lưu…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Đã lưu bản sao lưu vào $place · hãy giữ kỹ cụm mật khẩu';
+  }
+
+  @override
+  String get backupNotSaved => 'Bản sao lưu chưa được lưu. Tệp vẫn còn đây.';
+
+  @override
+  String get backupShareInstead => 'Chia sẻ thay vào đó';
+
+  @override
   String get backupCreating => 'Đang tạo…';
 
   @override

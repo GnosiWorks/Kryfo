@@ -1050,6 +1050,21 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn die Datei fertig ist, wählst du, wo du sie speicherst.';
 
   @override
+  String get backupSaving => 'Speichere…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'Backup gespeichert in $place · bewahre die Passphrase sicher auf';
+  }
+
+  @override
+  String get backupNotSaved =>
+      'Das Backup wurde nicht gespeichert. Die Datei ist noch da.';
+
+  @override
+  String get backupShareInstead => 'Stattdessen teilen';
+
+  @override
   String get backupCreating => 'Erstelle…';
 
   @override

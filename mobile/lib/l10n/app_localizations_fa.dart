@@ -1045,6 +1045,20 @@ class AppLocalizationsFa extends AppLocalizations {
       'وقتی فایل آماده شد، انتخاب می‌کنید کجا ذخیره‌اش کنید.';
 
   @override
+  String get backupSaving => 'در حال ذخیره…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'نسخه‌ی پشتیبان در ⁨$place⁩ ذخیره شد · عبارت عبور را امن نگه دارید';
+  }
+
+  @override
+  String get backupNotSaved => 'نسخه‌ی پشتیبان ذخیره نشد. فایل هنوز اینجاست.';
+
+  @override
+  String get backupShareInstead => 'هم‌رسانی به‌جای آن';
+
+  @override
   String get backupCreating => 'در حال ساختن…';
 
   @override

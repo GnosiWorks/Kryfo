@@ -1004,6 +1004,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupSaveComesAfter => '文件准备好后，你再选择保存位置。';
 
   @override
+  String get backupSaving => '正在保存…';
+
+  @override
+  String backupSavedIn(String place) {
+    return '备份已保存到 $place · 请保管好密码短语';
+  }
+
+  @override
+  String get backupNotSaved => '备份没有保存。文件还在。';
+
+  @override
+  String get backupShareInstead => '改为分享';
+
+  @override
   String get backupCreating => '正在创建…';
 
   @override
@@ -8859,6 +8873,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupSaveComesAfter => '檔案準備好後，你再選擇儲存位置。';
+
+  @override
+  String get backupSaving => '儲存中…';
+
+  @override
+  String backupSavedIn(String place) {
+    return '備份已儲存到 $place · 請妥善保管密碼短語';
+  }
+
+  @override
+  String get backupNotSaved => '備份沒有儲存。檔案還在。';
+
+  @override
+  String get backupShareInstead => '改為分享';
 
   @override
   String get backupCreating => '建立中…';

@@ -1635,6 +1635,30 @@ abstract class AppLocalizations {
   /// **'When it\'s ready, you\'ll choose where to save it.'**
   String get backupSaveComesAfter;
 
+  /// screens/backup_screen.dart. on the button while the system save dialog is up and the file is copied into the folder picked there
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get backupSaving;
+
+  /// screens/backup_screen.dart. toast once the backup is in the picked place. the placeholder is a folder path like Download/Kryfo, or the name of the app that holds it
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved in {place} · keep the passphrase safe'**
+  String backupSavedIn(String place);
+
+  /// screens/backup_screen.dart. above the buttons when the save dialog was answered but the file did not land, or no answer came back: the made file is kept for another try
+  ///
+  /// In en, this message translates to:
+  /// **'The backup wasn\'t saved. The file is still here.'**
+  String get backupNotSaved;
+
+  /// screens/backup_screen.dart. second button under the not-saved line: opens the share sheet with the made file
+  ///
+  /// In en, this message translates to:
+  /// **'Share instead'**
+  String get backupShareInstead;
+
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:

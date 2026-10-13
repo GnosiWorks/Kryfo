@@ -150,6 +150,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onStop() {
         super.onStop()
         stoppedSinceResume = true
+        SaveDoc.coveredNow()
     }
 
     override fun onDestroy() {
@@ -571,12 +572,13 @@ class MainActivity : FlutterFragmentActivity() {
                     "saveDocument" -> {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name") ?: "kryfo-backup.kryfo"
-                        if (path == null || pendingSave != null) {
-                            result.success(false)
+                        if (path == null) {
+                            result.success(mapOf("state" to SaveDoc.FAILED))
                         } else {
                             saveDocument(path, name, result)
                         }
                     }
+                    "saveDocumentState" -> result.success(SaveDoc.state())
                     else -> result.notImplemented()
                 }
             }
@@ -775,24 +777,24 @@ class MainActivity : FlutterFragmentActivity() {
 
     // the system's own save dialog, then a stream copy from the file into
     // whatever the person chose. the file never goes through memory or the
-    // channel: a backup can be a year of photos. false when they backed out.
-    private var pendingSave: MethodChannel.Result? = null
-    private var pendingSavePath: String? = null
-
+    // channel: a backup can be a year of photos. the waiting call lives in
+    // SaveDoc, so a screen rebuilt meanwhile still answers it
     private fun saveDocument(path: String, name: String, result: MethodChannel.Result) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_TITLE, name)
         }
+        val p = SaveDoc.begin(path) { result.success(it) }
+        if (p == null) {
+            result.success(mapOf("state" to SaveDoc.FAILED))
+            return
+        }
         try {
-            pendingSave = result
-            pendingSavePath = path
             startActivityForResult(intent, REQ_SAVE_DOCUMENT)
-        } catch (e: ActivityNotFoundException) {
-            pendingSave = null
-            pendingSavePath = null
-            result.success(false)
+        } catch (e: Exception) {
+            // no save dialog on this phone: the share sheet instead
+            p.reply(SaveDoc.CANCELLED)
         }
     }
 
@@ -800,26 +802,67 @@ class MainActivity : FlutterFragmentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (tools.onActivityResult(requestCode, resultCode, data)) return
         if (requestCode != REQ_SAVE_DOCUMENT) return
-        val result = pendingSave ?: return
-        val path = pendingSavePath
-        pendingSave = null
-        pendingSavePath = null
         val uri = data?.data
-        if (resultCode != RESULT_OK || uri == null || path == null) {
-            result.success(false)
+        val p = SaveDoc.take()
+        if (p == null) {
+            // the process that asked is gone: the empty file the dialog
+            // made would only puzzle someone
+            if (resultCode == RESULT_OK && uri != null) Thread { dropDocument(uri) }.start()
+            return
+        }
+        if (resultCode != RESULT_OK || uri == null) {
+            p.reply(SaveDoc.backedOut())
             return
         }
         Thread {
-            val ok = try {
-                contentResolver.openOutputStream(uri, "wt")?.use { out ->
-                    java.io.FileInputStream(path).use { it.copyTo(out) }
-                    true
-                } ?: false
-            } catch (e: Exception) {
-                false
-            }
-            runOnUiThread { result.success(ok) }
+            val state = SaveDoc.copy(
+                File(p.path),
+                open = { openForWrite(uri) },
+                sizeThere = { sizeOf(uri) },
+                readBack = { contentResolver.openInputStream(uri) },
+                onCopied = SaveDoc::progress,
+            )
+            if (state != SaveDoc.SAVED) dropDocument(uri)
+            val where = if (state == SaveDoc.SAVED) placeOf(uri) else null
+            runOnUiThread { p.reply(state, where) }
         }.start()
+    }
+
+    // a fresh document, so plain "w" is the same where "wt" is refused
+    private fun openForWrite(uri: Uri): java.io.OutputStream? = try {
+        contentResolver.openOutputStream(uri, "wt")
+    } catch (e: Exception) {
+        contentResolver.openOutputStream(uri, "w")
+    }
+
+    private fun sizeOf(uri: Uri): Long? =
+        contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.SIZE), null, null, null)
+            ?.use { c ->
+                if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null
+            }
+
+    private fun dropDocument(uri: Uri) {
+        try {
+            android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
+        } catch (e: Exception) {
+            // not ours to delete there: it stays empty
+        }
+    }
+
+    private fun placeOf(uri: Uri): String? = try {
+        val authority = uri.authority
+        val id = try {
+            android.provider.DocumentsContract.getDocumentId(uri)
+        } catch (e: Exception) {
+            null
+        }
+        val label = authority?.let {
+            packageManager.resolveContentProvider(it, 0)
+                ?.applicationInfo?.loadLabel(packageManager)?.toString()
+        }
+        SaveDoc.placeOf(authority, id, label)
+    } catch (e: Exception) {
+        null
     }
 
     // a copy into the phone's photos, through the media store, only when the

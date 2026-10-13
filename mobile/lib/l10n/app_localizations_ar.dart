@@ -1083,6 +1083,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'عندما يصبح الملف جاهزًا، ستختار أين تحفظه.';
 
   @override
+  String get backupSaving => 'جارٍ الحفظ…';
+
+  @override
+  String backupSavedIn(String place) {
+    return 'حُفظت النسخة الاحتياطية في ⁨$place⁩ · احفظ عبارة المرور في مكان آمن';
+  }
+
+  @override
+  String get backupNotSaved => 'لم تُحفظ النسخة الاحتياطية. الملف ما زال هنا.';
+
+  @override
+  String get backupShareInstead => 'المشاركة بدلًا من ذلك';
+
+  @override
   String get backupCreating => 'جارٍ الإنشاء…';
 
   @override
