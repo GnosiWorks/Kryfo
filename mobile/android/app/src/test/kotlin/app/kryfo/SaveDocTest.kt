@@ -154,15 +154,33 @@ class SaveDocTest {
     }
 
     @Test
-    fun theCheckIsAStageOfItsOwnAndCanBeStopped() {
+    fun theCheckIsAStageOfItsOwnAndAStoppedOneKeepsTheFile() {
         val p = SaveDoc.begin(src.path) {}!!
         SaveDoc.take(p.code)
         val out = ByteArrayOutputStream()
-        val state = SaveDoc.copy(src, { out }, { null }, {
-            // checking, not copying: its own bytes move, so it is no stall
+        val state = SaveDoc.copy(src, { out }, {
+            // the size query is part of the check: a slow one is no stall
+            assertEquals(SaveDoc.CHECKING, SaveDoc.state()["stage"])
+            null
+        }, {
+            // checking, not copying: its own bytes move
             assertEquals(SaveDoc.CHECKING, SaveDoc.state()["stage"])
             assertEquals(0L, SaveDoc.state()["copied"])
             assertEquals(SaveDoc.CHECKING, SaveDoc.cancel())
+            ByteArrayInputStream(out.toByteArray())
+        })
+        // every byte went out: a check given up on is unchecked, not failed
+        assertEquals(SaveDoc.UNCHECKED, state)
+        p.reply(state)
+    }
+
+    @Test
+    fun aStoppedCheckOfAShortFileIsStillNotSaved() {
+        val p = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(p.code)
+        val out = ByteArrayOutputStream()
+        val state = SaveDoc.copy(src, { out }, { src.length() / 2 }, {
+            SaveDoc.cancel()
             ByteArrayInputStream(out.toByteArray())
         })
         assertEquals(SaveDoc.FAILED, state)
@@ -271,9 +289,13 @@ class SaveDocTest {
 
     @Test
     fun onlyADocumentThatHeldNothingIsTakenAway() {
-        assertTrue(SaveDoc.mayDrop(0L))
-        assertFalse(SaveDoc.mayDrop(5000L))
-        assertFalse(SaveDoc.mayDrop(null))
+        assertTrue(SaveDoc.mayDrop(0L, opened = false))
+        assertTrue(SaveDoc.mayDrop(0L, opened = true))
+        // unknown before: ours to take only once we wrote into it
+        assertTrue(SaveDoc.mayDrop(null, opened = true))
+        assertFalse(SaveDoc.mayDrop(null, opened = false))
+        assertFalse(SaveDoc.mayDrop(5000L, opened = true))
+        assertFalse(SaveDoc.mayDrop(5000L, opened = false))
     }
 
     @Test

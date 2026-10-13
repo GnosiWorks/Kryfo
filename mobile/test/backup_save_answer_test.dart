@@ -44,11 +44,12 @@ void main() {
   late List<Completer<Object?>> dialogs;
   late Object? Function() stage;
   late bool shares;
+  const idle = {'stage': 'idle', 'copied': 0};
 
   setUp(() {
     asked = [];
     dialogs = [];
-    stage = () => null;
+    stage = () => idle;
     shares = true;
     tmp = Directory.systemTemp.createTempSync('backup_answer');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -111,8 +112,14 @@ void main() {
     }
   }
 
-  Future<void> open(WidgetTester t, {bool move = false}) async {
+  Future<void> open(
+    WidgetTester t, {
+    bool move = false,
+    bool wide = false,
+    double scale = 1,
+  }) async {
     phone(t);
+    if (wide) t.view.physicalSize = const Size(2340, 1080);
     final live = _Db(HaloContainer.everyday);
     useDatabasesForTest(live, Session(live));
     lockState.openForTest(enabled: true);
@@ -128,6 +135,12 @@ void main() {
           navigatorKey: rootNavKey,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          builder: (c, child) => MediaQuery(
+            data: MediaQuery.of(
+              c,
+            ).copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
           home: Builder(
             builder: (ctx) => TextButton(
               onPressed: () => Navigator.of(ctx).push(
@@ -186,7 +199,7 @@ void main() {
   testWidgets('an answer that never comes ends as not saved', (t) async {
     await open(t);
     // android is back in front and has nothing waiting or copying
-    await wait(t, 10);
+    await wait(t, 20);
     saysNotSaved();
     expect(asked, isNot(contains('shareFile')));
     // the file stays for another go
@@ -280,7 +293,7 @@ void main() {
     await wait(t, 60);
     expect(notSaved, findsNothing);
     expect(find.text(l10n.backupSaving), findsOneWidget);
-    stage = () => null;
+    stage = () => idle;
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);
     expect(screen, findsNothing);
@@ -292,11 +305,11 @@ void main() {
     stage = () => {'stage': 'copying', 'copied': 4096};
     await wait(t, 20);
     expect(notSaved, findsNothing);
-    await wait(t, 20);
+    await wait(t, 30);
     saysNotSaved();
     expect(made(), hasLength(1));
     // android stops it
-    stage = () => null;
+    stage = () => idle;
     await wait(t, 2);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
@@ -362,7 +375,7 @@ void main() {
 
   testWidgets('a checked save of a move retires the phone', (t) async {
     await open(t, move: true);
-    stage = () => null;
+    stage = () => idle;
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);
     await beats(t);
@@ -402,7 +415,7 @@ void main() {
     var running = true;
     stage = () =>
         running ? {'stage': 'copying', 'copied': 4096} : {'stage': 'idle'};
-    await wait(t, 40);
+    await wait(t, 50);
     saysNotSaved();
     // android was told to stop before the screen said so
     expect(asked, contains('saveDocumentCancel'));
@@ -423,7 +436,7 @@ void main() {
     var running = true;
     stage = () =>
         running ? {'stage': 'copying', 'copied': 4096} : {'stage': 'idle'};
-    await wait(t, 40);
+    await wait(t, 50);
     saysNotSaved();
     await press(t, tryAgain);
     await wait(t, 4);
@@ -446,7 +459,7 @@ void main() {
     stage = () => {'stage': 'checking', 'copied': n += 1 << 20};
     await wait(t, 60);
     expect(notSaved, findsNothing);
-    stage = () => null;
+    stage = () => idle;
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);
     expect(screen, findsNothing);
@@ -467,7 +480,7 @@ void main() {
     lockState.openForTest(enabled: true);
     lockState.inDecoy = true;
     await t.pump();
-    stage = () => null;
+    stage = () => idle;
     dialogs.single.complete({'state': 'saved'});
     await wait(t, 3);
     expect(screen, findsNothing);
@@ -491,6 +504,121 @@ void main() {
     await beats(t);
     await t.pumpAndSettle();
     expect(await movedAt(t), isNotNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a move whose copy outlasted the hold into the decoy is asked '
+      'about later', (t) async {
+    haloToastOverlay = () => rootNavKey.currentState?.overlay;
+    addTearDown(() => haloToastOverlay = null);
+    await open(t, move: true);
+    final live = _Db(HaloContainer.everyday);
+    // past the hold's deadline the lock comes up without a leave being
+    // counted, and the decoy pin opens the decoy
+    useDatabasesForTest(live, Session(_Db(HaloContainer.decoy)));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = true;
+    await t.pump();
+    dialogs.single.complete({'state': 'saved'});
+    await wait(t, 3);
+    expect(reached, findsNothing);
+    expect(await movedAt(t), isNull);
+
+    lockState.lock();
+    useDatabasesForTest(live, Session(live));
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await until(t, () => reached.evaluate().isNotEmpty);
+    expect(reached, findsOneWidget);
+    await t.pump(const Duration(milliseconds: 400));
+    await t.tap(find.text(l10n.backupFinishTheMove));
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(await movedAt(t), isNotNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  // a save given up on, then the screen left
+  Future<void> lostAndLeft(WidgetTester t) async {
+    await open(t);
+    stage = () => {'stage': 'copying', 'copied': 4096};
+    await wait(t, 50);
+    saysNotSaved();
+    await t.pageBack();
+    await wait(t, 2);
+    expect(screen, findsNothing);
+  }
+
+  testWidgets('a stage that cannot be read is not taken for idle', (t) async {
+    await lostAndLeft(t);
+    stage = () => throw PlatformException(code: 'gone');
+    // past the whole wait: the file is still there for a copy that may run
+    await wait(t, 70);
+    expect(made(), hasLength(1));
+    // android answers again, and kryfo comes back to the front
+    stage = () => idle;
+    life(t, [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]);
+    life(t, [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a file a copy held past the wait goes on the next unlock', (
+    t,
+  ) async {
+    await lostAndLeft(t);
+    await wait(t, 70);
+    expect(made(), hasLength(1));
+    stage = () => idle;
+    lockState.lock();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a check may take longer than a copy before it counts as '
+      'stalled', (t) async {
+    await open(t);
+    stage = () => {'stage': 'checking', 'copied': 0};
+    // a cloud place fetching the file before the first byte reads back
+    await wait(t, 90);
+    expect(notSaved, findsNothing);
+    expect(find.text(l10n.backupSaving), findsOneWidget);
+    stage = () => idle;
+    dialogs.single.complete({'state': 'unchecked'});
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(find.text(l10n.backupSavedUnchecked), findsOneWidget);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('the move sheet fits a wide screen at a large font', (t) async {
+    await open(t, move: true, wide: true, scale: 2);
+    dialogs.single.complete({'state': 'unchecked'});
+    await until(t, () => reached.evaluate().isNotEmpty);
+    await t.pump(const Duration(milliseconds: 400));
+    expect(reached, findsOneWidget);
+    // its last button can be reached
+    await t.dragUntilVisible(
+      find.text(l10n.backupNotYet),
+      find.byType(SingleChildScrollView).last,
+      const Offset(0, -80),
+    );
+    await t.tap(find.text(l10n.backupNotYet));
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(await movedAt(t), isNull);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 }

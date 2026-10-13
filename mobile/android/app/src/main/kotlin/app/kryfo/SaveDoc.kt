@@ -125,8 +125,11 @@ object SaveDoc {
         if (before == null || before == 0L) open("w") else throw e
     }
 
-    // a document is only taken away when it held nothing before we wrote
-    fun mayDrop(before: Long?) = before == 0L
+    // a document is taken away when it held nothing before. one of unknown
+    // size only once we opened it to write: then what is left is ours, a
+    // part of a backup at most. never one that held something
+    fun mayDrop(before: Long?, opened: Boolean) =
+        before == 0L || (before == null && opened)
 
     // saved only once every byte went out and reads back the same, byte for
     // byte. a provider that takes the bytes and keeps fewer, or other ones,
@@ -162,12 +165,13 @@ object SaveDoc {
                 o.flush()
             }
             if (n != want) return FAILED
-            val there = try { sizeThere() } catch (e: Exception) { null }
+            // every byte is out: from here a slow or stopped check leaves an
+            // unchecked file, never a dropped one
             onChecking()
+            val there = try { sizeThere() } catch (e: Exception) { null }
             val back = try {
                 readBack()?.use { digestOf(it, stop, onCopied) }
             } catch (e: Exception) {
-                if (stop()) return FAILED
                 null
             }
             when {

@@ -810,7 +810,7 @@ class MainActivity : FlutterFragmentActivity() {
             if (resultCode == RESULT_OK && uri != null) {
                 Thread {
                     val size = try { sizeOf(uri) } catch (e: Exception) { null }
-                    if (SaveDoc.mayDrop(size)) dropDocument(uri)
+                    if (SaveDoc.mayDrop(size, opened = false)) dropDocument(uri)
                 }.start()
             }
             return
@@ -821,14 +821,18 @@ class MainActivity : FlutterFragmentActivity() {
         }
         Thread {
             val before = try { sizeOf(uri) } catch (e: Exception) { null }
+            var opened = false
             val state = SaveDoc.copy(
                 File(p.path),
-                open = { SaveDoc.openWith(before) { contentResolver.openOutputStream(uri, it) } },
+                open = {
+                    SaveDoc.openWith(before) { contentResolver.openOutputStream(uri, it) }
+                        .also { opened = it != null }
+                },
                 sizeThere = { sizeOf(uri) },
                 readBack = { contentResolver.openInputStream(uri) },
             )
             val kept = state == SaveDoc.SAVED || state == SaveDoc.UNCHECKED
-            if (!kept && SaveDoc.mayDrop(before)) dropDocument(uri)
+            if (!kept && SaveDoc.mayDrop(before, opened)) dropDocument(uri)
             val where = if (kept) placeOf(uri) else null
             runOnUiThread { p.reply(state, where) }
         }.start()

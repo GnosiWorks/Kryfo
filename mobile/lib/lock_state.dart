@@ -1535,9 +1535,11 @@ class LockState extends ChangeNotifier {
     final vault = _inVault;
     try {
       final r = await body();
-      if (_holdsEnded != ended) {
-        // left from inside the picker: what it gave back waits for the pin,
-        // whichever pin it is, and never reaches another session
+      // left from inside the picker, or another session opened meanwhile
+      // (a hold past its deadline locks without counting as left): what it
+      // gave back waits for the pin, whichever pin it is, and never reaches
+      // another session
+      if (_holdsEnded != ended || _inDecoy != decoy || _inVault != vault) {
         await lockGuard.anyUnlock();
         if (_inDecoy != decoy || _inVault != vault) {
           try {

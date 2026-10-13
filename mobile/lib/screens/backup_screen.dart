@@ -70,6 +70,9 @@ class _BackupScreenState extends State<BackupScreen> {
   ({String path, String name, bool move, String p1, String p2})? _made;
   // the save dialog is up or the copy after it runs
   bool _saving = false;
+  // kryfo stopped waiting for the last save: android may still read the
+  // made file a while
+  bool _lost = false;
   // the last hand-over did not go: a calm line and two ways on
   bool _notSaved = false;
   // both fields show what was typed, or neither
@@ -170,7 +173,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final made = _made;
     if (made == null || _saving) return;
     _made = null;
-    unawaited(_shredWhenIdle(made.path));
+    unawaited(_shredMade(made.path, lost: _lost));
     if (_notSaved && mounted) setState(() => _notSaved = false);
   }
 
@@ -203,7 +206,7 @@ class _BackupScreenState extends State<BackupScreen> {
       _notSaved = false;
       _error = null;
     });
-    SaveAnswer answer = (state: SaveState.cancelled, where: null);
+    SaveAnswer answer = (state: SaveState.cancelled, where: null, lost: false);
     var shared = false;
     var dropped = false;
     try {
@@ -212,6 +215,7 @@ class _BackupScreenState extends State<BackupScreen> {
           // kept outside, so a save that went through is known even when
           // the lock drops what comes back
           answer = await saveDocumentOut(made.path, made.name);
+          _lost = answer.lost;
           return answer;
         });
       }
@@ -229,7 +233,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (out) {
       // saved, or the share sheet has a copy of its own: this one goes
       _made = null;
-      unawaited(_shredWhenIdle(made.path));
+      unawaited(_shredMade(made.path, lost: _lost));
       if (dropped || !mounted) {
         // another session opened over the save: what went out is said, or
         // asked, once the chats it began in are open again
@@ -284,7 +288,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (!mounted || dropped) {
       // gone under a lock: nothing handed, nothing retired
       _made = null;
-      unawaited(_shredWhenIdle(made.path));
+      unawaited(_shredMade(made.path, lost: _lost));
       later();
       if (mounted) Navigator.of(context).pop();
       return;
@@ -327,7 +331,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final made = _made;
     if (made != null && !_saving) {
       _made = null;
-      unawaited(_shredWhenIdle(made.path));
+      unawaited(_shredMade(made.path, lost: _lost));
     }
     _p1.dispose();
     _p2.dispose();
@@ -807,7 +811,6 @@ Future<void> _inSameSessionLater({
 Future<void> _askMoveDone(BuildContext context) async {
   final done = await showHaloSheet<bool>(
     context,
-    scroll: true,
     builder: (_) => const _MoveDoneSheet(),
   );
   if (done == true) await appState.markMoved();
@@ -863,12 +866,14 @@ class _MoveDoneSheet extends StatelessWidget {
 
 enum SaveState { saved, unchecked, cancelled, failed }
 
-typedef SaveAnswer = ({SaveState state, String? where});
+// lost: kryfo stopped waiting for android's answer. a copy android was
+// still running may read the made file a little longer
+typedef SaveAnswer = ({SaveState state, String? where, bool lost});
 
 // the save dialog's answer, a map from android. a plain yes or no is a
 // saved file or a dialog backed out of
 SaveAnswer _saveAnswer(Object? r) {
-  if (r == true) return (state: SaveState.saved, where: null);
+  if (r == true) return (state: SaveState.saved, where: null, lost: false);
   if (r is Map) {
     final where = r['where'];
     return (
@@ -879,51 +884,102 @@ SaveAnswer _saveAnswer(Object? r) {
         _ => SaveState.failed,
       },
       where: where is String ? where : null,
+      lost: false,
     );
   }
-  return (state: SaveState.cancelled, where: null);
+  return (state: SaveState.cancelled, where: null, lost: false);
 }
 
 const _platform = MethodChannel('halo/platform');
 
 // how often a missing answer is looked into, how long a copy may sit
-// without a byte moving, and how long one given up on may take to stop
+// without a byte moving, how long a check may (a cloud place can fetch the
+// whole file before the first byte reads back), how long android has to
+// answer once told to stop, and how long a stopped copy may take to end
 const _saveCheck = Duration(seconds: 3);
 const _copyStall = Duration(seconds: 30);
+const _checkStall = Duration(seconds: 120);
+const _answerWait = Duration(seconds: 10);
 const _stopWait = Duration(seconds: 60);
 
-// android is copying into the picked place, or reading it back
-bool _copying(Object? s) =>
-    s is Map && (s['stage'] == 'copying' || s['stage'] == 'checking');
-
-Future<Object?> _saveStage() async {
+// what android's copy is doing: idle, picking, copying or checking. null
+// when it could not be asked, which is not the same as idle
+Future<String?> _saveStage() async {
+  Object? s;
   try {
-    return await _platform.invokeMethod<Object?>('saveDocumentState');
+    s = await _platform.invokeMethod<Object?>('saveDocumentState');
   } catch (_) {
     return null;
   }
+  final stage = s is Map ? s['stage'] : null;
+  if (stage is! String) return null;
+  if (stage == 'idle' || stage == 'picking') unawaited(_retryShreds());
+  return stage;
 }
 
+bool _running(String? stage) => stage == 'copying' || stage == 'checking';
+
 // true once android runs no copy. a copy given up on stops at its next
-// block, so this is quick unless the place itself hangs
-Future<bool> _saveIdle() async {
+// block, so this is quick unless the place itself hangs. [unknown] is what
+// a stage that cannot be read counts as
+Future<bool> _saveIdle({required bool unknown}) async {
   var waited = Duration.zero;
-  while (_copying(await _saveStage())) {
+  while (true) {
+    final stage = await _saveStage();
+    if (stage == null ? unknown : !_running(stage)) return true;
     if (waited >= _stopWait) return false;
     await Future<void>.delayed(const Duration(seconds: 1));
     waited += const Duration(seconds: 1);
   }
-  return true;
 }
 
-// the made file goes once nothing reads it any more. one a hung copy still
-// holds is left for the next start's sweep
-Future<void> _shredWhenIdle(String path) async {
-  if (await _saveIdle()) {
-    await shredFile(path);
-  } else {
-    dlog('backup: a copy still runs, the file waits for the sweep');
+// made files a copy android was told to stop may still read. each goes
+// once a stage reads idle: on the next look, the next resume, the next
+// unlock. never before, so no copy ever saves a file shredded under it
+final _shredLater = <String>{};
+AppLifecycleListener? _shredOnResume;
+bool _shredRetrying = false;
+
+void _shredOnUnlock() {
+  if (!lockGuard.isLocked()) unawaited(_retryShreds());
+}
+
+Future<void> _retryShreds() async {
+  if (_shredLater.isEmpty || _shredRetrying) return;
+  _shredRetrying = true;
+  Object? s;
+  try {
+    s = await _platform.invokeMethod<Object?>('saveDocumentState');
+  } catch (_) {
+    s = null;
+  } finally {
+    _shredRetrying = false;
   }
+  final stage = s is Map ? s['stage'] : null;
+  if (stage != 'idle' && stage != 'picking') return;
+  final paths = List.of(_shredLater);
+  _shredLater.clear();
+  _shredOnResume?.dispose();
+  _shredOnResume = null;
+  lockState.removeListener(_shredOnUnlock);
+  for (final path in paths) {
+    await shredFile(path);
+  }
+}
+
+// the made file goes. after a save kryfo stopped waiting for, only once
+// android's copy has ended
+Future<void> _shredMade(String path, {required bool lost}) async {
+  if (!lost) return shredFile(path);
+  if (await _saveIdle(unknown: false)) return shredFile(path);
+  dlog('backup: a copy may still run, the file waits for it');
+  if (_shredLater.isEmpty) {
+    _shredOnResume = AppLifecycleListener(
+      onResume: () => unawaited(_retryShreds()),
+    );
+    lockState.addListener(_shredOnUnlock);
+  }
+  _shredLater.add(path);
 }
 
 // the system save dialog, then android's copy into what was picked.
@@ -931,12 +987,15 @@ Future<void> _shredWhenIdle(String path) async {
 // still missing a few seconds after, with no copy running, is lost and
 // counts as not saved: never a screen left waiting
 Future<SaveAnswer> saveDocumentOut(String path, String name) async {
-  const lostOne = (state: SaveState.failed, where: null);
-  // a copy given up on before stops first
-  if (!await _saveIdle()) return lostOne;
+  const lostOne = (state: SaveState.failed, where: null, lost: true);
+  // a copy given up on before stops first. one that cannot be asked about
+  // is left to android, which refuses a second dialog while a copy runs
+  if (!await _saveIdle(unknown: true)) return lostOne;
   final lost = Completer<SaveAnswer>();
+  Timer? grace;
   var strikes = 0;
   var copied = -1;
+  String? was;
   var still = Duration.zero;
   var asking = false;
   final asked = _platform
@@ -944,29 +1003,30 @@ Future<SaveAnswer> saveDocumentOut(String path, String name) async {
       .then(_saveAnswer)
       .catchError((Object e) {
         dlog('backup: no save dialog (${e.runtimeType})');
-        return (state: SaveState.cancelled, where: null as String?);
+        return (
+          state: SaveState.cancelled,
+          where: null as String?,
+          lost: false,
+        );
       });
 
-  // android is told first: a dialog still up is answered, a copy stops
+  // android is told first: a dialog still up is answered, a copy stops and
+  // answers for itself, a check stopped leaves an unchecked file. its own
+  // answer is taken if it comes in time
   Future<void> giveUp() async {
-    Object? was;
     try {
-      was = await _platform.invokeMethod<Object?>('saveDocumentCancel');
+      await _platform.invokeMethod<Object?>('saveDocumentCancel');
     } catch (_) {
-      was = null;
+      // not told: the answer it never gives counts as lost
     }
-    // nothing was running: its answer is already on the way
-    if (was == 'idle') {
-      await Future.any([
-        asked,
-        Future<void>.delayed(const Duration(seconds: 2)),
-      ]);
-    }
-    if (!lost.isCompleted) lost.complete(lostOne);
+    if (lost.isCompleted) return;
+    grace = Timer(_answerWait, () {
+      if (!lost.isCompleted) lost.complete(lostOne);
+    });
   }
 
   final watch = Timer.periodic(_saveCheck, (_) async {
-    if (asking || lost.isCompleted) return;
+    if (asking || lost.isCompleted || grace != null) return;
     final life = WidgetsBinding.instance.lifecycleState;
     if (life != null && life != AppLifecycleState.resumed) {
       // the dialog is up, or the app is not shown again yet
@@ -974,20 +1034,26 @@ Future<SaveAnswer> saveDocumentOut(String path, String name) async {
       return;
     }
     asking = true;
-    final s = await _saveStage();
+    Object? s;
+    try {
+      s = await _platform.invokeMethod<Object?>('saveDocumentState');
+    } catch (_) {
+      s = null;
+    }
     asking = false;
-    if (lost.isCompleted) return;
-    if (_copying(s)) {
+    if (lost.isCompleted || grace != null) return;
+    final stage = s is Map ? s['stage'] : null;
+    if (stage is String && _running(stage)) {
       strikes = 0;
       final n = ((s as Map)['copied'] as num?)?.toInt() ?? 0;
-      if (n != copied) {
+      if (n != copied || stage != was) {
         copied = n;
+        was = stage;
         still = Duration.zero;
       } else {
         still += _saveCheck;
-        if (still >= _copyStall) {
-          dlog('backup: the copy stopped moving');
-          asking = true;
+        if (still >= (stage == 'checking' ? _checkStall : _copyStall)) {
+          dlog('backup: the $stage stopped moving');
           await giveUp();
         }
       }
@@ -995,7 +1061,6 @@ Future<SaveAnswer> saveDocumentOut(String path, String name) async {
     }
     if (++strikes >= 2) {
       dlog('backup: the save answer never came');
-      asking = true;
       await giveUp();
     }
   });
@@ -1003,5 +1068,6 @@ Future<SaveAnswer> saveDocumentOut(String path, String name) async {
     return await Future.any([asked, lost.future]);
   } finally {
     watch.cancel();
+    grace?.cancel();
   }
 }
