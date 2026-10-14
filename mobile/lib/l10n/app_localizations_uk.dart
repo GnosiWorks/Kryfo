@@ -51,6 +51,40 @@ class AppLocalizationsUk extends AppLocalizations {
   String get atmospherePaper => 'Папір';
 
   @override
+  String get accentYellow => 'Жовтий';
+
+  @override
+  String get accentGrey => 'Сірий';
+
+  @override
+  String get accentPurple => 'Фіолетовий';
+
+  @override
+  String get accentLime => 'Лайм';
+
+  @override
+  String get accentVelvet => 'Оксамитовий';
+
+  @override
+  String get accentBlue => 'Синій';
+
+  @override
+  String get appearancePreview => 'Так виглядатимуть твої чати в цьому кольорі';
+
+  @override
+  String get appearanceSampleIn => 'Сьогодні ввечері в силі?';
+
+  @override
+  String get appearanceSampleOut => 'Так. О восьмій, на тому ж місці.';
+
+  @override
+  String get appearanceSampleButton => 'Відповісти';
+
+  @override
+  String get appearanceAccentHint =>
+      'Цим кольором будуть кнопки, твої повідомлення й посилання. Значок застосунку лишиться жовтим.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Ця парольна фраза не відкриває цей файл';
 
@@ -5250,6 +5284,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsSameProtectionBrighter => 'Той самий захист, але світліше';
+
+  @override
+  String get settingsAppearance => 'Вигляд';
+
+  @override
+  String get settingsAccentColour => 'Колір акценту';
 
   @override
   String get settingsAppLock2 => 'Блокування Kryfo';

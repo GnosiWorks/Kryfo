@@ -51,6 +51,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get atmospherePaper => 'Бумага';
 
   @override
+  String get accentYellow => 'Жёлтый';
+
+  @override
+  String get accentGrey => 'Серый';
+
+  @override
+  String get accentPurple => 'Фиолетовый';
+
+  @override
+  String get accentLime => 'Лайм';
+
+  @override
+  String get accentVelvet => 'Бархатный';
+
+  @override
+  String get accentBlue => 'Синий';
+
+  @override
+  String get appearancePreview => 'Так будут выглядеть твои чаты в этом цвете';
+
+  @override
+  String get appearanceSampleIn => 'Сегодня вечером в силе?';
+
+  @override
+  String get appearanceSampleOut => 'Да. В восемь, на том же месте.';
+
+  @override
+  String get appearanceSampleButton => 'Ответить';
+
+  @override
+  String get appearanceAccentHint =>
+      'Этим цветом будут кнопки, твои сообщения и ссылки. Значок приложения останется жёлтым.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Эта парольная фраза не открывает этот файл';
 
@@ -5266,6 +5300,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsSameProtectionBrighter => 'Та же защита, только светлее';
+
+  @override
+  String get settingsAppearance => 'Оформление';
+
+  @override
+  String get settingsAccentColour => 'Цвет акцента';
 
   @override
   String get settingsAppLock2 => 'Блокировка';

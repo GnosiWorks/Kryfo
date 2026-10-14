@@ -51,6 +51,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String get atmospherePaper => 'Kağıt';
 
   @override
+  String get accentYellow => 'Sarı';
+
+  @override
+  String get accentGrey => 'Gri';
+
+  @override
+  String get accentPurple => 'Mor';
+
+  @override
+  String get accentLime => 'Limon yeşili';
+
+  @override
+  String get accentVelvet => 'Kadife';
+
+  @override
+  String get accentBlue => 'Mavi';
+
+  @override
+  String get appearancePreview => 'Sohbetlerinin bu renkteki önizlemesi';
+
+  @override
+  String get appearanceSampleIn => 'Bu akşam hâlâ geçerli mi?';
+
+  @override
+  String get appearanceSampleOut => 'Evet. Sekizde, her zamanki yerde.';
+
+  @override
+  String get appearanceSampleButton => 'Yanıtla';
+
+  @override
+  String get appearanceAccentHint =>
+      'Düğmeler, kendi mesajların ve bağlantılar bu rengi alır. Uygulama simgesi sarı kalır.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Bu parola ifadesi bu dosyayı açmıyor';
 
@@ -5177,6 +5211,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsSameProtectionBrighter => 'Aynı koruma, daha aydınlık';
+
+  @override
+  String get settingsAppearance => 'Görünüm';
+
+  @override
+  String get settingsAccentColour => 'Vurgu rengi';
 
   @override
   String get settingsAppLock2 => 'Uygulama kilidi';

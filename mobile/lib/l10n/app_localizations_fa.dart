@@ -51,6 +51,40 @@ class AppLocalizationsFa extends AppLocalizations {
   String get atmospherePaper => 'کاغذ';
 
   @override
+  String get accentYellow => 'زرد';
+
+  @override
+  String get accentGrey => 'خاکستری';
+
+  @override
+  String get accentPurple => 'بنفش';
+
+  @override
+  String get accentLime => 'لیمویی';
+
+  @override
+  String get accentVelvet => 'مخملی';
+
+  @override
+  String get accentBlue => 'آبی';
+
+  @override
+  String get appearancePreview => 'پیش‌نمایش گفتگوهای شما با این رنگ';
+
+  @override
+  String get appearanceSampleIn => 'امشب هنوز سر قرار هستیم؟';
+
+  @override
+  String get appearanceSampleOut => 'بله. ساعت هشت، همان جای همیشگی.';
+
+  @override
+  String get appearanceSampleButton => 'پاسخ';
+
+  @override
+  String get appearanceAccentHint =>
+      'دکمه‌ها، پیام‌های خودتان و پیوندها این رنگ را می‌گیرند. نماد برنامه زرد می‌ماند.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'این عبارت عبور این فایل را باز نمی‌کند';
 
@@ -5169,6 +5203,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsSameProtectionBrighter => 'همان محافظت، روشن‌تر';
+
+  @override
+  String get settingsAppearance => 'ظاهر';
+
+  @override
+  String get settingsAccentColour => 'رنگ تأکیدی';
 
   @override
   String get settingsAppLock2 => 'قفل برنامه';

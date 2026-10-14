@@ -51,6 +51,40 @@ class AppLocalizationsId extends AppLocalizations {
   String get atmospherePaper => 'Kertas';
 
   @override
+  String get accentYellow => 'Kuning';
+
+  @override
+  String get accentGrey => 'Abu-abu';
+
+  @override
+  String get accentPurple => 'Ungu';
+
+  @override
+  String get accentLime => 'Limau';
+
+  @override
+  String get accentVelvet => 'Beludru';
+
+  @override
+  String get accentBlue => 'Biru';
+
+  @override
+  String get appearancePreview => 'Pratinjau obrolanmu dengan warna ini';
+
+  @override
+  String get appearanceSampleIn => 'Nanti malam jadi?';
+
+  @override
+  String get appearanceSampleOut => 'Jadi. Jam delapan, di tempat biasa.';
+
+  @override
+  String get appearanceSampleButton => 'Balas';
+
+  @override
+  String get appearanceAccentHint =>
+      'Tombol, pesanmu sendiri, dan tautan memakai warna ini. Ikon aplikasi tetap kuning.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Frasa sandi itu tidak bisa membuka file ini';
 
@@ -5161,6 +5195,12 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsSameProtectionBrighter =>
       'Perlindungan sama, lebih terang';
+
+  @override
+  String get settingsAppearance => 'Tampilan';
+
+  @override
+  String get settingsAccentColour => 'Warna aksen';
 
   @override
   String get settingsAppLock2 => 'Kunci aplikasi';

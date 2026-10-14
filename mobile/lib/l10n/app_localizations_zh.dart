@@ -51,6 +51,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get atmospherePaper => '纸张';
 
   @override
+  String get accentYellow => '黄色';
+
+  @override
+  String get accentGrey => '灰色';
+
+  @override
+  String get accentPurple => '紫色';
+
+  @override
+  String get accentLime => '青柠';
+
+  @override
+  String get accentVelvet => '丝绒红';
+
+  @override
+  String get accentBlue => '蓝色';
+
+  @override
+  String get appearancePreview => '你的聊天在这个颜色下的预览';
+
+  @override
+  String get appearanceSampleIn => '今晚还照旧吗？';
+
+  @override
+  String get appearanceSampleOut => '照旧。八点，老地方。';
+
+  @override
+  String get appearanceSampleButton => '回复';
+
+  @override
+  String get appearanceAccentHint => '按钮、你自己的消息和链接都会用这个颜色。应用图标保持黄色。';
+
+  @override
   String get backupThatPassphraseDoesNot => '这个密码短语打不开此文件';
 
   @override
@@ -4940,6 +4973,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSameProtectionBrighter => '同样的保护，更明亮';
 
   @override
+  String get settingsAppearance => '外观';
+
+  @override
+  String get settingsAccentColour => '强调色';
+
+  @override
   String get settingsAppLock2 => '应用锁';
 
   @override
@@ -7949,6 +7988,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get atmospherePaper => '紙張';
+
+  @override
+  String get accentYellow => '黃色';
+
+  @override
+  String get accentGrey => '灰色';
+
+  @override
+  String get accentPurple => '紫色';
+
+  @override
+  String get accentLime => '青檸';
+
+  @override
+  String get accentVelvet => '絲絨紅';
+
+  @override
+  String get accentBlue => '藍色';
+
+  @override
+  String get appearancePreview => '你的聊天在這個顏色下的預覽';
+
+  @override
+  String get appearanceSampleIn => '今晚還照舊嗎？';
+
+  @override
+  String get appearanceSampleOut => '照舊。八點，老地方。';
+
+  @override
+  String get appearanceSampleButton => '回覆';
+
+  @override
+  String get appearanceAccentHint => '按鈕、你自己的訊息和連結都會用這個顏色。應用程式圖示保持黃色。';
 
   @override
   String get backupThatPassphraseDoesNot => '這組密碼短語打不開這個檔案';
@@ -12838,6 +12910,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsSameProtectionBrighter => '同樣的防護，更明亮';
+
+  @override
+  String get settingsAppearance => '外觀';
+
+  @override
+  String get settingsAccentColour => '強調色';
 
   @override
   String get settingsAppLock2 => '應用程式鎖';

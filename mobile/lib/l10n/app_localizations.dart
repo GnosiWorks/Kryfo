@@ -207,6 +207,72 @@ abstract class AppLocalizations {
   /// **'Paper'**
   String get atmospherePaper;
 
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get accentYellow;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Grey'**
+  String get accentGrey;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get accentPurple;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Lime'**
+  String get accentLime;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Velvet'**
+  String get accentVelvet;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get accentBlue;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Preview of your chats in this colour'**
+  String get appearancePreview;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Still on for tonight?'**
+  String get appearanceSampleIn;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Eight, the usual place.'**
+  String get appearanceSampleOut;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get appearanceSampleButton;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Buttons, your own messages and links wear it. The app icon stays yellow.'**
+  String get appearanceAccentHint;
+
   /// backup.dart
   ///
   /// In en, this message translates to:
@@ -8330,6 +8396,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Same protection, brighter'**
   String get settingsSameProtectionBrighter;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Accent colour'**
+  String get settingsAccentColour;
 
   /// screens/settings_screen.dart
   ///

@@ -12,6 +12,7 @@ import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'why_kryfo_screen.dart';
+import 'appearance_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
 import '../bridge_mode.dart' show BridgeChoice, bridgeChoiceName;
@@ -620,16 +621,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (mounted) setState(() {});
                       },
               ),
-              HaloRow(
-                icon: Icons.light_mode_outlined,
-                label: l10n.settingsLightTheme,
-                hint: l10n.settingsSameProtectionBrighter,
-                toggled: HaloColors.isLight,
-                onTap: () async {
-                  await appState.setLight(!HaloColors.isLight);
-                  if (mounted) setState(() {});
-                },
-              ),
               AnimatedBuilder(
                 animation: lockState,
                 builder: (_, _) => HaloRow(
@@ -644,6 +635,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () =>
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          HaloSection(l10n.settingsAppearance),
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: Icons.light_mode_outlined,
+                label: l10n.settingsLightTheme,
+                hint: l10n.settingsSameProtectionBrighter,
+                toggled: HaloColors.isLight,
+                onTap: () async {
+                  await appState.setLight(!HaloColors.isLight);
+                  if (mounted) setState(() {});
+                },
+              ),
+              HaloRow(
+                icon: Icons.palette_outlined,
+                label: l10n.settingsAccentColour,
+                value: accentName(HaloColors.accent),
+                onTap: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(haloRoute(const AppearanceScreen()));
+                  if (mounted) setState(() {});
+                },
               ),
             ],
           ),

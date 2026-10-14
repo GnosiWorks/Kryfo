@@ -51,6 +51,40 @@ class AppLocalizationsPt extends AppLocalizations {
   String get atmospherePaper => 'Papel';
 
   @override
+  String get accentYellow => 'Amarelo';
+
+  @override
+  String get accentGrey => 'Cinza';
+
+  @override
+  String get accentPurple => 'Roxo';
+
+  @override
+  String get accentLime => 'Lima';
+
+  @override
+  String get accentVelvet => 'Veludo';
+
+  @override
+  String get accentBlue => 'Azul';
+
+  @override
+  String get appearancePreview => 'Prévia das suas conversas nesta cor';
+
+  @override
+  String get appearanceSampleIn => 'Ainda está de pé hoje à noite?';
+
+  @override
+  String get appearanceSampleOut => 'Sim. Às oito, no lugar de sempre.';
+
+  @override
+  String get appearanceSampleButton => 'Responder';
+
+  @override
+  String get appearanceAccentHint =>
+      'Os botões, suas próprias mensagens e os links usam essa cor. O ícone do app continua amarelo.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Essa frase-senha não abre este arquivo';
 
@@ -5194,6 +5228,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsSameProtectionBrighter => 'Mesma proteção, mais claro';
+
+  @override
+  String get settingsAppearance => 'Aparência';
+
+  @override
+  String get settingsAccentColour => 'Cor de destaque';
 
   @override
   String get settingsAppLock2 => 'Bloqueio do app';
