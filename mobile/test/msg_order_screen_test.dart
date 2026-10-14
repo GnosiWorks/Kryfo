@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/widgets/row_anchor.dart' show RowAnchor;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
@@ -582,6 +583,72 @@ void main() {
     await settle(t, 16);
     expect(find.byType(ChatScreen), findsOneWidget);
     expect(seen('late seven'), isTrue);
+    await devClose(t);
+  });
+
+  // the newest bubble's time and ticks rest above the line, whatever the
+  // keyboard, the direction or the size of the words
+  for (final (how, locale, scale, keyboard) in [
+    ('', const Locale('en'), 1.0, false),
+    (', keyboard up', const Locale('en'), 1.0, true),
+    (', right to left', const Locale('ar'), 1.0, false),
+    (', large text', const Locale('en'), 2.0, false),
+  ]) {
+    for (final still in [false, true]) {
+      testWidgets('the line never covers the newest bubble\'s time$how'
+          '${still ? ', reduced motion' : ''}', (t) async {
+        await seed(40);
+        await devOpen(t, chat(), locale: locale, scale: scale, still: still);
+        if (keyboard) {
+          t.view.viewInsets = const FakeViewPadding(bottom: 600);
+          addTearDown(t.view.resetViewInsets);
+        }
+        await settle(t);
+        final newest = find
+            .descendant(
+              of: find.ancestor(
+                of: text('note 39'),
+                matching: find.byType(RowAnchor),
+              ),
+              matching: find.byKey(const ValueKey('meta')),
+            )
+            .first;
+        final before = t.getRect(newest);
+        await cameLate('late10', 'late ten', note(24) + 60000);
+        appState.chatChanged(_peer);
+        await settle(t, 10);
+        final chip = find.byKey(const ValueKey('earlier-chip'));
+        expect(line(1), findsOneWidget);
+        final meta = t.getRect(newest);
+        expect(meta.overlaps(t.getRect(chip)), isFalse);
+        expect(meta.bottom, lessThan(t.getRect(chip).top));
+        // the reader at the newest rode up with it
+        expect(meta.top, lessThan(before.top));
+        expect(thread(t).pixels, 0);
+        await devClose(t);
+        setL10nLocale(const Locale('en'));
+      });
+    }
+  }
+
+  testWidgets('the line leaves a reader up the thread where they are', (
+    t,
+  ) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    thread(t).jumpTo(600);
+    await settle(t);
+    final reading = [
+      for (var i = 0; i < 40; i++)
+        if (seen('note $i')) i,
+    ];
+    final top = y(t, 'note ${reading.first}');
+    await cameLate('late11', 'late eleven', note(2) + 60000);
+    appState.chatChanged(_peer);
+    await settle(t, 10);
+    expect(line(1), findsOneWidget);
+    expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
     await devClose(t);
   });
 
