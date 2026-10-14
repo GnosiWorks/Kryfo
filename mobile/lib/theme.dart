@@ -11,8 +11,7 @@ import 'l10n/l10n.dart';
 class _Palette {
   final Color ink, surface, surface2, surface3, line, line2;
   final Color text, text2, text3, warm;
-  final Color amber, amberDeep, amberSoft;
-  final Color green, greenSoft, violet, rose, sky, onAmber;
+  final Color green, greenSoft, violet, rose, sky;
   final Color bubbleIn;
   const _Palette({
     required this.ink,
@@ -25,15 +24,11 @@ class _Palette {
     required this.text2,
     required this.text3,
     required this.warm,
-    required this.amber,
-    required this.amberDeep,
-    required this.amberSoft,
     required this.green,
     required this.greenSoft,
     required this.violet,
     required this.rose,
     required this.sky,
-    required this.onAmber,
     required this.bubbleIn,
   });
 }
@@ -49,16 +44,12 @@ const _dark = _Palette(
   text2: Color(0xFFC8C0B5),
   text3: Color(0xFFA79E92),
   warm: Color(0xFFD6CCBE),
-  amber: Color(0xFFF59E0B),
-  amberDeep: Color(0xFFD97706),
-  amberSoft: Color(0x24F59E0B),
   green: Color(0xFF34D399),
   greenSoft: Color(0x2434D399),
   violet: Color(0xFFA78BFA),
   rose: Color(0xFFF472B6),
   // relay's colour, the pill and the chat header
   sky: Color(0xFF4BB8C9),
-  onAmber: Color(0xFF1A0F04),
   bubbleIn: Color(0xFF3B332A),
 );
 
@@ -73,22 +64,143 @@ const _light = _Palette(
   text2: Color(0xFF57503F),
   text3: Color(0xFF554E44),
   warm: Color(0xFF5F4E38),
-  amber: Color(0xFFB66A07),
-  amberDeep: Color(0xFF8F5205),
-  amberSoft: Color(0x1FB66A07),
   green: Color(0xFF0E9D6C),
   greenSoft: Color(0x1F0E9D6C),
   violet: Color(0xFF6F4FD1),
   rose: Color(0xFFCE3F84),
   // 5.4:1 on surface, mono 10 needs 4.5
   sky: Color(0xFF0A5F95),
-  onAmber: Color(0xFFFFFBF4),
   bubbleIn: Color(0xFFDDD3BE),
 );
 
+/// one accent in one theme: the colour, a deeper one for gradients and
+/// presses, a faint wash, and what is written on it
+class AccentTones {
+  final Color accent, deep, soft, on;
+  const AccentTones(this.accent, this.deep, this.soft, this.on);
+}
+
+/// the colour buttons, own bubbles, links and the nav pill wear. the app
+/// icon, notifications and the website keep the yellow whatever is picked.
+/// every tone is held to its contrast in accent_contrast_test.
+enum HaloAccent {
+  yellow(
+    dark: AccentTones(
+      Color(0xFFF59E0B),
+      Color(0xFFD97706),
+      Color(0x24F59E0B),
+      Color(0xFF1A0F04),
+    ),
+    // a shade under the old b66a07: the cream on it reaches 4.5
+    light: AccentTones(
+      Color(0xFFA55F06),
+      Color(0xFF8F5205),
+      Color(0x1FA55F06),
+      Color(0xFFFFFBF4),
+    ),
+    bright: Color(0xFFE8960B),
+    brightDeep: Color(0xFFCC7006),
+  ),
+  grey(
+    dark: AccentTones(
+      Color(0xFFC9C3B9),
+      Color(0xFFA39D93),
+      Color(0x24C9C3B9),
+      Color(0xFF1A1714),
+    ),
+    light: AccentTones(
+      Color(0xFF5C564C),
+      Color(0xFF45403A),
+      Color(0x1F5C564C),
+      Color(0xFFFFFBF4),
+    ),
+  ),
+  purple(
+    dark: AccentTones(
+      Color(0xFFD08CF0),
+      Color(0xFFAE62D6),
+      Color(0x24D08CF0),
+      Color(0xFF1E0A28),
+    ),
+    // leans to orchid, away from the violet tor and groups wear
+    light: AccentTones(
+      Color(0xFF9B3FC0),
+      Color(0xFF7C2F9C),
+      Color(0x1F9B3FC0),
+      Color(0xFFFFFBF4),
+    ),
+  ),
+  lime(
+    dark: AccentTones(
+      Color(0xFFA8D94A),
+      Color(0xFF86B92B),
+      Color(0x24A8D94A),
+      Color(0xFF172005),
+    ),
+    light: AccentTones(
+      Color(0xFF4F7A12),
+      Color(0xFF3E620C),
+      Color(0x1F4F7A12),
+      Color(0xFFFFFBF4),
+    ),
+  ),
+  // a wine red, kept apart from the rose that errors and warnings wear
+  velvet(
+    dark: AccentTones(
+      Color(0xFFC83E4E),
+      Color(0xFF9C2B39),
+      Color(0x1FC83E4E),
+      Color(0xFFFFF7F5),
+    ),
+    light: AccentTones(
+      Color(0xFF92202E),
+      Color(0xFF721824),
+      Color(0x1F92202E),
+      Color(0xFFFFFBF4),
+    ),
+  ),
+  blue(
+    dark: AccentTones(
+      Color(0xFF6AAEF5),
+      Color(0xFF3D8BE8),
+      Color(0x246AAEF5),
+      Color(0xFF06172B),
+    ),
+    light: AccentTones(
+      Color(0xFF2458B8),
+      Color(0xFF1A4593),
+      Color(0x1F2458B8),
+      Color(0xFFFFFBF4),
+    ),
+  );
+
+  final AccentTones dark, light;
+  final Color? _bright, _brightDeep;
+  const HaloAccent({
+    required this.dark,
+    required this.light,
+    Color? bright,
+    Color? brightDeep,
+  }) : _bright = bright,
+       _brightDeep = brightDeep;
+
+  AccentTones tones(bool light) => light ? this.light : dark;
+
+  // the bright card in tools, the same in both themes: the dark theme's
+  // tones unless the accent has its own
+  Color get bright => _bright ?? dark.accent;
+  Color get brightDeep => _brightDeep ?? dark.deep;
+  Color get onBright => dark.on;
+
+  static HaloAccent byName(String? name) {
+    for (final a in values) {
+      if (a.name == name) return a;
+    }
+    return yellow;
+  }
+}
+
 class HaloColors {
-  static const Color amberBright = Color(0xFFE8960B);
-  static const Color amberBrightDeep = Color(0xFFCC7006);
   static const Color amberInk = Color(0xFF1A0F04);
   static const Color qrPaper = Color(0xFFF5F1EA);
   static const Color qrInk = Color(0xFF161310);
@@ -96,8 +208,19 @@ class HaloColors {
   static const Color qrViolet = Color(0xFF4C2F9E);
 
   static _Palette _p = _dark;
+  static HaloAccent _accent = HaloAccent.yellow;
+  static AccentTones _a = HaloAccent.yellow.dark;
   static bool get isLight => identical(_p, _light);
-  static void setLight(bool v) => _p = v ? _light : _dark;
+  static HaloAccent get accent => _accent;
+  static void setLight(bool v) {
+    _p = v ? _light : _dark;
+    _a = _accent.tones(v);
+  }
+
+  static void setAccent(HaloAccent a) {
+    _accent = a;
+    _a = a.tones(isLight);
+  }
 
   static Color get ink => _p.ink;
   static Color get surface => _p.surface;
@@ -109,16 +232,28 @@ class HaloColors {
   static Color get text2 => _p.text2;
   static Color get text3 => _p.text3;
   static Color get warm => _p.warm;
-  static Color get amber => _p.amber;
   static Color get bubbleIn => _p.bubbleIn;
-  static Color get amberDeep => _p.amberDeep;
-  static Color get amberSoft => _p.amberSoft;
   static Color get green => _p.green;
   static Color get greenSoft => _p.greenSoft;
   static Color get violet => _p.violet;
   static Color get rose => _p.rose;
   static Color get sky => _p.sky;
-  static Color get onAmber => _p.onAmber;
+
+  // the picked accent
+  static Color get amber => _a.accent;
+  static Color get amberDeep => _a.deep;
+  static Color get amberSoft => _a.soft;
+  static Color get onAmber => _a.on;
+  static Color get amberBright => _accent.bright;
+  static Color get amberBrightDeep => _accent.brightDeep;
+  static Color get onAmberBright => _accent.onBright;
+
+  // the yellow, whatever the accent: avatars and the gold tier are
+  // someone's look, not the app's
+  static AccentTones get _y => HaloAccent.yellow.tones(isLight);
+  static Color get yellow => _y.accent;
+  static Color get yellowDeep => _y.deep;
+  static Color get onYellow => _y.on;
 }
 
 // persian and arabic join their letters. letter spacing pulls the joins

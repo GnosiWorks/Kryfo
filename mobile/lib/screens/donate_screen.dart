@@ -321,7 +321,7 @@ class _DonateScreenState extends State<DonateScreen> {
         _tierCard(100, l10n.donateTierGuardian, '\u2726', const [
           Color(0xFFF59E0B),
           Color(0xFFD97706),
-        ], HaloColors.onAmber),
+        ], HaloColors.onYellow),
       ],
     );
   }

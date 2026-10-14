@@ -144,23 +144,29 @@ class _Palette {
   const _Palette(this.start, this.end, this.ink, this.mark);
 }
 
+// the yellow, not the accent: a face looks the same whatever is picked
 List<_Palette> get _palettes => <_Palette>[
   // dark-bg palettes - cream letter, varied tag accents
   _Palette(
     HaloColors.ink,
-    HaloColors.amberDeep,
+    HaloColors.yellowDeep,
     HaloColors.text,
-    HaloColors.amber,
+    HaloColors.yellow,
   ),
   _Palette(
     HaloColors.ink,
     HaloColors.violet,
     HaloColors.text,
-    HaloColors.amber,
+    HaloColors.yellow,
   ),
   _Palette(HaloColors.ink, HaloColors.rose, HaloColors.text, HaloColors.green),
-  _Palette(HaloColors.ink, HaloColors.green, HaloColors.text, HaloColors.amber),
-  _Palette(HaloColors.ink, HaloColors.amber, HaloColors.text, HaloColors.rose),
+  _Palette(
+    HaloColors.ink,
+    HaloColors.green,
+    HaloColors.text,
+    HaloColors.yellow,
+  ),
+  _Palette(HaloColors.ink, HaloColors.yellow, HaloColors.text, HaloColors.rose),
   _Palette(
     HaloColors.ink,
     HaloColors.violet,
@@ -182,7 +188,7 @@ List<_Palette> get _palettes => <_Palette>[
   ),
   _Palette(
     HaloColors.surface3,
-    HaloColors.amberDeep,
+    HaloColors.yellowDeep,
     HaloColors.text,
     HaloColors.green,
   ),
@@ -190,11 +196,11 @@ List<_Palette> get _palettes => <_Palette>[
     HaloColors.surface3,
     HaloColors.rose,
     HaloColors.text,
-    HaloColors.amber,
+    HaloColors.yellow,
   ),
   _Palette(
     HaloColors.line2,
-    HaloColors.amberDeep,
+    HaloColors.yellowDeep,
     HaloColors.text,
     HaloColors.violet,
   ),
@@ -206,20 +212,20 @@ List<_Palette> get _palettes => <_Palette>[
   ),
   // bright palettes - ink letter, cream/dark tag
   _Palette(
-    HaloColors.amberDeep,
+    HaloColors.yellowDeep,
     HaloColors.rose,
     HaloColors.ink,
     HaloColors.text,
   ),
-  _Palette(HaloColors.amber, HaloColors.rose, HaloColors.ink, HaloColors.text),
+  _Palette(HaloColors.yellow, HaloColors.rose, HaloColors.ink, HaloColors.text),
   _Palette(
-    HaloColors.amber,
+    HaloColors.yellow,
     HaloColors.violet,
     HaloColors.ink,
     HaloColors.text,
   ),
   _Palette(
-    HaloColors.amberDeep,
+    HaloColors.yellowDeep,
     HaloColors.violet,
     HaloColors.ink,
     HaloColors.text,
@@ -227,12 +233,22 @@ List<_Palette> get _palettes => <_Palette>[
   _Palette(HaloColors.violet, HaloColors.rose, HaloColors.ink, HaloColors.text),
   _Palette(
     HaloColors.violet,
-    HaloColors.amber,
+    HaloColors.yellow,
     HaloColors.ink,
     HaloColors.text,
   ),
-  _Palette(HaloColors.green, HaloColors.amber, HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.amber, HaloColors.green, HaloColors.ink, HaloColors.text),
+  _Palette(
+    HaloColors.green,
+    HaloColors.yellow,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
+  _Palette(
+    HaloColors.yellow,
+    HaloColors.green,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
   _Palette(HaloColors.green, HaloColors.rose, HaloColors.ink, HaloColors.text),
   _Palette(HaloColors.rose, HaloColors.green, HaloColors.ink, HaloColors.text),
   _Palette(

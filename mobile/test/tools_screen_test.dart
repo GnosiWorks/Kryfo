@@ -16,12 +16,6 @@ Widget host(Widget child, {double scale = 1, bool still = false}) =>
       ),
     );
 
-double _lum(Color c) {
-  double f(double v) =>
-      v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) * ((v + 0.055) / 1.055);
-  return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
-}
-
 void main() {
   testWidgets('card and tools appear in order', (t) async {
     await t.pumpWidget(host(const ToolsScreen(), still: true));
@@ -69,10 +63,16 @@ void main() {
     }
   });
 
-  test('amber card ink holds 4.5:1 contrast', () {
-    for (final bg in [HaloColors.amberBright, HaloColors.amberBrightDeep]) {
-      final a = _lum(bg), b = _lum(HaloColors.amberInk);
-      expect((a + 0.05) / (b + 0.05), greaterThan(4.5));
+  test('the bright card\'s ink holds 4.5:1 in every accent', () {
+    addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
+    for (final accent in HaloAccent.values) {
+      HaloColors.setAccent(accent);
+      for (final bg in [HaloColors.amberBright, HaloColors.amberBrightDeep]) {
+        final a = bg.computeLuminance();
+        final b = HaloColors.onAmberBright.computeLuminance();
+        final r = a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
+        expect(r, greaterThan(4.5), reason: accent.name);
+      }
     }
   });
 

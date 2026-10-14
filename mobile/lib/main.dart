@@ -5,6 +5,7 @@ import 'secure_store.dart';
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
+import 'widgets/theme_refresh.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -13833,6 +13834,9 @@ class AppState extends ChangeNotifier {
     try {
       final v = (await secureStore.read(key: 'theme_light')) == 'true';
       HaloColors.setLight(v);
+      HaloColors.setAccent(
+        HaloAccent.byName(await secureStore.read(key: 'theme_accent')),
+      );
     } catch (e) {
       dlog('theme pref: $e');
     }
@@ -13843,6 +13847,16 @@ class AppState extends ChangeNotifier {
     themeRevision.value++;
     notifyListeners();
     await secureStore.write(key: 'theme_light', value: v.toString());
+  }
+
+  // one accent for the whole app, like the theme: every identity, hidden
+  // chats and the decoy show the same, so none of them stands out
+  Future<void> setAccent(HaloAccent a) async {
+    if (a == HaloColors.accent) return;
+    HaloColors.setAccent(a);
+    themeRevision.value++;
+    notifyListeners();
+    await secureStore.write(key: 'theme_accent', value: a.name);
   }
 
   // ---- how tor gets out ----
@@ -23768,7 +23782,9 @@ void main() async {
   // first. started before the window check so a headless start loads it too.
   unawaited(
     appState.loadThemePref().then((_) {
-      if (HaloColors.isLight) themeRevision.value++;
+      if (HaloColors.isLight || HaloColors.accent != HaloAccent.yellow) {
+        themeRevision.value++;
+      }
     }),
   );
   if (PlatformDispatcher.instance.implicitView == null) {
@@ -23840,17 +23856,20 @@ class HaloApp extends StatelessWidget {
   const HaloApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        themeRevision,
-        localeRevision,
-        navRevision,
-      ]),
-      builder: (context, _) => haloAppShell(
-        navigatorKey: rootNavKey,
-        locale: l10nLocale,
-        lock: (navigator) => _LockGate(child: navigator),
-        home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+    return ThemeRefresh(
+      revision: themeRevision,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([
+          themeRevision,
+          localeRevision,
+          navRevision,
+        ]),
+        builder: (context, _) => haloAppShell(
+          navigatorKey: rootNavKey,
+          locale: l10nLocale,
+          lock: (navigator) => _LockGate(child: navigator),
+          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        ),
       ),
     );
   }

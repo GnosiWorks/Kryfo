@@ -176,7 +176,7 @@ class _OfflineMapState extends State<OfflineMap>
                 gridLine: HaloColors.line.withValues(alpha: 0.7),
                 amber: HaloColors.amber,
                 warm: HaloColors.warm,
-                ink: HaloColors.amberInk,
+                ink: HaloColors.onAmber,
               ),
             ),
           );

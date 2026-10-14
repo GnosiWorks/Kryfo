@@ -377,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           width: 2.5,
                         ),
                       ),
-                      child: Icon(Icons.edit, size: 13, color: HaloColors.ink),
+                      child: Icon(Icons.edit, size: 13, color: HaloColors.onAmber),
                     ),
                   ),
                 ],
