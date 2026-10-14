@@ -124,6 +124,24 @@ void main() {
     expect(f.existsSync(), isFalse);
   });
 
+  test('a request forgotten part way keeps its row and its photo', () async {
+    final db = await rows();
+    final f = await photo(db, accepted: 0);
+    db.mem.failOn = 'delete:shield';
+    await expectLater(db.forgetRequest(_peer), throwsStateError);
+    expect(atmo(db, _peer), 'image:${f.path}');
+    expect(f.existsSync(), isTrue);
+  });
+
+  test('a name let go part way keeps its row and its photo', () async {
+    final db = await rows();
+    final f = await photo(db);
+    db.mem.failOn = 'delete:vouches';
+    await expectLater(db.forgetName(_peer), throwsStateError);
+    expect(atmo(db, _peer), 'image:${f.path}');
+    expect(f.existsSync(), isTrue);
+  });
+
   test('a wallpaper reset to a preset shreds the photo', () async {
     final db = await rows();
     final f = await photo(db);

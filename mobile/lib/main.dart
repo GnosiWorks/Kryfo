@@ -2628,20 +2628,23 @@ class HaloDb implements GroupOwedStore {
   // of theirs waited to be tried again
   Future<void> forgetRequest(String haloId) async {
     final db = await open();
-    final gone = await db.query(
-      'contacts',
-      columns: ['atmosphere'],
-      where: 'halo_id = ? AND accepted = ?',
-      whereArgs: [haloId, 0],
-    );
-    await db.delete(
-      'contacts',
-      where: 'halo_id = ? AND accepted = ?',
-      whereArgs: [haloId, 0],
-    );
-    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
-    await db.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
-    await db.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+    final gone = await db.transaction((t) async {
+      final gone = await t.query(
+        'contacts',
+        columns: ['atmosphere'],
+        where: 'halo_id = ? AND accepted = ?',
+        whereArgs: [haloId, 0],
+      );
+      await t.delete(
+        'contacts',
+        where: 'halo_id = ? AND accepted = ?',
+        whereArgs: [haloId, 0],
+      );
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
+      await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      return gone;
+    });
     await _dropPhotos([for (final r in gone) r['atmosphere']]);
   }
 
@@ -2720,35 +2723,38 @@ class HaloDb implements GroupOwedStore {
   // came with it go. what is left is a name nobody checked
   Future<void> forgetName(String haloId) async {
     final db = await open();
-    final atmo = await _atmosphereOf(db, haloId);
-    await db.update(
-      'contacts',
-      {
-        'xpub': '',
-        'peer_bundle': null,
-        'key_changed': 0,
-        'verified': 0,
-        'verified_key': null,
-        'back_paired': 0,
-        'avatar': null,
-        'supporter_badge': null,
-        'vouched_by': null,
-        'vouched_at': null,
-        'nickname': null,
-        'note': null,
-        'atmosphere': null,
-        'pinned': 0,
-        'muted': 0,
-        'voice_disguise': null,
-        'name_check': kNameAsk | kNameSays,
-      },
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
-    );
-    // vouches for them, and the ones they gave
-    await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
-    await db.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
-    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+    final atmo = await db.transaction((t) async {
+      final atmo = await _atmosphereOf(t, haloId);
+      await t.update(
+        'contacts',
+        {
+          'xpub': '',
+          'peer_bundle': null,
+          'key_changed': 0,
+          'verified': 0,
+          'verified_key': null,
+          'back_paired': 0,
+          'avatar': null,
+          'supporter_badge': null,
+          'vouched_by': null,
+          'vouched_at': null,
+          'nickname': null,
+          'note': null,
+          'atmosphere': null,
+          'pinned': 0,
+          'muted': 0,
+          'voice_disguise': null,
+          'name_check': kNameAsk | kNameSays,
+        },
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
+      // vouches for them, and the ones they gave
+      await t.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      return atmo;
+    });
     await _dropPhotos([atmo]);
   }
 
