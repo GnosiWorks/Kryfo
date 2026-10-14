@@ -4187,6 +4187,19 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  /// the files in this container's wallpapers folder that no chat or group
+  /// names, last written before [before]: what a delete or a crash left
+  Future<List<File>> unnamedWallpapers({required DateTime before}) async {
+    final named = await _namedPhotos();
+    final dir = await container.folder('wallpapers');
+    final out = <File>[];
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File || named.contains(p.basename(e.path))) continue;
+      if ((await e.lastModified()).isBefore(before)) out.add(e);
+    }
+    return out;
+  }
+
   /// the files in this container's media folder that no message names,
   /// last written before [before]: what a delete left behind. a file is
   /// matched by its name in the folder, so rows written under another
@@ -16755,6 +16768,14 @@ class AppState extends ChangeNotifier {
         final q = await _quietOf(d);
         if (q != null) {
           await _dropGroupLeftovers(d);
+          // with a vault of its own on disk, a hide cut short can leave a
+          // file only that vault's rows name: its open sweeps instead
+          if (!await HaloContainer.decoyVault.onDisk()) {
+            await _sweepUnnamedWallpapers(
+              d,
+              DateTime.now().subtract(const Duration(minutes: 10)),
+            );
+          }
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -17502,6 +17523,10 @@ class AppState extends ChangeNotifier {
         }
       }
       await _dropGroupLeftovers(v);
+      // settled, both sides' rows name their files
+      final before = DateTime.now().subtract(const Duration(minutes: 10));
+      await _sweepUnnamedWallpapers(v, before);
+      if (decoy) await _sweepUnnamedWallpapers(primary, before);
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -19593,6 +19618,22 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // as for media: settled here, zeroed in the background
+  Future<void> _sweepUnnamedWallpapers(HaloDb d, DateTime before) async {
+    try {
+      final gone = await d.unnamedWallpapers(before: before);
+      if (gone.isEmpty) return;
+      dlog('wallpaper: ${gone.length} files no chat names');
+      unawaited(() async {
+        for (final f in gone) {
+          await shredFile(f.path);
+        }
+      }());
+    } catch (e) {
+      dlog('wallpaper: not swept (${e.runtimeType})');
+    }
+  }
+
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
@@ -19636,6 +19677,10 @@ class AppState extends ChangeNotifier {
     if (settled) {
       await _dropGroupLeftovers(live);
       await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
+      await _sweepUnnamedWallpapers(
+        live,
+        bootAt.subtract(const Duration(minutes: 10)),
+      );
     }
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);

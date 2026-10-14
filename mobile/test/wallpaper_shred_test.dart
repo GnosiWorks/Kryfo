@@ -189,4 +189,52 @@ void main() {
       expect(f.existsSync(), isTrue);
     },
   );
+
+  group('the start sweep', () {
+    final before = DateTime.now().subtract(const Duration(minutes: 10));
+    final old = before.subtract(const Duration(hours: 1));
+
+    test('keeps what a row names and finds the rest', () async {
+      final db = await rows();
+      final named = await photo(db)
+        ..setLastModifiedSync(old);
+      final dir = await db.container.folder('wallpapers');
+      // a group's row counts as naming one too
+      final g = File(p.join(dir.path, 'grp.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      await db.mem.insert('groups', {
+        'group_id': 'g1',
+        'name': 'g',
+        'admin_id': 'a',
+        'created_at': 1,
+        'atmosphere': 'image:${g.path}',
+      });
+      final orphan = File(p.join(dir.path, 'left.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      // one written moments ago may be a pick still being filed
+      final young = File(p.join(dir.path, 'young.jpg'))..writeAsBytesSync([1]);
+      final gone = await db.unnamedWallpapers(before: before);
+      expect(gone.map((f) => f.path), [orphan.path]);
+      expect(
+        named.existsSync() && g.existsSync() && young.existsSync(),
+        isTrue,
+      );
+    });
+
+    test('looks only in its own container', () async {
+      final db = await rows(HaloContainer.decoy);
+      final mine = await db.container.folder('wallpapers');
+      final theirs = await HaloContainer.everyday.folder('wallpapers');
+      final a = File(p.join(mine.path, 'a.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      File(p.join(theirs.path, 'b.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      final gone = await db.unnamedWallpapers(before: before);
+      expect(gone.map((f) => f.path), [a.path]);
+    });
+  });
 }
