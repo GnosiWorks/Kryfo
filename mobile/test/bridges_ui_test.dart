@@ -1308,6 +1308,24 @@ void main() {
       expect(_eng.moat, 1);
     });
 
+    test('a wi-fi sign-in shows on home, whatever the way, onion only', () {
+      final app = AppState()..sendModeForTest = 'private';
+      const portal = BridgeStatus(
+        mode: 'auto',
+        phase: 'captive',
+        errorCode: 'limited',
+      );
+      for (final choice in BridgeChoice.values) {
+        app.bridgeSetupForTest = BridgeSetup(choice: choice);
+        app.setBridgeStatusForTest(portal);
+        expect(app.homeBridgeCard, 'auto', reason: '$choice');
+        expect(app.bridgeLine.head, l10n.bridgesSignInToThisWifi);
+        expect(app.bridgeLine.action, BridgeAction.openWifi);
+      }
+      app.sendModeForTest = 'balanced';
+      expect(app.homeBridgeCard, isNull);
+    });
+
     test('one bridge card on home at a time, in every combination', () {
       final app = AppState()..sendModeForTest = 'private';
       for (final choice in BridgeChoice.values) {

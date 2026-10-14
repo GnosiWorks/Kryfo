@@ -14028,7 +14028,7 @@ class AppState extends ChangeNotifier {
   // chats
   String? get homeBridgeCard {
     if (inDecoyView || lockState.inVault) return null;
-    if (autoStruggling) return 'auto';
+    if (autoStruggling || captiveWait) return 'auto';
     if (suggestBridgesOff) return 'stuck';
     if (suggestBridges) return 'hint';
     if (_bridge.offerAuto &&
@@ -18078,6 +18078,13 @@ class AppState extends ChangeNotifier {
     if (_bridge.choice != BridgeChoice.direct) return false;
     return _torLooksBlockedAt(now);
   }
+
+  // a wi-fi that wants a sign-in first: its line and the way to the
+  // settings go on home, whatever way tor is set to take
+  bool get captiveWait =>
+      !inDecoyView &&
+      _sendMode == 'private' &&
+      _bridgeStatus.phase == 'captive';
 
   // automatic is past the usual way, or gave up: the home shows its line
   bool get autoStruggling =>
