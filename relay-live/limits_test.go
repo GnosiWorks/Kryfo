@@ -111,9 +111,16 @@ func ask(t *testing.T, r *nostr.Relay, f nostr.Filter) ([]*nostr.Event, string) 
 	}
 	defer sub.Unsub()
 	var got []*nostr.Event
+	// a closed subscription closes its events channel, at times before its
+	// reason comes: read from a closed channel is no event
+	events := sub.Events
 	for {
 		select {
-		case ev := <-sub.Events:
+		case ev, ok := <-events:
+			if !ok {
+				events = nil
+				continue
+			}
 			got = append(got, ev)
 		case <-sub.EndOfStoredEvents:
 			return got, ""
