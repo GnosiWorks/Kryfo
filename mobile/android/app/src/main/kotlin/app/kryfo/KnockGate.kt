@@ -30,7 +30,7 @@ object KnockGate {
         val p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val kept = (p.getString(KEY, null) ?: "").split(',').mapNotNull { it.toLongOrNull() }
         val (ok, next) = decide(kept, now)
-        p.edit().putString(KEY, next.joinToString(",")).commit()
+        p.edit().putString(KEY, next.joinToString(",")).apply()
         return ok
     }
 }
