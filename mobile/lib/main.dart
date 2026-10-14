@@ -8586,8 +8586,12 @@ Future<List<String>> adoptWallpaperFiles(DatabaseExecutor db) async {
       columns: [id, 'atmosphere'],
       where: "atmosphere LIKE 'image:%'",
     )) {
-      final chat = r[id] as String;
-      final path = (r['atmosphere'] as String).substring(6);
+      final chat = r[id];
+      final atmo = r['atmosphere'];
+      if (chat is! String || atmo is! String || !atmo.startsWith('image:')) {
+        continue;
+      }
+      final path = atmo.substring(6);
       final inFolder = p.basename(p.dirname(path)).startsWith('wallpapers');
       Uint8List? photo;
       if (inFolder) {
