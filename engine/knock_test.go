@@ -8,46 +8,61 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"fiatjaf.com/nostr"
 	nostr2 "github.com/nbd-wtf/go-nostr"
 )
 
+type knockWorld struct {
+	peers    []string // contacts' x keys
+	contacts []string // their receive addresses
+	fc       string
+	room     xid
+	roomPk   string
+	keys     []string
+}
+
 // subscriptions as the app starts them, without their runners: contacts,
 // the first-contact address and one room's member. taken down afterwards
-func knockSubs(t *testing.T, contacts int) (peers []string, room xid, roomPk string) {
+func knockSubs(t *testing.T, contacts int) *knockWorld {
 	t.Helper()
+	w := &knockWorld{}
 	idle := func(ctx context.Context) { <-ctx.Done() }
-	var keys []string
 	for i := 0; i < contacts; i++ {
 		p := newXid(t)
 		h := hex.EncodeToString(p.pub[:])
 		startSub(h, idle)
-		keys = append(keys, h)
-		peers = append(peers, h)
+		w.keys = append(w.keys, h)
+		w.peers = append(w.peers, h)
+		_, pk, _ := nip17RcvAddress(p.pub)
+		w.contacts = append(w.contacts, pk)
 	}
 	startSub("firstcontact", idle)
-	keys = append(keys, "firstcontact")
+	w.keys = append(w.keys, "firstcontact")
 	nostrMu.Lock()
 	oldFc := fcCounterNow
 	fcCounterNow = 0
 	nostrMu.Unlock()
-	room = newXid(t)
+	_, w.fc, _ = nip17FirstContactKeys(0)
+	w.room = newXid(t)
 	member := newXid(t)
-	sk, pk, err := nip17RcvAddressAs(room, member.pub)
+	sk, pk, err := nip17RcvAddressAs(w.room, member.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
-	key := roomSubKey(room, hex.EncodeToString(member.pub[:]))
-	lane := roomLane(hex.EncodeToString(room.pub[:]))
-	noteKnockTarget(key, knockTarget{pk, sk, lane, lane})
+	w.roomPk = pk
+	key := roomSubKey(w.room, hex.EncodeToString(member.pub[:]))
+	lane := roomLane(hex.EncodeToString(w.room.pub[:]))
+	noteKnockTarget(key, knockTarget{pk, sk, lane, lane, ""})
 	startSub(key, idle)
-	keys = append(keys, key)
+	w.keys = append(w.keys, key)
 	t.Cleanup(func() {
 		nostrMu.Lock()
 		fcCounterNow = oldFc
-		for _, k := range keys {
+		for _, k := range w.keys {
 			if c, ok := nostrSubs[k]; ok {
 				c()
 				delete(nostrSubs, k)
@@ -55,40 +70,83 @@ func knockSubs(t *testing.T, contacts int) (peers []string, room xid, roomPk str
 		}
 		nostrMu.Unlock()
 	})
-	return peers, room, pk
+	return w
 }
 
-func TestKnockAddressesCarryTheirGroup(t *testing.T) {
-	useStandIns(t, modePrivate, nil)
-	peers, room, roomPk := knockSubs(t, 6)
-	var rows []struct{ A, G string }
-	if err := json.Unmarshal([]byte(knockAddresses()), &rows); err != nil {
+func (w *knockWorld) unsubscribe(k string) {
+	nostrMu.Lock()
+	if c, ok := nostrSubs[k]; ok {
+		c()
+		delete(nostrSubs, k)
+	}
+	nostrMu.Unlock()
+}
+
+type knockRow struct{ I, G string }
+
+func knockRows(t *testing.T, exclude string) map[string]string {
+	t.Helper()
+	var rows []knockRow
+	if err := json.Unmarshal([]byte(knockAddresses(exclude)), &rows); err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) < 8 {
-		t.Fatalf("%d addresses, want at least the 8 started here", len(rows))
-	}
-	got := map[string]string{}
+	out := map[string]string{}
 	for _, r := range rows {
-		got[r.A] = r.G
+		out[r.I] = r.G
 	}
-	for _, h := range peers {
-		p, _ := peerArr(h)
-		_, pk, _ := nip17RcvAddress(p)
-		if got[pk] != receiveLane(pk) {
-			t.Fatalf("a contact's address is in group %q, its lane is %q", got[pk], receiveLane(pk))
+	return out
+}
+
+func TestKnockAddressesNameNoAddress(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	w := knockSubs(t, 6)
+	got := knockRows(t, "")
+	raw := knockAddresses("")
+	for _, pk := range append(append([]string{w.fc, w.roomPk}, w.contacts...), hex.EncodeToString(w.room.pub[:])) {
+		if strings.Contains(raw, pk) || strings.Contains(raw, pk[:16]) {
+			t.Fatal("the list names an address or a room key")
 		}
 	}
-	_, fc, _ := nip17FirstContactKeys(0)
-	if got[fc] != "firstcontact:"+fc {
-		t.Fatalf("the first-contact address is in group %q", got[fc])
+	for _, pk := range w.contacts {
+		if got[knockID(pk)] != receiveLane(pk) {
+			t.Fatalf("a contact's address is in group %q, its lane is %q", got[knockID(pk)], receiveLane(pk))
+		}
 	}
-	if got[roomPk] != roomLane(hex.EncodeToString(room.pub[:])) {
-		t.Fatalf("the room's address is in group %q", got[roomPk])
+	if g := got[knockID(w.fc)]; !strings.HasPrefix(g, "firstcontact:") {
+		t.Fatalf("the first-contact address is in group %q", g)
 	}
-	if strings.Contains(knockAddresses(), "sk") {
-		t.Fatal("the list carries more than addresses and groups")
+	if g := got[knockID(w.roomPk)]; !strings.HasPrefix(g, "room:") {
+		t.Fatalf("the room's address is in group %q", g)
 	}
+	// the same every time, under this identity
+	if knockAddresses("") != raw {
+		t.Fatal("the ids moved between two calls")
+	}
+}
+
+func TestKnockLeavesHiddenChatsOut(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	w := knockSubs(t, 3)
+	hidden, _ := json.Marshal([]string{strings.ToUpper(w.peers[1])})
+	got := knockRows(t, string(hidden))
+	if _, ok := got[knockID(w.contacts[1])]; ok {
+		t.Fatal("a hidden chat's address was listed")
+	}
+	if _, ok := got[knockID(w.contacts[0])]; !ok {
+		t.Fatal("an everyday contact's address was left out")
+	}
+}
+
+type knockOut struct{ Done, Dup []string }
+
+func runRegister(t *testing.T, items []knockItem) knockOut {
+	t.Helper()
+	raw, _ := json.Marshal(items)
+	var out knockOut
+	if err := json.Unmarshal([]byte(knockRegister(string(raw))), &out); err != nil {
+		t.Fatal(err)
+	}
+	return out
 }
 
 func TestKnockRegisterGoesOnEachLaneToOurRelayOnly(t *testing.T) {
@@ -96,39 +154,23 @@ func TestKnockRegisterGoesOnEachLaneToOurRelayOnly(t *testing.T) {
 	other := newRelayStandIn(t, 0)
 	socks := newSocksStandIn(t)
 	useStandIns(t, modePrivate, socks, own, other)
-	peers, room, roomPk := knockSubs(t, 5)
-	_, fc, _ := nip17FirstContactKeys(0)
-	var contacts []string
-	for _, h := range peers {
-		p, _ := peerArr(h)
-		_, pk, _ := nip17RcvAddress(p)
-		contacts = append(contacts, pk)
-	}
+	w := knockSubs(t, 5)
+	knockAddresses("")
 	dummy := nostr2.GeneratePrivateKey()
 	dummyPk, _ := nostr2.GetPublicKey(dummy)
-	stranger := strings.Repeat("ab", 32)
 
 	ep := func(i int) string { return "https://push.example.org/up" + string(rune('a'+i)) }
-	items := []knockItem{{A: fc, E: ep(0)}, {A: roomPk, E: ep(1)}, {K: dummy, S: 9, E: ep(2)}, {A: stranger, E: ep(3)}}
-	for i, pk := range contacts {
-		items = append(items, knockItem{A: pk, E: ep(4 + i%2)})
+	items := []knockItem{{I: knockID(w.fc), E: ep(0)}, {I: knockID(w.roomPk), E: ep(1)}, {K: dummy, S: 9, E: ep(2)}, {I: strings.Repeat("ab", 16), E: ep(3)}}
+	for i, pk := range w.contacts {
+		items = append(items, knockItem{I: knockID(pk), E: ep(4 + i%2)})
 	}
-	raw, _ := json.Marshal(items)
-	var out struct{ Done []string }
-	if err := json.Unmarshal([]byte(knockRegister(string(raw))), &out); err != nil {
-		t.Fatal(err)
-	}
+	out := runRegister(t, items)
 	if len(out.Done) != len(items)-1 {
-		t.Fatalf("done %v: want every item but the stranger's", out.Done)
-	}
-	for _, d := range out.Done {
-		if d == stranger {
-			t.Fatal("an address the engine does not listen on was registered")
-		}
+		t.Fatalf("done %v: want every item but the unknown one", out.Done)
 	}
 
-	lanes := map[string]string{fc: laneFirstContact, roomPk: roomLane(hex.EncodeToString(room.pub[:])), dummyPk: knockSlotLane(9)}
-	for _, pk := range contacts {
+	lanes := map[string]string{w.fc: laneFirstContact, w.roomPk: roomLane(hex.EncodeToString(w.room.pub[:])), dummyPk: knockSlotLane(9)}
+	for _, pk := range w.contacts {
 		lanes[pk] = receiveLane(pk)
 	}
 	seen := map[string]string{}
@@ -159,7 +201,6 @@ func TestKnockRegisterGoesOnEachLaneToOurRelayOnly(t *testing.T) {
 			t.Fatalf("a registration for %s... came in on another lane than its address's", pk[:8])
 		}
 	}
-	// the slot without an address shares a circuit with no address
 	for pk, name := range seen {
 		if pk != dummyPk && name == seen[dummyPk] {
 			t.Fatal("a stand-in registration shared a lane with an address")
@@ -174,12 +215,100 @@ func TestKnockRegisterGoesOnEachLaneToOurRelayOnly(t *testing.T) {
 	}
 }
 
-func TestKnockRegisterOnlyOverTor(t *testing.T) {
-	useStandIns(t, "fast", nil)
-	if got := knockRegister(`[]`); !strings.HasPrefix(got, "error") {
-		t.Fatalf("a registration outside tor answered %q", got)
+// a route switch in the middle of a batch: nothing goes out direct, and
+// what was not sent before the switch stays unsent
+func TestKnockRouteSwitchEndsTheBatch(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 12)
+	knockAddresses("")
+	var sent atomic.Int32
+	old := knockPublish
+	knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
+		err := old(ctx, lane, ev)
+		if sent.Add(1) == 2 {
+			transportMode.Store("fast")
+			nostrResetClient()
+		}
+		return err
+	}
+	t.Cleanup(func() { knockPublish = old })
+	var items []knockItem
+	for _, pk := range w.contacts {
+		items = append(items, knockItem{I: knockID(pk), E: "https://push.example.org/up"})
+	}
+	out := runRegister(t, items)
+	if len(out.Done) >= len(items) {
+		t.Fatalf("all %d went after the route changed", len(out.Done))
+	}
+	for _, c := range own.snapshot() {
+		if _, viaTor := socks.nameOf(c.remote); !viaTor {
+			t.Fatal("a registration went out direct after the switch")
+		}
 	}
 }
+
+func TestKnockRegistersOnlyOnThePrivateRoute(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 2)
+	knockAddresses("")
+	transportMode.Store("fast")
+	nostrResetClient()
+	out := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: "https://push.example.org/up"}, {I: knockID(w.contacts[1]), E: ""}})
+	if len(out.Done) != 1 || out.Done[0] != knockID(w.contacts[1]) {
+		t.Fatalf("off the private route: done %v, want only the forget", out.Done)
+	}
+	for _, c := range own.snapshot() {
+		if _, viaTor := socks.nameOf(c.remote); !viaTor {
+			t.Fatal("a forget went outside tor")
+		}
+	}
+}
+
+// a forget still reaches an address that is no longer listened on, once
+// it was listed in this process; a registration does not
+func TestKnockForgetsAnAddressGone(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 2)
+	knockAddresses("")
+	w.unsubscribe(w.peers[0])
+	id := knockID(w.contacts[0])
+	out := runRegister(t, []knockItem{{I: id, E: "https://push.example.org/up"}})
+	if len(out.Done) != 0 {
+		t.Fatal("an address no longer listened on was registered")
+	}
+	out = runRegister(t, []knockItem{{I: id, E: ""}})
+	if len(out.Done) != 1 {
+		t.Fatalf("the forget for an address gone did not go: %v", out)
+	}
+}
+
+func TestKnockRegisterReportsDuplicates(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	w := knockSubs(t, 2)
+	knockAddresses("")
+	old := knockPublish
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+		if ev.PubKey.Hex() == w.contacts[0] {
+			return errorString("msg: duplicate: not newer than what is kept")
+		}
+		return nil
+	}
+	t.Cleanup(func() { knockPublish = old })
+	out := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: "https://p/u"}, {I: knockID(w.contacts[1]), E: "https://p/u"}})
+	if len(out.Dup) != 1 || out.Dup[0] != knockID(w.contacts[0]) || len(out.Done) != 1 {
+		t.Fatalf("got %+v", out)
+	}
+}
+
+type errorString string
+
+func (e errorString) Error() string { return string(e) }
 
 func TestKnockEventIsSignedByTheAddress(t *testing.T) {
 	sk := nostr2.GeneratePrivateKey()
@@ -237,6 +366,26 @@ func TestKnockCheckReadsTheRelayInfo(t *testing.T) {
 	srv.Close()
 	if got := knockCheck(); !strings.HasPrefix(got, "error") {
 		t.Fatalf("a relay that does not answer: %q", got)
+	}
+}
+
+// the check asks over a lane of its own, through tor
+func TestKnockCheckHasItsOwnLane(t *testing.T) {
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"tags": []string{knockTag}})
+	}))
+	defer srv.Close()
+	setRelays([]string{"ws" + strings.TrimPrefix(srv.URL, "http")})
+	if got := knockCheck(); got != "yes" {
+		t.Fatalf("check: %q", got)
+	}
+	if socks.countAs(laneName(laneKnockInfo)) == 0 {
+		t.Fatal("the check did not go on its own lane")
+	}
+	if socks.countAs(laneName(laneServices)) != 0 {
+		t.Fatal("the check went on the services lane")
 	}
 }
 

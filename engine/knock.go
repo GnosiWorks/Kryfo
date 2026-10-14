@@ -5,15 +5,23 @@ package main
 // endpoint when a wrap for an address registered with it arrives
 // (relay-live/knock.go). the app picks which of its sixteen endpoints each
 // address uses (helper_slots.dart); the engine lists the addresses with the
-// lane each one listens on, and signs and sends the registrations.
+// group each one belongs to, and signs and sends the registrations.
+//
+// the app never sees an address: it gets an id, a keyed hash of it, and the
+// groups are named the same way, so nothing it keeps in its settings names
+// an address. the hidden chats' addresses are left out: the everyday side
+// must not register what the vault holds.
 //
 // a registration is signed by the address's own key and goes to our relay
-// only, over the same lane, so over the same circuit, as the address's
-// subscription. it never travels outside tor. a slot with no address gets
-// a registration for a key that belongs to nothing, on a lane of its own.
+// only, over that address's lane, through tor's socks port whatever the
+// route: a route switch in the middle of a batch ends the batch. a slot with
+// no address gets a registration for a key that belongs to nothing, on a
+// lane of its own.
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -40,9 +48,13 @@ const (
 	knockTag = "knock/1"
 	// the most registrations sent at once, each on its lane's circuit
 	knockParallel = 4
+	// how far back the app may date a registration
+	knockBack = time.Hour
+	// the capability check's own lane: it ties to nothing else
+	laneKnockInfo = "knockinfo"
 )
 
-// the call's bound, the app waits a little longer (helper_push.dart)
+// the call's bound, the app waits a little longer (main.dart)
 var knockWait = 90 * time.Second
 
 // an address the engine listens on, with what it takes to register it
@@ -54,6 +66,8 @@ type knockTarget struct {
 	// one circuit. a first-contact address that is replaced listens on a
 	// new circuit, so each one is a group of its own
 	group string
+	// the peer behind a contact's address, for leaving hidden chats out
+	peer string
 }
 
 // rooms' addresses, noted as they are subscribed: their keys are not
@@ -61,6 +75,9 @@ type knockTarget struct {
 var (
 	knockNotesMu sync.Mutex
 	knockNotes   = map[string]knockTarget{}
+	// every address listed in this process, by id: a forget still reaches
+	// one that is no longer listened on
+	knockSeen = map[string]knockTarget{}
 )
 
 func noteKnockTarget(key string, t knockTarget) {
@@ -98,7 +115,7 @@ func knockTargets() []knockTarget {
 		case k == "firstcontact":
 			sk, pk, err := nip17FirstContactKeys(fc)
 			if err == nil {
-				out = append(out, knockTarget{pk, sk, laneFirstContact, "firstcontact:" + pk})
+				out = append(out, knockTarget{pk, sk, laneFirstContact, "firstcontact:" + pk, ""})
 			}
 		case isHexKey(k):
 			peer, err := peerArr(k)
@@ -108,7 +125,7 @@ func knockTargets() []knockTarget {
 			sk, pk, err := nip17RcvAddress(peer)
 			if err == nil {
 				lane := receiveLane(pk)
-				out = append(out, knockTarget{pk, sk, lane, lane})
+				out = append(out, knockTarget{pk, sk, lane, lane, strings.ToLower(k)})
 			}
 		}
 	}
@@ -124,22 +141,76 @@ func isHexKey(s string) bool {
 	return err == nil
 }
 
-// the addresses and their groups, as json: [{"a":addr,"g":group}]. no keys
-//
-//export HaloKnockAddresses
-func HaloKnockAddresses() *C.char {
-	return C.CString(knockAddresses())
+// a keyed hash under this identity: the same every start, and it says
+// nothing of what went in to whoever reads the app's settings
+func knockID(s string) string {
+	me, err := myXid()
+	if err != nil {
+		return ""
+	}
+	m := hmac.New(sha256.New, nostrHkdf(me.priv[:], nil, []byte("kryfo knock id"), 32))
+	m.Write([]byte(s))
+	return hex.EncodeToString(m.Sum(nil))[:32]
 }
 
-func knockAddresses() string {
+// the group as the app sees it: a contact lane by its number, the others by
+// a keyed hash, keeping the kind
+func knockGroupID(g string) string {
+	if strings.HasPrefix(g, laneEveryday+":") {
+		return g
+	}
+	kind := g
+	if i := strings.IndexByte(g, ':'); i >= 0 {
+		kind = g[:i]
+	}
+	return kind + ":" + knockID(g)[:16]
+}
+
+// the addresses listened on now, less the hidden chats' peers in exclude,
+// noted as seen. by id
+func knockLive(exclude []string) map[string]knockTarget {
+	skip := map[string]bool{}
+	for _, p := range exclude {
+		skip[strings.ToLower(p)] = true
+	}
+	out := map[string]knockTarget{}
+	targets := knockTargets()
+	knockNotesMu.Lock()
+	defer knockNotesMu.Unlock()
+	for _, t := range targets {
+		if t.peer != "" && skip[t.peer] {
+			continue
+		}
+		id := knockID(t.pk)
+		if id == "" {
+			continue
+		}
+		out[id] = t
+		knockSeen[id] = t
+	}
+	return out
+}
+
+// the addresses and their groups, as json: [{"i":id,"g":group}]. no
+// address, no key. exclude: a json list of peers whose addresses stay out
+//
+//export HaloKnockAddresses
+func HaloKnockAddresses(cExclude *C.char) *C.char {
+	return C.CString(knockAddresses(goStr(cExclude)))
+}
+
+func knockAddresses(excludeJSON string) string {
+	var exclude []string
+	json.Unmarshal([]byte(excludeJSON), &exclude)
 	type row struct {
-		A string `json:"a"`
+		I string `json:"i"`
 		G string `json:"g"`
 	}
 	rows := []row{}
-	for _, t := range knockTargets() {
-		rows = append(rows, row{t.pk, t.group})
+	for id, t := range knockLive(exclude) {
+		rows = append(rows, row{id, knockGroupID(t.group)})
 	}
+	slices.SortFunc(rows, func(a, b row) int { return strings.Compare(a.I, b.I) })
 	b, _ := json.Marshal(rows)
 	return string(b)
 }
@@ -167,8 +238,8 @@ func knockEvent(sk, pk, endpoint string, at time.Time) (nostr.Event, error) {
 
 // one registration to send
 type knockItem struct {
-	// the address, or for a slot with none, the key that stands in
-	A string `json:"a,omitempty"`
+	// the address's id, or for a slot with none, the key that stands in
+	I string `json:"i,omitempty"`
 	K string `json:"k,omitempty"`
 	S int    `json:"s,omitempty"`
 	E string `json:"e"`
@@ -177,9 +248,6 @@ type knockItem struct {
 	// when ahead of now or more than knockBack before it
 	T int64 `json:"t,omitempty"`
 }
-
-// how far back the app may date a registration
-const knockBack = time.Hour
 
 func (it knockItem) at(now time.Time) time.Time {
 	if it.T <= 0 {
@@ -192,13 +260,37 @@ func (it knockItem) at(now time.Time) time.Time {
 	return t
 }
 
+// a lane's client through tor's socks port, whatever the route: a route
+// switch cannot hand a registration a direct client
+func knockTorClient(lane string) (*http.Client, error) {
+	key := "tor:" + lane
+	cachedNostrClientMu.Lock()
+	defer cachedNostrClientMu.Unlock()
+	if c := cachedNostrClients[key]; c != nil {
+		return c, nil
+	}
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil {
+		return nil, fmt.Errorf("tor not started")
+	}
+	d, err := torDialerAs(context.Background(), t, laneName(lane))
+	if err != nil {
+		return nil, fmt.Errorf("tor dialer: %v", err)
+	}
+	c := torLaneClient(d.DialContext)
+	cachedNostrClients[key] = c
+	return c, nil
+}
+
 // sends one registration to our relay on lane. a var for the tests
 var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
 	own := ownRelays(relaysWhenSet(ctx))
 	if len(own) == 0 {
 		return fmt.Errorf("no relay")
 	}
-	client, err := torNostrClientFor(lane)
+	client, err := knockTorClient(lane)
 	if err != nil {
 		return err
 	}
@@ -207,16 +299,18 @@ var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error 
 		pctx, cancel := relayDialCtx(ctx, u)
 		last = publishTo(pctx, lane, u, client, ev)
 		cancel()
-		if last == nil {
-			return nil
+		if last == nil || strings.Contains(last.Error(), "duplicate:") {
+			return last
 		}
 	}
 	return last
 }
 
-// registers each item and answers {"done":[...]}: the addresses, and "s<n>"
-// for the slots without one, that our relay took. an address not listened
-// on now is left out
+// registers each item and answers {"done":[...],"dup":[...]}: the ids, and
+// "s<n>" for the slots without one, that our relay took, and those it said
+// were not newer than what it keeps. a registration needs the private
+// route and an address listened on now; a forget goes over tor on any
+// route, for any address listed in this process
 //
 //export HaloKnockRegister
 func HaloKnockRegister(cItems *C.char) *C.char {
@@ -224,35 +318,41 @@ func HaloKnockRegister(cItems *C.char) *C.char {
 }
 
 func knockRegister(raw string) string {
-	if !modeNeedsTor() {
-		return "error: only over tor"
-	}
 	var items []knockItem
 	if err := json.Unmarshal([]byte(raw), &items); err != nil {
 		return "error: bad items"
 	}
-	byPk := map[string]knockTarget{}
-	for _, t := range knockTargets() {
-		byPk[t.pk] = t
+	mode := currentMode()
+	routeC := routeEnded()
+	private := modeNeedsTor()
+	knockLiveIDs := map[string]bool{}
+	for id := range knockLive(nil) {
+		knockLiveIDs[id] = true
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), knockWait)
 	defer cancel()
 	now := time.Now()
 	var (
-		dmu  sync.Mutex
-		done = []string{}
-		wg   sync.WaitGroup
-		sem  = make(chan struct{}, knockParallel)
+		dmu       sync.Mutex
+		done, dup = []string{}, []string{}
+		wg        sync.WaitGroup
+		sem       = make(chan struct{}, knockParallel)
 	)
+	// the route the batch began on: anything not sent before it changes
+	// stays unsent
+	moved := func() bool { return currentMode() != mode || routeGone(routeC) }
 	for _, it := range items {
 		var sk, pk, lane, name string
+		forget := it.E == ""
 		switch {
-		case it.A != "":
-			t, ok := byPk[it.A]
-			if !ok {
+		case it.I != "":
+			knockNotesMu.Lock()
+			t, ok := knockSeen[it.I]
+			knockNotesMu.Unlock()
+			if !ok || (!forget && !knockLiveIDs[it.I]) {
 				continue
 			}
-			sk, pk, lane, name = t.sk, t.pk, t.lane, t.pk
+			sk, pk, lane, name = t.sk, t.pk, t.lane, it.I
 		case it.K != "" && it.S >= 0 && it.S < 64:
 			p, err := nostr2.GetPublicKey(it.K)
 			if err != nil {
@@ -260,6 +360,9 @@ func knockRegister(raw string) string {
 			}
 			sk, pk, lane, name = it.K, p, knockSlotLane(it.S), "s"+strconv.Itoa(it.S)
 		default:
+			continue
+		}
+		if !forget && !private {
 			continue
 		}
 		ev, err := knockEvent(sk, pk, it.E, it.at(now))
@@ -275,18 +378,26 @@ func knockRegister(raw string) string {
 				return
 			}
 			defer func() { <-sem }()
-			if err := knockPublish(ctx, lane, ev); err != nil {
-				log.Printf("knock: a registration on %s was not taken: %v", laneKind(lane), err)
+			if moved() {
 				return
 			}
+			err := knockPublish(ctx, lane, ev)
 			dmu.Lock()
-			done = append(done, name)
-			dmu.Unlock()
+			defer dmu.Unlock()
+			switch {
+			case err == nil:
+				done = append(done, name)
+			case strings.Contains(err.Error(), "duplicate:"):
+				dup = append(dup, name)
+			default:
+				log.Printf("knock: a registration on %s was not taken: %v", laneKind(lane), err)
+			}
 		}()
 	}
 	wg.Wait()
 	slices.Sort(done)
-	b, _ := json.Marshal(map[string][]string{"done": done})
+	slices.Sort(dup)
+	b, _ := json.Marshal(map[string][]string{"done": done, "dup": dup})
 	return string(b)
 }
 
@@ -312,12 +423,23 @@ func knockInfoURL(u string) (string, bool) {
 	return p.String(), true
 }
 
-// the services lane's client, a var for the tests
-var knockInfoClient = func(ctx context.Context) (*http.Client, error) { return servicesClient(ctx) }
+// the check's client, on its own lane. a var for the tests
+var knockInfoClient = func(ctx context.Context) (*http.Client, error) {
+	for {
+		c, err := knockTorClient(laneKnockInfo)
+		if err == nil {
+			return c, nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil, err
+		case <-time.After(servicesPoll):
+		}
+	}
+}
 
 // whether our relay can knock: "yes", "no", or why it could not be asked.
-// the relay's info page, over tor on the services lane, carries nothing
-// about who asks
+// the relay's info page, over tor, carries nothing about who asks
 //
 //export HaloKnockCheck
 func HaloKnockCheck() *C.char { return C.CString(knockCheck()) }
