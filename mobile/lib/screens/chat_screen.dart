@@ -871,10 +871,12 @@ class _ChatScreenState extends State<ChatScreen>
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
-  bool _sending = false;
-  // stickers and waves being sealed. the composer does not wait for them,
-  // a retry does
-  int _stickerSends = 0;
+  // sends being ground and sealed, typed or not. the composer does not
+  // wait for them, a retry does
+  int _sealing = 0;
+  // the composer's sends seal in the order they were sent: a later one
+  // grinds beside an earlier one and waits for it to be handed on
+  Future<void> _typedTurn = Future.value();
   // the pack's waving sticker, once the packs are read; null for the emoji
   (StickerPack, Sticker)? _hi;
   bool _hiKnown = false;
@@ -1558,7 +1560,7 @@ class _ChatScreenState extends State<ChatScreen>
   // goes, then it is shown as failed. the reconnect retry below covers the
   // offline case; this covers a route that was simply slow or flaky.
   void _autoRetryTick() {
-    if (!mounted || _sending || _stickerSends > 0 || _cannotSend()) return;
+    if (!mounted || _sealing > 0 || _cannotSend()) return;
     for (final m in _messages) {
       if (m.direction != 'out' ||
           !m.failed ||
@@ -2851,7 +2853,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _retry(_Msg msg, {bool claimed = false}) async {
-    if (_sending || _stickerSends > 0) return;
+    if (_sealing > 0) return;
     if (await _stillHeld(msg)) return;
     // still going, here or in the outbox, or it went after all: a second
     // copy is only a duplicate
@@ -3817,7 +3819,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
-    if (text.isEmpty || _sending || (_devOpening?.busy ?? false)) return;
+    if (text.isEmpty || (_devOpening?.busy ?? false)) return;
     await _sendBody(text);
   }
 
@@ -3853,6 +3855,9 @@ class _ChatScreenState extends State<ChatScreen>
     // claimed from the start: a reload while it grinds or seals keeps it
     // sending, and no retry sends it alongside
     appState.claimSend(msgUid);
+    final before = typed ? _typedTurn : null;
+    final turn = Completer<void>();
+    if (typed) _typedTurn = turn.future;
     var handed = false;
     try {
       final replyToUid = _replyTo?.msgUid;
@@ -3874,15 +3879,7 @@ class _ChatScreenState extends State<ChatScreen>
       );
       msg.preview = preview;
       onRow?.call(msg);
-      // a sticker or a wave leaves the composer as it is: what was typed
-      // stays typed
-      void sealing(bool on) {
-        if (typed) {
-          _sending = on;
-        } else {
-          _stickerSends += on ? 1 : -1;
-        }
-      }
+      void sealing(bool on) => _sealing += on ? 1 : -1;
 
       setState(() {
         _messages.add(msg);
@@ -3912,8 +3909,8 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: sticker?.value,
         );
       } catch (e) {
-        // a throw must not leave _sending true: that disables the composer
-        // and the auto retry until the chat is reopened
+        // a throw must not leave it counted: that holds the auto retry
+        // until the chat is reopened
         dlog('send: save failed: $e');
         if (!mounted) return;
         giveBack();
@@ -3977,6 +3974,7 @@ class _ChatScreenState extends State<ChatScreen>
             dlog('send: opener not kept (${e.runtimeType})');
           });
         }
+        if (before != null) await before;
         final prev = _encryptGate;
         final gate = Completer<void>();
         _encryptGate = gate.future;
@@ -4020,6 +4018,7 @@ class _ChatScreenState extends State<ChatScreen>
           .then((result) => _finishTextSend(msg, result));
     } finally {
       if (!handed) appState.releaseSend(msgUid);
+      turn.complete();
     }
   }
 
@@ -5558,7 +5557,6 @@ class _ChatScreenState extends State<ChatScreen>
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,
                             focusNode: _composerFocus,
-                            sending: _sending,
                             onSend: _send,
                             disguise: _voiceDisguise,
                             disguiseLocked: _devAnon,
@@ -7770,7 +7768,6 @@ class _EmptyConversation extends StatelessWidget {
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
-  final bool sending;
   final VoidCallback onSend;
   final bool ghost;
   final VoidCallback onToggleGhost;
@@ -7789,7 +7786,6 @@ class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     this.focusNode,
-    required this.sending,
     required this.onSend,
     required this.ghost,
     required this.onToggleGhost,
@@ -8011,9 +8007,10 @@ class _Composer extends StatelessWidget {
                 builder: (context, value, _) {
                   final still = motionStill(context);
                   final hasText = value.text.trim().isNotEmpty;
-                  final canSend = !sending && hasText;
+                  // a send still grinding takes the next one behind it
+                  final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut
-                  final Widget end = (!hasText && !sending)
+                  final Widget end = !hasText
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
                           child: HoldToTalkMic(
