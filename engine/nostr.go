@@ -1437,7 +1437,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
-			turn := subTurn{tag: tag, fresh: isFresh(ctx)}
+			turn := subTurn{tag: tag, fresh: freshOf(ctx)}
 			defer turn.done()
 			for {
 				// nothing is counted while it parks or waits for tor below:

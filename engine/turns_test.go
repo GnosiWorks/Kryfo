@@ -463,7 +463,7 @@ func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 	}
 	kickRelays()
 	spendFirstTurn()
-	fresh := subTurn{fresh: true}
+	fresh := subTurn{fresh: freshOf(asFresh(context.Background()))}
 	if !quick(&fresh) {
 		t.Fatal("a just-added address waited its first turn")
 	}
@@ -476,6 +476,55 @@ func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 	spendFirstTurn()
 	if quick(&fresh) {
 		t.Fatal("a wake after the first ask went without a turn")
+	}
+}
+
+// the free turn is the add's or the accept's own: one that comes only after
+// a wake, or long after, waits a turn as any address does, and so does a
+// redial after a free turn that did not get through
+func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	quick := func(tn *subTurn) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+		ok := tn.take(ctx)
+		tn.done()
+		return ok
+	}
+	// added offline: the runner parks, and asks only once the network is
+	// back, at its wake
+	kickRelays()
+	spendFirstTurn()
+	parked := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	kickRelays()
+	spendFirstTurn()
+	if quick(&parked) {
+		t.Fatal("an address added offline asked at the wake without a turn")
+	}
+	// added while tor was still starting: by the time it asks the free turn
+	// is long gone
+	now := time.Now()
+	oldNow := autoNow
+	defer func() { autoNow = oldNow }()
+	autoNow = func() time.Time { return now }
+	late := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	autoNow = func() time.Time { return now.Add(freshFor + time.Second) }
+	if quick(&late) {
+		t.Fatal("an address added long ago asked without a turn")
+	}
+	autoNow = oldNow
+	// a free turn whose dial failed: the next kick is a turn of its own
+	failed := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	if !quick(&failed) {
+		t.Fatal("a just-added address waited its first turn")
+	}
+	failed.dialed(false)
+	kickRelays()
+	spendFirstTurn()
+	if quick(&failed) {
+		t.Fatal("a wake after a failed free turn went without a turn")
 	}
 }
 
@@ -524,5 +573,31 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 	time.Sleep(time.Second)
 	if asked(mustRcv(t, again)) {
 		t.Fatal("an address listened for again asked without its turn")
+	}
+}
+
+// added with no network: its runner first asks after the wake, and then it
+// waits its turn there like every other address
+func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, relay)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	kickRelays()
+	spendFirstTurn()
+	added := newXid(t)
+	fresh := asFresh(ctx)
+	// the network comes back: a wake, whose free first turn someone else took
+	kickRelays()
+	spendFirstTurn()
+	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), added.pub, mustRcv(t, added))
+	time.Sleep(1500 * time.Millisecond)
+	for _, c := range relay.snapshot() {
+		if c.addrs[mustRcv(t, added)] {
+			t.Fatal("an address added offline asked at the wake without its turn")
+		}
 	}
 }
