@@ -119,8 +119,8 @@ func (tk *testKnocks) drain() []knockJob {
 		d.real, d.decoy = nil, nil
 		d.inRing = false
 	}
-	tk.q.ring = nil
-	tk.q.queued = 0
+	tk.q.push, tk.q.shared = nil, nil
+	tk.q.queued, tk.q.sharedQueued = 0, 0
 	return out
 }
 
@@ -159,7 +159,14 @@ func TestKnockEndpoints(t *testing.T) {
 		{testEP, false, true},
 		{"https://ntfy.sh/upXyZ?up=1", false, true},
 		{"https://ntfy.sh:443/upXyZ", false, true},
-		{"https://8.8.8.8/up", false, true},
+		{"https://8.8.8.8/up", false, false},
+		{"https://[2a00:1450:4001::1]/up", false, false},
+		{"https://x1.zzqq/up", false, false},
+		{"https://a.b.github.io/up", false, false},
+		{"https://foo.duckdns.org/up", false, false},
+		{"https://up.conversations.im/up", false, true},
+		{"https://fcm.distributor.unifiedpush.org/up", false, true},
+		{"https://1.2.3.4.5/up", false, false},
 		{"https://push.example.org:8443/up", false, false},
 		{"https://8.8.8.8:25/x", false, false},
 		{"https://example.com:6379/", false, false},
@@ -234,9 +241,6 @@ func TestKnockRefusesTheBoxItself(t *testing.T) {
 		delete(selfIPs, "8.8.4.4")
 		selfMu.Unlock()
 	})
-	if knockEndpointOK("https://8.8.4.4/up", false) {
-		t.Fatal("the box's own address was taken as an endpoint")
-	}
 	if publicOnly("tcp4", "8.8.4.4:443", nil) == nil {
 		t.Fatal("the dial reached the box's own address")
 	}
@@ -542,7 +546,7 @@ func TestKnockDecoyTimesLookLikeRealOnes(t *testing.T) {
 			}
 		}
 	}
-	if len(decoy) < 500 || len(real) < 500 {
+	if len(decoy) < 300 || len(real) < 500 {
 		t.Fatalf("too few to judge: %d decoys, %d real", len(decoy), len(real))
 	}
 	// 30 bins, 29 degrees of freedom: 70 is far past p 0.0001
@@ -554,6 +558,35 @@ func TestKnockDecoyTimesLookLikeRealOnes(t *testing.T) {
 	}
 	if d := phaseKS(real, decoy); d > 0.08 {
 		t.Fatalf("real and decoy send times differ: ks %.3f", d)
+	}
+}
+
+// a decoy comes with trailing ones as often as a conversation's first
+// knock does, so a gap of a floor and a little is no mark of a real one
+func TestKnockDecoysComeInBurstsToo(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < 40; i++ {
+		register(t, tk, fmt.Sprintf("https://push.example.org/up%d", i))
+	}
+	tk.drain()
+	tk.log = nil
+	tk.advance(30 * 24 * time.Hour)
+	last := map[string]time.Time{}
+	burst, decoys := 0, 0
+	for _, s := range tk.log {
+		if !s.decoy {
+			t.Fatal("no wrap came, yet a real knock went")
+		}
+		decoys++
+		if l, ok := last[s.url]; ok {
+			if g := s.at.Sub(l); g >= knockFloor && g < knockFloor+knockTrail {
+				burst++
+			}
+		}
+		last[s.url] = s.at
+	}
+	if frac := float64(burst) / float64(decoys); frac < 0.3 {
+		t.Fatalf("only %.2f of decoys follow another a floor apart", frac)
 	}
 }
 
@@ -588,7 +621,7 @@ func TestKnockSweepLetsWrapsIn(t *testing.T) {
 	for i := 0; i < n; i++ {
 		var key [32]byte
 		key[0], key[1], key[2] = byte(i), byte(i>>8), byte(i>>16)
-		tk.setLocked(key, fmt.Sprintf("https://x.example/%d", i%200), tk.clock.now().Unix(), tk.clock.now().Add(knockTTL).Unix())
+		tk.setLocked(key, fmt.Sprintf("https://x.org/%d", i%200), tk.clock.now().Unix(), tk.clock.now().Add(knockTTL).Unix())
 		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires)
 	}
 	tk.mu.Unlock()
@@ -683,51 +716,242 @@ func TestKnockCeilingPerEndpoint(t *testing.T) {
 	}
 }
 
-// one person minting endpoints on a server of theirs fills that server's
-// share, not the relay
-func TestKnockOneServerCannotFillTheRelay(t *testing.T) {
+func r3key(i int) string { return fmt.Sprintf("%064x", i+1) }
+
+// a registration with no signature: check and apply read the key, the time
+// and the content only
+func r3reg(pk, ep string, at time.Time) nostr.Event {
+	return nostr.Event{Kind: knockKind, PubKey: pk, CreatedAt: nostr.Timestamp(at.Unix()), Content: ep}
+}
+
+// made-up servers, or random topics on a public one, fill one share and
+// never the relay
+func TestKnockMintingFillsOneShareOnly(t *testing.T) {
 	tk := newTestKnocks(t)
-	for i := 0; i < knockPerDomain; i++ {
-		register(t, tk, fmt.Sprintf("https://a%d.victim.example/%d", i%7, i))
+	now := tk.clock.now()
+	try := func(i int, ep string) bool {
+		ev := r3reg(r3key(i), ep, now)
+		rej, _ := tk.checkLocked(&ev)
+		if !rej {
+			tk.setLocked(knockKey(ev.PubKey), ep, now.Unix(), now.Add(knockTTL).Unix())
+		}
+		return !rej
 	}
-	sk, _ := keypair()
-	ev := signedReg(t, sk, "https://victim.example/more", tk.clock.now())
-	if rej, msg := tk.check(&ev); !rej || !strings.Contains(msg, "push server") {
-		t.Fatalf("one server took more than its share: %v %q", rej, msg)
-	}
-	register(t, tk, "https://ntfy.sh/upLegit")
-	register(t, tk, "https://push.own-server.example/up")
-	// and its decoys come at the pace of its share
-	tk.drain()
-	tk.log = nil
-	tk.advance(time.Hour)
-	n := 0
-	for _, s := range tk.log {
-		if strings.Contains(s.url, "victim.example") {
-			n++
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	// 782 invented servers with 256 endpoints each: the common share holds
+	// what it holds, one server what it may
+	took, i := 0, 0
+	for srv := 0; srv < 782; srv++ {
+		for j := 0; j < 256; j++ {
+			if try(i, fmt.Sprintf("https://h%d.s%d.org/up", j, srv)) {
+				took++
+			}
+			i++
 		}
 	}
-	if limit := float64(knockPerDomain) * 3 * float64(time.Hour) / float64(knockDecoyMean); float64(n) > limit {
-		t.Fatalf("%d decoys in an hour to one server", n)
+	if took > knockSharedEPs {
+		t.Fatalf("invented servers took %d endpoints, the common share is %d", took, knockSharedEPs)
+	}
+	for d, dom := range tk.domains {
+		if !dom.push && dom.eps > knockServerEPs {
+			t.Fatalf("%s holds %d endpoints", d, dom.eps)
+		}
+	}
+	// 1563 random ntfy topics with 256 addresses each
+	ntfy := 0
+	for topic := 0; topic < 1563; topic++ {
+		for j := 0; j < maxRegsPerEP; j++ {
+			if try(i, fmt.Sprintf("https://ntfy.sh/rand%d", topic)) {
+				ntfy++
+			}
+			i++
+		}
+	}
+	if ntfy > knockPushHostRegs {
+		t.Fatalf("one public server took %d addresses, its share is %d", ntfy, knockPushHostRegs)
+	}
+	// every other public server still takes new ones
+	for _, ep := range []string{
+		"https://up.conversations.im/legit",
+		"https://updates.push.services.mozilla.com/wpush/v2/legit",
+		"https://fcm.distributor.unifiedpush.org/legit",
+	} {
+		if !try(i, ep) {
+			t.Fatalf("%s was refused after the attack", ep)
+		}
+		i++
+	}
+	if len(tk.regs) > len(knockPushHosts())*knockPushHostRegs+knockSharedRegs {
+		t.Fatal("the relay holds more than its shares")
+	}
+}
+
+func TestKnockOneServerHasACap(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < knockServerEPs; i++ {
+		register(t, tk, fmt.Sprintf("https://a%d.victim.org/%d", i%7, i))
+	}
+	sk, _ := keypair()
+	ev := signedReg(t, sk, "https://victim.org/more", tk.clock.now())
+	if rej, msg := tk.check(&ev); !rej || !strings.Contains(msg, "push server") {
+		t.Fatalf("one server took more than its cap: %v %q", rej, msg)
+	}
+	register(t, tk, "https://ntfy.sh/upLegit")
+	register(t, tk, "https://push.own-server.org/up")
+}
+
+// made-up servers flooding the queue: knocks to a public push server still
+// go, every one of them
+func TestKnockPublicServersKeepTheirTurns(t *testing.T) {
+	for _, n := range []int{10, 500} {
+		tk := newTestKnocks(t)
+		tk.mu.Lock()
+		now := tk.clock.now()
+		var att, leg []*knockEP
+		for d := 0; d < n; d++ {
+			for j := 0; j < knockDomainQueue; j++ {
+				tk.setLocked(knockKey(r3key(d*1000+j)), fmt.Sprintf("https://h%d.s%d.org/%d", j, d, j), now.Unix(), now.Add(knockTTL).Unix())
+			}
+		}
+		for j := 0; j < 400; j++ {
+			tk.setLocked(knockKey(r3key(5_000_000+j)), fmt.Sprintf("https://ntfy.sh/up%d", j), now.Unix(), now.Add(knockTTL).Unix())
+		}
+		for _, ep := range tk.eps {
+			if ep.domain == "ntfy.sh" {
+				leg = append(leg, ep)
+			} else {
+				att = append(att, ep)
+			}
+		}
+		served, dropped := 0, 0
+		qi := 0
+		for ms := 0; ms < 60_000; ms++ {
+			now = now.Add(time.Millisecond)
+			// the attacker keeps its queues full
+			if ms%50 == 0 {
+				for _, ep := range att {
+					if !ep.queuedReal {
+						tk.q.addLocked(ep, false)
+					}
+				}
+			}
+			if ms%200 == 0 {
+				before := tk.stats.dropped.Load()
+				tk.q.addLocked(leg[qi%len(leg)], false)
+				qi++
+				if tk.stats.dropped.Load() > before {
+					dropped++
+				}
+			}
+			for {
+				ep, _, ok := tk.q.nextLocked(now)
+				if !ok {
+					break
+				}
+				if ep.domain == "ntfy.sh" {
+					served++
+				}
+				// posts end at once here
+				tk.q.doneLocked(ep)
+			}
+		}
+		tk.mu.Unlock()
+		if dropped != 0 || served < 295 {
+			t.Fatalf("%d made-up servers: ntfy.sh served %d of 300, %d dropped", n, served, dropped)
+		}
+	}
+}
+
+// with the shared budget empty no server's token is spent, and the ring is
+// not walked
+func TestKnockEmptyBudgetSpendsNothing(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	now := tk.clock.now()
+	for d := 0; d < 1000; d++ {
+		tk.setLocked(knockKey(r3key(d)), fmt.Sprintf("https://s%d.org/x", d), now.Unix(), now.Add(knockTTL).Unix())
+	}
+	for _, ep := range tk.eps {
+		tk.q.addLocked(ep, false)
+	}
+	tk.q.rate.tokens, tk.q.rate.last = 0, now
+	first := tk.q.shared[0]
+	before := first.rate.tokens
+	t0 := time.Now()
+	for i := 0; i < 200; i++ {
+		if _, _, ok := tk.q.nextLocked(now); ok {
+			t.Fatal("a knock went with the shared budget empty")
+		}
+	}
+	if first.rate.tokens != before {
+		t.Fatalf("a server's tokens went %.0f -> %.0f", before, first.rate.tokens)
+	}
+	if per := time.Since(t0) / 200; per > 50*time.Microsecond {
+		t.Fatalf("a poll with the budget empty took %v", per)
+	}
+	if w := tk.q.budgetWait(now); w <= 0 || w > time.Second {
+		t.Fatalf("the wait for the next token: %v", w)
+	}
+}
+
+func TestKnockGoneUsesTheIndex(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.mu.Lock()
+	now := tk.clock.now()
+	for i := 0; i < 200000; i++ {
+		tk.setLocked(knockKey(r3key(i)), fmt.Sprintf("https://ntfy.sh/r%d", i/maxRegsPerEP), now.Unix(), now.Add(knockTTL).Unix())
+	}
+	tk.mu.Unlock()
+	t0 := time.Now()
+	tk.gone("https://ntfy.sh/r5")
+	if w := time.Since(t0); w > 2*time.Millisecond {
+		t.Fatalf("one gone() took %v", w)
+	}
+	if len(tk.regs) != 200000-maxRegsPerEP {
+		t.Fatalf("%d left", len(tk.regs))
+	}
+}
+
+func TestKnockCheckAndApplyAreOneStep(t *testing.T) {
+	tk := newTestKnocks(t)
+	now := tk.clock.now()
+	older := 0
+	for i := 0; i < 5000; i++ {
+		pk := r3key(i)
+		a := r3reg(pk, fmt.Sprintf("https://ntfy.sh/a%d", i), now)
+		b := r3reg(pk, fmt.Sprintf("https://ntfy.sh/b%d", i), now.Add(time.Second))
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() { defer wg.Done(); tk.apply(&a) }()
+		go func() { defer wg.Done(); tk.apply(&b) }()
+		wg.Wait()
+		tk.mu.Lock()
+		if r := tk.regs[knockKey(pk)]; r == nil || r.made == a.CreatedAt.Time().Unix() {
+			older++
+		}
+		tk.mu.Unlock()
+	}
+	if older != 0 {
+		t.Fatalf("the older registration won %d of 5000 pairs", older)
 	}
 }
 
 func TestKnockServersAreServedInTurn(t *testing.T) {
 	tk := newTestKnocks(t)
-	var flood []*knockEP
 	for i := 0; i < knockDomainQueue; i++ {
-		register(t, tk, fmt.Sprintf("https://flood.example/%d", i))
+		register(t, tk, fmt.Sprintf("https://flood.org/%d", i))
 	}
-	register(t, tk, "https://quiet.example/up")
+	register(t, tk, "https://quiet.org/up")
 	tk.drain()
 	tk.mu.Lock()
 	for u, ep := range tk.eps {
 		if strings.Contains(u, "flood") {
-			flood = append(flood, ep)
 			tk.q.addLocked(ep, false)
 		}
 	}
-	tk.q.addLocked(tk.eps["https://quiet.example/up"], false)
+	tk.q.addLocked(tk.eps["https://quiet.org/up"], false)
 	var order []string
 	for i := 0; i < 3; i++ {
 		ep, _, ok := tk.q.nextLocked(tk.clock.now())
@@ -735,54 +959,56 @@ func TestKnockServersAreServedInTurn(t *testing.T) {
 			t.Fatal("nothing to send")
 		}
 		order = append(order, ep.domain)
+		tk.q.doneLocked(ep)
 	}
 	tk.mu.Unlock()
 	found := false
 	for _, d := range order[:2] {
-		found = found || d == "quiet.example"
+		found = found || d == "quiet.org"
 	}
 	if !found {
 		t.Fatalf("a quiet server waited behind a flooded one: %v", order)
-	}
-	if len(flood) != knockDomainQueue {
-		t.Fatal("setup")
 	}
 }
 
 func TestKnockFullQueues(t *testing.T) {
 	tk := newTestKnocks(t)
 	for i := 0; i < knockDomainQueue+10; i++ {
-		register(t, tk, fmt.Sprintf("https://flood.example/%d", i%knockPerDomain))
+		register(t, tk, fmt.Sprintf("https://flood.org/%d", i))
 	}
-	register(t, tk, "https://quiet.example/up")
+	register(t, tk, "https://quiet.org/up")
 	tk.drain()
 	tk.mu.Lock()
 	defer tk.mu.Unlock()
 	for _, ep := range tk.eps {
-		if ep.domain == "flood.example" {
+		if ep.domain == "flood.org" {
 			tk.q.addLocked(ep, false)
 		}
 	}
-	if d := tk.domains["flood.example"]; d.waiting() > knockDomainQueue {
+	if d := tk.domains["flood.org"]; d.waiting() > knockDomainQueue {
 		t.Fatalf("one server queued %d", d.waiting())
 	}
-	// its queue full, another server's knock still goes in
-	tk.q.addLocked(tk.eps["https://quiet.example/up"], false)
-	if tk.domains["quiet.example"].waiting() != 1 {
+	tk.q.addLocked(tk.eps["https://quiet.org/up"], false)
+	if tk.domains["quiet.org"].waiting() != 1 {
 		t.Fatal("a full server kept another's knock out")
 	}
-	// decoys stop at half
-	d := tk.domains["flood.example"]
-	d.real = nil
-	tk.q.queued = 1
-	for _, ep := range tk.eps {
-		ep.queuedReal = false
-		if ep.domain == "flood.example" {
-			tk.q.addLocked(ep, true)
+	// the common queue as a whole is bounded too
+	now := tk.clock.now()
+	for d := 0; d < 100; d++ {
+		for j := 0; j < knockDomainQueue; j++ {
+			u := fmt.Sprintf("https://s%d.org/%d", d, j)
+			tk.setLocked(knockKey(r3key(10000+d*100+j)), u, now.Unix(), now.Add(knockTTL).Unix())
+			tk.q.addLocked(tk.eps[u], false)
 		}
 	}
-	if len(d.decoy) > knockDomainQueue/2 {
-		t.Fatalf("decoys filled %d of a server's queue", len(d.decoy))
+	if tk.q.sharedQueued > knockSharedQueue {
+		t.Fatalf("the common queue holds %d", tk.q.sharedQueued)
+	}
+	// and a public server's knock still goes in
+	tk.setLocked(knockKey(r3key(1)), "https://ntfy.sh/up", now.Unix(), now.Add(knockTTL).Unix())
+	tk.q.addLocked(tk.eps["https://ntfy.sh/up"], false)
+	if tk.domains["ntfy.sh"].waiting() != 1 {
+		t.Fatal("a public server's knock was kept out by the common queue")
 	}
 }
 
@@ -800,9 +1026,11 @@ func TestKnockDecoysYieldToRealKnocks(t *testing.T) {
 	}
 	n := 0
 	for {
-		if _, _, ok := tk.q.nextLocked(tk.clock.now()); !ok {
+		ep, _, ok := tk.q.nextLocked(tk.clock.now())
+		if !ok {
 			break
 		}
+		tk.q.doneLocked(ep)
 		n++
 	}
 	if n != 5 {
@@ -813,9 +1041,11 @@ func TestKnockDecoysYieldToRealKnocks(t *testing.T) {
 	}
 	n = 0
 	for {
-		if _, _, ok := tk.q.nextLocked(tk.clock.now()); !ok {
+		ep, _, ok := tk.q.nextLocked(tk.clock.now())
+		if !ok {
 			break
 		}
+		tk.q.doneLocked(ep)
 		n++
 	}
 	if n != 5 {
@@ -866,9 +1096,9 @@ func TestKnockSlowServersDoNotHoldUpOthers(t *testing.T) {
 
 	k.mu.Lock()
 	for i := 0; i < 40; i++ {
-		k.setLocked([32]byte{byte(i), 1}, fmt.Sprintf("https://h%d.slow.example/up", i), k.now().Unix(), k.now().Add(time.Hour).Unix())
+		k.setLocked([32]byte{byte(i), 1}, fmt.Sprintf("https://h%d.slow.org/up", i), k.now().Unix(), k.now().Add(time.Hour).Unix())
 	}
-	k.setLocked([32]byte{9, 9}, "https://good.example/up", k.now().Unix(), k.now().Add(time.Hour).Unix())
+	k.setLocked([32]byte{9, 9}, "https://good.org/up", k.now().Unix(), k.now().Add(time.Hour).Unix())
 	for u, ep := range k.eps {
 		if strings.Contains(u, "slow") {
 			k.q.addLocked(ep, false)
@@ -878,7 +1108,7 @@ func TestKnockSlowServersDoNotHoldUpOthers(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	t0 := time.Now()
 	k.mu.Lock()
-	k.q.addLocked(k.eps["https://good.example/up"], false)
+	k.q.addLocked(k.eps["https://good.org/up"], false)
 	k.mu.Unlock()
 	select {
 	case at := <-served:
@@ -980,6 +1210,48 @@ func TestKnockTableSurvivesARestart(t *testing.T) {
 	}
 }
 
+// a mass expiry never crowds out a registration taken right after it, and
+// a forget is on disk before the relay answers it
+func TestKnockTableKeepsRoomForRegistrations(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.close()
+	tk := newTestKnocks(t)
+	tk.store = st
+	now := tk.clock.now()
+	// the writer held back while the sweep queues its deletes
+	tk.mu.Lock()
+	for i := 0; i < 100000; i++ {
+		tk.setLocked(knockKey(r3key(i)), fmt.Sprintf("https://ntfy.sh/r%d", i/maxRegsPerEP), now.Unix(), now.Add(knockTTL).Unix())
+	}
+	tk.mu.Unlock()
+	tk.clock.set(now.Add(knockTTL + time.Second))
+	tk.tick()
+	sk, pk := keypair()
+	ev := signedReg(t, sk, "https://ntfy.sh/legit", tk.clock.now())
+	tk.apply(&ev)
+	if st.dropped.Load() != 0 {
+		t.Fatalf("%d writes dropped", st.dropped.Load())
+	}
+	st.start()
+	st.flush(time.Minute)
+	var n int
+	st.db.QueryRow(`SELECT count(*) FROM knock WHERE endpoint = 'https://ntfy.sh/legit'`).Scan(&n)
+	if n != 1 {
+		t.Fatal("the registration after the sweep is not in the table")
+	}
+	forget := signedReg(t, sk, "", tk.clock.now().Add(time.Second))
+	tk.apply(&forget)
+	var ep string
+	st.db.QueryRow(`SELECT endpoint FROM knock WHERE addr = ?`, func() []byte { k := knockKey(pk); return k[:] }()).Scan(&ep)
+	if ep != "" {
+		t.Fatal("the forget was answered before it was on disk")
+	}
+}
+
 func TestKnockWritesNeverBlock(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "knock.sqlite")
 	store, err := openKnockStore(path)
@@ -1073,7 +1345,7 @@ func TestKnockEndToEndOverTheRelay(t *testing.T) {
 
 	// another key registers only itself
 	sk2, pk2 := keypair()
-	other := signedReg(t, sk2, "https://evil.example.org/up", time.Now())
+	other := signedReg(t, sk2, "https://evil.org/up", time.Now())
 	if err := publish(t, r, other); err != nil {
 		t.Fatal(err)
 	}

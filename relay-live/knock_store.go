@@ -2,9 +2,13 @@ package main
 
 // the knock table: a hash of the address, the endpoint, the signed time and
 // the expiry. a forget is a row with no endpoint, kept for the skew window.
-// writes go through one goroutine in batches, never under the knocker's
-// lock, so a slow disk never holds up a wrap. the files are the relay
-// user's alone.
+// writes go through one goroutine in batches, never waited on under the
+// knocker's lock, so a slow disk never holds up a wrap. half the queue is
+// kept for registrations and forgets: the sweep's deletes may be skipped,
+// a start deletes what expired anyway. a forget is written before the
+// relay answers it. a registration is answered first: one lost in a crash
+// is sent again by the phone within days. the files are the relay user's
+// alone.
 
 import (
 	"database/sql"
@@ -59,7 +63,8 @@ func openKnockStore(path string) (*knockStore, error) {
 }
 
 // a row to write, or with made 0 to delete. never blocks: a write that
-// does not fit is dropped and counted, the registration stays in memory
+// does not fit is dropped, counted and logged, the registration stays in
+// memory
 func (s *knockStore) put(key [32]byte, ep string, made, expires int64) {
 	if s == nil {
 		return
@@ -67,8 +72,63 @@ func (s *knockStore) put(key [32]byte, ep string, made, expires int64) {
 	select {
 	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires}:
 	default:
-		s.dropped.Add(1)
+		s.drop()
 	}
+}
+
+// a delete for something expired: only into the lower half of the queue
+func (s *knockStore) putSweep(key [32]byte) {
+	if s == nil || len(s.ch) >= cap(s.ch)/2 {
+		return
+	}
+	select {
+	case s.ch <- knockOp{key: key}:
+	default:
+	}
+}
+
+// a row whose write is waited for: the returned channel closes once it is
+// on disk. nil when it could not be queued
+func (s *knockStore) putWait(key [32]byte, ep string, made, expires int64) chan struct{} {
+	if s == nil {
+		return nil
+	}
+	done := make(chan struct{})
+	select {
+	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires, done: done}:
+		return done
+	default:
+		s.drop()
+		return nil
+	}
+}
+
+// waits for a putWait, a few seconds at most
+func (s *knockStore) wait(done chan struct{}) {
+	if done == nil {
+		return
+	}
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+	}
+}
+
+var lastDropLog atomic.Int64
+
+func (s *knockStore) drop() {
+	n := s.dropped.Add(1)
+	now := time.Now().Unix()
+	if last := lastDropLog.Load(); now-last >= 60 && lastDropLog.CompareAndSwap(last, now) {
+		log.Printf("knock: the table writer is behind, %d writes dropped", n)
+	}
+}
+
+func (s *knockStore) droppedSwap() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.dropped.Swap(0)
 }
 
 func (s *knockStore) start() {
@@ -96,7 +156,7 @@ func (s *knockStore) write(batch []knockOp) {
 	tx, err := s.db.Begin()
 	if err == nil {
 		for _, op := range batch {
-			if op.done != nil {
+			if op.done != nil && op.made == 0 && op.ep == "" && op.key == ([32]byte{}) {
 				continue
 			}
 			if op.made == 0 {

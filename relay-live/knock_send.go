@@ -1,9 +1,11 @@
 package main
 
-// the posts. knocks wait per push server and the servers are served in
-// turn, so a server that is slow or flooded holds up its own knocks only.
-// each server has its own pace, and at most a couple of posts are in flight
-// to one address at a time. a post gets three seconds. an endpoint that
+// the posts. knocks wait per push server, and the servers are served in
+// turn, the well-known public ones and all the others by turns, so that
+// made-up servers can take at most half the turns, half the workers and
+// their own slice of the queue. each server has its own pace, at most a
+// couple of posts are in flight to one server and to one address, the
+// name lookup counted, and a post gets three seconds. an endpoint that
 // fails for a day on end is let go.
 
 import (
@@ -27,11 +29,16 @@ const (
 	knockPostTimeout  = 3 * time.Second
 	knockOnionTimeout = 30 * time.Second
 	knockWorkers      = 32
-	// knocks waiting, for everyone and per server
-	knockQueueLen      = 8192
-	knockDomainQueue   = 64
+	// workers the servers outside the list may hold at once
+	knockSharedWorkers = 16
+	// knocks waiting: one public push server, all the others together, and
+	// one of those
 	knockPushHostQueue = 2048
-	// posts in flight to one address
+	knockSharedQueue   = 1024
+	knockDomainQueue   = 64
+	// posts in flight to one server, and to one address
+	knockPerServer     = 2
+	knockPerPushServer = 8
 	knockPerIP         = 2
 	knockPerPushHostIP = 8
 	// how long a push server keeps a knock for a phone that is offline
@@ -55,10 +62,12 @@ type knockJob struct {
 type knockDomain struct {
 	name        string
 	push        bool
-	eps         int
+	eps, regs   int
 	real, decoy []*knockEP
 	inRing      bool
 	rate        *bucket
+	// posts in flight, from the name lookup on
+	inflight int
 }
 
 func (d *knockDomain) waiting() int { return len(d.real) + len(d.decoy) }
@@ -68,6 +77,13 @@ func (d *knockDomain) queueCap() int {
 		return knockPushHostQueue
 	}
 	return knockDomainQueue
+}
+
+func (d *knockDomain) busyCap() int {
+	if d.push {
+		return knockPerPushServer
+	}
+	return knockPerServer
 }
 
 func (k *knocker) domainLocked(name string) *knockDomain {
@@ -86,15 +102,19 @@ func (k *knocker) domainLocked(name string) *knockDomain {
 
 type knockQueue struct {
 	k *knocker
-	// servers with knocks waiting, served in turn
-	ring    []*knockDomain
-	queued  int
-	cond    *sync.Cond
-	rate    *bucket
-	ipBusy  map[string]int
-	stopped bool
-	post    func(ctx context.Context, endpoint string) (int, error)
-	resolve func(ctx context.Context, host string) ([]net.IP, error)
+	// servers with knocks waiting, served in turn: the public push servers
+	// in one ring, all the others in the other, the two by turns
+	push, shared []*knockDomain
+	turn         bool
+	// knocks waiting in the shared ring, and its posts in flight
+	sharedQueued, sharedBusy int
+	queued                   int
+	cond                     *sync.Cond
+	rate                     *bucket
+	ipBusy                   map[string]int
+	stopped                  bool
+	post                     func(ctx context.Context, endpoint string) (int, error)
+	resolve                  func(ctx context.Context, host string) ([]net.IP, error)
 }
 
 func (q *knockQueue) init(k *knocker) {
@@ -105,19 +125,36 @@ func (q *knockQueue) init(k *knocker) {
 	q.resolve = knockResolver("tcp4")
 }
 
+func (q *knockQueue) ringOf(d *knockDomain) *[]*knockDomain {
+	if d.push {
+		return &q.push
+	}
+	return &q.shared
+}
+
+func (q *knockQueue) ringAppend(d *knockDomain) {
+	if !d.inRing {
+		d.inRing = true
+		r := q.ringOf(d)
+		*r = append(*r, d)
+	}
+}
+
 // a knock to wait its turn. one of each kind per endpoint at most; decoys
-// only while the queues are less than half full
+// only while their queue is less than half full
 func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 	k := q.k
 	if k.eps[ep.url] != ep {
 		return
 	}
 	d := k.domainLocked(ep.domain)
+	full := d.waiting() >= d.queueCap() || (!d.push && q.sharedQueued >= knockSharedQueue)
+	half := d.waiting() >= d.queueCap()/2 || (!d.push && q.sharedQueued >= knockSharedQueue/2)
 	if decoy {
 		if ep.queuedDecoy || ep.queuedReal {
 			return
 		}
-		if q.queued >= knockQueueLen/2 || d.waiting() >= d.queueCap()/2 {
+		if half {
 			k.stats.dropped.Add(1)
 			return
 		}
@@ -127,7 +164,7 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		if ep.queuedReal {
 			return
 		}
-		if q.queued >= knockQueueLen || d.waiting() >= d.queueCap() {
+		if full {
 			k.stats.dropped.Add(1)
 			return
 		}
@@ -135,10 +172,10 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		d.real = append(d.real, ep)
 	}
 	q.queued++
-	if !d.inRing {
-		d.inRing = true
-		q.ring = append(q.ring, d)
+	if !d.push {
+		q.sharedQueued++
 	}
+	q.ringAppend(d)
 	q.cond.Signal()
 }
 
@@ -151,50 +188,96 @@ func without(s []*knockEP, ep *knockEP) ([]*knockEP, bool) {
 	return s, false
 }
 
+func (q *knockQueue) unqueued(d *knockDomain) {
+	q.queued--
+	if !d.push {
+		q.sharedQueued--
+	}
+}
+
 // an endpoint let go leaves the queue
 func (q *knockQueue) forgetLocked(d *knockDomain, ep *knockEP) {
 	var gone bool
 	if d.real, gone = without(d.real, ep); gone {
-		q.queued--
+		q.unqueued(d)
 	}
 	if d.decoy, gone = without(d.decoy, ep); gone {
-		q.queued--
+		q.unqueued(d)
 	}
 	ep.queuedReal, ep.queuedDecoy = false, false
 }
 
-// the next knock: the next server in turn with a knock and pace to spare,
-// a real knock before a decoy. ok false when none may go now
+// how long until the shared budget has a token
+func (q *knockQueue) budgetWait(now time.Time) time.Duration {
+	q.rate.takeN(now, 0)
+	if q.rate.tokens >= 1 {
+		return 0
+	}
+	if q.rate.perSec <= 0 {
+		return time.Hour
+	}
+	return time.Duration((1 - q.rate.tokens) / q.rate.perSec * float64(time.Second))
+}
+
+// the next knock: the two rings by turns, each server in its ring in turn,
+// a real knock before a decoy, from a server with pace to spare and room
+// for another post. nothing is walked while the shared budget is empty,
+// and no server's token is spent unless the shared budget gives one too.
+// the server's in-flight count is taken here, before the name lookup
 func (q *knockQueue) nextLocked(now time.Time) (ep *knockEP, decoy, ok bool) {
-	for n := len(q.ring); n > 0; n-- {
-		d := q.ring[0]
-		q.ring = q.ring[1:]
+	if q.budgetWait(now) > 0 {
+		return nil, false, false
+	}
+	q.turn = !q.turn
+	rings := []*[]*knockDomain{&q.push, &q.shared}
+	if q.turn {
+		rings[0], rings[1] = rings[1], rings[0]
+	}
+	for _, r := range rings {
+		if ep, decoy, ok = q.fromRing(r, now); ok {
+			return
+		}
+	}
+	return nil, false, false
+}
+
+func (q *knockQueue) fromRing(r *[]*knockDomain, now time.Time) (ep *knockEP, decoy, ok bool) {
+	for n := len(*r); n > 0; n-- {
+		d := (*r)[0]
+		*r = (*r)[1:]
 		d.inRing = false
 		if d.waiting() == 0 {
 			continue
 		}
-		requeue := func() {
-			d.inRing = true
-			q.ring = append(q.ring, d)
+		requeue := func() { q.ringAppend(d) }
+		if d.inflight >= d.busyCap() || (!d.push && q.sharedBusy >= knockSharedWorkers) {
+			requeue()
+			continue
+		}
+		d.rate.takeN(now, 0)
+		if d.rate.tokens < 1 {
+			requeue()
+			continue
 		}
 		if len(d.real) > 0 {
-			if !d.rate.take(now) || !q.rate.take(now) {
-				requeue()
-				continue
-			}
 			ep, d.real = d.real[0], d.real[1:]
 			ep.queuedReal = false
 		} else {
 			// decoys only while more than half the second's budget is left
-			q.rate.takeN(now, 0)
-			if q.rate.tokens <= q.rate.max/2 || !d.rate.take(now) || !q.rate.take(now) {
+			if q.rate.tokens <= q.rate.max/2 {
 				requeue()
 				continue
 			}
 			ep, d.decoy = d.decoy[0], d.decoy[1:]
 			ep.queuedDecoy, decoy = false, true
 		}
-		q.queued--
+		d.rate.take(now)
+		q.rate.take(now)
+		q.unqueued(d)
+		d.inflight++
+		if !d.push {
+			q.sharedBusy++
+		}
 		if d.waiting() > 0 {
 			requeue()
 		}
@@ -203,22 +286,43 @@ func (q *knockQueue) nextLocked(now time.Time) (ep *knockEP, decoy, ok bool) {
 	return nil, false, false
 }
 
+// a post is over: its server's in-flight count goes back
+func (q *knockQueue) doneLocked(ep *knockEP) {
+	d := q.k.domains[ep.domain]
+	if d == nil {
+		return
+	}
+	d.inflight--
+	if !d.push {
+		q.sharedBusy--
+	}
+	if d.eps <= 0 && d.waiting() == 0 && d.inflight == 0 {
+		delete(q.k.domains, ep.domain)
+	}
+}
+
 // waits for a knock that may go. false once stopped
 func (q *knockQueue) take() (ep *knockEP, decoy, ok bool) {
 	k := q.k
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	for !q.stopped {
-		if ep, decoy, ok = q.nextLocked(k.now()); ok {
+		now := k.now()
+		if ep, decoy, ok = q.nextLocked(now); ok {
 			return
 		}
 		if q.queued == 0 {
 			q.cond.Wait()
 			continue
 		}
-		// knocks wait on their pace: look again shortly
+		// the shared budget empty: until its next token. a server's pace
+		// or room: look again shortly
+		wait := q.budgetWait(now)
+		if wait <= 0 || wait > time.Second {
+			wait = 20 * time.Millisecond
+		}
 		k.mu.Unlock()
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(wait)
 		k.mu.Lock()
 	}
 	return nil, false, false
@@ -251,8 +355,14 @@ func (q *knockQueue) start(ctx context.Context) {
 // one post. false when it could not go now and waits again
 func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 	k := q.k
+	release := func() {
+		k.mu.Lock()
+		q.doneLocked(ep)
+		k.mu.Unlock()
+	}
 	u, err := url.Parse(ep.url)
 	if err != nil {
+		release()
 		k.gone(ep.url)
 		return true
 	}
@@ -264,6 +374,7 @@ func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 		ips, err = q.resolve(rctx, host)
 		cancel()
 		if err != nil || len(ips) == 0 {
+			release()
 			q.result(ep, decoy, 0, errNotPublic)
 			return true
 		}
@@ -275,6 +386,7 @@ func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 	}
 	k.mu.Lock()
 	if q.ipBusy[ipKey] >= limit {
+		q.doneLocked(ep)
 		q.addLocked(ep, decoy)
 		k.mu.Unlock()
 		return false
@@ -290,6 +402,7 @@ func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 	if q.ipBusy[ipKey]--; q.ipBusy[ipKey] <= 0 {
 		delete(q.ipBusy, ipKey)
 	}
+	q.doneLocked(ep)
 	k.mu.Unlock()
 	q.result(ep, decoy, code, err)
 	return true
@@ -364,8 +477,13 @@ func publicIP(ip net.IP) bool {
 		ip[0] == 0x00 && ip[1] == 0x64 && ip[2] == 0xff && ip[3] == 0x9b,
 		ip[0] == 0x20 && ip[1] == 0x02,
 		ip[0] == 0x20 && ip[1] == 0x01 && ip[2] == 0 && ip[3] == 0,
-		// documentation, discard-only, site-local
+		// documentation (2001:db8::/32, 3fff::/20), benchmarking
+		// (2001:2::/48), segment routing (5f00::/16), discard-only,
+		// site-local
 		ip[0] == 0x20 && ip[1] == 0x01 && ip[2] == 0x0d && ip[3] == 0xb8,
+		ip[0] == 0x3f && ip[1] == 0xff && ip[2]&0xf0 == 0,
+		ip[0] == 0x20 && ip[1] == 0x01 && ip[2] == 0 && ip[3] == 0x02 && ip[4] == 0 && ip[5] == 0,
+		ip[0] == 0x5f && ip[1] == 0x00,
 		ip[0] == 0x01 && allZero(ip[1:8]),
 		ip[0] == 0xfe && ip[1]&0xc0 == 0xc0:
 		return false

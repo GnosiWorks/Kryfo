@@ -17,10 +17,13 @@ package main
 // timing says less about when anything arrived. real and decoy knocks are
 // the same request and keep the same floor.
 //
-// endpoints are counted, queued and paced per push server (its registrable
-// domain), so one person's endpoints fill their own server's share and
-// queue, not everyone's. see knock_send.go for the posts, knock_store.go
-// for the table.
+// endpoints are counted, queued and paced per push server, its registrable
+// domain under an icann suffix. each well-known public push server has a
+// share of its own; every other server shares one, and each of those has a
+// small cap inside it. so minting endpoints, on random topics of a public
+// server or on made-up servers, fills one share and never the relay. no ip
+// literal, no private suffix (github.io and the like), no made-up tld. see
+// knock_send.go for the posts, knock_store.go for the table.
 //
 // no proof of work on registrations: a phone would pay for it what a
 // desktop pays a hundred times faster, so it slows the people it is meant
@@ -62,10 +65,8 @@ const (
 	// get one more knock when the minute is up, a little later still
 	knockFloor = time.Minute
 	knockTrail = 30 * time.Second
-	// registrations, endpoints and addresses per endpoint, for everyone
-	// together. the phone uses sixteen endpoints whatever its contacts
-	maxKnockRegs     = 400000
-	maxKnockEPs      = 200000
+	// addresses per endpoint. the phone uses sixteen endpoints whatever
+	// its contacts
 	maxRegsPerEP     = 256
 	maxEndpointLen   = 512
 	knockTick        = 30 * time.Second
@@ -74,22 +75,32 @@ const (
 	knockFailAtLeast = 5
 )
 
-// the mean gap between decoys to one endpoint. a phone has sixteen
-// endpoints, so at four hours it gets one every fifteen minutes, as many
+// the mean gap between decoy bursts to one endpoint. a burst is one decoy,
+// and like a conversation's knocks it is followed by more a floor and a
+// random while apart, this often each: two on average. a phone has sixteen
+// endpoints, so at eight hours it gets about four decoys an hour, as many
 // check-ins as its own timer adds
-var knockDecoyMean = time.Duration(envInt("RELAY_KNOCK_DECOY_MIN", 240)) * time.Minute
+var knockDecoyMean = time.Duration(envInt("RELAY_KNOCK_DECOY_MIN", 480)) * time.Minute
 
-// endpoints one push server may hold: a server of one's own, or one we do
-// not know, holds what sixteen phones use; the big public ones far more
+const knockDecoyMore = 0.5
+
+// the shares. each well-known push server holds its own, every other
+// server shares one, and one server outside the list holds what about
+// sixty-four phones use. the relay holds no more than the shares add up to
 var (
-	knockPerDomain   = envInt("RELAY_KNOCK_PER_DOMAIN", 256)
-	knockPerPushHost = envInt("RELAY_KNOCK_PER_PUSH_HOST", 100000)
+	knockPushHostEPs  = envInt("RELAY_KNOCK_PUSH_HOST_EPS", 20000)
+	knockPushHostRegs = envInt("RELAY_KNOCK_PUSH_HOST_REGS", 80000)
+	knockSharedEPs    = envInt("RELAY_KNOCK_SHARED_EPS", 10000)
+	knockSharedRegs   = envInt("RELAY_KNOCK_SHARED_REGS", 40000)
+	knockServerEPs    = envInt("RELAY_KNOCK_SERVER_EPS", 1024)
+	knockServerRegs   = envInt("RELAY_KNOCK_SERVER_REGS", 4096)
 )
 
-// the public push servers, by registrable domain: ntfy, conversations'
-// unifiedpush server, mozilla's autopush (sunup and the web push ones)
+// the public push servers, by registrable domain: ntfy and the envs.net
+// community ntfy, conversations' unifiedpush server, the unifiedpush fcm
+// distributor, mozilla's autopush (sunup and the web push ones)
 func knockPushHosts() map[string]bool {
-	list := "ntfy.sh,conversations.im,mozilla.com"
+	list := "ntfy.sh,envs.net,conversations.im,unifiedpush.org,mozilla.com"
 	if v, ok := os.LookupEnv("RELAY_KNOCK_PUSH_HOSTS"); ok {
 		list = v
 	}
@@ -115,8 +126,8 @@ func knockPorts() map[string]bool {
 
 type knockEP struct {
 	url, domain string
-	// addresses registered to it
-	regs int
+	// addresses registered to it, by key
+	keys map[[32]byte]struct{}
 	// the last knock out, real or decoy, and whether one waits for the floor
 	last     time.Time
 	trailing bool
@@ -137,12 +148,16 @@ type knockReg struct {
 
 type knockStats struct{ real, decoys, failed, dropped, gone atomic.Int64 }
 
+// what one share holds: a public push server's, or everyone else's
+type knockShare struct{ eps, regs, epCap, regCap int }
+
 type knocker struct {
 	mu      sync.Mutex
 	regs    map[[32]byte]*knockReg
 	forgets map[[32]byte]int64
 	eps     map[string]*knockEP
 	domains map[string]*knockDomain
+	shares  map[string]*knockShare
 	store   *knockStore
 	now     func() time.Time
 	rnd     *rand.Rand
@@ -166,6 +181,7 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		forgets: map[[32]byte]int64{},
 		eps:     map[string]*knockEP{},
 		domains: map[string]*knockDomain{},
+		shares:  map[string]*knockShare{},
 		store:   store,
 		now:     time.Now,
 		rnd:     rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64())),
@@ -179,21 +195,46 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 	return k
 }
 
-// the push server an endpoint belongs to: its registrable domain, or the
-// host itself for an address or an onion. "" for one that has none
+// the push server an endpoint belongs to: its registrable domain under an
+// icann suffix, or an onion's own name. "" for an address, a private
+// suffix or a tld that does not exist
 func knockDomainOf(host string) string {
-	host = strings.ToLower(strings.TrimSuffix(host, "."))
-	if host == "" {
+	host = strings.ToLower(host)
+	if host == "" || strings.HasSuffix(host, ".") || strings.ContainsAny(host, "[]:%") {
 		return ""
 	}
-	if net.ParseIP(host) != nil || strings.HasSuffix(host, ".onion") {
+	if net.ParseIP(host) != nil {
+		return ""
+	}
+	if strings.HasSuffix(host, ".onion") {
 		return host
+	}
+	if _, icann := publicsuffix.PublicSuffix(host); !icann {
+		return ""
 	}
 	d, err := publicsuffix.EffectiveTLDPlusOne(host)
 	if err != nil {
 		return ""
 	}
 	return d
+}
+
+// the share a server's endpoints count in: its own for a known public push
+// server, the common one ("") for any other
+func (k *knocker) shareOf(domain string) (string, *knockShare) {
+	name := ""
+	if k.push[domain] {
+		name = domain
+	}
+	sh := k.shares[name]
+	if sh == nil {
+		sh = &knockShare{epCap: knockSharedEPs, regCap: knockSharedRegs}
+		if name != "" {
+			sh.epCap, sh.regCap = knockPushHostEPs, knockPushHostRegs
+		}
+		k.shares[name] = sh
+	}
+	return name, sh
 }
 
 // a host written as a number in any base, which a resolver may read as an
@@ -244,11 +285,7 @@ func (k *knocker) endpointOK(raw string) bool {
 	if port != "" && !k.ports[port] {
 		return false
 	}
-	if ip := net.ParseIP(host); ip != nil {
-		if !publicIP(ip) || selfIP(ip) {
-			return false
-		}
-	} else if numericHost(host) {
+	if net.ParseIP(host) != nil || numericHost(host) {
 		return false
 	}
 	return knockDomainOf(host) != ""
@@ -258,13 +295,6 @@ func (k *knocker) endpointOK(raw string) bool {
 func knockEndpointOK(raw string, onions bool) bool {
 	k := &knocker{onions: onions, ports: knockPorts()}
 	return k.endpointOK(raw)
-}
-
-func (k *knocker) domainCap(d string) int {
-	if k.push[d] {
-		return knockPerPushHost
-	}
-	return knockPerDomain
 }
 
 // what is kept for an address: the time of its registration or of its
@@ -288,6 +318,12 @@ func (k *knocker) keptLocked(key [32]byte) (made int64, forget, any bool) {
 // or forget it: the harm stays on that pair's lane. the ±skew window and
 // newer-wins keep them from pinning a registration further ahead than that
 func (k *knocker) check(ev *nostr.Event) (bool, string) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	return k.checkLocked(ev)
+}
+
+func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 	if len(ev.Tags) != 0 {
 		return true, "invalid: a knock registration has no tags"
 	}
@@ -310,8 +346,6 @@ func (k *knocker) check(ev *nostr.Event) (bool, string) {
 	}
 	key := knockKey(ev.PubKey)
 	made := int64(ev.CreatedAt)
-	k.mu.Lock()
-	defer k.mu.Unlock()
 	if kept, wasForget, any := k.keptLocked(key); any {
 		// newer wins; in the same second a forget beats a registration
 		if made < kept || (made == kept && !(forget && !wasForget)) {
@@ -323,49 +357,60 @@ func (k *knocker) check(ev *nostr.Event) (bool, string) {
 	}
 	reg := k.regs[key]
 	ep := k.eps[ev.Content]
-	if reg == nil && len(k.regs) >= maxKnockRegs {
-		return true, "error: the relay is full, try later"
+	if reg != nil && reg.ep == ep {
+		// a renewal takes nothing new
+		return false, ""
 	}
+	name, sh := k.shareOf(domain)
+	d := k.domains[domain]
 	if ep == nil {
-		if len(k.eps) >= maxKnockEPs {
-			return true, "error: the relay is full, try later"
-		}
-		if d := k.domains[domain]; d != nil && d.eps >= k.domainCap(domain) {
+		if sh.eps >= sh.epCap {
 			return true, "error: this push server has all the endpoints it may"
 		}
-	}
-	if ep != nil && ep.regs >= maxRegsPerEP && (reg == nil || reg.ep != ep) {
+		if name == "" && d != nil && d.eps >= knockServerEPs {
+			return true, "error: this push server has all the endpoints it may"
+		}
+	} else if len(ep.keys) >= maxRegsPerEP {
 		return true, "error: too many addresses on one endpoint"
+	}
+	if sh.regs >= sh.regCap || (name == "" && d != nil && d.regs >= knockServerRegs) {
+		return true, "error: this push server has all the addresses it may"
 	}
 	return false, ""
 }
 
-// takes a registration that passed check
+// takes a registration, checked again in the same step, so two at once for
+// one address end with the newer. a forget is on disk before the relay
+// answers it: a crash right after cannot bring the registration back
 func (k *knocker) apply(ev *nostr.Event) {
 	if ev.Kind != knockKind {
-		return
-	}
-	if rej, _ := k.check(ev); rej {
 		return
 	}
 	key := knockKey(ev.PubKey)
 	made := int64(ev.CreatedAt)
 	k.mu.Lock()
-	defer k.mu.Unlock()
+	if rej, _ := k.checkLocked(ev); rej {
+		k.mu.Unlock()
+		return
+	}
 	if ev.Content == "" {
 		// only a forget that took something is kept: one for nothing
 		// guards nothing
 		if k.regs[key] == nil {
+			k.mu.Unlock()
 			return
 		}
 		k.dropLocked(key)
 		k.forgets[key] = made
-		k.store.put(key, "", made, made+int64(knockSkew/time.Second))
+		done := k.store.putWait(key, "", made, made+int64(knockSkew/time.Second))
+		k.mu.Unlock()
+		k.store.wait(done)
 		return
 	}
 	delete(k.forgets, key)
 	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
 	k.store.put(key, ev.Content, made, k.regs[key].expires)
+	k.mu.Unlock()
 }
 
 func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) {
@@ -377,14 +422,23 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 		k.dropLocked(key)
 	}
 	ep := k.eps[endpoint]
+	d := (*knockDomain)(nil)
 	if ep == nil {
 		u, _ := url.Parse(endpoint)
-		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname())}
+		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname()), keys: map[[32]byte]struct{}{}}
 		k.eps[endpoint] = ep
-		k.domainLocked(ep.domain).eps++
+		d = k.domainLocked(ep.domain)
+		d.eps++
+		_, sh := k.shareOf(ep.domain)
+		sh.eps++
 		k.decoyLocked(ep)
+	} else {
+		d = k.domainLocked(ep.domain)
 	}
-	ep.regs++
+	ep.keys[key] = struct{}{}
+	d.regs++
+	_, sh := k.shareOf(ep.domain)
+	sh.regs++
 	k.regs[key] = &knockReg{ep: ep, made: made, expires: expires}
 }
 
@@ -394,8 +448,13 @@ func (k *knocker) dropLocked(key [32]byte) {
 		return
 	}
 	delete(k.regs, key)
-	reg.ep.regs--
-	if reg.ep.regs <= 0 {
+	delete(reg.ep.keys, key)
+	if d := k.domains[reg.ep.domain]; d != nil {
+		d.regs--
+	}
+	_, sh := k.shareOf(reg.ep.domain)
+	sh.regs--
+	if len(reg.ep.keys) == 0 {
 		k.dropEPLocked(reg.ep)
 	}
 }
@@ -407,10 +466,12 @@ func (k *knocker) dropEPLocked(ep *knockEP) {
 	delete(k.eps, ep.url)
 	// its timers and queue places see it gone and do nothing
 	ep.decoyGen++
+	_, sh := k.shareOf(ep.domain)
+	sh.eps--
 	if d := k.domains[ep.domain]; d != nil {
 		d.eps--
 		k.q.forgetLocked(d, ep)
-		if d.eps <= 0 && d.waiting() == 0 {
+		if d.eps <= 0 && d.waiting() == 0 && d.inflight == 0 {
 			delete(k.domains, ep.domain)
 		}
 	}
@@ -435,8 +496,29 @@ func (k *knocker) decoyDue(ep *knockEP, gen int) {
 	if k.eps[ep.url] != ep || ep.decoyGen != gen {
 		return
 	}
-	k.ringLocked(ep, true)
+	if k.ringLocked(ep, true) {
+		k.decoyMoreLocked(ep, gen)
+	}
 	k.decoyLocked(ep)
+}
+
+// a decoy is followed, as a conversation's first knock is, by another a
+// floor and a random while later, this often, and that one again
+func (k *knocker) decoyMoreLocked(ep *knockEP, gen int) {
+	if k.rnd.Float64() >= knockDecoyMore {
+		return
+	}
+	wait := k.floor + time.Duration(k.rnd.Int64N(int64(knockTrail)))
+	k.after(wait, func() {
+		k.mu.Lock()
+		defer k.mu.Unlock()
+		if k.eps[ep.url] != ep || ep.decoyGen != gen+1 {
+			return
+		}
+		if k.ringLocked(ep, true) {
+			k.decoyMoreLocked(ep, gen)
+		}
+	})
 }
 
 // a wrap was stored: knock each registered address it names
@@ -462,25 +544,27 @@ func (k *knocker) wrapFor(addr string) {
 }
 
 // one knock now if the floor allows, or one when it is up and a random
-// while more, so the trailing knock keeps no fixed distance from the last
-func (k *knocker) ringLocked(ep *knockEP, decoy bool) {
+// while more, so the trailing knock keeps no fixed distance from the last.
+// true when one went into the queue now
+func (k *knocker) ringLocked(ep *knockEP, decoy bool) bool {
 	// a trailing knock on its way carries this one too
 	if ep.trailing {
-		return
+		return false
 	}
 	now := k.now()
 	if wait := ep.last.Add(k.floor).Sub(now); wait > 0 {
 		// a decoy inside the floor is not needed: a knock just went
 		if decoy {
-			return
+			return false
 		}
 		ep.trailing = true
 		wait += time.Duration(k.rnd.Int64N(int64(knockTrail)))
 		k.after(wait, func() { k.trail(ep) })
-		return
+		return false
 	}
 	ep.last = now
 	k.q.addLocked(ep, decoy)
+	return true
 }
 
 func (k *knocker) trail(ep *knockEP) {
@@ -503,11 +587,9 @@ func (k *knocker) gone(endpoint string) {
 	if ep == nil {
 		return
 	}
-	var keys [][32]byte
-	for key, reg := range k.regs {
-		if reg.ep == ep {
-			keys = append(keys, key)
-		}
+	keys := make([][32]byte, 0, len(ep.keys))
+	for key := range ep.keys {
+		keys = append(keys, key)
 	}
 	for _, key := range keys {
 		k.dropLocked(key)
@@ -529,8 +611,9 @@ func (k *knocker) tick() {
 				break
 			}
 			if reg.expires <= now {
+				// the table's copy may stay: a start deletes what expired
 				k.dropLocked(key)
-				k.store.put(key, "", 0, 0)
+				k.store.putSweep(key)
 				n++
 			}
 		}
@@ -540,7 +623,7 @@ func (k *knocker) tick() {
 			}
 			if made+int64(knockSkew/time.Second) <= now {
 				delete(k.forgets, key)
-				k.store.put(key, "", 0, 0)
+				k.store.putSweep(key)
 				n++
 			}
 		}
@@ -575,8 +658,8 @@ func (k *knocker) logStats() {
 	regs, eps, doms := len(k.regs), len(k.eps), len(k.domains)
 	k.mu.Unlock()
 	s := &k.stats
-	log.Printf("knock: %d registrations, %d endpoints on %d servers, last hour %d knocks, %d decoys, %d failed, %d dropped, %d gone",
-		regs, eps, doms, s.real.Swap(0), s.decoys.Swap(0), s.failed.Swap(0), s.dropped.Swap(0), s.gone.Swap(0))
+	log.Printf("knock: %d registrations, %d endpoints on %d servers, last hour %d knocks, %d decoys, %d failed, %d dropped, %d gone, %d table writes dropped",
+		regs, eps, doms, s.real.Swap(0), s.decoys.Swap(0), s.failed.Swap(0), s.dropped.Swap(0), s.gone.Swap(0), k.store.droppedSwap())
 }
 
 // ---- wiring ----
