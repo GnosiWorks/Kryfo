@@ -75,9 +75,6 @@ type knockTarget struct {
 var (
 	knockNotesMu sync.Mutex
 	knockNotes   = map[string]knockTarget{}
-	// every address listed in this process, by id: a forget still reaches
-	// one that is no longer listened on
-	knockSeen = map[string]knockTarget{}
 )
 
 func noteKnockTarget(key string, t knockTarget) {
@@ -166,18 +163,15 @@ func knockGroupID(g string) string {
 	return kind + ":" + knockID(g)[:16]
 }
 
-// the addresses listened on now, less the hidden chats' peers in exclude,
-// noted as seen. by id
+// the addresses listened on now, less the hidden chats' peers in exclude.
+// by id
 func knockLive(exclude []string) map[string]knockTarget {
 	skip := map[string]bool{}
 	for _, p := range exclude {
 		skip[strings.ToLower(p)] = true
 	}
 	out := map[string]knockTarget{}
-	targets := knockTargets()
-	knockNotesMu.Lock()
-	defer knockNotesMu.Unlock()
-	for _, t := range targets {
+	for _, t := range knockTargets() {
 		if t.peer != "" && skip[t.peer] {
 			continue
 		}
@@ -186,7 +180,6 @@ func knockLive(exclude []string) map[string]knockTarget {
 			continue
 		}
 		out[id] = t
-		knockSeen[id] = t
 	}
 	return out
 }
@@ -306,11 +299,13 @@ var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error 
 	return last
 }
 
-// registers each item and answers {"done":[...],"dup":[...]}: the ids, and
-// "s<n>" for the slots without one, that our relay took, and those it said
-// were not newer than what it keeps. a registration needs the private
-// route and an address listened on now; a forget goes over tor on any
-// route, for any address listed in this process
+// registers each item and answers {"done":[...],"dup":[...],"unknown":[...]}:
+// the ids, and "s<n>" for the slots without one, that our relay took, those
+// it said were not newer than what it keeps, and ids not listened on now.
+// a registration needs the private route; a forget goes over tor on any
+// route. both only for an address listened on now, on its lane as it is
+// now: an address that is gone, a first-contact address replaced, a chat
+// hidden, is never signed for again, its registration lapses
 //
 //export HaloKnockRegister
 func HaloKnockRegister(cItems *C.char) *C.char {
@@ -325,16 +320,14 @@ func knockRegister(raw string) string {
 	mode := currentMode()
 	routeC := routeEnded()
 	private := modeNeedsTor()
-	knockLiveIDs := map[string]bool{}
-	for id := range knockLive(nil) {
-		knockLiveIDs[id] = true
-	}
+	live := knockLive(nil)
 	ctx, cancel := context.WithTimeout(context.Background(), knockWait)
 	defer cancel()
 	now := time.Now()
 	var (
 		dmu       sync.Mutex
 		done, dup = []string{}, []string{}
+		unknown   = []string{}
 		wg        sync.WaitGroup
 		sem       = make(chan struct{}, knockParallel)
 	)
@@ -346,10 +339,9 @@ func knockRegister(raw string) string {
 		forget := it.E == ""
 		switch {
 		case it.I != "":
-			knockNotesMu.Lock()
-			t, ok := knockSeen[it.I]
-			knockNotesMu.Unlock()
-			if !ok || (!forget && !knockLiveIDs[it.I]) {
+			t, ok := live[it.I]
+			if !ok {
+				unknown = append(unknown, it.I)
 				continue
 			}
 			sk, pk, lane, name = t.sk, t.pk, t.lane, it.I
@@ -397,7 +389,8 @@ func knockRegister(raw string) string {
 	wg.Wait()
 	slices.Sort(done)
 	slices.Sort(dup)
-	b, _ := json.Marshal(map[string][]string{"done": done, "dup": dup})
+	slices.Sort(unknown)
+	b, _ := json.Marshal(map[string][]string{"done": done, "dup": dup, "unknown": unknown})
 	return string(b)
 }
 

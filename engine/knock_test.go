@@ -137,7 +137,7 @@ func TestKnockLeavesHiddenChatsOut(t *testing.T) {
 	}
 }
 
-type knockOut struct{ Done, Dup []string }
+type knockOut struct{ Done, Dup, Unknown []string }
 
 func runRegister(t *testing.T, items []knockItem) knockOut {
 	t.Helper()
@@ -268,9 +268,10 @@ func TestKnockRegistersOnlyOnThePrivateRoute(t *testing.T) {
 	}
 }
 
-// a forget still reaches an address that is no longer listened on, once
-// it was listed in this process; a registration does not
-func TestKnockForgetsAnAddressGone(t *testing.T) {
+// an address no longer listened on is never signed for again, not even to
+// forget it: a forget for a chat just hidden, or for a first-contact address
+// just replaced, would tell the relay what the phone does
+func TestKnockNeverSignsForAnAddressGone(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	socks := newSocksStandIn(t)
 	useStandIns(t, modePrivate, socks, own)
@@ -278,13 +279,49 @@ func TestKnockForgetsAnAddressGone(t *testing.T) {
 	knockAddresses("")
 	w.unsubscribe(w.peers[0])
 	id := knockID(w.contacts[0])
-	out := runRegister(t, []knockItem{{I: id, E: "https://push.example.org/up"}})
-	if len(out.Done) != 0 {
-		t.Fatal("an address no longer listened on was registered")
+	for _, e := range []string{"https://push.example.org/up", ""} {
+		out := runRegister(t, []knockItem{{I: id, E: e}})
+		if len(out.Done) != 0 || len(out.Unknown) != 1 {
+			t.Fatalf("an address gone was signed for (%q): %+v", e, out)
+		}
 	}
-	out = runRegister(t, []knockItem{{I: id, E: ""}})
-	if len(out.Done) != 1 {
-		t.Fatalf("the forget for an address gone did not go: %v", out)
+}
+
+// a new first-contact address registers on the new address's circuit,
+// never on the one the old address used
+func TestKnockFirstContactResetTakesANewCircuit(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 1)
+	knockAddresses("")
+	if out := runRegister(t, []knockItem{{I: knockID(w.fc), E: "https://push.example.org/a"}}); len(out.Done) != 1 {
+		t.Fatalf("old: %+v", out)
+	}
+	oldName := laneName(laneFirstContact)
+	// the invite is reset: a new counter, the lane dropped
+	nostrMu.Lock()
+	fcCounterNow = 1
+	nostrMu.Unlock()
+	dropLane(laneFirstContact)
+	_, fresh, _ := nip17FirstContactKeys(1)
+	out := runRegister(t, []knockItem{{I: knockID(fresh), E: "https://push.example.org/b"}, {I: knockID(w.fc), E: ""}})
+	if len(out.Done) != 1 || out.Done[0] != knockID(fresh) {
+		t.Fatalf("after the reset: %+v", out)
+	}
+	newName := laneName(laneFirstContact)
+	if newName == oldName {
+		t.Fatal("the lane kept its name")
+	}
+	for _, c := range own.snapshot() {
+		for _, ev := range c.got {
+			if ev.PubKey.Hex() != fresh {
+				continue
+			}
+			if name, _ := socks.nameOf(c.remote); name != newName {
+				t.Fatal("the new first-contact address registered on the old circuit")
+			}
+		}
 	}
 }
 

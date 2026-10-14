@@ -117,6 +117,9 @@ func dropLane(lane string) {
 	laneMu.Unlock()
 	cachedNostrClientMu.Lock()
 	delete(cachedNostrClients, lane)
+	// the lane's client from tor's socks port too (knock.go), or the next
+	// one on this lane would ride the old circuit
+	delete(cachedNostrClients, "tor:"+lane)
 	cachedNostrClientMu.Unlock()
 	pubCloseAll(lane)
 }
