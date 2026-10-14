@@ -179,13 +179,35 @@ type knockEP struct {
 	delivered bool
 }
 
-// knocks for an endpoint known a day and proven are kept apart from new
-// ones, so a flood of fresh endpoints on the same server cannot delay them
-const knockTrustAfter = 24 * time.Hour
+// knocks wait in lanes by the endpoint's age, an endpoint counting as old
+// once it delivered and is a day old, then a week, then a month. the lanes
+// take turns by weight, so a flood of fresh endpoints on the same server
+// cannot delay old ones much, and old ones never shut out the first day
+const (
+	knockTrustAfter = 24 * time.Hour
+	knockTiers      = 4
+)
 
-func (ep *knockEP) trusted(now time.Time) bool {
-	return ep.delivered && now.Sub(ep.born) >= knockTrustAfter
+var (
+	knockTierAge    = [knockTiers]time.Duration{0, knockTrustAfter, 7 * 24 * time.Hour, 30 * 24 * time.Hour}
+	knockTierWeight = [knockTiers]int{1, 2, 3, 4}
+)
+
+func (ep *knockEP) tier(now time.Time) int {
+	if !ep.delivered {
+		return 0
+	}
+	age := now.Sub(ep.born)
+	t := 0
+	for i := 1; i < knockTiers; i++ {
+		if age >= knockTierAge[i] {
+			t = i
+		}
+	}
+	return t
 }
+
+func (ep *knockEP) trusted(now time.Time) bool { return ep.tier(now) > 0 }
 
 type knockReg struct {
 	ep      *knockEP
@@ -653,7 +675,7 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 	}
 	delete(k.forgets, key)
 	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
-	k.store.put(key, ev.Content, made, k.regs[key].expires)
+	k.store.put(key, ev.Content, made, k.regs[key].expires, k.regs[key].ep.born.Unix())
 	return false, ""
 }
 
@@ -715,10 +737,8 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 	d := (*knockDomain)(nil)
 	if ep == nil {
 		u, _ := url.Parse(endpoint)
-		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname()), keys: map[[32]byte]struct{}{}, born: time.Unix(made, 0)}
-		if nb := k.now(); nb.Before(ep.born) {
-			ep.born = nb
-		}
+		// born by this box's clock, whatever the phone's said
+		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname()), keys: map[[32]byte]struct{}{}, born: k.now()}
 		k.eps[endpoint] = ep
 		d = k.domainLocked(ep.domain)
 		d.eps++
@@ -911,7 +931,7 @@ func (k *knocker) gone(endpoint string) {
 	}
 	for _, key := range keys {
 		k.dropLocked(key)
-		k.store.put(key, "", 0, 0)
+		k.store.put(key, "", 0, 0, 0)
 	}
 	k.dropEPLocked(ep)
 	k.stats.gone.Add(1)

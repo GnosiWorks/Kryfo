@@ -139,15 +139,17 @@ func (tk *testKnocks) drain() []knockJob {
 	defer tk.mu.Unlock()
 	var out []knockJob
 	for _, d := range tk.domains {
-		for _, ep := range append(d.old, d.real...) {
-			out = append(out, knockJob{ep.url, false})
-			ep.queuedReal = false
+		for _, l := range d.lanes {
+			for _, ep := range l {
+				out = append(out, knockJob{ep.url, false})
+				ep.queuedReal = false
+			}
 		}
 		for _, ep := range d.decoy {
 			out = append(out, knockJob{ep.url, true})
 			ep.queuedDecoy = false
 		}
-		d.old, d.real, d.decoy = nil, nil, nil
+		d.lanes, d.decoy = [knockTiers][]*knockEP{}, nil
 		d.inRing = false
 	}
 	tk.q.push, tk.q.shared = nil, nil
@@ -766,7 +768,7 @@ func TestKnockSweepLetsWrapsIn(t *testing.T) {
 		var key [32]byte
 		key[0], key[1], key[2] = byte(i), byte(i>>8), byte(i>>16)
 		tk.setLocked(key, fmt.Sprintf("https://x.org/%d", i%200), tk.clock.now().Unix(), tk.clock.now().Add(knockTTL).Unix())
-		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires)
+		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires, 0)
 	}
 	tk.mu.Unlock()
 	store.flush(time.Minute)
@@ -1017,8 +1019,8 @@ func TestKnockProvenEndpointsKeepTheirLane(t *testing.T) {
 	var leg, att []*knockEP
 	for i := 0; i < 1000; i++ {
 		u := fmt.Sprintf("https://ntfy.sh/upLegit%d", i)
-		tk.setLocked(knockKey(r3key(1_000_000+i)), u, day.Unix(), now.Add(knockTTL).Unix())
-		tk.eps[u].delivered = true
+		tk.setLocked(knockKey(r3key(1_000_000+i)), u, now.Unix(), now.Add(knockTTL).Unix())
+		tk.eps[u].delivered, tk.eps[u].born = true, day
 		leg = append(leg, tk.eps[u])
 	}
 	for i := 0; i < 19000; i++ {
@@ -1063,6 +1065,105 @@ func TestKnockProvenEndpointsKeepTheirLane(t *testing.T) {
 	tk.mu.Unlock()
 	if float64(served) < 0.95*float64(asked) || dropped != 0 {
 		t.Fatalf("proven endpoints: %d asked, %d served, %d dropped", asked, served, dropped)
+	}
+}
+
+// endpoints of a day and of a month, both proven, flooding a server: a
+// first-day user's knocks still get turns, never none
+func TestKnockOldLanesDoNotShutOutTheFirstDay(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.mu.Lock()
+	now := tk.clock.now()
+	var newcomers, att []*knockEP
+	for i := 0; i < 1000; i++ {
+		u := fmt.Sprintf("https://ntfy.sh/new%d", i)
+		tk.setLocked(knockKey(r3key(1_000_000+i)), u, now.Unix(), now.Add(knockTTL).Unix())
+		tk.eps[u].delivered = true
+		newcomers = append(newcomers, tk.eps[u])
+	}
+	for i := 0; i < 19000; i++ {
+		u := fmt.Sprintf("https://ntfy.sh/old%d", i)
+		tk.setLocked(knockKey(r3key(i)), u, now.Unix(), now.Add(knockTTL).Unix())
+		tk.eps[u].delivered, tk.eps[u].born = true, now.Add(-40*24*time.Hour)
+		att = append(att, tk.eps[u])
+	}
+	var asked, served, ti, li int
+	waiting := map[*knockEP]bool{}
+	var acc float64
+	for ms := 0; ms < 60_000; ms++ {
+		now = now.Add(time.Millisecond)
+		tk.clock.set(now)
+		for acc += 0.3; acc >= 1; acc-- {
+			tk.q.addLocked(att[ti%len(att)], false)
+			ti++
+		}
+		if ms%200 == 0 {
+			ep := newcomers[li%len(newcomers)]
+			li++
+			tk.q.addLocked(ep, false)
+			asked++
+			waiting[ep] = true
+		}
+		for {
+			ep, _, ok := tk.q.nextLocked(now)
+			if !ok {
+				break
+			}
+			if waiting[ep] {
+				served++
+				delete(waiting, ep)
+			}
+			tk.q.doneLocked(ep)
+		}
+	}
+	tk.mu.Unlock()
+	if float64(served) < 0.95*float64(asked) {
+		t.Fatalf("first-day endpoints: %d asked, %d served", asked, served)
+	}
+}
+
+// an endpoint's age and whether it delivered survive a restart; one that
+// never delivered does not become old by waiting
+func TestKnockAgeSurvivesARestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st.start()
+	tk := newTestKnocks(t)
+	tk.store = st
+	now := tk.clock.now()
+	// signed two hours back, as the window allows
+	dead := r3reg(r3key(1), "https://ntfy.sh/dead", now.Add(-knockSkew+time.Second))
+	good := r3reg(r3key(2), "https://ntfy.sh/good", now)
+	tk.take(nil, &dead)
+	tk.take(nil, &good)
+	tk.q.result(tk.eps["https://ntfy.sh/good"], true, 201, nil)
+	st.flush(time.Minute)
+	st.close()
+
+	st2, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st2.close()
+	tk2 := newTestKnocks(t)
+	tk2.store = st2
+	tk2.clock.set(now.Add(23 * time.Hour))
+	if err := tk2.load(); err != nil {
+		t.Fatal(err)
+	}
+	d, g := tk2.eps["https://ntfy.sh/dead"], tk2.eps["https://ntfy.sh/good"]
+	if !g.born.Equal(now) || !g.delivered {
+		t.Fatalf("the proven endpoint came back born %v delivered %v", g.born, g.delivered)
+	}
+	if d.trusted(tk2.now()) || d.delivered {
+		t.Fatal("a never-delivered endpoint came back trusted")
+	}
+	tk2.clock.set(now.Add(25 * time.Hour))
+	if !g.trusted(tk2.now()) || d.trusted(tk2.now()) {
+		t.Fatal("a day on: the proven one should be old, the dead one not")
 	}
 }
 
@@ -1942,7 +2043,7 @@ func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
 	}
 	// the writer not running, its queue filled to the brim by renewals
 	for i := 0; len(st.ch) < cap(st.ch); i++ {
-		st.put([32]byte{byte(i), byte(i >> 8), byte(i >> 16)}, "https://ntfy.sh/x", now.Unix(), now.Unix()+1)
+		st.put([32]byte{byte(i), byte(i >> 8), byte(i >> 16)}, "https://ntfy.sh/x", now.Unix(), now.Unix()+1, 0)
 	}
 	for _, sk := range sks {
 		ev := signedReg(t, sk, "", now.Add(time.Second))
@@ -1967,7 +2068,7 @@ func TestKnockWritesNeverBlock(t *testing.T) {
 	// the writer not running: puts past the buffer are dropped, not waited on
 	t0 := time.Now()
 	for i := 0; i < cap(store.ch)+100; i++ {
-		store.put([32]byte{byte(i)}, testEP, 1, 2)
+		store.put([32]byte{byte(i)}, testEP, 1, 2, 0)
 	}
 	if time.Since(t0) > time.Second || store.dropped.Load() != 100 {
 		t.Fatalf("puts took %v, %d dropped", time.Since(t0), store.dropped.Load())

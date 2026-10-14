@@ -23,6 +23,10 @@ type knockOp struct {
 	key           [32]byte
 	ep            string
 	made, expires int64
+	// when the relay first took the endpoint
+	born int64
+	// marks the endpoint as having delivered, on every row naming it
+	proven bool
 	// a flush marker: closed once everything before it is written
 	done chan struct{}
 }
@@ -57,9 +61,15 @@ func openKnockStore(path string) (*knockStore, error) {
 	fdb.SetMaxOpenConns(1)
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS knock (
 		addr BLOB PRIMARY KEY, endpoint TEXT NOT NULL,
-		made INTEGER NOT NULL, expires INTEGER NOT NULL)`); err != nil {
+		made INTEGER NOT NULL, expires INTEGER NOT NULL,
+		born INTEGER NOT NULL DEFAULT 0, proven INTEGER NOT NULL DEFAULT 0)`); err != nil {
 		db.Close()
 		return nil, err
+	}
+	// a table from before the two columns: they are added, an error for
+	// one already there is the expected one
+	for _, col := range []string{"born", "proven"} {
+		db.Exec(`ALTER TABLE knock ADD COLUMN ` + col + ` INTEGER NOT NULL DEFAULT 0`)
 	}
 	for _, p := range []string{path, path + "-wal", path + "-shm"} {
 		if _, err := os.Stat(p); err == nil {
@@ -75,12 +85,24 @@ func openKnockStore(path string) (*knockStore, error) {
 // a row to write, or with made 0 to delete. never blocks: a write that
 // does not fit is dropped, counted and logged, the registration stays in
 // memory
-func (s *knockStore) put(key [32]byte, ep string, made, expires int64) {
+func (s *knockStore) put(key [32]byte, ep string, made, expires, born int64) {
 	if s == nil {
 		return
 	}
 	select {
-	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires}:
+	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires, born: born}:
+	default:
+		s.drop()
+	}
+}
+
+// an endpoint delivered: so it keeps its age across a restart
+func (s *knockStore) proven(ep string) {
+	if s == nil {
+		return
+	}
+	select {
+	case s.ch <- knockOp{ep: ep, proven: true}:
 	default:
 		s.drop()
 	}
@@ -142,13 +164,16 @@ func (s *knockStore) write(batch []knockOp) {
 			if op.done != nil && op.made == 0 && op.ep == "" && op.key == ([32]byte{}) {
 				continue
 			}
-			if op.made == 0 {
+			if op.proven {
+				_, err = tx.Exec(`UPDATE knock SET proven = 1 WHERE endpoint = ?`, op.ep)
+			} else if op.made == 0 {
 				_, err = tx.Exec(`DELETE FROM knock WHERE addr = ?`, op.key[:])
 			} else {
-				_, err = tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, ?, ?, ?)
-					ON CONFLICT(addr) DO UPDATE SET endpoint = excluded.endpoint, made = excluded.made, expires = excluded.expires
+				_, err = tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires, born) VALUES (?, ?, ?, ?, ?)
+					ON CONFLICT(addr) DO UPDATE SET endpoint = excluded.endpoint, made = excluded.made, expires = excluded.expires,
+						born = excluded.born, proven = CASE WHEN knock.endpoint = excluded.endpoint THEN knock.proven ELSE 0 END
 					WHERE excluded.made > knock.made`,
-					op.key[:], op.ep, op.made, op.expires)
+					op.key[:], op.ep, op.made, op.expires, op.born)
 			}
 			if err != nil {
 				break
@@ -225,7 +250,7 @@ func (k *knocker) load() error {
 	if _, err := db.Exec(`DELETE FROM knock WHERE expires <= ?`, now); err != nil {
 		return err
 	}
-	rows, err := db.Query(`SELECT addr, endpoint, made, expires FROM knock`)
+	rows, err := db.Query(`SELECT addr, endpoint, made, expires, born, proven FROM knock`)
 	if err != nil {
 		return err
 	}
@@ -235,8 +260,9 @@ func (k *knocker) load() error {
 	for rows.Next() {
 		var a []byte
 		var ep string
-		var made, exp int64
-		if err := rows.Scan(&a, &ep, &made, &exp); err != nil {
+		var made, exp, born int64
+		var proven bool
+		if err := rows.Scan(&a, &ep, &made, &exp, &born, &proven); err != nil {
 			return err
 		}
 		if len(a) != 32 {
@@ -252,11 +278,22 @@ func (k *knocker) load() error {
 			continue
 		}
 		k.setLocked(key, ep, made, exp)
-		// across a restart, an endpoint a day old counts as proven
-		if e := k.eps[ep]; e != nil && k.now().Sub(e.born) >= knockTrustAfter {
+		// its age and whether it ever delivered, as they were before the
+		// restart. a row from before born was kept counts from its signing
+		e := k.eps[ep]
+		if born <= 0 {
+			born = made
+		}
+		if b := time.Unix(born, 0); b.Before(e.born) {
+			e.born = b
+		}
+		if proven && !e.delivered {
 			e.delivered = true
 			k.settledLocked(e)
 		}
+		// an old endpoint's decoys keep their usual gaps, not a new one's
+		// first decoy within minutes
+		k.decoyLocked(e)
 	}
 	return rows.Err()
 }

@@ -65,15 +65,44 @@ type knockDomain struct {
 	eps, regs int
 	// endpoints that never delivered yet and are less than a day old
 	pending int
-	// real knocks for proven endpoints, for the rest, and decoys
-	old, real, decoy []*knockEP
-	inRing           bool
-	rate             *bucket
+	// real knocks by the endpoint's age tier (knockEP.tier), and decoys
+	lanes [knockTiers][]*knockEP
+	decoy []*knockEP
+	// each lane's turns so far, for the weighted turns between them
+	credit [knockTiers]int
+	inRing bool
+	rate   *bucket
 	// posts in flight, from the name lookup on
 	inflight int
 }
 
-func (d *knockDomain) waiting() int { return len(d.old) + len(d.real) + len(d.decoy) }
+func (d *knockDomain) waiting() int {
+	n := len(d.decoy)
+	for _, l := range d.lanes {
+		n += len(l)
+	}
+	return n
+}
+
+// the lane whose turn it is, among those with knocks: weighted turns, so an
+// older tier gets more of them and a new one never none. -1 for none
+func (d *knockDomain) nextLane() int {
+	total, best := 0, -1
+	for t := range d.lanes {
+		if len(d.lanes[t]) == 0 {
+			continue
+		}
+		d.credit[t] += knockTierWeight[t]
+		total += knockTierWeight[t]
+		if best < 0 || d.credit[t] > d.credit[best] {
+			best = t
+		}
+	}
+	if best >= 0 {
+		d.credit[best] -= total
+	}
+	return best
+}
 
 func (d *knockDomain) queueCap() int {
 	if d.push {
@@ -151,7 +180,8 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		return
 	}
 	d := k.domainLocked(ep.domain)
-	fresh := len(d.real) + len(d.decoy)
+	tier := ep.tier(k.now())
+	fresh := len(d.lanes[0]) + len(d.decoy)
 	full := fresh >= d.queueCap() || (!d.push && q.sharedQueued >= knockSharedQueue)
 	half := fresh >= d.queueCap()/2 || (!d.push && q.sharedQueued >= knockSharedQueue/2)
 	if decoy {
@@ -164,17 +194,17 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		}
 		ep.queuedDecoy = true
 		d.decoy = append(d.decoy, ep)
-	} else if ep.trusted(k.now()) {
-		// a lane of their own, as long as a server's queue
+	} else if tier > 0 {
+		// a lane per tier, each as long as a server's queue
 		if ep.queuedReal {
 			return
 		}
-		if len(d.old) >= d.queueCap() {
+		if len(d.lanes[tier]) >= d.queueCap() {
 			k.stats.dropped.Add(1)
 			return
 		}
 		ep.queuedReal = true
-		d.old = append(d.old, ep)
+		d.lanes[tier] = append(d.lanes[tier], ep)
 	} else {
 		if ep.queuedReal {
 			return
@@ -184,7 +214,7 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 			return
 		}
 		ep.queuedReal = true
-		d.real = append(d.real, ep)
+		d.lanes[0] = append(d.lanes[0], ep)
 	}
 	q.queued++
 	if !d.push {
@@ -213,11 +243,10 @@ func (q *knockQueue) unqueued(d *knockDomain) {
 // an endpoint let go leaves the queue
 func (q *knockQueue) forgetLocked(d *knockDomain, ep *knockEP) {
 	var gone bool
-	if d.old, gone = without(d.old, ep); gone {
-		q.unqueued(d)
-	}
-	if d.real, gone = without(d.real, ep); gone {
-		q.unqueued(d)
+	for t := range d.lanes {
+		if d.lanes[t], gone = without(d.lanes[t], ep); gone {
+			q.unqueued(d)
+		}
 	}
 	if d.decoy, gone = without(d.decoy, ep); gone {
 		q.unqueued(d)
@@ -277,11 +306,8 @@ func (q *knockQueue) fromRing(r *[]*knockDomain, now time.Time) (ep *knockEP, de
 			requeue()
 			continue
 		}
-		if len(d.old) > 0 {
-			ep, d.old = d.old[0], d.old[1:]
-			ep.queuedReal = false
-		} else if len(d.real) > 0 {
-			ep, d.real = d.real[0], d.real[1:]
+		if t := d.nextLane(); t >= 0 {
+			ep, d.lanes[t] = d.lanes[t][0], d.lanes[t][1:]
 			ep.queuedReal = false
 		} else {
 			// decoys only while more than half the second's budget is left
@@ -443,7 +469,10 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 	case err == nil && code < 400:
 		k.mu.Lock()
 		ep.fails, ep.failingSince = 0, time.Time{}
-		ep.delivered = true
+		if !ep.delivered {
+			ep.delivered = true
+			k.store.proven(ep.url)
+		}
 		// it worked: no longer one of the share's new ones
 		k.settledLocked(ep)
 		k.mu.Unlock()
