@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
+import 'orientation.dart' show appOrientations;
 import 'backup.dart' show backupRunning, restoreRunning, sweepBackupLeftovers;
 import 'picked.dart'
     show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
@@ -23511,12 +23512,13 @@ void main() async {
   unawaited(sweepBackupLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers
-  unawaited(
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-  );
+  unawaited(SystemChrome.setPreferredOrientations(appOrientations));
   // drawn under the bars on android 10 to 14 too, as 15 and later force.
-  // older versions ignore it
+  // older versions ignore it. android keeps this on the screen, which the
+  // engine outlives: asked before one was attached, or of one since
+  // replaced, it is lost, so it is asked again on every return
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+  WidgetsBinding.instance.addObserver(_underBars);
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the
@@ -23592,6 +23594,16 @@ Future<void> _openFromNotif() async {
     }
   } catch (e) {
     dlog('notif launch: $e');
+  }
+}
+
+final _underBars = _UnderBars();
+
+class _UnderBars with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   }
 }
 

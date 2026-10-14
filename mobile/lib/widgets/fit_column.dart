@@ -25,6 +25,12 @@ class FitColumn extends StatelessWidget {
         padding: padding,
         child: ConstrainedBox(
           constraints: BoxConstraints(
+            // a scaffold's body is loose across, and a column left to it
+            // is only as wide as its widest line, at the start edge: its
+            // centred lines then sit off the middle of the screen
+            minWidth: c.hasBoundedWidth
+                ? math.max(0, c.maxWidth - padding.horizontal)
+                : 0,
             minHeight: (c.maxHeight - padding.vertical).clamp(
               0,
               double.infinity,

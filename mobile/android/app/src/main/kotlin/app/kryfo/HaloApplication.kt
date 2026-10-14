@@ -34,6 +34,7 @@ class HaloApplication : Application() {
             }
         // on the engine of the process, so a check-in without a screen hears it too
         NetWatch.start(this, engine)
+        Tilt.start(this, engine)
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,
         // one shared a copy in cache/share_plus/. the app it went to may
