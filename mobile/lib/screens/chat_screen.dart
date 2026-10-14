@@ -4957,23 +4957,12 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     HapticFeedback.selectionClick();
-    await _dropWallpaperFile();
     await session.setAtmosphere(widget.peerHaloId, picked.name);
     if (!mounted) return;
     setState(() {
       _atmosphere = picked;
       _wallpaperPath = null;
     });
-  }
-
-  Future<void> _dropWallpaperFile() async {
-    final old = _wallpaperPath;
-    if (old == null) return;
-    try {
-      await shredFile(old);
-    } catch (_) {
-      // shredFile logs its own failure
-    }
   }
 
   // a picture from the gallery, shrunk by the picker, copied into the
@@ -4994,14 +4983,11 @@ class _ChatScreenState extends State<ChatScreen>
     } finally {
       await shredPickedImages([x]);
     }
-    final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
-    final file = File('${folder.path}/${widget.peerHaloId}.jpg');
-    await file.writeAsBytes(bytes, flush: true);
-    await session.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
+    final path = await session.setWallpaperPhoto(widget.peerHaloId, bytes);
     if (!mounted) return;
     HapticFeedback.selectionClick();
     setState(() {
-      _wallpaperPath = file.path;
+      _wallpaperPath = path;
       _atmosphere = Atmo.none;
     });
   }
