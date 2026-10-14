@@ -92,12 +92,14 @@ void main() {
       r['halo_id'] as String: ChatShots.ofRow(r).on,
   };
 
-  test('the old switch on: nothing changes by itself, and the window is '
-      'no longer held for the whole app', () async {
+  test('the old switch on: nothing changes by itself, and the whole '
+      'window stays covered until the card is answered', () async {
     final app = await make();
     expect(app.shotsCardDue, isTrue);
     expect(on(), {'bob': false, 'carol': false});
-    expect(told, [false]);
+    expect(told, [true]);
+    await app.answerShotsCard(on: false);
+    expect(told, [true, false]);
   });
 
   test(
@@ -113,6 +115,7 @@ void main() {
         isNull,
       );
       expect((await make()).shotsCardDue, isFalse);
+      expect(told.last, isFalse);
     },
   );
 
@@ -123,15 +126,29 @@ void main() {
     expect((await make()).shotsCardDue, isFalse);
   });
 
-  test('it waits for a chat whose phone knows the block', () async {
+  test('it shows at once; with no chat that can yet, a yes waits and '
+      'never says none', () async {
     await mem.update('contacts', {'shots_can': 0});
     final app = await make();
-    expect(app.shotsCardDue, isFalse);
-    // still waiting at the next start
+    expect(app.shotsCardDue, isTrue);
+    expect(app.shotsCardCan, isFalse);
+    expect(await app.answerShotsCard(on: true), 0);
+    expect(app.shotsCardDue, isTrue);
+    expect(told.last, isTrue);
     expect(
       await const FlutterSecureStorage().read(key: 'block_screenshots'),
       'true',
     );
+    // a chat's phone says it knows the block: the yes is there
+    await mem.update(
+      'contacts',
+      {'shots_can': 50},
+      where: 'halo_id = ?',
+      whereArgs: ['bob'],
+    );
+    final again = await make();
+    expect(again.shotsCardCan, isTrue);
+    expect(await again.answerShotsCard(on: true), 1);
   });
 
   test('never with the old switch off', () async {

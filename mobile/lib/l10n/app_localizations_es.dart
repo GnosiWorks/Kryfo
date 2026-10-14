@@ -8288,15 +8288,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Las capturas y la grabación de pantalla están bloqueadas en los dos teléfonos';
+      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos';
 
   @override
   String get chatShotsBlocksBoth =>
       'Bloquea las capturas y la grabación de pantalla en los dos teléfonos';
 
   @override
-  String get chatShotsBlockedHere =>
-      'Las capturas están bloqueadas en este chat';
+  String get chatShotsBlockedHere => 'Kryfo bloquea las capturas en este chat';
 
   @override
   String get chatShotsYouTurnedOn => 'Activaste el bloqueo de capturas';
@@ -8316,7 +8315,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Las capturas y la grabación de pantalla están bloqueadas en todos los teléfonos de esta sala';
+      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8326,17 +8325,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPerChat => 'Por chat';
 
   @override
-  String get homeShotsPerChat => 'El bloqueo de capturas ahora es por chat';
+  String get homeShotsPerChat => 'El bloqueo de capturas ahora es por chat.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      '¿Activarlo en todos tus chats? Los chats donde el otro teléfono aún no se actualizó se quedan sin él.';
+  String get homeShotsTurnOnForAll => '¿Activarlo en todos tus chats?';
 
   @override
   String get homeShotsTurnOn => 'Activar en todos';
 
   @override
   String get homeShotsLeaveOff => 'Dejarlo apagado';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo también las bloquea en el otro teléfono, y la otra persona verá que lo activaste.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8347,8 +8349,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Las capturas están bloqueadas en $countString chats',
-      one: 'Las capturas están bloqueadas en $countString chat',
+      other: 'Kryfo ahora bloquea las capturas en $countString chats',
+      one: 'Kryfo ahora bloquea las capturas en $countString chat',
     );
     return '$_temp0';
   }

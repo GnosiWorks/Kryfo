@@ -13254,7 +13254,7 @@ abstract class AppLocalizations {
   /// screens/contact_screen.dart: under the switch while it is on
   ///
   /// In en, this message translates to:
-  /// **'Screenshots and screen recording are blocked on both phones'**
+  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones'**
   String get chatShotsBothPhones;
 
   /// screens/contact_screen.dart: under the switch while it is off, what it does
@@ -13266,7 +13266,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart: screen reader label of the small mark in the chat header
   ///
   /// In en, this message translates to:
-  /// **'Screenshots are blocked in this chat'**
+  /// **'Kryfo blocks screenshots in this chat'**
   String get chatShotsBlockedHere;
 
   /// widgets/shots_line.dart: the line in the chat where you turned the block on
@@ -13296,7 +13296,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart: the line a room shows on its first open
   ///
   /// In en, this message translates to:
-  /// **'Screenshots and screen recording are blocked on every phone in this room'**
+  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it'**
   String get roomShotsBlocked;
 
   /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off
@@ -13314,13 +13314,13 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking is now per chat'**
+  /// **'Screenshot blocking is now per chat.'**
   String get homeShotsPerChat;
 
   /// screens/home_screen.dart: the card line
   ///
   /// In en, this message translates to:
-  /// **'Turn it on for all your chats? Chats where the other phone hasn’t updated yet stay off.'**
+  /// **'Turn it on for all your chats?'**
   String get homeShotsTurnOnForAll;
 
   /// screens/home_screen.dart: the card button that turns the block on in every chat that can
@@ -13335,10 +13335,16 @@ abstract class AppLocalizations {
   /// **'Leave them off'**
   String get homeShotsLeaveOff;
 
+  /// screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks them on the other phone too, and they’ll see that you turned it on.'**
+  String get homeShotsTheySeeIt;
+
   /// screens/home_screen.dart: toast after the card turned the block on
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{Screenshots are blocked in {count} chat} other{Screenshots are blocked in {count} chats}}'**
+  /// **'{count, plural, one{Kryfo now blocks screenshots in {count} chat} other{Kryfo now blocks screenshots in {count} chats}}'**
   String homeShotsTurnedOn(int count);
 
   /// the mic's screen reader hint while voice notes in this chat go out disguised

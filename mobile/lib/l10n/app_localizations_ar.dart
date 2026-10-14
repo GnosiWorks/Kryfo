@@ -8350,14 +8350,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'لقطات الشاشة وتسجيل الشاشة ممنوعة على الهاتفين';
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين';
 
   @override
   String get chatShotsBlocksBoth =>
       'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين';
 
   @override
-  String get chatShotsBlockedHere => 'لقطات الشاشة ممنوعة في هذه المحادثة';
+  String get chatShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المحادثة';
 
   @override
   String get chatShotsYouTurnedOn => 'فعّلت منع لقطات الشاشة';
@@ -8377,7 +8377,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'لقطات الشاشة وتسجيل الشاشة ممنوعة على كل هاتف في هذه الغرفة';
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها';
 
   @override
   String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
@@ -8386,17 +8386,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsPerChat => 'حسب المحادثة';
 
   @override
-  String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة';
+  String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'هل تريد تفعيله في كل محادثاتك؟ المحادثات التي لم يُحدَّث فيها الهاتف الآخر بعد تبقى دونه.';
+  String get homeShotsTurnOnForAll => 'هل تريد تفعيله في كل محادثاتك؟';
 
   @override
   String get homeShotsTurnOn => 'تفعيل للكل';
 
   @override
   String get homeShotsLeaveOff => 'اتركه متوقفًا';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'يمنعها Kryfo على الهاتف الآخر أيضًا، وسيرى الطرف الآخر أنك فعّلته.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8407,12 +8410,12 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
-      many: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
-      few: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثات',
-      two: 'لقطات الشاشة ممنوعة في محادثتين',
-      one: 'لقطات الشاشة ممنوعة في محادثة واحدة',
-      zero: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
+      other: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
+      many: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
+      few: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثات',
+      two: 'يمنع Kryfo الآن لقطات الشاشة في محادثتين',
+      one: 'يمنع Kryfo الآن لقطات الشاشة في محادثة واحدة',
+      zero: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
     );
     return '$_temp0';
   }

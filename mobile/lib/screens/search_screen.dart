@@ -389,6 +389,21 @@ class _SearchScreenState extends State<SearchScreen> {
             ? _Chat(groupId: gid, name: groupName[gid] ?? '')
             : _Chat(peer: peer, name: _nameOfPeer(peer), avatar: _faceOf(peer)),
       );
+      // a chat that blocks screenshots shows none of itself here: its
+      // words as a plain line, its pictures not at all
+      if (gid == null && appState.shotsBlocksChat(peer)) {
+        if (r['media_path'] != null) continue;
+        chat.hits.add(
+          _Hit(
+            uid: r['msg_uid'] as String? ?? '',
+            text: l10n.notificationsNewMessage,
+            out: out,
+            sender: out ? l10n.groupChatYou : _nameOfPeer(peer),
+            when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
+          ),
+        );
+        continue;
+      }
       final fileName = r['file_name'] as String?;
       final poll = PollSpec.parse(r['poll']);
       final plain = (r['plaintext'] as String?) ?? '';

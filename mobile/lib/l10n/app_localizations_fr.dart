@@ -8308,7 +8308,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Les captures et l’enregistrement d’écran sont bloqués sur les deux téléphones';
+      'Kryfo bloque les captures et l’enregistrement d’écran de cette discussion sur les deux téléphones';
 
   @override
   String get chatShotsBlocksBoth =>
@@ -8316,7 +8316,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatShotsBlockedHere =>
-      'Les captures sont bloquées dans cette discussion';
+      'Kryfo bloque les captures dans cette discussion';
 
   @override
   String get chatShotsYouTurnedOn => 'Vous avez activé le blocage des captures';
@@ -8337,7 +8337,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Les captures et l’enregistrement d’écran sont bloqués sur chaque téléphone de ce salon';
+      'Kryfo bloque les captures et l’enregistrement d’écran de ce salon sur chaque téléphone';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8348,17 +8348,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'Le blocage des captures se règle maintenant par discussion';
+      'Le blocage des captures se règle maintenant par discussion.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'L’activer pour toutes vos discussions ? Celles où l’autre téléphone n’est pas encore à jour restent sans.';
+  String get homeShotsTurnOnForAll => 'L’activer pour toutes vos discussions ?';
 
   @override
   String get homeShotsTurnOn => 'Activer partout';
 
   @override
   String get homeShotsLeaveOff => 'Laisser désactivé';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo les bloque aussi sur l’autre téléphone, et la personne verra que vous l’avez activé.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8369,8 +8372,9 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Captures bloquées dans $countString discussions',
-      one: 'Captures bloquées dans $countString discussion',
+      other:
+          'Kryfo bloque maintenant les captures dans $countString discussions',
+      one: 'Kryfo bloque maintenant les captures dans $countString discussion',
     );
     return '$_temp0';
   }

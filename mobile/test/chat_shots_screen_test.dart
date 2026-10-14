@@ -5,6 +5,7 @@
 // their phone does not know the block, holding nothing. a mark beside the
 // name says it is on, and a line in the thread says who changed it last.
 // the chat's own screen over rows kept in maps, android's channel a fake
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -38,22 +39,31 @@ class _Db extends SayHiDb {
   Map<String, Object?> get _row =>
       mem.rows('contacts').firstWhere((r) => r['halo_id'] == _peer);
 
-  @override
-  Future<ChatShots> shotsOf(String peer) async => ChatShots.ofRow(_row);
+  // a read that has not come back yet
+  Completer<void>? slow;
 
   @override
-  Future<void> putShots(String peer, {required bool on, required int at}) =>
-      mem.update(
-        'contacts',
-        {
-          'shots_on': on ? 1 : 0,
-          'shots_at': at,
-          'shots_by': kShotsByMe,
-          'shots_when': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'halo_id = ?',
-        whereArgs: [peer],
-      );
+  Future<ChatShots> shotsOf(String peer) async {
+    await slow?.future;
+    return ChatShots.ofRow(_row);
+  }
+
+  @override
+  Future<int?> turnShots(String peer, {required bool on}) async {
+    final at = (_row['shots_at'] as int) + 1;
+    await mem.update(
+      'contacts',
+      {
+        'shots_on': on ? 1 : 0,
+        'shots_at': at,
+        'shots_by': kShotsByMe,
+        'shots_when': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+    );
+    return at;
+  }
 
   @override
   Future<void> queueFrame(
@@ -103,6 +113,7 @@ void main() {
   Future<_Db> person({
     bool on = false,
     int can = 0,
+    int blocked = 0,
     int by = kShotsByNone,
     int when = 0,
   }) async {
@@ -119,6 +130,7 @@ void main() {
       'shots_can': can,
       'shots_by': by,
       'shots_when': when,
+      'blocked': blocked,
     });
     final db = _Db(mem);
     useDatabasesForTest(db, Session(db));
@@ -171,6 +183,35 @@ void main() {
     await devClose(t);
     expect(told.last, isFalse);
     expect(appState.secureForced, isFalse);
+  });
+
+  testWidgets('the window is covered before the chat draws, from what the '
+      'list knows, while its own read is still out', (t) async {
+    final db = await person(on: true, can: 10);
+    db.slow = Completer<void>();
+    await devOpen(
+      t,
+      const ChatScreen(
+        peerHaloId: _peer,
+        peerOnion: '',
+        peerXPub: '',
+        avatarSeed: _peer,
+      ),
+    );
+    expect(told, isNotEmpty);
+    expect(told.first, isTrue);
+    db.slow!.complete();
+    await settle(t);
+    await devClose(t);
+    expect(told.last, isFalse);
+  });
+
+  testWidgets('someone blocked holds nothing, and has no switch', (t) async {
+    await person(on: true, can: 10, blocked: 1);
+    await open(t);
+    expect(told.where((on) => on), isEmpty);
+    expect(mark(), findsNothing);
+    await devClose(t);
   });
 
   testWidgets('their phone does not know the block: nothing held, nothing '

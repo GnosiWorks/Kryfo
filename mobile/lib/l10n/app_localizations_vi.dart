@@ -8212,7 +8212,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Chụp màn hình và quay màn hình bị chặn trên cả hai điện thoại';
+      'Kryfo chặn chụp màn hình và quay màn hình cuộc trò chuyện này trên cả hai điện thoại';
 
   @override
   String get chatShotsBlocksBoth =>
@@ -8220,7 +8220,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsBlockedHere =>
-      'Đã chặn chụp màn hình trong cuộc trò chuyện này';
+      'Kryfo chặn chụp màn hình trong cuộc trò chuyện này';
 
   @override
   String get chatShotsYouTurnedOn => 'Bạn đã bật chặn chụp màn hình';
@@ -8240,7 +8240,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Chụp màn hình và quay màn hình bị chặn trên mọi điện thoại trong phòng này';
+      'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8251,17 +8251,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'Chặn chụp màn hình giờ được đặt theo từng cuộc trò chuyện';
+      'Chặn chụp màn hình giờ được đặt theo từng cuộc trò chuyện.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Bật cho mọi cuộc trò chuyện của bạn? Những cuộc trò chuyện mà điện thoại bên kia chưa cập nhật sẽ vẫn tắt.';
+  String get homeShotsTurnOnForAll => 'Bật cho mọi cuộc trò chuyện của bạn?';
 
   @override
   String get homeShotsTurnOn => 'Bật cho tất cả';
 
   @override
   String get homeShotsLeaveOff => 'Để tắt';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo cũng chặn trên điện thoại bên kia, và người đó sẽ thấy bạn đã bật.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8272,7 +8275,7 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Đã chặn chụp màn hình trong $countString cuộc trò chuyện',
+      other: 'Kryfo giờ chặn chụp màn hình trong $countString cuộc trò chuyện',
     );
     return '$_temp0';
   }

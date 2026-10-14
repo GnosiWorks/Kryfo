@@ -8294,7 +8294,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Screenshot e registrazione dello schermo sono bloccati su entrambi i telefoni';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa chat su entrambi i telefoni';
 
   @override
   String get chatShotsBlocksBoth =>
@@ -8302,7 +8302,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatShotsBlockedHere =>
-      'Gli screenshot sono bloccati in questa chat';
+      'Kryfo blocca gli screenshot in questa chat';
 
   @override
   String get chatShotsYouTurnedOn => 'Hai attivato il blocco degli screenshot';
@@ -8323,7 +8323,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Screenshot e registrazione dello schermo sono bloccati su ogni telefono in questa stanza';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8333,17 +8333,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsPerChat => 'Per ogni chat';
 
   @override
-  String get homeShotsPerChat => 'Il blocco degli screenshot ora è per chat';
+  String get homeShotsPerChat => 'Il blocco degli screenshot ora è per chat.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Attivarlo in tutte le tue chat? Le chat in cui l\'altro telefono non è ancora aggiornato restano senza.';
+  String get homeShotsTurnOnForAll => 'Attivarlo in tutte le tue chat?';
 
   @override
   String get homeShotsTurnOn => 'Attiva per tutte';
 
   @override
   String get homeShotsLeaveOff => 'Lascia disattivato';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo li blocca anche sull\'altro telefono, e l\'altra persona vedrà che l\'hai attivato.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8354,8 +8357,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Screenshot bloccati in $countString chat',
-      one: 'Screenshot bloccati in $countString chat',
+      other: 'Kryfo ora blocca gli screenshot in $countString chat',
+      one: 'Kryfo ora blocca gli screenshot in $countString chat',
     );
     return '$_temp0';
   }

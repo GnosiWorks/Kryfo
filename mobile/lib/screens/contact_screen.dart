@@ -7,10 +7,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../chat_shots.dart' show ChatShots;
+import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, nameUnchecked, session;
+import '../main.dart' show appState, nameUnchecked, session, sessionQuiet;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
@@ -164,38 +164,45 @@ class _ContactScreenState extends State<ContactScreen> {
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
   bool? _shotsNow;
-  // the chat's media is here too: held while the chat blocks
-  bool _shotsHeld = false;
+  // the chat's media is here too: held while the chat blocks, from what
+  // the list knows before the first read
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  late int _rev = appState.chatRevOf(widget.haloId);
 
-  ChatShots get _shots => ChatShots.ofRow(_c);
-
-  void _holdShots(bool on) {
-    if (on == _shotsHeld) return;
-    _shotsHeld = on;
-    appState.forceSecure(on);
-  }
+  ChatShots get _shots => ChatShots.ofRow(_c, quiet: sessionQuiet);
 
   @override
   void initState() {
     super.initState();
+    _shotsHold.want(appState.shotsBlocksChat(widget.haloId), now: true);
+    appState.addListener(_changed);
+    _load();
+  }
+
+  // a change from their phone shows here while the page is open
+  void _changed() {
+    final rev = appState.chatRevOf(widget.haloId);
+    if (rev == _rev) return;
+    _rev = rev;
     _load();
   }
 
   @override
   void deactivate() {
-    _holdShots(false);
+    _shotsHold.release();
     super.deactivate();
   }
 
   @override
   void activate() {
     super.activate();
-    _holdShots(_shots.blocking);
+    _shotsHold.want(_shots.blocking, now: true);
   }
 
   @override
   void dispose() {
-    _holdShots(false);
+    appState.removeListener(_changed);
+    _shotsHold.release();
     _scroll.dispose();
     super.dispose();
   }
@@ -205,7 +212,10 @@ class _ContactScreenState extends State<ContactScreen> {
     setState(() => _shotsNow = on);
     await appState.setChatShots(widget.haloId, on);
     await _load();
-    if (mounted) setState(() => _shotsNow = null);
+    if (!mounted) return;
+    // this phone's own tap: at once either way
+    _shotsHold.want(_shots.blocking, now: true);
+    setState(() => _shotsNow = null);
   }
 
   Future<void> _load() async {
@@ -241,7 +251,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _held = held;
       _loaded = true;
     });
-    _holdShots(_shots.blocking);
+    _shotsHold.want(_shots.blocking);
   }
 
   bool _flag(String k) {

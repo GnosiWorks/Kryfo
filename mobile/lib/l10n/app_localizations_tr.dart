@@ -8247,14 +8247,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Ekran görüntüsü ve ekran kaydı iki telefonda da engelli';
+      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller';
 
   @override
   String get chatShotsBlocksBoth =>
       'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller';
 
   @override
-  String get chatShotsBlockedHere => 'Bu sohbette ekran görüntüsü engelli';
+  String get chatShotsBlockedHere =>
+      'Kryfo bu sohbette ekran görüntüsünü engeller';
 
   @override
   String get chatShotsYouTurnedOn => 'Ekran görüntüsü engelini açtın';
@@ -8274,7 +8275,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Bu odadaki her telefonda ekran görüntüsü ve ekran kaydı engelli';
+      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8284,17 +8285,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsPerChat => 'Sohbete göre';
 
   @override
-  String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına';
+  String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Tüm sohbetlerinde açılsın mı? Karşı telefonun henüz güncellenmediği sohbetler kapalı kalır.';
+  String get homeShotsTurnOnForAll => 'Tüm sohbetlerinde açılsın mı?';
 
   @override
   String get homeShotsTurnOn => 'Hepsinde aç';
 
   @override
   String get homeShotsLeaveOff => 'Kapalı kalsın';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo karşı telefonda da engeller ve karşı taraf bunu senin açtığını görür.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8305,8 +8309,8 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString sohbette ekran görüntüsü engelli',
-      one: '$countString sohbette ekran görüntüsü engelli',
+      other: 'Kryfo artık $countString sohbette ekran görüntüsünü engelliyor',
+      one: 'Kryfo artık $countString sohbette ekran görüntüsünü engelliyor',
     );
     return '$_temp0';
   }

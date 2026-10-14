@@ -8219,14 +8219,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Tangkapan layar dan rekaman layar diblokir di kedua ponsel';
+      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel';
 
   @override
   String get chatShotsBlocksBoth =>
       'Memblokir tangkapan layar dan rekaman layar di kedua ponsel';
 
   @override
-  String get chatShotsBlockedHere => 'Tangkapan layar diblokir di obrolan ini';
+  String get chatShotsBlockedHere =>
+      'Kryfo memblokir tangkapan layar di obrolan ini';
 
   @override
   String get chatShotsYouTurnedOn => 'Kamu menyalakan blokir tangkapan layar';
@@ -8246,7 +8247,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Tangkapan layar dan rekaman layar diblokir di setiap ponsel dalam ruang ini';
+      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8257,17 +8258,20 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'Blokir tangkapan layar sekarang diatur per obrolan';
+      'Blokir tangkapan layar sekarang diatur per obrolan.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Nyalakan untuk semua obrolanmu? Obrolan yang ponsel lawannya belum diperbarui tetap mati.';
+  String get homeShotsTurnOnForAll => 'Nyalakan untuk semua obrolanmu?';
 
   @override
   String get homeShotsTurnOn => 'Nyalakan untuk semua';
 
   @override
   String get homeShotsLeaveOff => 'Biarkan mati';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo juga memblokirnya di ponsel lawan, dan dia akan melihat bahwa kamu menyalakannya.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8278,7 +8282,7 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Tangkapan layar diblokir di $countString obrolan',
+      other: 'Kryfo kini memblokir tangkapan layar di $countString obrolan',
     );
     return '$_temp0';
   }

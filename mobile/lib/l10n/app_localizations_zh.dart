@@ -7865,13 +7865,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
 
   @override
-  String get chatShotsBothPhones => '两部手机上都禁止截屏和录屏';
+  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天';
 
   @override
   String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏';
 
   @override
-  String get chatShotsBlockedHere => '此聊天已禁止截屏';
+  String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截屏';
 
   @override
   String get chatShotsYouTurnedOn => '你开启了禁止截屏';
@@ -7890,7 +7890,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomShotsBlocked => '这个聊天室里的每部手机都禁止截屏和录屏';
+  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏';
 
   @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
@@ -7899,16 +7899,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPerChat => '按聊天设置';
 
   @override
-  String get homeShotsPerChat => '禁止截屏现在按聊天设置';
+  String get homeShotsPerChat => '禁止截屏现在按聊天设置。';
 
   @override
-  String get homeShotsTurnOnForAll => '要在你的所有聊天中开启吗？对方手机尚未更新的聊天会保持关闭。';
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中开启吗？';
 
   @override
   String get homeShotsTurnOn => '全部开启';
 
   @override
   String get homeShotsLeaveOff => '保持关闭';
+
+  @override
+  String get homeShotsTheySeeIt => 'Kryfo 也会在对方手机上禁止截屏，对方会看到是你开启的。';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -7919,7 +7922,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '已在 $countString 个聊天中禁止截屏',
+      other: 'Kryfo 现已在 $countString 个聊天中禁止截屏',
     );
     return '$_temp0';
   }
@@ -15696,13 +15699,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
 
   @override
-  String get chatShotsBothPhones => '兩支手機上都禁止截圖和螢幕錄影';
+  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天';
 
   @override
   String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影';
 
   @override
-  String get chatShotsBlockedHere => '此聊天已禁止截圖';
+  String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截圖';
 
   @override
   String get chatShotsYouTurnedOn => '你開啟了禁止截圖';
@@ -15721,7 +15724,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomShotsBlocked => '這個聊天室裡的每支手機都禁止截圖和螢幕錄影';
+  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影';
 
   @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
@@ -15730,16 +15733,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsPerChat => '依聊天設定';
 
   @override
-  String get homeShotsPerChat => '禁止截圖現在依聊天設定';
+  String get homeShotsPerChat => '禁止截圖現在依聊天設定。';
 
   @override
-  String get homeShotsTurnOnForAll => '要在你的所有聊天中開啟嗎？對方手機尚未更新的聊天會維持關閉。';
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中開啟嗎？';
 
   @override
   String get homeShotsTurnOn => '全部開啟';
 
   @override
   String get homeShotsLeaveOff => '維持關閉';
+
+  @override
+  String get homeShotsTheySeeIt => 'Kryfo 也會在對方手機上禁止截圖，對方會看到是你開啟的。';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -15750,7 +15756,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '已在 $countString 個聊天中禁止截圖',
+      other: 'Kryfo 現已在 $countString 個聊天中禁止截圖',
     );
     return '$_temp0';
   }

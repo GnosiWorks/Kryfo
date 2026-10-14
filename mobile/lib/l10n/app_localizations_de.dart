@@ -8315,7 +8315,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Screenshots und Bildschirmaufnahmen sind auf beiden Handys blockiert';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys';
 
   @override
   String get chatShotsBlocksBoth =>
@@ -8323,7 +8323,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsBlockedHere =>
-      'Screenshots sind in diesem Chat blockiert';
+      'Kryfo blockiert Screenshots in diesem Chat';
 
   @override
   String get chatShotsYouTurnedOn =>
@@ -8345,7 +8345,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Screenshots und Bildschirmaufnahmen sind auf jedem Handy in diesem Raum blockiert';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8355,17 +8355,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPerChat => 'Pro Chat';
 
   @override
-  String get homeShotsPerChat => 'Screenshots blockierst du jetzt pro Chat';
+  String get homeShotsPerChat => 'Screenshots blockierst du jetzt pro Chat.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Für alle deine Chats einschalten? Chats, in denen das andere Handy noch nicht aktualisiert ist, bleiben aus.';
+  String get homeShotsTurnOnForAll => 'Für alle deine Chats einschalten?';
 
   @override
   String get homeShotsTurnOn => 'Für alle einschalten';
 
   @override
   String get homeShotsLeaveOff => 'Ausgeschaltet lassen';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo blockiert sie auch auf dem anderen Handy, und die andere Person sieht, dass du es eingeschaltet hast.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8376,8 +8379,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Screenshots sind in $countString Chats blockiert',
-      one: 'Screenshots sind in $countString Chat blockiert',
+      other: 'Kryfo blockiert jetzt Screenshots in $countString Chats',
+      one: 'Kryfo blockiert jetzt Screenshots in $countString Chat',
     );
     return '$_temp0';
   }

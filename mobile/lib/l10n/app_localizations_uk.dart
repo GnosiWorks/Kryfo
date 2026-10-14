@@ -8367,14 +8367,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Знімки екрана й запис екрана заблоковано на обох телефонах';
+      'Kryfo блокує знімки екрана й запис екрана цього чату на обох телефонах';
 
   @override
   String get chatShotsBlocksBoth =>
       'Блокує знімки екрана й запис екрана на обох телефонах';
 
   @override
-  String get chatShotsBlockedHere => 'У цьому чаті знімки екрана заблоковано';
+  String get chatShotsBlockedHere => 'Kryfo блокує знімки екрана в цьому чаті';
 
   @override
   String get chatShotsYouTurnedOn =>
@@ -8396,7 +8396,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Знімки екрана й запис екрана заблоковано на кожному телефоні в цій кімнаті';
+      'Kryfo блокує знімки екрана й запис екрана цієї кімнати на кожному телефоні в ній';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8407,17 +8407,20 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'Блокування знімків екрана тепер налаштовується в кожному чаті';
+      'Блокування знімків екрана тепер налаштовується в кожному чаті.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Увімкнути в усіх твоїх чатах? Чати, де другий телефон ще не оновився, залишаться без нього.';
+  String get homeShotsTurnOnForAll => 'Увімкнути в усіх твоїх чатах?';
 
   @override
   String get homeShotsTurnOn => 'Увімкнути всюди';
 
   @override
   String get homeShotsLeaveOff => 'Залишити вимкненим';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo заблокує їх і на другому телефоні, а співрозмовник побачить, що це увімкнув(-ла) ти.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8428,10 +8431,10 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Знімки екрана заблоковано в $countString чату',
-      many: 'Знімки екрана заблоковано в $countString чатах',
-      few: 'Знімки екрана заблоковано в $countString чатах',
-      one: 'Знімки екрана заблоковано в $countString чаті',
+      other: 'Kryfo тепер блокує знімки екрана в $countString чату',
+      many: 'Kryfo тепер блокує знімки екрана в $countString чатах',
+      few: 'Kryfo тепер блокує знімки екрана в $countString чатах',
+      one: 'Kryfo тепер блокує знімки екрана в $countString чаті',
     );
     return '$_temp0';
   }

@@ -8285,7 +8285,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Capturas e gravação de tela estão bloqueadas nos dois celulares';
+      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares';
 
   @override
   String get chatShotsBlocksBoth =>
@@ -8293,7 +8293,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatShotsBlockedHere =>
-      'As capturas de tela estão bloqueadas nesta conversa';
+      'O Kryfo bloqueia capturas de tela nesta conversa';
 
   @override
   String get chatShotsYouTurnedOn =>
@@ -8315,7 +8315,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Capturas e gravação de tela estão bloqueadas em todos os celulares desta sala';
+      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8326,17 +8326,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'O bloqueio de capturas de tela agora é por conversa';
+      'O bloqueio de capturas de tela agora é por conversa.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'Ativar em todas as suas conversas? As conversas em que o outro celular ainda não foi atualizado ficam sem.';
+  String get homeShotsTurnOnForAll => 'Ativar em todas as suas conversas?';
 
   @override
   String get homeShotsTurnOn => 'Ativar em todas';
 
   @override
   String get homeShotsLeaveOff => 'Deixar desativado';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'O Kryfo também bloqueia no outro celular, e a outra pessoa vai ver que você ativou.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8347,8 +8350,9 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Capturas de tela bloqueadas em $countString conversas',
-      one: 'Capturas de tela bloqueadas em $countString conversa',
+      other:
+          'O Kryfo agora bloqueia capturas de tela em $countString conversas',
+      one: 'O Kryfo agora bloqueia capturas de tela em $countString conversa',
     );
     return '$_temp0';
   }

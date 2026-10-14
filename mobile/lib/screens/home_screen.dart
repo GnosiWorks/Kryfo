@@ -573,6 +573,8 @@ class ContactPreview {
   final String? supporterBadge;
   // one of the open vault's: only its session shows it
   final bool hidden;
+  // the chat blocks screenshots on this phone
+  final bool shotsBlocking;
   ContactPreview({
     required this.haloId,
     this.nickname,
@@ -588,6 +590,7 @@ class ContactPreview {
     this.pinned = false,
     this.supporterBadge,
     this.hidden = false,
+    this.shotsBlocking = false,
   });
 }
 
@@ -1128,8 +1131,9 @@ class _ShotsCardState extends State<_ShotsCard> {
     if (_busy) return;
     setState(() => _busy = true);
     final n = await appState.answerShotsCard(on: on);
-    if (!mounted || !on) return;
-    showHaloToast(context, l10n.homeShotsTurnedOn(n));
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (on && n > 0) showHaloToast(context, l10n.homeShotsTurnedOn(n));
   }
 
   @override
@@ -1141,14 +1145,25 @@ class _ShotsCardState extends State<_ShotsCard> {
         id: 'shots-per-chat',
         tint: HaloColors.amber,
         title: l10n.homeShotsPerChat,
-        line: l10n.homeShotsTurnOnForAll,
+        line: '${l10n.homeShotsTurnOnForAll} ${l10n.homeShotsTheySeeIt}',
         actions: [
-          CardAction(
-            label: l10n.homeShotsTurnOn,
-            onTap: () => _answer(true),
-            fill: HaloColors.amber,
-            ink: HaloColors.onAmber,
-          ),
+          // a yes needs a chat whose phone knows the block; until one does
+          // the card says so in its place
+          if (appState.shotsCardCan)
+            CardAction(
+              label: l10n.homeShotsTurnOn,
+              onTap: () => _answer(true),
+              fill: HaloColors.amber,
+              ink: HaloColors.onAmber,
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                l10n.chatShotsWhenTheyUpdate,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              ),
+            ),
           CardAction(
             label: l10n.homeShotsLeaveOff,
             onTap: () => _answer(false),

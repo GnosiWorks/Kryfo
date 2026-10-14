@@ -3062,6 +3062,7 @@ final _calls = <_Call>[
   ('homeShotsTurnOnForAll', [], (l) => l.homeShotsTurnOnForAll),
   ('homeShotsTurnOn', [], (l) => l.homeShotsTurnOn),
   ('homeShotsLeaveOff', [], (l) => l.homeShotsLeaveOff),
+  ('homeShotsTheySeeIt', [], (l) => l.homeShotsTheySeeIt),
   ('voiceDisguisedHere', [], (l) => l.voiceDisguisedHere),
   ('voiceSlideUpToLock', [], (l) => l.voiceSlideUpToLock),
   ('voiceStopRecording', [], (l) => l.voiceStopRecording),

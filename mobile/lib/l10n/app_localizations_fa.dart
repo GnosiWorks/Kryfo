@@ -8238,14 +8238,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'اسکرین‌شات و ضبط صفحه در هر دو گوشی مسدود است';
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این گفت‌وگو را در هر دو گوشی مسدود می‌کند';
 
   @override
   String get chatShotsBlocksBoth =>
       'جلوی اسکرین‌شات و ضبط صفحه را در هر دو گوشی می‌گیرد';
 
   @override
-  String get chatShotsBlockedHere => 'اسکرین‌شات در این گفت‌وگو مسدود است';
+  String get chatShotsBlockedHere =>
+      'Kryfo در این گفت‌وگو جلوی اسکرین‌شات را می‌گیرد';
 
   @override
   String get chatShotsYouTurnedOn => 'شما جلوگیری از اسکرین‌شات را روشن کردید';
@@ -8266,7 +8267,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'اسکرین‌شات و ضبط صفحه در همه‌ی گوشی‌های این اتاق مسدود است';
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند';
 
   @override
   String get roomShotsAlwaysOn =>
@@ -8277,17 +8278,20 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeShotsPerChat =>
-      'جلوگیری از اسکرین‌شات حالا برای هر گفت‌وگو جداست';
+      'جلوگیری از اسکرین‌شات حالا برای هر گفت‌وگو جداست.';
 
   @override
-  String get homeShotsTurnOnForAll =>
-      'برای همه‌ی گفت‌وگوهایتان روشن شود؟ گفت‌وگوهایی که گوشی طرف مقابل هنوز به‌روز نشده، خاموش می‌مانند.';
+  String get homeShotsTurnOnForAll => 'برای همه‌ی گفت‌وگوهایتان روشن شود؟';
 
   @override
   String get homeShotsTurnOn => 'روشن برای همه';
 
   @override
   String get homeShotsLeaveOff => 'خاموش بماند';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo روی گوشی طرف مقابل هم جلوی آن را می‌گیرد و او می‌بیند که شما آن را روشن کرده‌اید.';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -8298,8 +8302,8 @@ class AppLocalizationsFa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'اسکرین‌شات در ⁨$countString⁩ گفت‌وگو مسدود است',
-      one: 'اسکرین‌شات در ⁨$countString⁩ گفت‌وگو مسدود است',
+      other: 'Kryfo حالا در ⁨$countString⁩ گفت‌وگو جلوی اسکرین‌شات را می‌گیرد',
+      one: 'Kryfo حالا در ⁨$countString⁩ گفت‌وگو جلوی اسکرین‌شات را می‌گیرد',
     );
     return '$_temp0';
   }

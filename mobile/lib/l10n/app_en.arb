@@ -10376,7 +10376,7 @@
   "@chatShotsWhenTheyUpdate": {
     "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
   },
-  "chatShotsBothPhones": "Screenshots and screen recording are blocked on both phones",
+  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones",
   "@chatShotsBothPhones": {
     "description": "screens/contact_screen.dart: under the switch while it is on"
   },
@@ -10384,7 +10384,7 @@
   "@chatShotsBlocksBoth": {
     "description": "screens/contact_screen.dart: under the switch while it is off, what it does"
   },
-  "chatShotsBlockedHere": "Screenshots are blocked in this chat",
+  "chatShotsBlockedHere": "Kryfo blocks screenshots in this chat",
   "@chatShotsBlockedHere": {
     "description": "screens/chat_screen.dart: screen reader label of the small mark in the chat header"
   },
@@ -10414,7 +10414,7 @@
       }
     }
   },
-  "roomShotsBlocked": "Screenshots and screen recording are blocked on every phone in this room",
+  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it",
   "@roomShotsBlocked": {
     "description": "screens/group_chat_screen.dart: the line a room shows on its first open"
   },
@@ -10426,11 +10426,11 @@
   "@settingsPerChat": {
     "description": "screens/settings_screen.dart: the screenshots line of your protections, without an app lock"
   },
-  "homeShotsPerChat": "Screenshot blocking is now per chat",
+  "homeShotsPerChat": "Screenshot blocking is now per chat.",
   "@homeShotsPerChat": {
     "description": "screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on"
   },
-  "homeShotsTurnOnForAll": "Turn it on for all your chats? Chats where the other phone hasn’t updated yet stay off.",
+  "homeShotsTurnOnForAll": "Turn it on for all your chats?",
   "@homeShotsTurnOnForAll": {
     "description": "screens/home_screen.dart: the card line"
   },
@@ -10442,7 +10442,11 @@
   "@homeShotsLeaveOff": {
     "description": "screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good"
   },
-  "homeShotsTurnedOn": "{count, plural, one{Screenshots are blocked in {count} chat} other{Screenshots are blocked in {count} chats}}",
+  "homeShotsTheySeeIt": "Kryfo blocks them on the other phone too, and they’ll see that you turned it on.",
+  "@homeShotsTheySeeIt": {
+    "description": "screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on"
+  },
+  "homeShotsTurnedOn": "{count, plural, one{Kryfo now blocks screenshots in {count} chat} other{Kryfo now blocks screenshots in {count} chats}}",
   "@homeShotsTurnedOn": {
     "description": "screens/home_screen.dart: toast after the card turned the block on",
     "placeholders": {

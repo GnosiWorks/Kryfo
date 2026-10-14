@@ -110,7 +110,8 @@ import '../widgets/shift_tap_guard.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
 import '../widgets/shots_line.dart';
-import '../chat_shots.dart' show ChatShots, kShotsByMe, kShotsByNone;
+import '../chat_shots.dart'
+    show ChatShots, ShotsPacer, kShotsByMe, kShotsByNone;
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
@@ -694,7 +695,7 @@ class _ChatScreenState extends State<ChatScreen>
   // the chat's screenshot block, as both phones hold it
   ChatShots _shots = const ChatShots();
   // this screen's one hold on the window's flag while the chat blocks
-  bool _shotsHeld = false;
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   // the burn, the inbox poll and the auto retry run only while the chat is
   // in view, and catch up the moment it is back
@@ -1219,6 +1220,11 @@ class _ChatScreenState extends State<ChatScreen>
     appState.loadChatDisguise(widget.peerHaloId).then((d) {
       if (mounted) setState(() => _disguise = d);
     });
+    // held before the first frame, from what the list knows, so the push
+    // never draws the chat uncovered; the read below settles it
+    if (!_isDev && !widget.support) {
+      _shotsHold.want(appState.shotsBlocksChat(widget.peerHaloId), now: true);
+    }
     _loadShots();
     appState.addListener(_onAppStateChanged);
     lockState.addListener(_lockLifted);
@@ -4340,14 +4346,14 @@ class _ChatScreenState extends State<ChatScreen>
     releaseChat(widget.peerHaloId);
     // the flag comes off here and not only in dispose: a screen deactivated
     // and never disposed would keep the whole app from screenshots
-    _holdShots(false);
+    _shotsHold.release();
     super.deactivate();
   }
 
   @override
   void activate() {
     super.activate();
-    _holdShots(_shots.blocking);
+    _shotsHold.want(_shots.blocking, now: true);
   }
 
   Future<void> _loadShots() async {
@@ -4360,21 +4366,17 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     if (!mounted) return;
-    _holdShots(s.blocking);
+    // their changes are paced: a phone flipping fast cannot flash this one
+    _shotsHold.want(s.blocking);
     final was = _shots;
     if (s.on == was.on &&
         s.can == was.can &&
         s.by == was.by &&
-        s.when == was.when) {
+        s.when == was.when &&
+        s.blocked == was.blocked) {
       return;
     }
     setState(() => _shots = s);
-  }
-
-  void _holdShots(bool on) {
-    if (on == _shotsHeld) return;
-    _shotsHeld = on;
-    appState.forceSecure(on);
   }
 
   Future<void> _flipShots() async {
@@ -4388,9 +4390,12 @@ class _ChatScreenState extends State<ChatScreen>
         can: _shots.can,
         by: kShotsByMe,
         when: DateTime.now().millisecondsSinceEpoch,
+        blocked: _shots.blocked,
+        quiet: _shots.quiet,
+        known: _shots.known,
       ),
     );
-    _holdShots(_shots.blocking);
+    _shotsHold.want(_shots.blocking, now: true);
     await appState.setChatShots(widget.peerHaloId, on);
     await _loadShots();
   }
@@ -4626,7 +4631,7 @@ class _ChatScreenState extends State<ChatScreen>
     _timers.dispose();
     _reads.dispose();
     releaseChat(widget.peerHaloId);
-    _holdShots(false);
+    _shotsHold.release();
     final open = _openChats[widget.peerHaloId]?..remove(this);
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
@@ -5152,11 +5157,14 @@ class _ChatScreenState extends State<ChatScreen>
     if (confirm != true) return;
     await appState.block(widget.peerHaloId);
     if (mounted) setState(() => _blocked = true);
+    // someone blocked holds nothing on this screen
+    await _loadShots();
   }
 
   Future<void> _unblockContact() async {
     await appState.unblock(widget.peerHaloId);
     if (mounted) setState(() => _blocked = false);
+    await _loadShots();
   }
 
   // a support chat's first reply takes it on: accepted, listened for, told
