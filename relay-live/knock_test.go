@@ -5,16 +5,22 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
+	"math"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/slicestore"
 	"github.com/fiatjaf/khatru"
 	"github.com/nbd-wtf/go-nostr"
@@ -33,19 +39,31 @@ func (c *fakeClock) now() time.Time {
 	return c.t
 }
 
-func (c *fakeClock) add(d time.Duration) {
+func (c *fakeClock) set(t time.Time) {
 	c.mu.Lock()
-	c.t = c.t.Add(d)
+	c.t = t
 	c.mu.Unlock()
 }
 
-// a knocker on a fake clock whose trailing knocks wait in timers the test
-// fires itself. nothing is posted: knocks stay in k.out
+type fakeTimer struct {
+	at time.Time
+	f  func()
+}
+
+// a knocker on a fake clock whose timers run when the test moves the clock.
+// nothing is posted: knocks stay queued until drained
 type testKnocks struct {
 	*knocker
 	clock  *fakeClock
-	mu     sync.Mutex
-	timers []func()
+	tmu    sync.Mutex
+	timers []fakeTimer
+	// what the queue took and when, as timers fired
+	log []stamped
+}
+
+type stamped struct {
+	knockJob
+	at time.Time
 }
 
 func newTestKnocks(t *testing.T) *testKnocks {
@@ -53,35 +71,57 @@ func newTestKnocks(t *testing.T) *testKnocks {
 	tk := &testKnocks{clock: &fakeClock{t: time.Unix(1_800_000_000, 0)}}
 	tk.knocker = newKnocker(nil, false)
 	tk.now = tk.clock.now
-	tk.after = func(_ time.Duration, f func()) {
-		tk.mu.Lock()
-		tk.timers = append(tk.timers, f)
-		tk.mu.Unlock()
+	tk.after = func(d time.Duration, f func()) {
+		tk.tmu.Lock()
+		tk.timers = append(tk.timers, fakeTimer{tk.clock.now().Add(d), f})
+		tk.tmu.Unlock()
 	}
 	return tk
 }
 
-func (tk *testKnocks) fire() {
-	tk.mu.Lock()
-	ts := tk.timers
-	tk.timers = nil
-	tk.mu.Unlock()
-	for _, f := range ts {
-		f()
-	}
-}
-
-// what is waiting to be posted
-func (tk *testKnocks) drain() []knockJob {
-	var out []knockJob
+// moves the clock on by d, firing every timer due on the way in order, and
+// stamps what each one queued with its time
+func (tk *testKnocks) advance(d time.Duration) {
+	end := tk.clock.now().Add(d)
 	for {
-		select {
-		case j := <-tk.out:
-			out = append(out, j)
-		default:
-			return out
+		tk.tmu.Lock()
+		sort.SliceStable(tk.timers, func(i, j int) bool { return tk.timers[i].at.Before(tk.timers[j].at) })
+		if len(tk.timers) == 0 || tk.timers[0].at.After(end) {
+			tk.tmu.Unlock()
+			break
+		}
+		next := tk.timers[0]
+		tk.timers = tk.timers[1:]
+		tk.tmu.Unlock()
+		tk.clock.set(next.at)
+		next.f()
+		for _, j := range tk.drain() {
+			tk.log = append(tk.log, stamped{j, next.at})
 		}
 	}
+	tk.clock.set(end)
+}
+
+// what is waiting to be posted, taken out of the queue
+func (tk *testKnocks) drain() []knockJob {
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	var out []knockJob
+	for _, d := range tk.domains {
+		for _, ep := range d.real {
+			out = append(out, knockJob{ep.url, false})
+			ep.queuedReal = false
+		}
+		for _, ep := range d.decoy {
+			out = append(out, knockJob{ep.url, true})
+			ep.queuedDecoy = false
+		}
+		d.real, d.decoy = nil, nil
+		d.inRing = false
+	}
+	tk.q.ring = nil
+	tk.q.queued = 0
+	return out
 }
 
 func signedReg(t *testing.T, sk string, endpoint string, at time.Time) nostr.Event {
@@ -99,6 +139,17 @@ func keypair() (sk, pk string) {
 	return
 }
 
+func register(t *testing.T, tk *testKnocks, endpoint string) (sk, pk string) {
+	t.Helper()
+	sk, pk = keypair()
+	ev := signedReg(t, sk, endpoint, tk.clock.now())
+	if rej, msg := tk.check(&ev); rej {
+		t.Fatalf("%s: %s", endpoint, msg)
+	}
+	tk.apply(&ev)
+	return
+}
+
 func TestKnockEndpoints(t *testing.T) {
 	for _, c := range []struct {
 		url    string
@@ -107,31 +158,90 @@ func TestKnockEndpoints(t *testing.T) {
 	}{
 		{testEP, false, true},
 		{"https://ntfy.sh/upXyZ?up=1", false, true},
-		{"https://push.example.org:8443/up", false, true},
+		{"https://ntfy.sh:443/upXyZ", false, true},
+		{"https://8.8.8.8/up", false, true},
+		{"https://push.example.org:8443/up", false, false},
+		{"https://8.8.8.8:25/x", false, false},
+		{"https://example.com:6379/", false, false},
 		{"http://ntfy.sh/up", false, false},
 		{"ftp://ntfy.sh/up", false, false},
 		{"https://localhost/up", false, false},
+		{"https://localhost./up", false, false},
 		{"https://a.localhost/up", false, false},
+		{"https://ntfy.sh./up", false, false},
 		{"https://127.0.0.1/up", false, false},
+		{"https://127.1/up", false, false},
+		{"https://2130706433/up", false, false},
+		{"https://0x7f.1/up", false, false},
 		{"https://10.0.0.2/up", false, false},
 		{"https://192.168.1.1/up", false, false},
 		{"https://169.254.169.254/latest", false, false},
 		{"https://100.64.0.1/up", false, false},
+		{"https://192.0.2.1/up", false, false},
+		{"https://192.88.99.1/up", false, false},
 		{"https://[::1]/up", false, false},
 		{"https://[fd00::1]/up", false, false},
+		{"https://[::ffff:127.0.0.1]/up", false, false},
+		{"https://[::7f00:1]/up", false, false},
 		{"https://[64:ff9b::a00:1]/up", false, false},
 		{"https://user:pw@ntfy.sh/up", false, false},
 		{"https://ntfy.sh/up#x", false, false},
 		{"https:///up", false, false},
 		{"https://ntfy.sh/up x", false, false},
+		{"https://com/up", false, false},
 		{"https://ntfy.sh/" + strings.Repeat("a", maxEndpointLen), false, false},
 		{"http://abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuv.onion/up", false, false},
 		{"http://abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuv.onion/up", true, true},
-		{"https://8.8.8.8/up", false, true},
+		{"http://abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuv.onion:22/up", true, false},
 	} {
 		if got := knockEndpointOK(c.url, c.onions); got != c.ok {
 			t.Errorf("%q onions=%v: got %v, want %v", c.url, c.onions, got, c.ok)
 		}
+	}
+}
+
+func TestKnockPortsCanBeOpened(t *testing.T) {
+	t.Setenv("RELAY_KNOCK_PORTS", "8443")
+	if !knockEndpointOK("https://push.example.org:8443/up", false) {
+		t.Fatal("a port the box allows was refused")
+	}
+	if knockEndpointOK("https://push.example.org:25/up", false) {
+		t.Fatal("a port the box does not allow was taken")
+	}
+}
+
+func TestPublicIPForms(t *testing.T) {
+	for s, want := range map[string]bool{
+		"8.8.8.8": true, "2a00:1450:4001::1": true,
+		"::7f00:1": false, "::a00:1": false, "::ffff:127.0.0.1": false, "::ffff:10.0.0.1": false,
+		"fec0::1": false, "2001:0:4136:e378:8000:63bf:3fff:fdd2": false, "2001:db8::1": false,
+		"192.0.2.1": false, "198.51.100.1": false, "203.0.113.1": false, "192.88.99.1": false,
+		"100::1": false, "64:ff9b::a00:1": false, "64:ff9b:1::a00:1": false, "2002:a00:1::1": false,
+		"255.255.255.255": false, "0.0.0.0": false, "::": false,
+	} {
+		if got := publicIP(net.ParseIP(s)); got != want {
+			t.Errorf("%s: public %v, want %v", s, got, want)
+		}
+	}
+}
+
+func TestKnockRefusesTheBoxItself(t *testing.T) {
+	selfMu.Lock()
+	selfIPs["8.8.4.4"] = true
+	selfMu.Unlock()
+	t.Cleanup(func() {
+		selfMu.Lock()
+		delete(selfIPs, "8.8.4.4")
+		selfMu.Unlock()
+	})
+	if knockEndpointOK("https://8.8.4.4/up", false) {
+		t.Fatal("the box's own address was taken as an endpoint")
+	}
+	if publicOnly("tcp4", "8.8.4.4:443", nil) == nil {
+		t.Fatal("the dial reached the box's own address")
+	}
+	if _, err := knockResolver("tcp4")(context.Background(), "8.8.4.4"); err == nil {
+		t.Fatal("the resolver handed out the box's own address")
 	}
 }
 
@@ -153,23 +263,23 @@ func TestKnockRegistrationIsCheckedAndOrdered(t *testing.T) {
 	if rej, _ := tk.check(&tagged); !rej {
 		t.Fatal("a registration with tags was taken")
 	}
-	private := signedReg(t, sk, "https://127.0.0.1/up", now)
-	if rej, _ := tk.check(&private); !rej {
-		t.Fatal("a loopback endpoint was taken")
-	}
 
 	first := signedReg(t, sk, testEP, now)
 	tk.apply(&first)
 	if len(tk.regs) != 1 || len(tk.eps) != 1 {
 		t.Fatalf("regs %d eps %d after one registration", len(tk.regs), len(tk.eps))
 	}
-	// an older one, replayed, changes nothing
-	older := signedReg(t, sk, "https://other.example.org/up", now.Add(-time.Minute))
-	tk.apply(&older)
+	// the same one again, or an older one, is refused so the app knows
+	for _, ev := range []nostr.Event{first, signedReg(t, sk, "https://other.example.org/up", now.Add(-time.Minute))} {
+		rej, msg := tk.check(&ev)
+		if !rej || !strings.HasPrefix(msg, "duplicate:") {
+			t.Fatalf("not newer: %v %q", rej, msg)
+		}
+		tk.apply(&ev)
+	}
 	if reg := tk.regs[knockKey(pk)]; reg.ep.url != testEP {
 		t.Fatalf("an older registration replaced a newer one: %s", reg.ep.url)
 	}
-	// a newer one with no endpoint forgets it
 	forget := signedReg(t, sk, "", now.Add(time.Second))
 	tk.apply(&forget)
 	if len(tk.regs) != 0 || len(tk.eps) != 0 {
@@ -177,11 +287,74 @@ func TestKnockRegistrationIsCheckedAndOrdered(t *testing.T) {
 	}
 }
 
-func TestKnockStoresNoAddress(t *testing.T) {
+func TestKnockReplayAfterForget(t *testing.T) {
 	tk := newTestKnocks(t)
 	sk, pk := keypair()
-	ev := signedReg(t, sk, testEP, tk.clock.now())
-	tk.apply(&ev)
+	now := tk.clock.now()
+	reg := signedReg(t, sk, testEP, now)
+	tk.apply(&reg)
+	forget := signedReg(t, sk, "", now.Add(time.Second))
+	tk.apply(&forget)
+	tk.advance(time.Hour)
+	if rej, msg := tk.check(&reg); !rej || !strings.HasPrefix(msg, "duplicate:") {
+		t.Fatalf("a replay inside the window: %v %q", rej, msg)
+	}
+	tk.apply(&reg)
+	if tk.regs[knockKey(pk)] != nil {
+		t.Fatal("an old registration came back after a newer forget")
+	}
+	// past the window the forget goes, and the replay is too old anyway
+	tk.advance(2 * knockSkew)
+	tk.tick()
+	if len(tk.forgets) != 0 {
+		t.Fatal("a forget was kept past its window")
+	}
+	if rej, _ := tk.check(&reg); !rej {
+		t.Fatal("a replay past the window was taken")
+	}
+	// a fresh one after the forget is taken
+	fresh := signedReg(t, sk, testEP, tk.clock.now())
+	tk.apply(&fresh)
+	if tk.regs[knockKey(pk)] == nil {
+		t.Fatal("a new registration after a forget was refused")
+	}
+}
+
+func TestKnockForgetWinsATie(t *testing.T) {
+	tk := newTestKnocks(t)
+	sk, pk := keypair()
+	now := tk.clock.now()
+	reg := signedReg(t, sk, testEP, now)
+	tk.apply(&reg)
+	forget := signedReg(t, sk, "", now)
+	if rej, msg := tk.check(&forget); rej {
+		t.Fatalf("a forget in the same second was refused: %s", msg)
+	}
+	tk.apply(&forget)
+	if tk.regs[knockKey(pk)] != nil {
+		t.Fatal("a forget in the same second lost to the registration")
+	}
+	again := signedReg(t, sk, "https://other.example.org/up", now)
+	if rej, _ := tk.check(&again); !rej {
+		t.Fatal("a registration in the forget's second was taken")
+	}
+}
+
+func TestKnockForgetForNothingKeepsNothing(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < 100; i++ {
+		sk, _ := keypair()
+		ev := signedReg(t, sk, "", tk.clock.now())
+		tk.apply(&ev)
+	}
+	if len(tk.forgets) != 0 {
+		t.Fatalf("%d forgets kept for addresses that had nothing", len(tk.forgets))
+	}
+}
+
+func TestKnockStoresNoAddress(t *testing.T) {
+	tk := newTestKnocks(t)
+	_, pk := register(t, tk, testEP)
 	raw, _ := hex.DecodeString(pk)
 	for key := range tk.regs {
 		if bytes.Equal(key[:], raw) || key != knockKey(pk) {
@@ -192,10 +365,9 @@ func TestKnockStoresNoAddress(t *testing.T) {
 
 func TestKnockOnWrapWithFloorAndOneTrailing(t *testing.T) {
 	tk := newTestKnocks(t)
-	sk, pk := keypair()
-	reg := signedReg(t, sk, testEP, tk.clock.now())
-	tk.apply(&reg)
+	_, pk := register(t, tk, testEP)
 	_, other := keypair()
+	tk.drain()
 
 	w := wrap(t, other, nil)
 	tk.stored(&w)
@@ -203,7 +375,8 @@ func TestKnockOnWrapWithFloorAndOneTrailing(t *testing.T) {
 		t.Fatalf("a wrap for an unregistered address knocked: %v", got)
 	}
 
-	// a burst of fifty slices: one knock now, one when the minute is up
+	// a burst of fifty slices: one knock now, one after the minute
+	start := tk.clock.now()
 	for i := 0; i < 50; i++ {
 		w := wrap(t, pk, nil)
 		tk.stored(&w)
@@ -212,69 +385,61 @@ func TestKnockOnWrapWithFloorAndOneTrailing(t *testing.T) {
 	if len(got) != 1 || got[0].url != testEP || got[0].decoy {
 		t.Fatalf("knocks right after the burst: %+v", got)
 	}
-	if len(tk.timers) != 1 {
-		t.Fatalf("%d trailing knocks waiting, want 1", len(tk.timers))
+	tk.log = nil
+	tk.advance(knockFloor + knockTrail)
+	var trailing []stamped
+	for _, s := range tk.log {
+		if !s.decoy {
+			trailing = append(trailing, s)
+		}
 	}
-	tk.clock.add(knockFloor)
-	tk.fire()
-	if got := tk.drain(); len(got) != 1 {
-		t.Fatalf("trailing knocks: %d, want 1", len(got))
+	if len(trailing) != 1 {
+		t.Fatalf("trailing knocks: %d, want 1", len(trailing))
 	}
-	// quiet after: nothing more
-	tk.fire()
-	if got := tk.drain(); len(got) != 0 {
-		t.Fatalf("knocks after the burst was answered: %d", len(got))
+	if at := trailing[0].at.Sub(start); at < knockFloor || at >= knockFloor+knockTrail {
+		t.Fatalf("the trailing knock came %v after the first", at)
 	}
 }
 
 func TestKnockStormStaysBounded(t *testing.T) {
 	tk := newTestKnocks(t)
-	sk, pk := keypair()
-	reg := signedReg(t, sk, testEP, tk.clock.now())
-	tk.apply(&reg)
-	// a wrap every second for an hour: at most one knock a minute, plus
-	// the trailing one each minute rolls into
+	_, pk := register(t, tk, testEP)
+	tk.drain()
+	// a wrap every second for an hour
 	sent := 0
 	for s := 0; s < 3600; s++ {
 		w := wrap(t, pk, nil)
 		tk.stored(&w)
-		tk.clock.add(time.Second)
-		if s%60 == 59 {
-			tk.fire()
-		}
 		sent += len(tk.drain())
+		tk.log = nil
+		tk.advance(time.Second)
+		for _, j := range tk.log {
+			if !j.decoy {
+				sent++
+			}
+		}
 	}
 	if sent > 61 {
 		t.Fatalf("%d knocks in an hour of wraps, want at most 61", sent)
 	}
-	if sent < 59 {
+	if sent < 40 {
 		t.Fatalf("%d knocks in an hour of wraps: wraps went unannounced", sent)
 	}
 }
 
 func TestKnockDecoysPerEndpointNotPerAddress(t *testing.T) {
 	tk := newTestKnocks(t)
-	// sixteen addresses on one endpoint, one on another
 	for i := 0; i < 16; i++ {
-		sk, _ := keypair()
-		ev := signedReg(t, sk, testEP, tk.clock.now())
-		tk.apply(&ev)
+		register(t, tk, testEP)
 	}
-	sk, _ := keypair()
-	ev := signedReg(t, sk, "https://push.example.org/upOther", tk.clock.now())
-	tk.apply(&ev)
-
+	register(t, tk, "https://push.example.org/upOther")
+	tk.advance(96 * time.Hour)
 	counts := map[string]int{}
-	// four days in timer steps
-	for i := 0; i < int(96*time.Hour/knockTick); i++ {
-		tk.clock.add(knockTick)
-		tk.tick()
-		for _, j := range tk.drain() {
-			if !j.decoy {
-				t.Fatal("a decoy pass sent a real knock")
-			}
-			counts[j.url]++
+	for _, s := range tk.log {
+		if !s.decoy {
+			t.Fatal("a decoy timer sent a real knock")
 		}
+		counts[s.url]++
 	}
 	mean := float64(96*time.Hour) / float64(knockDecoyMean)
 	for u, n := range counts {
@@ -285,8 +450,6 @@ func TestKnockDecoysPerEndpointNotPerAddress(t *testing.T) {
 	if len(counts) != 2 {
 		t.Fatalf("decoys reached %d endpoints, want 2", len(counts))
 	}
-	// the number of addresses behind an endpoint does not show in its
-	// decoys
 	a, b := counts[testEP], counts["https://push.example.org/upOther"]
 	if a > 3*b+3 {
 		t.Fatalf("sixteen addresses got %d decoys, one got %d", a, b)
@@ -295,57 +458,223 @@ func TestKnockDecoysPerEndpointNotPerAddress(t *testing.T) {
 
 func TestKnockDecoyKeepsTheFloor(t *testing.T) {
 	tk := newTestKnocks(t)
-	sk, pk := keypair()
-	ev := signedReg(t, sk, testEP, tk.clock.now())
-	tk.apply(&ev)
+	_, pk := register(t, tk, testEP)
+	tk.drain()
 	w := wrap(t, pk, nil)
 	tk.stored(&w)
 	tk.drain()
-	tk.eps[testEP].nextDecoy = tk.clock.now()
-	tk.clock.add(time.Second)
-	tk.tick()
+	tk.mu.Lock()
+	ep := tk.eps[testEP]
+	gen := ep.decoyGen
+	tk.mu.Unlock()
+	tk.decoyDue(ep, gen)
 	if got := tk.drain(); len(got) != 0 {
 		t.Fatal("a decoy went out inside the floor of a real knock")
 	}
 }
 
+// chi-square of the times' phase in the timer's tick, against an even
+// spread over bins
+func phaseChi2(ts []time.Time, bins int) float64 {
+	counts := make([]float64, bins)
+	for _, t := range ts {
+		ph := t.UnixNano() % int64(knockTick)
+		counts[int(ph*int64(bins)/int64(knockTick))]++
+	}
+	want := float64(len(ts)) / float64(bins)
+	var chi float64
+	for _, c := range counts {
+		chi += (c - want) * (c - want) / want
+	}
+	return chi
+}
+
+// two-sample kolmogorov-smirnov distance between the phases of a and b
+func phaseKS(a, b []time.Time) float64 {
+	ph := func(ts []time.Time) []float64 {
+		out := make([]float64, len(ts))
+		for i, t := range ts {
+			out[i] = float64(t.UnixNano()%int64(knockTick)) / float64(knockTick)
+		}
+		sort.Float64s(out)
+		return out
+	}
+	x, y := ph(a), ph(b)
+	var i, j int
+	var d float64
+	for i < len(x) && j < len(y) {
+		if x[i] <= y[j] {
+			i++
+		} else {
+			j++
+		}
+		d = math.Max(d, math.Abs(float64(i)/float64(len(x))-float64(j)/float64(len(y))))
+	}
+	return d
+}
+
+func TestKnockDecoyTimesLookLikeRealOnes(t *testing.T) {
+	tk := newTestKnocks(t)
+	var pks []string
+	for i := 0; i < 40; i++ {
+		_, pk := register(t, tk, fmt.Sprintf("https://push.example.org/up%d", i))
+		pks = append(pks, pk)
+	}
+	tk.drain()
+	// wraps at random instants, as messages come; decoys on their timers.
+	// the clock moves in uneven steps, never on a tick
+	var real, decoy []time.Time
+	for step := 0; step < 20000; step++ {
+		tk.log = nil
+		tk.advance(time.Duration(tk.rnd.Int64N(int64(20 * time.Second))))
+		if tk.rnd.IntN(10) == 0 {
+			w := wrap(t, pks[tk.rnd.IntN(len(pks))], nil)
+			tk.stored(&w)
+			for _, j := range tk.drain() {
+				tk.log = append(tk.log, stamped{j, tk.clock.now()})
+			}
+		}
+		for _, s := range tk.log {
+			if s.decoy {
+				decoy = append(decoy, s.at)
+			} else {
+				real = append(real, s.at)
+			}
+		}
+	}
+	if len(decoy) < 500 || len(real) < 500 {
+		t.Fatalf("too few to judge: %d decoys, %d real", len(decoy), len(real))
+	}
+	// 30 bins, 29 degrees of freedom: 70 is far past p 0.0001
+	if c := phaseChi2(decoy, 30); c > 70 {
+		t.Fatalf("decoys bunch within the tick: chi2 %.0f", c)
+	}
+	if c := phaseChi2(real, 30); c > 70 {
+		t.Fatalf("real knocks bunch within the tick: chi2 %.0f", c)
+	}
+	if d := phaseKS(real, decoy); d > 0.08 {
+		t.Fatalf("real and decoy send times differ: ks %.3f", d)
+	}
+}
+
 func TestKnockExpiry(t *testing.T) {
 	tk := newTestKnocks(t)
-	sk, pk := keypair()
-	ev := signedReg(t, sk, testEP, tk.clock.now())
-	tk.apply(&ev)
-	tk.clock.add(knockTTL + time.Second)
+	_, pk := register(t, tk, testEP)
+	tk.drain()
+	tk.clock.set(tk.clock.now().Add(knockTTL + time.Second))
 	w := wrap(t, pk, nil)
 	tk.stored(&w)
 	if got := tk.drain(); len(got) != 0 {
 		t.Fatal("an expired registration was knocked")
 	}
 	tk.tick()
-	if len(tk.regs) != 0 || len(tk.eps) != 0 {
+	if len(tk.regs) != 0 || len(tk.eps) != 0 || len(tk.domains) != 0 {
 		t.Fatal("an expired registration was kept")
+	}
+}
+
+func TestKnockSweepLetsWrapsIn(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	store, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.close()
+	store.start()
+	tk := newTestKnocks(t)
+	tk.store = store
+	const n = 20000
+	tk.mu.Lock()
+	for i := 0; i < n; i++ {
+		var key [32]byte
+		key[0], key[1], key[2] = byte(i), byte(i>>8), byte(i>>16)
+		tk.setLocked(key, fmt.Sprintf("https://x.example/%d", i%200), tk.clock.now().Unix(), tk.clock.now().Add(knockTTL).Unix())
+		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires)
+	}
+	tk.mu.Unlock()
+	store.flush(time.Minute)
+	tk.clock.set(tk.clock.now().Add(knockTTL + time.Second))
+	done := make(chan struct{})
+	go func() {
+		tk.tick()
+		close(done)
+	}()
+	var worst time.Duration
+	_, pk := keypair()
+	for {
+		select {
+		case <-done:
+			if len(tk.regs) != 0 {
+				t.Fatalf("%d left after the sweep", len(tk.regs))
+			}
+			if worst > 250*time.Millisecond {
+				t.Fatalf("a wrap waited %v on the sweep", worst)
+			}
+			return
+		default:
+		}
+		t0 := time.Now()
+		tk.wrapFor(pk)
+		if w := time.Since(t0); w > worst {
+			worst = w
+		}
+		time.Sleep(time.Millisecond)
 	}
 }
 
 func TestKnockGoneEndpointIsDropped(t *testing.T) {
 	tk := newTestKnocks(t)
 	for i := 0; i < 3; i++ {
-		sk, _ := keypair()
-		ev := signedReg(t, sk, testEP, tk.clock.now())
-		tk.apply(&ev)
+		register(t, tk, testEP)
 	}
-	tk.post = func(context.Context, string) (int, error) { return http.StatusNotFound, nil }
-	tk.send(context.Background(), knockJob{testEP, false})
+	tk.q.result(tk.eps[testEP], false, http.StatusNotFound, nil)
 	if len(tk.regs) != 0 || len(tk.eps) != 0 {
 		t.Fatalf("regs %d eps %d after a 404", len(tk.regs), len(tk.eps))
+	}
+}
+
+func TestKnockFailingEndpointGoesAfterADay(t *testing.T) {
+	tk := newTestKnocks(t)
+	register(t, tk, testEP)
+	ep := tk.eps[testEP]
+	// an hour of trouble: kept
+	for i := 0; i < 10; i++ {
+		tk.q.result(ep, false, 0, context.DeadlineExceeded)
+		tk.clock.set(tk.clock.now().Add(6 * time.Minute))
+	}
+	if tk.eps[testEP] == nil {
+		t.Fatal("an endpoint was let go after an hour of failures")
+	}
+	// one success starts the count again
+	tk.q.result(ep, false, 201, nil)
+	tk.clock.set(tk.clock.now().Add(knockFailFor))
+	tk.q.result(ep, false, 503, nil)
+	if tk.eps[testEP] == nil {
+		t.Fatal("one failure after a success let the endpoint go")
+	}
+	for i := 0; i < knockFailAtLeast; i++ {
+		tk.clock.set(tk.clock.now().Add(knockFailFor / knockFailAtLeast))
+		tk.q.result(ep, true, 0, context.DeadlineExceeded)
+	}
+	if tk.eps[testEP] != nil || len(tk.regs) != 0 {
+		t.Fatal("an endpoint failing for a day was kept")
+	}
+	// a server pacing us is not the endpoint failing
+	register(t, tk, testEP)
+	ep = tk.eps[testEP]
+	for i := 0; i < 50; i++ {
+		tk.clock.set(tk.clock.now().Add(time.Hour))
+		tk.q.result(ep, false, http.StatusTooManyRequests, nil)
+	}
+	if tk.eps[testEP] == nil {
+		t.Fatal("a 429 let the endpoint go")
 	}
 }
 
 func TestKnockCeilingPerEndpoint(t *testing.T) {
 	tk := newTestKnocks(t)
 	for i := 0; i < maxRegsPerEP; i++ {
-		sk, _ := keypair()
-		ev := signedReg(t, sk, testEP, tk.clock.now())
-		tk.apply(&ev)
+		register(t, tk, testEP)
 	}
 	sk, _ := keypair()
 	ev := signedReg(t, sk, testEP, tk.clock.now())
@@ -354,68 +683,317 @@ func TestKnockCeilingPerEndpoint(t *testing.T) {
 	}
 }
 
+// one person minting endpoints on a server of theirs fills that server's
+// share, not the relay
+func TestKnockOneServerCannotFillTheRelay(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < knockPerDomain; i++ {
+		register(t, tk, fmt.Sprintf("https://a%d.victim.example/%d", i%7, i))
+	}
+	sk, _ := keypair()
+	ev := signedReg(t, sk, "https://victim.example/more", tk.clock.now())
+	if rej, msg := tk.check(&ev); !rej || !strings.Contains(msg, "push server") {
+		t.Fatalf("one server took more than its share: %v %q", rej, msg)
+	}
+	register(t, tk, "https://ntfy.sh/upLegit")
+	register(t, tk, "https://push.own-server.example/up")
+	// and its decoys come at the pace of its share
+	tk.drain()
+	tk.log = nil
+	tk.advance(time.Hour)
+	n := 0
+	for _, s := range tk.log {
+		if strings.Contains(s.url, "victim.example") {
+			n++
+		}
+	}
+	if limit := float64(knockPerDomain) * 3 * float64(time.Hour) / float64(knockDecoyMean); float64(n) > limit {
+		t.Fatalf("%d decoys in an hour to one server", n)
+	}
+}
+
+func TestKnockServersAreServedInTurn(t *testing.T) {
+	tk := newTestKnocks(t)
+	var flood []*knockEP
+	for i := 0; i < knockDomainQueue; i++ {
+		register(t, tk, fmt.Sprintf("https://flood.example/%d", i))
+	}
+	register(t, tk, "https://quiet.example/up")
+	tk.drain()
+	tk.mu.Lock()
+	for u, ep := range tk.eps {
+		if strings.Contains(u, "flood") {
+			flood = append(flood, ep)
+			tk.q.addLocked(ep, false)
+		}
+	}
+	tk.q.addLocked(tk.eps["https://quiet.example/up"], false)
+	var order []string
+	for i := 0; i < 3; i++ {
+		ep, _, ok := tk.q.nextLocked(tk.clock.now())
+		if !ok {
+			t.Fatal("nothing to send")
+		}
+		order = append(order, ep.domain)
+	}
+	tk.mu.Unlock()
+	found := false
+	for _, d := range order[:2] {
+		found = found || d == "quiet.example"
+	}
+	if !found {
+		t.Fatalf("a quiet server waited behind a flooded one: %v", order)
+	}
+	if len(flood) != knockDomainQueue {
+		t.Fatal("setup")
+	}
+}
+
+func TestKnockFullQueues(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < knockDomainQueue+10; i++ {
+		register(t, tk, fmt.Sprintf("https://flood.example/%d", i%knockPerDomain))
+	}
+	register(t, tk, "https://quiet.example/up")
+	tk.drain()
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	for _, ep := range tk.eps {
+		if ep.domain == "flood.example" {
+			tk.q.addLocked(ep, false)
+		}
+	}
+	if d := tk.domains["flood.example"]; d.waiting() > knockDomainQueue {
+		t.Fatalf("one server queued %d", d.waiting())
+	}
+	// its queue full, another server's knock still goes in
+	tk.q.addLocked(tk.eps["https://quiet.example/up"], false)
+	if tk.domains["quiet.example"].waiting() != 1 {
+		t.Fatal("a full server kept another's knock out")
+	}
+	// decoys stop at half
+	d := tk.domains["flood.example"]
+	d.real = nil
+	tk.q.queued = 1
+	for _, ep := range tk.eps {
+		ep.queuedReal = false
+		if ep.domain == "flood.example" {
+			tk.q.addLocked(ep, true)
+		}
+	}
+	if len(d.decoy) > knockDomainQueue/2 {
+		t.Fatalf("decoys filled %d of a server's queue", len(d.decoy))
+	}
+}
+
 func TestKnockDecoysYieldToRealKnocks(t *testing.T) {
 	tk := newTestKnocks(t)
-	posts := 0
-	tk.post = func(context.Context, string) (int, error) { posts++; return 201, nil }
-	tk.rate = newBucket(0, 10)
-	for i := 0; i < 10; i++ {
-		tk.send(context.Background(), knockJob{testEP, true})
+	for i := 0; i < 20; i++ {
+		register(t, tk, fmt.Sprintf("https://ntfy.sh/up%d", i))
 	}
-	if posts != 5 {
-		t.Fatalf("decoys took %d of a budget of 10, want half", posts)
+	tk.drain()
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	tk.q.rate = newBucket(0, 10)
+	for _, ep := range tk.eps {
+		tk.q.addLocked(ep, true)
 	}
-	for i := 0; i < 5; i++ {
-		tk.send(context.Background(), knockJob{testEP, false})
+	n := 0
+	for {
+		if _, _, ok := tk.q.nextLocked(tk.clock.now()); !ok {
+			break
+		}
+		n++
 	}
-	if posts != 10 {
-		t.Fatalf("real knocks got %d of the rest", posts-5)
+	if n != 5 {
+		t.Fatalf("decoys took %d of a budget of 10, want half", n)
+	}
+	for _, ep := range tk.eps {
+		tk.q.addLocked(ep, false)
+	}
+	n = 0
+	for {
+		if _, _, ok := tk.q.nextLocked(tk.clock.now()); !ok {
+			break
+		}
+		n++
+	}
+	if n != 5 {
+		t.Fatalf("real knocks got %d of the rest", n)
+	}
+}
+
+// slow servers hold up their own knocks only: a real knock to another one
+// goes at once, through the real client's transport
+func TestKnockSlowServersDoNotHoldUpOthers(t *testing.T) {
+	hang := make(chan struct{})
+	defer close(hang)
+	slow := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-hang:
+		case <-r.Context().Done():
+		}
+	}))
+	defer slow.Close()
+	served := make(chan time.Time, 4)
+	good := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		served <- time.Now()
+		w.WriteHeader(201)
+	}))
+	defer good.Close()
+
+	k := newKnocker(nil, false)
+	// the names resolve to two public addresses, dialled to the stand-ins
+	k.q.resolve = func(_ context.Context, host string) ([]net.IP, error) {
+		if strings.Contains(host, "slow") {
+			return []net.IP{net.ParseIP("9.9.9.9")}, nil
+		}
+		return []net.IP{net.ParseIP("1.1.1.1")}, nil
+	}
+	c := knockClientWith(func(ctx context.Context, n, addr string) (net.Conn, error) {
+		to := good.Listener.Addr().String()
+		if ips, _ := ctx.Value(knockDialIPs{}).([]net.IP); len(ips) > 0 && ips[0].String() == "9.9.9.9" {
+			to = slow.Listener.Addr().String()
+		}
+		return (&net.Dialer{}).DialContext(ctx, n, to)
+	})
+	c.Transport.(*http.Transport).TLSClientConfig = slow.Client().Transport.(*http.Transport).TLSClientConfig.Clone()
+	c.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = true
+	k.q.post = knockPoster(c)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	k.q.start(ctx)
+
+	k.mu.Lock()
+	for i := 0; i < 40; i++ {
+		k.setLocked([32]byte{byte(i), 1}, fmt.Sprintf("https://h%d.slow.example/up", i), k.now().Unix(), k.now().Add(time.Hour).Unix())
+	}
+	k.setLocked([32]byte{9, 9}, "https://good.example/up", k.now().Unix(), k.now().Add(time.Hour).Unix())
+	for u, ep := range k.eps {
+		if strings.Contains(u, "slow") {
+			k.q.addLocked(ep, false)
+		}
+	}
+	k.mu.Unlock()
+	time.Sleep(200 * time.Millisecond)
+	t0 := time.Now()
+	k.mu.Lock()
+	k.q.addLocked(k.eps["https://good.example/up"], false)
+	k.mu.Unlock()
+	select {
+	case at := <-served:
+		if w := at.Sub(t0); w > time.Second {
+			t.Fatalf("a knock to another server waited %v behind slow ones", w)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the knock to another server never went")
+	}
+	k.mu.Lock()
+	busy := k.q.ipBusy["9.9.9.9"]
+	k.mu.Unlock()
+	if busy > knockPerIP {
+		t.Fatalf("%d posts in flight to one address", busy)
+	}
+}
+
+func TestKnockPostGivesUpQuickly(t *testing.T) {
+	hang := make(chan struct{})
+	defer close(hang)
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-hang:
+		case <-r.Context().Done():
+		}
+	}))
+	defer srv.Close()
+	t0 := time.Now()
+	_, err := knockPoster(srv.Client())(context.Background(), srv.URL+"/up")
+	if err == nil {
+		t.Fatal("a hanging server answered")
+	}
+	if w := time.Since(t0); w > knockPostTimeout+time.Second {
+		t.Fatalf("a post waited %v", w)
 	}
 }
 
 func TestKnockTableSurvivesARestart(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "knock.sqlite")
-	db, err := openKnockStore(path)
+	store, err := openKnockStore(path)
 	if err != nil {
 		t.Fatal(err)
 	}
+	store.start()
 	clock := &fakeClock{t: time.Unix(1_800_000_000, 0)}
-	k := newKnocker(db, false)
+	k := newKnocker(store, false)
 	k.now = clock.now
 	sk, pk := keypair()
 	ev := signedReg(t, sk, testEP, clock.now())
 	k.apply(&ev)
-	sk2, _ := keypair()
+	sk2, pk2 := keypair()
 	ev2 := signedReg(t, sk2, testEP, clock.now().Add(-5*time.Minute))
 	k.apply(&ev2)
-	db.Close()
+	// a forget is kept across a restart for its window
+	f2 := signedReg(t, sk2, "", clock.now())
+	k.apply(&f2)
+	if !store.flush(10 * time.Second) {
+		t.Fatal("the writer did not catch up")
+	}
+	for _, p := range []string{path, path + "-wal", path + "-shm"} {
+		if st, err := os.Stat(p); err == nil && st.Mode().Perm() != 0o600 {
+			t.Fatalf("%s is %v", filepath.Base(p), st.Mode().Perm())
+		}
+	}
+	store.close()
 
-	// a day later both come back; a month later only what is left
 	for _, c := range []struct {
-		after time.Duration
-		want  int
-	}{{24 * time.Hour, 2}, {knockTTL - 2*time.Minute, 1}} {
-		db, err := openKnockStore(path)
+		after   time.Duration
+		forgets int
+	}{{time.Hour, 1}, {knockTTL - 2*time.Minute, 0}} {
+		store, err := openKnockStore(path)
 		if err != nil {
 			t.Fatal(err)
 		}
-		k := newKnocker(db, false)
+		k := newKnocker(store, false)
 		k.now = func() time.Time { return clock.now().Add(c.after) }
 		if err := k.load(); err != nil {
 			t.Fatal(err)
 		}
-		if len(k.regs) != c.want {
-			t.Fatalf("after %v: %d registrations, want %d", c.after, len(k.regs), c.want)
+		if len(k.regs) != 1 || k.regs[knockKey(pk)] == nil {
+			t.Fatalf("after %v: %d registrations", c.after, len(k.regs))
 		}
-		if k.regs[knockKey(pk)] == nil {
-			t.Fatalf("after %v: the newest registration is gone", c.after)
+		if len(k.forgets) != c.forgets {
+			t.Fatalf("after %v: %d forgets, want %d", c.after, len(k.forgets), c.forgets)
+		}
+		if c.forgets == 1 {
+			old := signedReg(t, sk2, testEP, clock.now().Add(-5*time.Minute))
+			if rej, _ := k.check(&old); !rej {
+				t.Fatal("after a restart a replay beat the forget")
+			}
 		}
 		var raw int
-		db.QueryRow(`SELECT count(*) FROM knock WHERE instr(lower(hex(addr)), ?) > 0`, pk[:16]).Scan(&raw)
+		store.db.QueryRow(`SELECT count(*) FROM knock WHERE instr(lower(hex(addr)), ?) > 0`, pk[:16]).Scan(&raw)
 		if raw != 0 {
 			t.Fatal("the table holds the address itself")
 		}
-		db.Close()
+		_ = pk2
+		store.close()
+	}
+}
+
+func TestKnockWritesNeverBlock(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	store, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.close()
+	// the writer not running: puts past the buffer are dropped, not waited on
+	t0 := time.Now()
+	for i := 0; i < cap(store.ch)+100; i++ {
+		store.put([32]byte{byte(i)}, testEP, 1, 2)
+	}
+	if time.Since(t0) > time.Second || store.dropped.Load() != 100 {
+		t.Fatalf("puts took %v, %d dropped", time.Since(t0), store.dropped.Load())
 	}
 }
 
@@ -468,6 +1046,10 @@ func TestKnockEndToEndOverTheRelay(t *testing.T) {
 	if err := publish(t, r, ev); err != nil {
 		t.Fatalf("the registration was refused: %v", err)
 	}
+	// the same again tells the app it is not newer
+	if err := publish(t, r, ev); err == nil || !strings.Contains(err.Error(), "duplicate") {
+		t.Fatalf("a repeat answered %v", err)
+	}
 	if got, _ := ask(t, r, nostr.Filter{IDs: []string{ev.ID}}); len(got) != 0 {
 		t.Fatal("the registration was stored")
 	}
@@ -476,6 +1058,7 @@ func TestKnockEndToEndOverTheRelay(t *testing.T) {
 		t.Fatalf("a listener was handed the registration: %s", got.Content)
 	case <-time.After(300 * time.Millisecond):
 	}
+	tk.drain()
 
 	if err := publish(t, r, wrap(t, pk, nil)); err != nil {
 		t.Fatal(err)
@@ -484,18 +1067,18 @@ func TestKnockEndToEndOverTheRelay(t *testing.T) {
 	if len(got) != 1 || got[0].url != testEP {
 		t.Fatalf("knocks after a wrap: %+v", got)
 	}
-	// a wrap the relay refuses knocks nobody
 	if err := publish(t, r, wrap(t, pk, func(e *nostr.Event) { e.Tags = append(e.Tags, nostr.Tag{"p", addr()}) })); err == nil {
 		t.Fatal("a wrap to two addresses was taken")
 	}
 
-	// someone else cannot point the address elsewhere: the registration
-	// is signed by the address, so another key registers only itself
+	// another key registers only itself
 	sk2, pk2 := keypair()
 	other := signedReg(t, sk2, "https://evil.example.org/up", time.Now())
 	if err := publish(t, r, other); err != nil {
 		t.Fatal(err)
 	}
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
 	if tk.regs[knockKey(pk)].ep.url != testEP || tk.regs[knockKey(pk2)] == nil {
 		t.Fatal("a registration reached another address")
 	}
@@ -563,21 +1146,34 @@ func TestKnockIsAnEmptyPost(t *testing.T) {
 	}
 }
 
+// the real client refuses at the dial whatever the url or the resolver
+// says: a loopback url, and the forms that carry one
 func TestKnockClientReachesNothingPrivate(t *testing.T) {
 	hit := false
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hit = true
 	}))
 	defer srv.Close()
-	// a public name that resolves to the box itself is still refused, at
-	// the dial
-	c := knockClient("tcp4", "")
-	_, err := knockPoster(c)(context.Background(), srv.URL+"/up")
-	if err == nil || hit {
-		t.Fatal("the knock client reached a loopback address")
+	_, port, _ := net.SplitHostPort(srv.Listener.Addr().String())
+	c := knockClient("tcp", "")
+	for _, u := range []string{
+		srv.URL + "/up",
+		"https://[::ffff:127.0.0.1]:" + port + "/up",
+		"https://[::7f00:1]:" + port + "/up",
+		"https://[::1]:" + port + "/up",
+	} {
+		_, err := knockPoster(c)(context.Background(), u)
+		if err == nil || hit || !strings.Contains(err.Error(), errNotPublic.Error()) {
+			t.Fatalf("%s: %v (reached: %v)", u, err, hit)
+		}
 	}
-	if !strings.Contains(err.Error(), errNotPublic.Error()) {
-		t.Fatalf("refused for another reason: %v", err)
+	// a name the queue resolved to loopback is refused at the dial too
+	ctx := context.WithValue(context.Background(), knockDialIPs{}, []net.IP{net.ParseIP("127.0.0.1")})
+	if _, err := knockPoster(c)(ctx, "https://example.com:"+port+"/up"); err == nil || hit {
+		t.Fatal("a resolved loopback address was dialled")
+	}
+	if _, err := knockResolver("tcp4")(context.Background(), "127.0.0.1"); err == nil {
+		t.Fatal("the resolver handed out loopback")
 	}
 }
 
@@ -586,16 +1182,32 @@ func TestKnockClientFollowsNoRedirect(t *testing.T) {
 		http.Redirect(w, r, "http://127.0.0.1:1/", http.StatusFound)
 	}))
 	defer srv.Close()
-	c := srv.Client()
-	c.CheckRedirect = knockClient("tcp4", "").CheckRedirect
+	c := knockClientWith(func(ctx context.Context, n, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, n, srv.Listener.Addr().String())
+	})
 	code, err := knockPoster(c)(context.Background(), srv.URL+"/up")
 	if err != nil || code != http.StatusFound {
 		t.Fatalf("a redirect was followed: %d %v", code, err)
 	}
 }
 
+func TestKnockClientTakesSmallAnswersOnly(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Big", strings.Repeat("a", 64<<10))
+		w.WriteHeader(201)
+	}))
+	defer srv.Close()
+	c := knockClientWith(func(ctx context.Context, n, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, n, srv.Listener.Addr().String())
+	})
+	if _, err := knockPoster(c)(context.Background(), srv.URL+"/up"); err == nil {
+		t.Fatal("a 64 kB header was read")
+	}
+}
+
 // the whole way: a registration over the websocket, a wrap to that
-// address, and the knock arriving at a push server as an empty post
+// address, and the knock arriving at a push server as an empty post,
+// through the queue and the real client's transport
 func TestKnockReachesAPushServer(t *testing.T) {
 	var mu sync.Mutex
 	var bodies []int
@@ -614,17 +1226,17 @@ func TestKnockReachesAPushServer(t *testing.T) {
 	}
 
 	url, tk := testKnockRelay(t)
-	// every name the knock asks for is the push server here
-	c := push.Client()
-	tr := c.Transport.(*http.Transport).Clone()
-	tr.TLSClientConfig.InsecureSkipVerify = true
-	tr.DialContext = func(ctx context.Context, n, _ string) (net.Conn, error) {
+	tk.q.resolve = func(context.Context, string) ([]net.IP, error) { return []net.IP{net.ParseIP("1.1.1.1")}, nil }
+	c := knockClientWith(func(ctx context.Context, n, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, n, push.Listener.Addr().String())
-	}
-	tk.post = knockPoster(&http.Client{Transport: tr})
+	})
+	tr := c.Transport.(*http.Transport)
+	tr.TLSClientConfig = push.Client().Transport.(*http.Transport).TLSClientConfig.Clone()
+	tr.TLSClientConfig.InsecureSkipVerify = true
+	tk.q.post = knockPoster(c)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go tk.run(ctx)
+	tk.q.start(ctx)
 
 	r := connect(t, url)
 	sk, pk := keypair()
@@ -644,13 +1256,58 @@ func TestKnockReachesAPushServer(t *testing.T) {
 	if b := got(); len(b) != 1 || b[0] != 0 {
 		t.Fatalf("knocks at the push server after five wraps: %v", b)
 	}
-	// the minute is up: one more for what came during it
-	tk.fire()
+	// the minute and a little are up: one more for what came during it
+	tk.tmu.Lock()
+	timers := tk.timers
+	tk.timers = nil
+	tk.tmu.Unlock()
+	for _, tm := range timers {
+		tm.f()
+	}
 	deadline = time.Now().Add(3 * time.Second)
 	for len(got()) < 2 && time.Now().Before(deadline) {
 		time.Sleep(10 * time.Millisecond)
 	}
-	if b := got(); len(b) != 2 || b[1] != 0 {
+	if b := got(); len(b) < 2 || b[1] != 0 {
 		t.Fatalf("knocks after the floor: %v", b)
 	}
 }
+
+// khatru logs an unexpected close; with no address of the caller
+func TestUnexpectedCloseLogsNoAddress(t *testing.T) {
+	relay := khatru.NewRelay()
+	var buf bytes.Buffer
+	var mu sync.Mutex
+	relay.Log = log.New(writerFunc(func(p []byte) (int, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		return buf.Write(p)
+	}), "", 0)
+	applyLimits(relay, "")
+	srv := httptest.NewServer(relay)
+	defer srv.Close()
+	c, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http"), http.Header{"X-Forwarded-For": {"203.0.113.9"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4000, "bye"))
+	c.Close()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		mu.Lock()
+		got := buf.String()
+		mu.Unlock()
+		if strings.Contains(got, "unexpected close") {
+			if strings.Contains(got, "127.0.0.1") || strings.Contains(got, "203.0.113.9") {
+				t.Fatalf("the log names the caller: %q", got)
+			}
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("no unexpected close was logged")
+}
+
+type writerFunc func([]byte) (int, error)
+
+func (f writerFunc) Write(p []byte) (int, error) { return f(p) }

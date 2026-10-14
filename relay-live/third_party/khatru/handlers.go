@@ -132,7 +132,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					websocket.CloseAbnormalClosure,  // 1006
 					4537,                            // some client seems to send many of these
 				) {
-					rl.Log.Printf("unexpected close error from %s: %v\n", GetIPFromRequest(r), err)
+					rl.Log.Printf("unexpected close error: %v\n", err) // kryfo: no address in the log
 				}
 				ws.cancel()
 				return
