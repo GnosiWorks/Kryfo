@@ -8252,7 +8252,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Panggilan bangun palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, dan ruang setelah beberapa yang pertama, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.';
+      'Panggilan bangun palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa yang pertama, dan sesekali kontak biasa, kira-kira satu bulan dari lima, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.';
 
   @override
   String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';

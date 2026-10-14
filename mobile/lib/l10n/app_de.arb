@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "Meine Stimme standardmäßig verfremden",
   "settingsDisguiseByDefaultHint": "Jeder Chat kann das in seinem Menü ändern",
   "gettingMessagesHelperBody": "Sofort und sparsam. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, nie, was darin steht.",
-  "gettingMessagesHelperNote": "Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats und Räume nach den ersten paar warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.",
+  "gettingMessagesHelperNote": "Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen Monat von fünf, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.",
   "helperSheetNeedTitle": "Du brauchst eine Hilfs-App",
   "helperSheetNeedLine": "Eine Hilfs-App hält eine sparsame Verbindung für alle deine Apps und weckt Kryfo, wenn etwas ankommt. Jede UnifiedPush-App geht, ntfy ist ein guter Anfang.",
   "helperSheetGetNtfy": "ntfy holen",

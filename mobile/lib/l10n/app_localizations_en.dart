@@ -8250,7 +8250,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, and rooms past the first few, wait for the check-in Kryfo still makes every 15 minutes.';
+      'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
 
   @override
   String get helperSheetNeedTitle => 'You need a helper app';

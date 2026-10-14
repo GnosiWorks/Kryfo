@@ -8321,7 +8321,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, y las salas después de las primeras, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+      'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
 
   @override
   String get helperSheetNeedTitle => 'Necesitas una app auxiliar';

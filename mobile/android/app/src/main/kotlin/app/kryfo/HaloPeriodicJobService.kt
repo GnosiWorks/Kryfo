@@ -54,7 +54,7 @@ class HaloPeriodicJobService : JobService() {
         val run = runs.start(params?.jobId ?: 0) {
             jobFinished(params, false)
             // a knock owed to a job that was running goes once it has let go
-            main.postDelayed({ JobSetup.knockJobsEnded(this) }, 1_000L)
+            main.postDelayed({ JobSetup.knockJobsEnded(applicationContext) }, 1_000L)
         }
         // a hard stop of its own, so a wedged drain cannot hold the job
         // open. a check-in has to bring tor up, fetch and take it down again

@@ -8245,7 +8245,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, và các phòng sau vài phòng đầu, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+      'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong năm, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
 
   @override
   String get helperSheetNeedTitle => 'Bạn cần một ứng dụng trợ giúp';

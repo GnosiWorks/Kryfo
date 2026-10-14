@@ -192,9 +192,19 @@ func HaloKnockAddresses(cExclude *C.char) *C.char {
 	return C.CString(knockAddresses(goStr(cExclude)))
 }
 
+// the hidden chats' peers the app named last: their addresses are neither
+// listed nor signed for, whatever an item asks
+var (
+	knockHiddenMu sync.Mutex
+	knockHidden   []string
+)
+
 func knockAddresses(excludeJSON string) string {
 	var exclude []string
 	json.Unmarshal([]byte(excludeJSON), &exclude)
+	knockHiddenMu.Lock()
+	knockHidden = exclude
+	knockHiddenMu.Unlock()
 	type row struct {
 		I string `json:"i"`
 		G string `json:"g"`
@@ -299,9 +309,11 @@ var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error 
 	return last
 }
 
-// registers each item and answers {"done":[...],"dup":[...],"unknown":[...]}:
-// the ids, and "s<n>" for the slots without one, that our relay took, those
-// it said were not newer than what it keeps, and ids not listened on now.
+// registers each item and answers {"done":[...],"dup":[...],"unknown":[...],
+// "refused":[...]}: the ids, and "s<n>" for the slots without one, that our
+// relay took, those it said were not newer than what it keeps, ids not
+// listened on now or hidden, and those our relay refused for another
+// reason. what went nowhere, tor down or the relay unreached, is in none.
 // a registration needs the private route; a forget goes over tor on any
 // route. both only for an address listened on now, on its lane as it is
 // now: an address that is gone, a first-contact address replaced, a chat
@@ -320,7 +332,10 @@ func knockRegister(raw string) string {
 	mode := currentMode()
 	routeC := routeEnded()
 	private := modeNeedsTor()
-	live := knockLive(nil)
+	knockHiddenMu.Lock()
+	hidden := knockHidden
+	knockHiddenMu.Unlock()
+	live := knockLive(hidden)
 	ctx, cancel := context.WithTimeout(context.Background(), knockWait)
 	defer cancel()
 	now := time.Now()
@@ -328,6 +343,7 @@ func knockRegister(raw string) string {
 		dmu       sync.Mutex
 		done, dup = []string{}, []string{}
 		unknown   = []string{}
+		refused   = []string{}
 		wg        sync.WaitGroup
 		sem       = make(chan struct{}, knockParallel)
 	)
@@ -381,6 +397,9 @@ func knockRegister(raw string) string {
 				done = append(done, name)
 			case strings.Contains(err.Error(), "duplicate:"):
 				dup = append(dup, name)
+			case strings.HasPrefix(err.Error(), "msg: "):
+				// the relay answered, and said no
+				refused = append(refused, name)
 			default:
 				log.Printf("knock: a registration on %s was not taken: %v", laneKind(lane), err)
 			}
@@ -390,7 +409,8 @@ func knockRegister(raw string) string {
 	slices.Sort(done)
 	slices.Sort(dup)
 	slices.Sort(unknown)
-	b, _ := json.Marshal(map[string][]string{"done": done, "dup": dup, "unknown": unknown})
+	slices.Sort(refused)
+	b, _ := json.Marshal(map[string][]string{"done": done, "dup": dup, "unknown": unknown, "refused": refused})
 	return string(b)
 }
 

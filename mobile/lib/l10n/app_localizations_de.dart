@@ -8349,7 +8349,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats und Räume nach den ersten paar warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+      'Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen Monat von fünf, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get helperSheetNeedTitle => 'Du brauchst eine Hilfs-App';

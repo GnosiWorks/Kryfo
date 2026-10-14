@@ -72,8 +72,9 @@ put you in danger, read all of it.
   arriving. our relay learns which endpoints your addresses use, and
   together with the helper's server it can tie your mailboxes to your
   phone's ip address. with a helper server of your own, the server's name
-  ties all of them to one person. a relay watching for months can guess
-  which mailboxes are hidden chats from which are never registered.
+  ties all of them to one person. a relay that watches can tell which
+  mailboxes are hidden chats within two or three months: they are read and
+  never registered.
   check-ins and always on involve no one else.
 - forensics on a seized unlocked device or on backups of it.
 - a forensic copy of the phone. the decoy pin and hidden chats are for a

@@ -295,8 +295,25 @@ class HelperDelivery {
       await _saveSynced(synced);
       return 0;
     }
+    final refused = _namesOf(r, 'refused') ?? const {};
     final standIn = Map<int, String>.from(book.standIn);
     for (final it in batch) {
+      if (it.endpoint.isEmpty && !done.contains(it.name)) {
+        // a stand-in's forget: the relay holding something newer is as
+        // good as done; one it refuses is given up after a few
+        var drop = dup.contains(it.name);
+        if (refused.contains(it.name)) {
+          final tries = (_forgetTried[it.name] ?? 0) + 1;
+          _forgetTried[it.name] = tries;
+          drop = drop || tries >= kForgetTries;
+        }
+        if (drop) {
+          _forgetTried.remove(it.name);
+          synced.remove(it.name);
+          standIn.remove(it.slot);
+        }
+        continue;
+      }
       if (dup.contains(it.name)) {
         // the relay keeps one at least as new: again a little later, newer
         synced[it.name] = _Synced(_Synced.dup, now, now + kDupRetryMs);
@@ -438,13 +455,17 @@ class HelperDelivery {
     final r = await engine.knockRegister(jsonEncode([item]));
     final done = _namesOf(r, 'done');
     final unknown = _namesOf(r, 'unknown') ?? const {};
+    final dup = _namesOf(r, 'dup') ?? const {};
+    final refused = _namesOf(r, 'refused') ?? const {};
     // nothing went: tor down, or the relay unreached. tried again later,
     // and not counted
     if (done == null) return 0;
     final name = f['i'] as String? ?? 's${f['s']}';
-    var drop = done.contains(name);
-    if (unknown.contains(name)) {
-      // an address no longer listened on is never signed for
+    // the relay holding something newer is as good as done
+    var drop = done.contains(name) || dup.contains(name);
+    if (unknown.contains(name) || refused.contains(name)) {
+      // an address no longer listened on is never signed for, and a forget
+      // the relay refuses is not sent for ever
       final tries = (_forgetTried[name] ?? 0) + 1;
       _forgetTried[name] = tries;
       drop = drop || tries >= kForgetTries;

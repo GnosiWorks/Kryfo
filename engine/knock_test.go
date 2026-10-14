@@ -137,7 +137,7 @@ func TestKnockLeavesHiddenChatsOut(t *testing.T) {
 	}
 }
 
-type knockOut struct{ Done, Dup, Unknown []string }
+type knockOut struct{ Done, Dup, Unknown, Refused []string }
 
 func runRegister(t *testing.T, items []knockItem) knockOut {
 	t.Helper()
@@ -340,6 +340,45 @@ func TestKnockRegisterReportsDuplicates(t *testing.T) {
 	out := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: "https://p/u"}, {I: knockID(w.contacts[1]), E: "https://p/u"}})
 	if len(out.Dup) != 1 || out.Dup[0] != knockID(w.contacts[0]) || len(out.Done) != 1 {
 		t.Fatalf("got %+v", out)
+	}
+}
+
+func TestKnockRegisterReportsRefusals(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	w := knockSubs(t, 2)
+	knockAddresses("")
+	old := knockPublish
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+		if ev.PubKey.Hex() == w.contacts[0] {
+			return errorString("msg: invalid: created_at is too far from now")
+		}
+		return errorString("dial: connection refused")
+	}
+	t.Cleanup(func() { knockPublish = old })
+	out := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: ""}, {I: knockID(w.contacts[1]), E: ""}})
+	if len(out.Refused) != 1 || out.Refused[0] != knockID(w.contacts[0]) || len(out.Done)+len(out.Dup)+len(out.Unknown) != 0 {
+		t.Fatalf("got %+v", out)
+	}
+}
+
+// the engine keeps the hidden chats out itself, whatever an item asks
+func TestKnockNeverSignsForAHiddenChat(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 2)
+	hidden, _ := json.Marshal([]string{w.peers[0]})
+	knockAddresses(string(hidden))
+	t.Cleanup(func() { knockAddresses("") })
+	for _, e := range []string{"https://push.example.org/up", ""} {
+		out := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: e}})
+		if len(out.Done) != 0 || len(out.Unknown) != 1 {
+			t.Fatalf("a hidden chat's address was signed for (%q): %+v", e, out)
+		}
+	}
+	out := runRegister(t, []knockItem{{I: knockID(w.contacts[1]), E: "https://push.example.org/up"}})
+	if len(out.Done) != 1 {
+		t.Fatalf("an everyday contact was refused: %+v", out)
 	}
 }
 

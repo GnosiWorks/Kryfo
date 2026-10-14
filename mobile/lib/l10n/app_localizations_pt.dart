@@ -8317,7 +8317,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Despertares falsos são misturados, o que dificulta para o servidor do app auxiliar saber quando chegam as mensagens de verdade. Um servidor auxiliar próprio revela o endereço dele ao nosso retransmissor. Conversas ocultas, e salas além das primeiras, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
+      'Despertares falsos são misturados, o que dificulta para o servidor do app auxiliar saber quando chegam as mensagens de verdade. Um servidor auxiliar próprio revela o endereço dele ao nosso retransmissor. Conversas ocultas, salas além das primeiras e, de vez em quando, um contato comum, cerca de um mês em cada cinco, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
 
   @override
   String get helperSheetNeedTitle => 'Você precisa de um app auxiliar';

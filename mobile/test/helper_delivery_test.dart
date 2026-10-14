@@ -80,6 +80,8 @@ class FakeEngine implements KnockEngine {
   final List<(String, int)> forgets = [];
   bool up = true;
   Set<String> dups = {};
+  // names the relay answers no for, every time
+  Set<String> refuse = {};
 
   @override
   Future<String> knockAddresses(String excludeJson) async {
@@ -105,6 +107,7 @@ class FakeEngine implements KnockEngine {
     final done = <String>[];
     final dup = <String>[];
     final unknown = <String>[];
+    final refused = <String>[];
     final known = {for (final a in live) a.address};
     for (final i in items) {
       final name = i['i'] as String? ?? 's${i['s']}';
@@ -119,6 +122,10 @@ class FakeEngine implements KnockEngine {
         dup.add(name);
         continue;
       }
+      if (refuse.contains(name)) {
+        refused.add(name);
+        continue;
+      }
       if (forget) {
         relay.remove(key);
       } else {
@@ -127,7 +134,12 @@ class FakeEngine implements KnockEngine {
       made[key] = i['t'] as int? ?? 0;
       done.add(name);
     }
-    return jsonEncode({'done': done, 'dup': dup, 'unknown': unknown});
+    return jsonEncode({
+      'done': done,
+      'dup': dup,
+      'unknown': unknown,
+      'refused': refused,
+    });
   }
 }
 
@@ -512,6 +524,45 @@ void main() {
         await helper.forgetRound();
       }
       expect(await helper.forgetsLeft(), isFalse);
+    });
+
+    test('a forget the relay holds newer for is done; one it refuses is '
+        'given up after a few', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      await helper.stop();
+      engine.dups = {for (final a in contacts) a.address};
+      engine.refuse = {for (var s = 0; s < kHelperSlots; s++) 's$s'};
+      var n = 0;
+      while (await helper.forgetsLeft() && n < 500) {
+        await helper.forgetRound();
+        n++;
+      }
+      expect(await helper.forgetsLeft(), isFalse);
+      expect(n, lessThan(contacts.length + kHelperSlots * kForgetTries + 1));
+    });
+
+    test('a stand-in forget the relay refuses is given up; one it holds '
+        'newer for is done', () async {
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      // every slot gets an address: each stand-in is to be forgotten
+      engine.live = [
+        for (var i = 0; i < 16; i++) KnockAddress(steady('x$i'), 'room:r$i'),
+        ...contacts,
+      ];
+      engine.refuse = {for (var s = 0; s < 8; s++) 's$s'};
+      engine.dups = {for (var s = 8; s < kHelperSlots; s++) 's$s'};
+      for (var i = 0; i < 200; i++) {
+        await helper.sync();
+      }
+      final book = SlotBook.read(
+        (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
+      );
+      for (final s in book.carrying) {
+        expect(book.standIn[s], isNull, reason: 'slot $s');
+      }
     });
 
     test('the hourly ask again holds across a restart', () async {
