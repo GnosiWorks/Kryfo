@@ -649,30 +649,25 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 		tookFresh = true
 	}
 	// a server outside the list must have a name that resolves: looked up
-	// for a new endpoint only, after every other check, with the lock let go
-	lookup := ep == nil && !k.push[domain] && !strings.HasSuffix(host, ".onion")
-	k.mu.Unlock()
-	if lookup {
-		if msg := k.nameCheck(host); msg != "" {
+	// for a new endpoint only, after every other check, with the lock let
+	// go only then, and everything checked again after
+	if !k.push[domain] && ep == nil && !strings.HasSuffix(host, ".onion") {
+		k.mu.Unlock()
+		msg := k.nameCheck(host)
+		k.mu.Lock()
+		if msg == "" {
+			// things may have moved while the name was looked up
+			_, msg = k.checkLocked(ev)
+		}
+		if msg != "" {
 			if tookFresh {
-				k.mu.Lock()
 				sh.giveBack()
-				k.mu.Unlock()
 			}
+			k.mu.Unlock()
 			return true, msg
 		}
 	}
-	k.mu.Lock()
 	defer k.mu.Unlock()
-	if lookup {
-		// things may have moved while the name was looked up
-		if rej, msg := k.checkLocked(ev); rej {
-			if tookFresh {
-				sh.giveBack()
-			}
-			return rej, msg
-		}
-	}
 	delete(k.forgets, key)
 	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
 	k.store.put(key, ev.Content, made, k.regs[key].expires, k.regs[key].ep.born.Unix())
