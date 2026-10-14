@@ -155,7 +155,11 @@ class Session {
     bool newestFirst = true,
     int? limit,
   }) {
-    int k(Map<String, Object?> r) => (r[key] as num?)?.toInt() ?? 0;
+    // a message row without written_at says when it came
+    int k(Map<String, Object?> r) =>
+        ((r[key] ?? (key == 'written_at' ? r['sent_at'] : null)) as num?)
+            ?.toInt() ??
+        0;
     final out = <Map<String, Object?>>[];
     var i = 0;
     var j = 0;
@@ -235,10 +239,19 @@ class Session {
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
-  }) => _ofPeer(
+  }) => _ofPeer(peerId).messagesPage(
     peerId,
-  ).messagesPage(peerId, beforeRowid: beforeRowid, limit: limit);
+    beforeRowid: beforeRowid,
+    beforeAt: beforeAt,
+    limit: limit,
+  );
+  Future<List<Map<String, Object?>>> messagesFrom(
+    String peerId, {
+    required int rowid,
+    int? at,
+  }) => _ofPeer(peerId).messagesFrom(peerId, rowid: rowid, at: at);
   Future<void> setArchived(String haloId, bool archived) =>
       _ofPeer(haloId).setArchived(haloId, archived);
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
@@ -335,10 +348,14 @@ class Session {
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
-  }) => _ofGroup(
+  }) => _ofGroup(groupId).groupMessagesPage(
     groupId,
-  ).groupMessagesPage(groupId, beforeRowid: beforeRowid, limit: limit);
+    beforeRowid: beforeRowid,
+    beforeAt: beforeAt,
+    limit: limit,
+  );
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) =>
       _ofGroup(groupId).loadGroupMessages(groupId);
   Future<void> markRoomSeen(String groupId) =>
@@ -688,7 +705,7 @@ class Session {
     return _merge(
       _own(primary, await primary.savedMessages(), _ofMessage),
       _own(v, await v.savedMessages(), _ofMessage),
-      'sent_at',
+      'written_at',
       limit: 500,
     );
   }
@@ -709,7 +726,7 @@ class Session {
         _ofMessage,
       ),
       _own(v, await v.searchMessages(match, kind, limit: limit), _ofMessage),
-      'sent_at',
+      'written_at',
       limit: limit,
     );
   }

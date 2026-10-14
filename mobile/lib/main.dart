@@ -31,6 +31,7 @@ import 'wipe.dart';
 import 'group_media_send.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
+import 'msg_order.dart';
 import 'send_order.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
@@ -1476,7 +1477,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 77,
+      version: 78,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1545,6 +1546,7 @@ class HaloDb implements GroupOwedStore {
             sticker TEXT,
             burn_unseen INTEGER NOT NULL DEFAULT 0,
             via_dev INTEGER NOT NULL DEFAULT 0,
+            written_at INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1564,6 +1566,7 @@ class HaloDb implements GroupOwedStore {
           'CREATE INDEX idx_messages_group_id ON messages(group_id)',
         );
         await burnIndex(db);
+        await writtenOrder(db);
         await db.execute('''
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
@@ -1643,7 +1646,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 77
+        // they add. 66 runs after it: it reads what they all make. 67 to 78
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2122,6 +2125,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 77) {
           // whether the name someone goes by here was checked
           await nameCheckColumn(db);
+        }
+        if (oldV < 78) {
+          // when each message was written: the order a chat shows
+          await writtenAtColumn(db);
         }
       },
     );
@@ -3234,17 +3241,22 @@ class HaloDb implements GroupOwedStore {
     String? sticker,
     // when it came, if not now: an arrival opened from the seal
     int? sentAt,
+    // when it was written, held to what can be true (writtenAtOf). when it
+    // came if not given: ours are written as they go
+    int? writtenAt,
     // a contact's, through the developer chat (viaDevChat)
     bool viaDev = false,
   }) async {
     final db = await open();
+    final came = sentAt ?? DateTime.now().millisecondsSinceEpoch;
     final id = await db.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
       // your own words too (a pasted caption, a forward): no direction
       // controls reach the screen from here (bidi_safe.dart)
       'plaintext': unmarked(plaintext),
-      'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
+      'sent_at': came,
+      'written_at': writtenAt ?? came,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
       // came in with its window and its clock already running: nobody read
@@ -3319,11 +3331,13 @@ class HaloDb implements GroupOwedStore {
         limit: 1,
       );
       if (there.isEmpty) return null;
+      final now = DateTime.now().millisecondsSinceEpoch;
       return t.insert('messages', {
         'peer_id': peerId,
         'direction': 'out',
         'plaintext': unmarked(plaintext),
-        'sent_at': DateTime.now().millisecondsSinceEpoch,
+        'sent_at': now,
+        'written_at': now,
         'burn_secs': burnSecs,
         'msg_uid': msgUid,
         'reply_to': replyTo,
@@ -3902,6 +3916,28 @@ class HaloDb implements GroupOwedStore {
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
+  // a chat's order (msg_order.dart): by when each was written, then as
+  // they came. before and from name a row by its time and id
+  static const _kOldestFirst = 'written_at ASC, id ASC';
+  static const _kNewestFirst = 'written_at DESC, id DESC';
+  static const _kBefore = '(written_at < ? OR (written_at = ? AND id < ?))';
+  static const _kFrom = '(written_at > ? OR (written_at = ? AND id >= ?))';
+
+  // the args for _kBefore or _kFrom at row [id]. its own time when [at] is
+  // not given, null when that row is gone
+  static Future<List<Object>?> _at(Database db, int id, int? at) async {
+    if (at != null) return [at, at, id];
+    final r = await db.query(
+      'messages',
+      columns: ['written_at'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final w = r.isEmpty ? null : (r.first['written_at'] as num?)?.toInt();
+    return w == null ? null : [w, w, id];
+  }
+
   // peer_id on each row is the sender's kryfo id, ours on our own messages
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     final db = await open();
@@ -3910,24 +3946,29 @@ class HaloDb implements GroupOwedStore {
       columns: ['*', 'rowid AS rowid'],
       where: 'group_id = ?',
       whereArgs: [groupId],
-      orderBy: 'sent_at ASC',
+      orderBy: _kOldestFirst,
     );
   }
 
+  // the newest page of a group, or the one before row [beforeRowid],
+  // written at [beforeAt]
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     final db = await open();
+    final at = beforeRowid == null
+        ? null
+        : await _at(db, beforeRowid, beforeAt);
+    if (beforeRowid != null && at == null) return [];
     final rows = await db.query(
       'messages',
       columns: ['*', 'rowid AS rowid'],
-      where: beforeRowid == null
-          ? 'group_id = ?'
-          : 'group_id = ? AND rowid < ?',
-      whereArgs: beforeRowid == null ? [groupId] : [groupId, beforeRowid],
-      orderBy: 'Rowid DESC',
+      where: at == null ? 'group_id = ?' : 'group_id = ? AND $_kBefore',
+      whereArgs: [groupId, ...?at],
+      orderBy: _kNewestFirst,
       limit: limit,
     );
     return rows.reversed.toList();
@@ -3993,6 +4034,7 @@ class HaloDb implements GroupOwedStore {
         'direction',
         'plaintext',
         'sent_at',
+        'written_at',
         'media_path',
         'file_name',
         'pinned_at',
@@ -4007,7 +4049,7 @@ class HaloDb implements GroupOwedStore {
           : "pinned = 1 AND msg_uid IS NOT NULL AND peer_id = ? "
                 "AND (group_id IS NULL OR group_id = '')",
       whereArgs: [groupId ?? peerId],
-      orderBy: 'COALESCE(pinned_at, sent_at) DESC',
+      orderBy: 'COALESCE(pinned_at, written_at) DESC',
     );
   }
 
@@ -4030,7 +4072,7 @@ class HaloDb implements GroupOwedStore {
     final rows = await db.query(
       'messages',
       where: 'saved = 1',
-      orderBy: 'sent_at DESC',
+      orderBy: _kNewestFirst,
       limit: 500,
     );
     return [
@@ -5516,7 +5558,18 @@ class HaloDb implements GroupOwedStore {
     String? match,
     SearchKind kind, {
     int limit = 300,
-  }) async => runSearchQuery(await open(), match, kind, limit: limit);
+  }) async {
+    final rows = await runSearchQuery(await open(), match, kind, limit: limit);
+    // the newest that came, shown in the chats' order
+    return [...rows]..sort(
+      (a, b) => byWritten(
+        rowWrittenAt(b),
+        (b['id'] as num?)?.toInt() ?? 0,
+        rowWrittenAt(a),
+        (a['id'] as num?)?.toInt() ?? 0,
+      ),
+    );
+  }
 
   Future<bool> messageExists(String msgUid) async {
     final db = await open();
@@ -7087,6 +7140,7 @@ class HaloDb implements GroupOwedStore {
       'peer_id',
       'group_id',
       'sent_at',
+      'written_at',
       'burn_secs',
       'burn_at',
       'burn_unseen',
@@ -7129,10 +7183,10 @@ class HaloDb implements GroupOwedStore {
         final chat = (g == null || g.isEmpty)
             ? (r['peer_id'] as String, null)
             : ('', g);
-        final sent = (r['sent_at'] as num?)?.toInt() ?? 0;
-        if (sent > (newest[chat] ?? -1)) newest[chat] = sent;
+        final w = rowWrittenAt(r);
+        if (w > (newest[chat] ?? -1)) newest[chat] = w;
       }
-      for (final MapEntry(key: (peer, group), value: sent) in newest.entries) {
+      for (final MapEntry(key: (peer, group), value: w) in newest.entries) {
         final chat = group == null
             ? 'peer_id = ? AND group_id IS NULL'
             : 'group_id = ?';
@@ -7143,11 +7197,11 @@ class HaloDb implements GroupOwedStore {
             columns: cols,
             where:
                 "$chat AND direction = 'in' AND burn_secs IS NOT NULL"
-                ' AND $unread AND sent_at < ?',
-            whereArgs: [group ?? peer, sent + 1],
+                ' AND $unread',
+            whereArgs: [group ?? peer],
           );
           for (final r in older) {
-            await lightRow(r);
+            if (rowWrittenAt(r) <= w) await lightRow(r);
           }
         }
       }
@@ -7216,29 +7270,54 @@ class HaloDb implements GroupOwedStore {
       // row carries peer_id = sender too
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
-      orderBy: 'sent_at ASC',
+      orderBy: _kOldestFirst,
     );
   }
 
-  // newest page of a 1:1 thread. beforeRowid pages older on scroll-up so a
-  // 5000-message chat doesn't parse the world on open.
+  // newest page of a 1:1 thread. beforeRowid, written at beforeAt, pages
+  // older on scroll-up so a 5000-message chat doesn't parse the world on
+  // open.
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     final db = await open();
+    final at = beforeRowid == null
+        ? null
+        : await _at(db, beforeRowid, beforeAt);
+    if (beforeRowid != null && at == null) return [];
     final rows = await db.query(
       'messages',
       columns: ['*', 'rowid AS rowid'],
-      where: beforeRowid == null
+      where: at == null
           ? 'peer_id = ? AND group_id IS NULL'
-          : 'peer_id = ? AND group_id IS NULL AND rowid < ?',
-      whereArgs: beforeRowid == null ? [peerId] : [peerId, beforeRowid],
-      orderBy: 'Rowid DESC',
+          : 'peer_id = ? AND group_id IS NULL AND $_kBefore',
+      whereArgs: [peerId, ...?at],
+      orderBy: _kNewestFirst,
       limit: limit,
     );
     return rows.reversed.toList();
+  }
+
+  // a 1:1 thread from row [rowid], written at [at], to its newest: a
+  // reload keeps the pages already scrolled in
+  Future<List<Map<String, Object?>>> messagesFrom(
+    String peerId, {
+    required int rowid,
+    int? at,
+  }) async {
+    final db = await open();
+    final from = await _at(db, rowid, at);
+    if (from == null) return messagesPage(peerId);
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'peer_id = ? AND group_id IS NULL AND $_kFrom',
+      whereArgs: [peerId, ...from],
+      orderBy: _kOldestFirst,
+    );
   }
 
   // only messages after a rowid, oldest first, for the chat's
@@ -7259,19 +7338,24 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  // the newest 1:1 row per peer in one query, for the home list, which
-  // refreshes after every send. the burn columns say a timed one still
-  // waits to be read (burnWaitsRow)
+  // the newest 1:1 row per peer in the chat's order, for the home list,
+  // which refreshes after every send. the burn columns say a timed one
+  // still waits to be read (burnWaitsRow)
   Future<Map<String, Map<String, Object?>>> lastMessages() async {
     final db = await open();
     final rows = await db.rawQuery('''
       SELECT m.peer_id, m.direction, m.plaintext, m.media_path, m.file_name,
-             m.sent_at, m.sticker, m.burn_secs, m.burn_at, m.burn_unseen
+             m.sent_at, m.written_at, m.sticker, m.burn_secs, m.burn_at,
+             m.burn_unseen
       FROM messages m
-      JOIN (
-        SELECT peer_id, MAX(rowid) AS r FROM messages
-        WHERE group_id IS NULL GROUP BY peer_id
-      ) x ON x.r = m.rowid
+      WHERE m.id IN (
+        SELECT (
+          SELECT y.id FROM messages y
+          WHERE y.peer_id = p.peer_id AND y.group_id IS NULL
+          ORDER BY y.written_at DESC, y.id DESC LIMIT 1
+        )
+        FROM (SELECT DISTINCT peer_id FROM messages WHERE group_id IS NULL) p
+      )
     ''');
     return {for (final r in rows) r['peer_id'] as String: r};
   }
@@ -7309,7 +7393,8 @@ class HaloDb implements GroupOwedStore {
   Future<int?> firstMessageAt(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT MIN(sent_at) t FROM messages WHERE peer_id = ? AND group_id IS NULL',
+      'SELECT MIN(written_at) t FROM messages '
+      'WHERE peer_id = ? AND group_id IS NULL',
       [peerId],
     );
     return r.isEmpty ? null : r.first['t'] as int?;
@@ -7317,14 +7402,13 @@ class HaloDb implements GroupOwedStore {
 
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
-    // rowid, not sent_at: clock skew can give a received note a sent_at older
-    // than our local newest. group_id IS NULL: a group message is stored
-    // under the sender's peer_id too.
+    // the newest in the chat's order. group_id IS NULL: a group message is
+    // stored under the sender's peer_id too.
     final rows = await db.query(
       'messages',
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
-      orderBy: 'Rowid DESC',
+      orderBy: _kNewestFirst,
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
@@ -7414,8 +7498,8 @@ Future<List<Map<String, Object?>>> runSearchQuery(
   args.add(limit);
   return db.rawQuery(
     'SELECT m.id, m.msg_uid, m.peer_id, m.group_id, m.direction, '
-    'm.plaintext, m.sent_at, m.media_path, m.file_path, m.file_name, '
-    'm.poll, m.preview FROM $from WHERE ${where.join(' AND ')} '
+    'm.plaintext, m.sent_at, m.written_at, m.media_path, m.file_path, '
+    'm.file_name, m.poll, m.preview FROM $from WHERE ${where.join(' AND ')} '
     'ORDER BY $order LIMIT ?',
     args,
   );
@@ -7814,6 +7898,33 @@ Future<void> nameCheckColumn(DatabaseExecutor db) async {
   await db.update('contacts', {
     'name_check': kNameAsk | kNameSays,
   }, where: 'accepted = 0 AND IFNULL(archived, 0) = 0 AND verified = 0');
+}
+
+// the upgrade to 78. a row from before says when it came
+Future<void> writtenAtColumn(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE messages ADD COLUMN written_at INTEGER');
+  await db.execute(
+    'UPDATE messages SET written_at = sent_at WHERE written_at IS NULL',
+  );
+  await writtenOrder(db);
+}
+
+// a chat's rows by when they were written (msg_order.dart). a row stored
+// without that time takes the time it came
+Future<void> writtenOrder(DatabaseExecutor db) async {
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_messages_peer_written '
+    'ON messages(peer_id, group_id, written_at)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_messages_group_written '
+    'ON messages(group_id, written_at)',
+  );
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS messages_written_at AFTER INSERT ON '
+    'messages WHEN new.written_at IS NULL BEGIN UPDATE messages SET '
+    'written_at = new.sent_at WHERE id = new.id; END',
+  );
 }
 
 int nameCheckOf(Map<String, Object?>? row) =>
@@ -15515,6 +15626,14 @@ class AppState extends ChangeNotifier {
         : startBy <= now
         ? startBy + burnSecs * 1000
         : null;
+    // placed by when they wrote it: their envelope's time, or the wrap's
+    // from a version without one
+    final firstSeen = (await db.getContact(senderHaloId))?['first_seen'];
+    final writtenAt = writtenAtOf(
+      env.writtenAt ?? wrappedAt,
+      came: arrivedAt ?? now,
+      firstSeen: (firstSeen as num?)?.toInt(),
+    );
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -15540,6 +15659,7 @@ class AppState extends ChangeNotifier {
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
       sentAt: arrivedAt,
+      writtenAt: writtenAt,
       // his phone: a contact who wrote through the developer chat keeps
       // their chat, and the message says how it came
       viaDev:
@@ -20176,10 +20296,10 @@ class AppState extends ChangeNotifier {
     } else {
       body = '';
     }
-    final sentAt = last['sent_at'] as int?;
+    final at = last['written_at'] ?? last['sent_at'];
     return (
       body.isEmpty ? null : (dir == 'out' ? l10n.appYou(body) : body),
-      sentAt == null ? null : DateTime.fromMillisecondsSinceEpoch(sentAt),
+      at is! num ? null : DateTime.fromMillisecondsSinceEpoch(at.toInt()),
     );
   }
 

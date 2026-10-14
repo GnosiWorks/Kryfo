@@ -612,6 +612,7 @@ class _Mem implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);

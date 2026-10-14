@@ -41,6 +41,7 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
+import '../msg_order.dart' show rowWrittenAt;
 
 /// home's search button grows into the field here
 const kSearchHero = 'home-search';
@@ -397,7 +398,7 @@ class _SearchScreenState extends State<SearchScreen> {
           text: poll == null ? plain : '$plain  ·  ${poll.options.join(' · ')}',
           out: out,
           sender: out ? l10n.groupChatYou : _nameOfPeer(peer),
-          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           mediaPath: r['media_path'] as String?,
           fileName: fileName == 'voice.wav' ? null : fileName,
           poll: poll != null,

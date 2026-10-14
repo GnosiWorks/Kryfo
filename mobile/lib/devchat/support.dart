@@ -77,7 +77,8 @@ class SupportChat {
       : SupportSection.waiting;
 
   // the last message's time, or when the chat came in
-  int get at => (last?['sent_at'] as num?)?.toInt() ?? firstAt;
+  int get at =>
+      ((last?['written_at'] ?? last?['sent_at']) as num?)?.toInt() ?? firstAt;
 }
 
 // the support chats of one container's database
@@ -303,13 +304,14 @@ class SupportChats {
           'direction',
           'plaintext',
           'sent_at',
+          'written_at',
           'media_path',
           'file_name',
           'sticker',
         ],
         where: 'peer_id = ? AND group_id IS NULL',
         whereArgs: [id],
-        orderBy: 'id DESC',
+        orderBy: 'written_at DESC, id DESC',
         limit: 1,
       );
       out.add(

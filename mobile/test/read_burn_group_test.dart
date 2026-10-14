@@ -87,6 +87,7 @@ class _GroupDb implements HaloDb {
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async => [
     for (final r in rows)
@@ -310,10 +311,7 @@ void main() {
     );
     expect(t.widget<BurnFlame>(flame).waiting, isTrue);
     expect(
-      find.descendant(
-        of: find.byType(PollCard),
-        matching: find.text('5m 00s'),
-      ),
+      find.descendant(of: find.byType(PollCard), matching: find.text('5m 00s')),
       findsOneWidget,
     );
     lockState.openForTest(enabled: true);

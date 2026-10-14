@@ -62,6 +62,7 @@ class _GroupDb implements HaloDb {
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     if (beforeRowid != null) olderPages++;

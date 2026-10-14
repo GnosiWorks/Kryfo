@@ -57,6 +57,7 @@ import '../main.dart'
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
+import '../msg_order.dart';
 import '../group_send_watch.dart';
 import '../media_send.dart' show cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
@@ -419,7 +420,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // before it", so an out-of-order list emits two dividers for one day and
   // both grab the same GlobalKey.
   void _normaliseMessages() {
-    _messages.sort((a, b) => a.when.compareTo(b.when));
+    _messages.sort(
+      (a, b) => byWritten(
+        a.when.millisecondsSinceEpoch,
+        a.rowid,
+        b.when.millisecondsSinceEpoch,
+        b.rowid,
+      ),
+    );
     final seen = <String>{};
     _messages.retainWhere((m) {
       final id = m.msgUid;
@@ -616,7 +624,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final starts = <int>[];
     for (final m in _messages) {
       if (m.burnWaits) {
-        starts.add(burnStartBy(m.when.millisecondsSinceEpoch, now));
+        starts.add(burnStartBy(m.came, now));
       }
       final at = m.burnAt;
       if (at == null) continue;
@@ -636,7 +644,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _startWaited(int now) {
     for (final m in _messages) {
       if (!m.burnWaits) continue;
-      final s = burnStartBy(m.when.millisecondsSinceEpoch, now);
+      final s = burnStartBy(m.came, now);
       if (s > now) continue;
       m.burnAt = s + m.burnSecs! * 1000;
       m.burnUnseen = true;
@@ -739,11 +747,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_loadingOlder || !_hasMore || _searching) return;
     _loadingOlder = true;
     try {
-      final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
+      final oldest = _oldestHeld();
       _blocked = await session.blockedIds();
       final rows0 = await session.groupMessagesPage(
         widget.groupId,
-        beforeRowid: oldestRowid,
+        beforeRowid: oldest?.rowid,
+        beforeAt: oldest?.when.millisecondsSinceEpoch,
         limit: _pageSize + 1,
       );
       // a blocked member is out of sight here too, not only at the door.
@@ -785,7 +794,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           senderName: _senderLabel(nickById, r['peer_id'] as String),
           direction: dir,
           text: r['plaintext'] as String,
-          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -806,6 +815,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         m.votes = votes[uid] ?? const {};
         m.reach = _reach[uid];
         m.rowid = (r['rowid'] as int?) ?? 0;
+        m.cameAt = (r['sent_at'] as num?)?.toInt();
         older.add(m);
       }
       // divider anchors change after the prepend (day boundaries move), so
@@ -961,7 +971,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 senderName: _senderLabel(nickById, r['peer_id'] as String),
                 direction: dir,
                 text: r['plaintext'] as String,
-                when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+                when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
                 sticker: StickerWire.parse(r['sticker']),
                 burnAt: r['burn_at'] as int?,
                 burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -983,6 +993,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.votes = votes[uid] ?? const {};
               m.reach = reach[uid];
               m.rowid = (r['rowid'] as int?) ?? 0;
+              m.cameAt = (r['sent_at'] as num?)?.toInt();
               _placeLoadedSend(m);
               final c = carry[m.msgUid];
               if (c != null) {
@@ -1189,6 +1200,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  // the oldest row on screen that the database has, in the chat's order
+  _GMsg? _oldestHeld() {
+    for (final m in _messages) {
+      if (m.rowid > 0) return m;
+    }
+    return null;
+  }
+
   Future<void> _appendNewInner() async {
     final lastRowid = _messages.isEmpty
         ? 0
@@ -1198,11 +1217,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
+    // one written before the pages held comes with the page it is in
+    final oldest = _hasMore ? _oldestHeld() : null;
     final brandNew = rows
         .where(
           (r) =>
               (r['msg_uid'] as String?) != null &&
-              !have.contains(r['msg_uid'] as String?),
+              !have.contains(r['msg_uid'] as String?) &&
+              (oldest == null ||
+                  byWritten(
+                        rowWrittenAt(r),
+                        (r['rowid'] as int?) ?? 0,
+                        oldest.when.millisecondsSinceEpoch,
+                        oldest.rowid,
+                      ) >
+                      0),
         )
         .toList();
     if (brandNew.isEmpty) {
@@ -1244,7 +1273,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         senderName: _senderLabel(nickById, r['peer_id'] as String),
         direction: dir,
         text: r['plaintext'] as String,
-        when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -1266,6 +1295,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.votes = votes[uid] ?? const {};
       m.reach = _reach[uid];
       m.rowid = (r['rowid'] as int?) ?? 0;
+      m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
       fresh.add(m);
@@ -3155,7 +3185,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 : (_senderLabel(nickById, peer) ?? peer),
             authorSeed: out ? appState.sessionId : peer,
             face: out ? appState.myAvatar : faceById[peer],
-            when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+            when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
             text: (r['plaintext'] as String?) ?? '',
             imagePath: r['media_path'] as String?,
             fileName: r['file_name'] as String?,
@@ -3775,7 +3805,11 @@ class _GMsg with WordLinks {
   final String direction;
   @override
   String text;
+  // when it was written: where it shows and what it shows
   final DateTime when;
+  // when it came, the row's sent_at: what its burn counts from
+  int? cameAt;
+  int get came => cameAt ?? when.millisecondsSinceEpoch;
   int? burnAt;
   // the burn window: ours is lit into burnAt when it goes, theirs when it
   // is first read

@@ -41,6 +41,7 @@ import '../message_envelope.dart'
 import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../media_progress.dart';
+import '../msg_order.dart';
 import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
@@ -270,7 +271,7 @@ Future<bool> showNoteSheet(
   return r == true;
 }
 
-// newest message ms seen when the chat was last left, keyed by
+// the newest row id held when the chat was last left, keyed by
 // session.chatKey like the drafts
 final Map<String, int> _lastReadPerPeer = {};
 
@@ -312,7 +313,11 @@ class _Msg with WordLinks {
   final String direction;
   @override
   String text;
+  // when it was written: where it shows and what it shows
   final DateTime when;
+  // when it came, the row's sent_at: what its burn counts from
+  int? cameAt;
+  int get came => cameAt ?? when.millisecondsSinceEpoch;
   int? burnAt;
   // the burn window: ours is lit into burnAt when it goes, theirs when it
   // is first read
@@ -665,7 +670,9 @@ class _ChatScreenState extends State<ChatScreen>
   final _msgCtrl = TextEditingController();
   // a reply raises the keyboard at once, like a tap on the field
   final _composerFocus = FocusNode();
-  int _unreadAfterMs = 0;
+  // the newest row held when the chat was last left: what came after it is
+  // new, wherever its time puts it
+  int? _unreadAfterRow;
   // the row the new messages divider sits above, by its key: an index
   // would slip as older pages come in above it
   String? _firstUnreadKey;
@@ -694,11 +701,11 @@ class _ChatScreenState extends State<ChatScreen>
     if (_loadingOlder || !_hasMore) return;
     _loadingOlder = true;
     try {
-      final real = _messages.where((m) => !m.welcome);
-      final oldest = real.isEmpty ? null : real.first.rowid;
+      final oldest = _oldestHeld();
       final rows = await session.messagesPage(
         widget.peerHaloId,
-        beforeRowid: oldest,
+        beforeRowid: oldest?.rowid,
+        beforeAt: oldest?.when.millisecondsSinceEpoch,
         limit: _pageSize + 1,
       );
       if (!mounted) return;
@@ -712,7 +719,7 @@ class _ChatScreenState extends State<ChatScreen>
         final m = _Msg(
           r['direction'] as String,
           r['plaintext'] as String,
-          DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -734,6 +741,7 @@ class _ChatScreenState extends State<ChatScreen>
               (r['sent'] as int? ?? 1) == 0,
         );
         m.rowid = (r['rowid'] as int?) ?? 0;
+        m.cameAt = (r['sent_at'] as num?)?.toInt();
         _readNotSent(m, r);
         final pvRaw = r['preview'] as String?;
         if (pvRaw != null && pvRaw.isNotEmpty) {
@@ -804,7 +812,14 @@ class _ChatScreenState extends State<ChatScreen>
   // one day two dividers, and their shared GlobalKey takes the whole chat
   // out of the widget tree.
   void _normaliseMessages() {
-    _messages.sort((a, b) => a.when.compareTo(b.when));
+    _messages.sort(
+      (a, b) => byWritten(
+        a.when.millisecondsSinceEpoch,
+        a.rowid,
+        b.when.millisecondsSinceEpoch,
+        b.rowid,
+      ),
+    );
     final seen = <String>{};
     _messages.retainWhere((m) {
       final id = m.msgUid;
@@ -1196,8 +1211,7 @@ class _ChatScreenState extends State<ChatScreen>
     (_openChats[widget.peerHaloId] ??= []).add(this);
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
-    _unreadAfterMs =
-        _lastReadPerPeer[_memo] ?? DateTime.now().millisecondsSinceEpoch;
+    _unreadAfterRow = _lastReadPerPeer[_memo];
     _msgCtrl.text = composerWith(draftPerPeer[_memo] ?? '', widget.initialText);
     // save the draft live on every keystroke so it survives leaving the chat
     // regardless of when dispose runs.
@@ -1328,7 +1342,7 @@ class _ChatScreenState extends State<ChatScreen>
     final starts = <int>[];
     for (final m in _messages) {
       if (m.burnWaits) {
-        starts.add(burnStartBy(m.when.millisecondsSinceEpoch, now));
+        starts.add(burnStartBy(m.came, now));
       }
       final at = m.burnAt;
       if (at == null) continue;
@@ -1348,7 +1362,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _startWaited(int now) {
     for (final m in _messages) {
       if (!m.burnWaits) continue;
-      final s = burnStartBy(m.when.millisecondsSinceEpoch, now);
+      final s = burnStartBy(m.came, now);
       if (s > now) continue;
       m.burnAt = s + m.burnSecs! * 1000;
       m.burnUnseen = true;
@@ -1638,13 +1652,23 @@ class _ChatScreenState extends State<ChatScreen>
     final rows = await session.messagesAfter(widget.peerHaloId, lastRowid);
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
+    // one written before the pages held comes with the page it is in
+    final oldest = _hasMore ? _oldestHeld() : null;
     // no new row we don't already hold means a full reload: covers edits,
-    // reactions, deletes and clock skew (a received msg older than our newest)
+    // reactions and deletes
     final brandNew = rows
         .where(
           (r) =>
               (r['msg_uid'] as String?) != null &&
-              !have.contains(r['msg_uid'] as String?),
+              !have.contains(r['msg_uid'] as String?) &&
+              (oldest == null ||
+                  byWritten(
+                        rowWrittenAt(r),
+                        (r['rowid'] as int?) ?? 0,
+                        oldest.when.millisecondsSinceEpoch,
+                        oldest.rowid,
+                      ) >
+                      0),
         )
         .toList();
     if (brandNew.isEmpty) {
@@ -1660,7 +1684,7 @@ class _ChatScreenState extends State<ChatScreen>
       final m = _Msg(
         r['direction'] as String,
         r['plaintext'] as String,
-        DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -1682,6 +1706,7 @@ class _ChatScreenState extends State<ChatScreen>
             (r['sent'] as int? ?? 1) == 0,
       );
       m.rowid = (r['rowid'] as int?) ?? 0;
+      m.cameAt = (r['sent_at'] as num?)?.toInt();
       _readNotSent(m, r);
       final pvRaw = r['preview'] as String?;
       if (pvRaw != null && pvRaw.isNotEmpty) {
@@ -1826,11 +1851,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (target.msgUid == null && !welcome) {
       final uid = newMsgUid();
       target.msgUid = uid;
-      await session.assignUidIfMissing(
-        widget.peerHaloId,
-        target.when.millisecondsSinceEpoch,
-        uid,
-      );
+      await session.assignUidIfMissing(widget.peerHaloId, target.came, uid);
     }
     if (!mounted) return;
     await keyboardDown(context);
@@ -2155,7 +2176,7 @@ class _ChatScreenState extends State<ChatScreen>
               ? appState.sessionId
               : widget.avatarSeed,
           face: r['direction'] == 'out' ? appState.myAvatar : _peerFace,
-          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           text: (r['plaintext'] as String?) ?? '',
           imagePath: r['media_path'] as String?,
           fileName: r['file_name'] as String?,
@@ -2370,11 +2391,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (m.msgUid == null) {
       final uid = newMsgUid();
       m.msgUid = uid;
-      await session.assignUidIfMissing(
-        widget.peerHaloId,
-        m.when.millisecondsSinceEpoch,
-        uid,
-      );
+      await session.assignUidIfMissing(widget.peerHaloId, m.came, uid);
     }
     if (!mounted) return;
     final result = await showInputSheet(
@@ -2405,11 +2422,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (m.msgUid == null) {
       final uid = newMsgUid();
       m.msgUid = uid;
-      await session.assignUidIfMissing(
-        widget.peerHaloId,
-        m.when.millisecondsSinceEpoch,
-        uid,
-      );
+      await session.assignUidIfMissing(widget.peerHaloId, m.came, uid);
     }
     final current = m.reactions[''];
     final remove = current == emoji; // tapping same emoji = unreact
@@ -2482,14 +2495,18 @@ class _ChatScreenState extends State<ChatScreen>
     final wantAll = _searching || widget.jumpToUid != null || _pagedOut;
     // a reload keeps the pages already scrolled in: a receipt, a reaction
     // or an edit must not drop what is being read
-    final keepFrom = wantAll || !_loaded ? null : _oldestHeldRowid();
+    final keepFrom = wantAll || !_loaded ? null : _oldestHeld();
     final List<Map<String, Object?>> rows;
     if (wantAll) {
       rows = await session.messagesFor(widget.peerHaloId);
       _hasMore = false;
     } else if (keepFrom != null) {
       rows = List.of(
-        await session.messagesAfter(widget.peerHaloId, keepFrom - 1),
+        await session.messagesFrom(
+          widget.peerHaloId,
+          rowid: keepFrom.rowid,
+          at: keepFrom.when.millisecondsSinceEpoch,
+        ),
       );
     } else {
       rows = List.of(
@@ -2508,7 +2525,7 @@ class _ChatScreenState extends State<ChatScreen>
         _Msg(
           r['direction'] as String,
           r['plaintext'] as String,
-          DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -2540,6 +2557,7 @@ class _ChatScreenState extends State<ChatScreen>
         }
       }
       loaded.last.rowid = (r['rowid'] as int?) ?? 0;
+      loaded.last.cameAt = (r['sent_at'] as num?)?.toInt();
       _readNotSent(loaded.last, r);
       if (uid != null) uids.add(uid);
     }
@@ -2580,9 +2598,11 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_unreadResolved) {
       _firstUnreadKey = null;
       for (var i = 0; i < loaded.length; i++) {
-        if (loaded[i].direction != 'out' &&
+        final after = _unreadAfterRow;
+        if (after != null &&
+            loaded[i].direction != 'out' &&
             !loaded[i].welcome &&
-            loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
+            loaded[i].rowid > after) {
           _firstUnreadKey = _rowKey(loaded[i]);
           break;
         }
@@ -2656,14 +2676,12 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // the oldest row on screen that the database has, if any
-  int? _oldestHeldRowid() {
-    int? oldest;
+  // the oldest row on screen that the database has, in the chat's order
+  _Msg? _oldestHeld() {
     for (final m in _messages) {
-      if (m.welcome || m.rowid <= 0) continue;
-      if (oldest == null || m.rowid < oldest) oldest = m.rowid;
+      if (!m.welcome && m.rowid > 0) return m;
     }
-    return oldest;
+    return null;
   }
 
   // reversed list: the newest message sits at offset 0
@@ -4336,9 +4354,10 @@ class _ChatScreenState extends State<ChatScreen>
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
-    _lastReadPerPeer[_memo] = _messages.isNotEmpty
-        ? _messages.last.when.millisecondsSinceEpoch
-        : 0;
+    _lastReadPerPeer[_memo] = _messages.fold(
+      0,
+      (a, m) => m.rowid > a ? m.rowid : a,
+    );
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
       draftPerPeer.remove(_memo);

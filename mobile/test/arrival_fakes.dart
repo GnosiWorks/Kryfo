@@ -1036,6 +1036,7 @@ class ArrivalRows implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     beforeSave?.call();
@@ -1047,6 +1048,7 @@ class ArrivalRows implements HaloDb {
       'direction': direction,
       'plaintext': plaintext,
       'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
+      'written_at': writtenAt,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
       'msg_uid': msgUid,

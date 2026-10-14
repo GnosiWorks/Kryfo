@@ -255,6 +255,7 @@ class _ScreenDb implements HaloDb {
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async => [..._rows];
   @override
