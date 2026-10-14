@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../open_file.dart';
 import '../theme.dart';
+import 'halo_hero.dart';
 import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
 import '../l10n/l10n.dart';
@@ -366,7 +367,7 @@ class _VideoViewerState extends State<_VideoViewer>
   Widget _video() {
     final jpeg = videoInfoNow(widget.path)?.jpeg;
     final id = _id;
-    return Hero(
+    return HaloHero(
       tag: videoHeroTag(widget.path),
       flightShuttleBuilder: (c, a, dir, from, to) =>
           videoFlight(c, a, dir, from, to, widget.path),

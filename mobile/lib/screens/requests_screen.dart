@@ -12,6 +12,7 @@ import '../main.dart' show session, appState, nameUnchecked;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
+import '../widgets/halo_hero.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/row_motion.dart';
 import '../widgets/page_head.dart' show PageBar;
@@ -456,7 +457,7 @@ class _RequestCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Hero(
+                HaloHero(
                   tag: 'face-$haloId',
                   child: KryfoAvatar(seed: haloId, size: 44, choice: avatar),
                 ),

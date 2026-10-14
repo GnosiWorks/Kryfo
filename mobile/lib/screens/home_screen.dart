@@ -39,6 +39,7 @@ import '../main.dart' hide live;
 import '../tor_valve.dart' show ValveStage;
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/row_motion.dart';
@@ -2044,7 +2045,7 @@ class _GroupRow extends StatelessWidget {
               children: [
                 // group avatar: a square tile with the first letter of the name
                 // in italic serif, so groups differ from round contact avatars
-                Hero(
+                HaloHero(
                   tag: 'group-${g.groupId}',
                   child: Container(
                     width: 36,
@@ -2493,7 +2494,7 @@ class _DevRowTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
           child: Row(
             children: [
-              Hero(tag: kDevFaceHero, child: const DevAvatar(pop: true)),
+              HaloHero(tag: kDevFaceHero, child: const DevAvatar(pop: true)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -2622,7 +2623,7 @@ class _Row extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Hero(
+                    HaloHero(
                       tag: 'face-${c.avatarSeed}',
                       child: KryfoAvatar(
                         seed: c.avatarSeed,

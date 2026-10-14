@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../theme.dart';
 import 'decode_px.dart';
+import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, motionStill;
 
 /// the tag a photo and the viewer share, so the photo flies between them.
@@ -298,7 +299,7 @@ class _PhotoViewerState extends State<PhotoViewer>
             child: Center(
               child: tag == null
                   ? photo
-                  : Hero(
+                  : HaloHero(
                       tag: tag,
                       flightShuttleBuilder: (_, a, _, _, _) =>
                           photoFlight(a, widget.image, widget.radius),

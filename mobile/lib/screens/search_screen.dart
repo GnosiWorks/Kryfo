@@ -26,6 +26,7 @@ import '../theme.dart';
 import '../widgets/decode_px.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -498,7 +499,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     Expanded(
                       child: HeroMode(
                         enabled: !still,
-                        child: Hero(
+                        child: HaloHero(
                           tag: kSearchHero,
                           createRectTween: _straight,
                           // a still copy flies: a live field built in the
@@ -574,7 +575,7 @@ class SearchDoor extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: HeroMode(
             enabled: !motionStill(context),
-            child: Hero(
+            child: HaloHero(
               tag: kSearchHero,
               createRectTween: _straight,
               child: SizedBox(

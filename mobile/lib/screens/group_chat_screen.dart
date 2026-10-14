@@ -111,6 +111,7 @@ import '../widgets/voice_mic.dart';
 import '../voice_mask.dart' show maskWavOff;
 import '../polls.dart';
 import '../widgets/attach_grid.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/new_poll_sheet.dart';
 import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
@@ -3911,7 +3912,7 @@ class _Header extends StatelessWidget {
                   children: [
                     // a room's tile is violet, as on the chat list it
                     // flies from: known from that list before the load
-                    Hero(
+                    HaloHero(
                       tag: 'group-$groupId',
                       child: Container(
                         width: 36,
@@ -4992,7 +4993,7 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: RememberedHeight(
                                                         id: m.mediaPath!,
-                                                        child: Hero(
+                                                        child: HaloHero(
                                                           tag: photoHeroTag(
                                                             m.mediaPath!,
                                                             'chat',

@@ -109,6 +109,7 @@ import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
 import '../widgets/preview_strip.dart';
@@ -6048,7 +6049,7 @@ class _ChatHead extends StatelessWidget {
               onTap: onBlock, // avatar opens the contact page
               behavior: HitTestBehavior.opaque,
               // the same face flies in from the list row
-              child: Hero(
+              child: HaloHero(
                 tag: 'face-$avatarSeed',
                 child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
               ),
@@ -6915,7 +6916,7 @@ class _Bubble extends StatelessWidget {
                                                   // decodes, so pin a width
                                                   child: RememberedHeight(
                                                     id: msg.mediaPath!,
-                                                    child: Hero(
+                                                    child: HaloHero(
                                                       tag: photoHeroTag(
                                                         msg.mediaPath!,
                                                         'chat',
@@ -8158,7 +8159,7 @@ class MediaGalleryScreen extends StatelessWidget {
                     secure: securePaths.contains(path),
                     tag: tag,
                   ),
-                  child: Hero(
+                  child: HaloHero(
                     tag: tag,
                     child: Image.file(
                       File(path),

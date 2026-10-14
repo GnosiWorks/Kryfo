@@ -12,6 +12,7 @@ import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, nameUnchecked, session;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -356,7 +357,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     curve: kHouseCurve,
                     builder: (_, v, child) =>
                         Transform.scale(scale: v, child: child),
-                    child: Hero(
+                    child: HaloHero(
                       tag: 'face-${widget.avatarSeed}',
                       child: KryfoAvatar(
                         seed: widget.avatarSeed,

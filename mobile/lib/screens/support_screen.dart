@@ -24,6 +24,7 @@ import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/count_badge.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/home_pin.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -842,7 +843,7 @@ class _Tile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
           child: Row(
             children: [
-              hero ? Hero(tag: 'face-${c.haloId}', child: face) : face,
+              hero ? HaloHero(tag: 'face-${c.haloId}', child: face) : face,
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
