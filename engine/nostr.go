@@ -1233,6 +1233,9 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	return accepted
 }
 
+// how long a runner waits for tor before it tries again
+var torRetryWait = 10 * time.Second
+
 // run a long-lived subscription against all configured relays for events from `pk`.
 // dedupes across relays. exits when ctx is cancelled.
 func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string) {
@@ -1468,12 +1471,17 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if h := runnerParkHook; h != nil {
 						h()
 					}
+					// it asks at the wake now, not at the add
+					turn.fresh = nil
 					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
 				client, err := torNostrClientFor(lane)
 				if err != nil {
-					wait := 10 * time.Second
+					// it asks as tor comes up, beside the start's first
+					// socket, not at the add
+					turn.fresh = nil
+					wait := torRetryWait
 					log.Printf("nostr: tor not ready, retry subscribe to %s in %s: %v", u, wait, err)
 					// a hung dialer that nothing rescues leaves the phone deaf
 					// to every relay, which looks like features being broken

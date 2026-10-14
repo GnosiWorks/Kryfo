@@ -601,3 +601,50 @@ func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 		}
 	}
 }
+
+// added while tor was still starting: its runner first finds tor not up,
+// and asks only once it is, beside the start's own sockets, so it waits
+// its turn there as they do
+func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
+	old, oldWait := subSpread, torRetryWait
+	subSpread, torRetryWait = time.Hour, 200*time.Millisecond
+	defer func() { subSpread, torRetryWait = old, oldWait }()
+	socks := newSocksStandIn(t)
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, relay)
+	// a relay answered lately: the tor watchdog stays out of it
+	noteRelayConnected()
+	mu.Lock()
+	up := torNode
+	torNode = nil
+	mu.Unlock()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	kickRelays()
+	spendFirstTurn()
+	base := settledActive(t)
+	added := newXid(t)
+	rcv := mustRcv(t, added)
+	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), added.pub, rcv)
+	time.Sleep(300 * time.Millisecond)
+	// tor is up, well inside the add's free window and with no kick
+	mu.Lock()
+	torNode = up
+	mu.Unlock()
+	asked := func() bool {
+		for _, c := range relay.snapshot() {
+			if c.addrs[rcv] {
+				return true
+			}
+		}
+		return false
+	}
+	// it got past tor: waiting its turn, or asking
+	waitFor(t, "it got past tor", 5*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) > base || asked()
+	})
+	time.Sleep(time.Second)
+	if asked() {
+		t.Fatal("an address added while tor started asked at tor-up without its turn")
+	}
+}

@@ -113,7 +113,8 @@ func freshOf(ctx context.Context) *freshMark {
 
 // the free turn holds only under the kick the add or accept came in, and
 // only soon after it. one that parked offline or waited for tor would ask
-// at the wake or the start, beside the phone's other addresses
+// at the wake or the start, beside the phone's other addresses, so the
+// runner drops it there too
 func (m *freshMark) holds(kc chan struct{}, now time.Time) bool {
 	return m != nil && kc == m.kick && now.Before(m.until)
 }
