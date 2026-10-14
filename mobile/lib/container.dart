@@ -325,6 +325,7 @@ const deviceKeys = {
   'helper_slots',
   'helper_synced',
   'helper_forget',
+  'helper_asked',
   'helper_relay_knocks',
   'helper_gone',
   'kryfo.update.checked',

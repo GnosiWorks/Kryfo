@@ -70,21 +70,20 @@ class FakeDistributor {
 // key, and what it was asked
 class FakeEngine implements KnockEngine {
   List<KnockAddress> live = [];
-  // ids the engine can still sign a forget for
-  Set<String> seen = {};
   String check = 'yes';
   int checks = 0;
   String lastExclude = '';
   final List<List<Map<String, dynamic>>> sent = [];
   final Map<String, String> relay = {};
   final Map<String, int> made = {};
+  // every forget asked for, with its signed time
+  final List<(String, int)> forgets = [];
   bool up = true;
   Set<String> dups = {};
 
   @override
   Future<String> knockAddresses(String excludeJson) async {
     lastExclude = excludeJson;
-    seen.addAll(live.map((a) => a.address));
     return jsonEncode([
       for (final a in live) {'i': a.address, 'g': a.group},
     ]);
@@ -105,14 +104,17 @@ class FakeEngine implements KnockEngine {
     sent.add(items);
     final done = <String>[];
     final dup = <String>[];
+    final unknown = <String>[];
     final known = {for (final a in live) a.address};
     for (final i in items) {
       final name = i['i'] as String? ?? 's${i['s']}';
       final key = i['i'] as String? ?? i['k'] as String;
       final forget = (i['e'] as String).isEmpty;
-      if (i['i'] != null && !(forget ? seen : known).contains(i['i'])) {
+      if (i['i'] != null && !known.contains(i['i'])) {
+        unknown.add(name);
         continue;
       }
+      if (forget) forgets.add((key, i['t'] as int? ?? 0));
       if (dups.remove(name)) {
         dup.add(name);
         continue;
@@ -125,9 +127,23 @@ class FakeEngine implements KnockEngine {
       made[key] = i['t'] as int? ?? 0;
       done.add(name);
     }
-    return jsonEncode({'done': done, 'dup': dup});
+    return jsonEncode({'done': done, 'dup': dup, 'unknown': unknown});
   }
 }
+
+// an id that is not resting on any day of the two months the tests span
+String steady(String base) {
+  for (var n = 0; ; n++) {
+    final id = '$base.$n';
+    var ok = true;
+    for (var d = 0; d < 60 && ok; d++) {
+      ok = !restsNow(id, 1800000000000 + d * 24 * 60 * 60 * 1000);
+    }
+    if (ok) return id;
+  }
+}
+
+final c = [for (var i = 0; i < 10; i++) steady('c$i')];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -202,7 +218,7 @@ void main() {
 
   group('set up and registrations', () {
     final contacts = [
-      for (var i = 0; i < 6; i++) KnockAddress('c$i', 'everyday:${i % 4}'),
+      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:${i % 4}'),
     ];
     const fc = KnockAddress('fc', 'firstcontact:aa');
 
@@ -243,9 +259,9 @@ void main() {
       }
       // a contact who arrives later goes in the next round, before renewals
       now += kRefreshMinMs + kRefreshSpanMs;
-      engine.live = [...engine.live, const KnockAddress('c9', 'room:bb')];
+      engine.live = [...engine.live, KnockAddress(c[9], 'room:bb')];
       await helper.sync();
-      expect(engine.sent.last.any((i) => i['i'] == 'c9'), isTrue);
+      expect(engine.sent.last.any((i) => i['i'] == c[9]), isTrue);
     });
 
     test('renewals fall on days of their own', () async {
@@ -289,10 +305,10 @@ void main() {
       now += 60 * 1000;
       final s = SlotBook.read(
         (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
-      ).slotOf('c0')!;
+      ).slotOf(c[0])!;
       ntfy.endpoints['kryfo-$s.0'] = 'https://push.example.org/upNew';
       await rounds();
-      final again = engine.sent.last.where((i) => i['i'] == 'c0').single;
+      final again = engine.sent.last.where((i) => i['i'] == c[0]).single;
       expect(again['t'] as int, greaterThan(nowS));
     });
 
@@ -307,19 +323,19 @@ void main() {
     test('the relay says not newer: tried again later, newer', () async {
       engine.live = [contacts.first];
       await helper.setUp(ntfy.package, wait: Duration.zero);
-      engine.dups = {'c0'};
+      engine.dups = {c[0]};
       await rounds();
-      expect(engine.relay.containsKey('c0'), isFalse);
+      expect(engine.relay.containsKey(c[0]), isFalse);
       final firstT =
-          engine.sent.expand((b) => b).where((i) => i['i'] == 'c0').single['t']
+          engine.sent.expand((b) => b).where((i) => i['i'] == c[0]).single['t']
               as int;
       now += kDupRetryMs ~/ 2;
       await rounds();
-      expect(engine.relay.containsKey('c0'), isFalse);
+      expect(engine.relay.containsKey(c[0]), isFalse);
       now += kDupRetryMs;
       await rounds();
-      expect(engine.relay.containsKey('c0'), isTrue);
-      expect(engine.made['c0']!, greaterThan(firstT));
+      expect(engine.relay.containsKey(c[0]), isTrue);
+      expect(engine.made[c[0]]!, greaterThan(firstT));
     });
 
     test('a helper app that gives no endpoint fails the set-up', () async {
@@ -380,17 +396,52 @@ void main() {
           .single
           .value;
       expect(engine.relay.values, contains(fresh));
-      // and the room's own registration is forgotten
-      expect(engine.relay.containsKey('r1'), isFalse);
+      // and the room's own registration is left to lapse: no forget is
+      // signed for an address that is gone
+      expect(engine.forgets, isEmpty);
+    });
+
+    test('a chat hidden is not forgotten: its registration lapses', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      engine.live = [...contacts.skip(1)];
+      now += kRefreshMinMs + kRefreshSpanMs;
+      await rounds();
+      expect(engine.forgets, isEmpty);
+      expect(
+        engine.sent.expand((b) => b).where((i) => i['i'] == c[0]).length,
+        1,
+      );
+    });
+
+    test('a contact resting is not registered, and comes back after', () async {
+      // an id resting now, and not a month later
+      var id = '';
+      for (var n = 0; id.isEmpty; n++) {
+        final x = 'rest$n';
+        if (restsNow(x, now) &&
+            !restsNow(x, now + kRestWindowMs + 24 * 60 * 60 * 1000)) {
+          id = x;
+        }
+      }
+      engine.live = [KnockAddress(id, 'everyday:0'), ...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      expect(engine.relay.containsKey(id), isFalse);
+      now += kRestWindowMs + 24 * 60 * 60 * 1000;
+      await rounds();
+      expect(engine.relay.containsKey(id), isTrue);
     });
 
     test('leaving the mode: the helper app lets go at once, the relay '
-        'forgets one round at a time, at times of their own', () async {
+        'forgets one at a time, each signed after its registration', () async {
       engine.live = [...contacts, fc];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await rounds();
       final before = Set.of(ntfy.endpoints.values);
       final held = engine.relay.length;
+      final made = Map.of(engine.made);
       await helper.stop();
       expect(ntfy.endpoints, isEmpty);
       expect(await helper.forgetsLeft(), isTrue);
@@ -404,32 +455,79 @@ void main() {
       final forgets = engine.sent.skip(sentBefore).toList();
       expect(forgets.every((b) => b.length == 1), isTrue);
       expect(forgets.length, held);
-      final ts = {for (final b in forgets) b.single['t'] as int};
-      expect(ts.length, greaterThan(held ~/ 2));
+      for (final (key, t) in engine.forgets) {
+        expect(t, greaterThan(made[key]!), reason: key);
+      }
       await helper.setUp(ntfy.package, wait: Duration.zero);
       expect(before.intersection(Set.of(ntfy.endpoints.values)), isEmpty);
     });
 
-    test('a phone moving away forgets everything at once', () async {
+    test('set up again with forgets still queued: what is registered again '
+        'is never forgotten', () async {
       engine.live = [...contacts];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await rounds();
       await helper.stop();
-      await helper.forgetRound(all: true);
-      expect(engine.relay, isEmpty);
-      expect(await helper.forgetsLeft(), isFalse);
+      expect(await helper.forgetsLeft(), isTrue);
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      for (var i = 0; i < 40 && await helper.forgetsLeft(); i++) {
+        await helper.forgetRound();
+      }
+      for (final a in contacts) {
+        expect(engine.relay.containsKey(a.address), isTrue, reason: a.address);
+      }
+      expect(
+        engine.forgets.where((f) => contacts.any((a) => a.address == f.$1)),
+        isEmpty,
+      );
     });
 
-    test('a forget the engine cannot sign is given up after a few', () async {
+    test('a phone moving away drops its forgets: nothing is sent', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      final sent = engine.sent.length;
+      await helper.stop();
+      await helper.dropForgets();
+      expect(await helper.forgetsLeft(), isFalse);
+      expect(engine.sent.length, sent);
+      expect(ntfy.endpoints, isEmpty);
+    });
+
+    test('a forget for an address no longer listened on is given up after '
+        'a few; with tor down nothing is counted', () async {
       engine.live = [...contacts];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await rounds();
       await helper.stop();
-      engine.seen = {};
-      for (var i = 0; i < 100 && await helper.forgetsLeft(); i++) {
+      engine.up = false;
+      for (var i = 0; i < 20; i++) {
+        await helper.forgetRound();
+      }
+      expect(await helper.forgetsLeft(), isTrue);
+      engine.up = true;
+      engine.live = [];
+      for (var i = 0; i < 200 && await helper.forgetsLeft(); i++) {
         await helper.forgetRound();
       }
       expect(await helper.forgetsLeft(), isFalse);
+    });
+
+    test('the hourly ask again holds across a restart', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      ntfy.endpoints.remove('kryfo-3.0');
+      ntfy.answers = false;
+      await helper.sync();
+      final again = HelperDelivery(
+        engine: engine,
+        push: HelperPush(_ch),
+        rnd: Random(2),
+        nowMs: () => now,
+      );
+      await again.sync();
+      expect(ntfy.events.where((e) => e == 'register kryfo-3.0').length, 2);
     });
 
     test('a helper app uninstalled is noticed', () async {

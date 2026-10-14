@@ -23,8 +23,11 @@ const kHelperSlotsKey = 'helper_slots';
 // what the relay took last: name -> [endpoint, sent ms, due ms]. names are
 // the engine's ids, never an address
 const kHelperSyncedKey = 'helper_synced';
-// forgets still to send after the mode was left: [{"i":id} or {"k","s"}]
+// forgets still to send after the mode was left: [{"i":id} or {"k","s"}],
+// each with "w", when its registration was sent
 const kHelperForgetKey = 'helper_forget';
+// slot -> when the helper app was last asked for it again
+const kHelperAskedKey = 'helper_asked';
 // "yes" or "no" and when our relay last said so, as "yes@ms"
 const kHelperRelayKey = 'helper_relay_knocks';
 // the helper app was there and is gone, or the relay stopped knocking:
@@ -84,14 +87,16 @@ class HelperDelivery {
   final Random _rnd;
   final int Function() _now;
   Future<int>? _syncing;
-  // slot -> when the helper app was last asked for it again
-  final Map<int, int> _askedAgain = {};
-  // name -> forgets tried without the engine signing
+  // name -> forgets the engine could not sign, the address not listened on
   final Map<String, int> _forgetTried = {};
 
   /// whether the last round left something still to send
   bool get more => _more;
   bool _more = false;
+
+  /// whether the last round sent anything: one group a round, all told
+  bool get sent => _sent;
+  bool _sent = false;
 
   /// whether our relay said it can knock. [ask] asks it again when the
   /// answer is a day old: over tor, so only when tor is up
@@ -188,9 +193,14 @@ class HelperDelivery {
   }
 
   Future<int> _sync(String? package) async {
-    final live = knockAddressesOf(
-      await engine.knockAddresses(jsonEncode(_hidden())),
-    );
+    _sent = false;
+    final now = _now();
+    final live = [
+      for (final a in knockAddressesOf(
+        await engine.knockAddresses(jsonEncode(_hidden())),
+      ))
+        if (!(lastingGroup(a.group) && restsNow(a.address, now))) a,
+    ];
     final before = await _book();
     final plan = planSlots(before, live, _rnd);
     var book = plan.book;
@@ -207,18 +217,23 @@ class HelperDelivery {
     var endpoints = slotEndpoints(book, await push.endpoints());
     // a registration the helper app dropped or never answered is asked
     // again, at most once an hour per slot: same group, same slot
-    final now = _now();
+    final prefs = await SharedPreferences.getInstance();
+    final asked = _asked(prefs);
     final missing = [
       for (var s = 0; s < kHelperSlots; s++)
         if (!endpoints.containsKey(s) &&
             !plan.renew.contains(s) &&
-            now - (_askedAgain[s] ?? 0) >= kAskAgainMs)
+            now - (asked[s] ?? 0) >= kAskAgainMs)
           s,
     ];
     if (pkg != null && missing.isNotEmpty) {
       for (final s in missing) {
-        _askedAgain[s] = now;
+        asked[s] = now;
       }
+      await prefs.setString(
+        kHelperAskedKey,
+        jsonEncode({for (final e in asked.entries) '${e.key}': e.value}),
+      );
       await push.register(pkg, [for (final s in missing) book.instance(s)]);
       endpoints = slotEndpoints(book, await push.endpoints());
     }
@@ -226,23 +241,26 @@ class HelperDelivery {
     final synced = await _synced();
     final wanted = wantedItems(book, endpoints);
     final names = {for (final it in wanted) it.name};
-    // addresses gone since they were registered: forgotten, each on its own
-    final gone = [
-      for (final n in synced.keys)
-        if (!n.startsWith('s') && !book.byAddress.containsKey(n))
-          KnockItem.address(n, -1, ''),
+    // an address gone, hidden, replaced or resting is never forgotten: a
+    // forget then would tell the relay what happened. its registration
+    // lapses within the month
+    synced.removeWhere((k, _) => !names.contains(k));
+    // forgets still queued from leaving the mode must not undo what is
+    // about to be registered again
+    final queued = _forgets(prefs);
+    final keep = [
+      for (final f in queued)
+        if (f['i'] == null || !names.contains(f['i'])) f,
     ];
-    synced.removeWhere((k, _) => !names.contains(k) && k.startsWith('s'));
+    if (keep.length != queued.length) {
+      await prefs.setString(kHelperForgetKey, jsonEncode(keep));
+    }
 
-    String groupOf(KnockItem it) => it.slot < 0
-        ? 'gone:${it.name}'
-        : it.address != null
-        ? 'g:${book.owner[it.slot]}'
-        : 's${it.slot}';
+    String groupOf(KnockItem it) =>
+        it.address != null ? 'g:${book.owner[it.slot]}' : 's${it.slot}';
     final due = [
       for (final it in wanted)
         if (_due(synced[it.name], it.endpoint, now)) it,
-      ...gone,
     ];
     if (due.isEmpty) {
       _more = false;
@@ -256,17 +274,18 @@ class HelperDelivery {
     // groups the relay has never seen first, then the rest, at random
     final fresh = [
       for (final e in groups.entries)
-        if (e.value.any((it) => synced[it.name] == null && it.slot >= 0)) e.key,
+        if (e.value.any((it) => synced[it.name] == null)) e.key,
     ];
     final pool = fresh.isNotEmpty ? fresh : groups.keys.toList();
     final pick = pool[_rnd.nextInt(pool.length)];
     final batch = groups[pick]!;
     _more = groups.length > 1;
 
+    _sent = true;
     final r = await engine.knockRegister(
       jsonEncode([
         for (final it in batch)
-          {...it.toJson(), 't': _signedAt(synced[it.name], now)},
+          {...it.toJson(), 't': _signedAt(synced[it.name]?.sent, now)},
       ]),
     );
     final done = _namesOf(r, 'done');
@@ -278,17 +297,6 @@ class HelperDelivery {
     }
     final standIn = Map<int, String>.from(book.standIn);
     for (final it in batch) {
-      if (it.slot < 0) {
-        // a forget for an address gone: done, or given up after a few
-        final tries = (_forgetTried[it.name] ?? 0) + 1;
-        if (done.contains(it.name) || tries >= kForgetTries) {
-          synced.remove(it.name);
-          _forgetTried.remove(it.name);
-        } else {
-          _forgetTried[it.name] = tries;
-        }
-        continue;
-      }
       if (dup.contains(it.name)) {
         // the relay keeps one at least as new: again a little later, newer
         synced[it.name] = _Synced(_Synced.dup, now, now + kDupRetryMs);
@@ -318,11 +326,24 @@ class HelperDelivery {
   // the time a registration or a forget is signed with, in seconds: its
   // own, up to twenty minutes back, and always after the one before it for
   // the same name
-  int _signedAt(_Synced? had, int nowMs) {
+  int _signedAt(int? sentMs, int nowMs) {
     final now = nowMs ~/ 1000;
     final back = now - _rnd.nextInt(kSignedJitterS + 1);
-    final after = had == null ? 0 : had.sent ~/ 1000 + 1;
+    final after = sentMs == null ? 0 : sentMs ~/ 1000 + 1;
     return min(now, max(back, after));
+  }
+
+  Map<int, int> _asked(SharedPreferences prefs) {
+    try {
+      final j = jsonDecode(prefs.getString(kHelperAskedKey) ?? '{}') as Map;
+      return {
+        for (final e in j.entries)
+          if (int.tryParse('${e.key}') != null && e.value is int)
+            int.parse('${e.key}'): e.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
   }
 
   bool _due(_Synced? had, String endpoint, int now) {
@@ -350,13 +371,16 @@ class HelperDelivery {
     final synced = await _synced();
     final prefs = await SharedPreferences.getInstance();
     final queued = _forgets(prefs);
-    for (final n in synced.keys) {
+    // each with when its registration went, so its forget is signed after
+    for (final e in synced.entries) {
+      final n = e.key;
+      final w = e.value.sent;
       if (n.startsWith('s')) {
         final s = int.tryParse(n.substring(1));
         final k = s == null ? null : book.standIn[s];
-        if (k != null) queued.add({'k': k, 's': s!});
+        if (k != null) queued.add({'k': k, 's': s!, 'w': w});
       } else {
-        queued.add({'i': n});
+        queued.add({'i': n, 'w': w});
       }
     }
     await prefs.setString(kHelperForgetKey, jsonEncode(queued));
@@ -387,35 +411,57 @@ class HelperDelivery {
   Future<bool> forgetsLeft() async =>
       _forgets(await SharedPreferences.getInstance()).isNotEmpty;
 
-  /// one queued forget, signed at its own time. [all] sends every one now,
-  /// for a phone that is leaving
-  Future<int> forgetRound({bool all = false}) async {
+  /// one queued forget, signed at its own time, after its registration.
+  /// one registered again since is dropped, never sent
+  Future<int> forgetRound() async {
     final prefs = await SharedPreferences.getInstance();
-    final queued = _forgets(prefs);
+    var queued = _forgets(prefs);
     if (queued.isEmpty) return 0;
-    final batch = all ? List.of(queued) : [queued[_rnd.nextInt(queued.length)]];
-    final now = _now();
-    final r = await engine.knockRegister(
-      jsonEncode([
-        for (final f in batch) {...f, 'e': '', 't': _signedAt(null, now)},
-      ]),
-    );
-    final done = _namesOf(r, 'done');
-    if (done == null) return 0;
-    // sent or not, an item is not tried for ever: the engine signs only
-    // for addresses it listed since it started
-    for (final f in batch) {
-      final name = f['i'] as String? ?? 's${f['s']}';
-      final tries = (_forgetTried[name] ?? 0) + 1;
-      if (done.contains(name) || tries >= kForgetTries) {
-        queued.remove(f);
-        _forgetTried.remove(name);
-      } else {
-        _forgetTried[name] = tries;
-      }
-    }
+    final synced = await _synced();
+    queued = [
+      for (final f in queued)
+        if (f['i'] == null || !synced.containsKey(f['i'])) f,
+    ];
     await prefs.setString(kHelperForgetKey, jsonEncode(queued));
+    if (queued.isEmpty) return 0;
+    // the engine signs only for what it lists now
+    await engine.knockAddresses(jsonEncode(_hidden()));
+    final f = queued[_rnd.nextInt(queued.length)];
+    final now = _now();
+    final item = {
+      for (final e in f.entries)
+        if (e.key != 'w') e.key: e.value,
+      'e': '',
+      't': _signedAt(f['w'] as int?, now),
+    };
+    _sent = true;
+    final r = await engine.knockRegister(jsonEncode([item]));
+    final done = _namesOf(r, 'done');
+    final unknown = _namesOf(r, 'unknown') ?? const {};
+    // nothing went: tor down, or the relay unreached. tried again later,
+    // and not counted
+    if (done == null) return 0;
+    final name = f['i'] as String? ?? 's${f['s']}';
+    var drop = done.contains(name);
+    if (unknown.contains(name)) {
+      // an address no longer listened on is never signed for
+      final tries = (_forgetTried[name] ?? 0) + 1;
+      _forgetTried[name] = tries;
+      drop = drop || tries >= kForgetTries;
+    }
+    if (drop) {
+      queued.remove(f);
+      _forgetTried.remove(name);
+      await prefs.setString(kHelperForgetKey, jsonEncode(queued));
+    }
     return done.length;
+  }
+
+  /// a phone moving away: the helper app has let go, so the relay's next
+  /// knock finds each endpoint gone. nothing more is sent from here
+  Future<void> dropForgets() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(kHelperForgetKey);
   }
 
   /// whether the helper app registered with is still on the phone. null

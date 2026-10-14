@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
   "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
   "gettingMessagesHelperBody": "Seketika dan hemat baterai. Server aplikasi pembantu melihat alamat IP ponselmu dan tahu kapan pesan masuk, tidak pernah isinya.",
-  "gettingMessagesHelperNote": "Bangunan palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, dan ruang setelah beberapa yang pertama, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.",
+  "gettingMessagesHelperNote": "Panggilan bangun palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, dan ruang setelah beberapa yang pertama, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.",
   "helperSheetNeedTitle": "Kamu perlu aplikasi pembantu",
   "helperSheetNeedLine": "Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa, ntfy awal yang bagus.",
   "helperSheetGetNtfy": "Pasang ntfy",

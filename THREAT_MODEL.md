@@ -67,10 +67,14 @@ put you in danger, read all of it.
 - the helper app mode, if you choose it. the helper's server sees your
   phone's ip address and when each of your sixteen endpoints is knocked.
   fake knocks make the real ones harder to pick out, not impossible: a
-  server that watches long enough, or works with our relay, can match knocks
-  to messages arriving. our relay learns which endpoints your addresses use;
-  with a helper server of your own, the server's name ties all of them to
-  one person. check-ins and always on involve no one else.
+  server that watches long enough can still tell many conversations from
+  the fakes, and one that works with our relay can match knocks to messages
+  arriving. our relay learns which endpoints your addresses use, and
+  together with the helper's server it can tie your mailboxes to your
+  phone's ip address. with a helper server of your own, the server's name
+  ties all of them to one person. a relay watching for months can guess
+  which mailboxes are hidden chats from which are never registered.
+  check-ins and always on involve no one else.
 - forensics on a seized unlocked device or on backups of it.
 - a forensic copy of the phone. the decoy pin and hidden chats are for a
   quick look, someone scrolling through a phone you were made to unlock. they

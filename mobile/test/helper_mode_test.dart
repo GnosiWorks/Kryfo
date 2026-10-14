@@ -4,7 +4,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:convert';
+
 import 'package:kryfo/delivery_mode.dart';
+import 'package:kryfo/helper_delivery.dart';
 import 'package:kryfo/helper_push.dart';
 import 'package:kryfo/main.dart' show AppState, HaloEngine, useEngineForTest;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
@@ -14,13 +17,18 @@ const _ch = MethodChannel('halo/helper');
 
 class _Engine implements HaloEngine {
   String check = 'yes';
+  String live = '[]';
+  final List<String> registered = [];
   @override
   Future<String> knockCheck() async => check;
   @override
-  Future<String> knockAddresses(String excludeJson) async => '[]';
+  Future<String> knockAddresses(String excludeJson) async => live;
   @override
-  Future<String> knockRegister(String itemsJson) async =>
-      '{"done":[],"dup":[]}';
+  Future<String> knockRegister(String itemsJson) async {
+    registered.add(itemsJson);
+    return '{"done":[],"dup":[],"unknown":[]}';
+  }
+
   @override
   String setTransportMode(String mode) => 'ok';
   @override
@@ -143,5 +151,27 @@ void main() {
     await app.helperGoneAnswered();
     await app.lookAtHelperForTest();
     expect(app.helperGoneDue, isFalse);
+  });
+
+  test('one group a round, all told: a forget waits for a round with no '
+      'registrations', () async {
+    SharedPreferences.setMockInitialValues({
+      kHelperForgetKey: jsonEncode([
+        {'i': 'old', 'w': 1},
+      ]),
+    });
+    final app = AppState()
+      ..sendModeForTest = 'private'
+      ..deliveryModeForTest = DeliveryMode.helper;
+    eng.live = jsonEncode([
+      {'i': 'abcd', 'g': 'everyday:0'},
+    ]);
+    chosen = 'io.heckel.ntfy';
+    for (var s = 0; s < 16; s++) {
+      events.add('register kryfo-$s.0');
+    }
+    await app.helperRoundForTest();
+    expect(eng.registered.length, 1);
+    expect(eng.registered.single, isNot(contains('"e":""')));
   });
 }

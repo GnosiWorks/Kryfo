@@ -207,4 +207,26 @@ void main() {
     );
     expect(knockAddressesOf('error: no engine'), isEmpty);
   });
+
+  test(
+    'about one contact address in five rests, each in a month of its own',
+    () {
+      const t0 = 1800000000000;
+      const day = 24 * 60 * 60 * 1000;
+      final ids = [for (var i = 0; i < 2000; i++) 'id$i'];
+      final resting = ids.where((id) => restsNow(id, t0)).length;
+      expect(resting, inInclusiveRange(300, 500));
+      // over a year each id changes now and then, and not on one shared day
+      final changeDays = <int>{};
+      for (final id in ids.take(200)) {
+        var was = restsNow(id, t0);
+        for (var d = 1; d < 365; d++) {
+          final now = restsNow(id, t0 + d * day);
+          if (now != was) changeDays.add(d);
+          was = now;
+        }
+      }
+      expect(changeDays.length, greaterThan(100));
+    },
+  );
 }

@@ -13282,6 +13282,8 @@ class AppState extends ChangeNotifier {
   set relayKnocksForTest(bool v) => _relayKnocks = v;
   @visibleForTesting
   Future<void> lookAtHelperForTest() => _lookAtHelper();
+  @visibleForTesting
+  Future<int> helperRoundForTest() => _helperRound();
 
   Future<void> _loadHelper() async {
     try {
@@ -13347,8 +13349,10 @@ class AppState extends ChangeNotifier {
 
   // an endpoint came or went, or a round left more: the next round once
   // things settle, if tor is up anyway. otherwise the next check-in
+  // a round already waiting keeps its time: an endpoint arriving never
+  // pulls the next round forward
   void _helperSoon([Duration? after]) {
-    _helperTimer?.cancel();
+    if (_helperTimer?.isActive ?? false) return;
     _helperTimer = Timer(after ?? const Duration(seconds: 3), () {
       if (!_torHeld && torReady) unawaited(_helperRound());
     });
@@ -13361,12 +13365,16 @@ class AppState extends ChangeNotifier {
     var n = 0;
     var more = false;
     try {
+      var sent = false;
       if (_deliveryMode == DeliveryMode.helper && _sendMode == 'private') {
         n = await _helperOp(() => helper.sync());
         more = helper.more;
+        sent = helper.sent;
       }
+      // one group a round, all told: a forget waits for a round with no
+      // registrations in it
       if (await helper.forgetsLeft()) {
-        n += await _helperOp(() => helper.forgetRound());
+        if (!sent) n += await _helperOp(() => helper.forgetRound());
         more = more || await helper.forgetsLeft();
       }
     } catch (e) {
@@ -23650,17 +23658,19 @@ class AppState extends ChangeNotifier {
     await prefs.setInt('moved.at', DateTime.now().millisecondsSinceEpoch);
     _movedAway = true;
     notifyListeners();
-    // the identity lives elsewhere now: the relay forgets this phone's
-    // registrations, all at once while it still talks to relays
+    // the identity lives elsewhere now: the helper app lets go
     unawaited(_forgetOnMove());
   }
 
+  // the helper app lets go of every endpoint, so the relay's next knock
+  // finds each one gone. no forget is sent: a burst of them would tie this
+  // phone's mailboxes together
   Future<void> _forgetOnMove() async {
     try {
       if (_deliveryMode == DeliveryMode.helper) {
         await setDeliveryMode(DeliveryMode.checkins);
       }
-      await _helperOp(() => helper.forgetRound(all: true));
+      await _helperOp(() => helper.dropForgets());
     } catch (e) {
       dlog('helper: forgets on move (${e.runtimeType})');
     }

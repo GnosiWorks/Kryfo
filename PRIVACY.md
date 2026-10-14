@@ -54,13 +54,15 @@ by default there is no push service. the app checks for messages itself, over th
 
 "Through a helper app" is a way of getting messages you can choose, off by default and only on the default private route. a unifiedpush helper app (ntfy or another) keeps one connection for all your apps, and our relay knocks on it when something arrives for you. the knock is an empty request: no sender, no count, no content. Kryfo then fetches over tor as always.
 
-what our relay learns: for each of your mailbox addresses, a web address on your helper's server to knock (an endpoint). Kryfo always uses sixteen endpoints. addresses that share an endpoint are ones that already reach the relay together over one tor circuit, and while there are free endpoints each address has one of its own. the registration travels over tor, on the same circuit as the address it names, and only to our relay. the relay keeps a hash of the address, the endpoint and two times, for at most 30 days, and deletes them when you leave the mode or the helper's server says the endpoint is gone. hidden chats are never registered.
+what our relay learns: for each of your mailbox addresses that is registered, a web address on your helper's server to knock (an endpoint). Kryfo always uses sixteen endpoints. addresses that share an endpoint are ones that already reach the relay together over one tor circuit, and while there are free endpoints each address has one of its own. rooms past the free endpoints are not registered. the registration travels over tor, on the same circuit as the address it names, and only to our relay. the relay keeps a hash of the address, the endpoint and two times, for at most 30 days.
+
+hidden chats are never registered. their mailboxes are still read, so on its own that would set them apart. to blur it, each ordinary contact's mailbox also goes unregistered now and then, about one month in five at a time of its own, and nothing is ever sent to forget an address that stops being registered: its registration just runs out. a relay that watches for months can still guess which mailboxes are never registered at all.
 
 what the helper's server learns: your phone's ip address, as it does for every app that uses it, that it holds sixteen endpoints for Kryfo, and when each one is knocked. the knocks come from our relay's address, so it can tell you use Kryfo. our relay also sends fake knocks at random times, which makes it harder to tell when real messages arrive. it never learns what a message says, who sent it, or how many came.
 
 if you run your own helper server, its name is part of every endpoint, so our relay learns that all of your endpoints belong to one person. on a public server that many people use, the name says nothing.
 
-leaving the mode tells the helper app to drop the endpoints at once, and the relay is told to forget them.
+leaving the mode tells the helper app to drop the endpoints at once, so our relay's next knock finds them gone, and our relay is asked to forget them, a few at a time. both are best effort: whatever is missed runs out within 30 days. moving Kryfo to another phone drops the endpoints without asking the relay. a panic wipe makes no call at all, so the helper app keeps its endpoints until our relay's registrations run out, and its server sees knocks that nothing answers.
 
 ## third parties
 

@@ -65,13 +65,29 @@ object JobSetup {
         scheduler.schedule(jobInfo)
     }
 
+    private fun pending(context: Context, id: Int): Boolean =
+        context.getSystemService(JobScheduler::class.java)?.getPendingJob(id) != null
+
+    private fun knockOwe(context: Context, id: Int, schedule: () -> Unit) =
+        KnockOwe({ pending(context, id) }, schedule, KnockOwe.Prefs(context, id))
+
     // a knock from the helper app: one check-in, now. expedited where
     // android has it, so it is not held for a maintenance window. one
-    // waiting or running is enough, it fetches for every address
+    // already waiting or running is owed another once it ends
     fun scheduleKnock(context: Context) {
         if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_JOB_ID) { knockNow(context) }.knock()
+    }
+
+    // a job of this service ended: a knock owed to it goes now
+    fun knockJobsEnded(context: Context) {
+        if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_JOB_ID) { knockNow(context) }.ended()
+        knockOwe(context, KNOCK_LATER_JOB_ID) { knockLaterNow(context, 5_000L) }.ended()
+    }
+
+    private fun knockNow(context: Context) {
         val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
-        if (scheduler.getPendingJob(KNOCK_JOB_ID) != null) return
         val component = ComponentName(context, HaloPeriodicJobService::class.java)
         val extras = PersistableBundle().apply { putString("why", "push") }
         fun builder() = JobInfo.Builder(KNOCK_JOB_ID, component)
@@ -90,11 +106,14 @@ object JobSetup {
     }
 
     // a knock owed: one that came inside the floor, or while a check-in
-    // ran. one waiting at a time, it fetches for every address
+    // ran. one waiting at a time; another meanwhile is owed after it
     fun scheduleKnockLater(context: Context, waitMs: Long) {
         if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_LATER_JOB_ID) { knockLaterNow(context, waitMs) }.knock()
+    }
+
+    private fun knockLaterNow(context: Context, waitMs: Long) {
         val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
-        if (scheduler.getPendingJob(KNOCK_LATER_JOB_ID) != null) return
         val component = ComponentName(context, HaloPeriodicJobService::class.java)
         val extras = PersistableBundle().apply { putString("why", "push") }
         try {

@@ -11,9 +11,13 @@
 // together what the relay sees apart, and while free slots last each address
 // has one to itself. a slot whose group is gone gets a new endpoint before
 // it serves another. a slot with no address registers a key that belongs to
-// nothing, so every endpoint looks the same to the relay and to the helper.
+// nothing, so the helper's server sees sixteen alike; the relay can tell a
+// stand-in in time, as no wrap ever comes for it. rooms past the free slots
+// are not registered at all.
 import 'dart:convert';
 import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 
 const kHelperSlots = 16;
 // a contact lane owns at most this many slots, so the first-contact address
@@ -47,6 +51,26 @@ List<KnockAddress> knockAddressesOf(String raw) {
 // a contact lane is fixed by its addresses' hash and never goes away. a
 // room or a first-contact address does
 bool lastingGroup(String g) => g.startsWith('everyday:');
+
+// a hidden chat's address is read but never registered. so that this alone
+// does not mark it, each contact's address rests too, one month in five or
+// so, in a month of its own: unregistered, its registration left to lapse
+// as a hidden one's does. its messages come with the next knock or
+// check-in
+const kRestWindowMs = 30 * 24 * 60 * 60 * 1000;
+const kRestOneIn = 5;
+
+bool restsNow(String id, int nowMs) {
+  final phase = sha256.convert(utf8.encode('phase:$id')).bytes;
+  final offset =
+      ((phase[0] << 24 | phase[1] << 16 | phase[2] << 8 | phase[3]) &
+          0x7fffffff) %
+      kRestWindowMs;
+  final window = (nowMs + offset) ~/ kRestWindowMs;
+  return sha256.convert(utf8.encode('rest:$id:$window')).bytes[0] %
+          kRestOneIn ==
+      0;
+}
 
 bool _mainGroup(String g) => lastingGroup(g) || g.startsWith('firstcontact:');
 
