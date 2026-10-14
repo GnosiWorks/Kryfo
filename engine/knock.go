@@ -201,10 +201,16 @@ var (
 
 func knockAddresses(excludeJSON string) string {
 	var exclude []string
-	json.Unmarshal([]byte(excludeJSON), &exclude)
-	knockHiddenMu.Lock()
-	knockHidden = exclude
-	knockHiddenMu.Unlock()
+	if json.Unmarshal([]byte(excludeJSON), &exclude) == nil {
+		knockHiddenMu.Lock()
+		knockHidden = exclude
+		knockHiddenMu.Unlock()
+	} else {
+		// a list that cannot be read keeps the last one
+		knockHiddenMu.Lock()
+		exclude = knockHidden
+		knockHiddenMu.Unlock()
+	}
 	type row struct {
 		I string `json:"i"`
 		G string `json:"g"`
@@ -312,8 +318,9 @@ var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error 
 // registers each item and answers {"done":[...],"dup":[...],"unknown":[...],
 // "refused":[...]}: the ids, and "s<n>" for the slots without one, that our
 // relay took, those it said were not newer than what it keeps, ids not
-// listened on now or hidden, and those our relay refused for another
-// reason. what went nowhere, tor down or the relay unreached, is in none.
+// listened on now or hidden, and those our relay refused for good (invalid,
+// blocked). what went nowhere, tor down, the relay unreached, or a refusal
+// for now (error, rate-limited), is in none.
 // a registration needs the private route; a forget goes over tor on any
 // route. both only for an address listened on now, on its lane as it is
 // now: an address that is gone, a first-contact address replaced, a chat
@@ -325,8 +332,25 @@ func HaloKnockRegister(cItems *C.char) *C.char {
 }
 
 func knockRegister(raw string) string {
+	// {"items":[...],"hidden":[...]}: the hidden chats named in the call
+	// itself, so a register never runs on an older list. a bare list of
+	// items uses the last one named
 	var items []knockItem
-	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+	var call struct {
+		Items  []knockItem `json:"items"`
+		Hidden *[]string   `json:"hidden"`
+	}
+	if strings.HasPrefix(strings.TrimSpace(raw), "{") {
+		if err := json.Unmarshal([]byte(raw), &call); err != nil {
+			return "error: bad items"
+		}
+		items = call.Items
+		if call.Hidden != nil {
+			knockHiddenMu.Lock()
+			knockHidden = *call.Hidden
+			knockHiddenMu.Unlock()
+		}
+	} else if err := json.Unmarshal([]byte(raw), &items); err != nil {
 		return "error: bad items"
 	}
 	mode := currentMode()
@@ -397,8 +421,8 @@ func knockRegister(raw string) string {
 				done = append(done, name)
 			case strings.Contains(err.Error(), "duplicate:"):
 				dup = append(dup, name)
-			case strings.HasPrefix(err.Error(), "msg: "):
-				// the relay answered, and said no
+			case strings.HasPrefix(err.Error(), "msg: invalid:") || strings.HasPrefix(err.Error(), "msg: blocked:"):
+				// the relay answered no, and will again
 				refused = append(refused, name)
 			default:
 				log.Printf("knock: a registration on %s was not taken: %v", laneKind(lane), err)

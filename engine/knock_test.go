@@ -382,6 +382,58 @@ func TestKnockNeverSignsForAHiddenChat(t *testing.T) {
 	}
 }
 
+// the hidden list named in the register call itself holds, with no list
+// before it, and a list that cannot be read keeps the one before
+func TestKnockHiddenInTheCall(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 2)
+	knockHiddenMu.Lock()
+	knockHidden = nil
+	knockHiddenMu.Unlock()
+	t.Cleanup(func() { knockAddresses("") })
+	call, _ := json.Marshal(map[string]any{
+		"items":  []knockItem{{I: knockID(w.contacts[0]), E: "https://push.example.org/up"}},
+		"hidden": []string{w.peers[0]},
+	})
+	var out knockOut
+	json.Unmarshal([]byte(knockRegister(string(call))), &out)
+	if len(out.Done) != 0 || len(out.Unknown) != 1 {
+		t.Fatalf("a chat hidden in the call was registered: %+v", out)
+	}
+	knockAddresses("not json")
+	bare := runRegister(t, []knockItem{{I: knockID(w.contacts[0]), E: "https://push.example.org/up"}})
+	if len(bare.Done) != 0 {
+		t.Fatalf("a list that cannot be read cleared the hidden ones: %+v", bare)
+	}
+}
+
+func TestKnockOnlyLastingRefusalsCount(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	w := knockSubs(t, 4)
+	knockAddresses("")
+	answers := map[string]string{
+		w.contacts[0]: "msg: invalid: this endpoint cannot be knocked",
+		w.contacts[1]: "msg: blocked: this relay only keeps gift wraps",
+		w.contacts[2]: "msg: error: the relay is full, try later",
+		w.contacts[3]: "msg: rate-limited: too many new registrations at once",
+	}
+	old := knockPublish
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+		return errorString(answers[ev.PubKey.Hex()])
+	}
+	t.Cleanup(func() { knockPublish = old })
+	var items []knockItem
+	for _, pk := range w.contacts {
+		items = append(items, knockItem{I: knockID(pk), E: "https://p/u"})
+	}
+	out := runRegister(t, items)
+	if len(out.Refused) != 2 || len(out.Done)+len(out.Dup)+len(out.Unknown) != 0 {
+		t.Fatalf("got %+v", out)
+	}
+}
+
 type errorString string
 
 func (e errorString) Error() string { return string(e) }
