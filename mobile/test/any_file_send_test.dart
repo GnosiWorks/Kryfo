@@ -37,7 +37,7 @@ void main() {
   test('a file over the limit is refused with both sizes', () {
     screens.forEach((file, sig) {
       final send = bodyOf(sourceOf(file), sig.$2);
-      final over = send.indexOf('if (size > kMaxFileBytes) {');
+      final over = send.indexOf('if (!fileFits(size)) {');
       expect(over, greaterThan(0), reason: file);
       final refusal = send.substring(over, send.indexOf('return;', over));
       expect(
@@ -53,14 +53,20 @@ void main() {
     });
   });
 
+  test('15 mb goes, one byte more does not', () {
+    expect(kMaxFileBytes, 15 * 1024 * 1024);
+    expect(fileFits(15 * 1024 * 1024), isTrue);
+    expect(fileFits(15 * 1024 * 1024 + 1), isFalse);
+    expect(fileFits(1), isTrue);
+  });
+
   test('the limit reads as a person would say it', () {
-    expect(kMaxFileBytes, 8 * 1024 * 1024);
     expect(
       l10n.fileTooBig(
-        humanFileSize(9 * 1024 * 1024),
+        humanFileSize(20 * 1024 * 1024),
         humanFileSize(kMaxFileBytes),
       ),
-      'This file is 9.0 mb. Files can be up to 8.0 mb.',
+      'This file is 20.0 mb. Files can be up to 15.0 mb.',
     );
   });
 

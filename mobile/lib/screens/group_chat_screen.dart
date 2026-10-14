@@ -27,6 +27,7 @@ import '../file_kind.dart'
         FileShape,
         bytesSayIsoVideo,
         fileFactsRead,
+        fileFits,
         fileShapeNow,
         kMaxFileBytes,
         knownInstaller;
@@ -2462,7 +2463,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
-    if (size > kMaxFileBytes) {
+    if (!fileFits(size)) {
       if (mounted) {
         showHaloToast(
           context,

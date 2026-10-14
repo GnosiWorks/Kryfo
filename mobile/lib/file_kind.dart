@@ -42,7 +42,9 @@ class FileFacts {
 
 // the most a file may be when it goes out. every slice of it crosses tor and
 // a relay, and the receiver keeps the slices until the last one is in
-const kMaxFileBytes = 8 * 1024 * 1024;
+const kMaxFileBytes = 15 * 1024 * 1024;
+
+bool fileFits(int bytes) => bytes <= kMaxFileBytes;
 
 const _installerExts = {'apk', 'apks', 'apkm', 'xapk'};
 

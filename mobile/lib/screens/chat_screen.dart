@@ -39,6 +39,7 @@ import '../file_kind.dart'
         FileShape,
         bytesSayIsoVideo,
         fileFactsRead,
+        fileFits,
         fileShapeNow,
         kMaxFileBytes,
         knownInstaller,
@@ -3536,7 +3537,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
-    if (size > kMaxFileBytes) {
+    if (!fileFits(size)) {
       if (mounted) {
         showHaloToast(
           context,
