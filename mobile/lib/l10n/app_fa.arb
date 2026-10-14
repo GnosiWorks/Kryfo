@@ -422,6 +422,7 @@
   "chatMS": "⁨{m}⁩:⁨{s}⁩ دقیقه",
   "chatS2": "⁨{s}⁩ ثانیه",
   "chatNewMessages": "پیام‌های جدید",
+  "chatEarlierMessagesArrived": "{count, plural, one{⁨{count}⁩ پیام قبلی رسید} other{⁨{count}⁩ پیام قبلی رسید}}",
   "chatUnsave": "لغو ذخیره",
   "chatForward": "بازارسال",
   "commonShare": "هم‌رسانی",

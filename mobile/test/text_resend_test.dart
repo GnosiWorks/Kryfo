@@ -114,6 +114,7 @@ class _Db extends DevTestDb {
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     final rows = [
@@ -224,6 +225,7 @@ class _Db extends DevTestDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     await mem.insert('messages', {

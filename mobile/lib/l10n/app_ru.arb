@@ -422,6 +422,7 @@
   "chatMS": "{m} мин {s} с",
   "chatS2": "{s} с",
   "chatNewMessages": "Новые сообщения",
+  "chatEarlierMessagesArrived": "{count, plural, one{Пришло {count} более раннее сообщение} few{Пришли {count} более ранних сообщения} many{Пришло {count} более ранних сообщений} other{Пришло {count} более раннего сообщения}}",
   "chatUnsave": "Убрать из сохранённых",
   "chatForward": "Переслать",
   "commonShare": "Поделиться",

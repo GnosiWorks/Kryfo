@@ -422,6 +422,7 @@
   "chatMS": "{m}m {s}s",
   "chatS2": "{s}s",
   "chatNewMessages": "Mensajes nuevos",
+  "chatEarlierMessagesArrived": "{count, plural, one{Llegó {count} mensaje anterior} other{Llegaron {count} mensajes anteriores}}",
   "chatUnsave": "Quitar de guardados",
   "chatForward": "Reenviar",
   "commonShare": "Compartir",

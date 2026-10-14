@@ -422,6 +422,7 @@
   "chatMS": "⁨{m}⁩ د ⁨{s}⁩ ث",
   "chatS2": "⁨{s}⁩ ث",
   "chatNewMessages": "رسائل جديدة",
+  "chatEarlierMessagesArrived": "{count, plural, zero{وصلت ⁨{count}⁩ رسالة سابقة} one{وصلت رسالة سابقة} two{وصلت رسالتان سابقتان} few{وصلت ⁨{count}⁩ رسائل سابقة} many{وصلت ⁨{count}⁩ رسالة سابقة} other{وصلت ⁨{count}⁩ رسالة سابقة}}",
   "chatUnsave": "إلغاء الحفظ",
   "chatForward": "إعادة توجيه",
   "commonShare": "مشاركة",

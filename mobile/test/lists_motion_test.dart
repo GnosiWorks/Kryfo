@@ -102,6 +102,7 @@ class _Db implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     notes.add({

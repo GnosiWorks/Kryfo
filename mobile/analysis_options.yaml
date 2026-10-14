@@ -16,6 +16,8 @@ analyzer:
     # runs inside a 0.5.0 checkout, against that tree's code (make_050*.sh)
     - test/fixtures/upgrade_050/make_050.dart
     - test/fixtures/upgrade_050/make_050_backups.dart
+    # runs inside a 0.4.2 checkout, against that tree's code (make_042.sh)
+    - test/fixtures/upgrade_042/make_042.dart
     # generated from app_fa.arb and app_ar.arb: the right-to-left messages
     # carry invisible direction isolates on purpose (each value dropped into
     # a sentence keeps its own direction), which the trojan-source lint

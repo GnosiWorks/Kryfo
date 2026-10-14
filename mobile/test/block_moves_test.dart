@@ -56,6 +56,8 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
     'CREATE TABLE $s.notif_tags (chat TEXT PRIMARY KEY, tag TEXT NOT NULL '
         'UNIQUE)',
+    'CREATE TABLE $s.notif_rings (id INTEGER PRIMARY KEY, chat TEXT, '
+        'msg_uid TEXT, at INTEGER)',
     'CREATE TABLE $s.gone_in (msg_uid TEXT, peer_id TEXT, at INTEGER, '
         'PRIMARY KEY (msg_uid, peer_id))',
     'CREATE TABLE $s.group_resent (group_id TEXT, member TEXT, since '

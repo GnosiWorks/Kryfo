@@ -1284,6 +1284,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatNewMessages => 'Mensajes nuevos';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Llegaron $countString mensajes anteriores',
+      one: 'Llegó $countString mensaje anterior',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'Quitar de guardados';
 
   @override

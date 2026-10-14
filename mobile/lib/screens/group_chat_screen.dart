@@ -57,6 +57,8 @@ import '../main.dart'
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
+import '../msg_order.dart';
+import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
 import '../media_send.dart' show cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
@@ -65,7 +67,8 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
 import '../read_burn.dart';
-import '../widgets/row_anchor.dart' show RowAnchor, RowAnchors;
+import '../widgets/row_anchor.dart'
+    show HoldScrollController, RowAnchor, RowAnchors, holdRowsInView;
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show
@@ -290,6 +293,10 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
       ),
     );
 
+// the newest row id held when a group was last left, keyed by
+// session.chatKey like the drafts
+final Map<String, int> _lastRowPerGroup = {};
+
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
   // open at this message, lit for a moment (from search)
@@ -304,7 +311,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final _msgCtrl = TextEditingController();
   // the people @ can offer, refreshed with the roster
   List<MentionCandidate> _mentionable = const [];
-  final _scrollCtrl = ScrollController();
+  final _scrollCtrl = HoldScrollController();
   final List<_GMsg> _messages = [];
 
   // when the oldest of ours still going was written. a file that is
@@ -328,6 +335,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // others' messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
   int _unseenNew = 0;
+  // came in written well before the bottom, up the thread (EarlierChip)
+  final _earlier = EarlierArrivals();
   String _groupName = '';
   int _memberCount = 0;
   // who this phone is in this chat: its kryfo id, or its key in a room
@@ -424,7 +433,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // before it", so an out-of-order list emits two dividers for one day and
   // both grab the same GlobalKey.
   void _normaliseMessages() {
-    _messages.sort((a, b) => a.when.compareTo(b.when));
+    _messages.sort(
+      (a, b) => byWritten(
+        a.when.millisecondsSinceEpoch,
+        a.rowid,
+        b.when.millisecondsSinceEpoch,
+        b.rowid,
+      ),
+    );
     final seen = <String>{};
     _messages.retainWhere((m) {
       final id = m.msgUid;
@@ -553,6 +569,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
     _scrollCtrl.addListener(_reads.look);
+    _scrollCtrl.addListener(_lookEarlier);
   }
 
   final RowAnchors _anchors = RowAnchors();
@@ -621,7 +638,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final starts = <int>[];
     for (final m in _messages) {
       if (m.burnWaits) {
-        starts.add(burnStartBy(m.when.millisecondsSinceEpoch, now));
+        starts.add(burnStartBy(m.came, now));
       }
       final at = m.burnAt;
       if (at == null) continue;
@@ -641,7 +658,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _startWaited(int now) {
     for (final m in _messages) {
       if (!m.burnWaits) continue;
-      final s = burnStartBy(m.when.millisecondsSinceEpoch, now);
+      final s = burnStartBy(m.came, now);
       if (s > now) continue;
       m.burnAt = s + m.burnSecs! * 1000;
       m.burnUnseen = true;
@@ -695,6 +712,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  // the line for what came up the thread, above the jump button
+  Widget _earlierLine() => Positioned(
+    left: 16,
+    right: 16,
+    bottom: 0,
+    child: Center(
+      child: _earlierChip(
+        count: _earlier.count,
+        lifted: _showScrollDown,
+        onTap: _toEarlier,
+      ),
+    ),
+  );
+
   // jump to newest, same control as 1:1
   Widget _scrollDownButton() {
     return Positioned(
@@ -744,11 +775,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_loadingOlder || !_hasMore || _searching) return;
     _loadingOlder = true;
     try {
-      final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
+      final oldest = _oldestHeld();
       _blocked = await session.blockedIds();
       final rows0 = await session.groupMessagesPage(
         widget.groupId,
-        beforeRowid: oldestRowid,
+        beforeRowid: oldest?.rowid,
+        beforeAt: oldest?.when.millisecondsSinceEpoch,
         limit: _pageSize + 1,
       );
       // a blocked member is out of sight here too, not only at the door.
@@ -790,7 +822,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           senderName: _senderLabel(nickById, r['peer_id'] as String),
           direction: dir,
           text: r['plaintext'] as String,
-          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -811,6 +843,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         m.votes = votes[uid] ?? const {};
         m.reach = _reach[uid];
         m.rowid = (r['rowid'] as int?) ?? 0;
+        m.cameAt = (r['sent_at'] as num?)?.toInt();
         older.add(m);
       }
       // divider anchors change after the prepend (day boundaries move), so
@@ -885,13 +918,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to, so a mid-scroll
       // reaction does not collapse the list back to one page
-      final wantAll =
-          _searching ||
-          _pagedOut ||
-          _messages.length > _pageSize ||
-          (widget.jumpToUid != null && !_didJump);
+      final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
+      // opened on a message: the newest page, and the whole thread only
+      // when it is further up than that
+      final jumpTo = _didJump ? null : widget.jumpToUid;
       _blocked = await session.blockedIds();
-      final rows0 = wantAll
+      var rows0 = wantAll
           ? await session.loadGroupMessages(widget.groupId)
           : await session.groupMessagesPage(
               widget.groupId,
@@ -901,6 +933,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _hasMore = rows0.length > _pageSize;
         if (_hasMore) rows0.removeAt(0);
         if (!_hasMore) _pagedOut = true;
+        if (jumpTo != null && !rows0.any((r) => r['msg_uid'] == jumpTo)) {
+          rows0 = await session.loadGroupMessages(widget.groupId);
+          _hasMore = false;
+          _pagedOut = true;
+        }
       }
       final rows = _withoutBlocked(rows0);
       // gather reactions for every uid we have
@@ -966,7 +1003,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 senderName: _senderLabel(nickById, r['peer_id'] as String),
                 direction: dir,
                 text: r['plaintext'] as String,
-                when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+                when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
                 sticker: StickerWire.parse(r['sticker']),
                 burnAt: r['burn_at'] as int?,
                 burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -988,6 +1025,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.votes = votes[uid] ?? const {};
               m.reach = reach[uid];
               m.rowid = (r['rowid'] as int?) ?? 0;
+              m.cameAt = (r['sent_at'] as num?)?.toInt();
               _placeLoadedSend(m);
               final c = carry[m.msgUid];
               if (c != null) {
@@ -1011,6 +1049,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _jumpWhenReady(target, 0);
       } else if (!_loaded || (nearEnd && _jumpUid == null)) {
         _scrollToEnd(instant: true);
+      }
+      final after = _lastRowPerGroup[_memo];
+      if (!_loaded && after != null) {
+        try {
+          await _earlierSince(after);
+        } catch (e) {
+          // the line is a help: a read that fails leaves the chat as it is
+          dlog('earlier: not read (${e.runtimeType})');
+        }
+      }
+      if (_earlier.count > 0) {
+        await _pruneEarlier();
+        _lookEarlierSoon();
       }
       _loaded = true;
       unawaited(_refreshPinCount());
@@ -1194,6 +1245,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  // the oldest row on screen that the database has, in the chat's order
+  _GMsg? _oldestHeld() {
+    for (final m in _messages) {
+      if (m.rowid > 0) return m;
+    }
+    return null;
+  }
+
   Future<void> _appendNewInner() async {
     final lastRowid = _messages.isEmpty
         ? 0
@@ -1203,11 +1262,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
+    // one written before the pages held comes with the page it is in
+    final oldest = _hasMore ? _oldestHeld() : null;
     final brandNew = rows
         .where(
           (r) =>
               (r['msg_uid'] as String?) != null &&
-              !have.contains(r['msg_uid'] as String?),
+              !have.contains(r['msg_uid'] as String?) &&
+              (oldest == null ||
+                  byWritten(
+                        rowWrittenAt(r),
+                        (r['rowid'] as int?) ?? 0,
+                        oldest.when.millisecondsSinceEpoch,
+                        oldest.rowid,
+                      ) >
+                      0),
         )
         .toList();
     if (brandNew.isEmpty) {
@@ -1249,7 +1318,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         senderName: _senderLabel(nickById, r['peer_id'] as String),
         direction: dir,
         text: r['plaintext'] as String,
-        when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         burnSecs: (r['burn_secs'] as num?)?.toInt(),
@@ -1271,6 +1340,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.votes = votes[uid] ?? const {};
       m.reach = _reach[uid];
       m.rowid = (r['rowid'] as int?) ?? 0;
+      m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
       fresh.add(m);
@@ -1278,16 +1348,152 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final nowHave = _messages.map((m) => m.msgUid).toSet();
     fresh.removeWhere((m) => m.msgUid != null && nowHave.contains(m.msgUid));
     if (fresh.isEmpty) return;
-    // someone reading back stays where they are: rows added at the end move
-    // nothing above them. near the newest they are taken down to it
-    final theirs = fresh.where((m) => m.direction != 'out').length;
-    final follow = _nearNewest || theirs < fresh.length;
+    // someone reading back stays where they are, a late one put in above
+    // them too. near the newest they are taken down to what lands at the
+    // end; one that came late goes where it was written and is not counted
+    final last = _messages.lastOrNull;
+    bool below(_GMsg m) =>
+        last == null ||
+        byWritten(
+              m.when.millisecondsSinceEpoch,
+              m.rowid,
+              last.when.millisecondsSinceEpoch,
+              last.rowid,
+            ) >
+            0;
+    final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
+    final ours = fresh.any((m) => m.direction == 'out');
+    final follow = (_nearNewest && fresh.any(below)) || ours;
+    for (final m in fresh) {
+      if (m.direction != 'out' &&
+          m.msgUid != null &&
+          last != null &&
+          cameEarlier(
+            m.when.millisecondsSinceEpoch,
+            last.when.millisecondsSinceEpoch,
+          )) {
+        _earlier.add(m.msgUid!);
+      }
+    }
+    if (!follow) {
+      holdRowsInView(
+        ctrl: _scrollCtrl,
+        anchors: _anchors,
+        alive: () => mounted,
+      );
+    }
     setState(() {
       _messages.addAll(fresh);
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    _lookEarlierSoon();
     if (follow) _scrollToEnd();
+  }
+
+  // what came in after row [after] and went up the thread, well above the
+  // newest row read then: in the rows held or above them
+  Future<void> _earlierSince(int after) async {
+    _GMsg? read;
+    for (final m in _messages) {
+      if (m.rowid > 0 && m.rowid <= after) read = m;
+    }
+    if (read == null) return;
+    final bottom = read.when.millisecondsSinceEpoch;
+    final first = _oldestHeld();
+    final rows = _withoutBlocked(
+      await session.groupMessagesAfter(widget.groupId, after),
+    );
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid == null || r['direction'] == 'out') continue;
+      final at = rowWrittenAt(r);
+      final id = (r['rowid'] as int?) ?? 0;
+      final held = _messages.any((m) => m.msgUid == uid);
+      final up = held
+          ? byWritten(at, id, bottom, read.rowid) < 0
+          : first != null &&
+                byWritten(
+                      at,
+                      id,
+                      first.when.millisecondsSinceEpoch,
+                      first.rowid,
+                    ) <
+                    0;
+      if (up && cameEarlier(at, bottom)) _earlier.add(uid);
+    }
+  }
+
+  // each one up the thread that is on screen now has been seen. one
+  // leaving, taken back or burned, is no longer there to see
+  void _lookEarlier() {
+    if (!mounted || _earlier.count == 0) return;
+    final leaving = {
+      for (final m in _messages)
+        if (m.removing && m.msgUid != null) m.msgUid!,
+    };
+    for (final id in leaving) {
+      _earlier.drop(id);
+    }
+    if (_earlier.seenIn(_anchors) || leaving.isNotEmpty) setState(() {});
+  }
+
+  // after a reload: only what is still in the database stays counted
+  Future<void> _pruneEarlier() async {
+    if (_earlier.count == 0) return;
+    final held = {
+      for (final m in _messages)
+        if (m.msgUid != null && !m.removing) m.msgUid!,
+    };
+    final gone = <String>[];
+    for (final id in _earlier.ids) {
+      if (held.contains(id)) continue;
+      final leaving = _messages.any((m) => m.msgUid == id);
+      var there = !leaving;
+      if (there) {
+        try {
+          there = await session.messageExists(id);
+        } catch (e) {
+          dlog('earlier: not read (${e.runtimeType})');
+        }
+      }
+      if (!there) gone.add(id);
+    }
+    if (gone.isEmpty || !mounted) return;
+    setState(() {
+      for (final id in gone) {
+        _earlier.drop(id);
+      }
+    });
+  }
+
+  void _lookEarlierSoon() =>
+      WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
+
+  // the line, and after each frame it shows a count, a look for rows that
+  // went since or came on screen
+  Widget _earlierChip({
+    required int count,
+    required bool lifted,
+    required VoidCallback onTap,
+  }) {
+    if (count > 0) _lookEarlierSoon();
+    return EarlierChip(count: count, lifted: lifted, onTap: onTap);
+  }
+
+  // the line's tap: to the first one up the thread, the thread brought in
+  // whole when it is above the pages held
+  Future<void> _toEarlier() async {
+    final uid = _earlier.first;
+    if (uid == null) return;
+    setState(() => _earlier.drop(uid));
+    if (!_messages.any((m) => m.msgUid == uid)) {
+      _pagedOut = true;
+      await _load();
+      if (!mounted) return;
+    }
+    final at = _messages.indexWhere((m) => m.msgUid == uid);
+    if (at >= 0) _scrollToIndex(at);
   }
 
   // .position asserts exactly one attached scroll view, and during a route
@@ -3168,7 +3374,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 : (_senderLabel(nickById, peer) ?? peer),
             authorSeed: out ? appState.sessionId : peer,
             face: out ? appState.myAvatar : faceById[peer],
-            when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+            when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
             text: (r['plaintext'] as String?) ?? '',
             imagePath: r['media_path'] as String?,
             fileName: r['file_name'] as String?,
@@ -3483,6 +3689,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } else {
       draftPerGroup[_memo] = draft;
     }
+    _lastRowPerGroup[_memo] = _messages.fold(
+      0,
+      (a, m) => m.rowid > a ? m.rowid : a,
+    );
     _menuClose?.call();
     _searchCtrl.dispose();
     _scrollCtrl.removeListener(_onGroupScroll);
@@ -3679,6 +3889,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             ),
                             // over the list, or the list takes its taps
                             _scrollDownButton(),
+                            _earlierLine(),
                           ],
                         ),
                       ),
@@ -3788,7 +3999,11 @@ class _GMsg with WordLinks {
   final String direction;
   @override
   String text;
+  // when it was written: where it shows and what it shows
   final DateTime when;
+  // when it came, the row's sent_at: what its burn counts from
+  int? cameAt;
+  int get came => cameAt ?? when.millisecondsSinceEpoch;
   int? burnAt;
   // the burn window: ours is lit into burnAt when it goes, theirs when it
   // is first read

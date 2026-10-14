@@ -21,6 +21,7 @@ import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../msg_order.dart' show rowWrittenAt;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave: it empties, and the
@@ -238,7 +239,7 @@ class _SavedScreenState extends State<SavedScreen> {
         ? _who(peer)
         : '${_who(peer)} · $group';
     final uid = r['msg_uid'] as String?;
-    final ms = r['sent_at'] as int? ?? 0;
+    final ms = rowWrittenAt(r);
     final accent = _authorColor(peer);
     final isVoice = _isVoice(r);
     final isPhoto = _isPhoto(r);

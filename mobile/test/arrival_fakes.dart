@@ -292,6 +292,20 @@ class ArrivalIo implements AppIo {
 class ArrivalRows implements HaloDb {
   // the tag each chat's notifications go under
   final notifTags = <String, String>{};
+  // which message each notification rang for, by its id: (chat, uid)
+  final rings = <int, (String, String)>{};
+  @override
+  Future<void> noteRing(int id, String chat, String msgUid) async =>
+      rings[id] = (chat, msgUid);
+  @override
+  Future<String?> ringOf(int id, String chat) async {
+    final r = rings[id];
+    return r != null && r.$1 == chat && msg(r.$2) != null ? r.$2 : null;
+  }
+
+  @override
+  Future<void> forgetRings({String? chat, String? msgUid}) async =>
+      rings.removeWhere((_, r) => r.$1 == chat || r.$2 == msgUid);
   static var _tagNo = 0;
   @override
   Future<String> notifTag(String chat) async =>
@@ -1036,6 +1050,7 @@ class ArrivalRows implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     beforeSave?.call();
@@ -1047,6 +1062,7 @@ class ArrivalRows implements HaloDb {
       'direction': direction,
       'plaintext': plaintext,
       'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
+      'written_at': writtenAt,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
       'msg_uid': msgUid,
@@ -1262,6 +1278,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async =>
       _hit('getGroup', groupId, groupRows[groupId]);
+  // when this phone joined each group, where a test says
+  final joinedAt = <String, int>{};
+  @override
+  Future<int?> groupJoinedAt(String groupId) async =>
+      _hit('groupJoinedAt', groupId, joinedAt[groupId]);
   @override
   Future<String?> groupAdminId(String groupId) async =>
       _hit('groupAdminId', groupId, groupRows[groupId]?['admin_id'] as String?);

@@ -290,7 +290,7 @@ void main() {
         await s.execute(
           'CREATE TABLE messages (id INTEGER PRIMARY KEY, msg_uid TEXT, '
           'peer_id TEXT, group_id TEXT, direction TEXT, plaintext TEXT, '
-          'sent_at INTEGER, media_path TEXT, file_path TEXT, '
+          'sent_at INTEGER, written_at INTEGER, media_path TEXT, file_path TEXT, '
           'file_name TEXT, poll TEXT, preview TEXT, sticker TEXT, '
           'burn_at INTEGER, burn_secs INTEGER, '
           'burn_unseen INTEGER NOT NULL DEFAULT 0)',

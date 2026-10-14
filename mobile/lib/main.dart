@@ -32,6 +32,7 @@ import 'wipe.dart';
 import 'group_media_send.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
+import 'msg_order.dart';
 import 'send_order.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
@@ -1478,7 +1479,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 77,
+      version: 79,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1547,6 +1548,7 @@ class HaloDb implements GroupOwedStore {
             sticker TEXT,
             burn_unseen INTEGER NOT NULL DEFAULT 0,
             via_dev INTEGER NOT NULL DEFAULT 0,
+            written_at INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1566,6 +1568,7 @@ class HaloDb implements GroupOwedStore {
           'CREATE INDEX idx_messages_group_id ON messages(group_id)',
         );
         await burnIndex(db);
+        await writtenOrder(db);
         await db.execute('''
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
@@ -1642,10 +1645,11 @@ class HaloDb implements GroupOwedStore {
         await frameOrderTable(db);
         await notifTagTables(db);
         await groupResentTables(db);
+        await notifRingTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 77
+        // they add. 66 runs after it: it reads what they all make. 67 to 79
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2125,6 +2129,14 @@ class HaloDb implements GroupOwedStore {
           // whether the name someone goes by here was checked
           await nameCheckColumn(db);
         }
+        if (oldV < 78) {
+          // when each message was written: the order a chat shows
+          await writtenAtColumn(db);
+        }
+        if (oldV < 79) {
+          // which message each notification rang for
+          await notifRingTables(db);
+        }
       },
     );
     // retired while it was opening
@@ -2585,6 +2597,7 @@ class HaloDb implements GroupOwedStore {
       // new tag the shade never ties to the old chat
       await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
       await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      await t.delete('notif_rings', where: 'chat = ?', whereArgs: [haloId]);
       // nothing queued for the old chat goes after it. a take-back still
       // goes, it only withdraws
       await _dropQueuedTo(t, haloId);
@@ -3236,17 +3249,22 @@ class HaloDb implements GroupOwedStore {
     String? sticker,
     // when it came, if not now: an arrival opened from the seal
     int? sentAt,
+    // when it was written, held to what can be true (writtenAtOf). when it
+    // came if not given: ours are written as they go
+    int? writtenAt,
     // a contact's, through the developer chat (viaDevChat)
     bool viaDev = false,
   }) async {
     final db = await open();
+    final came = sentAt ?? DateTime.now().millisecondsSinceEpoch;
     final id = await db.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
       // your own words too (a pasted caption, a forward): no direction
       // controls reach the screen from here (bidi_safe.dart)
       'plaintext': unmarked(plaintext),
-      'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
+      'sent_at': came,
+      'written_at': writtenAt ?? came,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
       // came in with its window and its clock already running: nobody read
@@ -3321,11 +3339,13 @@ class HaloDb implements GroupOwedStore {
         limit: 1,
       );
       if (there.isEmpty) return null;
+      final now = DateTime.now().millisecondsSinceEpoch;
       return t.insert('messages', {
         'peer_id': peerId,
         'direction': 'out',
         'plaintext': unmarked(plaintext),
-        'sent_at': DateTime.now().millisecondsSinceEpoch,
+        'sent_at': now,
+        'written_at': now,
         'burn_secs': burnSecs,
         'msg_uid': msgUid,
         'reply_to': replyTo,
@@ -3432,6 +3452,17 @@ class HaloDb implements GroupOwedStore {
   }
 
   // ---- groups ----
+
+  // when this phone first had group [groupId]: its first members' row. a
+  // roster sent again keeps it
+  Future<int?> groupJoinedAt(String groupId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT MIN(joined_at) AS t FROM group_members WHERE group_id = ?',
+      [groupId],
+    );
+    return (r.first['t'] as num?)?.toInt();
+  }
 
   // members is the full set, including the creator. isAdmin is true for
   // groups we created.
@@ -3904,6 +3935,28 @@ class HaloDb implements GroupOwedStore {
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
+  // a chat's order (msg_order.dart): by when each was written, then as
+  // they came. before and from name a row by its time and id
+  static const _kOldestFirst = 'written_at ASC, id ASC';
+  static const _kNewestFirst = 'written_at DESC, id DESC';
+  static const _kBefore = '(written_at < ? OR (written_at = ? AND id < ?))';
+  static const _kFrom = '(written_at > ? OR (written_at = ? AND id >= ?))';
+
+  // the args for _kBefore or _kFrom at row [id]. its own time when [at] is
+  // not given, null when that row is gone
+  static Future<List<Object>?> _at(Database db, int id, int? at) async {
+    if (at != null) return [at, at, id];
+    final r = await db.query(
+      'messages',
+      columns: ['written_at'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final w = r.isEmpty ? null : (r.first['written_at'] as num?)?.toInt();
+    return w == null ? null : [w, w, id];
+  }
+
   // peer_id on each row is the sender's kryfo id, ours on our own messages
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     final db = await open();
@@ -3912,24 +3965,29 @@ class HaloDb implements GroupOwedStore {
       columns: ['*', 'rowid AS rowid'],
       where: 'group_id = ?',
       whereArgs: [groupId],
-      orderBy: 'sent_at ASC',
+      orderBy: _kOldestFirst,
     );
   }
 
+  // the newest page of a group, or the one before row [beforeRowid],
+  // written at [beforeAt]
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     final db = await open();
+    final at = beforeRowid == null
+        ? null
+        : await _at(db, beforeRowid, beforeAt);
+    if (beforeRowid != null && at == null) return [];
     final rows = await db.query(
       'messages',
       columns: ['*', 'rowid AS rowid'],
-      where: beforeRowid == null
-          ? 'group_id = ?'
-          : 'group_id = ? AND rowid < ?',
-      whereArgs: beforeRowid == null ? [groupId] : [groupId, beforeRowid],
-      orderBy: 'Rowid DESC',
+      where: at == null ? 'group_id = ?' : 'group_id = ? AND $_kBefore',
+      whereArgs: [groupId, ...?at],
+      orderBy: _kNewestFirst,
       limit: limit,
     );
     return rows.reversed.toList();
@@ -3995,6 +4053,7 @@ class HaloDb implements GroupOwedStore {
         'direction',
         'plaintext',
         'sent_at',
+        'written_at',
         'media_path',
         'file_name',
         'pinned_at',
@@ -4009,7 +4068,7 @@ class HaloDb implements GroupOwedStore {
           : "pinned = 1 AND msg_uid IS NOT NULL AND peer_id = ? "
                 "AND (group_id IS NULL OR group_id = '')",
       whereArgs: [groupId ?? peerId],
-      orderBy: 'COALESCE(pinned_at, sent_at) DESC',
+      orderBy: 'COALESCE(pinned_at, written_at) DESC',
     );
   }
 
@@ -4032,7 +4091,7 @@ class HaloDb implements GroupOwedStore {
     final rows = await db.query(
       'messages',
       where: 'saved = 1',
-      orderBy: 'sent_at DESC',
+      orderBy: _kNewestFirst,
       limit: 500,
     );
     return [
@@ -5518,7 +5577,18 @@ class HaloDb implements GroupOwedStore {
     String? match,
     SearchKind kind, {
     int limit = 300,
-  }) async => runSearchQuery(await open(), match, kind, limit: limit);
+  }) async {
+    final rows = await runSearchQuery(await open(), match, kind, limit: limit);
+    // the newest that came, shown in the chats' order
+    return [...rows]..sort(
+      (a, b) => byWritten(
+        rowWrittenAt(b),
+        (b['id'] as num?)?.toInt() ?? 0,
+        rowWrittenAt(a),
+        (a['id'] as num?)?.toInt() ?? 0,
+      ),
+    );
+  }
 
   Future<bool> messageExists(String msgUid) async {
     final db = await open();
@@ -7089,6 +7159,7 @@ class HaloDb implements GroupOwedStore {
       'peer_id',
       'group_id',
       'sent_at',
+      'written_at',
       'burn_secs',
       'burn_at',
       'burn_unseen',
@@ -7100,8 +7171,9 @@ class HaloDb implements GroupOwedStore {
         where: "msg_uid IN ($marks) AND direction = 'in'",
         whereArgs: msgUids,
       );
-      // the newest row read in each chat, the order both chats sort by
-      final newest = <(String, String?), int>{};
+      // the newest row read in each chat, by when it was written and as it
+      // came: a row older both ways was above it when it was read
+      final newest = <(String, String?), (int, int)>{};
       Future<void> lightRow(Map<String, Object?> r) async {
         final uid = r['msg_uid'] as String?;
         final lit = (r['burn_at'] as num?)?.toInt();
@@ -7131,10 +7203,14 @@ class HaloDb implements GroupOwedStore {
         final chat = (g == null || g.isEmpty)
             ? (r['peer_id'] as String, null)
             : ('', g);
-        final sent = (r['sent_at'] as num?)?.toInt() ?? 0;
-        if (sent > (newest[chat] ?? -1)) newest[chat] = sent;
+        final (w0, id0) = newest[chat] ?? (-1, -1);
+        newest[chat] = (
+          max(w0, rowWrittenAt(r)),
+          max(id0, (r['id'] as num).toInt()),
+        );
       }
-      for (final MapEntry(key: (peer, group), value: sent) in newest.entries) {
+      for (final MapEntry(key: (peer, group), value: (w, id))
+          in newest.entries) {
         final chat = group == null
             ? 'peer_id = ? AND group_id IS NULL'
             : 'group_id = ?';
@@ -7145,11 +7221,13 @@ class HaloDb implements GroupOwedStore {
             columns: cols,
             where:
                 "$chat AND direction = 'in' AND burn_secs IS NOT NULL"
-                ' AND $unread AND sent_at < ?',
-            whereArgs: [group ?? peer, sent + 1],
+                ' AND $unread',
+            whereArgs: [group ?? peer],
           );
           for (final r in older) {
-            await lightRow(r);
+            if (rowWrittenAt(r) <= w && (r['id'] as num).toInt() <= id) {
+              await lightRow(r);
+            }
           }
         }
       }
@@ -7186,6 +7264,47 @@ class HaloDb implements GroupOwedStore {
     return n;
   }
 
+  // notification [id] rang for message [msgUid] of [chat]. the shade keeps
+  // nothing for longer than a week here
+  Future<void> noteRing(int id, String chat, String msgUid) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('notif_rings', {
+      'id': id,
+      'chat': chat,
+      'msg_uid': msgUid,
+      'at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.delete(
+      'notif_rings',
+      where: 'at < ?',
+      whereArgs: [now - kReceiptKeptFor.inMilliseconds],
+    );
+  }
+
+  // the message notification [id] of [chat] rang for, while it is here
+  Future<String?> ringOf(int id, String chat) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT r.msg_uid FROM notif_rings r JOIN messages m '
+      'ON m.msg_uid = r.msg_uid WHERE r.id = ? AND r.chat = ? LIMIT 1',
+      [id, chat],
+    );
+    return r.isEmpty ? null : r.first['msg_uid'] as String?;
+  }
+
+  // the notifications of [chat], or of [msgUid], left the shade
+  Future<void> forgetRings({String? chat, String? msgUid}) async {
+    if (!isOpen) return;
+    final db = await open();
+    if (chat != null) {
+      await db.delete('notif_rings', where: 'chat = ?', whereArgs: [chat]);
+    }
+    if (msgUid != null) {
+      await db.delete('notif_rings', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    }
+  }
+
   // the tag [chat]'s notifications go under, made on its first one
   Future<String> notifTag(String chat) async => notifTagIn(await open(), chat);
 
@@ -7218,29 +7337,54 @@ class HaloDb implements GroupOwedStore {
       // row carries peer_id = sender too
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
-      orderBy: 'sent_at ASC',
+      orderBy: _kOldestFirst,
     );
   }
 
-  // newest page of a 1:1 thread. beforeRowid pages older on scroll-up so a
-  // 5000-message chat doesn't parse the world on open.
+  // newest page of a 1:1 thread. beforeRowid, written at beforeAt, pages
+  // older on scroll-up so a 5000-message chat doesn't parse the world on
+  // open.
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
   }) async {
     final db = await open();
+    final at = beforeRowid == null
+        ? null
+        : await _at(db, beforeRowid, beforeAt);
+    if (beforeRowid != null && at == null) return [];
     final rows = await db.query(
       'messages',
       columns: ['*', 'rowid AS rowid'],
-      where: beforeRowid == null
+      where: at == null
           ? 'peer_id = ? AND group_id IS NULL'
-          : 'peer_id = ? AND group_id IS NULL AND rowid < ?',
-      whereArgs: beforeRowid == null ? [peerId] : [peerId, beforeRowid],
-      orderBy: 'Rowid DESC',
+          : 'peer_id = ? AND group_id IS NULL AND $_kBefore',
+      whereArgs: [peerId, ...?at],
+      orderBy: _kNewestFirst,
       limit: limit,
     );
     return rows.reversed.toList();
+  }
+
+  // a 1:1 thread from row [rowid], written at [at], to its newest: a
+  // reload keeps the pages already scrolled in
+  Future<List<Map<String, Object?>>> messagesFrom(
+    String peerId, {
+    required int rowid,
+    int? at,
+  }) async {
+    final db = await open();
+    final from = await _at(db, rowid, at);
+    if (from == null) return messagesPage(peerId);
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'peer_id = ? AND group_id IS NULL AND $_kFrom',
+      whereArgs: [peerId, ...from],
+      orderBy: _kOldestFirst,
+    );
   }
 
   // only messages after a rowid, oldest first, for the chat's
@@ -7261,19 +7405,24 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  // the newest 1:1 row per peer in one query, for the home list, which
-  // refreshes after every send. the burn columns say a timed one still
-  // waits to be read (burnWaitsRow)
+  // the newest 1:1 row per peer in the chat's order, for the home list,
+  // which refreshes after every send. the burn columns say a timed one
+  // still waits to be read (burnWaitsRow)
   Future<Map<String, Map<String, Object?>>> lastMessages() async {
     final db = await open();
     final rows = await db.rawQuery('''
       SELECT m.peer_id, m.direction, m.plaintext, m.media_path, m.file_name,
-             m.sent_at, m.sticker, m.burn_secs, m.burn_at, m.burn_unseen
+             m.sent_at, m.written_at, m.sticker, m.burn_secs, m.burn_at,
+             m.burn_unseen
       FROM messages m
-      JOIN (
-        SELECT peer_id, MAX(rowid) AS r FROM messages
-        WHERE group_id IS NULL GROUP BY peer_id
-      ) x ON x.r = m.rowid
+      WHERE m.id IN (
+        SELECT (
+          SELECT y.id FROM messages y
+          WHERE y.peer_id = p.peer_id AND y.group_id IS NULL
+          ORDER BY y.written_at DESC, y.id DESC LIMIT 1
+        )
+        FROM (SELECT DISTINCT peer_id FROM messages WHERE group_id IS NULL) p
+      )
     ''');
     return {for (final r in rows) r['peer_id'] as String: r};
   }
@@ -7311,7 +7460,8 @@ class HaloDb implements GroupOwedStore {
   Future<int?> firstMessageAt(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT MIN(sent_at) t FROM messages WHERE peer_id = ? AND group_id IS NULL',
+      'SELECT MIN(sent_at) t FROM messages '
+      'WHERE peer_id = ? AND group_id IS NULL',
       [peerId],
     );
     return r.isEmpty ? null : r.first['t'] as int?;
@@ -7319,14 +7469,13 @@ class HaloDb implements GroupOwedStore {
 
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
-    // rowid, not sent_at: clock skew can give a received note a sent_at older
-    // than our local newest. group_id IS NULL: a group message is stored
-    // under the sender's peer_id too.
+    // the newest in the chat's order. group_id IS NULL: a group message is
+    // stored under the sender's peer_id too.
     final rows = await db.query(
       'messages',
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
-      orderBy: 'Rowid DESC',
+      orderBy: _kNewestFirst,
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
@@ -7416,8 +7565,8 @@ Future<List<Map<String, Object?>>> runSearchQuery(
   args.add(limit);
   return db.rawQuery(
     'SELECT m.id, m.msg_uid, m.peer_id, m.group_id, m.direction, '
-    'm.plaintext, m.sent_at, m.media_path, m.file_path, m.file_name, '
-    'm.poll, m.preview FROM $from WHERE ${where.join(' AND ')} '
+    'm.plaintext, m.sent_at, m.written_at, m.media_path, m.file_path, '
+    'm.file_name, m.poll, m.preview FROM $from WHERE ${where.join(' AND ')} '
     'ORDER BY $order LIMIT ?',
     args,
   );
@@ -7816,6 +7965,33 @@ Future<void> nameCheckColumn(DatabaseExecutor db) async {
   await db.update('contacts', {
     'name_check': kNameAsk | kNameSays,
   }, where: 'accepted = 0 AND IFNULL(archived, 0) = 0 AND verified = 0');
+}
+
+// the upgrade to 78. a row from before says when it came
+Future<void> writtenAtColumn(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE messages ADD COLUMN written_at INTEGER');
+  await db.execute(
+    'UPDATE messages SET written_at = sent_at WHERE written_at IS NULL',
+  );
+  await writtenOrder(db);
+}
+
+// a chat's rows by when they were written (msg_order.dart). a row stored
+// without that time takes the time it came
+Future<void> writtenOrder(DatabaseExecutor db) async {
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_messages_peer_written '
+    'ON messages(peer_id, group_id, written_at)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_messages_group_written '
+    'ON messages(group_id, written_at)',
+  );
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS messages_written_at AFTER INSERT ON '
+    'messages WHEN new.written_at IS NULL BEGIN UPDATE messages SET '
+    'written_at = new.sent_at WHERE id = new.id; END',
+  );
 }
 
 int nameCheckOf(Map<String, Object?>? row) =>
@@ -8241,6 +8417,25 @@ Future<void> notifTagTables(DatabaseExecutor db) async {
       tag TEXT NOT NULL UNIQUE
     )
   ''');
+}
+
+// which message each notification still in the shade rang for, by its
+// android id, kept here in the chat's own container: the tap hands back the
+// id alone and opens the chat on it. a row goes with its message, and when
+// the notification leaves the shade
+Future<void> notifRingTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS notif_rings (
+      id INTEGER PRIMARY KEY,
+      chat TEXT NOT NULL,
+      msg_uid TEXT NOT NULL,
+      at INTEGER NOT NULL
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS notif_rings_follow AFTER DELETE ON '
+    'messages BEGIN DELETE FROM notif_rings WHERE msg_uid = old.msg_uid; END',
+  );
 }
 
 // a group's texts sent again to a member who restored a backup: once per
@@ -9844,17 +10039,29 @@ Future<void> openChatForHalo(String? haloId) =>
 
 // a tapped notification names its chat by tag only. the tag is read once
 // the app lock is open, in the containers of the session it opened to
-Future<void> openChatForNotif(String? tag) async {
+Future<void> openChatForNotif(String? tag, [int? id]) async {
   if (tag == null || tag.isEmpty) return;
   await lockGuard.afterUnlock(() async {
     final chat = await notifChatFor(tag);
-    if (chat != null) await openNotifChat(chat);
+    if (chat == null) return;
+    // the message it rang for, kept here by its id. with none the chat
+    // opens at its newest, where the line and the new messages show
+    String? uid;
+    if (id != null) {
+      try {
+        uid = await session.ringOf(id, chat);
+      } catch (e) {
+        dlog('notif tap: ring not read (${e.runtimeType})');
+      }
+    }
+    await openNotifChat(chat, uid);
   }, key: 'notif:$tag');
 }
 
-// what a resolved tap opens. tests watch it here
+// what a resolved tap opens, on the message it rang for. tests watch it
+// here
 @visibleForTesting
-Future<void> Function(String chat) openNotifChat = _openChatFor;
+Future<void> Function(String chat, String? uid) openNotifChat = _openChatFor;
 
 // the support summary's payload is the inbox itself, the same on every post
 @visibleForTesting
@@ -9916,7 +10123,7 @@ Future<NotifTarget?> notifTargetFor(String payload) async {
   return null;
 }
 
-Future<void> _openChatFor(String? haloId) async {
+Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
@@ -9928,7 +10135,7 @@ Future<void> _openChatFor(String? haloId) async {
   if (isDevChat(haloId)) {
     if (haloId == currentChatPeer) return;
     if ((await session.devChat.load())?.chatId != haloId) return;
-    nav.push(devChatRoute(haloId));
+    nav.push(devChatRoute(haloId, jumpToUid: uid));
     return;
   }
   final target = await notifTargetFor(haloId);
@@ -9938,7 +10145,7 @@ Future<void> _openChatFor(String? haloId) async {
     // one already open is gone back to, never stacked twice
     case NotifGroup(:final groupId):
       if (!backToOpenGroup(nav, groupId)) {
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+        nav.push(haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)));
       }
       return;
     case NotifRequests():
@@ -9956,6 +10163,7 @@ Future<void> _openChatFor(String? haloId) async {
         avatarSeed: haloId,
         avatarChoice: (row['avatar'] as num?)?.toInt(),
         nickname: row['nickname'] as String?,
+        jumpToUid: uid,
       ),
     ),
   );
@@ -10223,7 +10431,7 @@ class AppIo {
     int? burnAt,
   }) async {
     if (await quietNow()) return;
-    await showMessageNotification(
+    final id = await showMessageNotification(
       title: title,
       body: body,
       chat: payload,
@@ -10231,6 +10439,12 @@ class AppIo {
       msgUid: msgUid,
       burnAt: burnAt,
     );
+    if (id == null || msgUid == null) return;
+    try {
+      await on.noteRing(id, payload, msgUid);
+    } catch (e) {
+      dlog('ring: not kept (${e.runtimeType})');
+    }
   }
 
   // what this process showed for a chat leaves the shade
@@ -15517,6 +15731,15 @@ class AppState extends ChangeNotifier {
         : startBy <= now
         ? startBy + burnSecs * 1000
         : null;
+    // placed by when they wrote it (writtenAtOf). a group's from when this
+    // phone joined it
+    final writtenAt = writtenAtOf(
+      env.writtenAt,
+      wrapped: wrappedAt,
+      reached: reached,
+      came: arrivedAt ?? now,
+      since: env.groupId == null ? null : await db.groupJoinedAt(env.groupId!),
+    );
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -15542,6 +15765,7 @@ class AppState extends ChangeNotifier {
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
       sentAt: arrivedAt,
+      writtenAt: writtenAt,
       // his phone: a contact who wrote through the developer chat keeps
       // their chat, and the message says how it came
       viaDev:
@@ -19481,6 +19705,8 @@ class AppState extends ChangeNotifier {
     await initNotifications(
       onTap: openChatForNotif,
       tagsOf: (chat) => session.notifTagsOf(chat),
+      forget: ({chat, msgUid}) =>
+          session.forgetRings(chat: chat, msgUid: msgUid),
     );
     // the first call into android's notification service after a start is
     // slow, a tenth of a second or more. every start pays it here, so
@@ -20178,10 +20404,10 @@ class AppState extends ChangeNotifier {
     } else {
       body = '';
     }
-    final sentAt = last['sent_at'] as int?;
+    final at = last['written_at'] ?? last['sent_at'];
     return (
       body.isEmpty ? null : (dir == 'out' ? l10n.appYou(body) : body),
-      sentAt == null ? null : DateTime.fromMillisecondsSinceEpoch(sentAt),
+      at is! num ? null : DateTime.fromMillisecondsSinceEpoch(at.toInt()),
     );
   }
 
@@ -23587,9 +23813,10 @@ Future<void> _openFromNotif() async {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp ?? false) {
       final payload = details?.notificationResponse?.payload;
+      final id = details?.notificationResponse?.id;
       Future.delayed(
         const Duration(milliseconds: 500),
-        () => openChatForNotif(payload),
+        () => openChatForNotif(payload, id),
       );
     }
   } catch (e) {

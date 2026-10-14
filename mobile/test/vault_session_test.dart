@@ -723,6 +723,7 @@ class _Db implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
@@ -750,6 +751,9 @@ class _Db implements HaloDb {
   @override
   Future<bool> groupExists(String groupId) async =>
       _hit('groupExists', groupId, r.groupRows.containsKey(groupId));
+  // when this phone joined a group: not known here, nothing holds it back
+  @override
+  Future<int?> groupJoinedAt(String groupId) async => null;
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async =>
       _hit('getGroup', groupId, r.groupRows[groupId]);

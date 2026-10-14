@@ -1277,6 +1277,21 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatNewMessages => 'پیام‌های جدید';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ پیام قبلی رسید',
+      one: '⁨$countString⁩ پیام قبلی رسید',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'لغو ذخیره';
 
   @override

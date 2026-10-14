@@ -588,6 +588,10 @@ void main() {
     expect(l.chatMS("<m>", "<s>"), "<m>m <s>s");
     expect(l.chatS2("<s>"), "<s>s");
     expect(l.chatNewMessages, "New messages");
+    expect(l.chatEarlierMessagesArrived(0), "0 earlier messages arrived");
+    expect(l.chatEarlierMessagesArrived(1), "1 earlier message arrived");
+    expect(l.chatEarlierMessagesArrived(2), "2 earlier messages arrived");
+    expect(l.chatEarlierMessagesArrived(5), "5 earlier messages arrived");
     expect(l.chatUnsave, "Unsave");
     expect(l.chatForward, "Forward");
     expect(l.commonShare, "Share");
