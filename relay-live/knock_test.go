@@ -1309,6 +1309,34 @@ func TestKnockCheckAndApplyAreOneStep(t *testing.T) {
 	}
 }
 
+// what is answered ok is what is kept: a share that fills while many come
+// at once refuses the rest, never takes them in the answer and drops them
+func TestKnockAnswerIsWhatIsKept(t *testing.T) {
+	old := knockPushHostEPs
+	knockPushHostEPs = 40
+	t.Cleanup(func() { knockPushHostEPs = old })
+	tk := newTestKnocks(t)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	ok := 0
+	for i := 0; i < 200; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/e%d", i), tk.clock.now())
+			if rej, _ := tk.take(nil, &ev); !rej {
+				mu.Lock()
+				ok++
+				mu.Unlock()
+			}
+		}(i)
+	}
+	wg.Wait()
+	if ok != len(tk.regs) {
+		t.Fatalf("%d answered ok, %d kept", ok, len(tk.regs))
+	}
+}
+
 func TestKnockServersAreServedInTurn(t *testing.T) {
 	tk := newTestKnocks(t)
 	for i := 0; i < knockDomainQueue; i++ {

@@ -80,7 +80,7 @@ put you in danger, read all of it.
   servers together the same, and for any one of those 256 endpoints. new
   ones are taken at a pace (4,000 an hour on a public server, 1,000 on the
   others), endpoints that have not worked yet hold at most a tenth of a
-  share, and endpoints that have worked for a day keep a queue of their
+  public server's share and a quarter of any other server's room, and endpoints that have worked for a day keep a queue of their
   own. someone registering in bulk can use up a server's room for new
   sign-ups for a while; registrations already there keep working.
   check-ins and always on involve no one else.
