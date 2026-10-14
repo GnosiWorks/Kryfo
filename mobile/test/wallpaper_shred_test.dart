@@ -4,7 +4,6 @@
 // what no row names is found at start. the real database methods over
 // rows kept in maps, the files real ones in a scratch folder
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
