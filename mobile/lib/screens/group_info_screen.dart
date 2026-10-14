@@ -6,6 +6,7 @@ import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, GroupFull;
 import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../rooms.dart';
 import 'room_link_sheet.dart';
@@ -425,7 +426,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Column(
                 children: [
                   // the same tile flies here from the chat's header
-                  Hero(
+                  HaloHero(
                     tag: 'group-${widget.groupId}',
                     flightShuttleBuilder: (_, _, _, _, _) =>
                         FittedBox(child: _tile(_name)),

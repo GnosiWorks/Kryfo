@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'dev_avatar.dart';
+import 'halo_hero.dart';
 import 'halo_sheet.dart';
 import 'motion.dart';
 import 'pins.dart' show PinHeaderButton;
@@ -482,7 +483,10 @@ class DevChatHead extends StatelessWidget {
                 child: Row(
                   children: [
                     // the ring flies in from the row
-                    const Hero(tag: kDevFaceHero, child: DevAvatar(size: 36)),
+                    const HaloHero(
+                      tag: kDevFaceHero,
+                      child: DevAvatar(size: 36),
+                    ),
                     const SizedBox(width: 11),
                     Expanded(
                       child: Column(
