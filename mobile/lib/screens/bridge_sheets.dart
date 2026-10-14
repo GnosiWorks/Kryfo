@@ -25,6 +25,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
 import 'scan_screen.dart';
+import '../widgets/shift_tap_guard.dart';
 
 // the onion from the fokia pack. it plays twice and rests; still when the
 // phone asks for no movement
@@ -518,26 +519,32 @@ class _FriendSheetState extends State<_FriendSheet> {
               ),
               // a keyboard that adds a space after each dot would break an
               // address, so it gets no say here
-              child: TextField(
+              child: ShiftTapGuard(
                 controller: _ctrl,
-                textDirection: TextDirection.ltr,
-                minLines: 3,
-                maxLines: 6,
-                autocorrect: false,
-                enableSuggestions: false,
-                enableIMEPersonalizedLearning: false,
-                keyboardType: TextInputType.visiblePassword,
-                textCapitalization: TextCapitalization.none,
-                smartDashesType: SmartDashesType.disabled,
-                smartQuotesType: SmartQuotesType.disabled,
-                inputFormatters: const [UnmarkedInput()],
-                style: HaloType.mono(size: 11.5, color: HaloColors.text),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: l10n.bridgesPasteABridgeLine,
-                  // the line is left to right, the hint the app's way
-                  hintTextDirection: Directionality.of(context),
-                  hintStyle: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                child: TextField(
+                  controller: _ctrl,
+                  textDirection: TextDirection.ltr,
+                  minLines: 3,
+                  maxLines: 6,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableIMEPersonalizedLearning: false,
+                  keyboardType: TextInputType.visiblePassword,
+                  textCapitalization: TextCapitalization.none,
+                  smartDashesType: SmartDashesType.disabled,
+                  smartQuotesType: SmartQuotesType.disabled,
+                  inputFormatters: const [UnmarkedInput()],
+                  style: HaloType.mono(size: 11.5, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: l10n.bridgesPasteABridgeLine,
+                    // the line is left to right, the hint the app's way
+                    hintTextDirection: Directionality.of(context),
+                    hintStyle: HaloType.mono(
+                      size: 11.5,
+                      color: HaloColors.text2,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -210,25 +210,28 @@ Future<bool> showNoteSheet(
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
-            TextField(
+            ShiftTapGuard(
               controller: ctrl,
-              autofocus: true,
-              minLines: 1,
-              maxLines: 4,
-              cursorColor: HaloColors.amber,
-              style: HaloType.serif(
-                size: 16,
-                italic: true,
-                color: HaloColors.text,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.chatAQuietReminder,
-                hintStyle: HaloType.serif(
+              child: TextField(
+                controller: ctrl,
+                autofocus: true,
+                minLines: 1,
+                maxLines: 4,
+                cursorColor: HaloColors.amber,
+                style: HaloType.serif(
                   size: 16,
                   italic: true,
-                  color: HaloColors.text3,
+                  color: HaloColors.text,
                 ),
-                border: InputBorder.none,
+                decoration: InputDecoration(
+                  hintText: l10n.chatAQuietReminder,
+                  hintStyle: HaloType.serif(
+                    size: 16,
+                    italic: true,
+                    color: HaloColors.text3,
+                  ),
+                  border: InputBorder.none,
+                ),
               ),
             ),
             const SizedBox(height: 18),
@@ -6296,29 +6299,32 @@ class _SearchHeadState extends State<SearchHead> {
                         Expanded(
                           child: WrittenDir(
                             controller: widget.controller,
-                            builder: (dir) => TextField(
-                              textDirection: dir,
-                              inputFormatters: const [UnmarkedInput()],
+                            builder: (dir) => ShiftTapGuard(
                               controller: widget.controller,
-                              focusNode: _focus,
-                              onChanged: widget.onChanged,
-                              cursorColor: HaloColors.amber,
-                              cursorWidth: 1.5,
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text,
-                              ),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                hintText: l10n.chatFindInConversation,
-                                hintStyle: HaloType.serif(
+                              child: TextField(
+                                textDirection: dir,
+                                inputFormatters: const [UnmarkedInput()],
+                                controller: widget.controller,
+                                focusNode: _focus,
+                                onChanged: widget.onChanged,
+                                cursorColor: HaloColors.amber,
+                                cursorWidth: 1.5,
+                                style: HaloType.sans(
                                   size: 13,
-                                  italic: true,
-                                  color: HaloColors.text3,
+                                  color: HaloColors.text,
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: l10n.chatFindInConversation,
+                                  hintStyle: HaloType.serif(
+                                    size: 13,
+                                    italic: true,
+                                    color: HaloColors.text3,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
                             ),

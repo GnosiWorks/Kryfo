@@ -22,6 +22,7 @@ import '../bidi_safe.dart';
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
+import 'shift_tap_guard.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -570,30 +571,33 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                   Expanded(
                     child: WrittenDir(
                       controller: _ctrl,
-                      builder: (dir) => TextField(
-                        textDirection: dir,
-                        inputFormatters: const [UnmarkedInput()],
+                      builder: (dir) => ShiftTapGuard(
                         controller: _ctrl,
-                        autofocus: true,
-                        style: HaloType.sans(size: 14),
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: l10n.mediaBubblesAddACaption,
-                          hintStyle: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text3,
-                          ),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: HaloColors.surface2,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
+                        child: TextField(
+                          textDirection: dir,
+                          inputFormatters: const [UnmarkedInput()],
+                          controller: _ctrl,
+                          autofocus: true,
+                          style: HaloType.sans(size: 14),
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            hintText: l10n.mediaBubblesAddACaption,
+                            hintStyle: HaloType.sans(
+                              size: 14,
+                              color: HaloColors.text3,
+                            ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            filled: true,
+                            fillColor: HaloColors.surface2,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ),

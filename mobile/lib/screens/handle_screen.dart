@@ -23,6 +23,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 class HandleScreen extends StatefulWidget {
   const HandleScreen({super.key});
@@ -692,20 +693,26 @@ class _FieldState extends State<_Field> {
                   ),
                 ),
               Expanded(
-                child: TextField(
-                  textDirection: ltr ? TextDirection.ltr : dir,
+                child: ShiftTapGuard(
                   controller: widget.ctrl,
-                  onChanged: widget.onChanged,
-                  maxLength: widget.max,
-                  minLines: widget.lines,
-                  maxLines: widget.lines,
-                  cursorColor: HaloColors.amber,
-                  style: HaloType.mono(size: 14, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    counterText: '',
-                    hintText: widget.hint,
-                    hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
+                  child: TextField(
+                    textDirection: ltr ? TextDirection.ltr : dir,
+                    controller: widget.ctrl,
+                    onChanged: widget.onChanged,
+                    maxLength: widget.max,
+                    minLines: widget.lines,
+                    maxLines: widget.lines,
+                    cursorColor: HaloColors.amber,
+                    style: HaloType.mono(size: 14, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      counterText: '',
+                      hintText: widget.hint,
+                      hintStyle: HaloType.mono(
+                        size: 14,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),

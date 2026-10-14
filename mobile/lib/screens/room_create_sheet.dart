@@ -13,6 +13,7 @@ import '../widgets/halo_switch.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/press_scale.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
@@ -93,29 +94,32 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              ShiftTapGuard(
                 controller: _nameCtrl,
-                autofocus: true,
-                maxLength: 32,
-                style: HaloType.sans(size: 16, color: HaloColors.text),
-                cursorColor: HaloColors.violet,
-                decoration: InputDecoration(
-                  hintText: l10n.roomCreateRoomName,
-                  hintStyle: HaloType.serif(
-                    size: 16,
-                    italic: true,
-                    color: HaloColors.text2,
-                  ),
-                  counterText: '',
-                  filled: true,
-                  fillColor: HaloColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
+                child: TextField(
+                  controller: _nameCtrl,
+                  autofocus: true,
+                  maxLength: 32,
+                  style: HaloType.sans(size: 16, color: HaloColors.text),
+                  cursorColor: HaloColors.violet,
+                  decoration: InputDecoration(
+                    hintText: l10n.roomCreateRoomName,
+                    hintStyle: HaloType.serif(
+                      size: 16,
+                      italic: true,
+                      color: HaloColors.text2,
+                    ),
+                    counterText: '',
+                    filled: true,
+                    fillColor: HaloColors.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),

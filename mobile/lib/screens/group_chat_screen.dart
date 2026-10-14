@@ -239,20 +239,23 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                 ),
               ),
               const SizedBox(height: 14),
-              TextField(
+              ShiftTapGuard(
                 controller: ctrl,
-                autofocus: true,
-                // a long message scrolls in the field, so save stays in view
-                minLines: 1,
-                maxLines: 6,
-                cursorColor: HaloColors.amber,
-                style: HaloType.sans(size: 15),
-                decoration: InputDecoration(
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: HaloColors.line2),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: HaloColors.amber),
+                child: TextField(
+                  controller: ctrl,
+                  autofocus: true,
+                  // a long message scrolls in the field, so save stays in view
+                  minLines: 1,
+                  maxLines: 6,
+                  cursorColor: HaloColors.amber,
+                  style: HaloType.sans(size: 15),
+                  decoration: InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: HaloColors.line2),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: HaloColors.amber),
+                    ),
                   ),
                 ),
               ),
