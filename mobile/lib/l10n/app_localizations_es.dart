@@ -85,6 +85,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los botones, tus propios mensajes y los enlaces lo llevan. El icono de la app sigue amarillo.';
 
   @override
+  String get appearanceChatWallpaper => 'Fondo de chat';
+
+  @override
+  String get appearanceEveryChat => 'Todos los chats';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'El fondo propio de un chat, elegido desde su menú, va primero. Las fotos se quedan en este teléfono, cifradas con tus chats.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Esa frase de contraseña no abre este archivo';
 
@@ -5247,6 +5257,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsAccentColour => 'Color de acento';
 
   @override
+  String get settingsColoursAndWallpaper => 'Colores y fondo';
+
+  @override
   String get settingsAppLock2 => 'Bloqueo de la app';
 
   @override
@@ -5731,6 +5744,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Tu foto';
+
+  @override
+  String get wallpaperDefault => 'Predeterminado';
 
   @override
   String get wallpaperFromYourPhotos => 'De tus fotos';

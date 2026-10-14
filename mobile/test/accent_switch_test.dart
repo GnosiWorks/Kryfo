@@ -5,12 +5,15 @@
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/atmosphere.dart' show AtmosphereWash;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show appState, themeRevision;
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/wallpaper.dart' show ChatWall;
 import 'package:kryfo/widgets/halo_buttons.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:kryfo/widgets/theme_refresh.dart';
@@ -184,6 +187,7 @@ void main() {
               child: Directionality(
                 textDirection: dir,
                 child: AppearanceScreen(
+                  readDefault: () async => ChatWall.none,
                   onPick: (a) async {
                     HaloColors.setAccent(a);
                     rev.value++;
@@ -277,6 +281,33 @@ void main() {
       final theirs = t.getCenter(find.text(l10n.appearanceSampleIn));
       final yours = t.getCenter(find.text(l10n.appearanceSampleOut));
       expect(theirs.dx, greaterThan(yours.dx));
+    });
+
+    testWidgets('the default wallpaper previews behind the small chat and '
+        'backing out puts it back', (t) async {
+      t.view.physicalSize = const Size(800, 2600);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await open(t);
+      Finder wash() => find.descendant(
+        of: find.byType(AccentPreview),
+        matching: find.byType(AtmosphereWash),
+      );
+      expect(wash(), findsNothing);
+      expect(find.text(l10n.atmosphereNone), findsOneWidget);
+      await t.tap(find.text(l10n.appearanceEveryChat));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.atmosphereDusk));
+      await t.pumpAndSettle();
+      expect(wash(), findsOneWidget);
+      await t.tapAt(const Offset(10, 10));
+      await t.pumpAndSettle();
+      expect(wash(), findsNothing);
     });
 
     testWidgets('light theme: the swatches show the light tones', (t) async {

@@ -85,6 +85,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Buttons, your own messages and links wear it. The app icon stays yellow.';
 
   @override
+  String get appearanceChatWallpaper => 'Chat wallpaper';
+
+  @override
+  String get appearanceEveryChat => 'Every chat';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'A chat\'s own wallpaper, set from its menu, comes first. Photos stay on this phone, encrypted with your chats.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'That passphrase does not open this file';
 
@@ -5198,6 +5208,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccentColour => 'Accent colour';
 
   @override
+  String get settingsColoursAndWallpaper => 'Colours and wallpaper';
+
+  @override
   String get settingsAppLock2 => 'App lock';
 
   @override
@@ -5679,6 +5692,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Your photo';
+
+  @override
+  String get wallpaperDefault => 'Default';
 
   @override
   String get wallpaperFromYourPhotos => 'From your photos';

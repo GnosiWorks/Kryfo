@@ -17,6 +17,8 @@ import 'dart:convert';
 import 'key_verification_screen.dart';
 import 'contact_screen.dart';
 import 'wallpaper_sheet.dart';
+import '../wallpaper.dart';
+import '../widgets/chat_backdrop.dart';
 import 'introduce_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
@@ -880,10 +882,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool _loaded = false;
-  Atmo _atmosphere = Atmo.none;
-  // a photo of their own behind this chat. lives in the app's folder, so
-  // it goes with a wipe; stored as image:<path> in the atmosphere column.
-  String? _wallpaperPath;
+  // what this chat shows behind it (wallpaper.dart)
+  ChatWall _wall = ChatWall.none;
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
@@ -1245,17 +1245,9 @@ class _ChatScreenState extends State<ChatScreen>
       _loadVouches();
       _loadShield();
     }
-    session.getAtmosphere(widget.peerHaloId).then((a) {
-      if (!mounted) return;
-      setState(() {
-        if (a != null && a.startsWith('image:')) {
-          _wallpaperPath = a.substring(6);
-          _atmosphere = Atmo.none;
-        } else {
-          _atmosphere = atmoFromName(a);
-        }
-      });
-    });
+    _loadWall();
+    // a new default under appearance shows here at once
+    wallpaperRevision.addListener(_loadWall);
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
@@ -4540,6 +4532,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
+    wallpaperRevision.removeListener(_loadWall);
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
@@ -4912,76 +4905,54 @@ class _ChatScreenState extends State<ChatScreen>
     if (saved && mounted) showHaloToast(context, l10n.chatNoteSaved);
   }
 
+  void _loadWall() {
+    chatWall(widget.peerHaloId).then((w) {
+      if (mounted && !w.sameAs(_wall)) setState(() => _wall = w);
+    });
+  }
+
   // the sheet previews live: each swatch changes the room behind it, and
   // backing out puts the old one back
   Future<void> _pickAtmosphere() async {
-    final before = _atmosphere;
+    final id = widget.peerHaloId;
+    final before = _wall;
+    final follows = await followsDefault(id);
+    if (!mounted) return;
     final picked = await showWallpaperSheet(
       context,
-      before,
+      before.atmo,
       allowPhoto: true,
+      allowDefault: true,
+      followsDefault: follows,
+      hasPhoto: !follows && before.photo != null,
       onPreview: (a) {
-        if (mounted) setState(() => _atmosphere = a);
+        if (mounted) setState(() => _wall = ChatWall(a));
       },
+      onPreviewDefault: () => defaultWall().then((w) {
+        if (mounted) setState(() => _wall = w);
+      }),
     );
     if (!mounted) return;
     if (picked is WallpaperFromPhotos) {
-      setState(() => _atmosphere = before);
-      await _pickWallpaperImage();
-      return;
-    }
-    if (picked is! Atmo) {
-      setState(() => _atmosphere = before);
+      setState(() => _wall = before);
+      final photo = await pickWallpaperPhoto(
+        context,
+        failed: () {
+          if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+        },
+      );
+      if (photo == null) return;
+      await session.setChatPhoto(id, photo);
+    } else if (picked is WallpaperDefault) {
+      await session.setChatAtmosphere(id, null);
+    } else if (picked is Atmo) {
+      await session.setChatAtmosphere(id, picked.name);
+    } else {
+      setState(() => _wall = before);
       return;
     }
     HapticFeedback.selectionClick();
-    await _dropWallpaperFile();
-    await session.setAtmosphere(widget.peerHaloId, picked.name);
-    if (!mounted) return;
-    setState(() {
-      _atmosphere = picked;
-      _wallpaperPath = null;
-    });
-  }
-
-  Future<void> _dropWallpaperFile() async {
-    final old = _wallpaperPath;
-    if (old == null) return;
-    try {
-      await shredFile(old);
-    } catch (_) {
-      // shredFile logs its own failure
-    }
-  }
-
-  // a picture from the gallery, shrunk by the picker, copied into the
-  // app's own folder. the gallery copy is not touched; ours goes on wipe.
-  Future<void> _pickWallpaperImage() async {
-    final x = await lockState.hold(
-      () => ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 80,
-      ),
-    );
-    if (x == null) return;
-    final Uint8List bytes;
-    try {
-      bytes = await x.readAsBytes();
-    } finally {
-      await shredPickedImages([x]);
-    }
-    final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
-    final file = File('${folder.path}/${widget.peerHaloId}.jpg');
-    await file.writeAsBytes(bytes, flush: true);
-    await session.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
-    if (!mounted) return;
-    HapticFeedback.selectionClick();
-    setState(() {
-      _wallpaperPath = file.path;
-      _atmosphere = Atmo.none;
-    });
+    _loadWall();
   }
 
   Future<void> _clearConversation() async {
@@ -5402,28 +5373,11 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             Expanded(
               child: AtmoScope(
-                atmo: _atmosphere,
+                atmo: _wall.atmo,
                 child: Stack(
                   key: _listKey,
                   children: [
-                    if (_wallpaperPath != null) ...[
-                      Positioned.fill(
-                        child: Image.file(
-                          File(_wallpaperPath!),
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                          cacheWidth: screenPx(context),
-                        ),
-                      ),
-                      // a wash so the bubbles keep reading over any photo
-                      Positioned.fill(
-                        child: ColoredBox(
-                          color: HaloColors.ink.withValues(alpha: 0.42),
-                        ),
-                      ),
-                    ],
-                    if (_atmosphere != Atmo.none)
-                      Positioned.fill(child: AtmosphereWash(_atmosphere)),
+                    Positioned.fill(child: ChatBackdrop(_wall)),
                     // a slow first read fades the thread up, not a cut
                     FadeSwap(
                       // an empty chat waits for what its card depends on,

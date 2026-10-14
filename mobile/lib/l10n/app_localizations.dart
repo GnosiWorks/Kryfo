@@ -273,6 +273,24 @@ abstract class AppLocalizations {
   /// **'Buttons, your own messages and links wear it. The app icon stays yellow.'**
   String get appearanceAccentHint;
 
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Chat wallpaper'**
+  String get appearanceChatWallpaper;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Every chat'**
+  String get appearanceEveryChat;
+
+  /// screens/appearance_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A chat\'s own wallpaper, set from its menu, comes first. Photos stay on this phone, encrypted with your chats.'**
+  String get appearanceWallpaperHint;
+
   /// backup.dart
   ///
   /// In en, this message translates to:
@@ -8412,6 +8430,12 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Colours and wallpaper'**
+  String get settingsColoursAndWallpaper;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'App lock'**
   String get settingsAppLock2;
 
@@ -9170,6 +9194,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your photo'**
   String get wallpaperYourPhoto;
+
+  /// screens/wallpaper_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get wallpaperDefault;
 
   /// screens/wallpaper_sheet.dart
   ///

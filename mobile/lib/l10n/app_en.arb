@@ -100,6 +100,18 @@
   "@appearanceAccentHint": {
     "description": "screens/appearance_screen.dart"
   },
+  "appearanceChatWallpaper": "Chat wallpaper",
+  "@appearanceChatWallpaper": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceEveryChat": "Every chat",
+  "@appearanceEveryChat": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceWallpaperHint": "A chat's own wallpaper, set from its menu, comes first. Photos stay on this phone, encrypted with your chats.",
+  "@appearanceWallpaperHint": {
+    "description": "screens/appearance_screen.dart"
+  },
   "backupThatPassphraseDoesNot": "That passphrase does not open this file",
   "@backupThatPassphraseDoesNot": {
     "description": "backup.dart"
@@ -6520,6 +6532,10 @@
   "@settingsAccentColour": {
     "description": "screens/settings_screen.dart"
   },
+  "settingsColoursAndWallpaper": "Colours and wallpaper",
+  "@settingsColoursAndWallpaper": {
+    "description": "screens/settings_screen.dart"
+  },
   "settingsAppLock2": "App lock",
   "@settingsAppLock2": {
     "description": "screens/settings_screen.dart"
@@ -7163,6 +7179,10 @@
   },
   "wallpaperYourPhoto": "Your photo",
   "@wallpaperYourPhoto": {
+    "description": "screens/wallpaper_sheet.dart"
+  },
+  "wallpaperDefault": "Default",
+  "@wallpaperDefault": {
     "description": "screens/wallpaper_sheet.dart"
   },
   "wallpaperFromYourPhotos": "From your photos",

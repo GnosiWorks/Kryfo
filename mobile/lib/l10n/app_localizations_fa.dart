@@ -85,6 +85,16 @@ class AppLocalizationsFa extends AppLocalizations {
       'دکمه‌ها، پیام‌های خودتان و پیوندها این رنگ را می‌گیرند. نماد برنامه زرد می‌ماند.';
 
   @override
+  String get appearanceChatWallpaper => 'تصویر زمینه گفتگو';
+
+  @override
+  String get appearanceEveryChat => 'همه گفتگوها';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'تصویر زمینه‌ای که از منوی خود گفتگو انتخاب شود، اولویت دارد. عکس‌ها روی همین گوشی، رمزگذاری‌شده همراه گفتگوهای شما، می‌مانند.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'این عبارت عبور این فایل را باز نمی‌کند';
 
@@ -5211,6 +5221,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsAccentColour => 'رنگ تأکیدی';
 
   @override
+  String get settingsColoursAndWallpaper => 'رنگ‌ها و تصویر زمینه';
+
+  @override
   String get settingsAppLock2 => 'قفل برنامه';
 
   @override
@@ -5693,6 +5706,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'عکس شما';
+
+  @override
+  String get wallpaperDefault => 'پیش‌فرض';
 
   @override
   String get wallpaperFromYourPhotos => 'از عکس‌هایتان';

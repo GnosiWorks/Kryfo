@@ -655,7 +655,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               HaloRow(
                 icon: Icons.palette_outlined,
-                label: l10n.settingsAccentColour,
+                label: l10n.settingsColoursAndWallpaper,
                 value: accentName(HaloColors.accent),
                 onTap: () async {
                   await Navigator.of(

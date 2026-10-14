@@ -85,6 +85,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Tombol, pesanmu sendiri, dan tautan memakai warna ini. Ikon aplikasi tetap kuning.';
 
   @override
+  String get appearanceChatWallpaper => 'Latar belakang obrolan';
+
+  @override
+  String get appearanceEveryChat => 'Semua obrolan';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Latar belakang milik obrolan sendiri, dipilih dari menunya, didahulukan. Foto tetap di ponsel ini, terenkripsi bersama obrolanmu.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Frasa sandi itu tidak bisa membuka file ini';
 
@@ -5203,6 +5213,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsAccentColour => 'Warna aksen';
 
   @override
+  String get settingsColoursAndWallpaper => 'Warna dan latar belakang';
+
+  @override
   String get settingsAppLock2 => 'Kunci aplikasi';
 
   @override
@@ -5685,6 +5698,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Fotomu';
+
+  @override
+  String get wallpaperDefault => 'Bawaan';
 
   @override
   String get wallpaperFromYourPhotos => 'Dari galerimu';

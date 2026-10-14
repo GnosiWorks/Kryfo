@@ -85,6 +85,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Buttons, deine eigenen Nachrichten und Links tragen sie. Das App-Symbol bleibt gelb.';
 
   @override
+  String get appearanceChatWallpaper => 'Chat-Hintergrund';
+
+  @override
+  String get appearanceEveryChat => 'Alle Chats';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Der eigene Hintergrund eines Chats, gesetzt über sein Menü, geht vor. Fotos bleiben auf diesem Telefon, verschlüsselt mit deinen Chats.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Diese Passphrase öffnet diese Datei nicht';
 
@@ -5264,6 +5274,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAccentColour => 'Akzentfarbe';
 
   @override
+  String get settingsColoursAndWallpaper => 'Farben und Hintergrund';
+
+  @override
   String get settingsAppLock2 => 'App-Sperre';
 
   @override
@@ -5749,6 +5762,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Dein Foto';
+
+  @override
+  String get wallpaperDefault => 'Standard';
 
   @override
   String get wallpaperFromYourPhotos => 'Aus deinen Fotos';

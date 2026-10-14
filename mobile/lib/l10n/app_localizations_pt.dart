@@ -85,6 +85,16 @@ class AppLocalizationsPt extends AppLocalizations {
       'Os botões, suas próprias mensagens e os links usam essa cor. O ícone do app continua amarelo.';
 
   @override
+  String get appearanceChatWallpaper => 'Papel de parede das conversas';
+
+  @override
+  String get appearanceEveryChat => 'Todas as conversas';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'O papel de parede próprio de uma conversa, escolhido no menu dela, vem primeiro. As fotos ficam neste celular, criptografadas com suas conversas.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Essa frase-senha não abre este arquivo';
 
@@ -5236,6 +5246,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsAccentColour => 'Cor de destaque';
 
   @override
+  String get settingsColoursAndWallpaper => 'Cores e papel de parede';
+
+  @override
   String get settingsAppLock2 => 'Bloqueio do app';
 
   @override
@@ -5720,6 +5733,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Sua foto';
+
+  @override
+  String get wallpaperDefault => 'Padrão';
 
   @override
   String get wallpaperFromYourPhotos => 'Das suas fotos';

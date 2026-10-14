@@ -86,6 +86,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Các nút, tin nhắn của bạn và liên kết sẽ mang màu này. Biểu tượng ứng dụng vẫn màu vàng.';
 
   @override
+  String get appearanceChatWallpaper => 'Hình nền trò chuyện';
+
+  @override
+  String get appearanceEveryChat => 'Mọi cuộc trò chuyện';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Hình nền riêng của một cuộc trò chuyện, chọn từ menu của nó, được ưu tiên. Ảnh ở lại trên điện thoại này, được mã hóa cùng các cuộc trò chuyện của bạn.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Cụm mật khẩu đó không mở được tệp này';
 
@@ -5200,6 +5210,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAccentColour => 'Màu nhấn';
 
   @override
+  String get settingsColoursAndWallpaper => 'Màu sắc và hình nền';
+
+  @override
   String get settingsAppLock2 => 'Khóa ứng dụng';
 
   @override
@@ -5683,6 +5696,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Ảnh của bạn';
+
+  @override
+  String get wallpaperDefault => 'Mặc định';
 
   @override
   String get wallpaperFromYourPhotos => 'Từ thư viện ảnh';

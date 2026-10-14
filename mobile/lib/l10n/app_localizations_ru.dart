@@ -85,6 +85,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этим цветом будут кнопки, твои сообщения и ссылки. Значок приложения останется жёлтым.';
 
   @override
+  String get appearanceChatWallpaper => 'Обои чатов';
+
+  @override
+  String get appearanceEveryChat => 'Все чаты';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Собственные обои чата, выбранные в его меню, важнее. Фото остаются на этом телефоне, зашифрованные вместе с твоими чатами.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Эта парольная фраза не открывает этот файл';
 
@@ -5308,6 +5318,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsAccentColour => 'Цвет акцента';
 
   @override
+  String get settingsColoursAndWallpaper => 'Цвета и обои';
+
+  @override
   String get settingsAppLock2 => 'Блокировка';
 
   @override
@@ -5798,6 +5811,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Твоё фото';
+
+  @override
+  String get wallpaperDefault => 'По умолчанию';
 
   @override
   String get wallpaperFromYourPhotos => 'Из галереи';

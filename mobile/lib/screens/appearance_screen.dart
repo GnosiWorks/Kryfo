@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the accent the app wears, picked over a small chat that shows it at once.
-// one choice for the whole phone, like the theme
+// the accent the app wears, picked over a small chat that shows it at once,
+// one choice for the whole phone like the theme; and the wallpaper every
+// chat without one of its own shows, this identity's own
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../atmosphere.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, kPhotoWall, session;
 import '../theme.dart';
+import '../wallpaper.dart';
+import '../widgets/chat_backdrop.dart';
+import '../widgets/halo_rows.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/nav_bar.dart' show HaloTab, navTabIcon;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
+import 'wallpaper_sheet.dart';
 
 String accentName(HaloAccent a) => switch (a) {
   HaloAccent.yellow => l10n.accentYellow,
@@ -25,13 +31,69 @@ String accentName(HaloAccent a) => switch (a) {
 class AppearanceScreen extends StatefulWidget {
   // what the accent is set with; the app's own unless a test hands one
   final Future<void> Function(HaloAccent)? onPick;
-  const AppearanceScreen({super.key, this.onPick});
+  // where the default wallpaper is read; the session's unless a test
+  // hands one
+  final Future<ChatWall> Function()? readDefault;
+  const AppearanceScreen({super.key, this.onPick, this.readDefault});
 
   @override
   State<AppearanceScreen> createState() => _AppearanceScreenState();
 }
 
 class _AppearanceScreenState extends State<AppearanceScreen> {
+  ChatWall _default = ChatWall.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _readDefault();
+  }
+
+  void _readDefault() {
+    (widget.readDefault ?? defaultWall)().then((w) {
+      if (mounted) setState(() => _default = w);
+    });
+  }
+
+  String get _defaultName => _default.photo != null
+      ? l10n.wallpaperYourPhoto
+      : atmoLabel(_default.atmo);
+
+  // the sheet previews live behind it, on the small chat; backing out puts
+  // the old one back
+  Future<void> _pickDefault() async {
+    final before = _default;
+    final picked = await showWallpaperSheet(
+      context,
+      before.atmo,
+      allowPhoto: true,
+      hasPhoto: before.photo != null,
+      onPreview: (a) {
+        if (mounted) setState(() => _default = ChatWall(a));
+      },
+    );
+    if (!mounted) return;
+    if (picked is WallpaperFromPhotos) {
+      setState(() => _default = before);
+      final photo = await pickWallpaperPhoto(
+        context,
+        failed: () {
+          if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+        },
+      );
+      if (photo == null) return;
+      await session.setDefaultWallpaper(kPhotoWall, photo);
+    } else if (picked is Atmo) {
+      await session.setDefaultWallpaper(picked.name);
+    } else {
+      setState(() => _default = before);
+      return;
+    }
+    HapticFeedback.selectionClick();
+    wallpaperRevision.value++;
+    _readDefault();
+  }
+
   Future<void> _pick(HaloAccent a) async {
     if (a == HaloColors.accent) return;
     HapticFeedback.selectionClick();
@@ -57,7 +119,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           32 + MediaQuery.paddingOf(context).bottom,
         ),
         children: staggerAll([
-          const AccentPreview(),
+          AccentPreview(background: ChatBackdrop(_default)),
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 4, 10),
@@ -94,6 +156,25 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
             child: Text(
               l10n.appearanceAccentHint,
+              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          HaloSection(l10n.appearanceChatWallpaper),
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: Icons.wallpaper_outlined,
+                label: l10n.appearanceEveryChat,
+                value: _defaultName,
+                onTap: _pickDefault,
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
+            child: Text(
+              l10n.appearanceWallpaperHint,
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
           ),

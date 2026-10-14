@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, GroupFull;
-import '../atmosphere.dart' show Atmo, atmoFromName;
+import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -12,7 +12,7 @@ import '../rooms.dart';
 import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
-import 'chat_screen.dart' show MediaGalleryScreen, atmoFromName;
+import 'chat_screen.dart' show MediaGalleryScreen;
 import 'contact_screen.dart';
 import 'home_screen.dart' show ContactPreview;
 import '../widgets/contact_pick_row.dart';
@@ -21,6 +21,7 @@ import '../widgets/halo_buttons.dart';
 import '../widgets/shared_media.dart';
 import '../widgets/swap.dart';
 import 'wallpaper_sheet.dart';
+import '../wallpaper.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/page_head.dart';
@@ -318,14 +319,37 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _pickAtmosphere() async {
-    final current = atmoFromName(
-      await session.getGroupAtmosphere(widget.groupId),
+    final id = widget.groupId;
+    final follows = await followsDefault(id, group: true);
+    final now = await chatWall(id, group: true);
+    if (!mounted) return;
+    final picked = await showWallpaperSheet(
+      context,
+      now.atmo,
+      allowPhoto: true,
+      allowDefault: true,
+      followsDefault: follows,
+      hasPhoto: !follows && now.photo != null,
     );
     if (!mounted) return;
-    final picked = await showWallpaperSheet(context, current);
-    if (picked is! Atmo) return;
+    if (picked is WallpaperFromPhotos) {
+      final photo = await pickWallpaperPhoto(
+        context,
+        failed: () {
+          if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+        },
+      );
+      if (photo == null) return;
+      await session.setChatPhoto(id, photo, group: true);
+    } else if (picked is WallpaperDefault) {
+      await session.setChatAtmosphere(id, null, group: true);
+    } else if (picked is Atmo) {
+      await session.setChatAtmosphere(id, picked.name, group: true);
+    } else {
+      return;
+    }
     HapticFeedback.selectionClick();
-    await session.setGroupAtmosphere(widget.groupId, picked.name);
+    wallpaperRevision.value++;
   }
 
   void _openSharedMedia() {

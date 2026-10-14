@@ -85,6 +85,16 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цим кольором будуть кнопки, твої повідомлення й посилання. Значок застосунку лишиться жовтим.';
 
   @override
+  String get appearanceChatWallpaper => 'Фон чатів';
+
+  @override
+  String get appearanceEveryChat => 'Усі чати';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Власний фон чату, вибраний у його меню, важливіший. Фото лишаються на цьому телефоні, зашифровані разом із твоїми чатами.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Ця парольна фраза не відкриває цей файл';
 
@@ -5292,6 +5302,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsAccentColour => 'Колір акценту';
 
   @override
+  String get settingsColoursAndWallpaper => 'Кольори й фон';
+
+  @override
   String get settingsAppLock2 => 'Блокування Kryfo';
 
   @override
@@ -5783,6 +5796,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Твоє фото';
+
+  @override
+  String get wallpaperDefault => 'Типовий';
 
   @override
   String get wallpaperFromYourPhotos => 'З твоїх фото';
