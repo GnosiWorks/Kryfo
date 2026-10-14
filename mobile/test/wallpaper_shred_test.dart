@@ -116,6 +116,14 @@ void main() {
     expect(f.existsSync(), isFalse);
   });
 
+  test('a name let go shreds its wallpaper', () async {
+    final db = await rows();
+    final f = await photo(db);
+    await db.forgetName(_peer);
+    expect(atmo(db, _peer), isNull);
+    expect(f.existsSync(), isFalse);
+  });
+
   test('a photo another chat still names stays', () async {
     final db = await rows();
     final f = await photo(db);

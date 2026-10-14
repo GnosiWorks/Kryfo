@@ -2720,6 +2720,7 @@ class HaloDb implements GroupOwedStore {
   // came with it go. what is left is a name nobody checked
   Future<void> forgetName(String haloId) async {
     final db = await open();
+    final atmo = await _atmosphereOf(db, haloId);
     await db.update(
       'contacts',
       {
@@ -2748,6 +2749,7 @@ class HaloDb implements GroupOwedStore {
     await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
     await db.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+    await _dropPhotos([atmo]);
   }
 
   // a member of a group or a room here
