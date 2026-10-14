@@ -35,6 +35,9 @@ const (
 	// knocks the wraps of one connection may set off: a phone writes to
 	// one address at a time
 	knocksPerSec, knockBurst = 1, 20
+	// new knock registrations from one connection: a phone sends one group
+	// at a time
+	regsPerSec, regBurst = 1.0 / 30, 20
 	// a wrap carries its address and an expiration. every parsed tag costs
 	// about 100 bytes of memory while the wrap waits for a listener, and is
 	// looked at for every listener, whatever it holds
@@ -101,8 +104,9 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 	return true
 }
 
-// a connection's events, reqs, and the knocks its wraps may set off
-type budget struct{ events, reqs, knocks *bucket }
+// a connection's events, reqs, the knocks its wraps may set off and the
+// new knock registrations it may make
+type budget struct{ events, reqs, knocks, regs *bucket }
 
 type limits struct {
 	mu       sync.Mutex
@@ -187,7 +191,7 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst)}
+	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst), newBucket(regsPerSec, regBurst)}
 	l.mu.Unlock()
 }
 
@@ -226,13 +230,25 @@ func (l *limits) takeKnock(ctx context.Context) bool {
 	return b.knocks.take(time.Now())
 }
 
+// one new registration from the connection's budget
+func (l *limits) takeNewReg(ctx context.Context) bool {
+	ws := khatru.GetConnection(ctx)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	b := l.conns[ws]
+	if b == nil {
+		return false
+	}
+	return b.regs.take(time.Now())
+}
+
 // every event costs one from the connection, taken or refused
 func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !l.take(ctx, true) {
 		return true, "rate-limited: slow down"
 	}
 	if ev.Kind == knockKind && l.knock != nil {
-		return l.knock.take(ev)
+		return l.knock.take(ctx, ev)
 	}
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"

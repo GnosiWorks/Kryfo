@@ -63,6 +63,8 @@ type knockDomain struct {
 	name      string
 	push      bool
 	eps, regs int
+	// endpoints that never delivered yet and are less than a day old
+	pending int
 	// real knocks for proven endpoints, for the rest, and decoys
 	old, real, decoy []*knockEP
 	inRing           bool
@@ -442,6 +444,8 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 		k.mu.Lock()
 		ep.fails, ep.failingSince = 0, time.Time{}
 		ep.delivered = true
+		// it worked: no longer one of the share's new ones
+		k.settledLocked(ep)
 		k.mu.Unlock()
 		if decoy {
 			k.stats.decoys.Add(1)

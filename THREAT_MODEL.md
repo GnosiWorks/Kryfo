@@ -75,6 +75,14 @@ put you in danger, read all of it.
   ties all of them to one person. a relay that watches can tell which
   mailboxes are hidden chats within two or three months: they are read and
   never registered.
+  our relay holds a limited number of helper registrations: per well-known
+  public push server 20,000 endpoints and 80,000 addresses, for all other
+  servers together the same, and for any one of those 256 endpoints. new
+  ones are taken at a pace (4,000 an hour on a public server, 1,000 on the
+  others), endpoints that have not worked yet hold at most a tenth of a
+  share, and endpoints that have worked for a day keep a queue of their
+  own. someone registering in bulk can use up a server's room for new
+  sign-ups for a while; registrations already there keep working.
   check-ins and always on involve no one else.
 - forensics on a seized unlocked device or on backups of it.
 - a forensic copy of the phone. the decoy pin and hidden chats are for a

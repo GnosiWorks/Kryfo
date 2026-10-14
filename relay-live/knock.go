@@ -89,14 +89,22 @@ func decoyRunMean() float64 { return 1 / (1 - knockDecoyMore) }
 
 // the shares. each well-known push server holds its own, every other
 // server shares one, and one server outside the list holds what about
-// sixty-four phones use. the relay holds no more than the shares add up to
+// sixteen phones use (a community server can be added to the list). the
+// relay holds no more than the shares add up to. new registrations come
+// at a pace per share; the last twentieth of a share is kept for
+// addresses already there; endpoints that never worked yet hold at most a
+// tenth of a public server's share, and a quarter of one other server's
+// cap, until they deliver once or are a day old
 var (
 	knockPushHostEPs  = envInt("RELAY_KNOCK_PUSH_HOST_EPS", 20000)
 	knockPushHostRegs = envInt("RELAY_KNOCK_PUSH_HOST_REGS", 80000)
-	knockSharedEPs    = envInt("RELAY_KNOCK_SHARED_EPS", 10000)
-	knockSharedRegs   = envInt("RELAY_KNOCK_SHARED_REGS", 40000)
-	knockServerEPs    = envInt("RELAY_KNOCK_SERVER_EPS", 1024)
-	knockServerRegs   = envInt("RELAY_KNOCK_SERVER_REGS", 4096)
+	knockSharedEPs    = envInt("RELAY_KNOCK_SHARED_EPS", 20000)
+	knockSharedRegs   = envInt("RELAY_KNOCK_SHARED_REGS", 80000)
+	knockServerEPs    = envInt("RELAY_KNOCK_SERVER_EPS", 256)
+	knockServerRegs   = envInt("RELAY_KNOCK_SERVER_REGS", 1024)
+	// new registrations an hour, per share
+	knockPushHostFresh = envInt("RELAY_KNOCK_PUSH_HOST_NEW_PER_HOUR", 4000)
+	knockSharedFresh   = envInt("RELAY_KNOCK_SHARED_NEW_PER_HOUR", 1000)
 )
 
 // the public push servers, by registrable domain: ntfy and the envs.net
@@ -164,7 +172,15 @@ type knockReg struct {
 type knockStats struct{ real, decoys, failed, dropped, gone atomic.Int64 }
 
 // what one share holds: a public push server's, or everyone else's
-type knockShare struct{ eps, regs, epCap, regCap int }
+type knockShare struct {
+	eps, regs, epCap, regCap int
+	// endpoints that have not delivered yet and are less than a day old
+	pending map[*knockEP]struct{}
+	// new registrations, so many an hour
+	fresh *bucket
+}
+
+func (sh *knockShare) pendingCap() int { return sh.epCap / 10 }
 
 type knocker struct {
 	mu      sync.Mutex
@@ -184,6 +200,52 @@ type knocker struct {
 	floor time.Duration
 	after func(time.Duration, func())
 	q     knockQueue
+	// a new registration out of its connection's budget (limits.go)
+	newReg func(ctx context.Context) bool
+	// names looked up, and until when the answer holds
+	lookup  func(ctx context.Context, host string) ([]net.IP, error)
+	names   map[string]knockName
+	namesMu sync.Mutex
+}
+
+type knockName struct {
+	ok    bool
+	until time.Time
+}
+
+// whether a name has a public address, asked once and remembered: an hour
+// when it does, ten minutes when it does not
+func (k *knocker) resolves(ctx context.Context, host string) bool {
+	host = strings.ToLower(host)
+	now := time.Now()
+	k.namesMu.Lock()
+	if n, ok := k.names[host]; ok && now.Before(n.until) {
+		k.namesMu.Unlock()
+		return n.ok
+	}
+	k.namesMu.Unlock()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	lctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	ips, err := k.lookup(lctx, host)
+	cancel()
+	ok := false
+	for _, ip := range ips {
+		ok = ok || (publicIP(ip) && !selfIP(ip))
+	}
+	ok = ok && err == nil
+	hold := 10 * time.Minute
+	if ok {
+		hold = time.Hour
+	}
+	k.namesMu.Lock()
+	if len(k.names) >= 10000 {
+		k.names = map[string]knockName{}
+	}
+	k.names[host] = knockName{ok, now.Add(hold)}
+	k.namesMu.Unlock()
+	return ok
 }
 
 // sha256 of the address: the table lists no address, a wrap's p tag finds
@@ -205,6 +267,15 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		ports:   knockPorts(),
 		floor:   knockFloor,
 		after:   func(d time.Duration, f func()) { time.AfterFunc(d, f) },
+		names:   map[string]knockName{},
+		lookup: func(ctx context.Context, host string) ([]net.IP, error) {
+			addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+			var ips []net.IP
+			for _, a := range addrs {
+				ips = append(ips, a.IP)
+			}
+			return ips, err
+		},
 	}
 	k.q.init(k)
 	return k
@@ -243,10 +314,12 @@ func (k *knocker) shareOf(domain string) (string, *knockShare) {
 	}
 	sh := k.shares[name]
 	if sh == nil {
-		sh = &knockShare{epCap: knockSharedEPs, regCap: knockSharedRegs}
+		fresh := knockSharedFresh
+		sh = &knockShare{epCap: knockSharedEPs, regCap: knockSharedRegs, pending: map[*knockEP]struct{}{}}
 		if name != "" {
-			sh.epCap, sh.regCap = knockPushHostEPs, knockPushHostRegs
+			sh.epCap, sh.regCap, fresh = knockPushHostEPs, knockPushHostRegs, knockPushHostFresh
 		}
+		sh.fresh = newBucket(float64(fresh)/3600, float64(fresh))
 		k.shares[name] = sh
 	}
 	return name, sh
@@ -378,18 +451,30 @@ func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 	}
 	name, sh := k.shareOf(domain)
 	d := k.domains[domain]
+	// the last twentieth of a share is for addresses already registered
+	full := func(n, max int) bool {
+		if reg != nil {
+			return n >= max
+		}
+		return n >= max-max/20
+	}
 	if ep == nil {
-		if sh.eps >= sh.epCap {
+		if full(sh.eps, sh.epCap) || (name == "" && d != nil && d.eps >= knockServerEPs) {
 			return true, "error: this push server has all the endpoints it may"
 		}
-		if name == "" && d != nil && d.eps >= knockServerEPs {
-			return true, "error: this push server has all the endpoints it may"
+		if name != "" && len(sh.pending) >= sh.pendingCap() ||
+			name == "" && d != nil && d.pending >= knockServerEPs/4 {
+			return true, "error: too many new endpoints on this push server, try later"
 		}
 	} else if len(ep.keys) >= maxRegsPerEP {
 		return true, "error: too many addresses on one endpoint"
 	}
-	if sh.regs >= sh.regCap || (name == "" && d != nil && d.regs >= knockServerRegs) {
+	if full(sh.regs, sh.regCap) || (name == "" && d != nil && d.regs >= knockServerRegs) {
 		return true, "error: this push server has all the addresses it may"
+	}
+	sh.fresh.takeN(now, 0)
+	if sh.fresh.tokens < 1 {
+		return true, "error: too many new registrations on this push server, try later"
 	}
 	return false, ""
 }
@@ -399,15 +484,34 @@ func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 // fill between the check and the taking. a forget is written to disk, on
 // its own path and synced, before the relay answers it; one that cannot be
 // written is answered with an error, so the phone sends it again
-func (k *knocker) take(ev *nostr.Event) (bool, string) {
+func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 	key := knockKey(ev.PubKey)
 	made := int64(ev.CreatedAt)
+	// a server outside the list must have a name that resolves. asked
+	// before the lock, and remembered
+	if ev.Content != "" {
+		if u, err := url.Parse(ev.Content); err == nil && !k.push[knockDomainOf(u.Hostname())] &&
+			!strings.HasSuffix(strings.ToLower(u.Hostname()), ".onion") && !k.resolves(ctx, u.Hostname()) {
+			return true, "invalid: this endpoint's name does not resolve"
+		}
+	}
 	k.mu.Lock()
 	if rej, msg := k.checkLocked(ev); rej {
 		k.mu.Unlock()
 		return rej, msg
 	}
 	if ev.Content != "" {
+		if reg := k.regs[key]; reg == nil || reg.ep.url != ev.Content {
+			// a new registration: out of the connection's budget and its
+			// share's hour
+			if k.newReg != nil && ctx != nil && !k.newReg(ctx) {
+				k.mu.Unlock()
+				return true, "rate-limited: too many new registrations at once"
+			}
+			u, _ := url.Parse(ev.Content)
+			_, sh := k.shareOf(knockDomainOf(u.Hostname()))
+			sh.fresh.take(k.now())
+		}
 		delete(k.forgets, key)
 		k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
 		k.store.put(key, ev.Content, made, k.regs[key].expires)
@@ -438,7 +542,7 @@ func (k *knocker) take(ev *nostr.Event) (bool, string) {
 // take, for the tests: the answer left out
 func (k *knocker) apply(ev *nostr.Event) {
 	if ev.Kind == knockKind {
-		k.take(ev)
+		k.take(nil, ev)
 	}
 }
 
@@ -463,6 +567,8 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 		d.eps++
 		_, sh := k.shareOf(ep.domain)
 		sh.eps++
+		sh.pending[ep] = struct{}{}
+		d.pending++
 		k.decoyLocked(ep)
 	} else {
 		d = k.domainLocked(ep.domain)
@@ -498,6 +604,7 @@ func (k *knocker) dropEPLocked(ep *knockEP) {
 	delete(k.eps, ep.url)
 	// its timers and queue places see it gone and do nothing
 	ep.decoyGen++
+	k.settledLocked(ep)
 	_, sh := k.shareOf(ep.domain)
 	sh.eps--
 	if d := k.domains[ep.domain]; d != nil {
@@ -506,6 +613,19 @@ func (k *knocker) dropEPLocked(ep *knockEP) {
 		if d.eps <= 0 && d.waiting() == 0 && d.inflight == 0 {
 			delete(k.domains, ep.domain)
 		}
+	}
+}
+
+// an endpoint no longer counted as new: it delivered, it is a day old, or
+// it is gone
+func (k *knocker) settledLocked(ep *knockEP) {
+	_, sh := k.shareOf(ep.domain)
+	if _, ok := sh.pending[ep]; !ok {
+		return
+	}
+	delete(sh.pending, ep)
+	if d := k.domains[ep.domain]; d != nil {
+		d.pending--
 	}
 }
 
@@ -634,6 +754,16 @@ func (k *knocker) gone(endpoint string) {
 // one pass of the timer: expired registrations and forgets go, a chunk at
 // a time with the lock let go in between, so wraps keep being taken
 func (k *knocker) tick() {
+	k.mu.Lock()
+	now0 := k.now()
+	for _, sh := range k.shares {
+		for ep := range sh.pending {
+			if now0.Sub(ep.born) >= knockTrustAfter {
+				k.settledLocked(ep)
+			}
+		}
+	}
+	k.mu.Unlock()
 	for {
 		now := k.now().Unix()
 		k.mu.Lock()
@@ -701,6 +831,7 @@ func (k *knocker) logStats() {
 // were. they are never handed to a listener
 func applyKnocks(relay *khatru.Relay, l *limits, k *knocker) {
 	l.knock = k
+	k.newReg = l.takeNewReg
 	// taken in the reject hook already; this only lets khatru answer ok
 	relay.OnEphemeralEvent = append(relay.OnEphemeralEvent, func(context.Context, *nostr.Event) {})
 	relay.OnEventSaved = append(relay.OnEventSaved, func(ctx context.Context, ev *nostr.Event) {

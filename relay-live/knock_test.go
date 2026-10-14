@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -67,10 +68,19 @@ type stamped struct {
 	at time.Time
 }
 
+// every name resolves to a public address, but those with "nx" in them
+func fakeLookup(_ context.Context, host string) ([]net.IP, error) {
+	if strings.Contains(host, "nx") {
+		return nil, errors.New("no such host")
+	}
+	return []net.IP{net.ParseIP("1.1.1.1")}, nil
+}
+
 func newTestKnocks(t *testing.T) *testKnocks {
 	t.Helper()
 	tk := &testKnocks{clock: &fakeClock{t: time.Unix(1_800_000_000, 0)}}
 	tk.knocker = newKnocker(nil, false)
+	tk.lookup = fakeLookup
 	tk.now = tk.clock.now
 	tk.after = func(d time.Duration, f func()) {
 		tk.tmu.Lock()
@@ -144,10 +154,13 @@ func register(t *testing.T, tk *testKnocks, endpoint string) (sk, pk string) {
 	t.Helper()
 	sk, pk = keypair()
 	ev := signedReg(t, sk, endpoint, tk.clock.now())
-	if rej, msg := tk.check(&ev); rej {
+	if rej, msg := tk.take(nil, &ev); rej {
 		t.Fatalf("%s: %s", endpoint, msg)
 	}
-	tk.apply(&ev)
+	// a working endpoint, as most are
+	tk.mu.Lock()
+	tk.settledLocked(tk.eps[endpoint])
+	tk.mu.Unlock()
 	return
 }
 
@@ -954,6 +967,151 @@ func TestKnockConnectionKnockBudget(t *testing.T) {
 	}
 }
 
+func TestKnockServerNamesMustResolve(t *testing.T) {
+	tk := newTestKnocks(t)
+	asked := 0
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		asked++
+		return fakeLookup(ctx, host)
+	}
+	for i := 0; i < 5; i++ {
+		sk, _ := keypair()
+		ev := signedReg(t, sk, "https://up.nx-nobody.org/x", tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); !rej || !strings.Contains(msg, "resolve") {
+			t.Fatalf("a name that does not resolve: %v %q", rej, msg)
+		}
+	}
+	if asked != 1 {
+		t.Fatalf("the name was looked up %d times, the answer is kept", asked)
+	}
+	// a listed server needs no lookup
+	sk, _ := keypair()
+	ev := signedReg(t, sk, "https://ntfy.sh/up", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatal(msg)
+	}
+	if asked != 1 {
+		t.Fatal("a listed server's name was looked up")
+	}
+}
+
+// ten names, each a server of its own, fill a little of the common share
+func TestKnockTenNamesCannotFillTheCommonShare(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < 20000; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://h%d.srv%d.org/up", i, i%10), tk.clock.now())
+		tk.take(nil, &ev)
+	}
+	_, sh := tk.shareOf("")
+	if sh.eps > 10*knockServerEPs/4 {
+		t.Fatalf("ten servers hold %d endpoints while none ever delivered", sh.eps)
+	}
+	sk, _ := keypair()
+	ev := signedReg(t, sk, "https://push.own-server.org/up", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("a server of one's own was refused: %q", msg)
+	}
+}
+
+// new registrations come at a pace per share; renewals always go
+func TestKnockNewRegistrationsArePaced(t *testing.T) {
+	tk := newTestKnocks(t)
+	var first nostr.Event
+	for i := 0; i < knockPushHostFresh; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/up%d", i/200), tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatalf("%d: %q", i, msg)
+		}
+		if i == 0 {
+			first = ev
+		}
+	}
+	ev := r3reg(r3key(knockPushHostFresh), "https://ntfy.sh/up0", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); !rej || !strings.Contains(msg, "new registrations") {
+		t.Fatalf("past the hour's pace: %v %q", rej, msg)
+	}
+	renew := r3reg(first.PubKey, first.Content, tk.clock.now().Add(time.Second))
+	if rej, msg := tk.take(nil, &renew); rej {
+		t.Fatalf("a renewal was refused: %q", msg)
+	}
+	tk.clock.set(tk.clock.now().Add(time.Hour))
+	ev = r3reg(r3key(knockPushHostFresh), "https://ntfy.sh/up0", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("an hour later: %q", msg)
+	}
+}
+
+// endpoints that never delivered hold at most a tenth of a share, until
+// they deliver once or are a day old
+func TestKnockNewEndpointsHoldATenth(t *testing.T) {
+	tk := newTestKnocks(t)
+	_, sh := tk.shareOf("ntfy.sh")
+	sh.fresh = newBucket(0, 1e9)
+	n := 0
+	for i := 0; i < sh.pendingCap()+50; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/new%d", i), tk.clock.now())
+		if rej, _ := tk.take(nil, &ev); !rej {
+			n++
+		}
+	}
+	if n != sh.pendingCap() {
+		t.Fatalf("%d new endpoints taken, the cap is %d", n, sh.pendingCap())
+	}
+	tk.q.result(tk.eps["https://ntfy.sh/new0"], true, 201, nil)
+	ev := r3reg(r3key(900000), "https://ntfy.sh/after", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("one delivered, room for one: %q", msg)
+	}
+	tk.clock.set(tk.clock.now().Add(knockTrustAfter))
+	tk.tick()
+	if len(sh.pending) != 0 {
+		t.Fatalf("%d still new a day later", len(sh.pending))
+	}
+}
+
+// near full, a share keeps its last twentieth for addresses already there
+func TestKnockNearFullKeepsRoomForTheRegistered(t *testing.T) {
+	old := knockPushHostEPs
+	knockPushHostEPs = 100
+	t.Cleanup(func() { knockPushHostEPs = old })
+	tk := newTestKnocks(t)
+	var firstPk string
+	for i := 0; i < 95; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/e%d", i), tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatalf("%d: %q", i, msg)
+		}
+		tk.q.result(tk.eps[ev.Content], true, 201, nil)
+		if i == 0 {
+			firstPk = ev.PubKey
+		}
+	}
+	ev := r3reg(r3key(500), "https://ntfy.sh/newcomer", tk.clock.now())
+	if rej, _ := tk.take(nil, &ev); !rej {
+		t.Fatal("a new address took the last twentieth")
+	}
+	move := r3reg(firstPk, "https://ntfy.sh/moved", tk.clock.now().Add(time.Second))
+	if rej, msg := tk.take(nil, &move); rej {
+		t.Fatalf("an address already there could not move: %q", msg)
+	}
+}
+
+// one connection makes a bounded number of new registrations
+func TestKnockConnectionRegistrationBudget(t *testing.T) {
+	url, _ := testKnockRelay(t)
+	r := connect(t, url)
+	took := 0
+	for i := 0; i < regBurst+10; i++ {
+		sk, _ := keypair()
+		if publish(t, r, signedReg(t, sk, fmt.Sprintf("https://ntfy.sh/c%d", i), time.Now())) == nil {
+			took++
+		}
+	}
+	if took > regBurst+1 {
+		t.Fatalf("one connection made %d new registrations", took)
+	}
+}
+
 // with the shared budget empty no server's token is spent, and the ring is
 // not walked
 func TestKnockEmptyBudgetSpendsNothing(t *testing.T) {
@@ -1008,11 +1166,14 @@ func TestKnockGoneUsesTheIndex(t *testing.T) {
 func TestKnockCheckAndApplyAreOneStep(t *testing.T) {
 	tk := newTestKnocks(t)
 	now := tk.clock.now()
+	// the hour's pace out of the way: this is about order only
+	_, sh := tk.shareOf("ntfy.sh")
+	sh.fresh = newBucket(0, 1e9)
 	older := 0
 	for i := 0; i < 5000; i++ {
 		pk := r3key(i)
-		a := r3reg(pk, fmt.Sprintf("https://ntfy.sh/a%d", i), now)
-		b := r3reg(pk, fmt.Sprintf("https://ntfy.sh/b%d", i), now.Add(time.Second))
+		a := r3reg(pk, fmt.Sprintf("https://ntfy.sh/a%d", i%100), now)
+		b := r3reg(pk, fmt.Sprintf("https://ntfy.sh/b%d", i%100), now.Add(time.Second))
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go func() { defer wg.Done(); tk.apply(&a) }()
@@ -1164,6 +1325,7 @@ func TestKnockSlowServersDoNotHoldUpOthers(t *testing.T) {
 	defer good.Close()
 
 	k := newKnocker(nil, false)
+	k.lookup = fakeLookup
 	// the names resolve to two public addresses, dialled to the stand-ins
 	k.q.resolve = func(_ context.Context, host string) ([]net.IP, error) {
 		if strings.Contains(host, "slow") {
@@ -1246,6 +1408,7 @@ func TestKnockTableSurvivesARestart(t *testing.T) {
 	store.start()
 	clock := &fakeClock{t: time.Unix(1_800_000_000, 0)}
 	k := newKnocker(store, false)
+	k.lookup = fakeLookup
 	k.now = clock.now
 	sk, pk := keypair()
 	ev := signedReg(t, sk, testEP, clock.now())
@@ -1275,6 +1438,7 @@ func TestKnockTableSurvivesARestart(t *testing.T) {
 			t.Fatal(err)
 		}
 		k := newKnocker(store, false)
+		k.lookup = fakeLookup
 		k.now = func() time.Time { return clock.now().Add(c.after) }
 		if err := k.load(); err != nil {
 			t.Fatal(err)
@@ -1357,7 +1521,7 @@ func TestKnockForgetOnALockedTableIsAnError(t *testing.T) {
 	tk.store = st
 	sk, pk := keypair()
 	reg := signedReg(t, sk, "https://ntfy.sh/up", tk.clock.now())
-	if rej, msg := tk.take(&reg); rej {
+	if rej, msg := tk.take(nil, &reg); rej {
 		t.Fatal(msg)
 	}
 	st.flush(time.Minute)
@@ -1374,7 +1538,7 @@ func TestKnockForgetOnALockedTableIsAnError(t *testing.T) {
 		t.Fatal(err)
 	}
 	forget := signedReg(t, sk, "", tk.clock.now().Add(time.Second))
-	rej, msg := tk.take(&forget)
+	rej, msg := tk.take(nil, &forget)
 	if !rej || !strings.HasPrefix(msg, "error:") {
 		t.Fatalf("a forget not written was answered %v %q", rej, msg)
 	}
@@ -1383,7 +1547,7 @@ func TestKnockForgetOnALockedTableIsAnError(t *testing.T) {
 	}
 	conn.ExecContext(context.Background(), `ROLLBACK`)
 	conn.Close()
-	if rej, msg := tk.take(&forget); rej {
+	if rej, msg := tk.take(nil, &forget); rej {
 		t.Fatalf("sent again: %q", msg)
 	}
 	var ep string
@@ -1411,7 +1575,7 @@ func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
 	for i := 0; i < nf; i++ {
 		sk, _ := keypair()
 		ev := signedReg(t, sk, fmt.Sprintf("https://ntfy.sh/f%d", i/200), now)
-		tk.take(&ev)
+		tk.take(nil, &ev)
 		sks = append(sks, sk)
 	}
 	// the writer not running, its queue filled to the brim by renewals
@@ -1420,7 +1584,7 @@ func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
 	}
 	for _, sk := range sks {
 		ev := signedReg(t, sk, "", now.Add(time.Second))
-		if rej, msg := tk.take(&ev); rej {
+		if rej, msg := tk.take(nil, &ev); rej {
 			t.Fatal(msg)
 		}
 	}
