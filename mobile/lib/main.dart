@@ -2419,20 +2419,30 @@ class HaloDb implements GroupOwedStore {
   }
 
   // headline and lines are stored as shield codes (ShieldHit.toJson), and
-  // worded when shown. an empty headline is a clean check.
+  // worded when shown. a flag or a dismissal stays; only a clean check an
+  // older build stored gives way
   Future<void> setShield(
     String haloId,
     String headline,
     List<Map<String, String>> lines,
   ) async {
     final db = await open();
-    await db.insert('shield', {
-      'halo_id': haloId,
-      'headline': headline,
-      'lines': jsonEncode(lines),
-      'dismissed': 0,
-      'at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.transaction((t) async {
+      final had = await t.query(
+        'shield',
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      if (had.isNotEmpty && !shieldRowOpen(had.first)) return;
+      await t.insert('shield', {
+        'halo_id': haloId,
+        'headline': headline,
+        'lines': jsonEncode(lines),
+        'dismissed': 0,
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
   }
 
   Future<Map<String, Object?>?> shieldFor(String haloId) async {
@@ -15785,12 +15795,13 @@ class AppState extends ChangeNotifier {
     if (env.senderAvatar != null) {
       await db.setContactAvatar(senderHaloId, env.senderAvatar);
     }
-    // scam shield: a stranger's opener, once, on this phone only. in a
-    // group that is any member you never added.
-    if (!senderAccepted && senderHaloId != myId) {
-      unawaited(
-        _runShield(senderHaloId, said, env.senderAvatar, db, group: isGroup),
-      );
+    // scam shield: a stranger's request, on this phone only. never a
+    // contact, a group or the developer's pinned key
+    if (!senderAccepted &&
+        !isGroup &&
+        senderHaloId != myId &&
+        !isDevId(senderHaloId)) {
+      unawaited(_runShield(senderHaloId, said, db));
     }
     // saved now, messageExists covers dedup from here
     _inflightUids.removeAll(claims);
@@ -16200,58 +16211,29 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // group screens reload their marks when this moves
-  int _shieldRev = 0;
-  int get shieldRev => _shieldRev;
-
-  Future<void> _runShield(
-    String senderHaloId,
-    String text,
-    int? face,
-    HaloDb db, {
-    bool group = false,
-  }) async {
+  // each message of a request, until one flags. the switch is the one of
+  // the session the message is filed in. a clean check leaves nothing
+  Future<void> _runShield(String senderHaloId, String text, HaloDb db) async {
     try {
-      if (!await loadScamShieldOn()) return;
-      if (await db.countMessagesFrom(senderHaloId, inGroups: group) != 1) {
-        return;
-      }
-      if (await db.shieldFor(senderHaloId) != null) return;
+      if (!await loadScamShieldOn(db.container)) return;
+      final had = await db.shieldFor(senderHaloId);
+      if (had != null && !shieldRowOpen(had)) return;
       final rows = await db.contacts();
-      final contacts = [
-        for (final c in rows)
-          ShieldContact(
-            c['halo_id'] as String,
-            nickname: c['nickname'] as String?,
-            avatar: (c['avatar'] as num?)?.toInt(),
-          ),
-      ];
-      final r = group
-          ? shieldCheckInGroup(
-              strangerId: senderHaloId,
-              strangerAvatar: face,
-              firstMessage: text,
-              contacts: contacts,
-            )
-          : shieldCheck(
-              strangerId: senderHaloId,
-              strangerAvatar: face,
-              firstMessage: text,
-              contacts: contacts,
-            );
-      // a clean check is recorded too, as an empty headline: the chat can
-      // then say it looked, which is most of what a shield is for. not in
-      // a group: you chose to be there, so a clean line is clutter.
-      if (!r.flagged) {
-        if (group) return;
-        await db.setShield(senderHaloId, '', const []);
-        notifyListeners();
-        return;
-      }
+      final r = shieldCheck(
+        strangerId: senderHaloId,
+        text: text,
+        contacts: [
+          for (final c in rows)
+            ShieldContact(
+              c['halo_id'] as String,
+              nickname: c['nickname'] as String?,
+            ),
+        ],
+      );
+      if (!r.flagged) return;
       await db.setShield(senderHaloId, jsonEncode(r.lead!.toJson()), [
         for (final h in r.hits) h.toJson(),
       ]);
-      _shieldRev++;
       dlog('shield: flagged ${r.hits.map((h) => h.code).join(',')}');
       notifyListeners();
     } catch (e) {
@@ -18568,7 +18550,6 @@ class AppState extends ChangeNotifier {
   Future<void> _noteOtherKey(HaloDb db, String id, String said) async {
     final hit = ShieldHit('other_key', said).toJson();
     await db.setShield(id, jsonEncode(hit), [hit]);
-    _shieldRev++;
   }
 
   // a vault that just shut: nothing is opened or filed until the list it

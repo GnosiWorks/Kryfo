@@ -25,7 +25,6 @@ import '../open_file.dart';
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
-import 'shield_sheet.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart'
@@ -174,16 +173,14 @@ bool closeGoneGroup(
 }
 
 /// an incoming bubble names its sender at the start of their run: after
-/// someone else, after one of ours, under a new day's chip. a flagged
-/// member's name line shows on every one, since the mark lives there
+/// someone else, after one of ours, under a new day's chip
 @visibleForTesting
 bool startsSenderRun({
   required String sender,
   required DateTime when,
   required ({String sender, bool inbound, DateTime when})? prev,
-  bool flagged = false,
 }) {
-  if (flagged || prev == null) return true;
+  if (prev == null) return true;
   if (prev.sender != sender || !prev.inbound) return true;
   return prev.when.year != when.year ||
       prev.when.month != when.month ||
@@ -484,10 +481,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
   int _seenRev = -1; // last group rev we reloaded for
-  // the shield's verdict on members you never added, by id. a mark on
-  // their own bubbles, nothing above the thread.
-  final Map<String, ShieldFlag> _shieldFlags = {};
-  int _seenShieldRev = -1;
   // this group in the session that opened it, for what is kept between
   // visits
   late final String _memo;
@@ -1065,7 +1058,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       _loaded = true;
       unawaited(_refreshPinCount());
-      await _loadShieldFlags();
     } finally {
       // a throw mid-load must not leave _loading stuck true, or every later
       // refresh freezes
@@ -1127,39 +1119,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
-  Future<void> _loadShieldFlags() async {
-    _seenShieldRev = appState.shieldRev;
-    final senders = {
-      for (final m in _messages)
-        if (m.direction == 'in') m.sender,
-    };
-    final next = <String, ShieldFlag>{};
-    for (final id in senders) {
-      if (await session.isAccepted(id)) continue;
-      final f = ShieldFlag.fromRow(await session.shownShieldFor(id));
-      if (f != null) next[id] = f;
-    }
-    if (!mounted) return;
-    setState(() {
-      _shieldFlags
-        ..clear()
-        ..addAll(next);
-    });
-  }
-
-  Future<void> _openShield(String id) async {
-    final flag = _shieldFlags[id];
-    if (flag == null) return;
-    final c = await showShieldSheet(context, id, flag, group: true);
-    if (!mounted) return;
-    if (c == ShieldChoice.block) {
-      showHaloToast(context, l10n.groupChatBlockedEverywhere);
-      await _load();
-      return;
-    }
-    await _loadShieldFlags();
-  }
-
   // whether the route was up at the last change, so a send left 'sending'
   // while it was down is looked at again once it comes up. a look that a
   // send in flight held back stays due until that send ends
@@ -1172,10 +1131,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _onAppStateChanged() {
     final full = appState.roomFull(widget.groupId);
     if (full != _full && mounted) setState(() => _full = full);
-    // a verdict landed after its message did: refresh the marks alone
-    if (appState.shieldRev != _seenShieldRev && !_loading) {
-      unawaited(_loadShieldFlags());
-    }
     final ready = appState.torReady;
     if (ready && !_wasReady) _deadLookDue = true;
     _wasReady = ready;
@@ -1515,13 +1470,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Widget _buildGroupRow(int i) {
     final m = _messages[i];
     final prev = i > 0 ? _messages[i - 1] : null;
-    final shieldFlag = m.direction == 'in' ? _shieldFlags[m.sender] : null;
     final showSender =
         m.direction == 'in' &&
         startsSenderRun(
           sender: m.sender,
           when: m.when,
-          flagged: shieldFlag != null,
           prev: prev == null
               ? null
               : (
@@ -1625,10 +1578,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         ? null
                         : () => appState.closePoll(widget.groupId, m.msgUid!),
                     senderBadge: _badgeFor(m.sender),
-                    shieldFlag: shieldFlag,
-                    onShield: shieldFlag == null
-                        ? null
-                        : () => _openShield(m.sender),
                     linkTitle: _linkPreview(m)?['title'],
                     linkBySender: _linkPreview(m)?['by'] == 'sender',
                     quotedText: quoted,
@@ -4746,8 +4695,6 @@ class _GroupBubble extends StatelessWidget {
   final _GMsg m;
   final bool showSender;
   final String? senderBadge;
-  final ShieldFlag? shieldFlag;
-  final VoidCallback? onShield;
   final String? quotedText;
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
@@ -4793,8 +4740,6 @@ class _GroupBubble extends StatelessWidget {
     this.nameOf,
     this.faceOf,
     this.senderBadge,
-    this.shieldFlag,
-    this.onShield,
     this.quotedText,
     this.quotedAuthor,
     this.onLongPress,
@@ -4902,56 +4847,6 @@ class _GroupBubble extends StatelessWidget {
                                 style: HaloType.mono(
                                   size: 9,
                                   color: HaloColors.amber,
-                                ),
-                              ),
-                            ),
-                          ],
-                          if (shieldFlag != null) ...[
-                            const SizedBox(width: 5),
-                            // the shield's mark: tap for the reasons, block
-                            // or ignore. no banner, no clean line here.
-                            Flexible(
-                              child: GestureDetector(
-                                onTap: onShield,
-                                behavior: HitTestBehavior.opaque,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 5,
-                                    vertical: 1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: HaloColors.rose.withValues(
-                                      alpha: 0.14,
-                                    ),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                      color: HaloColors.rose.withValues(
-                                        alpha: 0.4,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.shield_outlined,
-                                        size: 10,
-                                        color: HaloColors.rose,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Flexible(
-                                        child: Text(
-                                          shieldFlag!.headline,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: HaloType.mono(
-                                            size: 9,
-                                            color: HaloColors.rose,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             ),

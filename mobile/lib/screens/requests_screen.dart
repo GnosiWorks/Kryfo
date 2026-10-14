@@ -22,11 +22,10 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/name_check_mark.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
-import '../widgets/notice_banner.dart';
+import '../widgets/shield_note.dart';
 import '../widgets/confirm_sheet.dart';
 import 'chat_screen.dart';
-import 'shield_sheet.dart';
-import '../scam_shield.dart' show requestTitle;
+import '../scam_shield.dart' show ShieldFlag, requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
 
@@ -83,7 +82,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
   final Map<String, String> _previews = {};
   final Map<String, _Introducer> _introducers = {};
   final Map<String, ShieldFlag> _flags = {};
-  final Set<String> _clean = {};
   bool _loading = true;
   // the requests waiting as last read, without the folding ones
   int _pending = 0;
@@ -148,15 +146,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final previews = <String, String>{};
     final introducers = <String, _Introducer>{};
     final flags = <String, ShieldFlag>{};
-    final clean = <String>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
-      final shieldRow = await session.shownShieldFor(id);
-      final flag = ShieldFlag.fromRow(shieldRow);
+      final flag = ShieldFlag.fromRow(await session.shownShieldFor(id));
       if (flag != null) flags[id] = flag;
-      // the shield ran and found nothing: worth a line here, since this is
-      // the screen where a stranger is judged
-      if (flag == null && ShieldFlag.cleanRow(shieldRow)) clean.add(id);
       final msgs = await session.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
@@ -203,9 +196,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
       _flags
         ..removeWhere((id, _) => stale(id))
         ..addAll(flags);
-      _clean
-        ..removeWhere(stale)
-        ..addAll(clean);
       _loading = false;
     });
   }
@@ -269,18 +259,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
     await _load();
   }
 
-  Future<void> _shield(String id) async {
-    final flag = _flags[id];
-    if (flag == null) return;
-    final c = await showShieldSheet(context, id, flag);
-    if (c == null || !mounted) return;
-    if (c != ShieldChoice.ignore) {
-      showHaloToast(
-        context,
-        c == ShieldChoice.block ? l10n.requestsBlocked : l10n.requestsDeleted,
-      );
-    }
-    await _load();
+  // dismissed for good: the row stays, so the check never runs on them again
+  Future<void> _dismissShield(String id) async {
+    await session.dismissShield(id);
+    if (mounted) setState(() => _flags.remove(id));
   }
 
   Widget _card(Map<String, Object?> row, int i) {
@@ -305,8 +287,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 preview: _previews[id] ?? '',
                 introducer: _introducers[id],
                 flag: _flags[id],
-                clean: _clean.contains(id),
-                onShield: () => _shield(id),
+                onDismissShield: () => _dismissShield(id),
                 onTap: () => _open(row),
                 onAccept: () => _accept(id),
                 onDecline: () => _decline(id),
@@ -416,8 +397,7 @@ class _RequestCard extends StatelessWidget {
   final String preview;
   final _Introducer? introducer;
   final ShieldFlag? flag;
-  final bool clean;
-  final VoidCallback? onShield;
+  final Future<void> Function()? onDismissShield;
   final VoidCallback onTap;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
@@ -430,8 +410,7 @@ class _RequestCard extends StatelessWidget {
     required this.preview,
     this.introducer,
     this.flag,
-    this.clean = false,
-    this.onShield,
+    this.onDismissShield,
     required this.onTap,
     required this.onAccept,
     required this.onDecline,
@@ -504,24 +483,15 @@ class _RequestCard extends StatelessWidget {
                           delay: Duration(milliseconds: 60 * order + 180),
                         ),
                       ],
-                      if (flag != null) ...[
-                        const SizedBox(height: 7),
-                        NoticeBanner(
-                          glyph: NoticeGlyph.shield,
-                          text: flag!.headline,
-                          color: HaloColors.rose,
+                      // nothing at all when the shield found nothing
+                      if (flag != null)
+                        ShieldNote(
+                          key: ValueKey('shield-$haloId'),
+                          flag: flag!,
+                          margin: const EdgeInsets.only(top: 7),
                           delay: Duration(milliseconds: 60 * order + 220),
-                          onTap: onShield,
+                          onDismiss: onDismissShield ?? () async {},
                         ),
-                      ] else if (clean) ...[
-                        const SizedBox(height: 7),
-                        NoticeBanner(
-                          glyph: NoticeGlyph.shield,
-                          text: l10n.requestsLooksSafeNothingSuspicious,
-                          color: HaloColors.green,
-                          delay: Duration(milliseconds: 60 * order + 220),
-                        ),
-                      ],
                       const SizedBox(height: 4),
                       Text(
                         preview,

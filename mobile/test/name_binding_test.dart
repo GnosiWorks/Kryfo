@@ -47,7 +47,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
-import 'package:kryfo/screens/shield_sheet.dart' show ShieldFlag;
+import 'package:kryfo/scam_shield.dart' show ShieldFlag;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -494,7 +494,7 @@ void main() {
       [_said],
     );
     expect(
-      ShieldFlag.fromRow(live.shields[own])?.headline,
+      ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
       l10n.scamShieldGivesUsedName(_amber),
     );
     // and the next message from them opens there too
@@ -1216,7 +1216,7 @@ void main() {
     final own = unboundIdOf(_keyOf(other));
     expect(live.msgs.where((m) => m['peer_id'] == own), hasLength(1));
     expect(
-      ShieldFlag.fromRow(live.shields[own])?.headline,
+      ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
       l10n.scamShieldGivesUsedName(_hidden),
     );
     // the member's own first message is sealed for the vault

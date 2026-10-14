@@ -173,17 +173,5 @@ void main() {
     test('a new day under its chip names the sender again', () {
       expect(after('ada', night), isTrue);
     });
-
-    test('a flagged member is named on every bubble', () {
-      expect(
-        startsSenderRun(
-          sender: 'ada',
-          when: morning,
-          flagged: true,
-          prev: (sender: 'ada', inbound: true, when: morning),
-        ),
-        isTrue,
-      );
-    });
   });
 }

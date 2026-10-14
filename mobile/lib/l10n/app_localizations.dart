@@ -1329,23 +1329,47 @@ abstract class AppLocalizations {
   /// **'{inMinutes}m'**
   String roomsM(Object inMinutes);
 
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Looks like a scam'**
-  String get scamShieldLooksLikeAScam;
-
   /// scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key. it says nothing about which of the two is who they say
   ///
   /// In en, this message translates to:
   /// **'Says it is {shown}, a name someone here already goes by'**
   String scamShieldGivesUsedName(Object shown);
 
-  /// scam_shield.dart
+  /// scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. calm, no exclamation mark
   ///
   /// In en, this message translates to:
-  /// **'This name matches {shown}'**
-  String scamShieldThisNameMatches(Object shown);
+  /// **'{noticed}. Don\'t send money or codes to people you haven\'t met.'**
+  String scamShieldWarning(Object noticed);
+
+  /// scam_shield.dart: what the shield noticed, put in scamShieldWarning
+  ///
+  /// In en, this message translates to:
+  /// **'Asks for a code, PIN or recovery words'**
+  String get scamShieldAsksForSecret;
+
+  /// scam_shield.dart: what the shield noticed, put in scamShieldWarning
+  ///
+  /// In en, this message translates to:
+  /// **'Asks for money in a hurry'**
+  String get scamShieldAsksForMoneyFast;
+
+  /// scam_shield.dart: what the shield noticed, put in scamShieldWarning
+  ///
+  /// In en, this message translates to:
+  /// **'Promises easy profit'**
+  String get scamShieldPromisesProfit;
+
+  /// scam_shield.dart: what the shield noticed, put in scamShieldWarning
+  ///
+  /// In en, this message translates to:
+  /// **'Says it is from Kryfo or a support team'**
+  String get scamShieldClaimsSupport;
+
+  /// widgets/shield_note.dart: the cross on the shield line, read out by a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get scamShieldDismiss;
 
   /// scam_shield.dart
   ///
@@ -1356,50 +1380,8 @@ abstract class AppLocalizations {
   /// scam_shield.dart
   ///
   /// In en, this message translates to:
-  /// **'Same face as your contact {shown}'**
-  String scamShieldSameFaceAsYour(Object shown);
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Contains a crypto address'**
-  String get scamShieldContainsACryptoAddress;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Mentions money and urgency together'**
-  String get scamShieldMentionsMoneyAndUrgency;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asks you to move to another app'**
-  String get scamShieldAsksYouToMove;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
   /// **'Links to a lookalike of a well-known site'**
   String get scamShieldLinksToALookalike;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'A long opener from someone with no history'**
-  String get scamShieldALongOpenerFrom;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asks for a code, seed phrase or recovery file'**
-  String get scamShieldAsksForACode;
-
-  /// scam_shield.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Also: name matches your contact {shown}'**
-  String scamShieldAlso(Object shown);
 
   /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/getting_messages_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
   ///
@@ -2558,12 +2540,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Building a private route · first connect is the slow one, later ones are quick. Anything you send now is queued and delivers itself.'**
   String get chatBuildingAPrivateRoute;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Looks safe · nothing suspicious in their first message'**
-  String get chatLooksSafeNothingSuspicious;
 
   /// screens/chat_screen.dart
   ///
@@ -3770,12 +3746,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Jump to the newest'**
   String get groupChatJumpToTheNewest;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Blocked everywhere'**
-  String get groupChatBlockedEverywhere;
 
   /// screens/group_chat_screen.dart
   ///
@@ -7344,18 +7314,6 @@ abstract class AppLocalizations {
   /// screens/requests_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Blocked'**
-  String get requestsBlocked;
-
-  /// screens/requests_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Deleted'**
-  String get requestsDeleted;
-
-  /// screens/requests_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Requests'**
   String get requestsRequests;
 
@@ -7370,12 +7328,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages from people you have not added show up here first.'**
   String get requestsMessagesFromPeopleYou;
-
-  /// screens/requests_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Looks safe · nothing suspicious in their first message'**
-  String get requestsLooksSafeNothingSuspicious;
 
   /// screens/requests_screen.dart
   ///
@@ -8040,8 +7992,8 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Runs on your phone with rules that ship in the app. No network, no list downloads. It only reads the first message from a stranger and cannot see anything a contact sends you.'**
-  String get seenRunsOnYourPhone;
+  /// **'Runs on your phone with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.'**
+  String get seenScamShieldRequestsOnly;
 
   /// screens/seen_screen.dart
   ///
@@ -8295,11 +8247,11 @@ abstract class AppLocalizations {
   /// **'Scam shield'**
   String get settingsScamShield;
 
-  /// screens/settings_screen.dart
+  /// screens/settings_screen.dart: under the scam shield switch
   ///
   /// In en, this message translates to:
-  /// **'Checks strangers on your phone. Nothing leaves it'**
-  String get settingsChecksStrangersOnYour;
+  /// **'Checked only on your phone, nothing leaves it'**
+  String get settingsScamShieldHint;
 
   /// screens/settings_screen.dart
   ///
@@ -8552,12 +8504,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wipe Kryfo from this phone'**
   String get settingsWipeKryfoFromThis;
-
-  /// screens/shield_sheet.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Checked on this phone. Nothing was sent anywhere.'**
-  String get shieldCheckedOnThisPhone;
 
   /// screens/tools_screen.dart
   ///
@@ -10598,24 +10544,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hidden chats need the app lock, so Kryfo gets a PIN of its own first.'**
   String get restoreHiddenLockFirst;
-
-  /// screens/shield_sheet.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Block'**
-  String get shieldBlock;
-
-  /// screens/shield_sheet.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get shieldDelete;
-
-  /// screens/shield_sheet.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Ignore'**
-  String get shieldIgnore;
 
   /// screens/profile_screen.dart
   ///

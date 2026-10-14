@@ -863,17 +863,30 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'شبیه کلاهبرداری';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return 'خود را ⁨$shown⁩ معرفی می‌کند، نامی که کس دیگری اینجا دارد';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'این نام با ⁨$shown⁩ یکی است';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. به کسی که او را ندیده‌اید پول یا کد نفرستید.';
   }
+
+  @override
+  String get scamShieldAsksForSecret => 'کد، PIN یا کلمات بازیابی می‌خواهد';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'با عجله پول می‌خواهد';
+
+  @override
+  String get scamShieldPromisesProfit => 'وعده‌ی سود آسان می‌دهد';
+
+  @override
+  String get scamShieldClaimsSupport =>
+      'ادعا می‌کند از Kryfo یا یک تیم پشتیبانی است';
+
+  @override
+  String get scamShieldDismiss => 'پنهان کردن';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -881,37 +894,8 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'همان چهره‌ی مخاطبتان ⁨$shown⁩';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => 'نشانی رمزارز دارد';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'از پول و عجله با هم حرف می‌زند';
-
-  @override
-  String get scamShieldAsksYouToMove =>
-      'از شما می‌خواهد به برنامه‌ی دیگری بروید';
-
-  @override
   String get scamShieldLinksToALookalike =>
       'به بدلی از یک سایت شناخته‌شده پیوند می‌دهد';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'پیام اول طولانی از کسی که سابقه‌ای ندارد';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'کد، عبارت بازیابی کیف پول یا فایل بازیابی می‌خواهد';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'همچنین: نامش با مخاطبتان ⁨$shown⁩ یکی است';
-  }
 
   @override
   String get commonBack => 'بازگشت';
@@ -1621,10 +1605,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'در حال ساختن مسیری خصوصی · اولین اتصال کند است، بعدی‌ها سریع‌اند. هر چه الان بفرستید در صف می‌ماند و خودش می‌رسد.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'به نظر امن است · در پیام اولش چیز مشکوکی نیست';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2362,9 +2342,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'رفتن به تازه‌ترین';
-
-  @override
-  String get groupChatBlockedEverywhere => 'همه‌جا مسدود';
 
   @override
   String get groupChatYou => 'شما';
@@ -4575,12 +4552,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'دیگر هیچ چیزی از او به شما نمی‌رسد. درخواستش و پیام‌هایش حذف می‌شوند.';
 
   @override
-  String get requestsBlocked => 'مسدود شد';
-
-  @override
-  String get requestsDeleted => 'حذف شد';
-
-  @override
   String get requestsRequests => 'درخواست‌ها';
 
   @override
@@ -4589,10 +4560,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'پیام‌های کسانی که اضافه‌شان نکرده‌اید، اول این‌جا نشان داده می‌شوند.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'به نظر امن است · در پیام اولش چیز مشکوکی نیست';
 
   @override
   String get commonAccept => 'پذیرفتن';
@@ -5007,8 +4974,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get seenTheScamShield => 'سپر ضدکلاهبرداری';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'روی گوشی شما با قواعدی اجرا می‌شود که همراه برنامه می‌آیند. بدون شبکه، بدون دانلود فهرست. فقط پیام اول یک غریبه را می‌خواند و نمی‌تواند چیزی را که یک مخاطب برایتان می‌فرستد ببیند.';
+  String get seenScamShieldRequestsOnly =>
+      'روی گوشی شما با قواعدی اجرا می‌شود که همراه برنامه می‌آیند. بدون شبکه، بدون دانلود فهرست. فقط درخواست‌های پیام از غریبه‌ها را می‌خواند، هرگز آنچه یک مخاطب یا گروه برایتان می‌فرستد را نمی‌خواند.';
 
   @override
   String get seenBurnerRooms => 'اتاق‌های یک‌بارمصرف';
@@ -5150,8 +5117,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsScamShield => 'سپر ضدکلاهبرداری';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'غریبه‌ها را روی گوشی شما بررسی می‌کند. چیزی از آن بیرون نمی‌رود';
+  String get settingsScamShieldHint =>
+      'فقط روی گوشی شما بررسی می‌شود، چیزی از آن بیرون نمی‌رود';
 
   @override
   String get settingsBlockScreenshots => 'جلوگیری از اسکرین‌شات';
@@ -5292,10 +5259,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'پاک‌سازی کامل Kryfo از این گوشی';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'روی همین گوشی بررسی شد. هیچ چیز به جایی فرستاده نشد.';
 
   @override
   String get toolsMoreTools => 'ابزارهای بیشتر';
@@ -6641,15 +6604,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'گفت‌وگوهای پنهان به قفل برنامه نیاز دارند، پس اول Kryfo یک PIN مخصوص خودش می‌گیرد.';
-
-  @override
-  String get shieldBlock => 'مسدود کردن';
-
-  @override
-  String get shieldDelete => 'حذف';
-
-  @override
-  String get shieldIgnore => 'نادیده گرفتن';
 
   @override
   String get profileIdentity => 'هویت';

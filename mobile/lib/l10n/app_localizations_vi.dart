@@ -852,17 +852,29 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'Có vẻ là lừa đảo';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return 'Tự nhận là $shown, một cái tên đã có người khác dùng ở đây';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'Tên này trùng với $shown';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. Đừng gửi tiền hay mã cho người bạn chưa từng gặp.';
   }
+
+  @override
+  String get scamShieldAsksForSecret => 'Hỏi mã, mã PIN hoặc các từ khôi phục';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'Đòi tiền và hối thúc';
+
+  @override
+  String get scamShieldPromisesProfit => 'Hứa hẹn lợi nhuận dễ dàng';
+
+  @override
+  String get scamShieldClaimsSupport => 'Tự nhận là Kryfo hoặc đội hỗ trợ';
+
+  @override
+  String get scamShieldDismiss => 'Ẩn';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -870,36 +882,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'Cùng khuôn mặt với liên hệ $shown của bạn';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => 'Có chứa địa chỉ tiền mã hóa';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'Vừa nhắc đến tiền vừa hối thúc';
-
-  @override
-  String get scamShieldAsksYouToMove => 'Đề nghị bạn chuyển sang ứng dụng khác';
-
-  @override
   String get scamShieldLinksToALookalike =>
       'Dẫn tới trang nhái một trang web nổi tiếng';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'Lời mở đầu dài từ một người chưa từng trò chuyện';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'Hỏi mã, cụm từ khôi phục ví (seed phrase) hoặc tệp khôi phục';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'Ngoài ra: tên trùng với liên hệ $shown của bạn';
-  }
 
   @override
   String get commonBack => 'Quay lại';
@@ -1606,10 +1590,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'Đang dựng tuyến đường riêng tư · lần kết nối đầu tiên chậm, các lần sau sẽ nhanh. Mọi thứ bạn gửi lúc này sẽ vào hàng chờ và tự được gửi đi.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'Có vẻ an toàn · tin nhắn đầu tiên của họ không có gì đáng ngờ';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2352,9 +2332,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'Đến tin mới nhất';
-
-  @override
-  String get groupChatBlockedEverywhere => 'Đã chặn ở mọi nơi';
 
   @override
   String get groupChatYou => 'Bạn';
@@ -4558,12 +4535,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn sẽ không nhận được gì từ họ nữa. Yêu cầu của họ và các tin nhắn trong đó sẽ bị xóa.';
 
   @override
-  String get requestsBlocked => 'Đã chặn';
-
-  @override
-  String get requestsDeleted => 'Đã xóa';
-
-  @override
   String get requestsRequests => 'Yêu cầu';
 
   @override
@@ -4572,10 +4543,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Tin nhắn từ những người mà bạn chưa thêm sẽ hiện ở đây trước.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'Có vẻ an toàn · tin nhắn đầu tiên của họ không có gì đáng ngờ';
 
   @override
   String get commonAccept => 'Chấp nhận';
@@ -4995,8 +4962,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenTheScamShield => 'Lá chắn chống lừa đảo';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'Chạy trên điện thoại của bạn với các quy tắc có sẵn trong ứng dụng. Không dùng mạng, không tải danh sách. Nó chỉ đọc tin nhắn đầu tiên từ người lạ và không thể thấy bất cứ thứ gì một liên hệ gửi cho bạn.';
+  String get seenScamShieldRequestsOnly =>
+      'Chạy trên điện thoại của bạn với các quy tắc có sẵn trong ứng dụng. Không dùng mạng, không tải danh sách. Nó chỉ đọc yêu cầu nhắn tin từ người lạ, không bao giờ đọc những gì một liên hệ hoặc nhóm gửi cho bạn.';
 
   @override
   String get seenBurnerRooms => 'Phòng tạm';
@@ -5138,8 +5105,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsScamShield => 'Lá chắn chống lừa đảo';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'Kiểm tra người lạ ngay trên điện thoại của bạn. Không có gì rời khỏi máy';
+  String get settingsScamShieldHint =>
+      'Chỉ kiểm tra trên điện thoại của bạn, không gì rời khỏi máy';
 
   @override
   String get settingsBlockScreenshots => 'Chặn chụp màn hình';
@@ -5280,10 +5247,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'Xóa sạch Kryfo khỏi điện thoại này';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'Được kiểm tra trên điện thoại này. Không có gì được gửi đi đâu cả.';
 
   @override
   String get toolsMoreTools => 'Thêm công cụ';
@@ -6620,15 +6583,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'Trò chuyện ẩn cần khóa ứng dụng, nên trước tiên Kryfo sẽ có mã PIN riêng.';
-
-  @override
-  String get shieldBlock => 'Chặn';
-
-  @override
-  String get shieldDelete => 'Xóa';
-
-  @override
-  String get shieldIgnore => 'Bỏ qua';
 
   @override
   String get profileIdentity => 'Danh tính';

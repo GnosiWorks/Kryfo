@@ -866,17 +866,31 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'Dolandırıcılığa benziyor';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return '$shown olduğunu söylüyor, bu adı burada zaten başka biri kullanıyor';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'Bu ad $shown ile aynı';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. Tanışmadığın kişilere para ya da kod gönderme.';
   }
+
+  @override
+  String get scamShieldAsksForSecret =>
+      'Kod, PIN ya da kurtarma kelimeleri istiyor';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'Aceleyle para istiyor';
+
+  @override
+  String get scamShieldPromisesProfit => 'Kolay kazanç vaat ediyor';
+
+  @override
+  String get scamShieldClaimsSupport =>
+      'Kryfo ya da bir destek ekibi olduğunu söylüyor';
+
+  @override
+  String get scamShieldDismiss => 'Gizle';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -884,37 +898,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'Kişin $shown ile aynı yüz';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress =>
-      'Bir kripto para adresi içeriyor';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'Hem paradan hem aciliyetten söz ediyor';
-
-  @override
-  String get scamShieldAsksYouToMove => 'Başka bir uygulamaya geçmeni istiyor';
-
-  @override
   String get scamShieldLinksToALookalike =>
       'Tanınmış bir sitenin taklidine bağlantı veriyor';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'Geçmişi olmayan birinden uzun bir ilk mesaj';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'Kod, cüzdan kurtarma ifadesi ya da kurtarma dosyası istiyor';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'Ayrıca: ad, kişin $shown ile aynı';
-  }
 
   @override
   String get commonBack => 'Geri';
@@ -1620,10 +1605,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'Gizli bir rota kuruluyor · ilk bağlantı yavaştır, sonrakiler hızlı. Şimdi gönderdiğin her şey sıraya girer ve kendiliğinden iletilir.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'Güvenli görünüyor · ilk mesajında şüpheli bir şey yok';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2361,9 +2342,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'En yeniye git';
-
-  @override
-  String get groupChatBlockedEverywhere => 'Her yerde engelli';
 
   @override
   String get groupChatYou => 'Sen';
@@ -4580,12 +4558,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ondan artık hiçbir şey sana ulaşmaz. İsteği ve mesajları silinir.';
 
   @override
-  String get requestsBlocked => 'Engellendi';
-
-  @override
-  String get requestsDeleted => 'Silindi';
-
-  @override
   String get requestsRequests => 'İstekler';
 
   @override
@@ -4594,10 +4566,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Eklemediğin kişilerden gelen mesajlar önce burada görünür.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'Güvenli görünüyor · ilk mesajında şüpheli bir şey yok';
 
   @override
   String get commonAccept => 'Kabul et';
@@ -5015,8 +4983,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get seenTheScamShield => 'Dolandırıcılık kalkanı';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'Uygulamayla gelen kurallarla telefonunda çalışır. Ağ yok, liste indirme yok. Yalnızca bir yabancıdan gelen ilk mesajı okur ve bir kişinin sana gönderdiği hiçbir şeyi göremez.';
+  String get seenScamShieldRequestsOnly =>
+      'Uygulamayla gelen kurallarla telefonunda çalışır. Ağ yok, liste indirme yok. Yalnızca yabancılardan gelen mesaj isteklerini okur, bir kişinin ya da grubun sana gönderdiklerini asla okumaz.';
 
   @override
   String get seenBurnerRooms => 'Geçici odalar';
@@ -5158,8 +5126,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsScamShield => 'Dolandırıcılık kalkanı';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'Yabancıları telefonunda kontrol eder. Hiçbir şey dışarı çıkmaz';
+  String get settingsScamShieldHint =>
+      'Yalnızca telefonunda kontrol edilir, hiçbir şey dışarı çıkmaz';
 
   @override
   String get settingsBlockScreenshots => 'Ekran görüntüsünü engelle';
@@ -5299,10 +5267,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'Kryfo’yu bu telefondan sil';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'Bu telefonda kontrol edildi. Hiçbir yere hiçbir şey gönderilmedi.';
 
   @override
   String get toolsMoreTools => 'Diğer araçlar';
@@ -6652,15 +6616,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'Gizli sohbetler uygulama kilidine ihtiyaç duyar, bu yüzden önce Kryfo’ya kendi PIN’i verilir.';
-
-  @override
-  String get shieldBlock => 'Engelle';
-
-  @override
-  String get shieldDelete => 'Sil';
-
-  @override
-  String get shieldIgnore => 'Yok say';
 
   @override
   String get profileIdentity => 'Kimlik';

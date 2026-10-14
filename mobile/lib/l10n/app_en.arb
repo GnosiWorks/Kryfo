@@ -1073,10 +1073,6 @@
       }
     }
   },
-  "scamShieldLooksLikeAScam": "Looks like a scam",
-  "@scamShieldLooksLikeAScam": {
-    "description": "scam_shield.dart"
-  },
   "scamShieldGivesUsedName": "Says it is {shown}, a name someone here already goes by",
   "@scamShieldGivesUsedName": {
     "description": "scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key. it says nothing about which of the two is who they say",
@@ -1086,14 +1082,34 @@
       }
     }
   },
-  "scamShieldThisNameMatches": "This name matches {shown}",
-  "@scamShieldThisNameMatches": {
-    "description": "scam_shield.dart",
+  "scamShieldWarning": "{noticed}. Don't send money or codes to people you haven't met.",
+  "@scamShieldWarning": {
+    "description": "scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. calm, no exclamation mark",
     "placeholders": {
-      "shown": {
+      "noticed": {
         "type": "Object"
       }
     }
+  },
+  "scamShieldAsksForSecret": "Asks for a code, PIN or recovery words",
+  "@scamShieldAsksForSecret": {
+    "description": "scam_shield.dart: what the shield noticed, put in scamShieldWarning"
+  },
+  "scamShieldAsksForMoneyFast": "Asks for money in a hurry",
+  "@scamShieldAsksForMoneyFast": {
+    "description": "scam_shield.dart: what the shield noticed, put in scamShieldWarning"
+  },
+  "scamShieldPromisesProfit": "Promises easy profit",
+  "@scamShieldPromisesProfit": {
+    "description": "scam_shield.dart: what the shield noticed, put in scamShieldWarning"
+  },
+  "scamShieldClaimsSupport": "Says it is from Kryfo or a support team",
+  "@scamShieldClaimsSupport": {
+    "description": "scam_shield.dart: what the shield noticed, put in scamShieldWarning"
+  },
+  "scamShieldDismiss": "Dismiss",
+  "@scamShieldDismiss": {
+    "description": "widgets/shield_note.dart: the cross on the shield line, read out by a screen reader"
   },
   "scamShieldNameMatchesYourContact": "Name matches your contact {shown}",
   "@scamShieldNameMatchesYourContact": {
@@ -1104,47 +1120,9 @@
       }
     }
   },
-  "scamShieldSameFaceAsYour": "Same face as your contact {shown}",
-  "@scamShieldSameFaceAsYour": {
-    "description": "scam_shield.dart",
-    "placeholders": {
-      "shown": {
-        "type": "Object"
-      }
-    }
-  },
-  "scamShieldContainsACryptoAddress": "Contains a crypto address",
-  "@scamShieldContainsACryptoAddress": {
-    "description": "scam_shield.dart"
-  },
-  "scamShieldMentionsMoneyAndUrgency": "Mentions money and urgency together",
-  "@scamShieldMentionsMoneyAndUrgency": {
-    "description": "scam_shield.dart"
-  },
-  "scamShieldAsksYouToMove": "Asks you to move to another app",
-  "@scamShieldAsksYouToMove": {
-    "description": "scam_shield.dart"
-  },
   "scamShieldLinksToALookalike": "Links to a lookalike of a well-known site",
   "@scamShieldLinksToALookalike": {
     "description": "scam_shield.dart"
-  },
-  "scamShieldALongOpenerFrom": "A long opener from someone with no history",
-  "@scamShieldALongOpenerFrom": {
-    "description": "scam_shield.dart"
-  },
-  "scamShieldAsksForACode": "Asks for a code, seed phrase or recovery file",
-  "@scamShieldAsksForACode": {
-    "description": "scam_shield.dart"
-  },
-  "scamShieldAlso": "Also: name matches your contact {shown}",
-  "@scamShieldAlso": {
-    "description": "scam_shield.dart",
-    "placeholders": {
-      "shown": {
-        "type": "Object"
-      }
-    }
   },
   "commonBack": "Back",
   "@commonBack": {
@@ -2046,10 +2024,6 @@
   },
   "chatBuildingAPrivateRoute": "Building a private route · first connect is the slow one, later ones are quick. Anything you send now is queued and delivers itself.",
   "@chatBuildingAPrivateRoute": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatLooksSafeNothingSuspicious": "Looks safe · nothing suspicious in their first message",
-  "@chatLooksSafeNothingSuspicious": {
     "description": "screens/chat_screen.dart"
   },
   "chatTheNextPhotoYou": "The next photo you send opens protected · they cannot screenshot it",
@@ -2977,10 +2951,6 @@
   },
   "groupChatJumpToTheNewest": "Jump to the newest",
   "@groupChatJumpToTheNewest": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatBlockedEverywhere": "Blocked everywhere",
-  "@groupChatBlockedEverywhere": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatYou": "You",
@@ -5714,14 +5684,6 @@
   "@requestsNothingMoreFromThem": {
     "description": "screens/requests_screen.dart"
   },
-  "requestsBlocked": "Blocked",
-  "@requestsBlocked": {
-    "description": "screens/requests_screen.dart"
-  },
-  "requestsDeleted": "Deleted",
-  "@requestsDeleted": {
-    "description": "screens/requests_screen.dart"
-  },
   "requestsRequests": "Requests",
   "@requestsRequests": {
     "description": "screens/requests_screen.dart"
@@ -5732,10 +5694,6 @@
   },
   "requestsMessagesFromPeopleYou": "Messages from people you have not added show up here first.",
   "@requestsMessagesFromPeopleYou": {
-    "description": "screens/requests_screen.dart"
-  },
-  "requestsLooksSafeNothingSuspicious": "Looks safe · nothing suspicious in their first message",
-  "@requestsLooksSafeNothingSuspicious": {
     "description": "screens/requests_screen.dart"
   },
   "commonAccept": "Accept",
@@ -6257,8 +6215,8 @@
   "@seenTheScamShield": {
     "description": "screens/seen_screen.dart"
   },
-  "seenRunsOnYourPhone": "Runs on your phone with rules that ship in the app. No network, no list downloads. It only reads the first message from a stranger and cannot see anything a contact sends you.",
-  "@seenRunsOnYourPhone": {
+  "seenScamShieldRequestsOnly": "Runs on your phone with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.",
+  "@seenScamShieldRequestsOnly": {
     "description": "screens/seen_screen.dart"
   },
   "seenBurnerRooms": "Burner rooms",
@@ -6444,9 +6402,9 @@
   "@settingsScamShield": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsChecksStrangersOnYour": "Checks strangers on your phone. Nothing leaves it",
-  "@settingsChecksStrangersOnYour": {
-    "description": "screens/settings_screen.dart"
+  "settingsScamShieldHint": "Checked only on your phone, nothing leaves it",
+  "@settingsScamShieldHint": {
+    "description": "screens/settings_screen.dart: under the scam shield switch"
   },
   "settingsBlockScreenshots": "Block screenshots",
   "@settingsBlockScreenshots": {
@@ -6620,10 +6578,6 @@
   "settingsWipeKryfoFromThis": "Wipe Kryfo from this phone",
   "@settingsWipeKryfoFromThis": {
     "description": "screens/settings_screen.dart"
-  },
-  "shieldCheckedOnThisPhone": "Checked on this phone. Nothing was sent anywhere.",
-  "@shieldCheckedOnThisPhone": {
-    "description": "screens/shield_sheet.dart"
   },
   "toolsMoreTools": "More tools",
   "@toolsMoreTools": {
@@ -8413,18 +8367,6 @@
   "restoreHiddenLockFirst": "Hidden chats need the app lock, so Kryfo gets a PIN of its own first.",
   "@restoreHiddenLockFirst": {
     "description": "screens/pin_flow_screen.dart: after a restore of a backup that holds hidden chats, when there is no app lock yet"
-  },
-  "shieldBlock": "Block",
-  "@shieldBlock": {
-    "description": "screens/shield_sheet.dart"
-  },
-  "shieldDelete": "Delete",
-  "@shieldDelete": {
-    "description": "screens/shield_sheet.dart"
-  },
-  "shieldIgnore": "Ignore",
-  "@shieldIgnore": {
-    "description": "screens/shield_sheet.dart"
   },
   "profileIdentity": "Identity",
   "@profileIdentity": {

@@ -854,17 +854,30 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'Sepertinya penipuan';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return 'Mengaku sebagai $shown, nama yang sudah dipakai orang lain di sini';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'Nama ini sama dengan $shown';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. Jangan kirim uang atau kode ke orang yang belum pernah kamu temui.';
   }
+
+  @override
+  String get scamShieldAsksForSecret =>
+      'Meminta kode, PIN, atau kata pemulihan';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'Meminta uang sambil mendesak';
+
+  @override
+  String get scamShieldPromisesProfit => 'Menjanjikan untung mudah';
+
+  @override
+  String get scamShieldClaimsSupport => 'Mengaku dari Kryfo atau tim dukungan';
+
+  @override
+  String get scamShieldDismiss => 'Sembunyikan';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -872,36 +885,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'Wajahnya sama dengan kontakmu $shown';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => 'Berisi alamat kripto';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'Menyebut uang sambil mendesak';
-
-  @override
-  String get scamShieldAsksYouToMove => 'Mengajakmu pindah ke aplikasi lain';
-
-  @override
   String get scamShieldLinksToALookalike =>
       'Menautkan ke tiruan situs terkenal';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'Pesan pembuka panjang dari orang tanpa riwayat';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'Meminta kode, seed phrase, atau file pemulihan';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'Juga: namanya sama dengan kontakmu $shown';
-  }
 
   @override
   String get commonBack => 'Kembali';
@@ -1605,10 +1590,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'Membangun rute privat · koneksi pertama memang lambat, berikutnya cepat. Apa pun yang kamu kirim sekarang masuk antrean dan terkirim sendiri.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'Tampak aman · tidak ada yang mencurigakan di pesan pertamanya';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2355,9 +2336,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'Ke pesan terbaru';
-
-  @override
-  String get groupChatBlockedEverywhere => 'Diblokir di mana-mana';
 
   @override
   String get groupChatYou => 'Kamu';
@@ -4566,12 +4544,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada lagi darinya yang sampai ke kamu. Permintaan dan pesan-pesannya dihapus.';
 
   @override
-  String get requestsBlocked => 'Diblokir';
-
-  @override
-  String get requestsDeleted => 'Dihapus';
-
-  @override
   String get requestsRequests => 'Permintaan';
 
   @override
@@ -4580,10 +4552,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Pesan dari orang yang belum kamu tambahkan muncul di sini dulu.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'Tampak aman · tidak ada yang mencurigakan di pesan pertamanya';
 
   @override
   String get commonAccept => 'Terima';
@@ -4998,8 +4966,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get seenTheScamShield => 'Perisai penipuan';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'Berjalan di ponselmu dengan aturan bawaan aplikasi. Tanpa jaringan, tanpa mengunduh daftar. Perisai ini hanya membaca pesan pertama dari orang asing dan tidak bisa melihat apa pun yang dikirim kontakmu.';
+  String get seenScamShieldRequestsOnly =>
+      'Berjalan di ponselmu dengan aturan bawaan aplikasi. Tanpa jaringan, tanpa mengunduh daftar. Perisai ini hanya membaca permintaan pesan dari orang asing, tidak pernah yang dikirim kontak atau grup kepadamu.';
 
   @override
   String get seenBurnerRooms => 'Ruang sekali pakai';
@@ -5141,8 +5109,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsScamShield => 'Perisai penipuan';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'Memeriksa orang asing di ponselmu. Tidak ada yang keluar darinya';
+  String get settingsScamShieldHint =>
+      'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
 
   @override
   String get settingsBlockScreenshots => 'Blokir tangkapan layar';
@@ -5284,10 +5252,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'Hapus total Kryfo dari ponsel ini';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'Dicek di ponsel ini. Tidak ada yang dikirim ke mana pun.';
 
   @override
   String get toolsMoreTools => 'Alat lainnya';
@@ -6629,15 +6593,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'Obrolan tersembunyi butuh kunci aplikasi, jadi Kryfo mendapat PIN sendiri lebih dulu.';
-
-  @override
-  String get shieldBlock => 'Blokir';
-
-  @override
-  String get shieldDelete => 'Hapus';
-
-  @override
-  String get shieldIgnore => 'Abaikan';
 
   @override
   String get profileIdentity => 'Identitas';

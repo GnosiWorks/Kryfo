@@ -135,7 +135,7 @@ List<_Row> get _rows => [
     _onDevice,
     _onDevice,
     _onDevice,
-  ], l10n.seenRunsOnYourPhone),
+  ], l10n.seenScamShieldRequestsOnly),
   _Row(l10n.seenBurnerRooms, [
     _Cell(l10n.seenRoomKeys, _Tone.good),
     _Cell(l10n.seenRoomKeys, _Tone.good),

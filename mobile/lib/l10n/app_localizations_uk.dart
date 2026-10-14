@@ -891,17 +891,31 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'Схоже на шахрайство';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return 'Представляється як $shown, але це ім’я тут уже зайняте';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'Це ім’я збігається з контактом $shown';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. Не надсилай гроші й коди тим, з ким не знайомий особисто.';
   }
+
+  @override
+  String get scamShieldAsksForSecret =>
+      'Просить код, PIN-код або слова відновлення';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'Просить грошей і квапить';
+
+  @override
+  String get scamShieldPromisesProfit => 'Обіцяє легкий прибуток';
+
+  @override
+  String get scamShieldClaimsSupport =>
+      'Видає себе за Kryfo чи службу підтримки';
+
+  @override
+  String get scamShieldDismiss => 'Сховати';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -909,35 +923,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'Таке саме обличчя, як у твого контакту $shown';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => 'Містить криптоадресу';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'Згадує гроші й поспіх водночас';
-
-  @override
-  String get scamShieldAsksYouToMove => 'Просить перейти в інший застосунок';
-
-  @override
   String get scamShieldLinksToALookalike => 'Веде на двійника відомого сайту';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'Довге перше повідомлення від когось без історії';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'Просить код, сид-фразу або файл відновлення';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'Також: ім’я збігається з твоїм контактом $shown';
-  }
 
   @override
   String get commonBack => 'Назад';
@@ -1651,10 +1637,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'Будуємо приватний маршрут · перше підключення найдовше, наступні швидкі. Усе, що надішлеш зараз, стане в чергу й доставиться само.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'Схоже, безпечно · у першому повідомленні нічого підозрілого';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2412,9 +2394,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'До найновіших';
-
-  @override
-  String get groupChatBlockedEverywhere => 'Заблоковано всюди';
 
   @override
   String get groupChatYou => 'Ти';
@@ -4651,12 +4630,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Від цієї людини до тебе більше нічого не дійде. Її запит і повідомлення зникнуть.';
 
   @override
-  String get requestsBlocked => 'Заблоковано';
-
-  @override
-  String get requestsDeleted => 'Видалено';
-
-  @override
   String get requestsRequests => 'Запити';
 
   @override
@@ -4665,10 +4638,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Повідомлення від людей не з твоїх контактів спершу з’являються тут.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'Схоже, безпечно · у першому повідомленні нічого підозрілого';
 
   @override
   String get commonAccept => 'Прийняти';
@@ -5088,8 +5057,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get seenTheScamShield => 'Захист від шахраїв';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'Працює на твоєму телефоні за правилами, вбудованими в застосунок. Без мережі, без завантаження списків. Він читає лише перше повідомлення від незнайомця і не може бачити нічого, що тобі надсилає контакт.';
+  String get seenScamShieldRequestsOnly =>
+      'Працює на твоєму телефоні за правилами, вбудованими в застосунок. Без мережі, без завантаження списків. Він читає лише запити від незнайомців, ніколи те, що тобі надсилає контакт чи група.';
 
   @override
   String get seenBurnerRooms => 'Одноразові кімнати';
@@ -5231,8 +5200,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsScamShield => 'Захист від шахраїв';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'Перевіряє незнайомців на твоєму телефоні. Нічого не залишає телефон';
+  String get settingsScamShieldHint =>
+      'Перевірка лише на твоєму телефоні, нічого не залишає його';
 
   @override
   String get settingsBlockScreenshots => 'Блокувати знімки екрана';
@@ -5372,10 +5341,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'Стерти Kryfo з цього телефону';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'Перевірено на цьому телефоні. Нічого нікуди не надсилалося.';
 
   @override
   String get toolsMoreTools => 'Ще інструменти';
@@ -6753,15 +6718,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'Прихованим чатам потрібне блокування, тому спершу Kryfo отримає власний PIN-код.';
-
-  @override
-  String get shieldBlock => 'Заблокувати';
-
-  @override
-  String get shieldDelete => 'Видалити';
-
-  @override
-  String get shieldIgnore => 'Ігнорувати';
 
   @override
   String get profileIdentity => 'Ідентичність';

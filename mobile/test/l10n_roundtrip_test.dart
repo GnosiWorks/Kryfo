@@ -429,37 +429,13 @@ void main() {
     expect(l.roomsDH("<inDays>", "<h>"), "<inDays>d <h>h");
     expect(l.roomsHM("<inHours>", "<m>"), "<inHours>h <m>m");
     expect(l.roomsM("<inMinutes>"), "<inMinutes>m");
-    expect(l.scamShieldLooksLikeAScam, "Looks like a scam");
-    expect(l.scamShieldThisNameMatches("<shown>"), "This name matches <shown>");
     expect(
       l.scamShieldNameMatchesYourContact("<shown>"),
       "Name matches your contact <shown>",
     );
     expect(
-      l.scamShieldSameFaceAsYour("<shown>"),
-      "Same face as your contact <shown>",
-    );
-    expect(l.scamShieldContainsACryptoAddress, "Contains a crypto address");
-    expect(
-      l.scamShieldMentionsMoneyAndUrgency,
-      "Mentions money and urgency together",
-    );
-    expect(l.scamShieldAsksYouToMove, "Asks you to move to another app");
-    expect(
       l.scamShieldLinksToALookalike,
       "Links to a lookalike of a well-known site",
-    );
-    expect(
-      l.scamShieldALongOpenerFrom,
-      "A long opener from someone with no history",
-    );
-    expect(
-      l.scamShieldAsksForACode,
-      "Asks for a code, seed phrase or recovery file",
-    );
-    expect(
-      l.scamShieldAlso("<shown>"),
-      "Also: name matches your contact <shown>",
     );
     expect(l.commonBack, "Back");
     expect(l.archivedArchived, "Archived");
@@ -724,10 +700,6 @@ void main() {
     expect(
       l.chatBuildingAPrivateRoute,
       "Building a private route · first connect is the slow one, later ones are quick. Anything you send now is queued and delivers itself.",
-    );
-    expect(
-      l.chatLooksSafeNothingSuspicious,
-      "Looks safe · nothing suspicious in their first message",
     );
     expect(
       l.chatTheNextPhotoYou,
@@ -1119,7 +1091,6 @@ void main() {
       "When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.",
     );
     expect(l.groupChatJumpToTheNewest, "Jump to the newest");
-    expect(l.groupChatBlockedEverywhere, "Blocked everywhere");
     expect(l.groupChatYou, "You");
     expect(l.groupChatVoiceMessage, "Voice message");
     expect(l.groupChatQuotedPhoto, "Photo");
@@ -2170,17 +2141,11 @@ void main() {
       l.requestsNothingMoreFromThem,
       "Nothing more from them reaches you. Their request and its messages go.",
     );
-    expect(l.requestsBlocked, "Blocked");
-    expect(l.requestsDeleted, "Deleted");
     expect(l.requestsRequests, "Requests");
     expect(l.requestsNoRequests, "No requests");
     expect(
       l.requestsMessagesFromPeopleYou,
       "Messages from people you have not added show up here first.",
-    );
-    expect(
-      l.requestsLooksSafeNothingSuspicious,
-      "Looks safe · nothing suspicious in their first message",
     );
     expect(l.commonAccept, "Accept");
     expect(l.requestsDecline, "Decline");
@@ -2411,10 +2376,6 @@ void main() {
       "When a contact introduces you to someone, that contact learns the two of you are now connected. Nobody else does. The relay sees ciphertext, and no server ever sees the graph.",
     );
     expect(l.seenTheScamShield, "The scam shield");
-    expect(
-      l.seenRunsOnYourPhone,
-      "Runs on your phone with rules that ship in the app. No network, no list downloads. It only reads the first message from a stranger and cannot see anything a contact sends you.",
-    );
     expect(l.seenBurnerRooms, "Burner rooms");
     expect(l.seenRoomKeys, "Room keys");
     expect(l.groupChatNobodyHereYet, "Nobody is here yet.");
@@ -2487,10 +2448,6 @@ void main() {
       "Friends can introduce you to theirs",
     );
     expect(l.settingsScamShield, "Scam shield");
-    expect(
-      l.settingsChecksStrangersOnYour,
-      "Checks strangers on your phone. Nothing leaves it",
-    );
     expect(l.settingsBlockScreenshots, "Block screenshots");
     expect(
       l.settingsWholeAppHiddenFrom,
@@ -2541,10 +2498,6 @@ void main() {
     );
     expect(l.settingsDangerZone, "Danger zone");
     expect(l.settingsWipeKryfoFromThis, "Wipe Kryfo from this phone");
-    expect(
-      l.shieldCheckedOnThisPhone,
-      "Checked on this phone. Nothing was sent anywhere.",
-    );
     expect(l.toolsMoreTools, "More tools");
     expect(l.toolsCleanAPhotoOr, "Clean a photo or video");
     expect(l.toolsOrShareOneTo, "Or share one to Kryfo from your gallery");
@@ -3131,9 +3084,6 @@ void main() {
     expect(l.restoreContacts, "Contacts");
     expect(l.restoreMessages, "Messages");
     expect(l.restoreAttachments, "Attachments");
-    expect(l.shieldBlock, "Block");
-    expect(l.shieldDelete, "Delete");
-    expect(l.shieldIgnore, "Ignore");
     expect(l.profileIdentity, "Identity");
     expect(l.avatarPickerShape, "Shape");
     expect(l.avatarPickerColour, "Colour");
@@ -3582,6 +3532,26 @@ void main() {
     expect(
       l.scamShieldGivesUsedName("<shown>"),
       "Says it is <shown>, a name someone here already goes by",
+    );
+    expect(
+      l.scamShieldWarning("<noticed>"),
+      "<noticed>. Don't send money or codes to people you haven't met.",
+    );
+    expect(l.scamShieldAsksForSecret, "Asks for a code, PIN or recovery words");
+    expect(l.scamShieldAsksForMoneyFast, "Asks for money in a hurry");
+    expect(l.scamShieldPromisesProfit, "Promises easy profit");
+    expect(
+      l.scamShieldClaimsSupport,
+      "Says it is from Kryfo or a support team",
+    );
+    expect(l.scamShieldDismiss, "Dismiss");
+    expect(
+      l.settingsScamShieldHint,
+      "Checked only on your phone, nothing leaves it",
+    );
+    expect(
+      l.seenScamShieldRequestsOnly,
+      "Runs on your phone with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.",
     );
     expect(l.nameNotChecked, "Not checked");
     expect(l.nameTakenTitle, "Someone else uses these words");
