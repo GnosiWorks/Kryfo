@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"container/heap"
 	"context"
 	"database/sql"
 	"encoding/hex"
@@ -48,8 +49,28 @@ func (c *fakeClock) set(t time.Time) {
 }
 
 type fakeTimer struct {
-	at time.Time
-	f  func()
+	at  time.Time
+	seq int
+	f   func()
+}
+
+// timers by when they are due, and in the order set at the same time
+type timerHeap []fakeTimer
+
+func (h timerHeap) Len() int { return len(h) }
+func (h timerHeap) Less(i, j int) bool {
+	if h[i].at.Equal(h[j].at) {
+		return h[i].seq < h[j].seq
+	}
+	return h[i].at.Before(h[j].at)
+}
+func (h timerHeap) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+func (h *timerHeap) Push(x any)   { *h = append(*h, x.(fakeTimer)) }
+func (h *timerHeap) Pop() any {
+	old := *h
+	x := old[len(old)-1]
+	*h = old[:len(old)-1]
+	return x
 }
 
 // a knocker on a fake clock whose timers run when the test moves the clock.
@@ -58,7 +79,8 @@ type testKnocks struct {
 	*knocker
 	clock  *fakeClock
 	tmu    sync.Mutex
-	timers []fakeTimer
+	timers timerHeap
+	seq    int
 	// what the queue took and when, as timers fired
 	log []stamped
 }
@@ -84,7 +106,8 @@ func newTestKnocks(t *testing.T) *testKnocks {
 	tk.now = tk.clock.now
 	tk.after = func(d time.Duration, f func()) {
 		tk.tmu.Lock()
-		tk.timers = append(tk.timers, fakeTimer{tk.clock.now().Add(d), f})
+		tk.seq++
+		heap.Push(&tk.timers, fakeTimer{tk.clock.now().Add(d), tk.seq, f})
 		tk.tmu.Unlock()
 	}
 	return tk
@@ -96,13 +119,11 @@ func (tk *testKnocks) advance(d time.Duration) {
 	end := tk.clock.now().Add(d)
 	for {
 		tk.tmu.Lock()
-		sort.SliceStable(tk.timers, func(i, j int) bool { return tk.timers[i].at.Before(tk.timers[j].at) })
 		if len(tk.timers) == 0 || tk.timers[0].at.After(end) {
 			tk.tmu.Unlock()
 			break
 		}
-		next := tk.timers[0]
-		tk.timers = tk.timers[1:]
+		next := heap.Pop(&tk.timers).(fakeTimer)
 		tk.tmu.Unlock()
 		tk.clock.set(next.at)
 		next.f()
@@ -608,6 +629,104 @@ func TestKnockDecoysComeInBurstsToo(t *testing.T) {
 	}
 	if frac := float64(burst) / float64(decoys); frac < 0.3 {
 		t.Fatalf("only %.2f of decoys follow another a floor apart", frac)
+	}
+}
+
+type knockClass struct{ tp, fp, fn int }
+
+func (c knockClass) precision() float64 {
+	return float64(c.tp) / math.Max(1, float64(c.tp+c.fp))
+}
+
+func (c *knockClass) score(called, decoy bool) {
+	switch {
+	case called && !decoy:
+		c.tp++
+	case called && decoy:
+		c.fp++
+	case !called && !decoy:
+		c.fn++
+	}
+}
+
+// conversations every [conv] per endpoint, of 3 to 17 messages, with the
+// decoys on their timers. how well two simple watchers tell the real knocks
+// apart: A calls a knock real when it comes 60 to 90 s after the one
+// before, C when it is in a run of four or more less than 15 min apart.
+// also the share of knocks that are real, the most any watcher could get
+// by calling every knock real
+func knockWatch(t *testing.T, conv time.Duration) (a, c knockClass, realShare float64) {
+	tk := newTestKnocks(t)
+	var addrs []string
+	for i := 0; i < 40; i++ {
+		_, pk := register(t, tk, fmt.Sprintf("https://push.example.org/up%d", i))
+		addrs = append(addrs, pk)
+	}
+	tk.drain()
+	horizon := 30 * 24 * time.Hour
+	for _, addr := range addrs {
+		at := time.Duration(0)
+		for {
+			at += time.Duration(tk.rnd.ExpFloat64() * float64(conv))
+			if at > horizon {
+				break
+			}
+			mt := at
+			for j := 0; j < 3+tk.rnd.IntN(15); j++ {
+				mt += time.Duration(tk.rnd.ExpFloat64() * float64(20*time.Second))
+				tk.after(mt, func() { tk.wrapFor(addr) })
+			}
+		}
+	}
+	tk.log = nil
+	tk.advance(horizon)
+	type kn struct {
+		at    time.Time
+		decoy bool
+	}
+	per := map[string][]kn{}
+	nreal := 0
+	for _, s := range tk.log {
+		per[s.url] = append(per[s.url], kn{s.at, s.decoy})
+		if !s.decoy {
+			nreal++
+		}
+	}
+	for _, ks := range per {
+		runLen := make([]int, len(ks))
+		start := 0
+		for i := 1; i <= len(ks); i++ {
+			if i == len(ks) || ks[i].at.Sub(ks[i-1].at) >= 15*time.Minute {
+				for j := start; j < i; j++ {
+					runLen[j] = i - start
+				}
+				start = i
+			}
+		}
+		for i := 1; i < len(ks); i++ {
+			g := ks[i].at.Sub(ks[i-1].at)
+			a.score(g >= knockFloor && g < knockFloor+knockTrail, ks[i].decoy)
+		}
+		for i := range ks {
+			c.score(runLen[i] >= 4, ks[i].decoy)
+		}
+	}
+	return a, c, float64(nreal) / float64(len(tk.log))
+}
+
+// a decoy run is shaped like a conversation's knocks: a watcher that calls
+// long runs real does little better than one that calls every knock real
+func TestKnockDecoyRunsLookLikeConversations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("a month of knocks")
+	}
+	for _, conv := range []time.Duration{2 * time.Hour, 8 * time.Hour} {
+		a, c, share := knockWatch(t, conv)
+		t.Logf("conversations every %v: real share %.3f, A precision %.3f, C precision %.3f",
+			conv, share, a.precision(), c.precision())
+		if c.precision() > share+0.06 {
+			t.Errorf("conversations every %v: runs of four give %.3f against a share of %.3f", conv, c.precision(), share)
+		}
 	}
 }
 

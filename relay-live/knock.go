@@ -75,17 +75,40 @@ const (
 	knockFailAtLeast = 5
 )
 
-// the mean gap between decoy bursts to one endpoint. a burst is one decoy,
-// and like a conversation's knocks it is followed by more a floor and a
-// random while apart, this often each: two on average. a phone has sixteen
-// endpoints, so at eight hours it gets about four decoys an hour, as many
-// check-ins as its own timer adds
-var knockDecoyMean = time.Duration(envInt("RELAY_KNOCK_DECOY_MIN", 480)) * time.Minute
+// the mean gap between decoy runs to one endpoint. a run is shaped like a
+// conversation's knocks: half are short, one to a few knocks, half long,
+// three and more with a long tail, mostly a floor and a little apart and
+// now and then minutes. 3.3 knocks a run on average: a phone has sixteen
+// endpoints, so at thirteen hours it gets about four decoys an hour, as
+// many check-ins as its own timer adds
+var knockDecoyMean = time.Duration(envInt("RELAY_KNOCK_DECOY_MIN", 780)) * time.Minute
 
-const knockDecoyMore = 0.5
+const (
+	knockDecoyShortMore = 0.4
+	knockDecoyLongMore  = 0.65
+	knockDecoyLongRuns  = 0.5
+	knockDecoyPause     = 0.15
+	knockDecoyMaxRun    = 30
+)
 
 // knocks in one decoy run, on average
-func decoyRunMean() float64 { return 1 / (1 - knockDecoyMore) }
+func decoyRunMean() float64 {
+	short := 1 + knockDecoyShortMore/(1-knockDecoyShortMore)
+	long := 3 + knockDecoyLongMore/(1-knockDecoyLongMore)
+	return (1-knockDecoyLongRuns)*short + knockDecoyLongRuns*long
+}
+
+// the length of one decoy run
+func (k *knocker) decoyRun() int {
+	n, more := 1, knockDecoyShortMore
+	if k.rnd.Float64() < knockDecoyLongRuns {
+		n, more = 3, knockDecoyLongMore
+	}
+	for n < knockDecoyMaxRun && k.rnd.Float64() < more {
+		n++
+	}
+	return n
+}
 
 // the shares. each well-known push server holds its own, every other
 // server shares one, and one server outside the list holds what about
@@ -649,18 +672,21 @@ func (k *knocker) decoyDue(ep *knockEP, gen int) {
 		return
 	}
 	if k.ringLocked(ep, true) {
-		k.decoyMoreLocked(ep, gen)
+		k.decoyRunLocked(ep, gen, k.decoyRun()-1)
 	}
 	k.decoyLocked(ep)
 }
 
-// a decoy is followed, as a conversation's first knock is, by another a
-// floor and a random while later, this often, and that one again
-func (k *knocker) decoyMoreLocked(ep *knockEP, gen int) {
-	if k.rnd.Float64() >= knockDecoyMore {
+// the rest of a decoy run, as a conversation's knocks follow its first:
+// mostly a floor and a little apart, now and then a pause of minutes
+func (k *knocker) decoyRunLocked(ep *knockEP, gen, left int) {
+	if left <= 0 {
 		return
 	}
 	wait := k.floor + time.Duration(k.rnd.Int64N(int64(knockTrail)))
+	if k.rnd.Float64() < knockDecoyPause {
+		wait = k.floor + knockTrail + time.Duration(k.rnd.Int64N(int64(8*time.Minute)))
+	}
 	k.after(wait, func() {
 		k.mu.Lock()
 		defer k.mu.Unlock()
@@ -668,7 +694,7 @@ func (k *knocker) decoyMoreLocked(ep *knockEP, gen int) {
 			return
 		}
 		if k.ringLocked(ep, true) {
-			k.decoyMoreLocked(ep, gen)
+			k.decoyRunLocked(ep, gen, left-1)
 		}
 	})
 }
