@@ -22,7 +22,14 @@ import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
-import '../file_kind.dart' show bytesSayIsoVideo, kMaxFileBytes, knownInstaller;
+import '../file_kind.dart'
+    show
+        FileShape,
+        bytesSayIsoVideo,
+        fileFactsRead,
+        fileShapeNow,
+        kMaxFileBytes,
+        knownInstaller;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
@@ -4842,18 +4849,25 @@ class _GroupBubble extends StatelessWidget {
     duration: const Duration(milliseconds: 250),
     curve: Curves.easeOut,
     opacity: dimmed ? 0.4 : 1.0,
-    child: _bubble(context),
+    // a file is drawn by what its bytes are once they are read
+    child: m.filePath == null || m.fileName == 'voice.wav'
+        ? _bubble(context)
+        : ValueListenableBuilder<int>(
+            valueListenable: fileFactsRead,
+            builder: (context, _, _) => _bubble(context),
+          ),
   );
 
   Widget _bubble(BuildContext context) {
     final isOut = m.direction == 'out';
+    final shape = fileShapeNow(m.filePath, m.fileName);
     // a video with no caption sits on the chat like a photo: no bubble around
     // it, its time in its corner
     final isVideo =
         m.filePath != null &&
         m.text.isEmpty &&
         m.fileName != 'voice.wav' &&
-        nameSaysVideo(m.fileName);
+        shape == FileShape.video;
     final frameless = m.mediaPath != null || isVideo;
     final onAmberText = isOut && m.mediaPath == null;
     final reacted = m.reactions.isNotEmpty;
@@ -5155,7 +5169,7 @@ class _GroupBubble extends StatelessWidget {
                                             ),
                                           )
                                         else if (m.filePath != null &&
-                                            nameSaysVideo(m.fileName))
+                                            shape == FileShape.video)
                                           VideoBubble(
                                             key: ValueKey('vid_${m.filePath}'),
                                             path: m.filePath!,
@@ -5196,6 +5210,7 @@ class _GroupBubble extends StatelessWidget {
                                                 m.filePath,
                                                 m.fileName,
                                                 isOut,
+                                                shape: shape,
                                               ),
                                             ),
                                           ),

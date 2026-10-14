@@ -7,9 +7,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show ValueNotifier;
+
 import 'bidi_safe.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
 import 'mp4_strip.dart' show videoNameNeedsStrip;
+import 'open_file.dart' show nameSaysVideo;
 
 enum FileKind {
   installer,
@@ -374,6 +377,43 @@ final Map<String, FileFacts> _known = {};
 /// facts already read for [path], or null
 FileFacts? fileFactsNow(String path, String? name) => _known['$path\n$name'];
 
+/// bumped each time a file's facts are first read, so a bubble drawn by
+/// the name alone can be drawn again by what the bytes are
+final fileFactsRead = ValueNotifier<int>(0);
+
+enum FileShape { video, picture, card }
+
+const _shownPictures = {
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'bmp',
+  'heic',
+  'heif',
+};
+
+/// how a file is drawn in a chat. by the bytes once they are read, which
+/// starts here; by the name until then. an app installer is always a card
+FileShape fileShapeNow(String? path, String? name) {
+  final facts = path == null ? null : fileFactsNow(path, name);
+  if (facts == null) {
+    if (path != null) readFileFacts(path, name);
+    if (nameSaysInstaller(name)) return FileShape.card;
+    if (nameSaysVideo(name)) return FileShape.video;
+    if (_shownPictures.contains(extOf(name))) return FileShape.picture;
+    return FileShape.card;
+  }
+  return fileShapeOf(facts);
+}
+
+FileShape fileShapeOf(FileFacts facts) => switch (facts.kind) {
+  FileKind.video => FileShape.video,
+  FileKind.picture when _shownPictures.contains(facts.ext) => FileShape.picture,
+  _ => FileShape.card,
+};
+
 Future<Uint8List?> _head(String path, int n) async {
   RandomAccessFile? raf;
   try {
@@ -410,13 +450,22 @@ Future<bool> sendLaneCleans(String path, String name) async {
 bool knownInstaller(String path, String? name) =>
     nameSaysInstaller(name) || (fileFactsNow(path, name)?.installer ?? false);
 
-/// reads what [path] is. a file that cannot be read goes by its name
-Future<FileFacts> readFileFacts(String path, String? name) async {
+final Map<String, Future<FileFacts>> _reading = {};
+
+/// reads what [path] is. a file that cannot be read goes by its name, and
+/// is read again next time
+Future<FileFacts> readFileFacts(String path, String? name) {
   final key = '$path\n$name';
   final had = _known[key];
-  if (had != null) return had;
+  if (had != null) return Future.value(had);
+  return _reading[key] ??= _readFacts(path, name, key).whenComplete(() {
+    _reading.remove(key);
+  });
+}
+
+Future<FileFacts> _readFacts(String path, String? name, String key) async {
   RandomAccessFile? raf;
-  FileFacts out;
+  final FileFacts out;
   try {
     raf = await File(path).open();
     final head = await raf.read(512);
@@ -425,12 +474,13 @@ Future<FileFacts> readFileFacts(String path, String? name) async {
         : null;
     out = factsOf(name, head, zipNames: names);
   } catch (_) {
-    out = FileFacts(kindOfName(name), extOf(name));
+    return FileFacts(kindOfName(name), extOf(name));
   } finally {
     await raf?.close();
   }
   if (_known.length >= 300) _known.remove(_known.keys.first);
   _known[key] = out;
+  fileFactsRead.value++;
   return out;
 }
 

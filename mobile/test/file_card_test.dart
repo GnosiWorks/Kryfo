@@ -50,7 +50,7 @@ void main() {
       ),
     );
     // the bytes are read off the frame, a step at a time
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 60; i++) {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 5)),
       );

@@ -101,7 +101,7 @@ void main() {
   test('both chats draw a file with the one card', () {
     expect(
       sourceOf('lib/screens/chat_screen.dart').replaceAll(RegExp(r'\s+'), ''),
-      contains('fileCard(msg.filePath,msg.fileName,isOut,)'),
+      contains('fileCard(msg.filePath,msg.fileName,isOut,shape:shape,)'),
     );
     expect(
       sourceOf('lib/screens/chat_screen.dart'),

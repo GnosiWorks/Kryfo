@@ -48,27 +48,17 @@ IconData fileGlyph(FileKind k) => switch (k) {
   FileKind.other => Icons.insert_drive_file_outlined,
 };
 
-// a picture sent through the file picker arrives as a file. if the name says
-// it is an image, show it as one with the name underneath. a name that lies
-// is caught by the decode: errorBuilder falls back to the plain card.
-const _imageExts = {
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.gif',
-  '.webp',
-  '.bmp',
-  '.heic',
-  '.heif',
-};
-
-bool _nameSaysImage(String? name) {
-  final n = (name ?? '').toLowerCase();
-  return _imageExts.any(n.endsWith);
-}
-
-Widget fileCard(String? filePath, String? fileName, bool isOut) {
-  if (filePath != null && _nameSaysImage(fileName)) {
+// a picture sent through the file picker arrives as a file. one whose
+// bytes or name say picture is shown as one with the name underneath; a
+// picture that cannot be decoded falls back to the plain card.
+Widget fileCard(
+  String? filePath,
+  String? fileName,
+  bool isOut, {
+  FileShape? shape,
+}) {
+  final drawn = shape ?? fileShapeNow(filePath, fileName);
+  if (filePath != null && drawn == FileShape.picture) {
     final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 230),
@@ -180,7 +170,11 @@ class _FileCardState extends State<FileCard> {
     final installer = facts.installer;
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
     final sub = isOut ? HaloColors.onAmber : HaloColors.text2;
-    final shown = shownFileName(widget.name);
+    // an installer shows the name it is saved under: what is seen is
+    // what is saved
+    final shown = installer
+        ? safeFileName(widget.name, facts: facts)
+        : shownFileName(widget.name);
     final (stem, ext) = splitFileName(shown);
     final nameDir = _rtlStart.hasMatch(stem)
         ? TextDirection.rtl
