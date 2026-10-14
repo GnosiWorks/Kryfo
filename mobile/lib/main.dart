@@ -129,6 +129,7 @@ import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
+import 'widgets/shift_tap_guard.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -23899,24 +23900,30 @@ class _AddSheetState extends State<_AddSheet>
                     width: lit ? 1 : 0.5,
                   ),
                 ),
-                child: TextField(
-                  textDirection: TextDirection.ltr,
+                child: ShiftTapGuard(
                   controller: widget.ctrl,
-                  focusNode: _focus,
-                  minLines: 1,
-                  maxLines: 3,
-                  // "add them" under it comes into view with it
-                  scrollPadding: const EdgeInsets.fromLTRB(
-                    20,
-                    20,
-                    20,
-                    20 + 10 + 46,
-                  ),
-                  style: HaloType.mono(size: 12, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: l10n.appAKryfoLinkA,
-                    hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+                  child: TextField(
+                    textDirection: TextDirection.ltr,
+                    controller: widget.ctrl,
+                    focusNode: _focus,
+                    minLines: 1,
+                    maxLines: 3,
+                    // "add them" under it comes into view with it
+                    scrollPadding: const EdgeInsets.fromLTRB(
+                      20,
+                      20,
+                      20,
+                      20 + 10 + 46,
+                    ),
+                    style: HaloType.mono(size: 12, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: l10n.appAKryfoLinkA,
+                      hintStyle: HaloType.mono(
+                        size: 12,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -24120,14 +24127,17 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
                 style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               const SizedBox(height: 10),
-              TextField(
-                textDirection: TextDirection.ltr,
+              ShiftTapGuard(
                 controller: ctrl,
-                maxLines: 4,
-                style: HaloType.mono(size: 11, color: HaloColors.text),
-                decoration: InputDecoration(
-                  hintText: 'kryfo://share?...',
-                  hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                child: TextField(
+                  textDirection: TextDirection.ltr,
+                  controller: ctrl,
+                  maxLines: 4,
+                  style: HaloType.mono(size: 11, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    hintText: 'kryfo://share?...',
+                    hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                  ),
                 ),
               ),
             ],
@@ -24475,13 +24485,16 @@ class _DevScreenState extends State<DevScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              TextField(
+              ShiftTapGuard(
                 controller: _msgCtrl,
-                style: HaloType.sans(color: HaloColors.text),
-                decoration: InputDecoration(
-                  labelText: l10n.appMessageWillBeEncrypted,
-                  labelStyle: HaloType.sans(color: HaloColors.text2),
-                  border: const OutlineInputBorder(),
+                child: TextField(
+                  controller: _msgCtrl,
+                  style: HaloType.sans(color: HaloColors.text),
+                  decoration: InputDecoration(
+                    labelText: l10n.appMessageWillBeEncrypted,
+                    labelStyle: HaloType.sans(color: HaloColors.text2),
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

@@ -17,6 +17,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
 import 'gif_picture.dart';
 import 'gif_source.dart';
+import '../widgets/shift_tap_guard.dart';
 
 /// how the phone reaches our server, as the transport screen names it
 enum GifRoute { onion, relay, fast }
@@ -252,31 +253,34 @@ class GifPanelState extends State<GifPanel> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: TextField(
+              child: ShiftTapGuard(
                 controller: _field,
-                focusNode: _focus,
-                onChanged: _typed,
-                onSubmitted: (v) {
-                  _wait?.cancel();
-                  final q = v.trim();
-                  if (q != _shown) _ask(q);
-                },
-                textInputAction: TextInputAction.search,
-                // counted in code points, as the relay counts: an emoji
-                // with a skin tone is two
-                inputFormatters: const [CodePointLimit(kGifQueryMax)],
-                // nothing typed here is learned by the keyboard
-                enableSuggestions: false,
-                autocorrect: false,
-                enableIMEPersonalizedLearning: false,
-                style: HaloType.sans(size: 15),
-                cursorColor: HaloColors.amber,
-                decoration: InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  hintText: l10n.gifSearchHint,
-                  hintStyle: HaloType.sans(size: 15, color: HaloColors.text2),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                child: TextField(
+                  controller: _field,
+                  focusNode: _focus,
+                  onChanged: _typed,
+                  onSubmitted: (v) {
+                    _wait?.cancel();
+                    final q = v.trim();
+                    if (q != _shown) _ask(q);
+                  },
+                  textInputAction: TextInputAction.search,
+                  // counted in code points, as the relay counts: an emoji
+                  // with a skin tone is two
+                  inputFormatters: const [CodePointLimit(kGifQueryMax)],
+                  // nothing typed here is learned by the keyboard
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  enableIMEPersonalizedLearning: false,
+                  style: HaloType.sans(size: 15),
+                  cursorColor: HaloColors.amber,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: l10n.gifSearchHint,
+                    hintStyle: HaloType.sans(size: 15, color: HaloColors.text2),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ),

@@ -34,6 +34,7 @@ import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/owned_text.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 /// the name we give a contact. '' to clear it, null when dismissed
 @visibleForTesting
@@ -77,16 +78,22 @@ Future<String?> showRenameSheet(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: HaloColors.line, width: 0.5),
                 ),
-                child: TextField(
+                child: ShiftTapGuard(
                   controller: ctrl,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.none,
-                  onSubmitted: (s) => Navigator.pop(ctx, s),
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: haloId,
-                    hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+                  child: TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.none,
+                    onSubmitted: (s) => Navigator.pop(ctx, s),
+                    style: HaloType.sans(size: 15, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: haloId,
+                      hintStyle: HaloType.mono(
+                        size: 13,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),

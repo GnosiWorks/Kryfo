@@ -7,6 +7,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'press_scale.dart';
 import 'stroke_icon.dart';
+import 'shift_tap_guard.dart';
 
 const _eyeOn = [
   'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z',
@@ -72,33 +73,36 @@ class SecretField extends StatelessWidget {
                 child: MergeSemantics(
                   child: Semantics(
                     label: label,
-                    child: TextField(
+                    child: ShiftTapGuard(
                       controller: controller,
-                      enabled: enabled,
-                      obscureText: !shown,
-                      // never offered to the phone's autofill service
-                      autofillHints: null,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      enableIMEPersonalizedLearning: false,
-                      keyboardType: TextInputType.visiblePassword,
-                      textInputAction: action,
-                      onSubmitted: (_) => onSubmit?.call(),
-                      cursorColor: HaloColors.amber,
-                      style: shown
-                          ? HaloType.mono(size: 14, color: HaloColors.text)
-                          : HaloType.sans(size: 14.5, color: HaloColors.text),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                        hintText: hint,
-                        hintStyle: HaloType.sans(
-                          size: 13.5,
-                          color: HaloColors.text3,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
+                      child: TextField(
+                        controller: controller,
+                        enabled: enabled,
+                        obscureText: !shown,
+                        // never offered to the phone's autofill service
+                        autofillHints: null,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        enableIMEPersonalizedLearning: false,
+                        keyboardType: TextInputType.visiblePassword,
+                        textInputAction: action,
+                        onSubmitted: (_) => onSubmit?.call(),
+                        cursorColor: HaloColors.amber,
+                        style: shown
+                            ? HaloType.mono(size: 14, color: HaloColors.text)
+                            : HaloType.sans(size: 14.5, color: HaloColors.text),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: hint,
+                          hintStyle: HaloType.sans(
+                            size: 13.5,
+                            color: HaloColors.text3,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),

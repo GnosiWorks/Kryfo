@@ -25,6 +25,7 @@ import '../l10n/dates.dart';
 import '../widgets/written_field.dart';
 import '../widgets/ease_size.dart';
 import '../bidi_safe.dart';
+import '../widgets/shift_tap_guard.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
@@ -622,19 +623,25 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               child: WrittenDir(
                 controller: _input,
-                builder: (dir) => TextField(
-                  textDirection: dir,
-                  inputFormatters: const [UnmarkedInput()],
+                builder: (dir) => ShiftTapGuard(
                   controller: _input,
-                  maxLines: 5,
-                  minLines: 1,
-                  style: HaloType.sans(size: 14, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    hintText: l10n.notesJotSomethingDown,
-                    hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  child: TextField(
+                    textDirection: dir,
+                    inputFormatters: const [UnmarkedInput()],
+                    controller: _input,
+                    maxLines: 5,
+                    minLines: 1,
+                    style: HaloType.sans(size: 14, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      hintText: l10n.notesJotSomethingDown,
+                      hintStyle: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.text3,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
                   ),
                 ),
               ),
