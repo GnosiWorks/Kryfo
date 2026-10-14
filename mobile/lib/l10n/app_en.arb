@@ -10178,6 +10178,42 @@
       }
     }
   },
+  "notThemNumbersDiffer": "The numbers are different",
+  "@notThemNumbersDiffer": {
+    "description": "widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton"
+  },
+  "notThemLine": "Then this chat is not with the person you know. Someone else may be using their name.",
+  "@notThemLine": {
+    "description": "widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means"
+  },
+  "notThemButton": "This isn't them",
+  "@notThemButton": {
+    "description": "widgets/not_them.dart: button, rose: the contact goes from this phone and the key the number was made from is blocked. asks first (notThemSheetTitle)"
+  },
+  "notThemSheetTitle": "Remove this contact and block its key?",
+  "@notThemSheetTitle": {
+    "description": "widgets/not_them.dart: sheet title after notThemButton"
+  },
+  "notThemSheetLine": "The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.",
+  "@notThemSheetLine": {
+    "description": "widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked"
+  },
+  "notThemRemove": "Remove and block",
+  "@notThemRemove": {
+    "description": "widgets/not_them.dart: the yes of that sheet"
+  },
+  "notThemDone": "Removed, and their key is blocked",
+  "@notThemDone": {
+    "description": "widgets/not_them.dart: toast once the contact is gone and the key blocked"
+  },
+  "blockedKey": "Blocked key",
+  "@blockedKey": {
+    "description": "screens/blocked_screen.dart: a row on the Blocked page for a key blocked by notThemButton. no name is kept for it; its key number shows under it"
+  },
+  "appKeyBlocked": "You blocked this key. Unblock it under Blocked in Settings to add it.",
+  "@appKeyBlocked": {
+    "description": "main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back"
+  },
   "devLinkGone": "You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.",
   "@devLinkGone": {
     "description": "main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one"

@@ -7723,6 +7723,33 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => '号码不一致';
+
+  @override
+  String get notThemLine => '那么这个聊天的对方不是你认识的人，可能有人在冒用对方的名字。';
+
+  @override
+  String get notThemButton => '这不是对方本人';
+
+  @override
+  String get notThemSheetTitle => '要删除这位联系人并屏蔽其密钥吗？';
+
+  @override
+  String get notThemSheetLine => '聊天及其中的消息和文件都会从这部手机上消失。如果真正的对方把链接发给你，一切都会照常。';
+
+  @override
+  String get notThemRemove => '删除并屏蔽';
+
+  @override
+  String get notThemDone => '已删除，并已屏蔽其密钥';
+
+  @override
+  String get blockedKey => '已屏蔽的密钥';
+
+  @override
+  String get appKeyBlocked => '你已屏蔽这个密钥。请在设置的“已屏蔽”中取消屏蔽后再添加。';
+
+  @override
   String get devLinkGone => '你已删除与 Marios 的聊天。要开始新的聊天，请在设置中点按“给 Marios 发消息”。';
 
   @override
@@ -15501,6 +15528,33 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String appTheyAreBlocked(Object id) {
     return '你已封鎖 $id。請在設定的「已封鎖」中解除封鎖後再新增。';
   }
+
+  @override
+  String get notThemNumbersDiffer => '號碼不一致';
+
+  @override
+  String get notThemLine => '那麼這個聊天的對方不是你認識的人，可能有人在冒用對方的名字。';
+
+  @override
+  String get notThemButton => '這不是對方本人';
+
+  @override
+  String get notThemSheetTitle => '要刪除這位聯絡人並封鎖其金鑰嗎？';
+
+  @override
+  String get notThemSheetLine => '聊天及其中的訊息和檔案都會從這支手機上消失。如果真正的對方把連結傳給你，一切都會照常。';
+
+  @override
+  String get notThemRemove => '刪除並封鎖';
+
+  @override
+  String get notThemDone => '已刪除，並已封鎖其金鑰';
+
+  @override
+  String get blockedKey => '已封鎖的金鑰';
+
+  @override
+  String get appKeyBlocked => '你已封鎖這個金鑰。請在設定的「已封鎖」中解除封鎖後再新增。';
 
   @override
   String get devLinkGone => '你已刪除與 Marios 的聊天。要開始新的聊天，請在設定中點按「傳訊息給 Marios」。';

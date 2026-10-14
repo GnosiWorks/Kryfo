@@ -8203,6 +8203,36 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'الرقمان مختلفان';
+
+  @override
+  String get notThemLine =>
+      'إذن هذه المحادثة ليست مع الشخص الذي تعرفه. ربما يستخدم شخص آخر اسمه.';
+
+  @override
+  String get notThemButton => 'هذا ليس هو';
+
+  @override
+  String get notThemSheetTitle => 'إزالة جهة الاتصال هذه وحظر مفتاحها؟';
+
+  @override
+  String get notThemSheetLine =>
+      'تُحذف المحادثة ورسائلها وملفاتها من هذا الهاتف. وإن أرسل إليك الشخص الحقيقي رابطه، فسيعمل كالمعتاد.';
+
+  @override
+  String get notThemRemove => 'إزالة وحظر';
+
+  @override
+  String get notThemDone => 'أُزيلت، وحُظر مفتاحها';
+
+  @override
+  String get blockedKey => 'مفتاح محظور';
+
+  @override
+  String get appKeyBlocked =>
+      'لقد حظرت هذا المفتاح. ألغِ حظره من «المحظورون» في الإعدادات لتضيفه.';
+
+  @override
   String get devLinkGone =>
       'لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.';
 

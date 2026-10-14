@@ -8099,6 +8099,37 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Numaralar farklı';
+
+  @override
+  String get notThemLine =>
+      'O zaman bu sohbet tanıdığın kişiyle değil. Belki başka biri onun adını kullanıyor.';
+
+  @override
+  String get notThemButton => 'Bu o değil';
+
+  @override
+  String get notThemSheetTitle =>
+      'Bu kişi kaldırılsın ve anahtarı engellensin mi?';
+
+  @override
+  String get notThemSheetLine =>
+      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Gerçek kişi sana bağlantısını gönderirse, her zamanki gibi çalışır.';
+
+  @override
+  String get notThemRemove => 'Kaldır ve engelle';
+
+  @override
+  String get notThemDone => 'Kaldırıldı, anahtarı engellendi';
+
+  @override
+  String get blockedKey => 'Engellenen anahtar';
+
+  @override
+  String get appKeyBlocked =>
+      'Bu anahtarı engelledin. Eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.';
+
+  @override
   String get devLinkGone =>
       'Marios ile sohbeti sildin. Yenisini başlatmak için Ayarlar’da “Marios’a yaz”a dokun.';
 

@@ -12993,6 +12993,60 @@ abstract class AppLocalizations {
   /// **'You blocked {id}. Unblock them under Blocked in Settings to add them again.'**
   String appTheyAreBlocked(Object id);
 
+  /// widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton
+  ///
+  /// In en, this message translates to:
+  /// **'The numbers are different'**
+  String get notThemNumbersDiffer;
+
+  /// widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means
+  ///
+  /// In en, this message translates to:
+  /// **'Then this chat is not with the person you know. Someone else may be using their name.'**
+  String get notThemLine;
+
+  /// widgets/not_them.dart: button, rose: the contact goes from this phone and the key the number was made from is blocked. asks first (notThemSheetTitle)
+  ///
+  /// In en, this message translates to:
+  /// **'This isn\'t them'**
+  String get notThemButton;
+
+  /// widgets/not_them.dart: sheet title after notThemButton
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this contact and block its key?'**
+  String get notThemSheetTitle;
+
+  /// widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked
+  ///
+  /// In en, this message translates to:
+  /// **'The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.'**
+  String get notThemSheetLine;
+
+  /// widgets/not_them.dart: the yes of that sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and block'**
+  String get notThemRemove;
+
+  /// widgets/not_them.dart: toast once the contact is gone and the key blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Removed, and their key is blocked'**
+  String get notThemDone;
+
+  /// screens/blocked_screen.dart: a row on the Blocked page for a key blocked by notThemButton. no name is kept for it; its key number shows under it
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked key'**
+  String get blockedKey;
+
+  /// main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked this key. Unblock it under Blocked in Settings to add it.'**
+  String get appKeyBlocked;
+
   /// main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one
   ///
   /// In en, this message translates to:

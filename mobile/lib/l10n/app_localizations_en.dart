@@ -8071,6 +8071,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'The numbers are different';
+
+  @override
+  String get notThemLine =>
+      'Then this chat is not with the person you know. Someone else may be using their name.';
+
+  @override
+  String get notThemButton => 'This isn\'t them';
+
+  @override
+  String get notThemSheetTitle => 'Remove this contact and block its key?';
+
+  @override
+  String get notThemSheetLine =>
+      'The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.';
+
+  @override
+  String get notThemRemove => 'Remove and block';
+
+  @override
+  String get notThemDone => 'Removed, and their key is blocked';
+
+  @override
+  String get blockedKey => 'Blocked key';
+
+  @override
+  String get appKeyBlocked =>
+      'You blocked this key. Unblock it under Blocked in Settings to add it.';
+
+  @override
   String get devLinkGone =>
       'You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.';
 

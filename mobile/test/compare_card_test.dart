@@ -7,6 +7,7 @@
 // name until then. with less movement the card is simply there, and folds
 // at once. the chat's own screen over rows kept in maps
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -330,12 +331,13 @@ void main() {
     expect(find.text(l10n.chatCompareFolded), findsOneWidget);
     final card = find.text(l10n.chatCompareTitle);
     if (card.evaluate().isEmpty) return 0;
-    return t
-        .widget<FadeTransition>(
-          find.ancestor(of: card, matching: find.byType(FadeTransition)).first,
-        )
-        .opacity
-        .value;
+    // the card's own fade, whichever of the fades around it is moving
+    return [
+      for (final f in t.widgetList<FadeTransition>(
+        find.ancestor(of: card, matching: find.byType(FadeTransition)),
+      ))
+        f.opacity.value,
+    ].reduce(math.min);
   }
 
   testWidgets('later fades the card into the line', (t) async {

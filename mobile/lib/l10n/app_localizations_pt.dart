@@ -8134,6 +8134,37 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Os números são diferentes';
+
+  @override
+  String get notThemLine =>
+      'Então esta conversa não é com a pessoa que você conhece. Talvez outra pessoa esteja usando o nome dela.';
+
+  @override
+  String get notThemButton => 'Não é essa pessoa';
+
+  @override
+  String get notThemSheetTitle =>
+      'Remover este contato e bloquear a chave dele?';
+
+  @override
+  String get notThemSheetLine =>
+      'A conversa, as mensagens e os arquivos somem deste celular. Se a pessoa de verdade mandar o link dela, ele vai funcionar normalmente.';
+
+  @override
+  String get notThemRemove => 'Remover e bloquear';
+
+  @override
+  String get notThemDone => 'Removido, e a chave bloqueada';
+
+  @override
+  String get blockedKey => 'Chave bloqueada';
+
+  @override
+  String get appKeyBlocked =>
+      'Você bloqueou esta chave. Desbloqueie em “Bloqueados”, nas Configurações, para adicionar.';
+
+  @override
   String get devLinkGone =>
       'Você apagou a conversa com o Marios. Para começar uma nova, toque em “Escrever para o Marios” nas Configurações.';
 

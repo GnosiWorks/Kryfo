@@ -8061,6 +8061,36 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Các số không giống nhau';
+
+  @override
+  String get notThemLine =>
+      'Vậy cuộc trò chuyện này không phải với người bạn quen. Có thể ai đó đang dùng tên của họ.';
+
+  @override
+  String get notThemButton => 'Đây không phải họ';
+
+  @override
+  String get notThemSheetTitle => 'Xóa liên hệ này và chặn khóa của nó?';
+
+  @override
+  String get notThemSheetLine =>
+      'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi điện thoại này. Nếu người thật gửi liên kết của họ cho bạn, liên kết sẽ hoạt động bình thường.';
+
+  @override
+  String get notThemRemove => 'Xóa và chặn';
+
+  @override
+  String get notThemDone => 'Đã xóa, và khóa đã bị chặn';
+
+  @override
+  String get blockedKey => 'Khóa đã chặn';
+
+  @override
+  String get appKeyBlocked =>
+      'Bạn đã chặn khóa này. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm.';
+
+  @override
   String get devLinkGone =>
       'Bạn đã xóa cuộc trò chuyện với Marios. Để bắt đầu cuộc mới, hãy chạm “Nhắn cho Marios” trong Cài đặt.';
 

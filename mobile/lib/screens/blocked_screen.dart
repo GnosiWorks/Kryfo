@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../key_number.dart';
 import '../main.dart' show appState;
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
@@ -11,8 +12,9 @@ import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 
-// blocked contacts. blocking never notifies the other side. an unblocked
-// row folds away before the list is read again
+// blocked contacts, and the keys "this isn't them" blocked, by their key
+// number. blocking never notifies the other side. an unblocked row folds
+// away before the list is read again
 class BlockedScreen extends StatefulWidget {
   const BlockedScreen({super.key});
 
@@ -22,6 +24,7 @@ class BlockedScreen extends StatefulWidget {
 
 class _BlockedScreenState extends State<BlockedScreen> {
   List<({String haloId, String? nickname})> _blocked = [];
+  List<({String x, int at})> _keys = [];
   bool _loading = true;
   final Set<String> _leaving = {};
 
@@ -33,12 +36,24 @@ class _BlockedScreenState extends State<BlockedScreen> {
 
   Future<void> _load() async {
     final list = await appState.blockedContacts();
+    final keys = await appState.blockedKeys();
     if (mounted) {
       setState(() {
         _blocked = list;
+        _keys = keys;
         _loading = false;
       });
     }
+  }
+
+  Future<void> _unblockKey(String x) async {
+    final at = 'key:$x';
+    if (!_leaving.add(at)) return;
+    setState(() {});
+    await appState.unblockKey(x);
+    await Future.delayed(FadeFold.gone);
+    await _load();
+    _leaving.remove(at);
   }
 
   Future<void> _unblock(String haloId) async {
@@ -93,7 +108,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                   ? const SizedBox()
                   // the last one unblocked, the empty page fades in
                   : FadeSwap(
-                      child: _blocked.isEmpty
+                      child: _blocked.isEmpty && _keys.isEmpty
                           ? KeyedSubtree(
                               key: const ValueKey('none'),
                               child: _empty(),
@@ -111,6 +126,20 @@ class _BlockedScreenState extends State<BlockedScreen> {
                                       child: FadeFold(
                                         leaving: _leaving.contains(c.haloId),
                                         child: _row(c),
+                                      ),
+                                    ),
+                                  ),
+                                for (final (i, k) in _keys.indexed)
+                                  StaggerIn(
+                                    key: ValueKey('key:${k.x}'),
+                                    index: _blocked.length + i,
+                                    child: IgnorePointer(
+                                      ignoring: _leaving.contains('key:${k.x}'),
+                                      child: FadeFold(
+                                        leaving: _leaving.contains(
+                                          'key:${k.x}',
+                                        ),
+                                        child: _keyRow(k.x),
                                       ),
                                     ),
                                   ),
@@ -152,35 +181,105 @@ class _BlockedScreenState extends State<BlockedScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          PressScale(
-            label: l10n.commonUnblock,
-            scale: 0.94,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _unblock(c.haloId);
-            },
-            haptic: false,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: HaloColors.amber.withValues(alpha: 0.45),
-                ),
-              ),
-              child: ExcludeSemantics(
-                child: Text(
-                  l10n.commonUnblock,
-                  style: HaloType.sans(
-                    size: 12.5,
-                    weight: FontWeight.w600,
-                    color: HaloColors.amber,
+          _unblockButton(() => _unblock(c.haloId)),
+        ],
+      ),
+    );
+  }
+
+  // a key blocked with no one's name on it: the number it shows as
+  Widget _keyRow(String x) {
+    final number = keyNumber(_bytes(x)) ?? x;
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 10, 16, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: HaloColors.surface2,
+              shape: BoxShape.circle,
+              border: Border.all(color: HaloColors.line, width: 0.5),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.key_off_outlined,
+              size: 18,
+              color: HaloColors.rose,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.blockedKey,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.sans(size: 14, weight: FontWeight.w500),
                   ),
-                ),
+                  // the same digits in every language, as on a pair code
+                  Semantics(
+                    label: '${l10n.pairCodeKeyNumber} $number',
+                    textDirection: TextDirection.ltr,
+                    excludeSemantics: true,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        number,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: HaloType.mono(
+                          size: 10.5,
+                          color: HaloColors.text2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(width: 10),
+          _unblockButton(() => _unblockKey(x)),
         ],
+      ),
+    );
+  }
+
+  static List<int> _bytes(String hex) => [
+    for (var i = 0; i + 1 < hex.length; i += 2)
+      int.tryParse(hex.substring(i, i + 2), radix: 16) ?? 0,
+  ];
+
+  Widget _unblockButton(VoidCallback onTap) {
+    return PressScale(
+      label: l10n.commonUnblock,
+      scale: 0.94,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      haptic: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
+        ),
+        child: ExcludeSemantics(
+          child: Text(
+            l10n.commonUnblock,
+            style: HaloType.sans(
+              size: 12.5,
+              weight: FontWeight.w600,
+              color: HaloColors.amber,
+            ),
+          ),
+        ),
       ),
     );
   }

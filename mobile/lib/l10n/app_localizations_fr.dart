@@ -8158,6 +8158,36 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Les numéros sont différents';
+
+  @override
+  String get notThemLine =>
+      'Alors cette discussion n’est pas avec la personne que vous connaissez. Quelqu’un d’autre utilise peut-être son nom.';
+
+  @override
+  String get notThemButton => 'Ce n’est pas cette personne';
+
+  @override
+  String get notThemSheetTitle => 'Retirer ce contact et bloquer sa clé ?';
+
+  @override
+  String get notThemSheetLine =>
+      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Si la vraie personne vous envoie son lien, il fonctionnera normalement.';
+
+  @override
+  String get notThemRemove => 'Retirer et bloquer';
+
+  @override
+  String get notThemDone => 'Retiré, et sa clé est bloquée';
+
+  @override
+  String get blockedKey => 'Clé bloquée';
+
+  @override
+  String get appKeyBlocked =>
+      'Vous avez bloqué cette clé. Débloquez-la dans « Bloqués », dans les Paramètres, pour l’ajouter.';
+
+  @override
   String get devLinkGone =>
       'Vous avez supprimé la discussion avec Marios. Pour en commencer une nouvelle, touchez « Écrire à Marios » dans les Paramètres.';
 

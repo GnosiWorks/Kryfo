@@ -8218,6 +8218,37 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Номери не збігаються';
+
+  @override
+  String get notThemLine =>
+      'Тоді цей чат не з тією людиною, яку ти знаєш. Можливо, хтось інший використовує її ім’я.';
+
+  @override
+  String get notThemButton => 'Це не та людина';
+
+  @override
+  String get notThemSheetTitle =>
+      'Видалити цей контакт і заблокувати його ключ?';
+
+  @override
+  String get notThemSheetLine =>
+      'Чат, його повідомлення й файли зникнуть із цього телефону. Якщо справжня людина надішле тобі своє посилання, воно спрацює як завжди.';
+
+  @override
+  String get notThemRemove => 'Видалити й заблокувати';
+
+  @override
+  String get notThemDone => 'Видалено, ключ заблоковано';
+
+  @override
+  String get blockedKey => 'Заблокований ключ';
+
+  @override
+  String get appKeyBlocked =>
+      'Цей ключ заблоковано. Розблокуй його в налаштуваннях, у розділі «Заблоковані», щоб додати.';
+
+  @override
   String get devLinkGone =>
       'Чат із Marios видалено. Щоб почати новий, натисни «Написати Marios» у налаштуваннях.';
 

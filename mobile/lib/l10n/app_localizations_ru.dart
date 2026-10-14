@@ -8228,6 +8228,37 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Коды не совпадают';
+
+  @override
+  String get notThemLine =>
+      'Значит, этот чат не с тем человеком, которого ты знаешь. Возможно, кто-то другой использует его имя.';
+
+  @override
+  String get notThemButton => 'Это не тот человек';
+
+  @override
+  String get notThemSheetTitle =>
+      'Удалить этот контакт и заблокировать его ключ?';
+
+  @override
+  String get notThemSheetLine =>
+      'Чат, его сообщения и файлы удалятся с этого телефона. Если настоящий человек пришлёт тебе свою ссылку, она сработает как обычно.';
+
+  @override
+  String get notThemRemove => 'Удалить и заблокировать';
+
+  @override
+  String get notThemDone => 'Удалено, ключ заблокирован';
+
+  @override
+  String get blockedKey => 'Заблокированный ключ';
+
+  @override
+  String get appKeyBlocked =>
+      'Этот ключ заблокирован. Разблокируй его в настройках, в разделе «Заблокированные», чтобы добавить.';
+
+  @override
   String get devLinkGone =>
       'Чат с Marios удалён. Чтобы начать новый, нажми «Написать Marios» в настройках.';
 

@@ -489,6 +489,74 @@ void main() {
       expect(w.members, contains(held));
     });
 
+    test('a key "this isn\'t them" blocked takes no seat and no row from '
+        'an add, a new roster or a list on a message', () async {
+      final w = await _World.make();
+      const words = 'calm-river-fake';
+      final fake = 'f0' * 32, real = 'a7' * 32;
+      w.live.blockedKeyAt[fake] = 1;
+      final card = [
+        {'h': words, 'o': 'o-fake', 'x': fake},
+      ];
+      await w.control(
+        _a,
+        GroupControl(type: 'add', members: const [words], participants: card),
+      );
+      expect(w.members, ['me', _a, _v]);
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'create',
+          name: 'two',
+          members: const ['me', _a, _v, words],
+          participants: card,
+        ),
+      );
+      expect(w.members, ['me', _a, _v]);
+      await w.from(
+        _a,
+        await wrapMessage(
+          'hi',
+          groupId: _g,
+          msgUid: 'rk1',
+          roster: const ['me', _a, _v, words],
+          rosterParticipants: card,
+          sender: asSender(_a),
+        ),
+      );
+      expect(w.members, ['me', _a, _v]);
+      // and a new group naming them seats everyone else
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'create',
+          name: 'new',
+          members: const ['me', _a, words],
+          participants: card,
+        ),
+        g: 'grp000000007',
+      );
+      expect(w.live.members['grp000000007'], ['me', _a]);
+      expect(w.live.people.containsKey(words), isFalse);
+      expect(
+        w.live.people.containsKey(unboundIdOf([5, ...List.filled(32, 0xf0)])),
+        isFalse,
+      );
+      // the same words on another key are someone else, and seated
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'add',
+          members: const [words],
+          participants: [
+            {'h': words, 'o': 'o-real', 'x': real},
+          ],
+        ),
+      );
+      expect(w.members, contains(words));
+      expect(w.live.people[words], containsPair('xpub', real));
+    });
+
     test('an add past the member cap is not taken', () async {
       final w = await _World.make();
       await w.control(

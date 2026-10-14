@@ -8146,6 +8146,37 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'I numeri sono diversi';
+
+  @override
+  String get notThemLine =>
+      'Allora questa chat non è con la persona che conosci. Forse qualcun altro sta usando il suo nome.';
+
+  @override
+  String get notThemButton => 'Non è questa persona';
+
+  @override
+  String get notThemSheetTitle =>
+      'Rimuovere questo contatto e bloccare la sua chiave?';
+
+  @override
+  String get notThemSheetLine =>
+      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Se la persona vera ti manda il suo link, funzionerà normalmente.';
+
+  @override
+  String get notThemRemove => 'Rimuovi e blocca';
+
+  @override
+  String get notThemDone => 'Rimosso, e la sua chiave è bloccata';
+
+  @override
+  String get blockedKey => 'Chiave bloccata';
+
+  @override
+  String get appKeyBlocked =>
+      'Hai bloccato questa chiave. Sbloccala da «Bloccati» nelle Impostazioni per aggiungerla.';
+
+  @override
   String get devLinkGone =>
       'Hai eliminato la chat con Marios. Per iniziarne una nuova, tocca «Scrivi a Marios» nelle Impostazioni.';
 

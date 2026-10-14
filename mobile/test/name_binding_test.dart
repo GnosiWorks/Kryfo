@@ -41,6 +41,7 @@ import 'package:kryfo/main.dart'
         linkKinOf,
         makePreKeyBundleB64,
         processPeerBundle,
+        session,
         signalDecrypt,
         unboundIdOf,
         useDatabasesForTest,
@@ -1598,6 +1599,219 @@ void main() {
       );
       expect(await handleHaloUriAdded(link2), ('', true));
       expect(nameCheckOf(live.people[fresh]), kNameAsk);
+    });
+  });
+
+  // the safety number they read out was another: the contact goes, all of
+  // it, and the key it ran on is blocked. the words go back to no one, so
+  // the real person comes in under them as anyone does
+  group('this isn\'t them', () {
+    const ends = [
+      'ash',
+      'bay',
+      'cove',
+      'dune',
+      'elm',
+      'fern',
+      'glen',
+      'hill',
+      'isle',
+      'jade',
+      'kelp',
+      'lake',
+    ];
+    var round = -1;
+    late String words;
+    late _Phone mallory;
+    late _Phone alice;
+    late String aliceEd;
+
+    setUp(() async {
+      words = 'not-them-${ends[++round]}';
+      mallory = await _phone();
+      alice = await _phone();
+      aliceEd = _rndHex(32);
+      _idOf[aliceEd] = words;
+      unheard.clear();
+    });
+
+    Future<String> link(_Phone p, {String? id}) async => haloUriV3(
+      id ?? words,
+      'o-${p.xPub.substring(0, 8)}',
+      Uri.encodeQueryComponent(await makePreKeyBundleB64(p.ss)),
+      'ab' * 32,
+    );
+
+    // the fake's link, under the real one's words, added as any link is
+    Future<void> faked() async {
+      expect(await handleHaloUriAdded(await link(mallory)), ('', true));
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+    }
+
+    Future<void> sessionIsWith(_Phone who, _Phone not) async {
+      final next = await signalSession.encryptTo(words, 'for the one kept');
+      expect(await _reads(not.ss, next), isNull);
+      expect(await _reads(who.ss, next), 'for the one kept');
+    }
+
+    Future<void> realWrites() async {
+      await app.receiveOnion([
+        await _opener(alice, words, aliceEd, _said, pow: pow),
+      ]);
+      await _settle();
+    }
+
+    List<Object?> textsOf(String id) => [
+      for (final m in live.msgs)
+        if (m['peer_id'] == id) m['plaintext'],
+    ];
+
+    test('a fake added by a link and deleted holds no name: the real link is '
+        'added', () async {
+      await faked();
+      await app.deleteConversation(words);
+      expect(await linkKinOf(await link(alice)), (LinkKin.stranger, words));
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(nameCheckOf(live.people[words]), kNameAsk);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('a fake added by a link and deleted holds no name: the real one '
+        'writing lands under their words, not an id of their own', () async {
+      await faked();
+      await app.deleteConversation(words);
+      await realWrites();
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isFalse);
+      expect(textsOf(words), [_said]);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('it takes everything of theirs and blocks the key', () async {
+      await faked();
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(live.people.containsKey(words), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      expect(await signalSession.peerXPubHex(words), isNull);
+      expect(live.blockedKeyAt.keys, [mallory.xPub]);
+      expect(unheard, contains(mallory.xPub));
+    });
+
+    test('after it the real link adds them under their words', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      expect(await linkKinOf(await link(alice)), (LinkKin.stranger, words));
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(live.people[words], containsPair('accepted', 1));
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('after it the real one writing lands under their words', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      await realWrites();
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isFalse);
+      expect(live.people[words], containsPair('accepted', 0));
+      expect(textsOf(words), [_said]);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('the key stays out on every way in, under any words', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      // a link or a code under their words or others, an old card
+      for (final l in [
+        await link(mallory),
+        await link(mallory, id: 'other-mask-words'),
+        buildHaloUri('old-card-words', 'o', mallory.xPub),
+      ]) {
+        expect(await handleHaloUriAdded(l), (l10n.appKeyBlocked, false));
+      }
+      // a first message under their words or new ones
+      for (final says in [words, 'fresh-mask-words']) {
+        final ed = _rndHex(32);
+        _idOf[ed] = says;
+        await app.receiveOnion([
+          await _opener(mallory, says, ed, _said, pow: pow),
+        ]);
+        await _settle();
+        expect(live.people.containsKey(says), isFalse);
+        expect(textsOf(says), isEmpty);
+      }
+      final own = unboundIdOf(_keyOf(mallory));
+      expect(live.people.containsKey(own), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      expect(await hasSessionWith(own), isFalse);
+      expect(live.people.containsKey('other-mask-words'), isFalse);
+      expect(live.people.containsKey('old-card-words'), isFalse);
+    });
+
+    test('a key that moved meanwhile lets nothing go', () async {
+      await faked();
+      expect(await app.notThem(words, 'cd' * 32), isFalse);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+      expect(live.blockedKeyAt, isEmpty);
+    });
+
+    test('in the decoy only the decoy\'s row goes, its key blocked there, '
+        'and the everyday side is not touched', () async {
+      await faked();
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      decoy.person(words, xpub: mallory.xPub);
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(decoy.people.containsKey(words), isFalse);
+      expect(decoy.blockedKeyAt.keys, [mallory.xPub]);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(live.blockedKeyAt, isEmpty);
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+      expect(unheard, isEmpty);
+      expect(
+        await handleHaloUriAdded(
+          buildHaloUri('other-mask-two', 'o', mallory.xPub),
+        ),
+        (l10n.appKeyBlocked, false),
+      );
+    });
+
+    test('a hidden chat goes from the open vault alone, and its key is '
+        'blocked there', () async {
+      final vault = ArrivalRows(HaloContainer.vault);
+      vault.person(words, onion: 'o-h', xpub: mallory.xPub);
+      await processPeerBundle(words, await makePreKeyBundleB64(mallory.ss));
+      final store = ArrivalStore();
+      await store.putHidden(
+        words,
+        kHiddenPeer,
+        peerCard(RouterCard(words, 'o-h', mallory.xPub, backPaired: true)),
+        1,
+      );
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      app = AppState(io: const _Io(), router: router)..myId = _me;
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      expect(session.isHidden(words), isTrue);
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(vault.people.containsKey(words), isFalse);
+      expect(vault.blockedKeyAt.keys, [mallory.xPub]);
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.people.containsKey(words), isFalse);
+      expect(router.keeps(words), isFalse);
+      expect(session.isHidden(words), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      // the real one's link adds them as anyone new
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(live.people[words], containsPair('accepted', 1));
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('the developer is never let go this way', () async {
+      expect(await app.notThem('dev:marios', 'ab' * 32), isFalse);
     });
   });
 }

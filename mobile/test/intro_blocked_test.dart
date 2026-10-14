@@ -181,6 +181,23 @@ void main() {
     expect(w.bundlesTo('x-$_n').single['want'], isTrue);
   });
 
+  test('a card on a key "this isn\'t them" blocked does nothing, under any '
+      'words, and the same words on another key are introduced', () async {
+    final w = await _World.make();
+    final fake = 'f0' * 32, real = 'a7' * 32;
+    w.live.blockedKeyAt[fake] = 1;
+    for (final who in [_n, 'other-mask-words']) {
+      await w.introduce(who, xPub: fake);
+      expect(w.live.people.containsKey(who), isFalse);
+      expect(w.live.vouches.containsKey(who), isFalse);
+    }
+    expect(w.io.listened, isNot(contains(fake)));
+    expect(w.bundlesTo(fake), isEmpty);
+    await w.introduce(_n, xPub: real);
+    expect(w.live.vouches[_n], {_v});
+    expect(w.live.people[_n], containsPair('xpub', real));
+  });
+
   test('a card under words held here on another key is someone else: the '
       'holder gets no vouch', () async {
     final w = await _World.make();

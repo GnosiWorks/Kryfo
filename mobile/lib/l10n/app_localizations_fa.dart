@@ -8089,6 +8089,36 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'شماره‌ها فرق دارند';
+
+  @override
+  String get notThemLine =>
+      'پس این گفت‌وگو با کسی که می‌شناسید نیست. شاید کس دیگری از نام او استفاده می‌کند.';
+
+  @override
+  String get notThemButton => 'این او نیست';
+
+  @override
+  String get notThemSheetTitle => 'این مخاطب حذف و کلیدش مسدود شود؟';
+
+  @override
+  String get notThemSheetLine =>
+      'گفت‌وگو، پیام‌ها و فایل‌هایش از این گوشی حذف می‌شوند. اگر خود آن شخص پیوندش را برایتان بفرستد، مثل همیشه کار می‌کند.';
+
+  @override
+  String get notThemRemove => 'حذف و مسدود کردن';
+
+  @override
+  String get notThemDone => 'حذف شد و کلیدش مسدود است';
+
+  @override
+  String get blockedKey => 'کلید مسدودشده';
+
+  @override
+  String get appKeyBlocked =>
+      'این کلید را مسدود کرده‌اید. برای افزودنش، از «مسدودشده‌ها» در تنظیمات رفع مسدودیت کنید.';
+
+  @override
   String get devLinkGone =>
       'گفتگو با Marios را حذف کرده‌اید. برای شروع گفتگوی تازه، در تنظیمات روی «پیام به Marios» بزنید.';
 

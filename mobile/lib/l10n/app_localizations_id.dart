@@ -8070,6 +8070,36 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get notThemNumbersDiffer => 'Nomor-nomornya berbeda';
+
+  @override
+  String get notThemLine =>
+      'Berarti obrolan ini bukan dengan orang yang kamu kenal. Mungkin ada orang lain yang memakai namanya.';
+
+  @override
+  String get notThemButton => 'Ini bukan dia';
+
+  @override
+  String get notThemSheetTitle => 'Hapus kontak ini dan blokir kuncinya?';
+
+  @override
+  String get notThemSheetLine =>
+      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Kalau orang yang asli mengirim tautannya, tautan itu akan berfungsi seperti biasa.';
+
+  @override
+  String get notThemRemove => 'Hapus dan blokir';
+
+  @override
+  String get notThemDone => 'Dihapus, dan kuncinya diblokir';
+
+  @override
+  String get blockedKey => 'Kunci diblokir';
+
+  @override
+  String get appKeyBlocked =>
+      'Kamu memblokir kunci ini. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya.';
+
+  @override
   String get devLinkGone =>
       'Kamu sudah menghapus chat dengan Marios. Untuk memulai yang baru, ketuk “Kirim pesan ke Marios” di Pengaturan.';
 

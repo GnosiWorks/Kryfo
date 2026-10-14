@@ -9590,6 +9590,10 @@ Future<(String, bool)> handleHaloUriAdded(
       );
     }
   }
+  // a key "this isn't them" blocked takes no link, whatever words it gives
+  if (await session.keyBlocked(_keyHex(cardKey))) {
+    return (l10n.appKeyBlocked, false);
+  }
   final bound = await _boundIdentity(
     parsed['id']!,
     ss: sessionQuiet ? null : signalSession,
@@ -10526,6 +10530,12 @@ class AppIo {
         dlog('back-pair: key mismatch');
         firstFails.note('key');
         return null;
+      }
+      // a key "this isn't them" blocked opens nothing, under any name
+      if (await appState._keyBlockedHere(_keyHex(key))) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        dlog('back-pair: a blocked key, dropped');
+        throw const FirstRefused('blocked');
       }
       // a name stays with the key first seen for it
       var at = h;
@@ -15557,8 +15567,14 @@ class AppState extends ChangeNotifier {
       if (fromAdmin &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
         final seats = await _seats(env.rosterParticipants, db, room: isRoom);
+        final out = await _keyBlockedSeats(
+          env.rosterParticipants,
+          db,
+          room: isRoom,
+        );
         await db.syncGroupMembers(env.groupId!, [
-          for (final h in roster) seats[h] ?? h,
+          for (final h in roster)
+            if (!out.contains(h)) seats[h] ?? h,
         ]);
         await _subscribeRoomMembers(env.groupId!);
         if (isRoom) await _roomLetIn(env.groupId!, roster, db);
@@ -15573,6 +15589,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -16461,6 +16478,11 @@ class AppState extends ChangeNotifier {
       dlog('intro: names the developer, dropped');
       return;
     }
+    // a key "this isn't them" blocked comes back on no one's card
+    if (await db.keyBlocked(card.xPub.trim().toLowerCase())) {
+      dlog('intro: a blocked key, dropped');
+      return;
+    }
     final everyday = identical(db, live);
     // a card for someone the router keeps is not the everyday side's to
     // file: no row, no vouch, nothing in requests
@@ -16555,6 +16577,23 @@ class AppState extends ChangeNotifier {
     return out;
   }
 
+  // the people a member list names on a key "this isn't them" blocked
+  // here: no seat and no row from it. a room seats keys, not people
+  Future<Set<String>> _keyBlockedSeats(
+    List<Map<String, String>>? people,
+    HaloDb db, {
+    required bool room,
+  }) async {
+    final out = <String>{};
+    if (room || people == null) return out;
+    for (final p in people) {
+      final h = p['h'];
+      final x = (p['x'] ?? '').trim().toLowerCase();
+      if (h != null && x.isNotEmpty && await db.keyBlocked(x)) out.add(h);
+    }
+    return out;
+  }
+
   // whether a group or room of [n] people fits its cap
   Future<bool> _fitsCap(String groupId, int n, HaloDb db) async {
     if (n > kGroupMemberCap) return false;
@@ -16615,7 +16654,11 @@ class AppState extends ChangeNotifier {
         }
         if (!await _fitsCap(groupId, members.toSet().length, db)) return;
         final seats = await _seats(gc.participants, db, room: isRoom);
-        members = [for (final h in members) seats[h] ?? h];
+        final out = await _keyBlockedSeats(gc.participants, db, room: isRoom);
+        members = [
+          for (final h in members)
+            if (!out.contains(h)) seats[h] ?? h,
+        ];
         // rosters can land out of order, a catch-up's most of all: one
         // older than the last taken changes nothing
         final stamp = gc.stamp;
@@ -16656,6 +16699,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -16672,9 +16716,11 @@ class AppState extends ChangeNotifier {
         final isRoom = await _roomOf(groupId, db) != null;
         final have = await db.getGroupMembers(groupId);
         final seats = await _seats(gc.participants, db, room: isRoom);
+        final out = await _keyBlockedSeats(gc.participants, db, room: isRoom);
         final adds = {
           for (final h in _members(gc.members!, room: isRoom))
-            if (!have.contains(seats[h] ?? h)) seats[h] ?? h,
+            if (!out.contains(h) && !have.contains(seats[h] ?? h))
+              seats[h] ?? h,
         };
         if (!await _fitsCap(groupId, have.length + adds.length, db)) return;
         for (final h in adds) {
@@ -16689,6 +16735,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -20227,6 +20274,100 @@ class AppState extends ChangeNotifier {
     await forgetPeerFc(id);
     await live.forgetName(id);
     dlog('name: let go for the one chosen');
+  }
+
+  // "this isn't them": the safety number they read out is not the one on
+  // screen. they go from the container that holds them, all of it, and
+  // [keyHex], the key that number was made from, is blocked there. their
+  // words hold nothing after: the real person's link or first message comes
+  // in as anyone's. false when the key moved meanwhile, or it is the
+  // developer, who is his pinned keys alone
+  Future<bool> notThem(String haloId, String keyHex) async {
+    final key = keyHex.trim().toLowerCase();
+    if (isDevId(haloId) || key.isEmpty) return false;
+    final s = session;
+    final quiet = sessionQuiet;
+    final hidden = s.isHidden(haloId);
+    if (await s.heldKey(haloId) != key) return false;
+    final row = await s.getContact(haloId);
+    final xs = {
+      ((row?['xpub'] as String?) ?? '').trim().toLowerCase(),
+      if (!quiet && signalSession.ready)
+        (await signalSession.peerXPubHex(haloId)) ?? '',
+      key,
+    }..remove('');
+    // what a full shelf left on the relay for them is not fetched again,
+    // and the shade lets go of them while their tags are still known
+    await _relayLeft(haloId, 'drop');
+    if (!quiet) {
+      await cancelWithRetry(() => _io.unnotify(haloId), 'not them shade');
+    }
+    Future<bool> run() async {
+      if (await s.heldKey(haloId) != key) return false;
+      await s.removeAndBlockKey(haloId, key);
+      // the everyday store holds every session, a hidden chat's too
+      if (!quiet && signalSession.ready) {
+        final addr = SignalProtocolAddress(haloId, 1);
+        await signalSession.sessionStore.deleteSession(addr);
+        await signalSession.identityStore.removePeerIdentity(addr);
+      }
+      return true;
+    }
+
+    if (!(quiet ? await run() : await signalSession.serial(haloId, run))) {
+      return false;
+    }
+    dropChatDraft(haloId);
+    if (!quiet) {
+      for (final x in xs) {
+        if (_xPubToHaloId[x] == haloId) _xPubToHaloId.remove(x);
+        _io.unlisten(x);
+      }
+      await forgetPeerFc(haloId);
+      // the router lets them go, and a hidden group's card loses its seat
+      final v = _openVault;
+      if (hidden && v != null) {
+        await _serial(() async {
+          await _router.unlist([haloId]);
+          try {
+            await _attached(v, _recard);
+          } catch (e) {
+            // the cards are read again as the vault next opens
+            dlog('not them: cards not read (${e.runtimeType})');
+          }
+        });
+      }
+    }
+    final v = s.vault;
+    if (hidden && v != null && identical(_session.vault, v)) {
+      try {
+        final rebuilt = await Session.withVault(s.primary, v);
+        if (identical(_session.vault, v)) _session = rebuilt;
+      } catch (e) {
+        dlog('not them: session not rebuilt (${e.runtimeType})');
+      }
+    }
+    _bumpChatRev(haloId);
+    await refreshContacts();
+    await refreshGroups();
+    dlog('not them: removed, their key blocked');
+    return true;
+  }
+
+  // a key "this isn't them" blocked, in any container open here
+  Future<List<({String x, int at})>> blockedKeys() => session.blockedKeys();
+
+  Future<void> unblockKey(String keyHex) async {
+    await session.unblockKey(keyHex);
+    notifyListeners();
+  }
+
+  // an arrival's key blocked on the everyday side or in its open vault
+  Future<bool> _keyBlockedHere(String keyHex) async {
+    for (final d in [live, ?_openVault]) {
+      if (await d.keyBlocked(keyHex)) return true;
+    }
+    return false;
   }
 
   Future<void> archive(String haloId) async {
