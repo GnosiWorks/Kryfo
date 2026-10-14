@@ -874,9 +874,9 @@ class _ChatScreenState extends State<ChatScreen>
   // sends being ground and sealed, typed or not. the composer does not
   // wait for them, a retry does
   int _sealing = 0;
-  // the composer's sends seal in the order they were sent: a later one
-  // grinds beside an earlier one and waits for it to be handed on
-  Future<void> _typedTurn = Future.value();
+  // texts, stickers and waves seal in the order they were sent: a later
+  // one grinds beside an earlier one and waits for it to be handed on
+  Future<void> _sendTurn = Future.value();
   // the pack's waving sticker, once the packs are read; null for the emoji
   (StickerPack, Sticker)? _hi;
   bool _hiKnown = false;
@@ -3855,9 +3855,9 @@ class _ChatScreenState extends State<ChatScreen>
     // claimed from the start: a reload while it grinds or seals keeps it
     // sending, and no retry sends it alongside
     appState.claimSend(msgUid);
-    final before = typed ? _typedTurn : null;
+    final before = _sendTurn;
     final turn = Completer<void>();
-    if (typed) _typedTurn = turn.future;
+    _sendTurn = turn.future;
     var handed = false;
     try {
       final replyToUid = _replyTo?.msgUid;
@@ -3974,7 +3974,7 @@ class _ChatScreenState extends State<ChatScreen>
             dlog('send: opener not kept (${e.runtimeType})');
           });
         }
-        if (before != null) await before;
+        await before;
         final prev = _encryptGate;
         final gate = Completer<void>();
         _encryptGate = gate.future;
@@ -4018,7 +4018,9 @@ class _ChatScreenState extends State<ChatScreen>
           .then((result) => _finishTextSend(msg, result));
     } finally {
       if (!handed) appState.releaseSend(msgUid);
-      turn.complete();
+      // one that ended early still lets the next go only after the one
+      // before it
+      unawaited(before.whenComplete(turn.complete));
     }
   }
 

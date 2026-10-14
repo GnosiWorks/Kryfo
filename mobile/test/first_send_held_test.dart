@@ -186,26 +186,27 @@ void main() {
   });
 
   testWidgets('a wave and a text side by side take both of a request\'s '
-      'slots at once, so a third cannot pass', (t) async {
+      'slots at once, so a third cannot pass, and go in the order they '
+      'were sent', (t) async {
     await open(t);
     await t.tap(find.text(l10n.chatWave));
     await settle(t);
     expect(db.held, hasLength(1));
     await type(t, 'it is me, from the cafe');
     expect(db.held, hasLength(2));
-    // the text goes first, the wave still holds
+    // the text is ready first, and waits for the wave sent before it
     db.held[1].complete();
     await settle(t);
-    expect(relay.ciphers, hasLength(1));
-    relay.sends.single.complete('ok');
-    await settle(t);
+    expect(relay.ciphers, isEmpty);
     // both slots are spent: the composer is gone, nothing more goes
     expect(find.byIcon(Icons.arrow_upward), findsNothing);
     expect(find.text(l10n.chatWaitingForThemTo), findsOneWidget);
     db.held.first.complete();
     await settle(t);
     expect(relay.ciphers, hasLength(2));
-    relay.sends.last.complete('ok');
+    for (final s in relay.sends) {
+      s.complete('ok');
+    }
     await settle(t);
     expect(
       mem.rows('messages').where((r) => r['direction'] == 'out'),
@@ -235,6 +236,35 @@ void main() {
       went.add(await t.runAsync(() => words(c)) ?? '');
     }
     expect(went, ['first, from the cafe', 'second, still there']);
+    for (final s in relay.sends) {
+      s.complete('ok');
+    }
+    await settle(t);
+    expect(t.takeException(), isNull);
+    await devClose(t);
+  });
+
+  testWidgets('one that fails while an earlier one holds still lets the '
+      'next go only after that earlier one', (t) async {
+    await open(t);
+    await type(t, 'first, from the cafe');
+    await type(t, 'this one breaks');
+    expect(db.held, hasLength(2));
+    db.held[1].completeError(StateError('the disk is full'));
+    await settle(t);
+    await type(t, 'third, after the first');
+    expect(db.held, hasLength(3));
+    db.held[2].complete();
+    await settle(t);
+    expect(relay.ciphers, isEmpty);
+    db.held[0].complete();
+    await settle(t);
+    expect(relay.ciphers, hasLength(2));
+    final went = <String>[];
+    for (final c in relay.ciphers) {
+      went.add(await t.runAsync(() => words(c)) ?? '');
+    }
+    expect(went, ['first, from the cafe', 'third, after the first']);
     for (final s in relay.sends) {
       s.complete('ok');
     }
