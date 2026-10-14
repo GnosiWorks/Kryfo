@@ -23,7 +23,7 @@
 - the disguised voice is easier to understand.
 - a voice note's length counts from the first sound, rounded to the nearest second.
 - when someone you verified gets a new security code, Kryfo waits for you to check it or accept it before sending to them. their messages still arrive.
-- three words that came with a request, an introduction or a group show "Not checked" until you scan their qr code or compare the safety number.
+- three words that came with a request, an introduction or a group show "Not checked" until you scan their qr code in person or compare the safety number.
 - backups now bring your privacy settings with them. pins never travel, so set them again after a restore.
 - backups and moving to a new phone are more reliable.
 - with "Always on", Kryfo keeps getting messages after an update.
