@@ -206,6 +206,55 @@ func TestCaptivePortalIdlesThenRetries(t *testing.T) {
 	}
 }
 
+// wifi back behind a portal while direct was what worked here: the pass on
+// it is cut short by the portal, and tor must not be left with no way in.
+// the way that worked is put back without a pass, and nothing unknown is
+func TestCaptiveKeepsTheKnownWay(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	memRemember("wifi", autoStep{Method: "direct"}, dayOf(f.now))
+	bounces := 0
+	old := captiveBounce
+	captiveBounce = func() { bounces++ }
+	defer func() { captiveBounce = old }()
+	portal := netInfo{On: true, Limited: true, Kind: "wifi"}
+	f.script["direct"] = func(a *attemptSeen, el time.Duration) {
+		if el >= 4*time.Second {
+			setNetInfo(portal)
+		}
+	}
+	if r := pass(t, modeOpts{}); r != passInterrupted {
+		t.Fatalf("pass %s", r)
+	}
+	if why := networkHold(); why != errAutoWait {
+		t.Fatalf("hold after the cut pass: %q", why)
+	}
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		stopLoop()
+	}()
+	if calls := runLoop(t, f, func(int, string) string { return seenOK }); len(calls) != 0 {
+		t.Fatalf("passes behind the portal: %v", calls)
+	}
+	if why := networkHold(); why != "" {
+		t.Fatalf("tor left off behind the portal: %q", why)
+	}
+	if st := bridgeStatus(); st.Phase != "captive" || st.Method != "direct" {
+		t.Fatalf("status %+v", st)
+	}
+	// nothing remembered for this type of network: it waits for the sign-in
+	resetAuto(t)
+	autoDirectOK.Store(false)
+	setNetInfo(portal)
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		stopLoop()
+	}()
+	runLoop(t, f, func(int, string) string { return seenOK })
+	if why := networkHold(); why != errAutoWait {
+		t.Fatalf("an unknown way put in place behind a portal: %q", why)
+	}
+}
+
 // a method that failed in a pass is no longer the one to check in by
 func TestCheckInForgetsAFailedMethod(t *testing.T) {
 	f := useFakeAuto(t, wifi())

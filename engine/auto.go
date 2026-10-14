@@ -700,6 +700,31 @@ func autoIdleWhy() string {
 	return ""
 }
 
+// behind a portal no pass runs, but tor keeps the way that worked on this
+// type of network, so a sign-in, or a portal android only thinks is there,
+// finds it in place. nothing known here: tor waits for the sign-in
+func captiveWay(gen int64) {
+	if networkHold() != errAutoWait {
+		return
+	}
+	_, opts, _ := bridgeMode()
+	s, ok := checkInStep(currentNet().Kind, memSnapshot(), opts, dayOf(autoNow()))
+	if !ok {
+		return
+	}
+	if ok, _ := autoUseStep(gen, s); !ok {
+		return
+	}
+	stSet(func() { autoSt.method, autoSt.source = s.Method, s.Source })
+	log.Printf("auto: behind a portal, keeping %s in place", s.Method)
+	if torStarted() && !torIsPaused() {
+		go captiveBounce()
+	}
+}
+
+// a var for the tests
+var captiveBounce = func() { _ = reconnectAuto() }
+
 // one pass and what it began with
 type passCtx struct {
 	gen   int64
@@ -1080,6 +1105,9 @@ func autoLoop(gen int64) {
 			downSince, upSince = time.Time{}, time.Time{}
 			if result != seenOK && result != "exhausted" {
 				result = passInterrupted
+			}
+			if why == "captive" {
+				captiveWay(gen)
 			}
 		} else {
 			n := currentNet()
@@ -1491,6 +1519,9 @@ func bridgeStatus() bridgeStatusView {
 	switch why := autoIdleWhy(); {
 	case why == "not_tor_mode", why == "no_internet":
 		phase, v.ErrorCode = why, why
+	// a portal tor gets through anyway is no portal to sign in to
+	case why == "captive" && v.CanSend:
+		phase = "connected"
 	case why == "captive":
 		phase, v.ErrorCode = "captive", "limited"
 	case why == "paused" && inCheckIn():
