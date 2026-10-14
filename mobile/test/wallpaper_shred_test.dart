@@ -8,7 +8,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show HaloDb;
+import 'package:kryfo/main.dart' show HaloDb, tidyWallpapers;
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -151,6 +151,8 @@ void main() {
     expect(File(b).readAsBytesSync(), [2, 2]);
     expect(atmo(db, _peer), 'image:$b');
     expect(p.basename(File(b).parent.path), 'wallpapers');
+    // nothing in the name says whose chat it is
+    expect(p.basename(b), matches(RegExp(r'^wp_[0-9a-f]{32}\.jpg$')));
   });
 
   test('the photo stays when the row is not written', () async {
@@ -188,6 +190,71 @@ void main() {
       expect(f.existsSync(), isTrue);
     },
   );
+
+  group('a name after its chat', () {
+    final before = DateTime.now().subtract(const Duration(minutes: 10));
+    final old = before.subtract(const Duration(hours: 1));
+    final random = RegExp(r'^wp_[0-9a-f]{32}\.jpg$');
+
+    for (final leaf in ['$_peer.jpg', '${_peer}_0123456789abcdef.jpg']) {
+      test('$leaf goes random, the row with it', () async {
+        final db = await rows(HaloContainer.vault);
+        final f = (await photo(db, name: leaf))..setLastModifiedSync(old);
+        expect(await tidyWallpapers(db, before: before), isEmpty);
+        final now = atmo(db, _peer)!.substring(6);
+        expect(p.basename(now), matches(random));
+        expect(p.dirname(now), f.parent.path);
+        expect(File(now).readAsBytesSync(), [1, 2, 3]);
+        expect(f.existsSync(), isFalse);
+      });
+    }
+
+    test('a fault writing the row leaves the old name and the old row, and '
+        'sweeps nothing', () async {
+      final db = await rows();
+      final f = (await photo(db))..setLastModifiedSync(old);
+      final was = atmo(db, _peer);
+      final dir = await db.container.folder('wallpapers');
+      final orphan = File(p.join(dir.path, 'left.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      db.mem.failOn = 'update:contacts';
+      await expectLater(tidyWallpapers(db, before: before), throwsStateError);
+      expect(atmo(db, _peer), was);
+      expect(f.existsSync() && orphan.existsSync(), isTrue);
+    });
+
+    test('a start after the row and before the rename finishes it', () async {
+      final db = await rows();
+      final dir = await db.container.folder('wallpapers');
+      final f = File(p.join(dir.path, '$_peer.jpg'))
+        ..writeAsBytesSync([1, 2, 3])
+        ..setLastModifiedSync(old);
+      final to = p.join(dir.path, 'wp_${'ab' * 16}.jpg');
+      await db.mem.update(
+        'contacts',
+        {'atmosphere': 'image:$to'},
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      expect(await tidyWallpapers(db, before: before), isEmpty);
+      expect(atmo(db, _peer), 'image:$to');
+      expect(File(to).readAsBytesSync(), [1, 2, 3]);
+      expect(f.existsSync(), isFalse);
+    });
+
+    test('another container\'s folder is never touched', () async {
+      final db = await rows();
+      await photo(db);
+      final shut = await HaloContainer.vault.folder('wallpapers');
+      final theirs = File(p.join(shut.path, '$_other.jpg'))
+        ..writeAsBytesSync([5])
+        ..setLastModifiedSync(old);
+      await tidyWallpapers(db, before: before);
+      expect(theirs.existsSync(), isTrue);
+      expect(shut.listSync(), hasLength(1));
+    });
+  });
 
   group('the start sweep', () {
     final before = DateTime.now().subtract(const Duration(minutes: 10));

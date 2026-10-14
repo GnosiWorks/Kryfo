@@ -4187,6 +4187,64 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  static final _randomWall = RegExp(r'^wp_[0-9a-f]{32}\.jpg$');
+
+  /// wallpapers an older version named after their chat get a random name:
+  /// the row is written first, then the file renamed. a start between the
+  /// two finds the row's file missing and the old name beside it, and
+  /// finishes the rename. throws when a rename is left undone, so nothing
+  /// is swept that a row is about to name
+  Future<void> renameNamedWallpapers() async {
+    final db = await open();
+    final dir = await container.folder('wallpapers');
+    for (final r in await db.query(
+      'contacts',
+      columns: ['halo_id', 'atmosphere'],
+      where: 'atmosphere IS NOT NULL',
+    )) {
+      final id = r['halo_id'] as String;
+      final was = r['atmosphere'];
+      final f = _photoOf(was);
+      if (f == null) continue;
+      final leaf = p.basename(f);
+      final at = File(p.join(dir.path, leaf));
+      final type = await FileSystemEntity.type(at.path, followLinks: false);
+      if (_randomWall.hasMatch(leaf)) {
+        if (type == FileSystemEntityType.notFound) {
+          await (await _namedAfter(dir, id))?.rename(at.path);
+        }
+        continue;
+      }
+      // only a file of ours: a link or a folder is left as it is
+      if (type != FileSystemEntityType.file) continue;
+      final to = p.join(dir.path, _freshWallLeaf());
+      final written = await db.transaction((t) async {
+        if (await _atmosphereOf(t, id) != was) return false;
+        await t.update(
+          'contacts',
+          {'atmosphere': 'image:$to'},
+          where: 'halo_id = ?',
+          whereArgs: [id],
+        );
+        return true;
+      });
+      if (written) await at.rename(to);
+    }
+  }
+
+  // a wallpaper an older version named after [id]'s chat, the newest
+  static Future<File?> _namedAfter(Directory dir, String id) async {
+    final shape = RegExp('^${RegExp.escape(id)}(_[0-9a-f]{16})?\\.jpg\$');
+    File? best;
+    DateTime? at;
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File || !shape.hasMatch(p.basename(e.path))) continue;
+      final m = await e.lastModified();
+      if (at == null || m.isAfter(at)) (best, at) = (e, m);
+    }
+    return best;
+  }
+
   /// the files in this container's wallpapers folder that no chat or group
   /// names, last written before [before]: what a delete or a crash left
   Future<List<File>> unnamedWallpapers({required DateTime before}) async {
@@ -4607,17 +4665,12 @@ class HaloDb implements GroupOwedStore {
     if (was != atmosphere) await _dropPhotos([was]);
   }
 
-  // a photo from the gallery behind a chat, under a name of its own: the
-  // old file is shredded, not written over, and no cached image of it
-  // shows. the path it was kept at
+  // a photo from the gallery behind a chat, under a new random name: the
+  // old file is shredded, not written over, no cached image of it shows,
+  // and the name says nothing of whose chat it is. the path it was kept at
   Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) async {
     final dir = await container.folder('wallpapers');
-    final rnd = Random.secure();
-    final tag = [
-      for (var i = 0; i < 8; i++)
-        rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ].join();
-    final f = File(p.join(dir.path, '${peerId}_$tag.jpg'));
+    final f = File(p.join(dir.path, _freshWallLeaf()));
     try {
       await f.writeAsBytes(bytes, flush: true);
       await setAtmosphere(peerId, 'image:${f.path}');
@@ -9720,6 +9773,32 @@ Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
 
 final _leafRandom = Random.secure();
+
+// a wallpaper's name: random, never its chat's
+String _freshWallLeaf() {
+  final b = [for (var i = 0; i < 16; i++) _leafRandom.nextInt(256)];
+  return 'wp_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}.jpg';
+}
+
+/// a container's wallpapers put right while it is open and settled: names
+/// that say whose chat it is go random, then what no row names is listed
+/// for the shred. the decoy's, with a vault of its own on disk, waits for
+/// that vault's open ([vaultOpen]): a hide cut short can leave a file only
+/// the vault's rows name
+@visibleForTesting
+Future<List<File>> tidyWallpapers(
+  HaloDb d, {
+  required DateTime before,
+  bool vaultOpen = false,
+}) async {
+  if (d.container == HaloContainer.decoy &&
+      !vaultOpen &&
+      await HaloContainer.decoyVault.onDisk()) {
+    return const [];
+  }
+  await d.renameNamedWallpapers();
+  return d.unnamedWallpapers(before: before);
+}
 
 // a name for an arriving file that nothing on the wire chose: never a
 // message id, and never the shape of the names our own files get
@@ -16768,14 +16847,10 @@ class AppState extends ChangeNotifier {
         final q = await _quietOf(d);
         if (q != null) {
           await _dropGroupLeftovers(d);
-          // with a vault of its own on disk, a hide cut short can leave a
-          // file only that vault's rows name: its open sweeps instead
-          if (!await HaloContainer.decoyVault.onDisk()) {
-            await _sweepUnnamedWallpapers(
-              d,
-              DateTime.now().subtract(const Duration(minutes: 10)),
-            );
-          }
+          await _sweepUnnamedWallpapers(
+            d,
+            DateTime.now().subtract(const Duration(minutes: 10)),
+          );
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -17526,7 +17601,9 @@ class AppState extends ChangeNotifier {
       // settled, both sides' rows name their files
       final before = DateTime.now().subtract(const Duration(minutes: 10));
       await _sweepUnnamedWallpapers(v, before);
-      if (decoy) await _sweepUnnamedWallpapers(primary, before);
+      if (decoy) {
+        await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
+      }
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -19619,9 +19696,17 @@ class AppState extends ChangeNotifier {
   }
 
   // as for media: settled here, zeroed in the background
-  Future<void> _sweepUnnamedWallpapers(HaloDb d, DateTime before) async {
+  Future<void> _sweepUnnamedWallpapers(
+    HaloDb d,
+    DateTime before, {
+    bool vaultOpen = false,
+  }) async {
     try {
-      final gone = await d.unnamedWallpapers(before: before);
+      final gone = await tidyWallpapers(
+        d,
+        before: before,
+        vaultOpen: vaultOpen,
+      );
       if (gone.isEmpty) return;
       dlog('wallpaper: ${gone.length} files no chat names');
       unawaited(() async {
