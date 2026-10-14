@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../engine_strings.dart';
 
@@ -49,18 +50,41 @@ AgeError? ageErrorOf(String result) {
   };
 }
 
-Future<AgeError?> ageLock(int inFd, int outFd, String pass) => Isolate.run(() {
-  final p = pass.toNativeUtf8();
+// the engine's entry, another name in tests to make the lookup fail
+@visibleForTesting
+String ageLockSymbol = 'HaloAgeLock';
+
+// the engine owns both descriptors once HaloAgeLock is called. until then
+// they are this side's, and closed on any way out
+Future<AgeError?> ageLock(int inFd, int outFd, String pass) async {
+  final symbol = ageLockSymbol;
   try {
-    return ageErrorOf(
-      engineTake(
-        _lib().lookupFunction<_LockC, _LockD>('HaloAgeLock')(inFd, outFd, p),
-      ),
-    );
-  } finally {
-    freeSecret(p);
+    return await Isolate.run(() {
+      var p = nullptr.cast<Utf8>();
+      var handed = false;
+      try {
+        final lock = _lib().lookupFunction<_LockC, _LockD>(symbol);
+        p = pass.toNativeUtf8();
+        handed = true;
+        return ageErrorOf(engineTake(lock(inFd, outFd, p)));
+      } catch (_) {
+        return AgeError.io;
+      } finally {
+        if (!handed) {
+          closeFd(inFd);
+          closeFd(outFd);
+        }
+        freeSecret(p);
+      }
+    });
+  } catch (_) {
+    // the body never throws: the isolate did not run, the descriptors are
+    // still ours
+    closeFd(inFd);
+    closeFd(outFd);
+    return AgeError.io;
   }
-});
+}
 
 Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
   final p = pass.toNativeUtf8();
