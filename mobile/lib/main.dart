@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
+import 'orientation.dart' show appOrientations;
 import 'backup.dart' show backupRunning, restoreRunning, sweepBackupLeftovers;
 import 'picked.dart'
     show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
@@ -23511,7 +23512,7 @@ void main() async {
   // not awaited: this is a platform call, and with no activity attached it
   // never answers
   unawaited(
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+    SystemChrome.setPreferredOrientations(appOrientations),
   );
   // drawn under the bars on android 10 to 14 too, as 15 and later force.
   // older versions ignore it
