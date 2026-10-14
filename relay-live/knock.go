@@ -394,38 +394,52 @@ func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 	return false, ""
 }
 
-// takes a registration, checked again in the same step, so two at once for
-// one address end with the newer. a forget is on disk before the relay
-// answers it: a crash right after cannot bring the registration back
-func (k *knocker) apply(ev *nostr.Event) {
-	if ev.Kind != knockKind {
-		return
-	}
+// takes a registration as the reject hook, checked and kept in one step,
+// so two at once for one address end with the newer, and a share cannot
+// fill between the check and the taking. a forget is written to disk, on
+// its own path and synced, before the relay answers it; one that cannot be
+// written is answered with an error, so the phone sends it again
+func (k *knocker) take(ev *nostr.Event) (bool, string) {
 	key := knockKey(ev.PubKey)
 	made := int64(ev.CreatedAt)
 	k.mu.Lock()
-	if rej, _ := k.checkLocked(ev); rej {
+	if rej, msg := k.checkLocked(ev); rej {
 		k.mu.Unlock()
-		return
+		return rej, msg
 	}
-	if ev.Content == "" {
-		// only a forget that took something is kept: one for nothing
-		// guards nothing
-		if k.regs[key] == nil {
-			k.mu.Unlock()
-			return
-		}
-		k.dropLocked(key)
-		k.forgets[key] = made
-		done := k.store.putWait(key, "", made, made+int64(knockSkew/time.Second))
+	if ev.Content != "" {
+		delete(k.forgets, key)
+		k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
+		k.store.put(key, ev.Content, made, k.regs[key].expires)
 		k.mu.Unlock()
-		k.store.wait(done)
-		return
+		return false, ""
 	}
-	delete(k.forgets, key)
-	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
-	k.store.put(key, ev.Content, made, k.regs[key].expires)
+	// only a forget that took something is kept: one for nothing guards
+	// nothing
+	if k.regs[key] == nil {
+		k.mu.Unlock()
+		return false, ""
+	}
 	k.mu.Unlock()
+	if err := k.store.writeForget(key, made, made+int64(knockSkew/time.Second)); err != nil {
+		return true, "error: the relay could not keep this, try again"
+	}
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if kept, _, any := k.keptLocked(key); any && kept > made {
+		// a newer one came meanwhile; on disk the newer wins as well
+		return true, "duplicate: not newer than what is kept"
+	}
+	k.dropLocked(key)
+	k.forgets[key] = made
+	return false, ""
+}
+
+// take, for the tests: the answer left out
+func (k *knocker) apply(ev *nostr.Event) {
+	if ev.Kind == knockKind {
+		k.take(ev)
+	}
 }
 
 func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) {
@@ -682,12 +696,13 @@ func (k *knocker) logStats() {
 
 // ---- wiring ----
 
-// registrations come in through the reject hooks (limits.event, which
-// counts them like any event) and are taken once every hook said yes. they
-// are never handed to a listener
+// registrations come in through the reject hook (limits.event, which counts
+// them like any event) and are taken there, so the answer says whether they
+// were. they are never handed to a listener
 func applyKnocks(relay *khatru.Relay, l *limits, k *knocker) {
 	l.knock = k
-	relay.OnEphemeralEvent = append(relay.OnEphemeralEvent, func(_ context.Context, ev *nostr.Event) { k.apply(ev) })
+	// taken in the reject hook already; this only lets khatru answer ok
+	relay.OnEphemeralEvent = append(relay.OnEphemeralEvent, func(context.Context, *nostr.Event) {})
 	relay.OnEventSaved = append(relay.OnEventSaved, func(ctx context.Context, ev *nostr.Event) {
 		// a wrap's knock comes out of its connection's budget; a knock per
 		// endpoint is held to the floor besides

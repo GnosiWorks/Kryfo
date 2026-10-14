@@ -232,7 +232,7 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 		return true, "rate-limited: slow down"
 	}
 	if ev.Kind == knockKind && l.knock != nil {
-		return l.knock.check(ev)
+		return l.knock.take(ev)
 	}
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"

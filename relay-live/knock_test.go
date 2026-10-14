@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -1339,6 +1340,94 @@ func TestKnockTableKeepsRoomForRegistrations(t *testing.T) {
 	st.db.QueryRow(`SELECT endpoint FROM knock WHERE addr = ?`, func() []byte { k := knockKey(pk); return k[:] }()).Scan(&ep)
 	if ep != "" {
 		t.Fatal("the forget was answered before it was on disk")
+	}
+}
+
+// a forget the table cannot take is answered with an error, and nothing
+// is forgotten in memory either: the phone sends it again
+func TestKnockForgetOnALockedTableIsAnError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.close()
+	st.start()
+	tk := newTestKnocks(t)
+	tk.store = st
+	sk, pk := keypair()
+	reg := signedReg(t, sk, "https://ntfy.sh/up", tk.clock.now())
+	if rej, msg := tk.take(&reg); rej {
+		t.Fatal(msg)
+	}
+	st.flush(time.Minute)
+	other, err := sql.Open("sqlite3", path+"?_busy_timeout=0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer other.Close()
+	conn, err := other.Conn(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := conn.ExecContext(context.Background(), `BEGIN IMMEDIATE`); err != nil {
+		t.Fatal(err)
+	}
+	forget := signedReg(t, sk, "", tk.clock.now().Add(time.Second))
+	rej, msg := tk.take(&forget)
+	if !rej || !strings.HasPrefix(msg, "error:") {
+		t.Fatalf("a forget not written was answered %v %q", rej, msg)
+	}
+	if tk.regs[knockKey(pk)] == nil {
+		t.Fatal("a forget not written was taken in memory")
+	}
+	conn.ExecContext(context.Background(), `ROLLBACK`)
+	conn.Close()
+	if rej, msg := tk.take(&forget); rej {
+		t.Fatalf("sent again: %q", msg)
+	}
+	var ep string
+	k := knockKey(pk)
+	st.db.QueryRow(`SELECT endpoint FROM knock WHERE addr = ?`, k[:]).Scan(&ep)
+	if ep != "" || tk.regs[k] != nil {
+		t.Fatal("the forget sent again did not land")
+	}
+}
+
+// with the writer's queue full of renewals, every forget still reaches the
+// disk before it is answered
+func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.close()
+	tk := newTestKnocks(t)
+	tk.store = st
+	now := tk.clock.now()
+	const nf = 2000
+	var sks []string
+	for i := 0; i < nf; i++ {
+		sk, _ := keypair()
+		ev := signedReg(t, sk, fmt.Sprintf("https://ntfy.sh/f%d", i/200), now)
+		tk.take(&ev)
+		sks = append(sks, sk)
+	}
+	// the writer not running, its queue filled to the brim by renewals
+	for i := 0; len(st.ch) < cap(st.ch); i++ {
+		st.put([32]byte{byte(i), byte(i >> 8), byte(i >> 16)}, "https://ntfy.sh/x", now.Unix(), now.Unix()+1)
+	}
+	for _, sk := range sks {
+		ev := signedReg(t, sk, "", now.Add(time.Second))
+		if rej, msg := tk.take(&ev); rej {
+			t.Fatal(msg)
+		}
+	}
+	var n int
+	st.fdb.QueryRow(`SELECT count(*) FROM knock WHERE endpoint = ''`).Scan(&n)
+	if n != nf {
+		t.Fatalf("%d of %d forgets on disk", n, nf)
 	}
 }
 

@@ -2,13 +2,14 @@ package main
 
 // the knock table: a hash of the address, the endpoint, the signed time and
 // the expiry. a forget is a row with no endpoint, kept for the skew window.
-// writes go through one goroutine in batches, never waited on under the
-// knocker's lock, so a slow disk never holds up a wrap. half the queue is
-// kept for registrations and forgets: the sweep's deletes may be skipped,
-// a start deletes what expired anyway. a forget is written before the
-// relay answers it. a registration is answered first: one lost in a crash
-// is sent again by the phone within days. the files are the relay user's
-// alone.
+// registrations go through one goroutine in batches, never waited on under
+// the knocker's lock, so a slow disk never holds up a wrap. half that queue
+// is kept for them: the sweep's deletes may be skipped, a start deletes
+// what expired anyway. a registration is answered first: one lost in a
+// crash is sent again by the phone within days. a forget is written on its
+// own connection, synced, before the relay answers it. every write keeps
+// the newer of two for one address, so the two paths cannot undo each
+// other. the files are the relay user's alone.
 
 import (
 	"database/sql"
@@ -27,7 +28,10 @@ type knockOp struct {
 }
 
 type knockStore struct {
-	db      *sql.DB
+	db *sql.DB
+	// forgets, written on their own connection and synced before the relay
+	// answers them
+	fdb     *sql.DB
 	path    string
 	ch      chan knockOp
 	dropped atomic.Int64
@@ -45,6 +49,12 @@ func openKnockStore(path string) (*knockStore, error) {
 		return nil, err
 	}
 	db.SetMaxOpenConns(1)
+	fdb, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_sync=FULL&_busy_timeout=2000")
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	fdb.SetMaxOpenConns(1)
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS knock (
 		addr BLOB PRIMARY KEY, endpoint TEXT NOT NULL,
 		made INTEGER NOT NULL, expires INTEGER NOT NULL)`); err != nil {
@@ -59,7 +69,7 @@ func openKnockStore(path string) (*knockStore, error) {
 			}
 		}
 	}
-	return &knockStore{db: db, path: path, ch: make(chan knockOp, 1<<16)}, nil
+	return &knockStore{db: db, fdb: fdb, path: path, ch: make(chan knockOp, 1<<16)}, nil
 }
 
 // a row to write, or with made 0 to delete. never blocks: a write that
@@ -84,33 +94,6 @@ func (s *knockStore) putSweep(key [32]byte) {
 	select {
 	case s.ch <- knockOp{key: key}:
 	default:
-	}
-}
-
-// a row whose write is waited for: the returned channel closes once it is
-// on disk. nil when it could not be queued
-func (s *knockStore) putWait(key [32]byte, ep string, made, expires int64) chan struct{} {
-	if s == nil {
-		return nil
-	}
-	done := make(chan struct{})
-	select {
-	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires, done: done}:
-		return done
-	default:
-		s.drop()
-		return nil
-	}
-}
-
-// waits for a putWait, a few seconds at most
-func (s *knockStore) wait(done chan struct{}) {
-	if done == nil {
-		return
-	}
-	select {
-	case <-done:
-	case <-time.After(5 * time.Second):
 	}
 }
 
@@ -163,7 +146,8 @@ func (s *knockStore) write(batch []knockOp) {
 				_, err = tx.Exec(`DELETE FROM knock WHERE addr = ?`, op.key[:])
 			} else {
 				_, err = tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, ?, ?, ?)
-					ON CONFLICT(addr) DO UPDATE SET endpoint = excluded.endpoint, made = excluded.made, expires = excluded.expires`,
+					ON CONFLICT(addr) DO UPDATE SET endpoint = excluded.endpoint, made = excluded.made, expires = excluded.expires
+					WHERE excluded.made > knock.made`,
 					op.key[:], op.ep, op.made, op.expires)
 			}
 			if err != nil {
@@ -206,10 +190,26 @@ func (s *knockStore) flush(wait time.Duration) bool {
 	}
 }
 
+// a forget, on disk before this returns; it wins a tie with a
+// registration of the same second
+func (s *knockStore) writeForget(key [32]byte, made, expires int64) error {
+	if s == nil {
+		return nil
+	}
+	_, err := s.fdb.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, '', ?, ?)
+		ON CONFLICT(addr) DO UPDATE SET endpoint = '', made = excluded.made, expires = excluded.expires
+		WHERE excluded.made >= knock.made`, key[:], made, expires)
+	if err != nil {
+		log.Printf("knock: a forget not written: %v", err)
+	}
+	return err
+}
+
 func (s *knockStore) close() {
 	if s == nil {
 		return
 	}
+	s.fdb.Close()
 	s.db.Close()
 }
 
