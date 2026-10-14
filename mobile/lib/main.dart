@@ -1480,7 +1480,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 79,
+      version: 80,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1647,10 +1647,11 @@ class HaloDb implements GroupOwedStore {
         await notifTagTables(db);
         await groupResentTables(db);
         await notifRingTables(db);
+        await wallpaperTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 79
+        // they add. 66 runs after it: it reads what they all make. 67 to 80
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2137,6 +2138,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 79) {
           // which message each notification rang for
           await notifRingTables(db);
+        }
+        if (oldV < 80) {
+          // chats' wallpaper photos and the default, kept in here
+          await wallpaperTable(db);
         }
       },
     );
@@ -4559,6 +4564,82 @@ class HaloDb implements GroupOwedStore {
     );
     if (rows.isEmpty) return null;
     return rows.first['atmosphere'] as String?;
+  }
+
+  // a wallpaper row by its key (wallKey, '' for the default)
+  Future<({String atmo, Uint8List? photo})?> wallpaperRow(String key) async {
+    final db = await open();
+    final rows = await db.query(
+      'wallpapers',
+      columns: ['atmo', 'photo'],
+      where: 'chat = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final photo = rows.first['photo'];
+    return (
+      atmo: rows.first['atmo'] as String,
+      photo: photo is Uint8List
+          ? photo
+          : photo is List<int>
+          ? Uint8List.fromList(photo)
+          : null,
+    );
+  }
+
+  // a chat's own photo behind it, and its atmosphere saying so
+  Future<void> setChatPhoto(
+    String chatId,
+    Uint8List photo, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    await db.transaction((t) async {
+      await t.insert('wallpapers', {
+        'chat': wallKey(chatId, group: group),
+        'atmo': kPhotoWall,
+        'photo': photo,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await t.update(
+        group ? 'groups' : 'contacts',
+        {'atmosphere': kPhotoWall},
+        where: group ? 'group_id = ?' : 'halo_id = ?',
+        whereArgs: [chatId],
+      );
+    });
+  }
+
+  // a built-in by name, or null to follow the default. a photo it had goes
+  Future<void> setChatAtmosphere(
+    String chatId,
+    String? atmo, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    await db.transaction((t) async {
+      await t.delete(
+        'wallpapers',
+        where: 'chat = ?',
+        whereArgs: [wallKey(chatId, group: group)],
+      );
+      await t.update(
+        group ? 'groups' : 'contacts',
+        {'atmosphere': atmo},
+        where: group ? 'group_id = ?' : 'halo_id = ?',
+        whereArgs: [chatId],
+      );
+    });
+  }
+
+  // the default: a built-in by name, or kPhotoWall with its photo
+  Future<void> setDefaultWallpaper(String atmo, [Uint8List? photo]) async {
+    final db = await open();
+    await db.insert('wallpapers', {
+      'chat': '',
+      'atmo': atmo,
+      'photo': photo,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> clearConversation(String peerId) async {
@@ -8437,6 +8518,44 @@ Future<void> notifRingTables(DatabaseExecutor db) async {
     'CREATE TRIGGER IF NOT EXISTS notif_rings_follow AFTER DELETE ON '
     'messages BEGIN DELETE FROM notif_rings WHERE msg_uid = old.msg_uid; END',
   );
+}
+
+// a chat's own wallpaper photo, and the default every chat without a choice
+// of its own shows. chat is a contact's id, 'group:' and a group's id, or
+// '' for the default. atmo is kPhotoWall with a photo, or for the default a
+// built-in by name. the photo's bytes live here, under the container's own
+// key, and nowhere else. a chat's photo lasts while its atmosphere says
+// photo: whatever clears that or drops the row (a delete, a wipe of the
+// chat's settings) takes the photo with it, by the triggers below
+const kPhotoWall = 'photo';
+
+String wallKey(String chatId, {bool group = false}) =>
+    group ? 'group:$chatId' : chatId;
+
+Future<void> wallpaperTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS wallpapers (
+      chat TEXT PRIMARY KEY,
+      atmo TEXT NOT NULL,
+      photo BLOB
+    )
+  ''');
+  for (final (table, key) in const [
+    ('contacts', 'X.halo_id'),
+    ('groups', "'group:' || X.group_id"),
+  ]) {
+    final oldKey = key.replaceAll('X.', 'old.');
+    final newKey = key.replaceAll('X.', 'new.');
+    await db.execute(
+      'CREATE TRIGGER IF NOT EXISTS wallpapers_${table}_gone AFTER DELETE ON '
+      '$table BEGIN DELETE FROM wallpapers WHERE chat = $oldKey; END',
+    );
+    await db.execute(
+      'CREATE TRIGGER IF NOT EXISTS wallpapers_${table}_off AFTER UPDATE OF '
+      "atmosphere ON $table WHEN new.atmosphere IS NOT '$kPhotoWall' BEGIN "
+      'DELETE FROM wallpapers WHERE chat = $newKey; END',
+    );
+  }
 }
 
 // a group's texts sent again to a member who restored a backup: once per

@@ -62,6 +62,12 @@ Future<void> _tables(SqliteMem db, String s) async {
         'PRIMARY KEY (msg_uid, peer_id))',
     'CREATE TABLE $s.group_resent (group_id TEXT, member TEXT, since '
         'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
+    'CREATE TABLE $s.wallpapers (chat TEXT PRIMARY KEY, atmo TEXT NOT NULL, '
+        'photo BLOB)',
+    // a person's own, for a chat with them moved alone
+    'CREATE TABLE $s.frames_out (id INTEGER PRIMARY KEY, peer_id TEXT)',
+    'CREATE TABLE $s.first_kept (hash TEXT PRIMARY KEY, peer TEXT)',
+    'CREATE TABLE $s.opener_again (msg_uid TEXT PRIMARY KEY)',
   ]) {
     await db.execute(t);
   }
@@ -262,4 +268,37 @@ void main() {
     },
     skip: skip,
   );
+
+  test('a chat\'s wallpaper photo moves with it and back, byte for byte; '
+      'the default and other chats\' stay', () async {
+    final db = await _world();
+    final photo = List.generate(5000, (i) => i % 256);
+    for (final chat in ['group:$_g', _f, '']) {
+      await db.execute(
+        'INSERT INTO main.wallpapers (chat, atmo, photo) VALUES (?, ?, ?)',
+        [chat, chat.isEmpty ? 'rain' : 'photo', photo],
+      );
+    }
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    Future<List<Object?>> walls(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT chat FROM $s.wallpapers ORDER BY chat',
+      ))
+        r['chat'],
+    ];
+    await mover.moveRowsOn(db, group, intoVault: true);
+    expect(await walls('v'), ['group:$_g']);
+    expect(await walls('main'), ['', _f]);
+    final there = await db.rawQuery(
+      "SELECT photo FROM v.wallpapers WHERE chat = 'group:$_g'",
+    );
+    expect(there.single['photo'], photo);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+    expect(await walls('v'), [_f, 'group:$_g']);
+    expect(await walls('main'), ['']);
+    await mover.moveRowsOn(db, group, intoVault: false);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+    expect(await walls('v'), isEmpty);
+    expect(await walls('main'), ['', _f, 'group:$_g']);
+  }, skip: skip);
 }
