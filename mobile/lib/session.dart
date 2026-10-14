@@ -197,6 +197,7 @@ class Session {
   // on their row, in the container that holds them
   Future<void> setAckOwed(String haloId, bool owed) =>
       _ofPeer(haloId).setAckOwed(haloId, owed);
+  Future<bool> ackLost(String haloId) => _ofPeer(haloId).ackLost(haloId);
   Future<void> assignUidIfMissing(String peerId, int sentAtMs, String uid) =>
       _ofPeer(peerId).assignUidIfMissing(peerId, sentAtMs, uid);
   Future<void> clearConversation(String peerId) =>

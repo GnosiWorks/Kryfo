@@ -950,6 +950,8 @@ class _ChatScreenState extends State<ChatScreen>
   bool _nameAsks = false;
   // the ask put off for later: a quiet line in place of the card
   bool _nameFolded = false;
+  // the accept's word to them never got through: they may not know
+  bool _ackLost = false;
   int _nameFlags = 0;
 
   // what this chat shows about their key, read again whenever a key changes
@@ -1004,6 +1006,26 @@ class _ChatScreenState extends State<ChatScreen>
     final name = _nickname ?? widget.peerHaloId;
     if (!await acceptNewKeyAsked(context, widget.peerHaloId, name)) return;
     await _readKeyState();
+  }
+
+  // whether the accept's word to them was let go. a quiet session says
+  // nothing of it: it sends nothing anyway
+  Future<void> _readAckLost() async {
+    if (_isDev) return;
+    try {
+      final lost = !sessionQuiet && await session.ackLost(widget.peerHaloId);
+      if (mounted && lost != _ackLost) setState(() => _ackLost = lost);
+    } catch (e) {
+      dlog('ack line: not read (${e.runtimeType})');
+    }
+  }
+
+  // the line's button: the accept's word goes again, and the line with it
+  Future<void> _retryAck() async {
+    HapticFeedback.selectionClick();
+    setState(() => _ackLost = false);
+    await appState.retryAck(widget.peerHaloId);
+    await _readAckLost();
   }
 
   Future<void> _dismissKeyChanged() async {
@@ -1302,6 +1324,7 @@ class _ChatScreenState extends State<ChatScreen>
       // a held chat never shows the composer first
       _readKeyState(),
     ];
+    unawaited(_readAckLost());
     // the bottom bar waits for these, so a blocked chat or a request never
     // shows the composer first
     Future.wait(barReads)
@@ -1450,6 +1473,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _refreshRequestState();
     unawaited(_readKeyState());
+    unawaited(_readAckLost());
     if (!_accepted && _flag == null && !_isDev) _loadShield();
     if (_isDev) {
       _syncDev();
@@ -5363,6 +5387,17 @@ class _ChatScreenState extends State<ChatScreen>
                             ),
                     ),
                     _Fold(
+                      _ackLost && !_blocked && !_isDev
+                          ? _AckLostLine(
+                              key: const ValueKey('ack-lost'),
+                              onRetry: _retryAck,
+                            )
+                          : const SizedBox(
+                              key: ValueKey('ack-lost-none'),
+                              width: 0,
+                            ),
+                    ),
+                    _Fold(
                       _keyChanged && !_keyHeld && !_isDev
                           ? _KeyChangedBanner(
                               key: const ValueKey('key-changed'),
@@ -8622,6 +8657,65 @@ class _CompareCard extends StatelessWidget {
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead
 // of alarming. ok dismisses until the key changes again.
+// the accept's word to them was tried as long as it is and never got
+// through: a calm line, and a way to send it again
+class _AckLostLine extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _AckLostLine({super.key, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.chatTheyMayNotKnow,
+              style: HaloType.sans(
+                size: 12.5,
+                weight: FontWeight.w500,
+                color: HaloColors.text,
+                height: 1.35,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Semantics(
+            button: true,
+            child: _ScaleTap(
+              onTap: onRetry,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 36),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  l10n.commonTryAgain,
+                  maxLines: 1,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    weight: FontWeight.w600,
+                    color: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _KeyChangedBanner extends StatelessWidget {
   final String peerName;
   final VoidCallback onVerify;

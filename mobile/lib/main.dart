@@ -3334,6 +3334,16 @@ class HaloDb implements GroupOwedStore {
         whereArgs: [peerId],
       );
     }
+    // a word from them, or one to them that carries the accept with it:
+    // the line saying they may not know goes
+    if (groupId == null || groupId.isEmpty) {
+      await db.update(
+        'contacts',
+        {'ack_owed': 0},
+        where: 'halo_id = ? AND ack_owed = 2',
+        whereArgs: [peerId],
+      );
+    }
   }
 
   /// a row of this phone's own in group [groupId], kept in the same go as
@@ -3503,6 +3513,43 @@ class HaloDb implements GroupOwedStore {
       limit: 1,
     );
     return rows.isNotEmpty && (rows.first['ack_owed'] as int? ?? 0) == 1;
+  }
+
+  // the ack went untried for good: 2 on the row, and a line in their chat
+  // says they may not know until a word goes either way or it is tried
+  // again
+  Future<void> loseAck(String haloId) async {
+    final d = await open();
+    await d.update(
+      'contacts',
+      {'ack_owed': 2},
+      where: 'halo_id = ? AND ack_owed = 1',
+      whereArgs: [haloId],
+    );
+  }
+
+  Future<bool> ackLost(String haloId) async {
+    final d = await open();
+    final rows = await d.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'halo_id = ? AND ack_owed = 2 AND accepted = 1 AND blocked = 0',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  // owed again, from the line's button. true when it was lost here
+  Future<bool> retryAck(String haloId) async {
+    final d = await open();
+    final n = await d.update(
+      'contacts',
+      {'ack_owed': 1},
+      where: 'halo_id = ? AND ack_owed = 2 AND accepted = 1 AND blocked = 0',
+      whereArgs: [haloId],
+    );
+    return n > 0;
   }
 
   // everyone here still owed it, and not blocked since
@@ -21898,16 +21945,41 @@ class AppState extends ChangeNotifier {
   void ackTriesForTest(HaloDb d, String haloId, int n) =>
       _ackTries[d.container.chatKey(haloId)] = n;
 
+  // tried as long as a queued reaction is: their chat says they may not
+  // know, and offers to try again
   Future<bool> _letAckGo(HaloDb d, String haloId, String key) async {
     try {
-      await d.setAckOwed(haloId, false);
+      await d.loseAck(haloId);
       dlog('accept ack: let go after $kFrameTries tries');
     } catch (e) {
       dlog('accept ack: not let go (${e.runtimeType})');
     }
     _ackTries.remove(key);
     _ackNextAt.remove(key);
+    if (identical(_ownerOf(haloId), d)) {
+      _bumpChatRev(haloId);
+      notifyListeners();
+    }
     return false;
+  }
+
+  // the line's button: owed again, from a fresh count. a quiet session
+  // shows no line and sends nothing
+  Future<void> retryAck(String haloId) async {
+    if (sessionQuiet) return;
+    final d = _ownerOf(haloId);
+    try {
+      if (!await d.retryAck(haloId)) return;
+    } catch (e) {
+      dlog('accept ack: not owed again (${e.runtimeType})');
+      return;
+    }
+    final key = d.container.chatKey(haloId);
+    _ackTries.remove(key);
+    _ackNextAt.remove(key);
+    _bumpChatRev(haloId);
+    notifyListeners();
+    unawaited(_drainAcks());
   }
 
   Future<void> _ackRound() async {

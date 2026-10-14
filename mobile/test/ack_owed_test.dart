@@ -46,6 +46,8 @@ class _Rows extends HaloDb {
   Future<List<Map<String, Object?>>> pendingRequests() async => const [];
   @override
   Future<List<Map<String, Object?>>> askedRequests() async => const [];
+  @override
+  Future<void> bumpUnread(String peerId) async {}
   // no span listened on: someone blocked is not heard
   @override
   Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
@@ -347,8 +349,76 @@ void main() {
     await app.drainAcksForTest();
     await settle();
     expect(io.tried, hasLength(before));
-    expect(_owed(mem, _bob), 0);
+    // let go: their chat says they may not know
+    expect(_owed(mem, _bob), 2);
+    expect(await db.ackLost(_bob), isTrue);
+    expect(await db.ackOwed(), isEmpty);
   });
+
+  // tried as long as it is, and let go: the line's state
+  Future<void> lose() async {
+    io.down = true;
+    await app.afterAccept(_bob);
+    await settle();
+    app.ackTriesForTest(db, _bob, kFrameTries);
+    await app.drainAcksForTest();
+    await settle();
+    expect(await db.ackLost(_bob), isTrue);
+    io.down = false;
+  }
+
+  test('try again sends the ack, from a fresh count', () async {
+    await lose();
+    final before = io.tried.length;
+    await app.retryAck(_bob);
+    await settle();
+    expect(io.tried, hasLength(before + 1));
+    expect(acks(_bob), hasLength(1));
+    expect(_owed(mem, _bob), 0);
+    expect(await db.ackLost(_bob), isFalse);
+  });
+
+  test('a word from them takes the line away', () async {
+    await lose();
+    io.opens['c-hi'] = (
+      _bob,
+      await wrapMessage('hi again', msgUid: 'b1', sender: asSender(_bob)),
+    );
+    expect(
+      await app.receiveRelay([(peer: 'x-$_bob', cipher: 'c-hi')]),
+      isEmpty,
+    );
+    await settle();
+    expect(await db.ackLost(_bob), isFalse);
+  });
+
+  test('a word to them takes the line away', () async {
+    await lose();
+    await db.saveMessage(_bob, 'out', 'you are in', msgUid: 'o1', sent: 0);
+    expect(await db.ackLost(_bob), isFalse);
+    // a group's row is not a word to them
+    await mem.update('contacts', {'ack_owed': 2});
+    await db.saveMessage(_bob, 'out', 'to all', msgUid: 'g1', groupId: 'grp');
+    expect(await db.ackLost(_bob), isTrue);
+  });
+
+  test(
+    'someone blocked has no line, and try again sends them nothing',
+    () async {
+      await lose();
+      await mem.update('contacts', {'blocked': 1, 'ack_owed': 2});
+      expect(await db.ackLost(_bob), isFalse);
+      final before = io.tried.length;
+      await app.retryAck(_bob);
+      await settle();
+      expect(io.tried, hasLength(before));
+      expect(_owed(mem, _bob), 2);
+      // a block itself clears it
+      await mem.update('contacts', {'blocked': 0});
+      await db.setBlocked(_bob, true);
+      expect(_owed(mem, _bob), 0);
+    },
+  );
 
   test('an accept that started before a block puts no mark on the blocked '
       'row', () async {
