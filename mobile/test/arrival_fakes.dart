@@ -654,6 +654,22 @@ class ArrivalRows implements HaloDb {
     people[peerId]?['back_paired'] = 1;
   }
 
+  // an accept's word still owed, on the row as the app keeps it
+  @override
+  Future<void> setAckOwed(String haloId, bool owed) async =>
+      people[haloId]?['ack_owed'] = owed ? 1 : 0;
+  @override
+  Future<bool> isAckOwed(String haloId) async =>
+      people[haloId]?['ack_owed'] == 1;
+  @override
+  Future<List<String>> ackOwed() async => [
+    for (final e in people.entries)
+      if (e.value['ack_owed'] == 1 &&
+          e.value['accepted'] == 1 &&
+          e.value['blocked'] != 1)
+        e.key,
+  ];
+
   @override
   Future<void> setContactBadge(String haloId, String? tier) async =>
       _hit('setContactBadge', haloId, null);
