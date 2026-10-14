@@ -553,7 +553,8 @@ class MainActivity : FlutterFragmentActivity() {
                     "openFile" -> {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name")
-                        if (path == null) result.success(false) else openFile(path, name, result)
+                        val mime = call.argument<String>("mime")
+                        if (path == null) result.success(false) else openFile(path, name, mime, result)
                     }
                     "shareFile" -> {
                         val path = call.argument<String>("path")
@@ -647,8 +648,14 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun openFile(path: String, name: String?, result: MethodChannel.Result) {
+    // "refused" for an app installer: dart offers a save instead
+    private fun openFile(path: String, name: String?, mime: String?, result: MethodChannel.Result) {
         Thread {
+            val type = mime ?: mimeOf(File(name ?: path))
+            if (Installer.refused(File(path), name, type)) {
+                runOnUiThread { result.success("refused") }
+                return@Thread
+            }
             val dst = handOut(File(path), name, "open")
             if (dst == null) {
                 runOnUiThread { result.success(false) }
@@ -660,7 +667,7 @@ class MainActivity : FlutterFragmentActivity() {
                     this, "$packageName.open", dst
                 )
                 val view = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, mimeOf(dst))
+                    setDataAndType(uri, type)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 runOnUiThread {
@@ -701,6 +708,10 @@ class MainActivity : FlutterFragmentActivity() {
         result: MethodChannel.Result
     ) {
         Thread {
+            if (!backup && Installer.refused(File(path), name, mimeOf(File(name ?: path)))) {
+                runOnUiThread { result.success(false) }
+                return@Thread
+            }
             val dst = handOut(File(path), name, Shred.shareInto(backup, quiet))
             if (dst == null) {
                 runOnUiThread { result.success(false) }

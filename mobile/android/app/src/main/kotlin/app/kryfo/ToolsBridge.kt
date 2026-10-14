@@ -410,7 +410,7 @@ class ToolsBridge(private val activity: Activity) {
 
     private fun shareOut(path: String?, mime: String?, result: MethodChannel.Result) {
         val uri = path?.let { outUri(it) }
-        if (uri == null) {
+        if (uri == null || Installer.refused(File(path), null, mime)) {
             result.success(false)
             return
         }

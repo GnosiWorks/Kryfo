@@ -168,7 +168,15 @@ void main() {
       for (final f in root.listSync(recursive: true)) {
         if (f is! File) continue;
         if (!RegExp(r'\.(dart|kt|java|xml)$').hasMatch(f.path)) continue;
-        if (banned.hasMatch(f.readAsStringSync())) hits.add(f.path);
+        // the unit tests that check it is absent name it
+        if (f.path.startsWith('android/app/src/test/')) continue;
+        // the two lines that keep it out: the manifest takes the permission
+        // away, and the open and share paths refuse the type
+        final text = f
+            .readAsStringSync()
+            .replaceAll(_takenAway, '')
+            .replaceAll(_refused, '');
+        if (banned.hasMatch(text)) hits.add(f.path);
       }
     }
     expect(hits, isEmpty);
@@ -182,3 +190,8 @@ void main() {
     expect(hits, ['lib/store.dart']);
   });
 }
+
+const _takenAway =
+    '<uses-permission android:name="android.permission.'
+    'REQUEST_INSTALL_PACKAGES" tools:node="remove" />';
+const _refused = 'const val MIME = "application/vnd.android.package-archive"';
