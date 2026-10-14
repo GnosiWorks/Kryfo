@@ -144,6 +144,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onPause() {
         super.onPause()
         openedAt = 0L
+        SharePick.wait.paused()
     }
 
     override fun onStop() {
@@ -164,6 +165,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onResume() {
         super.onResume()
         stoppedSinceResume = false
+        SharePick.wait.resumed()
         // a file opened or shared with another app is a decrypted copy in
         // cache/open or cache/share_plus. coming back here is the first sign
         // that app may be done with it, and a resume also follows every
@@ -558,7 +560,7 @@ class MainActivity : FlutterFragmentActivity() {
                     "shareFile" -> {
                         val path = call.argument<String>("path")
                         if (path == null) {
-                            result.success(false)
+                            result.success(SharePick.FAILED)
                         } else {
                             shareFile(
                                 path,
@@ -703,7 +705,7 @@ class MainActivity : FlutterFragmentActivity() {
         Thread {
             val dst = handOut(File(path), name, Shred.shareInto(backup, quiet))
             if (dst == null) {
-                runOnUiThread { result.success(false) }
+                runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
             }
             var started = false
@@ -720,12 +722,11 @@ class MainActivity : FlutterFragmentActivity() {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 runOnUiThread {
-                    try {
-                        startActivity(Intent.createChooser(send, null))
-                        result.success(true)
-                    } catch (e: Exception) {
+                    // a closed sheet leaves its copy to the sweep: a phone
+                    // that never reports picks would lose a real share
+                    if (!SharePick.start(this, send) { result.success(it) }) {
                         Thread { Shred.tree(dst.parentFile!!) }.start()
-                        result.success(false)
+                        result.success(SharePick.FAILED)
                     }
                 }
                 started = true
@@ -734,7 +735,7 @@ class MainActivity : FlutterFragmentActivity() {
             }
             if (!started) {
                 Shred.tree(dst.parentFile!!)
-                runOnUiThread { result.success(false) }
+                runOnUiThread { result.success(SharePick.FAILED) }
             }
         }.start()
     }
