@@ -6,12 +6,15 @@
 // engine built for this computer
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data' show ByteData, Endian;
 
 import 'package:archive/archive.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show sweepCaptures;
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/notes_export.dart';
+import 'package:kryfo/store_zip.dart';
 import 'package:kryfo/tools/age_ffi.dart';
 import 'package:path/path.dart' as p;
 
@@ -59,6 +62,15 @@ Map<String, Uint8List> _unzip(List<int> bytes) {
   };
 }
 
+// a zip past a test's small limit cannot end either: its file still shuts
+Future<void> _shut(StoreZip zip) async {
+  try {
+    await zip.close();
+  } on ZipTooLarge {
+    // as asked
+  }
+}
+
 List<String> _left(Directory d) => d.existsSync()
     ? [for (final e in d.listSync(recursive: true)) p.basename(e.path)]
     : [];
@@ -76,6 +88,7 @@ void main() {
   setUp(() {
     tmp = Directory.systemTemp.createTempSync('notes_export');
     out = Directory(p.join(tmp.path, kNotesOut));
+    forgetNotesExportRun();
   });
   tearDown(() => tmp.deleteSync(recursive: true));
 
@@ -265,17 +278,234 @@ void main() {
     expect(noteFiles([_note('a', at, photo: link.path)]), isEmpty);
   });
 
-  test('what a dead app left goes at the next boot', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('plugins.flutter.io/path_provider'),
-          (_) async => tmp.path,
-        );
-    File(p.join(out.path, 'a1b2.txt'))
-      ..createSync(recursive: true)
-      ..writeAsStringSync('a plaintext note');
-    File(p.join(out.path, 'a1b2.zip')).writeAsStringSync('zip');
-    await sweepCaptures();
-    expect(out.existsSync(), isFalse);
+  group('leftovers', () {
+    void leave() {
+      File(p.join(out.path, 'a1b2.txt'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('a plaintext note');
+      File(p.join(out.path, 'a1b2.zip')).writeAsStringSync('zip');
+    }
+
+    test('what a dead app left goes at launch', () async {
+      leave();
+      await sweepNotesExports(tmp);
+      expect(out.existsSync(), isFalse);
+    });
+
+    test('the later boot sweep never looks there', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (_) async => tmp.path,
+          );
+      leave();
+      await sweepCaptures();
+      expect(_left(out), hasLength(2));
+    });
+
+    test('an export that began is never swept from under', () async {
+      final made = await makeNotesExport(
+        notes,
+        format: NotesFormat.text,
+        passphrase: null,
+        dir: out,
+      );
+      await sweepNotesExports(tmp);
+      expect(File(made.path).existsSync(), isTrue);
+    });
+
+    test('one that begins during the sweep waits for it', () async {
+      leave();
+      for (var i = 0; i < 40; i++) {
+        File(p.join(out.path, 'old$i.txt')).writeAsStringSync('x' * 5000);
+      }
+      final swept = sweepNotesExports(tmp);
+      final made = await makeNotesExport(
+        notes,
+        format: NotesFormat.text,
+        passphrase: null,
+        dir: out,
+      );
+      await swept;
+      expect(_left(out), [p.basename(made.path)]);
+    });
+  });
+
+  group('a lock or a switch', () {
+    test('shreds what the session made, a handed file only unlinked', () async {
+      final made = File(p.join(out.path, 'a.txt'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('plain words');
+      final handed = File(p.join(out.path, 'h.txt'))
+        ..writeAsStringSync('being copied');
+      notesExportHanded(handed.path);
+      final reading = handed.openSync();
+      final watching = made.openSync();
+      addTearDown(() {
+        reading.closeSync();
+        watching.closeSync();
+      });
+      await dropNotesExports(tmp);
+      expect(_left(out), isEmpty);
+      // android's copy reads on; the other was zeroed first
+      expect(utf8.decode(reading.readSync(100)), 'being copied');
+      expect(watching.readSync(100).every((b) => b == 0), isTrue);
+    });
+
+    test('runs at every lock and every unlock', () {
+      // the body of the method that starts at [head], read off the source
+      String body(String src, String head) {
+        final at = src.indexOf(head);
+        expect(at, greaterThanOrEqualTo(0), reason: head);
+        var depth = 0;
+        for (var i = src.indexOf('{', at + head.length); i < src.length; i++) {
+          if (src[i] == '{') depth++;
+          if (src[i] == '}' && --depth == 0) return src.substring(at, i);
+        }
+        return '';
+      }
+
+      final main = File('lib/main.dart').readAsStringSync();
+      for (final head in [
+        'void lockingUp()',
+        'Future<void> _sessionFor(PinResult r, {String? vaultKey}) async',
+      ]) {
+        expect(body(main, head), contains('dropNotesExports('), reason: head);
+      }
+    });
+
+    test('waits for an export being made, then takes it too', () async {
+      final big = File(p.join(tmp.path, 'big.jpg'))
+        ..writeAsBytesSync(Uint8List(8 << 20));
+      final making = makeNotesExport(
+        [_note('x', at, photo: big.path)],
+        format: NotesFormat.text,
+        passphrase: null,
+        dir: out,
+      );
+      await Future<void>.delayed(Duration.zero);
+      await dropNotesExports(tmp);
+      final made = await making;
+      expect(File(made.path).existsSync(), isFalse);
+      expect(_left(out), isEmpty);
+    });
+  });
+
+  group('zip', () {
+    test(
+      'names are utf-8 and say so',
+      () async {
+        final path = p.join(tmp.path, 'u.zip');
+        final zip = await StoreZip.create(path, at);
+        await zip.addBytes('notes-ü✓.txt', utf8.encode('hi'));
+        await zip.close();
+        final bytes = File(path).readAsBytesSync();
+        // the flag in the local header and in the central one
+        final d = ByteData.sublistView(bytes);
+        expect(d.getUint16(6, Endian.little) & 0x0800, 0x0800);
+        final cd = d.getUint32(bytes.length - 6, Endian.little);
+        expect(d.getUint16(cd + 8, Endian.little) & 0x0800, 0x0800);
+        expect(_unzip(bytes).keys, ['notes-ü✓.txt']);
+        // python reads a name as cp437 unless the flag says utf-8
+        final py = await Process.run('python3', [
+          '-I',
+          '-c',
+          'import sys, zipfile\n'
+              'z = zipfile.ZipFile(sys.argv[1])\n'
+              'n = z.namelist()[0]\n'
+              'sys.stdout.buffer.write(n.encode() + b"|" + z.read(n))',
+          path,
+        ], stdoutEncoding: utf8);
+        expect(py.exitCode, 0, reason: '${py.stderr}');
+        expect(py.stdout, 'notes-ü✓.txt|hi');
+      },
+      skip: Process.runSync('which', ['python3']).exitCode != 0,
+    );
+
+    test('all ones is a marker, never a size', () async {
+      final path = p.join(tmp.path, 'l.zip');
+      var zip = await StoreZip.create(path, at, limit: 10);
+      await zip.addBytes('a', List.filled(9, 1));
+      await expectLater(
+        zip.addBytes('b', List.filled(10, 1)),
+        throwsA(isA<ZipTooLarge>()),
+      );
+      await _shut(zip);
+      final ten = File(p.join(tmp.path, 'ten'))
+        ..writeAsBytesSync(List.filled(10, 1));
+      zip = await StoreZip.create(path, at, limit: 10);
+      await expectLater(zip.addFile('t', ten), throwsA(isA<ZipTooLarge>()));
+      await _shut(zip);
+      // an entry past where the offset can still be told
+      zip = await StoreZip.create(path, at, limit: 40);
+      await zip.addBytes('a', List.filled(9, 1));
+      await expectLater(zip.addBytes('b', [1]), throwsA(isA<ZipTooLarge>()));
+      await _shut(zip);
+    });
+
+    test('and never a count', () async {
+      final zip = await StoreZip.create(
+        p.join(tmp.path, 'c.zip'),
+        at,
+        entries: 3,
+      );
+      await zip.addBytes('a', [1]);
+      await zip.addBytes('b', [1]);
+      await expectLater(zip.addBytes('c', [1]), throwsA(isA<ZipTooLarge>()));
+      await zip.close();
+    });
+
+    test('an export past 4 GB is refused before anything is written', () async {
+      // sparse: as long as it says, without the disk
+      final big = File(p.join(tmp.path, 'big.jpg'));
+      final raf = big.openSync(mode: FileMode.write)
+        ..setPositionSync(kZipLimit - 100)
+        ..writeByteSync(1);
+      raf.closeSync();
+      final watch = Stopwatch()..start();
+      await expectLater(
+        makeNotesExport(
+          [_note('x', at, photo: big.path)],
+          format: NotesFormat.text,
+          passphrase: null,
+          dir: out,
+        ),
+        throwsA(isA<NotesExportTooLarge>()),
+      );
+      expect(watch.elapsed, lessThan(const Duration(seconds: 5)));
+      expect(out.existsSync(), isFalse);
+    });
+  });
+
+  test(
+    'descriptors not yet the engine\'s are closed',
+    () async {
+      int open() => Directory('/proc/self/fd').listSync().length;
+      final src = File(p.join(tmp.path, 'in'))..writeAsStringSync('x');
+      ageLockSymbol = 'HaloNoSuchCall';
+      addTearDown(() => ageLockSymbol = 'HaloAgeLock');
+      final before = open();
+      expect(
+        await ageLockPath(src.path, p.join(tmp.path, 'o.age'), _pass),
+        AgeError.io,
+      );
+      expect(open(), before);
+    },
+    skip: !Directory('/proc/self/fd').existsSync(),
+  );
+
+  test('the tool is named in quotes, never run into the sentence', () {
+    for (final locale in AppLocalizations.supportedLocales) {
+      final l = lookupAppLocalizations(locale);
+      final line = l.notesExportLockLine;
+      final at = line.indexOf(l.toolsOpenALockedFile);
+      expect(at, greaterThan(0), reason: '$locale');
+      final before = line.substring(0, at).trimRight();
+      expect(
+        '«„“「"'.contains(before[before.length - 1]),
+        isTrue,
+        reason: '$locale: $line',
+      );
+    }
   });
 }

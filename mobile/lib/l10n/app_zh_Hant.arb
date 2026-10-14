@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "筆記已儲存到 {place}",
   "notesExportSavedUnchecked": "筆記已儲存，但 Kryfo 無法檢查這份副本",
   "notesExportFailed": "無法匯出筆記。什麼都沒有儲存。",
+  "notesExportTooLarge": "太大了，無法匯出。照片和語音加起來有 4 GB 以上。",
   "notesExportSubject": "Kryfo 筆記",
   "onboardingPrivateByDefault": "預設就是私密",
   "onboardingPrivateMessaging": "私密通訊，\n*沒有隱藏代價*。",

@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "Нотатки збережено в {place}",
   "notesExportSavedUnchecked": "Нотатки збережено, але Kryfo не зміг перевірити копію",
   "notesExportFailed": "Не вдалося експортувати нотатки. Нічого не збережено.",
+  "notesExportTooLarge": "Завелико для експорту. Фото й голосові займають 4 ГБ або більше.",
   "notesExportSubject": "Нотатки Kryfo",
   "onboardingPrivateByDefault": "ПРИВАТНО ЗА ЗАМОВЧУВАННЯМ",
   "onboardingPrivateMessaging": "Приватне листування,\n*без підступу*.",

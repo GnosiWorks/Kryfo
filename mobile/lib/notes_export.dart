@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -29,15 +30,67 @@ class NotesExportStopped implements Exception {
   const NotesExportStopped();
 }
 
+// more than a zip without zip64 holds: said before anything is written
+class NotesExportTooLarge implements Exception {
+  const NotesExportTooLarge();
+}
+
 Future<Directory> notesOutDir() async =>
     Directory(p.join((await getTemporaryDirectory()).path, kNotesOut));
 
-/// what an export the app did not live through left behind
-Future<void> sweepNotesExports(Directory cache) async {
+// the sweep at launch, and whether an export began since: one that began
+// is never swept from under, and one that begins during the sweep waits
+Future<void>? _sweeping;
+var _began = false;
+
+@visibleForTesting
+void forgetNotesExportRun() {
+  _sweeping = null;
+  _began = false;
+}
+
+/// what an export the app did not live through left behind. once, at launch
+Future<void> sweepNotesExports(Directory cache) {
+  if (_began) return Future.value();
+  return _sweeping ??= () async {
+    try {
+      await shredTree(p.join(cache.path, kNotesOut));
+    } catch (e) {
+      dlog('notes export: leftovers stayed (${e.runtimeType})');
+    }
+  }();
+}
+
+// exports being made now, and made files android may still be copying
+var _making = 0;
+Completer<void>? _idle;
+final _handed = <String>{};
+
+/// a made file whose save kryfo stopped waiting for: a drop only unlinks it,
+/// so a copy android still runs keeps reading
+void notesExportHanded(String path) => _handed.add(path);
+
+/// what this session's exports left, at a lock or a switch to another pin:
+/// once any export being made has ended, every file is shredded, but one
+/// android may still read is only unlinked
+Future<void> dropNotesExports([Directory? cache]) async {
+  while (_making > 0) {
+    await (_idle ??= Completer<void>()).future;
+  }
   try {
-    await shredTree(p.join(cache.path, kNotesOut));
+    final dir = Directory(
+      p.join((cache ?? await getTemporaryDirectory()).path, kNotesOut),
+    );
+    if (!await dir.exists()) return;
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is File && !_handed.remove(e.path)) {
+        await shredFile(e.path);
+      } else {
+        await e.delete(recursive: true);
+      }
+    }
   } catch (e) {
-    dlog('notes export: leftovers stayed (${e.runtimeType})');
+    dlog('notes export: not dropped (${e.runtimeType})');
   }
 }
 
@@ -131,6 +184,36 @@ Future<({String path, String name})> makeNotesExport(
   bool Function()? stopped,
   void Function(double done)? progress,
 }) async {
+  _began = true;
+  _making++;
+  try {
+    await _sweeping;
+    return await _make(
+      notes,
+      format: format,
+      passphrase: passphrase,
+      dir: dir,
+      now: now,
+      stopped: stopped,
+      progress: progress,
+    );
+  } finally {
+    if (--_making == 0) {
+      _idle?.complete();
+      _idle = null;
+    }
+  }
+}
+
+Future<({String path, String name})> _make(
+  List<Map<String, Object?>> notes, {
+  required NotesFormat format,
+  required String? passphrase,
+  required Directory dir,
+  DateTime? now,
+  bool Function()? stopped,
+  void Function(double done)? progress,
+}) async {
   bool halt() => stopped?.call() ?? false;
   final at = now ?? DateTime.now();
   final files = noteFiles(notes);
@@ -145,15 +228,23 @@ Future<({String path, String name})> makeNotesExport(
   final share = files.isEmpty ? 0.0 : (lock ? 0.5 : 1.0);
   var kept = false;
   try {
-    await dir.create(recursive: true);
     final body = utf8.encode(notesBody(notes, format, files));
+    var total = 0, done = 0;
+    for (final f in files) {
+      total += await f.file.length();
+    }
+    // the data, each entry's two headers and the end record
+    var whole = body.length + total + 22;
+    for (final name in ['notes.$ext', for (final f in files) f.entry]) {
+      whole += 30 + 46 + 2 * utf8.encode(name).length;
+    }
+    if (files.isNotEmpty && whole >= kZipLimit) {
+      throw const NotesExportTooLarge();
+    }
+    await dir.create(recursive: true);
     if (files.isEmpty) {
       await File(plain).writeAsBytes(body, flush: true);
     } else {
-      var total = 0, done = 0;
-      for (final f in files) {
-        total += await f.file.length();
-      }
       final zip = await StoreZip.create(plain, at);
       try {
         await zip.addBytes('notes.$ext', body);
@@ -199,6 +290,8 @@ Future<({String path, String name})> makeNotesExport(
   } on NotesExportStopped {
     rethrow;
   } on NotesExportFailed {
+    rethrow;
+  } on NotesExportTooLarge {
     rethrow;
   } catch (e) {
     dlog('notes export: not made (${e.runtimeType})');

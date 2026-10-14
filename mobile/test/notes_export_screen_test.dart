@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the notes menu offers export in the everyday notes only: never in a decoy
-// or with hidden chats open, and the decoy's menu shows nothing the everyday
-// one does not. the export page asks for a passphrase by the backup's rules,
-// turns it off only past a calm warning, and goes through the backup's save
-// window. a save backed out of leaves no file in the app once the page is
-// left. a locked export needs the engine built for this computer
+// the notes menu offers export in the everyday notes and a decoy's, the same
+// menu in both, and never with hidden chats open. a decoy exports its own
+// notes, as slowly as anywhere. the export page asks for a passphrase by the
+// backup's rules, turns it off only past a calm warning, and goes through the
+// backup's save window. a save backed out of, or a lock while the file is
+// made, leaves no file in the app. a locked export needs the engine built
+// for this computer
 import 'dart:async';
 import 'dart:io';
 
@@ -15,7 +16,12 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, navRevision, rootNavKey, useDatabasesForTest;
+    show
+        HaloDb,
+        navRevision,
+        renewRootNavigator,
+        rootNavKey,
+        useDatabasesForTest;
 import 'package:kryfo/notes_export.dart' show kNotesOut;
 import 'package:kryfo/screens/notes_export_screen.dart';
 import 'package:kryfo/screens/notes_screen.dart';
@@ -52,11 +58,15 @@ void main() {
   late List<String> asked;
   late List<Completer<Object?>> dialogs;
   late bool shares;
+  late List<Map<Object?, Object?>> shared;
+  late List<List<int>> saved;
 
   setUp(() {
     asked = [];
     dialogs = [];
     shares = true;
+    shared = [];
+    saved = [];
     tmp = Directory.systemTemp.createTempSync('notes_export_screen');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(
@@ -69,12 +79,16 @@ void main() {
       asked.add(call.method);
       switch (call.method) {
         case 'saveDocument':
+          // what the save window would copy, read as it opens
+          final path = (call.arguments as Map)['path'] as String;
+          saved.add(File(path).readAsBytesSync());
           final d = Completer<Object?>();
           dialogs.add(d);
           return d.future;
         case 'saveDocumentState':
           return {'stage': 'idle', 'copied': 0};
         case 'shareFile':
+          shared.add(call.arguments as Map<Object?, Object?>);
           return shares;
       }
       return null;
@@ -170,15 +184,14 @@ void main() {
       expect(await menu(t), contains(l10n.notesExportNotes));
     });
 
-    testWidgets('a decoy has none and shows nothing more', (t) async {
+    testWidgets('a decoy\'s menu is the everyday one', (t) async {
       final everyday = await menu(t);
       final decoy = _Db(HaloContainer.decoy)..notes = db.notes;
       useDatabasesForTest(decoy, Session(decoy));
       lockState.inDecoy = true;
-      expect(notesExportHere(), isFalse);
-      final rows = await menu(t);
-      expect(rows, isNot(contains(l10n.notesExportNotes)));
-      expect(everyday.toSet().containsAll(rows), isTrue);
+      expect(notesExportHere(), isTrue);
+      expect(await menu(t), everyday);
+      expect(everyday, contains(l10n.notesExportNotes));
     });
 
     testWidgets('open hidden chats have none', (t) async {
@@ -287,6 +300,9 @@ void main() {
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => screen.evaluate().isEmpty);
     expect(asked, containsAllInOrder(['saveDocument', 'shareFile']));
+    // plaintext shared goes with the next lock
+    expect(shared.single['quiet'], isTrue);
+    expect(shared.single['name'], endsWith('.txt'));
     await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
     await t.pumpAndSettle(const Duration(seconds: 5));
@@ -334,12 +350,141 @@ void main() {
     }
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => asked.contains('shareFile'));
+    // a locked copy keeps its grace
+    expect(shared.single['quiet'], isFalse);
     await beats(t);
     await t.pump(const Duration(seconds: 1));
     await t.pageBack();
     await t.pumpAndSettle();
     await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
+  }, skip: !engine);
+
+  // a lock or a switch to another pin takes the page while the file is
+  // made: nothing of it stays, and no save window opens
+  Future<void> lockMidway(WidgetTester t) async {
+    // a file is being written when the lock comes
+    await until(t, () => left().isNotEmpty);
+    expect(find.text(l10n.notesExportWorking), findsOneWidget);
+    renewRootNavigator();
+    await t.pump();
+    await until(t, () => left().isEmpty, 1000);
+    await beats(t);
+    expect(screen, findsNothing);
+    expect(left(), isEmpty);
+    expect(asked, isNot(contains('saveDocument')));
+    await t.pumpAndSettle();
+  }
+
+  void bigPhoto(_Db into) {
+    final big = File(p.join(tmp.path, 'big.jpg'));
+    final raf = big.openSync(mode: FileMode.write)
+      ..setPositionSync(256 << 20)
+      ..writeByteSync(1);
+    raf.closeSync();
+    into.notes = [
+      ...into.notes,
+      {'plaintext': 'photo', 'sent_at': 2, 'media_path': big.path},
+    ];
+  }
+
+  Future<void> plainStart(WidgetTester t) async {
+    await page(t);
+    await t.tap(find.text(l10n.notesExportLock));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.notesExportPlainYes));
+    await t.pumpAndSettle();
+    await press(t, find.text(l10n.notesExport));
+    await t.pump();
+  }
+
+  testWidgets('a lock before the file is begun leaves nothing', (t) async {
+    bigPhoto(db);
+    await plainStart(t);
+    renewRootNavigator();
+    await t.pump();
+    await beats(t, 100);
+    await until(t, () => left().isEmpty, 1000);
+    expect(left(), isEmpty);
+    expect(asked, isNot(contains('saveDocument')));
+  });
+
+  testWidgets('a lock while a plain zip is made leaves nothing', (t) async {
+    bigPhoto(db);
+    await plainStart(t);
+    await lockMidway(t);
+  });
+
+  testWidgets('a lock while a locked file is made leaves nothing', (t) async {
+    await page(t);
+    await typePass(t, 'four random words here');
+    await press(t, find.text(l10n.notesExport));
+    await t.pump();
+    await lockMidway(t);
+  }, skip: !engine);
+
+  // a decoy with notes of its own, open in place of the everyday ones
+  _Db intoDecoy() {
+    final decoy = _Db(HaloContainer.decoy)
+      ..notes = [
+        {
+          'rowid': 1,
+          'msg_uid': 'd1',
+          'plaintext': 'eggs and coffee',
+          'sent_at': DateTime(2026, 10, 12, 8).millisecondsSinceEpoch,
+        },
+      ];
+    useDatabasesForTest(decoy, Session(decoy));
+    lockState.inDecoy = true;
+    return decoy;
+  }
+
+  testWidgets('a decoy exports its own notes, never the everyday ones', (
+    t,
+  ) async {
+    intoDecoy();
+    await plain(t);
+    final text = String.fromCharCodes(saved.single);
+    expect(text, contains('eggs and coffee'));
+    expect(text, isNot(contains('under the mat')));
+    dialogs.single.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await until(t, () => left().isEmpty);
+    expect(left(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a lock while a decoy export is made leaves nothing', (t) async {
+    bigPhoto(intoDecoy());
+    await plainStart(t);
+    await lockMidway(t);
+  });
+
+  // the scrypt work in a locked file's header: the same in a decoy, so it
+  // takes as long there as anywhere
+  Future<String> lockedHeader(WidgetTester t) async {
+    shares = false;
+    await page(t);
+    await typePass(t, 'four random words here');
+    await press(t, find.text(l10n.notesExport));
+    await until(t, () => dialogs.isNotEmpty, 1000);
+    final head = String.fromCharCodes(saved.single.take(200));
+    dialogs.single.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await until(t, () => left().isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+    return RegExp(r'-> scrypt \S+ (\d+)').firstMatch(head)!.group(1)!;
+  }
+
+  testWidgets('a decoy export does the same work as an everyday one', (
+    t,
+  ) async {
+    final everyday = await lockedHeader(t);
+    saved.clear();
+    dialogs.clear();
+    intoDecoy();
+    expect(await lockedHeader(t), everyday);
+    expect(everyday, '18');
   }, skip: !engine);
 
   for (final (name, locale, dark) in [

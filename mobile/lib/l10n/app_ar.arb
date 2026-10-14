@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "حُفظت الملاحظات في ⁨{place}⁩",
   "notesExportSavedUnchecked": "حُفظت الملاحظات، لكن Kryfo لم يتمكن من التحقق من النسخة",
   "notesExportFailed": "تعذّر تصدير الملاحظات. لم يُحفظ شيء.",
+  "notesExportTooLarge": "أكبر من أن يُصدَّر. الصور والرسائل الصوتية تبلغ ٤ غ.ب أو أكثر.",
   "notesExportSubject": "ملاحظات Kryfo",
   "onboardingPrivateByDefault": "خاص افتراضيًا",
   "onboardingPrivateMessaging": "مراسلة خاصة،\n*بلا ثمن خفي*.",

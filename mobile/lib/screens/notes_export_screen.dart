@@ -34,13 +34,8 @@ import 'backup_screen.dart'
 import 'lock_file_screen.dart' show ageErrorBody, ageErrorTitle;
 import 'notes_screen.dart' show kNotesPeerId;
 
-/// everyday notes only: never in a decoy, and never while hidden chats are
-/// open
-bool notesExportHere() =>
-    !lockState.inDecoy &&
-    !lockState.inVault &&
-    !sessionQuiet &&
-    !sessionBackupHasHidden;
+/// the open notes, everyday or a decoy's: never while hidden chats are open
+bool notesExportHere() => !lockState.inVault && !sessionBackupHasHidden;
 
 class NotesExportScreen extends StatefulWidget {
   const NotesExportScreen({super.key});
@@ -231,7 +226,9 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       if (mounted) {
         HapticFeedback.heavyImpact();
         setState(() {
-          _error = age == AgeError.needsMemory
+          _error = e is NotesExportTooLarge
+              ? l10n.notesExportTooLarge
+              : age == AgeError.needsMemory
               ? '${ageErrorTitle(age!)} ${ageErrorBody(age)}'
               : l10n.notesExportFailed;
           _busy = false;
@@ -272,6 +269,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         await lockState.hold(() async {
           answer = await saveDocumentOut(made.path, made.name);
           _lost = answer.lost;
+          // a lock or a switch only unlinks it while android may read it
+          if (_lost) notesExportHanded(made.path);
           return answer;
         });
       }
@@ -281,6 +280,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
             made.path,
             name: made.name,
             subject: l10n.notesExportSubject,
+            // plaintext never outlives the lock in the cache
+            quiet: !made.name.endsWith('.age'),
           ),
         );
       }

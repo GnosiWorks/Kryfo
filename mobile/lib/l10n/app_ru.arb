@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "Заметки сохранены в {place}",
   "notesExportSavedUnchecked": "Заметки сохранены, но Kryfo не смог проверить копию",
   "notesExportFailed": "Не удалось экспортировать заметки. Ничего не сохранено.",
+  "notesExportTooLarge": "Слишком много для экспорта. Фото и голосовые занимают 4 ГБ или больше.",
   "notesExportSubject": "Заметки Kryfo",
   "onboardingPrivateByDefault": "ПРИВАТНО ПО УМОЛЧАНИЮ",
   "onboardingPrivateMessaging": "Приватная переписка —\n*без подвоха*.",

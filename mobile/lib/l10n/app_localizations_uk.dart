@@ -4061,6 +4061,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося експортувати нотатки. Нічого не збережено.';
 
   @override
+  String get notesExportTooLarge =>
+      'Завелико для експорту. Фото й голосові займають 4 ГБ або більше.';
+
+  @override
   String get notesExportSubject => 'Нотатки Kryfo';
 
   @override

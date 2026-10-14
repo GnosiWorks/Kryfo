@@ -4023,6 +4023,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Notizen konnten nicht exportiert werden. Nichts wurde gespeichert.';
 
   @override
+  String get notesExportTooLarge =>
+      'Zu groß zum Exportieren. Fotos und Sprachnachrichten kommen zusammen auf 4 GB oder mehr.';
+
+  @override
   String get notesExportSubject => 'Kryfo-Notizen';
 
   @override

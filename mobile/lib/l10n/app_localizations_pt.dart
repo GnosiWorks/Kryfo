@@ -4005,6 +4005,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível exportar as notas. Nada foi salvo.';
 
   @override
+  String get notesExportTooLarge =>
+      'Grande demais para exportar. As fotos e os áudios somam 4 GB ou mais.';
+
+  @override
   String get notesExportSubject => 'Notas do Kryfo';
 
   @override

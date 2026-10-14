@@ -4079,6 +4079,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesExportFailed => 'تعذّر تصدير الملاحظات. لم يُحفظ شيء.';
 
   @override
+  String get notesExportTooLarge =>
+      'أكبر من أن يُصدَّر. الصور والرسائل الصوتية تبلغ ٤ غ.ب أو أكثر.';
+
+  @override
   String get notesExportSubject => 'ملاحظات Kryfo';
 
   @override

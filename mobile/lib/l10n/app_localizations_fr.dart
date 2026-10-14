@@ -4018,6 +4018,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’exporter les notes. Rien n’a été enregistré.';
 
   @override
+  String get notesExportTooLarge =>
+      'Trop volumineux pour l’export. Les photos et les notes vocales font 4 Go ou plus.';
+
+  @override
   String get notesExportSubject => 'Notes Kryfo';
 
   @override

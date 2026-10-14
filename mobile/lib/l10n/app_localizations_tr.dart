@@ -3956,7 +3956,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notesExportLockLine =>
-      'Araçlar’da Kilitli dosya aç ile ya da bilgisayarda age ile aç';
+      'Araçlar’da “Kilitli dosya aç” ile ya da bilgisayarda age ile aç';
 
   @override
   String get notesExportPlainTitle =>
@@ -3990,6 +3990,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get notesExportFailed =>
       'Notlar dışa aktarılamadı. Hiçbir şey kaydedilmedi.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Dışa aktarmak için çok büyük. Fotoğraflar ve sesli notlar 4 GB ya da daha fazla tutuyor.';
 
   @override
   String get notesExportSubject => 'Kryfo notları';

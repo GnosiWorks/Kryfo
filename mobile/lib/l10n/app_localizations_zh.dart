@@ -3808,6 +3808,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesExportFailed => '无法导出笔记。什么都没有保存。';
 
   @override
+  String get notesExportTooLarge => '太大了，无法导出。照片和语音加起来有 4 GB 或更多。';
+
+  @override
   String get notesExportSubject => 'Kryfo 笔记';
 
   @override
@@ -11783,6 +11786,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesExportFailed => '無法匯出筆記。什麼都沒有儲存。';
+
+  @override
+  String get notesExportTooLarge => '太大了，無法匯出。照片和語音加起來有 4 GB 以上。';
 
   @override
   String get notesExportSubject => 'Kryfo 筆記';

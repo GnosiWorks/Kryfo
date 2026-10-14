@@ -3934,7 +3934,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesExportLockLine =>
-      'Open it with Open a locked file in Tools, or with age on a computer';
+      'Open it in Tools with “Open a locked file”, or with age on a computer';
 
   @override
   String get notesExportPlainTitle => 'Export without a passphrase?';
@@ -3967,6 +3967,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notesExportFailed =>
       'Couldn\'t export the notes. Nothing was saved.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Too large to export. The photos and voice notes come to 4 GB or more.';
 
   @override
   String get notesExportSubject => 'Kryfo notes';

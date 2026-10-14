@@ -4921,7 +4921,7 @@
   "@notesExportLock": {
     "description": "screens/notes_export_screen.dart. the switch, on by default"
   },
-  "notesExportLockLine": "Open it with Open a locked file in Tools, or with age on a computer",
+  "notesExportLockLine": "Open it in Tools with “Open a locked file”, or with age on a computer",
   "@notesExportLockLine": {
     "description": "screens/notes_export_screen.dart. under the switch. Tools is the tab, Open a locked file the tool in it, age the free desktop tool"
   },
@@ -4965,6 +4965,10 @@
   "notesExportFailed": "Couldn't export the notes. Nothing was saved.",
   "@notesExportFailed": {
     "description": "screens/notes_export_screen.dart. the file could not be made"
+  },
+  "notesExportTooLarge": "Too large to export. The photos and voice notes come to 4 GB or more.",
+  "@notesExportTooLarge": {
+    "description": "screens/notes_export_screen.dart. the photos and voice notes are more than one zip can hold"
   },
   "notesExportSubject": "Kryfo notes",
   "@notesExportSubject": {

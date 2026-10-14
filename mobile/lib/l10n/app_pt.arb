@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "Notas salvas em {place}",
   "notesExportSavedUnchecked": "Notas salvas, mas o Kryfo não conseguiu conferir a cópia",
   "notesExportFailed": "Não foi possível exportar as notas. Nada foi salvo.",
+  "notesExportTooLarge": "Grande demais para exportar. As fotos e os áudios somam 4 GB ou mais.",
   "notesExportSubject": "Notas do Kryfo",
   "onboardingPrivateByDefault": "PRIVADO POR PADRÃO",
   "onboardingPrivateMessaging": "Mensagens privadas,\n*sem pegadinha*.",

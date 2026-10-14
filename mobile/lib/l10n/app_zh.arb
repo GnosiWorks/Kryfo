@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "笔记已保存到 {place}",
   "notesExportSavedUnchecked": "笔记已保存，但 Kryfo 无法检查这份副本",
   "notesExportFailed": "无法导出笔记。什么都没有保存。",
+  "notesExportTooLarge": "太大了，无法导出。照片和语音加起来有 4 GB 或更多。",
   "notesExportSubject": "Kryfo 笔记",
   "onboardingPrivateByDefault": "默认私密",
   "onboardingPrivateMessaging": "私密聊天，\n*没有套路*。",

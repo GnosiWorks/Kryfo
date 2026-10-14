@@ -6210,7 +6210,7 @@ abstract class AppLocalizations {
   /// screens/notes_export_screen.dart. under the switch. Tools is the tab, Open a locked file the tool in it, age the free desktop tool
   ///
   /// In en, this message translates to:
-  /// **'Open it with Open a locked file in Tools, or with age on a computer'**
+  /// **'Open it in Tools with “Open a locked file”, or with age on a computer'**
   String get notesExportLockLine;
 
   /// screens/notes_export_screen.dart. asked when the passphrase switch is turned off
@@ -6266,6 +6266,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t export the notes. Nothing was saved.'**
   String get notesExportFailed;
+
+  /// screens/notes_export_screen.dart. the photos and voice notes are more than one zip can hold
+  ///
+  /// In en, this message translates to:
+  /// **'Too large to export. The photos and voice notes come to 4 GB or more.'**
+  String get notesExportTooLarge;
 
   /// screens/notes_export_screen.dart. subject line when the file is shared
   ///

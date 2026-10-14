@@ -3987,6 +3987,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'برون‌بری یادداشت‌ها ممکن نشد. چیزی ذخیره نشد.';
 
   @override
+  String get notesExportTooLarge =>
+      'برای برون‌بری بیش از حد بزرگ است. عکس‌ها و پیام‌های صوتی ۴ گیگابایت یا بیشتر می‌شوند.';
+
+  @override
   String get notesExportSubject => 'یادداشت‌های Kryfo';
 
   @override

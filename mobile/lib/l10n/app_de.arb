@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "Notizen gespeichert in {place}",
   "notesExportSavedUnchecked": "Notizen gespeichert, aber Kryfo konnte die Kopie nicht prüfen",
   "notesExportFailed": "Die Notizen konnten nicht exportiert werden. Nichts wurde gespeichert.",
+  "notesExportTooLarge": "Zu groß zum Exportieren. Fotos und Sprachnachrichten kommen zusammen auf 4 GB oder mehr.",
   "notesExportSubject": "Kryfo-Notizen",
   "onboardingPrivateByDefault": "PRIVAT VON ANFANG AN",
   "onboardingPrivateMessaging": "Private Nachrichten,\n*ohne Haken*.",

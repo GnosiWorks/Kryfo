@@ -3930,7 +3930,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notesExportLockLine =>
-      'Mở bằng Mở tệp đã khóa trong Công cụ, hoặc bằng age trên máy tính';
+      'Mở bằng “Mở tệp đã khóa” trong Công cụ, hoặc bằng age trên máy tính';
 
   @override
   String get notesExportPlainTitle => 'Xuất mà không có cụm mật khẩu?';
@@ -3962,6 +3962,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notesExportFailed =>
       'Không xuất được ghi chú. Chưa có gì được lưu.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Quá lớn để xuất. Ảnh và tin nhắn thoại cộng lại từ 4 GB trở lên.';
 
   @override
   String get notesExportSubject => 'Ghi chú Kryfo';

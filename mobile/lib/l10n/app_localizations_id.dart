@@ -3934,7 +3934,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notesExportLockLine =>
-      'Buka di Alat dengan Buka file terkunci, atau dengan age di komputer';
+      'Buka di Alat dengan “Buka file terkunci”, atau dengan age di komputer';
 
   @override
   String get notesExportPlainTitle => 'Ekspor tanpa frasa sandi?';
@@ -3968,6 +3968,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notesExportFailed =>
       'Catatan tidak bisa diekspor. Tidak ada yang disimpan.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Terlalu besar untuk diekspor. Foto dan pesan suaranya mencapai 4 GB atau lebih.';
 
   @override
   String get notesExportSubject => 'Catatan Kryfo';

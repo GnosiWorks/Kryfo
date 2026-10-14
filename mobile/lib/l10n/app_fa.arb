@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "یادداشت‌ها در ⁨{place}⁩ ذخیره شدند",
   "notesExportSavedUnchecked": "یادداشت‌ها ذخیره شدند، ولی Kryfo نتوانست نسخه را بررسی کند",
   "notesExportFailed": "برون‌بری یادداشت‌ها ممکن نشد. چیزی ذخیره نشد.",
+  "notesExportTooLarge": "برای برون‌بری بیش از حد بزرگ است. عکس‌ها و پیام‌های صوتی ۴ گیگابایت یا بیشتر می‌شوند.",
   "notesExportSubject": "یادداشت‌های Kryfo",
   "onboardingPrivateByDefault": "به‌طور پیش‌فرض خصوصی",
   "onboardingPrivateMessaging": "پیام‌رسانی خصوصی،\n*بی قید و شرط*.",

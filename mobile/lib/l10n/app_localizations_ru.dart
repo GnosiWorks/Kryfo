@@ -4076,6 +4076,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось экспортировать заметки. Ничего не сохранено.';
 
   @override
+  String get notesExportTooLarge =>
+      'Слишком много для экспорта. Фото и голосовые занимают 4 ГБ или больше.';
+
+  @override
   String get notesExportSubject => 'Заметки Kryfo';
 
   @override

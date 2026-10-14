@@ -1132,6 +1132,7 @@
   "notesExportSavedIn": "Notes enregistrées dans {place}",
   "notesExportSavedUnchecked": "Notes enregistrées, mais Kryfo n’a pas pu vérifier la copie",
   "notesExportFailed": "Impossible d’exporter les notes. Rien n’a été enregistré.",
+  "notesExportTooLarge": "Trop volumineux pour l’export. Les photos et les notes vocales font 4 Go ou plus.",
   "notesExportSubject": "Notes Kryfo",
   "onboardingPrivateByDefault": "PRIVÉ PAR DÉFAUT",
   "onboardingPrivateMessaging": "Une messagerie privée,\n*sans piège*.",
