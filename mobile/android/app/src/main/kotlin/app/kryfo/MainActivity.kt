@@ -371,6 +371,7 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    "photoPickerReady" -> result.success(PhotoPicker.ready(this))
                     "installSource" -> result.success(installSource())
                     "askNotifications" -> {
                         askForNotificationsOnce()

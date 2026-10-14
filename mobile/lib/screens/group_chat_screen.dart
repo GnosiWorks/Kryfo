@@ -1980,24 +1980,32 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos
-    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
+    // whole, each in a folder of its own: see readPickedPhotos. videos come
+    // too where android has its photo picker
+    final picked = await lockState.hold(pickGallery);
     if (picked.isEmpty) return;
-    // the bytes are all that is kept
-    final bytesOf = await readPickedPhotos(picked);
-    if (bytesOf.length == 1) {
-      if (!mounted) return;
-      final caption = await Navigator.of(context).push<String?>(
-        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
-      );
-      if (caption == null) return;
-      await _sendGroupImage(bytesOf[0], caption);
-      return;
-    }
-    for (final bytes in bytesOf) {
-      if (!mounted) return;
-      await _sendGroupImage(bytes, '');
-    }
+    // the bytes are all that is kept, and a video goes the video tile's way
+    await sendGalleryPicks(
+      picked,
+      photo: (bytes, alone) async {
+        if (!mounted) return false;
+        if (alone) {
+          final caption = await Navigator.of(
+            context,
+          ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+          if (caption == null) return false;
+          await _sendGroupImage(bytes, caption);
+          return true;
+        }
+        await _sendGroupImage(bytes, '');
+        return true;
+      },
+      video: (x) async {
+        if (!mounted) return false;
+        await _sendGroupFileFrom(x.path, madeVideoName(x.name));
+        return true;
+      },
+    );
   }
 
   Future<void> _pickGroupGif() async {

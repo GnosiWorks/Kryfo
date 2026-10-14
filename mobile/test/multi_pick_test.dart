@@ -143,6 +143,15 @@ void main() {
   });
 
   test('both chats ask the picker for whole photos and shrink them here', () {
+    final picked = sourceOf('lib/picked.dart');
+    final pick = bodyOf(picked, 'Future<List<XFile>> pickGallery(');
+    expect(callsOf(pick, 'pickMultiImage('), ['pickMultiImage()']);
+    expect(callsOf(pick, 'pickMultipleMedia('), [
+      'pickMultipleMedia()',
+      'pickMultipleMedia()',
+    ]);
+    final send = bodyOf(picked, 'Future<void> sendGalleryPicks(');
+    expect(send, contains('await readPickedPhotos('));
     for (final (file, sig) in [
       ('lib/screens/chat_screen.dart', 'Future<void> _pickAndSendMultiple('),
       (
@@ -151,9 +160,8 @@ void main() {
       ),
     ]) {
       final body = bodyOf(sourceOf(file), sig);
-      final asks = callsOf(body, 'pickMultiImage(');
-      expect(asks, ['pickMultiImage()'], reason: file);
-      expect(body, contains('await readPickedPhotos(picked)'), reason: file);
+      expect(body, contains('lockState.hold(pickGallery)'), reason: file);
+      expect(body, contains('await sendGalleryPicks('), reason: file);
     }
   });
 }
