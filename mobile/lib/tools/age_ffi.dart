@@ -83,6 +83,47 @@ Future<AgeError?> ageOpenFinish(int outFd) => Isolate.run(
   ),
 );
 
+typedef _OpenFdC = Int32 Function(Pointer<Utf8>, Int32, VarArgs<(Uint32,)>);
+typedef _OpenFdD = int Function(Pointer<Utf8>, int, int);
+typedef _CloseFdC = Int32 Function(Int32);
+typedef _CloseFdD = int Function(int);
+
+DynamicLibrary _libc() => Platform.isAndroid
+    ? DynamicLibrary.open('libc.so')
+    : DynamicLibrary.process();
+
+// linux's flags, the same on arm, arm64 and x86
+const _oWrite = 0x1, _oCreate = 0x40, _oExcl = 0x80, _oCloexec = 0x80000;
+
+/// a descriptor of a file in the app's own folders, for the engine to read,
+/// or to write as a new file only this app can read. -1 when it will not open
+int openFd(String path, {bool write = false}) {
+  final p = path.toNativeUtf8();
+  try {
+    return _libc().lookupFunction<_OpenFdC, _OpenFdD>('open')(
+      p,
+      write ? _oWrite | _oCreate | _oExcl | _oCloexec : _oCloexec,
+      write ? 384 : 0, // 0600
+    );
+  } finally {
+    calloc.free(p);
+  }
+}
+
+void closeFd(int fd) =>
+    _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
+
+/// [inPath] locked into [outPath], which must not exist yet
+Future<AgeError?> ageLockPath(String inPath, String outPath, String pass) {
+  final inFd = openFd(inPath);
+  final outFd = inFd < 0 ? -1 : openFd(outPath, write: true);
+  if (outFd < 0) {
+    if (inFd >= 0) closeFd(inFd);
+    return Future.value(AgeError.io);
+  }
+  return ageLock(inFd, outFd, pass);
+}
+
 void ageOpenDrop() =>
     _lib().lookupFunction<_VoidC, _VoidD>('HaloAgeOpenDrop')();
 
