@@ -6012,6 +6012,10 @@ class _ChatHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // the palette swaps in place: depending on the theme repaints the
+    // header when it switches under an open chat
+    Theme.of(context);
+    final relay = appState.sendMode == 'balanced';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -6125,14 +6129,14 @@ class _ChatHead extends StatelessWidget {
                         Icon(
                           Icons.lock_outline,
                           size: 10,
-                          color: HaloColors.amber,
+                          color: relay ? HaloColors.sky : HaloColors.amber,
                         ),
                         const SizedBox(width: 4),
                         // a longer language at a big font size would run
                         // past the header's buttons, so it ends in …
                         Flexible(
                           child: Text(
-                            appState.sendMode == 'balanced'
+                            relay
                                 ? l10n.chatEncryptedViaRelay
                                 : appState.sendMode == 'fast'
                                 ? l10n.chatEncryptedDirect
@@ -6141,7 +6145,7 @@ class _ChatHead extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 10,
-                              color: HaloColors.text2,
+                              color: relay ? HaloColors.sky : HaloColors.text2,
                             ),
                           ),
                         ),

@@ -12,7 +12,7 @@ class _Palette {
   final Color ink, surface, surface2, surface3, line, line2;
   final Color text, text2, text3, warm;
   final Color amber, amberDeep, amberSoft;
-  final Color green, greenSoft, violet, rose, onAmber;
+  final Color green, greenSoft, violet, rose, sky, onAmber;
   final Color bubbleIn;
   const _Palette({
     required this.ink,
@@ -32,6 +32,7 @@ class _Palette {
     required this.greenSoft,
     required this.violet,
     required this.rose,
+    required this.sky,
     required this.onAmber,
     required this.bubbleIn,
   });
@@ -55,6 +56,7 @@ const _dark = _Palette(
   greenSoft: Color(0x2434D399),
   violet: Color(0xFFA78BFA),
   rose: Color(0xFFF472B6),
+  sky: Color(0xFF7DD3FC),
   onAmber: Color(0xFF1A0F04),
   bubbleIn: Color(0xFF3B332A),
 );
@@ -77,6 +79,8 @@ const _light = _Palette(
   greenSoft: Color(0x1F0E9D6C),
   violet: Color(0xFF6F4FD1),
   rose: Color(0xFFCE3F84),
+  // 5.4:1 on surface, mono 10 needs 4.5
+  sky: Color(0xFF0A5F95),
   onAmber: Color(0xFFFFFBF4),
   bubbleIn: Color(0xFFDDD3BE),
 );
@@ -112,6 +116,7 @@ class HaloColors {
   static Color get greenSoft => _p.greenSoft;
   static Color get violet => _p.violet;
   static Color get rose => _p.rose;
+  static Color get sky => _p.sky;
   static Color get onAmber => _p.onAmber;
 }
 
