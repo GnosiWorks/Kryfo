@@ -5461,50 +5461,58 @@ class _ChatScreenState extends State<ChatScreen>
                           : NotificationListener<ScrollMetricsNotification>(
                               key: const ValueKey('list'),
                               onNotification: _threadResized,
-                              child: ListView.builder(
+                              // the newest bubble's time rests above the line
+                              child: EarlierRoom(
+                                shown: _earlier.count > 0,
                                 controller: _scrollCtrl,
-                                reverse: true,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                itemCount: _messages.length,
-                                findChildIndexCallback: _indexOfRow,
-                                itemBuilder: (c, i) {
-                                  // one unbuildable message must never cost
-                                  // the whole conversation. draw a stub and
-                                  // carry on.
-                                  try {
-                                    // keyed by the message at the top, where
-                                    // the list looks: in a reversed list every
-                                    // arrival moves every index, and a voice
-                                    // note must keep its player. the same id
-                                    // is the anchor a jump lands on.
-                                    final id = _rowKey(
-                                      _messages[_messages.length - 1 - i],
-                                    );
-                                    return RowAnchor(
-                                      key: ValueKey(id),
-                                      anchors: _anchors,
-                                      id: id,
-                                      child: _buildRow(c, i, searchActive),
-                                    );
-                                  } catch (e) {
-                                    dlog('bubble failed: $e');
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      child: Text(
-                                        l10n.chatThisMessageCanT,
-                                        style: HaloType.sans(
-                                          size: 12,
-                                          color: HaloColors.text2,
+                                reversed: true,
+                                builder: (_, room) => ListView.builder(
+                                  controller: _scrollCtrl,
+                                  reverse: true,
+                                  padding: EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    12 + room,
+                                  ),
+                                  itemCount: _messages.length,
+                                  findChildIndexCallback: _indexOfRow,
+                                  itemBuilder: (c, i) {
+                                    // one unbuildable message must never cost
+                                    // the whole conversation. draw a stub and
+                                    // carry on.
+                                    try {
+                                      // keyed by the message at the top, where
+                                      // the list looks: in a reversed list every
+                                      // arrival moves every index, and a voice
+                                      // note must keep its player. the same id
+                                      // is the anchor a jump lands on.
+                                      final id = _rowKey(
+                                        _messages[_messages.length - 1 - i],
+                                      );
+                                      return RowAnchor(
+                                        key: ValueKey(id),
+                                        anchors: _anchors,
+                                        id: id,
+                                        child: _buildRow(c, i, searchActive),
+                                      );
+                                    } catch (e) {
+                                      dlog('bubble failed: $e');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
                                         ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                        child: Text(
+                                          l10n.chatThisMessageCanT,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                     ),
