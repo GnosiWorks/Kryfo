@@ -1022,15 +1022,15 @@ func TestKnockProvenEndpointsKeepTheirLane(t *testing.T) {
 		tk.setLocked(knockKey(r3key(i)), u, now.Unix(), now.Add(knockTTL).Unix())
 		att = append(att, tk.eps[u])
 	}
-	var asked, served, dropped, ai, li int
+	var asked, served, dropped, ti, li int
 	waiting := map[*knockEP]bool{}
 	var acc float64
 	for ms := 0; ms < 60_000; ms++ {
 		now = now.Add(time.Millisecond)
 		tk.clock.set(now)
 		for acc += 0.3; acc >= 1; acc-- {
-			tk.q.addLocked(att[ai%len(att)], false)
-			ai++
+			tk.q.addLocked(att[ti%len(att)], false)
+			ti++
 		}
 		if ms%200 == 0 {
 			ep := leg[li%len(leg)]
