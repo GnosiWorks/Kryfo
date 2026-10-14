@@ -6942,15 +6942,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor is blocked or watched here';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Faster, and it skips Tor. Our relay sees your IP address, never what you say.';
+  String get torBootSplashStartThroughABridge => 'Start through a bridge';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Finds a way around the block by itself, through a bridge when it needs one.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Two ways around the block';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.';
 
   @override
   String get bridgesRecommended => 'Recommended';

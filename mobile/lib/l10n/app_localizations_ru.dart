@@ -7080,15 +7080,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Tor здесь заблокирован или под наблюдением';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Быстрее и без Tor. Наш ретранслятор видит твой IP-адрес, но никогда не видит, что ты пишешь.';
+  String get torBootSplashStartThroughABridge => 'Запуск через мост';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Сам находит способ обойти блокировку, если нужно, через мост.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Два способа обойти блокировку';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Здесь Kryfo никогда не пробует Tor напрямую. Он сам найдёт рабочий мост, или ты выберешь свой на следующем шаге.';
 
   @override
   String get bridgesRecommended => 'Рекомендуем';

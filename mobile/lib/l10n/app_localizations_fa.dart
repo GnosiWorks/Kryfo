@@ -6957,15 +6957,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود یا زیر نظر است';
 
   @override
-  String get torBootSplashRelayLine =>
-      'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.';
+  String get torBootSplashStartThroughABridge => 'شروع از راه یک پل';
 
   @override
-  String get torBootSplashAutoLine =>
-      'خودش راهی برای دور زدن مسدودسازی پیدا می‌کند و اگر لازم باشد از یک پل کمک می‌گیرد.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'دو راه برای دور زدن مسدودسازی';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'این‌جا Kryfo هرگز Tor را مستقیم امتحان نمی‌کند. خودش پلی پیدا می‌کند که کار کند، یا می‌توانید در گام بعد پل خودتان را انتخاب کنید.';
 
   @override
   String get bridgesRecommended => 'پیشنهادی';

@@ -6998,16 +6998,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Aqui o Tor está bloqueado ou vigiado';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Mais rápido e sem passar pelo Tor. Nosso retransmissor vê seu endereço IP, nunca o que você diz.';
+  String get torBootSplashStartThroughABridge => 'Iniciar por uma ponte';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Encontra sozinho um jeito de contornar o bloqueio, com uma ponte se precisar.';
-
-  @override
-  String get torBootSplashTwoWaysAround =>
-      'Dois jeitos de contornar o bloqueio';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Aqui o Kryfo nunca tenta o Tor diretamente. Ele encontra uma ponte que funcione, ou você escolhe a sua na próxima tela.';
 
   @override
   String get bridgesRecommended => 'Recomendado';

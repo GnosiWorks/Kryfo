@@ -6939,15 +6939,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tor bị chặn hoặc bị theo dõi ở đây';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Nhanh hơn và không qua Tor. Relay của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+  String get torBootSplashStartThroughABridge => 'Khởi động qua cầu nối';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Tự tìm cách vượt qua việc chặn, dùng cầu nối khi cần.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Hai cách vượt qua việc chặn';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Ở đây Kryfo không bao giờ thử kết nối Tor trực tiếp. Kryfo tự tìm một cầu nối hoạt động được, hoặc bạn có thể chọn cầu nối của mình ở bước tiếp theo.';
 
   @override
   String get bridgesRecommended => 'Nên dùng';

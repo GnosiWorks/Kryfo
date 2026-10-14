@@ -3063,9 +3063,16 @@ final _calls = <_Call>[
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
   ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
   ('bridgesRecommended', [], (l) => l.bridgesRecommended),
-  ('torBootSplashTwoWaysAround', [], (l) => l.torBootSplashTwoWaysAround),
-  ('torBootSplashAutoLine', [], (l) => l.torBootSplashAutoLine),
-  ('torBootSplashRelayLine', ["Tor", "IP"], (l) => l.torBootSplashRelayLine),
+  (
+    'torBootSplashStartThroughABridge',
+    [],
+    (l) => l.torBootSplashStartThroughABridge,
+  ),
+  (
+    'torBootSplashNeverTriesTorPlainly',
+    ["Kryfo", "Tor"],
+    (l) => l.torBootSplashNeverTriesTorPlainly,
+  ),
   ('onboardingAutoFindsAWay', [], (l) => l.onboardingAutoFindsAWay),
   (
     'onboardingAboutASecondSkipsTor',
@@ -3204,13 +3211,10 @@ void main() {
     ],
     'fa': [
       ((l) => l.bridgesRecommended, 'پیشنهادی'),
-      (
-        (l) => l.torBootSplashRelayLine,
-        'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.',
-      ),
+      ((l) => l.torBootSplashStartThroughABridge, 'شروع از راه یک پل'),
     ],
     'de': [
-      ((l) => l.torBootSplashTwoWaysAround, 'Zwei Wege um die Sperre herum'),
+      ((l) => l.torBootSplashStartThroughABridge, 'Über eine Brücke starten'),
       (
         (l) => l.onboardingAboutASecondSkipsTor,
         'Etwa eine Sekunde, ganz ohne Tor.',

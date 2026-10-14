@@ -6945,15 +6945,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Tor diblokir atau diawasi di sini';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Lebih cepat dan tanpa Tor. Relay kami melihat alamat IP-mu, tidak pernah isi obrolanmu.';
+  String get torBootSplashStartThroughABridge => 'Mulai lewat jembatan';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Mencari sendiri jalan melewati blokir, lewat jembatan bila perlu.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Dua cara melewati blokir';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Di sini Kryfo tidak pernah mencoba Tor secara langsung. Kryfo mencari jembatan yang berfungsi, atau kamu bisa memilih sendiri setelah ini.';
 
   @override
   String get bridgesRecommended => 'Disarankan';

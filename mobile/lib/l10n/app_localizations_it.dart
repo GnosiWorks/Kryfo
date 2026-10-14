@@ -7015,15 +7015,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Qui Tor è bloccato o sorvegliato';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Più veloce e senza Tor. Il nostro relay vede il tuo indirizzo IP, mai quello che scrivi.';
+  String get torBootSplashStartThroughABridge => 'Avvia tramite un bridge';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Trova da solo un modo per aggirare il blocco, con un bridge se serve.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Due modi per aggirare il blocco';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Qui Kryfo non prova mai Tor in chiaro. Trova da solo un bridge che funziona, oppure scegline uno tuo subito dopo.';
 
   @override
   String get bridgesRecommended => 'Consigliato';

@@ -11169,25 +11169,19 @@ abstract class AppLocalizations {
   /// **'Tor is blocked or watched here'**
   String get torBootSplashTorIsBlockedHere;
 
-  /// screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked
+  /// screens/bridge_sheets.dart: title of the sheet after Tor is blocked or watched here on a new install's first start
   ///
   /// In en, this message translates to:
-  /// **'Faster, and it skips Tor. Our relay sees your IP address, never what you say.'**
-  String get torBootSplashRelayLine;
+  /// **'Start through a bridge'**
+  String get torBootSplashStartThroughABridge;
 
-  /// screens/bridge_sheets.dart: under Automatic, the first and recommended way to start where Tor is blocked
+  /// screens/bridge_sheets.dart: under the title of the sheet after Tor is blocked or watched here; the next screen is the bridges screen
   ///
   /// In en, this message translates to:
-  /// **'Finds a way around the block by itself, through a bridge when it needs one.'**
-  String get torBootSplashAutoLine;
+  /// **'Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.'**
+  String get torBootSplashNeverTriesTorPlainly;
 
-  /// screens/bridge_sheets.dart: title of the sheet after Tor is blocked here on a new install's first start
-  ///
-  /// In en, this message translates to:
-  /// **'Two ways around the block'**
-  String get torBootSplashTwoWaysAround;
-
-  /// screens/bridge_sheets.dart, screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked
+  /// screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked
   ///
   /// In en, this message translates to:
   /// **'Recommended'**

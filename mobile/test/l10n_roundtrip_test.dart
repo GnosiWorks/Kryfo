@@ -3540,14 +3540,10 @@ void main() {
     expect(l.supportMovedToInbox, "Moved to inbox");
     expect(l.bridgesFindingAWayIn, "Finding a way in…");
     expect(l.bridgesRecommended, "Recommended");
-    expect(l.torBootSplashTwoWaysAround, "Two ways around the block");
+    expect(l.torBootSplashStartThroughABridge, "Start through a bridge");
     expect(
-      l.torBootSplashAutoLine,
-      "Finds a way around the block by itself, through a bridge when it needs one.",
-    );
-    expect(
-      l.torBootSplashRelayLine,
-      "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
+      l.torBootSplashNeverTriesTorPlainly,
+      "Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.",
     );
     expect(
       l.onboardingAutoFindsAWay,

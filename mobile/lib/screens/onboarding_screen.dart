@@ -1167,9 +1167,9 @@ class _TransportScreen extends StatefulWidget {
 
 class _TransportScreenState extends State<_TransportScreen> {
   // said tor is blocked at the start: onion through automatic leads, relay
-  // next. relay picked there is picked here
+  // next
   final bool _blocked = appState.bridge.skipDirect;
-  late String _pick = appState.firstRunRelay ? 'balanced' : 'private';
+  String _pick = 'private';
   bool _busy = false;
 
   Future<void> _go() async {

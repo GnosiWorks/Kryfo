@@ -7071,15 +7071,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Tor тут заблокований або під наглядом';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Швидше і без Tor. Наш ретранслятор бачить твою IP-адресу, але ніколи не бачить, що ти пишеш.';
+  String get torBootSplashStartThroughABridge => 'Запуск через міст';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Сам знаходить спосіб обійти блокування, якщо треба, через міст.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Два способи обійти блокування';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Тут Kryfo ніколи не пробує Tor напряму. Він сам знайде робочий міст, або ти вибереш свій на наступному кроці.';
 
   @override
   String get bridgesRecommended => 'Рекомендуємо';

@@ -7024,15 +7024,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tor ist hier blockiert oder überwacht';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Schneller und ohne Tor. Unser Relais sieht deine IP-Adresse, nie, was du schreibst.';
+  String get torBootSplashStartThroughABridge => 'Über eine Brücke starten';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Findet selbst einen Weg um die Sperre, wenn nötig über eine Brücke.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Zwei Wege um die Sperre herum';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Kryfo versucht Tor hier nie direkt. Es findet selbst eine Brücke, die funktioniert, oder du wählst als Nächstes deine eigene.';
 
   @override
   String get bridgesRecommended => 'Empfohlen';
