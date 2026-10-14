@@ -3695,9 +3695,9 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // its own tile rather than a mixed picker: on android 12 and older the
-  // mixed one is the system file browser. the clip goes the file way, which
-  // strips it and copies it out of the picker's cache.
+  // its own tile as well: without android's photo picker the gallery is
+  // photos only, as a mixed pick there is the file browser. the clip goes
+  // the file way, which strips it and copies it out of the picker's cache.
   Future<void> _pickAndSendVideo() async {
     final x = await lockState.hold(
       () => ImagePicker().pickVideo(source: ImageSource.gallery),
@@ -3713,25 +3713,33 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAndSendMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos
-    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
+    // whole, each in a folder of its own: see readPickedPhotos. videos come
+    // too where android has its photo picker
+    final picked = await lockState.hold(pickGallery);
     if (picked.isEmpty) return;
-    // the bytes are all that is kept
-    final bytesOf = await readPickedPhotos(picked);
-    // one photo picked: same preview + caption screen the camera path gets.
-    if (bytesOf.length == 1) {
-      if (!mounted) return;
-      final caption = await Navigator.of(context).push<String?>(
-        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
-      );
-      if (caption == null) return;
-      await _sendOneImage(bytesOf[0], caption);
-      return;
-    }
-    for (final bytes in bytesOf) {
-      if (!mounted) return;
-      await _sendOneImage(bytes, '');
-    }
+    // the bytes are all that is kept, and a video goes the video tile's way
+    await sendGalleryPicks(
+      picked,
+      photo: (bytes, alone) async {
+        if (!mounted) return false;
+        // one photo picked: the preview and caption screen the camera gets
+        if (alone) {
+          final caption = await Navigator.of(
+            context,
+          ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+          if (caption == null) return false;
+          await _sendOneImage(bytes, caption);
+          return true;
+        }
+        await _sendOneImage(bytes, '');
+        return true;
+      },
+      video: (x) async {
+        if (!mounted) return false;
+        await _sendFileFrom(x.path, madeVideoName(x.name));
+        return true;
+      },
+    );
   }
 
   // when the oldest of ours still going was written. a file that is

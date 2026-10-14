@@ -139,18 +139,24 @@ void main() {
       (chat, 'Future<void> _pickWallpaperImage('),
       (group, 'Future<void> _pickGroupVideo('),
       (picked, 'Future<List<Uint8List>> readPickedPhotos('),
+      (picked, 'Future<void> sendGalleryPicks('),
     ]) {
       final body = bodyOf(src, fn);
       expect(body, contains('} finally {'), reason: fn);
       expect(body, contains('shredPickedImages'), reason: fn);
       expect(body, isNot(contains('shredFile(')), reason: fn);
     }
-    // several at a time go through readPickedPhotos
+    // several at a time go through sendGalleryPicks, and its photos
+    // through readPickedPhotos
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendMultiple('),
       (group, 'Future<void> _pickGroupMultiple('),
     ]) {
-      expect(bodyOf(src, fn), contains('await readPickedPhotos('), reason: fn);
+      expect(bodyOf(src, fn), contains('await sendGalleryPicks('), reason: fn);
     }
+    expect(
+      bodyOf(picked, 'Future<void> sendGalleryPicks('),
+      contains('await readPickedPhotos('),
+    );
   });
 }

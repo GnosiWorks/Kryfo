@@ -131,6 +131,8 @@ dependencies {
     // the camera shrink reads the orientation tag. the platform class is
     // banned by lint for old security bugs; this one is the maintained copy
     implementation("androidx.exifinterface:exifinterface:1.4.2")
+    // the photo picker check. the version image_picker_android brings
+    implementation("androidx.activity:activity:1.12.4")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16.1")
 }
