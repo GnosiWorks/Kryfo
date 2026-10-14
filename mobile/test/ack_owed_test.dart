@@ -17,6 +17,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_session.dart' show KeyHeld, StartingAfresh;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -45,6 +46,10 @@ class _Rows extends HaloDb {
   Future<List<Map<String, Object?>>> pendingRequests() async => const [];
   @override
   Future<List<Map<String, Object?>>> askedRequests() async => const [];
+  // no span listened on: someone blocked is not heard
+  @override
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
+      const [];
 }
 
 // every relay try noted, and one held at the wire when told
@@ -53,6 +58,15 @@ class _Io extends ArrivalIo {
   Completer<void>? hold;
   // the keys listened for as just added or accepted
   final fresh = <String>[];
+  // a seal that waits: on a key check, or on their card after a restore
+  Exception Function(String peer)? sealWaits;
+
+  @override
+  Future<String> encrypt(String peer, String plain) async {
+    final w = sealWaits;
+    if (w != null) throw w(peer);
+    return super.encrypt(peer, plain);
+  }
 
   @override
   Future<String> relaySend(String xPub, String cipher) async {
@@ -335,6 +349,53 @@ void main() {
     expect(io.tried, hasLength(before));
     expect(_owed(mem, _bob), 0);
   });
+
+  test('an accept that started before a block puts no mark on the blocked '
+      'row', () async {
+    await mem.update('contacts', {'accepted': 0});
+    await db.acceptRequest(_bob);
+    await db.setBlocked(_bob, true);
+    io.down = true;
+    app.noteOnline(false);
+    // the accept's own mark write lands after the block
+    await app.afterAccept(_bob);
+    await settle();
+    expect(_owed(mem, _bob), 0);
+    await db.setBlocked(_bob, false);
+    io.down = false;
+    app.noteOnline(true);
+    await app.drainOutbox();
+    await app.drainAcksForTest();
+    await settle();
+    expect(acks(_bob), isEmpty);
+  });
+
+  for (final (why, wait) in [
+    ('a key check', (String p) => KeyHeld(p)),
+    ('their card after a restore', (String p) => StartingAfresh(p)),
+  ]) {
+    test('a seal that waits on $why uses no try, and the ack goes once it '
+        'can', () async {
+      io.sealWaits = wait;
+      await app.afterAccept(_bob);
+      await settle();
+      // one try short of letting it go
+      app.ackTriesForTest(db, _bob, kFrameTries - 1);
+      for (var i = 0; i < 3; i++) {
+        await app.flushOutboxNow();
+        await app.drainAcksForTest();
+        await settle();
+      }
+      expect(_owed(mem, _bob), 1);
+      expect(acks(_bob), isEmpty);
+      io.sealWaits = null;
+      await app.flushOutboxNow();
+      await app.drainAcksForTest();
+      await settle();
+      expect(acks(_bob), hasLength(1));
+      expect(_owed(mem, _bob), 0);
+    });
+  }
 
   test('the ack that went unlocks the requester', () async {
     await acceptOffline(app, _bob);

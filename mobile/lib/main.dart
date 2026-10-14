@@ -2149,7 +2149,7 @@ class HaloDb implements GroupOwedStore {
         }
         if (oldV < 80) {
           // an accept whose word to them has not gone yet
-          await ackOwedColumn(db);
+          await upgradeTo80(db, oldV);
         }
       },
     );
@@ -3479,12 +3479,16 @@ class HaloDb implements GroupOwedStore {
 
   // an accept's word to them, kept on their row until a send of it is
   // taken: a dead route or a restart must not leave them locked out
+  // set only on someone accepted and not blocked: a block that lands
+  // between an accept and this write keeps its row clear
   Future<void> setAckOwed(String haloId, bool owed) async {
     final d = await open();
     await d.update(
       'contacts',
       {'ack_owed': owed ? 1 : 0},
-      where: 'halo_id = ?',
+      where: owed
+          ? 'halo_id = ? AND accepted = 1 AND blocked = 0'
+          : 'halo_id = ?',
       whereArgs: [haloId],
     );
   }
@@ -8055,7 +8059,17 @@ Future<void> writtenOrder(DatabaseExecutor db) async {
   );
 }
 
-// the upgrade to 80: an accept still owes them word that they are in
+// the upgrade to 80: an accept still owes them word that they are in. a
+// file at 78 or 79 may come from a build that had this step at 78, so the
+// steps to 78 and 79 run again first: both are safe twice
+Future<void> upgradeTo80(DatabaseExecutor db, int oldV) async {
+  if (oldV >= 78) {
+    await writtenAtColumn(db);
+    await notifRingTables(db);
+  }
+  await ackOwedColumn(db);
+}
+
 Future<void> ackOwedColumn(DatabaseExecutor db) => addColumn(
   db,
   'ALTER TABLE contacts ADD COLUMN ack_owed INTEGER NOT NULL DEFAULT 0',
@@ -11543,6 +11557,7 @@ class AppState extends ChangeNotifier {
   Future<void> acceptNewKey(String peer) async {
     await session.acceptNewKey(peer);
     _recardFor(peer);
+    _ackDueNow(peer);
   }
 
   // a block in the open vault on someone its cards name: the cards say so
@@ -11622,6 +11637,15 @@ class AppState extends ChangeNotifier {
       _bumpChatRev(peer);
       unawaited(drainOutbox());
     }
+    _ackDueNow(peer);
+  }
+
+  // what an accept owes them waited on their card or a key check: it goes
+  // now, not at the end of its wait
+  void _ackDueNow(String peer) {
+    final before = _ackNextAt.length;
+    _ackNextAt.removeWhere((k, _) => k.endsWith('|$peer'));
+    if (_ackNextAt.length != before) unawaited(_drainAcks());
   }
 
   // what one container's unsent rows come to
@@ -21525,6 +21549,9 @@ class AppState extends ChangeNotifier {
     bool member = false,
     bool takeBack = false,
     bool pairOnly = false,
+    // a seal that waits on a key check or on their card throws, rather
+    // than reading as a failed send
+    bool holdThrows = false,
   }) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
@@ -21668,6 +21695,7 @@ class AppState extends ChangeNotifier {
       }
       return done.future;
     } catch (e) {
+      if (holdThrows && (e is KeyHeld || e is StartingAfresh)) rethrow;
       dlog('send to $memberId failed: $e');
       return false;
     }
@@ -21786,12 +21814,18 @@ class AppState extends ChangeNotifier {
   // for our first reply. true when a send of it was taken
   Future<bool> sendAcceptAck(String haloId) async {
     try {
-      final wrapped = await wrapMessage('', sender: _mySender());
-      return await _sendOneEnvelope(haloId, wrapped);
+      return await _ackWire(haloId);
     } catch (e) {
       dlog('accept ack failed: $e');
       return false;
     }
+  }
+
+  // as sendAcceptAck, but a seal that waits on a key check or on their
+  // card throws
+  Future<bool> _ackWire(String haloId) async {
+    final wrapped = await wrapMessage('', sender: _mySender());
+    return _sendOneEnvelope(haloId, wrapped, holdThrows: true);
   }
 
   // ---- the accept's word, until it goes ----
@@ -21824,13 +21858,20 @@ class AppState extends ChangeNotifier {
   }
 
   // one send of what [d] owes them, one at a time. the mark goes only once
-  // a send was taken, and a send that finds it gone already sends nothing
-  Future<bool> _sendAckOf(HaloDb d, String haloId) async {
+  // a send was taken, and a send that finds it gone already sends nothing.
+  // null when the seal waits on a key check or on their card
+  Future<bool?> _sendAckOf(HaloDb d, String haloId) async {
     final key = d.container.chatKey(haloId);
     if (!_acksGoing.add(key)) return false;
     try {
       if (!await d.isAckOwed(haloId)) return true;
-      if (!await sendAcceptAck(haloId)) return false;
+      try {
+        if (!await _ackWire(haloId)) return false;
+      } on KeyHeld {
+        return null;
+      } on StartingAfresh {
+        return null;
+      }
       await d.setAckOwed(haloId, false);
       _ackTries.remove(key);
       _ackNextAt.remove(key);
@@ -21870,7 +21911,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _ackRound() async {
-    final going = <Future<bool>>[];
+    final going = <Future<bool?>>[];
     for (final d in [live, ?_openVault]) {
       if (!linkUp || haloWiping || everydayHeld) break;
       final List<String> owed;
@@ -21897,7 +21938,16 @@ class AppState extends ChangeNotifier {
         }
         _ackTries[key] = tries + 1;
         _ackNextAt[key] = now + queueGap(tries);
-        going.add(_sendAckOf(d, id));
+        going.add(
+          _sendAckOf(d, id).then((r) {
+            // waiting on a key check or their card is no failed try
+            if (r == null) {
+              _ackTries[key] = tries;
+              _ackNextAt[key] = now + 600000;
+            }
+            return r;
+          }),
+        );
       }
     }
     await Future.wait(going);
