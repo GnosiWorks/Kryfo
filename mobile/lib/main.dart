@@ -1479,7 +1479,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 78,
+      version: 79,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1645,10 +1645,11 @@ class HaloDb implements GroupOwedStore {
         await frameOrderTable(db);
         await notifTagTables(db);
         await groupResentTables(db);
+        await notifRingTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 78
+        // they add. 66 runs after it: it reads what they all make. 67 to 79
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2132,6 +2133,10 @@ class HaloDb implements GroupOwedStore {
           // when each message was written: the order a chat shows
           await writtenAtColumn(db);
         }
+        if (oldV < 79) {
+          // which message each notification rang for
+          await notifRingTables(db);
+        }
       },
     );
     // retired while it was opening
@@ -2592,6 +2597,7 @@ class HaloDb implements GroupOwedStore {
       // new tag the shade never ties to the old chat
       await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
       await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      await t.delete('notif_rings', where: 'chat = ?', whereArgs: [haloId]);
       // nothing queued for the old chat goes after it. a take-back still
       // goes, it only withdraws
       await _dropQueuedTo(t, haloId);
@@ -7258,6 +7264,47 @@ class HaloDb implements GroupOwedStore {
     return n;
   }
 
+  // notification [id] rang for message [msgUid] of [chat]. the shade keeps
+  // nothing for longer than a week here
+  Future<void> noteRing(int id, String chat, String msgUid) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('notif_rings', {
+      'id': id,
+      'chat': chat,
+      'msg_uid': msgUid,
+      'at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.delete(
+      'notif_rings',
+      where: 'at < ?',
+      whereArgs: [now - kReceiptKeptFor.inMilliseconds],
+    );
+  }
+
+  // the message notification [id] of [chat] rang for, while it is here
+  Future<String?> ringOf(int id, String chat) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT r.msg_uid FROM notif_rings r JOIN messages m '
+      'ON m.msg_uid = r.msg_uid WHERE r.id = ? AND r.chat = ? LIMIT 1',
+      [id, chat],
+    );
+    return r.isEmpty ? null : r.first['msg_uid'] as String?;
+  }
+
+  // the notifications of [chat], or of [msgUid], left the shade
+  Future<void> forgetRings({String? chat, String? msgUid}) async {
+    if (!isOpen) return;
+    final db = await open();
+    if (chat != null) {
+      await db.delete('notif_rings', where: 'chat = ?', whereArgs: [chat]);
+    }
+    if (msgUid != null) {
+      await db.delete('notif_rings', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    }
+  }
+
   // the tag [chat]'s notifications go under, made on its first one
   Future<String> notifTag(String chat) async => notifTagIn(await open(), chat);
 
@@ -8370,6 +8417,25 @@ Future<void> notifTagTables(DatabaseExecutor db) async {
       tag TEXT NOT NULL UNIQUE
     )
   ''');
+}
+
+// which message each notification still in the shade rang for, by its
+// android id, kept here in the chat's own container: the tap hands back the
+// id alone and opens the chat on it. a row goes with its message, and when
+// the notification leaves the shade
+Future<void> notifRingTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS notif_rings (
+      id INTEGER PRIMARY KEY,
+      chat TEXT NOT NULL,
+      msg_uid TEXT NOT NULL,
+      at INTEGER NOT NULL
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS notif_rings_follow AFTER DELETE ON '
+    'messages BEGIN DELETE FROM notif_rings WHERE msg_uid = old.msg_uid; END',
+  );
 }
 
 // a group's texts sent again to a member who restored a backup: once per
@@ -9973,12 +10039,22 @@ Future<void> openChatForHalo(String? haloId) =>
 
 // a tapped notification names its chat by tag only. the tag is read once
 // the app lock is open, in the containers of the session it opened to
-Future<void> openChatForNotif(String? payload) async {
-  if (payload == null || payload.isEmpty) return;
-  final (tag, uid) = notifPayloadParts(payload);
+Future<void> openChatForNotif(String? tag, [int? id]) async {
+  if (tag == null || tag.isEmpty) return;
   await lockGuard.afterUnlock(() async {
     final chat = await notifChatFor(tag);
-    if (chat != null) await openNotifChat(chat, uid);
+    if (chat == null) return;
+    // the message it rang for, kept here by its id. with none the chat
+    // opens at its newest, where the line and the new messages show
+    String? uid;
+    if (id != null) {
+      try {
+        uid = await session.ringOf(id, chat);
+      } catch (e) {
+        dlog('notif tap: ring not read (${e.runtimeType})');
+      }
+    }
+    await openNotifChat(chat, uid);
   }, key: 'notif:$tag');
 }
 
@@ -10355,7 +10431,7 @@ class AppIo {
     int? burnAt,
   }) async {
     if (await quietNow()) return;
-    await showMessageNotification(
+    final id = await showMessageNotification(
       title: title,
       body: body,
       chat: payload,
@@ -10363,6 +10439,12 @@ class AppIo {
       msgUid: msgUid,
       burnAt: burnAt,
     );
+    if (id == null || msgUid == null) return;
+    try {
+      await on.noteRing(id, payload, msgUid);
+    } catch (e) {
+      dlog('ring: not kept (${e.runtimeType})');
+    }
   }
 
   // what this process showed for a chat leaves the shade
@@ -19623,6 +19705,8 @@ class AppState extends ChangeNotifier {
     await initNotifications(
       onTap: openChatForNotif,
       tagsOf: (chat) => session.notifTagsOf(chat),
+      forget: ({chat, msgUid}) =>
+          session.forgetRings(chat: chat, msgUid: msgUid),
     );
     // the first call into android's notification service after a start is
     // slow, a tenth of a second or more. every start pays it here, so
@@ -23729,9 +23813,10 @@ Future<void> _openFromNotif() async {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp ?? false) {
       final payload = details?.notificationResponse?.payload;
+      final id = details?.notificationResponse?.id;
       Future.delayed(
         const Duration(milliseconds: 500),
-        () => openChatForNotif(payload),
+        () => openChatForNotif(payload, id),
       );
     }
   } catch (e) {

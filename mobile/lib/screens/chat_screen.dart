@@ -2548,11 +2548,14 @@ class _ChatScreenState extends State<ChatScreen>
     session.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
-    final wantAll = _searching || widget.jumpToUid != null || _pagedOut;
+    final wantAll = _searching || _pagedOut;
     // a reload keeps the pages already scrolled in: a receipt, a reaction
     // or an edit must not drop what is being read
     final keepFrom = wantAll || !_loaded ? null : _oldestHeld();
-    final List<Map<String, Object?>> rows;
+    // opened on a message: the newest page, and the whole thread only when
+    // it is further up than that
+    final jumpTo = _didJump ? null : widget.jumpToUid;
+    List<Map<String, Object?>> rows;
     if (wantAll) {
       rows = await session.messagesFor(widget.peerHaloId);
       _hasMore = false;
@@ -2570,6 +2573,11 @@ class _ChatScreenState extends State<ChatScreen>
       );
       _hasMore = rows.length > _pageSize;
       if (_hasMore) rows.removeAt(0);
+      if (jumpTo != null && !rows.any((r) => r['msg_uid'] == jumpTo)) {
+        rows = await session.messagesFor(widget.peerHaloId);
+        _hasMore = false;
+        _pagedOut = true;
+      }
     }
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
@@ -2676,7 +2684,12 @@ class _ChatScreenState extends State<ChatScreen>
           ? loaded[start - 1]
           : null;
       if (after != null && read != null) {
-        await _earlierSince(after, read, loaded);
+        try {
+          await _earlierSince(after, read, loaded);
+        } catch (e) {
+          // the line is a help: a read that fails leaves the chat as it is
+          dlog('earlier: not read (${e.runtimeType})');
+        }
         if (!mounted) return;
       }
     }
@@ -2745,7 +2758,10 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (snap) {
       _scrollToEnd(instant: true);
     }
-    if (_earlier.count > 0) _lookEarlierSoon();
+    if (_earlier.count > 0) {
+      await _pruneEarlier();
+      _lookEarlierSoon();
+    }
   }
 
   // what came in after row [after] and went up the thread, well above
@@ -2775,14 +2791,62 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // each one up the thread that is on screen now has been seen
+  // each one up the thread that is on screen now has been seen. one
+  // leaving, taken back or burned, is no longer there to see
   void _lookEarlier() {
     if (!mounted || _earlier.count == 0) return;
-    if (_earlier.seenIn(_anchors)) setState(() {});
+    final leaving = {
+      for (final m in _messages)
+        if (m.removing && m.msgUid != null) m.msgUid!,
+    };
+    for (final id in leaving) {
+      _earlier.drop(id);
+    }
+    if (_earlier.seenIn(_anchors) || leaving.isNotEmpty) setState(() {});
+  }
+
+  // after a reload: only what is still in the database stays counted
+  Future<void> _pruneEarlier() async {
+    if (_earlier.count == 0) return;
+    final held = {
+      for (final m in _messages)
+        if (m.msgUid != null && !m.removing) m.msgUid!,
+    };
+    final gone = <String>[];
+    for (final id in _earlier.ids) {
+      if (held.contains(id)) continue;
+      final leaving = _messages.any((m) => m.msgUid == id);
+      var there = !leaving;
+      if (there) {
+        try {
+          there = await session.messageExists(id);
+        } catch (e) {
+          dlog('earlier: not read (${e.runtimeType})');
+        }
+      }
+      if (!there) gone.add(id);
+    }
+    if (gone.isEmpty || !mounted) return;
+    setState(() {
+      for (final id in gone) {
+        _earlier.drop(id);
+      }
+    });
   }
 
   void _lookEarlierSoon() =>
       WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
+
+  // the line, and after each frame it shows a count, a look for rows that
+  // went since or came on screen
+  Widget _earlierChip({
+    required int count,
+    required bool lifted,
+    required VoidCallback onTap,
+  }) {
+    if (count > 0) _lookEarlierSoon();
+    return EarlierChip(count: count, lifted: lifted, onTap: onTap);
+  }
 
   // the line's tap: to the first one up the thread, the thread brought in
   // whole when it is above the pages held
@@ -5456,7 +5520,7 @@ class _ChatScreenState extends State<ChatScreen>
                       right: 16,
                       bottom: 0,
                       child: Center(
-                        child: EarlierChip(
+                        child: _earlierChip(
                           count: _earlier.count,
                           lifted: _showScrollDown,
                           onTap: _toEarlier,

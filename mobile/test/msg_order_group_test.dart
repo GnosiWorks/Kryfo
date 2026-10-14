@@ -91,9 +91,17 @@ class _GroupDb implements HaloDb {
     return older.sublist(older.length > limit ? older.length - limit : 0);
   }
 
+  // whole threads read
+  int wholeLoads = 0;
   @override
-  Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async =>
-      _ordered;
+  Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
+    wholeLoads++;
+    return _ordered;
+  }
+
+  @override
+  Future<bool> messageExists(String msgUid) async =>
+      rows.any((r) => r['msg_uid'] == msgUid);
   @override
   Future<List<Map<String, Object?>>> groupMessagesAfter(
     String groupId,
@@ -163,7 +171,7 @@ void main() {
     }
   }
 
-  Future<void> open(WidgetTester t) async {
+  Future<void> open(WidgetTester t, {String? jumpTo}) async {
     phone(t);
     db = _GroupDb();
     for (var i = 0; i < _rows; i++) {
@@ -175,7 +183,9 @@ void main() {
     addTearDown(
       () => m.setMockMethodCallHandler(SystemChannels.platform, null),
     );
-    await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+    await t.pumpWidget(
+      app(GroupChatScreen(groupId: _group, jumpToUid: jumpTo)),
+    );
     await frames(t, 20);
   }
 
@@ -261,6 +271,30 @@ void main() {
     await frames(t, 20);
     expect(seen('late four'), isTrue);
     expect(line, findsNothing);
+    await close(t);
+  });
+
+  testWidgets('a message taken back takes its line with it', (t) async {
+    await open(t);
+    final line = find.text(l10n.chatEarlierMessagesArrived(1)).hitTestable();
+    db.add('late five', note(60) + 60000);
+    appState.chatChanged('group:$_group');
+    await frames(t, 6);
+    expect(line, findsOneWidget);
+    db.rows.removeWhere((r) => r['plaintext'] == 'late five');
+    appState.chatChanged('group:$_group');
+    await frames(t, 10);
+    expect(line, findsNothing);
+    await close(t);
+  });
+
+  testWidgets('opened on a message in the newest page, the whole thread is '
+      'not read', (t) async {
+    // uid90 is note 89
+    await open(t, jumpTo: 'uid90');
+    await frames(t, 10);
+    expect(seen('note 89'), isTrue);
+    expect(db.wholeLoads, 0);
     await close(t);
   });
 }

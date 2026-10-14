@@ -75,6 +75,23 @@ class Session {
     };
   }
 
+  // the message notification [id] rang for in [chat], in whichever open
+  // container kept it
+  Future<String?> ringOf(int id, String chat) async {
+    final v = vault;
+    if (v != null && v.isOpen) {
+      final u = await v.ringOf(id, chat);
+      if (u != null) return u;
+    }
+    return primary.ringOf(id, chat);
+  }
+
+  Future<void> forgetRings({String? chat, String? msgUid}) async {
+    for (final d in [primary, ?vault]) {
+      await d.forgetRings(chat: chat, msgUid: msgUid);
+    }
+  }
+
   // the chat a tapped notification's tag stands for, in the container that
   // made it. a shut vault's tags name nothing here
   Future<String?> chatOfNotifTag(String tag) async {

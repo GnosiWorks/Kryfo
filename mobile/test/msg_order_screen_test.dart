@@ -118,9 +118,14 @@ class _Db extends DevTestDb {
 
   List<Map<String, Object?>> _ordered(String peer) => _thread(peer)..sort(_cmp);
 
+  // whole threads read
+  int wholeLoads = 0;
   @override
-  Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
-      _ordered(peerId);
+  Future<List<Map<String, Object?>>> messagesFor(String peerId) async {
+    wholeLoads++;
+    return _ordered(peerId);
+  }
+
   @override
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
@@ -172,6 +177,10 @@ class _Db extends DevTestDb {
   // the tag this chat's notifications go under
   @override
   Future<String?> notifChatOf(String tag) async => tag == 'tag1' ? _peer : null;
+  // notification 7 rang for late7, as this container kept it
+  @override
+  Future<String?> ringOf(int id, String chat) async =>
+      id == 7 && chat == _peer ? 'late7' : null;
   @override
   Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
     List<String> msgUids,
@@ -568,10 +577,43 @@ void main() {
         home: const SizedBox(),
       ),
     );
-    await t.runAsync(() => openChatForNotif('tag1/late7'));
+    // the tap hands back the bare tag and the notification's id
+    await t.runAsync(() => openChatForNotif('tag1', 7));
     await settle(t, 16);
     expect(find.byType(ChatScreen), findsOneWidget);
     expect(seen('late seven'), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a message taken back takes its line with it', (t) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    await cameLate('late8', 'late eight', note(24) + 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(line(1), findsOneWidget);
+    // unsent by them
+    await mem.delete('messages', where: 'msg_uid = ?', whereArgs: ['late8']);
+    appState.chatChanged(_peer);
+    await settle(t, 10);
+    expect(line(1), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('opened on a message in the newest page, the whole thread is '
+      'not read', (t) async {
+    await seed(150);
+    await devOpen(t, chat(jumpTo: 'uid120'));
+    await settle(t, 14);
+    expect(seen('note 120'), isTrue);
+    expect(db.wholeLoads, 0);
+    await devClose(t);
+    // one further up than the newest page brings the whole thread in
+    await devOpen(t, chat(jumpTo: 'uid20'));
+    await settle(t, 14);
+    expect(seen('note 20'), isTrue);
+    expect(db.wholeLoads, greaterThan(0));
     await devClose(t);
   });
 }

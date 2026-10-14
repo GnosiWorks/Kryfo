@@ -25,6 +25,7 @@ class EarlierArrivals {
   final List<String> _ids = [];
 
   int get count => _ids.length;
+  List<String> get ids => List.unmodifiable(_ids);
   String? get first => _ids.firstOrNull;
 
   // false when it was held already

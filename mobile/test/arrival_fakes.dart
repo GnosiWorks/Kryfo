@@ -292,6 +292,20 @@ class ArrivalIo implements AppIo {
 class ArrivalRows implements HaloDb {
   // the tag each chat's notifications go under
   final notifTags = <String, String>{};
+  // which message each notification rang for, by its id: (chat, uid)
+  final rings = <int, (String, String)>{};
+  @override
+  Future<void> noteRing(int id, String chat, String msgUid) async =>
+      rings[id] = (chat, msgUid);
+  @override
+  Future<String?> ringOf(int id, String chat) async {
+    final r = rings[id];
+    return r != null && r.$1 == chat && msg(r.$2) != null ? r.$2 : null;
+  }
+
+  @override
+  Future<void> forgetRings({String? chat, String? msgUid}) async =>
+      rings.removeWhere((_, r) => r.$1 == chat || r.$2 == msgUid);
   static var _tagNo = 0;
   @override
   Future<String> notifTag(String chat) async =>

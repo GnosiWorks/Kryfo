@@ -316,8 +316,8 @@ const _groupRows = {
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its
-// messages. notif_tags is dropped, never copied. the rest are the
-// phone's or the identity's, and stay
+// messages. notif_tags and notif_rings are dropped, never copied. the
+// rest are the phone's or the identity's, and stay
 Set<String> get chatTables => {
   'contacts',
   'groups',
@@ -325,6 +325,7 @@ Set<String> get chatTables => {
   'msg_fts',
   'polls_gone',
   'notif_tags',
+  'notif_rings',
   ..._peerRows.keys,
   ..._groupRows.keys,
 };
@@ -596,9 +597,11 @@ class SqlChatMover implements ChatMover {
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);
     // its notification tag stays behind with nothing: the other side makes
     // its own, so the shade's history never ties the two
-    await t.execute('DELETE FROM $s.notif_tags WHERE chat = ?1', [
-      c.group ? 'group:${c.id}' : c.id,
-    ]);
+    for (final table in const ['notif_tags', 'notif_rings']) {
+      await t.execute('DELETE FROM $s.$table WHERE chat = ?1', [
+        c.group ? 'group:${c.id}' : c.id,
+      ]);
+    }
     // the delete marked its polls as just gone: nothing of them stays
     for (var i = 0; i < polls.length; i += 400) {
       final part = polls.sublist(i, min(i + 400, polls.length));

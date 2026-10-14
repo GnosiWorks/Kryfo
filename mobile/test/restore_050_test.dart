@@ -4,7 +4,7 @@
 // make_050_backups.sh), one without the hidden chats and one made with
 // them open. each goes in through the real restore, the engine's own cipher
 // included, onto a phone of this version with an account of its own: what
-// 0.5.0 had comes back, the database opens at 78, the sessions go on, the
+// 0.5.0 had comes back, the database opens at 79, the sessions go on, the
 // settings the file carries apply and the ones it predates keep the phone's
 // own or their defaults. a wrong passphrase leaves the phone as it was.
 // without the engine built for this computer (tool/host_engine.sh) these
@@ -255,7 +255,7 @@ void main() {
       final restart = HaloDb();
       useDatabasesForTest(restart, Session(restart));
       final raw = await restart.open();
-      expect(await raw.getVersion(), 78);
+      expect(await raw.getVersion(), 79);
       // the engine is handed the identity in the file
       final id = (await restart.loadIdentity())!;
       expect(id['id'], _me);
@@ -354,7 +354,7 @@ void main() {
         expect(await lock.verifyPin(_hiddenPin), PinResult.vault);
         final vault = HaloDb.withKey(HaloContainer.vault, key!);
         final v = await vault.open();
-        expect(await v.getVersion(), 78);
+        expect(await v.getVersion(), 79);
         final rows = await _rows(v, only: hiddenCols);
         for (final t in hiddenBefore.keys) {
           expect(rows[t], hiddenBefore[t], reason: 'hidden $t');

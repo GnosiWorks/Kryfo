@@ -718,7 +718,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     right: 16,
     bottom: 0,
     child: Center(
-      child: EarlierChip(
+      child: _earlierChip(
         count: _earlier.count,
         lifted: _showScrollDown,
         onTap: _toEarlier,
@@ -918,13 +918,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to, so a mid-scroll
       // reaction does not collapse the list back to one page
-      final wantAll =
-          _searching ||
-          _pagedOut ||
-          _messages.length > _pageSize ||
-          (widget.jumpToUid != null && !_didJump);
+      final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
+      // opened on a message: the newest page, and the whole thread only
+      // when it is further up than that
+      final jumpTo = _didJump ? null : widget.jumpToUid;
       _blocked = await session.blockedIds();
-      final rows0 = wantAll
+      var rows0 = wantAll
           ? await session.loadGroupMessages(widget.groupId)
           : await session.groupMessagesPage(
               widget.groupId,
@@ -934,6 +933,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _hasMore = rows0.length > _pageSize;
         if (_hasMore) rows0.removeAt(0);
         if (!_hasMore) _pagedOut = true;
+        if (jumpTo != null && !rows0.any((r) => r['msg_uid'] == jumpTo)) {
+          rows0 = await session.loadGroupMessages(widget.groupId);
+          _hasMore = false;
+          _pagedOut = true;
+        }
       }
       final rows = _withoutBlocked(rows0);
       // gather reactions for every uid we have
@@ -1047,8 +1051,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _scrollToEnd(instant: true);
       }
       final after = _lastRowPerGroup[_memo];
-      if (!_loaded && after != null) await _earlierSince(after);
-      if (_earlier.count > 0) _lookEarlierSoon();
+      if (!_loaded && after != null) {
+        try {
+          await _earlierSince(after);
+        } catch (e) {
+          // the line is a help: a read that fails leaves the chat as it is
+          dlog('earlier: not read (${e.runtimeType})');
+        }
+      }
+      if (_earlier.count > 0) {
+        await _pruneEarlier();
+        _lookEarlierSoon();
+      }
       _loaded = true;
       unawaited(_refreshPinCount());
       await _loadShieldFlags();
@@ -1410,14 +1424,62 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  // each one up the thread that is on screen now has been seen
+  // each one up the thread that is on screen now has been seen. one
+  // leaving, taken back or burned, is no longer there to see
   void _lookEarlier() {
     if (!mounted || _earlier.count == 0) return;
-    if (_earlier.seenIn(_anchors)) setState(() {});
+    final leaving = {
+      for (final m in _messages)
+        if (m.removing && m.msgUid != null) m.msgUid!,
+    };
+    for (final id in leaving) {
+      _earlier.drop(id);
+    }
+    if (_earlier.seenIn(_anchors) || leaving.isNotEmpty) setState(() {});
+  }
+
+  // after a reload: only what is still in the database stays counted
+  Future<void> _pruneEarlier() async {
+    if (_earlier.count == 0) return;
+    final held = {
+      for (final m in _messages)
+        if (m.msgUid != null && !m.removing) m.msgUid!,
+    };
+    final gone = <String>[];
+    for (final id in _earlier.ids) {
+      if (held.contains(id)) continue;
+      final leaving = _messages.any((m) => m.msgUid == id);
+      var there = !leaving;
+      if (there) {
+        try {
+          there = await session.messageExists(id);
+        } catch (e) {
+          dlog('earlier: not read (${e.runtimeType})');
+        }
+      }
+      if (!there) gone.add(id);
+    }
+    if (gone.isEmpty || !mounted) return;
+    setState(() {
+      for (final id in gone) {
+        _earlier.drop(id);
+      }
+    });
   }
 
   void _lookEarlierSoon() =>
       WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
+
+  // the line, and after each frame it shows a count, a look for rows that
+  // went since or came on screen
+  Widget _earlierChip({
+    required int count,
+    required bool lifted,
+    required VoidCallback onTap,
+  }) {
+    if (count > 0) _lookEarlierSoon();
+    return EarlierChip(count: count, lifted: lifted, onTap: onTap);
+  }
 
   // the line's tap: to the first one up the thread, the thread brought in
   // whole when it is above the pages held
