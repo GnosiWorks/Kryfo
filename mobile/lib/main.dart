@@ -53,6 +53,7 @@ import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
+import 'screens/chat_door.dart' show openChatAt;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
 import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
@@ -24255,25 +24256,7 @@ class _RootShellState extends State<RootShell> {
       expiredRoomName: appState.expiredRoomName,
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
-      onOpenChat: (id) async {
-        final rows = await session.contacts();
-        final matches = rows.where((r) => r['halo_id'] == id).toList();
-        if (matches.isEmpty || !context.mounted) return;
-        final row = matches.first;
-        Navigator.push(
-          context,
-          haloRoute(
-            ChatScreen(
-              peerHaloId: id,
-              peerOnion: row['onion'] as String,
-              peerXPub: row['xpub'] as String,
-              avatarSeed: id,
-              avatarChoice: (row['avatar'] as num?)?.toInt(),
-              nickname: row['nickname'] as String?,
-            ),
-          ),
-        );
-      },
+      onOpenChat: (id) => openChatAt(context, peer: id),
       onOpenGroup: (groupId) async {
         if (!mounted) return;
         Navigator.push(context, haloRoute(GroupChatScreen(groupId: groupId)));
