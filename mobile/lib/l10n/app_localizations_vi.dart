@@ -5142,17 +5142,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kiểm tra người lạ ngay trên điện thoại của bạn. Không có gì rời khỏi máy';
 
   @override
-  String get settingsBlockScreenshots => 'Chặn chụp màn hình';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Toàn bộ ứng dụng được ẩn khỏi danh sách gần đây và ảnh chụp màn hình · có hiệu lực sau lần khởi động tới';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Toàn bộ ứng dụng được ẩn khỏi danh sách gần đây và ảnh chụp màn hình';
-
-  @override
   String get settingsLightTheme => 'Giao diện sáng';
 
   @override
@@ -6698,9 +6687,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsBlocked2 => 'Đã chặn';
 
   @override
-  String get settingsAllowed => 'Cho phép';
-
-  @override
   String get settingsOn => 'Bật';
 
   @override
@@ -7492,9 +7478,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinPickDifferent => 'Hãy chọn mã PIN khác';
 
   @override
-  String get settingsKeptOnWhileLock => 'Luôn bật khi khóa ứng dụng đang bật.';
-
-  @override
   String get lockFingerAfterPin => 'Nhập mã PIN một lần để dùng lại vân tay.';
 
   @override
@@ -8219,6 +8202,80 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Đổi giọng của tôi ở đây';
+
+  @override
+  String get chatBlockScreenshots => 'Chặn chụp màn hình';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Dùng được khi người kia cập nhật ứng dụng';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Chụp màn hình và quay màn hình bị chặn trên cả hai điện thoại';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Chặn chụp màn hình và quay màn hình trên cả hai điện thoại';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Đã chặn chụp màn hình trong cuộc trò chuyện này';
+
+  @override
+  String get chatShotsYouTurnedOn => 'Bạn đã bật chặn chụp màn hình';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Bạn đã tắt chặn chụp màn hình';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name đã bật chặn chụp màn hình';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name đã tắt chặn chụp màn hình';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Chụp màn hình và quay màn hình bị chặn trên mọi điện thoại trong phòng này';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Luôn bật trong phòng, trên mọi điện thoại trong đó';
+
+  @override
+  String get settingsPerChat => 'Theo từng cuộc trò chuyện';
+
+  @override
+  String get homeShotsPerChat =>
+      'Chặn chụp màn hình giờ được đặt theo từng cuộc trò chuyện';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Bật cho mọi cuộc trò chuyện của bạn? Những cuộc trò chuyện mà điện thoại bên kia chưa cập nhật sẽ vẫn tắt.';
+
+  @override
+  String get homeShotsTurnOn => 'Bật cho tất cả';
+
+  @override
+  String get homeShotsLeaveOff => 'Để tắt';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã chặn chụp màn hình trong $countString cuộc trò chuyện',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere =>

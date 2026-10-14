@@ -166,7 +166,6 @@ const _phoneOnly = <String, Object>{
 };
 
 const _everydaySettings = {
-  Carried.screenshots: true,
   Carried.light: true,
   Carried.voice: true,
   Carried.previewsHidden: false,
@@ -178,7 +177,6 @@ const _everydaySettings = {
 };
 
 const _defaults = {
-  Carried.screenshots: false,
   Carried.light: false,
   Carried.voice: false,
   Carried.previewsHidden: true,
@@ -314,7 +312,6 @@ void main() {
     const st = FlutterSecureStorage();
     final prefs = await SharedPreferences.getInstance();
     return {
-      Carried.screenshots: (await st.read(key: 'block_screenshots')) == 'true',
       Carried.light: (await st.read(key: 'theme_light')) == 'true',
       Carried.voice: (await st.read(key: c.key('disguise_on'))) == '1',
       Carried.previewsHidden: await loadHideNotifContent(c),
@@ -597,6 +594,39 @@ void main() {
     expect(await loadScamShieldOn(), isFalse);
   });
 
+  test(
+    'the old switch for the whole app no longer travels; a file from '
+    'before with it on brings home\'s card, and never into a decoy',
+    () async {
+      oldPhone();
+      final d = await draftBackup(stage, side: const _Side());
+      expect(
+        d.manifest['settings'] as Map,
+        isNot(contains(Carried.screenshots)),
+      );
+      newPhone();
+      const st = FlutterSecureStorage();
+      await landCarriedSettings(
+        {Carried.screenshots: false},
+        HaloContainer.everyday,
+        phone: true,
+      );
+      expect(await st.read(key: 'block_screenshots'), isNull);
+      await landCarriedSettings(
+        {Carried.screenshots: true},
+        HaloContainer.decoy,
+        phone: true,
+      );
+      expect(await st.read(key: 'block_screenshots'), isNull);
+      await landCarriedSettings(
+        {Carried.screenshots: true},
+        HaloContainer.everyday,
+        phone: true,
+      );
+      expect(await st.read(key: 'block_screenshots'), 'true');
+    },
+  );
+
   test('landed for a decoy, the phone\'s are never written, even when '
       'asked', () async {
     newPhone();
@@ -659,7 +689,6 @@ void main() {
       final carried = d.manifest['settings'] as Map;
       expect(carried, {
         // the phone's, as the decoy sees them
-        Carried.screenshots: true,
         Carried.light: true,
         Carried.route: 'balanced',
         Carried.delivery: 'checkins',

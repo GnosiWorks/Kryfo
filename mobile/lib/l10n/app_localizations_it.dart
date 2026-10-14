@@ -5194,17 +5194,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Controlla gli sconosciuti sul tuo telefono. Non ne esce niente';
 
   @override
-  String get settingsBlockScreenshots => 'Blocca screenshot';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Tutta l\'app nascosta dalle app recenti e dagli screenshot · vale dal prossimo avvio';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Tutta l\'app nascosta dalle app recenti e dagli screenshot';
-
-  @override
   String get settingsLightTheme => 'Tema chiaro';
 
   @override
@@ -6775,9 +6764,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsBlocked2 => 'Bloccati';
 
   @override
-  String get settingsAllowed => 'Consentiti';
-
-  @override
   String get settingsOn => 'Attivo';
 
   @override
@@ -7574,10 +7560,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinPickDifferent => 'Scegli un altro PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Resta attivo finché il blocco app è attivo.';
-
-  @override
   String get lockFingerAfterPin =>
       'Digita il PIN una volta per usare di nuovo l\'impronta.';
 
@@ -8303,6 +8285,80 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Camuffa la mia voce qui';
+
+  @override
+  String get chatBlockScreenshots => 'Blocca screenshot';
+
+  @override
+  String get chatShotsWhenTheyUpdate => 'Disponibile quando aggiorna l\'app';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Screenshot e registrazione dello schermo sono bloccati su entrambi i telefoni';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Blocca screenshot e registrazione dello schermo su entrambi i telefoni';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Gli screenshot sono bloccati in questa chat';
+
+  @override
+  String get chatShotsYouTurnedOn => 'Hai attivato il blocco degli screenshot';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'Hai disattivato il blocco degli screenshot';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name ha attivato il blocco degli screenshot';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name ha disattivato il blocco degli screenshot';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Screenshot e registrazione dello schermo sono bloccati su ogni telefono in questa stanza';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Sempre attivo in una stanza, su ogni telefono';
+
+  @override
+  String get settingsPerChat => 'Per ogni chat';
+
+  @override
+  String get homeShotsPerChat => 'Il blocco degli screenshot ora è per chat';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Attivarlo in tutte le tue chat? Le chat in cui l\'altro telefono non è ancora aggiornato restano senza.';
+
+  @override
+  String get homeShotsTurnOn => 'Attiva per tutte';
+
+  @override
+  String get homeShotsLeaveOff => 'Lascia disattivato';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Screenshot bloccati in $countString chat',
+      one: 'Screenshot bloccati in $countString chat',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'La tua voce è camuffata in questa chat';

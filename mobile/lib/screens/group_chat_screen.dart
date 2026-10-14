@@ -3760,18 +3760,32 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             // instead of shoving it when the room is known
             EaseSize(
               child: _isRoom && _roomBanner && !_waiting
-                  ? NoticeBanner(
-                      glyph: NoticeGlyph.clock,
-                      text: l10n.groupChatThisRoomAndEverything(
-                        expiryWords(
-                          DateTime.fromMillisecondsSinceEpoch(
-                            _roomExpiresAt!,
-                          ).difference(DateTime.now()),
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NoticeBanner(
+                          glyph: NoticeGlyph.clock,
+                          text: l10n.groupChatThisRoomAndEverything(
+                            expiryWords(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                _roomExpiresAt!,
+                              ).difference(DateTime.now()),
+                            ),
+                          ),
+                          color: HaloColors.violet,
+                          margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                          delay: const Duration(milliseconds: 160),
                         ),
-                      ),
-                      color: HaloColors.violet,
-                      margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-                      delay: const Duration(milliseconds: 160),
+                        // every phone that opens a room holds the flag on
+                        // it, since the first version with rooms
+                        NoticeBanner(
+                          glyph: NoticeGlyph.shield,
+                          text: l10n.roomShotsBlocked,
+                          color: HaloColors.violet,
+                          margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+                          delay: const Duration(milliseconds: 220),
+                        ),
+                      ],
                     )
                   : const SizedBox(width: double.infinity, height: 0),
             ),

@@ -5231,17 +5231,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'يفحص الغرباء على هاتفك. لا شيء يغادره';
 
   @override
-  String get settingsBlockScreenshots => 'منع لقطات الشاشة';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'التطبيق كله مخفي من التطبيقات الأخيرة ولقطات الشاشة · يسري بعد التشغيل التالي';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'التطبيق كله مخفي من التطبيقات الأخيرة ولقطات الشاشة';
-
-  @override
   String get settingsLightTheme => 'المظهر الفاتح';
 
   @override
@@ -6830,9 +6819,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsBlocked2 => 'ممنوعة';
 
   @override
-  String get settingsAllowed => 'مسموحة';
-
-  @override
   String get settingsOn => 'مفعّل';
 
   @override
@@ -7633,10 +7619,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinPickDifferent => 'اختر رمز PIN آخر';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'يبقى مفعّلًا ما دام قفل التطبيق مفعّلًا.';
-
-  @override
   String get lockFingerAfterPin =>
       'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
 
@@ -8359,6 +8341,81 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'تمويه صوتي هنا';
+
+  @override
+  String get chatBlockScreenshots => 'منع لقطات الشاشة';
+
+  @override
+  String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
+
+  @override
+  String get chatShotsBothPhones =>
+      'لقطات الشاشة وتسجيل الشاشة ممنوعة على الهاتفين';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين';
+
+  @override
+  String get chatShotsBlockedHere => 'لقطات الشاشة ممنوعة في هذه المحادثة';
+
+  @override
+  String get chatShotsYouTurnedOn => 'فعّلت منع لقطات الشاشة';
+
+  @override
+  String get chatShotsYouTurnedOff => 'أوقفت منع لقطات الشاشة';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return 'فعّل ⁨$name⁩ منع لقطات الشاشة';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return 'أوقف ⁨$name⁩ منع لقطات الشاشة';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'لقطات الشاشة وتسجيل الشاشة ممنوعة على كل هاتف في هذه الغرفة';
+
+  @override
+  String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
+
+  @override
+  String get settingsPerChat => 'حسب المحادثة';
+
+  @override
+  String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'هل تريد تفعيله في كل محادثاتك؟ المحادثات التي لم يُحدَّث فيها الهاتف الآخر بعد تبقى دونه.';
+
+  @override
+  String get homeShotsTurnOn => 'تفعيل للكل';
+
+  @override
+  String get homeShotsLeaveOff => 'اتركه متوقفًا';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
+      many: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
+      few: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثات',
+      two: 'لقطات الشاشة ممنوعة في محادثتين',
+      one: 'لقطات الشاشة ممنوعة في محادثة واحدة',
+      zero: 'لقطات الشاشة ممنوعة في ⁨$countString⁩ محادثة',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'صوتك مموّه في هذه المحادثة';

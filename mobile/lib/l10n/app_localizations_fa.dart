@@ -5154,17 +5154,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'غریبه‌ها را روی گوشی شما بررسی می‌کند. چیزی از آن بیرون نمی‌رود';
 
   @override
-  String get settingsBlockScreenshots => 'جلوگیری از اسکرین‌شات';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'کل برنامه از فهرست اخیر و اسکرین‌شات‌ها پنهان می‌شود · از اجرای بعدی اعمال می‌شود';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'کل برنامه از فهرست اخیر و اسکرین‌شات‌ها پنهان می‌شود';
-
-  @override
   String get settingsLightTheme => 'پوسته‌ی روشن';
 
   @override
@@ -6719,9 +6708,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsBlocked2 => 'مسدود';
 
   @override
-  String get settingsAllowed => 'مجاز';
-
-  @override
   String get settingsOn => 'روشن';
 
   @override
@@ -7517,10 +7503,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinPickDifferent => 'PIN دیگری انتخاب کنید';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'تا وقتی قفل برنامه روشن است، روشن می‌ماند.';
-
-  @override
   String get lockFingerAfterPin =>
       'یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید.';
 
@@ -8246,6 +8228,81 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'تغییر صدای من در اینجا';
+
+  @override
+  String get chatBlockScreenshots => 'جلوگیری از اسکرین‌شات';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'وقتی برنامه‌اش را به‌روز کند در دسترس است';
+
+  @override
+  String get chatShotsBothPhones =>
+      'اسکرین‌شات و ضبط صفحه در هر دو گوشی مسدود است';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'جلوی اسکرین‌شات و ضبط صفحه را در هر دو گوشی می‌گیرد';
+
+  @override
+  String get chatShotsBlockedHere => 'اسکرین‌شات در این گفت‌وگو مسدود است';
+
+  @override
+  String get chatShotsYouTurnedOn => 'شما جلوگیری از اسکرین‌شات را روشن کردید';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'شما جلوگیری از اسکرین‌شات را خاموش کردید';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را خاموش کرد';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'اسکرین‌شات و ضبط صفحه در همه‌ی گوشی‌های این اتاق مسدود است';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'در اتاق همیشه روشن است، روی همه‌ی گوشی‌های آن';
+
+  @override
+  String get settingsPerChat => 'برای هر گفت‌وگو';
+
+  @override
+  String get homeShotsPerChat =>
+      'جلوگیری از اسکرین‌شات حالا برای هر گفت‌وگو جداست';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'برای همه‌ی گفت‌وگوهایتان روشن شود؟ گفت‌وگوهایی که گوشی طرف مقابل هنوز به‌روز نشده، خاموش می‌مانند.';
+
+  @override
+  String get homeShotsTurnOn => 'روشن برای همه';
+
+  @override
+  String get homeShotsLeaveOff => 'خاموش بماند';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'اسکرین‌شات در ⁨$countString⁩ گفت‌وگو مسدود است',
+      one: 'اسکرین‌شات در ⁨$countString⁩ گفت‌وگو مسدود است',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'صدای شما در این گفت‌وگو تغییر داده می‌شود';

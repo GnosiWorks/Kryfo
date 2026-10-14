@@ -5235,17 +5235,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перевіряє незнайомців на твоєму телефоні. Нічого не залишає телефон';
 
   @override
-  String get settingsBlockScreenshots => 'Блокувати знімки екрана';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Увесь застосунок прихований у недавніх і на знімках екрана · діє після наступного запуску';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Увесь застосунок прихований у недавніх і на знімках екрана';
-
-  @override
   String get settingsLightTheme => 'Світла тема';
 
   @override
@@ -6831,9 +6820,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsBlocked2 => 'Заблоковано';
 
   @override
-  String get settingsAllowed => 'Дозволено';
-
-  @override
   String get settingsOn => 'Увімкнено';
 
   @override
@@ -7639,10 +7625,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinPickDifferent => 'Вибери інший PIN-код';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Лишається увімкненим, доки увімкнене блокування Kryfo.';
-
-  @override
   String get lockFingerAfterPin =>
       'Введи PIN-код один раз, щоб знову входити за відбитком.';
 
@@ -8375,6 +8357,84 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Змінювати мій голос тут';
+
+  @override
+  String get chatBlockScreenshots => 'Блокувати знімки екрана';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Стане доступно, коли співрозмовник оновить застосунок';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Знімки екрана й запис екрана заблоковано на обох телефонах';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Блокує знімки екрана й запис екрана на обох телефонах';
+
+  @override
+  String get chatShotsBlockedHere => 'У цьому чаті знімки екрана заблоковано';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Ти увімкнув(-ла) блокування знімків екрана';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'Ти вимкнув(-ла) блокування знімків екрана';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name увімкнув(-ла) блокування знімків екрана';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name вимкнув(-ла) блокування знімків екрана';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Знімки екрана й запис екрана заблоковано на кожному телефоні в цій кімнаті';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'У кімнаті ввімкнено завжди, на кожному телефоні';
+
+  @override
+  String get settingsPerChat => 'Для кожного чату';
+
+  @override
+  String get homeShotsPerChat =>
+      'Блокування знімків екрана тепер налаштовується в кожному чаті';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Увімкнути в усіх твоїх чатах? Чати, де другий телефон ще не оновився, залишаться без нього.';
+
+  @override
+  String get homeShotsTurnOn => 'Увімкнути всюди';
+
+  @override
+  String get homeShotsLeaveOff => 'Залишити вимкненим';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Знімки екрана заблоковано в $countString чату',
+      many: 'Знімки екрана заблоковано в $countString чатах',
+      few: 'Знімки екрана заблоковано в $countString чатах',
+      one: 'Знімки екрана заблоковано в $countString чаті',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Твій голос у цьому чаті змінено';

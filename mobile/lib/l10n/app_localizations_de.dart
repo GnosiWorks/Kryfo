@@ -5207,17 +5207,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Prüft Fremde auf deinem Handy. Nichts verlässt es';
 
   @override
-  String get settingsBlockScreenshots => 'Screenshots blockieren';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Ganze App in „Zuletzt verwendet“ und auf Screenshots verborgen · gilt ab dem nächsten Start';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Ganze App in „Zuletzt verwendet“ und auf Screenshots verborgen';
-
-  @override
   String get settingsLightTheme => 'Helles Design';
 
   @override
@@ -6784,9 +6773,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsBlocked2 => 'Blockiert';
 
   @override
-  String get settingsAllowed => 'Erlaubt';
-
-  @override
   String get settingsOn => 'An';
 
   @override
@@ -7588,10 +7574,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinPickDifferent => 'Wähl eine andere PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Bleibt an, solange die App-Sperre an ist.';
-
-  @override
   String get lockFingerAfterPin =>
       'Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.';
 
@@ -8323,6 +8305,82 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Meine Stimme hier verfremden';
+
+  @override
+  String get chatBlockScreenshots => 'Screenshots blockieren';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Verfügbar, sobald die andere Person aktualisiert';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Screenshots und Bildschirmaufnahmen sind auf beiden Handys blockiert';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Screenshots sind in diesem Chat blockiert';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Du hast das Blockieren von Screenshots eingeschaltet';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'Du hast das Blockieren von Screenshots ausgeschaltet';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name hat das Blockieren von Screenshots eingeschaltet';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name hat das Blockieren von Screenshots ausgeschaltet';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Screenshots und Bildschirmaufnahmen sind auf jedem Handy in diesem Raum blockiert';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'In einem Raum immer an, auf jedem Handy darin';
+
+  @override
+  String get settingsPerChat => 'Pro Chat';
+
+  @override
+  String get homeShotsPerChat => 'Screenshots blockierst du jetzt pro Chat';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Für alle deine Chats einschalten? Chats, in denen das andere Handy noch nicht aktualisiert ist, bleiben aus.';
+
+  @override
+  String get homeShotsTurnOn => 'Für alle einschalten';
+
+  @override
+  String get homeShotsLeaveOff => 'Ausgeschaltet lassen';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Screenshots sind in $countString Chats blockiert',
+      one: 'Screenshots sind in $countString Chat blockiert',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere =>

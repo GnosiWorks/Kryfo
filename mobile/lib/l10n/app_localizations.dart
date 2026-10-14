@@ -8304,24 +8304,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Block screenshots'**
-  String get settingsBlockScreenshots;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Whole app hidden from recents and screenshots · takes effect after the next start'**
-  String get settingsWholeAppHiddenFrom;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Whole app hidden from recents and screenshots'**
-  String get settingsWholeAppHiddenFromRecentsAnd;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Light theme'**
   String get settingsLightTheme;
 
@@ -10734,12 +10716,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Allowed'**
-  String get settingsAllowed;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'On'**
   String get settingsOn;
 
@@ -12087,12 +12063,6 @@ abstract class AppLocalizations {
   /// **'Pick a different PIN'**
   String get pinPickDifferent;
 
-  /// hint under Block screenshots when the app lock forces it on
-  ///
-  /// In en, this message translates to:
-  /// **'Kept on while the app lock is on.'**
-  String get settingsKeptOnWhileLock;
-
   /// lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)
   ///
   /// In en, this message translates to:
@@ -13268,6 +13238,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disguise my voice here'**
   String get voiceDisguiseHere;
+
+  /// screens/chat_screen.dart, screens/contact_screen.dart, screens/group_info_screen.dart: the per-chat switch that blocks screenshots on both phones
+  ///
+  /// In en, this message translates to:
+  /// **'Block screenshots'**
+  String get chatBlockScreenshots;
+
+  /// screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet
+  ///
+  /// In en, this message translates to:
+  /// **'Available when they update'**
+  String get chatShotsWhenTheyUpdate;
+
+  /// screens/contact_screen.dart: under the switch while it is on
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots and screen recording are blocked on both phones'**
+  String get chatShotsBothPhones;
+
+  /// screens/contact_screen.dart: under the switch while it is off, what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks screenshots and screen recording on both phones'**
+  String get chatShotsBlocksBoth;
+
+  /// screens/chat_screen.dart: screen reader label of the small mark in the chat header
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots are blocked in this chat'**
+  String get chatShotsBlockedHere;
+
+  /// widgets/shots_line.dart: the line in the chat where you turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'You turned on screenshot blocking'**
+  String get chatShotsYouTurnedOn;
+
+  /// widgets/shots_line.dart: the line in the chat where you turned the block off
+  ///
+  /// In en, this message translates to:
+  /// **'You turned off screenshot blocking'**
+  String get chatShotsYouTurnedOff;
+
+  /// widgets/shots_line.dart: the line in the chat where the other person turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned on screenshot blocking'**
+  String chatShotsTheyTurnedOn(String name);
+
+  /// widgets/shots_line.dart: the line in the chat where the other person turned the block off
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned off screenshot blocking'**
+  String chatShotsTheyTurnedOff(String name);
+
+  /// screens/group_chat_screen.dart: the line a room shows on its first open
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots and screen recording are blocked on every phone in this room'**
+  String get roomShotsBlocked;
+
+  /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off
+  ///
+  /// In en, this message translates to:
+  /// **'Always on in a room, on every phone in it'**
+  String get roomShotsAlwaysOn;
+
+  /// screens/settings_screen.dart: the screenshots line of your protections, without an app lock
+  ///
+  /// In en, this message translates to:
+  /// **'Per chat'**
+  String get settingsPerChat;
+
+  /// screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is now per chat'**
+  String get homeShotsPerChat;
+
+  /// screens/home_screen.dart: the card line
+  ///
+  /// In en, this message translates to:
+  /// **'Turn it on for all your chats? Chats where the other phone hasn’t updated yet stay off.'**
+  String get homeShotsTurnOnForAll;
+
+  /// screens/home_screen.dart: the card button that turns the block on in every chat that can
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on for all'**
+  String get homeShotsTurnOn;
+
+  /// screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good
+  ///
+  /// In en, this message translates to:
+  /// **'Leave them off'**
+  String get homeShotsLeaveOff;
+
+  /// screens/home_screen.dart: toast after the card turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Screenshots are blocked in {count} chat} other{Screenshots are blocked in {count} chats}}'**
+  String homeShotsTurnedOn(int count);
 
   /// the mic's screen reader hint while voice notes in this chat go out disguised
   ///

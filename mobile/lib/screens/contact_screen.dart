@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../chat_shots.dart' show ChatShots;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, nameUnchecked, session;
@@ -162,6 +163,17 @@ class _ContactScreenState extends State<ContactScreen> {
   bool? _pinnedNow;
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
+  bool? _shotsNow;
+  // the chat's media is here too: held while the chat blocks
+  bool _shotsHeld = false;
+
+  ChatShots get _shots => ChatShots.ofRow(_c);
+
+  void _holdShots(bool on) {
+    if (on == _shotsHeld) return;
+    _shotsHeld = on;
+    appState.forceSecure(on);
+  }
 
   @override
   void initState() {
@@ -170,9 +182,30 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   @override
+  void deactivate() {
+    _holdShots(false);
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _holdShots(_shots.blocking);
+  }
+
+  @override
   void dispose() {
+    _holdShots(false);
     _scroll.dispose();
     super.dispose();
+  }
+
+  Future<void> _setShots(bool on) async {
+    HapticFeedback.selectionClick();
+    setState(() => _shotsNow = on);
+    await appState.setChatShots(widget.haloId, on);
+    await _load();
+    if (mounted) setState(() => _shotsNow = null);
   }
 
   Future<void> _load() async {
@@ -208,6 +241,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _held = held;
       _loaded = true;
     });
+    _holdShots(_shots.blocking);
   }
 
   bool _flag(String k) {
@@ -529,6 +563,22 @@ class _ContactScreenState extends State<ContactScreen> {
                 toggled: pinned,
                 onTap: () => _setPinned(!pinned),
               ),
+              // both phones or neither, once theirs knows how
+              if (accepted && !blocked)
+                HaloRow(
+                  icon: Icons.phonelink_lock_outlined,
+                  label: l10n.chatBlockScreenshots,
+                  hint: !_shots.peerCan
+                      ? l10n.chatShotsWhenTheyUpdate
+                      : (_shotsNow ?? _shots.on)
+                      ? l10n.chatShotsBothPhones
+                      : l10n.chatShotsBlocksBoth,
+                  toggled: _shotsNow ?? _shots.blocking,
+                  pending: !_loaded,
+                  onTap: _shots.peerCan
+                      ? () => _setShots(!(_shotsNow ?? _shots.on))
+                      : null,
+                ),
               HaloRow(
                 icon: Icons.archive_outlined,
                 label: l10n.contactArchive,

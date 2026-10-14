@@ -232,6 +232,8 @@ class Session {
         on,
         group: group,
       );
+  // the database that holds a person's chat
+  HaloDb peerDb(String haloId) => _ofPeer(haloId);
   Future<Map<String, Object?>?> getContact(String haloId) =>
       _ofPeer(haloId).getContact(haloId);
   Future<bool> askedBefore(String haloId) =>

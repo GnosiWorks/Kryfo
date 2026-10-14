@@ -5162,17 +5162,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yabancıları telefonunda kontrol eder. Hiçbir şey dışarı çıkmaz';
 
   @override
-  String get settingsBlockScreenshots => 'Ekran görüntüsünü engelle';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir · bir sonraki açılışta etkili olur';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir';
-
-  @override
   String get settingsLightTheme => 'Açık tema';
 
   @override
@@ -6730,9 +6719,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsBlocked2 => 'Engelli';
 
   @override
-  String get settingsAllowed => 'İzinli';
-
-  @override
   String get settingsOn => 'Açık';
 
   @override
@@ -7529,10 +7515,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinPickDifferent => 'Başka bir PIN seç';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Uygulama kilidi açık olduğu sürece açık kalır.';
-
-  @override
   String get lockFingerAfterPin =>
       'Parmak izini yeniden kullanmak için PIN\'ini bir kez gir.';
 
@@ -8255,6 +8237,79 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Burada sesimi gizle';
+
+  @override
+  String get chatBlockScreenshots => 'Ekran görüntüsünü engelle';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Karşı taraf güncelleyince kullanılabilir';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Ekran görüntüsü ve ekran kaydı iki telefonda da engelli';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller';
+
+  @override
+  String get chatShotsBlockedHere => 'Bu sohbette ekran görüntüsü engelli';
+
+  @override
+  String get chatShotsYouTurnedOn => 'Ekran görüntüsü engelini açtın';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Ekran görüntüsü engelini kapattın';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name ekran görüntüsü engelini açtı';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name ekran görüntüsü engelini kapattı';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Bu odadaki her telefonda ekran görüntüsü ve ekran kaydı engelli';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Odada her zaman açık, içindeki her telefonda';
+
+  @override
+  String get settingsPerChat => 'Sohbete göre';
+
+  @override
+  String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Tüm sohbetlerinde açılsın mı? Karşı telefonun henüz güncellenmediği sohbetler kapalı kalır.';
+
+  @override
+  String get homeShotsTurnOn => 'Hepsinde aç';
+
+  @override
+  String get homeShotsLeaveOff => 'Kapalı kalsın';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sohbette ekran görüntüsü engelli',
+      one: '$countString sohbette ekran görüntüsü engelli',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Bu sohbette sesin gizleniyor';

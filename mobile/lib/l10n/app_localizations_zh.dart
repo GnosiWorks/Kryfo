@@ -4925,15 +4925,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsChecksStrangersOnYour => '在你的手机上检查陌生人。什么都不会离开手机';
 
   @override
-  String get settingsBlockScreenshots => '禁止截屏';
-
-  @override
-  String get settingsWholeAppHiddenFrom => '整个应用不出现在最近任务和截屏中 · 下次启动后生效';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd => '整个应用不出现在最近任务和截屏中';
-
-  @override
   String get settingsLightTheme => '浅色主题';
 
   @override
@@ -6430,9 +6421,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsBlocked2 => '已禁止';
 
   @override
-  String get settingsAllowed => '已允许';
-
-  @override
   String get settingsOn => '开';
 
   @override
@@ -7187,9 +7175,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinPickDifferent => '请换一个 PIN 码';
 
   @override
-  String get settingsKeptOnWhileLock => '应用锁开启时保持开启。';
-
-  @override
   String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
 
   @override
@@ -7872,6 +7857,72 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => '在这里给我的语音变声';
+
+  @override
+  String get chatBlockScreenshots => '禁止截屏';
+
+  @override
+  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+
+  @override
+  String get chatShotsBothPhones => '两部手机上都禁止截屏和录屏';
+
+  @override
+  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏';
+
+  @override
+  String get chatShotsBlockedHere => '此聊天已禁止截屏';
+
+  @override
+  String get chatShotsYouTurnedOn => '你开启了禁止截屏';
+
+  @override
+  String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name 开启了禁止截屏';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name 关闭了禁止截屏';
+  }
+
+  @override
+  String get roomShotsBlocked => '这个聊天室里的每部手机都禁止截屏和录屏';
+
+  @override
+  String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get settingsPerChat => '按聊天设置';
+
+  @override
+  String get homeShotsPerChat => '禁止截屏现在按聊天设置';
+
+  @override
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中开启吗？对方手机尚未更新的聊天会保持关闭。';
+
+  @override
+  String get homeShotsTurnOn => '全部开启';
+
+  @override
+  String get homeShotsLeaveOff => '保持关闭';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已在 $countString 个聊天中禁止截屏',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => '在这个聊天里，你的语音会变声';
@@ -12825,15 +12876,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsChecksStrangersOnYour => '在你的手機上檢查陌生人。不會有任何東西離開手機';
 
   @override
-  String get settingsBlockScreenshots => '禁止截圖';
-
-  @override
-  String get settingsWholeAppHiddenFrom => '在最近使用畫面和截圖中隱藏整個應用程式 · 下次啟動後生效';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd => '在最近使用畫面和截圖中隱藏整個應用程式';
-
-  @override
   String get settingsLightTheme => '淺色主題';
 
   @override
@@ -14330,9 +14372,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsBlocked2 => '已禁止';
 
   @override
-  String get settingsAllowed => '已允許';
-
-  @override
   String get settingsOn => '開啟';
 
   @override
@@ -15087,9 +15126,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinPickDifferent => '請換一組 PIN 碼';
 
   @override
-  String get settingsKeptOnWhileLock => '應用程式鎖開啟時保持開啟。';
-
-  @override
   String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
 
   @override
@@ -15652,6 +15688,72 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceDisguiseHere => '在這裡給我的語音變聲';
+
+  @override
+  String get chatBlockScreenshots => '禁止截圖';
+
+  @override
+  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+
+  @override
+  String get chatShotsBothPhones => '兩支手機上都禁止截圖和螢幕錄影';
+
+  @override
+  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影';
+
+  @override
+  String get chatShotsBlockedHere => '此聊天已禁止截圖';
+
+  @override
+  String get chatShotsYouTurnedOn => '你開啟了禁止截圖';
+
+  @override
+  String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name 開啟了禁止截圖';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name 關閉了禁止截圖';
+  }
+
+  @override
+  String get roomShotsBlocked => '這個聊天室裡的每支手機都禁止截圖和螢幕錄影';
+
+  @override
+  String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get settingsPerChat => '依聊天設定';
+
+  @override
+  String get homeShotsPerChat => '禁止截圖現在依聊天設定';
+
+  @override
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中開啟嗎？對方手機尚未更新的聊天會維持關閉。';
+
+  @override
+  String get homeShotsTurnOn => '全部開啟';
+
+  @override
+  String get homeShotsLeaveOff => '維持關閉';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已在 $countString 個聊天中禁止截圖',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => '在這個聊天裡，你的語音會變聲';

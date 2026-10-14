@@ -475,6 +475,7 @@ class _ChatsTab extends StatelessWidget {
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
           const UpdateHint(),
+          const _ShotsCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -1107,6 +1108,54 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
           ink: HaloColors.text2,
         ),
       ],
+    );
+  }
+}
+
+// the old switch for the whole app was on: one ask about the chats' own
+// switches, then never again
+class _ShotsCard extends StatefulWidget {
+  const _ShotsCard();
+
+  @override
+  State<_ShotsCard> createState() => _ShotsCardState();
+}
+
+class _ShotsCardState extends State<_ShotsCard> {
+  bool _busy = false;
+
+  Future<void> _answer(bool on) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final n = await appState.answerShotsCard(on: on);
+    if (!mounted || !on) return;
+    showHaloToast(context, l10n.homeShotsTurnedOn(n));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([appState, lockState]),
+      builder: (context, _) => _HomeCard(
+        show: appState.shotsCardDue,
+        id: 'shots-per-chat',
+        tint: HaloColors.amber,
+        title: l10n.homeShotsPerChat,
+        line: l10n.homeShotsTurnOnForAll,
+        actions: [
+          CardAction(
+            label: l10n.homeShotsTurnOn,
+            onTap: () => _answer(true),
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
+          ),
+          CardAction(
+            label: l10n.homeShotsLeaveOff,
+            onTap: () => _answer(false),
+            ink: HaloColors.text2,
+          ),
+        ],
+      ),
     );
   }
 }

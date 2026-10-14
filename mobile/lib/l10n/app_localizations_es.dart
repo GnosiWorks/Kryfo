@@ -5190,17 +5190,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Revisa a los desconocidos en tu teléfono. Nada sale de él';
 
   @override
-  String get settingsBlockScreenshots => 'Bloquear capturas';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Toda la app oculta en recientes y capturas · se aplica tras el próximo inicio';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Toda la app oculta en recientes y capturas';
-
-  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override
@@ -6766,9 +6755,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsBlocked2 => 'Bloqueadas';
 
   @override
-  String get settingsAllowed => 'Permitidas';
-
-  @override
   String get settingsOn => 'Activado';
 
   @override
@@ -7566,10 +7552,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinPickDifferent => 'Elige otro PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Sigue activado mientras el bloqueo de la app esté activado.';
-
-  @override
   String get lockFingerAfterPin =>
       'Escribe tu PIN una vez para volver a usar tu huella.';
 
@@ -8297,6 +8279,79 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Disfrazar mi voz aquí';
+
+  @override
+  String get chatBlockScreenshots => 'Bloquear capturas';
+
+  @override
+  String get chatShotsWhenTheyUpdate => 'Disponible cuando actualice la app';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Las capturas y la grabación de pantalla están bloqueadas en los dos teléfonos';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Las capturas están bloqueadas en este chat';
+
+  @override
+  String get chatShotsYouTurnedOn => 'Activaste el bloqueo de capturas';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Desactivaste el bloqueo de capturas';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name activó el bloqueo de capturas';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name desactivó el bloqueo de capturas';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Las capturas y la grabación de pantalla están bloqueadas en todos los teléfonos de esta sala';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Siempre activado en una sala, en todos sus teléfonos';
+
+  @override
+  String get settingsPerChat => 'Por chat';
+
+  @override
+  String get homeShotsPerChat => 'El bloqueo de capturas ahora es por chat';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      '¿Activarlo en todos tus chats? Los chats donde el otro teléfono aún no se actualizó se quedan sin él.';
+
+  @override
+  String get homeShotsTurnOn => 'Activar en todos';
+
+  @override
+  String get homeShotsLeaveOff => 'Dejarlo apagado';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Las capturas están bloqueadas en $countString chats',
+      one: 'Las capturas están bloqueadas en $countString chat',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Tu voz va disfrazada en este chat';

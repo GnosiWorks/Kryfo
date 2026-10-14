@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'bidi_safe.dart';
+import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
@@ -55,6 +56,7 @@ class UnwrappedMessage {
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   final String? sticker; // 'st' - pack:id:since, drawn from our own pack
   final int? supportMarker; // 'sp' - written in a chat with the developer
+  final ShotsWord? shots; // 'ss' - a 1:1 chat's screenshot block (chat_shots)
   // 'w' - when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
@@ -104,6 +106,7 @@ class UnwrappedMessage {
     this.pollClose,
     this.sticker,
     this.supportMarker,
+    this.shots,
     this.writtenAt,
   });
 }
@@ -549,6 +552,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         final num n => n.toInt(),
         _ => null,
       },
+      shots: ShotsWord.fromWire(json[kShotsWire]),
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,

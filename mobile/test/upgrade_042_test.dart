@@ -98,7 +98,7 @@ void main() {
     await old.close();
   });
 
-  test('it opens at 79 with the schema of a new install', () async {
+  test('it opens at 81 with the schema of a new install', () async {
     if (skip()) return;
     final fresh = Directory.systemTemp.createTempSync('upgrade_042_fresh');
     m.setMockMethodCallHandler(paths, (_) async => fresh.path);
@@ -110,7 +110,7 @@ void main() {
 
     final db = HaloDb();
     final raw = await db.open();
-    expect(await raw.getVersion(), 79);
+    expect(await raw.getVersion(), 81);
     final got = await _schema(raw);
     for (final k in {...want.keys, ...got.keys}) {
       expect(got[k], want[k], reason: k);
@@ -164,7 +164,7 @@ void main() {
     final from = sql!.said.length;
     final again = HaloDb();
     final raw = await again.open();
-    expect(await raw.getVersion(), 79);
+    expect(await raw.getVersion(), 81);
     expect(
       sql!.said
           .sublist(from)

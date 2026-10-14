@@ -6448,18 +6448,6 @@
   "@settingsChecksStrangersOnYour": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsBlockScreenshots": "Block screenshots",
-  "@settingsBlockScreenshots": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsWholeAppHiddenFrom": "Whole app hidden from recents and screenshots · takes effect after the next start",
-  "@settingsWholeAppHiddenFrom": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsWholeAppHiddenFromRecentsAnd": "Whole app hidden from recents and screenshots",
-  "@settingsWholeAppHiddenFromRecentsAnd": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsLightTheme": "Light theme",
   "@settingsLightTheme": {
     "description": "screens/settings_screen.dart"
@@ -8515,10 +8503,6 @@
   "@settingsBlocked2": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsAllowed": "Allowed",
-  "@settingsAllowed": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
@@ -9525,10 +9509,6 @@
   "@pinPickDifferent": {
     "description": "setting a PIN that is already in use; never says which one it matched"
   },
-  "settingsKeptOnWhileLock": "Kept on while the app lock is on.",
-  "@settingsKeptOnWhileLock": {
-    "description": "hint under Block screenshots when the app lock forces it on"
-  },
   "lockFingerAfterPin": "Type your PIN once to use your fingerprint again.",
   "@lockFingerAfterPin": {
     "description": "lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)"
@@ -10387,6 +10367,90 @@
   "voiceDisguiseHere": "Disguise my voice here",
   "@voiceDisguiseHere": {
     "description": "a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat"
+  },
+  "chatBlockScreenshots": "Block screenshots",
+  "@chatBlockScreenshots": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart, screens/group_info_screen.dart: the per-chat switch that blocks screenshots on both phones"
+  },
+  "chatShotsWhenTheyUpdate": "Available when they update",
+  "@chatShotsWhenTheyUpdate": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
+  },
+  "chatShotsBothPhones": "Screenshots and screen recording are blocked on both phones",
+  "@chatShotsBothPhones": {
+    "description": "screens/contact_screen.dart: under the switch while it is on"
+  },
+  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones",
+  "@chatShotsBlocksBoth": {
+    "description": "screens/contact_screen.dart: under the switch while it is off, what it does"
+  },
+  "chatShotsBlockedHere": "Screenshots are blocked in this chat",
+  "@chatShotsBlockedHere": {
+    "description": "screens/chat_screen.dart: screen reader label of the small mark in the chat header"
+  },
+  "chatShotsYouTurnedOn": "You turned on screenshot blocking",
+  "@chatShotsYouTurnedOn": {
+    "description": "widgets/shots_line.dart: the line in the chat where you turned the block on"
+  },
+  "chatShotsYouTurnedOff": "You turned off screenshot blocking",
+  "@chatShotsYouTurnedOff": {
+    "description": "widgets/shots_line.dart: the line in the chat where you turned the block off"
+  },
+  "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking",
+  "@chatShotsTheyTurnedOn": {
+    "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block on",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatShotsTheyTurnedOff": "{name} turned off screenshot blocking",
+  "@chatShotsTheyTurnedOff": {
+    "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block off",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomShotsBlocked": "Screenshots and screen recording are blocked on every phone in this room",
+  "@roomShotsBlocked": {
+    "description": "screens/group_chat_screen.dart: the line a room shows on its first open"
+  },
+  "roomShotsAlwaysOn": "Always on in a room, on every phone in it",
+  "@roomShotsAlwaysOn": {
+    "description": "screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off"
+  },
+  "settingsPerChat": "Per chat",
+  "@settingsPerChat": {
+    "description": "screens/settings_screen.dart: the screenshots line of your protections, without an app lock"
+  },
+  "homeShotsPerChat": "Screenshot blocking is now per chat",
+  "@homeShotsPerChat": {
+    "description": "screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on"
+  },
+  "homeShotsTurnOnForAll": "Turn it on for all your chats? Chats where the other phone hasn’t updated yet stay off.",
+  "@homeShotsTurnOnForAll": {
+    "description": "screens/home_screen.dart: the card line"
+  },
+  "homeShotsTurnOn": "Turn on for all",
+  "@homeShotsTurnOn": {
+    "description": "screens/home_screen.dart: the card button that turns the block on in every chat that can"
+  },
+  "homeShotsLeaveOff": "Leave them off",
+  "@homeShotsLeaveOff": {
+    "description": "screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good"
+  },
+  "homeShotsTurnedOn": "{count, plural, one{Screenshots are blocked in {count} chat} other{Screenshots are blocked in {count} chats}}",
+  "@homeShotsTurnedOn": {
+    "description": "screens/home_screen.dart: toast after the card turned the block on",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   },
   "voiceDisguisedHere": "Your voice is disguised in this chat",
   "@voiceDisguisedHere": {

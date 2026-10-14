@@ -5251,17 +5251,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверяет незнакомцев на твоём телефоне. Ничего не покидает его';
 
   @override
-  String get settingsBlockScreenshots => 'Запретить скриншоты';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Приложение целиком скрыто из недавних и скриншотов · сработает после следующего запуска';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Приложение целиком скрыто из недавних и скриншотов';
-
-  @override
   String get settingsLightTheme => 'Светлая тема';
 
   @override
@@ -6840,9 +6829,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsBlocked2 => 'Запрещены';
 
   @override
-  String get settingsAllowed => 'Разрешены';
-
-  @override
   String get settingsOn => 'Вкл.';
 
   @override
@@ -7650,10 +7636,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pinPickDifferent => 'Выбери другой PIN-код';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Остаётся включённым, пока включена блокировка приложения.';
-
-  @override
   String get lockFingerAfterPin =>
       'Введи PIN-код один раз, чтобы снова входить по отпечатку.';
 
@@ -8386,6 +8368,82 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Изменять мой голос здесь';
+
+  @override
+  String get chatBlockScreenshots => 'Запретить скриншоты';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Станет доступно, когда собеседник обновит приложение';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Скриншоты и запись экрана запрещены на обоих телефонах';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Запрещает скриншоты и запись экрана на обоих телефонах';
+
+  @override
+  String get chatShotsBlockedHere => 'В этом чате скриншоты запрещены';
+
+  @override
+  String get chatShotsYouTurnedOn => 'Ты включил(а) запрет скриншотов';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Ты выключил(а) запрет скриншотов';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name включил(а) запрет скриншотов';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name выключил(а) запрет скриншотов';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Скриншоты и запись экрана запрещены на каждом телефоне в этой комнате';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'В комнате включено всегда, на каждом телефоне';
+
+  @override
+  String get settingsPerChat => 'Для каждого чата';
+
+  @override
+  String get homeShotsPerChat =>
+      'Запрет скриншотов теперь настраивается в каждом чате';
+
+  @override
+  String get homeShotsTurnOnForAll =>
+      'Включить во всех твоих чатах? Чаты, где второй телефон ещё не обновился, останутся без него.';
+
+  @override
+  String get homeShotsTurnOn => 'Включить везде';
+
+  @override
+  String get homeShotsLeaveOff => 'Оставить выключенным';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Скриншоты запрещены в $countString чата',
+      many: 'Скриншоты запрещены в $countString чатах',
+      few: 'Скриншоты запрещены в $countString чатах',
+      one: 'Скриншоты запрещены в $countString чате',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Твой голос в этом чате изменён';

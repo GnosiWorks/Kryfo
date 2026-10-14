@@ -80,6 +80,7 @@ import 'scam_shield.dart';
 import 'rooms.dart';
 import 'outbox.dart';
 import 'supporter.dart';
+import 'chat_shots.dart';
 import 'message_envelope.dart';
 import 'polls.dart';
 import 'open_file.dart' show nameSaysVideo, shareGoesWithLock;
@@ -1479,7 +1480,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 79,
+      version: 81,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1516,7 +1517,12 @@ class HaloDb implements GroupOwedStore {
             vouched_by TEXT,
             vouched_at INTEGER,
             voice_disguise INTEGER,
-            name_check INTEGER NOT NULL DEFAULT 0
+            name_check INTEGER NOT NULL DEFAULT 0,
+            shots_on INTEGER NOT NULL DEFAULT 0,
+            shots_at INTEGER NOT NULL DEFAULT 0,
+            shots_can INTEGER NOT NULL DEFAULT 0,
+            shots_by INTEGER NOT NULL DEFAULT 0,
+            shots_when INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -2136,6 +2142,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 79) {
           // which message each notification rang for
           await notifRingTables(db);
+        }
+        if (oldV < 81) {
+          // a chat's screenshot block, as both phones hold it
+          await shotsColumns(db);
         }
       },
     );
@@ -4547,6 +4557,95 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
+  // a chat's screenshot block (chat_shots.dart)
+  Future<ChatShots> shotsOf(String peer) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ChatShots.columns,
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    return ChatShots.ofRow(rows.firstOrNull);
+  }
+
+  // a change made here, for [peer]'s phone to take
+  Future<void> putShots(String peer, {required bool on, required int at}) =>
+      _shotsWrite(peer, {
+        'shots_on': on ? 1 : 0,
+        'shots_at': at,
+        'shots_by': kShotsByMe,
+        'shots_when': DateTime.now().millisecondsSinceEpoch,
+      });
+
+  Future<void> _shotsWrite(String peer, Map<String, Object?> put) async {
+    final db = await open();
+    await db.update('contacts', put, where: 'halo_id = ?', whereArgs: [peer]);
+  }
+
+  // what a 1:1 envelope from [peer] says of the block. [counts]: a message
+  // of theirs (shotsCanAfter). true when anything changed
+  Future<bool> takeShots(
+    String peer,
+    ShotsWord? word, {
+    required bool counts,
+    int? written,
+  }) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final rows = await t.query(
+        'contacts',
+        columns: [...ChatShots.columns, 'accepted'],
+        where: 'halo_id = ?',
+        whereArgs: [peer],
+        limit: 1,
+      );
+      if (rows.isEmpty) return false;
+      final was = ChatShots.ofRow(rows.first);
+      // a request sets nothing on this screen: it could keep its own words
+      // from being kept
+      final accepted = rows.first['accepted'] == 1;
+      final can = shotsCanAfter(
+        was.can,
+        carried: word != null,
+        counts: counts,
+        written: written,
+      );
+      final took =
+          accepted && word != null && shotsWins(word, on: was.on, at: was.at);
+      final put = <String, Object?>{
+        'shots_can': ?can,
+        if (took) ...{
+          'shots_on': word.on ? 1 : 0,
+          'shots_at': word.at,
+          if (word.on != was.on) ...{
+            'shots_by': kShotsByThem,
+            'shots_when': DateTime.now().millisecondsSinceEpoch,
+          },
+        },
+      };
+      if (put.isEmpty) return false;
+      await t.update('contacts', put, where: 'halo_id = ?', whereArgs: [peer]);
+      return true;
+    });
+  }
+
+  // accepted chats whose phones know the block and that do not block yet
+  Future<List<String>> shotsCanTurnOn() async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: const ['halo_id'],
+      where: 'accepted = 1 AND blocked = 0 AND shots_can > ? AND shots_on = 0',
+      whereArgs: [0],
+    );
+    return [
+      for (final r in rows)
+        if (!isDevChat(r['halo_id'] as String)) r['halo_id'] as String,
+    ];
+  }
+
   Future<String?> getAtmosphere(String peerId) async {
     final db = await open();
     final rows = await db.query(
@@ -5096,11 +5195,13 @@ class HaloDb implements GroupOwedStore {
         whereArgs: [kind, old],
       );
     }
-    await db.delete(
-      'frames_out',
-      where: 'kind = ? AND tries > ?',
-      whereArgs: [kFrameReaction, kFrameTries - 1],
-    );
+    for (final kind in const [kFrameReaction, kFrameShots]) {
+      await db.delete(
+        'frames_out',
+        where: 'kind = ? AND tries > ?',
+        whereArgs: [kind, kFrameTries - 1],
+      );
+    }
     final skip = waiting.toList();
     return db.query(
       'frames_out',
@@ -7967,6 +8068,16 @@ Future<void> nameCheckColumn(DatabaseExecutor db) async {
   }, where: 'accepted = 0 AND IFNULL(archived, 0) = 0 AND verified = 0');
 }
 
+// the upgrade to 81: a chat's screenshot block (chat_shots.dart)
+Future<void> shotsColumns(DatabaseExecutor db) async {
+  for (final col in ChatShots.columns) {
+    await addColumn(
+      db,
+      'ALTER TABLE contacts ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
+    );
+  }
+}
+
 // the upgrade to 78. a row from before says when it came
 Future<void> writtenAtColumn(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE messages ADD COLUMN written_at INTEGER');
@@ -8590,6 +8701,12 @@ const kFrameUnsend = 'unsend';
 const kFrameReaction = 'reaction';
 // a receipt that could not be sealed while a session waits on their card
 const kFrameReceipt = 'receipt';
+// a chat's screenshot block: the frame carries the state as it is when it
+// goes (shotsOnWire), so one per chat
+const kFrameShots = 'shots';
+String shotsUid(String peer) => 'shots:$peer';
+// the old switch for the whole app, kept until home asks about it
+const kOldShotsKey = 'block_screenshots';
 // and how long it waits at most
 const kReceiptKeptFor = Duration(days: 7);
 
@@ -8942,6 +9059,7 @@ Future<bool> hasSessionWith(String peerId) async {
 // the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
+  plaintext = await appState.shotsOnWire(peerId, plaintext);
   final from = _afreshFrom;
   return signalSession.encryptTo(
     peerId,
@@ -11914,6 +12032,12 @@ class AppState extends ChangeNotifier {
           sender: _mySender(),
           writtenAt: writtenAt,
         ),
+        // nothing but the block, which the seal puts on
+        kFrameShots => await wrapMessage(
+          '',
+          sender: _mySender(),
+          writtenAt: writtenAt,
+        ),
         _ => await wrapMessage(
           '',
           reaction: ReactionFrame(targetUid: uid, emoji: body),
@@ -13034,15 +13158,6 @@ class AppState extends ChangeNotifier {
   }
 
   static const _platformChannel = MethodChannel('halo/platform');
-  // the switch as saved, and as applied at this start. the flag is only
-  // set at boot: changing it live recreates the window's surface, which
-  // flashes.
-  bool _blockScreenshots = false;
-  bool get blockScreenshots => _blockScreenshots;
-  bool _blockScreenshotsApplied = false;
-  bool get blockScreenshotsApplied => _blockScreenshotsApplied;
-  bool get blockScreenshotsPending =>
-      _blockScreenshots != _blockScreenshotsApplied;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. written once a minute, so after
@@ -13811,22 +13926,102 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadScreenshotPref() async {
+  Future<void> loadScreenSecure() async {
     if (_lockWasOn == null) {
       _lockWasOn = lockState.lockOn;
       lockState.addListener(_lockMoved);
     }
-    _blockScreenshots =
-        (await secureStore.read(key: 'block_screenshots')) == 'true';
-    _blockScreenshotsApplied = _blockScreenshots;
     await _applyScreenSecure();
+    try {
+      _shotsCardWaits = (await secureStore.read(key: kOldShotsKey)) == 'true';
+      if (_shotsCardWaits) await _readShotsCard();
+    } catch (e) {
+      dlog('shots card: not read (${e.runtimeType})');
+    }
     notifyListeners();
   }
 
-  Future<void> setBlockScreenshots(bool v) async {
-    _blockScreenshots = v;
+  // the old switch for the whole app was on: home asks once whether every
+  // chat that can should block. never in a decoy, never with the hidden
+  // chats open, and only once a chat's phone knows the block
+  bool _shotsCardWaits = false;
+  bool _shotsCardCan = false;
+  bool get shotsCardDue =>
+      _shotsCardWaits && _shotsCardCan && !sessionQuiet && !lockState.inVault;
+
+  Future<void> _readShotsCard() async {
+    final can = (await live.shotsCanTurnOn()).isNotEmpty;
+    if (can == _shotsCardCan) return;
+    _shotsCardCan = can;
     notifyListeners();
-    await secureStore.write(key: 'block_screenshots', value: v.toString());
+  }
+
+  /// the card's answer: [on] blocks in every everyday chat that can. the
+  /// card goes for good either way
+  Future<int> answerShotsCard({required bool on}) async {
+    _shotsCardWaits = false;
+    notifyListeners();
+    var n = 0;
+    if (on && !sessionQuiet) {
+      for (final peer in await live.shotsCanTurnOn()) {
+        await _turnShots(peer, true, live);
+        n++;
+      }
+    }
+    await secureStore.delete(key: kOldShotsKey);
+    return n;
+  }
+
+  /// the chat's switch: both phones block, or neither does. only once their
+  /// phone knows the block
+  Future<void> setChatShots(String peer, bool on) async {
+    final db = session.peerDb(peer);
+    final s = await db.shotsOf(peer);
+    if (!s.peerCan || s.on == on) return;
+    await _turnShots(peer, on, db);
+  }
+
+  Future<void> _turnShots(String peer, bool on, HaloDb db) async {
+    final s = await db.shotsOf(peer);
+    final at = shotsNextStamp(s.at, DateTime.now().millisecondsSinceEpoch);
+    await db.putShots(peer, on: on, at: at);
+    // queued first: a route that is down carries it later
+    await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
+    _bumpChatRev(peer);
+    notifyListeners();
+    if (await blockedAnywhere(peer)) return;
+    await _frameNow(peer, shotsUid(peer), kFrameShots, '$at');
+  }
+
+  // what a 1:1 envelope says of the chat's block, and of their phone
+  Future<void> _takeShots(String peer, UnwrappedMessage env, HaloDb db) async {
+    if (env.groupId != null || isDevId(peer)) return;
+    try {
+      final changed = await db.takeShots(
+        peer,
+        env.shots,
+        counts: _dataFrame(env) && env.msgUid != null,
+        written: env.writtenAt,
+      );
+      if (!changed) return;
+      _bumpChatRev(peer);
+      notifyListeners();
+      if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
+    } catch (e) {
+      dlog('shots: not taken (${e.runtimeType})');
+    }
+  }
+
+  /// [wrapped] as it goes to [peer]: with the chat's block on it, from the
+  /// container that holds the chat
+  Future<String> shotsOnWire(String peer, String wrapped) async {
+    if (isDevId(peer)) return wrapped;
+    try {
+      return shotsStamped(wrapped, (await _ownerOf(peer).shotsOf(peer)).word);
+    } catch (e) {
+      dlog('shots: not stamped (${e.runtimeType})');
+      return shotsStamped(wrapped, const ShotsWord(on: false, at: 0));
+    }
   }
 
   Future<void> loadThemePref() async {
@@ -14750,7 +14945,7 @@ class AppState extends ChangeNotifier {
   bool? _secureSent;
 
   Future<void> _applyScreenSecure() async {
-    final on = _blockScreenshotsApplied || secureForced || screenSecureByLock;
+    final on = secureForced || screenSecureByLock;
     if (on == _secureSent) return;
     _secureSent = on;
     try {
@@ -15071,6 +15266,7 @@ class AppState extends ChangeNotifier {
       }
       return to;
     }
+    await _takeShots(senderHaloId, env, db);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -19699,7 +19895,7 @@ class AppState extends ChangeNotifier {
     // if it is empty.
     engine.nostrInit(relaysFor(_sendMode));
     _loadFirstContact();
-    await loadScreenshotPref();
+    await loadScreenSecure();
     await loadHeartbeat();
     startMemoryLog();
     await initNotifications(

@@ -265,7 +265,8 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('a lock turned off in the decoy frees the screenshot switch', (
+    testWidgets('screenshots are per chat now: no switch for the whole app, '
+        'and a lock turned off in the decoy leaves them to each chat', (
       t,
     ) async {
       SharedPreferences.setMockInitialValues({
@@ -285,15 +286,9 @@ void main() {
       addTearDown(t.view.reset);
       await t.pumpWidget(devApp(const SettingsScreen()));
       await t.pump(const Duration(seconds: 1));
-      final row = t.widget<HaloRow>(
-        find.ancestor(
-          of: find.text(l10n.settingsBlockScreenshots),
-          matching: find.byType(HaloRow),
-        ),
-      );
+      expect(find.text(l10n.chatBlockScreenshots), findsNothing);
       // as after a turn off in the everyday app
-      expect(row.hint, isNot(l10n.settingsKeptOnWhileLock));
-      expect(row.onTap, isNotNull);
+      expect(find.text(l10n.settingsPerChat), findsOneWidget);
       await devClose(t);
     });
   });

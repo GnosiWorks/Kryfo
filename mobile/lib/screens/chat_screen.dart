@@ -109,6 +109,8 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
+import '../widgets/shots_line.dart';
+import '../chat_shots.dart' show ChatShots, kShotsByMe, kShotsByNone;
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
@@ -689,6 +691,10 @@ class _ChatScreenState extends State<ChatScreen>
   bool _secureNext = false;
   // this chat's voice notes go out disguised
   bool _disguise = false;
+  // the chat's screenshot block, as both phones hold it
+  ChatShots _shots = const ChatShots();
+  // this screen's one hold on the window's flag while the chat blocks
+  bool _shotsHeld = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   // the burn, the inbox poll and the auto retry run only while the chat is
   // in view, and catch up the moment it is back
@@ -1213,6 +1219,7 @@ class _ChatScreenState extends State<ChatScreen>
     appState.loadChatDisguise(widget.peerHaloId).then((d) {
       if (mounted) setState(() => _disguise = d);
     });
+    _loadShots();
     appState.addListener(_onAppStateChanged);
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
@@ -1444,6 +1451,7 @@ class _ChatScreenState extends State<ChatScreen>
       _lastRev = rev;
       _tryAppendNew();
       unawaited(_refreshDelivered());
+      _loadShots();
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -4330,7 +4338,87 @@ class _ChatScreenState extends State<ChatScreen>
     // popped or covered: stop claiming this chat is the one being read, so a
     // message arriving right after we leave still lights the home dot.
     releaseChat(widget.peerHaloId);
+    // the flag comes off here and not only in dispose: a screen deactivated
+    // and never disposed would keep the whole app from screenshots
+    _holdShots(false);
     super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _holdShots(_shots.blocking);
+  }
+
+  Future<void> _loadShots() async {
+    if (_isDev || widget.support) return;
+    final ChatShots s;
+    try {
+      s = await session.peerDb(widget.peerHaloId).shotsOf(widget.peerHaloId);
+    } catch (e) {
+      dlog('shots: not read (${e.runtimeType})');
+      return;
+    }
+    if (!mounted) return;
+    _holdShots(s.blocking);
+    final was = _shots;
+    if (s.on == was.on &&
+        s.can == was.can &&
+        s.by == was.by &&
+        s.when == was.when) {
+      return;
+    }
+    setState(() => _shots = s);
+  }
+
+  void _holdShots(bool on) {
+    if (on == _shotsHeld) return;
+    _shotsHeld = on;
+    appState.forceSecure(on);
+  }
+
+  Future<void> _flipShots() async {
+    if (!_shots.peerCan) return;
+    final on = !_shots.on;
+    // the switch moves on the tap; the line and the flag follow the write
+    setState(
+      () => _shots = ChatShots(
+        on: on,
+        at: _shots.at,
+        can: _shots.can,
+        by: kShotsByMe,
+        when: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+    _holdShots(_shots.blocking);
+    await appState.setChatShots(widget.peerHaloId, on);
+    await _loadShots();
+  }
+
+  // where the block last changed: over the first row since, or under the
+  // newest one when nothing came after it
+  Widget? _shotsLineAt(int ix, {required bool below}) {
+    final s = _shots;
+    if (s.by == kShotsByNone || s.when <= 0 || _messages.isEmpty) return null;
+    final at = DateTime.fromMillisecondsSinceEpoch(s.when);
+    final m = _messages[ix];
+    if (below) {
+      if (ix != _messages.length - 1 || !m.when.isBefore(at)) return null;
+    } else {
+      if (m.when.isBefore(at)) return null;
+      if (ix == 0 ? _hasMore : !_messages[ix - 1].when.isBefore(at)) {
+        return null;
+      }
+    }
+    return ShotsLine(
+      key: const ValueKey('shots-line'),
+      on: s.on,
+      text: shotsLineText(
+        on: s.on,
+        mine: s.by == kShotsByMe,
+        name: _nickname ?? widget.peerHaloId,
+      ),
+    );
   }
 
   // a page title only while the words still lead with its link: an edit
@@ -4483,6 +4571,7 @@ class _ChatScreenState extends State<ChatScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
+          ?_shotsLineAt(ix, below: false),
           if (firstUnread) _newMessagesDivider(),
           // the bubble alone: what says it has been read
           RowAnchor(
@@ -4504,6 +4593,7 @@ class _ChatScreenState extends State<ChatScreen>
                     ),
             ),
           ),
+          ?_shotsLineAt(ix, below: true),
         ],
       ),
     );
@@ -4536,6 +4626,7 @@ class _ChatScreenState extends State<ChatScreen>
     _timers.dispose();
     _reads.dispose();
     releaseChat(widget.peerHaloId);
+    _holdShots(false);
     final open = _openChats[widget.peerHaloId]?..remove(this);
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
@@ -4702,6 +4793,12 @@ class _ChatScreenState extends State<ChatScreen>
             await _setDisguise(!_disguise);
             setSheet(() {});
           },
+          onShots: () async {
+            final flip = _flipShots();
+            setSheet(() {});
+            await flip;
+            setSheet(() {});
+          },
         ),
       ),
     );
@@ -4716,6 +4813,7 @@ class _ChatScreenState extends State<ChatScreen>
     required bool toInbox,
     required bool pinned,
     required VoidCallback onDisguise,
+    required VoidCallback onShots,
   }) {
     void pick(String a) => Navigator.pop(ctx, a);
     return SingleChildScrollView(
@@ -4788,6 +4886,20 @@ class _ChatScreenState extends State<ChatScreen>
               toggled: _disguise,
               onTap: onDisguise,
             ),
+            // both phones or neither: off, with the reason, until theirs
+            // knows the block. someone blocked is not offered
+            if (!_blocked && !widget.support)
+              MenuSheetRow(
+                icon: Icons.phonelink_lock_outlined,
+                label: l10n.chatBlockScreenshots,
+                sub: !_accepted
+                    ? l10n.chatAcceptThemFirst
+                    : !_shots.peerCan
+                    ? l10n.chatShotsWhenTheyUpdate
+                    : null,
+                toggled: _shots.blocking,
+                onTap: _accepted && _shots.peerCan ? onShots : null,
+              ),
             MenuSheetRow(
               icon: Icons.palette_outlined,
               label: l10n.chatWallpaper,
@@ -5306,6 +5418,7 @@ class _ChatScreenState extends State<ChatScreen>
                       verified: _verified,
                       nameUnchecked: _nameUnchecked,
                       supporterBadge: _peerBadge,
+                      shotsBlocked: _shots.blocking,
                       onBlock: _openContact,
                       onMore: _chatActions,
                       avatarSeed: widget.avatarSeed,
@@ -6211,6 +6324,8 @@ class _ChatHead extends StatelessWidget {
   final bool nameUnchecked;
   final String? note;
   final String? supporterBadge;
+  // the chat blocks screenshots on both phones
+  final bool shotsBlocked;
   const _ChatHead({
     super.key,
     required this.haloId,
@@ -6228,6 +6343,7 @@ class _ChatHead extends StatelessWidget {
     this.nameUnchecked = false,
     this.note,
     this.supporterBadge,
+    this.shotsBlocked = false,
   });
 
   @override
@@ -6368,6 +6484,30 @@ class _ChatHead extends StatelessWidget {
                               color: relay ? HaloColors.sky : HaloColors.text2,
                             ),
                           ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: Duration(
+                            milliseconds: motionStill(context) ? 0 : 220,
+                          ),
+                          child: shotsBlocked
+                              ? Padding(
+                                  key: const ValueKey('shots'),
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: 6,
+                                  ),
+                                  child: Semantics(
+                                    label: l10n.chatShotsBlockedHere,
+                                    child: Icon(
+                                      Icons.phonelink_lock_outlined,
+                                      size: 11,
+                                      color: HaloColors.text2,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox(
+                                  key: ValueKey('no-shots'),
+                                  width: 0,
+                                ),
                         ),
                       ],
                     ),
