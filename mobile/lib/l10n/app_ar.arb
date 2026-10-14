@@ -525,6 +525,7 @@
   "chatMessageRequest": "طلب مراسلة",
   "chatTheyNeedToAccept": "يجب أن يقبل قبل أن تتمكن من مواصلة المحادثة.",
   "chatWaitingForThemTo": "بانتظار قبوله لطلبك",
+  "chatTheyMayNotKnow": "ربما لا يعرف أنك قبلت",
   "chatYouBlockedThisContact": "لقد حظرت جهة الاتصال هذه",
   "chatSupporter": "داعم",
   "chatEncryptedViaRelay": "مشفّرة · عبر مُرحِّل",

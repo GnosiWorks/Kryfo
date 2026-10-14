@@ -3,6 +3,8 @@
 // a request's notification goes back to it rather than stacking a second
 // one, and an accept opens the chat, in place of the screen when no one
 // else waits
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -33,6 +35,20 @@ class _Rows extends ArrivalRows {
   @override
   Future<void> acceptRequest(String haloId) async =>
       people[haloId]!['accepted'] = 1;
+  // a read of the list that waits to be let through, when set
+  Completer<void>? gate;
+  final declined = <String>[];
+  @override
+  Future<List<Map<String, Object?>>> requestsInbox() async {
+    await gate?.future;
+    return super.requestsInbox();
+  }
+
+  @override
+  Future<void> declineRequest(String haloId) async {
+    declined.add(haloId);
+    await super.declineRequest(haloId);
+  }
 }
 
 Widget _app() => MaterialApp(
@@ -142,6 +158,31 @@ void main() {
     expect(find.byType(RequestsScreen), findsOne);
     expect(find.text(_second), findsOne);
     expect(find.text(_first), findsNothing);
+    await drain(t);
+  });
+
+  testWidgets('a decline on a card the accept has not cleared yet does '
+      'nothing', (t) async {
+    rows.person(_second, accepted: 0);
+    await show(t);
+    final card = find.byKey(const ValueKey('req_$_first'));
+    final gate = Completer<void>();
+    rows.gate = gate;
+    await t.tap(
+      find.descendant(of: card, matching: find.text(l10n.commonAccept)),
+    );
+    await frames(t);
+    // the list has not read again: the card is still up
+    expect(card, findsOne);
+    await t.tap(
+      find.descendant(of: card, matching: find.text(l10n.requestsDecline)),
+    );
+    await frames(t);
+    rows.gate = null;
+    gate.complete();
+    await frames(t, 12);
+    expect(rows.declined, isEmpty);
+    expect(rows.people[_first]!['accepted'], 1);
     await drain(t);
   });
 }

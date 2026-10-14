@@ -4,7 +4,8 @@ package main
 // every relay socket waits a turn of its own before it subscribes, at the
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
-// open chat's address goes with no turn.
+// open chat's address, and a just-added one's first ask right after the add,
+// go with no turn.
 
 import (
 	"context"
@@ -87,10 +88,48 @@ func isFirstTag(tag string) bool {
 	return tag != "" && f == tag
 }
 
+// how long after an add or accept its free turn holds
+var freshFor = 15 * time.Second
+
+// a runner started for someone just added or accepted: the kick it was
+// started under, and until when its free turn holds
+type freshMark struct {
+	kick  chan struct{}
+	until time.Time
+}
+
+type freshKey struct{}
+
+func asFresh(ctx context.Context) context.Context {
+	return context.WithValue(ctx, freshKey{}, freshMark{kickChan(), autoNow().Add(freshFor)})
+}
+
+func freshOf(ctx context.Context) *freshMark {
+	if m, ok := ctx.Value(freshKey{}).(freshMark); ok {
+		return &m
+	}
+	return nil
+}
+
+// the free turn holds only under the kick the add or accept came in, and
+// only soon after it. one that parked offline or waited for tor would ask
+// at the wake or the start, beside the phone's other addresses, so the
+// runner drops it there too
+func (m *freshMark) holds(kc chan struct{}, now time.Time) bool {
+	return m != nil && kc == m.kick && now.Before(m.until)
+}
+
 // one socket's turn
 type subTurn struct {
 	// the runner's tag, see isFirstTag
 	tag string
+	// the address was just added or accepted: its first turn is free. the
+	// add or accept is already the user's own act on this lane, not a start
+	// or a wake, so it shows up beside none of the phone's other addresses
+	fresh *freshMark
+	// its last turn was that free one: a dial that failed there waits a
+	// turn on the next kick, as a first one would
+	free bool
 	// the kick it last waited after, nil before its first turn
 	kick chan struct{}
 	// it got through since that turn. until it does, a kick is no new turn
@@ -110,9 +149,11 @@ func (t *subTurn) take(ctx context.Context) bool {
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
-	again := t.kick != nil && !t.up
+	again := t.kick != nil && !t.up && !t.free
+	first := t.kick == nil && t.fresh.holds(kc, autoNow())
 	t.kick = kc
-	if again || isFirstTag(t.tag) {
+	t.free = first
+	if again || first || isFirstTag(t.tag) {
 		return ctx.Err() == nil
 	}
 	t.up = false

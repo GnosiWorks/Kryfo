@@ -179,7 +179,7 @@ class _Io implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
@@ -363,6 +363,7 @@ class _Mem implements HaloDb {
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     _hit('upsertContact', haloId, null);
     final p = people[haloId];

@@ -194,6 +194,10 @@ class Session {
   // ---- one contact's chat ----
   Future<void> acceptRequest(String haloId) =>
       _ofPeer(haloId).acceptRequest(haloId);
+  // on their row, in the container that holds them
+  Future<void> setAckOwed(String haloId, bool owed) =>
+      _ofPeer(haloId).setAckOwed(haloId, owed);
+  Future<bool> ackLost(String haloId) => _ofPeer(haloId).ackLost(haloId);
   Future<void> assignUidIfMissing(String peerId, int sentAtMs, String uid) =>
       _ofPeer(peerId).assignUidIfMissing(peerId, sentAtMs, uid);
   Future<void> clearConversation(String peerId) =>
@@ -334,7 +338,10 @@ class Session {
     String onion,
     String xpub, {
     int accepted = 1,
-  }) => _ofPeer(haloId).upsertContact(haloId, onion, xpub, accepted: accepted);
+    bool owe = false,
+  }) => _ofPeer(
+    haloId,
+  ).upsertContact(haloId, onion, xpub, accepted: accepted, owe: owe);
 
   // ---- one group ----
   Future<void> addGroupMember(String groupId, String haloId) =>

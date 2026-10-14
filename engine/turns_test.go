@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
 	"sort"
 	"sync/atomic"
@@ -445,4 +446,205 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 	waitFor(t, "the parked sockets let go", 45*time.Second, func() bool {
 		return atomic.LoadInt32(&catchupActive) == base
 	})
+}
+
+// someone just added or accepted: each socket's first turn is free, and
+// only the first. one already running keeps its turns
+func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	quick := func(tn *subTurn) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+		ok := tn.take(ctx)
+		tn.done()
+		return ok
+	}
+	kickRelays()
+	spendFirstTurn()
+	fresh := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	if !quick(&fresh) {
+		t.Fatal("a just-added address waited its first turn")
+	}
+	var plain subTurn
+	if quick(&plain) {
+		t.Fatal("an address not just added went at once")
+	}
+	fresh.dialed(true)
+	kickRelays()
+	spendFirstTurn()
+	if quick(&fresh) {
+		t.Fatal("a wake after the first ask went without a turn")
+	}
+}
+
+// the free turn is the add's or the accept's own: one that comes only after
+// a wake, or long after, waits a turn as any address does, and so does a
+// redial after a free turn that did not get through
+func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	quick := func(tn *subTurn) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+		ok := tn.take(ctx)
+		tn.done()
+		return ok
+	}
+	// added offline: the runner parks, and asks only once the network is
+	// back, at its wake
+	kickRelays()
+	spendFirstTurn()
+	parked := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	kickRelays()
+	spendFirstTurn()
+	if quick(&parked) {
+		t.Fatal("an address added offline asked at the wake without a turn")
+	}
+	// added while tor was still starting: by the time it asks the free turn
+	// is long gone
+	now := time.Now()
+	oldNow := autoNow
+	defer func() { autoNow = oldNow }()
+	autoNow = func() time.Time { return now }
+	late := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	autoNow = func() time.Time { return now.Add(freshFor + time.Second) }
+	if quick(&late) {
+		t.Fatal("an address added long ago asked without a turn")
+	}
+	autoNow = oldNow
+	// a free turn whose dial failed: the next kick is a turn of its own
+	failed := subTurn{fresh: freshOf(asFresh(context.Background()))}
+	if !quick(&failed) {
+		t.Fatal("a just-added address waited its first turn")
+	}
+	failed.dialed(false)
+	kickRelays()
+	spendFirstTurn()
+	if quick(&failed) {
+		t.Fatal("a wake after a failed free turn went without a turn")
+	}
+}
+
+// against a relay with real turns: the address the user just added asks
+// at once, one listened for again waits its turn
+func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, relay)
+	kickRelays()
+	spendFirstTurn()
+	added, again := newXid(t), newXid(t)
+	addedHex := hex.EncodeToString(added.pub[:])
+	againHex := hex.EncodeToString(again.pub[:])
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		for _, h := range []string{addedHex, againHex} {
+			if cancel, ok := nostrSubs[h]; ok {
+				cancel()
+				delete(nostrSubs, h)
+			}
+		}
+	})
+	asked := func(addr string) bool {
+		for _, c := range relay.snapshot() {
+			if c.addrs[addr] {
+				return true
+			}
+		}
+		return false
+	}
+	if r := nostrSubscribe(againHex, false); r != "ok" {
+		t.Fatal(r)
+	}
+	if r := nostrSubscribe(addedHex, true); r != "ok" {
+		t.Fatal(r)
+	}
+	start := time.Now()
+	waitFor(t, "the added address asked", 5*time.Second, func() bool {
+		return asked(mustRcv(t, added))
+	})
+	t.Logf("the added address asked %s after the add", time.Since(start).Round(time.Millisecond))
+	time.Sleep(time.Second)
+	if asked(mustRcv(t, again)) {
+		t.Fatal("an address listened for again asked without its turn")
+	}
+}
+
+// added with no network: its runner first asks after the wake, and then it
+// waits its turn there like every other address
+func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, relay)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	kickRelays()
+	spendFirstTurn()
+	added := newXid(t)
+	fresh := asFresh(ctx)
+	// the network comes back: a wake, whose free first turn someone else took
+	kickRelays()
+	spendFirstTurn()
+	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), added.pub, mustRcv(t, added))
+	time.Sleep(1500 * time.Millisecond)
+	for _, c := range relay.snapshot() {
+		if c.addrs[mustRcv(t, added)] {
+			t.Fatal("an address added offline asked at the wake without its turn")
+		}
+	}
+}
+
+// added while tor was still starting: its runner first finds tor not up,
+// and asks only once it is, beside the start's own sockets, so it waits
+// its turn there as they do
+func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
+	old, oldWait := subSpread, torRetryWait
+	subSpread, torRetryWait = time.Hour, 200*time.Millisecond
+	defer func() { subSpread, torRetryWait = old, oldWait }()
+	socks := newSocksStandIn(t)
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, relay)
+	// a relay answered lately: the tor watchdog stays out of it
+	noteRelayConnected()
+	mu.Lock()
+	up := torNode
+	torNode = nil
+	mu.Unlock()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	kickRelays()
+	spendFirstTurn()
+	base := settledActive(t)
+	added := newXid(t)
+	rcv := mustRcv(t, added)
+	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), added.pub, rcv)
+	time.Sleep(300 * time.Millisecond)
+	// tor is up, well inside the add's free window and with no kick
+	mu.Lock()
+	torNode = up
+	mu.Unlock()
+	asked := func() bool {
+		for _, c := range relay.snapshot() {
+			if c.addrs[rcv] {
+				return true
+			}
+		}
+		return false
+	}
+	// it got past tor: waiting its turn, or asking
+	waitFor(t, "it got past tor", 5*time.Second, func() bool {
+		return atomic.LoadInt32(&catchupActive) > base || asked()
+	})
+	time.Sleep(time.Second)
+	if asked() {
+		t.Fatal("an address added while tor started asked at tor-up without its turn")
+	}
 }

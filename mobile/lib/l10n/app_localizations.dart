@@ -2628,6 +2628,12 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'They may not know you accepted'**
+  String get chatTheyMayNotKnow;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'You blocked this contact'**
   String get chatYouBlockedThisContact;
 

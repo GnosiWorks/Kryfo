@@ -1672,6 +1672,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatWaitingForThemTo => 'Esperando a que acepte tu solicitud';
 
   @override
+  String get chatTheyMayNotKnow => 'Puede que no sepa que aceptaste';
+
+  @override
   String get chatYouBlockedThisContact => 'Bloqueaste a este contacto';
 
   @override

@@ -525,6 +525,7 @@
   "chatMessageRequest": "درخواست پیام",
   "chatTheyNeedToAccept": "او باید بپذیرد تا بتوانید به گفت‌وگو ادامه دهید.",
   "chatWaitingForThemTo": "در انتظار اینکه درخواستتان را بپذیرد",
+  "chatTheyMayNotKnow": "شاید نداند که پذیرفته‌اید",
   "chatYouBlockedThisContact": "این مخاطب را مسدود کرده‌اید",
   "chatSupporter": "هوادار",
   "chatEncryptedViaRelay": "رمزگذاری‌شده · از راه رله",

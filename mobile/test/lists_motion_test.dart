@@ -121,7 +121,8 @@ class _Db implements HaloDb {
 class _Engine implements HaloEngine {
   final calls = <String>[];
   @override
-  void nostrSubscribeBg(String peerXPubHex) => calls.add('listen $peerXPubHex');
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) =>
+      calls.add('listen $peerXPubHex');
   @override
   void nostrUnsubscribeBg(String peerXPubHex) =>
       calls.add('unlisten $peerXPubHex');
