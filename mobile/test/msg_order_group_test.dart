@@ -171,7 +171,11 @@ void main() {
     }
   }
 
-  Future<void> open(WidgetTester t, {String? jumpTo}) async {
+  Future<void> open(
+    WidgetTester t, {
+    String? jumpTo,
+    bool still = false,
+  }) async {
     phone(t);
     db = _GroupDb();
     for (var i = 0; i < _rows; i++) {
@@ -184,7 +188,10 @@ void main() {
       () => m.setMockMethodCallHandler(SystemChannels.platform, null),
     );
     await t.pumpWidget(
-      app(GroupChatScreen(groupId: _group, jumpToUid: jumpTo)),
+      app(
+        GroupChatScreen(groupId: _group, jumpToUid: jumpTo),
+        still: still,
+      ),
     );
     await frames(t, 20);
   }
@@ -287,6 +294,35 @@ void main() {
     expect(line, findsNothing);
     await close(t);
   });
+
+  for (final still in [false, true]) {
+    testWidgets('a row leaving that the line does not count leaves the '
+        'screen unbuilt${still ? ', reduced motion' : ''}', (t) async {
+      await open(t, still: still);
+      final line = find.text(l10n.chatEarlierMessagesArrived(1)).hitTestable();
+      db.add('late six', note(60) + 60000);
+      appState.chatChanged('group:$_group');
+      await frames(t, 6);
+      expect(line, findsOneWidget);
+      // a row on screen, not counted, taken back
+      db.rows.removeWhere((r) => r['plaintext'] == 'note 98');
+      appState.chatChanged('group:$_group');
+      await frames(t, 2);
+      expect(text('note 98'), findsOneWidget);
+      var builds = 0;
+      debugOnRebuildDirtyWidget = (e, _) {
+        if (e.widget is GroupChatScreen) builds++;
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      await frames(t, 5);
+      debugOnRebuildDirtyWidget = null;
+      expect(builds, lessThan(2));
+      await frames(t, 10);
+      expect(text('note 98'), findsNothing);
+      expect(line, findsOneWidget);
+      await close(t);
+    });
+  }
 
   testWidgets('opened on a message in the newest page, the whole thread is '
       'not read', (t) async {

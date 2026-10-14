@@ -601,6 +601,38 @@ void main() {
     await devClose(t);
   });
 
+  for (final still in [false, true]) {
+    testWidgets('a row leaving that the line does not count leaves the '
+        'screen unbuilt${still ? ', reduced motion' : ''}', (t) async {
+      await seed(40);
+      await devOpen(t, chat(), still: still);
+      await settle(t);
+      await cameLate('late9', 'late nine', note(24) + 60000);
+      appState.chatChanged(_peer);
+      await settle(t);
+      expect(line(1), findsOneWidget);
+      // a row on screen, not counted, taken back
+      await mem.delete('messages', where: 'msg_uid = ?', whereArgs: ['uid38']);
+      appState.chatChanged(_peer);
+      await settle(t, 2);
+      expect(text('note 38'), findsOneWidget);
+      var builds = 0;
+      debugOnRebuildDirtyWidget = (e, _) {
+        if (e.widget is ChatScreen) builds++;
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      debugOnRebuildDirtyWidget = null;
+      expect(builds, lessThan(2));
+      await settle(t, 6);
+      expect(text('note 38'), findsNothing);
+      expect(line(1), findsOneWidget);
+      await devClose(t);
+    });
+  }
+
   testWidgets('opened on a message in the newest page, the whole thread is '
       'not read', (t) async {
     await seed(150);

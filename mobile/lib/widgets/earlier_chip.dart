@@ -35,7 +35,8 @@ class EarlierArrivals {
     return true;
   }
 
-  void drop(String id) => _ids.remove(id);
+  // false when it was not held
+  bool drop(String id) => _ids.remove(id);
 
   void clear() => _ids.clear();
 
