@@ -1305,6 +1305,23 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatNewMessages => 'Нові повідомлення';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Надійшло $countString попереднього повідомлення',
+      many: 'Надійшло $countString попередніх повідомлень',
+      few: 'Надійшли $countString попередні повідомлення',
+      one: 'Надійшло $countString попереднє повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'Не зберігати';
 
   @override

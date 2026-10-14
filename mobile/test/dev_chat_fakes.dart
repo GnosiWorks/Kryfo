@@ -161,6 +161,15 @@ class DevTestDb implements HaloDb {
         whereArgs: [chatId],
       );
 
+  // a reload from a row held: its threads come in the order they came, so
+  // what came from that row on
+  @override
+  Future<List<Map<String, Object?>>> messagesFrom(
+    String peerId, {
+    required int rowid,
+    int? at,
+  }) => messagesAfter(peerId, rowid - 1);
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');

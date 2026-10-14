@@ -75,6 +75,23 @@ class Session {
     };
   }
 
+  // the message notification [id] rang for in [chat], in whichever open
+  // container kept it
+  Future<String?> ringOf(int id, String chat) async {
+    final v = vault;
+    if (v != null && v.isOpen) {
+      final u = await v.ringOf(id, chat);
+      if (u != null) return u;
+    }
+    return primary.ringOf(id, chat);
+  }
+
+  Future<void> forgetRings({String? chat, String? msgUid}) async {
+    for (final d in [primary, ?vault]) {
+      await d.forgetRings(chat: chat, msgUid: msgUid);
+    }
+  }
+
   // the chat a tapped notification's tag stands for, in the container that
   // made it. a shut vault's tags name nothing here
   Future<String?> chatOfNotifTag(String tag) async {
@@ -155,7 +172,11 @@ class Session {
     bool newestFirst = true,
     int? limit,
   }) {
-    int k(Map<String, Object?> r) => (r[key] as num?)?.toInt() ?? 0;
+    // a message row without written_at says when it came
+    int k(Map<String, Object?> r) =>
+        ((r[key] ?? (key == 'written_at' ? r['sent_at'] : null)) as num?)
+            ?.toInt() ??
+        0;
     final out = <Map<String, Object?>>[];
     var i = 0;
     var j = 0;
@@ -238,10 +259,19 @@ class Session {
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
-  }) => _ofPeer(
+  }) => _ofPeer(peerId).messagesPage(
     peerId,
-  ).messagesPage(peerId, beforeRowid: beforeRowid, limit: limit);
+    beforeRowid: beforeRowid,
+    beforeAt: beforeAt,
+    limit: limit,
+  );
+  Future<List<Map<String, Object?>>> messagesFrom(
+    String peerId, {
+    required int rowid,
+    int? at,
+  }) => _ofPeer(peerId).messagesFrom(peerId, rowid: rowid, at: at);
   Future<void> setArchived(String haloId, bool archived) =>
       _ofPeer(haloId).setArchived(haloId, archived);
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
@@ -341,10 +371,14 @@ class Session {
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
+    int? beforeAt,
     int limit = 60,
-  }) => _ofGroup(
+  }) => _ofGroup(groupId).groupMessagesPage(
     groupId,
-  ).groupMessagesPage(groupId, beforeRowid: beforeRowid, limit: limit);
+    beforeRowid: beforeRowid,
+    beforeAt: beforeAt,
+    limit: limit,
+  );
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) =>
       _ofGroup(groupId).loadGroupMessages(groupId);
   Future<void> markRoomSeen(String groupId) =>
@@ -694,7 +728,7 @@ class Session {
     return _merge(
       _own(primary, await primary.savedMessages(), _ofMessage),
       _own(v, await v.savedMessages(), _ofMessage),
-      'sent_at',
+      'written_at',
       limit: 500,
     );
   }
@@ -715,7 +749,7 @@ class Session {
         _ofMessage,
       ),
       _own(v, await v.searchMessages(match, kind, limit: limit), _ofMessage),
-      'sent_at',
+      'written_at',
       limit: limit,
     );
   }

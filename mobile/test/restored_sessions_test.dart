@@ -76,6 +76,7 @@ class _Rows extends HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) {
     if (full) throw StateError('the disk is full');

@@ -1309,6 +1309,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatNewMessages => 'Новые сообщения';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Пришло $countString более раннего сообщения',
+      many: 'Пришло $countString более ранних сообщений',
+      few: 'Пришли $countString более ранних сообщения',
+      one: 'Пришло $countString более раннее сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'Убрать из сохранённых';
 
   @override

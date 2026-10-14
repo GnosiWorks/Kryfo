@@ -257,6 +257,7 @@ class _Phone extends DevTestDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    int? writtenAt,
     bool viaDev = false,
   }) async {
     if (saveFails > 0) {

@@ -1266,6 +1266,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatNewMessages => 'Tin nhắn mới';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã nhận $countString tin nhắn trước đó',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'Bỏ lưu';
 
   @override

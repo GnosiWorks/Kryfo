@@ -146,10 +146,11 @@ class MemDb implements Database, Transaction {
       if (!except.contains(e.key)) _tables[e.key] = e.value;
     }
     // sqlite's own, made with the first AUTOINCREMENT table
-    _tables['sqlite_sequence'] = _Table({
-      'name': _Col(false, null, null),
-      'seq': _Col(false, null, null),
-    }, const [], null);
+    _tables['sqlite_sequence'] = _Table(
+      {'name': _Col(false, null, null), 'seq': _Col(false, null, null)},
+      const [],
+      null,
+    );
   }
 
   Map<String, _Table> _tables = {};
@@ -426,21 +427,28 @@ class MemDb implements Database, Transaction {
               : {for (final (name, get) in picks) name: get(r)},
     ];
     if (orderBy != null) {
-      final m = RegExp(r'^(\w+)(?: (ASC|DESC))?$').firstMatch(orderBy);
-      if (m == null) throw UnimplementedError('order: $orderBy');
-      final col = m.group(1)!;
+      // one or more terms, each a column and its direction
+      final terms = [
+        for (final part in orderBy.split(','))
+          RegExp(r'^(\w+)(?: (ASC|DESC))?$').firstMatch(part.trim()) ??
+              (throw UnimplementedError('order: $orderBy')),
+      ];
       final full = [
         for (final r in t.rows)
           if (ok(r)) r,
       ];
       final order = [for (var i = 0; i < full.length; i++) i]
         ..sort((a, b) {
-          final x = _get(t, full[a], col);
-          final y = _get(t, full[b], col);
-          final c = x is Comparable && y is Comparable
-              ? Comparable.compare(x, y)
-              : 0;
-          return m.group(2) == 'DESC' ? -c : c;
+          for (final m in terms) {
+            final col = m.group(1)!;
+            final x = _get(t, full[a], col);
+            final y = _get(t, full[b], col);
+            final c = x is Comparable && y is Comparable
+                ? Comparable.compare(x, y)
+                : 0;
+            if (c != 0) return m.group(2) == 'DESC' ? -c : c;
+          }
+          return 0;
         });
       out = [for (final i in order) out[i]];
     }

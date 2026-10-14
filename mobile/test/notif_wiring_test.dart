@@ -18,6 +18,7 @@ import 'package:kryfo/main.dart'
         openChatForNotif,
         openFromNotifForTest,
         openNotifChat,
+        session,
         useDatabasesForTest;
 import 'package:kryfo/notifications.dart';
 import 'package:kryfo/session.dart';
@@ -89,6 +90,7 @@ void main() {
   late _Shade shade;
   late ArrivalRows live;
   late List<String> opened;
+  late List<String?> openedOn;
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -100,7 +102,11 @@ void main() {
     useDatabasesForTest(live, Session(live));
     lockState.openForTest();
     opened = [];
-    openNotifChat = (chat) async => opened.add(chat);
+    openedOn = [];
+    openNotifChat = (chat, uid) async {
+      opened.add(chat);
+      openedOn.add(uid);
+    };
   });
 
   tearDown(() {
@@ -144,7 +150,7 @@ void main() {
     ]);
     final taps = <String?>[];
     await initNotifications(
-      onTap: taps.add,
+      onTap: (p, _) => taps.add(p),
       tagsOf: (chat) async => chat == 'x' ? {'kept-tag'} : const {},
     );
     expect(shade.up, [12]);
@@ -219,5 +225,32 @@ void main() {
     expect(src, contains('onTap: openChatForNotif,'));
     expect(src, contains('tagsOf: (chat) => session.notifTagsOf(chat),'));
     expect(src, isNot(contains('initNotifications(onTap: openChatForHalo')));
+  });
+
+  test('a ring gives android the bare tag, keeps here which message it '
+      'rang for, and its tap opens the chat on it', () async {
+    live.msgs.add({'peer_id': 'calm-orbit-lantern', 'msg_uid': 'Ab3_x-9'});
+    await const AppIo().notify(
+      title: 'Kryfo',
+      body: 'new message',
+      payload: 'calm-orbit-lantern',
+      on: live,
+      msgUid: 'Ab3_x-9',
+    );
+    final tag = live.notifTags['calm-orbit-lantern']!;
+    expect(shade.payloads, [tag]);
+    final id = live.rings.keys.single;
+    await openChatForNotif(tag, id);
+    expect(opened, ['calm-orbit-lantern']);
+    expect(openedOn, ['Ab3_x-9']);
+    // once it left the shade nothing is kept of it: a tap then opens the
+    // chat at its newest
+    ringsForget = ({chat, msgUid}) =>
+        live.forgetRings(chat: chat, msgUid: msgUid);
+    addTearDown(() => ringsForget = ({chat, msgUid}) async {});
+    await clearNotificationsFor('calm-orbit-lantern');
+    await Future<void>.delayed(Duration.zero);
+    expect(live.rings, isEmpty);
+    expect(await session.ringOf(id, 'calm-orbit-lantern'), isNull);
   });
 }

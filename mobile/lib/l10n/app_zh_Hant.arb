@@ -422,6 +422,7 @@
   "chatMS": "{m} 分 {s} 秒",
   "chatS2": "{s} 秒",
   "chatNewMessages": "新訊息",
+  "chatEarlierMessagesArrived": "{count, plural, other{收到 {count} 則更早的訊息}}",
   "chatUnsave": "取消收藏",
   "chatForward": "轉傳",
   "commonShare": "分享",

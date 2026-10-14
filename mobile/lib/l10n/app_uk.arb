@@ -422,6 +422,7 @@
   "chatMS": "{m} хв {s} с",
   "chatS2": "{s} с",
   "chatNewMessages": "Нові повідомлення",
+  "chatEarlierMessagesArrived": "{count, plural, one{Надійшло {count} попереднє повідомлення} few{Надійшли {count} попередні повідомлення} many{Надійшло {count} попередніх повідомлень} other{Надійшло {count} попереднього повідомлення}}",
   "chatUnsave": "Не зберігати",
   "chatForward": "Переслати",
   "commonShare": "Поділитися",

@@ -422,6 +422,7 @@
   "chatMS": "{m}p {s}s",
   "chatS2": "{s}s",
   "chatNewMessages": "Tin nhắn mới",
+  "chatEarlierMessagesArrived": "{count, plural, other{Đã nhận {count} tin nhắn trước đó}}",
   "chatUnsave": "Bỏ lưu",
   "chatForward": "Chuyển tiếp",
   "commonShare": "Chia sẻ",

@@ -294,11 +294,11 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 78 with the schema of a new install', () async {
+    test('$f opens at 80 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();
-      expect(await raw.getVersion(), 78);
+      expect(await raw.getVersion(), 80);
       final got = await _schema(raw);
       // key by key, so a miss names the table and the column
       for (final k in {...fresh[f]!.keys, ...got.keys}) {
@@ -318,6 +318,8 @@ void main() {
         'ALTER TABLE block_spans ADD COLUMN listen_from',
         'ALTER TABLE contacts ADD COLUMN voice_disguise',
         'ALTER TABLE contacts ADD COLUMN name_check',
+        'ALTER TABLE messages ADD COLUMN written_at',
+        'CREATE TABLE IF NOT EXISTS notif_rings',
         'ALTER TABLE contacts ADD COLUMN ack_owed',
       ];
       final at = [
@@ -355,6 +357,18 @@ void main() {
       await db.close();
     });
 
+    test('$f: every message keeps its place, at the time it came', () async {
+      if (skip()) return;
+      final db = _files[f]!();
+      final raw = await db.open();
+      final rows = await raw.query('messages');
+      expect(rows.length, before[f]!['messages']!.length);
+      for (final r in rows) {
+        expect(r['written_at'], r['sent_at'], reason: '${r['msg_uid']}');
+      }
+      await db.close();
+    });
+
     test('$f: a second open changes nothing', () async {
       if (skip()) return;
       final db = _files[f]!();
@@ -366,7 +380,7 @@ void main() {
       final again = _files[f]!();
       final raw = await again.open();
       final said = sql!.said.sublist(from);
-      expect(await raw.getVersion(), 78);
+      expect(await raw.getVersion(), 80);
       expect(
         said.where(
           (s) => RegExp(
@@ -576,7 +590,7 @@ void main() {
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);
     final otherRaw = await other.open();
-    expect(await otherRaw.getVersion(), 78);
+    expect(await otherRaw.getVersion(), 80);
     final mine = await _store(raw, (await peerIdentityHex(otherRaw, _me))!);
     final hers = await _store(
       otherRaw,

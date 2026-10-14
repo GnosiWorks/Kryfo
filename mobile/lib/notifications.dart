@@ -18,16 +18,18 @@ final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> initNotifications({
-  void Function(String? payload)? onTap,
+  void Function(String? payload, int? id)? onTap,
   Future<Set<String>> Function(String chat)? tagsOf,
+  Future<void> Function({String? chat, String? msgUid})? forget,
 }) async {
   if (tagsOf != null) notifTagsOf = tagsOf;
+  if (forget != null) ringsForget = forget;
   const androidInit = AndroidInitializationSettings('ic_halo_notification');
   const initSettings = InitializationSettings(android: androidInit);
   await notifPlugin.initialize(
     settings: initSettings,
     onDidReceiveNotificationResponse: (resp) {
-      if (onTap != null) onTap(resp.payload);
+      if (onTap != null) onTap(resp.payload, resp.id);
     },
   );
 
@@ -237,6 +239,19 @@ String newNotifTag() {
 // set as notifications start; only this process's are known before that
 Future<Set<String>> Function(String chat) notifTagsOf = (_) async => const {};
 
+// what the containers keep of which message each notification rang for:
+// dropped once it leaves the shade, by its chat or its message
+Future<void> Function({String? chat, String? msgUid}) ringsForget =
+    ({chat, msgUid}) async {};
+
+Future<void> _forgetRings({String? chat, String? msgUid}) async {
+  try {
+    await ringsForget(chat: chat, msgUid: msgUid);
+  } catch (e) {
+    dlog('shade: rings not dropped (${e.runtimeType})');
+  }
+}
+
 // ids and tags by chat, so opening the chat by hand takes its
 // notifications down
 final Map<String, List<(int, String?)>> _shownFor = {};
@@ -245,6 +260,7 @@ final Map<String, List<(int, String?)>> _shownFor = {};
 final Map<String, (String, int, String?)> _shownForMsg = {};
 
 Future<void> clearNotificationsFor(String chat) async {
+  unawaited(_forgetRings(chat: chat));
   _shownForMsg.removeWhere((_, v) => v.$1 == chat);
   final shown = _shownFor.remove(chat) ?? const <(int, String?)>[];
   for (final (id, tag) in shown) {
@@ -300,6 +316,7 @@ Future<void> clearUntaggedShade() async {
 }
 
 Future<void> clearMessageNotification(String msgUid) async {
+  unawaited(_forgetRings(msgUid: msgUid));
   final shown = _shownForMsg.remove(msgUid);
   if (shown == null) return;
   final (chat, id, tag) = shown;
@@ -338,8 +355,9 @@ Future<void> cancelWithRetry(
   }
 }
 
-// [chat] is what this process knows it by; android sees only [tag]
-Future<void> showMessageNotification({
+// [chat] is what this process knows it by; android sees only [tag]. the
+// notification's id, null when none was shown
+Future<int?> showMessageNotification({
   required String title,
   required String body,
   required String chat,
@@ -348,7 +366,7 @@ Future<void> showMessageNotification({
   int? burnAt,
 }) async {
   // a decoy session is open: no notification at all
-  if (await quietNow()) return;
+  if (await quietNow()) return null;
   final hidden = await loadHideNotifContent();
   if (hidden) {
     title = 'Kryfo';
@@ -402,4 +420,5 @@ Future<void> showMessageNotification({
     notificationDetails: NotificationDetails(android: details),
     payload: tag,
   );
+  return id;
 }
