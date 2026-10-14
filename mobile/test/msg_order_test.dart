@@ -145,6 +145,22 @@ void main() {
       );
       expect(w.live.msg('old')!['written_at'], joined);
     });
+
+    test('in a group, their own stamps never take a live message back past '
+        'when this phone joined', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final joined = now - 60 * _min;
+      w.live.group(_gid, ['me', _alice], admin: _alice);
+      w.live.joinedAt[_gid] = joined;
+      // wrapped now, said to be written eleven days before
+      await w.relay(
+        [('aged', now - 11 * _day, now)],
+        from: now,
+        until: now,
+        group: _gid,
+      );
+      expect(w.live.msg('aged')!['written_at'], greaterThanOrEqualTo(joined));
+    });
   });
 
   group('the database', () {

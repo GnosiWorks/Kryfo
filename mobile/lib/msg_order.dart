@@ -36,10 +36,11 @@ int writtenAtOf(
   if (reached != null && reached.from > 0) {
     lo = math.max(lo, reached.from - age);
   }
-  if (since != null) lo = math.max(lo, since);
   lo = math.min(lo, hi);
   final w = written ?? wrapped;
-  return w == null ? hi : w.clamp(lo, hi);
+  final out = w == null ? hi : w.clamp(lo, hi);
+  // their own age claim never takes it back past the join
+  return since == null ? out : math.max(out, math.min(since, until));
 }
 
 /// the time a row is shown and placed by: when it was written, or when it
