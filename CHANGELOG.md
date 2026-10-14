@@ -14,14 +14,23 @@
 - notes are grouped by time: today, yesterday, this week, then by month. long notes fold away behind "Show more", and you can delete all notes at once.
 - whoever made a room can reset its link. the old link stops working, and everyone in the room gets the new one.
 - location links show as a small place card.
+- pair codes show a key number on both phones. check that all four groups match before you add someone.
+- chats you add by a code, a link or a request show a card to compare the safety number. "Later" folds it into one quiet line.
 
 ### Changed
 - if tor stops answering while Kryfo is in the background, tor can restart itself. if it still can't connect, Kryfo says so plainly and offers a restart that keeps your messages.
+- when the network drops for a while, Kryfo gets going again much sooner once it's back.
 - the disguised voice is easier to understand.
+- a voice note's length counts from the first sound, rounded to the nearest second.
 - when someone you verified gets a new security code, Kryfo waits for you to check it or accept it before sending to them. their messages still arrive.
+- three words that came with a request, an introduction or a group show "Not checked" until you scan their qr code or compare the safety number.
 - backups now bring your privacy settings with them. pins never travel, so set them again after a restore.
+- backups and moving to a new phone are more reliable.
+- with "Always on", Kryfo keeps getting messages after an update.
+- when tor can't connect, handle search says it needs tor, and you can still add someone by qr code or link.
 - deleting the chat with Marios also takes back what you sent him.
 - report an issue offers to write to Marios in Kryfo first, and email second. settings also has a row to follow GnosiWorks.
+- in support, you can help fund an independent security audit. the full report will be public.
 - tapping a room link shows the room before you join, and a full room tells you so.
 - someone you deleted who writes to you again shows up as a new request. deleting a chat also clears what you set for it, like its note or mute.
 - double tap to zoom in the photo viewer, and polls show the faces of who voted.
@@ -29,6 +38,8 @@
 - Kryfo uses the whole screen on newer android, and sheets stay clear of the navigation bar and the keyboard.
 - the language choice is the first thing you see when you set up Kryfo.
 - in arabic and persian, pair codes take your own digits, and replies and bios follow the direction they're written in.
+- backups and wiping are more private.
+- more privacy in how Kryfo talks to relays and the handle service.
 - After updating, you may need to type your PIN once before fingerprint unlock works again.
 
 ### Fixed
@@ -36,6 +47,7 @@
 - tor could stay stuck after a network change, like moving from wi-fi to mobile data. Kryfo now follows the change and gets going again.
 - messages arrive even when android restarts Kryfo in the background.
 - a crash at launch on some newer phones.
+- tor no longer restarts itself while automatic mode is still finding a way in.
 - after restoring a backup, deleted messages stay deleted, and what you missed in chats and groups arrives sooner.
 - edits, reactions and pins that arrive before their message are no longer lost, and edits land in the right order.
 - a rare case where a message could be sent twice.
