@@ -1437,7 +1437,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
-			turn := subTurn{tag: tag}
+			turn := subTurn{tag: tag, fresh: isFresh(ctx)}
 			defer turn.done()
 			for {
 				// nothing is counted while it parks or waits for tor below:
@@ -2010,24 +2010,35 @@ func nostrSend(peerHex, msg string) string {
 
 //export HaloNostrSubscribe
 func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
-	peerHex := goStr(cPeerXPubHex)
+	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), false))
+}
+
+// as HaloNostrSubscribe, for someone the user just added or accepted: the
+// first turn of each socket is free (subTurn.fresh)
+//
+//export HaloNostrSubscribeNew
+func HaloNostrSubscribeNew(cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), true))
+}
+
+func nostrSubscribe(peerHex string, fresh bool) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
-		return C.CString("error: bad peer pubkey")
+		return "error: bad peer pubkey"
 	}
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
 	_, rcvPk, err := nip17RcvAddress(peerArr)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: derive: %v", err))
+		return fmt.Sprintf("error: derive: %v", err)
 	}
-	nostrSubscribeAt(peerHex, peerArr, rcvPk)
-	return C.CString("ok")
+	nostrSubscribeAt(peerHex, peerArr, rcvPk, fresh)
+	return "ok"
 }
 
 // a runner for the peer's address, in place of any running one
-func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
+func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string, fresh bool) {
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[peerHex]; exists {
 		cancel()
@@ -2036,6 +2047,9 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	nostrSubs[peerHex] = cancel
 	nostrMu.Unlock()
+	if fresh {
+		ctx = asFresh(ctx)
+	}
 
 	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
@@ -2140,9 +2154,10 @@ func nostrLetHeld(peerHex, how string) error {
 	if h := letHeldHook; h != nil {
 		h()
 	}
-	// a runner reads the mark as it starts
+	// a runner reads the mark as it starts. free comes with an accept, so
+	// it asks at once as the accept's own listen would
 	if own && on {
-		nostrSubscribeAt(peerHex, peer, rcvPk)
+		nostrSubscribeAt(peerHex, peer, rcvPk, true)
 	}
 	if lane {
 		// only the listener read above: a new invite address may have

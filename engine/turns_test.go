@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
 	"sort"
 	"sync/atomic"
@@ -445,4 +446,83 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 	waitFor(t, "the parked sockets let go", 45*time.Second, func() bool {
 		return atomic.LoadInt32(&catchupActive) == base
 	})
+}
+
+// someone just added or accepted: each socket's first turn is free, and
+// only the first. one already running keeps its turns
+func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	quick := func(tn *subTurn) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+		ok := tn.take(ctx)
+		tn.done()
+		return ok
+	}
+	kickRelays()
+	spendFirstTurn()
+	fresh := subTurn{fresh: true}
+	if !quick(&fresh) {
+		t.Fatal("a just-added address waited its first turn")
+	}
+	var plain subTurn
+	if quick(&plain) {
+		t.Fatal("an address not just added went at once")
+	}
+	fresh.dialed(true)
+	kickRelays()
+	spendFirstTurn()
+	if quick(&fresh) {
+		t.Fatal("a wake after the first ask went without a turn")
+	}
+}
+
+// against a relay with real turns: the address the user just added asks
+// at once, one listened for again waits its turn
+func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
+	old := subSpread
+	subSpread = time.Hour
+	defer func() { subSpread = old }()
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, relay)
+	kickRelays()
+	spendFirstTurn()
+	added, again := newXid(t), newXid(t)
+	addedHex := hex.EncodeToString(added.pub[:])
+	againHex := hex.EncodeToString(again.pub[:])
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		for _, h := range []string{addedHex, againHex} {
+			if cancel, ok := nostrSubs[h]; ok {
+				cancel()
+				delete(nostrSubs, h)
+			}
+		}
+	})
+	asked := func(addr string) bool {
+		for _, c := range relay.snapshot() {
+			if c.addrs[addr] {
+				return true
+			}
+		}
+		return false
+	}
+	if r := nostrSubscribe(againHex, false); r != "ok" {
+		t.Fatal(r)
+	}
+	if r := nostrSubscribe(addedHex, true); r != "ok" {
+		t.Fatal(r)
+	}
+	start := time.Now()
+	waitFor(t, "the added address asked", 5*time.Second, func() bool {
+		return asked(mustRcv(t, added))
+	})
+	t.Logf("the added address asked %s after the add", time.Since(start).Round(time.Millisecond))
+	time.Sleep(time.Second)
+	if asked(mustRcv(t, again)) {
+		t.Fatal("an address listened for again asked without its turn")
+	}
 }

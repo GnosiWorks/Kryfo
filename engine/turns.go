@@ -4,7 +4,7 @@ package main
 // every relay socket waits a turn of its own before it subscribes, at the
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
-// open chat's address goes with no turn.
+// open chat's address, and a just-added one's first ask, go with no turn.
 
 import (
 	"context"
@@ -87,10 +87,26 @@ func isFirstTag(tag string) bool {
 	return tag != "" && f == tag
 }
 
+// a runner started for someone just added or accepted
+type freshKey struct{}
+
+func asFresh(ctx context.Context) context.Context {
+	return context.WithValue(ctx, freshKey{}, true)
+}
+
+func isFresh(ctx context.Context) bool {
+	v, _ := ctx.Value(freshKey{}).(bool)
+	return v
+}
+
 // one socket's turn
 type subTurn struct {
 	// the runner's tag, see isFirstTag
 	tag string
+	// the address was just added or accepted: its first turn is free. the
+	// add or accept is already the user's own act on this lane, not a start
+	// or a wake, so it shows up beside none of the phone's other addresses
+	fresh bool
 	// the kick it last waited after, nil before its first turn
 	kick chan struct{}
 	// it got through since that turn. until it does, a kick is no new turn
@@ -111,8 +127,9 @@ func (t *subTurn) take(ctx context.Context) bool {
 		return ctx.Err() == nil
 	}
 	again := t.kick != nil && !t.up
+	first := t.kick == nil && t.fresh
 	t.kick = kc
-	if again || isFirstTag(t.tag) {
+	if again || first || isFirstTag(t.tag) {
 		return ctx.Err() == nil
 	}
 	t.up = false

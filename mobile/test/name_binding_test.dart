@@ -98,7 +98,7 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => ed;
   @override
-  void nostrSubscribeBg(String peerXPubHex) {}
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
   @override
   void nostrUnsubscribeBg(String peerXPubHex) => dropped.add(peerXPubHex);
   @override
@@ -121,7 +121,7 @@ final unheard = <String>[];
 class _Io extends AppIo {
   const _Io();
   @override
-  void listen(String xPub) {}
+  void listen(String xPub, {bool fresh = false}) {}
   @override
   void unlisten(String xPub) => unheard.add(xPub);
   @override

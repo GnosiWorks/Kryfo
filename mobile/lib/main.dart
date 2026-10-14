@@ -376,11 +376,12 @@ class HaloEngine {
         room: (priv) => roomSend(priv, peerXPubHex, b64Cipher),
       );
 
-  void nostrSubscribeBg(String peerXPubHex) {
+  // [fresh]: someone just added or accepted, heard without a turn
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {
     _background(
       devGate.listen(
         peerXPubHex,
-        out: () => _subscribeOnIsolate(peerXPubHex),
+        out: () => _subscribeOnIsolate(peerXPubHex, fresh: fresh),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
           return 'ok';
@@ -1276,12 +1277,20 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
   });
 }
 
-Future<String> _subscribeOnIsolate(String xPub) {
+Future<String> _subscribeOnIsolate(String xPub, {bool fresh = false}) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
+    OneArgFnDart fn;
+    try {
+      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
+        fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
+      );
+    } on ArgumentError {
+      // an engine without it hears them all the same, after a turn
+      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
+    }
     final p = xPub.toNativeUtf8();
     try {
       return engineTake(fn(p));
@@ -9308,7 +9317,7 @@ Future<(String, bool)> handleHaloUriAdded(
     if (fc != null && fc.isNotEmpty) {
       await appState.rememberPeerFc(parsed['id']!, fc);
     }
-    await appState.subscribePeer(parsed['id']!);
+    await appState.subscribePeer(parsed['id']!, fresh: true);
     // as the accept button would: they hear they are in, and what was
     // held for them opens
     if (asked) await appState.afterAccept(id);
@@ -9329,7 +9338,7 @@ Future<(String, bool)> handleHaloUriAdded(
     final asked = !wasIn && await session.askedBefore(id);
     await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
     await _noteHowAdded(id, scanned: scanned, already: wasIn, taken: taken);
-    if (!sessionQuiet) await appState.subscribePeer(id);
+    if (!sessionQuiet) await appState.subscribePeer(id, fresh: true);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
     // home and the pickers show them now, and their chat opens as a v2
     // add's does
@@ -10195,7 +10204,8 @@ class AppIo {
   Future<String> encrypt(String peer, String plain) =>
       signalEncrypt(peer, plain);
 
-  void listen(String xPub) => engine.nostrSubscribeBg(xPub);
+  void listen(String xPub, {bool fresh = false}) =>
+      engine.nostrSubscribeBg(xPub, fresh: fresh);
 
   void unlisten(String xPub) => engine.nostrUnsubscribeBg(xPub);
 
@@ -19953,7 +19963,7 @@ class AppState extends ChangeNotifier {
       await refreshContacts();
       return;
     }
-    unawaited(subscribePeer(haloId));
+    unawaited(subscribePeer(haloId, fresh: true));
     unawaited(sendAcceptAck(haloId));
     final s = session;
     // let go of on the relay's side before the shelf goes: a death in
@@ -23366,7 +23376,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> subscribePeer(String haloId) async {
+  // [fresh]: the user just added or accepted them
+  Future<void> subscribePeer(String haloId, {bool fresh = false}) async {
     // an add or an accept: a kept opener of theirs may file now
     unawaited(retryFirsts(all: true));
     // the dev chat listens on its own lane, and only once it runs
@@ -23394,7 +23405,7 @@ class AppState extends ChangeNotifier {
     }
     if (xPub == null || xPub.isEmpty) return;
     _xPubToHaloId[xPub] = haloId;
-    _io.listen(xPub);
+    _io.listen(xPub, fresh: fresh);
     // the chat on screen whose key was not known when it opened
     if (haloId == _firstChat) unawaited(_tellFirst());
   }

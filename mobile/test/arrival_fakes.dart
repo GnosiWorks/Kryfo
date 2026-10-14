@@ -224,7 +224,7 @@ class ArrivalIo implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
   final unheard = <String>[];
   @override
   void unlisten(String xPub) => unheard.add(xPub);

@@ -293,7 +293,7 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
   @override
   String edPub() => _myEd;
   @override

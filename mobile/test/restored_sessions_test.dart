@@ -154,7 +154,7 @@ class _Io extends AppIo {
     String cipher,
   ) async => 'error: off';
   @override
-  void listen(String xPub) {}
+  void listen(String xPub, {bool fresh = false}) {}
   @override
   void unlisten(String xPub) {}
   @override
