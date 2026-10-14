@@ -4083,8 +4083,9 @@ class _ChatScreenState extends State<ChatScreen>
       // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
 
-      await _answerSupport();
       try {
+        // inside, so a throw here settles the row and the count too
+        await _answerSupport();
         await session.saveMessage(
           widget.peerHaloId,
           'out',

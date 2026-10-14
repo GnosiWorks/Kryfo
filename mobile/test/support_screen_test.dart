@@ -74,6 +74,16 @@ class _Db extends DevTestDb {
   Future<void> dropHeld(String peerId) async {}
   @override
   Future<void> clearUnread(String peerId) => _set(peerId, {'unread': 0});
+
+  // an accept that fails, as a full disk would
+  var acceptFails = false;
+  var acceptTries = 0;
+  @override
+  Future<void> acceptRequest(String haloId) async {
+    acceptTries++;
+    if (acceptFails) throw StateError('the disk is full');
+    await super.acceptRequest(haloId);
+  }
 }
 
 // what a chat's screen reads of its database, kept in maps
@@ -584,6 +594,29 @@ void main() {
       avatarSeed: _s,
       support: support,
     );
+
+    testWidgets('a first reply whose taking-on fails settles as failed, and '
+        'nothing escapes', (t) async {
+      await _world();
+      _db.acceptFails = true;
+      await devOpen(t, chat(support: true));
+      await t.enterText(find.byType(TextField), 'on it');
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byIcon(Icons.arrow_upward));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(_db.acceptTries, 1);
+      expect(t.takeException(), isNull);
+      expect(
+        _mem
+            .rows('messages')
+            .where((r) => r['direction'] == 'out' && r['peer_id'] == _s),
+        isEmpty,
+      );
+      await devClose(t);
+    });
 
     testWidgets('opens with the composer, never accept and decline', (t) async {
       await _world();
