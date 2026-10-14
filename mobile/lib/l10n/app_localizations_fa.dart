@@ -8280,4 +8280,43 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
+
+  @override
+  String get groupEndedYou => 'شما این گروه را پایان دادید';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '⁨$name⁩ این گروه را پایان داد';
+  }
+
+  @override
+  String get groupEndedBar => 'این گروه پایان یافته';
+
+  @override
+  String get groupInfoEndGroup => 'پایان دادن به گروه';
+
+  @override
+  String get groupInfoEndThisGroup => 'این گروه برای همه پایان یابد؟';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'برای همه حذف می‌شود: پیام‌ها و رسانه‌هایش از گوشی همه‌ی اعضا پاک می‌شود.';
+
+  @override
+  String get groupInfoDeleteGroup => 'حذف گروه';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'این گروه حذف شود؟';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'گروهِ پایان‌یافته از فهرست گفت‌وگوهای شما حذف می‌شود.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'این گروه را پایان دادم، پس دیگر هیچ‌کس نمی‌تواند در آن پیام بفرستد. Kryfo را به‌روز کنید تا آن را پایان‌یافته ببینید.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند.';
 }

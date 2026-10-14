@@ -7905,6 +7905,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
+
+  @override
+  String get groupEndedYou => '你结束了这个群组';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name 结束了这个群组';
+  }
+
+  @override
+  String get groupEndedBar => '这个群组已结束';
+
+  @override
+  String get groupInfoEndGroup => '结束群组';
+
+  @override
+  String get groupInfoEndThisGroup => '要为所有人结束这个群组吗？';
+
+  @override
+  String get groupInfoEndGroupLine => '将为所有人删除：消息和媒体会从每位成员的手机上移除。';
+
+  @override
+  String get groupInfoDeleteGroup => '删除群组';
+
+  @override
+  String get groupInfoDeleteThisGroup => '删除这个群组？';
+
+  @override
+  String get groupInfoDeleteGroupLine => '这个已结束的群组会从你的聊天列表中移除。';
+
+  @override
+  String get groupEndedOldNotice => '我结束了这个群组，之后谁都不能再在里面发消息。更新 Kryfo 就能看到它已结束。';
+
+  @override
+  String get groupInfoEndGroupDetail => 'Kryfo 会从每位已更新的成员手机上移除它。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15688,4 +15723,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String get groupEndedYou => '你結束了這個群組';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name 結束了這個群組';
+  }
+
+  @override
+  String get groupEndedBar => '這個群組已結束';
+
+  @override
+  String get groupInfoEndGroup => '結束群組';
+
+  @override
+  String get groupInfoEndThisGroup => '要為所有人結束這個群組嗎？';
+
+  @override
+  String get groupInfoEndGroupLine => '將為所有人刪除：訊息和媒體會從每位成員的手機上移除。';
+
+  @override
+  String get groupInfoDeleteGroup => '刪除群組';
+
+  @override
+  String get groupInfoDeleteThisGroup => '要刪除這個群組嗎？';
+
+  @override
+  String get groupInfoDeleteGroupLine => '這個已結束的群組會從你的聊天列表中移除。';
+
+  @override
+  String get groupEndedOldNotice => '我結束了這個群組，之後誰都不能再在裡面傳訊息。更新 Kryfo 就能看到它已結束。';
+
+  @override
+  String get groupInfoEndGroupDetail => 'Kryfo 會從每位已更新的成員手機上移除它。';
 }

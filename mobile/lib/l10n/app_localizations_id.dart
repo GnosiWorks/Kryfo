@@ -8262,4 +8262,43 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Setiap obrolan bisa mengubahnya di menunya';
+
+  @override
+  String get groupEndedYou => 'Kamu mengakhiri grup ini';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name mengakhiri grup ini';
+  }
+
+  @override
+  String get groupEndedBar => 'Grup ini sudah berakhir';
+
+  @override
+  String get groupInfoEndGroup => 'Akhiri grup';
+
+  @override
+  String get groupInfoEndThisGroup => 'Akhiri grup ini untuk semua?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Grup ini dihapus untuk semua: pesan dan medianya dihapus dari ponsel setiap anggota.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Hapus grup';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Hapus grup ini?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Grup yang sudah berakhir hilang dari daftar obrolanmu.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Aku mengakhiri grup ini, jadi tidak ada yang bisa mengirim pesan di sini lagi. Perbarui Kryfo untuk melihatnya sudah berakhir.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
 }

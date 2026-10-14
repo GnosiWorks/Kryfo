@@ -2175,5 +2175,16 @@
   "voiceDisguiseThisNote": "Camuffa questa nota",
   "voiceNotDisguised": "Non è stato possibile camuffare questa nota, quindi non è stata inviata",
   "settingsDisguiseByDefault": "Camuffa la mia voce di default",
-  "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu"
+  "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu",
+  "groupEndedYou": "Hai chiuso questo gruppo",
+  "groupEndedBy": "{name} ha chiuso questo gruppo",
+  "groupEndedBar": "Questo gruppo è stato chiuso",
+  "groupInfoEndGroup": "Chiudi gruppo",
+  "groupInfoEndThisGroup": "Chiudere questo gruppo per tutti?",
+  "groupInfoEndGroupLine": "Viene eliminato per tutti: messaggi e media vengono rimossi dal telefono di ogni membro.",
+  "groupInfoDeleteGroup": "Elimina gruppo",
+  "groupInfoDeleteThisGroup": "Eliminare questo gruppo?",
+  "groupInfoDeleteGroupLine": "Il gruppo chiuso sparisce dall'elenco delle chat.",
+  "groupEndedOldNotice": "Ho chiuso questo gruppo, quindi nessuno può più scriverci. Aggiorna Kryfo per vederlo chiuso.",
+  "groupInfoEndGroupDetail": "Kryfo lo rimuove dal telefono di ogni membro che ha l'aggiornamento."
 }

@@ -13334,6 +13334,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
+
+  /// the line in a group this phone ended, in the chat and on its row in the chat list
+  ///
+  /// In en, this message translates to:
+  /// **'You ended this group'**
+  String get groupEndedYou;
+
+  /// the line in a group its admin ended, in the chat and on its row in the chat list
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ended this group'**
+  String groupEndedBy(Object name);
+
+  /// screens/group_chat_screen.dart: in place of the message box once the group has ended
+  ///
+  /// In en, this message translates to:
+  /// **'This group has ended'**
+  String get groupEndedBar;
+
+  /// screens/group_info_screen.dart: the admin's row that ends the group for everyone, and the button that confirms it
+  ///
+  /// In en, this message translates to:
+  /// **'End group'**
+  String get groupInfoEndGroup;
+
+  /// screens/group_info_screen.dart: the title of the sheet that asks before ending the group
+  ///
+  /// In en, this message translates to:
+  /// **'End this group for everyone?'**
+  String get groupInfoEndThisGroup;
+
+  /// screens/group_info_screen.dart: under that title: ending deletes the group's messages and media for everyone
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s deleted for everyone: its messages and media are removed from every member\'s phone.'**
+  String get groupInfoEndGroupLine;
+
+  /// group info and the chat list menu: in place of Leave group once the group has ended
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get groupInfoDeleteGroup;
+
+  /// the title of the sheet that asks before deleting an ended group from this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this group?'**
+  String get groupInfoDeleteThisGroup;
+
+  /// under that title, for an ended group whose content is already gone
+  ///
+  /// In en, this message translates to:
+  /// **'The ended group goes from your chat list.'**
+  String get groupInfoDeleteGroupLine;
+
+  /// sent once as a plain message to members on an older version, who cannot see the group as ended. written as the admin
+  ///
+  /// In en, this message translates to:
+  /// **'I ended this group, so no one can send in it anymore. Update Kryfo to see it as ended.'**
+  String get groupEndedOldNotice;
+
+  /// screens/group_info_screen.dart: a smaller line under that, saying where the removal reaches
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo removes it from every member\'s phone that has the update.'**
+  String get groupInfoEndGroupDetail;
 }
 
 class _AppLocalizationsDelegate

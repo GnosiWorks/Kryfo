@@ -2175,5 +2175,16 @@
   "voiceDisguiseThisNote": "Samarkan pesan ini",
   "voiceNotDisguised": "Pesan ini tidak bisa disamarkan, jadi tidak dikirim",
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
-  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya"
+  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
+  "groupEndedYou": "Kamu mengakhiri grup ini",
+  "groupEndedBy": "{name} mengakhiri grup ini",
+  "groupEndedBar": "Grup ini sudah berakhir",
+  "groupInfoEndGroup": "Akhiri grup",
+  "groupInfoEndThisGroup": "Akhiri grup ini untuk semua?",
+  "groupInfoEndGroupLine": "Grup ini dihapus untuk semua: pesan dan medianya dihapus dari ponsel setiap anggota.",
+  "groupInfoDeleteGroup": "Hapus grup",
+  "groupInfoDeleteThisGroup": "Hapus grup ini?",
+  "groupInfoDeleteGroupLine": "Grup yang sudah berakhir hilang dari daftar obrolanmu.",
+  "groupEndedOldNotice": "Aku mengakhiri grup ini, jadi tidak ada yang bisa mengirim pesan di sini lagi. Perbarui Kryfo untuk melihatnya sudah berakhir.",
+  "groupInfoEndGroupDetail": "Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya."
 }

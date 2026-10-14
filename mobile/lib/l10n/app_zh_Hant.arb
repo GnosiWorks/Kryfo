@@ -2175,5 +2175,16 @@
   "voiceDisguiseThisNote": "給這則語音變聲",
   "voiceNotDisguised": "這則語音無法變聲，所以沒有送出",
   "settingsDisguiseByDefault": "預設給我的語音變聲",
-  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改"
+  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改",
+  "groupEndedYou": "你結束了這個群組",
+  "groupEndedBy": "{name} 結束了這個群組",
+  "groupEndedBar": "這個群組已結束",
+  "groupInfoEndGroup": "結束群組",
+  "groupInfoEndThisGroup": "要為所有人結束這個群組嗎？",
+  "groupInfoEndGroupLine": "將為所有人刪除：訊息和媒體會從每位成員的手機上移除。",
+  "groupInfoDeleteGroup": "刪除群組",
+  "groupInfoDeleteThisGroup": "要刪除這個群組嗎？",
+  "groupInfoDeleteGroupLine": "這個已結束的群組會從你的聊天列表中移除。",
+  "groupEndedOldNotice": "我結束了這個群組，之後誰都不能再在裡面傳訊息。更新 Kryfo 就能看到它已結束。",
+  "groupInfoEndGroupDetail": "Kryfo 會從每位已更新的成員手機上移除它。"
 }

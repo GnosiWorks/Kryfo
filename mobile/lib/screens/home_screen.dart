@@ -62,7 +62,7 @@ import '../devchat/dev_chat.dart' show DevRow;
 import '../widgets/dev_avatar.dart';
 import 'dev_about_sheet.dart';
 import 'search_screen.dart';
-import 'group_info_screen.dart' show leaveLine;
+import 'group_info_screen.dart' show endedLine, leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
 import '../widgets/update_card.dart' show UpdateHint;
 
@@ -602,6 +602,8 @@ class GroupSummary {
   // a room not let in yet: when its join went
   final int? joiningAt;
   final bool hidden;
+  // who ended it, null while it runs
+  final String? endedBy;
   const GroupSummary({
     required this.groupId,
     required this.name,
@@ -611,8 +613,10 @@ class GroupSummary {
     this.expiresAt,
     this.joiningAt,
     this.hidden = false,
+    this.endedBy,
   });
   bool get isRoom => expiresAt != null;
+  bool get ended => endedBy != null;
 }
 
 // ───────── date header ─────────
@@ -2045,19 +2049,28 @@ class _GroupRow extends StatelessWidget {
               children: [
                 // group avatar: a square tile with the first letter of the name
                 // in italic serif, so groups differ from round contact avatars
+                // an ended group's tile goes quiet, as a closed room's link
                 HaloHero(
                   tag: 'group-${g.groupId}',
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: motionStill(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: g.isRoom
+                      color: g.ended
+                          ? HaloColors.surface2
+                          : g.isRoom
                           ? HaloColors.violet.withValues(alpha: 0.14)
                           : HaloColors.amberSoft,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
-                            .withValues(alpha: 0.35),
+                        color: g.ended
+                            ? HaloColors.line2
+                            : (g.isRoom ? HaloColors.violet : HaloColors.amber)
+                                  .withValues(alpha: 0.35),
                         width: 0.6,
                       ),
                     ),
@@ -2069,7 +2082,11 @@ class _GroupRow extends StatelessWidget {
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
-                        color: g.isRoom ? HaloColors.violet : HaloColors.amber,
+                        color: g.ended
+                            ? HaloColors.text2
+                            : g.isRoom
+                            ? HaloColors.violet
+                            : HaloColors.amber,
                       ),
                     ),
                   ),
@@ -2091,7 +2108,9 @@ class _GroupRow extends StatelessWidget {
                                 weight: g.unread > 0
                                     ? FontWeight.w600
                                     : FontWeight.w500,
-                                color: HaloColors.text,
+                                color: g.ended
+                                    ? HaloColors.text2
+                                    : HaloColors.text,
                               ),
                             ),
                           ),
@@ -2102,7 +2121,19 @@ class _GroupRow extends StatelessWidget {
                       // not let in yet: no clock, no count, until it is.
                       // a new state rises in over the last one
                       RiseSwap(
-                        child: g.isRoom && g.joiningAt != null
+                        child: g.ended
+                            // its admin ended it: the line, in place of all else
+                            ? Text(
+                                endedLine((at: 0, by: g.endedBy!)),
+                                key: const ValueKey('ended'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.sans(
+                                  size: 12,
+                                  color: HaloColors.text2,
+                                ).copyWith(fontStyle: FontStyle.italic),
+                              )
+                            : g.isRoom && g.joiningAt != null
                             ? RoomJoinLine(
                                 key: const ValueKey('joining'),
                                 joiningAt: g.joiningAt!,
@@ -2312,8 +2343,10 @@ void _groupMenu(BuildContext context, GroupSummary g) {
               ],
             [
               MenuSheetRow(
-                icon: Icons.logout_rounded,
-                label: g.isRoom
+                icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
+                label: g.ended
+                    ? l10n.groupInfoDeleteGroup
+                    : g.isRoom
                     ? l10n.groupInfoLeaveRoom2
                     : l10n.groupInfoLeaveGroup2,
                 danger: true,
@@ -2340,12 +2373,18 @@ Future<void> _confirmLeave(BuildContext context, GroupSummary g) async {
   if (!context.mounted) return;
   final ok = await showConfirmSheet(
     context,
-    title: g.isRoom ? l10n.groupInfoLeaveRoom : l10n.groupInfoLeaveGroup,
-    line: leaveLine(
-      room: g.isRoom,
-      admin: ((row?['is_admin'] as int?) ?? 0) == 1,
-    ),
-    yes: l10n.groupInfoLeave,
+    title: g.ended
+        ? l10n.groupInfoDeleteThisGroup
+        : g.isRoom
+        ? l10n.groupInfoLeaveRoom
+        : l10n.groupInfoLeaveGroup,
+    line: g.ended
+        ? l10n.groupInfoDeleteGroupLine
+        : leaveLine(
+            room: g.isRoom,
+            admin: ((row?['is_admin'] as int?) ?? 0) == 1,
+          ),
+    yes: g.ended ? l10n.commonDelete : l10n.groupInfoLeave,
   );
   if (!ok) return;
   HapticFeedback.heavyImpact();

@@ -2175,5 +2175,16 @@
   "voiceDisguiseThisNote": "تمويه هذه الرسالة",
   "voiceNotDisguised": "تعذّر تمويه هذه الرسالة، لذا لم تُرسل",
   "settingsDisguiseByDefault": "تمويه صوتي افتراضيًا",
-  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها"
+  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها",
+  "groupEndedYou": "أنهيت هذه المجموعة",
+  "groupEndedBy": "أنهى ⁨{name}⁩ هذه المجموعة",
+  "groupEndedBar": "انتهت هذه المجموعة",
+  "groupInfoEndGroup": "إنهاء المجموعة",
+  "groupInfoEndThisGroup": "إنهاء هذه المجموعة للجميع؟",
+  "groupInfoEndGroupLine": "تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو.",
+  "groupInfoDeleteGroup": "حذف المجموعة",
+  "groupInfoDeleteThisGroup": "حذف هذه المجموعة؟",
+  "groupInfoDeleteGroupLine": "تختفي المجموعة المنتهية من قائمة محادثاتك.",
+  "groupEndedOldNotice": "أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.",
+  "groupInfoEndGroupDetail": "يزيلها Kryfo من هاتف كل عضو لديه التحديث."
 }

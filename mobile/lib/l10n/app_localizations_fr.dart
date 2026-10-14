@@ -8353,4 +8353,44 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Chaque discussion peut le changer dans son menu';
+
+  @override
+  String get groupEndedYou => 'Vous avez mis fin à ce groupe';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name a mis fin à ce groupe';
+  }
+
+  @override
+  String get groupEndedBar => 'Ce groupe est terminé';
+
+  @override
+  String get groupInfoEndGroup => 'Mettre fin au groupe';
+
+  @override
+  String get groupInfoEndThisGroup =>
+      'Mettre fin à ce groupe pour tout le monde ?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Supprimer le groupe';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Supprimer ce groupe ?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Le groupe terminé disparaît de votre liste de discussions.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'J’ai mis fin à ce groupe, plus personne ne peut y écrire. Mettez Kryfo à jour pour le voir comme terminé.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo le retire du téléphone de chaque membre qui a la mise à jour.';
 }

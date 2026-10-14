@@ -8290,4 +8290,43 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Her sohbet bunu kendi menüsünden değiştirebilir';
+
+  @override
+  String get groupEndedYou => 'Bu grubu sonlandırdın';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name bu grubu sonlandırdı';
+  }
+
+  @override
+  String get groupEndedBar => 'Bu grup sonlandı';
+
+  @override
+  String get groupInfoEndGroup => 'Grubu sonlandır';
+
+  @override
+  String get groupInfoEndThisGroup => 'Bu grup herkes için sonlandırılsın mı?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Herkes için silinir: mesajları ve medyası her üyenin telefonundan kaldırılır.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Grubu sil';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Bu grup silinsin mi?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Sonlanan grup sohbet listenden kalkar.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Bu grubu sonlandırdım, artık kimse buraya mesaj gönderemez. Sonlandığını görmek için Kryfo\'yu güncelle.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır.';
 }

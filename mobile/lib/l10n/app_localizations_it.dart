@@ -8338,4 +8338,43 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Ogni chat può cambiarlo nel suo menu';
+
+  @override
+  String get groupEndedYou => 'Hai chiuso questo gruppo';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name ha chiuso questo gruppo';
+  }
+
+  @override
+  String get groupEndedBar => 'Questo gruppo è stato chiuso';
+
+  @override
+  String get groupInfoEndGroup => 'Chiudi gruppo';
+
+  @override
+  String get groupInfoEndThisGroup => 'Chiudere questo gruppo per tutti?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Viene eliminato per tutti: messaggi e media vengono rimossi dal telefono di ogni membro.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Elimina gruppo';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Eliminare questo gruppo?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Il gruppo chiuso sparisce dall\'elenco delle chat.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Ho chiuso questo gruppo, quindi nessuno può più scriverci. Aggiorna Kryfo per vederlo chiuso.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo lo rimuove dal telefono di ogni membro che ha l\'aggiornamento.';
 }

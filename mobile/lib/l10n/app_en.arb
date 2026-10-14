@@ -10431,5 +10431,54 @@
   "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
+  },
+  "groupEndedYou": "You ended this group",
+  "@groupEndedYou": {
+    "description": "the line in a group this phone ended, in the chat and on its row in the chat list"
+  },
+  "groupEndedBy": "{name} ended this group",
+  "@groupEndedBy": {
+    "description": "the line in a group its admin ended, in the chat and on its row in the chat list",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "groupEndedBar": "This group has ended",
+  "@groupEndedBar": {
+    "description": "screens/group_chat_screen.dart: in place of the message box once the group has ended"
+  },
+  "groupInfoEndGroup": "End group",
+  "@groupInfoEndGroup": {
+    "description": "screens/group_info_screen.dart: the admin's row that ends the group for everyone, and the button that confirms it"
+  },
+  "groupInfoEndThisGroup": "End this group for everyone?",
+  "@groupInfoEndThisGroup": {
+    "description": "screens/group_info_screen.dart: the title of the sheet that asks before ending the group"
+  },
+  "groupInfoEndGroupLine": "It's deleted for everyone: its messages and media are removed from every member's phone.",
+  "@groupInfoEndGroupLine": {
+    "description": "screens/group_info_screen.dart: under that title: ending deletes the group's messages and media for everyone"
+  },
+  "groupInfoDeleteGroup": "Delete group",
+  "@groupInfoDeleteGroup": {
+    "description": "group info and the chat list menu: in place of Leave group once the group has ended"
+  },
+  "groupInfoDeleteThisGroup": "Delete this group?",
+  "@groupInfoDeleteThisGroup": {
+    "description": "the title of the sheet that asks before deleting an ended group from this phone"
+  },
+  "groupInfoDeleteGroupLine": "The ended group goes from your chat list.",
+  "@groupInfoDeleteGroupLine": {
+    "description": "under that title, for an ended group whose content is already gone"
+  },
+  "groupEndedOldNotice": "I ended this group, so no one can send in it anymore. Update Kryfo to see it as ended.",
+  "@groupEndedOldNotice": {
+    "description": "sent once as a plain message to members on an older version, who cannot see the group as ended. written as the admin"
+  },
+  "groupInfoEndGroupDetail": "Kryfo removes it from every member's phone that has the update.",
+  "@groupInfoEndGroupDetail": {
+    "description": "screens/group_info_screen.dart: a smaller line under that, saying where the removal reaches"
   }
 }

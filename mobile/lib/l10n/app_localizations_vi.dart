@@ -8255,4 +8255,43 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó';
+
+  @override
+  String get groupEndedYou => 'Bạn đã kết thúc nhóm này';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name đã kết thúc nhóm này';
+  }
+
+  @override
+  String get groupEndedBar => 'Nhóm này đã kết thúc';
+
+  @override
+  String get groupInfoEndGroup => 'Kết thúc nhóm';
+
+  @override
+  String get groupInfoEndThisGroup => 'Kết thúc nhóm này cho mọi người?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi điện thoại của mọi thành viên.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Xóa nhóm';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Xóa nhóm này?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Nhóm đã kết thúc sẽ biến mất khỏi danh sách trò chuyện.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Mình đã kết thúc nhóm này, nên không ai gửi tin nhắn trong nhóm được nữa. Hãy cập nhật Kryfo để thấy nhóm đã kết thúc.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.';
 }

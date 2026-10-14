@@ -8328,4 +8328,43 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Cada conversa pode mudar isso no próprio menu';
+
+  @override
+  String get groupEndedYou => 'Você encerrou este grupo';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name encerrou este grupo';
+  }
+
+  @override
+  String get groupEndedBar => 'Este grupo foi encerrado';
+
+  @override
+  String get groupInfoEndGroup => 'Encerrar grupo';
+
+  @override
+  String get groupInfoEndThisGroup => 'Encerrar este grupo para todos?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Ele é excluído para todos: as mensagens e mídias são removidas do celular de cada membro.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Excluir grupo';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Excluir este grupo?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'O grupo encerrado sai da sua lista de conversas.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Encerrei este grupo, então ninguém pode mais enviar mensagens nele. Atualize o Kryfo para vê-lo como encerrado.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'O Kryfo remove o grupo do celular de cada membro que tem a atualização.';
 }
