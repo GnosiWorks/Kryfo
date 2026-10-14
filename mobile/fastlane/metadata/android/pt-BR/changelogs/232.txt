@@ -1,7 +1,7 @@
-Novo: pontes que entram em ação quando o Tor está bloqueado, disfarce de voz mais claro por conversa, um aceno de oi, compartilhar de outros apps e busca privada de GIFs.
+Novo: pontes automáticas quando o Tor está bloqueado, disfarce de voz mais claro por conversa, um número da chave para conferir ao parear e busca privada de GIFs.
 
 Corrigido: primeiras mensagens perdidas para alguém novo, Tor travado após uma troca de rede e o app fechando ao abrir em alguns celulares novos.
 
-Depois de atualizar, talvez você precise digitar seu PIN uma vez antes que o desbloqueio com a digital volte a funcionar.
+Backups e a mudança para um celular novo estão mais confiáveis.
 
-Mais estabilidade e privacidade. Atualize quando puder.
+Depois de atualizar, talvez você precise digitar seu PIN uma vez antes que o desbloqueio com a digital volte a funcionar.

@@ -1,7 +1,9 @@
-Neu: Brücken, die einspringen, wenn Tor blockiert ist, klarere Stimmverfremdung pro Chat, ein Winken als Hallo, Teilen aus anderen Apps und private GIF-Suche.
+Neu: Brücken bei blockiertem Tor, klarere Stimmverfremdung pro Chat, eine Schlüsselnummer zum Abgleich beim Koppeln und private GIF-Suche.
 
 Behoben: verlorene erste Nachrichten an neue Kontakte, ein hängendes Tor nach einem Netzwechsel und ein Absturz beim Start auf einigen neueren Handys.
 
+Backups und der Umzug aufs neue Handy sind zuverlässiger.
+
 Nach dem Update musst du eventuell einmal deine PIN eingeben, bevor das Entsperren mit Fingerabdruck wieder geht.
 
-Mehr Stabilität und Privatsphäre. Aktualisiere, wenn du kannst.
+Mehr Stabilität und Privatsphäre.

@@ -1,7 +1,7 @@
-Nouveau : des ponts automatiques quand Tor est bloqué, une voix déguisée plus claire, un petit coucou, le partage depuis d’autres apps et une recherche de GIF privée.
+Nouveau : des ponts automatiques si Tor est bloqué, une voix déguisée plus claire, un numéro de clé à vérifier à l’appairage et une recherche de GIF privée.
 
 Corrigé : premiers messages perdus vers un nouveau contact, Tor coincé après un changement de réseau et plantage au lancement sur des téléphones récents.
 
-Après la mise à jour, vous devrez peut-être saisir votre PIN une fois avant que le déverrouillage par empreinte fonctionne à nouveau.
+Sauvegardes et changement d’appareil plus fiables.
 
-Plus de stabilité et de confidentialité.
+Après la mise à jour, vous devrez peut-être saisir votre PIN une fois avant que le déverrouillage par empreinte fonctionne à nouveau.
