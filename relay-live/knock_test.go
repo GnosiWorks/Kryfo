@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -93,7 +92,7 @@ type stamped struct {
 // every name resolves to a public address, but those with "nx" in them
 func fakeLookup(_ context.Context, host string) ([]net.IP, error) {
 	if strings.Contains(host, "nx") {
-		return nil, errors.New("no such host")
+		return nil, &net.DNSError{Err: "no such host", Name: host, IsNotFound: true}
 	}
 	return []net.IP{net.ParseIP("1.1.1.1")}, nil
 }
@@ -1114,9 +1113,178 @@ func TestKnockServerNamesMustResolve(t *testing.T) {
 	}
 }
 
+// a lookup comes after every other check: nothing malformed, stale or
+// refused costs one
+func TestKnockLookupAfterEveryOtherCheck(t *testing.T) {
+	tk := newTestKnocks(t)
+	asked := 0
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		asked++
+		return fakeLookup(ctx, host)
+	}
+	now := tk.clock.now()
+	for _, ev := range []nostr.Event{
+		r3reg(r3key(1), "https://a1.victim.org/x", now.Add(-365*24*time.Hour)),
+		r3reg(r3key(2), "http://a2.victim.org/x", now),
+		r3reg(r3key(3), "https://a3.victim.org:8443/x", now),
+		r3reg(r3key(4), "https://localhost/x", now),
+		r3reg(r3key(5), "https://intranet/x", now),
+		r3reg(r3key(6), "https://db.internal/x", now),
+		r3reg(r3key(7), "https://x.y.github.io/x", now),
+		{Kind: knockKind, PubKey: "zz", CreatedAt: nostr.Timestamp(now.Unix()), Content: "https://a8.victim.org/x"},
+		{Kind: knockKind, PubKey: r3key(9), CreatedAt: nostr.Timestamp(now.Unix()), Content: "https://a9.victim.org/x", Tags: nostr.Tags{{"x"}}},
+		r3reg(r3key(10), "https://a10.victim.org/"+strings.Repeat("x", 2000), now),
+	} {
+		if rej, _ := tk.take(nil, &ev); !rej {
+			t.Fatalf("%q was taken", ev.Content)
+		}
+	}
+	if asked != 0 {
+		t.Fatalf("%d names looked up for registrations refused anyway", asked)
+	}
+}
+
+// a caller that goes away does not cut the lookup short, and a lookup that
+// fails for a while is not remembered as a name that does not exist
+func TestKnockLookupIsNotPoisoned(t *testing.T) {
+	tk := newTestKnocks(t)
+	fail := true
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if fail {
+			return nil, &net.DNSError{Err: "i/o timeout", Name: host, IsTimeout: true}
+		}
+		return []net.IP{net.ParseIP("1.1.1.1")}, nil
+	}
+	gone, cancel := context.WithCancel(context.Background())
+	cancel()
+	ev := r3reg(r3key(1), "https://push.community.org/a", tk.clock.now())
+	if rej, msg := tk.take(gone, &ev); !rej || !strings.HasPrefix(msg, "error:") {
+		t.Fatalf("a timeout answered %v %q", rej, msg)
+	}
+	fail = false
+	ev2 := r3reg(r3key(2), "https://push.community.org/b", tk.clock.now())
+	if rej, msg := tk.take(gone, &ev2); rej {
+		t.Fatalf("after a timeout and with the caller gone, the name was refused: %q", msg)
+	}
+}
+
+// a renewal or a move to an endpoint already held is never looked up
+func TestKnockRenewalNeedsNoLookup(t *testing.T) {
+	tk := newTestKnocks(t)
+	ev := r3reg(r3key(1), "https://push.community.org/old", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatal(msg)
+	}
+	tk.lookup = func(context.Context, string) ([]net.IP, error) {
+		return nil, &net.DNSError{Err: "no such host", IsNotFound: true}
+	}
+	tk.namesMu.Lock()
+	tk.names = map[string]knockName{}
+	tk.namesMu.Unlock()
+	renew := r3reg(r3key(1), "https://push.community.org/old", tk.clock.now().Add(time.Second))
+	if rej, msg := tk.take(nil, &renew); rej {
+		t.Fatalf("a renewal was looked up and refused: %q", msg)
+	}
+	join := r3reg(r3key(2), "https://push.community.org/old", tk.clock.now())
+	if rej, msg := tk.take(nil, &join); rej {
+		t.Fatalf("an address joining an endpoint already held was refused: %q", msg)
+	}
+}
+
+// lookups have a pace for everyone; past it the answer is to try later,
+// and nothing is remembered
+func TestKnockLookupsArePaced(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.lookups = newBucket(0, 3)
+	refused := 0
+	for i := 0; i < 10; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://push.s%d.org/x", i), tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			if !strings.HasPrefix(msg, "rate-limited:") {
+				t.Fatalf("past the pace: %q", msg)
+			}
+			refused++
+		}
+	}
+	if refused != 7 || len(tk.names) != 3 {
+		t.Fatalf("%d refused, %d names remembered", refused, len(tk.names))
+	}
+}
+
+// a full cache lets one entry go at a time, never all of them
+func TestKnockNameCacheEvictsOne(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.lookups = newBucket(0, 1e9)
+	n := 0
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		n++
+		return fakeLookup(ctx, host)
+	}
+	tk.resolves(nil, "push.legit.org")
+	for i := 0; i < 2*knockNamesKept; i++ {
+		tk.resolves(nil, fmt.Sprintf("r%d.junk.org", i))
+	}
+	if len(tk.names) != knockNamesKept {
+		t.Fatalf("the cache holds %d", len(tk.names))
+	}
+	hits := 0
+	for i := 2*knockNamesKept - 100; i < 2*knockNamesKept; i++ {
+		before := n
+		tk.resolves(nil, fmt.Sprintf("r%d.junk.org", i))
+		if n == before {
+			hits++
+		}
+	}
+	if hits < 90 {
+		t.Fatalf("recent names were looked up again: %d of 100 kept", hits)
+	}
+}
+
+// moving addresses between endpoints already held grows nothing and takes
+// no token of the hour; new users still get in
+func TestKnockMovesTakeNoToken(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i := 0; i < 50; i++ {
+		if rej, msg := tk.take(nil, &[]nostr.Event{r3reg(r3key(i), "https://push.own.org/a", tk.clock.now())}[0]); rej {
+			t.Fatal(msg)
+		}
+	}
+	// one address stays on each endpoint, so neither is let go
+	tk.take(nil, &[]nostr.Event{r3reg(r3key(98), "https://push.own.org/a", tk.clock.now())}[0])
+	tk.take(nil, &[]nostr.Event{r3reg(r3key(99), "https://push.own.org/b", tk.clock.now())}[0])
+	_, sh := tk.shareOf("")
+	before := sh.fresh.tokens
+	at := tk.clock.now()
+	for m := 1; m <= 2000; m++ {
+		i := m % 50
+		target := "https://push.own.org/b"
+		if (m/50)%2 == 1 {
+			target = "https://push.own.org/a"
+		}
+		tk.take(nil, &[]nostr.Event{r3reg(r3key(i), target, at.Add(time.Duration(m)*time.Second))}[0])
+	}
+	if sh.fresh.tokens < before-1 {
+		t.Fatalf("moves took %.0f tokens of the hour", before-sh.fresh.tokens)
+	}
+	// and a registration forgotten within the hour gives its token back
+	sk, _ := keypair()
+	reg := signedReg(t, sk, "https://push.own.org/a", tk.clock.now())
+	tk.take(nil, &reg)
+	mid := sh.fresh.tokens
+	forget := signedReg(t, sk, "", tk.clock.now().Add(time.Second))
+	tk.take(nil, &forget)
+	if sh.fresh.tokens <= mid {
+		t.Fatal("a registration forgotten within the hour kept its token")
+	}
+}
+
 // ten names, each a server of its own, fill a little of the common share
 func TestKnockTenNamesCannotFillTheCommonShare(t *testing.T) {
 	tk := newTestKnocks(t)
+	tk.lookups = newBucket(0, 1e9)
 	for i := 0; i < 20000; i++ {
 		ev := r3reg(r3key(i), fmt.Sprintf("https://h%d.srv%d.org/up", i, i%10), tk.clock.now())
 		tk.take(nil, &ev)

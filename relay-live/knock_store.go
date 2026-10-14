@@ -190,19 +190,20 @@ func (s *knockStore) flush(wait time.Duration) bool {
 	}
 }
 
-// a forget, on disk before this returns; it wins a tie with a
-// registration of the same second
-func (s *knockStore) writeForget(key [32]byte, made, expires int64) error {
+// a forget, on disk before this returns: "" once it is, or the answer to
+// give. it wins a tie with a registration of the same second
+func (s *knockStore) writeForget(key [32]byte, made, expires int64) string {
 	if s == nil {
-		return nil
+		return ""
 	}
 	_, err := s.fdb.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, '', ?, ?)
 		ON CONFLICT(addr) DO UPDATE SET endpoint = '', made = excluded.made, expires = excluded.expires
 		WHERE excluded.made >= knock.made`, key[:], made, expires)
 	if err != nil {
 		log.Printf("knock: a forget not written: %v", err)
+		return "error: the relay could not keep this, try again"
 	}
-	return err
+	return ""
 }
 
 func (s *knockStore) close() {

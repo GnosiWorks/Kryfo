@@ -33,6 +33,7 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"log"
 	"math/rand/v2"
 	"net"
@@ -190,6 +191,8 @@ type knockReg struct {
 	ep      *knockEP
 	made    int64
 	expires int64
+	// when the relay first took this address
+	first int64
 }
 
 type knockStats struct{ real, decoys, failed, dropped, gone atomic.Int64 }
@@ -204,6 +207,13 @@ type knockShare struct {
 }
 
 func (sh *knockShare) pendingCap() int { return sh.epCap / 10 }
+
+// a token of the hour back, for a registration that did not stay
+func (sh *knockShare) giveBack() {
+	if sh.fresh.tokens += 1; sh.fresh.tokens > sh.fresh.max {
+		sh.fresh.tokens = sh.fresh.max
+	}
+}
 
 type knocker struct {
 	mu      sync.Mutex
@@ -229,47 +239,87 @@ type knocker struct {
 	lookup  func(ctx context.Context, host string) ([]net.IP, error)
 	names   map[string]knockName
 	namesMu sync.Mutex
+	// name lookups, so many a second for everyone
+	lookups *bucket
 }
+
+const knockNamesKept = 10000
 
 type knockName struct {
 	ok    bool
 	until time.Time
 }
 
-// whether a name has a public address, asked once and remembered: an hour
-// when it does, ten minutes when it does not
-func (k *knocker) resolves(ctx context.Context, host string) bool {
+// whether a name has a public address: "" when it has, or the answer to
+// give. asked with a context of its own, so a caller that goes away cannot
+// cut the lookup short, and at most so many a second for everyone. only a
+// definite answer is remembered: an hour when the name has a public
+// address, ten minutes when it does not exist or has none. a timeout or a
+// failing resolver is never remembered
+func (k *knocker) nameCheck(host string) string {
 	host = strings.ToLower(host)
 	now := time.Now()
 	k.namesMu.Lock()
 	if n, ok := k.names[host]; ok && now.Before(n.until) {
 		k.namesMu.Unlock()
-		return n.ok
+		if n.ok {
+			return ""
+		}
+		return "invalid: this endpoint's name does not resolve"
+	}
+	if !k.lookups.take(now) {
+		k.namesMu.Unlock()
+		return "rate-limited: too many names to look up, try later"
 	}
 	k.namesMu.Unlock()
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	lctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	lctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	ips, err := k.lookup(lctx, host)
 	cancel()
-	ok := false
-	for _, ip := range ips {
-		ok = ok || (publicIP(ip) && !selfIP(ip))
+	var dnsErr *net.DNSError
+	definite := err == nil || (errors.As(err, &dnsErr) && dnsErr.IsNotFound)
+	if !definite {
+		return "error: the name could not be looked up, try again"
 	}
-	ok = ok && err == nil
+	ok := false
+	if err == nil {
+		for _, ip := range ips {
+			ok = ok || (publicIP(ip) && !selfIP(ip))
+		}
+	}
 	hold := 10 * time.Minute
 	if ok {
 		hold = time.Hour
 	}
 	k.namesMu.Lock()
-	if len(k.names) >= 10000 {
-		k.names = map[string]knockName{}
-	}
-	k.names[host] = knockName{ok, now.Add(hold)}
+	k.rememberLocked(host, knockName{ok, now.Add(hold)})
 	k.namesMu.Unlock()
-	return ok
+	if ok {
+		return ""
+	}
+	return "invalid: this endpoint's name does not resolve"
 }
+
+// a full cache lets one entry go, an expired one where it finds one
+func (k *knocker) rememberLocked(host string, n knockName) {
+	if _, there := k.names[host]; !there && len(k.names) >= knockNamesKept {
+		var victim string
+		seen := 0
+		now := time.Now()
+		for h, old := range k.names {
+			if victim == "" || now.After(old.until) {
+				victim = h
+			}
+			if seen++; seen >= 64 || now.After(old.until) {
+				break
+			}
+		}
+		delete(k.names, victim)
+	}
+	k.names[host] = n
+}
+
+// for the tests: whether a name passes
+func (k *knocker) resolves(_ context.Context, host string) bool { return k.nameCheck(host) == "" }
 
 // sha256 of the address: the table lists no address, a wrap's p tag finds
 // its registration by the same hash
@@ -291,6 +341,7 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		floor:   knockFloor,
 		after:   func(d time.Duration, f func()) { time.AfterFunc(d, f) },
 		names:   map[string]knockName{},
+		lookups: newBucket(20, 40),
 		lookup: func(ctx context.Context, host string) ([]net.IP, error) {
 			addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
 			var ips []net.IP
@@ -495,10 +546,6 @@ func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 	if full(sh.regs, sh.regCap) || (name == "" && d != nil && d.regs >= knockServerRegs) {
 		return true, "error: this push server has all the addresses it may"
 	}
-	sh.fresh.takeN(now, 0)
-	if sh.fresh.tokens < 1 {
-		return true, "error: too many new registrations on this push server, try later"
-	}
 	return false, ""
 }
 
@@ -508,38 +555,81 @@ func (k *knocker) checkLocked(ev *nostr.Event) (bool, string) {
 // its own path and synced, before the relay answers it; one that cannot be
 // written is answered with an error, so the phone sends it again
 func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
+	if ev.Content == "" {
+		return k.takeForget(ev)
+	}
 	key := knockKey(ev.PubKey)
 	made := int64(ev.CreatedAt)
-	// a server outside the list must have a name that resolves. asked
-	// before the lock, and remembered
-	if ev.Content != "" {
-		if u, err := url.Parse(ev.Content); err == nil && !k.push[knockDomainOf(u.Hostname())] &&
-			!strings.HasSuffix(strings.ToLower(u.Hostname()), ".onion") && !k.resolves(ctx, u.Hostname()) {
-			return true, "invalid: this endpoint's name does not resolve"
-		}
-	}
+	now := k.now()
 	k.mu.Lock()
 	if rej, msg := k.checkLocked(ev); rej {
 		k.mu.Unlock()
 		return rej, msg
 	}
-	if ev.Content != "" {
-		if reg := k.regs[key]; reg == nil || reg.ep.url != ev.Content {
-			// a new registration: out of the connection's budget and its
-			// share's hour
-			if k.newReg != nil && ctx != nil && !k.newReg(ctx) {
-				k.mu.Unlock()
-				return true, "rate-limited: too many new registrations at once"
-			}
-			u, _ := url.Parse(ev.Content)
-			_, sh := k.shareOf(knockDomainOf(u.Hostname()))
-			sh.fresh.take(k.now())
+	reg := k.regs[key]
+	ep := k.eps[ev.Content]
+	u, _ := url.Parse(ev.Content)
+	host := strings.ToLower(u.Hostname())
+	domain := knockDomainOf(host)
+	_, sh := k.shareOf(domain)
+	if reg == nil || reg.ep != ep {
+		// a new registration or a move: out of the connection's budget
+		if k.newReg != nil && ctx != nil && !k.newReg(ctx) {
+			k.mu.Unlock()
+			return true, "rate-limited: too many new registrations at once"
 		}
-		delete(k.forgets, key)
-		k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
-		k.store.put(key, ev.Content, made, k.regs[key].expires)
+	}
+	// a token of the share's hour only when the share grows: a new address,
+	// or a new endpoint
+	tookFresh := false
+	if reg == nil || ep == nil {
+		if !sh.fresh.take(now) {
+			k.mu.Unlock()
+			return true, "error: too many new registrations on this push server, try later"
+		}
+		tookFresh = true
+	}
+	// a server outside the list must have a name that resolves: looked up
+	// for a new endpoint only, after every other check, with the lock let go
+	lookup := ep == nil && !k.push[domain] && !strings.HasSuffix(host, ".onion")
+	k.mu.Unlock()
+	if lookup {
+		if msg := k.nameCheck(host); msg != "" {
+			if tookFresh {
+				k.mu.Lock()
+				sh.giveBack()
+				k.mu.Unlock()
+			}
+			return true, msg
+		}
+	}
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if lookup {
+		// things may have moved while the name was looked up
+		if rej, msg := k.checkLocked(ev); rej {
+			if tookFresh {
+				sh.giveBack()
+			}
+			return rej, msg
+		}
+	}
+	delete(k.forgets, key)
+	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
+	k.store.put(key, ev.Content, made, k.regs[key].expires)
+	return false, ""
+}
+
+// a forget is written to disk, on its own path and synced, before the
+// relay answers it; one that cannot be written is answered with an error,
+// so the phone sends it again
+func (k *knocker) takeForget(ev *nostr.Event) (bool, string) {
+	key := knockKey(ev.PubKey)
+	made := int64(ev.CreatedAt)
+	k.mu.Lock()
+	if rej, msg := k.checkLocked(ev); rej {
 		k.mu.Unlock()
-		return false, ""
+		return rej, msg
 	}
 	// only a forget that took something is kept: one for nothing guards
 	// nothing
@@ -548,14 +638,19 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 		return false, ""
 	}
 	k.mu.Unlock()
-	if err := k.store.writeForget(key, made, made+int64(knockSkew/time.Second)); err != nil {
-		return true, "error: the relay could not keep this, try again"
+	if msg := k.store.writeForget(key, made, made+int64(knockSkew/time.Second)); msg != "" {
+		return true, msg
 	}
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	if kept, _, any := k.keptLocked(key); any && kept > made {
 		// a newer one came meanwhile; on disk the newer wins as well
 		return true, "duplicate: not newer than what is kept"
+	}
+	// an address taken within the hour and forgotten gives its token back
+	if reg := k.regs[key]; reg != nil && k.now().Unix()-reg.first < 3600 {
+		_, sh := k.shareOf(reg.ep.domain)
+		sh.giveBack()
 	}
 	k.dropLocked(key)
 	k.forgets[key] = made
@@ -570,11 +665,13 @@ func (k *knocker) apply(ev *nostr.Event) {
 }
 
 func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) {
+	first := k.now().Unix()
 	if old := k.regs[key]; old != nil {
 		if old.ep.url == endpoint {
 			old.made, old.expires = made, expires
 			return
 		}
+		first = old.first
 		k.dropLocked(key)
 	}
 	ep := k.eps[endpoint]
@@ -600,7 +697,7 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 	d.regs++
 	_, sh := k.shareOf(ep.domain)
 	sh.regs++
-	k.regs[key] = &knockReg{ep: ep, made: made, expires: expires}
+	k.regs[key] = &knockReg{ep: ep, made: made, expires: expires, first: first}
 }
 
 func (k *knocker) dropLocked(key [32]byte) {
