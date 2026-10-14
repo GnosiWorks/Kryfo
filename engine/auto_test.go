@@ -2,8 +2,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -433,6 +438,33 @@ func TestAutoAskGoneOnceConnected(t *testing.T) {
 	stSet(func() { autoSt.askConsent = true })
 	if st := bridgeStatus(); st.AskConsent {
 		t.Fatalf("status asks while connected: %+v", st)
+	}
+}
+
+// the pass's log line and the status line count the same ways: direct
+// blocked here is skipped and the ask of moat is none
+func TestAutoPassLogCountsLikeStatus(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	memMu.Lock()
+	autoMem.Blocked = map[string]int64{"wifi": dayOf(f.now)}
+	memMu.Unlock()
+	f.script["obfs4"] = never
+	f.script["snowflake"] = worksAfter(5 * time.Second)
+	var mid bridgeStatusView
+	f.at(10*time.Second, func() { mid = bridgeStatus() })
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	r := pass(t, modeOpts{Consent: "no"})
+	log.SetOutput(os.Stderr)
+	if r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	m := regexp.MustCompile(`auto: pass \(test\) on wifi, (\d+) ways to try`).FindStringSubmatch(buf.String())
+	if m == nil {
+		t.Fatalf("no pass line in %q", buf.String())
+	}
+	if m[1] != strconv.Itoa(mid.Attempts) || mid.Attempts != 2 || mid.Attempt != 1 {
+		t.Fatalf("log says %s ways, status %d of %d", m[1], mid.Attempt, mid.Attempts)
 	}
 }
 

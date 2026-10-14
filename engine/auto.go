@@ -738,7 +738,8 @@ func runPass(gen, epoch int64, why string) string {
 	_, opts, _ := bridgeMode()
 	today := dayOf(autoNow())
 	steps := planPass(kind, memSnapshot(), opts, today)
-	log.Printf("auto: pass (%s) on %s, %d steps", why, kind, len(steps))
+	// counted as the status line counts them: the ask of moat is no way in
+	log.Printf("auto: pass (%s) on %s, %d ways to try", why, kind, attemptCount(steps))
 	p := passCtx{gen: gen, epoch: epoch, valid: autoValidFlips.Load()}
 	if p.id = gateHold(gen, passBudget(steps)); p.id == 0 {
 		return passInterrupted
