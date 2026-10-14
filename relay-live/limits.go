@@ -110,6 +110,8 @@ type limits struct {
 	diskLow atomic.Bool
 	// bytes taken since free space was last read
 	written atomic.Int64
+	// the helper app mode's registrations, nil when off
+	knock *knocker
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -212,6 +214,9 @@ func (l *limits) take(ctx context.Context, events bool) bool {
 func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !l.take(ctx, true) {
 		return true, "rate-limited: slow down"
+	}
+	if ev.Kind == knockKind && l.knock != nil {
+		return l.knock.check(ev)
 	}
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"
