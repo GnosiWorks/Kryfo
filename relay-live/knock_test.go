@@ -431,32 +431,39 @@ func TestKnockStormStaysBounded(t *testing.T) {
 	}
 }
 
+// decoys go per endpoint: twenty endpoints with sixteen addresses each get
+// as many as twenty with one, and both as many as the timer and the runs
+// promise. counted over many endpoints and two months, so chance stays far
+// inside the bounds
 func TestKnockDecoysPerEndpointNotPerAddress(t *testing.T) {
 	tk := newTestKnocks(t)
-	for i := 0; i < 16; i++ {
-		register(t, tk, testEP)
+	for e := 0; e < 20; e++ {
+		for i := 0; i < 16; i++ {
+			register(t, tk, fmt.Sprintf("https://push.example.org/many%d", e))
+		}
+		register(t, tk, fmt.Sprintf("https://push.example.org/one%d", e))
 	}
-	register(t, tk, "https://push.example.org/upOther")
-	tk.advance(96 * time.Hour)
-	counts := map[string]int{}
+	span := 60 * 24 * time.Hour
+	tk.advance(span)
+	many, one := 0, 0
 	for _, s := range tk.log {
 		if !s.decoy {
 			t.Fatal("a decoy timer sent a real knock")
 		}
-		counts[s.url]++
-	}
-	mean := float64(96*time.Hour) / float64(knockDecoyMean)
-	for u, n := range counts {
-		if float64(n) < mean/3 || float64(n) > mean*3 {
-			t.Errorf("%s: %d decoys in four days, expected near %.0f", u, n, mean)
+		if strings.Contains(s.url, "/many") {
+			many++
+		} else {
+			one++
 		}
 	}
-	if len(counts) != 2 {
-		t.Fatalf("decoys reached %d endpoints, want 2", len(counts))
+	want := 20 * float64(span) / float64(knockDecoyMean) * decoyRunMean()
+	for name, n := range map[string]int{"sixteen addresses": many, "one address": one} {
+		if f := float64(n) / want; f < 0.75 || f > 1.25 {
+			t.Fatalf("%s: %d decoys on twenty endpoints, expected near %.0f", name, n, want)
+		}
 	}
-	a, b := counts[testEP], counts["https://push.example.org/upOther"]
-	if a > 3*b+3 {
-		t.Fatalf("sixteen addresses got %d decoys, one got %d", a, b)
+	if r := float64(many) / float64(one); r < 0.8 || r > 1.25 {
+		t.Fatalf("sixteen addresses got %d decoys, one got %d", many, one)
 	}
 }
 

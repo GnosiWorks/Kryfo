@@ -84,6 +84,9 @@ var knockDecoyMean = time.Duration(envInt("RELAY_KNOCK_DECOY_MIN", 480)) * time.
 
 const knockDecoyMore = 0.5
 
+// knocks in one decoy run, on average
+func decoyRunMean() float64 { return 1 / (1 - knockDecoyMore) }
+
 // the shares. each well-known push server holds its own, every other
 // server shares one, and one server outside the list holds what about
 // sixty-four phones use. the relay holds no more than the shares add up to
