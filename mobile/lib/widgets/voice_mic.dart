@@ -127,6 +127,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   @override
   void dispose() {
+    // a start still in flight sees no finger and shreds what it began
+    _live = false;
     _release();
     _ticker?.cancel();
     _level?.cancel();
