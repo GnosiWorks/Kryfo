@@ -9263,22 +9263,26 @@ enum NameHold {
   // given by a request, an introduction or a group and never checked: the
   // link takes it if the person says so
   ask,
-  // the same, with its chat deleted: nothing here holds it any more
+  // its chat deleted, and never verified: nothing here holds it any more,
+  // however they were added
   free,
 }
 
 /// [seated]: they are in a group or a room here. whoever took the words
 /// would take that seat as well, so the name stays
 NameHold nameHoldOf(Map<String, Object?>? row, {bool seated = false}) {
-  if (seated ||
-      !nameUnchecked(row) ||
-      (row!['blocked'] as num?)?.toInt() == 1) {
+  if (row == null ||
+      seated ||
+      (row['blocked'] as num?)?.toInt() == 1 ||
+      (row['verified'] as num?)?.toInt() == 1 ||
+      isDevId(row['halo_id'] as String? ?? '')) {
     return NameHold.kept;
   }
   final parked =
       (row['accepted'] as num?)?.toInt() != 1 &&
       (row['archived'] as num?)?.toInt() == 1;
-  return parked ? NameHold.free : NameHold.ask;
+  if (parked) return NameHold.free;
+  return nameUnchecked(row) ? NameHold.ask : NameHold.kept;
 }
 
 // an add from a camera scan clears the marks. any other add asks for the
@@ -10358,8 +10362,8 @@ class AppIo {
         ss: signalSession,
         row: live.getContact,
       );
-      // unless the name came with a request, an introduction or a group,
-      // nobody checked it and its chat was deleted: then it is free
+      // unless its chat was deleted and its key never verified: then it is
+      // free
       if (bound != null &&
           !_eqBytes(bound, key) &&
           _firstWouldPass(env) &&
@@ -19989,9 +19993,9 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
-    // words a request, an introduction or a group gave, never checked, hold
-    // nothing once the chat is gone: a link or a first contact on another
-    // key takes them (NameHold.free)
+    // words whose key was never verified hold nothing once the chat is
+    // gone: a link or a first contact on another key takes them
+    // (NameHold.free)
     dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     await _forgetPairSeen({haloId});

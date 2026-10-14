@@ -2,8 +2,8 @@
 // a deleted chat takes the name given them with it, so a re-add starts from
 // their own name. the verified mark stays on the key it was given for: a
 // re-add on another key is still held. words a request, an introduction or
-// a group gave start out not checked, and once such a chat is deleted they
-// hold nothing against a link. the real database methods over rows kept in
+// a group gave start out not checked, and once a chat is deleted its words
+// hold nothing against a link, however it was added, unless verified. the real database methods over rows kept in
 // maps
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
@@ -90,13 +90,16 @@ void main() {
     };
     expect(nameHoldOf(r()), NameHold.ask);
     expect(nameHoldOf(r(accepted: 1)), NameHold.ask);
-    // deleted: nothing here holds it
+    // deleted: nothing here holds it, however they were added
     expect(nameHoldOf(r(archived: 1)), NameHold.free);
+    expect(nameHoldOf(r(flags: 0, archived: 1)), NameHold.free);
+    expect(nameHoldOf(r(flags: kNameAsk, archived: 1)), NameHold.free);
     // verified, blocked, checked by a scan or added by hand: it stays
     expect(nameHoldOf(r(verified: 1)), NameHold.kept);
     expect(nameHoldOf(r(verified: 1, archived: 1)), NameHold.kept);
     expect(nameHoldOf(r(blocked: 1)), NameHold.kept);
-    expect(nameHoldOf(r(flags: 0, archived: 1)), NameHold.kept);
+    expect(nameHoldOf(r(blocked: 1, archived: 1)), NameHold.kept);
+    expect(nameHoldOf(r(flags: 0, accepted: 1)), NameHold.kept);
     expect(nameHoldOf(r(flags: kNameAsk, accepted: 1)), NameHold.kept);
     expect(nameHoldOf(null), NameHold.kept);
     // a seat in a group or a room is never handed over with the words
