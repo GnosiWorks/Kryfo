@@ -18,6 +18,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'jpeg_strip.dart';
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
@@ -81,10 +83,23 @@ String pictureExt(Uint8List b) => switch (pictureKind(b)) {
   _ => 'jpg',
 };
 
-/// cleans the file at [path] in place. see the contract at the top.
-Future<bool?> stripPictureFile(String path) async {
+/// cleans the file at [path] in place. see the contract at the top. the
+/// first bytes are read before anything else, so a file that is not a
+/// picture is never read whole. [readAll] stands in for the read in tests
+Future<bool?> stripPictureFile(
+  String path, {
+  @visibleForTesting Future<Uint8List> Function(File f)? readAll,
+}) async {
   final f = File(path);
-  final src = await f.readAsBytes();
+  final raf = await f.open();
+  final Uint8List head;
+  try {
+    head = await raf.read(256);
+  } finally {
+    await raf.close();
+  }
+  if (pictureKind(head) == PictureKind.other) return false;
+  final src = await (readAll ?? (File f) => f.readAsBytes())(f);
   final out = stripPictureBytes(src);
   if (out == null) return null;
   if (identical(out, src)) return pictureKind(src) != PictureKind.other;
