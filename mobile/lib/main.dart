@@ -2628,6 +2628,12 @@ class HaloDb implements GroupOwedStore {
   // of theirs waited to be tried again
   Future<void> forgetRequest(String haloId) async {
     final db = await open();
+    final gone = await db.query(
+      'contacts',
+      columns: ['atmosphere'],
+      where: 'halo_id = ? AND accepted = ?',
+      whereArgs: [haloId, 0],
+    );
     await db.delete(
       'contacts',
       where: 'halo_id = ? AND accepted = ?',
@@ -2636,6 +2642,7 @@ class HaloDb implements GroupOwedStore {
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
     await db.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
     await db.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+    await _dropPhotos([for (final r in gone) r['atmosphere']]);
   }
 
   // they wrote after we deleted them: bring the row back as a request.
@@ -3117,7 +3124,9 @@ class HaloDb implements GroupOwedStore {
   // not a block: they can reach us again later.
   Future<void> declineRequest(String haloId) async {
     final d = await open();
+    String? atmo;
     final files = await d.transaction((t) async {
+      atmo = await _atmosphereOf(t, haloId);
       final rows = await t.query(
         'messages',
         columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
@@ -3156,16 +3165,17 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // park, don't delete: the row carries the xpub the relay subscription
       // is built from. if they write again, unparkIfArchived surfaces them as
-      // a new request.
+      // a new request. a wallpaper set for the request goes with it
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0},
+        {'accepted': 0, 'archived': 1, 'unread': 0, 'atmosphere': null},
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
       return rows;
     });
     await _scrubMedia(files);
+    await _dropPhotos([atmo]);
   }
 
   Future<void> upsertContact(

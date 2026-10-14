@@ -95,6 +95,27 @@ void main() {
     expect(f.existsSync(), isFalse);
   });
 
+  test('a request turned away takes its wallpaper along', () async {
+    // block and delete on a request declines it, then blocks
+    final db = await rows();
+    final f = await photo(db, accepted: 0);
+    await db.declineRequest(_peer);
+    await db.setBlocked(_peer, true);
+    expect(atmo(db, _peer), isNull);
+    expect(f.existsSync(), isFalse);
+  });
+
+  test('a request forgotten shreds its wallpaper', () async {
+    final db = await rows();
+    final f = await photo(db, accepted: 0);
+    await db.forgetRequest(_peer);
+    expect(
+      db.mem.rows('contacts').where((r) => r['halo_id'] == _peer),
+      isEmpty,
+    );
+    expect(f.existsSync(), isFalse);
+  });
+
   test('a photo another chat still names stays', () async {
     final db = await rows();
     final f = await photo(db);
