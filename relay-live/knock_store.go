@@ -34,8 +34,11 @@ type knockOp struct {
 type knockStore struct {
 	db *sql.DB
 	// forgets, written on their own connection and synced before the relay
-	// answers them
+	// answers them: those waiting go in one transaction together
 	fdb     *sql.DB
+	fch     chan *forgetReq
+	waiting atomic.Int64
+	quit    chan struct{}
 	path    string
 	ch      chan knockOp
 	dropped atomic.Int64
@@ -79,7 +82,10 @@ func openKnockStore(path string) (*knockStore, error) {
 			}
 		}
 	}
-	return &knockStore{db: db, fdb: fdb, path: path, ch: make(chan knockOp, 1<<16)}, nil
+	s := &knockStore{db: db, fdb: fdb, path: path, ch: make(chan knockOp, 1<<16),
+		fch: make(chan *forgetReq, knockForgetWaiters), quit: make(chan struct{})}
+	go s.forgetWriter()
+	return s, nil
 }
 
 // a row to write, or with made 0 to delete. never blocks: a write that
@@ -215,25 +221,95 @@ func (s *knockStore) flush(wait time.Duration) bool {
 	}
 }
 
+// forgets waiting for the disk at once; past it the answer is to try
+// later
+const knockForgetWaiters = 1000
+
+type forgetReq struct {
+	key           [32]byte
+	made, expires int64
+	done          chan error
+}
+
 // a forget, on disk before this returns: "" once it is, or the answer to
 // give. it wins a tie with a registration of the same second
 func (s *knockStore) writeForget(key [32]byte, made, expires int64) string {
 	if s == nil {
 		return ""
 	}
-	_, err := s.fdb.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, '', ?, ?)
-		ON CONFLICT(addr) DO UPDATE SET endpoint = '', made = excluded.made, expires = excluded.expires
-		WHERE excluded.made >= knock.made`, key[:], made, expires)
-	if err != nil {
-		log.Printf("knock: a forget not written: %v", err)
+	if s.waiting.Add(1) > knockForgetWaiters {
+		s.waiting.Add(-1)
+		return "rate-limited: too many forgets at once, try later"
+	}
+	defer s.waiting.Add(-1)
+	r := &forgetReq{key: key, made: made, expires: expires, done: make(chan error, 1)}
+	select {
+	case s.fch <- r:
+	case <-s.quit:
 		return "error: the relay could not keep this, try again"
 	}
-	return ""
+	select {
+	case err := <-r.done:
+		if err != nil {
+			log.Printf("knock: forgets not written: %v", err)
+			return "error: the relay could not keep this, try again"
+		}
+		return ""
+	case <-time.After(10 * time.Second):
+		return "error: the relay could not keep this, try again"
+	}
+}
+
+// the forgets waiting, in one synced transaction, then each answered
+func (s *knockStore) forgetWriter() {
+	for {
+		var first *forgetReq
+		select {
+		case first = <-s.fch:
+		case <-s.quit:
+			return
+		}
+		batch := []*forgetReq{first}
+	more:
+		for len(batch) < knockForgetWaiters {
+			select {
+			case r := <-s.fch:
+				batch = append(batch, r)
+			default:
+				break more
+			}
+		}
+		err := s.writeForgets(batch)
+		for _, r := range batch {
+			r.done <- err
+		}
+	}
+}
+
+func (s *knockStore) writeForgets(batch []*forgetReq) error {
+	tx, err := s.fdb.Begin()
+	if err != nil {
+		return err
+	}
+	for _, r := range batch {
+		if _, err := tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires) VALUES (?, '', ?, ?)
+			ON CONFLICT(addr) DO UPDATE SET endpoint = '', made = excluded.made, expires = excluded.expires
+			WHERE excluded.made >= knock.made`, r.key[:], r.made, r.expires); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (s *knockStore) close() {
 	if s == nil {
 		return
+	}
+	select {
+	case <-s.quit:
+	default:
+		close(s.quit)
 	}
 	s.fdb.Close()
 	s.db.Close()

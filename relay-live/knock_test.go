@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -2055,6 +2056,65 @@ func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
 	st.fdb.QueryRow(`SELECT count(*) FROM knock WHERE endpoint = ''`).Scan(&n)
 	if n != nf {
 		t.Fatalf("%d of %d forgets on disk", n, nf)
+	}
+}
+
+// a storm of forgets is written in batches, each synced once, and past a
+// thousand waiting the answer is to try later: none waits for minutes
+func TestKnockForgetStorm(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.close()
+	st.start()
+	tk := newTestKnocks(t)
+	tk.store = st
+	_, sh := tk.shareOf("ntfy.sh")
+	sh.fresh, sh.epCap, sh.regCap = newBucket(0, 1e9), 1e9, 1e9
+	now := tk.clock.now()
+	const n = 20000
+	for i := 0; i < n; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/s%d", i/250), now)
+		tk.take(nil, &ev)
+	}
+	st.flush(time.Minute)
+	var wg sync.WaitGroup
+	var ok, later, other atomic.Int64
+	var slowest atomic.Int64
+	t0 := time.Now()
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			ev := r3reg(r3key(i), "", now.Add(time.Second))
+			s := time.Now()
+			rej, msg := tk.take(nil, &ev)
+			if d := int64(time.Since(s)); d > slowest.Load() {
+				slowest.Store(d)
+			}
+			switch {
+			case !rej:
+				ok.Add(1)
+			case strings.HasPrefix(msg, "rate-limited:"):
+				later.Add(1)
+			default:
+				other.Add(1)
+			}
+		}(i)
+	}
+	wg.Wait()
+	if other.Load() != 0 || ok.Load() == 0 {
+		t.Fatalf("%d taken, %d told to try later, %d other", ok.Load(), later.Load(), other.Load())
+	}
+	if el := time.Since(t0); el > 30*time.Second || time.Duration(slowest.Load()) > 20*time.Second {
+		t.Fatalf("the storm took %v, the slowest answer %v", el, time.Duration(slowest.Load()))
+	}
+	var rows int
+	st.fdb.QueryRow(`SELECT count(*) FROM knock WHERE endpoint = ''`).Scan(&rows)
+	if int64(rows) != ok.Load() {
+		t.Fatalf("%d answered ok, %d on disk", ok.Load(), rows)
 	}
 }
 
