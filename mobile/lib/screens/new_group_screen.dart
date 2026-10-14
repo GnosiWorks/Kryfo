@@ -10,6 +10,7 @@ import 'group_chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 class NewGroupScreen extends StatefulWidget {
   const NewGroupScreen({super.key});
@@ -159,27 +160,30 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: TextField(
+              child: ShiftTapGuard(
                 controller: _nameCtrl,
-                onChanged: (_) => setState(() {}),
-                style: HaloType.sans(size: 16, color: HaloColors.text),
-                cursorColor: HaloColors.amber,
-                decoration: InputDecoration(
-                  hintText: l10n.newGroupGroupName,
-                  hintStyle: HaloType.serif(
-                    size: 16,
-                    italic: true,
-                    color: HaloColors.text2,
-                  ),
-                  filled: true,
-                  fillColor: HaloColors.surface2,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
+                child: TextField(
+                  controller: _nameCtrl,
+                  onChanged: (_) => setState(() {}),
+                  style: HaloType.sans(size: 16, color: HaloColors.text),
+                  cursorColor: HaloColors.amber,
+                  decoration: InputDecoration(
+                    hintText: l10n.newGroupGroupName,
+                    hintStyle: HaloType.serif(
+                      size: 16,
+                      italic: true,
+                      color: HaloColors.text2,
+                    ),
+                    filled: true,
+                    fillColor: HaloColors.surface2,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),

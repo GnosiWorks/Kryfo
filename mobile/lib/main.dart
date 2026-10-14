@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
+import 'orientation.dart' show appOrientations;
 import 'backup.dart' show backupRunning, restoreRunning, sweepBackupLeftovers;
 import 'picked.dart'
     show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
@@ -130,6 +131,7 @@ import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
+import 'widgets/shift_tap_guard.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -23630,12 +23632,13 @@ void main() async {
   unawaited(sweepBackupLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers
-  unawaited(
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-  );
+  unawaited(SystemChrome.setPreferredOrientations(appOrientations));
   // drawn under the bars on android 10 to 14 too, as 15 and later force.
-  // older versions ignore it
+  // older versions ignore it. android keeps this on the screen, which the
+  // engine outlives: asked before one was attached, or of one since
+  // replaced, it is lost, so it is asked again on every return
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+  WidgetsBinding.instance.addObserver(_underBars);
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the
@@ -23711,6 +23714,16 @@ Future<void> _openFromNotif() async {
     }
   } catch (e) {
     dlog('notif launch: $e');
+  }
+}
+
+final _underBars = _UnderBars();
+
+class _UnderBars with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   }
 }
 
@@ -24019,24 +24032,30 @@ class _AddSheetState extends State<_AddSheet>
                     width: lit ? 1 : 0.5,
                   ),
                 ),
-                child: TextField(
-                  textDirection: TextDirection.ltr,
+                child: ShiftTapGuard(
                   controller: widget.ctrl,
-                  focusNode: _focus,
-                  minLines: 1,
-                  maxLines: 3,
-                  // "add them" under it comes into view with it
-                  scrollPadding: const EdgeInsets.fromLTRB(
-                    20,
-                    20,
-                    20,
-                    20 + 10 + 46,
-                  ),
-                  style: HaloType.mono(size: 12, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: l10n.appAKryfoLinkA,
-                    hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+                  child: TextField(
+                    textDirection: TextDirection.ltr,
+                    controller: widget.ctrl,
+                    focusNode: _focus,
+                    minLines: 1,
+                    maxLines: 3,
+                    // "add them" under it comes into view with it
+                    scrollPadding: const EdgeInsets.fromLTRB(
+                      20,
+                      20,
+                      20,
+                      20 + 10 + 46,
+                    ),
+                    style: HaloType.mono(size: 12, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: l10n.appAKryfoLinkA,
+                      hintStyle: HaloType.mono(
+                        size: 12,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -24240,14 +24259,17 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
                 style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               const SizedBox(height: 10),
-              TextField(
-                textDirection: TextDirection.ltr,
+              ShiftTapGuard(
                 controller: ctrl,
-                maxLines: 4,
-                style: HaloType.mono(size: 11, color: HaloColors.text),
-                decoration: InputDecoration(
-                  hintText: 'kryfo://share?...',
-                  hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                child: TextField(
+                  textDirection: TextDirection.ltr,
+                  controller: ctrl,
+                  maxLines: 4,
+                  style: HaloType.mono(size: 11, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    hintText: 'kryfo://share?...',
+                    hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                  ),
                 ),
               ),
             ],
@@ -24595,13 +24617,16 @@ class _DevScreenState extends State<DevScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              TextField(
+              ShiftTapGuard(
                 controller: _msgCtrl,
-                style: HaloType.sans(color: HaloColors.text),
-                decoration: InputDecoration(
-                  labelText: l10n.appMessageWillBeEncrypted,
-                  labelStyle: HaloType.sans(color: HaloColors.text2),
-                  border: const OutlineInputBorder(),
+                child: TextField(
+                  controller: _msgCtrl,
+                  style: HaloType.sans(color: HaloColors.text),
+                  decoration: InputDecoration(
+                    labelText: l10n.appMessageWillBeEncrypted,
+                    labelStyle: HaloType.sans(color: HaloColors.text2),
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -25163,14 +25188,17 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             decoy: appState.inDecoyView,
           );
           const torGreen = Color(0xFF34D399);
-          final accent = off
+          // relay does not go through tor, so tor being off never greys it
+          final relay = said.kind == 'relay';
+          final dim = off && !relay;
+          final accent = relay
+              ? HaloColors.sky
+              : off
               ? HaloColors.text2
               : said.kind == 'offline'
               ? HaloColors.amber
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
-              : appState.sendMode == 'balanced'
-              ? const Color(0xFF4BB8C9)
               : appState.sendMode == 'fast'
               ? torGreen
               : ready
@@ -25193,7 +25221,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   ),
                 _ring(
                   12,
-                  off
+                  dim
                       ? HaloColors.text3.withValues(alpha: 0.4)
                       : accent.withValues(alpha: secured ? 1.0 : 0.85),
                   1.4,

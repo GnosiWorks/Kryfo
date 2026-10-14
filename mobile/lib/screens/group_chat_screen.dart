@@ -89,6 +89,7 @@ import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/shift_tap_guard.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
@@ -111,6 +112,7 @@ import '../widgets/voice_mic.dart';
 import '../voice_mask.dart' show maskWavOff;
 import '../polls.dart';
 import '../widgets/attach_grid.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/new_poll_sheet.dart';
 import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
@@ -239,20 +241,23 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                 ),
               ),
               const SizedBox(height: 14),
-              TextField(
+              ShiftTapGuard(
                 controller: ctrl,
-                autofocus: true,
-                // a long message scrolls in the field, so save stays in view
-                minLines: 1,
-                maxLines: 6,
-                cursorColor: HaloColors.amber,
-                style: HaloType.sans(size: 15),
-                decoration: InputDecoration(
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: HaloColors.line2),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: HaloColors.amber),
+                child: TextField(
+                  controller: ctrl,
+                  autofocus: true,
+                  // a long message scrolls in the field, so save stays in view
+                  minLines: 1,
+                  maxLines: 6,
+                  cursorColor: HaloColors.amber,
+                  style: HaloType.sans(size: 15),
+                  decoration: InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: HaloColors.line2),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: HaloColors.amber),
+                    ),
                   ),
                 ),
               ),
@@ -2006,24 +2011,32 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos
-    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
+    // whole, each in a folder of its own: see readPickedPhotos. videos come
+    // too where android has its photo picker
+    final picked = await lockState.hold(pickGallery);
     if (picked.isEmpty) return;
-    // the bytes are all that is kept
-    final bytesOf = await readPickedPhotos(picked);
-    if (bytesOf.length == 1) {
-      if (!mounted) return;
-      final caption = await Navigator.of(context).push<String?>(
-        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
-      );
-      if (caption == null) return;
-      await _sendGroupImage(bytesOf[0], caption);
-      return;
-    }
-    for (final bytes in bytesOf) {
-      if (!mounted) return;
-      await _sendGroupImage(bytes, '');
-    }
+    // the bytes are all that is kept, and a video goes the video tile's way
+    await sendGalleryPicks(
+      picked,
+      photo: (bytes, alone) async {
+        if (!mounted) return false;
+        if (alone) {
+          final caption = await Navigator.of(
+            context,
+          ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+          if (caption == null) return false;
+          await _sendGroupImage(bytes, caption);
+          return true;
+        }
+        await _sendGroupImage(bytes, '');
+        return true;
+      },
+      video: (x) async {
+        if (!mounted) return false;
+        await _sendGroupFileFrom(x.path, madeVideoName(x.name));
+        return true;
+      },
+    );
   }
 
   Future<void> _pickGroupGif() async {
@@ -3933,7 +3946,7 @@ class _Header extends StatelessWidget {
                   children: [
                     // a room's tile is violet, as on the chat list it
                     // flies from: known from that list before the load
-                    Hero(
+                    HaloHero(
                       tag: 'group-$groupId',
                       child: Container(
                         width: 36,
@@ -4300,30 +4313,33 @@ class _Composer extends StatelessWidget {
                       Expanded(
                         child: WrittenDir(
                           controller: controller,
-                          builder: (dir) => TextField(
-                            textDirection: dir,
-                            inputFormatters: const [UnmarkedInput()],
+                          builder: (dir) => ShiftTapGuard(
                             controller: controller,
-                            style: HaloType.sans(
-                              size: 14,
-                              color: HaloColors.text,
-                            ),
-                            cursorColor: HaloColors.amber,
-                            decoration: InputDecoration(
-                              hintText: l10n.groupChatMessage,
-                              hintStyle: HaloType.sans(
+                            child: TextField(
+                              textDirection: dir,
+                              inputFormatters: const [UnmarkedInput()],
+                              controller: controller,
+                              style: HaloType.sans(
                                 size: 14,
-                                color: HaloColors.text3,
+                                color: HaloColors.text,
                               ),
-                              border: InputBorder.none,
-                              isCollapsed: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
+                              cursorColor: HaloColors.amber,
+                              decoration: InputDecoration(
+                                hintText: l10n.groupChatMessage,
+                                hintStyle: HaloType.sans(
+                                  size: 14,
+                                  color: HaloColors.text3,
+                                ),
+                                border: InputBorder.none,
+                                isCollapsed: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
+                              minLines: 1,
+                              maxLines: 5,
+                              onSubmitted: (_) => onSend(),
                             ),
-                            minLines: 1,
-                            maxLines: 5,
-                            onSubmitted: (_) => onSend(),
                           ),
                         ),
                       ),
@@ -5011,7 +5027,7 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: RememberedHeight(
                                                         id: m.mediaPath!,
-                                                        child: Hero(
+                                                        child: HaloHero(
                                                           tag: photoHeroTag(
                                                             m.mediaPath!,
                                                             'chat',

@@ -26,6 +26,7 @@ import '../theme.dart';
 import '../widgets/decode_px.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -42,6 +43,7 @@ import '../bidi_safe.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
 import '../msg_order.dart' show rowWrittenAt;
+import '../widgets/shift_tap_guard.dart';
 
 /// home's search button grows into the field here
 const kSearchHero = 'home-search';
@@ -498,7 +500,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     Expanded(
                       child: HeroMode(
                         enabled: !still,
-                        child: Hero(
+                        child: HaloHero(
                           tag: kSearchHero,
                           createRectTween: _straight,
                           // a still copy flies: a live field built in the
@@ -574,7 +576,7 @@ class SearchDoor extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: HeroMode(
             enabled: !motionStill(context),
-            child: Hero(
+            child: HaloHero(
               tag: kSearchHero,
               createRectTween: _straight,
               child: SizedBox(
@@ -775,19 +777,22 @@ class _Field extends StatelessWidget {
           Expanded(
             child: WrittenDir(
               controller: ctrl,
-              builder: (dir) => TextField(
-                textDirection: dir,
-                inputFormatters: const [UnmarkedInput()],
+              builder: (dir) => ShiftTapGuard(
                 controller: ctrl,
-                focusNode: focus,
-                textInputAction: TextInputAction.search,
-                style: HaloType.sans(size: 15, color: HaloColors.text),
-                cursorColor: HaloColors.amber,
-                decoration: InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  hintText: l10n.searchHint,
-                  hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
+                child: TextField(
+                  textDirection: dir,
+                  inputFormatters: const [UnmarkedInput()],
+                  controller: ctrl,
+                  focusNode: focus,
+                  textInputAction: TextInputAction.search,
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                  cursorColor: HaloColors.amber,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: l10n.searchHint,
+                    hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
+                  ),
                 ),
               ),
             ),

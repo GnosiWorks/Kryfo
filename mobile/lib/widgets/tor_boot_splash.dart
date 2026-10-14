@@ -102,9 +102,15 @@ class _TorBootSplashState extends State<TorBootSplash>
 
   @override
   Widget build(BuildContext context) {
+    // the same inset on opposite edges: a cutout, a status bar or a
+    // navigation bar on one edge would push it all off the middle
+    final pad = MediaQuery.paddingOf(context);
+    final sides = math.max(pad.left, pad.right);
+    final ends = math.max(pad.top, pad.bottom);
     return Scaffold(
       backgroundColor: HaloColors.ink,
       body: SafeArea(
+        minimum: EdgeInsets.symmetric(horizontal: sides, vertical: ends),
         child: FitColumn(
           padding: const EdgeInsets.fromLTRB(32, 0, 32, 28),
           children: [
@@ -192,18 +198,27 @@ class _TorBootSplashState extends State<TorBootSplash>
                 // long hop names at a large text size shrink, never spill
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: AnimatedBuilder(
-                    animation: _c,
-                    builder: (_, _) => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _hopDot(l10n.torBootSplashHopEntry, 0.0),
-                        _link(0.0),
-                        _hopDot(l10n.torBootSplashHopMiddle, 0.33),
-                        _link(0.33),
-                        _hopDot(l10n.torBootSplashHopExit, 0.66),
-                      ],
+                  // each hop as wide as the widest name, so the middle one
+                  // sits on the middle whatever the names
+                  child: IntrinsicWidth(
+                    child: AnimatedBuilder(
+                      animation: _c,
+                      builder: (_, _) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _hopDot(l10n.torBootSplashHopEntry, 0.0),
+                          ),
+                          _link(0.0),
+                          Expanded(
+                            child: _hopDot(l10n.torBootSplashHopMiddle, 0.33),
+                          ),
+                          _link(0.33),
+                          Expanded(
+                            child: _hopDot(l10n.torBootSplashHopExit, 0.66),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -333,7 +348,12 @@ class _TorBootSplashState extends State<TorBootSplash>
           ),
         ),
         const SizedBox(height: 6),
-        Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
+        Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          style: HaloType.mono(size: 10, color: HaloColors.text2),
+        ),
       ],
     );
   }

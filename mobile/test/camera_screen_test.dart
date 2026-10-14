@@ -5,7 +5,9 @@
 // language and from zero each time, a flip fades through dark unless the
 // phone asks for no movement, the photo and video tabs are full-size
 // targets read out as chosen or not, and a refused microphone only stops
-// video.
+// video. the screen stays portrait however the phone is held: the icons
+// turn with the phone, captures are told the side it is held on, and the
+// picture keeps the frame's shape on a screen of either shape.
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show Tristate;
@@ -16,12 +18,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show decimal, twoDigits, whole;
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/orientation.dart' show appOrientations;
 import 'package:kryfo/screens/camera_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
 import 'package:kryfo/widgets/press_scale.dart';
 
 const _cam = MethodChannel('plugins.flutter.io/camera');
+const _tilt = EventChannel('kryfo/tilt');
 const _codec = StandardMethodCodec();
 
 bool deny = false;
@@ -33,6 +37,11 @@ String? clipAt;
 // a start that waits here until let through
 int starts = 0;
 Completer<void>? startGate;
+// what the camera plugin and the system were asked, in order
+final asked = <MethodCall>[];
+final chrome = <MethodCall>[];
+// the sensor's side of the tilt channel, while the camera listens
+MockStreamHandlerEventSink? tiltOut;
 
 Widget framed({bool still = false, Locale? locale}) => MaterialApp(
   theme: buildHaloTheme(),
@@ -48,8 +57,23 @@ Widget framed({bool still = false, Locale? locale}) => MaterialApp(
 
 void plugin(WidgetTester t) {
   final m = t.binding.defaultBinaryMessenger;
-  m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+  m.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+    chrome.add(call);
+    return null;
+  });
+  m.setMockStreamHandler(
+    _tilt,
+    MockStreamHandler.inline(
+      onListen: (_, sink) {
+        tiltOut = sink;
+      },
+      onCancel: (_) {
+        tiltOut = null;
+      },
+    ),
+  );
   m.setMockMethodCallHandler(_cam, (call) async {
+    asked.add(call);
     switch (call.method) {
       case 'availableCameras':
         return [
@@ -93,14 +117,57 @@ void plugin(WidgetTester t) {
         return null;
       case 'stopVideoRecording':
         return clipAt;
+      case 'takePicture':
+        throw PlatformException(code: 'test');
     }
     return null;
   });
   addTearDown(() {
     m.setMockMethodCallHandler(SystemChannels.platform, null);
     m.setMockMethodCallHandler(_cam, null);
+    m.setMockStreamHandler(_tilt, null);
+    tiltOut = null;
   });
 }
+
+// the phone held at [angle] degrees, clockwise from upright
+Future<void> hold(WidgetTester t, int angle) async {
+  tiltOut!.success(angle);
+  await t.pump();
+  await t.pump();
+}
+
+// the screen itself turned, as the plugin reports it
+Future<void> screenTurned(WidgetTester t, String orientation) async {
+  await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+    'flutter.io/cameraPlugin/device',
+    _codec.encodeMethodCall(
+      MethodCall('orientation_changed', {'orientation': orientation}),
+    ),
+    (_) {},
+  );
+  await t.pump();
+}
+
+Iterable<String> locks() => asked
+    .where((c) => c.method == 'lockCaptureOrientation')
+    .map((c) => (c.arguments as Map)['orientation'] as String);
+
+List<String> orientationsAsked() => [
+  for (final c in chrome)
+    if (c.method == 'SystemChrome.setPreferredOrientations')
+      (c.arguments as List).join(','),
+];
+
+// the turn an icon is drawn at
+double turnOf(WidgetTester t, IconData icon) => t
+    .widget<AnimatedRotation>(
+      find.ancestor(
+        of: find.byIcon(icon),
+        matching: find.byType(AnimatedRotation),
+      ),
+    )
+    .turns;
 
 void phone(WidgetTester t) {
   t.view.physicalSize = const Size(720, 1600);
@@ -123,6 +190,8 @@ void main() {
     disposes = 0;
     starts = 0;
     startGate = null;
+    asked.clear();
+    chrome.clear();
   });
 
   testWidgets('permission off: a line, settings, and try again', (t) async {
@@ -496,6 +565,237 @@ void main() {
     await settle(t);
     expect(find.text(l10n.chatMicPermissionNeeded), findsNothing);
     expect(find.byType(Texture), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+  });
+
+  // the picture's rounded box, and the camera's picture in it
+  final picture = find.byWidgetPredicate(
+    (w) => w is ClipRRect && w.borderRadius == BorderRadius.circular(18),
+  );
+  void fills(WidgetTester t, {required double shape}) {
+    final box = t.getRect(picture);
+    final shown = t.getRect(find.byType(Texture));
+    // the frame's own shape, not the box's
+    expect(shown.width / shown.height, closeTo(shape, 0.005));
+    // and all of the box covered
+    expect(shown.left, lessThanOrEqualTo(box.left + 0.5));
+    expect(shown.top, lessThanOrEqualTo(box.top + 0.5));
+    expect(shown.right, greaterThanOrEqualTo(box.right - 0.5));
+    expect(shown.bottom, greaterThanOrEqualTo(box.bottom - 0.5));
+  }
+
+  testWidgets('portrait while it is open, the app\'s own after', (t) async {
+    phone(t);
+    plugin(t);
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildHaloTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => Navigator.of(ctx).push(
+              MaterialPageRoute<void>(builder: (_) => const CameraScreen()),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await settle(t);
+    expect(orientationsAsked(), ['DeviceOrientation.portraitUp']);
+    expect(tiltOut, isNotNull);
+    await t.tap(find.bySemanticsLabel(l10n.cameraClose));
+    await settle(t);
+    expect(find.byType(CameraScreen), findsNothing);
+    expect(orientationsAsked(), [
+      'DeviceOrientation.portraitUp',
+      appOrientations.join(','),
+    ]);
+    // the sensor is let go with the screen
+    expect(tiltOut, isNull);
+  });
+
+  for (final still in [false, true]) {
+    testWidgets(
+      still
+          ? 'reduced motion: the icons turn at once'
+          : 'held sideways, the icons turn with the phone',
+      (t) async {
+        phone(t);
+        plugin(t);
+        await t.pumpWidget(framed(still: still));
+        await settle(t);
+        const icons = [
+          Icons.close,
+          Icons.flash_off,
+          Icons.cameraswitch_outlined,
+        ];
+        double drawn(IconData i) => t
+            .widget<RotationTransition>(
+              find.ancestor(
+                of: find.byIcon(i),
+                matching: find.byType(RotationTransition),
+              ),
+            )
+            .turns
+            .value;
+        for (final i in icons) {
+          expect(turnOf(t, i), 0);
+        }
+        // top to the left: a quarter turn clockwise keeps them upright
+        await hold(t, 270);
+        for (final i in icons) {
+          expect(turnOf(t, i), 0.25);
+          if (still) {
+            expect(drawn(i), 0.25);
+          } else {
+            expect(drawn(i), lessThan(0.25));
+          }
+        }
+        await settle(t);
+        expect(drawn(Icons.close), 0.25);
+        // a wobble near the middle keeps the side
+        await hold(t, 220);
+        expect(turnOf(t, Icons.close), 0.25);
+        await hold(t, 0);
+        expect(turnOf(t, Icons.close), 0);
+        // top to the right
+        await hold(t, 90);
+        await settle(t);
+        expect(turnOf(t, Icons.close), -0.25);
+        // upside down from there goes on the short way
+        await hold(t, 180);
+        expect(turnOf(t, Icons.close), -0.5);
+        // flat on a table keeps the last side
+        await hold(t, -1);
+        expect(turnOf(t, Icons.close), -0.5);
+        await settle(t);
+        expect(t.takeException(), isNull);
+        await t.pumpWidget(const SizedBox());
+        await settle(t);
+      },
+    );
+  }
+
+  testWidgets('held sideways the picture keeps its shape', (t) async {
+    phone(t);
+    plugin(t);
+    await t.pumpWidget(framed(still: true));
+    await settle(t);
+    await hold(t, 270);
+    await settle(t);
+    // the screen did not turn, so the frame stands upright
+    fills(t, shape: 480 / 640);
+    expect(t.getSize(picture).height, greaterThan(t.getSize(picture).width));
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+  });
+
+  testWidgets('a screen that turned anyway: no strip, no stretch', (t) async {
+    // a wide screen, where android would not keep the app portrait
+    t.view.physicalSize = const Size(1600, 720);
+    t.view.devicePixelRatio = 2;
+    addTearDown(t.view.reset);
+    plugin(t);
+    await t.pumpWidget(framed(still: true));
+    await settle(t);
+    await screenTurned(t, 'landscapeLeft');
+    await hold(t, 270);
+    await settle(t);
+    expect(t.takeException(), isNull);
+    final box = t.getRect(picture);
+    expect(box.height, greaterThan(360 * 0.85));
+    fills(t, shape: 640 / 480);
+    // the shutter sits beside the picture, not under it
+    final shutter = t.getRect(find.bySemanticsLabel(l10n.cameraTakeAPhoto));
+    expect(shutter.left, greaterThanOrEqualTo(box.right));
+    // the screen turned with the phone, so the icons stay as they are
+    expect(turnOf(t, Icons.close) % 1, 0);
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+  });
+
+  testWidgets('a photo is taken the way up the phone is held', (t) async {
+    phone(t);
+    plugin(t);
+    await t.pumpWidget(framed(still: true));
+    await settle(t);
+    // no reading yet: the plugin's own default stands
+    expect(locks(), isEmpty);
+    await hold(t, 270);
+    await settle(t);
+    expect(locks(), ['landscapeLeft']);
+    // the same side again asks nothing
+    await hold(t, 280);
+    await settle(t);
+    expect(locks(), ['landscapeLeft']);
+    await hold(t, 90);
+    await settle(t);
+    expect(locks(), ['landscapeLeft', 'landscapeRight']);
+    await t.tap(find.bySemanticsLabel(l10n.cameraTakeAPhoto));
+    await settle(t);
+    final shot = asked.indexWhere((c) => c.method == 'takePicture');
+    expect(shot, greaterThan(0));
+    final before = asked
+        .take(shot)
+        .lastWhere((c) => c.method == 'lockCaptureOrientation');
+    expect((before.arguments as Map)['orientation'], 'landscapeRight');
+    await t.pump(const Duration(seconds: 4));
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+  });
+
+  testWidgets('a clip keeps the side it started on', (t) async {
+    phone(t);
+    plugin(t);
+    await t.pumpWidget(framed(still: true));
+    await settle(t);
+    await t.tap(find.text(l10n.cameraVideo));
+    await settle(t);
+    await hold(t, 270);
+    await settle(t);
+    await record(t);
+    final start = asked.indexWhere((c) => c.method == 'startVideoRecording');
+    expect(start, greaterThan(0));
+    final before = asked
+        .take(start)
+        .lastWhere((c) => c.method == 'lockCaptureOrientation');
+    expect((before.arguments as Map)['orientation'], 'landscapeLeft');
+    // the video controller was opened after the switch: it is the one told
+    expect(
+      (before.arguments as Map)['cameraId'],
+      (asked[start].arguments as Map)['cameraId'],
+    );
+    final told = locks().length;
+    await hold(t, 0);
+    await settle(t);
+    expect(locks(), hasLength(told));
+    expect(turnOf(t, Icons.close), 0);
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+  });
+
+  testWidgets('the front camera is told the side too', (t) async {
+    phone(t);
+    plugin(t);
+    await t.pumpWidget(framed(still: true));
+    await settle(t);
+    await hold(t, 270);
+    await settle(t);
+    await t.tap(find.bySemanticsLabel(l10n.cameraSwitchCamera));
+    await settle(t);
+    expect(creates, 2);
+    final front = asked.where(
+      (c) =>
+          c.method == 'lockCaptureOrientation' &&
+          (c.arguments as Map)['cameraId'] == 2,
+    );
+    expect(front.map((c) => (c.arguments as Map)['orientation']), [
+      'landscapeLeft',
+    ]);
     await t.pumpWidget(const SizedBox());
     await settle(t);
   });

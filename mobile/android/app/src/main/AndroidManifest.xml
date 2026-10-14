@@ -29,12 +29,16 @@
         android:roundIcon="@mipmap/ic_launcher_round">
         <!-- one instance only: the engine attaches to one screen, and a
              tap, link or share arriving while a picker or the camera is on
-             top would otherwise stack a second, blank copy above it -->
+             top would otherwise stack a second, blank copy above it.
+             portrait here too: the engine outlives this screen, and a lock
+             asked for from dart before it was attached never reaches it -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:taskAffinity=""
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity,DiscouragedApi"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|locale|layoutDirection|fontScale|uiMode|density"
             android:hardwareAccelerated="true"

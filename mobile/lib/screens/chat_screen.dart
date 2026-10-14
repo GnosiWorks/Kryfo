@@ -105,10 +105,12 @@ import '../seen_timers.dart';
 import '../read_burn.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/shift_tap_guard.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
 import '../widgets/preview_strip.dart';
@@ -210,25 +212,28 @@ Future<bool> showNoteSheet(
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
-            TextField(
+            ShiftTapGuard(
               controller: ctrl,
-              autofocus: true,
-              minLines: 1,
-              maxLines: 4,
-              cursorColor: HaloColors.amber,
-              style: HaloType.serif(
-                size: 16,
-                italic: true,
-                color: HaloColors.text,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.chatAQuietReminder,
-                hintStyle: HaloType.serif(
+              child: TextField(
+                controller: ctrl,
+                autofocus: true,
+                minLines: 1,
+                maxLines: 4,
+                cursorColor: HaloColors.amber,
+                style: HaloType.serif(
                   size: 16,
                   italic: true,
-                  color: HaloColors.text3,
+                  color: HaloColors.text,
                 ),
-                border: InputBorder.none,
+                decoration: InputDecoration(
+                  hintText: l10n.chatAQuietReminder,
+                  hintStyle: HaloType.serif(
+                    size: 16,
+                    italic: true,
+                    color: HaloColors.text3,
+                  ),
+                  border: InputBorder.none,
+                ),
               ),
             ),
             const SizedBox(height: 18),
@@ -3709,9 +3714,9 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  // its own tile rather than a mixed picker: on android 12 and older the
-  // mixed one is the system file browser. the clip goes the file way, which
-  // strips it and copies it out of the picker's cache.
+  // its own tile as well: without android's photo picker the gallery is
+  // photos only, as a mixed pick there is the file browser. the clip goes
+  // the file way, which strips it and copies it out of the picker's cache.
   Future<void> _pickAndSendVideo() async {
     final x = await lockState.hold(
       () => ImagePicker().pickVideo(source: ImageSource.gallery),
@@ -3727,25 +3732,33 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAndSendMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos
-    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
+    // whole, each in a folder of its own: see readPickedPhotos. videos come
+    // too where android has its photo picker
+    final picked = await lockState.hold(pickGallery);
     if (picked.isEmpty) return;
-    // the bytes are all that is kept
-    final bytesOf = await readPickedPhotos(picked);
-    // one photo picked: same preview + caption screen the camera path gets.
-    if (bytesOf.length == 1) {
-      if (!mounted) return;
-      final caption = await Navigator.of(context).push<String?>(
-        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
-      );
-      if (caption == null) return;
-      await _sendOneImage(bytesOf[0], caption);
-      return;
-    }
-    for (final bytes in bytesOf) {
-      if (!mounted) return;
-      await _sendOneImage(bytes, '');
-    }
+    // the bytes are all that is kept, and a video goes the video tile's way
+    await sendGalleryPicks(
+      picked,
+      photo: (bytes, alone) async {
+        if (!mounted) return false;
+        // one photo picked: the preview and caption screen the camera gets
+        if (alone) {
+          final caption = await Navigator.of(
+            context,
+          ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+          if (caption == null) return false;
+          await _sendOneImage(bytes, caption);
+          return true;
+        }
+        await _sendOneImage(bytes, '');
+        return true;
+      },
+      video: (x) async {
+        if (!mounted) return false;
+        await _sendFileFrom(x.path, madeVideoName(x.name));
+        return true;
+      },
+    );
   }
 
   // when the oldest of ours still going was written. a file that is
@@ -6031,6 +6044,10 @@ class _ChatHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // the palette swaps in place: depending on the theme repaints the
+    // header when it switches under an open chat
+    Theme.of(context);
+    final relay = appState.sendMode == 'balanced';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -6051,7 +6068,7 @@ class _ChatHead extends StatelessWidget {
               onTap: onBlock, // avatar opens the contact page
               behavior: HitTestBehavior.opaque,
               // the same face flies in from the list row
-              child: Hero(
+              child: HaloHero(
                 tag: 'face-$avatarSeed',
                 child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
               ),
@@ -6144,14 +6161,14 @@ class _ChatHead extends StatelessWidget {
                         Icon(
                           Icons.lock_outline,
                           size: 10,
-                          color: HaloColors.amber,
+                          color: relay ? HaloColors.sky : HaloColors.amber,
                         ),
                         const SizedBox(width: 4),
                         // a longer language at a big font size would run
                         // past the header's buttons, so it ends in …
                         Flexible(
                           child: Text(
-                            appState.sendMode == 'balanced'
+                            relay
                                 ? l10n.chatEncryptedViaRelay
                                 : appState.sendMode == 'fast'
                                 ? l10n.chatEncryptedDirect
@@ -6160,7 +6177,7 @@ class _ChatHead extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 10,
-                              color: HaloColors.text2,
+                              color: relay ? HaloColors.sky : HaloColors.text2,
                             ),
                           ),
                         ),
@@ -6314,29 +6331,32 @@ class _SearchHeadState extends State<SearchHead> {
                         Expanded(
                           child: WrittenDir(
                             controller: widget.controller,
-                            builder: (dir) => TextField(
-                              textDirection: dir,
-                              inputFormatters: const [UnmarkedInput()],
+                            builder: (dir) => ShiftTapGuard(
                               controller: widget.controller,
-                              focusNode: _focus,
-                              onChanged: widget.onChanged,
-                              cursorColor: HaloColors.amber,
-                              cursorWidth: 1.5,
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text,
-                              ),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                hintText: l10n.chatFindInConversation,
-                                hintStyle: HaloType.serif(
+                              child: TextField(
+                                textDirection: dir,
+                                inputFormatters: const [UnmarkedInput()],
+                                controller: widget.controller,
+                                focusNode: _focus,
+                                onChanged: widget.onChanged,
+                                cursorColor: HaloColors.amber,
+                                cursorWidth: 1.5,
+                                style: HaloType.sans(
                                   size: 13,
-                                  italic: true,
-                                  color: HaloColors.text3,
+                                  color: HaloColors.text,
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: l10n.chatFindInConversation,
+                                  hintStyle: HaloType.serif(
+                                    size: 13,
+                                    italic: true,
+                                    color: HaloColors.text3,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
                             ),
@@ -6915,7 +6935,7 @@ class _Bubble extends StatelessWidget {
                                                   // decodes, so pin a width
                                                   child: RememberedHeight(
                                                     id: msg.mediaPath!,
-                                                    child: Hero(
+                                                    child: HaloHero(
                                                       tag: photoHeroTag(
                                                         msg.mediaPath!,
                                                         'chat',
@@ -7953,51 +7973,54 @@ class _Composer extends StatelessWidget {
               Expanded(
                 child: WrittenDir(
                   controller: controller,
-                  builder: (dir) => TextField(
+                  builder: (dir) => ShiftTapGuard(
                     controller: controller,
-                    focusNode: focusNode,
-                    textDirection: dir,
-                    inputFormatters: const [UnmarkedInput()],
-                    cursorColor: HaloColors.amber,
-                    style: HaloType.sans(size: 14),
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: l10n.chatMessage,
-                      hintStyle: HaloType.sans(
-                        size: 14,
-                        color: HaloColors.text3,
-                      ),
-                      // stickers sit inside the field: no width taken from the row
-                      suffixIcon: StickerButton(onTap: onStickers),
-                      suffixIconConstraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 36,
-                      ),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      filled: true,
-                      fillColor: HaloColors.surface2,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(
-                          color: HaloColors.amber,
-                          width: 0.5,
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      textDirection: dir,
+                      inputFormatters: const [UnmarkedInput()],
+                      cursorColor: HaloColors.amber,
+                      style: HaloType.sans(size: 14),
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: l10n.chatMessage,
+                        hintStyle: HaloType.sans(
+                          size: 14,
+                          color: HaloColors.text3,
+                        ),
+                        // stickers sit inside the field: no width taken from the row
+                        suffixIcon: StickerButton(onTap: onStickers),
+                        suffixIconConstraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 36,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: HaloColors.surface2,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(
+                            color: HaloColors.amber,
+                            width: 0.5,
+                          ),
                         ),
                       ),
+                      onSubmitted: (_) => onSend(),
                     ),
-                    onSubmitted: (_) => onSend(),
                   ),
                 ),
               ),
@@ -8155,7 +8178,7 @@ class MediaGalleryScreen extends StatelessWidget {
                     secure: securePaths.contains(path),
                     tag: tag,
                   ),
-                  child: Hero(
+                  child: HaloHero(
                     tag: tag,
                     child: Image.file(
                       File(path),

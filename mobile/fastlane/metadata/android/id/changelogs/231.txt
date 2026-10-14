@@ -1,0 +1,9 @@
+Baru: jembatan otomatis saat Tor diblokir, penyamaran suara lebih jelas per obrolan, nomor kunci untuk dicek di kode penautan, dan pencarian GIF privat.
+
+Diperbaiki: pesan pertama ke orang baru yang hilang, Tor macet setelah ganti jaringan, dan aplikasi mogok saat dibuka di beberapa ponsel baru.
+
+Cadangan dan pindah ke ponsel baru lebih andal.
+
+Setelah memperbarui, kamu mungkin perlu mengetik PIN sekali sebelum buka kunci dengan sidik jari berfungsi lagi.
+
+Peningkatan stabilitas dan privasi.

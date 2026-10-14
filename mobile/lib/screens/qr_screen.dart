@@ -16,6 +16,7 @@ import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show LockDropped;
+import '../widgets/shift_tap_guard.dart';
 
 class _Field {
   final String id;
@@ -839,33 +840,39 @@ class _Input extends StatelessWidget {
                 child: MergeSemantics(
                   child: Semantics(
                     label: field.label,
-                    child: TextField(
+                    child: ShiftTapGuard(
                       controller: controller,
-                      keyboardType: field.keyboard,
-                      obscureText: field.secret && !shown,
-                      // never offered to the phone's autofill service
-                      autofillHints: null,
-                      minLines: 1,
-                      maxLines: field.secret ? 1 : field.lines,
-                      autocorrect: !field.plain && !field.secret,
-                      enableSuggestions: !field.plain && !field.secret,
-                      enableIMEPersonalizedLearning: false,
-                      textCapitalization: field.plain || field.secret
-                          ? TextCapitalization.none
-                          : TextCapitalization.sentences,
-                      cursorColor: HaloColors.amber,
-                      style: HaloType.sans(size: 14.5, color: HaloColors.text),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                        hintText: field.hint.isEmpty ? null : field.hint,
-                        hintStyle: HaloType.sans(
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: field.keyboard,
+                        obscureText: field.secret && !shown,
+                        // never offered to the phone's autofill service
+                        autofillHints: null,
+                        minLines: 1,
+                        maxLines: field.secret ? 1 : field.lines,
+                        autocorrect: !field.plain && !field.secret,
+                        enableSuggestions: !field.plain && !field.secret,
+                        enableIMEPersonalizedLearning: false,
+                        textCapitalization: field.plain || field.secret
+                            ? TextCapitalization.none
+                            : TextCapitalization.sentences,
+                        cursorColor: HaloColors.amber,
+                        style: HaloType.sans(
                           size: 14.5,
-                          color: HaloColors.text3,
+                          color: HaloColors.text,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: field.hint.isEmpty ? null : field.hint,
+                          hintStyle: HaloType.sans(
+                            size: 14.5,
+                            color: HaloColors.text3,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),

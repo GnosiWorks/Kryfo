@@ -5199,7 +5199,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVersion => 'Version';
 
   @override
-  String get settings030Alpha => '0.5.0 · alpha';
+  String get settings030Alpha => '0.5.1 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Report an issue';

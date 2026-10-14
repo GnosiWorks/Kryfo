@@ -8,10 +8,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart'
+    show ImagePickerPlatform;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
+import 'open_file.dart' show nameSaysVideo;
 import 'shred.dart';
 
 // only a path inside the app's own cache is ours to destroy. a picker that
@@ -144,6 +148,85 @@ Future<List<Uint8List>> readPickedPhotos(
     ];
   } finally {
     await (drop ?? shredPickedImages)(picked);
+  }
+}
+
+// android's photo picker: built in from 13, a system update on 11 and 12,
+// google play on older phones. without it a mixed pick is the file browser
+Future<bool> photoPickerReady() async {
+  try {
+    return await _platform.invokeMethod<bool>('photoPickerReady') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
+
+// the gallery tile: photos and videos in one sheet where the photo picker
+// is, photos alone elsewhere, where videos keep their own tile
+Future<List<XFile>> pickGallery({
+  ImagePicker? picker,
+  Future<bool> Function()? ready,
+}) async {
+  final p = picker ?? ImagePicker();
+  if (!await (ready ?? photoPickerReady)()) return p.pickMultiImage();
+  final android = ImagePickerPlatform.instance;
+  if (android is! ImagePickerAndroid) return p.pickMultipleMedia();
+  // read as the call goes out, so no other pick sees it
+  final was = android.useAndroidPhotoPicker;
+  android.useAndroidPhotoPicker = true;
+  try {
+    return p.pickMultipleMedia();
+  } finally {
+    android.useAndroidPhotoPicker = was;
+  }
+}
+
+// the picker names its copy for the type it was given
+bool isVideoPick(XFile x) =>
+    nameSaysVideo(x.name) || (x.mimeType?.startsWith('video/') ?? false);
+
+// a gallery pick sent in the order chosen. photos are read whole and shrunk
+// as readPickedPhotos does; a video goes to [video] as the video tile's does
+// and its copy is shredded once sent. [photo] hears whether it is the only
+// pick. either returning false stops the rest, and what is left still goes
+Future<void> sendGalleryPicks(
+  List<XFile> picked, {
+  required Future<bool> Function(Uint8List bytes, bool alone) photo,
+  required Future<bool> Function(XFile video) video,
+  Future<Uint8List> Function(Uint8List b)? shrink,
+  Future<void> Function(List<XFile> x)? drop,
+}) async {
+  final shred = drop ?? shredPickedImages;
+  final picks = {for (final x in picked) x.path: x}.values.toList();
+  final videos = [
+    for (final x in picks)
+      if (isVideoPick(x)) x,
+  ];
+  try {
+    final bytesOf = await readPickedPhotos(
+      [
+        for (final x in picks)
+          if (!isVideoPick(x)) x,
+      ],
+      shrink: shrink,
+      drop: drop,
+    );
+    final alone = picks.length == 1;
+    var i = 0;
+    for (final x in picks) {
+      if (!isVideoPick(x)) {
+        if (!await photo(bytesOf[i++], alone)) return;
+        continue;
+      }
+      videos.remove(x);
+      try {
+        if (!await video(x)) return;
+      } finally {
+        await shred([x]);
+      }
+    }
+  } finally {
+    if (videos.isNotEmpty) await shred(videos);
   }
 }
 

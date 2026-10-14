@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.5.1] - 2026-10-11
+
+### Added
+- bridges for places where tor is blocked. in automatic mode, Kryfo notices when tor can't get through, tries a disguised way in by itself, and remembers what worked on that kind of network, wi-fi or mobile data. you can still pick a bridge yourself or ask the tor project for one. when tor is blocked during setup, Kryfo suggests automatic first.
+- voice disguise per chat: turn on "Disguise my voice here" in a chat's menu and Kryfo remembers it for that chat. burner rooms start with it on.
+- your voice is disguised while you record, so the note is ready the moment you let go.
+- a new mic: hold to record, let go to send, slide to the side to cancel, or slide up to keep recording hands-free. before sending, you can listen to the note with or without the disguise.
+- say hi: after you add someone, their chat opens with a one-tap wave. they won't know you added them until your first message arrives.
+- share to Kryfo: share text or a link from any app, pick a chat, and it waits in the message box. nothing is sent until you tap send.
+- gif search, off until you turn it on. Kryfo's server searches for you, so the gif service never sees you, and the gif reaches your friend encrypted, like a photo.
+- update notice for copies from kryfo.app or github. once a day, over tor, Kryfo checks for a new version and tells you. nothing installs by itself, and you can turn it off in settings.
+- notes are grouped by time: today, yesterday, this week, then by month. long notes fold away behind "Show more", and you can delete all notes at once.
+- whoever made a room can reset its link. the old link stops working, and everyone in the room gets the new one.
+- location links show as a small place card.
+- pair codes show a key number on both phones. check that all four groups match before you add someone.
+- chats you add by a code, a link or a request show a card to compare the safety number. "Later" folds it into one quiet line.
+
+### Changed
+- if tor stops answering while Kryfo is in the background, tor can restart itself. if it still can't connect, Kryfo says so plainly and offers a restart that keeps your messages.
+- when the network drops for a while, Kryfo gets going again much sooner once it's back.
+- the disguised voice is easier to understand.
+- a voice note's length counts from the first sound, rounded to the nearest second.
+- when someone you verified gets a new security code, Kryfo waits for you to check it or accept it before sending to them. their messages still arrive.
+- three words that came with a request, an introduction or a group show "Not checked" until you scan their qr code in person or compare the safety number.
+- backups now bring your privacy settings with them. pins never travel, so set them again after a restore.
+- backups and moving to a new phone are more reliable.
+- with "Always on", Kryfo keeps getting messages after an update.
+- when tor can't connect, handle search says it needs tor, and you can still add someone by qr code or link.
+- deleting the chat with Marios also takes back what you sent him.
+- report an issue offers to write to Marios in Kryfo first, and email second. settings also has a row to follow GnosiWorks.
+- in support, you can help fund an independent security audit. the full report will be public.
+- tapping a room link shows the room before you join, and a full room tells you so.
+- someone you deleted who writes to you again shows up as a new request. deleting a chat also clears what you set for it, like its note or mute.
+- double tap to zoom in the photo viewer, and polls show the faces of who voted.
+- new backups need a passphrase of at least 12 characters.
+- Kryfo uses the whole screen on newer android, and sheets stay clear of the navigation bar and the keyboard.
+- the language choice is the first thing you see when you set up Kryfo.
+- in arabic and persian, pair codes take your own digits, and replies and bios follow the direction they're written in.
+- backups and wiping are more private.
+- more privacy in how Kryfo talks to relays and the handle service.
+- After updating, you may need to type your PIN once before fingerprint unlock works again.
+
+### Fixed
+- a rare case where the first messages to someone you had just added never arrived. Kryfo now sends them again until they do.
+- tor could stay stuck after a network change, like moving from wi-fi to mobile data. Kryfo now follows the change and gets going again.
+- messages arrive even when android restarts Kryfo in the background.
+- a crash at launch on some newer phones.
+- tor no longer restarts itself while automatic mode is still finding a way in.
+- after restoring a backup, deleted messages stay deleted, and what you missed in chats and groups arrives sooner.
+- edits, reactions and pins that arrive before their message are no longer lost, and edits land in the right order.
+- a rare case where a message could be sent twice.
+- forwarding into the chat you're in now works as expected.
+- group info now updates while you have it open.
+- replies to a photo in a group keep their quote.
+- photos with the same name, picked together, all arrive.
+- png and gif pictures keep their format when sent.
+- a group no longer keeps saying "Mentioned you" after that message is taken back.
+- a room its maker left now shows as closed.
+- sheets you type in, like the one for editing a message, close cleanly.
+
+### Security
+- the engine is built with go 1.26.9, and its crypto and network libraries are updated: x/crypto 0.57.0 and x/net 0.60.0.
+- stability and privacy improvements throughout. update when you can.
+
 ## [0.5.0] - 2026-10-08
 
 ### Added

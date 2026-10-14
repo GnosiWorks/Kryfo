@@ -21,6 +21,7 @@ import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 const _noteMax = 40;
 
@@ -202,35 +203,41 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             Divider(color: HaloColors.line, height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: TextField(
+              child: ShiftTapGuard(
                 controller: _noteCtrl,
-                maxLength: _noteMax,
-                onChanged: (_) => setState(() {}),
-                textCapitalization: TextCapitalization.none,
-                style: HaloType.sans(size: 14, color: HaloColors.text),
-                cursorColor: HaloColors.amber,
-                decoration: InputDecoration(
-                  hintText: l10n.introduceANoteLikeMy,
-                  hintStyle: HaloType.serif(
-                    size: 14,
-                    italic: true,
-                    color: HaloColors.text3,
-                  ),
-                  counterText: '',
-                  suffixText: _noteCtrl.text.isEmpty
-                      ? null
-                      : '${_noteCtrl.text.length}/$_noteMax',
-                  suffixStyle: HaloType.mono(size: 9, color: HaloColors.text2),
-                  isDense: true,
-                  filled: true,
-                  fillColor: HaloColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                child: TextField(
+                  controller: _noteCtrl,
+                  maxLength: _noteMax,
+                  onChanged: (_) => setState(() {}),
+                  textCapitalization: TextCapitalization.none,
+                  style: HaloType.sans(size: 14, color: HaloColors.text),
+                  cursorColor: HaloColors.amber,
+                  decoration: InputDecoration(
+                    hintText: l10n.introduceANoteLikeMy,
+                    hintStyle: HaloType.serif(
+                      size: 14,
+                      italic: true,
+                      color: HaloColors.text3,
+                    ),
+                    counterText: '',
+                    suffixText: _noteCtrl.text.isEmpty
+                        ? null
+                        : '${_noteCtrl.text.length}/$_noteMax',
+                    suffixStyle: HaloType.mono(
+                      size: 9,
+                      color: HaloColors.text2,
+                    ),
+                    isDense: true,
+                    filled: true,
+                    fillColor: HaloColors.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),

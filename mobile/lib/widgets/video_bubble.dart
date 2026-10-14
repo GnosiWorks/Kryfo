@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
+import 'halo_hero.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
 import 'swap.dart';
@@ -117,7 +118,7 @@ class _VideoBubbleState extends State<VideoBubble> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Hero(
+              HaloHero(
                 tag: videoHeroTag(widget.path),
                 flightShuttleBuilder: (c, a, dir, from, to) =>
                     videoFlight(c, a, dir, from, to, widget.path),

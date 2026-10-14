@@ -12,6 +12,7 @@ import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, nameUnchecked, session;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -34,6 +35,7 @@ import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/owned_text.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 /// the name we give a contact. '' to clear it, null when dismissed
 @visibleForTesting
@@ -77,16 +79,22 @@ Future<String?> showRenameSheet(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: HaloColors.line, width: 0.5),
                 ),
-                child: TextField(
+                child: ShiftTapGuard(
                   controller: ctrl,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.none,
-                  onSubmitted: (s) => Navigator.pop(ctx, s),
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: haloId,
-                    hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+                  child: TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.none,
+                    onSubmitted: (s) => Navigator.pop(ctx, s),
+                    style: HaloType.sans(size: 15, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: haloId,
+                      hintStyle: HaloType.mono(
+                        size: 13,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -349,7 +357,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     curve: kHouseCurve,
                     builder: (_, v, child) =>
                         Transform.scale(scale: v, child: child),
-                    child: Hero(
+                    child: HaloHero(
                       tag: 'face-${widget.avatarSeed}',
                       child: KryfoAvatar(
                         seed: widget.avatarSeed,

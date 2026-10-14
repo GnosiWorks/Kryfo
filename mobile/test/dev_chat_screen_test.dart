@@ -653,6 +653,7 @@ void main() {
       'plugins.flutter.io/image_picker',
       'miguelruivo.flutter.plugins.filepicker',
       'com.ryanheise.just_audio.methods',
+      'halo/platform',
     ]) {
       _mock(c, null);
     }
@@ -1472,5 +1473,66 @@ void main() {
       await leave(t);
       expect(_engine.calls, isEmpty);
     });
+  });
+
+  // with android's photo picker the gallery hands back photos and videos
+  // together; without it, photos alone, as a mixed pick there is the file
+  // browser
+  group('the gallery', () {
+    for (final ready in [true, false]) {
+      testWidgets(
+        ready
+            ? 'with the photo picker, a photo, a video and a photo go in '
+                  'the order picked, each its own way'
+            : 'without it, photos alone as before',
+        (t) async {
+          _mock(
+            'halo/platform',
+            (c) async => c.method == 'photoPickerReady' ? ready : null,
+          );
+          final asked = <String>[];
+          final picked = <String>[];
+          _mock('plugins.flutter.io/image_picker', (c) async {
+            asked.add(c.method);
+            final out = switch (c.method) {
+              'pickMedia' => [
+                _file('one.png', _png),
+                _file('clip.mp4', _mp4()),
+                _file('two.png', _png),
+              ],
+              'pickMultiImage' => [
+                _file('one.png', _png),
+                _file('two.png', _png),
+              ],
+              _ => null,
+            };
+            picked.addAll(out ?? []);
+            return out;
+          });
+          await _world(container: HaloContainer.decoy);
+          await _open(t);
+          final rows = ready ? 3 : 2;
+          await _attach(t, l10n.chatGallery, () => _sent().length >= rows);
+          expect(asked, [ready ? 'pickMedia' : 'pickMultiImage']);
+          String kind(Map<String, Object?> r) => r['media_path'] != null
+              ? 'photo'
+              : '${r['file_name']}'.endsWith('.mp4') && r['file_path'] != null
+              ? 'video'
+              : '$r';
+          expect([
+            for (final r in _sent()) kind(r),
+          ], ready ? ['photo', 'video', 'photo'] : ['photo', 'photo']);
+          // the video went the video tile's way: renamed, not as picked
+          expect(
+            _sent().map((r) => r['file_name']),
+            isNot(contains('clip.mp4')),
+          );
+          // what the picker left went with the send
+          await _io(t, () => picked.every((p) => !File(p).existsSync()));
+          expect(_engine.calls, isEmpty);
+          await _close(t);
+        },
+      );
+    }
   });
 }

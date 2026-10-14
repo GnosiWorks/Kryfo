@@ -13,6 +13,7 @@ import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'written_field.dart';
 import '../l10n/l10n.dart';
+import 'shift_tap_guard.dart';
 
 Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
   padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
@@ -275,27 +276,30 @@ Future<String?> showInputSheet(
         ),
         child: WrittenDir(
           controller: ctrl,
-          builder: (dir) => TextField(
+          builder: (dir) => ShiftTapGuard(
             controller: ctrl,
-            textDirection: dir,
-            inputFormatters: const [UnmarkedInput()],
-            autofocus: true,
-            maxLength: multiline ? null : maxLength,
-            minLines: 1,
-            maxLines: multiline ? 6 : 1,
-            keyboardType: multiline ? TextInputType.multiline : null,
-            autocorrect: !mono,
-            enableSuggestions: !mono,
-            cursorColor: HaloColors.amber,
-            onSubmitted: multiline ? null : (s) => Navigator.pop(ctx, s),
-            style: mono
-                ? HaloType.mono(size: 14, color: HaloColors.text)
-                : HaloType.sans(size: 15, color: HaloColors.text),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              counterText: '',
-              hintText: hint,
-              hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+            child: TextField(
+              controller: ctrl,
+              textDirection: dir,
+              inputFormatters: const [UnmarkedInput()],
+              autofocus: true,
+              maxLength: multiline ? null : maxLength,
+              minLines: 1,
+              maxLines: multiline ? 6 : 1,
+              keyboardType: multiline ? TextInputType.multiline : null,
+              autocorrect: !mono,
+              enableSuggestions: !mono,
+              cursorColor: HaloColors.amber,
+              onSubmitted: multiline ? null : (s) => Navigator.pop(ctx, s),
+              style: mono
+                  ? HaloType.mono(size: 14, color: HaloColors.text)
+                  : HaloType.sans(size: 15, color: HaloColors.text),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                counterText: '',
+                hintText: hint,
+                hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+              ),
             ),
           ),
         ),

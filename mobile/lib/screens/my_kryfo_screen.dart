@@ -27,6 +27,7 @@ import '../widgets/unfold.dart';
 import 'handle_screen.dart';
 import 'scan_screen.dart';
 import '../l10n/l10n.dart';
+import '../widgets/shift_tap_guard.dart';
 
 enum _Way { none, here, away, handle }
 
@@ -595,22 +596,25 @@ class _Way3Card extends StatelessWidget {
                 ),
                 const SizedBox(width: 2),
                 Expanded(
-                  child: TextField(
-                    textDirection: TextDirection.ltr,
+                  child: ShiftTapGuard(
                     controller: ctrl,
-                    maxLength: 20,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => onFind(),
-                    style: HaloType.mono(size: 14, color: HaloColors.text),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      counterText: '',
-                      hintText: l10n.handleWren,
-                      hintStyle: HaloType.mono(
-                        size: 14,
-                        color: HaloColors.text3,
+                    child: TextField(
+                      textDirection: TextDirection.ltr,
+                      controller: ctrl,
+                      maxLength: 20,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => onFind(),
+                      style: HaloType.mono(size: 14, color: HaloColors.text),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        counterText: '',
+                        hintText: l10n.handleWren,
+                        hintStyle: HaloType.mono(
+                          size: 14,
+                          color: HaloColors.text3,
+                        ),
                       ),
                     ),
                   ),

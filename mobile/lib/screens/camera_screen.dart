@@ -4,8 +4,10 @@
 // to the chat. nothing lands in the camera roll unless the person asks.
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../dlog.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +29,7 @@ import '../widgets/decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../orientation.dart';
 import 'scan_screen.dart' show cameraDenied;
 
 class CaptureResult {
@@ -42,6 +45,33 @@ Future<Directory> capturesDir() async {
   final d = Directory('${base.path}/captures');
   if (!await d.exists()) await d.create(recursive: true);
   return d;
+}
+
+// the preview's box at the frame's own shape, upright or sideways as the
+// screen is. a box of the other shape squeezes the picture
+@visibleForTesting
+Size previewBox(Size? frame, DeviceOrientation screen) {
+  final f = frame ?? const Size(4, 3);
+  final long = math.max(f.width, f.height);
+  final short = math.min(f.width, f.height);
+  final upright =
+      screen == DeviceOrientation.portraitUp ||
+      screen == DeviceOrientation.portraitDown;
+  return upright ? Size(short, long) : Size(long, short);
+}
+
+// the android preview takes off a turn for the screen's orientation that it
+// expects the plugin's own preview widget to have put on. put on here the
+// same way, and only for the screen: that widget also turns by a locked
+// capture orientation, which here is the phone's tilt
+int _previewTurns(DeviceOrientation screen) {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return 0;
+  return switch (screen) {
+    DeviceOrientation.portraitUp => 0,
+    DeviceOrientation.landscapeRight => 1,
+    DeviceOrientation.portraitDown => 2,
+    DeviceOrientation.landscapeLeft => 3,
+  };
 }
 
 class CameraScreen extends StatefulWidget {
@@ -74,13 +104,72 @@ class _CameraScreenState extends State<CameraScreen>
   int _recSecs = 0;
   Timer? _recTick;
 
+  // which way up the phone is held, null until the sensor says
+  DeviceOrientation? _held;
+  // the icons' turn, never wrapped, so each change goes the short way
+  double _turns = 0;
+  StreamSubscription<DeviceOrientation>? _tilt;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _unguard = lockGuard.closeOnLock(_closeForLock);
+    // portrait however the phone is held, as other camera apps are. the
+    // icons turn instead, and the capture is told the real way up
+    unawaited(
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+      ]),
+    );
+    _tilt = tilts().listen(_tilted);
     _setup();
   }
+
+  void _tilted(DeviceOrientation o) {
+    if (!mounted) return;
+    setState(() {
+      _held = o;
+      _turns = nearestTurns(_turns, tiltTurns(o));
+    });
+    unawaited(_aim());
+  }
+
+  // photos and clips come out the way up the phone was held. the screen
+  // never turns, so the plugin's own guess from it is always portrait. a
+  // clip keeps the side it started on
+  Future<void> _aim() async {
+    final c = _cam;
+    final o = _held;
+    if (c == null || o == null || _recording || !c.value.isInitialized) {
+      return;
+    }
+    if (c.value.lockedCaptureOrientation == o) return;
+    try {
+      await c.lockCaptureOrientation(o);
+    } catch (e) {
+      dlog('camera: aim: $e');
+    }
+  }
+
+  // the screen is wider than tall only where android ignored the lock, as a
+  // large screen may
+  bool get _wide {
+    final s = MediaQuery.sizeOf(context);
+    return s.width > s.height;
+  }
+
+  // there the screen turns with the phone, and the icons need not
+  double get _iconTurns => _wide ? nearestTurns(_turns, 0) : _turns;
+
+  Widget _upright(Widget child) => AnimatedRotation(
+    turns: _iconTurns,
+    duration: motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 280),
+    curve: Curves.easeOutCubic,
+    child: child,
+  );
 
   // the lock closes the camera: it never runs under the pin pad
   VoidCallback? _unguard;
@@ -170,6 +259,7 @@ class _CameraScreenState extends State<CameraScreen>
       return;
     }
     setState(() => _cam = c);
+    unawaited(_aim());
   }
 
   @override
@@ -193,6 +283,8 @@ class _CameraScreenState extends State<CameraScreen>
   void dispose() {
     _unguard?.call();
     _recTick?.cancel();
+    _tilt?.cancel();
+    unawaited(SystemChrome.setPreferredOrientations(appOrientations));
     WidgetsBinding.instance.removeObserver(this);
     _cam?.dispose();
     // a clip that was never used is shredded on the way out
@@ -237,6 +329,7 @@ class _CameraScreenState extends State<CameraScreen>
     setState(() => _busy = true);
     HapticFeedback.mediumImpact();
     try {
+      await _aim();
       final x = await c.takePicture();
       final raw = await x.readAsBytes();
       // the plugin wrote a file with everything the sensor knows. it goes
@@ -312,6 +405,7 @@ class _CameraScreenState extends State<CameraScreen>
       // a second tap while it starts is not a second start
       setState(() => _busy = true);
       try {
+        await _aim();
         await c.startVideoRecording();
       } catch (_) {
         // a camera let go while it started is no failure to report
@@ -374,6 +468,8 @@ class _CameraScreenState extends State<CameraScreen>
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+      // the next capture follows the phone again
+      unawaited(_aim());
     }
   }
 
@@ -429,53 +525,86 @@ class _CameraScreenState extends State<CameraScreen>
   @override
   Widget build(BuildContext context) {
     final reviewing = _shot != null || _clip != null;
+    final wide = _wide;
+    final picture = ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: ColoredBox(
+        color: HaloColors.surface,
+        child: FadeSwap(child: reviewing ? _review() : _live()),
+      ),
+    );
+    final note = Text(
+      _video ? l10n.cameraNeverSavedToYour : l10n.cameraNoExifNeverSaved,
+      textAlign: TextAlign.center,
+      style: HaloType.mono(size: 10.5, color: HaloColors.text2, letter: 0.06),
+    );
+    // the bars cross with the picture
+    final bars = EaseSize(
+      child: FadeSwap(
+        child: reviewing
+            ? KeyedSubtree(
+                key: const ValueKey('review'),
+                child: _reviewBar(stacked: wide),
+              )
+            : KeyedSubtree(
+                key: const ValueKey('shutter'),
+                child: _shutterBar(),
+              ),
+      ),
+    );
     return Scaffold(
       backgroundColor: HaloColors.ink,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              // the margin sits outside the clip, so all four corners round
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: ColoredBox(
-                    color: HaloColors.surface,
-                    child: FadeSwap(child: reviewing ? _review() : _live()),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              _video
-                  ? l10n.cameraNeverSavedToYour
-                  : l10n.cameraNoExifNeverSaved,
-              style: HaloType.mono(
-                size: 10.5,
-                color: HaloColors.text2,
-                letter: 0.06,
-              ),
-            ),
-            const SizedBox(height: 14),
-            // the bars cross with the picture above them
-            EaseSize(
-              child: FadeSwap(
-                child: reviewing
-                    ? KeyedSubtree(
-                        key: const ValueKey('review'),
-                        child: _reviewBar(),
-                      )
-                    : KeyedSubtree(
-                        key: const ValueKey('shutter'),
-                        child: _shutterBar(),
+        child: wide
+            // beside the picture, never under a strip of it
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        12,
+                        8,
+                        0,
+                        8,
                       ),
+                      child: picture,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 196,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: note,
+                          ),
+                          const SizedBox(height: 14),
+                          bars,
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  Expanded(
+                    // the margin sits outside the clip, so all four corners
+                    // round
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      child: picture,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  note,
+                  const SizedBox(height: 14),
+                  bars,
+                  const SizedBox(height: 18),
+                ],
               ),
-            ),
-            const SizedBox(height: 18),
-          ],
-        ),
       ),
     );
   }
@@ -498,14 +627,21 @@ class _CameraScreenState extends State<CameraScreen>
                   color: Colors.black,
                   child: const SizedBox.expand(),
                 )
-              : FittedBox(
+              // fills the box, cropped, at the frame's own shape
+              : ValueListenableBuilder<CameraValue>(
                   key: ObjectKey(c),
-                  fit: BoxFit.cover,
-                  clipBehavior: Clip.hardEdge,
-                  child: SizedBox(
-                    width: c.value.previewSize?.height ?? 1,
-                    height: c.value.previewSize?.width ?? 1,
-                    child: CameraPreview(c),
+                  valueListenable: c,
+                  child: c.buildPreview(),
+                  builder: (_, v, preview) => FittedBox(
+                    fit: BoxFit.cover,
+                    clipBehavior: Clip.hardEdge,
+                    child: SizedBox.fromSize(
+                      size: previewBox(v.previewSize, v.deviceOrientation),
+                      child: RotatedBox(
+                        quarterTurns: _previewTurns(v.deviceOrientation),
+                        child: preview,
+                      ),
+                    ),
                   ),
                 ),
         ),
@@ -588,10 +724,12 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.no_photography_outlined,
-              size: 30,
-              color: HaloColors.amber,
+            _upright(
+              Icon(
+                Icons.no_photography_outlined,
+                size: 30,
+                color: HaloColors.amber,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -653,7 +791,7 @@ class _CameraScreenState extends State<CameraScreen>
         shape: BoxShape.circle,
         color: HaloColors.ink.withValues(alpha: 0.55),
       ),
-      child: Icon(icon, size: 20, color: HaloColors.text),
+      child: _upright(Icon(icon, size: 20, color: HaloColors.text)),
     ),
   );
 
@@ -674,7 +812,9 @@ class _CameraScreenState extends State<CameraScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
+          _upright(
+            Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
+          ),
           const SizedBox(height: 12),
           Text(
             l10n.cameraClipSMb(whole(secs), mb),
@@ -808,18 +948,25 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  Widget _reviewBar() {
+  // [stacked] one above the other, for the narrow column beside the picture
+  Widget _reviewBar({bool stacked = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(child: _ghost(l10n.cameraRetake, _retake)),
-              const SizedBox(width: 10),
-              Expanded(child: _ghost(l10n.cameraKeepACopy, _keepCopy)),
-            ],
-          ),
+          if (stacked) ...[
+            _ghost(l10n.cameraRetake, _retake),
+            const SizedBox(height: 8),
+            _ghost(l10n.cameraKeepACopy, _keepCopy),
+          ] else
+            Row(
+              children: [
+                Expanded(child: _ghost(l10n.cameraRetake, _retake)),
+                const SizedBox(width: 10),
+                Expanded(child: _ghost(l10n.cameraKeepACopy, _keepCopy)),
+              ],
+            ),
           const SizedBox(height: 10),
           PressScale(
             onTap: _use,

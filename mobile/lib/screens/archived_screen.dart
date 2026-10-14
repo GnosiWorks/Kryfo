@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../widgets/halo_hero.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart' show appState;
 import '../lock_guard.dart' show lockGuard;
@@ -401,7 +402,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                 opacity: dim,
                 child: ColorFiltered(
                   colorFilter: _awake ? _awakeFilter : _asleepFilter,
-                  child: Hero(
+                  child: HaloHero(
                     tag: 'face-${c.avatarSeed}',
                     child: KryfoAvatar(
                       seed: c.avatarSeed,
