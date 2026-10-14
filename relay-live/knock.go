@@ -141,6 +141,18 @@ type knockEP struct {
 	// failures in a row, since when
 	fails        int
 	failingSince time.Time
+	// when the relay first took it, and whether a knock to it ever went
+	// through: one a day old that did gets a lane new ones cannot fill
+	born      time.Time
+	delivered bool
+}
+
+// knocks for an endpoint known a day and proven are kept apart from new
+// ones, so a flood of fresh endpoints on the same server cannot delay them
+const knockTrustAfter = 24 * time.Hour
+
+func (ep *knockEP) trusted(now time.Time) bool {
+	return ep.delivered && now.Sub(ep.born) >= knockTrustAfter
 }
 
 type knockReg struct {
@@ -428,7 +440,10 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 	d := (*knockDomain)(nil)
 	if ep == nil {
 		u, _ := url.Parse(endpoint)
-		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname()), keys: map[[32]byte]struct{}{}}
+		ep = &knockEP{url: endpoint, domain: knockDomainOf(u.Hostname()), keys: map[[32]byte]struct{}{}, born: time.Unix(made, 0)}
+		if nb := k.now(); nb.Before(ep.born) {
+			ep.born = nb
+		}
 		k.eps[endpoint] = ep
 		d = k.domainLocked(ep.domain)
 		d.eps++
@@ -673,7 +688,13 @@ func (k *knocker) logStats() {
 func applyKnocks(relay *khatru.Relay, l *limits, k *knocker) {
 	l.knock = k
 	relay.OnEphemeralEvent = append(relay.OnEphemeralEvent, func(_ context.Context, ev *nostr.Event) { k.apply(ev) })
-	relay.OnEventSaved = append(relay.OnEventSaved, func(_ context.Context, ev *nostr.Event) { k.stored(ev) })
+	relay.OnEventSaved = append(relay.OnEventSaved, func(ctx context.Context, ev *nostr.Event) {
+		// a wrap's knock comes out of its connection's budget; a knock per
+		// endpoint is held to the floor besides
+		if ev.Kind == wrapKind && l.takeKnock(ctx) {
+			k.stored(ev)
+		}
+	})
 	relay.PreventBroadcast = append(relay.PreventBroadcast, func(_ *khatru.WebSocket, ev *nostr.Event) bool {
 		return ev.Kind == knockKind
 	})

@@ -108,7 +108,7 @@ func (tk *testKnocks) drain() []knockJob {
 	defer tk.mu.Unlock()
 	var out []knockJob
 	for _, d := range tk.domains {
-		for _, ep := range d.real {
+		for _, ep := range append(d.old, d.real...) {
 			out = append(out, knockJob{ep.url, false})
 			ep.queuedReal = false
 		}
@@ -116,7 +116,7 @@ func (tk *testKnocks) drain() []knockJob {
 			out = append(out, knockJob{ep.url, true})
 			ep.queuedDecoy = false
 		}
-		d.real, d.decoy = nil, nil
+		d.old, d.real, d.decoy = nil, nil, nil
 		d.inRing = false
 	}
 	tk.q.push, tk.q.shared = nil, nil
@@ -867,6 +867,89 @@ func TestKnockPublicServersKeepTheirTurns(t *testing.T) {
 		if dropped != 0 || served < 295 {
 			t.Fatalf("%d made-up servers: ntfy.sh served %d of 300, %d dropped", n, served, dropped)
 		}
+	}
+}
+
+// thousands of fresh random topics on the same public server, knocked at
+// 300 a second: endpoints a day old that knocked before keep their lane
+func TestKnockProvenEndpointsKeepTheirLane(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.mu.Lock()
+	now := tk.clock.now()
+	day := now.Add(-knockTrustAfter - time.Hour)
+	var leg, att []*knockEP
+	for i := 0; i < 1000; i++ {
+		u := fmt.Sprintf("https://ntfy.sh/upLegit%d", i)
+		tk.setLocked(knockKey(r3key(1_000_000+i)), u, day.Unix(), now.Add(knockTTL).Unix())
+		tk.eps[u].delivered = true
+		leg = append(leg, tk.eps[u])
+	}
+	for i := 0; i < 19000; i++ {
+		u := fmt.Sprintf("https://ntfy.sh/rand%d", i)
+		tk.setLocked(knockKey(r3key(i)), u, now.Unix(), now.Add(knockTTL).Unix())
+		att = append(att, tk.eps[u])
+	}
+	var asked, served, dropped, ai, li int
+	waiting := map[*knockEP]bool{}
+	var acc float64
+	for ms := 0; ms < 60_000; ms++ {
+		now = now.Add(time.Millisecond)
+		tk.clock.set(now)
+		for acc += 0.3; acc >= 1; acc-- {
+			tk.q.addLocked(att[ai%len(att)], false)
+			ai++
+		}
+		if ms%200 == 0 {
+			ep := leg[li%len(leg)]
+			li++
+			before := tk.stats.dropped.Load()
+			tk.q.addLocked(ep, false)
+			asked++
+			if tk.stats.dropped.Load() > before {
+				dropped++
+			} else {
+				waiting[ep] = true
+			}
+		}
+		for {
+			ep, _, ok := tk.q.nextLocked(now)
+			if !ok {
+				break
+			}
+			if waiting[ep] {
+				served++
+				delete(waiting, ep)
+			}
+			tk.q.doneLocked(ep)
+		}
+	}
+	tk.mu.Unlock()
+	if float64(served) < 0.95*float64(asked) || dropped != 0 {
+		t.Fatalf("proven endpoints: %d asked, %d served, %d dropped", asked, served, dropped)
+	}
+}
+
+// one connection's wraps set off a bounded number of knocks
+func TestKnockConnectionKnockBudget(t *testing.T) {
+	url, tk := testKnockRelay(t)
+	var pks []string
+	for i := 0; i < 60; i++ {
+		_, pk := keypair()
+		tk.mu.Lock()
+		tk.setLocked(knockKey(pk), fmt.Sprintf("https://ntfy.sh/up%d", i), time.Now().Unix(), time.Now().Add(knockTTL).Unix())
+		tk.mu.Unlock()
+		pks = append(pks, pk)
+	}
+	tk.drain()
+	r := connect(t, url)
+	for _, pk := range pks {
+		if err := publish(t, r, wrap(t, pk, nil)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	time.Sleep(100 * time.Millisecond)
+	if n := len(tk.drain()); n > knockBurst+3 {
+		t.Fatalf("one connection's wraps set off %d knocks", n)
 	}
 }
 

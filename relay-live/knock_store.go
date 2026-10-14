@@ -251,6 +251,10 @@ func (k *knocker) load() error {
 			continue
 		}
 		k.setLocked(key, ep, made, exp)
+		// across a restart, an endpoint a day old counts as proven
+		if e := k.eps[ep]; e != nil && k.now().Sub(e.born) >= knockTrustAfter {
+			e.delivered = true
+		}
 	}
 	return rows.Err()
 }

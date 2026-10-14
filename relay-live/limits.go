@@ -32,6 +32,9 @@ const (
 	// one live subscription per socket, catch-up pages one after another
 	reqsPerSec, reqBurst = 2, 100
 	maxIDs, maxAddrs     = 20, 10
+	// knocks the wraps of one connection may set off: a phone writes to
+	// one address at a time
+	knocksPerSec, knockBurst = 1, 20
 	// a wrap carries its address and an expiration. every parsed tag costs
 	// about 100 bytes of memory while the wrap waits for a listener, and is
 	// looked at for every listener, whatever it holds
@@ -98,7 +101,8 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 	return true
 }
 
-type budget struct{ events, reqs *bucket }
+// a connection's events, reqs, and the knocks its wraps may set off
+type budget struct{ events, reqs, knocks *bucket }
 
 type limits struct {
 	mu       sync.Mutex
@@ -183,7 +187,7 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst)}
+	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst)}
 	l.mu.Unlock()
 }
 
@@ -208,6 +212,18 @@ func (l *limits) take(ctx context.Context, events bool) bool {
 		return b.events.take(time.Now())
 	}
 	return b.reqs.take(time.Now())
+}
+
+// one knock from the connection's budget. one not seen open gets none
+func (l *limits) takeKnock(ctx context.Context) bool {
+	ws := khatru.GetConnection(ctx)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	b := l.conns[ws]
+	if b == nil {
+		return false
+	}
+	return b.knocks.take(time.Now())
 }
 
 // every event costs one from the connection, taken or refused

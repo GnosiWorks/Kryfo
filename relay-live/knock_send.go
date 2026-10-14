@@ -60,17 +60,18 @@ type knockJob struct {
 }
 
 type knockDomain struct {
-	name        string
-	push        bool
-	eps, regs   int
-	real, decoy []*knockEP
-	inRing      bool
-	rate        *bucket
+	name      string
+	push      bool
+	eps, regs int
+	// real knocks for proven endpoints, for the rest, and decoys
+	old, real, decoy []*knockEP
+	inRing           bool
+	rate             *bucket
 	// posts in flight, from the name lookup on
 	inflight int
 }
 
-func (d *knockDomain) waiting() int { return len(d.real) + len(d.decoy) }
+func (d *knockDomain) waiting() int { return len(d.old) + len(d.real) + len(d.decoy) }
 
 func (d *knockDomain) queueCap() int {
 	if d.push {
@@ -148,8 +149,9 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		return
 	}
 	d := k.domainLocked(ep.domain)
-	full := d.waiting() >= d.queueCap() || (!d.push && q.sharedQueued >= knockSharedQueue)
-	half := d.waiting() >= d.queueCap()/2 || (!d.push && q.sharedQueued >= knockSharedQueue/2)
+	fresh := len(d.real) + len(d.decoy)
+	full := fresh >= d.queueCap() || (!d.push && q.sharedQueued >= knockSharedQueue)
+	half := fresh >= d.queueCap()/2 || (!d.push && q.sharedQueued >= knockSharedQueue/2)
 	if decoy {
 		if ep.queuedDecoy || ep.queuedReal {
 			return
@@ -160,6 +162,17 @@ func (q *knockQueue) addLocked(ep *knockEP, decoy bool) {
 		}
 		ep.queuedDecoy = true
 		d.decoy = append(d.decoy, ep)
+	} else if ep.trusted(k.now()) {
+		// a lane of their own, as long as a server's queue
+		if ep.queuedReal {
+			return
+		}
+		if len(d.old) >= d.queueCap() {
+			k.stats.dropped.Add(1)
+			return
+		}
+		ep.queuedReal = true
+		d.old = append(d.old, ep)
 	} else {
 		if ep.queuedReal {
 			return
@@ -198,6 +211,9 @@ func (q *knockQueue) unqueued(d *knockDomain) {
 // an endpoint let go leaves the queue
 func (q *knockQueue) forgetLocked(d *knockDomain, ep *knockEP) {
 	var gone bool
+	if d.old, gone = without(d.old, ep); gone {
+		q.unqueued(d)
+	}
 	if d.real, gone = without(d.real, ep); gone {
 		q.unqueued(d)
 	}
@@ -259,7 +275,10 @@ func (q *knockQueue) fromRing(r *[]*knockDomain, now time.Time) (ep *knockEP, de
 			requeue()
 			continue
 		}
-		if len(d.real) > 0 {
+		if len(d.old) > 0 {
+			ep, d.old = d.old[0], d.old[1:]
+			ep.queuedReal = false
+		} else if len(d.real) > 0 {
 			ep, d.real = d.real[0], d.real[1:]
 			ep.queuedReal = false
 		} else {
@@ -422,6 +441,7 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 	case err == nil && code < 400:
 		k.mu.Lock()
 		ep.fails, ep.failingSince = 0, time.Time{}
+		ep.delivered = true
 		k.mu.Unlock()
 		if decoy {
 			k.stats.decoys.Add(1)
