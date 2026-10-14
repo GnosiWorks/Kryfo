@@ -575,6 +575,21 @@ void main() {
       await g.cancel();
     });
 
+    testWidgets('the touch taken away mid-hold: the note is thrown away', (
+      t,
+    ) async {
+      await open(t);
+      final g = await hold(t);
+      await g.cancel();
+      await shredded(t, recording!);
+      expect(asked, contains('stop'));
+      expect(mic(t).stage, VoiceStage.idle);
+      expect(File(recording!).existsSync(), isFalse);
+      expect(voiceRecording.value, 0);
+      expect(sent, isEmpty);
+      await close(t);
+    });
+
     testWidgets('a recorder that will not stop: the live disguise ends', (
       t,
     ) async {
