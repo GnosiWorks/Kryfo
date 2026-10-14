@@ -171,12 +171,13 @@ func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	_, rcvPk, err := nip17RcvAddressAs(me, peer)
+	rcvSk, rcvPk, err := nip17RcvAddressAs(me, peer)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
 	key := roomSubKey(me, peerHex)
 	lane := roomLane(hex.EncodeToString(me.pub[:]))
+	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane})
 	startSub(key, func(ctx context.Context) {
 		nostrSubscribeRunnerFn(ctx, lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
 			return nip17UnwrapAs(me, peer, gw)
@@ -202,6 +203,7 @@ func HaloRoomSubscribeFirstContact(cPriv *C.char) *C.char {
 	}
 	key := "roomfc:" + hex.EncodeToString(me.pub[:])
 	lane := roomLane(hex.EncodeToString(me.pub[:]))
+	noteKnockTarget(key, knockTarget{fcPk, fcSk, lane, lane})
 	startSub(key, func(ctx context.Context) {
 		nostrSubscribeRunnerFn(ctx, lane, key, fcPk, func(gw nostr2.Event) (string, error) {
 			content, _, err := nip17UnwrapFirstContactWith(fcSk, gw)

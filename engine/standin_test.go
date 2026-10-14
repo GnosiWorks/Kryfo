@@ -41,6 +41,7 @@ type siConn struct {
 	reqs      []siReq
 	addrs     map[string]bool // p tags asked for
 	published map[string]bool // p tags of events it published
+	got       []nostr.Event   // every event it published
 	pings     []time.Time
 	kill      context.CancelFunc
 	mute      bool // takes events and never answers, like a dead circuit
@@ -208,6 +209,7 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			for p := range e.Event.Tags.FindAll("p") {
 				c.published[p[1]] = true
 			}
+			c.got = append(c.got, e.Event)
 			if s.keep {
 				s.events = append(s.events, e.Event)
 			}
