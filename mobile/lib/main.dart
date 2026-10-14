@@ -3447,6 +3447,17 @@ class HaloDb implements GroupOwedStore {
 
   // ---- groups ----
 
+  // when this phone first had group [groupId]: its first members' row. a
+  // roster sent again keeps it
+  Future<int?> groupJoinedAt(String groupId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT MIN(joined_at) AS t FROM group_members WHERE group_id = ?',
+      [groupId],
+    );
+    return (r.first['t'] as num?)?.toInt();
+  }
+
   // members is the full set, including the creator. isAdmin is true for
   // groups we created.
   Future<void> createGroup(
@@ -7154,8 +7165,9 @@ class HaloDb implements GroupOwedStore {
         where: "msg_uid IN ($marks) AND direction = 'in'",
         whereArgs: msgUids,
       );
-      // the newest row read in each chat, the order both chats sort by
-      final newest = <(String, String?), int>{};
+      // the newest row read in each chat, by when it was written and as it
+      // came: a row older both ways was above it when it was read
+      final newest = <(String, String?), (int, int)>{};
       Future<void> lightRow(Map<String, Object?> r) async {
         final uid = r['msg_uid'] as String?;
         final lit = (r['burn_at'] as num?)?.toInt();
@@ -7185,10 +7197,14 @@ class HaloDb implements GroupOwedStore {
         final chat = (g == null || g.isEmpty)
             ? (r['peer_id'] as String, null)
             : ('', g);
-        final w = rowWrittenAt(r);
-        if (w > (newest[chat] ?? -1)) newest[chat] = w;
+        final (w0, id0) = newest[chat] ?? (-1, -1);
+        newest[chat] = (
+          max(w0, rowWrittenAt(r)),
+          max(id0, (r['id'] as num).toInt()),
+        );
       }
-      for (final MapEntry(key: (peer, group), value: w) in newest.entries) {
+      for (final MapEntry(key: (peer, group), value: (w, id))
+          in newest.entries) {
         final chat = group == null
             ? 'peer_id = ? AND group_id IS NULL'
             : 'group_id = ?';
@@ -7203,7 +7219,9 @@ class HaloDb implements GroupOwedStore {
             whereArgs: [group ?? peer],
           );
           for (final r in older) {
-            if (rowWrittenAt(r) <= w) await lightRow(r);
+            if (rowWrittenAt(r) <= w && (r['id'] as num).toInt() <= id) {
+              await lightRow(r);
+            }
           }
         }
       }
@@ -7395,7 +7413,7 @@ class HaloDb implements GroupOwedStore {
   Future<int?> firstMessageAt(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT MIN(written_at) t FROM messages '
+      'SELECT MIN(sent_at) t FROM messages '
       'WHERE peer_id = ? AND group_id IS NULL',
       [peerId],
     );
@@ -15628,13 +15646,14 @@ class AppState extends ChangeNotifier {
         : startBy <= now
         ? startBy + burnSecs * 1000
         : null;
-    // placed by when they wrote it: their envelope's time, or the wrap's
-    // from a version without one
-    final firstSeen = (await db.getContact(senderHaloId))?['first_seen'];
+    // placed by when they wrote it (writtenAtOf). a group's from when this
+    // phone joined it
     final writtenAt = writtenAtOf(
-      env.writtenAt ?? wrappedAt,
+      env.writtenAt,
+      wrapped: wrappedAt,
+      reached: reached,
       came: arrivedAt ?? now,
-      firstSeen: (firstSeen as num?)?.toInt(),
+      since: env.groupId == null ? null : await db.groupJoinedAt(env.groupId!),
     );
     await db.saveMessage(
       senderHaloId,

@@ -1264,6 +1264,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async =>
       _hit('getGroup', groupId, groupRows[groupId]);
+  // when this phone joined each group, where a test says
+  final joinedAt = <String, int>{};
+  @override
+  Future<int?> groupJoinedAt(String groupId) async =>
+      _hit('groupJoinedAt', groupId, joinedAt[groupId]);
   @override
   Future<String?> groupAdminId(String groupId) async =>
       _hit('groupAdminId', groupId, groupRows[groupId]?['admin_id'] as String?);

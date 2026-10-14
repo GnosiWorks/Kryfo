@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/widgets/chat_parts.dart' show UnreadDivider;
+import 'package:kryfo/widgets/chat_parts.dart'
+    show JumpDownButton, UnreadDivider;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -401,17 +402,19 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('the new messages line sits above the first new one where '
-      'it shows, a late one included', (t) async {
+  testWidgets('the new messages line sits over the new ones at the end, '
+      'never over read ones a late one went up between', (t) async {
     await seed(40);
     // read to the newest, then left
     await devOpen(t, chat());
     await settle(t);
     await devClose(t);
-    await cameLate('late2', 'late two', note(10) + 60000);
+    await cameLate('late2', 'late two', note(37) + 60000);
     await cameLate('fresh', 'fresh one', DateTime.now().millisecondsSinceEpoch);
-    await devOpen(t, chat(jumpTo: 'late2'));
+    await devOpen(t, chat());
     await settle(t, 12);
+    expect(y(t, 'note 37'), lessThan(y(t, 'late two')));
+    expect(y(t, 'late two'), lessThan(y(t, 'note 38')));
     expect(find.byType(UnreadDivider), findsOneWidget);
     final line = find
         .ancestor(
@@ -420,11 +423,34 @@ void main() {
         )
         .first;
     expect(
-      find.descendant(of: line, matching: text('late two')),
+      find.descendant(of: line, matching: text('fresh one')),
       findsOneWidget,
     );
-    expect(y(t, 'note 10'), lessThan(y(t, 'late two')));
-    expect(y(t, 'late two'), lessThan(y(t, 'note 11')));
+    expect(find.descendant(of: line, matching: text('late two')), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('one that came late while reading back goes up the thread, '
+      'leaves the place, and is not counted as new below', (t) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    thread(t).jumpTo(600);
+    await settle(t);
+    List<int> shown() => [
+      for (var i = 0; i < 40; i++)
+        if (seen('note $i')) i,
+    ];
+    final reading = shown();
+    final top = y(t, 'note ${reading.first}');
+    await cameLate('late4', 'late four', note(38) + 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(thread(t).pixels, greaterThan(240));
+    expect(t.widget<JumpDownButton>(find.byType(JumpDownButton)).count, 0);
+    // the rows read stay where they were
+    expect(shown(), reading);
+    expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
     await devClose(t);
   });
 

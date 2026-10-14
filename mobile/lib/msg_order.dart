@@ -1,27 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat shows its messages by when each was written, oldest first, and
 // in the order they came where two say the same time. ours by this
-// phone's clock, theirs by the sender's, held to what can be true
+// phone's clock, theirs by when they reached it (writtenAtOf)
 import 'dart:math' as math;
 
-/// how far past the time it came a message may say it was written
-const kWrittenAhead = Duration(minutes: 1);
+import 'relay_poll.dart' show Reached;
 
-/// how far before the first contact with its sender a message may say it
-/// was written: as long as relays keep a wrap
+/// how long relays keep a wrap: nothing that reaches this phone was
+/// written longer ago than this
 const kWrittenBefore = Duration(days: 14);
 
-/// when an arrival was written, by the sender's clock, held between the
-/// first contact with them less [kWrittenBefore] and the time it came plus
-/// [kWrittenAhead], so a clock set wrong, or on purpose, can never keep a
-/// message under every later one or above the whole chat. [firstSeen] is
-/// null when there is no contact yet; with no time of its own it is when
-/// it came
-int writtenAtOf(int? written, {required int came, int? firstSeen}) {
-  final hi = came + kWrittenAhead.inMilliseconds;
-  final lo = math.min((firstSeen ?? came) - kWrittenBefore.inMilliseconds, hi);
-  if (written == null) return came;
-  return written.clamp(lo, hi);
+/// where an arrival goes: when its sender wrote it, by this phone's clock.
+/// it reached the relay or this phone within [reached], by this clock, and
+/// was written as long before that as its wrap time less [written], their
+/// own two stamps, whatever their clock reads. one that came live is placed by that
+/// alone. one from a catch-up keeps its sender's time within that window,
+/// so a batch stays in the order it was sent. never later than it came, or
+/// a clock set ahead keeps it under every later message, and never earlier
+/// than the relays keep a wrap or [since], when this phone joined its
+/// group. with no lane stamp, [came] is the window
+int writtenAtOf(
+  int? written, {
+  int? wrapped,
+  Reached? reached,
+  required int came,
+  int? since,
+}) {
+  final keep = kWrittenBefore.inMilliseconds;
+  final until = reached?.until ?? came;
+  final age = written != null && wrapped != null
+      ? (wrapped - written).clamp(0, keep)
+      : 0;
+  final hi = until - age;
+  var lo = until - keep;
+  if (reached != null && reached.from > 0) {
+    lo = math.max(lo, reached.from - age);
+  }
+  if (since != null) lo = math.max(lo, since);
+  lo = math.min(lo, hi);
+  final w = written ?? wrapped;
+  return w == null ? hi : w.clamp(lo, hi);
 }
 
 /// the time a row is shown and placed by: when it was written, or when it

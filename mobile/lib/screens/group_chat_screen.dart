@@ -66,7 +66,8 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
 import '../read_burn.dart';
-import '../widgets/row_anchor.dart' show RowAnchor, RowAnchors;
+import '../widgets/row_anchor.dart'
+    show HoldScrollController, RowAnchor, RowAnchors, holdRowsInView;
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show
@@ -305,7 +306,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final _msgCtrl = TextEditingController();
   // the people @ can offer, refreshed with the roster
   List<MentionCandidate> _mentionable = const [];
-  final _scrollCtrl = ScrollController();
+  final _scrollCtrl = HoldScrollController();
   final List<_GMsg> _messages = [];
 
   // when the oldest of ours still going was written. a file that is
@@ -1308,10 +1309,29 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final nowHave = _messages.map((m) => m.msgUid).toSet();
     fresh.removeWhere((m) => m.msgUid != null && nowHave.contains(m.msgUid));
     if (fresh.isEmpty) return;
-    // someone reading back stays where they are: rows added at the end move
-    // nothing above them. near the newest they are taken down to it
-    final theirs = fresh.where((m) => m.direction != 'out').length;
-    final follow = _nearNewest || theirs < fresh.length;
+    // someone reading back stays where they are, a late one put in above
+    // them too. near the newest they are taken down to what lands at the
+    // end; one that came late goes where it was written and is not counted
+    final last = _messages.lastOrNull;
+    bool below(_GMsg m) =>
+        last == null ||
+        byWritten(
+              m.when.millisecondsSinceEpoch,
+              m.rowid,
+              last.when.millisecondsSinceEpoch,
+              last.rowid,
+            ) >
+            0;
+    final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
+    final ours = fresh.any((m) => m.direction == 'out');
+    final follow = (_nearNewest && fresh.any(below)) || ours;
+    if (!follow) {
+      holdRowsInView(
+        ctrl: _scrollCtrl,
+        anchors: _anchors,
+        alive: () => mounted,
+      );
+    }
     setState(() {
       _messages.addAll(fresh);
       _normaliseMessages();

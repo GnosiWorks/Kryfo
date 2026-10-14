@@ -1726,8 +1726,21 @@ class _ChatScreenState extends State<ChatScreen>
       fresh.add(m);
       if (uid != null) _seenUids.add(uid);
     }
-    final theirs = fresh.where((m) => m.direction != 'out').length;
-    final follow = snap || theirs < fresh.length;
+    // one that came late goes up the thread, where it was written: it is
+    // neither followed nor counted as new below
+    final last = _messages.lastOrNull;
+    bool below(_Msg m) =>
+        last == null ||
+        byWritten(
+              m.when.millisecondsSinceEpoch,
+              m.rowid,
+              last.when.millisecondsSinceEpoch,
+              last.rowid,
+            ) >
+            0;
+    final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
+    final ours = fresh.any((m) => m.direction == 'out');
+    final follow = (snap && fresh.any(below)) || ours;
     if (!follow && !_jumpActive) {
       holdRowsInView(
         ctrl: _scrollCtrl,
@@ -2602,12 +2615,19 @@ class _ChatScreenState extends State<ChatScreen>
       ..addAll(newSeen);
     if (!_unreadResolved) {
       _firstUnreadKey = null;
-      for (var i = 0; i < loaded.length; i++) {
-        final after = _unreadAfterRow;
-        if (after != null &&
-            loaded[i].direction != 'out' &&
-            !loaded[i].welcome &&
-            loaded[i].rowid > after) {
+      // the line sits over the run of rows at the end that all came since
+      // the chat was left, at its first from them: everything under it is
+      // new. one that came late and went up the thread is not under it
+      final after = _unreadAfterRow;
+      var start = loaded.length;
+      while (after != null &&
+          start > 0 &&
+          !loaded[start - 1].welcome &&
+          loaded[start - 1].rowid > after) {
+        start--;
+      }
+      for (var i = start; i < loaded.length; i++) {
+        if (loaded[i].direction != 'out') {
           _firstUnreadKey = _rowKey(loaded[i]);
           break;
         }

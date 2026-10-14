@@ -62,39 +62,88 @@ void main() {
 
     test('messages that came out of order are placed by when they were '
         'written', () async {
-      final t0 = DateTime.now().millisecondsSinceEpoch - 60 * _min;
-      // sent one, two, three; the relays hand them over three, one, two
-      for (final (uid, at) in [
-        ('m3', t0 + 3 * _min),
-        ('m1', t0 + _min),
-        ('m2', t0 + 2 * _min),
-      ]) {
-        await w.from(_alice, uid, written: at);
-      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final t0 = now - 60 * _min;
+      // sent one, two, three while this phone was away; the relays hand
+      // them over three, one, two
+      await w.relay(
+        [
+          ('m3', t0 + 3 * _min, null),
+          ('m1', t0 + _min, null),
+          ('m2', t0 + 2 * _min, null),
+        ],
+        from: t0 - 60 * _min,
+        until: now,
+      );
       expect(_uids(w.live.msgs), ['m3', 'm1', 'm2']);
       expect(_placed(w.live.msgs), ['m1', 'm2', 'm3']);
       expect(w.live.msg('m1')!['written_at'], t0 + _min);
     });
 
-    test('a clock far ahead is held to when it came, one far back to the '
-        'first contact less the time relays keep a message', () async {
-      final first = DateTime.now().millisecondsSinceEpoch - 30 * _day;
-      w.live.people[_alice]!['first_seen'] = first;
+    test(
+      'one sent again later is placed as long before it reached the '
+      'relay as their own two stamps say, whatever their clock reads',
+      () async {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        // their clock an hour behind; written, then wrapped again five
+        // minutes later for a retry that came live
+        const slow = 60 * _min;
+        await w.relay(
+          [('again', now - slow - 5 * _min, now - slow)],
+          from: now,
+          until: now,
+        );
+        expect(w.live.msg('again')!['written_at'], now - 5 * _min);
+      },
+    );
+
+    test('a reply from a clock ten minutes slow goes under the question '
+        'it answers', () async {
+      // asked a minute ago, by this clock
+      final asked = DateTime.now().millisecondsSinceEpoch - _min;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final theirs = now - 10 * _min;
+      await w.relay([('yes', theirs, theirs)], from: now, until: now);
+      expect(w.live.msg('yes')!['written_at'], greaterThan(asked));
+    });
+
+    test('a clock fifty seconds fast never puts their message under the '
+        'next one sent from here', () async {
       final before = DateTime.now().millisecondsSinceEpoch;
-      await w.from(_alice, 'ahead', written: before + 365 * _day);
-      await w.from(_alice, 'back', written: 1000);
-      final after = DateTime.now().millisecondsSinceEpoch;
-      // pinned under every later message for a year: held to a minute
-      expect(
-        w.live.msg('ahead')!['written_at'],
-        inInclusiveRange(before + _min, after + _min),
+      await w.from(_alice, 'fast', written: before + 50000);
+      // the next one from here is written now or later
+      final next = DateTime.now().millisecondsSinceEpoch;
+      expect(w.live.msg('fast')!['written_at'], lessThanOrEqualTo(next));
+    });
+
+    test('a time far ahead is held to when it came, one far back to as '
+        'long as relays keep a message, however long ago they were first '
+        'seen', () async {
+      // known for a year
+      w.live.people[_alice]!['first_seen'] =
+          DateTime.now().millisecondsSinceEpoch - 365 * _day;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await w.relay(
+        [('ahead', now + 365 * _day, now + 365 * _day), ('back', 1000, 1000)],
+        from: 0,
+        until: now,
       );
-      // above the whole chat since 1970: held to the chat's start
-      expect(w.live.msg('back')!['written_at'], first - 14 * _day);
-      // a later message still goes under the one from far ahead within
-      // the minute, and over the one from far back
-      await w.from(_alice, 'next', written: after + 2 * _min);
-      expect(_placed(w.live.msgs), ['back', 'ahead', 'next']);
+      expect(w.live.msg('ahead')!['written_at'], now);
+      expect(w.live.msg('back')!['written_at'], now - 14 * _day);
+    });
+
+    test('in a group, nothing is placed before this phone joined it', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final joined = now - 60 * _min;
+      w.live.group(_gid, ['me', _alice], admin: _alice);
+      w.live.joinedAt[_gid] = joined;
+      await w.relay(
+        [('old', now - 3 * _day, now - 3 * _day)],
+        from: 0,
+        until: now,
+        group: _gid,
+      );
+      expect(w.live.msg('old')!['written_at'], joined);
     });
   });
 
@@ -152,7 +201,6 @@ void main() {
       final last = (await db.lastMessages())[_alice]!;
       expect(last['plaintext'], 'text c');
       expect(last['written_at'], t0 + 3 * _min);
-      expect(await db.firstMessageAt(_alice), t0 + _min);
     });
 
     test('pages meet with no gap and no repeat, across rows that share a '
@@ -226,6 +274,43 @@ void main() {
       );
     });
 
+    test('reading one lights the timed ones above it, never one that came '
+        'after it was read and went up the thread', () async {
+      if (skip()) return;
+      await db.upsertContact(_alice, 'a.onion', 'ab' * 32);
+      await db.acceptRequest(_alice);
+      final t0 = DateTime.now().millisecondsSinceEpoch - 60 * _min;
+      Future<void> timed(String uid, int written) => db.saveMessage(
+        _alice,
+        'in',
+        'text $uid',
+        msgUid: uid,
+        burnSecs: 30,
+        writtenAt: written,
+      );
+      await timed('older', t0);
+      await timed('read', t0 + 10 * _min);
+      // came after, written before: not seen yet
+      await timed('late', t0 + 5 * _min);
+      final lit = await db.lightReadBurns(['read']);
+      expect(lit.keys, unorderedEquals(['older', 'read']));
+    });
+
+    test('talking since is when the first message came', () async {
+      if (skip()) return;
+      await db.upsertContact(_alice, 'a.onion', 'ab' * 32);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.saveMessage(
+        _alice,
+        'in',
+        'hi',
+        msgUid: 'hi',
+        sentAt: now,
+        writtenAt: now - 3 * _day,
+      );
+      expect(await db.firstMessageAt(_alice), now);
+    });
+
     test(
       'a row stored with no time of its own is placed when it came',
       () async {
@@ -260,6 +345,7 @@ class _World {
     await router.load();
     w.app = AppState(io: w.io, router: router)..myId = 'me';
     useDatabasesForTest(w.live, Session(w.live));
+    await w.app.resubscribe();
     return w;
   }
 
@@ -275,6 +361,38 @@ class _World {
       ),
     );
     await app.receiveOnion([c]);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+
+  // a relay batch from alice: each uid, when it was written and when it
+  // was wrapped, by their clock, all reaching the relay between [from] and
+  // [until], by this one
+  Future<void> relay(
+    List<(String, int, int?)> batch, {
+    required int from,
+    required int until,
+    String? group,
+  }) async {
+    final msgs = <({String peer, String cipher})>[];
+    for (final (uid, written, _) in batch) {
+      final c = 'r${_n++}';
+      io.opens[c] = (
+        _alice,
+        await wrapMessage(
+          'text $uid',
+          msgUid: uid,
+          groupId: group,
+          sender: asSender(_alice),
+          writtenAt: written,
+        ),
+      );
+      msgs.add((peer: 'x-$_alice', cipher: c));
+    }
+    await app.receiveRelay(
+      msgs,
+      written: [for (final (_, _, wrap) in batch) wrap],
+      reached: [for (final _ in batch) (from: from, until: until)],
+    );
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
 }

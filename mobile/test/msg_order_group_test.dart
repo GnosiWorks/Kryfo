@@ -11,6 +11,7 @@ import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show JumpDownButton;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show app, phone;
@@ -220,6 +221,28 @@ void main() {
     expect(text('late two'), findsOneWidget);
     expect(y(t, 'note 10'), lessThan(y(t, 'late two')));
     expect(y(t, 'late two'), lessThan(y(t, 'note 11')));
+    await close(t);
+  });
+
+  testWidgets('one that came late above a reader leaves them where they '
+      'are, and is not counted as new below', (t) async {
+    await open(t);
+    thread(t).jumpTo(thread(t).maxScrollExtent - 1500);
+    await frames(t, 6);
+    List<int> shown() => [
+      for (var i = 0; i < _rows; i++)
+        if (seen('note $i')) i,
+    ];
+    final reading = shown();
+    expect(reading.first, greaterThan(45));
+    final top = y(t, 'note ${reading.first}');
+    // written just above what is on screen, in the page held
+    db.add('late three', note(reading.first - 3) + 60000);
+    appState.chatChanged('group:$_group');
+    await frames(t, 6);
+    expect(shown(), reading);
+    expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
+    expect(t.widget<JumpDownButton>(find.byType(JumpDownButton)).count, 0);
     await close(t);
   });
 }
