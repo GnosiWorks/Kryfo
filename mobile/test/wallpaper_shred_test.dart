@@ -124,6 +124,44 @@ void main() {
     expect(f.existsSync(), isFalse);
   });
 
+  test('a wallpaper reset to a preset shreds the photo', () async {
+    final db = await rows();
+    final f = await photo(db);
+    await db.setAtmosphere(_peer, 'dusk');
+    expect(atmo(db, _peer), 'dusk');
+    expect(f.existsSync(), isFalse);
+  });
+
+  test('a photo replaced by another shreds the old one', () async {
+    final db = await rows();
+    final old = await photo(db);
+    final dir = await db.container.folder('wallpapers');
+    final next = File(p.join(dir.path, '${_peer}_2.jpg'))
+      ..writeAsBytesSync([4, 5]);
+    await db.setAtmosphere(_peer, 'image:${next.path}');
+    expect(old.existsSync(), isFalse);
+    expect(next.existsSync(), isTrue);
+  });
+
+  test('a new photo lands under a name of its own', () async {
+    final db = await rows();
+    final a = await db.setWallpaperPhoto(_peer, Uint8List.fromList([1]));
+    final b = await db.setWallpaperPhoto(_peer, Uint8List.fromList([2, 2]));
+    expect(a, isNot(b));
+    expect(File(a).existsSync(), isFalse);
+    expect(File(b).readAsBytesSync(), [2, 2]);
+    expect(atmo(db, _peer), 'image:$b');
+    expect(p.basename(File(b).parent.path), 'wallpapers');
+  });
+
+  test('the photo stays when the row is not written', () async {
+    final db = await rows();
+    final f = await photo(db);
+    db.mem.failOn = 'update:contacts';
+    await expectLater(db.setAtmosphere(_peer, 'dusk'), throwsStateError);
+    expect(f.existsSync(), isTrue);
+  });
+
   test('a photo another chat still names stays', () async {
     final db = await rows();
     final f = await photo(db);

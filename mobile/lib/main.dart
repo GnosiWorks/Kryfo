@@ -4578,14 +4578,41 @@ class HaloDb implements GroupOwedStore {
     return rows.first['atmosphere'] as String?;
   }
 
+  // the photo it had goes once the row is written
   Future<void> setAtmosphere(String peerId, String atmosphere) async {
     final db = await open();
-    await db.update(
-      'contacts',
-      {'atmosphere': atmosphere},
-      where: 'halo_id = ?',
-      whereArgs: [peerId],
-    );
+    final was = await db.transaction((t) async {
+      final was = await _atmosphereOf(t, peerId);
+      await t.update(
+        'contacts',
+        {'atmosphere': atmosphere},
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+      );
+      return was;
+    });
+    if (was != atmosphere) await _dropPhotos([was]);
+  }
+
+  // a photo from the gallery behind a chat, under a name of its own: the
+  // old file is shredded, not written over, and no cached image of it
+  // shows. the path it was kept at
+  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) async {
+    final dir = await container.folder('wallpapers');
+    final rnd = Random.secure();
+    final tag = [
+      for (var i = 0; i < 8; i++)
+        rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ].join();
+    final f = File(p.join(dir.path, '${peerId}_$tag.jpg'));
+    try {
+      await f.writeAsBytes(bytes, flush: true);
+      await setAtmosphere(peerId, 'image:${f.path}');
+    } catch (_) {
+      await shredFile(f.path);
+      rethrow;
+    }
+    return f.path;
   }
 
   // a chat's own voice disguise choice, null until one is made here
