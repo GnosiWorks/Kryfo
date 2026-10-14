@@ -8321,7 +8321,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+      'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, las salas después de las primeras y, de vez en cuando y durante unos días, un contacto normal esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
 
   @override
   String get helperSheetNeedTitle => 'Necesitas una app auxiliar';
@@ -8365,4 +8365,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'El repetidor ya no activa Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Nuestro repetidor no está aceptando algunos registros de este teléfono por ahora. Esos chats llegan con la consulta cada 15 minutos, y Kryfo sigue intentándolo.';
 }

@@ -8345,18 +8345,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Sofort und sparsam. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, nie, was darin steht.';
+      'Sofort und schont den Akku. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, aber nie, was darin steht.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen Monat von fünf, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+      'Dazwischen kommen falsche Weckrufe. So kann der Server der Hilfs-App schwerer erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder für ein paar Tage ein gewöhnlicher Kontakt warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get helperSheetNeedTitle => 'Du brauchst eine Hilfs-App';
 
   @override
   String get helperSheetNeedLine =>
-      'Eine Hilfs-App hält eine sparsame Verbindung für alle deine Apps und weckt Kryfo, wenn etwas ankommt. Jede UnifiedPush-App geht, ntfy ist ein guter Anfang.';
+      'Eine Hilfs-App hält eine sparsame Verbindung für alle deine Apps und weckt Kryfo, wenn etwas ankommt. Jede UnifiedPush-App funktioniert, ntfy ist ein guter Anfang.';
 
   @override
   String get helperSheetGetNtfy => 'ntfy holen';
@@ -8393,4 +8393,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'Das Relais weckt Kryfo nicht mehr';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Unser Relais nimmt gerade einige Anmeldungen dieses Handys nicht an. Diese Chats kommen mit dem Check-in alle 15 Minuten, und Kryfo versucht es weiter.';
 }

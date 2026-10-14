@@ -28,6 +28,13 @@ const kHelperSyncedKey = 'helper_synced';
 const kHelperForgetKey = 'helper_forget';
 // slot -> when the helper app was last asked for it again
 const kHelperAskedKey = 'helper_asked';
+// name -> forgets the engine could not sign or the relay refused
+const kHelperForgetTriedKey = 'helper_forget_tried';
+// a registration the relay refuses is tried again an hour later, then two,
+// up to a day; after this many in a row the getting messages screen says so
+const kRefusedRetryMs = 60 * 60 * 1000;
+const kRefusedRetryMaxMs = 24 * 60 * 60 * 1000;
+const kRefusedLasting = 3;
 // "yes" or "no" and when our relay last said so, as "yes@ms"
 const kHelperRelayKey = 'helper_relay_knocks';
 // the helper app was there and is gone, or the relay stopped knocking:
@@ -67,6 +74,12 @@ class _Synced {
   final int sent, due;
   const _Synced(this.endpoint, this.sent, this.due);
   static const dup = '!dup';
+  // a refusal, with how many in a row
+  static const refused = '!refused:';
+  bool get waiting => endpoint.startsWith('!');
+  int get refusals => endpoint.startsWith(refused)
+      ? int.tryParse(endpoint.substring(refused.length)) ?? 0
+      : 0;
 }
 
 class HelperDelivery {
@@ -87,8 +100,6 @@ class HelperDelivery {
   final Random _rnd;
   final int Function() _now;
   Future<int>? _syncing;
-  // name -> forgets the engine could not sign, the address not listened on
-  final Map<String, int> _forgetTried = {};
 
   /// whether the last round left something still to send
   bool get more => _more;
@@ -283,10 +294,13 @@ class HelperDelivery {
 
     _sent = true;
     final r = await engine.knockRegister(
-      jsonEncode([
-        for (final it in batch)
-          {...it.toJson(), 't': _signedAt(synced[it.name]?.sent, now)},
-      ]),
+      jsonEncode({
+        'items': [
+          for (final it in batch)
+            {...it.toJson(), 't': _signedAt(synced[it.name]?.sent, now)},
+        ],
+        'hidden': _hidden(),
+      }),
     );
     final done = _namesOf(r, 'done');
     final dup = _namesOf(r, 'dup') ?? const {};
@@ -296,6 +310,7 @@ class HelperDelivery {
       return 0;
     }
     final refused = _namesOf(r, 'refused') ?? const {};
+    final tried = _tried(prefs);
     final standIn = Map<int, String>.from(book.standIn);
     for (final it in batch) {
       if (it.endpoint.isEmpty && !done.contains(it.name)) {
@@ -303,15 +318,23 @@ class HelperDelivery {
         // good as done; one it refuses is given up after a few
         var drop = dup.contains(it.name);
         if (refused.contains(it.name)) {
-          final tries = (_forgetTried[it.name] ?? 0) + 1;
-          _forgetTried[it.name] = tries;
+          final tries = (tried[it.name] ?? 0) + 1;
+          tried[it.name] = tries;
           drop = drop || tries >= kForgetTries;
         }
         if (drop) {
-          _forgetTried.remove(it.name);
+          tried.remove(it.name);
           synced.remove(it.name);
           standIn.remove(it.slot);
         }
+        continue;
+      }
+      if (refused.contains(it.name)) {
+        // refused: tried again later, longer each time, and the others go
+        // on meanwhile
+        final n = (synced[it.name]?.refusals ?? 0) + 1;
+        final wait = min(kRefusedRetryMs << (n - 1), kRefusedRetryMaxMs);
+        synced[it.name] = _Synced('${_Synced.refused}$n', now, now + wait);
         continue;
       }
       if (dup.contains(it.name)) {
@@ -335,6 +358,7 @@ class HelperDelivery {
     if (standIn.length != book.standIn.length) {
       await _saveBook(book.copyWith(standIn: standIn));
     }
+    await _saveTried(prefs, tried);
     await _saveSynced(synced);
     dlog('helper: relay took ${done.length} of ${batch.length}');
     return done.length;
@@ -349,6 +373,27 @@ class HelperDelivery {
     final after = sentMs == null ? 0 : sentMs ~/ 1000 + 1;
     return min(now, max(back, after));
   }
+
+  /// whether some registration has been refused several times in a row:
+  /// the getting messages screen says so
+  Future<bool> refusedLasting() async =>
+      (await _synced()).values.any((s) => s.refusals >= kRefusedLasting);
+
+  Map<String, int> _tried(SharedPreferences prefs) {
+    try {
+      final j =
+          jsonDecode(prefs.getString(kHelperForgetTriedKey) ?? '{}') as Map;
+      return {
+        for (final e in j.entries)
+          if (e.value is int) '${e.key}': e.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _saveTried(SharedPreferences prefs, Map<String, int> m) =>
+      prefs.setString(kHelperForgetTriedKey, jsonEncode(m));
 
   Map<int, int> _asked(SharedPreferences prefs) {
     try {
@@ -365,7 +410,7 @@ class HelperDelivery {
 
   bool _due(_Synced? had, String endpoint, int now) {
     if (had == null) return true;
-    if (had.endpoint == _Synced.dup) return now >= had.due;
+    if (had.waiting) return now >= had.due;
     if (had.endpoint != endpoint) return true;
     return now >= had.due || had.sent > now;
   }
@@ -452,7 +497,12 @@ class HelperDelivery {
       't': _signedAt(f['w'] as int?, now),
     };
     _sent = true;
-    final r = await engine.knockRegister(jsonEncode([item]));
+    final r = await engine.knockRegister(
+      jsonEncode({
+        'items': [item],
+        'hidden': _hidden(),
+      }),
+    );
     final done = _namesOf(r, 'done');
     final unknown = _namesOf(r, 'unknown') ?? const {};
     final dup = _namesOf(r, 'dup') ?? const {};
@@ -463,18 +513,20 @@ class HelperDelivery {
     final name = f['i'] as String? ?? 's${f['s']}';
     // the relay holding something newer is as good as done
     var drop = done.contains(name) || dup.contains(name);
+    final tried = _tried(prefs);
     if (unknown.contains(name) || refused.contains(name)) {
       // an address no longer listened on is never signed for, and a forget
       // the relay refuses is not sent for ever
-      final tries = (_forgetTried[name] ?? 0) + 1;
-      _forgetTried[name] = tries;
+      final tries = (tried[name] ?? 0) + 1;
+      tried[name] = tries;
       drop = drop || tries >= kForgetTries;
     }
     if (drop) {
       queued.remove(f);
-      _forgetTried.remove(name);
+      tried.remove(name);
       await prefs.setString(kHelperForgetKey, jsonEncode(queued));
     }
+    await _saveTried(prefs, tried);
     return done.length;
   }
 

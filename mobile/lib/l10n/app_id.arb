@@ -2175,17 +2175,18 @@
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
   "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
   "gettingMessagesHelperBody": "Seketika dan hemat baterai. Server aplikasi pembantu melihat alamat IP ponselmu dan tahu kapan pesan masuk, tidak pernah isinya.",
-  "gettingMessagesHelperNote": "Panggilan bangun palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa yang pertama, dan sesekali kontak biasa, kira-kira satu bulan dari lima, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.",
+  "gettingMessagesHelperNote": "Ada juga panggilan bangun palsu, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali, selama beberapa hari, kontak biasa menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.",
   "helperSheetNeedTitle": "Kamu perlu aplikasi pembantu",
-  "helperSheetNeedLine": "Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa, ntfy awal yang bagus.",
+  "helperSheetNeedLine": "Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa dipakai, ntfy pilihan yang baik untuk mulai.",
   "helperSheetGetNtfy": "Pasang ntfy",
   "helperSheetOtherApps": "Aplikasi pembantu lain",
   "helperSheetPickTitle": "Pilih aplikasi pembantu",
-  "helperSheetPickLine": "Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah lewat sana.",
+  "helperSheetPickLine": "Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah melewatinya.",
   "helperSheetSetUp": "{name} sudah siap",
   "helperSheetNoAnswer": "{name} tidak menjawab. Coba lagi.",
   "homeHelperGoneTitle": "Aplikasi pembantumu sudah tidak ada",
   "homeHelperGoneLine": "Kryfo mengecek setiap 15 menit sampai kamu memilih cara lain.",
   "homeHelperGoneChoose": "Pilih cara lain",
-  "homeHelperRelayTitle": "Relay tidak lagi membangunkan Kryfo"
+  "homeHelperRelayTitle": "Relay tidak lagi membangunkan Kryfo",
+  "gettingMessagesHelperRefused": "Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang bersama cek setiap 15 menit, dan Kryfo terus mencoba."
 }

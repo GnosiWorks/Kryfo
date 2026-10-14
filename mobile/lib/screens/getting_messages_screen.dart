@@ -333,6 +333,22 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ),
                 ),
               ),
+              // some registration the relay keeps refusing: said calmly,
+              // the check-ins carry those chats meanwhile
+              Unfold(
+                open: mode == DeliveryMode.helper && appState.helperRefused,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                  child: Text(
+                    l10n.gettingMessagesHelperRefused,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      height: 1.5,
+                      color: HaloColors.warm,
+                    ),
+                  ),
+                ),
+              ),
               Unfold(
                 open: mode == DeliveryMode.helper,
                 child: Padding(

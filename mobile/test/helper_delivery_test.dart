@@ -82,6 +82,8 @@ class FakeEngine implements KnockEngine {
   Set<String> dups = {};
   // names the relay answers no for, every time
   Set<String> refuse = {};
+  // the hidden list the last register call carried
+  List<String> hiddenInCall = [];
 
   @override
   Future<String> knockAddresses(String excludeJson) async {
@@ -100,8 +102,10 @@ class FakeEngine implements KnockEngine {
   @override
   Future<String> knockRegister(String itemsJson) async {
     if (!up) return 'error: tor not started';
+    final call = jsonDecode(itemsJson) as Map<String, dynamic>;
+    hiddenInCall = [for (final h in call['hidden'] as List) '$h'];
     final items = [
-      for (final i in jsonDecode(itemsJson) as List) i as Map<String, dynamic>,
+      for (final i in call['items'] as List) i as Map<String, dynamic>,
     ];
     sent.add(items);
     final done = <String>[];
@@ -324,12 +328,51 @@ void main() {
       expect(again['t'] as int, greaterThan(nowS));
     });
 
-    test('the hidden chats\' peers go to the engine to be left out', () async {
+    test('the hidden chats\' peers go to the engine to be left out, in the '
+        'register call too', () async {
       hidden = ['peer-h'];
       engine.live = [...contacts];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await helper.sync();
       expect(jsonDecode(engine.lastExclude), ['peer-h']);
+      expect(engine.hiddenInCall, ['peer-h']);
+    });
+
+    test('a registration the relay refuses waits and lets the others renew, '
+        'and the screen hears of it once it lasts', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      final first = {
+        for (final a in contacts) a.address: engine.made[a.address],
+      };
+      now += 7 * 24 * 60 * 60 * 1000;
+      final room = KnockAddress(steady('room1'), 'room:r1');
+      engine.live = [...contacts, room];
+      engine.refuse = {room.address};
+      for (var i = 0; i < 200; i++) {
+        await helper.sync();
+        now += 15 * 60 * 1000;
+      }
+      for (final a in contacts) {
+        expect(
+          engine.made[a.address],
+          isNot(first[a.address]),
+          reason: a.address,
+        );
+      }
+      final tries = engine.sent.where(
+        (b) => b.any((it) => it['i'] == room.address),
+      );
+      expect(tries.length, lessThan(15));
+      expect(await helper.refusedLasting(), isTrue);
+      engine.refuse = {};
+      for (var i = 0; i < 200 && await helper.refusedLasting(); i++) {
+        await helper.sync();
+        now += 15 * 60 * 1000;
+      }
+      expect(await helper.refusedLasting(), isFalse);
+      expect(engine.relay.containsKey(room.address), isTrue);
     });
 
     test('the relay says not newer: tried again later, newer', () async {
@@ -505,6 +548,35 @@ void main() {
       expect(await helper.forgetsLeft(), isFalse);
       expect(engine.sent.length, sent);
       expect(ntfy.endpoints, isEmpty);
+    });
+
+    test('the tries of a forget are kept across a restart', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      await helper.stop();
+      engine.live = [];
+      final queued =
+          jsonDecode(
+                (await SharedPreferences.getInstance()).getString(
+                  kHelperForgetKey,
+                )!,
+              )
+              as List;
+      var rounds2 = 0;
+      while (await helper.forgetsLeft() && rounds2 < 500) {
+        // a new process every round
+        helper = HelperDelivery(
+          engine: engine,
+          push: HelperPush(_ch),
+          rnd: Random(rounds2),
+          nowMs: () => now,
+        );
+        await helper.forgetRound();
+        rounds2++;
+      }
+      expect(await helper.forgetsLeft(), isFalse);
+      expect(rounds2, lessThanOrEqualTo(queued.length * kForgetTries));
     });
 
     test('a forget for an address no longer listened on is given up after '

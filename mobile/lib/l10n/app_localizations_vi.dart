@@ -8245,7 +8245,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong năm, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+      'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng, trong vài ngày, một liên hệ thường chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
 
   @override
   String get helperSheetNeedTitle => 'Bạn cần một ứng dụng trợ giúp';
@@ -8289,4 +8289,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'Relay không còn đánh thức Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Hiện relay của chúng tôi chưa nhận một số đăng ký của điện thoại này. Các cuộc trò chuyện đó sẽ đến cùng lần kiểm tra mỗi 15 phút, và Kryfo vẫn tiếp tục thử.';
 }

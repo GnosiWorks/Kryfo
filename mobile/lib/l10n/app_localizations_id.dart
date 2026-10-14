@@ -8252,14 +8252,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Panggilan bangun palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa yang pertama, dan sesekali kontak biasa, kira-kira satu bulan dari lima, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.';
+      'Ada juga panggilan bangun palsu, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali, selama beberapa hari, kontak biasa menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
 
   @override
   String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';
 
   @override
   String get helperSheetNeedLine =>
-      'Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa, ntfy awal yang bagus.';
+      'Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa dipakai, ntfy pilihan yang baik untuk mulai.';
 
   @override
   String get helperSheetGetNtfy => 'Pasang ntfy';
@@ -8272,7 +8272,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get helperSheetPickLine =>
-      'Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah lewat sana.';
+      'Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah melewatinya.';
 
   @override
   String helperSheetSetUp(Object name) {
@@ -8296,4 +8296,8 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'Relay tidak lagi membangunkan Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang bersama cek setiap 15 menit, dan Kryfo terus mencoba.';
 }

@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "Mặc định đổi giọng của tôi",
   "settingsDisguiseByDefaultHint": "Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó",
   "gettingMessagesHelperBody": "Đến ngay và nhẹ pin. Máy chủ của ứng dụng trợ giúp thấy địa chỉ IP của điện thoại và biết khi nào bạn có tin nhắn, không bao giờ biết nội dung.",
-  "gettingMessagesHelperNote": "Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong năm, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.",
+  "gettingMessagesHelperNote": "Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng, trong vài ngày, một liên hệ thường chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.",
   "helperSheetNeedTitle": "Bạn cần một ứng dụng trợ giúp",
   "helperSheetNeedLine": "Ứng dụng trợ giúp giữ một kết nối nhẹ cho mọi ứng dụng và đánh thức Kryfo khi có gì đó đến. Ứng dụng UnifiedPush nào cũng được, ntfy là lựa chọn tốt để bắt đầu.",
   "helperSheetGetNtfy": "Tải ntfy",
@@ -2187,5 +2187,6 @@
   "homeHelperGoneTitle": "Ứng dụng trợ giúp của bạn không còn nữa",
   "homeHelperGoneLine": "Kryfo sẽ kiểm tra mỗi 15 phút cho đến khi bạn chọn cách khác.",
   "homeHelperGoneChoose": "Chọn cách khác",
-  "homeHelperRelayTitle": "Relay không còn đánh thức Kryfo"
+  "homeHelperRelayTitle": "Relay không còn đánh thức Kryfo",
+  "gettingMessagesHelperRefused": "Hiện relay của chúng tôi chưa nhận một số đăng ký của điện thoại này. Các cuộc trò chuyện đó sẽ đến cùng lần kiểm tra mỗi 15 phút, và Kryfo vẫn tiếp tục thử."
 }

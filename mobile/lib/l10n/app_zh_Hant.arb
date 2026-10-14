@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "預設給我的語音變聲",
   "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改",
   "gettingMessagesHelperBody": "即時送達，省電。輔助應用程式的伺服器能看到你手機的 IP 位址，並知道你何時收到訊息，但從不知道內容。",
-  "gettingMessagesHelperNote": "其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。",
+  "gettingMessagesHelperNote": "其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾會有幾天，某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。",
   "helperSheetNeedTitle": "你需要一個輔助應用程式",
   "helperSheetNeedLine": "輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。",
   "helperSheetGetNtfy": "取得 ntfy",
@@ -2187,5 +2187,6 @@
   "homeHelperGoneTitle": "你的輔助應用程式不見了",
   "homeHelperGoneLine": "在你選擇其他方式之前，Kryfo 每 15 分鐘查收一次。",
   "homeHelperGoneChoose": "選擇其他方式",
-  "homeHelperRelayTitle": "中繼不再喚醒 Kryfo"
+  "homeHelperRelayTitle": "中繼不再喚醒 Kryfo",
+  "gettingMessagesHelperRefused": "我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。"
 }

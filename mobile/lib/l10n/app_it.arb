@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "Camuffa la mia voce di default",
   "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu",
   "gettingMessagesHelperBody": "Immediato e leggero sulla batteria. Il server dell'app di supporto vede l'indirizzo IP del telefono e sa quando ricevi messaggi, mai cosa dicono.",
-  "gettingMessagesHelperNote": "Vengono mescolati falsi risvegli, così per il server dell'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.",
+  "gettingMessagesHelperNote": "Vengono mescolati falsi risvegli, così per il server dell'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto e per qualche giorno, un contatto normale aspettano il controllo che Kryfo fa comunque ogni 15 minuti.",
   "helperSheetNeedTitle": "Ti serve un'app di supporto",
   "helperSheetNeedLine": "Un'app di supporto tiene una connessione leggera per tutte le tue app e sveglia Kryfo quando arriva qualcosa. Va bene qualsiasi app UnifiedPush, ntfy è un buon inizio.",
   "helperSheetGetNtfy": "Installa ntfy",
@@ -2187,5 +2187,6 @@
   "homeHelperGoneTitle": "La tua app di supporto non c'è più",
   "homeHelperGoneLine": "Kryfo fa un controllo ogni 15 minuti finché non scegli un altro modo.",
   "homeHelperGoneChoose": "Scegli un altro modo",
-  "homeHelperRelayTitle": "Il relay non sveglia più Kryfo"
+  "homeHelperRelayTitle": "Il relay non sveglia più Kryfo",
+  "gettingMessagesHelperRefused": "Il nostro relay al momento non accetta alcune registrazioni di questo telefono. Quelle chat arrivano con il controllo ogni 15 minuti, e Kryfo continua a provare."
 }

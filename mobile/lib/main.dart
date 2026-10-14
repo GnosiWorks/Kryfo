@@ -13275,6 +13275,9 @@ class AppState extends ChangeNotifier {
       _deliveryMode == DeliveryMode.helper ||
       (_relayKnocks && _sendMode == 'private');
   String? get helperName => _helperName;
+  // some registration refused several times running: said on the screen
+  bool _helperRefused = false;
+  bool get helperRefused => _helperRefused;
   bool get helperGoneDue => _helperGone.startsWith('due:') && !sessionQuiet;
   // why the card shows: the helper app is gone, or the relay stopped
   bool get helperRelayStopped => _helperGone.startsWith('due:relay:');
@@ -13288,6 +13291,7 @@ class AppState extends ChangeNotifier {
   Future<void> _loadHelper() async {
     try {
       _relayKnocks = await helper.relayKnocks();
+      _helperRefused = await helper.refusedLasting();
       final prefs = await SharedPreferences.getInstance();
       _helperGone = prefs.getString(kHelperGoneKey) ?? '';
       if (_deliveryMode == DeliveryMode.helper) await _lookAtHelper();
@@ -13370,6 +13374,11 @@ class AppState extends ChangeNotifier {
         n = await _helperOp(() => helper.sync());
         more = helper.more;
         sent = helper.sent;
+        final refused = await helper.refusedLasting();
+        if (refused != _helperRefused) {
+          _helperRefused = refused;
+          notifyListeners();
+        }
       }
       // one group a round, all told: a forget waits for a round with no
       // registrations in it

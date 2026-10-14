@@ -8279,7 +8279,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+      'Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, birkaç günlüğüne, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get helperSheetNeedTitle => 'Bir yardımcı uygulama gerekiyor';
@@ -8323,4 +8323,8 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'Aktarıcı artık Kryfo’yu uyandırmıyor';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder.';
 }

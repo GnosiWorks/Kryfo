@@ -8317,7 +8317,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Despertares falsos são misturados, o que dificulta para o servidor do app auxiliar saber quando chegam as mensagens de verdade. Um servidor auxiliar próprio revela o endereço dele ao nosso retransmissor. Conversas ocultas, salas além das primeiras e, de vez em quando, um contato comum, cerca de um mês em cada cinco, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
+      'Despertares falsos são misturados, o que dificulta para o servidor do app auxiliar saber quando chegam as mensagens de verdade. Um servidor auxiliar próprio revela o endereço dele ao nosso retransmissor. Conversas ocultas, salas além das primeiras e, de vez em quando e por alguns dias, um contato comum esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
 
   @override
   String get helperSheetNeedTitle => 'Você precisa de um app auxiliar';
@@ -8361,4 +8361,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeHelperRelayTitle => 'O retransmissor parou de acordar o Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Nosso retransmissor não está aceitando alguns registros deste celular no momento. Essas conversas chegam com a consulta a cada 15 minutos, e o Kryfo continua tentando.';
 }
