@@ -656,6 +656,7 @@ void main() {
           canSend: true,
         ),
       );
+      await t.pump();
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.bridgesSignInToThisWifi), findsNothing);
       await drain(t);
