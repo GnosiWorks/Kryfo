@@ -512,10 +512,6 @@ final _calls = <_Call>[
   ('cameraTakeAPhoto', [], (l) => l.cameraTakeAPhoto),
   ('cameraKeepACopy', [], (l) => l.cameraKeepACopy),
   ('cameraUseThis', [], (l) => l.cameraUseThis),
-  ('chatB', ["⟨bytes⟩"], (l) => l.chatB("⟨bytes⟩")),
-  ('chatKb', ["⟨bytes⟩"], (l) => l.chatKb("⟨bytes⟩")),
-  ('chatMb', ["⟨bytes⟩"], (l) => l.chatMb("⟨bytes⟩")),
-  ('chatFile', [], (l) => l.chatFile),
   ('chatYouAreOfflineThis', [], (l) => l.chatYouAreOfflineThis),
   ('chatStillConnectingToTor', [], (l) => l.chatStillConnectingToTor),
   ('chatS', ["⟨seconds⟩"], (l) => l.chatS("⟨seconds⟩")),
@@ -586,7 +582,6 @@ final _calls = <_Call>[
   ('chatBigFilesGoOut', [], (l) => l.chatBigFilesGoOut),
   ('chatSendIt', [], (l) => l.chatSendIt),
   ('chatCouldNotReadThat', [], (l) => l.chatCouldNotReadThat),
-  ('chatFileTooBig8', [], (l) => l.chatFileTooBig8),
   ('chatCouldNotCleanThat', [], (l) => l.chatCouldNotCleanThat),
   (
     'chatCouldNotCleanThatPictureSend',
@@ -1010,7 +1005,6 @@ final _calls = <_Call>[
   ('groupChatCouldNotReadThat', [], (l) => l.groupChatCouldNotReadThat),
   ('groupChatGifTooBig8', [], (l) => l.groupChatGifTooBig8),
   ('groupChatCouldNotCleanThat', [], (l) => l.groupChatCouldNotCleanThat),
-  ('groupChatFileTooBig8', [], (l) => l.groupChatFileTooBig8),
   (
     'groupChatCouldNotCleanThatVideo',
     [],
@@ -3140,6 +3134,16 @@ final _calls = <_Call>[
   ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
   ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
   ('pairCodePanelAcceptOnce', [], (l) => l.pairCodePanelAcceptOnce),
+  ('fileInstallerLine', [], (l) => l.fileInstallerLine),
+  ('fileAppInstaller', [], (l) => l.fileAppInstaller),
+  ('fileSaveToDevice', [], (l) => l.fileSaveToDevice),
+  ('fileOpenHint', [], (l) => l.fileOpenHint),
+  ('fileSaved', [], (l) => l.fileSaved),
+  ('fileSavedIn', ["⟨place⟩"], (l) => l.fileSavedIn("⟨place⟩")),
+  ('fileSavedUnchecked', [], (l) => l.fileSavedUnchecked),
+  ('fileNotSaved', [], (l) => l.fileNotSaved),
+  ('fileTooBig', ["⟨size⟩", "⟨max⟩"], (l) => l.fileTooBig("⟨size⟩", "⟨max⟩")),
+  ('fileGoesAsItIs', [], (l) => l.fileGoesAsItIs),
 ];
 
 void main() {

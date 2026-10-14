@@ -1199,24 +1199,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraUseThis => 'Pakai ini';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'FILE';
-
-  @override
   String get chatYouAreOfflineThis =>
       'Kamu sedang offline · pesan ini terkirim sendiri saat kamu tersambung lagi';
 
@@ -1449,9 +1431,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Gagal membaca file itu';
-
-  @override
-  String get chatFileTooBig8 => 'File terlalu besar · maks 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'Gagal membersihkan video itu';
@@ -2409,9 +2388,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Gagal membersihkan gif itu';
-
-  @override
-  String get groupChatFileTooBig8 => 'File terlalu besar · maks 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Gagal membersihkan video itu';
@@ -8259,4 +8235,41 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Setiap obrolan bisa mengubahnya di menunya';
+
+  @override
+  String get fileInstallerLine =>
+      'Ini file penginstal aplikasi. Instal aplikasi hanya dari orang yang kamu percaya.';
+
+  @override
+  String get fileAppInstaller => 'Penginstal aplikasi';
+
+  @override
+  String get fileSaveToDevice => 'Simpan ke perangkat';
+
+  @override
+  String get fileOpenHint => 'Dibuka di aplikasi lain';
+
+  @override
+  String get fileSaved => 'Tersimpan';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Tersimpan di $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Tersimpan, tapi Kryfo tidak bisa memeriksa salinannya';
+
+  @override
+  String get fileNotSaved => 'Gagal menyimpan file';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'File ini berukuran $size. Ukuran file maksimal $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'File ini dikirim apa adanya. Kryfo hanya membersihkan foto dan video.';
 }

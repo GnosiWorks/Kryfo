@@ -1239,24 +1239,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cameraUseThis => 'Використати';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes Б';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes КБ';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes МБ';
-  }
-
-  @override
-  String get chatFile => 'ФАЙЛ';
-
-  @override
   String get chatYouAreOfflineThis =>
       'Ти офлайн · надішлеться само, щойно знову підключишся';
 
@@ -1494,9 +1476,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Не вдалося прочитати файл';
-
-  @override
-  String get chatFileTooBig8 => 'Файл завеликий · макс. 8 МБ';
 
   @override
   String get chatCouldNotCleanThat => 'Не вдалося очистити це відео';
@@ -2464,9 +2443,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Не вдалося очистити цей GIF';
-
-  @override
-  String get groupChatFileTooBig8 => 'Файл завеликий · макс. 8 МБ';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Не вдалося очистити це відео';
@@ -8408,4 +8384,41 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'У кожному чаті це можна змінити в його меню';
+
+  @override
+  String get fileInstallerLine =>
+      'Це інсталятор застосунку. Встановлюй застосунки лише від тих, кому довіряєш.';
+
+  @override
+  String get fileAppInstaller => 'Інсталятор застосунку';
+
+  @override
+  String get fileSaveToDevice => 'Зберегти на пристрій';
+
+  @override
+  String get fileOpenHint => 'Відкриється в іншому застосунку';
+
+  @override
+  String get fileSaved => 'Збережено';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Збережено в $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Збережено, але Kryfo не зміг перевірити копію';
+
+  @override
+  String get fileNotSaved => 'Не вдалося зберегти файл';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Цей файл важить $size. Файли можуть бути до $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Цей файл піде як є. Kryfo очищує лише фото й відео.';
 }

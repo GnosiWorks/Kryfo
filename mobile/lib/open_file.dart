@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // opening a received file with another app, and what a video bubble needs
 // to draw itself. both are the phone's own machinery behind one channel.
+// an app installer is never handed to another app, here or natively
 import 'package:flutter/services.dart';
 import 'dlog.dart';
+import 'file_kind.dart';
 import 'l10n/numbers.dart';
 
 const _channel = MethodChannel('halo/platform');
@@ -11,25 +13,33 @@ const _channel = MethodChannel('halo/platform');
 /// then goes with the next lock or switch of pin. the app sets it
 bool Function() shareGoesWithLock = () => false;
 
+enum OpenAnswer { opened, nothing, refused }
+
 /// hands [path] to whichever app the person picks for that kind of file.
-/// [name] is the name the sender gave it; ours on disk has a prefix. false
-/// when nothing on the phone opens it, and the caller falls back to share.
-Future<bool> openWithAnotherApp(String path, {String? name}) async {
+/// [name] is the name the sender gave it; ours on disk has a prefix.
+/// nothing: no app on the phone opens it, and the caller falls back to
+/// share. refused: an app installer, which only ever goes to a save
+Future<OpenAnswer> openWithAnotherApp(String path, {String? name}) async {
+  final facts = await readFileFacts(path, name);
+  if (facts.installer) return OpenAnswer.refused;
   try {
-    return await _channel.invokeMethod<bool>('openFile', {
-          'path': path,
-          'name': name,
-        }) ??
-        false;
+    final r = await _channel.invokeMethod<Object?>('openFile', {
+      'path': path,
+      'name': safeFileName(name, facts: facts),
+      'mime': facts.mime,
+    });
+    if (r == true) return OpenAnswer.opened;
+    if (r == 'refused') return OpenAnswer.refused;
+    return OpenAnswer.nothing;
   } catch (_) {
-    return false;
+    return OpenAnswer.nothing;
   }
 }
 
 /// the share sheet with a copy of [path] the app keeps and shreds itself,
 /// not the share plugin's, which goes unzeroed at the next share. false
-/// when the copy was not made or the sheet did not open. a [backup] is
-/// ciphertext, kept until the next one or a day
+/// when the copy was not made or the sheet did not open, and always for an
+/// app installer. a [backup] is ciphertext, kept until the next one or a day
 Future<bool> shareFileOut(
   String path, {
   String? name,
@@ -37,10 +47,16 @@ Future<bool> shareFileOut(
   String? subject,
   bool backup = false,
 }) async {
+  var shown = name;
+  if (!backup) {
+    final facts = await readFileFacts(path, name);
+    if (facts.installer) return false;
+    if (name != null) shown = safeFileName(name, facts: facts);
+  }
   try {
     return await _channel.invokeMethod<bool>('shareFile', {
           'path': path,
-          'name': name,
+          'name': shown,
           'text': text,
           'subject': subject,
           'backup': backup,

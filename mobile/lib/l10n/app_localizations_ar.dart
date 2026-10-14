@@ -1248,24 +1248,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraUseThis => 'استخدام هذه';
 
   @override
-  String chatB(Object bytes) {
-    return '⁨$bytes⁩ بايت';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '⁨$bytes⁩ ك.ب';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '⁨$bytes⁩ م.ب';
-  }
-
-  @override
-  String get chatFile => 'ملف';
-
-  @override
   String get chatYouAreOfflineThis =>
       'أنت غير متصل · ستُرسل تلقائيًا عند عودة الاتصال';
 
@@ -1507,9 +1489,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'تعذّرت قراءة ذلك الملف';
-
-  @override
-  String get chatFileTooBig8 => 'الملف كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get chatCouldNotCleanThat => 'تعذّر تنظيف ذلك الفيديو';
@@ -2472,9 +2451,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'تعذّر تنظيف ملف GIF هذا';
-
-  @override
-  String get groupChatFileTooBig8 => 'الملف كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'تعذّر تنظيف ذلك الفيديو';
@@ -8390,4 +8366,41 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'يمكن لكل محادثة تغييره من قائمتها';
+
+  @override
+  String get fileInstallerLine =>
+      'هذا ملف لتثبيت تطبيق. لا تثبّت التطبيقات إلا من أشخاص تثق بهم.';
+
+  @override
+  String get fileAppInstaller => 'ملف تثبيت تطبيق';
+
+  @override
+  String get fileSaveToDevice => 'حفظ على الجهاز';
+
+  @override
+  String get fileOpenHint => 'يُفتح في تطبيق آخر';
+
+  @override
+  String get fileSaved => 'حُفظ';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'حُفظ في ⁨$place⁩';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'حُفظ، لكن Kryfo لم يتمكن من التحقق من النسخة';
+
+  @override
+  String get fileNotSaved => 'تعذّر حفظ الملف';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'حجم هذا الملف ⁨$size⁩. الحد الأقصى للملفات ⁨$max⁩.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo الصور والفيديوهات فقط.';
 }

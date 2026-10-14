@@ -1514,37 +1514,6 @@
   "@cameraUseThis": {
     "description": "screens/camera_screen.dart"
   },
-  "chatB": "{bytes} b",
-  "@chatB": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatKb": "{bytes} kb",
-  "@chatKb": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatMb": "{bytes} mb",
-  "@chatMb": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatFile": "FILE",
-  "@chatFile": {
-    "description": "screens/chat_screen.dart"
-  },
   "chatYouAreOfflineThis": "You are offline · this sends itself when you reconnect",
   "@chatYouAreOfflineThis": {
     "description": "screens/chat_screen.dart"
@@ -1853,10 +1822,6 @@
   },
   "chatCouldNotReadThat": "Could not read that file",
   "@chatCouldNotReadThat": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatFileTooBig8": "File too big · 8 mb max",
-  "@chatFileTooBig8": {
     "description": "screens/chat_screen.dart"
   },
   "chatCouldNotCleanThat": "Could not clean that video",
@@ -3045,10 +3010,6 @@
   },
   "groupChatCouldNotCleanThat": "Could not clean that gif",
   "@groupChatCouldNotCleanThat": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatFileTooBig8": "File too big · 8 mb max",
-  "@groupChatFileTooBig8": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatCouldNotCleanThatVideo": "Could not clean that video",
@@ -10427,5 +10388,58 @@
   "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
+  },
+  "fileInstallerLine": "This is an app installer. Only install apps from people you trust.",
+  "@fileInstallerLine": {
+    "description": "widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it"
+  },
+  "fileAppInstaller": "App installer",
+  "@fileAppInstaller": {
+    "description": "widgets/media_bubbles.dart: screen reader name for a file that is an app installer (apk)"
+  },
+  "fileSaveToDevice": "Save to device",
+  "@fileSaveToDevice": {
+    "description": "message menu and file bubble: saves the file through the system save window"
+  },
+  "fileOpenHint": "Opens in another app",
+  "@fileOpenHint": {
+    "description": "widgets/media_bubbles.dart: screen reader hint on a file bubble, a tap opens it in another app"
+  },
+  "fileSaved": "Saved",
+  "@fileSaved": {
+    "description": "file_save.dart: toast once a file was saved, when the place is not known"
+  },
+  "fileSavedIn": "Saved in {place}",
+  "@fileSavedIn": {
+    "description": "file_save.dart: toast once a file was saved. the placeholder is a folder like Download, or the app that holds it",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedUnchecked": "Saved, but Kryfo couldn't check the copy",
+  "@fileSavedUnchecked": {
+    "description": "file_save.dart: toast when a file was saved but the copy could not be read back"
+  },
+  "fileNotSaved": "Could not save the file",
+  "@fileNotSaved": {
+    "description": "file_save.dart: toast when saving a file failed"
+  },
+  "fileTooBig": "This file is {size}. Files can be up to {max}.",
+  "@fileTooBig": {
+    "description": "chat and group: toast when a picked file is over the limit. size and max are like 12.4 mb and 8.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "fileGoesAsItIs": "This file goes exactly as it is. Kryfo only cleans photos and videos.",
+  "@fileGoesAsItIs": {
+    "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
   }
 }

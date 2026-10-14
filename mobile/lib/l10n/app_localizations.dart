@@ -1920,30 +1920,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{bytes} b'**
-  String chatB(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{bytes} kb'**
-  String chatKb(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{bytes} mb'**
-  String chatMb(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'FILE'**
-  String get chatFile;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'You are offline · this sends itself when you reconnect'**
   String get chatYouAreOfflineThis;
 
@@ -2282,12 +2258,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not read that file'**
   String get chatCouldNotReadThat;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'File too big · 8 mb max'**
-  String get chatFileTooBig8;
 
   /// screens/chat_screen.dart
   ///
@@ -3872,12 +3842,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not clean that gif'**
   String get groupChatCouldNotCleanThat;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'File too big · 8 mb max'**
-  String get groupChatFileTooBig8;
 
   /// screens/group_chat_screen.dart
   ///
@@ -13328,6 +13292,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
+
+  /// widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it
+  ///
+  /// In en, this message translates to:
+  /// **'This is an app installer. Only install apps from people you trust.'**
+  String get fileInstallerLine;
+
+  /// widgets/media_bubbles.dart: screen reader name for a file that is an app installer (apk)
+  ///
+  /// In en, this message translates to:
+  /// **'App installer'**
+  String get fileAppInstaller;
+
+  /// message menu and file bubble: saves the file through the system save window
+  ///
+  /// In en, this message translates to:
+  /// **'Save to device'**
+  String get fileSaveToDevice;
+
+  /// widgets/media_bubbles.dart: screen reader hint on a file bubble, a tap opens it in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opens in another app'**
+  String get fileOpenHint;
+
+  /// file_save.dart: toast once a file was saved, when the place is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get fileSaved;
+
+  /// file_save.dart: toast once a file was saved. the placeholder is a folder like Download, or the app that holds it
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in {place}'**
+  String fileSavedIn(String place);
+
+  /// file_save.dart: toast when a file was saved but the copy could not be read back
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, but Kryfo couldn\'t check the copy'**
+  String get fileSavedUnchecked;
+
+  /// file_save.dart: toast when saving a file failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the file'**
+  String get fileNotSaved;
+
+  /// chat and group: toast when a picked file is over the limit. size and max are like 12.4 mb and 8.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. Files can be up to {max}.'**
+  String fileTooBig(String size, String max);
+
+  /// screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)
+  ///
+  /// In en, this message translates to:
+  /// **'This file goes exactly as it is. Kryfo only cleans photos and videos.'**
+  String get fileGoesAsItIs;
 }
 
 class _AppLocalizationsDelegate

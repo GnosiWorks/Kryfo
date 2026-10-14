@@ -1218,24 +1218,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cameraUseThis => 'Utiliser';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes o';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes Ko';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes Mo';
-  }
-
-  @override
-  String get chatFile => 'FICHIER';
-
-  @override
   String get chatYouAreOfflineThis =>
       'Vous êtes hors ligne · ceci partira tout seul à la reconnexion';
 
@@ -1470,9 +1452,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Impossible de lire ce fichier';
-
-  @override
-  String get chatFileTooBig8 => 'Fichier trop gros · 8 Mo max';
 
   @override
   String get chatCouldNotCleanThat => 'Impossible de nettoyer cette vidéo';
@@ -2434,9 +2413,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Impossible de nettoyer ce gif';
-
-  @override
-  String get groupChatFileTooBig8 => 'Fichier trop gros · 8 Mo max';
 
   @override
   String get groupChatCouldNotCleanThatVideo =>
@@ -8349,4 +8325,41 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Chaque discussion peut le changer dans son menu';
+
+  @override
+  String get fileInstallerLine =>
+      'C’est le fichier d’installation d’une appli. N’installez des applis que de personnes en qui vous avez confiance.';
+
+  @override
+  String get fileAppInstaller => 'Fichier d’installation d’appli';
+
+  @override
+  String get fileSaveToDevice => 'Enregistrer sur l’appareil';
+
+  @override
+  String get fileOpenHint => 'S’ouvre dans une autre appli';
+
+  @override
+  String get fileSaved => 'Enregistré';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Enregistré dans $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Enregistré, mais Kryfo n’a pas pu vérifier la copie';
+
+  @override
+  String get fileNotSaved => 'Impossible d’enregistrer le fichier';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Ce fichier fait $size. Les fichiers peuvent faire jusqu’à $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Ce fichier part tel quel. Kryfo ne nettoie que les photos et les vidéos.';
 }

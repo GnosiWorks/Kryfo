@@ -567,10 +567,6 @@ void main() {
     expect(l.cameraTakeAPhoto, "Take a photo");
     expect(l.cameraKeepACopy, "Keep a copy");
     expect(l.cameraUseThis, "Use this");
-    expect(l.chatB("<bytes>"), "<bytes> b");
-    expect(l.chatKb("<bytes>"), "<bytes> kb");
-    expect(l.chatMb("<bytes>"), "<bytes> mb");
-    expect(l.chatFile, "FILE");
     expect(
       l.chatYouAreOfflineThis,
       "You are offline · this sends itself when you reconnect",
@@ -661,7 +657,6 @@ void main() {
     );
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");
-    expect(l.chatFileTooBig8, "File too big · 8 mb max");
     expect(l.chatCouldNotCleanThat, "Could not clean that video");
     expect(
       l.chatCouldNotCleanThatPictureSend,
@@ -1136,7 +1131,6 @@ void main() {
     expect(l.groupChatCouldNotReadThat, "Could not read that file");
     expect(l.groupChatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThat, "Could not clean that gif");
-    expect(l.groupChatFileTooBig8, "File too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThatVideo, "Could not clean that video");
     expect(
       l.groupChatCouldNotCleanThatPictureSend,
@@ -3608,6 +3602,25 @@ void main() {
     expect(
       l.pairCodePanelAcceptOnce,
       "Their request comes once they add you. Accept it only once they say all four groups matched.",
+    );
+    expect(
+      l.fileInstallerLine,
+      "This is an app installer. Only install apps from people you trust.",
+    );
+    expect(l.fileAppInstaller, "App installer");
+    expect(l.fileSaveToDevice, "Save to device");
+    expect(l.fileOpenHint, "Opens in another app");
+    expect(l.fileSaved, "Saved");
+    expect(l.fileSavedIn("<place>"), "Saved in <place>");
+    expect(l.fileSavedUnchecked, "Saved, but Kryfo couldn't check the copy");
+    expect(l.fileNotSaved, "Could not save the file");
+    expect(
+      l.fileTooBig("<size>", "<max>"),
+      "This file is <size>. Files can be up to <max>.",
+    );
+    expect(
+      l.fileGoesAsItIs,
+      "This file goes exactly as it is. Kryfo only cleans photos and videos.",
     );
   });
 }

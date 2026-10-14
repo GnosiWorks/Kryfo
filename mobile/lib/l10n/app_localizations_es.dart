@@ -1218,24 +1218,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cameraUseThis => 'Usar';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'ARCHIVO';
-
-  @override
   String get chatYouAreOfflineThis =>
       'No tienes conexión · se enviará solo cuando vuelvas a conectarte';
 
@@ -1469,9 +1451,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'No se pudo leer ese archivo';
-
-  @override
-  String get chatFileTooBig8 => 'Archivo muy grande · máx. 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'No se pudo limpiar ese video';
@@ -2439,9 +2418,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'No se pudo limpiar ese gif';
-
-  @override
-  String get groupChatFileTooBig8 => 'Archivo muy grande · máx. 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'No se pudo limpiar ese video';
@@ -8329,4 +8305,41 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Cada chat puede cambiarlo en su menú';
+
+  @override
+  String get fileInstallerLine =>
+      'Esto es el instalador de una app. Instala apps solo de personas en las que confíes.';
+
+  @override
+  String get fileAppInstaller => 'Instalador de app';
+
+  @override
+  String get fileSaveToDevice => 'Guardar en el dispositivo';
+
+  @override
+  String get fileOpenHint => 'Se abre en otra app';
+
+  @override
+  String get fileSaved => 'Guardado';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Guardado en $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Guardado, pero Kryfo no pudo comprobar la copia';
+
+  @override
+  String get fileNotSaved => 'No se pudo guardar el archivo';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Este archivo pesa $size. Los archivos pueden pesar hasta $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Este archivo sale tal cual. Kryfo solo limpia fotos y vídeos.';
 }

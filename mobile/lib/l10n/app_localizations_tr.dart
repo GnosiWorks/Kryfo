@@ -1211,24 +1211,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraUseThis => 'Bunu kullan';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'DOSYA';
-
-  @override
   String get chatYouAreOfflineThis =>
       'Çevrimdışısın · yeniden bağlanınca kendiliğinden gider';
 
@@ -1464,9 +1446,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Bu dosya okunamadı';
-
-  @override
-  String get chatFileTooBig8 => 'Dosya çok büyük · en fazla 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'Bu video temizlenemedi';
@@ -2415,9 +2394,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Bu gif temizlenemedi';
-
-  @override
-  String get groupChatFileTooBig8 => 'Dosya çok büyük · en fazla 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Bu video temizlenemedi';
@@ -8287,4 +8263,41 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Her sohbet bunu kendi menüsünden değiştirebilir';
+
+  @override
+  String get fileInstallerLine =>
+      'Bu bir uygulama yükleyicisi. Uygulamaları yalnızca güvendiğin kişilerden yükle.';
+
+  @override
+  String get fileAppInstaller => 'Uygulama yükleyicisi';
+
+  @override
+  String get fileSaveToDevice => 'Cihaza kaydet';
+
+  @override
+  String get fileOpenHint => 'Başka bir uygulamada açılır';
+
+  @override
+  String get fileSaved => 'Kaydedildi';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Kaydedildi: $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get fileNotSaved => 'Dosya kaydedilemedi';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Bu dosya $size. Dosyalar en fazla $max olabilir.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Bu dosya olduğu gibi gider. Kryfo yalnızca fotoğrafları ve videoları temizler.';
 }

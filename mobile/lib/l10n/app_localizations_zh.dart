@@ -1161,24 +1161,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraUseThis => '用这个';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes B';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes KB';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes MB';
-  }
-
-  @override
-  String get chatFile => '文件';
-
-  @override
   String get chatYouAreOfflineThis => '你已离线 · 重新连上后会自动发出';
 
   @override
@@ -1403,9 +1385,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => '无法读取这个文件';
-
-  @override
-  String get chatFileTooBig8 => '文件太大 · 最大 8 MB';
 
   @override
   String get chatCouldNotCleanThat => '无法清理这个视频';
@@ -2311,9 +2290,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => '无法清理这个 GIF';
-
-  @override
-  String get groupChatFileTooBig8 => '文件太大 · 最大 8 MB';
 
   @override
   String get groupChatCouldNotCleanThatVideo => '无法清理这个视频';
@@ -7902,6 +7878,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
+
+  @override
+  String get fileInstallerLine => '这是一个应用安装包。只安装来自你信任的人的应用。';
+
+  @override
+  String get fileAppInstaller => '应用安装包';
+
+  @override
+  String get fileSaveToDevice => '保存到设备';
+
+  @override
+  String get fileOpenHint => '在其他应用中打开';
+
+  @override
+  String get fileSaved => '已保存';
+
+  @override
+  String fileSavedIn(String place) {
+    return '已保存到 $place';
+  }
+
+  @override
+  String get fileSavedUnchecked => '已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get fileNotSaved => '无法保存文件';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return '这个文件有 $size。文件最大为 $max。';
+  }
+
+  @override
+  String get fileGoesAsItIs => '这个文件会原样发出。Kryfo 只清理照片和视频。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9061,24 +9071,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraUseThis => '使用這個';
 
   @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => '檔案';
-
-  @override
   String get chatYouAreOfflineThis => '你目前離線 · 重新連線後會自動傳送';
 
   @override
@@ -9303,9 +9295,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatCouldNotReadThat => '無法讀取那個檔案';
-
-  @override
-  String get chatFileTooBig8 => '檔案太大 · 上限 8 mb';
 
   @override
   String get chatCouldNotCleanThat => '無法清理那段影片';
@@ -10211,9 +10200,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatCouldNotCleanThat => '無法清理那個 GIF';
-
-  @override
-  String get groupChatFileTooBig8 => '檔案太大 · 上限 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
@@ -15682,4 +15668,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String get fileInstallerLine => '這是一個應用程式安裝檔。只安裝來自你信任的人的應用程式。';
+
+  @override
+  String get fileAppInstaller => '應用程式安裝檔';
+
+  @override
+  String get fileSaveToDevice => '儲存到裝置';
+
+  @override
+  String get fileOpenHint => '在其他應用程式中開啟';
+
+  @override
+  String get fileSaved => '已儲存';
+
+  @override
+  String fileSavedIn(String place) {
+    return '已儲存到 $place';
+  }
+
+  @override
+  String get fileSavedUnchecked => '已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get fileNotSaved => '無法儲存檔案';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return '這個檔案有 $size。檔案最大為 $max。';
+  }
+
+  @override
+  String get fileGoesAsItIs => '這個檔案會原樣送出。Kryfo 只清理照片和影片。';
 }

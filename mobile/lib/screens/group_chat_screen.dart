@@ -22,6 +22,8 @@ import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_kind.dart' show bytesSayIsoVideo, kMaxFileBytes, knownInstaller;
+import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
@@ -2398,7 +2400,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _pickGroupFile() async {
     final PlatformFile? res;
     try {
-      res = await lockState.hold(() => FilePicker.pickFile());
+      // every kind of file: apps, archives, anything the phone holds
+      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
     } on LockDropped {
       // the session it was picked in is gone: nothing to say
       return;
@@ -2452,8 +2455,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
-    if (size > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
+    if (size > kMaxFileBytes) {
+      if (mounted) {
+        showHaloToast(
+          context,
+          l10n.fileTooBig(humanFileSize(size), humanFileSize(kMaxFileBytes)),
+        );
+      }
       return;
     }
     // ended while it was picked: nothing is copied
@@ -2465,8 +2473,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await File(src).copy(dest.path);
     // a gallery video carries what a gallery photo does: where, on what,
     // and when. stripped in place on our own copy; a file that cannot be
-    // walked is not sent, the same as a jpeg that cannot be.
-    if (videoNameNeedsStrip(name)) {
+    // walked is not sent, the same as a jpeg that cannot be. one renamed is
+    // told by its bytes
+    if (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path)) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
@@ -3103,17 +3112,34 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   _forwardGroupMessage(target);
                 },
         ),
-        // a tap opens a file, so sharing it lives here
+        // a tap opens a file, so sharing it lives here. an app installer is
+        // only ever saved
         MenuAction(
           icon: Icons.ios_share_rounded,
           label: l10n.commonShare,
-          onTap: (target.filePath == null || target.fileName == 'voice.wav')
+          onTap:
+              (target.filePath == null ||
+                  target.fileName == 'voice.wav' ||
+                  knownInstaller(target.filePath!, target.fileName))
               ? null
               : () {
                   dismiss();
                   lockState.hold(
                     () => shareFileOut(target.filePath!, name: target.fileName),
                   );
+                },
+        ),
+        MenuAction(
+          icon: Icons.download_rounded,
+          label: l10n.fileSaveToDevice,
+          onTap:
+              (target.filePath == null ||
+                  target.fileName == null ||
+                  target.fileName == 'voice.wav')
+              ? null
+              : () {
+                  dismiss();
+                  saveReceivedFile(context, target.filePath!, target.fileName);
                 },
         ),
         if (isOut) ...[

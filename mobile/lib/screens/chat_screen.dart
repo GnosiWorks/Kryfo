@@ -21,7 +21,8 @@ import 'introduce_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
-import '../widgets/media_bubbles.dart' show ImageCaptionScreen, VoiceBubble;
+import '../widgets/media_bubbles.dart'
+    show ImageCaptionScreen, VoiceBubble, fileCard, humanFileSize;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../voice_mask.dart' show maskWavOff;
@@ -33,6 +34,9 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_kind.dart'
+    show bytesSayIsoVideo, kMaxFileBytes, knownInstaller, sendLaneCleans;
+import '../file_save.dart' show saveReceivedFile;
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -406,97 +410,6 @@ class _Msg with WordLinks {
       : burnWaits
       ? burnLeft(burnSecs! * 1000)
       : null;
-}
-
-String _humanSize(int bytes) {
-  if (bytes < 1024) return l10n.chatB(whole(bytes));
-  if (bytes < 1024 * 1024) {
-    return l10n.chatKb(whole(((bytes / 1024)).round()));
-  }
-  return l10n.chatMb(decimal((bytes / (1024 * 1024)), 1));
-}
-
-IconData _fileGlyph(String name) {
-  final n = name.toLowerCase();
-  if (n.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
-  if (n.endsWith('.zip') || n.endsWith('.rar') || n.endsWith('.7z')) {
-    return Icons.folder_zip_outlined;
-  }
-  if (n.endsWith('.doc') || n.endsWith('.docx') || n.endsWith('.txt')) {
-    return Icons.description_outlined;
-  }
-  if (n.endsWith('.mp3') || n.endsWith('.wav') || n.endsWith('.m4a')) {
-    return Icons.audiotrack_outlined;
-  }
-  if (n.endsWith('.mp4') || n.endsWith('.mov') || n.endsWith('.mkv')) {
-    return Icons.movie_outlined;
-  }
-  return Icons.insert_drive_file_outlined;
-}
-
-Widget _fileCard(_Msg msg, bool isOut) {
-  final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-  final sub = isOut ? HaloColors.onAmber : HaloColors.text3;
-  final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
-  int? sz;
-  try {
-    if (msg.filePath != null) sz = File(msg.filePath!).lengthSync();
-  } catch (_) {
-    // gone or unreadable: the card shows no size
-  }
-  final ext = (msg.fileName ?? '').contains('.')
-      ? msg.fileName!.split('.').last.toUpperCase()
-      : l10n.chatFile;
-  return Container(
-    constraints: const BoxConstraints(maxWidth: 230),
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-    decoration: BoxDecoration(
-      color: isOut
-          ? HaloColors.onAmber.withValues(alpha: 0.12)
-          : HaloColors.surface3,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: isOut
-                ? HaloColors.onAmber.withValues(alpha: 0.16)
-                : HaloColors.amberSoft,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(_fileGlyph(msg.fileName ?? ''), size: 19, color: icon),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                msg.fileName ?? 'file',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(
-                  size: 13,
-                  color: fg,
-                  weight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                sz != null ? '$ext · ${_humanSize(sz)}' : ext,
-                style: HaloType.mono(size: 9, color: sub),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 // out of the bubble it was tapped in, or a tile of the shared photos. a
@@ -2140,13 +2053,18 @@ class _ChatScreenState extends State<ChatScreen>
                                   _forwardMessage(target);
                                 },
                         ),
-                      // a tap opens a file, so sharing it lives here
+                      // a tap opens a file, so sharing it lives here. an
+                      // app installer is only ever saved
                       MenuAction(
                         icon: Icons.ios_share_rounded,
                         label: l10n.commonShare,
                         onTap:
                             target.filePath == null ||
-                                target.fileName == 'voice.wav'
+                                target.fileName == 'voice.wav' ||
+                                knownInstaller(
+                                  target.filePath!,
+                                  target.fileName,
+                                )
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -2155,6 +2073,23 @@ class _ChatScreenState extends State<ChatScreen>
                                     target.filePath!,
                                     name: target.fileName,
                                   ),
+                                );
+                              },
+                      ),
+                      MenuAction(
+                        icon: Icons.download_rounded,
+                        label: l10n.fileSaveToDevice,
+                        onTap:
+                            target.filePath == null ||
+                                target.fileName == null ||
+                                target.fileName == 'voice.wav'
+                            ? null
+                            : () {
+                                dismiss(now: true);
+                                saveReceivedFile(
+                                  context,
+                                  target.filePath!,
+                                  target.fileName,
                                 );
                               },
                       ),
@@ -3509,7 +3444,8 @@ class _ChatScreenState extends State<ChatScreen>
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out - a dialog on a 40kb photo would just be noise.
-  Future<bool> _confirmBigSend(int bytes) async {
+  // [asItIs]: a kind the send lane does not clean, which it says
+  Future<bool> _confirmBigSend(int bytes, {bool asItIs = false}) async {
     if (bytes < 512 * 1024) return true;
     if (!mounted) return false;
     final ok = await showConfirmSheet(
@@ -3518,7 +3454,9 @@ class _ChatScreenState extends State<ChatScreen>
       figure: appState.sendMode == 'private'
           ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
           : _humanBytes(bytes),
-      line: l10n.chatBigFilesGoOut,
+      line: asItIs
+          ? '${l10n.chatBigFilesGoOut}\n\n${l10n.fileGoesAsItIs}'
+          : l10n.chatBigFilesGoOut,
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
       rose: false,
@@ -3533,7 +3471,8 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _pickAndSendFile() async {
     final PlatformFile? res;
     try {
-      res = await lockState.hold(() => FilePicker.pickFile());
+      // every kind of file: apps, archives, anything the phone holds
+      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
     } on LockDropped {
       // the session it was picked in is gone: nothing to say
       return;
@@ -3590,11 +3529,21 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
-    if (size > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
+    if (size > kMaxFileBytes) {
+      if (mounted) {
+        showHaloToast(
+          context,
+          l10n.fileTooBig(humanFileSize(size), humanFileSize(kMaxFileBytes)),
+        );
+      }
       return;
     }
-    if (!await _confirmBigSend(size)) return;
+    if (!await _confirmBigSend(
+      size,
+      asItIs: !await sendLaneCleans(src, name),
+    )) {
+      return;
+    }
     // after the confirm, so a cancelled send does not spend one of the two
     // slots a stranger gets. taken now, before the awaits below, so a second
     // send cannot slip past the limit; one that does not go gives it back
@@ -3611,8 +3560,8 @@ class _ChatScreenState extends State<ChatScreen>
     await File(src).copy(dest.path);
     // a gallery video carries where, on what and when, like a photo. it is
     // stripped in place on our own copy, and one that cannot be walked is
-    // not sent.
-    if (videoNameNeedsStrip(name)) {
+    // not sent. one renamed is told by its bytes
+    if (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path)) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
@@ -7078,7 +7027,11 @@ class _Bubble extends StatelessWidget {
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 2,
                                           ),
-                                          child: _fileCard(msg, isOut),
+                                          child: fileCard(
+                                            msg.filePath,
+                                            msg.fileName,
+                                            isOut,
+                                          ),
                                         ),
                                       ),
                                     if (msg.mediaPath != null)
