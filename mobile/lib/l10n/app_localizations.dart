@@ -11142,7 +11142,7 @@ abstract class AppLocalizations {
   /// widgets/tor_boot_splash.dart
   ///
   /// In en, this message translates to:
-  /// **'If Tor is blocked where you are, Kryfo can start through a bridge instead.'**
+  /// **'If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.'**
   String get torBootSplashIfTorIsBlocked;
 
   /// screens/bridges_screen.dart
@@ -11166,7 +11166,7 @@ abstract class AppLocalizations {
   /// widgets/tor_boot_splash.dart
   ///
   /// In en, this message translates to:
-  /// **'Tor is blocked here'**
+  /// **'Tor is blocked or watched here'**
   String get torBootSplashTorIsBlockedHere;
 
   /// screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked

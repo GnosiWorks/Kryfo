@@ -7048,7 +7048,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'إن كان Tor محجوبًا حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
+      'إن كان Tor محجوبًا أو مراقَبًا حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
 
   @override
   String get bridgesScanACode => 'قراءة رمز';
@@ -7060,7 +7060,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'التبديل إلى الوضع التلقائي';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor محجوب هنا';
+  String get torBootSplashTorIsBlockedHere => 'Tor محجوب أو مراقَب هنا';
 
   @override
   String get torBootSplashRelayLine =>

@@ -3441,7 +3441,7 @@ void main() {
     expect(l.bridgesRemoveBridgeN("<n>"), "Remove bridge <n>");
     expect(
       l.torBootSplashIfTorIsBlocked,
-      "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
+      "If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.",
     );
     expect(
       l.bridgesPasteTheLineThey,
@@ -3462,7 +3462,7 @@ void main() {
     );
     expect(l.bridgesWaitingForWifiSignIn, "Waiting for Wi-Fi sign-in");
     expect(l.bridgesOpenWifiSettings, "Open Wi-Fi settings");
-    expect(l.torBootSplashTorIsBlockedHere, "Tor is blocked here");
+    expect(l.torBootSplashTorIsBlockedHere, "Tor is blocked or watched here");
     expect(l.notesThisWeek, "This week");
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");

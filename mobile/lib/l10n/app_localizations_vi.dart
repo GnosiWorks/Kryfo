@@ -6923,7 +6923,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Nếu ở nơi bạn đang ở Tor bị chặn, Kryfo có thể khởi động qua một cầu nối.';
+      'Nếu ở nơi bạn đang ở Tor bị chặn hoặc bị theo dõi, Kryfo có thể khởi động qua một cầu nối.';
 
   @override
   String get bridgesScanACode => 'Quét mã';
@@ -6935,7 +6935,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor bị chặn ở đây';
+  String get torBootSplashTorIsBlockedHere =>
+      'Tor bị chặn hoặc bị theo dõi ở đây';
 
   @override
   String get torBootSplashRelayLine =>

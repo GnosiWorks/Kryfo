@@ -6942,7 +6942,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'اگر جایی که هستید Tor مسدود است، Kryfo می‌تواند به‌جایش از راه یک پل شروع کند.';
+      'اگر جایی که هستید Tor مسدود یا زیر نظر است، Kryfo می‌تواند به‌جایش از راه یک پل شروع کند.';
 
   @override
   String get bridgesScanACode => 'اسکن کد';
@@ -6954,7 +6954,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'رفتن به حالت خودکار';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود است';
+  String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود یا زیر نظر است';
 
   @override
   String get torBootSplashRelayLine =>

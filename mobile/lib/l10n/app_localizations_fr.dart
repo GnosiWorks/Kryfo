@@ -7005,7 +7005,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Si Tor est bloqué là où vous êtes, Kryfo peut démarrer par un pont à la place.';
+      'Si Tor est bloqué ou surveillé là où vous êtes, Kryfo peut démarrer par un pont à la place.';
 
   @override
   String get bridgesScanACode => 'Scanner un code';
@@ -7017,7 +7017,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Passer en automatique';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor est bloqué ici';
+  String get torBootSplashTorIsBlockedHere => 'Tor est bloqué ou surveillé ici';
 
   @override
   String get torBootSplashRelayLine =>

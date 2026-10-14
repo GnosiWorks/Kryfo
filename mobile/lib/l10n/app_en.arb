@@ -8829,7 +8829,7 @@
   "@bridgesThroughABridge": {
     "description": "screens/bridges_screen.dart"
   },
-  "torBootSplashIfTorIsBlocked": "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
+  "torBootSplashIfTorIsBlocked": "If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.",
   "bridgesScanACode": "Scan a code",
   "bridgesMyanmar": "Myanmar",
   "bridgesSwitchToAutomatic": "Switch to automatic",
@@ -8842,7 +8842,7 @@
   "@bridgesNothingYet": {
     "description": "screens/bridges_screen.dart"
   },
-  "torBootSplashTorIsBlockedHere": "Tor is blocked here",
+  "torBootSplashTorIsBlockedHere": "Tor is blocked or watched here",
   "torBootSplashRelayLine": "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
   "@torBootSplashRelayLine": {
     "description": "screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked"

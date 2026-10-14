@@ -6929,7 +6929,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Kalau Tor diblokir di tempatmu, Kryfo bisa mulai lewat jembatan.';
+      'Kalau Tor diblokir atau diawasi di tempatmu, Kryfo bisa mulai lewat jembatan.';
 
   @override
   String get bridgesScanACode => 'Pindai kode';
@@ -6941,7 +6941,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor diblokir di sini';
+  String get torBootSplashTorIsBlockedHere =>
+      'Tor diblokir atau diawasi di sini';
 
   @override
   String get torBootSplashRelayLine =>

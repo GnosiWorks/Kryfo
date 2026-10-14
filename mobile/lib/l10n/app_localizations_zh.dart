@@ -6639,7 +6639,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingYet => '暂无';
 
   @override
-  String get torBootSplashIfTorIsBlocked => '如果你那里封锁了 Tor，Kryfo 可以改为通过网桥启动。';
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那里 Tor 被封锁或监控，Kryfo 可以改为通过网桥启动。';
 
   @override
   String get bridgesScanACode => '扫码';
@@ -6651,7 +6652,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
-  String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁';
+  String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁或监控';
 
   @override
   String get torBootSplashRelayLine =>
@@ -14539,7 +14540,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingYet => '還沒有';
 
   @override
-  String get torBootSplashIfTorIsBlocked => '如果你那裡封鎖了 Tor，Kryfo 可以改為透過橋接啟動。';
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那裡 Tor 被封鎖或監控，Kryfo 可以改為透過橋接啟動。';
 
   @override
   String get bridgesScanACode => '掃描 QR 碼';
@@ -14551,7 +14553,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
-  String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖';
+  String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖或監控';
 
   @override
   String get torBootSplashRelayLine =>
