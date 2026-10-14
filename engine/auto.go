@@ -803,9 +803,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
+			// through: there is nothing left to ask the tor project for
 			stSet(func() {
 				autoSt.phase, autoSt.method, autoSt.source = "connected", s.Method, s.Source
-				autoSt.errCode = ""
+				autoSt.errCode, autoSt.askConsent = "", false
 			})
 			log.Printf("auto: %s gets through", s.Method)
 			return seenOK
@@ -1500,6 +1501,9 @@ func bridgeStatus() bridgeStatusView {
 		phase = "trying"
 	}
 	v.Phase = phase
+	if phase == "connected" || v.CanSend {
+		v.AskConsent = false
+	}
 	// "trying another way, 2 of 3" needs no method name
 	if mode == bmAuto && (phase == "trying" || phase == "asking") {
 		v.Attempt, v.Attempts = attempt, attempts

@@ -650,7 +650,7 @@ void main() {
       );
       appState.bridgeAskTaken();
       expect(appState.bridgeAskDue, isFalse);
-      await _open(t);
+      await _open(t, status: _another);
       showTorBlockedSheet(t.element(find.byType(BridgesScreen)), asked: true);
       await _in(t);
       lockState.openForTest(enabled: true);
@@ -664,6 +664,34 @@ void main() {
       expect(appState.bridgeAskDue, isTrue);
       appState.bridgeAskTaken();
       await _done(t);
+    });
+
+    test('asked in onboarding, dropped once tor gets in', () {
+      final app = AppState()..bridgeSetupForTest = const BridgeSetup();
+      app.takeBridgeStatus(
+        '{"mode":"auto","phase":"trying","blocked":true,"ask_consent":true}',
+      );
+      expect(app.bridgeAskDue, isTrue);
+      // automatic got through on its own while nobody looked
+      app.takeBridgeStatus(
+        '{"mode":"auto","phase":"connected","method":"snowflake",'
+        '"can_send":true,"blocked":true,"ask_consent":true}',
+      );
+      expect(app.bridgeAskDue, isFalse);
+      // a later status without the ask does not bring it back
+      app.takeBridgeStatus(
+        '{"mode":"auto","phase":"trying","method":"snowflake","blocked":true}',
+      );
+      expect(app.bridgeAskDue, isFalse);
+      // looked at again when it would show: connected by then, no sheet
+      final slow = AppState()..bridgeSetupForTest = const BridgeSetup();
+      slow.takeBridgeStatus(
+        '{"mode":"auto","phase":"trying","blocked":true,"ask_consent":true}',
+      );
+      slow.setBridgeStatusForTest(_through);
+      expect(slow.bridgeAskDue, isFalse);
+      slow.setBridgeStatusForTest(_another);
+      expect(slow.bridgeAskDue, isTrue);
     });
 
     test('never over hidden chats', () {

@@ -285,6 +285,8 @@ func TestAutoUnvalidatedEndsLimited(t *testing.T) {
 	f := useFakeAuto(t, netInfo{On: true, Validated: false, Kind: "wifi"})
 	f.script["direct"] = resetByCensor
 	f.script["obfs4"] = worksAfter(20 * time.Second)
+	var mid bridgeStatusView
+	f.at(directLimit+10*time.Second, func() { mid = bridgeStatus() })
 	if r := pass(t, modeOpts{Consent: "ask"}); r != seenOK {
 		t.Fatalf("pass ended %s", r)
 	}
@@ -302,8 +304,9 @@ func TestAutoUnvalidatedEndsLimited(t *testing.T) {
 	if m := memSnapshot(); len(m.Blocked) != 0 {
 		t.Fatal("limited was remembered as blocked")
 	}
-	if !st.AskConsent {
-		t.Fatal("no consent asked for after direct ran out")
+	// asked while obfs4 ran, and no longer once it got through
+	if !mid.AskConsent || st.AskConsent {
+		t.Fatalf("consent asked mid-pass %v, after connecting %v", mid.AskConsent, st.AskConsent)
 	}
 }
 
@@ -405,6 +408,31 @@ func TestAutoMoatConsent(t *testing.T) {
 	pass(t, modeOpts{Consent: "yes"})
 	if len(f.moatOpts) != 1 || f.applied[0] != "webtunnel/moat" {
 		t.Fatalf("asked again: %d, tried %v", len(f.moatOpts), f.applied)
+	}
+}
+
+// direct blocked raises the ask; a bridge that gets through later in the
+// same pass takes it back, so the app never asks once tor is in
+func TestAutoAskGoneOnceConnected(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	f.script["direct"] = resetByCensor
+	f.script["obfs4"] = never
+	f.script["snowflake"] = worksAfter(40 * time.Second)
+	var mid bridgeStatusView
+	f.at(60*time.Second, func() { mid = bridgeStatus() })
+	if r := pass(t, modeOpts{Consent: "ask"}); r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	if !mid.AskConsent || mid.Phase != "trying" {
+		t.Fatalf("mid-pass %+v", mid)
+	}
+	if st := bridgeStatus(); st.Phase != "connected" || st.AskConsent {
+		t.Fatalf("connected and still asking: %+v", st)
+	}
+	// a stale ask under a connected phase is never shown either
+	stSet(func() { autoSt.askConsent = true })
+	if st := bridgeStatus(); st.AskConsent {
+		t.Fatalf("status asks while connected: %+v", st)
 	}
 }
 
