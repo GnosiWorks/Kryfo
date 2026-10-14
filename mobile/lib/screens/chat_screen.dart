@@ -4896,6 +4896,7 @@ class _ChatScreenState extends State<ChatScreen>
           avatarSeed: widget.avatarSeed,
           peerXPub: widget.peerXPub,
           face: _peerFace,
+          nickname: _nickname,
         ),
       ),
     );
