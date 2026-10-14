@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart' show restoreRunningForTest, whileBackingUp;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show HaloDb, tidyWallpapers;
 import 'package:path/path.dart' as p;
@@ -241,6 +242,25 @@ void main() {
       expect(atmo(db, _peer), 'image:$to');
       expect(File(to).readAsBytesSync(), [1, 2, 3]);
       expect(f.existsSync(), isFalse);
+    });
+
+    test('nothing moves while a backup or a restore runs', () async {
+      final db = await rows();
+      final f = (await photo(db))..setLastModifiedSync(old);
+      final was = atmo(db, _peer);
+      final dir = await db.container.folder('wallpapers');
+      final orphan = File(p.join(dir.path, 'left.jpg'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(old);
+      expect(
+        await whileBackingUp(() => tidyWallpapers(db, before: before)),
+        isEmpty,
+      );
+      restoreRunningForTest = true;
+      addTearDown(() => restoreRunningForTest = false);
+      expect(await tidyWallpapers(db, before: before), isEmpty);
+      expect(atmo(db, _peer), was);
+      expect(f.existsSync() && orphan.existsSync(), isTrue);
     });
 
     test('another container\'s folder is never touched', () async {

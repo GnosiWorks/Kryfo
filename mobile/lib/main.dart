@@ -9784,13 +9784,15 @@ String _freshWallLeaf() {
 /// that say whose chat it is go random, then what no row names is listed
 /// for the shred. the decoy's, with a vault of its own on disk, waits for
 /// that vault's open ([vaultOpen]): a hide cut short can leave a file only
-/// the vault's rows name
+/// the vault's rows name. nothing moves while a backup reads the folder or
+/// a restore replaces it
 @visibleForTesting
 Future<List<File>> tidyWallpapers(
   HaloDb d, {
   required DateTime before,
   bool vaultOpen = false,
 }) async {
+  if (restoreRunning || backupRunning) return const [];
   if (d.container == HaloContainer.decoy &&
       !vaultOpen &&
       await HaloContainer.decoyVault.onDisk()) {
