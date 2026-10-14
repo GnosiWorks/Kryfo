@@ -227,6 +227,10 @@ class _Io implements AppIo {
 class _Mem implements HaloDb {
   _Mem(this._container);
 
+  // no key blocked by "this isn't them"
+  @override
+  Future<bool> keyBlocked(String keyHex) async => false;
+
   final HaloContainer _container;
   final calls = <String>[];
   final people = <String, Map<String, Object?>>{};

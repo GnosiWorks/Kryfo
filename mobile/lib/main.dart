@@ -1479,7 +1479,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 79,
+      version: 80,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1646,10 +1646,11 @@ class HaloDb implements GroupOwedStore {
         await notifTagTables(db);
         await groupResentTables(db);
         await notifRingTables(db);
+        await blockedKeysTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 79
+        // they add. 66 runs after it: it reads what they all make. 67 to 80
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2136,6 +2137,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 79) {
           // which message each notification rang for
           await notifRingTables(db);
+        }
+        if (oldV < 80) {
+          // keys blocked as not who they said
+          await blockedKeysTable(db);
         }
       },
     );
@@ -2723,6 +2728,161 @@ class HaloDb implements GroupOwedStore {
     await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
     await db.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  // "this isn't them": everything of [haloId] here goes in one go, what
+  // they wrote in groups and their seats there too, and [keyHex], the key
+  // the number was made from, is blocked. by the key alone: the same words
+  // on another key are someone else. the files go once it is done
+  Future<void> removeAndBlockKey(String haloId, String keyHex) async {
+    final db = await open();
+    final (rows, wallpaper) = await db.transaction((t) async {
+      final rows = await t.query(
+        'messages',
+        columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid', 'poll'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
+      );
+      final uids = [
+        for (final r in rows)
+          if (r['msg_uid'] case final String u) u,
+      ];
+      final polls = [
+        for (final r in rows)
+          if (r['poll'] != null)
+            if (r['msg_uid'] case final String u) u,
+      ];
+      final c = await t.query(
+        'contacts',
+        columns: ['atmosphere'],
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      final atmo = c.isEmpty ? null : c.first['atmosphere'] as String?;
+      // what they left unread in a group goes from its count
+      await _unreadGo(t, [
+        for (final r in rows)
+          if (r['group_id'] != null) r,
+      ]);
+      for (var i = 0; i < uids.length; i += 400) {
+        final part = uids.sublist(i, min(i + 400, uids.length));
+        final marks = List.filled(part.length, '?').join(', ');
+        for (final (table, col) in const [
+          ('reactions', 'msg_uid'),
+          ('poll_votes', 'poll_uid'),
+          ('pins_out', 'msg_uid'),
+          ('edits_out', 'msg_uid'),
+          ('opener_again', 'msg_uid'),
+          ('frame_order', 'msg_uid'),
+          ('notif_rings', 'msg_uid'),
+          ('group_media_owed', 'msg_uid'),
+        ]) {
+          await t.delete(table, where: '$col IN ($marks)', whereArgs: part);
+        }
+      }
+      await _dropFilesComingFrom(t, haloId);
+      for (final (table, col) in const [
+        ('reactions', 'reactor'),
+        ('poll_votes', 'voter'),
+        ('media_chunks', 'sender'),
+        ('frame_order', 'sender'),
+        ('frames_out', 'peer_id'),
+        ('pins_out', 'peer_id'),
+        ('edits_out', 'peer_id'),
+        ('held_onion', 'peer_id'),
+        ('first_kept', 'peer'),
+        ('gone_in', 'peer_id'),
+        ('notif_tags', 'chat'),
+        ('notif_rings', 'chat'),
+        ('shield', 'halo_id'),
+        ('vouches', 'halo_id'),
+        ('vouches', 'voucher_id'),
+        ('block_spans', 'peer_id'),
+        ('blocked_drops', 'peer_id'),
+        ('group_members', 'halo_id'),
+        ('group_media_owed', 'member'),
+        ('group_ctl_out', 'member'),
+        ('group_resent', 'member'),
+        ('support_chats', 'halo_id'),
+        ('sessions', 'address'),
+        ('peer_identities', 'address'),
+        ('messages', 'peer_id'),
+        ('contacts', 'halo_id'),
+      ]) {
+        await t.delete(table, where: '$col = ?', whereArgs: [haloId]);
+      }
+      // what of theirs went in groups, by group and sender (goneKey). the
+      // delete marked their polls as just gone: nothing of them stays
+      final inGroups = [
+        for (final r in await t.query(
+          'gone_in',
+          columns: ['peer_id'],
+          where: 'peer_id LIKE ?',
+          whereArgs: ['group:%'],
+        ))
+          if (r['peer_id'] case final String k)
+            if (k.substring(6).split(':').skip(1).join(':') == haloId) k,
+      ];
+      for (final (table, col, keys) in [
+        ('gone_in', 'peer_id', inGroups),
+        ('polls_gone', 'uid', polls),
+      ]) {
+        for (var i = 0; i < keys.length; i += 400) {
+          final part = keys.sublist(i, min(i + 400, keys.length));
+          await t.delete(
+            table,
+            where: '$col IN (${List.filled(part.length, '?').join(', ')})',
+            whereArgs: part,
+          );
+        }
+      }
+      await t.insert('blocked_keys', {
+        'x': keyHex.trim().toLowerCase(),
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return (rows, atmo);
+    });
+    await _scrubMedia(rows);
+    // their chat's own photo, named for them in this container's folder
+    if (wallpaper != null && wallpaper.startsWith('image:')) {
+      final f = File(wallpaper.substring(6));
+      final folder = await container.folder('wallpapers');
+      if (p.isWithin(folder.path, f.path) && await f.exists()) {
+        await shredFile(f.path);
+      }
+    }
+  }
+
+  // a key blocked here by "this isn't them"
+  Future<bool> keyBlocked(String keyHex) async {
+    final db = await open();
+    final r = await db.query(
+      'blocked_keys',
+      columns: ['x'],
+      where: 'x = ?',
+      whereArgs: [keyHex.trim().toLowerCase()],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
+  // the keys blocked here, the newest first
+  Future<List<({String x, int at})>> blockedKeys() async {
+    final db = await open();
+    return [
+      for (final r in await db.query('blocked_keys', orderBy: 'at DESC'))
+        (x: r['x'] as String, at: (r['at'] as num).toInt()),
+    ];
+  }
+
+  Future<void> unblockKey(String keyHex) async {
+    final db = await open();
+    await db.delete(
+      'blocked_keys',
+      where: 'x = ?',
+      whereArgs: [keyHex.trim().toLowerCase()],
+    );
   }
 
   // a member of a group or a room here
@@ -4246,7 +4406,10 @@ class HaloDb implements GroupOwedStore {
 
   // rows that came in and go before they were read take their unread mark
   // with them. the unread ones are the newest that many that came in
-  Future<void> _unreadGo(Database db, List<Map<String, Object?>> rows) async {
+  Future<void> _unreadGo(
+    DatabaseExecutor db,
+    List<Map<String, Object?>> rows,
+  ) async {
     final gone = <(String, bool), Set<int>>{};
     for (final r in rows) {
       final id = r['id'];
@@ -8290,6 +8453,15 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
     dlog('block tables: $e');
   }
 }
+
+// the upgrade to 80: keys taken as not who they said ("this isn't them"),
+// blocked by the key alone, never by a name
+Future<void> blockedKeysTable(DatabaseExecutor db) => db.execute('''
+  CREATE TABLE IF NOT EXISTS blocked_keys (
+    x TEXT PRIMARY KEY,
+    at INTEGER NOT NULL
+  )
+''');
 
 // the upgrade to 75: when a seeded span is listened on from. one seeded
 // before is listened on from now, for as long as a new block would be.

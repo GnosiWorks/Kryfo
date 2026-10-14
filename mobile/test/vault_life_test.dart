@@ -1447,6 +1447,8 @@ void main() {
       'hidden_chats',
       'vault_meta',
       'vault_inbox',
+      // keys blocked as not who they said: no chat's rows
+      'blocked_keys',
     };
     final src = [
       'lib/main.dart',

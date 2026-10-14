@@ -17,6 +17,7 @@ import 'package:kryfo/polls.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/router.dart';
+import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
@@ -548,6 +549,52 @@ class ArrivalRows implements HaloDb {
       v.remove(haloId);
     }
     shields.remove(haloId);
+  }
+
+  // keys "this isn't them" blocked here, with when
+  final blockedKeyAt = <String, int>{};
+
+  @override
+  Future<void> removeAndBlockKey(String haloId, String keyHex) async {
+    _hit('removeAndBlockKey', haloId, null);
+    people.remove(haloId);
+    msgs.removeWhere((m) => m['peer_id'] == haloId);
+    heldRows.remove(haloId);
+    for (final m in members.values) {
+      m.remove(haloId);
+    }
+    vouches.remove(haloId);
+    for (final v in vouches.values) {
+      v.remove(haloId);
+    }
+    shields.remove(haloId);
+    blockedKeyAt[keyHex.trim().toLowerCase()] =
+        DateTime.now().millisecondsSinceEpoch;
+  }
+
+  @override
+  Future<bool> keyBlocked(String keyHex) async =>
+      blockedKeyAt.containsKey(keyHex.trim().toLowerCase());
+
+  @override
+  Future<List<({String x, int at})>> blockedKeys() async => [
+    for (final e in blockedKeyAt.entries) (x: e.key, at: e.value),
+  ];
+
+  @override
+  Future<void> unblockKey(String keyHex) async =>
+      blockedKeyAt.remove(keyHex.trim().toLowerCase());
+
+  // the key the number is made from: signal's, else the row's. a decoy
+  // keeps no signal store
+  @override
+  Future<String?> heldKey(String haloId) async {
+    final s = signalSession.ready && !_container.quiet
+        ? await signalSession.peerXPubHex(haloId)
+        : null;
+    if (s != null && s.isNotEmpty) return s.toLowerCase();
+    final x = (people[haloId]?['xpub'] as String?)?.trim().toLowerCase();
+    return x == null || x.isEmpty ? null : x;
   }
 
   @override

@@ -54,6 +54,17 @@ class DevTestDb implements HaloDb {
 
   DevTestDb(this.mem, [this.container = HaloContainer.everyday]);
 
+  // keys "this isn't them" blocked, read off the rows as the app writes them
+  @override
+  Future<bool> keyBlocked(String keyHex) async => mem
+      .rows('blocked_keys')
+      .any((r) => r['x'] == keyHex.trim().toLowerCase());
+  @override
+  Future<List<({String x, int at})>> blockedKeys() async => [
+    for (final r in mem.rows('blocked_keys'))
+      (x: r['x'] as String, at: r['at'] as int),
+  ];
+
   final MemDb mem;
   @override
   final HaloContainer container;
