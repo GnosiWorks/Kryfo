@@ -8323,11 +8323,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Immediato e leggero sulla batteria. Il server dell\'app di supporto sa quando ricevi messaggi, mai cosa dicono.';
+      'Immediato e leggero sulla batteria. Il server dell\'app di supporto vede l\'indirizzo IP del telefono e sa quando ricevi messaggi, mai cosa dicono.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Vengono mescolati falsi risvegli, così il server dell\'app di supporto non distingue i messaggi veri. Kryfo fa comunque un controllo ogni 15 minuti.';
+      'Vengono mescolati falsi risvegli, così per il server dell\'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, e le stanze oltre le prime, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
 
   @override
   String get helperSheetNeedTitle => 'Ti serve un\'app di supporto';
@@ -8368,4 +8368,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Scegli un altro modo';
+
+  @override
+  String get homeHelperRelayTitle => 'Il relay non sveglia più Kryfo';
 }

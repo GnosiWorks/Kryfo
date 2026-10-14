@@ -1049,8 +1049,8 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
   }
 }
 
-// the helper app chosen for waking kryfo is no longer on the phone. the
-// fifteen-minute job still fetches. said once
+// the helper app chosen for waking kryfo is no longer on the phone, or our
+// relay stopped knocking: the phone is back on check-ins. said once
 class _HelperGoneCard extends StatelessWidget {
   const _HelperGoneCard();
 
@@ -1062,7 +1062,9 @@ class _HelperGoneCard extends StatelessWidget {
         show: appState.helperGoneDue,
         id: 'helper-gone',
         tint: HaloColors.amber,
-        title: l10n.homeHelperGoneTitle,
+        title: appState.helperRelayStopped
+            ? l10n.homeHelperRelayTitle
+            : l10n.homeHelperGoneTitle,
         line: l10n.homeHelperGoneLine,
         lineColor: HaloColors.warm,
         actions: [

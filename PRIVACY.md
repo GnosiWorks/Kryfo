@@ -48,11 +48,23 @@ deleting the chat deletes it on your phone, and it does not come back unless you
 
 ## notifications
 
-there is no push service. the app checks for messages itself, over the same route it sends on, and shows a notification when one arrives. nothing outside the app is told that a message is waiting for you.
+by default there is no push service. the app checks for messages itself, over the same route it sends on, and shows a notification when one arrives. nothing outside the app is told that a message is waiting for you.
+
+## the helper app mode
+
+"Through a helper app" is a way of getting messages you can choose, off by default and only on the default private route. a unifiedpush helper app (ntfy or another) keeps one connection for all your apps, and our relay knocks on it when something arrives for you. the knock is an empty request: no sender, no count, no content. Kryfo then fetches over tor as always.
+
+what our relay learns: for each of your mailbox addresses, a web address on your helper's server to knock (an endpoint). Kryfo always uses sixteen endpoints. addresses that share an endpoint are ones that already reach the relay together over one tor circuit, and while there are free endpoints each address has one of its own. the registration travels over tor, on the same circuit as the address it names, and only to our relay. the relay keeps a hash of the address, the endpoint and two times, for at most 30 days, and deletes them when you leave the mode or the helper's server says the endpoint is gone. hidden chats are never registered.
+
+what the helper's server learns: your phone's ip address, as it does for every app that uses it, that it holds sixteen endpoints for Kryfo, and when each one is knocked. the knocks come from our relay's address, so it can tell you use Kryfo. our relay also sends fake knocks at random times, which makes it harder to tell when real messages arrive. it never learns what a message says, who sent it, or how many came.
+
+if you run your own helper server, its name is part of every endpoint, so our relay learns that all of your endpoints belong to one person. on a public server that many people use, the name says nothing.
+
+leaving the mode tells the helper app to drop the endpoints at once, and the relay is told to forget them.
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
+Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
 
 ## law enforcement and data requests
 

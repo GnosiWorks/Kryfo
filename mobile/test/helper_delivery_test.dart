@@ -19,10 +19,13 @@ class FakeDistributor {
   final String package;
   final Map<String, String> endpoints = {};
   final List<String> dropped = [];
+  final List<String> events = [];
   var _n = 0;
   bool installed = true;
   bool answers = true;
   String? chosen;
+  // the book's generations as they stood when a registration was let go
+  final List<String> bookAtDrop = [];
   FakeDistributor(this.package);
 
   Future<Object?> handle(MethodCall call) async {
@@ -39,39 +42,53 @@ class FakeDistributor {
       case 'helperRegister':
         if (a['package'] != package || !installed) return false;
         chosen = package;
+        events.add('register ${a['instance']}');
         if (answers) {
           endpoints[a['instance'] as String] =
               'https://push.example.org/up${_n++}?up=1';
         }
         return true;
       case 'helperUnregisterOne':
+        final prefs = await SharedPreferences.getInstance();
+        bookAtDrop.add(prefs.getString(kHelperSlotsKey) ?? '');
         dropped.add(a['instance'] as String);
         endpoints.remove(a['instance']);
+        events.add('drop ${a['instance']}');
         return true;
       case 'helperUnregister':
         dropped.addAll(endpoints.keys);
         endpoints.clear();
         chosen = null;
+        events.add('unregister');
         return true;
     }
     return null;
   }
 }
 
-// our relay as the engine reaches it: what it holds per address or stand-in
+// our relay as the engine reaches it: what it holds per id or stand-in
 // key, and what it was asked
 class FakeEngine implements KnockEngine {
   List<KnockAddress> live = [];
+  // ids the engine can still sign a forget for
+  Set<String> seen = {};
   String check = 'yes';
   int checks = 0;
+  String lastExclude = '';
   final List<List<Map<String, dynamic>>> sent = [];
   final Map<String, String> relay = {};
+  final Map<String, int> made = {};
   bool up = true;
+  Set<String> dups = {};
 
   @override
-  Future<String> knockAddresses() async => jsonEncode([
-    for (final a in live) {'a': a.address, 'g': a.group},
-  ]);
+  Future<String> knockAddresses(String excludeJson) async {
+    lastExclude = excludeJson;
+    seen.addAll(live.map((a) => a.address));
+    return jsonEncode([
+      for (final a in live) {'i': a.address, 'g': a.group},
+    ]);
+  }
 
   @override
   Future<String> knockCheck() async {
@@ -81,25 +98,34 @@ class FakeEngine implements KnockEngine {
 
   @override
   Future<String> knockRegister(String itemsJson) async {
-    if (!up) return 'error: only over tor';
+    if (!up) return 'error: tor not started';
     final items = [
       for (final i in jsonDecode(itemsJson) as List) i as Map<String, dynamic>,
     ];
     sent.add(items);
     final done = <String>[];
+    final dup = <String>[];
     final known = {for (final a in live) a.address};
     for (final i in items) {
-      final name = i['a'] as String? ?? 's${i['s']}';
-      final key = i['a'] as String? ?? i['k'] as String;
-      if (i['a'] != null && !known.contains(i['a'])) continue;
-      if ((i['e'] as String).isEmpty) {
+      final name = i['i'] as String? ?? 's${i['s']}';
+      final key = i['i'] as String? ?? i['k'] as String;
+      final forget = (i['e'] as String).isEmpty;
+      if (i['i'] != null && !(forget ? seen : known).contains(i['i'])) {
+        continue;
+      }
+      if (dups.remove(name)) {
+        dup.add(name);
+        continue;
+      }
+      if (forget) {
         relay.remove(key);
       } else {
         relay[key] = i['e'] as String;
       }
+      made[key] = i['t'] as int? ?? 0;
       done.add(name);
     }
-    return jsonEncode({'done': done});
+    return jsonEncode({'done': done, 'dup': dup});
   }
 }
 
@@ -108,6 +134,7 @@ void main() {
   late FakeDistributor ntfy;
   late FakeEngine engine;
   late HelperDelivery helper;
+  var hidden = <String>[];
   var now = 1800000000000;
 
   setUp(() {
@@ -115,11 +142,13 @@ void main() {
     ntfy = FakeDistributor('io.heckel.ntfy');
     engine = FakeEngine();
     now = 1800000000000;
+    hidden = [];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_ch, ntfy.handle);
     helper = HelperDelivery(
       engine: engine,
       push: HelperPush(_ch),
+      hidden: () => hidden,
       rnd: Random(1),
       nowMs: () => now,
     );
@@ -129,6 +158,17 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_ch, null);
   });
+
+  // rounds until nothing is left, or [max]
+  Future<int> rounds({int max = 64}) async {
+    var n = 0;
+    for (var i = 0; i < max; i++) {
+      await helper.sync();
+      n++;
+      if (!helper.more) break;
+    }
+    return n;
+  }
 
   group('the gate', () {
     test('hidden until our relay says it knocks, asked once a day', () async {
@@ -164,17 +204,15 @@ void main() {
     final contacts = [
       for (var i = 0; i < 6; i++) KnockAddress('c$i', 'everyday:${i % 4}'),
     ];
-    const fc = KnockAddress('fc', 'firstcontact:fc');
+    const fc = KnockAddress('fc', 'firstcontact:aa');
 
     test('sixteen endpoints, every address and stand-in registered once, '
         'no endpoint shared across groups', () async {
       engine.live = [...contacts, fc];
       expect(await helper.setUp(ntfy.package, wait: Duration.zero), isTrue);
       expect(ntfy.endpoints.length, kHelperSlots);
-      final took = await helper.sync();
-      expect(took, kHelperSlots);
+      await rounds();
       expect(engine.relay.length, kHelperSlots);
-      // every endpoint carries one group at most
       final groupOf = {for (final a in engine.live) a.address: a.group};
       final byEndpoint = <String, Set<String>>{};
       for (final e in engine.relay.entries) {
@@ -184,43 +222,104 @@ void main() {
       for (final g in byEndpoint.values) {
         expect(g.length, 1);
       }
-
       // nothing changed: nothing is sent
+      final before = engine.sent.length;
       expect(await helper.sync(), 0);
-      expect(engine.sent.length, 1);
-      // a new contact: only that, and the stand-in on its slot forgotten
-      engine.live = [...engine.live, const KnockAddress('c9', 'everyday:3')];
+      expect(engine.sent.length, before);
+    });
+
+    test('one group a round, new groups first, and a round never mixes '
+        'groups', () async {
+      engine.live = [...contacts, fc];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      final groupOf = {for (final a in engine.live) a.address: a.group};
+      await rounds();
+      expect(engine.sent.length, greaterThan(5));
+      for (final batch in engine.sent) {
+        final groups = {
+          for (final i in batch) groupOf[i['i']] ?? 'stand-in ${i['s']}',
+        };
+        expect(groups.length, 1, reason: '$batch');
+      }
+      // a contact who arrives later goes in the next round, before renewals
+      now += kRefreshMinMs + kRefreshSpanMs;
+      engine.live = [...engine.live, const KnockAddress('c9', 'room:bb')];
       await helper.sync();
-      final last = engine.sent.last;
-      expect(last.where((i) => i['a'] == 'c9').length, 1);
-      expect(last.where((i) => i['e'] == '').length, 1);
-      expect(last.length, 2);
-      expect(engine.relay.length, kHelperSlots);
-      // five days on, everything again
-      now += kRefreshMs;
-      expect(await helper.sync(), kHelperSlots);
+      expect(engine.sent.last.any((i) => i['i'] == 'c9'), isTrue);
+    });
+
+    test('renewals fall on days of their own', () async {
+      engine.live = [...contacts, fc];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      final prefs = await SharedPreferences.getInstance();
+      final synced = jsonDecode(prefs.getString(kHelperSyncedKey)!) as Map;
+      final dues = {for (final v in synced.values) (v as List)[2] as int};
+      expect(dues.length, greaterThan(synced.length ~/ 2));
+      for (final d in dues) {
+        expect(
+          d - now,
+          inInclusiveRange(kRefreshMinMs, kRefreshMinMs + kRefreshSpanMs),
+        );
+      }
+      // four days on, only some are due
+      now += kRefreshMinMs + kRefreshSpanMs ~/ 2;
+      final before = engine.sent.length;
+      await rounds();
+      final again = {
+        for (final b in engine.sent.skip(before))
+          for (final i in b) i['i'] ?? 's${i['s']}',
+      };
+      expect(again.length, lessThan(synced.length));
+      expect(again, isNotEmpty);
     });
 
     test('a batch is not signed in one second, and a resend is always '
         'later than the one before', () async {
       engine.live = [...contacts, fc];
       await helper.setUp(ntfy.package, wait: Duration.zero);
-      await helper.sync();
-      final first = engine.sent.single;
-      final ts = [for (final i in first) i['t'] as int];
+      await rounds();
+      final ts = [
+        for (final b in engine.sent)
+          for (final i in b) i['t'] as int,
+      ];
       final nowS = now ~/ 1000;
       expect(ts.every((t) => t <= nowS && t >= nowS - kSignedJitterS), isTrue);
       expect(ts.toSet().length, greaterThan(ts.length ~/ 2));
-      // a minute later the helper app hands out a new endpoint for one
-      // slot: its registration is newer than the last, whatever the jitter
       now += 60 * 1000;
       final s = SlotBook.read(
         (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
       ).slotOf('c0')!;
       ntfy.endpoints['kryfo-$s.0'] = 'https://push.example.org/upNew';
-      await helper.sync();
-      final again = engine.sent.last.where((i) => i['a'] == 'c0').single;
+      await rounds();
+      final again = engine.sent.last.where((i) => i['i'] == 'c0').single;
       expect(again['t'] as int, greaterThan(nowS));
+    });
+
+    test('the hidden chats\' peers go to the engine to be left out', () async {
+      hidden = ['peer-h'];
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await helper.sync();
+      expect(jsonDecode(engine.lastExclude), ['peer-h']);
+    });
+
+    test('the relay says not newer: tried again later, newer', () async {
+      engine.live = [contacts.first];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      engine.dups = {'c0'};
+      await rounds();
+      expect(engine.relay.containsKey('c0'), isFalse);
+      final firstT =
+          engine.sent.expand((b) => b).where((i) => i['i'] == 'c0').single['t']
+              as int;
+      now += kDupRetryMs ~/ 2;
+      await rounds();
+      expect(engine.relay.containsKey('c0'), isFalse);
+      now += kDupRetryMs;
+      await rounds();
+      expect(engine.relay.containsKey('c0'), isTrue);
+      expect(engine.made['c0']!, greaterThan(firstT));
     });
 
     test('a helper app that gives no endpoint fails the set-up', () async {
@@ -228,45 +327,109 @@ void main() {
       expect(await helper.setUp(ntfy.package, wait: Duration.zero), isFalse);
     });
 
+    test(
+      'a slot the helper app dropped is asked again, not in a loop',
+      () async {
+        engine.live = [...contacts];
+        await helper.setUp(ntfy.package, wait: Duration.zero);
+        ntfy.endpoints.remove('kryfo-3.0');
+        final before = ntfy.events.length;
+        ntfy.answers = false;
+        await helper.sync();
+        await helper.sync();
+        await helper.sync();
+        final asked = ntfy.events
+            .skip(before)
+            .where((e) => e == 'register kryfo-3.0')
+            .length;
+        expect(asked, 1);
+        now += kAskAgainMs;
+        await helper.sync();
+        expect(ntfy.events.where((e) => e == 'register kryfo-3.0').length, 3);
+      },
+    );
+
     test('off tor nothing is marked sent, and it goes later', () async {
       engine.live = [...contacts];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       engine.up = false;
       expect(await helper.sync(), 0);
       engine.up = true;
-      expect(await helper.sync(), kHelperSlots);
+      await rounds();
+      expect(engine.relay.length, kHelperSlots);
     });
 
-    test('a room that ends: its slot is let go and comes back on a new '
-        'endpoint', () async {
+    test('a room that ends: its slot is let go before the book moves on, '
+        'and comes back on a new endpoint', () async {
       engine.live = [...contacts, const KnockAddress('r1', 'room:a')];
       await helper.setUp(ntfy.package, wait: Duration.zero);
-      await helper.sync();
+      await rounds();
       final roomEndpoint = engine.relay['r1'];
+      final s = SlotBook.read(
+        (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
+      ).slotOf('r1')!;
       engine.live = [...contacts];
-      await helper.sync();
-      expect(ntfy.dropped, hasLength(1));
-      expect(ntfy.endpoints.length, kHelperSlots);
+      await rounds();
+      expect(ntfy.dropped, ['kryfo-$s.0']);
+      // the helper app let go while the book still held the old generation
+      expect(SlotBook.read(ntfy.bookAtDrop.single).gen[s] ?? 0, 0);
       expect(ntfy.endpoints.values, isNot(contains(roomEndpoint)));
-      // the slot's new endpoint carries a stand-in at once
+      expect(ntfy.endpoints.length, kHelperSlots);
       final fresh = ntfy.endpoints.entries
           .where((e) => e.key.endsWith('.1'))
           .single
           .value;
       expect(engine.relay.values, contains(fresh));
+      // and the room's own registration is forgotten
+      expect(engine.relay.containsKey('r1'), isFalse);
     });
 
-    test('leaving the mode: the relay forgets, the helper app lets go, and '
-        'the next set-up is on new endpoints', () async {
+    test('leaving the mode: the helper app lets go at once, the relay '
+        'forgets one round at a time, at times of their own', () async {
       engine.live = [...contacts, fc];
       await helper.setUp(ntfy.package, wait: Duration.zero);
-      await helper.sync();
+      await rounds();
       final before = Set.of(ntfy.endpoints.values);
+      final held = engine.relay.length;
       await helper.stop();
-      expect(engine.relay, isEmpty);
       expect(ntfy.endpoints, isEmpty);
+      expect(await helper.forgetsLeft(), isTrue);
+      final sentBefore = engine.sent.length;
+      var n = 0;
+      while (await helper.forgetsLeft() && n < 100) {
+        await helper.forgetRound();
+        n++;
+      }
+      expect(engine.relay, isEmpty);
+      final forgets = engine.sent.skip(sentBefore).toList();
+      expect(forgets.every((b) => b.length == 1), isTrue);
+      expect(forgets.length, held);
+      final ts = {for (final b in forgets) b.single['t'] as int};
+      expect(ts.length, greaterThan(held ~/ 2));
       await helper.setUp(ntfy.package, wait: Duration.zero);
       expect(before.intersection(Set.of(ntfy.endpoints.values)), isEmpty);
+    });
+
+    test('a phone moving away forgets everything at once', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      await helper.stop();
+      await helper.forgetRound(all: true);
+      expect(engine.relay, isEmpty);
+      expect(await helper.forgetsLeft(), isFalse);
+    });
+
+    test('a forget the engine cannot sign is given up after a few', () async {
+      engine.live = [...contacts];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      await helper.stop();
+      engine.seen = {};
+      for (var i = 0; i < 100 && await helper.forgetsLeft(); i++) {
+        await helper.forgetRound();
+      }
+      expect(await helper.forgetsLeft(), isFalse);
     });
 
     test('a helper app uninstalled is noticed', () async {

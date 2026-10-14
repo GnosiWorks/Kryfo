@@ -8265,11 +8265,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'فوری و کم‌مصرف. سرور برنامه‌ی کمکی می‌فهمد کِی پیام می‌گیرید، هرگز نمی‌فهمد چه نوشته شده.';
+      'فوری و کم‌مصرف. سرور برنامه‌ی کمکی نشانی IP گوشی‌تان را می‌بیند و می‌فهمد کِی پیام می‌گیرید، هرگز نمی‌فهمد چه نوشته شده.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'بیداری‌های جعلی هم قاطی می‌شوند تا سرور برنامه‌ی کمکی پیام‌های واقعی را تشخیص ندهد. Kryfo همچنان هر ۱۵ دقیقه سرکشی می‌کند.';
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای سرور برنامه‌ی کمکی سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. سرور کمکی شخصی‌تان نشانی‌اش را به رله‌ی ما می‌گوید. گفتگوهای پنهان، و اتاق‌های بعد از چند تای اول، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
 
   @override
   String get helperSheetNeedTitle => 'به یک برنامه‌ی کمکی نیاز دارید';
@@ -8310,4 +8310,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'انتخاب راه دیگر';
+
+  @override
+  String get homeHelperRelayTitle => 'رله دیگر Kryfo را بیدار نمی‌کند';
 }

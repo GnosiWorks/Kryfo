@@ -8246,11 +8246,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Instant and light on battery. The helper\'s server learns when you get messages, never what they say.';
+      'Instant and light on battery. The helper\'s server sees your phone\'s IP address and learns when you get messages, never what they say.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Fake wake-ups are mixed in, so the helper\'s server cannot tell real messages apart. Kryfo still checks in every 15 minutes.';
+      'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, and rooms past the first few, wait for the check-in Kryfo still makes every 15 minutes.';
 
   @override
   String get helperSheetNeedTitle => 'You need a helper app';
@@ -8291,4 +8291,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Choose another way';
+
+  @override
+  String get homeHelperRelayTitle => 'The relay stopped waking Kryfo';
 }

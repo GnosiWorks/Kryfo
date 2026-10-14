@@ -64,6 +64,13 @@ put you in danger, read all of it.
   regular pattern a network can notice.
 - the fact that you communicated. metadata is minimized, not erased. if you
   send while a contact is online, that timing existed.
+- the helper app mode, if you choose it. the helper's server sees your
+  phone's ip address and when each of your sixteen endpoints is knocked.
+  fake knocks make the real ones harder to pick out, not impossible: a
+  server that watches long enough, or works with our relay, can match knocks
+  to messages arriving. our relay learns which endpoints your addresses use;
+  with a helper server of your own, the server's name ties all of them to
+  one person. check-ins and always on involve no one else.
 - forensics on a seized unlocked device or on backups of it.
 - a forensic copy of the phone. the decoy pin and hidden chats are for a
   quick look, someone scrolling through a phone you were made to unlock. they

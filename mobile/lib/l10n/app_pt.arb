@@ -2174,8 +2174,8 @@
   "voiceNotDisguised": "Não deu para disfarçar este áudio, então ele não foi enviado",
   "settingsDisguiseByDefault": "Disfarçar minha voz por padrão",
   "settingsDisguiseByDefaultHint": "Cada conversa pode mudar isso no próprio menu",
-  "gettingMessagesHelperBody": "Na hora e leve para a bateria. O servidor do app auxiliar fica sabendo quando você recebe mensagens, nunca o que elas dizem.",
-  "gettingMessagesHelperNote": "Despertares falsos são misturados, para que o servidor do app auxiliar não distinga as mensagens de verdade. O Kryfo ainda faz uma consulta a cada 15 minutos.",
+  "gettingMessagesHelperBody": "Na hora e leve para a bateria. O servidor do app auxiliar vê o endereço IP do seu celular e fica sabendo quando você recebe mensagens, nunca o que elas dizem.",
+  "gettingMessagesHelperNote": "Despertares falsos são misturados, o que dificulta para o servidor do app auxiliar saber quando chegam as mensagens de verdade. Um servidor auxiliar próprio revela o endereço dele ao nosso retransmissor. Conversas ocultas, e salas além das primeiras, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.",
   "helperSheetNeedTitle": "Você precisa de um app auxiliar",
   "helperSheetNeedLine": "Um app auxiliar mantém uma conexão leve para todos os seus apps e acorda o Kryfo quando algo chega. Qualquer app UnifiedPush serve, o ntfy é um bom começo.",
   "helperSheetGetNtfy": "Instalar o ntfy",
@@ -2186,5 +2186,6 @@
   "helperSheetNoAnswer": "{name} não respondeu. Tente de novo.",
   "homeHelperGoneTitle": "Seu app auxiliar sumiu",
   "homeHelperGoneLine": "O Kryfo faz uma consulta a cada 15 minutos até você escolher outro jeito.",
-  "homeHelperGoneChoose": "Escolher outro jeito"
+  "homeHelperGoneChoose": "Escolher outro jeito",
+  "homeHelperRelayTitle": "O retransmissor parou de acordar o Kryfo"
 }

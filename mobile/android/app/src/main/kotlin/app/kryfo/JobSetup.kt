@@ -15,6 +15,7 @@ object JobSetup {
     const val COPY_SWEEP_JOB_ID = 2002
     const val COME_BACK_JOB_ID = 2003
     const val KNOCK_JOB_ID = 2004
+    const val KNOCK_LATER_JOB_ID = 2005
     private const val EVERY_MS = 15 * 60 * 1000L
     // a window of the last five minutes of each period, the least android
     // allows. with the whole period as its window two runs could land back
@@ -84,6 +85,27 @@ object JobSetup {
         }
         try {
             scheduler.schedule(builder().build())
+        } catch (e: Exception) {
+        }
+    }
+
+    // a knock owed: one that came inside the floor, or while a check-in
+    // ran. one waiting at a time, it fetches for every address
+    fun scheduleKnockLater(context: Context, waitMs: Long) {
+        if (!KryfoState.hasData(context)) return
+        val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+        if (scheduler.getPendingJob(KNOCK_LATER_JOB_ID) != null) return
+        val component = ComponentName(context, HaloPeriodicJobService::class.java)
+        val extras = PersistableBundle().apply { putString("why", "push") }
+        try {
+            scheduler.schedule(
+                JobInfo.Builder(KNOCK_LATER_JOB_ID, component)
+                    .setMinimumLatency(waitMs.coerceIn(1_000L, KnockGate.FLOOR_MS))
+                    .setOverrideDeadline(waitMs.coerceIn(1_000L, KnockGate.FLOOR_MS) + 60_000L)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setExtras(extras)
+                    .build()
+            )
         } catch (e: Exception) {
         }
     }

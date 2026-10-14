@@ -13326,13 +13326,13 @@ abstract class AppLocalizations {
   /// screens/getting_messages_screen.dart: the helper app card
   ///
   /// In en, this message translates to:
-  /// **'Instant and light on battery. The helper\'s server learns when you get messages, never what they say.'**
+  /// **'Instant and light on battery. The helper\'s server sees your phone\'s IP address and learns when you get messages, never what they say.'**
   String get gettingMessagesHelperBody;
 
   /// screens/getting_messages_screen.dart: under the status line in helper app mode
   ///
   /// In en, this message translates to:
-  /// **'Fake wake-ups are mixed in, so the helper\'s server cannot tell real messages apart. Kryfo still checks in every 15 minutes.'**
+  /// **'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, and rooms past the first few, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get gettingMessagesHelperNote;
 
   /// screens/helper_sheet.dart: no helper app on the phone
@@ -13400,6 +13400,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose another way'**
   String get homeHelperGoneChoose;
+
+  /// screens/home_screen.dart: our relay stopped waking Kryfo through the helper app
+  ///
+  /// In en, this message translates to:
+  /// **'The relay stopped waking Kryfo'**
+  String get homeHelperRelayTitle;
 }
 
 class _AppLocalizationsDelegate

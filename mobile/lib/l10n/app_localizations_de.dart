@@ -8345,11 +8345,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Sofort und sparsam. Der Server der Hilfs-App erfährt, wann du Nachrichten bekommst, nie, was darin steht.';
+      'Sofort und sparsam. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, nie, was darin steht.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Falsche Weckrufe werden eingestreut, damit der Server der Hilfs-App echte Nachrichten nicht erkennt. Kryfo schaut trotzdem alle 15 Minuten nach.';
+      'Falsche Weckrufe werden eingestreut. Das macht es für den Server der Hilfs-App schwerer zu erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats und Räume nach den ersten paar warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get helperSheetNeedTitle => 'Du brauchst eine Hilfs-App';
@@ -8390,4 +8390,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Anderen Weg wählen';
+
+  @override
+  String get homeHelperRelayTitle => 'Das Relais weckt Kryfo nicht mehr';
 }

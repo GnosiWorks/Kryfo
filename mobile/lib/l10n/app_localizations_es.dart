@@ -8317,11 +8317,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Al instante y ligero para la batería. El servidor de la app auxiliar sabe cuándo te llegan mensajes, nunca lo que dicen.';
+      'Al instante y ligero para la batería. El servidor de la app auxiliar ve la dirección IP de tu teléfono y sabe cuándo te llegan mensajes, nunca lo que dicen.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Se mezclan activaciones falsas para que el servidor de la app auxiliar no distinga los mensajes reales. Kryfo sigue haciendo una consulta cada 15 minutos.';
+      'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, y las salas después de las primeras, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
 
   @override
   String get helperSheetNeedTitle => 'Necesitas una app auxiliar';
@@ -8362,4 +8362,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Elegir otra forma';
+
+  @override
+  String get homeHelperRelayTitle => 'El repetidor ya no activa Kryfo';
 }

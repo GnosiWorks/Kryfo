@@ -335,6 +335,35 @@ void main() {
   }, timeout: const Timeout(Duration(seconds: 60)));
 
   test(
+    'a knock while a check-in runs is owed, and asked for once it ends',
+    () async {
+      final asked = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/helper'), (
+            call,
+          ) async {
+            asked.add(call.method);
+            return true;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('halo/helper'), null),
+      );
+      final w = await waitingCheckIn();
+      w.app.deliveryModeForTest = DeliveryMode.helper;
+      w.app.listenAtStart();
+      final first = w.app.drainNow();
+      await _wait(50);
+      expect(w.app.checkingIn, isTrue);
+      expect(await w.app.drainNow(why: 'push'), 0);
+      expect(asked, isNot(contains('helperKnockAgain')));
+      await first;
+      expect(asked, contains('helperKnockAgain'));
+    },
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
     'a job that knocks before the boot listens waits for it',
     () async {
       final w = await waitingCheckIn();

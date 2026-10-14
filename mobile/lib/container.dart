@@ -324,6 +324,7 @@ const deviceKeys = {
   'xpub_cache',
   'helper_slots',
   'helper_synced',
+  'helper_forget',
   'helper_relay_knocks',
   'helper_gone',
   'kryfo.update.checked',

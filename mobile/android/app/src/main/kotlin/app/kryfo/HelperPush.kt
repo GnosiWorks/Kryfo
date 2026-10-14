@@ -202,12 +202,18 @@ class HelperPushReceiver : BroadcastReceiver() {
                 // the body is never read. a job, not a call into dart: a
                 // process this broadcast started has no dart listening yet,
                 // and the job keeps it alive for the check-in
-                if (!KnockGate.allow(context)) {
-                    Log.i("halo-engine", "helper: knock dropped, too many")
-                    return
+                val v = KnockGate.allow(context)
+                when {
+                    v.go -> {
+                        Log.i("halo-engine", "helper: knock")
+                        JobSetup.scheduleKnock(context)
+                    }
+                    v.waitMs > 0 -> {
+                        Log.i("halo-engine", "helper: knock waits for the floor")
+                        JobSetup.scheduleKnockLater(context, v.waitMs)
+                    }
+                    else -> Log.i("halo-engine", "helper: knock dropped, too many this hour")
                 }
-                Log.i("halo-engine", "helper: knock")
-                JobSetup.scheduleKnock(context)
             }
             HelperPush.ACTION_UNREGISTERED -> {
                 HelperPush.forget(context, instance)

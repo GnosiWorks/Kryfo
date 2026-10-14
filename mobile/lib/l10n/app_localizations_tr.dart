@@ -8275,11 +8275,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Anında ve pili yormaz. Yardımcının sunucusu mesaj aldığın anı öğrenir, içeriğini asla.';
+      'Anında ve pili yormaz. Yardımcının sunucusu telefonunun IP adresini görür ve mesaj aldığın anı öğrenir, içeriğini asla.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Araya sahte uyandırmalar karışır, böylece yardımcının sunucusu gerçek mesajları ayırt edemez. Kryfo yine de 15 dakikada bir kontrol eder.';
+      'Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler ve ilk birkaçından sonraki odalar, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get helperSheetNeedTitle => 'Bir yardımcı uygulama gerekiyor';
@@ -8320,4 +8320,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Başka yol seç';
+
+  @override
+  String get homeHelperRelayTitle => 'Aktarıcı artık Kryfo’yu uyandırmıyor';
 }

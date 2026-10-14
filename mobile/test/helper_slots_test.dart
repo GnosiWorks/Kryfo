@@ -202,7 +202,7 @@ void main() {
 
   test('the engine\'s list is read, and anything else is nothing', () {
     expect(
-      knockAddressesOf('[{"a":"x","g":"everyday:1"},{"a":3}]').single.group,
+      knockAddressesOf('[{"i":"x","g":"everyday:1"},{"i":3}]').single.group,
       'everyday:1',
     );
     expect(knockAddressesOf('error: no engine'), isEmpty);

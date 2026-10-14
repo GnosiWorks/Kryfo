@@ -4,8 +4,9 @@
 // one per address would let the helper's server count contacts. so always
 // sixteen.
 //
-// the engine names each address's group: the addresses that already reach
-// the relay over one tor circuit (a contact lane, a room, one first-contact
+// the engine names each address by an id, a keyed hash, never the address
+// itself, and names its group: the addresses that already reach the relay
+// over one tor circuit (a contact lane, a room, one first-contact
 // address). a slot only ever serves one group, so an endpoint never ties
 // together what the relay sees apart, and while free slots last each address
 // has one to itself. a slot whose group is gone gets a new endpoint before
@@ -22,20 +23,21 @@ const kLaneSlots = 3;
 const kContactLanes = 4;
 
 class KnockAddress {
+  // the engine's id for the address
   final String address;
   final String group;
   const KnockAddress(this.address, this.group);
 }
 
-/// the engine's list, [{"a":address,"g":group}]
+/// the engine's list, [{"i":id,"g":group}]
 List<KnockAddress> knockAddressesOf(String raw) {
   try {
     final j = jsonDecode(raw);
     if (j is! List) return const [];
     return [
       for (final r in j)
-        if (r is Map && r['a'] is String && r['g'] is String)
-          KnockAddress(r['a'] as String, r['g'] as String),
+        if (r is Map && r['i'] is String && r['g'] is String)
+          KnockAddress(r['i'] as String, r['g'] as String),
     ];
   } catch (_) {
     return const [];
@@ -259,7 +261,7 @@ class KnockItem {
   String get name => address ?? 's$slot';
 
   Map<String, Object> toJson() => address != null
-      ? {'a': address!, 'e': endpoint}
+      ? {'i': address!, 'e': endpoint}
       : {'k': key!, 's': slot, 'e': endpoint};
 }
 

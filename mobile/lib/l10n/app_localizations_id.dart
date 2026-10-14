@@ -8248,11 +8248,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Seketika dan hemat baterai. Server aplikasi pembantu tahu kapan pesan masuk, tidak pernah isinya.';
+      'Seketika dan hemat baterai. Server aplikasi pembantu melihat alamat IP ponselmu dan tahu kapan pesan masuk, tidak pernah isinya.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'Bangunan palsu dicampurkan, jadi server aplikasi pembantu tidak bisa membedakan pesan asli. Kryfo tetap mengecek setiap 15 menit.';
+      'Bangunan palsu dicampurkan, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, dan ruang setelah beberapa yang pertama, menunggu cek yang tetap Kryfo lakukan setiap 15 menit.';
 
   @override
   String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';
@@ -8293,4 +8293,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'Pilih cara lain';
+
+  @override
+  String get homeHelperRelayTitle => 'Relay tidak lagi membangunkan Kryfo';
 }

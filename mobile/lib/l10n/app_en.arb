@@ -10418,11 +10418,11 @@
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
   },
-  "gettingMessagesHelperBody": "Instant and light on battery. The helper's server learns when you get messages, never what they say.",
+  "gettingMessagesHelperBody": "Instant and light on battery. The helper's server sees your phone's IP address and learns when you get messages, never what they say.",
   "@gettingMessagesHelperBody": {
     "description": "screens/getting_messages_screen.dart: the helper app card"
   },
-  "gettingMessagesHelperNote": "Fake wake-ups are mixed in, so the helper's server cannot tell real messages apart. Kryfo still checks in every 15 minutes.",
+  "gettingMessagesHelperNote": "Fake wake-ups are mixed in, which makes it harder for the helper's server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, and rooms past the first few, wait for the check-in Kryfo still makes every 15 minutes.",
   "@gettingMessagesHelperNote": {
     "description": "screens/getting_messages_screen.dart: under the status line in helper app mode"
   },
@@ -10479,5 +10479,9 @@
   "homeHelperGoneChoose": "Choose another way",
   "@homeHelperGoneChoose": {
     "description": "screens/home_screen.dart: button, opens getting messages"
+  },
+  "homeHelperRelayTitle": "The relay stopped waking Kryfo",
+  "@homeHelperRelayTitle": {
+    "description": "screens/home_screen.dart: our relay stopped waking Kryfo through the helper app"
   }
 }

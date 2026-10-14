@@ -52,6 +52,10 @@ class HaloApplication : Application() {
                         if (!instance.isNullOrEmpty()) HelperPush.unregister(this, instance)
                         result.success(true)
                     }
+                    "helperKnockAgain" -> {
+                        JobSetup.scheduleKnockLater(this, 10_000L)
+                        result.success(true)
+                    }
                     "helperUnregister" -> {
                         HelperPush.unregisterAll(this)
                         result.success(true)

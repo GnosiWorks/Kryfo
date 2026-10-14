@@ -7890,11 +7890,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
 
   @override
-  String get gettingMessagesHelperBody => '即时送达，省电。辅助应用的服务器只知道你何时收到消息，从不知道内容。';
+  String get gettingMessagesHelperBody =>
+      '即时送达，省电。辅助应用的服务器能看到你手机的 IP 地址，并知道你何时收到消息，但从不知道内容。';
 
   @override
   String get gettingMessagesHelperNote =>
-      '其中混有假的唤醒，辅助应用的服务器分不出哪些是真消息。Kryfo 仍会每 15 分钟查收一次。';
+      '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天，以及前几个之后的房间，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get helperSheetNeedTitle => '你需要一个辅助应用';
@@ -7933,6 +7934,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => '选择其他方式';
+
+  @override
+  String get homeHelperRelayTitle => '中继不再唤醒 Kryfo';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15702,11 +15706,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperBody =>
-      '即時送達，省電。輔助應用程式的伺服器只知道你何時收到訊息，從不知道內容。';
+      '即時送達，省電。輔助應用程式的伺服器能看到你手機的 IP 位址，並知道你何時收到訊息，但從不知道內容。';
 
   @override
   String get gettingMessagesHelperNote =>
-      '其中混有假的喚醒，輔助應用程式的伺服器分不出哪些是真訊息。Kryfo 仍會每 15 分鐘查收一次。';
+      '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天，以及前幾個之後的房間，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get helperSheetNeedTitle => '你需要一個輔助應用程式';
@@ -15745,4 +15749,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeHelperGoneChoose => '選擇其他方式';
+
+  @override
+  String get homeHelperRelayTitle => '中繼不再喚醒 Kryfo';
 }

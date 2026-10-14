@@ -8374,11 +8374,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'فوري وخفيف على البطارية. يعرف خادم التطبيق المساعد متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.';
+      'فوري وخفيف على البطارية. يرى خادم التطبيق المساعد عنوان IP لهاتفك ويعرف متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.';
 
   @override
   String get gettingMessagesHelperNote =>
-      'تُخلط إيقاظات زائفة بالحقيقية، فلا يميّز خادم التطبيق المساعد الرسائل الحقيقية. ومع ذلك يتفقّد Kryfo كل ١٥ دقيقة.';
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على خادم التطبيق المساعد معرفة متى تصل الرسائل الحقيقية. خادم مساعد خاص بك يُعلم مُرحِّلنا بعنوانه. المحادثات المخفية، والغرف بعد الأوائل منها، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
 
   @override
   String get helperSheetNeedTitle => 'تحتاج إلى تطبيق مساعد';
@@ -8419,4 +8419,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeHelperGoneChoose => 'اختر طريقة أخرى';
+
+  @override
+  String get homeHelperRelayTitle => 'لم يعد المُرحِّل يوقظ Kryfo';
 }

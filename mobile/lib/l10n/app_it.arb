@@ -2174,8 +2174,8 @@
   "voiceNotDisguised": "Non è stato possibile camuffare questa nota, quindi non è stata inviata",
   "settingsDisguiseByDefault": "Camuffa la mia voce di default",
   "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu",
-  "gettingMessagesHelperBody": "Immediato e leggero sulla batteria. Il server dell'app di supporto sa quando ricevi messaggi, mai cosa dicono.",
-  "gettingMessagesHelperNote": "Vengono mescolati falsi risvegli, così il server dell'app di supporto non distingue i messaggi veri. Kryfo fa comunque un controllo ogni 15 minuti.",
+  "gettingMessagesHelperBody": "Immediato e leggero sulla batteria. Il server dell'app di supporto vede l'indirizzo IP del telefono e sa quando ricevi messaggi, mai cosa dicono.",
+  "gettingMessagesHelperNote": "Vengono mescolati falsi risvegli, così per il server dell'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, e le stanze oltre le prime, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.",
   "helperSheetNeedTitle": "Ti serve un'app di supporto",
   "helperSheetNeedLine": "Un'app di supporto tiene una connessione leggera per tutte le tue app e sveglia Kryfo quando arriva qualcosa. Va bene qualsiasi app UnifiedPush, ntfy è un buon inizio.",
   "helperSheetGetNtfy": "Installa ntfy",
@@ -2186,5 +2186,6 @@
   "helperSheetNoAnswer": "{name} non ha risposto. Riprova.",
   "homeHelperGoneTitle": "La tua app di supporto non c'è più",
   "homeHelperGoneLine": "Kryfo fa un controllo ogni 15 minuti finché non scegli un altro modo.",
-  "homeHelperGoneChoose": "Scegli un altro modo"
+  "homeHelperGoneChoose": "Scegli un altro modo",
+  "homeHelperRelayTitle": "Il relay non sveglia più Kryfo"
 }

@@ -87,4 +87,7 @@ class HelperPush {
       _call<bool>('helperUnregisterOne', {'instance': instance});
 
   Future<void> unregister() => _call<bool>('helperUnregister');
+
+  /// a knock came while a check-in ran: one more check-in, a little later
+  Future<void> knockAgain() => _call<bool>('helperKnockAgain');
 }

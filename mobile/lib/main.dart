@@ -617,8 +617,8 @@ class HaloEngine {
         what: 'knock',
       ).catchError((Object e) => 'error: ${e.runtimeType}');
 
-  Future<String> knockAddresses() =>
-      _knock('HaloKnockAddresses', const [], const Duration(seconds: 10));
+  Future<String> knockAddresses(String excludeJson) =>
+      _knock('HaloKnockAddresses', [excludeJson], const Duration(seconds: 10));
 
   Future<String> knockRegister(String itemsJson) =>
       _knock('HaloKnockRegister', [itemsJson], const Duration(seconds: 100));
@@ -1240,7 +1240,8 @@ const kCheckJobOldest = Duration(minutes: 10);
 // the helper app mode's engine calls, through whichever engine is in use
 class _EngineKnocks implements KnockEngine {
   @override
-  Future<String> knockAddresses() => engine.knockAddresses();
+  Future<String> knockAddresses(String excludeJson) =>
+      engine.knockAddresses(excludeJson);
   @override
   Future<String> knockRegister(String itemsJson) =>
       engine.knockRegister(itemsJson);
@@ -12766,6 +12767,11 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _switchSendMode(String m) async {
+    // the helper app mode registers over tor or not at all: off the
+    // private route the phone checks in instead, and the relay forgets
+    if (m != 'private' && _deliveryMode == DeliveryMode.helper) {
+      await setDeliveryMode(DeliveryMode.checkins);
+    }
     // saved first: a mode that was not saved is gone at the next start, so
     // a failed save moves nothing and the caller hears of it
     await secureStore.write(key: 'send_mode', value: m);
@@ -13238,13 +13244,29 @@ class AppState extends ChangeNotifier {
   late final HelperDelivery helper = HelperDelivery(
     engine: _EngineKnocks(),
     push: HelperPush.instance,
+    // the hidden chats' peers: the everyday side never registers them
+    hidden: () => _router.listenFor.keys.toList(),
   );
   bool _relayKnocks = false;
   String? _helperName;
-  // 'due:<package>' while the home screen owes the word that the helper
-  // app is gone, 'said:<package>' once it was said
+  // 'due:<why>:<package>' while the home screen owes the word that the
+  // helper app is gone (why 'gone') or the relay stopped knocking ('relay'),
+  // 'said:...' once it was said
   String _helperGone = '';
   Timer? _helperTimer;
+  // set up, leave, set up again: one after the other, never interleaved
+  Future<void> _helperQueue = Future.value();
+
+  Future<T> _helperOp<T>(Future<T> Function() f) {
+    final run = _helperQueue.then((_) => f());
+    _helperQueue = run.then(
+      (_) {},
+      onError: (Object e) {
+        dlog('helper: ${e.runtimeType}');
+      },
+    );
+    return run;
+  }
 
   /// the picker shows the helper app once our relay can knock, and only on
   /// the private route: registrations go over tor or not at all. a phone
@@ -13254,8 +13276,12 @@ class AppState extends ChangeNotifier {
       (_relayKnocks && _sendMode == 'private');
   String? get helperName => _helperName;
   bool get helperGoneDue => _helperGone.startsWith('due:') && !sessionQuiet;
+  // why the card shows: the helper app is gone, or the relay stopped
+  bool get helperRelayStopped => _helperGone.startsWith('due:relay:');
   @visibleForTesting
   set relayKnocksForTest(bool v) => _relayKnocks = v;
+  @visibleForTesting
+  Future<void> lookAtHelperForTest() => _lookAtHelper();
 
   Future<void> _loadHelper() async {
     try {
@@ -13270,7 +13296,8 @@ class AppState extends ChangeNotifier {
   }
 
   /// asks our relay whether it can knock, at most once a day, and only
-  /// with tor up on the private route
+  /// with tor up on the private route. a relay that stopped while this
+  /// phone relies on it sends the phone back to check-ins
   Future<void> refreshHelperOffer() async {
     if (_sendMode != 'private' || !torReady) return;
     final was = _relayKnocks;
@@ -13279,22 +13306,33 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('helper: relay not asked (${e.runtimeType})');
     }
+    if (was && !_relayKnocks && _deliveryMode == DeliveryMode.helper) {
+      await _helperFallBack('relay', '-');
+    }
     if (was != _relayKnocks) notifyListeners();
   }
 
   // the helper app's name for the status line, and whether it is still on
-  // the phone. without it the fifteen-minute job still fetches, and the
-  // home screen says so once
+  // the phone. gone, the phone goes back to check-ins, the relay forgets
+  // its registrations, and the home screen says so once
   Future<void> _lookAtHelper() async {
     final pkg = await HelperPush.instance.chosen();
     if (pkg == null) return;
     final apps = await HelperPush.instance.apps();
     final app = apps.where((a) => a.package == pkg).firstOrNull;
     _helperName = app?.name;
-    if (app == null && !_helperGone.endsWith(':$pkg')) {
-      _helperGone = 'due:$pkg';
+    if (app == null) await _helperFallBack('gone', pkg);
+    notifyListeners();
+  }
+
+  Future<void> _helperFallBack(String why, String pkg) async {
+    if (!_helperGone.endsWith(':$why:$pkg')) {
+      _helperGone = 'due:$why:$pkg';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(kHelperGoneKey, _helperGone);
+    }
+    if (_deliveryMode == DeliveryMode.helper) {
+      await setDeliveryMode(DeliveryMode.checkins);
     }
     notifyListeners();
   }
@@ -13307,55 +13345,70 @@ class AppState extends ChangeNotifier {
     await prefs.setString(kHelperGoneKey, _helperGone);
   }
 
-  // an endpoint came or went: the relay hears of it once things settle,
-  // if tor is up anyway. otherwise the next check-in takes it
-  void _helperSoon() {
+  // an endpoint came or went, or a round left more: the next round once
+  // things settle, if tor is up anyway. otherwise the next check-in
+  void _helperSoon([Duration? after]) {
     _helperTimer?.cancel();
-    _helperTimer = Timer(const Duration(seconds: 3), () {
-      if (!_torHeld && torReady) unawaited(_helperSync());
+    _helperTimer = Timer(after ?? const Duration(seconds: 3), () {
+      if (!_torHeld && torReady) unawaited(_helperRound());
     });
   }
 
-  Future<int> _helperSync() async {
-    if (_deliveryMode != DeliveryMode.helper || _sendMode != 'private') {
-      return 0;
-    }
+  // one round: a group of registrations in helper mode, or a forget left
+  // from before. with the app open the next round follows a few minutes
+  // on; in the background the next check-in takes it
+  Future<int> _helperRound() async {
+    var n = 0;
+    var more = false;
     try {
-      return await helper.sync();
+      if (_deliveryMode == DeliveryMode.helper && _sendMode == 'private') {
+        n = await _helperOp(() => helper.sync());
+        more = helper.more;
+      }
+      if (await helper.forgetsLeft()) {
+        n += await _helperOp(() => helper.forgetRound());
+        more = more || await helper.forgetsLeft();
+      }
     } catch (e) {
-      dlog('helper: sync (${e.runtimeType})');
-      return 0;
+      dlog('helper: round (${e.runtimeType})');
     }
+    if (more && _inFront) {
+      _helperSoon(Duration(seconds: 60 + Random().nextInt(180)));
+    }
+    return n;
   }
 
   /// the helper app chosen: sixteen registrations with it, the mode, then
   /// the relay. false when the helper app handed back no endpoint
-  Future<bool> useHelper(HelperApp app) async {
+  Future<bool> useHelper(HelperApp app) => _helperOp(() async {
     if (!await helper.setUp(app.package)) return false;
     _helperName = app.name;
     _helperGone = '';
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(kHelperGoneKey);
     await setDeliveryMode(DeliveryMode.helper);
-    unawaited(_helperSync());
+    _helperSoon();
     return true;
-  }
+  });
 
-  // leaving the mode: the relay and the helper app let go of everything
-  Future<void> helperOff() async {
+  // leaving the mode: the helper app lets go now, the relay's copies are
+  // forgotten a round at a time
+  Future<void> helperOff() => _helperOp(() async {
     try {
       await helper.stop();
     } catch (e) {
       dlog('helper: stop (${e.runtimeType})');
     }
     _helperName = null;
-  }
+    _helperSoon();
+  });
 
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
     if (front && _deliveryMode == DeliveryMode.helper) {
       unawaited(_lookAtHelper().catchError((Object _) {}));
+      unawaited(refreshHelperOffer());
     }
     if (front) {
       unawaited(_recheckNetwork());
@@ -13494,6 +13547,8 @@ class AppState extends ChangeNotifier {
   // one check-in: tor up, every relay asked for what it holds, tor down.
   // returns how many drains brought something. bounded all the way: the job
   // that calls this is given under three minutes.
+  // a knock came while a check-in ran: one more is asked for after it
+  bool _knockOwed = false;
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
   @visibleForTesting
@@ -13503,7 +13558,11 @@ class AppState extends ChangeNotifier {
   // job is stopped 170 s after it began (HaloPeriodicJobService), and all of
   // this, tor's sleep too, is over by about 137 s into it (kCheck*)
   Future<int> checkIn({String why = 'job', DateTime? jobAt}) async {
-    if (_checking) return 0;
+    if (_checking) {
+      // a knock while one runs is owed one more, once this one is done
+      if (why == 'push') _knockOwed = true;
+      return 0;
+    }
     _checking = true;
     final now0 = _checkClock();
     final started =
@@ -13630,11 +13689,11 @@ class AppState extends ChangeNotifier {
         how = 'late';
         return 0;
       }
-      // new addresses and due renewals go to the relay while tor is up,
-      // inside what is left of the job's loop budget
+      // a round of registrations, or of forgets, goes to the relay while
+      // tor is up, inside what is left of the job's loop budget
       final helperLeft = left(kCheckLoopBy);
-      if (_deliveryMode == DeliveryMode.helper && helperLeft.inSeconds >= 5) {
-        await _helperSync().timeout(
+      if (helperLeft.inSeconds >= 5) {
+        await _helperRound().timeout(
           helperLeft > const Duration(seconds: 40)
               ? const Duration(seconds: 40)
               : helperLeft,
@@ -13669,6 +13728,10 @@ class AppState extends ChangeNotifier {
       }
       if (window) engine.checkInWindow(false);
       _checking = false;
+      if (_knockOwed) {
+        _knockOwed = false;
+        unawaited(HelperPush.instance.knockAgain());
+      }
       _lastCheckHow = jsonEncode({
         'how': how,
         'secs': _checkClock().difference(started).inSeconds,
@@ -19576,7 +19639,7 @@ class AppState extends ChangeNotifier {
     await _judgeLastRun();
     // a knock comes as a job (HaloPeriodicJobService), whatever mode is
     // set. an endpoint that arrives is registered with the relay
-    HelperPush.instance.onChange = _helperSoon;
+    HelperPush.instance.onChange = () => _helperSoon();
     HelperPush.instance.listen();
     unawaited(_loadHelper());
     await _loadDeliveryTimes();
@@ -23587,6 +23650,20 @@ class AppState extends ChangeNotifier {
     await prefs.setInt('moved.at', DateTime.now().millisecondsSinceEpoch);
     _movedAway = true;
     notifyListeners();
+    // the identity lives elsewhere now: the relay forgets this phone's
+    // registrations, all at once while it still talks to relays
+    unawaited(_forgetOnMove());
+  }
+
+  Future<void> _forgetOnMove() async {
+    try {
+      if (_deliveryMode == DeliveryMode.helper) {
+        await setDeliveryMode(DeliveryMode.checkins);
+      }
+      await _helperOp(() => helper.forgetRound(all: true));
+    } catch (e) {
+      dlog('helper: forgets on move (${e.runtimeType})');
+    }
   }
 
   // the person chose to keep this phone to read. this session only: the
