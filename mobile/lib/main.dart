@@ -25043,14 +25043,17 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             decoy: appState.inDecoyView,
           );
           const torGreen = Color(0xFF34D399);
-          final accent = off
+          // relay does not go through tor, so tor being off never greys it
+          final relay = said.kind == 'relay';
+          final dim = off && !relay;
+          final accent = relay
+              ? HaloColors.sky
+              : off
               ? HaloColors.text2
               : said.kind == 'offline'
               ? HaloColors.amber
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
-              : appState.sendMode == 'balanced'
-              ? const Color(0xFF4BB8C9)
               : appState.sendMode == 'fast'
               ? torGreen
               : ready
@@ -25073,7 +25076,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   ),
                 _ring(
                   12,
-                  off
+                  dim
                       ? HaloColors.text3.withValues(alpha: 0.4)
                       : accent.withValues(alpha: secured ? 1.0 : 0.85),
                   1.4,

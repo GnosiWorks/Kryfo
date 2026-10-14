@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the chat header's route line: via relay is light blue in both themes, and
-// stays right across a live theme switch. over tor and direct keep text2
+// relay has one colour, sky: the chat header's route line and the home
+// pill, in both themes and across a live theme switch. over tor and direct
+// keep text2 in the header
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -15,6 +16,7 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         themeRevision,
+        TorHalo,
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
@@ -22,6 +24,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart' show StickerLibrary;
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -173,5 +176,65 @@ void main() {
       expect(_lockColour(t), HaloColors.sky, reason: '$light');
     }
     await devClose(t);
+  });
+
+  group('the home pill', () {
+    Color? label(WidgetTester t) =>
+        t.widget<Text>(find.text(l10n.appViaRelay)).style?.color;
+
+    // the 5px dot in the middle of the ring
+    Color? dot(WidgetTester t) => t
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(TorHalo),
+            matching: find.byType(Container),
+          ),
+        )
+        .map((c) => c.decoration)
+        .whereType<BoxDecoration>()
+        .firstWhere((d) => d.border == null)
+        .color;
+
+    setUp(() {
+      appState.sendModeForTest = 'balanced';
+      appState.setTorStatusForTest(TorStatus.off);
+      appState.noteOnline(true);
+    });
+
+    // relay does not ride tor: the pill is sky whether tor is off, coming
+    // up or reachable
+    for (final light in [false, true]) {
+      for (final tor in [
+        TorStatus.off,
+        TorStatus.starting,
+        TorStatus.reachable,
+      ]) {
+        testWidgets('${light ? 'light' : 'dark'} theme, tor ${tor.name}: '
+            'relay is sky', (t) async {
+          HaloColors.setLight(light);
+          appState.setTorStatusForTest(tor);
+          await devOpen(
+            t,
+            const Center(child: TorHalo(label: true)),
+            still: true,
+          );
+          expect(label(t), HaloColors.sky);
+          expect(dot(t), HaloColors.sky);
+          await devClose(t);
+        });
+      }
+    }
+
+    testWidgets('a live theme switch repaints it', (t) async {
+      await devOpen(t, const Center(child: TorHalo(label: true)), still: true);
+      for (final light in [true, false, true]) {
+        await appState.setLight(light);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        expect(label(t), HaloColors.sky, reason: '$light');
+        expect(dot(t), HaloColors.sky, reason: '$light');
+      }
+      await devClose(t);
+    });
   });
 }

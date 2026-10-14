@@ -56,7 +56,8 @@ const _dark = _Palette(
   greenSoft: Color(0x2434D399),
   violet: Color(0xFFA78BFA),
   rose: Color(0xFFF472B6),
-  sky: Color(0xFF7DD3FC),
+  // relay's colour, the pill and the chat header
+  sky: Color(0xFF4BB8C9),
   onAmber: Color(0xFF1A0F04),
   bubbleIn: Color(0xFF3B332A),
 );
