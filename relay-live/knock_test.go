@@ -227,6 +227,11 @@ func TestKnockEndpoints(t *testing.T) {
 		{"https://[64:ff9b::a00:1]/up", false, false},
 		{"https://user:pw@ntfy.sh/up", false, false},
 		{"https://ntfy.sh/up#x", false, false},
+		{"https://ntfy.sh/upX?delay=zzz", false, false},
+		{"https://ntfy.sh/upX?up=2", false, false},
+		{"https://gotify.example.org/UP?token=AbC-1_x", false, true},
+		{"https://fcm.distributor.unifiedpush.org/wpfcm?v2&instance=x1&token=abc", false, true},
+		{"https://gotify.example.org/UP?token=a%20b", false, false},
 		{"https:///up", false, false},
 		{"https://ntfy.sh/up x", false, false},
 		{"https://com/up", false, false},
@@ -1082,6 +1087,48 @@ func TestKnockConnectionKnockBudget(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	if n := len(tk.drain()); n > knockBurst+3 {
 		t.Fatalf("one connection's wraps set off %d knocks", n)
+	}
+}
+
+// an endpoint that never worked is let go at its first error, so it holds
+// a new one's room for minutes, not a day: its first decoy comes soon
+func TestKnockUnprovenEndpointGoesAtItsFirstError(t *testing.T) {
+	tk := newTestKnocks(t)
+	_, sh := tk.shareOf("ntfy.sh")
+	for i := 0; i < sh.pendingCap(); i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://ntfy.sh/sq%d", i), tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatal(msg)
+		}
+	}
+	legit := r3reg(r3key(900000), "https://ntfy.sh/legit", tk.clock.now())
+	if rej, _ := tk.take(nil, &legit); !rej {
+		t.Fatal("the room for new endpoints was not full")
+	}
+	tk.drain()
+	tk.log = nil
+	tk.advance(10 * time.Minute)
+	first := map[string]bool{}
+	for _, j := range tk.log {
+		first[j.url] = true
+		if ep := tk.eps[j.url]; ep != nil {
+			tk.q.result(ep, j.decoy, 400, nil)
+		}
+	}
+	if len(first) < sh.pendingCap() {
+		t.Fatalf("%d of %d new endpoints knocked within ten minutes", len(first), sh.pendingCap())
+	}
+	if len(sh.pending) != 0 {
+		t.Fatalf("%d endpoints that answered with errors still hold room", len(sh.pending))
+	}
+	if rej, msg := tk.take(nil, &legit); rej {
+		t.Fatalf("a new user after the squatters went: %q", msg)
+	}
+	// a proven endpoint is not let go for one error
+	tk.q.result(tk.eps["https://ntfy.sh/legit"], false, 201, nil)
+	tk.q.result(tk.eps["https://ntfy.sh/legit"], false, 500, nil)
+	if tk.eps["https://ntfy.sh/legit"] == nil {
+		t.Fatal("a proven endpoint went at one error")
 	}
 }
 

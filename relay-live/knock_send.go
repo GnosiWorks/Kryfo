@@ -457,6 +457,13 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 	k.stats.failed.Add(1)
 	now := k.now()
 	k.mu.Lock()
+	// an endpoint that never worked and is answered with an error is let
+	// go at once: it would only hold a new one's room
+	if err == nil && code >= 400 && !ep.delivered {
+		k.mu.Unlock()
+		k.gone(ep.url)
+		return
+	}
 	ep.fails++
 	if ep.failingSince.IsZero() {
 		ep.failingSince = now

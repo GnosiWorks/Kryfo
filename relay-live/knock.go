@@ -450,7 +450,44 @@ func (k *knocker) endpointOK(raw string) bool {
 	if net.ParseIP(host) != nil || numericHost(host) {
 		return false
 	}
+	if !knockQueryOK(u.Query(), u.RawQuery) {
+		return false
+	}
 	return knockDomainOf(host) != ""
+}
+
+// a query only as the unifiedpush distributors write it: ntfy's up=1, the
+// token of gotify's and the fcm distributor's, the fcm distributor's
+// instance and v2. any other could make a push server answer every knock
+// with an error while the endpoint is kept
+func knockQueryOK(q url.Values, raw string) bool {
+	if raw == "" {
+		return true
+	}
+	if len(raw) > 256 {
+		return false
+	}
+	for k, vs := range q {
+		for _, v := range vs {
+			switch k {
+			case "up":
+				if v != "1" {
+					return false
+				}
+			case "v2":
+				if v != "" {
+					return false
+				}
+			case "token", "instance":
+				if v == "" || strings.Trim(v, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.") != "" {
+					return false
+				}
+			default:
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // the endpoint check with the default ports, for the tests and the loader
@@ -689,7 +726,9 @@ func (k *knocker) setLocked(key [32]byte, endpoint string, made, expires int64) 
 		sh.eps++
 		sh.pending[ep] = struct{}{}
 		d.pending++
-		k.decoyLocked(ep)
+		// a new endpoint's first decoy comes within minutes: one that
+		// cannot be knocked is let go then, not held for a day
+		k.decoyAfterLocked(ep, time.Minute+time.Duration(k.rnd.Int64N(int64(9*time.Minute))))
 	} else {
 		d = k.domainLocked(ep.domain)
 	}
@@ -757,9 +796,13 @@ func (k *knocker) decoyGap() time.Duration {
 // the endpoint's next decoy, on a timer of its own: each one goes out at
 // its own instant, never batched with others on a tick
 func (k *knocker) decoyLocked(ep *knockEP) {
+	k.decoyAfterLocked(ep, k.decoyGap())
+}
+
+func (k *knocker) decoyAfterLocked(ep *knockEP, wait time.Duration) {
 	ep.decoyGen++
 	gen := ep.decoyGen
-	k.after(k.decoyGap(), func() { k.decoyDue(ep, gen) })
+	k.after(wait, func() { k.decoyDue(ep, gen) })
 }
 
 func (k *knocker) decoyDue(ep *knockEP, gen int) {
