@@ -6,7 +6,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/widgets/media_bubbles.dart' show humanFileSize;
+import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
 
 import 'source_body.dart';
 
@@ -42,9 +42,7 @@ void main() {
       final refusal = send.substring(over, send.indexOf('return;', over));
       expect(
         refusal,
-        contains(
-          'l10n.fileTooBig(humanFileSize(size), humanFileSize(kMaxFileBytes))',
-        ),
+        contains('showHaloToast(context, fileTooBigLine(size))'),
         reason: file,
       );
       // before anything is copied
@@ -62,12 +60,29 @@ void main() {
 
   test('the limit reads as a person would say it', () {
     expect(
-      l10n.fileTooBig(
-        humanFileSize(20 * 1024 * 1024),
-        humanFileSize(kMaxFileBytes),
-      ),
+      fileTooBigLine(20 * 1024 * 1024),
       'This file is 20.0 mb. Files can be up to 15.0 mb.',
     );
+    // just over reads in whole kb, so the two numbers never match
+    expect(
+      fileTooBigLine(15 * 1024 * 1024 + 1),
+      'This file is 15,361 kb. Files can be up to 15,360 kb.',
+    );
+    expect(
+      fileTooBigLine(15 * 1024 * 1024 + 40 * 1024),
+      'This file is 15,400 kb. Files can be up to 15,360 kb.',
+    );
+    expect(
+      fileTooBigLine(15 * 1024 * 1024 + 60 * 1024),
+      'This file is 15.1 mb. Files can be up to 15.0 mb.',
+    );
+  });
+
+  test('a camera clip has the same limit as a file', () {
+    final cam = sourceOf('lib/screens/camera_screen.dart');
+    expect(cam, isNot(contains('8 * 1024 * 1024')));
+    expect('!fileFits(_clipBytes)'.allMatches(cam), hasLength(2));
+    expect(l10n.cameraTooLongForA, 'Too long for a message · 15 MB max');
   });
 
   test('a video is cleaned by its bytes as well as its name', () {

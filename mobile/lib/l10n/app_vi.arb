@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "Đoạn quay đã bị mất",
   "cameraACopyIsIn": "Một bản đã vào thư viện ảnh",
   "cameraCouldNotSaveA": "Không lưu được bản sao trên điện thoại này",
-  "cameraTooLongForA": "Quá dài cho một tin nhắn · tối đa 8 MB",
+  "cameraTooLongForA": "Quá dài cho một tin nhắn · tối đa 15 MB",
   "cameraNeverSavedToYour": "Không bao giờ lưu vào thư viện ảnh",
   "cameraNoExifNeverSaved": "Không có EXIF, không bao giờ lưu vào thư viện ảnh",
   "cameraRec": "Quay",

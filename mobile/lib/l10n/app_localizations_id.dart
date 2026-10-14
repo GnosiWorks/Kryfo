@@ -1163,7 +1163,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Gagal menyimpan salinan di ponsel ini';
 
   @override
-  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 8 MB';
+  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Tidak pernah disimpan ke galerimu';

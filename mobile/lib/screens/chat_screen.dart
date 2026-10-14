@@ -22,7 +22,7 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
-    show ImageCaptionScreen, VoiceBubble, fileCard, humanFileSize;
+    show ImageCaptionScreen, VoiceBubble, fileCard, fileTooBigLine;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../voice_mask.dart' show maskWavOff;
@@ -41,7 +41,6 @@ import '../file_kind.dart'
         fileFactsRead,
         fileFits,
         fileShapeNow,
-        kMaxFileBytes,
         knownInstaller,
         sendLaneCleans;
 import '../file_save.dart' show saveReceivedFile;
@@ -3539,10 +3538,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     if (!fileFits(size)) {
       if (mounted) {
-        showHaloToast(
-          context,
-          l10n.fileTooBig(humanFileSize(size), humanFileSize(kMaxFileBytes)),
-        );
+        showHaloToast(context, fileTooBigLine(size));
       }
       return;
     }

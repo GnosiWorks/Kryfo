@@ -29,7 +29,6 @@ import '../file_kind.dart'
         fileFactsRead,
         fileFits,
         fileShapeNow,
-        kMaxFileBytes,
         knownInstaller;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
@@ -2465,10 +2464,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     if (!fileFits(size)) {
       if (mounted) {
-        showHaloToast(
-          context,
-          l10n.fileTooBig(humanFileSize(size), humanFileSize(kMaxFileBytes)),
-        );
+        showHaloToast(context, fileTooBigLine(size));
       }
       return;
     }

@@ -1182,7 +1182,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer une copie sur ce téléphone';
 
   @override
-  String get cameraTooLongForA => 'Trop long pour un message · 8 Mo max';
+  String get cameraTooLongForA => 'Trop long pour un message · 15 Mo max';
 
   @override
   String get cameraNeverSavedToYour => 'Jamais enregistré dans vos photos';

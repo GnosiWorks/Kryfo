@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "Kayıt kayboldu",
   "cameraACopyIsIn": "Fotoğraflarında bir kopyası var",
   "cameraCouldNotSaveA": "Bu telefona kopya kaydedilemedi",
-  "cameraTooLongForA": "Mesaj için çok uzun · en fazla 8 MB",
+  "cameraTooLongForA": "Mesaj için çok uzun · en fazla 15 MB",
   "cameraNeverSavedToYour": "Fotoğraflarına asla kaydedilmez",
   "cameraNoExifNeverSaved": "EXIF yok, fotoğraflarına asla kaydedilmez",
   "cameraRec": "Kayıt",

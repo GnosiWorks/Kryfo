@@ -1175,7 +1175,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 8 MB';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';

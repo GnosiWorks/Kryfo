@@ -1126,7 +1126,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 8 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -9036,7 +9036,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 8 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';

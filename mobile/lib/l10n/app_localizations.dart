@@ -1854,7 +1854,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 8 MB max'**
+  /// **'Too long for a message · 15 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart

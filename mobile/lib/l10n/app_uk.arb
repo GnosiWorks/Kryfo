@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "Запис втрачено",
   "cameraACopyIsIn": "Копія є у твоїх фото",
   "cameraCouldNotSaveA": "Не вдалося зберегти копію на цьому телефоні",
-  "cameraTooLongForA": "Задовге для повідомлення · макс. 8 МБ",
+  "cameraTooLongForA": "Задовге для повідомлення · макс. 15 МБ",
   "cameraNeverSavedToYour": "Ніколи не зберігається у твоїх фото",
   "cameraNoExifNeverSaved": "Без EXIF, ніколи не зберігається у твоїх фото",
   "cameraRec": "Запис",

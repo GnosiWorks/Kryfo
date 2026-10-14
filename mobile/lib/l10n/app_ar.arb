@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "ضاع التسجيل",
   "cameraACopyIsIn": "توجد نسخة في صورك",
   "cameraCouldNotSaveA": "تعذّر حفظ نسخة على هذا الهاتف",
-  "cameraTooLongForA": "أطول من أن يُرسل · ٨ م.ب كحد أقصى",
+  "cameraTooLongForA": "أطول من أن يُرسل · ١٥ م.ب كحد أقصى",
   "cameraNeverSavedToYour": "لا يُحفظ أبدًا في صورك",
   "cameraNoExifNeverSaved": "بلا EXIF، ولا يُحفظ أبدًا في صورك",
   "cameraRec": "تسجيل",

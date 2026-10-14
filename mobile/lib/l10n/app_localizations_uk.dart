@@ -1203,7 +1203,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося зберегти копію на цьому телефоні';
 
   @override
-  String get cameraTooLongForA => 'Задовге для повідомлення · макс. 8 МБ';
+  String get cameraTooLongForA => 'Задовге для повідомлення · макс. 15 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Ніколи не зберігається у твоїх фото';

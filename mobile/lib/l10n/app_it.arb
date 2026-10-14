@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "La registrazione è andata persa",
   "cameraACopyIsIn": "Una copia è nelle tue foto",
   "cameraCouldNotSaveA": "Impossibile salvare una copia su questo telefono",
-  "cameraTooLongForA": "Troppo lungo per un messaggio · max 8 MB",
+  "cameraTooLongForA": "Troppo lungo per un messaggio · max 15 MB",
   "cameraNeverSavedToYour": "Non finisce mai nelle tue foto",
   "cameraNoExifNeverSaved": "Niente EXIF, non finisce mai nelle tue foto",
   "cameraRec": "Rec",

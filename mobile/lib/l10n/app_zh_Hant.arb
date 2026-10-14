@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "錄影遺失了",
   "cameraACopyIsIn": "你的相簿裡有一份副本",
   "cameraCouldNotSaveA": "無法在這支手機上儲存副本",
-  "cameraTooLongForA": "太長了，無法用訊息傳送 · 上限 8 MB",
+  "cameraTooLongForA": "太長了，無法用訊息傳送 · 上限 15 MB",
   "cameraNeverSavedToYour": "不會存到你的相簿",
   "cameraNoExifNeverSaved": "沒有 EXIF，不會存到你的相簿",
   "cameraRec": "錄影",

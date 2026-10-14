@@ -36,6 +36,18 @@ String humanFileSize(int bytes) {
   return l10n.mediaBubblesMb(decimal((bytes / (1024 * 1024)), 1));
 }
 
+/// the line for a file over the limit. a size that would read the same as
+/// the limit is given in whole kb, rounded up, so the two never match
+String fileTooBigLine(int bytes, [int max = kMaxFileBytes]) {
+  final size = humanFileSize(bytes);
+  final most = humanFileSize(max);
+  if (size != most) return l10n.fileTooBig(size, most);
+  return l10n.fileTooBig(
+    l10n.mediaBubblesKb(whole((bytes / 1024).ceil())),
+    l10n.mediaBubblesKb(whole(max ~/ 1024)),
+  );
+}
+
 IconData fileGlyph(FileKind k) => switch (k) {
   FileKind.installer => Icons.install_mobile_outlined,
   FileKind.pdf => Icons.picture_as_pdf_outlined,

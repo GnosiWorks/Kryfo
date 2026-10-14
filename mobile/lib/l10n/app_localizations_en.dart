@@ -1173,7 +1173,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Could not save a copy on this phone';
 
   @override
-  String get cameraTooLongForA => 'Too long for a message · 8 MB max';
+  String get cameraTooLongForA => 'Too long for a message · 15 MB max';
 
   @override
   String get cameraNeverSavedToYour => 'Never saved to your photos';

@@ -1462,7 +1462,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 8 MB max",
+  "cameraTooLongForA": "Too long for a message · 15 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },

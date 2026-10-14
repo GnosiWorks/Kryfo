@@ -1163,7 +1163,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 8 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';

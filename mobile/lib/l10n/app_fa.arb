@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "ضبط از دست رفت",
   "cameraACopyIsIn": "یک نسخه در عکس‌هایتان هست",
   "cameraCouldNotSaveA": "ذخیره‌ی یک نسخه روی این گوشی ممکن نشد",
-  "cameraTooLongForA": "برای یک پیام زیادی طولانی است · حداکثر ۸ مگابایت",
+  "cameraTooLongForA": "برای یک پیام زیادی طولانی است · حداکثر ۱۵ مگابایت",
   "cameraNeverSavedToYour": "هرگز در عکس‌هایتان ذخیره نمی‌شود",
   "cameraNoExifNeverSaved": "بدون EXIF، هرگز در عکس‌هایتان ذخیره نمی‌شود",
   "cameraRec": "ضبط",

@@ -396,7 +396,7 @@
   "cameraTheRecordingWasLost": "A gravação se perdeu",
   "cameraACopyIsIn": "Tem uma cópia nas suas fotos",
   "cameraCouldNotSaveA": "Não foi possível salvar uma cópia neste celular",
-  "cameraTooLongForA": "Longo demais para uma mensagem · máx. 8 MB",
+  "cameraTooLongForA": "Longo demais para uma mensagem · máx. 15 MB",
   "cameraNeverSavedToYour": "Nunca salvo nas suas fotos",
   "cameraNoExifNeverSaved": "Sem EXIF, nunca salvo nas suas fotos",
   "cameraRec": "Gravar",

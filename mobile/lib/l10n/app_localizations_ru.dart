@@ -1206,7 +1206,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Слишком длинно для сообщения · максимум 8 МБ';
+      'Слишком длинно для сообщения · максимум 15 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Никогда не сохраняется в галерею';
