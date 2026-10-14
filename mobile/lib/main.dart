@@ -119,6 +119,7 @@ import 'text_send.dart' show kSendBlocked;
 import 'fast_gate.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
+import 'notes_export.dart' show sweepNotesExports;
 import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
@@ -9577,6 +9578,7 @@ Future<void> sweepCaptures() async {
       // a backup copy that never got shredded, say the app died mid-save
       if (n.contains('/kryfo-backup-')) await shredFile(f.path);
     }
+    await sweepNotesExports(tmp);
     await sweepShareCopies(tmp);
     // the gallery picker's whole copies, in folders of their own
     await sweepPickerLeftovers(tmp);

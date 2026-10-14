@@ -3980,6 +3980,90 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notesJotSomethingDown => 'Запиши щось…';
 
   @override
+  String get notesExportNotes => 'Експорт нотаток';
+
+  @override
+  String get notesExport => 'Експортувати';
+
+  @override
+  String get notesExportWorking => 'Експорт…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нотатки, від старих до нових.',
+      many: '$countString нотаток, від старих до нових.',
+      few: '$countString нотатки, від старих до нових.',
+      one: '$countString нотатка, від старих до нових.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'Фото й голосові підуть разом із ними в zip.';
+
+  @override
+  String get notesExportText => 'Простий текст';
+
+  @override
+  String get notesExportTextLine => 'Файл .txt, що відкривається будь-де';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Файл .md із заголовками, для застосунків нотаток';
+
+  @override
+  String get notesExportLock => 'Замкнути парольною фразою';
+
+  @override
+  String get notesExportLockLine =>
+      'Відкрий в Інструментах через «Відкрити замкнений файл» або програмою age на комп’ютері';
+
+  @override
+  String get notesExportPlainTitle => 'Експортувати без парольної фрази?';
+
+  @override
+  String get notesExportPlainLine =>
+      'Будь-хто, до кого потрапить цей файл, зможе його прочитати.';
+
+  @override
+  String get notesExportPlainYes => 'Експортувати без неї';
+
+  @override
+  String get notesExportKeepLock => 'Залишити парольну фразу';
+
+  @override
+  String get notesExportNotSaved => 'Нотатки не збережено. Файл усе ще тут.';
+
+  @override
+  String get notesExportSaved => 'Нотатки збережено';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Нотатки збережено в $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Нотатки збережено, але Kryfo не зміг перевірити копію';
+
+  @override
+  String get notesExportFailed =>
+      'Не вдалося експортувати нотатки. Нічого не збережено.';
+
+  @override
+  String get notesExportSubject => 'Нотатки Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'ПРИВАТНО ЗА ЗАМОВЧУВАННЯМ';
 
   @override

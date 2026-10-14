@@ -3890,6 +3890,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesJotSomethingDown => 'Jot something down…';
 
   @override
+  String get notesExportNotes => 'Export notes';
+
+  @override
+  String get notesExport => 'Export';
+
+  @override
+  String get notesExportWorking => 'Exporting…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString notes, oldest first.',
+      one: 'One note, oldest first.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'Photos and voice notes go in a zip with them.';
+
+  @override
+  String get notesExportText => 'Plain text';
+
+  @override
+  String get notesExportTextLine => 'A .txt file that opens anywhere';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'A .md file with headings, for note apps';
+
+  @override
+  String get notesExportLock => 'Lock with a passphrase';
+
+  @override
+  String get notesExportLockLine =>
+      'Open it with Open a locked file in Tools, or with age on a computer';
+
+  @override
+  String get notesExportPlainTitle => 'Export without a passphrase?';
+
+  @override
+  String get notesExportPlainLine => 'Anyone who gets this file can read it.';
+
+  @override
+  String get notesExportPlainYes => 'Export without one';
+
+  @override
+  String get notesExportKeepLock => 'Keep the passphrase';
+
+  @override
+  String get notesExportNotSaved =>
+      'The notes weren\'t saved. The file is still here.';
+
+  @override
+  String get notesExportSaved => 'Notes saved';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Notes saved in $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Notes saved, but Kryfo couldn\'t check the copy';
+
+  @override
+  String get notesExportFailed =>
+      'Couldn\'t export the notes. Nothing was saved.';
+
+  @override
+  String get notesExportSubject => 'Kryfo notes';
+
+  @override
   String get onboardingPrivateByDefault => 'PRIVATE BY DEFAULT';
 
   @override

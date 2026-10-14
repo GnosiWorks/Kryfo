@@ -6147,6 +6147,132 @@ abstract class AppLocalizations {
   /// **'Jot something down…'**
   String get notesJotSomethingDown;
 
+  /// screens/notes_screen.dart and notes_export_screen.dart. the notes menu row and the export page's title
+  ///
+  /// In en, this message translates to:
+  /// **'Export notes'**
+  String get notesExportNotes;
+
+  /// screens/notes_export_screen.dart. the button that makes the file
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get notesExport;
+
+  /// screens/notes_export_screen.dart. the button while the file is made
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting…'**
+  String get notesExportWorking;
+
+  /// screens/notes_export_screen.dart. how many notes go into the file, oldest at the top
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{One note, oldest first.} other{{count} notes, oldest first.}}'**
+  String notesExportCount(int count);
+
+  /// screens/notes_export_screen.dart. after the count, when some notes have a photo or a voice note
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice notes go in a zip with them.'**
+  String get notesExportZip;
+
+  /// screens/notes_export_screen.dart. format choice
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text'**
+  String get notesExportText;
+
+  /// screens/notes_export_screen.dart. under the plain text choice
+  ///
+  /// In en, this message translates to:
+  /// **'A .txt file that opens anywhere'**
+  String get notesExportTextLine;
+
+  /// screens/notes_export_screen.dart. format choice, the name of the format
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get notesExportMarkdown;
+
+  /// screens/notes_export_screen.dart. under the markdown choice
+  ///
+  /// In en, this message translates to:
+  /// **'A .md file with headings, for note apps'**
+  String get notesExportMarkdownLine;
+
+  /// screens/notes_export_screen.dart. the switch, on by default
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with a passphrase'**
+  String get notesExportLock;
+
+  /// screens/notes_export_screen.dart. under the switch. Tools is the tab, Open a locked file the tool in it, age the free desktop tool
+  ///
+  /// In en, this message translates to:
+  /// **'Open it with Open a locked file in Tools, or with age on a computer'**
+  String get notesExportLockLine;
+
+  /// screens/notes_export_screen.dart. asked when the passphrase switch is turned off
+  ///
+  /// In en, this message translates to:
+  /// **'Export without a passphrase?'**
+  String get notesExportPlainTitle;
+
+  /// screens/notes_export_screen.dart. the calm warning for a file without a passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone who gets this file can read it.'**
+  String get notesExportPlainLine;
+
+  /// screens/notes_export_screen.dart. turns the passphrase off
+  ///
+  /// In en, this message translates to:
+  /// **'Export without one'**
+  String get notesExportPlainYes;
+
+  /// screens/notes_export_screen.dart. keeps the passphrase on
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the passphrase'**
+  String get notesExportKeepLock;
+
+  /// screens/notes_export_screen.dart. the save window was left or failed, the file waits to try again
+  ///
+  /// In en, this message translates to:
+  /// **'The notes weren\'t saved. The file is still here.'**
+  String get notesExportNotSaved;
+
+  /// screens/notes_export_screen.dart. toast
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved'**
+  String get notesExportSaved;
+
+  /// screens/notes_export_screen.dart. toast. the placeholder is a folder path like Download, or the app that holds it
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved in {place}'**
+  String notesExportSavedIn(String place);
+
+  /// screens/notes_export_screen.dart. toast
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved, but Kryfo couldn\'t check the copy'**
+  String get notesExportSavedUnchecked;
+
+  /// screens/notes_export_screen.dart. the file could not be made
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the notes. Nothing was saved.'**
+  String get notesExportFailed;
+
+  /// screens/notes_export_screen.dart. subject line when the file is shared
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo notes'**
+  String get notesExportSubject;
+
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:

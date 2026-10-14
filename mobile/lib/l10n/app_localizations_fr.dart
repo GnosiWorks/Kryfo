@@ -3937,6 +3937,90 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notesJotSomethingDown => 'Notez quelque chose…';
 
   @override
+  String get notesExportNotes => 'Exporter les notes';
+
+  @override
+  String get notesExport => 'Exporter';
+
+  @override
+  String get notesExportWorking => 'Exportation…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString notes, de la plus ancienne à la plus récente.',
+      one: 'Une note, de la plus ancienne à la plus récente.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip =>
+      'Les photos et les notes vocales les accompagnent dans un zip.';
+
+  @override
+  String get notesExportText => 'Texte brut';
+
+  @override
+  String get notesExportTextLine => 'Un fichier .txt qui s’ouvre partout';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Un fichier .md avec des titres, pour les apps de notes';
+
+  @override
+  String get notesExportLock => 'Verrouiller avec une phrase secrète';
+
+  @override
+  String get notesExportLockLine =>
+      'Ouvrez-le dans Outils avec « Ouvrir un fichier verrouillé », ou avec age sur un ordinateur';
+
+  @override
+  String get notesExportPlainTitle => 'Exporter sans phrase secrète ?';
+
+  @override
+  String get notesExportPlainLine =>
+      'Quiconque obtient ce fichier peut le lire.';
+
+  @override
+  String get notesExportPlainYes => 'Exporter sans';
+
+  @override
+  String get notesExportKeepLock => 'Garder la phrase secrète';
+
+  @override
+  String get notesExportNotSaved =>
+      'Les notes n’ont pas été enregistrées. Le fichier est toujours là.';
+
+  @override
+  String get notesExportSaved => 'Notes enregistrées';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Notes enregistrées dans $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Notes enregistrées, mais Kryfo n’a pas pu vérifier la copie';
+
+  @override
+  String get notesExportFailed =>
+      'Impossible d’exporter les notes. Rien n’a été enregistré.';
+
+  @override
+  String get notesExportSubject => 'Notes Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'PRIVÉ PAR DÉFAUT';
 
   @override

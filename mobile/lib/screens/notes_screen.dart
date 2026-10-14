@@ -11,7 +11,7 @@ import '../widgets/chat_parts.dart' show DayChip;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
-import '../widgets/motion.dart' show motionStill;
+import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
@@ -26,6 +26,7 @@ import '../widgets/written_field.dart';
 import '../widgets/ease_size.dart';
 import '../bidi_safe.dart';
 import '../widgets/shift_tap_guard.dart';
+import 'notes_export_screen.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
@@ -151,6 +152,14 @@ class _NotesScreenState extends State<NotesScreen> {
       builder: (ctx) => SingleChildScrollView(
         child: MenuSheet(
           groups: [
+            if (notesExportHere())
+              [
+                MenuSheetRow(
+                  icon: Icons.ios_share_rounded,
+                  label: l10n.notesExportNotes,
+                  onTap: () => Navigator.pop(ctx, 'export'),
+                ),
+              ],
             [
               MenuSheetRow(
                 icon: Icons.delete_sweep_outlined,
@@ -163,7 +172,12 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
       ),
     ).then((a) {
-      if (a == 'all' && mounted) _deleteAll();
+      if (!mounted) return;
+      if (a == 'all') _deleteAll();
+      // asked again: the session may have changed under the sheet
+      if (a == 'export' && notesExportHere()) {
+        Navigator.of(context).push(haloRoute(const NotesExportScreen()));
+      }
     });
   }
 

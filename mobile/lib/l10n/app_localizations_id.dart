@@ -3891,6 +3891,88 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesJotSomethingDown => 'Tulis sesuatu…';
 
   @override
+  String get notesExportNotes => 'Ekspor catatan';
+
+  @override
+  String get notesExport => 'Ekspor';
+
+  @override
+  String get notesExportWorking => 'Mengekspor…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString catatan, dari yang paling lama.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'Foto dan pesan suara ikut di dalam zip.';
+
+  @override
+  String get notesExportText => 'Teks biasa';
+
+  @override
+  String get notesExportTextLine => 'File .txt yang bisa dibuka di mana saja';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'File .md dengan judul, untuk aplikasi catatan';
+
+  @override
+  String get notesExportLock => 'Kunci dengan frasa sandi';
+
+  @override
+  String get notesExportLockLine =>
+      'Buka di Alat dengan Buka file terkunci, atau dengan age di komputer';
+
+  @override
+  String get notesExportPlainTitle => 'Ekspor tanpa frasa sandi?';
+
+  @override
+  String get notesExportPlainLine =>
+      'Siapa pun yang mendapat file ini bisa membacanya.';
+
+  @override
+  String get notesExportPlainYes => 'Ekspor tanpa sandi';
+
+  @override
+  String get notesExportKeepLock => 'Tetap pakai frasa sandi';
+
+  @override
+  String get notesExportNotSaved =>
+      'Catatan tidak tersimpan. File-nya masih ada.';
+
+  @override
+  String get notesExportSaved => 'Catatan tersimpan';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Catatan tersimpan di $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Catatan tersimpan, tapi Kryfo tidak bisa memeriksa salinannya';
+
+  @override
+  String get notesExportFailed =>
+      'Catatan tidak bisa diekspor. Tidak ada yang disimpan.';
+
+  @override
+  String get notesExportSubject => 'Catatan Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'PRIVAT SEJAK AWAL';
 
   @override
