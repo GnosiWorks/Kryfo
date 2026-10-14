@@ -8371,4 +8371,52 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'يمكن لكل محادثة تغييره من قائمتها';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'فوري وخفيف على البطارية. يعرف خادم التطبيق المساعد متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'تُخلط إيقاظات زائفة بالحقيقية، فلا يميّز خادم التطبيق المساعد الرسائل الحقيقية. ومع ذلك يتفقّد Kryfo كل ١٥ دقيقة.';
+
+  @override
+  String get helperSheetNeedTitle => 'تحتاج إلى تطبيق مساعد';
+
+  @override
+  String get helperSheetNeedLine =>
+      'يحتفظ التطبيق المساعد باتصال خفيف واحد لكل تطبيقاتك ويوقظ Kryfo حين يصل شيء. يصلح أي تطبيق UnifiedPush، وntfy بداية جيدة.';
+
+  @override
+  String get helperSheetGetNtfy => 'احصل على ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'تطبيقات مساعدة أخرى';
+
+  @override
+  String get helperSheetPickTitle => 'اختر تطبيقًا مساعدًا';
+
+  @override
+  String get helperSheetPickLine =>
+      'لا يطلب Kryfo منه إلا إيقاظ التطبيق. لا تمر رسائلك عبره أبدًا.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return 'تم إعداد ⁨$name⁩';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return 'لم يستجب ⁨$name⁩. حاول مرة أخرى.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'تطبيقك المساعد لم يعد موجودًا';
+
+  @override
+  String get homeHelperGoneLine =>
+      'يتفقّد Kryfo كل ١٥ دقيقة إلى أن تختار طريقة أخرى.';
+
+  @override
+  String get homeHelperGoneChoose => 'اختر طريقة أخرى';
 }

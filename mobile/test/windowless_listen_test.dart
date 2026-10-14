@@ -18,6 +18,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
@@ -313,6 +314,25 @@ void main() {
     },
     timeout: const Timeout(Duration(seconds: 60)),
   );
+
+  test('a knock from the helper app is the same check-in, locked and in a '
+      'decoy, and counts as a wake-up', () async {
+    final w = await waitingCheckIn();
+    w.app.deliveryModeForTest = DeliveryMode.helper;
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    lockState.inDecoy = true;
+    addTearDown(() {
+      lockState.inDecoy = false;
+      lockState.openForTest();
+    });
+    expect(lockState.locked, isTrue);
+    w.app.listenAtStart();
+    drainedIt(w, await w.app.drainNow(why: 'push'));
+    expect(w.app.lastCheckHow, contains('"why":"push"'));
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(kLastWakeKey), greaterThan(0));
+  }, timeout: const Timeout(Duration(seconds: 60)));
 
   test(
     'a job that knocks before the boot listens waits for it',

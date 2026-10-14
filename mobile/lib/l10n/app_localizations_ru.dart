@@ -8401,4 +8401,52 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'В каждом чате это можно изменить в его меню';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Сразу и бережно к батарее. Сервер помощника узнаёт, когда приходят сообщения, но не их содержание.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'К настоящим пробуждениям подмешиваются ложные, чтобы сервер помощника не отличил реальные сообщения. Kryfo всё равно проверяет почту каждые 15 минут.';
+
+  @override
+  String get helperSheetNeedTitle => 'Нужно приложение-помощник';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Помощник держит одно лёгкое подключение для всех приложений и будит Kryfo, когда что-то приходит. Подойдёт любой помощник UnifiedPush, например ntfy.';
+
+  @override
+  String get helperSheetGetNtfy => 'Установить ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Другие помощники';
+
+  @override
+  String get helperSheetPickTitle => 'Выберите помощника';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo просит его только разбудить приложение. Ваши сообщения через него не проходят.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name настроен';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name не ответил. Попробуйте ещё раз.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Помощник удалён';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo проверяет почту каждые 15 минут, пока вы не выберете другой способ.';
+
+  @override
+  String get homeHelperGoneChoose => 'Выбрать другой способ';
 }

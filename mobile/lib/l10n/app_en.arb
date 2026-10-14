@@ -10417,5 +10417,67 @@
   "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
+  },
+  "gettingMessagesHelperBody": "Instant and light on battery. The helper's server learns when you get messages, never what they say.",
+  "@gettingMessagesHelperBody": {
+    "description": "screens/getting_messages_screen.dart: the helper app card"
+  },
+  "gettingMessagesHelperNote": "Fake wake-ups are mixed in, so the helper's server cannot tell real messages apart. Kryfo still checks in every 15 minutes.",
+  "@gettingMessagesHelperNote": {
+    "description": "screens/getting_messages_screen.dart: under the status line in helper app mode"
+  },
+  "helperSheetNeedTitle": "You need a helper app",
+  "@helperSheetNeedTitle": {
+    "description": "screens/helper_sheet.dart: no helper app on the phone"
+  },
+  "helperSheetNeedLine": "A helper app keeps one light connection for all your apps and wakes Kryfo when something arrives. Any UnifiedPush helper works, ntfy is a good start.",
+  "@helperSheetNeedLine": {
+    "description": "screens/helper_sheet.dart: what a helper app is. UnifiedPush and ntfy are names"
+  },
+  "helperSheetGetNtfy": "Get ntfy",
+  "@helperSheetGetNtfy": {
+    "description": "screens/helper_sheet.dart: button, opens the ntfy page in the app store. ntfy is a name"
+  },
+  "helperSheetOtherApps": "Other helper apps",
+  "@helperSheetOtherApps": {
+    "description": "screens/helper_sheet.dart: link to the list of UnifiedPush helper apps"
+  },
+  "helperSheetPickTitle": "Choose a helper app",
+  "@helperSheetPickTitle": {
+    "description": "screens/helper_sheet.dart: the helper apps on the phone to pick from"
+  },
+  "helperSheetPickLine": "Kryfo only asks it to wake the app. Your messages never pass through it.",
+  "@helperSheetPickLine": {
+    "description": "screens/helper_sheet.dart: under the title"
+  },
+  "helperSheetSetUp": "{name} is set up",
+  "@helperSheetSetUp": {
+    "description": "screens/helper_sheet.dart: the helper app answered and is set up. {name} is its name",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "helperSheetNoAnswer": "{name} did not answer. Try again.",
+  "@helperSheetNoAnswer": {
+    "description": "screens/helper_sheet.dart: the helper app gave no address to be woken on. {name} is its name",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "homeHelperGoneTitle": "Your helper app is gone",
+  "@homeHelperGoneTitle": {
+    "description": "screens/home_screen.dart: the helper app that woke Kryfo was uninstalled"
+  },
+  "homeHelperGoneLine": "Kryfo checks in every 15 minutes until you choose another way.",
+  "@homeHelperGoneLine": {
+    "description": "screens/home_screen.dart: under the title"
+  },
+  "homeHelperGoneChoose": "Choose another way",
+  "@homeHelperGoneChoose": {
+    "description": "screens/home_screen.dart: button, opens getting messages"
   }
 }

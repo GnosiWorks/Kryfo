@@ -8391,4 +8391,52 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'У кожному чаті це можна змінити в його меню';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Одразу й ощадливо для батареї. Сервер помічника знає, коли приходять повідомлення, але не їхній зміст.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'До справжніх пробуджень домішуються фальшиві, щоб сервер помічника не відрізнив справжні повідомлення. Kryfo однаково робить перевірку кожні 15 хвилин.';
+
+  @override
+  String get helperSheetNeedTitle => 'Потрібен застосунок-помічник';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Помічник тримає одне легке з’єднання для всіх застосунків і будить Kryfo, коли щось приходить. Підійде будь-який помічник UnifiedPush, наприклад ntfy.';
+
+  @override
+  String get helperSheetGetNtfy => 'Встановити ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Інші помічники';
+
+  @override
+  String get helperSheetPickTitle => 'Обери помічника';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo просить його лише розбудити застосунок. Твої повідомлення ніколи не проходять через нього.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name налаштовано';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name не відповів. Спробуй ще раз.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Твій помічник зник';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo робить перевірку кожні 15 хвилин, доки ти не обереш інший спосіб.';
+
+  @override
+  String get homeHelperGoneChoose => 'Обрати інший спосіб';
 }

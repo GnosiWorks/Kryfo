@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "Змінити голос у цьому повідомленні",
   "voiceNotDisguised": "Не вдалося змінити голос, тому повідомлення не надіслано",
   "settingsDisguiseByDefault": "Змінювати мій голос за замовчуванням",
-  "settingsDisguiseByDefaultHint": "У кожному чаті це можна змінити в його меню"
+  "settingsDisguiseByDefaultHint": "У кожному чаті це можна змінити в його меню",
+  "gettingMessagesHelperBody": "Одразу й ощадливо для батареї. Сервер помічника знає, коли приходять повідомлення, але не їхній зміст.",
+  "gettingMessagesHelperNote": "До справжніх пробуджень домішуються фальшиві, щоб сервер помічника не відрізнив справжні повідомлення. Kryfo однаково робить перевірку кожні 15 хвилин.",
+  "helperSheetNeedTitle": "Потрібен застосунок-помічник",
+  "helperSheetNeedLine": "Помічник тримає одне легке з’єднання для всіх застосунків і будить Kryfo, коли щось приходить. Підійде будь-який помічник UnifiedPush, наприклад ntfy.",
+  "helperSheetGetNtfy": "Встановити ntfy",
+  "helperSheetOtherApps": "Інші помічники",
+  "helperSheetPickTitle": "Обери помічника",
+  "helperSheetPickLine": "Kryfo просить його лише розбудити застосунок. Твої повідомлення ніколи не проходять через нього.",
+  "helperSheetSetUp": "{name} налаштовано",
+  "helperSheetNoAnswer": "{name} не відповів. Спробуй ще раз.",
+  "homeHelperGoneTitle": "Твій помічник зник",
+  "homeHelperGoneLine": "Kryfo робить перевірку кожні 15 хвилин, доки ти не обереш інший спосіб.",
+  "homeHelperGoneChoose": "Обрати інший спосіб"
 }

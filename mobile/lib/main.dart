@@ -43,6 +43,7 @@ import 'tor_valve.dart';
 import 'auto_restart.dart';
 import 'drafts.dart'
     show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
+import 'helper_delivery.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -605,6 +606,25 @@ class HaloEngine {
         listed ? '1' : '0',
         name,
       ], wait: registryWait);
+
+  // the helper app mode (engine/knock.go). an engine without the calls
+  // answers with an error and the mode stays hidden
+  Future<String> _knock(String symbol, List<String> args, Duration wait) =>
+      _ffiOnIsolate(
+        symbol,
+        args,
+        wait: wait,
+        what: 'knock',
+      ).catchError((Object e) => 'error: ${e.runtimeType}');
+
+  Future<String> knockAddresses() =>
+      _knock('HaloKnockAddresses', const [], const Duration(seconds: 10));
+
+  Future<String> knockRegister(String itemsJson) =>
+      _knock('HaloKnockRegister', [itemsJson], const Duration(seconds: 100));
+
+  Future<String> knockCheck() =>
+      _knock('HaloKnockCheck', const [], const Duration(seconds: 100));
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -1217,6 +1237,17 @@ const kCheckWakeLeast = Duration(seconds: 5);
 // a job older than this is someone else's clock
 const kCheckJobOldest = Duration(minutes: 10);
 
+// the helper app mode's engine calls, through whichever engine is in use
+class _EngineKnocks implements KnockEngine {
+  @override
+  Future<String> knockAddresses() => engine.knockAddresses();
+  @override
+  Future<String> knockRegister(String itemsJson) =>
+      engine.knockRegister(itemsJson);
+  @override
+  Future<String> knockCheck() => engine.knockCheck();
+}
+
 Future<String> _ffiOnIsolate(
   String symbol,
   List<String> args, {
@@ -1230,6 +1261,8 @@ Future<String> _ffiOnIsolate(
     final ps = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ps.length) {
+        case 0:
+          return engineTake(lib.lookupFunction<CStrFn, CStrFnDart>(symbol)());
         case 1:
           return engineTake(
             lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol)(ps[0]),
@@ -13181,7 +13214,9 @@ class AppState extends ChangeNotifier {
 
   Future<void> setDeliveryMode(DeliveryMode m) async {
     if (m == _deliveryMode) return;
+    final was = _deliveryMode;
     _deliveryMode = m;
+    if (was == DeliveryMode.helper) unawaited(helperOff());
     await saveDeliveryMode(m);
     try {
       await _platformChannel.invokeMethod('applyDeliveryMode');
@@ -13198,9 +13233,130 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---- the helper app mode ----
+
+  late final HelperDelivery helper = HelperDelivery(
+    engine: _EngineKnocks(),
+    push: HelperPush.instance,
+  );
+  bool _relayKnocks = false;
+  String? _helperName;
+  // 'due:<package>' while the home screen owes the word that the helper
+  // app is gone, 'said:<package>' once it was said
+  String _helperGone = '';
+  Timer? _helperTimer;
+
+  /// the picker shows the helper app once our relay can knock, and only on
+  /// the private route: registrations go over tor or not at all. a phone
+  /// already on it always sees its choice
+  bool get helperOffered =>
+      _deliveryMode == DeliveryMode.helper ||
+      (_relayKnocks && _sendMode == 'private');
+  String? get helperName => _helperName;
+  bool get helperGoneDue => _helperGone.startsWith('due:') && !sessionQuiet;
+  @visibleForTesting
+  set relayKnocksForTest(bool v) => _relayKnocks = v;
+
+  Future<void> _loadHelper() async {
+    try {
+      _relayKnocks = await helper.relayKnocks();
+      final prefs = await SharedPreferences.getInstance();
+      _helperGone = prefs.getString(kHelperGoneKey) ?? '';
+      if (_deliveryMode == DeliveryMode.helper) await _lookAtHelper();
+      notifyListeners();
+    } catch (e) {
+      dlog('helper: not loaded (${e.runtimeType})');
+    }
+  }
+
+  /// asks our relay whether it can knock, at most once a day, and only
+  /// with tor up on the private route
+  Future<void> refreshHelperOffer() async {
+    if (_sendMode != 'private' || !torReady) return;
+    final was = _relayKnocks;
+    try {
+      _relayKnocks = await helper.relayKnocks(ask: true);
+    } catch (e) {
+      dlog('helper: relay not asked (${e.runtimeType})');
+    }
+    if (was != _relayKnocks) notifyListeners();
+  }
+
+  // the helper app's name for the status line, and whether it is still on
+  // the phone. without it the fifteen-minute job still fetches, and the
+  // home screen says so once
+  Future<void> _lookAtHelper() async {
+    final pkg = await HelperPush.instance.chosen();
+    if (pkg == null) return;
+    final apps = await HelperPush.instance.apps();
+    final app = apps.where((a) => a.package == pkg).firstOrNull;
+    _helperName = app?.name;
+    if (app == null && !_helperGone.endsWith(':$pkg')) {
+      _helperGone = 'due:$pkg';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kHelperGoneKey, _helperGone);
+    }
+    notifyListeners();
+  }
+
+  Future<void> helperGoneAnswered() async {
+    if (!_helperGone.startsWith('due:')) return;
+    _helperGone = 'said:${_helperGone.substring(4)}';
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kHelperGoneKey, _helperGone);
+  }
+
+  // an endpoint came or went: the relay hears of it once things settle,
+  // if tor is up anyway. otherwise the next check-in takes it
+  void _helperSoon() {
+    _helperTimer?.cancel();
+    _helperTimer = Timer(const Duration(seconds: 3), () {
+      if (!_torHeld && torReady) unawaited(_helperSync());
+    });
+  }
+
+  Future<int> _helperSync() async {
+    if (_deliveryMode != DeliveryMode.helper || _sendMode != 'private') {
+      return 0;
+    }
+    try {
+      return await helper.sync();
+    } catch (e) {
+      dlog('helper: sync (${e.runtimeType})');
+      return 0;
+    }
+  }
+
+  /// the helper app chosen: sixteen registrations with it, the mode, then
+  /// the relay. false when the helper app handed back no endpoint
+  Future<bool> useHelper(HelperApp app) async {
+    if (!await helper.setUp(app.package)) return false;
+    _helperName = app.name;
+    _helperGone = '';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(kHelperGoneKey);
+    await setDeliveryMode(DeliveryMode.helper);
+    unawaited(_helperSync());
+    return true;
+  }
+
+  // leaving the mode: the relay and the helper app let go of everything
+  Future<void> helperOff() async {
+    try {
+      await helper.stop();
+    } catch (e) {
+      dlog('helper: stop (${e.runtimeType})');
+    }
+    _helperName = null;
+  }
+
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
+    if (front && _deliveryMode == DeliveryMode.helper) {
+      unawaited(_lookAtHelper().catchError((Object _) {}));
+    }
     if (front) {
       unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
@@ -13474,6 +13630,17 @@ class AppState extends ChangeNotifier {
         how = 'late';
         return 0;
       }
+      // new addresses and due renewals go to the relay while tor is up,
+      // inside what is left of the job's loop budget
+      final helperLeft = left(kCheckLoopBy);
+      if (_deliveryMode == DeliveryMode.helper && helperLeft.inSeconds >= 5) {
+        await _helperSync().timeout(
+          helperLeft > const Duration(seconds: 40)
+              ? const Duration(seconds: 40)
+              : helperLeft,
+          onTimeout: () => 0,
+        );
+      }
       how = 'ok$tail';
       _lastCheckAt = DateTime.now().millisecondsSinceEpoch;
       if (why == 'push') _lastWakeAt = _lastCheckAt;
@@ -13522,7 +13689,11 @@ class AppState extends ChangeNotifier {
 
   // [serviceUp]: the job found the listener service already running
   // [jobAgo]: how long ago the job that asks began, by the job's clock
-  Future<int> drainNow({bool serviceUp = false, Duration? jobAgo}) async {
+  Future<int> drainNow({
+    bool serviceUp = false,
+    Duration? jobAgo,
+    String why = 'job',
+  }) async {
     final jobAt = jobAgo == null ? null : _checkClock().subtract(jobAgo);
     // the job can knock before a cold boot has read the mode. wait for that,
     // or the first check-in after a kill does nothing
@@ -13530,7 +13701,7 @@ class AppState extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 500));
     }
     if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
-      return checkIn(jobAt: jobAt);
+      return checkIn(why: why, jobAt: jobAt);
     }
     if (jobMayRest(
       mode: _deliveryMode,
@@ -19403,10 +19574,11 @@ class AppState extends ChangeNotifier {
         _inFront ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     await _judgeLastRun();
-    // a knock wakes a check-in, whatever mode is set: a helper app still
-    // registered from before should not be answered with silence
-    HelperPush.instance.onKnock = () => unawaited(checkIn(why: 'push'));
+    // a knock comes as a job (HaloPeriodicJobService), whatever mode is
+    // set. an endpoint that arrives is registered with the relay
+    HelperPush.instance.onChange = _helperSoon;
     HelperPush.instance.listen();
+    unawaited(_loadHelper());
     await _loadDeliveryTimes();
     // start tor last: nothing above needs it, and earlier it stalls the main
     // thread while tor bootstraps. a process the fifteen-minute job started,
@@ -23526,9 +23698,13 @@ void main() async {
     appState.noteJobRun();
     final args = call.arguments;
     final ago = args is Map ? args['ago'] : null;
+    // a knock from the helper app, or the timer: the same check-in, locked,
+    // in a decoy or not
+    final why = args is Map && args['why'] == 'push' ? 'push' : 'job';
     return appState.drainNow(
       serviceUp: args is Map && args['up'] == true,
       jobAgo: ago is int ? Duration(milliseconds: ago) : null,
+      why: why,
     );
   });
   // the language, before anything says a word: the first frame, or a

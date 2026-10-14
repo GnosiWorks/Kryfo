@@ -13322,6 +13322,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
+
+  /// screens/getting_messages_screen.dart: the helper app card
+  ///
+  /// In en, this message translates to:
+  /// **'Instant and light on battery. The helper\'s server learns when you get messages, never what they say.'**
+  String get gettingMessagesHelperBody;
+
+  /// screens/getting_messages_screen.dart: under the status line in helper app mode
+  ///
+  /// In en, this message translates to:
+  /// **'Fake wake-ups are mixed in, so the helper\'s server cannot tell real messages apart. Kryfo still checks in every 15 minutes.'**
+  String get gettingMessagesHelperNote;
+
+  /// screens/helper_sheet.dart: no helper app on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'You need a helper app'**
+  String get helperSheetNeedTitle;
+
+  /// screens/helper_sheet.dart: what a helper app is. UnifiedPush and ntfy are names
+  ///
+  /// In en, this message translates to:
+  /// **'A helper app keeps one light connection for all your apps and wakes Kryfo when something arrives. Any UnifiedPush helper works, ntfy is a good start.'**
+  String get helperSheetNeedLine;
+
+  /// screens/helper_sheet.dart: button, opens the ntfy page in the app store. ntfy is a name
+  ///
+  /// In en, this message translates to:
+  /// **'Get ntfy'**
+  String get helperSheetGetNtfy;
+
+  /// screens/helper_sheet.dart: link to the list of UnifiedPush helper apps
+  ///
+  /// In en, this message translates to:
+  /// **'Other helper apps'**
+  String get helperSheetOtherApps;
+
+  /// screens/helper_sheet.dart: the helper apps on the phone to pick from
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a helper app'**
+  String get helperSheetPickTitle;
+
+  /// screens/helper_sheet.dart: under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo only asks it to wake the app. Your messages never pass through it.'**
+  String get helperSheetPickLine;
+
+  /// screens/helper_sheet.dart: the helper app answered and is set up. {name} is its name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is set up'**
+  String helperSheetSetUp(Object name);
+
+  /// screens/helper_sheet.dart: the helper app gave no address to be woken on. {name} is its name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} did not answer. Try again.'**
+  String helperSheetNoAnswer(Object name);
+
+  /// screens/home_screen.dart: the helper app that woke Kryfo was uninstalled
+  ///
+  /// In en, this message translates to:
+  /// **'Your helper app is gone'**
+  String get homeHelperGoneTitle;
+
+  /// screens/home_screen.dart: under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo checks in every 15 minutes until you choose another way.'**
+  String get homeHelperGoneLine;
+
+  /// screens/home_screen.dart: button, opens getting messages
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another way'**
+  String get homeHelperGoneChoose;
 }
 
 class _AppLocalizationsDelegate

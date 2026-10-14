@@ -7888,6 +7888,51 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
+
+  @override
+  String get gettingMessagesHelperBody => '即时送达，省电。辅助应用的服务器只知道你何时收到消息，从不知道内容。';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      '其中混有假的唤醒，辅助应用的服务器分不出哪些是真消息。Kryfo 仍会每 15 分钟查收一次。';
+
+  @override
+  String get helperSheetNeedTitle => '你需要一个辅助应用';
+
+  @override
+  String get helperSheetNeedLine =>
+      '辅助应用为你的所有应用保持一条轻量连接，有消息时唤醒 Kryfo。任何 UnifiedPush 辅助应用都可以，ntfy 是不错的起点。';
+
+  @override
+  String get helperSheetGetNtfy => '获取 ntfy';
+
+  @override
+  String get helperSheetOtherApps => '其他辅助应用';
+
+  @override
+  String get helperSheetPickTitle => '选择辅助应用';
+
+  @override
+  String get helperSheetPickLine => 'Kryfo 只请它唤醒应用。你的消息从不经过它。';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name 已设置好';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name 没有回应。请再试一次。';
+  }
+
+  @override
+  String get homeHelperGoneTitle => '你的辅助应用不见了';
+
+  @override
+  String get homeHelperGoneLine => '在你选择其他方式之前，Kryfo 每 15 分钟查收一次。';
+
+  @override
+  String get homeHelperGoneChoose => '选择其他方式';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15654,4 +15699,50 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      '即時送達，省電。輔助應用程式的伺服器只知道你何時收到訊息，從不知道內容。';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      '其中混有假的喚醒，輔助應用程式的伺服器分不出哪些是真訊息。Kryfo 仍會每 15 分鐘查收一次。';
+
+  @override
+  String get helperSheetNeedTitle => '你需要一個輔助應用程式';
+
+  @override
+  String get helperSheetNeedLine =>
+      '輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。';
+
+  @override
+  String get helperSheetGetNtfy => '取得 ntfy';
+
+  @override
+  String get helperSheetOtherApps => '其他輔助應用程式';
+
+  @override
+  String get helperSheetPickTitle => '選擇輔助應用程式';
+
+  @override
+  String get helperSheetPickLine => 'Kryfo 只請它喚醒應用程式。你的訊息從不經過它。';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name 已設定完成';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name 沒有回應。請再試一次。';
+  }
+
+  @override
+  String get homeHelperGoneTitle => '你的輔助應用程式不見了';
+
+  @override
+  String get homeHelperGoneLine => '在你選擇其他方式之前，Kryfo 每 15 分鐘查收一次。';
+
+  @override
+  String get homeHelperGoneChoose => '選擇其他方式';
 }

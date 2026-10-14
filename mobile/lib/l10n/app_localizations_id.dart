@@ -8245,4 +8245,52 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Setiap obrolan bisa mengubahnya di menunya';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Seketika dan hemat baterai. Server aplikasi pembantu tahu kapan pesan masuk, tidak pernah isinya.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Bangunan palsu dicampurkan, jadi server aplikasi pembantu tidak bisa membedakan pesan asli. Kryfo tetap mengecek setiap 15 menit.';
+
+  @override
+  String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa, ntfy awal yang bagus.';
+
+  @override
+  String get helperSheetGetNtfy => 'Pasang ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Aplikasi pembantu lain';
+
+  @override
+  String get helperSheetPickTitle => 'Pilih aplikasi pembantu';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah lewat sana.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name sudah siap';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name tidak menjawab. Coba lagi.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Aplikasi pembantumu sudah tidak ada';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo mengecek setiap 15 menit sampai kamu memilih cara lain.';
+
+  @override
+  String get homeHelperGoneChoose => 'Pilih cara lain';
 }

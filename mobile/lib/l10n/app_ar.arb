@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "تمويه هذه الرسالة",
   "voiceNotDisguised": "تعذّر تمويه هذه الرسالة، لذا لم تُرسل",
   "settingsDisguiseByDefault": "تمويه صوتي افتراضيًا",
-  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها"
+  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها",
+  "gettingMessagesHelperBody": "فوري وخفيف على البطارية. يعرف خادم التطبيق المساعد متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.",
+  "gettingMessagesHelperNote": "تُخلط إيقاظات زائفة بالحقيقية، فلا يميّز خادم التطبيق المساعد الرسائل الحقيقية. ومع ذلك يتفقّد Kryfo كل ١٥ دقيقة.",
+  "helperSheetNeedTitle": "تحتاج إلى تطبيق مساعد",
+  "helperSheetNeedLine": "يحتفظ التطبيق المساعد باتصال خفيف واحد لكل تطبيقاتك ويوقظ Kryfo حين يصل شيء. يصلح أي تطبيق UnifiedPush، وntfy بداية جيدة.",
+  "helperSheetGetNtfy": "احصل على ntfy",
+  "helperSheetOtherApps": "تطبيقات مساعدة أخرى",
+  "helperSheetPickTitle": "اختر تطبيقًا مساعدًا",
+  "helperSheetPickLine": "لا يطلب Kryfo منه إلا إيقاظ التطبيق. لا تمر رسائلك عبره أبدًا.",
+  "helperSheetSetUp": "تم إعداد ⁨{name}⁩",
+  "helperSheetNoAnswer": "لم يستجب ⁨{name}⁩. حاول مرة أخرى.",
+  "homeHelperGoneTitle": "تطبيقك المساعد لم يعد موجودًا",
+  "homeHelperGoneLine": "يتفقّد Kryfo كل ١٥ دقيقة إلى أن تختار طريقة أخرى.",
+  "homeHelperGoneChoose": "اختر طريقة أخرى"
 }

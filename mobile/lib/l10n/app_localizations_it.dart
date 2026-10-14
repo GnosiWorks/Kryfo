@@ -8320,4 +8320,52 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Ogni chat può cambiarlo nel suo menu';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Immediato e leggero sulla batteria. Il server dell\'app di supporto sa quando ricevi messaggi, mai cosa dicono.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Vengono mescolati falsi risvegli, così il server dell\'app di supporto non distingue i messaggi veri. Kryfo fa comunque un controllo ogni 15 minuti.';
+
+  @override
+  String get helperSheetNeedTitle => 'Ti serve un\'app di supporto';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Un\'app di supporto tiene una connessione leggera per tutte le tue app e sveglia Kryfo quando arriva qualcosa. Va bene qualsiasi app UnifiedPush, ntfy è un buon inizio.';
+
+  @override
+  String get helperSheetGetNtfy => 'Installa ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Altre app di supporto';
+
+  @override
+  String get helperSheetPickTitle => 'Scegli un\'app di supporto';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo le chiede solo di svegliare l\'app. I tuoi messaggi non passano mai da lì.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name è pronto';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name non ha risposto. Riprova.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'La tua app di supporto non c\'è più';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo fa un controllo ogni 15 minuti finché non scegli un altro modo.';
+
+  @override
+  String get homeHelperGoneChoose => 'Scegli un altro modo';
 }

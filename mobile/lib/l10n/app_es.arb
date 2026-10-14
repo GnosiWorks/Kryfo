@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "Disfrazar esta nota",
   "voiceNotDisguised": "No se pudo disfrazar esta nota, así que no se envió",
   "settingsDisguiseByDefault": "Disfrazar mi voz por defecto",
-  "settingsDisguiseByDefaultHint": "Cada chat puede cambiarlo en su menú"
+  "settingsDisguiseByDefaultHint": "Cada chat puede cambiarlo en su menú",
+  "gettingMessagesHelperBody": "Al instante y ligero para la batería. El servidor de la app auxiliar sabe cuándo te llegan mensajes, nunca lo que dicen.",
+  "gettingMessagesHelperNote": "Se mezclan activaciones falsas para que el servidor de la app auxiliar no distinga los mensajes reales. Kryfo sigue haciendo una consulta cada 15 minutos.",
+  "helperSheetNeedTitle": "Necesitas una app auxiliar",
+  "helperSheetNeedLine": "Una app auxiliar mantiene una conexión ligera para todas tus apps y activa Kryfo cuando llega algo. Sirve cualquier app de UnifiedPush; ntfy es un buen comienzo.",
+  "helperSheetGetNtfy": "Instalar ntfy",
+  "helperSheetOtherApps": "Otras apps auxiliares",
+  "helperSheetPickTitle": "Elige una app auxiliar",
+  "helperSheetPickLine": "Kryfo solo le pide que active la app. Tus mensajes nunca pasan por ella.",
+  "helperSheetSetUp": "{name} está listo",
+  "helperSheetNoAnswer": "{name} no respondió. Inténtalo de nuevo.",
+  "homeHelperGoneTitle": "Tu app auxiliar ya no está",
+  "homeHelperGoneLine": "Kryfo hace una consulta cada 15 minutos hasta que elijas otra forma.",
+  "homeHelperGoneChoose": "Elegir otra forma"
 }

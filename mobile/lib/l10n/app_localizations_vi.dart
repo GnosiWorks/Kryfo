@@ -8238,4 +8238,52 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Đến ngay và nhẹ pin. Máy chủ của ứng dụng trợ giúp biết khi nào bạn có tin nhắn, không bao giờ biết nội dung.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Có lẫn các lần đánh thức giả, nên máy chủ của ứng dụng trợ giúp không phân biệt được tin nhắn thật. Kryfo vẫn kiểm tra mỗi 15 phút.';
+
+  @override
+  String get helperSheetNeedTitle => 'Bạn cần một ứng dụng trợ giúp';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Ứng dụng trợ giúp giữ một kết nối nhẹ cho mọi ứng dụng và đánh thức Kryfo khi có gì đó đến. Ứng dụng UnifiedPush nào cũng được, ntfy là lựa chọn tốt để bắt đầu.';
+
+  @override
+  String get helperSheetGetNtfy => 'Tải ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Ứng dụng trợ giúp khác';
+
+  @override
+  String get helperSheetPickTitle => 'Chọn ứng dụng trợ giúp';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo chỉ nhờ nó đánh thức ứng dụng. Tin nhắn của bạn không bao giờ đi qua nó.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return 'Đã thiết lập $name';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name không phản hồi. Hãy thử lại.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Ứng dụng trợ giúp của bạn không còn nữa';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo sẽ kiểm tra mỗi 15 phút cho đến khi bạn chọn cách khác.';
+
+  @override
+  String get homeHelperGoneChoose => 'Chọn cách khác';
 }

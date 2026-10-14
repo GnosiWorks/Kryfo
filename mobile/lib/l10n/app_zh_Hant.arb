@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "給這則語音變聲",
   "voiceNotDisguised": "這則語音無法變聲，所以沒有送出",
   "settingsDisguiseByDefault": "預設給我的語音變聲",
-  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改"
+  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改",
+  "gettingMessagesHelperBody": "即時送達，省電。輔助應用程式的伺服器只知道你何時收到訊息，從不知道內容。",
+  "gettingMessagesHelperNote": "其中混有假的喚醒，輔助應用程式的伺服器分不出哪些是真訊息。Kryfo 仍會每 15 分鐘查收一次。",
+  "helperSheetNeedTitle": "你需要一個輔助應用程式",
+  "helperSheetNeedLine": "輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。",
+  "helperSheetGetNtfy": "取得 ntfy",
+  "helperSheetOtherApps": "其他輔助應用程式",
+  "helperSheetPickTitle": "選擇輔助應用程式",
+  "helperSheetPickLine": "Kryfo 只請它喚醒應用程式。你的訊息從不經過它。",
+  "helperSheetSetUp": "{name} 已設定完成",
+  "helperSheetNoAnswer": "{name} 沒有回應。請再試一次。",
+  "homeHelperGoneTitle": "你的輔助應用程式不見了",
+  "homeHelperGoneLine": "在你選擇其他方式之前，Kryfo 每 15 分鐘查收一次。",
+  "homeHelperGoneChoose": "選擇其他方式"
 }

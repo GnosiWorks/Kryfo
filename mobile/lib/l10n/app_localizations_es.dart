@@ -8314,4 +8314,52 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Cada chat puede cambiarlo en su menú';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Al instante y ligero para la batería. El servidor de la app auxiliar sabe cuándo te llegan mensajes, nunca lo que dicen.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Se mezclan activaciones falsas para que el servidor de la app auxiliar no distinga los mensajes reales. Kryfo sigue haciendo una consulta cada 15 minutos.';
+
+  @override
+  String get helperSheetNeedTitle => 'Necesitas una app auxiliar';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Una app auxiliar mantiene una conexión ligera para todas tus apps y activa Kryfo cuando llega algo. Sirve cualquier app de UnifiedPush; ntfy es un buen comienzo.';
+
+  @override
+  String get helperSheetGetNtfy => 'Instalar ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Otras apps auxiliares';
+
+  @override
+  String get helperSheetPickTitle => 'Elige una app auxiliar';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo solo le pide que active la app. Tus mensajes nunca pasan por ella.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name está listo';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name no respondió. Inténtalo de nuevo.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Tu app auxiliar ya no está';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo hace una consulta cada 15 minutos hasta que elijas otra forma.';
+
+  @override
+  String get homeHelperGoneChoose => 'Elegir otra forma';
 }

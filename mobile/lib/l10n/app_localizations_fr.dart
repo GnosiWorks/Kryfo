@@ -8334,4 +8334,52 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Chaque discussion peut le changer dans son menu';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Instantané et léger pour la batterie. Le serveur de l’appli auxiliaire apprend quand vous recevez des messages, jamais ce qu’ils disent.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'De faux réveils sont mêlés aux vrais, pour que le serveur de l’appli auxiliaire ne reconnaisse pas les vrais messages. Kryfo fait quand même un relevé toutes les 15 minutes.';
+
+  @override
+  String get helperSheetNeedTitle => 'Il vous faut une appli auxiliaire';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Une appli auxiliaire garde une connexion légère pour toutes vos applis et réveille Kryfo quand quelque chose arrive. Toute appli UnifiedPush convient, ntfy est un bon début.';
+
+  @override
+  String get helperSheetGetNtfy => 'Installer ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Autres applis auxiliaires';
+
+  @override
+  String get helperSheetPickTitle => 'Choisissez une appli auxiliaire';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo lui demande seulement de réveiller l’appli. Vos messages ne passent jamais par elle.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name est prêt';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name n’a pas répondu. Réessayez.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Votre appli auxiliaire a disparu';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo fait un relevé toutes les 15 minutes jusqu’à ce que vous choisissiez une autre façon.';
+
+  @override
+  String get homeHelperGoneChoose => 'Choisir une autre façon';
 }

@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "Déguiser cette note",
   "voiceNotDisguised": "Cette note n’a pas pu être déguisée, elle n’a donc pas été envoyée",
   "settingsDisguiseByDefault": "Déguiser ma voix par défaut",
-  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu"
+  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu",
+  "gettingMessagesHelperBody": "Instantané et léger pour la batterie. Le serveur de l’appli auxiliaire apprend quand vous recevez des messages, jamais ce qu’ils disent.",
+  "gettingMessagesHelperNote": "De faux réveils sont mêlés aux vrais, pour que le serveur de l’appli auxiliaire ne reconnaisse pas les vrais messages. Kryfo fait quand même un relevé toutes les 15 minutes.",
+  "helperSheetNeedTitle": "Il vous faut une appli auxiliaire",
+  "helperSheetNeedLine": "Une appli auxiliaire garde une connexion légère pour toutes vos applis et réveille Kryfo quand quelque chose arrive. Toute appli UnifiedPush convient, ntfy est un bon début.",
+  "helperSheetGetNtfy": "Installer ntfy",
+  "helperSheetOtherApps": "Autres applis auxiliaires",
+  "helperSheetPickTitle": "Choisissez une appli auxiliaire",
+  "helperSheetPickLine": "Kryfo lui demande seulement de réveiller l’appli. Vos messages ne passent jamais par elle.",
+  "helperSheetSetUp": "{name} est prêt",
+  "helperSheetNoAnswer": "{name} n’a pas répondu. Réessayez.",
+  "homeHelperGoneTitle": "Votre appli auxiliaire a disparu",
+  "homeHelperGoneLine": "Kryfo fait un relevé toutes les 15 minutes jusqu’à ce que vous choisissiez une autre façon.",
+  "homeHelperGoneChoose": "Choisir une autre façon"
 }

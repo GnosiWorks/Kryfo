@@ -8272,4 +8272,52 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Her sohbet bunu kendi menüsünden değiştirebilir';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Anında ve pili yormaz. Yardımcının sunucusu mesaj aldığın anı öğrenir, içeriğini asla.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Araya sahte uyandırmalar karışır, böylece yardımcının sunucusu gerçek mesajları ayırt edemez. Kryfo yine de 15 dakikada bir kontrol eder.';
+
+  @override
+  String get helperSheetNeedTitle => 'Bir yardımcı uygulama gerekiyor';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Yardımcı uygulama tüm uygulamaların için tek bir hafif bağlantı tutar ve bir şey geldiğinde Kryfo’yu uyandırır. Her UnifiedPush yardımcısı olur, ntfy iyi bir başlangıç.';
+
+  @override
+  String get helperSheetGetNtfy => 'ntfy’yi indir';
+
+  @override
+  String get helperSheetOtherApps => 'Diğer yardımcı uygulamalar';
+
+  @override
+  String get helperSheetPickTitle => 'Bir yardımcı uygulama seç';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo ondan yalnızca uygulamayı uyandırmasını ister. Mesajların asla onun üzerinden geçmez.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name hazır';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name yanıt vermedi. Tekrar dene.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Yardımcı uygulaman artık yok';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo, başka bir yol seçene kadar 15 dakikada bir kontrol eder.';
+
+  @override
+  String get homeHelperGoneChoose => 'Başka yol seç';
 }

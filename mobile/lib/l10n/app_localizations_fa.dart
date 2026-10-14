@@ -8262,4 +8262,52 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'فوری و کم‌مصرف. سرور برنامه‌ی کمکی می‌فهمد کِی پیام می‌گیرید، هرگز نمی‌فهمد چه نوشته شده.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'بیداری‌های جعلی هم قاطی می‌شوند تا سرور برنامه‌ی کمکی پیام‌های واقعی را تشخیص ندهد. Kryfo همچنان هر ۱۵ دقیقه سرکشی می‌کند.';
+
+  @override
+  String get helperSheetNeedTitle => 'به یک برنامه‌ی کمکی نیاز دارید';
+
+  @override
+  String get helperSheetNeedLine =>
+      'برنامه‌ی کمکی یک اتصال سبک برای همه‌ی برنامه‌هایتان نگه می‌دارد و وقتی چیزی برسد Kryfo را بیدار می‌کند. هر برنامه‌ی UnifiedPush کار می‌کند، ntfy شروع خوبی است.';
+
+  @override
+  String get helperSheetGetNtfy => 'دریافت ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'برنامه‌های کمکی دیگر';
+
+  @override
+  String get helperSheetPickTitle => 'یک برنامه‌ی کمکی انتخاب کنید';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo فقط از آن می‌خواهد برنامه را بیدار کند. پیام‌هایتان هرگز از آن رد نمی‌شوند.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '⁨$name⁩ آماده است';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '⁨$name⁩ جواب نداد. دوباره امتحان کنید.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'برنامه‌ی کمکی شما دیگر نیست';
+
+  @override
+  String get homeHelperGoneLine =>
+      'تا وقتی راه دیگری انتخاب کنید، Kryfo هر ۱۵ دقیقه سرکشی می‌کند.';
+
+  @override
+  String get homeHelperGoneChoose => 'انتخاب راه دیگر';
 }

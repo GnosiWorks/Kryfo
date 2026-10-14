@@ -12,6 +12,7 @@ import '../miui_autostart.dart';
 import '../notifications.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
+import 'helper_sheet.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/halo_switch.dart';
@@ -48,6 +49,8 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
           dlog('getting messages: preview setting (${e.runtimeType})');
         });
     appState.addListener(_changed);
+    // the helper app is offered once our relay says it can knock
+    unawaited(appState.refreshHelperOffer());
     // "4 min ago" has to become "5 min ago" on its own, while it is seen
     _timers.every(const Duration(seconds: 20), _changed);
   }
@@ -72,12 +75,20 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   Future<void> _pick(DeliveryMode m) async {
     if (_busy || m == appState.deliveryMode) return;
     setState(() => _busy = true);
-    await appState.setDeliveryMode(m);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (m == DeliveryMode.checkins) {
-      // a check-in is a background job. a phone that stops background work
-      // stops check-ins too, so the same ask applies.
+    if (m == DeliveryMode.helper) {
+      // the mode is set by the sheet, once the helper app has answered
+      final app = await showHelperSheet(context);
+      if (!mounted) return;
+      setState(() => _busy = false);
+      if (app == null) return;
+    } else {
+      await appState.setDeliveryMode(m);
+      if (!mounted) return;
+      setState(() => _busy = false);
+    }
+    if (m != DeliveryMode.always) {
+      // a check-in, and a knock's, is a background job. a phone that stops
+      // background work stops those too, so the same ask applies.
       unawaited(forceShowBackgroundPrompt(context));
     }
   }
@@ -94,6 +105,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
       lastCheckMs: appState.lastCheckAt,
       lastWakeMs: appState.lastWakeAt,
       nowMs: DateTime.now().millisecondsSinceEpoch,
+      helperName: appState.helperName,
     );
     // how tor gets out, when it is not the usual way. never in a decoy
     final bs = appState.bridgeStatus;
@@ -163,6 +175,16 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 body: l10n.gettingMessagesKryfoLooksForMessages,
                 on: mode == DeliveryMode.checkins,
                 onTap: () => _pick(DeliveryMode.checkins),
+              ),
+              // only once our relay can knock: grows in when it says so
+              Unfold(
+                open: appState.helperOffered,
+                child: _ModeCard(
+                  title: l10n.deliveryModeThroughAHelperApp,
+                  body: l10n.gettingMessagesHelperBody,
+                  on: mode == DeliveryMode.helper,
+                  onTap: () => _pick(DeliveryMode.helper),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 18, 22, 2),
@@ -303,6 +325,20 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
                   child: Text(
                     l10n.gettingMessagesWhenThePhoneSits,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      height: 1.5,
+                      color: HaloColors.warm,
+                    ),
+                  ),
+                ),
+              ),
+              Unfold(
+                open: mode == DeliveryMode.helper,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                  child: Text(
+                    l10n.gettingMessagesHelperNote,
                     style: HaloType.sans(
                       size: 12.5,
                       height: 1.5,

@@ -54,6 +54,7 @@ import '../widgets/swipe_actions.dart';
 import '../notif_permission.dart';
 import '../seen_timers.dart';
 import '../delivery_mode.dart';
+import 'getting_messages_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
@@ -472,6 +473,7 @@ class _ChatsTab extends StatelessWidget {
           const _RelayDownHint(),
           const OfflineCard(),
           const _KeepsStoppingCard(),
+          const _HelperGoneCard(),
           const _NotificationsBlockedHint(),
           const UpdateHint(),
           StaggerIn(
@@ -1039,6 +1041,45 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
           CardAction(
             label: l10n.homeNotNow,
             onTap: () => appState.nudgeAnswered(),
+            ink: HaloColors.warm,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// the helper app chosen for waking kryfo is no longer on the phone. the
+// fifteen-minute job still fetches. said once
+class _HelperGoneCard extends StatelessWidget {
+  const _HelperGoneCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) => _HomeCard(
+        show: appState.helperGoneDue,
+        id: 'helper-gone',
+        tint: HaloColors.amber,
+        title: l10n.homeHelperGoneTitle,
+        line: l10n.homeHelperGoneLine,
+        lineColor: HaloColors.warm,
+        actions: [
+          CardAction(
+            label: l10n.homeHelperGoneChoose,
+            onTap: () {
+              unawaited(appState.helperGoneAnswered());
+              Navigator.of(
+                context,
+              ).push(haloRoute(const GettingMessagesScreen()));
+            },
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
+          ),
+          CardAction(
+            label: l10n.homeNotNow,
+            onTap: () => appState.helperGoneAnswered(),
             ink: HaloColors.warm,
           ),
         ],

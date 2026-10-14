@@ -8243,4 +8243,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Each chat can change it in its menu';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      'Instant and light on battery. The helper\'s server learns when you get messages, never what they say.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Fake wake-ups are mixed in, so the helper\'s server cannot tell real messages apart. Kryfo still checks in every 15 minutes.';
+
+  @override
+  String get helperSheetNeedTitle => 'You need a helper app';
+
+  @override
+  String get helperSheetNeedLine =>
+      'A helper app keeps one light connection for all your apps and wakes Kryfo when something arrives. Any UnifiedPush helper works, ntfy is a good start.';
+
+  @override
+  String get helperSheetGetNtfy => 'Get ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Other helper apps';
+
+  @override
+  String get helperSheetPickTitle => 'Choose a helper app';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo only asks it to wake the app. Your messages never pass through it.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name is set up';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name did not answer. Try again.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Your helper app is gone';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo checks in every 15 minutes until you choose another way.';
+
+  @override
+  String get homeHelperGoneChoose => 'Choose another way';
 }

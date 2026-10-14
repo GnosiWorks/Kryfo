@@ -57,7 +57,9 @@ class HaloPeriodicJobService : JobService() {
         // inside its one window, so it gets longer than a knock on sockets
         // that are already there. android allows a job ten minutes.
         main.postDelayed(run.finish, if (staysOn) 60_000 else 170_000)
-        ask(engine, run, if (staysOn) 0 else 15, up, startedAt)
+        // a knock from the helper app, or the timer
+        val why = params?.extras?.getString("why") ?: "job"
+        ask(engine, run, if (staysOn) 0 else 15, up, startedAt, why)
         return true
     }
 
@@ -71,14 +73,15 @@ class HaloPeriodicJobService : JobService() {
         run: JobRuns.Run,
         retries: Int,
         up: Boolean,
-        startedAt: Long
+        startedAt: Long,
+        why: String
     ) {
         // stopped while a retry waited: android has taken the job back
         if (run.finished) return
         val finish = run.finish
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
-                .invokeMethod("drain", mapOf("up" to up, "ago" to SystemClock.elapsedRealtime() - startedAt), object : MethodChannel.Result {
+                .invokeMethod("drain", mapOf("up" to up, "ago" to SystemClock.elapsedRealtime() - startedAt, "why" to why), object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         Log.i("halo-engine", "periodic job: drained $result")
                         main.removeCallbacks(finish)
@@ -91,7 +94,7 @@ class HaloPeriodicJobService : JobService() {
                     }
                     override fun notImplemented() {
                         if (retries > 0 && !run.finished) {
-                            val again = Runnable { ask(engine, run, retries - 1, up, startedAt) }
+                            val again = Runnable { ask(engine, run, retries - 1, up, startedAt, why) }
                             run.retry = again
                             main.postDelayed(again, 2_000)
                             return

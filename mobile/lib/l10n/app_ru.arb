@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "Изменить голос в этом сообщении",
   "voiceNotDisguised": "Не удалось изменить голос, поэтому сообщение не отправлено",
   "settingsDisguiseByDefault": "Изменять мой голос по умолчанию",
-  "settingsDisguiseByDefaultHint": "В каждом чате это можно изменить в его меню"
+  "settingsDisguiseByDefaultHint": "В каждом чате это можно изменить в его меню",
+  "gettingMessagesHelperBody": "Сразу и бережно к батарее. Сервер помощника узнаёт, когда приходят сообщения, но не их содержание.",
+  "gettingMessagesHelperNote": "К настоящим пробуждениям подмешиваются ложные, чтобы сервер помощника не отличил реальные сообщения. Kryfo всё равно проверяет почту каждые 15 минут.",
+  "helperSheetNeedTitle": "Нужно приложение-помощник",
+  "helperSheetNeedLine": "Помощник держит одно лёгкое подключение для всех приложений и будит Kryfo, когда что-то приходит. Подойдёт любой помощник UnifiedPush, например ntfy.",
+  "helperSheetGetNtfy": "Установить ntfy",
+  "helperSheetOtherApps": "Другие помощники",
+  "helperSheetPickTitle": "Выберите помощника",
+  "helperSheetPickLine": "Kryfo просит его только разбудить приложение. Ваши сообщения через него не проходят.",
+  "helperSheetSetUp": "{name} настроен",
+  "helperSheetNoAnswer": "{name} не ответил. Попробуйте ещё раз.",
+  "homeHelperGoneTitle": "Помощник удалён",
+  "homeHelperGoneLine": "Kryfo проверяет почту каждые 15 минут, пока вы не выберете другой способ.",
+  "homeHelperGoneChoose": "Выбрать другой способ"
 }

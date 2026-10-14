@@ -2173,5 +2173,18 @@
   "voiceDisguiseThisNote": "Samarkan pesan ini",
   "voiceNotDisguised": "Pesan ini tidak bisa disamarkan, jadi tidak dikirim",
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
-  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya"
+  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
+  "gettingMessagesHelperBody": "Seketika dan hemat baterai. Server aplikasi pembantu tahu kapan pesan masuk, tidak pernah isinya.",
+  "gettingMessagesHelperNote": "Bangunan palsu dicampurkan, jadi server aplikasi pembantu tidak bisa membedakan pesan asli. Kryfo tetap mengecek setiap 15 menit.",
+  "helperSheetNeedTitle": "Kamu perlu aplikasi pembantu",
+  "helperSheetNeedLine": "Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa, ntfy awal yang bagus.",
+  "helperSheetGetNtfy": "Pasang ntfy",
+  "helperSheetOtherApps": "Aplikasi pembantu lain",
+  "helperSheetPickTitle": "Pilih aplikasi pembantu",
+  "helperSheetPickLine": "Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah lewat sana.",
+  "helperSheetSetUp": "{name} sudah siap",
+  "helperSheetNoAnswer": "{name} tidak menjawab. Coba lagi.",
+  "homeHelperGoneTitle": "Aplikasi pembantumu sudah tidak ada",
+  "homeHelperGoneLine": "Kryfo mengecek setiap 15 menit sampai kamu memilih cara lain.",
+  "homeHelperGoneChoose": "Pilih cara lain"
 }

@@ -14,12 +14,11 @@ import java.security.SecureRandom
 // the helper app mode: unifiedpush spoken by hand, a handful of broadcasts
 // to a distributor such as ntfy. no connector library, from 3.0 it pulls in
 // google's tink for web push decryption and a knock has nothing to decrypt.
-// one registration per address, each with its own token, so the relay gets
-// one endpoint per address and cannot tie a person's addresses together.
-// a push is only a knock: its bytes are dropped unread and it starts the
-// same check-in the fifteen-minute job runs, and only with a token this
-// phone made. anyone can send this receiver a broadcast, so that check and
-// the rate limit in dart guard the battery.
+// sixteen registrations, each with its own token, whatever the contact
+// count (helper_slots.dart). a push is only a knock: its bytes are dropped
+// unread and it schedules the same check-in the fifteen-minute job runs,
+// and only with a token this phone made. anyone can send this receiver a
+// broadcast, so that check and KnockGate guard the battery.
 object HelperPush {
     const val ACTION_REGISTER = "org.unifiedpush.android.distributor.REGISTER"
     const val ACTION_UNREGISTER = "org.unifiedpush.android.distributor.UNREGISTER"
@@ -32,6 +31,7 @@ object HelperPush {
     private const val PREFS = "helper_push"
     private const val KEY_DISTRIBUTOR = "distributor"
     private const val TOKEN_PREFIX = "token."
+    private const val ENDPOINT_PREFIX = "endpoint."
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -103,6 +103,10 @@ object HelperPush {
         val pkg = p.getString(KEY_DISTRIBUTOR, null)
         val edit = p.edit()
         for ((k, v) in p.all) {
+            if (k.startsWith(ENDPOINT_PREFIX)) {
+                edit.remove(k)
+                continue
+            }
             if (!k.startsWith(TOKEN_PREFIX) || v !is String) continue
             if (pkg != null) {
                 try {
@@ -118,6 +122,32 @@ object HelperPush {
         edit.remove(KEY_DISTRIBUTOR).apply()
     }
 
+    // one registration let go, for a slot that gets a new endpoint
+    fun unregister(c: Context, instance: String) {
+        val p = prefs(c)
+        val token = p.getString(TOKEN_PREFIX + instance, null) ?: return
+        val pkg = p.getString(KEY_DISTRIBUTOR, null)
+        if (pkg != null) {
+            try {
+                c.sendBroadcast(Intent(ACTION_UNREGISTER).apply {
+                    setPackage(pkg)
+                    putExtra("token", token)
+                })
+            } catch (e: Exception) {
+            }
+        }
+        p.edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance).apply()
+    }
+
+    // https, or plain http to an onion: an ntfy of one's own behind tor
+    fun endpointOK(e: String): Boolean {
+        if (e.length > 512) return false
+        if (e.startsWith("https://")) return true
+        if (!e.startsWith("http://")) return false
+        val host = e.removePrefix("http://").substringBefore('/').substringBefore('?').substringBefore(':')
+        return host.endsWith(".onion")
+    }
+
     fun instanceOf(c: Context, token: String?): String? {
         if (token.isNullOrEmpty()) return null
         for ((k, v) in prefs(c).all) {
@@ -127,7 +157,24 @@ object HelperPush {
     }
 
     fun forget(c: Context, instance: String) {
-        prefs(c).edit().remove(TOKEN_PREFIX + instance).apply()
+        prefs(c).edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance).apply()
+    }
+
+    // an endpoint that came while dart was not listening is read from here
+    fun keepEndpoint(c: Context, instance: String, endpoint: String) {
+        prefs(c).edit().putString(ENDPOINT_PREFIX + instance, endpoint).apply()
+    }
+
+    // instance -> endpoint, for the registrations this phone still holds
+    fun endpoints(c: Context): Map<String, String> {
+        val all = prefs(c).all
+        val out = mutableMapOf<String, String>()
+        for ((k, v) in all) {
+            if (!k.startsWith(ENDPOINT_PREFIX) || v !is String) continue
+            val instance = k.removePrefix(ENDPOINT_PREFIX)
+            if (all.containsKey(TOKEN_PREFIX + instance)) out[instance] = v
+        }
+        return out
     }
 
     fun tell(method: String, args: Map<String, Any?>) {
@@ -147,13 +194,20 @@ class HelperPushReceiver : BroadcastReceiver() {
         when (action) {
             HelperPush.ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra("endpoint") ?: return
-                if (!endpoint.startsWith("https://") || endpoint.length > 1024) return
+                if (!HelperPush.endpointOK(endpoint)) return
+                HelperPush.keepEndpoint(context, instance, endpoint)
                 HelperPush.tell("endpoint", mapOf("instance" to instance, "endpoint" to endpoint))
             }
             HelperPush.ACTION_MESSAGE -> {
-                // the body is never read
+                // the body is never read. a job, not a call into dart: a
+                // process this broadcast started has no dart listening yet,
+                // and the job keeps it alive for the check-in
+                if (!KnockGate.allow(context)) {
+                    Log.i("halo-engine", "helper: knock dropped, too many")
+                    return
+                }
                 Log.i("halo-engine", "helper: knock")
-                HelperPush.tell("knock", mapOf("instance" to instance))
+                JobSetup.scheduleKnock(context)
             }
             HelperPush.ACTION_UNREGISTERED -> {
                 HelperPush.forget(context, instance)
