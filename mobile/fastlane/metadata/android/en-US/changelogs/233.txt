@@ -1,0 +1,9 @@
+New: bridges that step in when Tor is blocked, a clearer voice disguise per chat, a key number to check on pair codes, sharing from other apps, and private GIF search.
+
+Fixed: lost first messages to someone new, Tor stuck after a network change, and a crash at launch on some newer phones.
+
+Backups and moving to a new phone are more reliable.
+
+After updating, you may need to type your PIN once before fingerprint unlock works again.
+
+Stability and privacy improvements throughout.

@@ -5249,7 +5249,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVersion => 'Versión';
 
   @override
-  String get settings030Alpha => '0.5.0 · alfa';
+  String get settings030Alpha => '0.5.1 · alfa';
 
   @override
   String get settingsReportAnIssue => 'Informar de un problema';

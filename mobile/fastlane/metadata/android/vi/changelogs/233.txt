@@ -1,0 +1,9 @@
+Mới: cầu nối tự hoạt động khi Tor bị chặn, đổi giọng rõ hơn cho từng cuộc trò chuyện, số khóa để đối chiếu trên mã ghép nối, và tìm GIF riêng tư.
+
+Đã sửa: tin nhắn đầu tiên gửi cho người mới có thể bị mất, Tor có thể bị kẹt sau khi đổi mạng, và ứng dụng bị văng khi mở trên một số điện thoại mới.
+
+Sao lưu và chuyển sang điện thoại mới đáng tin cậy hơn.
+
+Sau khi cập nhật, có thể bạn cần nhập mã PIN một lần trước khi mở khóa bằng vân tay hoạt động trở lại.
+
+Cải thiện độ ổn định và quyền riêng tư.

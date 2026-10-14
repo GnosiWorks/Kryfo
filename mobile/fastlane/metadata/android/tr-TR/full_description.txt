@@ -1,30 +1,31 @@
-gizli bir mesajlaşma uygulaması. telefon numarası yok, e-posta yok, hesap yok.
-sen, cihazında üretilmiş bir anahtar çiftisin. biz dahil hiç kimse
-sohbetlerini gerçek bir kimliğe bağlayamaz. ancak genel bir kullanıcı adı
-alırsan aranıp bulunabilirsin.
+Gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok, hesap yok.
+Sen, cihazında üretilmiş bir anahtar çiftisin. Varsayılan rotada biz dahil hiç
+kimse sohbetlerini gerçek bir kimliğe bağlayamaz. Ancak genel bir kullanıcı
+adı alırsan aranıp bulunabilirsin.
 
-varsayılan olarak her şey tor üzerinden gider. içerik, signal protokolüyle
-uçtan uca şifrelenir. bir kişi çevrimdışıyken mesajlar aktarıcılarda bekler;
-mühürlüdürler, böylece aktarıcı kimin konuştuğu ya da ne söylendiği hakkında
-hiçbir şey öğrenmez. rehber asla yüklenmez.
+Varsayılan olarak her şey Tor üzerinden gider. İçerik, Signal protokolüyle
+uçtan uca şifrelenir. Mesajlar aktarıcılar üzerinden gider; hiçbir aktarıcı
+okuyamasın diye mühürlenirler ve varsayılan rotada aktarıcılar IP adresini ya
+da kim olduğunu asla öğrenmez. Rehber asla yüklenmez.
 
-özellikler:
+Özellikler:
 
-* kayıt için telefon numarası ya da e-posta yok
-* uçtan uca şifreleme (signal protokolü)
-* varsayılan olarak tüm trafik gömülü bir tor istemcisinden geçer
-* doğrudan onion teslimi, karşı taraf çevrimdışıysa aktarıcı üzerinden
-* fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
-* ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz
-* tüm sohbetlerinde arama, dizini şifreli veritabanında tutulur
-* süreli mesajlar: belirlenen süreden sonra silinen mesajlar
-* şifreli yerel veritabanı ve şifreli yedekler
+* Kayıt için telefon numarası ya da e-posta yok
+* Uçtan uca şifreleme (Signal protokolü)
+* Varsayılan olarak tüm trafik gömülü bir Tor istemcisinden geçer
+* Tor’un engellendiği yerde çalışır: Kryfo engeli aşmanın bir yolunu kendiliğinden bulur
+* Nostr aktarıcıları üzerinden teslim, böylece mesajlar çevrimdışı olan bir telefona da ulaşır
+* Fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
+* Ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz
+* Tüm sohbetlerinde arama, dizini şifreli veritabanında tutulur
+* Süreli mesajlar: belirlenen süreden sonra silinen mesajlar
+* Şifreli yerel veritabanı ve şifreli yedekler
 * PIN ya da biyometriyle uygulama kilidi, boş bir Kryfo açan yem PIN’i ve kendi PIN’i olan gizli sohbetler
-* diskteki medya dahil her şeyi kaldıran panik silme
+* Diskteki medya dahil her şeyi kaldıran panik silme
 * Kryfo’yu yapan kişiyle bir sohbet, istersen anonim
 * 15 dil
-* analiz yok, telemetri yok, reklam yok
+* Analiz yok, telemetri yok, reklam yok
 
-finansman: reklam yok, yatırımcı yok. bağışçıların verdikleriyle ayakta
-duruyor. destek vermek isteğe bağlı ve anonim; her özellik iki durumda da aynı
+Finansman: reklam yok, yatırımcı yok. Bağışçıların verdikleriyle ayakta
+duruyor. Destek vermek isteğe bağlı ve anonim; her özellik iki durumda da aynı
 çalışır.

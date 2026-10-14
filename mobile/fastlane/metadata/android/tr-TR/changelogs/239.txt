@@ -1,0 +1,9 @@
+Yeni: Tor engellendiğinde devreye giren köprüler, sohbet başına daha net ses gizleme, eşleştirmede kontrol için anahtar numarası ve gizli GIF arama.
+
+Düzeltildi: yeni birine giden ilk mesajların kaybolması, ağ değişikliğinden sonra Tor’un takılması ve bazı yeni telefonlarda açılışta çökme.
+
+Yedekler ve yeni telefona taşıma daha güvenilir.
+
+Güncellemeden sonra, parmak iziyle kilit açma yeniden çalışmadan önce PIN’ini bir kez girmen gerekebilir.
+
+Kararlılık ve gizlilik iyileştirmeleri.

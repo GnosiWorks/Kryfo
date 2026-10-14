@@ -6530,7 +6530,7 @@
   "@settingsVersion": {
     "description": "screens/settings_screen.dart"
   },
-  "settings030Alpha": "0.5.0 · alpha",
+  "settings030Alpha": "0.5.1 · alpha",
   "@settings030Alpha": {
     "description": "screens/settings_screen.dart"
   },

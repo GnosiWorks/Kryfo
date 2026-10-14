@@ -5202,7 +5202,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsVersion => 'Phiên bản';
 
   @override
-  String get settings030Alpha => '0.5.0 · alpha';
+  String get settings030Alpha => '0.5.1 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Báo lỗi';

@@ -1,0 +1,7 @@
+Novità: bridge automatici quando Tor è bloccato, una voce camuffata più chiara per chat, un numero della chiave da verificare all'abbinamento e ricerca GIF privata.
+
+Corretto: primi messaggi persi verso un nuovo contatto, Tor bloccato dopo un cambio di rete e un crash all'avvio su alcuni telefoni recenti.
+
+I backup e il passaggio a un nuovo telefono sono più affidabili.
+
+Dopo l'aggiornamento potresti dover digitare il PIN una volta prima che lo sblocco con l'impronta torni a funzionare.
