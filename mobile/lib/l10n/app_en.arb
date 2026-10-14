@@ -1630,6 +1630,16 @@
   "@chatNewMessages": {
     "description": "screens/chat_screen.dart"
   },
+  "chatEarlierMessagesArrived": "{count, plural, one{{count} earlier message arrived} other{{count} earlier messages arrived}}",
+  "@chatEarlierMessagesArrived": {
+    "description": "widgets/earlier_chip.dart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "chatUnsave": "Unsave",
   "@chatUnsave": {
     "description": "screens/chat_screen.dart"

@@ -1315,6 +1315,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatNewMessages => 'رسائل جديدة';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'وصلت ⁨$countString⁩ رسالة سابقة',
+      many: 'وصلت ⁨$countString⁩ رسالة سابقة',
+      few: 'وصلت ⁨$countString⁩ رسائل سابقة',
+      two: 'وصلت رسالتان سابقتان',
+      one: 'وصلت رسالة سابقة',
+      zero: 'وصلت ⁨$countString⁩ رسالة سابقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => 'إلغاء الحفظ';
 
   @override

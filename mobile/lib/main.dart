@@ -9973,17 +9973,19 @@ Future<void> openChatForHalo(String? haloId) =>
 
 // a tapped notification names its chat by tag only. the tag is read once
 // the app lock is open, in the containers of the session it opened to
-Future<void> openChatForNotif(String? tag) async {
-  if (tag == null || tag.isEmpty) return;
+Future<void> openChatForNotif(String? payload) async {
+  if (payload == null || payload.isEmpty) return;
+  final (tag, uid) = notifPayloadParts(payload);
   await lockGuard.afterUnlock(() async {
     final chat = await notifChatFor(tag);
-    if (chat != null) await openNotifChat(chat);
+    if (chat != null) await openNotifChat(chat, uid);
   }, key: 'notif:$tag');
 }
 
-// what a resolved tap opens. tests watch it here
+// what a resolved tap opens, on the message it rang for. tests watch it
+// here
 @visibleForTesting
-Future<void> Function(String chat) openNotifChat = _openChatFor;
+Future<void> Function(String chat, String? uid) openNotifChat = _openChatFor;
 
 // the support summary's payload is the inbox itself, the same on every post
 @visibleForTesting
@@ -10045,7 +10047,7 @@ Future<NotifTarget?> notifTargetFor(String payload) async {
   return null;
 }
 
-Future<void> _openChatFor(String? haloId) async {
+Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
@@ -10057,7 +10059,7 @@ Future<void> _openChatFor(String? haloId) async {
   if (isDevChat(haloId)) {
     if (haloId == currentChatPeer) return;
     if ((await session.devChat.load())?.chatId != haloId) return;
-    nav.push(devChatRoute(haloId));
+    nav.push(devChatRoute(haloId, jumpToUid: uid));
     return;
   }
   final target = await notifTargetFor(haloId);
@@ -10067,7 +10069,7 @@ Future<void> _openChatFor(String? haloId) async {
     // one already open is gone back to, never stacked twice
     case NotifGroup(:final groupId):
       if (!backToOpenGroup(nav, groupId)) {
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+        nav.push(haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)));
       }
       return;
     case NotifRequests():
@@ -10085,6 +10087,7 @@ Future<void> _openChatFor(String? haloId) async {
         avatarSeed: haloId,
         avatarChoice: (row['avatar'] as num?)?.toInt(),
         nickname: row['nickname'] as String?,
+        jumpToUid: uid,
       ),
     ),
   );

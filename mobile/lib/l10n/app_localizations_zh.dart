@@ -1226,6 +1226,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatNewMessages => '新消息';
 
   @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '收到 $countString 条更早的消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatUnsave => '取消收藏';
 
   @override
@@ -9110,6 +9124,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatNewMessages => '新訊息';
+
+  @override
+  String chatEarlierMessagesArrived(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '收到 $countString 則更早的訊息',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatUnsave => '取消收藏';

@@ -2007,6 +2007,12 @@ abstract class AppLocalizations {
   /// **'New messages'**
   String get chatNewMessages;
 
+  /// widgets/earlier_chip.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} earlier message arrived} other{{count} earlier messages arrived}}'**
+  String chatEarlierMessagesArrived(int count);
+
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:

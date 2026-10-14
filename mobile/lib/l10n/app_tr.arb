@@ -422,6 +422,7 @@
   "chatMS": "{m} dk {s} sn",
   "chatS2": "{s} sn",
   "chatNewMessages": "Yeni mesajlar",
+  "chatEarlierMessagesArrived": "{count, plural, one{{count} önceki mesaj geldi} other{{count} önceki mesaj geldi}}",
   "chatUnsave": "Kaydı kaldır",
   "chatForward": "İlet",
   "commonShare": "Paylaş",

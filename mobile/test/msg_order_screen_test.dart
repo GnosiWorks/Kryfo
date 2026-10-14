@@ -14,12 +14,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
         HaloEngine,
         appState,
         makePreKeyBundleB64,
+        openChatForNotif,
         processPeerBundle,
+        rootNavKey,
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
@@ -166,6 +169,9 @@ class _Db extends DevTestDb {
     for (final r in _thread(peerId))
       if ((r['id'] as int) > afterRowid) r,
   ];
+  // the tag this chat's notifications go under
+  @override
+  Future<String?> notifChatOf(String tag) async => tag == 'tag1' ? _peer : null;
   @override
   Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
     List<String> msgUids,
@@ -485,6 +491,87 @@ void main() {
     expect(text('note 31'), findsOneWidget);
     expect(y(t, 'note 30'), lessThan(y(t, 'late three')));
     expect(y(t, 'late three'), lessThan(y(t, 'note 31')));
+    await devClose(t);
+  });
+
+  // the line for what came up the thread, as it reads
+  Finder line(int n) =>
+      find.text(l10n.chatEarlierMessagesArrived(n)).hitTestable();
+
+  testWidgets('an honest reply that came late, half an hour up, shows the '
+      'line, and a tap lands on it', (t) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(line(1), findsNothing);
+    // written while this phone was away, half an hour above the bottom
+    await cameLate('late5', 'late five', note(24) + 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(seen('late five'), isFalse);
+    expect(line(1), findsOneWidget);
+    await t.tap(line(1));
+    await settle(t, 14);
+    expect(seen('late five'), isTrue);
+    final mid = t.getSize(find.byType(ChatScreen)).height / 2;
+    expect((y(t, 'late five') - mid).abs(), lessThan(200));
+    expect(line(1), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('one that came while the chat was shut shows the line when '
+      'it opens', (t) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    await devClose(t);
+    await cameLate('late6', 'late six', note(24) + 60000);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(line(1), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('no line for what lands at the bottom, or just above it', (
+    t,
+  ) async {
+    await seed(40);
+    await devOpen(t, chat());
+    await settle(t);
+    await cameLate(
+      'fresh2',
+      'fresh two',
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    // a minute before the bottom: the order shows it
+    await cameLate('near', 'near one', note(39) - 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(seen('fresh two'), isTrue);
+    expect(find.byKey(const ValueKey('earlier-chip')), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a tapped notification opens the chat on the message it rang '
+      'for', (t) async {
+    lockState.openForTest();
+    await seed(40);
+    await cameLate('late7', 'late seven', note(24) + 60000);
+    t.view.physicalSize = const Size(1000, 1800);
+    t.view.devicePixelRatio = 2;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(
+      MaterialApp(
+        navigatorKey: rootNavKey,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const SizedBox(),
+      ),
+    );
+    await t.runAsync(() => openChatForNotif('tag1/late7'));
+    await settle(t, 16);
+    expect(find.byType(ChatScreen), findsOneWidget);
+    expect(seen('late seven'), isTrue);
     await devClose(t);
   });
 }

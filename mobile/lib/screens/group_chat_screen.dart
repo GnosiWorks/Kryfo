@@ -58,6 +58,7 @@ import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
 import '../msg_order.dart';
+import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
 import '../media_send.dart' show cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
@@ -292,6 +293,10 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
       ),
     );
 
+// the newest row id held when a group was last left, keyed by
+// session.chatKey like the drafts
+final Map<String, int> _lastRowPerGroup = {};
+
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
   // open at this message, lit for a moment (from search)
@@ -330,6 +335,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // others' messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
   int _unseenNew = 0;
+  // came in written well before the bottom, up the thread (EarlierChip)
+  final _earlier = EarlierArrivals();
   String _groupName = '';
   int _memberCount = 0;
   // who this phone is in this chat: its kryfo id, or its key in a room
@@ -562,6 +569,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
     _scrollCtrl.addListener(_reads.look);
+    _scrollCtrl.addListener(_lookEarlier);
   }
 
   final RowAnchors _anchors = RowAnchors();
@@ -703,6 +711,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       setState(() {});
     }
   }
+
+  // the line for what came up the thread, above the jump button
+  Widget _earlierLine() => Positioned(
+    left: 16,
+    right: 16,
+    bottom: 0,
+    child: Center(
+      child: EarlierChip(
+        count: _earlier.count,
+        lifted: _showScrollDown,
+        onTap: _toEarlier,
+      ),
+    ),
+  );
 
   // jump to newest, same control as 1:1
   Widget _scrollDownButton() {
@@ -1024,6 +1046,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       } else if (!_loaded || (nearEnd && _jumpUid == null)) {
         _scrollToEnd(instant: true);
       }
+      final after = _lastRowPerGroup[_memo];
+      if (!_loaded && after != null) await _earlierSince(after);
+      if (_earlier.count > 0) _lookEarlierSoon();
       _loaded = true;
       unawaited(_refreshPinCount());
       await _loadShieldFlags();
@@ -1325,6 +1350,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
     final ours = fresh.any((m) => m.direction == 'out');
     final follow = (_nearNewest && fresh.any(below)) || ours;
+    for (final m in fresh) {
+      if (m.direction != 'out' &&
+          m.msgUid != null &&
+          last != null &&
+          cameEarlier(
+            m.when.millisecondsSinceEpoch,
+            last.when.millisecondsSinceEpoch,
+          )) {
+        _earlier.add(m.msgUid!);
+      }
+    }
     if (!follow) {
       holdRowsInView(
         ctrl: _scrollCtrl,
@@ -1337,7 +1373,65 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    _lookEarlierSoon();
     if (follow) _scrollToEnd();
+  }
+
+  // what came in after row [after] and went up the thread, well above the
+  // newest row read then: in the rows held or above them
+  Future<void> _earlierSince(int after) async {
+    _GMsg? read;
+    for (final m in _messages) {
+      if (m.rowid > 0 && m.rowid <= after) read = m;
+    }
+    if (read == null) return;
+    final bottom = read.when.millisecondsSinceEpoch;
+    final first = _oldestHeld();
+    final rows = _withoutBlocked(
+      await session.groupMessagesAfter(widget.groupId, after),
+    );
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid == null || r['direction'] == 'out') continue;
+      final at = rowWrittenAt(r);
+      final id = (r['rowid'] as int?) ?? 0;
+      final held = _messages.any((m) => m.msgUid == uid);
+      final up = held
+          ? byWritten(at, id, bottom, read.rowid) < 0
+          : first != null &&
+                byWritten(
+                      at,
+                      id,
+                      first.when.millisecondsSinceEpoch,
+                      first.rowid,
+                    ) <
+                    0;
+      if (up && cameEarlier(at, bottom)) _earlier.add(uid);
+    }
+  }
+
+  // each one up the thread that is on screen now has been seen
+  void _lookEarlier() {
+    if (!mounted || _earlier.count == 0) return;
+    if (_earlier.seenIn(_anchors)) setState(() {});
+  }
+
+  void _lookEarlierSoon() =>
+      WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
+
+  // the line's tap: to the first one up the thread, the thread brought in
+  // whole when it is above the pages held
+  Future<void> _toEarlier() async {
+    final uid = _earlier.first;
+    if (uid == null) return;
+    setState(() => _earlier.drop(uid));
+    if (!_messages.any((m) => m.msgUid == uid)) {
+      _pagedOut = true;
+      await _load();
+      if (!mounted) return;
+    }
+    final at = _messages.indexWhere((m) => m.msgUid == uid);
+    if (at >= 0) _scrollToIndex(at);
   }
 
   // .position asserts exactly one attached scroll view, and during a route
@@ -3533,6 +3627,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } else {
       draftPerGroup[_memo] = draft;
     }
+    _lastRowPerGroup[_memo] = _messages.fold(
+      0,
+      (a, m) => m.rowid > a ? m.rowid : a,
+    );
     _menuClose?.call();
     _searchCtrl.dispose();
     _scrollCtrl.removeListener(_onGroupScroll);
@@ -3729,6 +3827,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             ),
                             // over the list, or the list takes its taps
                             _scrollDownButton(),
+                            _earlierLine(),
                           ],
                         ),
                       ),

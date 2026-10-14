@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/polls.dart' show PollVote;
@@ -243,6 +244,23 @@ void main() {
     expect(shown(), reading);
     expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
     expect(t.widget<JumpDownButton>(find.byType(JumpDownButton)).count, 0);
+    await close(t);
+  });
+
+  testWidgets('one that came late well up the thread shows the line, and '
+      'a tap lands on it', (t) async {
+    await open(t);
+    final line = find.text(l10n.chatEarlierMessagesArrived(1)).hitTestable();
+    expect(line, findsNothing);
+    db.add('late four', note(60) + 60000);
+    appState.chatChanged('group:$_group');
+    await frames(t, 6);
+    expect(seen('late four'), isFalse);
+    expect(line, findsOneWidget);
+    await t.tap(line);
+    await frames(t, 20);
+    expect(seen('late four'), isTrue);
+    expect(line, findsNothing);
     await close(t);
   });
 }

@@ -400,6 +400,22 @@ Future<void> showMessageNotification({
     title: title,
     body: body,
     notificationDetails: NotificationDetails(android: details),
-    payload: tag,
+    payload: notifPayloadOf(tag, msgUid),
   );
 }
+
+// what a tap hands back: the chat's tag, and the message it rang for so the
+// chat opens on it. the uid is random like the tag and names no chat
+String notifPayloadOf(String tag, String? msgUid) =>
+    msgUid != null && _sentUid.hasMatch(msgUid) ? '$tag/$msgUid' : tag;
+
+/// a tapped payload's tag and message uid
+(String, String?) notifPayloadParts(String payload) {
+  final at = payload.indexOf('/');
+  if (at < 0) return (payload, null);
+  final uid = payload.substring(at + 1);
+  return (payload.substring(0, at), _sentUid.hasMatch(uid) ? uid : null);
+}
+
+// what a sender may put in a uid that still opens on it
+final _sentUid = RegExp(r'^[A-Za-z0-9_-]{1,64}$');

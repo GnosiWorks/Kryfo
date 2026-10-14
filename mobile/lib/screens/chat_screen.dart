@@ -42,6 +42,7 @@ import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../msg_order.dart';
+import '../widgets/earlier_chip.dart';
 import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
@@ -1074,6 +1075,8 @@ class _ChatScreenState extends State<ChatScreen>
   // their messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
   int _unseenNew = 0;
+  // came in written well before the bottom, up the thread (EarlierChip)
+  final _earlier = EarlierArrivals();
   String? _rippleUid;
   _Msg? _replyFlash;
   String? _note;
@@ -1320,6 +1323,7 @@ class _ChatScreenState extends State<ChatScreen>
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
     _scrollCtrl.addListener(_reads.look);
+    _scrollCtrl.addListener(_lookEarlier);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _timers.every(const Duration(seconds: 1), () {
       if (mounted) _checkInbox();
@@ -1659,6 +1663,27 @@ class _ChatScreenState extends State<ChatScreen>
     final have = _messages.map((m) => m.msgUid).toSet();
     // one written before the pages held comes with the page it is in
     final oldest = _hasMore ? _oldestHeld() : null;
+    final bottom = _messages.lastOrNull;
+    if (oldest != null && bottom != null) {
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        if (uid == null || have.contains(uid) || r['direction'] == 'out') {
+          continue;
+        }
+        final at = rowWrittenAt(r);
+        final above =
+            byWritten(
+              at,
+              (r['rowid'] as int?) ?? 0,
+              oldest.when.millisecondsSinceEpoch,
+              oldest.rowid,
+            ) <=
+            0;
+        if (above && cameEarlier(at, bottom.when.millisecondsSinceEpoch)) {
+          _earlier.add(uid);
+        }
+      }
+    }
     // no new row we don't already hold means a full reload: covers edits,
     // reactions and deletes
     final brandNew = rows
@@ -1677,6 +1702,7 @@ class _ChatScreenState extends State<ChatScreen>
         )
         .toList();
     if (brandNew.isEmpty) {
+      if (_earlier.count > 0) _lookEarlierSoon();
       _loadMessages();
       return;
     }
@@ -1741,6 +1767,17 @@ class _ChatScreenState extends State<ChatScreen>
     final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
     final ours = fresh.any((m) => m.direction == 'out');
     final follow = (snap && fresh.any(below)) || ours;
+    for (final m in fresh) {
+      if (m.direction != 'out' &&
+          m.msgUid != null &&
+          last != null &&
+          cameEarlier(
+            m.when.millisecondsSinceEpoch,
+            last.when.millisecondsSinceEpoch,
+          )) {
+        _earlier.add(m.msgUid!);
+      }
+    }
     if (!follow && !_jumpActive) {
       holdRowsInView(
         ctrl: _scrollCtrl,
@@ -1753,6 +1790,7 @@ class _ChatScreenState extends State<ChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    _lookEarlierSoon();
     _applySecureContent();
     // clear the home badge for what we are reading. a backed-out chat stays
     // in the tree for a while, so only the open chat gets to clear.
@@ -2633,6 +2671,14 @@ class _ChatScreenState extends State<ChatScreen>
         }
       }
       _unreadResolved = true;
+      // what came since and went up the thread, above the newest read
+      final read = start > 0 && !loaded[start - 1].welcome
+          ? loaded[start - 1]
+          : null;
+      if (after != null && read != null) {
+        await _earlierSince(after, read, loaded);
+        if (!mounted) return;
+      }
     }
     // a reloaded 'sending' row has no send future left to resolve it, so it
     // becomes failed (or parked) and retryable
@@ -2699,6 +2745,52 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (snap) {
       _scrollToEnd(instant: true);
     }
+    if (_earlier.count > 0) _lookEarlierSoon();
+  }
+
+  // what came in after row [after] and went up the thread, well above
+  // [read], the newest row read: in the rows [loaded] or above them
+  Future<void> _earlierSince(int after, _Msg read, List<_Msg> loaded) async {
+    final bottom = read.when.millisecondsSinceEpoch;
+    final first = loaded.where((m) => !m.welcome).firstOrNull;
+    final rows = await session.messagesAfter(widget.peerHaloId, after);
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid == null || r['direction'] == 'out') continue;
+      final at = rowWrittenAt(r);
+      final id = (r['rowid'] as int?) ?? 0;
+      final held = loaded.any((m) => m.msgUid == uid);
+      // one held is up the thread when it sorts before the newest read
+      final up = held
+          ? byWritten(at, id, bottom, read.rowid) < 0
+          : first != null &&
+                byWritten(
+                      at,
+                      id,
+                      first.when.millisecondsSinceEpoch,
+                      first.rowid,
+                    ) <
+                    0;
+      if (up && cameEarlier(at, bottom)) _earlier.add(uid);
+    }
+  }
+
+  // each one up the thread that is on screen now has been seen
+  void _lookEarlier() {
+    if (!mounted || _earlier.count == 0) return;
+    if (_earlier.seenIn(_anchors)) setState(() {});
+  }
+
+  void _lookEarlierSoon() =>
+      WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
+
+  // the line's tap: to the first one up the thread, the thread brought in
+  // whole when it is above the pages held
+  Future<void> _toEarlier() async {
+    final uid = _earlier.first;
+    if (uid == null) return;
+    setState(() => _earlier.drop(uid));
+    await _jumpToPin(uid);
   }
 
   // the oldest row on screen that the database has, in the chat's order
@@ -5356,6 +5448,18 @@ class _ChatScreenState extends State<ChatScreen>
                           count: _unseenNew,
                           label: l10n.chatJumpToTheNewest,
                           onTap: _scrollToBottom,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 0,
+                      child: Center(
+                        child: EarlierChip(
+                          count: _earlier.count,
+                          lifted: _showScrollDown,
+                          onTap: _toEarlier,
                         ),
                       ),
                     ),

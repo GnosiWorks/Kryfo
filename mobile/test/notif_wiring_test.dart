@@ -89,6 +89,7 @@ void main() {
   late _Shade shade;
   late ArrivalRows live;
   late List<String> opened;
+  late List<String?> openedOn;
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -100,7 +101,11 @@ void main() {
     useDatabasesForTest(live, Session(live));
     lockState.openForTest();
     opened = [];
-    openNotifChat = (chat) async => opened.add(chat);
+    openedOn = [];
+    openNotifChat = (chat, uid) async {
+      opened.add(chat);
+      openedOn.add(uid);
+    };
   });
 
   tearDown(() {
@@ -219,5 +224,24 @@ void main() {
     expect(src, contains('onTap: openChatForNotif,'));
     expect(src, contains('tagsOf: (chat) => session.notifTagsOf(chat),'));
     expect(src, isNot(contains('initNotifications(onTap: openChatForHalo')));
+  });
+
+  test('a ring carries the message it rang for, and its tap opens the chat '
+      'on it', () async {
+    await const AppIo().notify(
+      title: 'Kryfo',
+      body: 'new message',
+      payload: 'calm-orbit-lantern',
+      on: live,
+      msgUid: 'Ab3_x-9',
+    );
+    final tag = live.notifTags['calm-orbit-lantern']!;
+    expect(shade.payloads, ['$tag/Ab3_x-9']);
+    await openChatForNotif(shade.payloads.single);
+    expect(opened, ['calm-orbit-lantern']);
+    expect(openedOn, ['Ab3_x-9']);
+    // a uid no sender could have made opens the chat alone
+    expect(notifPayloadParts('$tag/../../x'), (tag, null));
+    expect(notifPayloadOf(tag, '../x'), tag);
   });
 }
