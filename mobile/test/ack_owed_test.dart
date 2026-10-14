@@ -12,7 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, HaloDb, kFrameTries, useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -279,6 +280,60 @@ void main() {
     await settle();
     expect(io.tried, isEmpty);
     expect(_owed(dMem, _dee), 1);
+  });
+
+  test(
+    'a block takes the owed ack with it: an unblock sends nothing',
+    () async {
+      await acceptOffline(app, _bob);
+      expect(_owed(mem, _bob), 1);
+      await db.setBlocked(_bob, true);
+      expect(_owed(mem, _bob), 0);
+      await db.setBlocked(_bob, false);
+      io.down = false;
+      app.noteOnline(true);
+      await app.drainOutbox();
+      await app.drainAcksForTest();
+      await settle();
+      expect(acks(_bob), isEmpty);
+    },
+  );
+
+  test('a deleted chat and a declined request owe nothing, nor does '
+      'someone blocked', () async {
+    await db.setAckOwed(_bob, true);
+    await db.deleteConversation(_bob);
+    expect(_owed(mem, _bob), 0);
+    await mem.update('contacts', {'ack_owed': 1, 'accepted': 0});
+    await db.declineRequest(_bob);
+    expect(_owed(mem, _bob), 0);
+    await mem.update('contacts', {'ack_owed': 1, 'accepted': 1, 'blocked': 1});
+    expect(await db.isAckOwed(_bob), isFalse);
+  });
+
+  test('an accept owes the ack in the same write that accepts', () async {
+    await mem.update('contacts', {'accepted': 0});
+    await db.acceptRequest(_bob);
+    expect(_owed(mem, _bob), 1);
+    // an add that takes in someone who asked
+    await db.upsertContact(_vic, '', 'x-$_vic', owe: true);
+    expect(_owed(mem, _vic), 1);
+    // a plain add owes nothing
+    await db.upsertContact(_dee, '', 'x-$_dee');
+    expect(_owed(mem, _dee), 0);
+  });
+
+  test('a route that keeps failing lets the ack go after as many tries as '
+      'a queued reaction gets', () async {
+    io.down = true;
+    await app.afterAccept(_bob);
+    await settle();
+    final before = io.tried.length;
+    app.ackTriesForTest(db, _bob, kFrameTries);
+    await app.drainAcksForTest();
+    await settle();
+    expect(io.tried, hasLength(before));
+    expect(_owed(mem, _bob), 0);
   });
 
   test('the ack that went unlocks the requester', () async {

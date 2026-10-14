@@ -307,7 +307,10 @@ class Session {
     String onion,
     String xpub, {
     int accepted = 1,
-  }) => _ofPeer(haloId).upsertContact(haloId, onion, xpub, accepted: accepted);
+    bool owe = false,
+  }) => _ofPeer(
+    haloId,
+  ).upsertContact(haloId, onion, xpub, accepted: accepted, owe: owe);
 
   // ---- one group ----
   Future<void> addGroupMember(String groupId, String haloId) =>

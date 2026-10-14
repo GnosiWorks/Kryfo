@@ -218,6 +218,7 @@ class _GatedRows extends ArrivalRows {
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     final g = gate;
     gate = null;

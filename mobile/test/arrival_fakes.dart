@@ -448,6 +448,7 @@ class ArrivalRows implements HaloDb {
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     _hit('upsertContact', haloId, null);
     final p = people[haloId];
@@ -660,7 +661,9 @@ class ArrivalRows implements HaloDb {
       people[haloId]?['ack_owed'] = owed ? 1 : 0;
   @override
   Future<bool> isAckOwed(String haloId) async =>
-      people[haloId]?['ack_owed'] == 1;
+      people[haloId]?['ack_owed'] == 1 &&
+      people[haloId]?['accepted'] == 1 &&
+      people[haloId]?['blocked'] != 1;
   @override
   Future<List<String>> ackOwed() async => [
     for (final e in people.entries)

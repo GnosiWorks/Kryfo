@@ -2591,6 +2591,7 @@ class HaloDb implements GroupOwedStore {
           'voice_disguise': null,
           'muted': 0,
           'pinned': 0,
+          'ack_owed': 0,
         },
         where: 'halo_id = ?',
         whereArgs: [haloId],
@@ -2778,7 +2779,11 @@ class HaloDb implements GroupOwedStore {
     await db.transaction((t) async {
       await t.update(
         'contacts',
-        {'blocked': blocked ? 1 : 0},
+        {
+          'blocked': blocked ? 1 : 0,
+          // an unblock is no accept: what an accept owed them goes with it
+          if (blocked) 'ack_owed': 0,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
@@ -3086,11 +3091,13 @@ class HaloDb implements GroupOwedStore {
     return ((r.first['c'] as int?) ?? 0) > 0;
   }
 
+  // the accept and the word it owes them in one write: a death before the
+  // word goes leaves it owed
   Future<void> acceptRequest(String haloId) async {
     final db = await open();
     await db.update(
       'contacts',
-      {'accepted': 1},
+      {'accepted': 1, 'ack_owed': 1},
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
@@ -3142,7 +3149,7 @@ class HaloDb implements GroupOwedStore {
       // a new request.
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0},
+        {'accepted': 0, 'archived': 1, 'unread': 0, 'ack_owed': 0},
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
@@ -3151,11 +3158,14 @@ class HaloDb implements GroupOwedStore {
     await _scrubMedia(files);
   }
 
+  // [owe]: an add that takes in someone who asked, which owes them word
+  // that they are in, kept in the same write
   Future<void> upsertContact(
     String haloId,
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     // only the dev chat's own code writes its row, and no one else gets
     // the developer's words or key
@@ -3178,6 +3188,7 @@ class HaloDb implements GroupOwedStore {
         'accepted': accepted,
         // someone who wrote first gave their name themselves
         if (accepted == 0) 'name_check': kNameAsk | kNameSays,
+        if (owe && accepted == 1) 'ack_owed': 1,
       });
     } else {
       // xpub changed on someone we already know = they reinstalled, or its a
@@ -3219,6 +3230,7 @@ class HaloDb implements GroupOwedStore {
           if (xpub.isNotEmpty) 'xpub': xpub,
           'last_seen': now,
           'accepted': nextAccepted,
+          if (owe && nextAccepted == 1) 'ack_owed': 1,
           if (wasParked) 'archived': 0,
           if (changed) 'key_changed': 1,
           if (changed) 'verified': 0,
@@ -3462,7 +3474,7 @@ class HaloDb implements GroupOwedStore {
     final rows = await d.query(
       'contacts',
       columns: ['ack_owed'],
-      where: 'halo_id = ?',
+      where: 'halo_id = ? AND accepted = 1 AND blocked = 0',
       whereArgs: [haloId],
       limit: 1,
     );
@@ -9344,7 +9356,12 @@ Future<(String, bool)> handleHaloUriAdded(
         return (l10n.appBundleError(e), false);
       }
     }
-    await session.upsertContact(parsed['id']!, parsed['onion']!, '');
+    await session.upsertContact(
+      parsed['id']!,
+      parsed['onion']!,
+      '',
+      owe: asked,
+    );
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
     await _noteHowAdded(id, scanned: scanned, already: already, taken: taken);
     // nothing reaches them until a first message does: their chat opens,
@@ -9382,7 +9399,12 @@ Future<(String, bool)> handleHaloUriAdded(
     // an old card is an add all the same, and takes in who asked
     final wasIn = await session.isAccepted(id);
     final asked = !wasIn && await session.askedBefore(id);
-    await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
+    await session.upsertContact(
+      id,
+      parsed['onion']!,
+      parsed['xpub']!,
+      owe: asked,
+    );
     await _noteHowAdded(id, scanned: scanned, already: wasIn, taken: taken);
     if (!sessionQuiet) await appState.subscribePeer(id, fresh: true);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
@@ -19779,7 +19801,7 @@ class AppState extends ChangeNotifier {
       if (gone == null || at.difference(gone) >= _offlineSpell) {
         _outboxTries.clear();
         _outboxNextAt.clear();
-        _ackTries.clear();
+        // the wait goes, the count toward the cap stays
         _ackNextAt.clear();
       }
       // the status poll sees the route come up and drains
@@ -20847,7 +20869,6 @@ class AppState extends ChangeNotifier {
       _outboxNextAt.clear();
       _outboxTries.clear();
       _ackNextAt.clear();
-      _ackTries.clear();
       await drainOutbox(wait: true);
       await _countOutbox();
     } finally {
@@ -21606,6 +21627,22 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Future<void> drainAcksForTest() => _drainAcks();
 
+  @visibleForTesting
+  void ackTriesForTest(HaloDb d, String haloId, int n) =>
+      _ackTries[d.container.chatKey(haloId)] = n;
+
+  Future<bool> _letAckGo(HaloDb d, String haloId, String key) async {
+    try {
+      await d.setAckOwed(haloId, false);
+      dlog('accept ack: let go after $kFrameTries tries');
+    } catch (e) {
+      dlog('accept ack: not let go (${e.runtimeType})');
+    }
+    _ackTries.remove(key);
+    _ackNextAt.remove(key);
+    return false;
+  }
+
   Future<void> _ackRound() async {
     final going = <Future<bool>>[];
     for (final d in [live, ?_openVault]) {
@@ -21627,6 +21664,11 @@ class AppState extends ChangeNotifier {
         final next = _ackNextAt[key];
         if (next != null && now < next) continue;
         final tries = _ackTries[key] ?? 0;
+        // tried as long as a queued reaction is, then let go
+        if (tries >= kFrameTries) {
+          going.add(_letAckGo(d, id, key));
+          continue;
+        }
         _ackTries[key] = tries + 1;
         _ackNextAt[key] = now + queueGap(tries);
         going.add(_sendAckOf(d, id));

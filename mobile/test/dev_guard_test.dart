@@ -363,6 +363,7 @@ class _Mem implements HaloDb {
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     _hit('upsertContact', haloId, null);
     final p = people[haloId];
