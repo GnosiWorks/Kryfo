@@ -7,8 +7,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
 import 'package:kryfo/main.dart'
-    show HaloDb, kPhotoWall, wallKey, wallpaperTable;
+    show HaloDb, adoptWallpaperFiles, kPhotoWall, wallKey, wallpaperTable;
 import 'package:kryfo/vault_life.dart' show chatTables;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -234,4 +235,77 @@ void main() {
       throwsA(anything),
     );
   }, skip: skip);
+
+  test('the photo files of before are taken in at the upgrade, cleaned, '
+      'and handed back to be shredded; one that will not read leaves its '
+      'chat on the default', () async {
+    final docs = Directory.systemTemp.createTempSync('walls');
+    addTearDown(() => docs.deleteSync(recursive: true));
+    final dir = Directory('${docs.path}/wallpapers_v')..createSync();
+    final gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+    expect(jpegHasExif(gps), isTrue);
+    final kept = File('${dir.path}/$_peer.jpg')..writeAsBytesSync(gps);
+    final broken = File('${dir.path}/broken.jpg')
+      ..writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE1, 0, 9]);
+    final db = SqliteMem.open()!;
+    await db.execute(
+      'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, atmosphere TEXT)',
+    );
+    await db.execute(
+      'CREATE TABLE groups (group_id TEXT PRIMARY KEY, atmosphere TEXT)',
+    );
+    await db.insert('contacts', {
+      'halo_id': _peer,
+      'atmosphere': 'image:${kept.path}',
+    });
+    await db.insert('contacts', {
+      'halo_id': _other,
+      'atmosphere': 'image:${dir.path}/gone.jpg',
+    });
+    await db.insert('contacts', {'halo_id': 'plain', 'atmosphere': 'dusk'});
+    await db.insert('groups', {
+      'group_id': _group,
+      'atmosphere': 'image:${broken.path}',
+    });
+    // a path nothing here wrote is never named for a shred
+    await db.insert('contacts', {
+      'halo_id': 'odd',
+      'atmosphere': 'image:${docs.path}/notes.txt',
+    });
+    await wallpaperTable(db);
+    final files = await adoptWallpaperFiles(db);
+    expect(files.toSet(), {kept.path, '${dir.path}/gone.jpg', broken.path});
+    final row = await db.rawQuery(
+      'SELECT photo FROM wallpapers WHERE chat = ?',
+      [_peer],
+    );
+    final photo = row.single['photo']! as Uint8List;
+    expect(jpegHasExif(photo), isFalse);
+    expect(await db.rawQuery('SELECT halo_id, atmosphere FROM contacts'), [
+      {'halo_id': _peer, 'atmosphere': kPhotoWall},
+      {'halo_id': _other, 'atmosphere': null},
+      {'halo_id': 'plain', 'atmosphere': 'dusk'},
+      {'halo_id': 'odd', 'atmosphere': null},
+    ]);
+    expect(await db.rawQuery('SELECT atmosphere FROM groups'), [
+      {'atmosphere': null},
+    ]);
+    expect(await db.rawQuery('SELECT chat FROM wallpapers ORDER BY chat'), [
+      {'chat': _peer},
+    ]);
+  }, skip: skip);
+
+  test('the upgrade shreds what it took in once it is written', () {
+    final at = steps.indexOf('if (oldV < 80) {');
+    expect(
+      steps.substring(at),
+      contains('adopted = await adoptWallpaperFiles(db);'),
+    );
+    final after = src.substring(
+      src.indexOf('adopted = await adoptWallpaperFiles'),
+    );
+    final shred = after.indexOf('await shredFile(f);');
+    expect(shred, greaterThan(0));
+    expect(shred, lessThan(after.indexOf('// retired while it was opening')));
+  });
 }

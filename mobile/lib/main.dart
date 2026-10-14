@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
+import 'image_strip.dart' show photoToSend;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
@@ -1477,6 +1478,8 @@ class HaloDb implements GroupOwedStore {
     if (_db != null) return _db!;
     final path = await container.dbPath();
     final pw = await _passphrase();
+    // photo files an upgrade took in, shredded once it is written
+    var adopted = const <String>[];
     _db = await openDatabase(
       path,
       password: pw,
@@ -2140,11 +2143,20 @@ class HaloDb implements GroupOwedStore {
           await notifRingTables(db);
         }
         if (oldV < 80) {
-          // chats' wallpaper photos and the default, kept in here
+          // chats' wallpaper photos and the default, kept in here, and the
+          // photo files of before taken in
           await wallpaperTable(db);
+          adopted = await adoptWallpaperFiles(db);
         }
       },
     );
+    for (final f in adopted) {
+      try {
+        await shredFile(f);
+      } catch (_) {
+        // shredFile logs its own failure
+      }
+    }
     // retired while it was opening
     if (_retired) {
       await close();
@@ -8556,6 +8568,52 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
       'DELETE FROM wallpapers WHERE chat = $newKey; END',
     );
   }
+}
+
+// the photos an older version kept as files in the clear, taken in at the
+// upgrade to 80: each cleaned as a photo that leaves is, kept here, its
+// chat marked photo. one that will not read or clean leaves its chat on the
+// default. the files are handed back to be shredded once the upgrade is
+// written; only a file in a wallpapers folder is ever named
+Future<List<String>> adoptWallpaperFiles(DatabaseExecutor db) async {
+  final files = <String>[];
+  for (final (table, id, group) in const [
+    ('contacts', 'halo_id', false),
+    ('groups', 'group_id', true),
+  ]) {
+    for (final r in await db.query(
+      table,
+      columns: [id, 'atmosphere'],
+      where: "atmosphere LIKE 'image:%'",
+    )) {
+      final chat = r[id] as String;
+      final path = (r['atmosphere'] as String).substring(6);
+      final inFolder = p.basename(p.dirname(path)).startsWith('wallpapers');
+      Uint8List? photo;
+      if (inFolder) {
+        try {
+          photo = photoToSend(await File(path).readAsBytes());
+        } catch (e) {
+          dlog('wallpaper: an old file did not read (${e.runtimeType})');
+        }
+      }
+      if (photo != null) {
+        await db.insert('wallpapers', {
+          'chat': wallKey(chat, group: group),
+          'atmo': kPhotoWall,
+          'photo': photo,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await db.update(
+        table,
+        {'atmosphere': photo == null ? null : kPhotoWall},
+        where: '$id = ?',
+        whereArgs: [chat],
+      );
+      if (inFolder) files.add(path);
+    }
+  }
+  return files;
 }
 
 // a group's texts sent again to a member who restored a backup: once per

@@ -6,7 +6,6 @@
 // as bytes in the encrypted database of the container that holds the chat
 // (HaloDb.setChatPhoto): never a file, never shared storage, gone with the
 // chat. never sent: the other person sees their own.
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -20,7 +19,6 @@ import 'lock_guard.dart' show LockDropped;
 import 'lock_state.dart';
 import 'main.dart' show kPhotoWall, session;
 import 'picked.dart';
-import 'shred.dart';
 
 class ChatWall {
   final Atmo atmo;
@@ -88,9 +86,6 @@ Future<ChatWall> _chatWall(String chatId, bool group) async {
     final photo = await session.chatPhotoOf(chatId, group: group);
     return photo == null ? ChatWall.none : ChatWall(Atmo.none, photo);
   }
-  if (own.startsWith('image:')) {
-    return _adoptFile(chatId, own.substring(6));
-  }
   return ChatWall(atmoFromName(own));
 }
 
@@ -100,28 +95,6 @@ Future<bool> followsDefault(String chatId, {bool group = false}) async =>
         ? await session.getGroupAtmosphere(chatId)
         : await session.getAtmosphere(chatId)) ==
     null;
-
-// a photo kept by an older version as a file in the clear: cleaned, moved
-// into the database, and the file shredded
-Future<ChatWall> _adoptFile(String chatId, String path) async {
-  Uint8List? photo;
-  try {
-    photo = await wallpaperBytes(await File(path).readAsBytes());
-  } catch (e) {
-    dlog('wallpaper: an old file did not read (${e.runtimeType})');
-  }
-  if (photo != null) {
-    await session.setChatPhoto(chatId, photo);
-  } else {
-    await session.setChatAtmosphere(chatId, null);
-  }
-  try {
-    await shredFile(path);
-  } catch (_) {
-    // shredFile logs its own failure
-  }
-  return photo == null ? await defaultWall() : ChatWall(Atmo.none, photo);
-}
 
 /// a picked photo as it may sit behind a chat: cleaned by the photo lane's
 /// stripper, refused when a tag survives. null: dropped

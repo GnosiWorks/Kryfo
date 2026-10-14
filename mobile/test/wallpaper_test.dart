@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat's wallpaper as it is read, cleaned and drawn: its own choice or
-// the default, a photo out of the container that holds the chat, an old
-// photo file taken into the database and shredded, the tags of a real
-// camera photo gone, and a veil over a photo as strong as it needs in
-// either theme
+// the default, a photo out of the container that holds the chat, the tags
+// of a real camera photo gone, and a veil over a photo as strong as it
+// needs in either theme
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -124,28 +123,6 @@ void main() {
         expect(await chatWall(_peer), ChatWall.none);
       },
     );
-
-    test('a photo an older version kept as a file goes into the database, '
-        'cleaned, and the file is shredded', () async {
-      final dir = Directory.systemTemp.createTempSync('walls');
-      addTearDown(() => dir.deleteSync(recursive: true));
-      final f = File('${dir.path}/$_peer.jpg')..writeAsBytesSync(gps);
-      expect(jpegHasExif(gps), isTrue);
-      await live.setAtmosphere(_peer, 'image:${f.path}');
-      final w = await chatWall(_peer);
-      expect(w.photo, isNotNull);
-      expect(jpegHasExif(w.photo!), isFalse);
-      expect(f.existsSync(), isFalse);
-      expect(await live.getAtmosphere(_peer), kPhotoWall);
-      expect((await live.wallpaperRow(_peer))?.photo, w.photo);
-    });
-
-    test('an old file that is gone leaves the chat on the default', () async {
-      await live.setDefaultWallpaper('snow');
-      await live.setAtmosphere(_peer, 'image:/nowhere/$_peer.jpg');
-      expect(await chatWall(_peer), const ChatWall(Atmo.snow));
-      expect(await live.getAtmosphere(_peer), isNull);
-    });
   });
 
   test('a hidden chat\'s photo lives in the vault; the default is the '
