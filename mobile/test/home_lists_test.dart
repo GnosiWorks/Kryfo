@@ -524,6 +524,48 @@ void main() {
       await drain(t);
     });
 
+    testWidgets('an ended group shows its line, and deleting it asks first', (
+      t,
+    ) async {
+      phone(t);
+      db.groups = [
+        {'group_id': 'g1', 'name': 'Hikers', 'is_admin': 0},
+      ];
+      appState.contacts = [
+        ContactPreview(
+          haloId: 'wren-oak-lamp',
+          nickname: 'Wren',
+          avatarSeed: 'wren-oak-lamp',
+        ),
+      ];
+      addTearDown(() => appState.contacts = []);
+      await t.pumpWidget(
+        framed(
+          _home(
+            groups: const [
+              GroupSummary(
+                groupId: 'g1',
+                name: 'Hikers',
+                memberCount: 3,
+                endedBy: 'wren-oak-lamp',
+              ),
+            ],
+          ),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupEndedBy('Wren')), findsOneWidget);
+      expect(find.text(l10n.homeMembers(3)), findsNothing);
+      await t.longPress(find.text('Hikers'));
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.groupInfoLeaveGroup2), findsNothing);
+      await t.tap(find.text(l10n.groupInfoDeleteGroup));
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.groupInfoDeleteThisGroup), findsOneWidget);
+      expect(find.text(l10n.groupInfoDeleteGroupLine), findsOneWidget);
+      await drain(t);
+    });
+
     testWidgets('a room not let in yet says so on its row, with no clock', (
       t,
     ) async {

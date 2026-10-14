@@ -10,7 +10,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
+    show AppIo, FirstKept, HaloDb, groupEndOut, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -1343,6 +1343,30 @@ class ArrivalRows implements HaloDb {
   Future<void> removeGroupMember(String groupId, String haloId) async {
     _hit('removeGroupMember', groupId, null);
     members[groupId]?.remove(haloId);
+  }
+
+  // an end: the row stays with its members, what it held goes, and of
+  // its lanes the take-backs and the end itself
+  @override
+  Future<bool> endGroup(
+    String groupId, {
+    required String by,
+    required int at,
+  }) async {
+    _hit('endGroup', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['ended_at'] != null || g['room_pub'] != null) {
+      return false;
+    }
+    g.addAll({'ended_at': at, 'ended_by': by, 'unread': 0, 'mentioned': 0});
+    _dropGroupRows(groupId);
+    ctlOut.removeWhere(
+      (r) =>
+          r['group_id'] == groupId &&
+          groupUnsendOf(r['ctl']) == null &&
+          !groupEndOut(r['ctl']),
+    );
+    return true;
   }
 
   @override
