@@ -2556,7 +2556,9 @@ class HaloDb implements GroupOwedStore {
 
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
+    String? atmo;
     final files = await d.transaction((t) async {
+      atmo = await _atmosphereOf(t, haloId);
       final rows = await t.query(
         'messages',
         columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
@@ -2604,6 +2606,22 @@ class HaloDb implements GroupOwedStore {
       return rows;
     });
     await _scrubMedia(files);
+    await _dropPhotos([atmo]);
+  }
+
+  // a chat's atmosphere as its row has it
+  static Future<String?> _atmosphereOf(
+    DatabaseExecutor t,
+    String haloId,
+  ) async {
+    final r = await t.query(
+      'contacts',
+      columns: ['atmosphere'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['atmosphere'] as String?;
   }
 
   // a request that never became one: its row, its shield line and what
@@ -4114,6 +4132,46 @@ class HaloDb implements GroupOwedStore {
         final mp = r[k] as String?;
         if (mp != null && mp.isNotEmpty) await shredFile(mp);
       }
+    }
+  }
+
+  // the photo an atmosphere names, null for a preset
+  static String? _photoOf(Object? atmosphere) =>
+      atmosphere is String && atmosphere.startsWith('image:')
+      ? atmosphere.substring(6)
+      : null;
+
+  // every photo a chat or group here names, by its name in the folder
+  Future<Set<String>> _namedPhotos() async {
+    final db = await open();
+    return {
+      for (final t in const ['contacts', 'groups'])
+        for (final r in await db.query(
+          t,
+          columns: ['atmosphere'],
+          where: 'atmosphere IS NOT NULL',
+        ))
+          if (_photoOf(r['atmosphere']) case final f?) p.basename(f),
+    };
+  }
+
+  // wallpapers whose rows are written without them. one a row still names
+  // stays, and only this container's wallpapers folder is ever touched
+  Future<void> _dropPhotos(Iterable<Object?> atmospheres) async {
+    final names = {
+      for (final a in atmospheres)
+        if (_photoOf(a) case final f?) p.basename(f),
+    }..removeWhere((n) => n.isEmpty || n == '.' || n == '..');
+    if (names.isEmpty) return;
+    try {
+      final named = await _namedPhotos();
+      final dir = await container.folder('wallpapers');
+      for (final n in names) {
+        if (!named.contains(n)) await shredFile(p.join(dir.path, n));
+      }
+    } catch (e) {
+      // the start sweep takes it
+      dlog('wallpaper: not shredded (${e.runtimeType})');
     }
   }
 
