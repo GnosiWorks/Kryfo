@@ -247,6 +247,48 @@ void main() {
       expect(dropped.toSet(), {'a.mp4', 'b.mp4'});
     });
 
+    test(
+      'the video tile\'s pick goes through the preview as a video',
+      () async {
+        // a name that says nothing: the tile picked a video all the same
+        final v = pick('clip', [9]);
+        final shown = <String>[];
+        final dropped = <String>[];
+        MediaSendResult? sent;
+        await sendGalleryPicks(
+          [v],
+          videos: true,
+          shrink: shrink,
+          drop: (x) async => dropped.addAll([for (final f in x) f.name]),
+          preview: (items, _) async {
+            shown.addAll(items.map(said));
+            return MediaSendResult(items: items, caption: 'look');
+          },
+          send: (r) async => sent = r,
+        );
+        expect(shown, ['video clip']);
+        expect(sent!.items.single.isVideo, isTrue);
+        expect(sent!.caption, 'look');
+        expect(dropped, ['clip']);
+      },
+    );
+
+    test('backing out of the video tile\'s preview sends nothing', () async {
+      final dropped = <String>[];
+      var sends = 0;
+      await sendGalleryPicks(
+        [
+          pick('b.mp4', [9]),
+        ],
+        videos: true,
+        drop: (x) async => dropped.addAll([for (final f in x) f.name]),
+        preview: (_, _) async => null,
+        send: (_) async => sends++,
+      );
+      expect(sends, 0);
+      expect(dropped, ['b.mp4']);
+    });
+
     test('a video is told by its name or its type', () {
       for (final n in ['a.mp4', 'a.MOV', 'a.3gp', 'a.webm', 'a.mkv']) {
         expect(isVideoPick(XFile('/c/$n')), isTrue, reason: n);
@@ -256,6 +298,28 @@ void main() {
       }
       expect(isVideoPick(XFile('/c/a', mimeType: 'video/mp4')), isTrue);
     });
+  });
+
+  test('both chats\' video tiles go through the preview too', () {
+    for (final (file, sig, direct) in [
+      (
+        'lib/screens/chat_screen.dart',
+        'Future<void> _pickAndSendVideo(',
+        '_sendFileFrom(',
+      ),
+      (
+        'lib/screens/group_chat_screen.dart',
+        'Future<void> _pickGroupVideo(',
+        '_sendGroupFileFrom(',
+      ),
+    ]) {
+      final body = bodyOf(sourceOf(file), sig);
+      expect(body, contains('await sendGalleryPicks('), reason: file);
+      expect(body, contains('preview: _preview,'), reason: file);
+      expect(body, contains('send: _sendPicked,'), reason: file);
+      expect(body, contains('pickMore: () => lockState.hold(pickGallery)'));
+      expect(body, isNot(contains(direct)), reason: file);
+    }
   });
 
   test('both chats pick the gallery held, through the preview', () {

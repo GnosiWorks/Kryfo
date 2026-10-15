@@ -118,8 +118,10 @@ void main() {
       (chat, 'Future<void> _pickAndSendVideo('),
       (group, 'Future<void> _pickGroupVideo('),
     ]) {
+      // through the preview to _sendPicked, which names it made
       final body = bodyOf(src, fn);
-      expect(body, contains('madeVideoName(x.name)'), reason: fn);
+      expect(body, contains('videos: true,'), reason: fn);
+      expect(body, contains('send: _sendPicked,'), reason: fn);
       expect(body, isNot(contains(', x.name)')), reason: fn);
     }
     for (final src in [chat, group]) {

@@ -237,9 +237,11 @@ class MediaSendResult {
 // and gives back what to send, null when the person backed out; its second
 // argument reopens the picker ([pickMore]) for more. [send] sends it. every
 // video copy read along the way goes once it is done with, sent or not.
+// [videos]: the video tile's pick, a video whatever its name says.
 // [shrink] and [drop] stand in for the platform and the shred in tests
 Future<void> sendGalleryPicks(
   List<XFile> picked, {
+  bool videos = false,
   required Future<MediaSendResult?> Function(
     List<PickedMedia> items,
     Future<List<PickedMedia>> Function() more,
@@ -251,16 +253,19 @@ Future<void> sendGalleryPicks(
   Future<void> Function(List<XFile> x)? drop,
 }) async {
   final shred = drop ?? shredPickedImages;
-  final videos = <XFile>[];
+  final copies = <XFile>[];
   Future<List<PickedMedia>> read(List<XFile> x) async {
     if (x.isEmpty) return const [];
     final got = await readGalleryPicks(x, shrink: shrink, drop: drop);
-    videos.addAll([for (final m in got) ?m.video]);
+    copies.addAll([for (final m in got) ?m.video]);
     return got;
   }
 
   try {
-    final first = await read(picked);
+    final first = videos
+        ? [for (final x in picked) PickedMedia.video(x)]
+        : await read(picked);
+    if (videos) copies.addAll(picked);
     if (first.isEmpty) return;
     final r = await preview(
       first,
@@ -269,7 +274,7 @@ Future<void> sendGalleryPicks(
     if (r == null || r.items.isEmpty) return;
     await send(r);
   } finally {
-    if (videos.isNotEmpty) await shred(videos);
+    if (copies.isNotEmpty) await shred(copies);
   }
 }
 

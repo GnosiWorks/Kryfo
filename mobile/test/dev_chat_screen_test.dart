@@ -481,8 +481,8 @@ Future<void> _attach(WidgetTester t, String tile, bool Function() done) async {
   await _beat(t, 500);
   await t.tap(find.text(tile));
   await _beat(t, 300);
-  // a gallery pick waits in the send preview until it is sent
-  if (tile == l10n.chatGallery) {
+  // a gallery or video pick waits in the send preview until it is sent
+  if (tile == l10n.chatGallery || tile == l10n.chatVideo) {
     final preview = find.byType(MediaSendScreen);
     await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
     await t.tap(
@@ -1491,6 +1491,31 @@ void main() {
   // with android's photo picker the gallery hands back photos and videos
   // together; without it, photos alone, as a mixed pick there is the file
   // browser
+  group('the video tile', () {
+    testWidgets('opens the send preview and sends nothing straight away', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+      await _beat(t, 500);
+      await t.tap(find.text(l10n.chatVideo));
+      await _beat(t, 300);
+      final preview = find.byType(MediaSendScreen);
+      await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
+      expect(_sent(), isEmpty);
+      expect(find.text(l10n.mediaSendVideo), findsOneWidget);
+      // backed out of: nothing goes, and the picked copy goes with it
+      await t.tap(find.byTooltip(l10n.commonBack));
+      await _beat(t, 400);
+      expect(preview, findsNothing);
+      await _io(t, () => _leftovers().isEmpty, why: 'a copy was left');
+      expect(_sent(), isEmpty);
+      expect(_begun, isEmpty);
+      await _close(t);
+    });
+  });
+
   group('the gallery', () {
     for (final ready in [true, false]) {
       testWidgets(

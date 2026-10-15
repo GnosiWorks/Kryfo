@@ -2339,7 +2339,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       // a screen gone meanwhile sends nothing, and the copy still goes
       if (!mounted) return;
-      await _sendGroupFileFrom(x.path, madeVideoName(x.name));
+      // the send preview first, as every pick has it; named as a made
+      // video on its way (madeVideoName), never as it was picked
+      await sendGalleryPicks(
+        [x],
+        videos: true,
+        pickMore: () => lockState.hold(pickGallery),
+        preview: _preview,
+        send: _sendPicked,
+      );
     } finally {
       await shredPickedImages([x]);
     }
