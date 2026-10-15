@@ -11096,10 +11096,12 @@ class AppIo {
         return null;
       }
       // a key "this isn't them" blocked opens nothing, under any name
-      if (await _receiving._keyBlockedHere(_keyHex(key))) {
+      final kx = _keyHex(key);
+      if (await _receiving._keyBlockedHere(kx)) {
         await signalSession.sessionStore.deleteSession(tempAddr);
-        dlog('back-pair: a blocked key, dropped');
-        throw const FirstRefused('blocked');
+        dlog('back-pair: dropped');
+        // what the debug list says names no block the screen does not show
+        throw FirstRefused(await live.keyBlocked(kx) ? 'blocked' : 'decrypt');
       }
       // a name stays with the key first seen for it
       var at = h;
@@ -14186,8 +14188,9 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
-    // left the screen: a quiet moment for what a removal owes the file.
-    // a vault is tidied as it shuts
+    // left the screen: a quiet moment for what a removal owes the file. a
+    // vault is tidied right after a removal in it, and as it opens, never
+    // as it shuts
     if (!front) {
       unawaited(_tidy(live));
       if (sessionQuiet) unawaited(_tidy(_session.primary));
@@ -21051,6 +21054,10 @@ class AppState extends ChangeNotifier {
           dlog('not them: session not rebuilt (${e.runtimeType})');
         }
       }
+      // what the removal owes a vault's file is done now, off the queue: a
+      // vault is never tidied as it shuts
+      final owes = s.vault;
+      if (hidden && owes != null) unawaited(_tidy(owes));
     } finally {
       _removing.remove(haloId);
     }
