@@ -125,6 +125,28 @@ void main() {
       },
     );
 
+    test(
+      'a record with bytes after its comment is read as java reads it',
+      () async {
+        final z = zipOf({
+          'a.txt': [1],
+          'evil.apk': [2],
+        });
+        // the comment says none, and two bytes follow
+        final short = [...z, ...'cc'.codeUnits];
+        expect((await facts(short, 'notes.zip')).installer, isTrue);
+        final jpeg = [0xFF, 0xD8, 0xFF, 0xE0, ...List.filled(40, 1)];
+        expect((await facts([...jpeg, ...short], 'cat.jpg')).installer, isTrue);
+        // a loose one that does not read says nothing
+        final noise = await facts([
+          ...'just text '.codeUnits,
+          ..._end(size: 9000),
+          ...'more'.codeUnits,
+        ], 'notes.txt');
+        expect(noise.installer, isFalse);
+      },
+    );
+
     test('a comment that runs exactly to the end is read', () async {
       final z = zipOf({
         'a.txt': [1],
@@ -257,6 +279,10 @@ void main() {
         'x.apk${_c(0x200B)}',
         'x.ap${_c(0x200D)}k',
         'x.ap${_c(0x0336)}k',
+        'x.ap${_c(0x0951)}k',
+        'x.ap${_c(0x2028)}k',
+        'x.apk${_c(0x2029)}',
+        'x.ap${_c(0x20DD)}k',
         'x.APK${_c(0xFE0F)}',
       ]) {
         expect(nameSaysInstaller(name), isTrue, reason: name);
@@ -316,8 +342,8 @@ void main() {
       );
       // devanagari
       expect(
-        safeFileName('${_c(0x0915)}$zwj${_c(0x094D)}.txt'),
-        '${_c(0x0915)}$zwj${_c(0x094D)}.txt',
+        safeFileName('${_c(0x0915)}${_c(0x094D)}$zwj${_c(0x0937)}.txt'),
+        '${_c(0x0915)}${_c(0x094D)}$zwj${_c(0x0937)}.txt',
       );
       expect(safeFileName('ab${zwj}cd.pdf'), 'abcd.pdf');
       expect(safeFileName('a$zwnj.pdf'), 'a.pdf');

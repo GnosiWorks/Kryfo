@@ -44,12 +44,10 @@ bool _joins(int r) =>
     (r >= 0xFB50 && r <= 0xFDFF) ||
     (r >= 0xFE70 && r <= 0xFEFC);
 
-bool _mark(int r) =>
-    (r >= 0x0300 && r <= 0x036F) ||
-    (r >= 0x1AB0 && r <= 0x1AFF) ||
-    (r >= 0x1DC0 && r <= 0x1DFF) ||
-    (r >= 0x20D0 && r <= 0x20FF) ||
-    (r >= 0xFE20 && r <= 0xFE2F);
+// a combining mark, by unicode's own categories, as android reads it
+final _marks = RegExp(r'^[\p{Mn}\p{Me}]$', unicode: true);
+
+bool _mark(int r) => _marks.hasMatch(String.fromCharCode(r));
 
 final Map<int, int> _compose = () {
   final m = <int, int>{};

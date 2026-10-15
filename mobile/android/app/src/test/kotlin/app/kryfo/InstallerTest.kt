@@ -105,6 +105,17 @@ class InstallerTest {
     }
 
     @Test
+    fun aRecordWithBytesAfterItsCommentIsRead() {
+        val z = zip("a.zip", "a.txt", "evil.apk").readBytes() + "cc".toByteArray()
+        assertTrue(Installer.refused(bytes("notes.zip", z), "notes.zip", null))
+        val jpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte()) +
+            ByteArray(40) { 1 }
+        assertTrue(Installer.refused(bytes("cat.jpg", jpeg + z), "cat.jpg", "image/jpeg"))
+        val noise = "just text ".toByteArray() + end(1, 9000) + "more".toByteArray()
+        assertFalse(Installer.refused(bytes("notes.txt", noise), "notes.txt", "text/plain"))
+    }
+
+    @Test
     fun aSignatureWhoseCommentMissesTheEndIsNoZip() {
         val f = bytes("notes.txt", "just text ".toByteArray() + end(1, 46, comment = 9))
         assertFalse(Installer.refused(f, "notes.txt", "text/plain"))
@@ -133,7 +144,7 @@ class InstallerTest {
 
     @Test
     fun aNameIsReadAsItIsSaved() {
-        for (n in listOf("x.apk.", "x.apk ", "x.apk\u200B", "x.ap\u200Dk", "x.ap\u0336k", "x.APK\uFE0F", "x.aab")) {
+        for (n in listOf("x.apk.", "x.apk ", "x.apk\u200B", "x.ap\u200Dk", "x.ap\u0336k", "x.APK\uFE0F", "x.aab", "x.ap\u0951k", "x.ap\u2028k", "x.apk\u2029", "x.ap\u20DDk")) {
             assertTrue(n, Installer.named(n))
         }
         assertFalse(Installer.named("x.pdf"))

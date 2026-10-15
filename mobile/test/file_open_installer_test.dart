@@ -188,6 +188,16 @@ void main() {
         lessThan(out.indexOf('Installer.refused(')),
       );
       expect(out, contains('activity.runOnUiThread {'));
+      // a check that throws shares nothing and still answers
+      final guarded = out.substring(
+        out.indexOf('val send = try {'),
+        out.indexOf('activity.runOnUiThread {'),
+      );
+      expect(guarded, contains('Installer.refused('));
+      expect(
+        guarded,
+        contains('} catch (e: Exception) {\n                null'),
+      );
     });
   });
 

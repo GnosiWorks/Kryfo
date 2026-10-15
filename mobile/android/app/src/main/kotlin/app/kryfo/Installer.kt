@@ -21,11 +21,15 @@ object Installer {
     private fun hidden(cp: Int): Boolean {
         val t = Character.getType(cp)
         return t == Character.FORMAT.toInt() || t == Character.CONTROL.toInt() ||
+            t == Character.LINE_SEPARATOR.toInt() ||
+            t == Character.PARAGRAPH_SEPARATOR.toInt() ||
             cp in FILLERS || cp in 0xFE00..0xFE0F || cp in 0xE0100..0xE01EF
     }
 
-    private fun mark(cp: Int): Boolean =
-        Character.getType(cp) == Character.NON_SPACING_MARK.toInt()
+    private fun mark(cp: Int): Boolean {
+        val t = Character.getType(cp)
+        return t == Character.NON_SPACING_MARK.toInt() || t == Character.ENCLOSING_MARK.toInt()
+    }
 
     private fun keep(s: String, drop: (Int) -> Boolean): String {
         val sb = StringBuilder()
@@ -53,9 +57,10 @@ object Installer {
         n == "AndroidManifest.xml" || INNER.any { l.endsWith(it) }
     }
 
-    // where a zip's end record starts, as java and android find it: the
-    // signature, with a comment that runs exactly to the end of the file
-    fun endRecord(f: File): Long? {
+    // where a zip's end record starts: the signature, with a comment that
+    // runs exactly to the end of the file. [loose] takes one with bytes after
+    // its comment too, which java's zip reader accepts
+    fun endRecord(f: File, loose: Boolean = false): Long? {
         val len = f.length()
         val n = minOf(len, 22L + 0xFFFF).toInt()
         if (n < 22) return null
@@ -70,7 +75,8 @@ object Installer {
             ) continue
             val comment = (tail[i + 20].toInt() and 0xFF) or
                 ((tail[i + 21].toInt() and 0xFF) shl 8)
-            if (len - n + i + 22 + comment == len) return len - n + i
+            val stop = len - n + i + 22 + comment
+            if (stop == len || loose && stop < len) return len - n + i
         }
         return null
     }
@@ -108,7 +114,23 @@ object Installer {
             } catch (e: Exception) {
                 null
             }
-            return first != null && holds(listOf(first))
+            if (first != null && holds(listOf(first))) return true
+            // a loose record is only looked into: bytes that merely look like
+            // one say nothing
+            val loose = try {
+                endRecord(f, loose = true)
+            } catch (e: Exception) {
+                null
+            }
+            if (loose == null) return false
+            return try {
+                ZipFile(f).use { z ->
+                    z.size() > MAX_ENTRIES ||
+                        holds(z.entries().asSequence().map { it.name }.toList())
+                }
+            } catch (e: Exception) {
+                false
+            }
         }
         return try {
             ZipFile(f).use { z ->

@@ -426,13 +426,24 @@ class ZipDir {
 }
 
 /// where the end record of a zip sits in [tail], the last [tail].length
-/// bytes of a file of [len] bytes. as java and android read it: the
-/// signature, with a comment that runs exactly to the end of the file
+/// bytes of a file of [len] bytes: the signature, with a comment that runs
+/// exactly to the end of the file
 int? zipEndIn(Uint8List tail, int len) {
   final from = len - tail.length;
   for (var i = tail.length - 22; i >= 0; i--) {
     if (_u32(tail, i) != 0x06054b50) continue;
     if (from + i + 22 + _u16(tail, i + 20) == len) return i;
+  }
+  return null;
+}
+
+/// an end record with bytes after its comment. java's zip reader takes
+/// one, so a zip like that is read for apps too
+int? zipEndLooseIn(Uint8List tail, int len) {
+  final from = len - tail.length;
+  for (var i = tail.length - 22; i >= 0; i--) {
+    if (_u32(tail, i) != 0x06054b50) continue;
+    if (from + i + 22 + _u16(tail, i + 20) < len) return i;
   }
   return null;
 }
@@ -461,13 +472,19 @@ Future<ZipDir> zipDirOf(String path) async {
   int dirAt;
   int size;
   int count;
+  var bad = ZipDir.unreadable;
   try {
     len = await raf.length();
     final tailLen = min(len, 22 + 0xFFFF);
     await raf.setPosition(len - tailLen);
     final tail = await raf.read(tailLen);
-    final e = zipEndIn(tail, len);
+    final exact = zipEndIn(tail, len);
+    final e = exact ?? zipEndLooseIn(tail, len);
     if (e == null) return ZipDir.none;
+    // a record that is there exactly and cannot be read is taken for an
+    // app. a loose one is only looked into: bytes that merely look like
+    // one say nothing
+    if (exact == null) bad = ZipDir.none;
     count = _u16(tail, e + 10);
     size = _u32(tail, e + 12);
     var end = len - tail.length + e;
@@ -476,14 +493,12 @@ Future<ZipDir> zipDirOf(String path) async {
         _u32(tail, e + 16) == 0xFFFFFFFF) {
       // zip64: its locator sits just before
       final l = e - 20;
-      if (l < 0 || _u32(tail, l) != 0x07064b50) return ZipDir.unreadable;
+      if (l < 0 || _u32(tail, l) != 0x07064b50) return bad;
       final rec = _u64(tail, l + 8);
-      if (rec + 56 > len) return ZipDir.unreadable;
+      if (rec + 56 > len) return bad;
       await raf.setPosition(rec);
       final r = await raf.read(56);
-      if (r.length < 56 || _u32(r, 0) != 0x06064b50) {
-        return ZipDir.unreadable;
-      }
+      if (r.length < 56 || _u32(r, 0) != 0x06064b50) return bad;
       count = _u64(r, 32);
       size = _u64(r, 40);
       end = rec;
@@ -491,9 +506,7 @@ Future<ZipDir> zipDirOf(String path) async {
     // the directory ends where the end record starts, as java finds it,
     // so bytes put in front of a zip move nothing
     dirAt = end - size;
-    if (size > _maxDirectory || dirAt < 0 || count > _maxEntries) {
-      return ZipDir.unreadable;
-    }
+    if (size > _maxDirectory || dirAt < 0 || count > _maxEntries) return bad;
   } finally {
     await raf.close();
   }
@@ -507,7 +520,7 @@ Future<ZipDir> zipDirOf(String path) async {
       f.closeSync();
     }
   });
-  return names == null ? ZipDir.unreadable : ZipDir._(names, false);
+  return names == null ? bad : ZipDir._(names, false);
 }
 
 // a zip whose directory cannot be read still names its first entry up front

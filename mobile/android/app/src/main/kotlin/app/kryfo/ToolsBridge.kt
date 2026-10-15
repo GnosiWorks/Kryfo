@@ -408,21 +408,30 @@ class ToolsBridge(private val activity: Activity) {
         return FileProvider.getUriForFile(activity, "${activity.packageName}.open", f)
     }
 
-    // the installer check reads the file's end, so it runs off the ui thread
+    // the installer check reads the file's end, so it runs off the ui
+    // thread. anything that goes wrong on the way shares nothing
     private fun shareOut(path: String?, mime: String?, result: MethodChannel.Result) {
         Thread {
-            val uri = path?.let { outUri(it) }
-            if (uri == null || Installer.refused(File(path), null, mime)) {
-                activity.runOnUiThread { result.success(false) }
-                return@Thread
-            }
-            val send = Intent(Intent.ACTION_SEND).apply {
-                type = mime ?: "application/octet-stream"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                clipData = ClipData.newRawUri("", uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val send = try {
+                val uri = path?.let { outUri(it) }
+                if (uri == null || Installer.refused(File(path), null, mime)) {
+                    null
+                } else {
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = mime ?: "application/octet-stream"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        clipData = ClipData.newRawUri("", uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                }
+            } catch (e: Exception) {
+                null
             }
             activity.runOnUiThread {
+                if (send == null) {
+                    result.success(false)
+                    return@runOnUiThread
+                }
                 try {
                     activity.startActivity(Intent.createChooser(send, null))
                     result.success(true)
