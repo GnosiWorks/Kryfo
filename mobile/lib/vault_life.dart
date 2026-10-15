@@ -19,6 +19,7 @@ import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, engine, shredFile;
 import 'notifications.dart'
     show cancelWithRetry, clearNotificationsFor, notifPlugin;
+import 'chat_shots.dart' show ShotsWord;
 import 'router.dart';
 import 'search.dart' show searchBody;
 
@@ -869,6 +870,9 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     blocked: r['blocked'] == 1,
     blockedFrom: r['block_from'] as int?,
     verifiedKey: r['verified_key'] as String?,
+    shots: r['shots_at'] is int
+        ? ShotsWord(on: r['shots_on'] == 1, at: r['shots_at'] as int)
+        : null,
   );
   // when the open span began, or a seeded one is listened on from
   const from =
@@ -876,9 +880,15 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
       'WHERE s.peer_id = c.halo_id AND s.to_at IS NULL '
       'ORDER BY s.from_at DESC LIMIT 1) AS block_from';
   if (!c.group) {
+    // a vault from before the block has no columns for it yet
+    final cols = {
+      for (final x in await t.rawQuery('PRAGMA v.table_info(contacts)'))
+        x['name'] as String,
+    };
+    final shots = cols.contains('shots_at') ? 'c.shots_on, c.shots_at, ' : '';
     final r = await t.rawQuery(
       'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
-      'c.verified_key, $from FROM v.contacts c WHERE c.halo_id = ?1',
+      '${shots}c.verified_key, $from FROM v.contacts c WHERE c.halo_id = ?1',
       [c.id],
     );
     return r.isEmpty ? null : peerCard(card(r.first));

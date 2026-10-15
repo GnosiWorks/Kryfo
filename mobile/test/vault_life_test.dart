@@ -1123,10 +1123,19 @@ void main() {
         'bp': 1,
         // no mark: they were not verified
         'vk': '',
+        // the chat's screenshot block, never set
+        'ss': {'o': 0, 'a': '0000000000000'},
       });
       expect(jsonDecode(cards[_g2]!['card'] as String), {
         'm': [
-          {'h': _m, 'o': 'o-$_m', 'x': 'x-$_m', 'bp': 1, 'vk': ''},
+          {
+            'h': _m,
+            'o': 'o-$_m',
+            'x': 'x-$_m',
+            'bp': 1,
+            'vk': '',
+            'ss': {'o': 0, 'a': '0000000000000'},
+          },
         ],
       });
       // the everyday home without them
