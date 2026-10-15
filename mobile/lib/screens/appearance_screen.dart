@@ -77,8 +77,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       setState(() => _default = before);
       final r = await pickWallpaperPhoto(
         context,
-        save: (at, photo) => at.setDefaultWallpaper(kPhotoWall, photo),
-        failed: () {
+        save: (at, photo) async {
+          await at.setDefaultWallpaper(kPhotoWall, photo);
+          return true;
+        },
+        failed: (_) {
           if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
         },
       );

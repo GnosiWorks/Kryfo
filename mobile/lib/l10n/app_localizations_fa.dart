@@ -5714,6 +5714,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get wallpaperDefault => 'پیش‌فرض';
 
   @override
+  String get wallpaperNotSet => 'تصویر زمینه تنظیم نشد. دوباره امتحان کنید.';
+
+  @override
   String get wallpaperFromYourPhotos => 'از عکس‌هایتان';
 
   @override

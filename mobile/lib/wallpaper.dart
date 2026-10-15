@@ -106,16 +106,19 @@ Future<Uint8List?> wallpaperBytes(Uint8List picked) => photoToSendOffUi(picked);
 const kWallSide = 2048.0;
 
 /// what became of a picked photo
-enum Picked { kept, none, unclean }
+// kept; nothing picked or the lock took it; it would not clean; or its
+// chat was not there to take it
+enum Picked { kept, none, unclean, missed }
 
 /// a photo from the gallery, re-encoded by the picker no larger than the
 /// screen's longest side (kWallSide at most), cleaned, and handed to [save]
-/// with the session it was picked in. the picker's copy is shredded
-/// whatever happens. [failed] says when it could not be cleaned
+/// with the session it was picked in, as that session reads now; [save]
+/// says whether the chat took it. the picker's copy is shredded whatever
+/// happens. [failed] says why a photo was not kept
 Future<Picked> pickWallpaperPhoto(
   BuildContext context, {
-  required Future<Object?> Function(Session at, Uint8List photo) save,
-  VoidCallback? failed,
+  required Future<bool> Function(Session at, Uint8List photo) save,
+  ValueChanged<Picked>? failed,
 }) async {
   final at = session;
   final mq = MediaQuery.of(context);
@@ -147,28 +150,30 @@ Future<Picked> pickWallpaperPhoto(
     await shredPickedImages([x]);
   }
   final r = raw == null ? Picked.unclean : await keepPicked(at, raw, save);
-  if (r == Picked.unclean) failed?.call();
+  if (r == Picked.unclean || r == Picked.missed) failed?.call(r);
   return r;
 }
 
-/// a picked photo cleaned, then saved into [at] only if that is still the
-/// session open: one the lock closed, or another pin replaced, while it
-/// was cleaned would route a hidden chat's photo elsewhere, so it goes
-/// nowhere
+/// a picked photo cleaned, then saved only if the containers it was picked
+/// in are still the ones open: a lock that closed the vault, or another pin,
+/// while it was cleaned would route a hidden chat's photo elsewhere, so it
+/// goes nowhere. a session rebuilt over the same containers (a chat moved
+/// into the vault meanwhile) is the same place, and the save goes through
+/// it as it reads now
 @visibleForTesting
 Future<Picked> keepPicked(
   Session at,
   Uint8List raw,
-  Future<Object?> Function(Session at, Uint8List photo) save,
+  Future<bool> Function(Session at, Uint8List photo) save,
 ) async {
   final out = await wallpaperBytes(raw);
   if (out == null) return Picked.unclean;
-  if (!identical(session, at)) {
+  final now = session;
+  if (!identical(now.primary, at.primary) || !identical(now.vault, at.vault)) {
     dlog('wallpaper: the session changed while it was cleaned, dropped');
     return Picked.none;
   }
-  await save(at, out);
-  return Picked.kept;
+  return await save(now, out) ? Picked.kept : Picked.missed;
 }
 
 /// a photo read at 8 by 8: what its corners and middle are made of, enough

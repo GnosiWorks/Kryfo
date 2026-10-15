@@ -9207,6 +9207,12 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get wallpaperDefault;
 
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The wallpaper was not set. Try again.'**
+  String get wallpaperNotSet;
+
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:

@@ -5805,6 +5805,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get wallpaperDefault => 'Типовий';
 
   @override
+  String get wallpaperNotSet => 'Фон не встановлено. Спробуй ще раз.';
+
+  @override
   String get wallpaperFromYourPhotos => 'З твоїх фото';
 
   @override

@@ -5741,6 +5741,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get wallpaperDefault => 'Padrão';
 
   @override
+  String get wallpaperNotSet =>
+      'O papel de parede não foi aplicado. Tente de novo.';
+
+  @override
   String get wallpaperFromYourPhotos => 'Das suas fotos';
 
   @override

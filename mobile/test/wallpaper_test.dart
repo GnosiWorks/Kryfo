@@ -384,6 +384,50 @@ void main() {
       expect(await live.getAtmosphere(_hidden), isNull);
     });
 
+    testWidgets('a session rebuilt over the same containers while it is '
+        'cleaned (a chat moved meanwhile) still takes it, as it reads now', (
+      t,
+    ) async {
+      Session? now;
+      final r = await t.runAsync(() async {
+        final rebuilt = await Session.withVault(live, vault);
+        final f = keepPicked(s, gps, (at, p) {
+          now = at;
+          return at.setChatPhoto(_hidden, p);
+        });
+        useDatabasesForTest(live, rebuilt);
+        return f;
+      });
+      expect(r, Picked.kept);
+      expect(identical(now, s), isFalse);
+      expect(await vault.wallpaperRow(_hidden), isNotNull);
+      expect(await live.mem.query('wallpapers'), isEmpty);
+    });
+
+    testWidgets('a chat that is not there to take it is a miss, said so', (
+      t,
+    ) async {
+      final r = await t.runAsync(
+        () => keepPicked(s, gps, (at, p) => at.setChatPhoto('gone-now', p)),
+      );
+      expect(r, Picked.missed);
+      expect(await live.mem.query('wallpapers'), isEmpty);
+      expect(await vault.mem.query('wallpapers'), isEmpty);
+      for (final f in [
+        'lib/screens/chat_screen.dart',
+        'lib/screens/group_info_screen.dart',
+      ]) {
+        expect(
+          File(f).readAsStringSync(),
+          allOf(
+            contains('r == Picked.missed'),
+            contains('l10n.wallpaperNotSet'),
+          ),
+          reason: f,
+        );
+      }
+    });
+
     testWidgets('one that will not clean is said so and kept nowhere', (
       t,
     ) async {

@@ -7189,6 +7189,10 @@
   "@wallpaperDefault": {
     "description": "screens/wallpaper_sheet.dart"
   },
+  "wallpaperNotSet": "The wallpaper was not set. Try again.",
+  "@wallpaperNotSet": {
+    "description": "screens/chat_screen.dart"
+  },
   "wallpaperFromYourPhotos": "From your photos",
   "@wallpaperFromYourPhotos": {
     "description": "screens/wallpaper_sheet.dart"

@@ -5752,6 +5752,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wallpaperDefault => 'Predeterminado';
 
   @override
+  String get wallpaperNotSet => 'No se puso el fondo. Inténtalo de nuevo.';
+
+  @override
   String get wallpaperFromYourPhotos => 'De tus fotos';
 
   @override

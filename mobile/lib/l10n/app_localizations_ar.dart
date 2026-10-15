@@ -5805,6 +5805,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get wallpaperDefault => 'الافتراضي';
 
   @override
+  String get wallpaperNotSet => 'لم تُضبط الخلفية. حاول مرة أخرى.';
+
+  @override
   String get wallpaperFromYourPhotos => 'من صورك';
 
   @override

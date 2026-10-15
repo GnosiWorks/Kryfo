@@ -5760,6 +5760,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wallpaperDefault => 'Predefinito';
 
   @override
+  String get wallpaperNotSet => 'Lo sfondo non è stato impostato. Riprova.';
+
+  @override
   String get wallpaperFromYourPhotos => 'Dalle tue foto';
 
   @override

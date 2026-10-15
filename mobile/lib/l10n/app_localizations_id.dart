@@ -5706,6 +5706,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get wallpaperDefault => 'Bawaan';
 
   @override
+  String get wallpaperNotSet => 'Latar belakang belum terpasang. Coba lagi.';
+
+  @override
   String get wallpaperFromYourPhotos => 'Dari galerimu';
 
   @override

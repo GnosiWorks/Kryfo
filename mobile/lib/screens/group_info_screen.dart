@@ -337,8 +337,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       final r = await pickWallpaperPhoto(
         context,
         save: (at, photo) => at.setChatPhoto(id, photo, group: true),
-        failed: () {
-          if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+        failed: (r) {
+          if (!mounted) return;
+          showHaloToast(
+            context,
+            r == Picked.missed
+                ? l10n.wallpaperNotSet
+                : l10n.cameraCouldNotStripThat,
+          );
         },
       );
       if (r != Picked.kept) return;

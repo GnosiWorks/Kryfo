@@ -5704,6 +5704,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperDefault => 'Mặc định';
 
   @override
+  String get wallpaperNotSet => 'Chưa đặt được hình nền. Hãy thử lại.';
+
+  @override
   String get wallpaperFromYourPhotos => 'Từ thư viện ảnh';
 
   @override
