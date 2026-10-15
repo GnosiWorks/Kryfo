@@ -13023,7 +13023,7 @@ abstract class AppLocalizations {
   /// **'Play GIF'**
   String get gifPlay;
 
-  /// gifs/gif_picture.dart, gifs/gif_opt_in.dart: under a gif you sent, and a point of the opt-in sheet: the gif went encrypted inside the message, nobody fetched it
+  /// gifs/gif_opt_in.dart: a point of the opt-in sheet, a gif you send goes encrypted inside the message and nobody fetches it
   ///
   /// In en, this message translates to:
   /// **'Sent inside your message'**

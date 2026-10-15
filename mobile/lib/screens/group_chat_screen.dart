@@ -5284,10 +5284,6 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           ),
-                                        if (isOut &&
-                                            m.text.isEmpty &&
-                                            m.mediaPath != null)
-                                          GifSentLine(path: m.mediaPath!),
                                         if (m.text.isNotEmpty)
                                           writtenStart(
                                             m.text,

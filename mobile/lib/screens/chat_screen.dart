@@ -7284,10 +7284,6 @@ class _Bubble extends StatelessWidget {
                                                 image: msg.mediaPath != null,
                                               ),
                                             ),
-                                          if (isOut &&
-                                              msg.text.isEmpty &&
-                                              msg.mediaPath != null)
-                                            GifSentLine(path: msg.mediaPath!),
                                           if (msg.url case final u?) ...[
                                             const SizedBox(height: 6),
                                             LinkStub(

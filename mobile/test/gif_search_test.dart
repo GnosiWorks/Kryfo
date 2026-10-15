@@ -925,23 +925,20 @@ void main() {
                       ),
                     ),
                   ),
-                  GifSentLine(path: path),
                 ],
               ),
             ),
           ),
         );
 
-    testWidgets('a gif plays with its badge and says it went inside', (
-      t,
-    ) async {
+    testWidgets('a gif plays with its badge and no line under it', (t) async {
       final f = File('${tmp.path}/a.jpg')..writeAsBytesSync(_gif);
       await t.runAsync(() => isGifFile(f.path));
       await bubble(t, f.path);
       await t.pump();
       expect(find.byKey(const ValueKey('playing')), findsOneWidget);
       expect(find.byType(GifBadge), findsOneWidget);
-      expect(find.text('Sent inside your message'), findsOneWidget);
+      expect(find.text('Sent inside your message'), findsNothing);
     });
 
     testWidgets('reduced motion: a still and a play mark', (t) async {
