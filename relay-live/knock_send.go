@@ -422,7 +422,13 @@ func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 		cancel()
 		if err != nil || len(ips) == 0 {
 			release()
-			q.result(ep, decoy, 0, errNotPublic)
+			// a name that is not there or has no public address is a
+			// definite answer, a resolver that fails is not
+			var dnsErr *net.DNSError
+			if err == nil || errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+				err = errNotPublic
+			}
+			q.result(ep, decoy, 0, err)
 			return true
 		}
 		ipKey = ips[0].String()
@@ -486,9 +492,10 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 	k.stats.failed.Add(1)
 	now := k.now()
 	k.mu.Lock()
-	// an endpoint that never worked and is answered with an error is let
-	// go at once: it would only hold a new one's room
-	if err == nil && code >= 400 && !ep.delivered {
+	// an endpoint that never worked and is refused for good is let go at
+	// once: it would only hold a new one's room. a busy or failing server
+	// is not a refusal
+	if !ep.delivered && (err == nil && knockRefused(code) || errors.Is(err, errNotPublic)) {
 		k.mu.Unlock()
 		k.gone(ep.url)
 		return
@@ -498,10 +505,22 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 		ep.failingSince = now
 	}
 	drop := ep.fails >= knockFailAtLeast && now.Sub(ep.failingSince) >= knockFailFor
+	// one that never worked goes sooner
+	drop = drop || !ep.delivered && ep.fails >= knockNewFailAtLeast && now.Sub(ep.failingSince) <= knockNewFailFor
 	k.mu.Unlock()
 	if drop {
 		k.gone(ep.url)
 	}
+}
+
+// answers that refuse the endpoint itself, not the moment
+func knockRefused(code int) bool {
+	switch code {
+	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound,
+		http.StatusMethodNotAllowed, http.StatusGone, http.StatusRequestEntityTooLarge:
+		return true
+	}
+	return false
 }
 
 // ---- where a post may go ----

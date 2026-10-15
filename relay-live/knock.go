@@ -74,6 +74,9 @@ const (
 	knockSweepChunk  = 1000
 	knockFailFor     = 24 * time.Hour
 	knockFailAtLeast = 5
+	// an endpoint that never delivered: so many failures within the hour
+	knockNewFailAtLeast = 3
+	knockNewFailFor     = time.Hour
 )
 
 // the mean gap between decoy runs to one endpoint. a run is shaped like a

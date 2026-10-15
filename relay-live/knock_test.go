@@ -818,6 +818,7 @@ func TestKnockFailingEndpointGoesAfterADay(t *testing.T) {
 	tk := newTestKnocks(t)
 	register(t, tk, testEP)
 	ep := tk.eps[testEP]
+	tk.q.result(ep, false, 201, nil)
 	// an hour of trouble: kept
 	for i := 0; i < 10; i++ {
 		tk.q.result(ep, false, 0, context.DeadlineExceeded)
@@ -1232,6 +1233,107 @@ func TestKnockUnprovenEndpointGoesAtItsFirstError(t *testing.T) {
 	tk.q.result(tk.eps["https://ntfy.sh/legit"], false, 500, nil)
 	if tk.eps["https://ntfy.sh/legit"] == nil {
 		t.Fatal("a proven endpoint went at one error")
+	}
+}
+
+// a new endpoint goes at once only on a refusal of the endpoint itself; a
+// busy or failing server goes the failure path, a shorter one while the
+// endpoint never delivered
+func TestKnockUnprovenEndpointSurvivesABusyServer(t *testing.T) {
+	tk := newTestKnocks(t)
+	n := 0
+	fresh := func() *knockEP {
+		n++
+		ep := fmt.Sprintf("https://ntfy.sh/busy%d", n)
+		ev := r3reg(r3key(n), ep, tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatal(msg)
+		}
+		return tk.eps[ep]
+	}
+	for _, code := range []int{400, 401, 403, 404, 405, 410, 413} {
+		ep := fresh()
+		tk.q.result(ep, true, code, nil)
+		if tk.eps[ep.url] != nil {
+			t.Fatalf("a new endpoint answered %d was kept", code)
+		}
+	}
+	for _, code := range []int{408, 429, 500, 502, 503, 504, 507} {
+		ep := fresh()
+		tk.q.result(ep, true, code, nil)
+		if tk.eps[ep.url] == nil {
+			t.Fatalf("a new endpoint went at one %d", code)
+		}
+	}
+	ep := fresh()
+	tk.q.result(ep, true, 0, context.DeadlineExceeded)
+	if tk.eps[ep.url] == nil {
+		t.Fatal("a new endpoint went at one timeout")
+	}
+	// three failures within the hour let a new one go
+	ep = fresh()
+	for i := 0; i < knockNewFailAtLeast; i++ {
+		if tk.eps[ep.url] == nil {
+			t.Fatalf("a new endpoint went after %d failures", i)
+		}
+		tk.q.result(ep, false, 503, nil)
+		tk.clock.set(tk.clock.now().Add(10 * time.Minute))
+	}
+	if tk.eps[ep.url] != nil {
+		t.Fatal("a new endpoint failing three times within the hour was kept")
+	}
+	// spread over hours they do not
+	ep = fresh()
+	for i := 0; i < knockNewFailAtLeast; i++ {
+		tk.q.result(ep, false, 503, nil)
+		tk.clock.set(tk.clock.now().Add(time.Hour))
+	}
+	if tk.eps[ep.url] == nil {
+		t.Fatal("a new endpoint failing now and then went")
+	}
+	// a proven one is kept through refusals and failures alike
+	ep = fresh()
+	tk.q.result(ep, false, 201, nil)
+	for _, code := range []int{400, 403, 503, 503, 503} {
+		tk.q.result(ep, false, code, nil)
+	}
+	tk.q.result(ep, false, 0, errNotPublic)
+	if tk.eps[ep.url] == nil {
+		t.Fatal("a proven endpoint went within minutes")
+	}
+}
+
+// at send time a name that is not there lets a new endpoint go; a resolver
+// that fails does not
+func TestKnockNewEndpointWithoutANameGoes(t *testing.T) {
+	tk := newTestKnocks(t)
+	posted := 0
+	tk.q.post = func(context.Context, string) (int, error) { posted++; return 201, nil }
+	for i, c := range []struct {
+		err  error
+		kept bool
+	}{
+		{&net.DNSError{Err: "no such host", IsNotFound: true}, false},
+		{errNotPublic, false},
+		{&net.DNSError{Err: "i/o timeout", IsTimeout: true}, true},
+		{context.DeadlineExceeded, true},
+	} {
+		tk.q.resolve = func(context.Context, string) ([]net.IP, error) { return nil, c.err }
+		url := fmt.Sprintf("https://push.s%d.org/x", i)
+		ev := r3reg(r3key(i), url, tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatal(msg)
+		}
+		tk.mu.Lock()
+		tk.domains[tk.eps[url].domain].inflight++
+		tk.mu.Unlock()
+		tk.q.send(context.Background(), tk.eps[url], true)
+		if (tk.eps[url] != nil) != c.kept {
+			t.Fatalf("%v: kept %v", c.err, tk.eps[url] != nil)
+		}
+	}
+	if posted != 0 {
+		t.Fatal("a knock went out without a public address")
 	}
 }
 
