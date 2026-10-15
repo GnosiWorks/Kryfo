@@ -2154,8 +2154,10 @@ class HaloDb implements GroupOwedStore {
           await upgradeTo80(db, oldV);
         }
         if (oldV < 81) {
-          // keys blocked as not who they said
+          // keys blocked as not who they said. a file made before this
+          // build took 80 for itself may lack the column 80 adds
           await blockedKeysTable(db);
+          await ackOwedColumn(db);
         }
       },
     );
