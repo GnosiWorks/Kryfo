@@ -272,34 +272,39 @@ type knocker struct {
 	namesMu sync.Mutex
 	// name lookups, so many a second for everyone
 	lookups *bucket
+	// posts go over ipv4: a name needs an ipv4 address
+	v4 bool
 }
 
 const knockNamesKept = 10000
 
+// the answer for a name, "" when it passes, and until when it holds
 type knockName struct {
-	ok    bool
+	msg   string
 	until time.Time
 }
 
-// whether a name has a public address: "" when it has, or the answer to
-// give. asked with a context of its own, so a caller that goes away cannot
-// cut the lookup short, and at most so many a second for everyone. past
-// that pace a name passes unchecked, so names that do not exist cannot
-// keep everyone else's out: the endpoint is a new one, the post checks
-// the address, and a name that is not there lets it go. only a definite
-// answer is remembered: an hour when the name has a public address, ten
-// minutes when it does not exist or has none. a timeout or a failing
-// resolver is never remembered
+const (
+	knockNoName = "invalid: this endpoint's name does not resolve"
+	knockNoV4   = "invalid: this endpoint's server has no ipv4 address"
+)
+
+// whether a name has a public address, an ipv4 one while posts go over
+// ipv4: "" when it has, or the answer to give. asked with a context of its
+// own, so a caller that goes away cannot cut the lookup short, and at most
+// so many a second for everyone. past that pace a name passes unchecked,
+// so names that do not exist cannot keep everyone else's out: the endpoint
+// is a new one, the post checks the address, and a name that is not there
+// lets it go. only a definite answer is remembered: an hour when the name
+// has a public address, ten minutes when it does not exist or has none. a
+// timeout or a failing resolver is never remembered
 func (k *knocker) nameCheck(host string) string {
 	host = strings.ToLower(host)
 	now := time.Now()
 	k.namesMu.Lock()
 	if n, ok := k.names[host]; ok && now.Before(n.until) {
 		k.namesMu.Unlock()
-		if n.ok {
-			return ""
-		}
-		return "invalid: this endpoint's name does not resolve"
+		return n.msg
 	}
 	if !k.lookups.take(now) {
 		k.namesMu.Unlock()
@@ -314,23 +319,28 @@ func (k *knocker) nameCheck(host string) string {
 	if !definite {
 		return "error: the name could not be looked up, try again"
 	}
-	ok := false
+	msg := knockNoName
 	if err == nil {
 		for _, ip := range ips {
-			ok = ok || (publicIP(ip) && !selfIP(ip))
+			if !publicIP(ip) || selfIP(ip) {
+				continue
+			}
+			if k.v4 && ip.To4() == nil {
+				msg = knockNoV4
+				continue
+			}
+			msg = ""
+			break
 		}
 	}
 	hold := 10 * time.Minute
-	if ok {
+	if msg == "" {
 		hold = time.Hour
 	}
 	k.namesMu.Lock()
-	k.rememberLocked(host, knockName{ok, now.Add(hold)})
+	k.rememberLocked(host, knockName{msg, now.Add(hold)})
 	k.namesMu.Unlock()
-	if ok {
-		return ""
-	}
-	return "invalid: this endpoint's name does not resolve"
+	return msg
 }
 
 // a full cache lets one entry go, an expired one where it finds one
@@ -376,6 +386,7 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		after:   func(d time.Duration, f func()) { time.AfterFunc(d, f) },
 		names:   map[string]knockName{},
 		lookups: newBucket(20, 40),
+		v4:      true,
 		lookup: func(ctx context.Context, host string) ([]net.IP, error) {
 			addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
 			var ips []net.IP
@@ -1072,6 +1083,8 @@ func startKnocks(relay *khatru.Relay, l *limits, dataDir string) (*knocker, erro
 	}
 	noteSelfIPs()
 	k := newKnocker(store, socks != "")
+	k.v4 = netw == "tcp4"
+	k.q.resolve = knockResolver(netw)
 	k.q.post = knockPoster(knockClient(netw, socks))
 	if err := k.load(); err != nil {
 		store.close()

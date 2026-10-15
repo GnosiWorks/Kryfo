@@ -1657,6 +1657,41 @@ func TestKnockMadeUpNamesKeepNoOneOut(t *testing.T) {
 	}
 }
 
+// posts go over ipv4, so a server with ipv6 addresses only is refused up
+// front, with an answer the app shows
+func TestKnockNameNeedsAnIPv4Address(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		switch {
+		case strings.HasPrefix(host, "v6only."):
+			return []net.IP{net.ParseIP("2606:4700::1111")}, nil
+		case strings.HasPrefix(host, "both."):
+			return []net.IP{net.ParseIP("2606:4700::1111"), net.ParseIP("1.1.1.1")}, nil
+		}
+		return fakeLookup(ctx, host)
+	}
+	ev := r3reg(r3key(1), "https://v6only.community.org/x", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); !rej || !strings.HasPrefix(msg, "invalid:") {
+		t.Fatalf("an ipv6-only server: %v %q", rej, msg)
+	}
+	// remembered with the same answer
+	ev = r3reg(r3key(2), "https://v6only.community.org/y", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); !rej || msg != knockNoV4 {
+		t.Fatalf("an ipv6-only server again: %v %q", rej, msg)
+	}
+	ev = r3reg(r3key(3), "https://both.community.org/x", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("a server with both: %q", msg)
+	}
+	// posting over both, ipv6 alone will do
+	tk.v4 = false
+	tk.names = map[string]knockName{}
+	ev = r3reg(r3key(4), "https://v6only.community.org/z", tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("an ipv6-only server with posts over both: %q", msg)
+	}
+}
+
 // a full cache lets one entry go at a time, never all of them
 func TestKnockNameCacheEvictsOne(t *testing.T) {
 	tk := newTestKnocks(t)
