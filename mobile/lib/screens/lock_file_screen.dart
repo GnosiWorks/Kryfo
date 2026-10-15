@@ -9,6 +9,7 @@ import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
+import '../open_file.dart' show ShareEnd;
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
@@ -342,13 +343,15 @@ class _LockFileScreenState extends State<LockFileScreen> {
   Future<void> _share() async {
     if (_busy) return;
     setState(() => _busy = true);
-    final ok = await ToolsBridge.instance.shareOut(
+    final end = await ToolsBridge.instance.shareOut(
       _outPath!,
       'application/octet-stream',
     );
     if (!mounted) return;
     setState(() => _busy = false);
-    if (!ok) showHaloToast(context, l10n.lockFileNoAppOnThis);
+    if (end == ShareEnd.failed) {
+      showHaloToast(context, l10n.lockFileNoAppOnThis);
+    }
   }
 
   Future<void> _save() async {

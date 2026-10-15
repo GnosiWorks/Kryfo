@@ -26,11 +26,22 @@ Future<bool> openWithAnotherApp(String path, {String? name}) async {
   }
 }
 
+/// how a share sheet ended. [picked] says only that an app was chosen,
+/// not that the file reached anyone
+enum ShareEnd { picked, closed, failed }
+
+/// the platform's answer: anything unknown is a sheet that did not open
+ShareEnd shareEndOf(Object? answer) => switch (answer) {
+  'picked' => ShareEnd.picked,
+  'closed' => ShareEnd.closed,
+  _ => ShareEnd.failed,
+};
+
 /// the share sheet with a copy of [path] the app keeps and shreds itself,
-/// not the share plugin's, which goes unzeroed at the next share. false
-/// when the copy was not made or the sheet did not open. a [backup] is
-/// ciphertext, kept until the next one or a day
-Future<bool> shareFileOut(
+/// not the share plugin's, which goes unzeroed at the next share. answers
+/// once the sheet is over: failed when the copy was not made or the sheet
+/// did not open. a [backup] is ciphertext, kept until the next one or a day
+Future<ShareEnd> shareFileOut(
   String path, {
   String? name,
   String? text,
@@ -38,18 +49,19 @@ Future<bool> shareFileOut(
   bool backup = false,
 }) async {
   try {
-    return await _channel.invokeMethod<bool>('shareFile', {
-          'path': path,
-          'name': name,
-          'text': text,
-          'subject': subject,
-          'backup': backup,
-          'quiet': !backup && shareGoesWithLock(),
-        }) ??
-        false;
+    return shareEndOf(
+      await _channel.invokeMethod<Object>('shareFile', {
+        'path': path,
+        'name': name,
+        'text': text,
+        'subject': subject,
+        'backup': backup,
+        'quiet': !backup && shareGoesWithLock(),
+      }),
+    );
   } catch (e) {
     dlog('share: ${e.runtimeType}');
-    return false;
+    return ShareEnd.failed;
   }
 }
 

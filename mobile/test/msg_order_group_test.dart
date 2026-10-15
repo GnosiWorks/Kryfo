@@ -2,11 +2,14 @@
 // a group shows its messages where they were written. one that came late
 // goes between its neighbours, and one written before the pages held
 // comes in with its own page as the reader scrolls up, not at the bottom
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
 import 'package:kryfo/screens/group_chat_screen.dart';
@@ -175,6 +178,8 @@ void main() {
     WidgetTester t, {
     String? jumpTo,
     bool still = false,
+    Locale locale = const Locale('en'),
+    double scale = 1,
   }) async {
     phone(t);
     db = _GroupDb();
@@ -187,10 +192,20 @@ void main() {
     addTearDown(
       () => m.setMockMethodCallHandler(SystemChannels.platform, null),
     );
+    setL10nLocale(locale);
+    addTearDown(() => setL10nLocale(const Locale('en')));
     await t.pumpWidget(
       app(
-        GroupChatScreen(groupId: _group, jumpToUid: jumpTo),
+        Builder(
+          builder: (c) => MediaQuery(
+            data: MediaQuery.of(
+              c,
+            ).copyWith(textScaler: TextScaler.linear(scale)),
+            child: GroupChatScreen(groupId: _group, jumpToUid: jumpTo),
+          ),
+        ),
         still: still,
+        locale: locale,
       ),
     );
     await frames(t, 20);
@@ -323,6 +338,77 @@ void main() {
       await close(t);
     });
   }
+
+  // the newest bubble's time rests above the line, whatever the keyboard,
+  // the direction or the size of the words
+  for (final (how, locale, scale, keyboard) in [
+    ('', const Locale('en'), 1.0, false),
+    (', keyboard up', const Locale('en'), 1.0, true),
+    (', right to left', const Locale('ar'), 1.0, false),
+    (', large text', const Locale('en'), 2.0, false),
+  ]) {
+    for (final still in [false, true]) {
+      testWidgets('the line never covers the newest bubble\'s time$how'
+          '${still ? ', reduced motion' : ''}', (t) async {
+        await open(t, locale: locale, scale: scale, still: still);
+        if (keyboard) {
+          t.view.viewInsets = const FakeViewPadding(bottom: 900);
+          addTearDown(t.view.resetViewInsets);
+          await frames(t, 6);
+          thread(t).jumpTo(thread(t).maxScrollExtent);
+          await frames(t, 2);
+        }
+        final time = find
+            .textContaining(
+              hourMinute(DateTime.fromMillisecondsSinceEpoch(note(99))),
+              findRichText: true,
+            )
+            .last;
+        final before = t.getRect(time);
+        db.add('late seven', note(60) + 60000);
+        appState.chatChanged('group:$_group');
+        await frames(t, 10);
+        final chip = find.byKey(const ValueKey('earlier-chip'));
+        expect(
+          find.text(l10n.chatEarlierMessagesArrived(1)).hitTestable(),
+          findsOneWidget,
+        );
+        final meta = t.getRect(time);
+        expect(meta.overlaps(t.getRect(chip)), isFalse);
+        expect(meta.bottom, lessThan(t.getRect(chip).top));
+        // the reader at the newest rode up with it
+        expect(meta.top, lessThan(before.top));
+        expect(
+          thread(t).pixels,
+          moreOrLessEquals(thread(t).maxScrollExtent, epsilon: 0.01),
+        );
+        await close(t);
+      });
+    }
+  }
+
+  testWidgets('the line leaves a reader up the thread where they are', (
+    t,
+  ) async {
+    await open(t);
+    thread(t).jumpTo(thread(t).maxScrollExtent - 1500);
+    await frames(t, 6);
+    final reading = [
+      for (var i = 0; i < _rows; i++)
+        if (seen('note $i')) i,
+    ];
+    final top = y(t, 'note ${reading.first}');
+    // in the page held, above what is on screen
+    db.add('late eight', note(math.max(reading.first - 8, 42)) + 60000);
+    appState.chatChanged('group:$_group');
+    await frames(t, 10);
+    expect(
+      find.text(l10n.chatEarlierMessagesArrived(1)).hitTestable(),
+      findsOneWidget,
+    );
+    expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
+    await close(t);
+  });
 
   testWidgets('opened on a message in the newest page, the whole thread is '
       'not read', (t) async {

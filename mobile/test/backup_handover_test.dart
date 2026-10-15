@@ -2,8 +2,8 @@
 // a move backed out of the save dialog never opens the share sheet by
 // itself. shared on purpose, the made file goes and the phone is retired
 // only once the person says the file arrived. a share whose copy could not
-// be made, a full phone say, keeps the file and the phone. the platform is
-// a stand-in that says yes or no
+// be made, a full phone say, or a sheet closed with no app picked, keeps
+// the file and the phone. the platform is a stand-in
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -34,7 +34,7 @@ void main() {
   late Directory tmp;
   late List<String> asked;
 
-  void platform({required bool shares}) => TestDefaultBinaryMessengerBinding
+  void platform({required String shares}) => TestDefaultBinaryMessengerBinding
       .instance
       .defaultBinaryMessenger
       .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
@@ -125,7 +125,7 @@ void main() {
   testWidgets('a copy that could not be made keeps the file and the phone', (
     t,
   ) async {
-    platform(shares: false);
+    platform(shares: 'failed');
     await move(t);
     await until(t, () async => asked.contains('shareFile'));
     // and a beat for whatever would follow a hand-over that went
@@ -142,9 +142,29 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
+  testWidgets('a sheet closed with no app picked says so and keeps the '
+      'file and the phone', (t) async {
+    platform(shares: 'closed');
+    await move(t);
+    await until(t, () async => asked.contains('shareFile'));
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump();
+    }
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.backupNotSaved), findsOneWidget);
+    expect(find.text(l10n.backupShareInstead), findsOneWidget);
+    expect(find.text(l10n.backupFinishTheMove), findsNothing);
+    expect(made(), hasLength(1));
+    expect(await t.runAsync(movedAt), isNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
   testWidgets('a share that went lets the file go and, once it arrived, '
       'retires the phone', (t) async {
-    platform(shares: true);
+    platform(shares: 'picked');
     await move(t);
     final arrived = find.text(l10n.backupFinishTheMove);
     await until(t, () async => arrived.evaluate().isNotEmpty);

@@ -53,6 +53,7 @@ import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
+import 'screens/chat_door.dart' show openChatAt;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
 import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
@@ -2570,7 +2571,9 @@ class HaloDb implements GroupOwedStore {
 
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
+    String? atmo;
     final files = await d.transaction((t) async {
+      atmo = await _atmosphereOf(t, haloId);
       final rows = await t.query(
         'messages',
         columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
@@ -2619,20 +2622,46 @@ class HaloDb implements GroupOwedStore {
       return rows;
     });
     await _scrubMedia(files);
+    await _dropPhotos([atmo]);
+  }
+
+  // a chat's atmosphere as its row has it
+  static Future<String?> _atmosphereOf(
+    DatabaseExecutor t,
+    String haloId,
+  ) async {
+    final r = await t.query(
+      'contacts',
+      columns: ['atmosphere'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['atmosphere'] as String?;
   }
 
   // a request that never became one: its row, its shield line and what
   // of theirs waited to be tried again
   Future<void> forgetRequest(String haloId) async {
     final db = await open();
-    await db.delete(
-      'contacts',
-      where: 'halo_id = ? AND accepted = ?',
-      whereArgs: [haloId, 0],
-    );
-    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
-    await db.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
-    await db.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+    final gone = await db.transaction((t) async {
+      final gone = await t.query(
+        'contacts',
+        columns: ['atmosphere'],
+        where: 'halo_id = ? AND accepted = ?',
+        whereArgs: [haloId, 0],
+      );
+      await t.delete(
+        'contacts',
+        where: 'halo_id = ? AND accepted = ?',
+        whereArgs: [haloId, 0],
+      );
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
+      await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      return gone;
+    });
+    await _dropPhotos([for (final r in gone) r['atmosphere']]);
   }
 
   // they wrote after we deleted them: bring the row back as a request.
@@ -2710,34 +2739,39 @@ class HaloDb implements GroupOwedStore {
   // came with it go. what is left is a name nobody checked
   Future<void> forgetName(String haloId) async {
     final db = await open();
-    await db.update(
-      'contacts',
-      {
-        'xpub': '',
-        'peer_bundle': null,
-        'key_changed': 0,
-        'verified': 0,
-        'verified_key': null,
-        'back_paired': 0,
-        'avatar': null,
-        'supporter_badge': null,
-        'vouched_by': null,
-        'vouched_at': null,
-        'nickname': null,
-        'note': null,
-        'atmosphere': null,
-        'pinned': 0,
-        'muted': 0,
-        'voice_disguise': null,
-        'name_check': kNameAsk | kNameSays,
-      },
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
-    );
-    // vouches for them, and the ones they gave
-    await db.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
-    await db.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
-    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+    final atmo = await db.transaction((t) async {
+      final atmo = await _atmosphereOf(t, haloId);
+      await t.update(
+        'contacts',
+        {
+          'xpub': '',
+          'peer_bundle': null,
+          'key_changed': 0,
+          'verified': 0,
+          'verified_key': null,
+          'back_paired': 0,
+          'avatar': null,
+          'supporter_badge': null,
+          'vouched_by': null,
+          'vouched_at': null,
+          'nickname': null,
+          'note': null,
+          'atmosphere': null,
+          'pinned': 0,
+          'muted': 0,
+          'voice_disguise': null,
+          'name_check': kNameAsk | kNameSays,
+        },
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
+      // vouches for them, and the ones they gave
+      await t.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      return atmo;
+    });
+    await _dropPhotos([atmo]);
   }
 
   // a member of a group or a room here
@@ -3120,7 +3154,9 @@ class HaloDb implements GroupOwedStore {
   // not a block: they can reach us again later.
   Future<void> declineRequest(String haloId) async {
     final d = await open();
+    String? atmo;
     final files = await d.transaction((t) async {
+      atmo = await _atmosphereOf(t, haloId);
       final rows = await t.query(
         'messages',
         columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
@@ -3159,16 +3195,23 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // park, don't delete: the row carries the xpub the relay subscription
       // is built from. if they write again, unparkIfArchived surfaces them as
-      // a new request.
+      // a new request. a wallpaper set for the request goes with it
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0, 'ack_owed': 0},
+        {
+          'accepted': 0,
+          'archived': 1,
+          'unread': 0,
+          'ack_owed': 0,
+          'atmosphere': null,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
       return rows;
     });
     await _scrubMedia(files);
+    await _dropPhotos([atmo]);
   }
 
   // [owe]: an add that takes in someone who asked, which owes them word
@@ -4229,6 +4272,117 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  // the photo an atmosphere names, null for a preset
+  static String? _photoOf(Object? atmosphere) =>
+      atmosphere is String && atmosphere.startsWith('image:')
+      ? atmosphere.substring(6)
+      : null;
+
+  // every photo a chat or group here names, by its name in the folder
+  Future<Set<String>> _namedPhotos() async {
+    final db = await open();
+    return {
+      for (final t in const ['contacts', 'groups'])
+        for (final r in await db.query(
+          t,
+          columns: ['atmosphere'],
+          where: 'atmosphere IS NOT NULL',
+        ))
+          if (_photoOf(r['atmosphere']) case final f?) p.basename(f),
+    };
+  }
+
+  // wallpapers whose rows are written without them. one a row still names
+  // stays, and only this container's wallpapers folder is ever touched
+  Future<void> _dropPhotos(Iterable<Object?> atmospheres) async {
+    final names = {
+      for (final a in atmospheres)
+        if (_photoOf(a) case final f?) p.basename(f),
+    }..removeWhere((n) => n.isEmpty || n == '.' || n == '..');
+    if (names.isEmpty) return;
+    try {
+      final named = await _namedPhotos();
+      final dir = await container.folder('wallpapers');
+      for (final n in names) {
+        if (!named.contains(n)) await shredFile(p.join(dir.path, n));
+      }
+    } catch (e) {
+      // the start sweep takes it
+      dlog('wallpaper: not shredded (${e.runtimeType})');
+    }
+  }
+
+  static final _randomWall = RegExp(r'^wp_[0-9a-f]{32}\.jpg$');
+
+  /// wallpapers an older version named after their chat get a random name:
+  /// the row is written first, then the file renamed. a start between the
+  /// two finds the row's file missing and the old name beside it, and
+  /// finishes the rename. throws when a rename is left undone, so nothing
+  /// is swept that a row is about to name
+  Future<void> renameNamedWallpapers() async {
+    final db = await open();
+    final dir = await container.folder('wallpapers');
+    for (final r in await db.query(
+      'contacts',
+      columns: ['halo_id', 'atmosphere'],
+      where: 'atmosphere IS NOT NULL',
+    )) {
+      final id = r['halo_id'] as String;
+      final was = r['atmosphere'];
+      final f = _photoOf(was);
+      if (f == null) continue;
+      final leaf = p.basename(f);
+      final at = File(p.join(dir.path, leaf));
+      final type = await FileSystemEntity.type(at.path, followLinks: false);
+      if (_randomWall.hasMatch(leaf)) {
+        if (type == FileSystemEntityType.notFound) {
+          await (await _namedAfter(dir, id))?.rename(at.path);
+        }
+        continue;
+      }
+      // only a file of ours: a link or a folder is left as it is
+      if (type != FileSystemEntityType.file) continue;
+      final to = p.join(dir.path, _freshWallLeaf());
+      final written = await db.transaction((t) async {
+        if (await _atmosphereOf(t, id) != was) return false;
+        await t.update(
+          'contacts',
+          {'atmosphere': 'image:$to'},
+          where: 'halo_id = ?',
+          whereArgs: [id],
+        );
+        return true;
+      });
+      if (written) await at.rename(to);
+    }
+  }
+
+  // a wallpaper an older version named after [id]'s chat, the newest
+  static Future<File?> _namedAfter(Directory dir, String id) async {
+    final shape = RegExp('^${RegExp.escape(id)}(_[0-9a-f]{16})?\\.jpg\$');
+    File? best;
+    DateTime? at;
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File || !shape.hasMatch(p.basename(e.path))) continue;
+      final m = await e.lastModified();
+      if (at == null || m.isAfter(at)) (best, at) = (e, m);
+    }
+    return best;
+  }
+
+  /// the files in this container's wallpapers folder that no chat or group
+  /// names, last written before [before]: what a delete or a crash left
+  Future<List<File>> unnamedWallpapers({required DateTime before}) async {
+    final named = await _namedPhotos();
+    final dir = await container.folder('wallpapers');
+    final out = <File>[];
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File || named.contains(p.basename(e.path))) continue;
+      if ((await e.lastModified()).isBefore(before)) out.add(e);
+    }
+    return out;
+  }
+
   /// the files in this container's media folder that no message names,
   /// last written before [before]: what a delete left behind. a file is
   /// matched by its name in the folder, so rows written under another
@@ -4620,14 +4774,36 @@ class HaloDb implements GroupOwedStore {
     return rows.first['atmosphere'] as String?;
   }
 
+  // the photo it had goes once the row is written
   Future<void> setAtmosphere(String peerId, String atmosphere) async {
     final db = await open();
-    await db.update(
-      'contacts',
-      {'atmosphere': atmosphere},
-      where: 'halo_id = ?',
-      whereArgs: [peerId],
-    );
+    final was = await db.transaction((t) async {
+      final was = await _atmosphereOf(t, peerId);
+      await t.update(
+        'contacts',
+        {'atmosphere': atmosphere},
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+      );
+      return was;
+    });
+    if (was != atmosphere) await _dropPhotos([was]);
+  }
+
+  // a photo from the gallery behind a chat, under a new random name: the
+  // old file is shredded, not written over, no cached image of it shows,
+  // and the name says nothing of whose chat it is. the path it was kept at
+  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) async {
+    final dir = await container.folder('wallpapers');
+    final f = File(p.join(dir.path, _freshWallLeaf()));
+    try {
+      await f.writeAsBytes(bytes, flush: true);
+      await setAtmosphere(peerId, 'image:${f.path}');
+    } catch (_) {
+      await shredFile(f.path);
+      rethrow;
+    }
+    return f.path;
   }
 
   // a chat's own voice disguise choice, null until one is made here
@@ -9748,6 +9924,34 @@ Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
 
 final _leafRandom = Random.secure();
+
+// a wallpaper's name: random, never its chat's
+String _freshWallLeaf() {
+  final b = [for (var i = 0; i < 16; i++) _leafRandom.nextInt(256)];
+  return 'wp_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}.jpg';
+}
+
+/// a container's wallpapers put right while it is open and settled: names
+/// that say whose chat it is go random, then what no row names is listed
+/// for the shred. the decoy's, with a vault of its own on disk, waits for
+/// that vault's open ([vaultOpen]): a hide cut short can leave a file only
+/// the vault's rows name. nothing moves while a backup reads the folder or
+/// a restore replaces it
+@visibleForTesting
+Future<List<File>> tidyWallpapers(
+  HaloDb d, {
+  required DateTime before,
+  bool vaultOpen = false,
+}) async {
+  if (restoreRunning || backupRunning) return const [];
+  if (d.container == HaloContainer.decoy &&
+      !vaultOpen &&
+      await HaloContainer.decoyVault.onDisk()) {
+    return const [];
+  }
+  await d.renameNamedWallpapers();
+  return d.unnamedWallpapers(before: before);
+}
 
 // a name for an arriving file that nothing on the wire chose: never a
 // message id, and never the shape of the names our own files get
@@ -16815,6 +17019,10 @@ class AppState extends ChangeNotifier {
         final q = await _quietOf(d);
         if (q != null) {
           await _dropGroupLeftovers(d);
+          await _sweepUnnamedWallpapers(
+            d,
+            DateTime.now().subtract(const Duration(minutes: 10)),
+          );
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -17562,6 +17770,12 @@ class AppState extends ChangeNotifier {
         }
       }
       await _dropGroupLeftovers(v);
+      // settled, both sides' rows name their files
+      final before = DateTime.now().subtract(const Duration(minutes: 10));
+      await _sweepUnnamedWallpapers(v, before);
+      if (decoy) {
+        await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
+      }
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -19660,6 +19874,30 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // as for media: settled here, zeroed in the background
+  Future<void> _sweepUnnamedWallpapers(
+    HaloDb d,
+    DateTime before, {
+    bool vaultOpen = false,
+  }) async {
+    try {
+      final gone = await tidyWallpapers(
+        d,
+        before: before,
+        vaultOpen: vaultOpen,
+      );
+      if (gone.isEmpty) return;
+      dlog('wallpaper: ${gone.length} files no chat names');
+      unawaited(() async {
+        for (final f in gone) {
+          await shredFile(f.path);
+        }
+      }());
+    } catch (e) {
+      dlog('wallpaper: not swept (${e.runtimeType})');
+    }
+  }
+
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
@@ -19703,6 +19941,10 @@ class AppState extends ChangeNotifier {
     if (settled) {
       await _dropGroupLeftovers(live);
       await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
+      await _sweepUnnamedWallpapers(
+        live,
+        bootAt.subtract(const Duration(minutes: 10)),
+      );
     }
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
@@ -24269,25 +24511,7 @@ class _RootShellState extends State<RootShell> {
       expiredRoomName: appState.expiredRoomName,
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
-      onOpenChat: (id) async {
-        final rows = await session.contacts();
-        final matches = rows.where((r) => r['halo_id'] == id).toList();
-        if (matches.isEmpty || !context.mounted) return;
-        final row = matches.first;
-        Navigator.push(
-          context,
-          haloRoute(
-            ChatScreen(
-              peerHaloId: id,
-              peerOnion: row['onion'] as String,
-              peerXPub: row['xpub'] as String,
-              avatarSeed: id,
-              avatarChoice: (row['avatar'] as num?)?.toInt(),
-              nickname: row['nickname'] as String?,
-            ),
-          ),
-        );
-      },
+      onOpenChat: (id) => openChatAt(context, peer: id),
       onOpenGroup: (groupId) async {
         if (!mounted) return;
         Navigator.push(context, haloRoute(GroupChatScreen(groupId: groupId)));

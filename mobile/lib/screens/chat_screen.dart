@@ -4896,6 +4896,7 @@ class _ChatScreenState extends State<ChatScreen>
           avatarSeed: widget.avatarSeed,
           peerXPub: widget.peerXPub,
           face: _peerFace,
+          nickname: _nickname,
         ),
       ),
     );
@@ -4956,23 +4957,12 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     HapticFeedback.selectionClick();
-    await _dropWallpaperFile();
     await session.setAtmosphere(widget.peerHaloId, picked.name);
     if (!mounted) return;
     setState(() {
       _atmosphere = picked;
       _wallpaperPath = null;
     });
-  }
-
-  Future<void> _dropWallpaperFile() async {
-    final old = _wallpaperPath;
-    if (old == null) return;
-    try {
-      await shredFile(old);
-    } catch (_) {
-      // shredFile logs its own failure
-    }
   }
 
   // a picture from the gallery, shrunk by the picker, copied into the
@@ -4993,14 +4983,11 @@ class _ChatScreenState extends State<ChatScreen>
     } finally {
       await shredPickedImages([x]);
     }
-    final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
-    final file = File('${folder.path}/${widget.peerHaloId}.jpg');
-    await file.writeAsBytes(bytes, flush: true);
-    await session.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
+    final path = await session.setWallpaperPhoto(widget.peerHaloId, bytes);
     if (!mounted) return;
     HapticFeedback.selectionClick();
     setState(() {
-      _wallpaperPath = file.path;
+      _wallpaperPath = path;
       _atmosphere = Atmo.none;
     });
   }
@@ -5474,50 +5461,58 @@ class _ChatScreenState extends State<ChatScreen>
                           : NotificationListener<ScrollMetricsNotification>(
                               key: const ValueKey('list'),
                               onNotification: _threadResized,
-                              child: ListView.builder(
+                              // the newest bubble's time rests above the line
+                              child: EarlierRoom(
+                                shown: _earlier.count > 0,
                                 controller: _scrollCtrl,
-                                reverse: true,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                itemCount: _messages.length,
-                                findChildIndexCallback: _indexOfRow,
-                                itemBuilder: (c, i) {
-                                  // one unbuildable message must never cost
-                                  // the whole conversation. draw a stub and
-                                  // carry on.
-                                  try {
-                                    // keyed by the message at the top, where
-                                    // the list looks: in a reversed list every
-                                    // arrival moves every index, and a voice
-                                    // note must keep its player. the same id
-                                    // is the anchor a jump lands on.
-                                    final id = _rowKey(
-                                      _messages[_messages.length - 1 - i],
-                                    );
-                                    return RowAnchor(
-                                      key: ValueKey(id),
-                                      anchors: _anchors,
-                                      id: id,
-                                      child: _buildRow(c, i, searchActive),
-                                    );
-                                  } catch (e) {
-                                    dlog('bubble failed: $e');
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      child: Text(
-                                        l10n.chatThisMessageCanT,
-                                        style: HaloType.sans(
-                                          size: 12,
-                                          color: HaloColors.text2,
+                                reversed: true,
+                                builder: (_, room) => ListView.builder(
+                                  controller: _scrollCtrl,
+                                  reverse: true,
+                                  padding: EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    12 + room,
+                                  ),
+                                  itemCount: _messages.length,
+                                  findChildIndexCallback: _indexOfRow,
+                                  itemBuilder: (c, i) {
+                                    // one unbuildable message must never cost
+                                    // the whole conversation. draw a stub and
+                                    // carry on.
+                                    try {
+                                      // keyed by the message at the top, where
+                                      // the list looks: in a reversed list every
+                                      // arrival moves every index, and a voice
+                                      // note must keep its player. the same id
+                                      // is the anchor a jump lands on.
+                                      final id = _rowKey(
+                                        _messages[_messages.length - 1 - i],
+                                      );
+                                      return RowAnchor(
+                                        key: ValueKey(id),
+                                        anchors: _anchors,
+                                        id: id,
+                                        child: _buildRow(c, i, searchActive),
+                                      );
+                                    } catch (e) {
+                                      dlog('bubble failed: $e');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
                                         ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                        child: Text(
+                                          l10n.chatThisMessageCanT,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                     ),
