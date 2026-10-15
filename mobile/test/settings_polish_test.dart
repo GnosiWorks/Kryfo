@@ -291,6 +291,37 @@ void main() {
       expect(find.text(l10n.settingsPerChat), findsOneWidget);
       await devClose(t);
     });
+
+    testWidgets('the old switch still waiting on home\'s card: the '
+        'protections say the window is covered', (t) async {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+      });
+      await devWorld();
+      FlutterSecureStorage.setMockInitialValues({'block_screenshots': 'true'});
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (_) async => null,
+      );
+      await t.runAsync(() => appState.loadScreenSecure());
+      addTearDown(() async {
+        FlutterSecureStorage.setMockInitialValues({});
+        await appState.loadScreenSecure();
+      });
+      t.view.physicalSize = const Size(1000, 6000);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(devApp(const SettingsScreen()));
+      await t.pump(const Duration(seconds: 1));
+      final line = t.widget<ProtectionLine>(
+        find.byWidgetPredicate(
+          (w) => w is ProtectionLine && w.label == l10n.settingsScreenshots,
+        ),
+      );
+      expect((line.on, line.state), (true, l10n.settingsBlocked2));
+      await devClose(t);
+    });
   });
 
   group('gif search row', () {

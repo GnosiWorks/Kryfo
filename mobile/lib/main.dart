@@ -13976,6 +13976,8 @@ class AppState extends ChangeNotifier {
       _shotsCardWaits && !sessionQuiet && !lockState.inVault;
   // a chat whose phone knows the block, for the card's yes
   bool get shotsCardCan => _shotsCardCan;
+  // the whole window stays covered until the card is answered
+  bool get shotsCardCovers => _shotsCardWaits;
 
   Future<void> _readShotsCard() async {
     final can = (await live.shotsCanTurnOn()).isNotEmpty;
@@ -14015,6 +14017,10 @@ class AppState extends ChangeNotifier {
   Future<void> _turnShots(String peer, bool on, HaloDb db) async {
     final at = await db.turnShots(peer, on: on);
     if (at == null) return;
+    // blocking now: what the shade still shows of the chat goes
+    if (on && (await db.shotsOf(peer)).blocking) {
+      unawaited(_io.unnotify(peer));
+    }
     // queued first: a route that is down carries it later
     await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
     _bumpChatRev(peer);
@@ -14053,6 +14059,8 @@ class AppState extends ChangeNotifier {
       if (!changed) return;
       _bumpChatRev(peer);
       notifyListeners();
+      // blocking now: what the shade still shows of the chat goes
+      if ((await db.shotsOf(peer)).blocking) unawaited(_io.unnotify(peer));
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {
@@ -14066,16 +14074,21 @@ class AppState extends ChangeNotifier {
     if (isDevId(peer)) return wrapped;
     final body = shotsBodyOf(wrapped);
     if (body == null) return wrapped;
-    var word = const ShotsWord(on: false, at: 0);
+    ShotsWord? word;
     try {
       final s = await _ownerOf(peer).shotsOf(peer);
       if (s.known) word = s.word;
     } catch (e) {
       dlog('shots: not read for the wire (${e.runtimeType})');
     }
-    final heard = _shotsWords[peer];
-    if (heard != null && shotsWins(heard, on: word.on, at: word.at)) {
-      word = heard;
+    // no row here: a chat shut away in the vault says what its card kept
+    // at the close, or a newer word since, as an open one would
+    if (word == null) {
+      word = _router.cardOf(peer)?.shots ?? const ShotsWord(on: false, at: 0);
+      final heard = _shotsWords[peer];
+      if (heard != null && shotsWins(heard, on: word.on, at: word.at)) {
+        word = heard;
+      }
     }
     _shotsHeard(peer, word);
     return shotsPut(body, word);
@@ -14096,6 +14109,10 @@ class AppState extends ChangeNotifier {
   /// at once, before a screen opens on it
   bool shotsBlocksChat(String peer) =>
       contacts.any((c) => c.haloId == peer && c.shotsBlocking);
+
+  /// a room, which always blocks, as the list knows it
+  bool shotsBlocksGroup(String groupId) =>
+      groups.any((g) => g.groupId == groupId && g.expiresAt != null);
 
   Future<void> loadThemePref() async {
     try {
@@ -15142,12 +15159,6 @@ class AppState extends ChangeNotifier {
       wire = kept;
       env = unwrapMessage(kept);
     }
-    // heard before anything else: one sealed away still says what its
-    // chat's next envelope carries
-    final heard = env.shots;
-    if (heard != null && env.groupId == null && !isDevId(senderHaloId)) {
-      _shotsHeard(senderHaloId, heard);
-    }
     if (into != null) {
       return _fileArrival(
         senderHaloId,
@@ -15287,6 +15298,14 @@ class AppState extends ChangeNotifier {
       to = _routeOf(senderHaloId, env.groupId);
       if (to == RouteTo.dropped) return to;
       if (to == RouteTo.sealed) {
+        // its rows are shut away: what it says of the block is kept in
+        // memory, as its row would take it, for the next envelope to it
+        final heard = env.shots;
+        if (heard != null &&
+            env.groupId == null &&
+            shotsInTime(heard, DateTime.now().millisecondsSinceEpoch)) {
+          _shotsHeard(senderHaloId, heard);
+        }
         await _sealArrival(
           senderHaloId,
           env,
@@ -16138,7 +16157,10 @@ class AppState extends ChangeNotifier {
       final who = looksLikeRoomKey(senderHaloId)
           ? l10n.notificationsSomeone
           : named;
-      notifBody = '$who: $gBody';
+      // a room always blocks: none of it in the shade
+      notifBody = g?['room_pub'] != null
+          ? l10n.notificationsNewMessage
+          : '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = reading;
     } else if (!senderAccepted) {

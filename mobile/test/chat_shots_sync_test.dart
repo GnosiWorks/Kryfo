@@ -279,4 +279,18 @@ void main() {
     expect(ChatShots.ofRow(hidden.rows('contacts').single).on, isTrue);
     expect(everyday.rows('contacts'), isEmpty);
   });
+
+  test('as a chat starts blocking, what the shade shows of it goes, on '
+      'both phones', () async {
+    await text(bob, amy, 'b1');
+    await text(amy, bob, 'a1');
+    expect(amy.io.unrang, isNot(contains('bob')));
+    amy.use();
+    await amy.app.setChatShots('bob', true);
+    await settle();
+    expect(amy.io.unrang, contains('bob'));
+    expect(bob.io.unrang, isNot(contains('amy')));
+    await bob.take('amy', await amy.wire('bob'));
+    expect(bob.io.unrang, contains('amy'));
+  });
 }

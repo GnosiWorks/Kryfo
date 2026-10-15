@@ -6,6 +6,7 @@
 // away in the vault still says what an open one would. the stamp is one
 // width whatever it is, and none from far ahead is taken. a decoy's switch
 // works as anyone's, on its own phone
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -170,30 +171,6 @@ void main() {
       expect(live.shotsReads, 1);
     });
 
-    test('a chat shut away in the vault says the last word heard', () async {
-      final (app, live, io) = await world();
-      live.person('hidden-one', xpub: 'x-hidden-one');
-      final heard = shotsStamped(
-        await wrapMessage(
-          '',
-          deliveredUid: 'x',
-          sender: asSender('hidden-one'),
-        ),
-        const ShotsWord(on: true, at: 1760000000000),
-      );
-      io.opens['h1'] = ('hidden-one', heard);
-      await app.receiveRelay([(peer: 'x-hidden-one', cipher: 'h1')]);
-      // the vault shuts: its rows are no longer here
-      live.people.remove('hidden-one');
-      final out = unwrapMessage(
-        await app.shotsOnWire(
-          'hidden-one',
-          await wrapMessage('', deliveredUid: 'y', sender: asSender('me')),
-        ),
-      );
-      expect((out.shots!.on, out.shots!.at), (true, 1760000000000));
-    });
-
     test('and the last word sent, once its rows are shut away', () async {
       final (app, live, _) = await world();
       final w = await wrapMessage('', sender: asSender('me'));
@@ -319,4 +296,133 @@ void main() {
       expect(io.sent, isEmpty);
     },
   );
+
+  group('a chat shut away in the vault', () {
+    // a phone whose hidden chat with h is on the router's list, its card
+    // as the vault left it at the close, and no row of it here
+    Future<(AppState, ArrivalIo, ArrivalStore)> shut({ShotsWord? card}) async {
+      final live = _Arrivals(HaloContainer.everyday);
+      final io = ArrivalIo();
+      final store = ArrivalStore();
+      await store.putHidden(
+        'h',
+        kHiddenPeer,
+        peerCard(RouterCard('h', 'o-h', 'x-h', backPaired: true, shots: card)),
+        1,
+      );
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      final app = AppState(io: io, router: router)..myId = 'me';
+      useDatabasesForTest(live, Session(live));
+      return (app, io, store);
+    }
+
+    Future<ShotsWord> wire(AppState app) async => unwrapMessage(
+      await app.shotsOnWire(
+        'h',
+        await wrapMessage('', deliveredUid: 'r', sender: asSender('me')),
+      ),
+    ).shots!;
+
+    test('a fresh start says what the card kept at the close, even when '
+        'their phone leaves the block out', () async {
+      final (app, io, store) = await shut(
+        card: const ShotsWord(on: true, at: 1760000000000),
+      );
+      io.opens['c1'] = (
+        'h',
+        await wrapMessage('hi', msgUid: 'm1', sender: asSender('h')),
+      );
+      await app.receiveOnion(['c1']);
+      expect(store.inbox, hasLength(1));
+      final w = await wire(app);
+      expect((w.on, w.at), (true, 1760000000000));
+    });
+
+    test(
+      'a newer word that came sealed goes, one from far ahead does not',
+      () async {
+        final (app, io, store) = await shut(
+          card: const ShotsWord(on: false, at: 5),
+        );
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final far = now + const Duration(days: 3).inMilliseconds;
+        io.opens['c1'] = (
+          'h',
+          shotsStamped(
+            await wrapMessage('hi', msgUid: 'm1', sender: asSender('h')),
+            ShotsWord(on: true, at: far),
+          ),
+        );
+        await app.receiveOnion(['c1']);
+        var w = await wire(app);
+        expect((w.on, w.at), (false, 5));
+        io.opens['c2'] = (
+          'h',
+          shotsStamped(
+            await wrapMessage('again', msgUid: 'm2', sender: asSender('h')),
+            ShotsWord(on: true, at: now),
+          ),
+        );
+        await app.receiveOnion(['c2']);
+        w = await wire(app);
+        expect((w.on, w.at), (true, now));
+      },
+    );
+
+    test('the card keeps the word, one width set or not', () {
+      final set = peerCard(
+        const RouterCard('h', 'o', 'x', shots: ShotsWord(on: true, at: 9)),
+      );
+      final none = peerCard(const RouterCard('h', 'o', 'x'));
+      expect(set.length, none.length);
+      final back = RouterCard.fromJson(jsonDecode(set))!.shots!;
+      expect((back.on, back.at), (true, 9));
+      expect(RouterCard.fromJson(jsonDecode(none))!.shots!.at, 0);
+    });
+  });
+
+  test('a word refused by their row never goes back out', () async {
+    final (app, live, io) = await world(blocks: false);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final far = now + const Duration(days: 3).inMilliseconds;
+    io.opens['c1'] = (
+      _c,
+      shotsStamped(
+        await wrapMessage('hi', msgUid: 'm1', sender: asSender(_c)),
+        ShotsWord(on: true, at: far),
+      ),
+    );
+    await app.receiveRelay([(peer: 'x-$_c', cipher: 'c1')]);
+    final out = unwrapMessage(
+      await app.shotsOnWire(_c, await wrapMessage('', sender: asSender('me'))),
+    ).shots!;
+    expect((out.on, out.at), (false, 5));
+  });
+
+  test('a room says nothing of itself in the shade', () async {
+    final (app, live, io) = await world(blocks: false);
+    for (final (g, room) in [('room-1', true), ('group-1', false)]) {
+      live.group(g, ['me', _c]);
+      if (room) live.groupRows[g]!['room_pub'] = 'pub-room';
+      io.opens['g-$g'] = (
+        _c,
+        await wrapMessage(
+          'the plan in $g',
+          msgUid: 'm-$g',
+          groupId: g,
+          sender: asSender(_c),
+        ),
+      );
+      await app.receiveRelay([(peer: 'x-$_c', cipher: 'g-$g')]);
+    }
+    final bodies = [for (final (_, b) in io.shown) b];
+    expect(bodies.where((b) => b.contains('the plan in room-1')), isEmpty);
+    expect(bodies, contains(l10n.notificationsNewMessage));
+    expect(
+      bodies.where((b) => b.contains('the plan in group-1')),
+      hasLength(1),
+    );
+  });
 }

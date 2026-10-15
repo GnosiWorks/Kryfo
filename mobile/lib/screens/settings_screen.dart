@@ -376,9 +376,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // would be a promise nothing is trying to keep
               final onTor = appState.sendMode == 'private';
               final torOn = onTor && tor;
-              // the app lock covers every screen. without it each chat
-              // has its own switch
-              final shots = appState.screenSecureByLock;
+              // the app lock covers every screen, and so does the old
+              // switch until home's card about it is answered. without
+              // them each chat has its own switch
+              final shots =
+                  appState.screenSecureByLock || appState.shotsCardCovers;
               // as the App lock screen reads it: a lock turned off in a
               // decoy session is off
               final lock = lockState.lockOn;
