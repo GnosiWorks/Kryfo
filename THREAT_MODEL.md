@@ -72,6 +72,10 @@ put you in danger, read all of it.
   guessed. android's storage and battery figures for the app are not hidden
   either. if a forensic copy is the fear, the wipe pin is the tool, and not
   having the data on the phone at all is better still.
+- what the everyday side keeps to reach a hidden chat while it is shut. the
+  card it keeps for each one, readable with the everyday database key, holds
+  the keys and addresses needed to receive, and whether the chat blocks
+  screenshots and when that last changed.
 - someone who already knows you. a person who knows your three words or
   handle sees different ones in the decoy, and nothing that arrives for you
   shows while it is open.
