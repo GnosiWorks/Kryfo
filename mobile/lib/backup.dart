@@ -659,6 +659,11 @@ class _EngineCipher implements ChunkCipher {
   }
 }
 
+// the folders a backup carries. a wallpaper photo lives in the database
+// now; a file an older version left in wallpapers/ was never cleaned, so
+// it never leaves the phone. a restore still takes one from an old file
+const _kCarried = ['media'];
+
 // everything under docs that a restore has to bring back, relative to
 // docs, in a fixed order: the database first so a peek can stop early
 Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
@@ -670,7 +675,7 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
 
   await add('halo.db');
   await add('onion.key');
-  for (final folder in ['media', 'wallpapers']) {
+  for (final folder in _kCarried) {
     final d = Directory(p.join(docs.path, folder));
     if (!await d.exists()) continue;
     final names = <String>[];
@@ -695,7 +700,7 @@ Future<void> _addFolders(
   String suffix, {
   String under = '',
 }) async {
-  for (final folder in ['media', 'wallpapers']) {
+  for (final folder in _kCarried) {
     final d = Directory(p.join(docs, '$folder$suffix'));
     if (!await d.exists()) continue;
     final found = <String, File>{};
@@ -1224,7 +1229,7 @@ Future<BackupDraft> _draftQuiet(
   await File(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
-  for (final folder in ['media', 'wallpapers']) {
+  for (final folder in _kCarried) {
     final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
     if (!await from.exists()) continue;
     await for (final e in from.list(recursive: true, followLinks: false)) {
