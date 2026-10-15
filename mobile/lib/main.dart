@@ -1660,6 +1660,7 @@ class HaloDb implements GroupOwedStore {
         await notifTagTables(db);
         await groupResentTables(db);
         await notifRingTables(db);
+        await groupEndIndexes(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -3811,15 +3812,18 @@ class HaloDb implements GroupOwedStore {
     dropDraft(container.chatKey(groupId), group: true);
     await clearGroupConversation(groupId, noteGone: false);
     final db = await open();
-    // its wallpaper too: the line stays on a plain page, with no count
+    // its wallpaper too: the line stays on a plain page, with no count. a
+    // row with none of it is left as it is
     final atmo = (await getGroup(groupId))?['atmosphere'];
     await db.update(
       'groups',
       {'atmosphere': null, 'unread': 0, 'mentioned': 0},
-      where: 'group_id = ?',
+      where:
+          'group_id = ? AND (atmosphere IS NOT NULL OR unread != 0 '
+          'OR mentioned != 0)',
       whereArgs: [groupId],
     );
-    await _dropPhotos([atmo]);
+    if (atmo != null) await _dropPhotos([atmo]);
     for (final table in const ['group_media_owed', 'group_resent']) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
@@ -3851,17 +3855,41 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  /// the groups here their admin ended
+  /// the groups here their admin ended that still hold something a wipe
+  /// takes: one cut short. a wiped one costs a look at a few indexes
   Future<List<String>> endedGroupIds() async {
     final db = await open();
     return [
-      for (final r in await db.query(
-        'groups',
-        columns: ['group_id'],
-        where: 'ended_at IS NOT NULL',
+      for (final r in await db.rawQuery(
+        'SELECT g.group_id FROM groups g WHERE g.ended_at IS NOT NULL AND ('
+        'g.atmosphere IS NOT NULL OR g.unread != 0 OR g.mentioned != 0 '
+        'OR EXISTS (SELECT 1 FROM messages m WHERE m.group_id = g.group_id) '
+        'OR EXISTS (SELECT 1 FROM media_chunks c '
+        'WHERE c.group_id = g.group_id) '
+        'OR EXISTS (SELECT 1 FROM group_media_owed o '
+        'WHERE o.group_id = g.group_id) '
+        'OR EXISTS (SELECT 1 FROM group_resent r '
+        'WHERE r.group_id = g.group_id) '
+        "OR EXISTS (SELECT 1 FROM notif_tags n WHERE n.chat = 'group:' || "
+        'g.group_id))',
       ))
         r['group_id'] as String,
     ];
+  }
+
+  /// the wipes of ended groups a stop cut short, finished. one that fails
+  /// leaves the rest to go on; how many were finished
+  Future<int> finishEndedWipes() async {
+    var n = 0;
+    for (final g in await endedGroupIds()) {
+      try {
+        await wipeEnded(g);
+        n++;
+      } catch (e) {
+        dlog('groups: an ended one not swept (${e.runtimeType})');
+      }
+    }
+    return n;
   }
 
   /// the end and its words for older versions, in each member's lane at
@@ -8421,6 +8449,19 @@ Future<void> upgradeTo80(DatabaseExecutor db, int oldV) async {
 Future<void> groupEndColumns(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE groups ADD COLUMN ended_at INTEGER');
   await addColumn(db, 'ALTER TABLE groups ADD COLUMN ended_by TEXT');
+  await groupEndIndexes(db);
+}
+
+// what an ended group may still hold, found by its id at every start
+Future<void> groupEndIndexes(DatabaseExecutor db) async {
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_media_chunks_group '
+    'ON media_chunks(group_id)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_group_media_owed_group '
+    'ON group_media_owed(group_id)',
+  );
 }
 
 Future<void> ackOwedColumn(DatabaseExecutor db) => addColumn(
@@ -20177,11 +20218,9 @@ class AppState extends ChangeNotifier {
   Future<void> _dropGroupLeftovers(HaloDb d) async {
     // an ended group's wipe a stop cut short finishes here
     try {
-      for (final g in await d.endedGroupIds()) {
-        await d.wipeEnded(g);
-      }
+      await d.finishEndedWipes();
     } catch (e) {
-      dlog('groups: an ended one not swept (${e.runtimeType})');
+      dlog('groups: ended ones not swept (${e.runtimeType})');
     }
     try {
       final files = await d.dropGroupLeftovers();

@@ -1380,6 +1380,15 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<int> finishEndedWipes() async {
+    final ended = await endedGroupIds();
+    for (final g in ended) {
+      await wipeEnded(g);
+    }
+    return ended.length;
+  }
+
+  @override
   Future<List<String>> endedGroupIds() async => [
     for (final e in groupRows.entries)
       if (e.value['ended_at'] != null) e.key,

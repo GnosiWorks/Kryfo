@@ -40,6 +40,17 @@ class _Rows extends HaloDb {
   Future<Database> open() async => s;
 }
 
+// a database whose wipe of one group fails
+class _Failing extends _Rows {
+  _Failing(super.s, this.bad);
+  final String bad;
+  @override
+  Future<void> wipeEnded(String groupId) async {
+    if (groupId == bad) throw StateError('stopped');
+    return super.wipeEnded(groupId);
+  }
+}
+
 class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
@@ -697,6 +708,60 @@ void main() {
     }, skip: skip);
   });
 
+  group('the start\'s look at ended groups', () {
+    Future<void> ended(String id, {bool holding = false}) async {
+      await s.insert('groups', {
+        'group_id': id,
+        'name': id,
+        'created_at': 1,
+        'is_admin': 0,
+        'admin_id': 'bob',
+        'ended_at': 1,
+        'ended_by': 'bob',
+      });
+      if (!holding) return;
+      await s.insert('messages', {
+        'peer_id': 'bob',
+        'direction': 'in',
+        'plaintext': 'left behind',
+        'sent_at': 1,
+        'msg_uid': 'left-$id',
+        'group_id': id,
+      });
+    }
+
+    test('three hundred wiped ones cost a look, and their rows are not '
+        'written again', () async {
+      for (var i = 0; i < 300; i++) {
+        await ended('e$i');
+      }
+      await ended('cut', holding: true);
+      await s.execute('CREATE TABLE writes (n INTEGER)');
+      await s.execute(
+        'CREATE TRIGGER count_writes AFTER UPDATE ON groups BEGIN '
+        'INSERT INTO writes VALUES (1); END',
+      );
+      expect(await db.endedGroupIds(), ['cut']);
+      expect(await db.finishEndedWipes(), 1);
+      expect(await count("SELECT 1 FROM messages WHERE group_id = 'cut'"), 0);
+      // wiped: the next start finds nothing to do
+      expect(await db.endedGroupIds(), isEmpty);
+      expect(await db.finishEndedWipes(), 0);
+      // a wipe run again on a clean one writes no row
+      await db.wipeEnded('e0');
+      expect(await count('SELECT 1 FROM writes'), 0);
+    }, skip: skip);
+
+    test('one that fails leaves the rest to finish', () async {
+      await ended('bad', holding: true);
+      await ended('good', holding: true);
+      final failing = _Failing(s, 'bad');
+      expect(await failing.finishEndedWipes(), 1);
+      expect(await count("SELECT 1 FROM messages WHERE group_id = 'good'"), 0);
+      expect(await count("SELECT 1 FROM messages WHERE group_id = 'bad'"), 1);
+    }, skip: skip);
+  });
+
   group('older versions', () {
     test('an end reads as a control of its own kind, nothing else', () async {
       final w = await ctl(const GroupControl(type: 'end'));
@@ -729,6 +794,12 @@ void main() {
       'admin_id TEXT, voice_disguise INTEGER)',
     );
     await old.insert('groups', {'group_id': 'g', 'name': 'n', 'created_at': 1});
+    await old.execute(
+      'CREATE TABLE media_chunks (media_id TEXT, group_id TEXT)',
+    );
+    await old.execute(
+      'CREATE TABLE group_media_owed (msg_uid TEXT, group_id TEXT)',
+    );
     await groupEndColumns(old);
     // twice is safe: an upgrade cut short runs it again
     await groupEndColumns(old);
@@ -736,6 +807,17 @@ void main() {
     expect(r.containsKey('ended_at'), isTrue);
     expect(r.containsKey('ended_by'), isTrue);
     expect(groupEndOf(r), isNull);
+    // what an ended group may hold is found by its id
+    final idx = {
+      for (final x in await old.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'index'",
+      ))
+        x['name'],
+    };
+    expect(
+      idx,
+      containsAll(['idx_media_chunks_group', 'idx_group_media_owed_group']),
+    );
     await old.close();
   }, skip: skip);
 

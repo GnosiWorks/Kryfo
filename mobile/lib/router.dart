@@ -47,8 +47,8 @@ const kNotePart = -1;
 const kMaxSealedNotes = 2000;
 
 // a hidden group's end waits under this part. they go last when the cap is
-// reached, so a flood of arrivals never takes an end with it, and no more
-// than this many wait
+// reached, so a flood of arrivals never takes an end with it. past this
+// many the oldest wait as any arrival does
 const kKeepPart = -2;
 const kMaxSealedKept = 500;
 
@@ -828,18 +828,17 @@ class VaultRouter {
       await drop(r);
       left--;
     }
-    // kept ones past their own cap go, oldest first, whatever else waits
-    var keep = kept.length;
-    for (final r in kept) {
-      if (keep <= kMaxSealedKept) break;
-      await drop(r);
-      keep--;
-    }
-    for (final r in [
+    // past their own cap the oldest kept ones wait as any arrival does,
+    // and the newest go last
+    final spare = kept.length > kMaxSealedKept
+        ? kept.length - kMaxSealedKept
+        : 0;
+    final waits = {for (final r in kept.take(spare)) r.$1};
+    final plain = [
       for (final r in rows)
-        if (r.$3 != kNotePart && r.$3 != kKeepPart) r,
-      ...kept.skip(kept.length - keep),
-    ]) {
+        if (r.$3 != kNotePart && (r.$3 != kKeepPart || waits.contains(r.$1))) r,
+    ];
+    for (final r in [...plain, ...kept.skip(spare)]) {
       if (!over()) break;
       await drop(r);
     }

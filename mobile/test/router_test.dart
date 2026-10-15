@@ -1149,14 +1149,36 @@ void main() {
         [kKeepPart, null, null],
       );
       expect([for (final x in w.store.inbox) x['uid']], [null, 'u3', 'u4']);
-      // and the kept ones are held to a cap of their own
+    });
+
+    test('kept ones past their own cap wait as any arrival does, never '
+        'thrown out on their own', () async {
+      final w = await _World.make();
       final k = await capped(w, n: kMaxSealedKept + 10);
       for (var i = 0; i < kMaxSealedKept + 5; i++) {
         await k.seal(Unsealed(_h, 'end$i', false, i), keep: true);
       }
+      // under the cap of all arrivals: every one waits
+      expect(
+        w.store.inbox.where((x) => x['part'] == kKeepPart),
+        hasLength(kMaxSealedKept + 5),
+      );
+      for (var i = 0; i < 10; i++) {
+        await k.seal(Unsealed(_h, 'w$i', false, 1000 + i), uid: 'u$i');
+      }
+      // over it: the oldest past the kept cap went first, as the oldest
+      // arrivals, and the newest arrivals stay
+      expect(w.store.inbox, hasLength(kMaxSealedKept + 10));
       expect(
         w.store.inbox.where((x) => x['part'] == kKeepPart),
         hasLength(kMaxSealedKept),
+      );
+      expect(
+        [
+          for (final x in w.store.inbox)
+            if (x['part'] == null) x['uid'],
+        ],
+        [for (var i = 0; i < 10; i++) 'u$i'],
       );
     });
 
