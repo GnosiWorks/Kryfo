@@ -695,7 +695,8 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 	defer k.mu.Unlock()
 	delete(k.forgets, key)
 	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
-	k.store.put(key, ev.Content, made, k.regs[key].expires, k.regs[key].ep.born.Unix())
+	r := k.regs[key]
+	k.store.put(key, ev.Content, made, r.expires, r.ep.born.Unix(), r.ep.delivered)
 	return false, ""
 }
 
@@ -951,7 +952,7 @@ func (k *knocker) gone(endpoint string) {
 	}
 	for _, key := range keys {
 		k.dropLocked(key)
-		k.store.put(key, "", 0, 0, 0)
+		k.store.put(key, "", 0, 0, 0, false)
 	}
 	k.dropEPLocked(ep)
 	k.stats.gone.Add(1)

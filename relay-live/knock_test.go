@@ -786,7 +786,7 @@ func TestKnockSweepLetsWrapsIn(t *testing.T) {
 		var key [32]byte
 		key[0], key[1], key[2] = byte(i), byte(i>>8), byte(i>>16)
 		tk.setLocked(key, fmt.Sprintf("https://x.org/%d", i%200), tk.clock.now().Unix(), tk.clock.now().Add(knockTTL).Unix())
-		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires, 0)
+		tk.store.put(key, tk.regs[key].ep.url, tk.regs[key].made, tk.regs[key].expires, 0, false)
 	}
 	tk.mu.Unlock()
 	store.flush(time.Minute)
@@ -1183,6 +1183,50 @@ func TestKnockAgeSurvivesARestart(t *testing.T) {
 	tk2.clock.set(now.Add(25 * time.Hour))
 	if !g.trusted(tk2.now()) || d.trusted(tk2.now()) {
 		t.Fatal("a day on: the proven one should be old, the dead one not")
+	}
+}
+
+// an address joining an endpoint that delivered already keeps it proven
+// across a restart, after the first address is forgotten
+func TestKnockProvenSurvivesItsFirstAddress(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st.start()
+	tk := newTestKnocks(t)
+	tk.store = st
+	now := tk.clock.now()
+	ep := "https://ntfy.sh/shared"
+	skA, _ := keypair()
+	a := signedReg(t, skA, ep, now)
+	tk.take(nil, &a)
+	tk.q.result(tk.eps[ep], true, 201, nil)
+	st.flush(time.Minute)
+	b := r3reg(r3key(2), ep, now)
+	tk.take(nil, &b)
+	tk.clock.set(now.Add(time.Minute))
+	forget := signedReg(t, skA, "", tk.clock.now())
+	if rej, msg := tk.take(nil, &forget); rej {
+		t.Fatal(msg)
+	}
+	st.flush(time.Minute)
+	st.close()
+
+	st2, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st2.close()
+	tk2 := newTestKnocks(t)
+	tk2.store = st2
+	tk2.clock.set(now.Add(time.Hour))
+	if err := tk2.load(); err != nil {
+		t.Fatal(err)
+	}
+	if len(tk2.regs) != 1 || tk2.eps[ep] == nil || !tk2.eps[ep].delivered {
+		t.Fatal("the endpoint came back as one that never delivered")
 	}
 }
 
@@ -2196,7 +2240,7 @@ func TestKnockForgetsReachDiskUnderLoad(t *testing.T) {
 	}
 	// the writer not running, its queue filled to the brim by renewals
 	for i := 0; len(st.ch) < cap(st.ch); i++ {
-		st.put([32]byte{byte(i), byte(i >> 8), byte(i >> 16)}, "https://ntfy.sh/x", now.Unix(), now.Unix()+1, 0)
+		st.put([32]byte{byte(i), byte(i >> 8), byte(i >> 16)}, "https://ntfy.sh/x", now.Unix(), now.Unix()+1, 0, false)
 	}
 	for _, sk := range sks {
 		ev := signedReg(t, sk, "", now.Add(time.Second))
@@ -2280,7 +2324,7 @@ func TestKnockWritesNeverBlock(t *testing.T) {
 	// the writer not running: puts past the buffer are dropped, not waited on
 	t0 := time.Now()
 	for i := 0; i < cap(store.ch)+100; i++ {
-		store.put([32]byte{byte(i)}, testEP, 1, 2, 0)
+		store.put([32]byte{byte(i)}, testEP, 1, 2, 0, false)
 	}
 	if time.Since(t0) > time.Second || store.dropped.Load() != 100 {
 		t.Fatalf("puts took %v, %d dropped", time.Since(t0), store.dropped.Load())

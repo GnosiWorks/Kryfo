@@ -27,6 +27,8 @@ type knockOp struct {
 	born int64
 	// marks the endpoint as having delivered, on every row naming it
 	proven bool
+	// a row whose endpoint delivered already
+	delivered bool
 	// a flush marker: closed once everything before it is written
 	done chan struct{}
 }
@@ -91,12 +93,12 @@ func openKnockStore(path string) (*knockStore, error) {
 // a row to write, or with made 0 to delete. never blocks: a write that
 // does not fit is dropped, counted and logged, the registration stays in
 // memory
-func (s *knockStore) put(key [32]byte, ep string, made, expires, born int64) {
+func (s *knockStore) put(key [32]byte, ep string, made, expires, born int64, delivered bool) {
 	if s == nil {
 		return
 	}
 	select {
-	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires, born: born}:
+	case s.ch <- knockOp{key: key, ep: ep, made: made, expires: expires, born: born, delivered: delivered}:
 	default:
 		s.drop()
 	}
@@ -175,11 +177,12 @@ func (s *knockStore) write(batch []knockOp) {
 			} else if op.made == 0 {
 				_, err = tx.Exec(`DELETE FROM knock WHERE addr = ?`, op.key[:])
 			} else {
-				_, err = tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires, born) VALUES (?, ?, ?, ?, ?)
+				_, err = tx.Exec(`INSERT INTO knock (addr, endpoint, made, expires, born, proven) VALUES (?, ?, ?, ?, ?, ?)
 					ON CONFLICT(addr) DO UPDATE SET endpoint = excluded.endpoint, made = excluded.made, expires = excluded.expires,
-						born = excluded.born, proven = CASE WHEN knock.endpoint = excluded.endpoint THEN knock.proven ELSE 0 END
+						born = excluded.born, proven = CASE WHEN knock.endpoint = excluded.endpoint
+							THEN max(knock.proven, excluded.proven) ELSE excluded.proven END
 					WHERE excluded.made > knock.made`,
-					op.key[:], op.ep, op.made, op.expires, op.born)
+					op.key[:], op.ep, op.made, op.expires, op.born, op.delivered)
 			}
 			if err != nil {
 				break
