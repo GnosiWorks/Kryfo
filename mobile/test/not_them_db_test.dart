@@ -569,6 +569,24 @@ void main() {
     );
   });
 
+  test('R3-6 a file at this branch\'s old 80, with the blocked keys and no '
+      'ack column, opens at 81 with both', () async {
+    if (skip()) return;
+    var raw = await db.open();
+    await raw.execute('ALTER TABLE contacts DROP COLUMN ack_owed');
+    await raw.setVersion(80);
+    await db.close();
+    db = HaloDb();
+    raw = await db.open();
+    expect(await raw.getVersion(), 81);
+    final cols = await raw.rawQuery("PRAGMA table_info('contacts')");
+    expect(cols.any((c) => c['name'] == 'ack_owed'), isTrue);
+    expect(
+      await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
+      hasLength(2),
+    );
+  });
+
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();

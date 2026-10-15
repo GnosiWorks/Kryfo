@@ -2027,7 +2027,7 @@ void main() {
     });
 
     test('the router keeps the vault\'s marks across a start, and they go '
-        'with the vault', () async {
+        'once its rows were handed over', () async {
       final store = ArrivalStore();
       await store.putMeta('pub', 'pub-A');
       final r = VaultRouter(store, ArrivalSeal());
@@ -2043,7 +2043,7 @@ void main() {
       expect(await again.seatsGone(), [(words, 'ab' * 32)]);
       await again.markTomb(words, on: false);
       expect(again.tombed(words), isFalse);
-      await again.forget();
+      await again.retire();
       expect(again.keyBlocked('ab' * 32), isFalse);
       expect(await again.seatsGone(), isEmpty);
     });
@@ -2193,6 +2193,99 @@ void main() {
       expect(bad.opens, 3);
     });
 
+    test('R3-1 with the vault shut, a link under words it let go is added '
+        'as anyone\'s, and its mark comes off', () async {
+      final (vault, router) = await hiddenFake();
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      useDatabasesForTest(live, Session(live));
+      expect(await linkKinOf(await link(alice), app: app), (
+        LinkKin.stranger,
+        words,
+      ));
+      expect(await handleHaloUriAdded(await link(alice), app: app), ('', true));
+      expect(asked, isEmpty);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(router.tombed(words), isFalse);
+      expect(await router.tombsGone(), [words]);
+      // R3-2 the vault opens again: its own tomb goes before its marks are
+      // read, so the mark does not come back
+      expect(vault.tombedNames, {words});
+      await app.remarkForTest(vault);
+      expect(vault.tombedNames, isEmpty);
+      expect(router.tombed(words), isFalse);
+      expect(await router.tombsGone(), isEmpty);
+      // and the real one, their chat deleted, still writes under the words
+      await app.deleteConversation(words);
+      await writes(alice);
+      expect(live.people[words], containsPair('xpub', alice.xPub));
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isFalse);
+    });
+
+    test('R3-3 an everyday unblock with the vault shut leaves the vault\'s '
+        'block, and nothing names it', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      await live.takeBlocks([(x: mallory.xPub, at: 1)], const []);
+      useDatabasesForTest(live, Session(live));
+      expect([for (final k in await app.blockedKeys()) k.x], [mallory.xPub]);
+      await app.unblockKey(mallory.xPub);
+      expect(await app.blockedKeys(), isEmpty);
+      expect(router.keyBlocked(mallory.xPub), isTrue);
+    });
+
+    test('after a replace the old vault\'s block holds unseen: nothing listed, '
+        'no everyday row, a first message dropped, a link turned away as '
+        'any that does not take', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await router.forget();
+      expect(await app.blockedKeys(), isEmpty);
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.tombedNames, isEmpty);
+      final ed = _rndHex(32);
+      _idOf[ed] = 'fresh-mask-five';
+      await app.receiveOnion([
+        await _opener(mallory, 'fresh-mask-five', ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey('fresh-mask-five'), isFalse);
+      expect(live.people.containsKey(unboundIdOf(_keyOf(mallory))), isFalse);
+      expect(
+        await handleHaloUriAdded(
+          await link(mallory, id: 'other-mask-five'),
+          app: app,
+        ),
+        (l10n.appInvalidUri, false),
+      );
+      // a link under the words is added as anyone's, no sheet of its own
+      expect(await linkKinOf(await link(alice), app: app), (
+        LinkKin.stranger,
+        words,
+      ));
+    });
+
+    test('R3-5 a lock with a slow vault: the next vault open does not wait '
+        'on a tidy', () async {
+      final slow = _SlowDb();
+      final store = ArrivalStore();
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      app = AppState(io: const _Io(), router: router)..myId = _me;
+      useDatabasesForTest(live, await Session.withVault(live, slow));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      app.lockingUp();
+      final sw = Stopwatch()..start();
+      try {
+        await app.settleVault(ArrivalRows(HaloContainer.vault));
+      } catch (_) {
+        // the stand-in vault has no mover: only how long it waited counts
+      }
+      expect(sw.elapsedMilliseconds, lessThan(1500));
+      expect(slow.opened, isFalse);
+    });
+
     test('the developer is never let go this way', () async {
       expect(await app.notThem('dev:marios', 'ab' * 32), isFalse);
     });
@@ -2208,4 +2301,20 @@ class _BadDb extends ArrivalRows {
     opens++;
     throw StateError('shut');
   }
+}
+
+// a vault whose file is slow to open: a tidy at its close would hold up
+// everything queued behind it
+class _SlowDb extends ArrivalRows {
+  _SlowDb() : super(HaloContainer.vault);
+  var opened = false;
+  @override
+  Future<Database> open() async {
+    opened = true;
+    await Future<void>.delayed(const Duration(seconds: 3));
+    throw StateError('slow');
+  }
+
+  @override
+  Future<void> close() async {}
 }
