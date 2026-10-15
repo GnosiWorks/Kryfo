@@ -197,4 +197,14 @@ void main() {
       isNot(contains('LayoutBuilder')),
     );
   });
+
+  testWidgets('the card shows the name the file is saved under', (t) async {
+    final f = made('in_11_x.exe', 'MZ'.codeUnits);
+    await show(t, f.path, 'photo.jpg.exe');
+    expect(find.text('photo_jpg'), findsOneWidget);
+    expect(find.text('.exe'), findsOneWidget);
+    final g = made('in_12_c.pdf', '%PDF-1.7\n'.codeUnits);
+    await show(t, g.path, 'cafe${String.fromCharCode(0x0301)}.pdf');
+    expect(find.text('caf${String.fromCharCode(0xE9)}'), findsOneWidget);
+  });
 }

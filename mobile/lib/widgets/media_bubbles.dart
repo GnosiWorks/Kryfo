@@ -89,7 +89,7 @@ Widget fileCard(
             ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
             const SizedBox(height: 4),
             Text(
-              shownFileName(fileName),
+              safeFileName(fileName),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
@@ -178,15 +178,14 @@ class _FileCardState extends State<FileCard> {
   Widget build(BuildContext context) {
     final isOut = widget.isOut;
     final facts =
-        _facts ?? FileFacts(kindOfName(widget.name), extOf(widget.name));
+        _facts ??
+        FileFacts(kindOfName(widget.name), extOf(safeFileName(widget.name)));
     final installer = facts.installer;
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
     final sub = isOut ? HaloColors.onAmber : HaloColors.text2;
-    // an installer shows the name it is saved under: what is seen is
-    // what is saved
-    final shown = installer
-        ? safeFileName(widget.name, facts: facts)
-        : shownFileName(widget.name);
+    // the name it is saved and handed on under: what is seen is what is
+    // saved
+    final shown = safeFileName(widget.name, facts: facts);
     final (stem, ext) = splitFileName(shown);
     final nameDir = _rtlStart.hasMatch(stem)
         ? TextDirection.rtl

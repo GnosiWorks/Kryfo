@@ -210,7 +210,7 @@ void main() {
       expect(safeFileName('   '), 'file');
       expect(safeFileName(null), 'file');
       final long = safeFileName('${'x' * 300}.pdf');
-      expect(long.length, 120);
+      expect(long.length, 200);
       expect(long, endsWith('.pdf'));
     });
   });

@@ -74,6 +74,19 @@ const _heifBrands = {
   'avis',
 };
 
+/// the first bytes of [raf], enough to tell a picture: 256, or the whole
+/// ftyp box of an iso file up to 4 kb, since a heic can list its brand
+/// past the first 256
+Future<Uint8List> pictureHead(RandomAccessFile raf) async {
+  await raf.setPosition(0);
+  final h = await raf.read(256);
+  if (h.length < 256 || _tag(h, 4) != 'ftyp') return h;
+  final box = _u32(h, 0);
+  if (box <= h.length) return h;
+  await raf.setPosition(0);
+  return raf.read(box < 4096 ? box : 4096);
+}
+
 /// the extension a picture's bytes call for; jpg for one not known here
 String pictureExt(Uint8List b) => switch (pictureKind(b)) {
   PictureKind.png => 'png',
@@ -94,7 +107,7 @@ Future<bool?> stripPictureFile(
   final raf = await f.open();
   final Uint8List head;
   try {
-    head = await raf.read(256);
+    head = await pictureHead(raf);
   } finally {
     await raf.close();
   }
