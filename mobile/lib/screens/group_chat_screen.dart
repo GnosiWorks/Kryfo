@@ -374,8 +374,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }());
   }
 
-  // nothing in it to lose: the room goes from this phone, and the screen
-  // with it
+  // a group whose admin "this isn't them" took off this phone: left as
+  // the group info page leaves one
   Future<void> _leaveAdminGone() async {
     final ok = await showConfirmSheet(
       context,
@@ -388,6 +388,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (mounted) Navigator.of(context).pop();
   }
 
+  // nothing in it to lose: the room goes from this phone, and the screen
+  // with it
   void _leaveWaiting() {
     HapticFeedback.mediumImpact();
     final id = widget.groupId;
