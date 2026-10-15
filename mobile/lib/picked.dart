@@ -185,46 +185,89 @@ Future<List<XFile>> pickGallery({
 bool isVideoPick(XFile x) =>
     nameSaysVideo(x.name) || (x.mimeType?.startsWith('video/') ?? false);
 
-// a gallery pick sent in the order chosen. photos are read whole and shrunk
-// as readPickedPhotos does; a video goes to [video] as the video tile's does
-// and its copy is shredded once sent. [photo] hears whether it is the only
-// pick. either returning false stops the rest, and what is left still goes
+/// one item for the send preview, in the order picked: a photo's bytes,
+/// read whole and shrunk, or a video's picker copy, left where it is until
+/// the preview is done with it
+class PickedMedia {
+  final Uint8List? photo;
+  final XFile? video;
+  const PickedMedia.photo(Uint8List this.photo) : video = null;
+  const PickedMedia.video(XFile this.video) : photo = null;
+  bool get isVideo => video != null;
+}
+
+/// the gallery's picks for the preview, in the order chosen. photos are
+/// read and shrunk as readPickedPhotos does, their copies gone at once;
+/// a video's copy stays for the send, and goes with shredPickedImages
+Future<List<PickedMedia>> readGalleryPicks(
+  List<XFile> picked, {
+  Future<Uint8List> Function(Uint8List b)? shrink,
+  Future<void> Function(List<XFile> x)? drop,
+}) async {
+  final picks = {for (final x in picked) x.path: x}.values.toList();
+  final photos = await readPickedPhotos(
+    [
+      for (final x in picks)
+        if (!isVideoPick(x)) x,
+    ],
+    shrink: shrink,
+    drop: drop,
+  );
+  var i = 0;
+  return [
+    for (final x in picks)
+      isVideoPick(x) ? PickedMedia.video(x) : PickedMedia.photo(photos[i++]),
+  ];
+}
+
+/// what the send preview gives back: the items in their order, the
+/// caption for the first, and whether they open protected
+class MediaSendResult {
+  final List<PickedMedia> items;
+  final String caption;
+  final bool secure;
+  const MediaSendResult({
+    required this.items,
+    this.caption = '',
+    this.secure = false,
+  });
+}
+
+// a gallery pick, through the send preview. [preview] shows what was read
+// and gives back what to send, null when the person backed out; its second
+// argument reopens the picker ([pickMore]) for more. [send] sends it. every
+// video copy read along the way goes once it is done with, sent or not.
+// [shrink] and [drop] stand in for the platform and the shred in tests
 Future<void> sendGalleryPicks(
   List<XFile> picked, {
-  required Future<bool> Function(Uint8List bytes, bool alone) photo,
-  required Future<bool> Function(XFile video) video,
+  required Future<MediaSendResult?> Function(
+    List<PickedMedia> items,
+    Future<List<PickedMedia>> Function() more,
+  )
+  preview,
+  required Future<void> Function(MediaSendResult r) send,
+  Future<List<XFile>> Function()? pickMore,
   Future<Uint8List> Function(Uint8List b)? shrink,
   Future<void> Function(List<XFile> x)? drop,
 }) async {
   final shred = drop ?? shredPickedImages;
-  final picks = {for (final x in picked) x.path: x}.values.toList();
-  final videos = [
-    for (final x in picks)
-      if (isVideoPick(x)) x,
-  ];
+  final videos = <XFile>[];
+  Future<List<PickedMedia>> read(List<XFile> x) async {
+    if (x.isEmpty) return const [];
+    final got = await readGalleryPicks(x, shrink: shrink, drop: drop);
+    videos.addAll([for (final m in got) ?m.video]);
+    return got;
+  }
+
   try {
-    final bytesOf = await readPickedPhotos(
-      [
-        for (final x in picks)
-          if (!isVideoPick(x)) x,
-      ],
-      shrink: shrink,
-      drop: drop,
+    final first = await read(picked);
+    if (first.isEmpty) return;
+    final r = await preview(
+      first,
+      () async => read(await pickMore?.call() ?? const []),
     );
-    final alone = picks.length == 1;
-    var i = 0;
-    for (final x in picks) {
-      if (!isVideoPick(x)) {
-        if (!await photo(bytesOf[i++], alone)) return;
-        continue;
-      }
-      videos.remove(x);
-      try {
-        if (!await video(x)) return;
-      } finally {
-        await shred([x]);
-      }
-    }
+    if (r == null || r.items.isEmpty) return;
+    await send(r);
   } finally {
     if (videos.isNotEmpty) await shred(videos);
   }

@@ -8393,4 +8393,48 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'يمكن لكل محادثة تغييره من قائمتها';
+
+  @override
+  String albumLabel(Object count) {
+    return 'ألبوم · العناصر: ⁨$count⁩';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '⁨$at⁩ من ⁨$total⁩';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '⁨$count⁩ إضافية';
+  }
+
+  @override
+  String get albumOnItsWay => 'في الطريق';
+
+  @override
+  String get albumQuoted => 'ألبوم';
+
+  @override
+  String get albumUnsendTitle => 'سحب هذا الألبوم؟';
+
+  @override
+  String get mediaSendAddMore => 'إضافة المزيد';
+
+  @override
+  String get mediaSendRemove => 'إزالة';
+
+  @override
+  String get mediaSendProtect => 'حماية من لقطات الشاشة';
+
+  @override
+  String get mediaSendProtectedOn => 'محمية · لا يمكنه التقاط لقطة شاشة لها';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'حتى ⁨$count⁩ في المرة الواحدة';
+  }
+
+  @override
+  String get mediaSendVideo => 'إرسال الفيديو';
 }

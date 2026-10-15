@@ -399,7 +399,7 @@ class _VideoViewerState extends State<_VideoViewer>
         child: _Fade(
           visible: visible,
           opacity: fade,
-          child: _Round(
+          child: ViewerRound(
             size: 40,
             label: l10n.commonClose,
             onTap: _close,
@@ -419,7 +419,7 @@ class _VideoViewerState extends State<_VideoViewer>
             child: _Fade(
               visible: !_playing && _id != null && _drag == 0,
               opacity: fade,
-              child: _Round(
+              child: ViewerRound(
                 size: 66,
                 label: _done ? l10n.videoViewerPlayAgain : l10n.videoViewerPlay,
                 onTap: _toggle,
@@ -457,7 +457,7 @@ class _VideoViewerState extends State<_VideoViewer>
               ),
               child: Row(
                 children: [
-                  _Round(
+                  ViewerRound(
                     size: 40,
                     plain: true,
                     label: _playing
@@ -483,14 +483,14 @@ class _VideoViewerState extends State<_VideoViewer>
                     ),
                   ),
                   const SizedBox(width: 4),
-                  _Time(
+                  ViewerTime(
                     Duration(
                       milliseconds: (at * len).round().clamp(0, len.abs()),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _Scrubber(
+                    child: ViewerScrubber(
                       value: at.clamp(0.0, 1.0),
                       enabled: _id != null && len > 0,
                       onStart: (f) {
@@ -517,7 +517,7 @@ class _VideoViewerState extends State<_VideoViewer>
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _Time(_length),
+                  ViewerTime(_length),
                 ],
               ),
             ),
@@ -609,14 +609,16 @@ class _Fade extends StatelessWidget {
   );
 }
 
-// a round button on the video: a dark disc, or nothing behind it (plain)
-class _Round extends StatefulWidget {
+// a round button on a video: a dark disc, or nothing behind it (plain).
+// the album viewer's video pages use it too
+class ViewerRound extends StatefulWidget {
   final double size;
   final String label;
   final VoidCallback? onTap;
   final Widget child;
   final bool plain;
-  const _Round({
+  const ViewerRound({
+    super.key,
     required this.size,
     required this.label,
     required this.onTap,
@@ -624,10 +626,10 @@ class _Round extends StatefulWidget {
     this.plain = false,
   });
   @override
-  State<_Round> createState() => _RoundState();
+  State<ViewerRound> createState() => _ViewerRoundState();
 }
 
-class _RoundState extends State<_Round> {
+class _ViewerRoundState extends State<ViewerRound> {
   bool _down = false;
 
   @override
@@ -666,9 +668,9 @@ class _RoundState extends State<_Round> {
   }
 }
 
-class _Time extends StatelessWidget {
+class ViewerTime extends StatelessWidget {
   final Duration d;
-  const _Time(this.d);
+  const ViewerTime(this.d, {super.key});
   @override
   Widget build(BuildContext context) => Text(
     videoLength(d),
@@ -678,13 +680,14 @@ class _Time extends StatelessWidget {
 
 // the timeline: a thin track, the played part in amber, a thumb that grows
 // while it is held. a tap jumps, a drag scrubs.
-class _Scrubber extends StatefulWidget {
+class ViewerScrubber extends StatefulWidget {
   final double value;
   final bool enabled;
   final ValueChanged<double> onStart;
   final ValueChanged<double> onChange;
   final VoidCallback onEnd;
-  const _Scrubber({
+  const ViewerScrubber({
+    super.key,
     required this.value,
     required this.enabled,
     required this.onStart,
@@ -692,10 +695,10 @@ class _Scrubber extends StatefulWidget {
     required this.onEnd,
   });
   @override
-  State<_Scrubber> createState() => _ScrubberState();
+  State<ViewerScrubber> createState() => _ViewerScrubberState();
 }
 
-class _ScrubberState extends State<_Scrubber> {
+class _ViewerScrubberState extends State<ViewerScrubber> {
   bool _held = false;
 
   double _at(Offset local, double width) =>

@@ -8290,4 +8290,48 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Her sohbet bunu kendi menüsünden değiştirebilir';
+
+  @override
+  String albumLabel(Object count) {
+    return 'Albüm, $count öğe';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at/$total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '$count tane daha';
+  }
+
+  @override
+  String get albumOnItsWay => 'Yolda';
+
+  @override
+  String get albumQuoted => 'Albüm';
+
+  @override
+  String get albumUnsendTitle => 'Bu albüm geri çekilsin mi?';
+
+  @override
+  String get mediaSendAddMore => 'Daha fazla ekle';
+
+  @override
+  String get mediaSendRemove => 'Kaldır';
+
+  @override
+  String get mediaSendProtect => 'Ekran görüntüsüne karşı koru';
+
+  @override
+  String get mediaSendProtectedOn => 'Korumalı · ekran görüntüsünü alamaz';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Bir seferde en fazla $count';
+  }
+
+  @override
+  String get mediaSendVideo => 'Video gönder';
 }

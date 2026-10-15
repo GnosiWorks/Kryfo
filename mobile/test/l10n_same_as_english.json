@@ -18,6 +18,7 @@
   "seenOnion"
  ],
  "de": [
+  "albumQuoted",
   "appOffline",
   "appOk",
   "appPeer",
@@ -211,6 +212,7 @@
   "seenOnion"
  ],
  "fr": [
+  "albumQuoted",
   "appOk",
   "appPhoto",
   "appTor",
@@ -283,6 +285,7 @@
   "videoViewerPause"
  ],
  "id": [
+  "albumQuoted",
   "appOffline",
   "appOk",
   "appStatus",
@@ -361,6 +364,7 @@
   "videoBubbleVideo"
  ],
  "it": [
+  "albumQuoted",
   "appDev",
   "appOffline",
   "appOk",
@@ -623,6 +627,7 @@
   "seenOnion"
  ],
  "vi": [
+  "albumQuoted",
   "appDev",
   "appOk",
   "appPeer",

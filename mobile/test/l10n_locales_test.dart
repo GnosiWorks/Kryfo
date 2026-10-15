@@ -3140,6 +3140,22 @@ final _calls = <_Call>[
   ('nameTakenChatLine', [], (l) => l.nameTakenChatLine),
   ('pairCodeNumberMatches', [], (l) => l.pairCodeNumberMatches),
   ('pairCodePanelAcceptOnce', [], (l) => l.pairCodePanelAcceptOnce),
+  ('albumLabel', ["⟨count⟩"], (l) => l.albumLabel("⟨count⟩")),
+  (
+    'albumCounter',
+    ["⟨at⟩", "⟨total⟩"],
+    (l) => l.albumCounter("⟨at⟩", "⟨total⟩"),
+  ),
+  ('albumMore', ["⟨count⟩"], (l) => l.albumMore("⟨count⟩")),
+  ('albumOnItsWay', [], (l) => l.albumOnItsWay),
+  ('albumQuoted', [], (l) => l.albumQuoted),
+  ('albumUnsendTitle', [], (l) => l.albumUnsendTitle),
+  ('mediaSendAddMore', [], (l) => l.mediaSendAddMore),
+  ('mediaSendRemove', [], (l) => l.mediaSendRemove),
+  ('mediaSendProtect', [], (l) => l.mediaSendProtect),
+  ('mediaSendProtectedOn', [], (l) => l.mediaSendProtectedOn),
+  ('mediaSendUpTo', ["⟨count⟩"], (l) => l.mediaSendUpTo("⟨count⟩")),
+  ('mediaSendVideo', [], (l) => l.mediaSendVideo),
 ];
 
 void main() {

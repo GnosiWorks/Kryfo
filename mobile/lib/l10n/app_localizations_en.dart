@@ -8261,4 +8261,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Each chat can change it in its menu';
+
+  @override
+  String albumLabel(Object count) {
+    return 'Album, $count items';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at of $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '$count more';
+  }
+
+  @override
+  String get albumOnItsWay => 'On its way';
+
+  @override
+  String get albumQuoted => 'Album';
+
+  @override
+  String get albumUnsendTitle => 'Unsend this album?';
+
+  @override
+  String get mediaSendAddMore => 'Add more';
+
+  @override
+  String get mediaSendRemove => 'Remove';
+
+  @override
+  String get mediaSendProtect => 'Protect from screenshots';
+
+  @override
+  String get mediaSendProtectedOn => 'Protected · they cannot screenshot these';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Up to $count at a time';
+  }
+
+  @override
+  String get mediaSendVideo => 'Send video';
 }

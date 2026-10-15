@@ -11,6 +11,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'shred.dart';
+import 'album.dart' show AlbumTag, albumBurnAt;
 export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
@@ -1488,7 +1489,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 80,
+      version: 81,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1559,6 +1560,9 @@ class HaloDb implements GroupOwedStore {
             burn_unseen INTEGER NOT NULL DEFAULT 0,
             via_dev INTEGER NOT NULL DEFAULT 0,
             written_at INTEGER,
+            album_id TEXT,
+            album_n INTEGER,
+            album_i INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1579,6 +1583,7 @@ class HaloDb implements GroupOwedStore {
         );
         await burnIndex(db);
         await writtenOrder(db);
+        await albumIndex(db);
         await db.execute('''
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
@@ -1659,7 +1664,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 80
+        // they add. 66 runs after it: it reads what they all make. 67 to 81
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2150,6 +2155,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 80) {
           // an accept whose word to them has not gone yet
           await upgradeTo80(db, oldV);
+        }
+        if (oldV < 81) {
+          // the album each photo or video was sent in
+          await albumColumns(db);
         }
       },
     );
@@ -3280,6 +3289,8 @@ class HaloDb implements GroupOwedStore {
     int? writtenAt,
     // a contact's, through the developer chat (viaDevChat)
     bool viaDev = false,
+    // its place in an album
+    AlbumTag? album,
   }) async {
     final db = await open();
     final came = sentAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -3311,6 +3322,7 @@ class HaloDb implements GroupOwedStore {
       'poll': ?poll,
       'sticker': ?sticker,
       if (viaDev) 'via_dev': 1,
+      ...?album?.toRow(),
     });
     try {
       await indexSearchRow(db, id, {
@@ -3364,6 +3376,7 @@ class HaloDb implements GroupOwedStore {
     String? preview,
     String? poll,
     String? sticker,
+    AlbumTag? album,
   }) async {
     final db = await open();
     final id = await db.transaction((t) async {
@@ -3396,6 +3409,7 @@ class HaloDb implements GroupOwedStore {
         'secure': 0,
         'poll': ?poll,
         'sticker': ?sticker,
+        ...?album?.toRow(),
       });
     });
     if (id == null) return false;
@@ -5702,6 +5716,21 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
+  // a row of [sender]'s album [albumId] is here already
+  Future<bool> albumHas(String albumId, String sender, String? groupId) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['id'],
+      where:
+          "album_id = ? AND peer_id = ? AND IFNULL(group_id, '') = ? "
+          "AND direction = 'in'",
+      whereArgs: [albumId, sender, groupId ?? ''],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
   Future<bool> messageExists(String msgUid) async {
     final db = await open();
     final rows = await db.query(
@@ -5714,14 +5743,62 @@ class HaloDb implements GroupOwedStore {
     return rows.isNotEmpty;
   }
 
-  Future<void> setMsgBurnAt(String msgUid, int burnAt) async {
+  // an item of an album takes the earliest clock any of the album has, so
+  // all of it burns together. gives the clock it took
+  Future<int> setMsgBurnAt(String msgUid, int burnAt) async {
     final db = await open();
-    await db.update(
+    return db.transaction((t) async {
+      final at = albumBurnAt([burnAt, ...await _albumClocks(t, msgUid)])!;
+      await t.update(
+        'messages',
+        {'burn_at': at},
+        where: 'msg_uid = ?',
+        whereArgs: [msgUid],
+      );
+      return at;
+    });
+  }
+
+  // the album [msgUid] is in, as (album, peer, group, direction), or null
+  static Future<(String, String, String, String)?> _albumOf(
+    DatabaseExecutor t,
+    String msgUid,
+  ) async {
+    final r = await t.query(
       'messages',
-      {'burn_at': burnAt},
-      where: 'msg_uid = ?',
+      columns: ['album_id', 'peer_id', 'group_id', 'direction'],
+      where: 'msg_uid = ? AND album_id IS NOT NULL',
       whereArgs: [msgUid],
+      limit: 1,
     );
+    if (r.isEmpty) return null;
+    return (
+      r.first['album_id'] as String,
+      r.first['peer_id'] as String,
+      (r.first['group_id'] as String?) ?? '',
+      r.first['direction'] as String,
+    );
+  }
+
+  static const _albumMates =
+      "album_id = ? AND peer_id = ? AND IFNULL(group_id, '') = ? "
+      'AND direction = ? AND msg_uid IS NOT NULL AND msg_uid != ?';
+
+  // the clocks running on the other items of [msgUid]'s album
+  static Future<List<int?>> _albumClocks(
+    DatabaseExecutor t,
+    String msgUid,
+  ) async {
+    final a = await _albumOf(t, msgUid);
+    if (a == null) return const [];
+    final (album, peer, group, dir) = a;
+    final rows = await t.query(
+      'messages',
+      columns: ['burn_at'],
+      where: '$_albumMates AND burn_at IS NOT NULL AND burn_unseen = 0',
+      whereArgs: [album, peer, group, dir, msgUid],
+    );
+    return [for (final r in rows) (r['burn_at'] as num?)?.toInt()];
   }
 
   // add or replace a reaction. reactor is '' for self, peer's kryfo id
@@ -7297,7 +7374,11 @@ class HaloDb implements GroupOwedStore {
         if (secs == null) return;
         final sent = (r['sent_at'] as num?)?.toInt() ?? now;
         final from = min(now, burnStartBy(sent, now));
-        final at = min(lit ?? from + secs * 1000, from + secs * 1000);
+        var at = min(lit ?? from + secs * 1000, from + secs * 1000);
+        // an album is read as one and burns as one
+        if (uid != null) {
+          at = albumBurnAt([at, ...await _albumClocks(t, uid)])!;
+        }
         await t.update(
           'messages',
           {'burn_at': at, 'burn_unseen': 0},
@@ -7306,7 +7387,30 @@ class HaloDb implements GroupOwedStore {
               : 'id = ? AND burn_unseen = 1',
           whereArgs: [r['id']],
         );
-        if (uid != null) out[uid] = at;
+        if (uid == null) return;
+        out[uid] = at;
+        final a = await _albumOf(t, uid);
+        if (a == null) return;
+        final (album, peer, group, dir) = a;
+        const behind =
+            'burn_secs IS NOT NULL '
+            'AND (burn_at IS NULL OR burn_at > ? OR burn_unseen = 1)';
+        final mates = await t.query(
+          'messages',
+          columns: ['msg_uid'],
+          where: '$_albumMates AND $behind',
+          whereArgs: [album, peer, group, dir, uid, at],
+        );
+        if (mates.isEmpty) return;
+        await t.update(
+          'messages',
+          {'burn_at': at, 'burn_unseen': 0},
+          where: '$_albumMates AND $behind',
+          whereArgs: [album, peer, group, dir, uid, at],
+        );
+        for (final m in mates) {
+          out[m['msg_uid'] as String] = at;
+        }
       }
 
       for (final r in rows) {
@@ -8116,6 +8220,18 @@ Future<void> upgradeTo80(DatabaseExecutor db, int oldV) async {
   }
   await ackOwedColumn(db);
 }
+
+// the upgrade to 81: the album a photo or a video went in (album.dart)
+Future<void> albumColumns(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE messages ADD COLUMN album_id TEXT');
+  await addColumn(db, 'ALTER TABLE messages ADD COLUMN album_n INTEGER');
+  await addColumn(db, 'ALTER TABLE messages ADD COLUMN album_i INTEGER');
+  await albumIndex(db);
+}
+
+Future<void> albumIndex(DatabaseExecutor db) => db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_messages_album ON messages(album_id)',
+);
 
 Future<void> ackOwedColumn(DatabaseExecutor db) => addColumn(
   db,
@@ -12317,6 +12433,7 @@ class AppState extends ChangeNotifier {
         replyTo: r['reply_to'] as String?,
         burnSeconds: (r['burn_secs'] as num?)?.toInt(),
         writtenAt: (r['sent_at'] as num?)?.toInt(),
+        album: AlbumTag.ofRow(r),
       );
     } catch (e) {
       res = 'error: $e';
@@ -12411,6 +12528,7 @@ class AppState extends ChangeNotifier {
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       writtenAt: (r['sent_at'] as num?)?.toInt(),
       owed: {for (final m in to) m: fresh ? <int>{} : have[m]!},
+      album: AlbumTag.ofRow(r),
     );
   }
 
@@ -12798,6 +12916,7 @@ class AppState extends ChangeNotifier {
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,
       replyTo: r['reply_to'] as String?,
+      album: AlbumTag.ofRow(r),
       writtenAt: (r['sent_at'] as num?)?.toInt(),
       sender: _mySender(),
       only: only,
@@ -15890,10 +16009,18 @@ class AppState extends ChangeNotifier {
       came: arrivedAt ?? now,
       since: env.groupId == null ? null : await db.groupJoinedAt(env.groupId!),
     );
+    // an album rings once, for the first of it to land. only a photo or a
+    // video takes a place in one
+    final album = env.imageB64 != null || env.fileB64 != null || _sliced(env)
+        ? env.album
+        : null;
+    final albumSeen =
+        album != null && await db.albumHas(album.id, senderHaloId, env.groupId);
     await db.saveMessage(
       senderHaloId,
       'in',
       text,
+      album: album,
       burnSecs: waits ? burnSecs : null,
       burnAt: burnAt,
       msgUid: env.msgUid,
@@ -15987,6 +16114,7 @@ class AppState extends ChangeNotifier {
     // new preview, time and unread dot without needing the chat opened.
     await refreshContacts();
     if (isGroup) await refreshGroups();
+    if (albumSeen) return to;
     final String notifTitle;
     final String notifBody;
     final String notifPayload;
@@ -16008,6 +16136,8 @@ class AppState extends ChangeNotifier {
           ? l10n.pollPreview(env.message)
           : shownText.isNotEmpty
           ? shownText
+          : album != null
+          ? l10n.albumLabel(whole(album.n))
           : notifMediaLine(fileName, mediaPath);
       // a room member's tag is cut from their key: someone too
       final who = looksLikeRoomKey(senderHaloId)
@@ -16030,6 +16160,8 @@ class AppState extends ChangeNotifier {
           ? l10n.stickerLabel
           : shownText.isNotEmpty
           ? shownText
+          : album != null
+          ? l10n.albumLabel(whole(album.n))
           : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
@@ -23241,6 +23373,8 @@ class AppState extends ChangeNotifier {
     int? writtenAt,
     // only these members, owed it by a send that went, with what each has
     Map<String, Set<int>>? owed,
+    // its place in an album, on every slice
+    AlbumTag? album,
   }) async {
     final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
     // one send per media at a time, the same set the 1:1 path holds. the
@@ -23356,6 +23490,7 @@ class AppState extends ChangeNotifier {
           chunkTotal: total > 1 ? total : null,
           burnSeconds: burnSeconds,
           replyTo: replyTo,
+          album: album,
           groupId: groupId,
           roster: ids,
           rosterParticipants: parts,

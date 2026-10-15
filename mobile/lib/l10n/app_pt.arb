@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Disfarçar este áudio",
   "voiceNotDisguised": "Não deu para disfarçar este áudio, então ele não foi enviado",
   "settingsDisguiseByDefault": "Disfarçar minha voz por padrão",
-  "settingsDisguiseByDefaultHint": "Cada conversa pode mudar isso no próprio menu"
+  "settingsDisguiseByDefaultHint": "Cada conversa pode mudar isso no próprio menu",
+  "albumLabel": "Álbum, {count} itens",
+  "albumCounter": "{at} de {total}",
+  "albumMore": "Mais {count}",
+  "albumOnItsWay": "A caminho",
+  "albumQuoted": "Álbum",
+  "albumUnsendTitle": "Desfazer o envio deste álbum?",
+  "mediaSendAddMore": "Adicionar mais",
+  "mediaSendRemove": "Remover",
+  "mediaSendProtect": "Proteger de capturas de tela",
+  "mediaSendProtectedOn": "Protegidas · a pessoa não consegue fazer captura de tela delas",
+  "mediaSendUpTo": "Até {count} de cada vez",
+  "mediaSendVideo": "Enviar vídeo"
 }

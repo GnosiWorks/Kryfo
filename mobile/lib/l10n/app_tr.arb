@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Bu notta sesi gizle",
   "voiceNotDisguised": "Bu notta ses gizlenemedi, bu yüzden gönderilmedi",
   "settingsDisguiseByDefault": "Sesimi varsayılan olarak gizle",
-  "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir"
+  "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir",
+  "albumLabel": "Albüm, {count} öğe",
+  "albumCounter": "{at}/{total}",
+  "albumMore": "{count} tane daha",
+  "albumOnItsWay": "Yolda",
+  "albumQuoted": "Albüm",
+  "albumUnsendTitle": "Bu albüm geri çekilsin mi?",
+  "mediaSendAddMore": "Daha fazla ekle",
+  "mediaSendRemove": "Kaldır",
+  "mediaSendProtect": "Ekran görüntüsüne karşı koru",
+  "mediaSendProtectedOn": "Korumalı · ekran görüntüsünü alamaz",
+  "mediaSendUpTo": "Bir seferde en fazla {count}",
+  "mediaSendVideo": "Video gönder"
 }

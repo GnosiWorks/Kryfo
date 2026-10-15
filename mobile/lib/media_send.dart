@@ -15,6 +15,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import 'album.dart' show AlbumTag;
 import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
 import 'image_strip.dart' show cleanSavedPhoto;
@@ -98,6 +99,8 @@ Future<String> sendChunkedMediaTo({
   bool secure = false,
   // the message this one answers, on every slice like the name
   String? replyTo,
+  // its place in an album, on every slice too
+  AlbumTag? album,
   // when its row was written, on every slice too. now when not given
   int? writtenAt,
   required SenderInfo sender,
@@ -126,6 +129,7 @@ Future<String> sendChunkedMediaTo({
       burnSeconds: burnSeconds,
       secure: secure,
       replyTo: replyTo,
+      album: album,
       writtenAt: writtenAt,
       sender: sender,
       only: only,
@@ -155,6 +159,7 @@ Future<String> _sendChunkedMediaInner({
   int? burnSeconds,
   bool secure = false,
   String? replyTo,
+  AlbumTag? album,
   int? writtenAt,
   required SenderInfo sender,
   Set<int>? only,
@@ -300,6 +305,7 @@ Future<String> _sendChunkedMediaInner({
           burnSeconds: burnSeconds,
           secure: secure,
           replyTo: replyTo,
+          album: album,
           powNonce: pow,
           powBitsUsed: pow == null ? null : powBits,
           supporterBadge: await appState.sharedBadge(),

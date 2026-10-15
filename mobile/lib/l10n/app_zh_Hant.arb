@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "給這則語音變聲",
   "voiceNotDisguised": "這則語音無法變聲，所以沒有送出",
   "settingsDisguiseByDefault": "預設給我的語音變聲",
-  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改"
+  "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改",
+  "albumLabel": "相簿，{count} 項",
+  "albumCounter": "{at}/{total}",
+  "albumMore": "還有 {count} 項",
+  "albumOnItsWay": "傳送中",
+  "albumQuoted": "相簿",
+  "albumUnsendTitle": "收回這個相簿？",
+  "mediaSendAddMore": "新增更多",
+  "mediaSendRemove": "移除",
+  "mediaSendProtect": "防止截圖",
+  "mediaSendProtectedOn": "已保護 · 對方無法截圖",
+  "mediaSendUpTo": "一次最多 {count} 個",
+  "mediaSendVideo": "傳送影片"
 }

@@ -128,81 +128,108 @@ void main() {
     const jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 1];
     const png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 2];
 
-    test('a mixed pick goes in the order chosen, each its own way', () async {
+    String said(PickedMedia m) =>
+        m.isVideo ? 'video ${m.video!.name}' : 'photo ${m.photo}';
+
+    test('a mixed pick reaches the preview in the order chosen', () async {
       final a = pick('IMG_1.jpg', jpeg);
       final v = pick('VID_1.mp4', [9]);
       final b = pick('shot.png', png);
       final w = pick('VID_2.mov', [8]);
-      final seen = <String>[];
+      final shown = <String>[];
+      final sent = <String>[];
       final dropped = <List<String>>[];
       await sendGalleryPicks(
         [a, v, b, w],
         shrink: shrink,
         drop: (x) async => dropped.add([for (final f in x) f.name]),
-        photo: (bytes, alone) async {
-          seen.add('photo $bytes $alone');
-          return true;
+        preview: (items, _) async {
+          shown.addAll(items.map(said));
+          return MediaSendResult(items: items, caption: 'hi');
         },
-        video: (x) async {
-          seen.add('video ${x.name}');
-          return true;
+        send: (r) async {
+          sent.addAll(r.items.map(said));
+          sent.add('caption ${r.caption}');
         },
       );
-      expect(seen, [
-        'photo ${[0xAA, ...jpeg]} false',
+      final order = [
+        'photo ${[0xAA, ...jpeg]}',
         'video VID_1.mp4',
-        'photo $png false',
+        'photo $png',
         'video VID_2.mov',
-      ]);
-      // the photos once read, each video once sent
+      ];
+      expect(shown, order);
+      expect(sent, [...order, 'caption hi']);
+      // the photos once read, the videos once the send is done with them
       expect(dropped, [
         ['IMG_1.jpg', 'shot.png'],
-        ['VID_1.mp4'],
-        ['VID_2.mov'],
+        ['VID_1.mp4', 'VID_2.mov'],
       ]);
     });
 
-    test(
-      'one photo alone gets its caption screen, one video does not',
-      () async {
-        final seen = <String>[];
-        Future<void> send(XFile x) => sendGalleryPicks(
-          [x, XFile(x.path)],
-          shrink: shrink,
-          drop: (_) async {},
-          photo: (bytes, alone) async {
-            seen.add('photo $alone');
-            return true;
-          },
-          video: (x) async {
-            seen.add('video');
-            return true;
-          },
-        );
-        await send(pick('a.jpg', jpeg));
-        await send(pick('b.mp4', [9]));
-        expect(seen, ['photo true', 'video']);
-      },
-    );
-
-    test('a send that stops still drops every video copy', () async {
-      final v = pick('a.mp4', [9]);
-      final w = pick('b.mp4', [8]);
-      final dropped = <String>[];
+    test('one photo alone goes through the preview too', () async {
+      final shown = <int>[];
+      MediaSendResult? got;
       await sendGalleryPicks(
-        [v, w],
-        drop: (x) async => dropped.addAll([for (final f in x) f.name]),
-        photo: (_, _) async => true,
-        video: (_) async => false,
+        [pick('a.jpg', jpeg)],
+        shrink: shrink,
+        drop: (_) async {},
+        preview: (items, _) async {
+          shown.add(items.length);
+          return MediaSendResult(items: items, caption: 'one');
+        },
+        send: (r) async => got = r,
       );
-      expect(dropped.toSet(), {'a.mp4', 'b.mp4'});
-      dropped.clear();
+      expect(shown, [1]);
+      expect(got!.items.single.isVideo, isFalse);
+      expect(got!.caption, 'one');
+    });
+
+    test('backing out sends nothing and drops every video copy', () async {
+      final dropped = <String>[];
+      var sends = 0;
+      await sendGalleryPicks(
+        [pick('a.mp4', [9]), pick('b.jpg', jpeg)],
+        shrink: shrink,
+        drop: (x) async => dropped.addAll([for (final f in x) f.name]),
+        preview: (_, _) async => null,
+        send: (_) async => sends++,
+      );
+      expect(sends, 0);
+      expect(dropped.toSet(), {'a.mp4', 'b.jpg'});
+    });
+
+    test('more picked from the preview joins the end', () async {
+      final more = [pick('c.jpg', jpeg), pick('VID_3.mp4', [7])];
+      final dropped = <String>[];
+      final sent = <String>[];
+      await sendGalleryPicks(
+        [pick('a.mp4', [9])],
+        shrink: shrink,
+        pickMore: () async => more,
+        drop: (x) async => dropped.addAll([for (final f in x) f.name]),
+        preview: (items, add) async {
+          final got = await add();
+          return MediaSendResult(items: [...items, ...got]);
+        },
+        send: (r) async => sent.addAll(r.items.map(said)),
+      );
+      expect(sent, [
+        'video a.mp4',
+        'photo ${[0xAA, ...jpeg]}',
+        'video VID_3.mp4',
+      ]);
+      expect(dropped.toSet(), {'a.mp4', 'c.jpg', 'VID_3.mp4'});
+    });
+
+    test('a send that fails still drops every video copy', () async {
+      final dropped = <String>[];
       await expectLater(
         sendGalleryPicks(
-          [v, w],
+          [pick('a.mp4', [9]), pick('b.mp4', [8])],
           drop: (x) async => dropped.addAll([for (final f in x) f.name]),
-          photo: (_, _) async => true,
-          video: (_) async => throw StateError('gone'),
+          preview: (items, _) async => MediaSendResult(items: items),
+          send: (_) async => throw StateError('gone'),
         ),
         throwsStateError,
       );
@@ -220,24 +247,28 @@ void main() {
     });
   });
 
-  test('both chats pick the gallery held and send videos the video way', () {
-    for (final (file, sig, sendFile) in [
+  test('both chats pick the gallery held, through the preview', () {
+    for (final (file, sig, send, video) in [
       (
         'lib/screens/chat_screen.dart',
         'Future<void> _pickAndSendMultiple(',
-        '_sendFileFrom(x.path, madeVideoName(x.name))',
+        'Future<void> _sendPicked(',
+        '_readyFile(v.path, madeVideoName(v.name))',
       ),
       (
         'lib/screens/group_chat_screen.dart',
         'Future<void> _pickGroupMultiple(',
-        '_sendGroupFileFrom(x.path, madeVideoName(x.name))',
+        'Future<void> _sendPicked(',
+        '_readyGroupFile(v.path, madeVideoName(v.name))',
       ),
     ]) {
-      final body = bodyOf(sourceOf(file), sig);
+      final src = sourceOf(file);
+      final body = bodyOf(src, sig);
       expect(body, contains('await lockState.hold(pickGallery)'), reason: file);
       expect(body, contains('await sendGalleryPicks('), reason: file);
-      expect(body, contains(sendFile), reason: file);
+      expect(body, contains('pickMore: () => lockState.hold(pickGallery)'));
       expect(body, isNot(contains('ImagePicker()')), reason: file);
+      expect(bodyOf(src, send), contains(video), reason: file);
     }
   });
 }

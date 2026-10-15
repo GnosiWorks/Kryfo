@@ -8353,4 +8353,49 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Chaque discussion peut le changer dans son menu';
+
+  @override
+  String albumLabel(Object count) {
+    return 'Album, $count éléments';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at sur $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '$count de plus';
+  }
+
+  @override
+  String get albumOnItsWay => 'En route';
+
+  @override
+  String get albumQuoted => 'Album';
+
+  @override
+  String get albumUnsendTitle => 'Annuler l’envoi de cet album ?';
+
+  @override
+  String get mediaSendAddMore => 'En ajouter';
+
+  @override
+  String get mediaSendRemove => 'Retirer';
+
+  @override
+  String get mediaSendProtect => 'Protéger des captures d’écran';
+
+  @override
+  String get mediaSendProtectedOn =>
+      'Protégées · la personne ne pourra pas en faire de capture d’écran';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Jusqu’à $count à la fois';
+  }
+
+  @override
+  String get mediaSendVideo => 'Envoyer la vidéo';
 }

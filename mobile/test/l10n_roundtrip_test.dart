@@ -3610,5 +3610,17 @@ void main() {
       l.pairCodePanelAcceptOnce,
       "Their request comes once they add you. Accept it only once they say all four groups matched.",
     );
+    expect(l.albumLabel("<count>"), "Album, <count> items");
+    expect(l.albumCounter("<at>", "<total>"), "<at> of <total>");
+    expect(l.albumMore("<count>"), "<count> more");
+    expect(l.albumOnItsWay, "On its way");
+    expect(l.albumQuoted, "Album");
+    expect(l.albumUnsendTitle, "Unsend this album?");
+    expect(l.mediaSendAddMore, "Add more");
+    expect(l.mediaSendRemove, "Remove");
+    expect(l.mediaSendProtect, "Protect from screenshots");
+    expect(l.mediaSendProtectedOn, "Protected · they cannot screenshot these");
+    expect(l.mediaSendUpTo("<count>"), "Up to <count> at a time");
+    expect(l.mediaSendVideo, "Send video");
   });
 }

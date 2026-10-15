@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "تمويه هذه الرسالة",
   "voiceNotDisguised": "تعذّر تمويه هذه الرسالة، لذا لم تُرسل",
   "settingsDisguiseByDefault": "تمويه صوتي افتراضيًا",
-  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها"
+  "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها",
+  "albumLabel": "ألبوم · العناصر: ⁨{count}⁩",
+  "albumCounter": "⁨{at}⁩ من ⁨{total}⁩",
+  "albumMore": "⁨{count}⁩ إضافية",
+  "albumOnItsWay": "في الطريق",
+  "albumQuoted": "ألبوم",
+  "albumUnsendTitle": "سحب هذا الألبوم؟",
+  "mediaSendAddMore": "إضافة المزيد",
+  "mediaSendRemove": "إزالة",
+  "mediaSendProtect": "حماية من لقطات الشاشة",
+  "mediaSendProtectedOn": "محمية · لا يمكنه التقاط لقطة شاشة لها",
+  "mediaSendUpTo": "حتى ⁨{count}⁩ في المرة الواحدة",
+  "mediaSendVideo": "إرسال الفيديو"
 }

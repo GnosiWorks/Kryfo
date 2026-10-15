@@ -25,6 +25,7 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/session.dart';
@@ -227,6 +228,7 @@ class _Db extends DevTestDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     await mem.insert('messages', {
       'peer_id': peerId,

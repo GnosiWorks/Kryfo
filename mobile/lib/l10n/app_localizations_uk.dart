@@ -8412,4 +8412,49 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'У кожному чаті це можна змінити в його меню';
+
+  @override
+  String albumLabel(Object count) {
+    return 'Альбом · об’єктів: $count';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at з $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return 'Ще $count';
+  }
+
+  @override
+  String get albumOnItsWay => 'У дорозі';
+
+  @override
+  String get albumQuoted => 'Альбом';
+
+  @override
+  String get albumUnsendTitle => 'Відкликати цей альбом?';
+
+  @override
+  String get mediaSendAddMore => 'Додати ще';
+
+  @override
+  String get mediaSendRemove => 'Прибрати';
+
+  @override
+  String get mediaSendProtect => 'Захистити від знімків екрана';
+
+  @override
+  String get mediaSendProtectedOn =>
+      'Захищено · співрозмовник не зможе зробити знімок екрана';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Не більше $count за раз';
+  }
+
+  @override
+  String get mediaSendVideo => 'Надіслати відео';
 }

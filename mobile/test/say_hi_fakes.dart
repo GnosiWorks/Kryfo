@@ -2,6 +2,7 @@
 // a one to one chat's rows kept in maps, and a relay that answers when
 // told: what the say hi and request fit tests open the chat's screen over
 import 'dart:async';
+import 'package:kryfo/album.dart' show AlbumTag;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -155,6 +156,7 @@ class SayHiDb extends DevTestDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     await mem.insert('messages', {
       'peer_id': peerId,

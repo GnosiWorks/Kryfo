@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Camuffa questa nota",
   "voiceNotDisguised": "Non è stato possibile camuffare questa nota, quindi non è stata inviata",
   "settingsDisguiseByDefault": "Camuffa la mia voce di default",
-  "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu"
+  "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu",
+  "albumLabel": "Album, {count} elementi",
+  "albumCounter": "{at} di {total}",
+  "albumMore": "Altri {count}",
+  "albumOnItsWay": "In arrivo",
+  "albumQuoted": "Album",
+  "albumUnsendTitle": "Ritirare questo album?",
+  "mediaSendAddMore": "Aggiungi altri",
+  "mediaSendRemove": "Rimuovi",
+  "mediaSendProtect": "Proteggi dagli screenshot",
+  "mediaSendProtectedOn": "Protette · non se ne può fare uno screenshot",
+  "mediaSendUpTo": "Fino a {count} alla volta",
+  "mediaSendVideo": "Invia video"
 }

@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Déguiser cette note",
   "voiceNotDisguised": "Cette note n’a pas pu être déguisée, elle n’a donc pas été envoyée",
   "settingsDisguiseByDefault": "Déguiser ma voix par défaut",
-  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu"
+  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu",
+  "albumLabel": "Album, {count} éléments",
+  "albumCounter": "{at} sur {total}",
+  "albumMore": "{count} de plus",
+  "albumOnItsWay": "En route",
+  "albumQuoted": "Album",
+  "albumUnsendTitle": "Annuler l’envoi de cet album ?",
+  "mediaSendAddMore": "En ajouter",
+  "mediaSendRemove": "Retirer",
+  "mediaSendProtect": "Protéger des captures d’écran",
+  "mediaSendProtectedOn": "Protégées · la personne ne pourra pas en faire de capture d’écran",
+  "mediaSendUpTo": "Jusqu’à {count} à la fois",
+  "mediaSendVideo": "Envoyer la vidéo"
 }

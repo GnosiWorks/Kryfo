@@ -7905,6 +7905,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
+
+  @override
+  String albumLabel(Object count) {
+    return '相册，$count 项';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at/$total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '还有 $count 项';
+  }
+
+  @override
+  String get albumOnItsWay => '正在传送';
+
+  @override
+  String get albumQuoted => '相册';
+
+  @override
+  String get albumUnsendTitle => '撤回这个相册？';
+
+  @override
+  String get mediaSendAddMore => '添加更多';
+
+  @override
+  String get mediaSendRemove => '移除';
+
+  @override
+  String get mediaSendProtect => '防止截屏';
+
+  @override
+  String get mediaSendProtectedOn => '已保护 · 对方无法截屏';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return '一次最多 $count 个';
+  }
+
+  @override
+  String get mediaSendVideo => '发送视频';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15688,4 +15732,48 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String albumLabel(Object count) {
+    return '相簿，$count 項';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at/$total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '還有 $count 項';
+  }
+
+  @override
+  String get albumOnItsWay => '傳送中';
+
+  @override
+  String get albumQuoted => '相簿';
+
+  @override
+  String get albumUnsendTitle => '收回這個相簿？';
+
+  @override
+  String get mediaSendAddMore => '新增更多';
+
+  @override
+  String get mediaSendRemove => '移除';
+
+  @override
+  String get mediaSendProtect => '防止截圖';
+
+  @override
+  String get mediaSendProtectedOn => '已保護 · 對方無法截圖';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return '一次最多 $count 個';
+  }
+
+  @override
+  String get mediaSendVideo => '傳送影片';
 }

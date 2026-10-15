@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
@@ -1071,6 +1072,7 @@ class ArrivalRows implements HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     beforeSave?.call();
     final gate = saveGate;
@@ -1093,9 +1095,20 @@ class ArrivalRows implements HaloDb {
       'pinned': 0,
       'pinned_at': null,
       'edited': 0,
+      ...?album?.toRow(),
     });
     onSave?.call();
   }
+
+  @override
+  Future<bool> albumHas(String albumId, String sender, String? groupId) async =>
+      msgs.any(
+        (m) =>
+            m['album_id'] == albumId &&
+            m['peer_id'] == sender &&
+            m['group_id'] == groupId &&
+            m['direction'] == 'in',
+      );
 
   @override
   Future<bool> saveInGroup(
@@ -1113,6 +1126,7 @@ class ArrivalRows implements HaloDb {
     String? preview,
     String? poll,
     String? sticker,
+    AlbumTag? album,
   }) async {
     if (!groupRows.containsKey(groupId)) return false;
     await saveMessage(
@@ -1131,6 +1145,7 @@ class ArrivalRows implements HaloDb {
       preview: preview,
       poll: poll,
       sticker: sticker,
+      album: album,
     );
     return true;
   }

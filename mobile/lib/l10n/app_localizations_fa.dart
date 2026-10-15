@@ -8280,4 +8280,49 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
+
+  @override
+  String albumLabel(Object count) {
+    return 'آلبوم · ⁨$count⁩ مورد';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '⁨$at⁩ از ⁨$total⁩';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '⁨$count⁩ مورد دیگر';
+  }
+
+  @override
+  String get albumOnItsWay => 'در راه';
+
+  @override
+  String get albumQuoted => 'آلبوم';
+
+  @override
+  String get albumUnsendTitle => 'این آلبوم پس گرفته شود؟';
+
+  @override
+  String get mediaSendAddMore => 'افزودن بیشتر';
+
+  @override
+  String get mediaSendRemove => 'حذف';
+
+  @override
+  String get mediaSendProtect => 'محافظت در برابر اسکرین‌شات';
+
+  @override
+  String get mediaSendProtectedOn =>
+      'محافظت‌شده · او نمی‌تواند از آن‌ها اسکرین‌شات بگیرد';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'حداکثر ⁨$count⁩ مورد در هر بار';
+  }
+
+  @override
+  String get mediaSendVideo => 'ارسال ویدیو';
 }

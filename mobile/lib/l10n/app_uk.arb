@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Змінити голос у цьому повідомленні",
   "voiceNotDisguised": "Не вдалося змінити голос, тому повідомлення не надіслано",
   "settingsDisguiseByDefault": "Змінювати мій голос за замовчуванням",
-  "settingsDisguiseByDefaultHint": "У кожному чаті це можна змінити в його меню"
+  "settingsDisguiseByDefaultHint": "У кожному чаті це можна змінити в його меню",
+  "albumLabel": "Альбом · об’єктів: {count}",
+  "albumCounter": "{at} з {total}",
+  "albumMore": "Ще {count}",
+  "albumOnItsWay": "У дорозі",
+  "albumQuoted": "Альбом",
+  "albumUnsendTitle": "Відкликати цей альбом?",
+  "mediaSendAddMore": "Додати ще",
+  "mediaSendRemove": "Прибрати",
+  "mediaSendProtect": "Захистити від знімків екрана",
+  "mediaSendProtectedOn": "Захищено · співрозмовник не зможе зробити знімок екрана",
+  "mediaSendUpTo": "Не більше {count} за раз",
+  "mediaSendVideo": "Надіслати відео"
 }

@@ -10431,5 +10431,76 @@
   "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
+  },
+  "albumLabel": "Album, {count} items",
+  "@albumLabel": {
+    "description": "widgets/album_grid.dart: what a screen reader says for an album; the notification and the chat list line too",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "albumCounter": "{at} of {total}",
+  "@albumCounter": {
+    "description": "album viewer and send preview: which item is shown",
+    "placeholders": {
+      "at": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "albumMore": "{count} more",
+  "@albumMore": {
+    "description": "widgets/album_grid.dart: the last tile stands for this many more",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "albumOnItsWay": "On its way",
+  "@albumOnItsWay": {
+    "description": "widgets/album_grid.dart: an album item that has not landed yet"
+  },
+  "albumQuoted": "Album",
+  "@albumQuoted": {
+    "description": "a reply quoting an album"
+  },
+  "albumUnsendTitle": "Unsend this album?",
+  "@albumUnsendTitle": {
+    "description": "confirm sheet: taking back a whole album"
+  },
+  "mediaSendAddMore": "Add more",
+  "@mediaSendAddMore": {
+    "description": "send preview: the tile that reopens the picker"
+  },
+  "mediaSendRemove": "Remove",
+  "@mediaSendRemove": {
+    "description": "send preview: drop the item shown"
+  },
+  "mediaSendProtect": "Protect from screenshots",
+  "@mediaSendProtect": {
+    "description": "send preview: the protect switch"
+  },
+  "mediaSendProtectedOn": "Protected · they cannot screenshot these",
+  "@mediaSendProtectedOn": {
+    "description": "send preview: the protect switch turned on"
+  },
+  "mediaSendUpTo": "Up to {count} at a time",
+  "@mediaSendUpTo": {
+    "description": "send preview: more were picked than one send takes",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaSendVideo": "Send video",
+  "@mediaSendVideo": {
+    "description": "send preview: title for one video"
   }
 }

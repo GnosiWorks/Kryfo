@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Samarkan pesan ini",
   "voiceNotDisguised": "Pesan ini tidak bisa disamarkan, jadi tidak dikirim",
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
-  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya"
+  "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
+  "albumLabel": "Album, {count} item",
+  "albumCounter": "{at} dari {total}",
+  "albumMore": "{count} lagi",
+  "albumOnItsWay": "Sedang dikirim",
+  "albumQuoted": "Album",
+  "albumUnsendTitle": "Tarik album ini?",
+  "mediaSendAddMore": "Tambah lagi",
+  "mediaSendRemove": "Hapus",
+  "mediaSendProtect": "Lindungi dari tangkapan layar",
+  "mediaSendProtectedOn": "Terlindung · dia tidak bisa mengambil tangkapan layarnya",
+  "mediaSendUpTo": "Maksimal {count} sekaligus",
+  "mediaSendVideo": "Kirim video"
 }

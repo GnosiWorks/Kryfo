@@ -6,23 +6,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../theme.dart';
-import 'decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve;
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
-import 'press_scale.dart';
-import 'written_field.dart';
-import '../bidi_safe.dart';
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
-import 'shift_tap_guard.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -495,144 +489,6 @@ class VoiceBubbleState extends State<VoiceBubble> {
       onTap: _toggle,
       excludeSemantics: true,
       child: bubble,
-    );
-  }
-}
-
-class ImageCaptionScreen extends StatefulWidget {
-  final Uint8List bytes;
-  const ImageCaptionScreen({super.key, required this.bytes});
-  @override
-  State<ImageCaptionScreen> createState() => ImageCaptionScreenState();
-}
-
-class ImageCaptionScreenState extends State<ImageCaptionScreen> {
-  final _ctrl = TextEditingController();
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 16, 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.commonBack,
-                    icon: Icon(
-                      Icons.chevron_left,
-                      color: HaloColors.text2,
-                      size: 26,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  Expanded(
-                    child: Text(
-                      l10n.mediaBubblesSendPhoto,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.serif(
-                        size: 16,
-                        italic: true,
-                        color: HaloColors.text,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.memory(
-                      widget.bytes,
-                      fit: BoxFit.contain,
-                      cacheWidth: screenPx(context),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: WrittenDir(
-                      controller: _ctrl,
-                      builder: (dir) => ShiftTapGuard(
-                        controller: _ctrl,
-                        child: TextField(
-                          textDirection: dir,
-                          inputFormatters: const [UnmarkedInput()],
-                          controller: _ctrl,
-                          autofocus: true,
-                          style: HaloType.sans(size: 14),
-                          minLines: 1,
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                            hintText: l10n.mediaBubblesAddACaption,
-                            hintStyle: HaloType.sans(
-                              size: 14,
-                              color: HaloColors.text3,
-                            ),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            filled: true,
-                            fillColor: HaloColors.surface2,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  PressScale(
-                    label: l10n.commonSend,
-                    scale: 0.88,
-                    haptic: false,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).pop(_ctrl.text.trim());
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.amber,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.arrow_upward,
-                        size: 20,
-                        color: HaloColors.onAmber,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

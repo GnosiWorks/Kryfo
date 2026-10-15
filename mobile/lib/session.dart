@@ -7,6 +7,7 @@
 
 import 'dart:io';
 
+import 'album.dart' show AlbumTag;
 import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
@@ -434,6 +435,7 @@ class Session {
     bool secure = false,
     String? poll,
     String? sticker,
+    AlbumTag? album,
   }) => _ofEither(peerId, groupId).saveMessage(
     peerId,
     direction,
@@ -453,6 +455,7 @@ class Session {
     secure: secure,
     poll: poll,
     sticker: sticker,
+    album: album,
   );
   Future<bool> saveInGroup(
     String peerId,
@@ -469,6 +472,7 @@ class Session {
     String? preview,
     String? poll,
     String? sticker,
+    AlbumTag? album,
   }) => _ofGroup(groupId).saveInGroup(
     peerId,
     plaintext,
@@ -484,6 +488,7 @@ class Session {
     preview: preview,
     poll: poll,
     sticker: sticker,
+    album: album,
   );
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,
@@ -602,7 +607,7 @@ class Session {
       (await _ofUid(msgUid)).removeReaction(msgUid, reactor);
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (await _ofUid(msgUid)).sendState(msgUid);
-  Future<void> setMsgBurnAt(String msgUid, int burnAt) async =>
+  Future<int> setMsgBurnAt(String msgUid, int burnAt) async =>
       (await _ofUid(msgUid)).setMsgBurnAt(msgUid, burnAt);
   // the rows read in one chat are all its container's
   Future<Map<String, int>> lightReadBurns(

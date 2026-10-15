@@ -2175,5 +2175,17 @@
   "voiceDisguiseThisNote": "Diese Nachricht verfremden",
   "voiceNotDisguised": "Diese Nachricht ließ sich nicht verfremden und wurde nicht gesendet",
   "settingsDisguiseByDefault": "Meine Stimme standardmäßig verfremden",
-  "settingsDisguiseByDefaultHint": "Jeder Chat kann das in seinem Menü ändern"
+  "settingsDisguiseByDefaultHint": "Jeder Chat kann das in seinem Menü ändern",
+  "albumLabel": "Album, {count} Elemente",
+  "albumCounter": "{at} von {total}",
+  "albumMore": "{count} weitere",
+  "albumOnItsWay": "Unterwegs",
+  "albumQuoted": "Album",
+  "albumUnsendTitle": "Dieses Album zurückholen?",
+  "mediaSendAddMore": "Mehr hinzufügen",
+  "mediaSendRemove": "Entfernen",
+  "mediaSendProtect": "Vor Screenshots schützen",
+  "mediaSendProtectedOn": "Geschützt · die andere Person kann keinen Screenshot davon machen",
+  "mediaSendUpTo": "Bis zu {count} auf einmal",
+  "mediaSendVideo": "Video senden"
 }

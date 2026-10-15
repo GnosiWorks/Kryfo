@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'album.dart' show AlbumTag, kAlbumWire;
 import 'bidi_safe.dart';
 import 'dlog.dart';
 import 'media_resend.dart';
@@ -55,6 +56,7 @@ class UnwrappedMessage {
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   final String? sticker; // 'st' - pack:id:since, drawn from our own pack
   final int? supportMarker; // 'sp' - written in a chat with the developer
+  final AlbumTag? album; // 'al' - its place in an album, on every slice
   // 'w' - when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
@@ -104,6 +106,7 @@ class UnwrappedMessage {
     this.pollClose,
     this.sticker,
     this.supportMarker,
+    this.album,
     this.writtenAt,
   });
 }
@@ -342,6 +345,7 @@ Future<String> wrapMessage(
   PollCloseFrame? pollClose,
   String? sticker,
   int? supportMarker,
+  AlbumTag? album,
   // when it was written: a retry, a resend or a slice passes the time the
   // row was written, anything else is written now
   int? writtenAt,
@@ -400,6 +404,7 @@ Future<String> wrapMessage(
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
+  if (album != null) body[kAlbumWire] = album.toWire();
 
   if (sender != null) {
     body['h'] = sender.haloId;
@@ -549,6 +554,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         final num n => n.toInt(),
         _ => null,
       },
+      album: AlbumTag.fromWire(json[kAlbumWire]),
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,

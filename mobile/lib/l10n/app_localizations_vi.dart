@@ -8255,4 +8255,48 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó';
+
+  @override
+  String albumLabel(Object count) {
+    return 'Album, $count mục';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at trên $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return 'Thêm $count';
+  }
+
+  @override
+  String get albumOnItsWay => 'Đang đến';
+
+  @override
+  String get albumQuoted => 'Album';
+
+  @override
+  String get albumUnsendTitle => 'Thu hồi album này?';
+
+  @override
+  String get mediaSendAddMore => 'Thêm nữa';
+
+  @override
+  String get mediaSendRemove => 'Bỏ';
+
+  @override
+  String get mediaSendProtect => 'Bảo vệ khỏi chụp màn hình';
+
+  @override
+  String get mediaSendProtectedOn => 'Đã bảo vệ · họ không thể chụp màn hình';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Tối đa $count mỗi lần';
+  }
+
+  @override
+  String get mediaSendVideo => 'Gửi video';
 }
