@@ -3992,6 +3992,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As notas não foram salvas. O arquivo continua aqui.';
 
   @override
+  String get notesExportGone =>
+      'O arquivo foi apagado quando o Kryfo foi bloqueado. Exporte de novo para criar um novo.';
+
+  @override
   String get notesExportSaved => 'Notas salvas';
 
   @override

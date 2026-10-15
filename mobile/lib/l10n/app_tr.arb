@@ -1129,6 +1129,7 @@
   "notesExportPlainYes": "Parolasız dışa aktar",
   "notesExportKeepLock": "Parola ifadesini koru",
   "notesExportNotSaved": "Notlar kaydedilmedi. Dosya hâlâ burada.",
+  "notesExportGone": "Kryfo kilitlenince dosya silindi. Yenisini oluşturmak için tekrar dışa aktar.",
   "notesExportSaved": "Notlar kaydedildi",
   "notesExportSavedIn": "Notlar kaydedildi: {place}",
   "notesExportSavedUnchecked": "Notlar kaydedildi ama Kryfo kopyayı kontrol edemedi",

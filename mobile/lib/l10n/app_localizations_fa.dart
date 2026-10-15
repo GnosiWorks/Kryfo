@@ -3974,6 +3974,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'یادداشت‌ها ذخیره نشدند. فایل هنوز اینجاست.';
 
   @override
+  String get notesExportGone =>
+      'فایل وقتی Kryfo قفل شد پاک شد. برای ساختن فایلی تازه دوباره برون‌بری کنید.';
+
+  @override
   String get notesExportSaved => 'یادداشت‌ها ذخیره شدند';
 
   @override

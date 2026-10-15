@@ -4003,6 +4003,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Le note non sono state salvate. Il file è ancora qui.';
 
   @override
+  String get notesExportGone =>
+      'Il file è stato cancellato quando Kryfo si è bloccato. Esporta di nuovo per crearne uno nuovo.';
+
+  @override
   String get notesExportSaved => 'Note salvate';
 
   @override

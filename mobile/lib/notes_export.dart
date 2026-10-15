@@ -8,7 +8,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -70,10 +71,18 @@ final _handed = <String>{};
 /// so a copy android still runs keeps reading
 void notesExportHanded(String path) => _handed.add(path);
 
+// moves at every drop: an export of an earlier run stops, and a file it
+// made is gone
+final _run = ValueNotifier<int>(0);
+
+/// the run an export belongs to, and a screen's word that a drop came
+ValueListenable<int> get notesExportRun => _run;
+
 /// what this session's exports left, at a lock or a switch to another pin:
-/// once any export being made has ended, every file is shredded, but one
+/// any export being made stops, then every file is shredded, but one
 /// android may still read is only unlinked
 Future<void> dropNotesExports([Directory? cache]) async {
+  _run.value++;
   while (_making > 0) {
     await (_idle ??= Completer<void>()).future;
   }
@@ -174,7 +183,8 @@ String _leaf() {
 
 /// the export of [notes], made in [dir]: its path and the name it is saved
 /// under. a null [passphrase] leaves it plain. nothing is left in [dir] when
-/// it fails or [stopped] says so, and a locked one leaves no plaintext
+/// it fails, [stopped] says so or a drop comes after [run] was read, and a
+/// locked one leaves no plaintext
 Future<({String path, String name})> makeNotesExport(
   List<Map<String, Object?>> notes, {
   required NotesFormat format,
@@ -183,7 +193,9 @@ Future<({String path, String name})> makeNotesExport(
   DateTime? now,
   bool Function()? stopped,
   void Function(double done)? progress,
+  int? run,
 }) async {
+  final mine = run ?? _run.value;
   _began = true;
   _making++;
   try {
@@ -194,7 +206,7 @@ Future<({String path, String name})> makeNotesExport(
       passphrase: passphrase,
       dir: dir,
       now: now,
-      stopped: stopped,
+      stopped: () => _run.value != mine || (stopped?.call() ?? false),
       progress: progress,
     );
   } finally {

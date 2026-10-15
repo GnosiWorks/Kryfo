@@ -1129,6 +1129,7 @@
   "notesExportPlainYes": "Esporta senza",
   "notesExportKeepLock": "Tieni la passphrase",
   "notesExportNotSaved": "Le note non sono state salvate. Il file è ancora qui.",
+  "notesExportGone": "Il file è stato cancellato quando Kryfo si è bloccato. Esporta di nuovo per crearne uno nuovo.",
   "notesExportSaved": "Note salvate",
   "notesExportSavedIn": "Note salvate in {place}",
   "notesExportSavedUnchecked": "Note salvate, ma Kryfo non ha potuto verificare la copia",

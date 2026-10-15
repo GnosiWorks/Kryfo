@@ -3957,6 +3957,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Catatan tidak tersimpan. File-nya masih ada.';
 
   @override
+  String get notesExportGone =>
+      'File-nya dihapus saat Kryfo terkunci. Ekspor lagi untuk membuat yang baru.';
+
+  @override
   String get notesExportSaved => 'Catatan tersimpan';
 
   @override

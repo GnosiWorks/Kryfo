@@ -4006,6 +4006,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les notes n’ont pas été enregistrées. Le fichier est toujours là.';
 
   @override
+  String get notesExportGone =>
+      'Le fichier a été effacé quand Kryfo s’est verrouillé. Exportez à nouveau pour en créer un autre.';
+
+  @override
   String get notesExportSaved => 'Notes enregistrées';
 
   @override

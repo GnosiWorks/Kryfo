@@ -1129,6 +1129,7 @@
   "notesExportPlainYes": "不加密匯出",
   "notesExportKeepLock": "保留密碼短語",
   "notesExportNotSaved": "筆記沒有儲存。檔案還在。",
+  "notesExportGone": "Kryfo 鎖定時，檔案已清除。再匯出一次即可產生新檔案。",
   "notesExportSaved": "筆記已儲存",
   "notesExportSavedIn": "筆記已儲存到 {place}",
   "notesExportSavedUnchecked": "筆記已儲存，但 Kryfo 無法檢查這份副本",

@@ -3979,6 +3979,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notesExportNotSaved => 'Notlar kaydedilmedi. Dosya hâlâ burada.';
 
   @override
+  String get notesExportGone =>
+      'Kryfo kilitlenince dosya silindi. Yenisini oluşturmak için tekrar dışa aktar.';
+
+  @override
   String get notesExportSaved => 'Notlar kaydedildi';
 
   @override

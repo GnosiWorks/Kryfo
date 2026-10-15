@@ -4067,6 +4067,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesExportNotSaved => 'لم تُحفظ الملاحظات. الملف ما زال هنا.';
 
   @override
+  String get notesExportGone =>
+      'مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.';
+
+  @override
   String get notesExportSaved => 'حُفظت الملاحظات';
 
   @override

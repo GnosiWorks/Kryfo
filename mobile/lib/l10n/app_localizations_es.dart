@@ -4003,6 +4003,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las notas no se guardaron. El archivo sigue aquí.';
 
   @override
+  String get notesExportGone =>
+      'El archivo se borró cuando Kryfo se bloqueó. Exporta de nuevo para crear uno nuevo.';
+
+  @override
   String get notesExportSaved => 'Notas guardadas';
 
   @override

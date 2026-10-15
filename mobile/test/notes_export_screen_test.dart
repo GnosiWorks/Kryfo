@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         renewRootNavigator,
         rootNavKey,
         useDatabasesForTest;
-import 'package:kryfo/notes_export.dart' show kNotesOut;
+import 'package:kryfo/lock_guard.dart' show lockGuard;
+import 'package:kryfo/notes_export.dart' show dropNotesExports, kNotesOut;
 import 'package:kryfo/screens/notes_export_screen.dart';
 import 'package:kryfo/screens/notes_screen.dart';
 import 'package:kryfo/session.dart';
@@ -401,10 +402,10 @@ void main() {
     await t.pumpAndSettle();
   }
 
-  void bigPhoto(_Db into) {
+  void bigPhoto(_Db into, [int size = 256 << 20]) {
     final big = File(p.join(tmp.path, 'big.jpg'));
     final raf = big.openSync(mode: FileMode.write)
-      ..setPositionSync(256 << 20)
+      ..setPositionSync(size)
       ..writeByteSync(1);
     raf.closeSync();
     into.notes = [
@@ -447,6 +448,67 @@ void main() {
     await t.pump();
     await lockMidway(t);
   }, skip: !engine);
+
+  // the same pin locks and opens again: the page stays, its file does not
+  Future<void> lockAndBack(WidgetTester t) async {
+    lockState.lock();
+    expect(lockState.locked, isTrue);
+    var dropped = false;
+    final watch = Stopwatch()..start();
+    unawaited(dropNotesExports(tmp).then((_) => dropped = true));
+    await until(t, () => dropped, 250);
+    expect(dropped, isTrue);
+    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
+    expect(left(), isEmpty);
+    lockState.openForTest(enabled: true);
+    lockGuard.lifted();
+    await beats(t, 20);
+  }
+
+  testWidgets('a lock while the file is made stops it at once', (t) async {
+    bigPhoto(db, 2 << 30);
+    await plainStart(t);
+    await until(t, () => left().isNotEmpty);
+    expect(find.text(l10n.notesExportWorking), findsOneWidget);
+    await lockAndBack(t);
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.notesExportGone), findsOneWidget);
+    expect(find.text(l10n.notesExport), findsOneWidget);
+    expect(asked, isNot(contains('saveDocument')));
+    expect(left(), isEmpty);
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('a file a lock took is not offered, a new one is', (t) async {
+    shares = 'failed';
+    await plain(t);
+    dialogs.single.complete({'state': 'cancelled'});
+    await until(t, () => asked.contains('shareFile'));
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.notesExportNotSaved), findsOneWidget);
+    // the share sheet's hold has run out
+    await t.pump(const Duration(seconds: 3));
+    await lockAndBack(t);
+    await t.pumpAndSettle();
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.notesExportGone), findsOneWidget);
+    expect(find.text(l10n.notesExportNotSaved), findsNothing);
+    expect(find.text(l10n.backupShareInstead), findsNothing);
+    expect(asked.where((m) => m == 'saveDocument'), hasLength(1));
+    // exported again: a new file, and the save window for it
+    await press(t, find.text(l10n.notesExport));
+    await until(t, () => dialogs.length > 1);
+    expect(dialogs, hasLength(2));
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.notesExportGone), findsNothing);
+    expect(left(), hasLength(1));
+    dialogs.last.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await until(t, () => left().isEmpty);
+    expect(left(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
 
   // a decoy with notes of its own, open in place of the everyday ones
   _Db intoDecoy() {

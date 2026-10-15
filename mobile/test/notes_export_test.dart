@@ -374,19 +374,46 @@ void main() {
       }
     });
 
-    test('waits for an export being made, then takes it too', () async {
-      final big = File(p.join(tmp.path, 'big.jpg'))
-        ..writeAsBytesSync(Uint8List(8 << 20));
+    test('stops an export being made at once, and nothing is left', () async {
+      final big = File(p.join(tmp.path, 'big.jpg'));
+      big.openSync(mode: FileMode.write)
+        ..setPositionSync(2 << 30)
+        ..writeByteSync(1)
+        ..closeSync();
+      var moved = false;
       final making = makeNotesExport(
         [_note('x', at, photo: big.path)],
         format: NotesFormat.text,
         passphrase: null,
         dir: out,
+        progress: (_) => moved = true,
       );
-      await Future<void>.delayed(Duration.zero);
+      final stops = expectLater(making, throwsA(isA<NotesExportStopped>()));
+      // a file is being written when the lock comes
+      for (var i = 0; !moved && i < 2000; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      expect(_left(out), isNotEmpty);
+      final watch = Stopwatch()..start();
+      await dropNotesExports(tmp).timeout(const Duration(seconds: 10));
+      expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+      await stops;
+      expect(_left(out), isEmpty);
+    });
+
+    test('an export read before a drop stops and leaves nothing', () async {
+      final run = notesExportRun.value;
       await dropNotesExports(tmp);
-      final made = await making;
-      expect(File(made.path).existsSync(), isFalse);
+      await expectLater(
+        makeNotesExport(
+          notes,
+          format: NotesFormat.text,
+          passphrase: null,
+          dir: out,
+          run: run,
+        ),
+        throwsA(isA<NotesExportStopped>()),
+      );
       expect(_left(out), isEmpty);
     });
   });

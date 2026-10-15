@@ -4011,6 +4011,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Notizen wurden nicht gespeichert. Die Datei ist noch da.';
 
   @override
+  String get notesExportGone =>
+      'Die Datei wurde gelöscht, als Kryfo gesperrt wurde. Exportiere noch einmal, um eine neue zu erstellen.';
+
+  @override
   String get notesExportSaved => 'Notizen gespeichert';
 
   @override

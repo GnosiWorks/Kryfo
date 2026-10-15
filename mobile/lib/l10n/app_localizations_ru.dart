@@ -4064,6 +4064,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesExportNotSaved => 'Заметки не сохранены. Файл всё ещё здесь.';
 
   @override
+  String get notesExportGone =>
+      'Файл удалён, когда Kryfo заблокировался. Экспортируй ещё раз, чтобы создать новый.';
+
+  @override
   String get notesExportSaved => 'Заметки сохранены';
 
   @override

@@ -3956,6 +3956,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The notes weren\'t saved. The file is still here.';
 
   @override
+  String get notesExportGone =>
+      'The file was cleared when Kryfo locked. Export again to make a new one.';
+
+  @override
   String get notesExportSaved => 'Notes saved';
 
   @override

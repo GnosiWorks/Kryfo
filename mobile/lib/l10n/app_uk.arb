@@ -1129,6 +1129,7 @@
   "notesExportPlainYes": "Експортувати без неї",
   "notesExportKeepLock": "Залишити парольну фразу",
   "notesExportNotSaved": "Нотатки не збережено. Файл усе ще тут.",
+  "notesExportGone": "Файл видалено, коли Kryfo заблокувався. Експортуй ще раз, щоб створити новий.",
   "notesExportSaved": "Нотатки збережено",
   "notesExportSavedIn": "Нотатки збережено в {place}",
   "notesExportSavedUnchecked": "Нотатки збережено, але Kryfo не зміг перевірити копію",

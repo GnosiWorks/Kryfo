@@ -6249,6 +6249,12 @@ abstract class AppLocalizations {
   /// **'The notes weren\'t saved. The file is still here.'**
   String get notesExportNotSaved;
 
+  /// screens/notes_export_screen.dart. a lock stopped the export or cleared the made file
+  ///
+  /// In en, this message translates to:
+  /// **'The file was cleared when Kryfo locked. Export again to make a new one.'**
+  String get notesExportGone;
+
   /// screens/notes_export_screen.dart. toast
   ///
   /// In en, this message translates to:

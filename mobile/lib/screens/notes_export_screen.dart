@@ -3,6 +3,7 @@
 // unless the person turns that off past a warning, then handed to the save
 // window the way a backup is
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +60,9 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   // the made file while it waits to be saved or shared. another choice or
   // new words make it stale
   ({String path, String name})? _made;
+  // the export run the file was made in: a lock since has taken it
+  int _madeRun = 0;
+  bool _gone = false;
   bool _saving = false;
   // kryfo stopped waiting for the last save: android may still read the file
   bool _lost = false;
@@ -71,7 +75,20 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     appState.forceSecure(true);
     _p1.addListener(_typed);
     _p2.addListener(_typed);
+    notesExportRun.addListener(_runMoved);
     unawaited(_count0());
+  }
+
+  // a lock took the waiting file with it. one being made stops on its own,
+  // one being saved is seen to when the save ends
+  void _runMoved() {
+    if (!mounted || _made == null || _saving) return;
+    setState(() {
+      _made = null;
+      _notSaved = false;
+      _gone = true;
+      _busy = false;
+    });
   }
 
   Future<void> _count0() async {
@@ -98,6 +115,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   @override
   void dispose() {
     appState.forceSecure(false);
+    notesExportRun.removeListener(_runMoved);
     _stop = true;
     // one still being saved is let go when that ends
     final made = _made;
@@ -193,7 +211,9 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     }
     FocusScope.of(context).unfocus();
     _drop();
+    final run = notesExportRun.value;
     setState(() {
+      _gone = false;
       _error = null;
       _busy = true;
       _writing = true;
@@ -212,12 +232,14 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         progress: (v) {
           if (mounted) setState(() => _progress = v);
         },
+        run: run,
       );
     } on NotesExportStopped {
       if (mounted) {
         setState(() {
           _busy = false;
           _writing = false;
+          _gone = notesExportRun.value != run;
         });
       }
       return;
@@ -244,7 +266,19 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     }
     _p1.clear();
     _p2.clear();
+    if (notesExportRun.value != run) {
+      // a lock came as it ended: nothing of it is offered
+      await shredFile(made.path);
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _writing = false;
+        _gone = true;
+      });
+      return;
+    }
     _made = made;
+    _madeRun = run;
     setState(() => _writing = false);
     await _handOver(save: true);
   }
@@ -264,9 +298,18 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     SaveAnswer answer = (state: SaveState.cancelled, where: null, lost: false);
     var shared = false;
     var dropped = false;
+    var gone = false;
+    // a lock while the window was asked for took the file: nothing to hand
+    Future<void> there() async {
+      if (notesExportRun.value != _madeRun || !await File(made.path).exists()) {
+        throw const _Gone();
+      }
+    }
+
     try {
       if (save) {
         await lockState.hold(() async {
+          await there();
           answer = await saveDocumentOut(made.path, made.name);
           _lost = answer.lost;
           // a lock or a switch only unlinks it while android may read it
@@ -277,19 +320,22 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       if ((!save || answer.state == SaveState.cancelled) && mounted) {
         // only an app picked from the sheet has it: one closed keeps the file
         shared =
-            await lockState.hold(
-              () => shareFileOut(
+            await lockState.hold(() async {
+              await there();
+              return shareFileOut(
                 made.path,
                 name: made.name,
                 subject: l10n.notesExportSubject,
                 // plaintext never outlives the lock in the cache
                 quiet: !made.name.endsWith('.age'),
-              ),
-            ) ==
+              );
+            }) ==
             ShareEnd.picked;
       }
     } on LockDropped {
       dropped = true;
+    } on _Gone {
+      gone = true;
     } catch (e) {
       dlog('notes export: not handed over (${e.runtimeType})');
     }
@@ -315,6 +361,15 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         }
       }
       Navigator.of(context).pop();
+      return;
+    }
+    if (gone) {
+      _made = null;
+      unawaited(shredMade(made.path, lost: _lost));
+      setState(() {
+        _busy = false;
+        _gone = true;
+      });
       return;
     }
     HapticFeedback.lightImpact();
@@ -467,18 +522,20 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
               EaseSize(
                 child: RiseSwap(
                   alignment: Alignment.topCenter,
-                  child: !_notSaved
+                  child: !_notSaved && !_gone
                       ? const SizedBox(
                           key: ValueKey(false),
                           width: double.infinity,
                         )
                       : Padding(
-                          key: const ValueKey(true),
+                          key: ValueKey(_gone ? 'gone' : 'not saved'),
                           padding: const EdgeInsets.only(bottom: 12),
                           child: SizedBox(
                             width: double.infinity,
                             child: Text(
-                              l10n.notesExportNotSaved,
+                              _gone
+                                  ? l10n.notesExportGone
+                                  : l10n.notesExportNotSaved,
                               textAlign: TextAlign.center,
                               style: HaloType.sans(
                                 size: 13,
@@ -638,6 +695,10 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       ],
     );
   }
+}
+
+class _Gone implements Exception {
+  const _Gone();
 }
 
 // the plain file's warning: calm, in amber, where the fields were

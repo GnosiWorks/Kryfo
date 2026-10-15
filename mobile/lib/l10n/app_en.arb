@@ -4949,6 +4949,10 @@
   "@notesExportNotSaved": {
     "description": "screens/notes_export_screen.dart. the save window was left or failed, the file waits to try again"
   },
+  "notesExportGone": "The file was cleared when Kryfo locked. Export again to make a new one.",
+  "@notesExportGone": {
+    "description": "screens/notes_export_screen.dart. a lock stopped the export or cleared the made file"
+  },
   "notesExportSaved": "Notes saved",
   "@notesExportSaved": {
     "description": "screens/notes_export_screen.dart. toast"

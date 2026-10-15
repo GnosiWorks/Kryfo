@@ -3951,6 +3951,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesExportNotSaved => 'Ghi chú chưa được lưu. Tệp vẫn còn đây.';
 
   @override
+  String get notesExportGone =>
+      'Tệp đã bị xóa khi Kryfo khóa. Hãy xuất lại để tạo tệp mới.';
+
+  @override
   String get notesExportSaved => 'Đã lưu ghi chú';
 
   @override

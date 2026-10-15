@@ -1129,6 +1129,7 @@
   "notesExportPlainYes": "برون‌بری بدون آن",
   "notesExportKeepLock": "عبارت عبور بماند",
   "notesExportNotSaved": "یادداشت‌ها ذخیره نشدند. فایل هنوز اینجاست.",
+  "notesExportGone": "فایل وقتی Kryfo قفل شد پاک شد. برای ساختن فایلی تازه دوباره برون‌بری کنید.",
   "notesExportSaved": "یادداشت‌ها ذخیره شدند",
   "notesExportSavedIn": "یادداشت‌ها در ⁨{place}⁩ ذخیره شدند",
   "notesExportSavedUnchecked": "یادداشت‌ها ذخیره شدند، ولی Kryfo نتوانست نسخه را بررسی کند",
