@@ -593,11 +593,29 @@ class ArrivalRows implements HaloDb {
   Future<bool> tombed(String name) async => tombedNames.contains(name);
 
   @override
+  Future<List<({String name, int at})>> tombs() async => [
+    for (final n in tombedNames) (name: n, at: 1),
+  ];
+
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    for (final k in keys) {
+      blockedKeyAt.putIfAbsent(k.x, () => k.at);
+    }
+    tombedNames.addAll([for (final n in tombs) n.name]);
+  }
+
+  @override
   Future<void> clearTomb(String name) async => tombedNames.remove(name);
 
   @override
-  Future<void> dropSeats(String haloId) async {
+  Future<void> dropSeats(String haloId, String keyHex) async {
     _hit('dropSeats', haloId, null);
+    final x = ((people[haloId]?['xpub'] as String?) ?? '').toLowerCase();
+    if (x.isNotEmpty && x != keyHex.toLowerCase()) return;
     for (final m in members.values) {
       m.remove(haloId);
     }

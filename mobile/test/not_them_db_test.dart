@@ -367,7 +367,7 @@ void main() {
     await raw.insert('contacts', {
       'halo_id': _p,
       'onion': 'o',
-      'xpub': 'x',
+      'xpub': _key,
       'first_seen': 1,
       'last_seen': 1,
       'accepted': 0,
@@ -375,12 +375,19 @@ void main() {
     await db.createGroup(
       _gid,
       'walkers',
-      [_p, _q],
+      [_p, _q, 'no-key-here'],
       isAdmin: false,
       adminId: _p,
     );
-    await db.dropSeats(_p);
-    await db.dropSeats(_q);
+    // the same words on another key are someone else: nothing of theirs goes
+    await db.dropSeats(_p, 'cd' * 32);
+    expect(await db.getGroupMembers(_gid), hasLength(3));
+    expect(await db.getContact(_p), isNotNull);
+    expect((await db.getGroup(_gid))?['admin_id'], _p);
+    await db.dropSeats(_p, _key);
+    await db.dropSeats(_q, 'x-$_q');
+    // a seat with no row, and so no key, goes too
+    await db.dropSeats('no-key-here', _key);
     expect(await db.getGroupMembers(_gid), isEmpty);
     expect(await db.getContact(_p), isNull);
     // a chat of their own stays
@@ -471,6 +478,97 @@ void main() {
     });
   }
 
+  test('on the real database: the remove, the words, the admins, the seats '
+      'and the tidy, among many rows', () async {
+    if (skip()) return;
+    final raw = await db.open();
+    for (final (id, x) in [
+      ('fake-word-one', 'ab' * 32),
+      ('other-word-two', 'cd' * 32),
+    ]) {
+      await raw.insert('contacts', {
+        'halo_id': id,
+        'onion': 'o',
+        'xpub': x,
+        'first_seen': 1,
+        'last_seen': 1,
+        'accepted': 1,
+      });
+    }
+    for (final g in ['g1', 'g2']) {
+      await db.createGroup(
+        g,
+        'g',
+        ['fake-word-one', 'my-own-words'],
+        isAdmin: false,
+        adminId: 'fake-word-one',
+      );
+    }
+    for (var i = 0; i < 300; i++) {
+      await db.saveMessage(
+        'fake-word-one',
+        'in',
+        'zqxjfakeword$i plumbuscrypt secretfakephrase',
+        msgUid: 'uf$i',
+      );
+    }
+    final pad = 'lorem ipsum dolor sit amet ' * 15;
+    await raw.transaction((t) async {
+      for (var i = 0; i < 2000; i++) {
+        await t.insert('messages', {
+          'peer_id': 'other-word-two',
+          'direction': 'in',
+          'plaintext': 'keepme$i $pad',
+          'sent_at': i,
+          'msg_uid': 'uo$i',
+        });
+      }
+    });
+    expect(await RouterRows.tidyOwed(raw), isFalse);
+    final went = await db.removeAndBlockKey('fake-word-one', 'ab' * 32);
+    expect(went, hasLength(300));
+    expect(await RouterRows.tidyOwed(raw), isTrue);
+    expect(await db.tombed('fake-word-one'), isTrue);
+    expect(await db.tombed('other-word-two'), isFalse);
+    expect(
+      {
+        for (final r in await raw.query('groups', columns: ['admin_id']))
+          r['admin_id'],
+      },
+      {kAdminGone},
+    );
+    expect(await db.keyBlocked('AB' * 32), isTrue);
+    await db.createGroup(
+      'g3',
+      'g',
+      ['seat-only-x', 'my-own-words'],
+      isAdmin: false,
+      adminId: 'seat-only-x',
+    );
+    await raw.insert('contacts', {
+      'halo_id': 'seat-only-x',
+      'onion': 'o',
+      'xpub': 'ef' * 32,
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 0,
+    });
+    await db.dropSeats('seat-only-x', 'ef' * 32);
+    expect(await db.getGroupMembers('g3'), ['my-own-words']);
+    expect(await db.getContact('seat-only-x'), isNull);
+    expect(await db.groupAdminId('g3'), kAdminGone);
+    await tidyIfOwed(raw);
+    expect(await RouterRows.tidyOwed(raw), isFalse);
+    await db.deleteConversation('other-word-two');
+    expect(await RouterRows.tidyOwed(raw), isTrue);
+    await tidyIfOwed(raw);
+    await db.close();
+    expect(
+      inFiles(['plumbuscrypt', 'secretfakephrase', 'zqxjfakeword', 'keepme1']),
+      isEmpty,
+    );
+  });
+
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
@@ -487,10 +585,7 @@ void main() {
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
       hasLength(2),
     );
-    expect(
-      await raw.rawQuery("PRAGMA table_info('name_tombs')"),
-      hasLength(2),
-    );
+    expect(await raw.rawQuery("PRAGMA table_info('name_tombs')"), hasLength(2));
     expect(await db.getContact(_q), isNotNull);
     expect(
       await raw.query('messages', where: 'peer_id = ?', whereArgs: [_q]),

@@ -59,7 +59,8 @@ class _Db extends SayHiDb {
   @override
   Future<bool> tombed(String name) => real.tombed(name);
   @override
-  Future<void> dropSeats(String haloId) => real.dropSeats(haloId);
+  Future<void> dropSeats(String haloId, String keyHex) =>
+      real.dropSeats(haloId, keyHex);
   @override
   Future<bool> keyBlocked(String keyHex) => real.keyBlocked(keyHex);
   @override

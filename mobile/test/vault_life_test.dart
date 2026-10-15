@@ -56,6 +56,8 @@ const _keys = {
   'held_onion': ['id'],
   'shield': ['halo_id'],
   'vouches': ['halo_id', 'voucher_id'],
+  'blocked_keys': ['x'],
+  'name_tombs': ['name'],
 };
 
 // one database's rows, its search words by row id and its own meta
@@ -756,6 +758,31 @@ class _Db implements HaloDb {
   Future<void> close() async {}
 
   @override
+  Future<List<({String x, int at})>> blockedKeys() async => [
+    for (final r in _t['blocked_keys'])
+      (x: r['x'] as String, at: r['at'] as int),
+  ];
+
+  @override
+  Future<List<({String name, int at})>> tombs() async => [
+    for (final r in _t['name_tombs'])
+      (name: r['name'] as String, at: r['at'] as int),
+  ];
+
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    for (final k in keys) {
+      _t.put('blocked_keys', {'x': k.x, 'at': k.at});
+    }
+    for (final n in tombs) {
+      _t.put('name_tombs', {'name': n.name, 'at': n.at});
+    }
+  }
+
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
 }
@@ -1368,7 +1395,16 @@ void main() {
       // someone the vault holds that the list does not name yet
       w.vault.put('contacts', _person('accepted-inside'));
       _say(w.vault, 'in0', 'accepted-inside', 'said in the vault');
+      // and a key and words "this isn't them" let go in it
+      w.vault.put('blocked_keys', {'x': 'ab' * 32, 'at': 5});
+      w.vault.put('name_tombs', {'name': 'let-go-words', 'at': 5});
       await w.app.removeVault();
+      expect(w.live['blocked_keys'], [
+        {'x': 'ab' * 32, 'at': 5},
+      ]);
+      expect(w.live['name_tombs'], [
+        {'name': 'let-go-words', 'at': 5},
+      ]);
       expect(w.host.entry, isNull);
       expect(w.store.metas['pub'], isNull);
       expect(w.store.kinds(), {'older-gone-one': kHiddenGone});
