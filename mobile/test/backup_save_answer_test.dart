@@ -43,14 +43,15 @@ void main() {
   // each save dialog, answered when the test says
   late List<Completer<Object?>> dialogs;
   late Object? Function() stage;
-  late bool shares;
+  // how the share sheet ends
+  late String shares;
   const idle = {'stage': 'idle', 'copied': 0};
 
   setUp(() {
     asked = [];
     dialogs = [];
     stage = () => idle;
-    shares = true;
+    shares = 'picked';
     tmp = Directory.systemTemp.createTempSync('backup_answer');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(
@@ -251,7 +252,7 @@ void main() {
   });
 
   testWidgets('a backed-out dialog and no share sheet is not saved', (t) async {
-    shares = false;
+    shares = 'failed';
     await open(t);
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => asked.contains('shareFile'));
@@ -260,6 +261,29 @@ void main() {
     saysNotSaved();
     expect(made(), hasLength(1));
     expect(await movedAt(t), isNull);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a share sheet closed with no app picked is not saved, and '
+      'the file stays to try again', (t) async {
+    shares = 'closed';
+    await open(t);
+    dialogs.single.complete({'state': 'cancelled'});
+    await until(t, () => asked.contains('shareFile'));
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    saysNotSaved();
+    expect(made(), hasLength(1));
+    expect(made().single.readAsStringSync(), 'made');
+
+    // shared again, and this time an app is picked
+    shares = 'picked';
+    await press(t, shareInstead);
+    await until(t, () => screen.evaluate().isEmpty);
+    expect('shareFile'.allMatches(asked.join(' ')), hasLength(2));
+    expect(screen, findsNothing);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 

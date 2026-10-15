@@ -15,7 +15,7 @@ import '../lock_guard.dart' show LockDropped;
 import '../lock_state.dart';
 import '../main.dart' hide live;
 import '../notes_export.dart';
-import '../open_file.dart' show shareFileOut;
+import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
@@ -275,15 +275,17 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         });
       }
       if ((!save || answer.state == SaveState.cancelled) && mounted) {
-        shared = await lockState.hold(
-          () => shareFileOut(
-            made.path,
-            name: made.name,
-            subject: l10n.notesExportSubject,
-            // plaintext never outlives the lock in the cache
-            quiet: !made.name.endsWith('.age'),
-          ),
-        );
+        shared =
+            await lockState.hold(
+              () => shareFileOut(
+                made.path,
+                name: made.name,
+                subject: l10n.notesExportSubject,
+                // plaintext never outlives the lock in the cache
+                quiet: !made.name.endsWith('.age'),
+              ),
+            ) !=
+            ShareEnd.failed;
       }
     } on LockDropped {
       dropped = true;

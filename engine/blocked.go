@@ -111,6 +111,12 @@ var dirTags = map[string]bool{
 	"loading_status": true, "loading_keys": true, "requesting_descriptors": true, "loading_descriptors": true,
 }
 
+// past the consensus: what is left is the descriptor download
+var descTags = map[string]bool{"requesting_descriptors": true, "loading_descriptors": true}
+
+// the consensus itself on its way
+var statusTags = map[string]bool{"requesting_status": true, "loading_status": true, "loading_keys": true}
+
 // the ways a censor ends a connection to a relay
 var censorReasons = map[string]bool{
 	"CONNECTRESET": true, "TIMEOUT": true, "NOROUTE": true, "CONNECTREFUSED": true, "IOERROR": true,
@@ -137,6 +143,10 @@ type attemptSeen struct {
 	hsDoneAt time.Time
 	// tor got bytes of the directory in this attempt
 	dirSeen bool
+	// this attempt's way carried tor on to the descriptor download, and
+	// brought the consensus to get there: a cached one skips those phases
+	pastConsensus bool
+	sawStatus     bool
 	// a transport listener's first request after the switch, and the last
 	// time its snowflake reported progress
 	firstDial time.Time
@@ -201,6 +211,12 @@ func (a *attemptSeen) bootstrap(p bootPhase, fresh bool, now time.Time) {
 	// a new phase or a higher percent is progress
 	if a.phaseOK && (p.Tag != a.phase.Tag || p.Progress > a.phase.Progress) {
 		a.tagMoved = now
+		if statusTags[p.Tag] {
+			a.sawStatus = true
+		}
+		if descTags[p.Tag] {
+			a.pastConsensus = true
+		}
 	}
 	if a.phaseOK && p.Count > a.phase.Count {
 		a.countAt = now
@@ -230,6 +246,12 @@ var (
 	// an attempt that keeps moving forward runs on, up to this from its
 	// start, and ends only once it has stalled for its own limit
 	attemptCap = 4 * time.Minute
+	// a bridge that brought the consensus in this attempt, and went on to
+	// the descriptors, may sit this long on one percent of their download:
+	// tor fetches them all through the bridges, and a set with dead lines
+	// in it waits out each one. a jump there on a cached consensus gets no
+	// more than its own limit
+	descStall = 150 * time.Second
 	// tor at times waits over two minutes before the first dial to a line
 	// it was just given. the clock of a bridge starts at that dial.
 	firstDialWait = 160 * time.Second
@@ -320,6 +342,9 @@ func judgeBridge(a *attemptSeen, limit time.Duration, now time.Time) (string, st
 			return seenFailed, "tor never dialled"
 		}
 		return seenTrying, ""
+	}
+	if a.pastConsensus && a.sawStatus && limit < descStall {
+		limit = descStall
 	}
 	if !a.ranOut(a.firstDial, limit, now) {
 		return seenTrying, ""

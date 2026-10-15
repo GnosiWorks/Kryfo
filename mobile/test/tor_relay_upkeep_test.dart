@@ -146,7 +146,7 @@ class _Io extends ArrivalIo {
   _Io(this.log);
   final List<String> log;
   @override
-  void listen(String xPub) {
+  void listen(String xPub, {bool fresh = false}) {
     log.add('listen:$xPub');
     super.listen(xPub);
   }
@@ -1230,6 +1230,7 @@ void main() {
 
     test('reaches the engine, and nothing that is not a change does', () {
       final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([none]); // where the network starts
       app.connectivityEvent([wifi]); // offline to online
       app.connectivityEvent([wifi]); // the same again: no change
       app.connectivityEvent([mobile]); // wifi to mobile
@@ -1252,7 +1253,7 @@ void main() {
         app.connectivityEvent([none]);
         app.connectivityEvent([mobile]);
       }
-      expect(log.where((e) => e == 'network').length, 11);
+      expect(log.where((e) => e == 'network').length, 10);
       expect(log.where((e) => e == 'offline').length, 10);
     });
 
@@ -1302,6 +1303,58 @@ void main() {
       expect(net(), isEmpty);
       app.recheckNetDetail('{"on":false,"kind":"wifi"}');
       expect(app.online, isFalse);
+    });
+
+    // a cold start in front: the recheck, the boot's own read, the
+    // listener's first events and the watch all say the network that is
+    // there. none of it is a change, and tor up is left alone
+    test('the start network said many times is not a change', () async {
+      const watch = MethodChannel('kryfo/net');
+      const conn = MethodChannel('dev.fluttercommunity.plus/connectivity');
+      const wifiNet = '{"on":true,"validated":true,"kind":"wifi","net":7}';
+      final mock =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      mock.setMockMethodCallHandler(watch, (call) async => wifiNet);
+      mock.setMockMethodCallHandler(conn, (call) async => ['wifi']);
+      addTearDown(() {
+        mock.setMockMethodCallHandler(watch, null);
+        mock.setMockMethodCallHandler(conn, null);
+      });
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.always;
+      // in front before the boot read anything or started tor
+      app.appInFront(true);
+      await pumpEventQueue();
+      app.connectivityEvent([wifi]);
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent(wifiNet);
+      app.recheckNetDetail(wifiNet);
+      app.takeTorStatus('starting|10|0|0|0');
+      app.takeTorStatus('publishing|100|1|1|0');
+      app.appInFront(true);
+      await pumpEventQueue();
+      expect(net().where((e) => e != 'detail'), isEmpty);
+      expect(app.online, isTrue);
+
+      // wifi to mobile data, by both
+      app.connectivityEvent([mobile]);
+      app.netDetailEvent(
+        '{"on":true,"validated":true,"kind":"cellular","net":8}',
+      );
+      expect(net().where((e) => e == 'network'), isNotEmpty);
+    });
+
+    test('another wifi in place of the first is a change', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi","net":7}');
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi","net":7}');
+      expect(net(), ['detail', 'detail']);
+      // connectivity says wifi as before, the watch names another network
+      app.connectivityEvent([wifi]);
+      app.netDetailEvent('{"on":true,"validated":true,"kind":"wifi","net":9}');
+      expect(net(), ['detail', 'detail', 'detail', 'network']);
     });
 
     test('the watch alone bringing the network back brings the app online', () {

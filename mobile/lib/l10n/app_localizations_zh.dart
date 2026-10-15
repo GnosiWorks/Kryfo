@@ -1594,6 +1594,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatWaitingForThemTo => '正在等待对方接受你的请求';
 
   @override
+  String get chatTheyMayNotKnow => '对方可能还不知道你已接受';
+
+  @override
   String get chatYouBlockedThisContact => '你已屏蔽这位联系人';
 
   @override
@@ -9570,6 +9573,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatWaitingForThemTo => '正在等對方接受你的請求';
+
+  @override
+  String get chatTheyMayNotKnow => '對方可能還不知道你已接受';
 
   @override
   String get chatYouBlockedThisContact => '你已封鎖這位聯絡人';

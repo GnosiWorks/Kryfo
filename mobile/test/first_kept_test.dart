@@ -77,7 +77,7 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => ed;
   @override
-  void nostrSubscribeBg(String peerXPubHex) {}
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
   @override
   String firstContactPk(int counter) => 'fc$counter';
   @override
@@ -139,7 +139,7 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub) {}
+  void listen(String xPub, {bool fresh = false}) {}
   @override
   void unlisten(String xPub) {}
   @override

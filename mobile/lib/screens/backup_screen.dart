@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import '../open_file.dart' show shareFileOut;
+import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../backup.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
@@ -311,15 +311,18 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
-  // true only once the copy is made and the sheet is up
-  Future<bool> _share(String path) => lockState.hold(
-    () => shareFileOut(
-      path,
-      backup: true,
-      subject: l10n.backupKryfoBackup,
-      text: l10n.backupYourEncryptedKryfoBackup,
-    ),
-  );
+  // true only once an app was picked from the sheet: one closed with
+  // nothing picked keeps the file and says so
+  Future<bool> _share(String path) async =>
+      await lockState.hold(
+        () => shareFileOut(
+          path,
+          backup: true,
+          subject: l10n.backupKryfoBackup,
+          text: l10n.backupYourEncryptedKryfoBackup,
+        ),
+      ) ==
+      ShareEnd.picked;
 
   @override
   void dispose() {

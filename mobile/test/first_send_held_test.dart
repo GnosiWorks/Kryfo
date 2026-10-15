@@ -2,10 +2,13 @@
 // a first message holds on its proof of work before it is sealed. a chat
 // left while it holds still sends it, and a request's two slots are taken
 // the moment a send starts, so a wave and a text side by side cannot pass
-// the cap. the chat's own screen, with real signal over rows kept in maps
-// and a relay that answers when told
+// the cap. sends tapped while one holds are taken and go after it, in the
+// order they were sent. the chat's own screen, with real signal over rows
+// kept in maps and a relay that answers when told
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,13 +22,20 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         useDatabasesForTest,
         useEngineForTest;
-import 'package:kryfo/message_envelope.dart' show grindPow, powBits;
+import 'package:kryfo/message_envelope.dart'
+    show grindPow, powBits, unwrapMessage;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+    show
+        CiphertextMessage,
+        Curve,
+        PreKeySignalMessage,
+        SessionCipher,
+        SignalMessage,
+        SignalProtocolAddress;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -54,6 +64,25 @@ void main() {
   late _HeldDb db;
   late SayHiRelay relay;
   late Directory docs;
+  // the far side, to read what went
+  late SignalSession amber;
+
+  // the words a cipher carries, opened as amber
+  Future<String> words(String cipher) async {
+    final w = base64Decode(cipher);
+    final body = Uint8List.fromList(w.sublist(1));
+    final c = SessionCipher(
+      amber.sessionStore,
+      amber.preKeyStore,
+      amber.signedPreKeyStore,
+      amber.identityStore,
+      SignalProtocolAddress('me', 1),
+    );
+    final plain = w[0] == CiphertextMessage.prekeyType
+        ? await c.decrypt(PreKeySignalMessage(body))
+        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    return unwrapMessage(utf8.decode(plain)).message;
+  }
 
   setUpAll(() async {
     final me = Curve.generateKeyPair();
@@ -63,7 +92,7 @@ void main() {
       xPrivBytes: me.privateKey.serialize(),
     );
     final pair = Curve.generateKeyPair();
-    final amber = SignalSession();
+    amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
       xPubBytes: pair.publicKey.serialize().sublist(1),
@@ -157,31 +186,90 @@ void main() {
   });
 
   testWidgets('a wave and a text side by side take both of a request\'s '
-      'slots at once, so a third cannot pass', (t) async {
+      'slots at once, so a third cannot pass, and go in the order they '
+      'were sent', (t) async {
     await open(t);
     await t.tap(find.text(l10n.chatWave));
     await settle(t);
     expect(db.held, hasLength(1));
     await type(t, 'it is me, from the cafe');
     expect(db.held, hasLength(2));
-    // the text goes first, the wave still holds
+    // the text is ready first, and waits for the wave sent before it
     db.held[1].complete();
     await settle(t);
-    expect(relay.ciphers, hasLength(1));
-    relay.sends.single.complete('ok');
-    await settle(t);
+    expect(relay.ciphers, isEmpty);
     // both slots are spent: the composer is gone, nothing more goes
     expect(find.byIcon(Icons.arrow_upward), findsNothing);
     expect(find.text(l10n.chatWaitingForThemTo), findsOneWidget);
     db.held.first.complete();
     await settle(t);
     expect(relay.ciphers, hasLength(2));
-    relay.sends.last.complete('ok');
+    for (final s in relay.sends) {
+      s.complete('ok');
+    }
     await settle(t);
     expect(
       mem.rows('messages').where((r) => r['direction'] == 'out'),
       hasLength(2),
     );
+    await devClose(t);
+  });
+
+  testWidgets('sends tapped while the first one\'s proof of work holds are '
+      'taken, and go after it in the order they were sent', (t) async {
+    await open(t);
+    await type(t, 'first, from the cafe');
+    expect(db.held, hasLength(1));
+    await type(t, 'second, still there');
+    // taken at once: its bubble is up and it grinds beside the first
+    expect(db.held, hasLength(2));
+    expect(find.text('second, still there'), findsOneWidget);
+    // the second's work is done first, and it still waits for the first
+    db.held[1].complete();
+    await settle(t);
+    expect(relay.ciphers, isEmpty);
+    db.held[0].complete();
+    await settle(t);
+    expect(relay.ciphers, hasLength(2));
+    final went = <String>[];
+    for (final c in relay.ciphers) {
+      went.add(await t.runAsync(() => words(c)) ?? '');
+    }
+    expect(went, ['first, from the cafe', 'second, still there']);
+    for (final s in relay.sends) {
+      s.complete('ok');
+    }
+    await settle(t);
+    expect(t.takeException(), isNull);
+    await devClose(t);
+  });
+
+  testWidgets('one that fails while an earlier one holds still lets the '
+      'next go only after that earlier one', (t) async {
+    await open(t);
+    await type(t, 'first, from the cafe');
+    await type(t, 'this one breaks');
+    expect(db.held, hasLength(2));
+    db.held[1].completeError(StateError('the disk is full'));
+    await settle(t);
+    await type(t, 'third, after the first');
+    expect(db.held, hasLength(3));
+    db.held[2].complete();
+    await settle(t);
+    expect(relay.ciphers, isEmpty);
+    db.held[0].complete();
+    await settle(t);
+    expect(relay.ciphers, hasLength(2));
+    final went = <String>[];
+    for (final c in relay.ciphers) {
+      went.add(await t.runAsync(() => words(c)) ?? '');
+    }
+    expect(went, ['first, from the cafe', 'third, after the first']);
+    for (final s in relay.sends) {
+      s.complete('ok');
+    }
+    await settle(t);
+    expect(t.takeException(), isNull);
     await devClose(t);
   });
 }

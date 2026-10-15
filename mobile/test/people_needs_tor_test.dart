@@ -140,6 +140,14 @@ void main() {
     await rest(t);
   }
 
+  // a loaded machine can need more beats than rest gives before the ask lands
+  Future<void> asked(WidgetTester t) async {
+    for (var i = 0; i < 100 && engine.asks.isEmpty; i++) {
+      await rest(t, 1);
+    }
+    await rest(t);
+  }
+
   Future<void> close(WidgetTester t) async {
     await t.pumpWidget(const SizedBox());
     await t.pump(const Duration(seconds: 1));
@@ -203,6 +211,7 @@ void main() {
     tor(true);
     await open(t);
     await ask(t);
+    await asked(t);
     expect(engine.asks.single, endsWith('/handle/search'));
     expect(find.text(l10n.handleSearchNeedsTor), findsNothing);
     expect(find.text('@wren'), findsWidgets);
@@ -229,6 +238,7 @@ void main() {
         tor(true, route: mode == 'private');
         await open(t);
         await ask(t);
+        await asked(t);
         expect(engine.asks.single, endsWith('/handle/search'));
         expect(find.text(l10n.handleSearchNeedsTor), findsNothing);
         expect(find.text('@wren'), findsWidgets);

@@ -1663,6 +1663,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatWaitingForThemTo => 'İsteğini kabul etmesi bekleniyor';
 
   @override
+  String get chatTheyMayNotKnow => 'Kabul ettiğini bilmiyor olabilir';
+
+  @override
   String get chatYouBlockedThisContact => 'Bu kişiyi engelledin';
 
   @override
