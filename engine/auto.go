@@ -700,6 +700,34 @@ func autoIdleWhy() string {
 	return ""
 }
 
+// behind a portal no pass runs, but tor keeps the way that worked on this
+// type of network, so a sign-in, or a portal android only thinks is there,
+// finds it in place. nothing known here: tor waits for the sign-in
+func captiveWay(gen int64) {
+	if networkHold() != errAutoWait {
+		return
+	}
+	_, opts, _ := bridgeMode()
+	s, ok := checkInStep(currentNet().Kind, memSnapshot(), opts, dayOf(autoNow()))
+	if !ok {
+		return
+	}
+	if ok, _ := autoUseStep(gen, s); !ok {
+		return
+	}
+	stSet(func() { autoSt.method, autoSt.source = s.Method, s.Source })
+	log.Printf("auto: behind a portal, keeping %s in place", s.Method)
+	if torStarted() && !torIsPaused() {
+		go captiveBounce()
+	}
+}
+
+// vars for the tests
+var (
+	captiveBounce = func() { _ = reconnectAuto() }
+	holdBounce    = func() { _ = reconnectNow() }
+)
+
 // one pass and what it began with
 type passCtx struct {
 	gen   int64
@@ -738,7 +766,8 @@ func runPass(gen, epoch int64, why string) string {
 	_, opts, _ := bridgeMode()
 	today := dayOf(autoNow())
 	steps := planPass(kind, memSnapshot(), opts, today)
-	log.Printf("auto: pass (%s) on %s, %d steps", why, kind, len(steps))
+	// counted as the status line counts them: the ask of moat is no way in
+	log.Printf("auto: pass (%s) on %s, %d ways to try", why, kind, attemptCount(steps))
 	p := passCtx{gen: gen, epoch: epoch, valid: autoValidFlips.Load()}
 	if p.id = gateHold(gen, passBudget(steps)); p.id == 0 {
 		return passInterrupted
@@ -803,9 +832,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
+			// through: there is nothing left to ask the tor project for
 			stSet(func() {
 				autoSt.phase, autoSt.method, autoSt.source = "connected", s.Method, s.Source
-				autoSt.errCode = ""
+				autoSt.errCode, autoSt.askConsent = "", false
 			})
 			log.Printf("auto: %s gets through", s.Method)
 			return seenOK
@@ -1079,6 +1109,9 @@ func autoLoop(gen int64) {
 			if result != seenOK && result != "exhausted" {
 				result = passInterrupted
 			}
+			if why == "captive" {
+				captiveWay(gen)
+			}
 		} else {
 			n := currentNet()
 			ep := netEpoch.Load()
@@ -1222,6 +1255,7 @@ func applyBridgeMode(mode, raw string) string {
 		return "error: unknown mode"
 	}
 
+	heldBefore := networkHold()
 	autoMu.Lock()
 	prevMode, prevOpts := bmMode, bmOpts
 	same := prevMode == mode && optsEqual(prevOpts, o)
@@ -1258,6 +1292,11 @@ func applyBridgeMode(mode, raw string) string {
 	gateDrop()
 	if mode == bmAuto {
 		stSet(func() { autoSt.phase, autoSt.method, autoSt.source = "trying", "", "" })
+		// the direct step tor was on is over: off the network now, not when
+		// a pass gets to it, as none may run behind a portal
+		if prevMode == bmAuto && heldBefore == "" && networkHold() == errAutoWait && torStarted() && !torIsPaused() {
+			go holdBounce()
+		}
 		autoStart(gen)
 		return "ok"
 	}
@@ -1489,6 +1528,9 @@ func bridgeStatus() bridgeStatusView {
 	switch why := autoIdleWhy(); {
 	case why == "not_tor_mode", why == "no_internet":
 		phase, v.ErrorCode = why, why
+	// a portal tor gets through anyway is no portal to sign in to
+	case why == "captive" && v.CanSend:
+		phase = "connected"
 	case why == "captive":
 		phase, v.ErrorCode = "captive", "limited"
 	case why == "paused" && inCheckIn():
@@ -1500,6 +1542,9 @@ func bridgeStatus() bridgeStatusView {
 		phase = "trying"
 	}
 	v.Phase = phase
+	if phase == "connected" || v.CanSend {
+		v.AskConsent = false
+	}
 	// "trying another way, 2 of 3" needs no method name
 	if mode == bmAuto && (phase == "trying" || phase == "asking") {
 		v.Attempt, v.Attempts = attempt, attempts

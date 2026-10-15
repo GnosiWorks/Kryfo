@@ -1184,6 +1184,10 @@ class _AutoStrip extends StatelessWidget {
                 label: bridgeActionLabel(a),
                 onTap: () async {
                   if (a == BridgeAction.tryAgain) return appState.bridgeRetry();
+                  if (a == BridgeAction.openWifi) {
+                    await openWifiSettings();
+                    return;
+                  }
                   await showTorBlockedSheet(context);
                 },
                 fill: HaloColors.amber,

@@ -17,42 +17,51 @@ import org.json.JSONObject
 // capabilities after it, so there they are asked for; later androids send
 // them, and a read of our own could race them with an older answer. the
 // old default's onLost can come after the new one is up, and then it
-// changes nothing.
+// changes nothing. the network there at the start and the same word again
+// are not news: only a word that differs from the last is reported.
 class NetTracker<N>(
     private val describe: (N?) -> String,
     private val report: (String) -> Unit,
     private val capsFollow: Boolean,
+    private var said: String,
 ) {
     private var current: N? = null
 
     fun available(n: N) {
         current = n
-        if (!capsFollow) report(describe(n))
+        if (!capsFollow) say(describe(n))
     }
 
     fun changed(n: N, state: String) {
         current = n
-        report(state)
+        say(state)
     }
 
     fun lost(n: N) {
         if (n != current) return
         current = null
-        report(describe(null))
+        say(describe(null))
+    }
+
+    private fun say(state: String) {
+        if (state == said) return
+        said = state
+        report(state)
     }
 }
 
 // the default network as android sees it: whether there is one, its type,
 // whether android validated it, whether a captive portal sits in front and
-// whether a vpn carries it. dart hands each change to the engine, where
-// automatic bridges read it. android validates against a google host that
-// some networks block, so this is a hint, never proof.
+// whether a vpn carries it, and android's handle for it, so a new network
+// of the same type is told from the one before. dart hands each change to
+// the engine, where automatic bridges read it. android validates against a
+// google host that some networks block, so this is a hint, never proof.
 object NetWatch {
     const val CHANNEL = "kryfo/net"
 
     private val main = Handler(Looper.getMainLooper())
     private var channel: MethodChannel? = null
-    @Volatile private var last = describe(null)
+    @Volatile private var last = describe(null, null)
 
     fun start(context: Context, engine: FlutterEngine) {
         val ch = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
@@ -61,20 +70,22 @@ object NetWatch {
         }
         channel = ch
         val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
-        val tracker = NetTracker<Network>(
-            describe = { n -> describe(n?.let { cm.getNetworkCapabilities(it) }) },
-            report = { report(it) },
-            capsFollow = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O,
-        )
         try {
-            last = describe(cm.getNetworkCapabilities(cm.activeNetwork))
+            val active = cm.activeNetwork
+            last = describe(active, active?.let { cm.getNetworkCapabilities(it) })
+            val tracker = NetTracker<Network>(
+                describe = { n -> describe(n, n?.let { cm.getNetworkCapabilities(it) }) },
+                report = { report(it) },
+                capsFollow = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O,
+                said = last,
+            )
             cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     tracker.available(network)
                 }
 
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
-                    tracker.changed(network, describe(caps))
+                    tracker.changed(network, describe(network, caps))
                 }
 
                 override fun onLost(network: Network) {
@@ -89,7 +100,6 @@ object NetWatch {
 
     @Synchronized
     private fun report(state: String) {
-        if (state == last) return
         last = state
         main.post {
             try {
@@ -100,9 +110,9 @@ object NetWatch {
         }
     }
 
-    private fun describe(caps: NetworkCapabilities?): String {
+    private fun describe(network: Network?, caps: NetworkCapabilities?): String {
         val o = JSONObject()
-        if (caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+        if (network == null || caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             o.put("on", false)
             o.put("kind", "other")
             return o.toString()
@@ -120,6 +130,7 @@ object NetWatch {
                 else -> "other"
             }
         )
+        o.put("net", network.networkHandle)
         return o.toString()
     }
 }

@@ -66,6 +66,10 @@
 - accepting a request while offline reaches them once you're back online. if it still can't, the chat says so and offers to try again.
 - someone you just added is heard right away, and a message you send while the first one is still being prepared keeps its place.
 - a voice note is thrown away if the chat closes as you start recording, or if android takes the touch away while you hold the mic.
+- deleting a chat or turning away a request also removes the wallpaper photo set for it.
+- if you back out of saving a backup and close the share sheet too, the backup is kept and Kryfo says it wasn't saved.
+- on a wi-fi that wants a sign-in first, the home screen says so and opens the wi-fi settings.
+- tor no longer restarts once right after it connects at startup, and a move from one wi-fi to another is now noticed.
 
 ### Security
 - the engine is built with go 1.26.9, and its crypto and network libraries are updated: x/crypto 0.57.0 and x/net 0.60.0.
