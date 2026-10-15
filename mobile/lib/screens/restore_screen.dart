@@ -623,6 +623,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   height: 1.5,
                 ),
               ),
+              const SizedBox(height: 22),
               _Step(
                 n: '1',
                 label: l10n.restoreTheFile,
@@ -671,6 +672,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 14),
               EaseSize(
                 duration: const Duration(milliseconds: 220),
                 child: !_hasFile
@@ -711,10 +713,13 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 duration: const Duration(milliseconds: 240),
                 child: s == null
                     ? const SizedBox(width: double.infinity)
-                    : _Step(
-                        n: '3',
-                        label: l10n.restoreWhatComesBack,
-                        child: _SummaryCard(summary: s),
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 14),
+                        child: _Step(
+                          n: '3',
+                          label: l10n.restoreWhatComesBack,
+                          child: _SummaryCard(summary: s),
+                        ),
                       ),
               ),
               const SizedBox(height: 22),
@@ -830,11 +835,15 @@ class _Step extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      HaloSection(
-        label,
-        flush: true,
-        lead: _StepMark(n: n, done: done),
+      // a step of the form, not a section: the titles' words, a tighter gap
+      Row(
+        children: [
+          _StepMark(n: n, done: done),
+          const SizedBox(width: 10),
+          Flexible(child: Text(label, style: HaloSection.style())),
+        ],
       ),
+      const SizedBox(height: 8),
       child,
     ],
   );

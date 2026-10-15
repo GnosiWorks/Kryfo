@@ -100,9 +100,20 @@ class _Page {
   final String name;
   final Widget Function() build;
   final List<String> Function() titles;
+  // a form's step labels: the titles' style, the form's own gaps
+  final List<String> Function()? steps;
   final Future<void> Function(WidgetTester t)? after;
   final void Function()? setUp;
-  const _Page(this.name, this.build, this.titles, {this.after, this.setUp});
+  const _Page(
+    this.name,
+    this.build,
+    this.titles, {
+    this.after,
+    this.setUp,
+    this.steps,
+  });
+
+  List<String> styled() => [...titles(), ...?steps?.call()];
 }
 
 Future<void> _reach(WidgetTester t, Finder f) async {
@@ -196,7 +207,12 @@ final _pages = [
     () => const GettingMessagesScreen(),
     () => [l10n.gettingMessagesOnTheLockScreen],
   ),
-  _Page('restore', () => const RestoreScreen(), () => [l10n.restoreTheFile]),
+  _Page(
+    'restore',
+    () => const RestoreScreen(),
+    () => [],
+    steps: () => [l10n.restoreTheFile],
+  ),
   _Page(
     'why kryfo',
     () => const WhyKryfoScreen(),
@@ -375,13 +391,15 @@ void main() {
         await _show(t, page);
         final bad = <String>[];
         final want = _want();
-        for (final title in page.titles()) {
+        for (final title in page.styled()) {
           final p = _paragraph(title);
           if (p == null) {
             bad.add('not shown: $title');
             continue;
           }
-          if (!_inSection(title)) bad.add('drawn its own way: $title');
+          if (page.titles().contains(title) && !_inSection(title)) {
+            bad.add('drawn its own way: $title');
+          }
           final s = _styleOf(p);
           if (s.fontSize != want.fontSize ||
               s.fontWeight != want.fontWeight ||
@@ -465,10 +483,15 @@ void main() {
           HaloColors.setLight(light);
           HaloColors.setAccent(accent);
           final bad = <String>[];
-          for (final name in ['settings', 'wallpaper sheet', 'transport']) {
+          for (final name in [
+            'settings',
+            'wallpaper sheet',
+            'transport',
+            'restore',
+          ]) {
             final page = _pages.firstWhere((p) => p.name == name);
             await _show(t, page);
-            for (final title in page.titles()) {
+            for (final title in page.styled()) {
               final p = _paragraph(title);
               if (p == null) continue;
               final c = _styleOf(p).color!;
@@ -510,7 +533,7 @@ void main() {
                 scale: scale,
                 size: const Size(360, 16000),
               );
-              for (final title in page.titles()) {
+              for (final title in page.styled()) {
                 final p = _paragraph(title);
                 if (p == null) {
                   bad.add('$now not shown: $title');

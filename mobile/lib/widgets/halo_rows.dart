@@ -11,9 +11,7 @@ class HaloSection extends StatelessWidget {
   final String label;
   // the words start where flush content does, not at a group's tiles
   final bool flush;
-  // before the words, as a step's number
-  final Widget? lead;
-  const HaloSection(this.label, {super.key, this.flush = false, this.lead});
+  const HaloSection(this.label, {super.key, this.flush = false});
 
   static const double above = 28;
   static const double below = 10;
@@ -33,8 +31,6 @@ class HaloSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final words = Text(label, style: style());
-    final lead = this.lead;
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
         flush ? 0 : inset,
@@ -42,18 +38,7 @@ class HaloSection extends StatelessWidget {
         flush ? 0 : inset,
         below,
       ),
-      child: Semantics(
-        header: true,
-        child: lead == null
-            ? words
-            : Row(
-                children: [
-                  lead,
-                  const SizedBox(width: 10),
-                  Expanded(child: words),
-                ],
-              ),
-      ),
+      child: Semantics(header: true, child: Text(label, style: style())),
     );
   }
 }
