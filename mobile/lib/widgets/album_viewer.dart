@@ -117,9 +117,7 @@ class AlbumViewer extends StatefulWidget {
 
 class AlbumViewerState extends State<AlbumViewer>
     with SingleTickerProviderStateMixin {
-  late final PageController _pages = PageController(
-    initialPage: widget.start,
-  );
+  late final PageController _pages = PageController(initialPage: widget.start);
   late int _at = widget.start;
   bool _zoomed = false;
   bool _chrome = true;
