@@ -3979,10 +3979,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khoảng một giây. Hoạt động cả ở nơi tor bị chặn.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'Khoảng một giây, và không qua Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
 
@@ -6944,9 +6940,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Ở đây Kryfo không bao giờ thử kết nối Tor trực tiếp. Kryfo tự tìm một cầu nối hoạt động được, hoặc bạn có thể chọn cầu nối của mình ở bước tiếp theo.';
-
-  @override
-  String get bridgesRecommended => 'Nên dùng';
 
   @override
   String get bridgesTryingAnotherWay => 'Đang thử cách khác…';

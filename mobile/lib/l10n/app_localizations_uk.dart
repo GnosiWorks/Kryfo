@@ -4073,9 +4073,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Близько секунди. Працює там, де tor заблоковано.';
 
   @override
-  String get onboardingAboutASecondSkipsTor => 'Близько секунди, і без Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Режим «Авто» сам знаходить спосіб обійти блокування.';
 
@@ -7076,9 +7073,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Тут Kryfo ніколи не пробує Tor напряму. Він сам знайде робочий міст, або ти вибереш свій на наступному кроці.';
-
-  @override
-  String get bridgesRecommended => 'Рекомендуємо';
 
   @override
   String get bridgesTryingAnotherWay => 'Пробуємо інший спосіб…';

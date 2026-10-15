@@ -1166,8 +1166,7 @@ class _TransportScreen extends StatefulWidget {
 }
 
 class _TransportScreenState extends State<_TransportScreen> {
-  // said tor is blocked at the start: onion through automatic leads, relay
-  // next
+  // said tor is blocked or watched at the start
   final bool _blocked = appState.bridge.skipDirect;
   String _pick = 'private';
   bool _busy = false;
@@ -1197,6 +1196,26 @@ class _TransportScreenState extends State<_TransportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // tor blocked or watched: onion through a bridge only. relay and fast
+    // are plain connections a watcher sees, and stay in settings
+    if (_blocked) {
+      return _StepPage(
+        footer: [_Cta(label: l10n.onboardingContinue, onTap: _go)],
+        children: [
+          _Headline(l10n.onboardingHowYourMessages),
+          const SizedBox(height: 12),
+          _lead(l10n.onboardingYouCanChangeThis),
+          const SizedBox(height: 24),
+          ...staggerAll([
+            _ModeCard(
+              title: l10n.onboardingOnion,
+              cost: l10n.onboardingSlowerAMessageTakes,
+              gain: l10n.onboardingAutoFindsAWay,
+            ),
+          ]),
+        ],
+      );
+    }
     return _StepPage(
       footer: [
         _Cta(
@@ -1225,11 +1244,8 @@ class _TransportScreenState extends State<_TransportScreen> {
         ...staggerAll([
           _ModeCard(
             title: l10n.onboardingOnion,
-            tag: _blocked ? l10n.bridgesRecommended : null,
             cost: l10n.onboardingSlowerAMessageTakes,
-            gain: _blocked
-                ? l10n.onboardingAutoFindsAWay
-                : l10n.onboardingHidesYourAddressFrom,
+            gain: l10n.onboardingHidesYourAddressFrom,
             on: _pick == 'private',
             onTap: () => setState(() => _pick = 'private'),
           ),
@@ -1237,9 +1253,7 @@ class _TransportScreenState extends State<_TransportScreen> {
           _ModeCard(
             title: l10n.onboardingRelay,
             cost: l10n.onboardingOurRelaySeesYour,
-            gain: _blocked
-                ? l10n.onboardingAboutASecondSkipsTor
-                : l10n.onboardingAboutASecondWorks,
+            gain: l10n.onboardingAboutASecondWorks,
             on: _pick == 'balanced',
             onTap: () => setState(() => _pick = 'balanced'),
           ),
@@ -1259,128 +1273,98 @@ class _TransportScreenState extends State<_TransportScreen> {
 
 class _ModeCard extends StatelessWidget {
   final String title;
-  // a short word beside the title, the way to start where tor is blocked
-  final String? tag;
   final String cost;
   final String gain;
   final bool on;
-  final VoidCallback onTap;
+  // null: the only way, shown as a card with no radio
+  final VoidCallback? onTap;
   const _ModeCard({
     required this.title,
-    this.tag,
     required this.cost,
     required this.gain,
-    required this.on,
-    required this.onTap,
+    this.on = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
-    // read as one radio: the title, the cost, the gain, and whether it is on
-    return MergeSemantics(
-      child: Semantics(
-        inMutuallyExclusiveGroup: true,
-        checked: on,
-        child: PressScale(
-          scale: 0.98,
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: still ? 0 : 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 14),
-            decoration: BoxDecoration(
-              color: on
-                  ? Color.alphaBlend(
-                      HaloColors.amber.withValues(alpha: 0.10),
-                      HaloColors.surface2,
-                    )
-                  : HaloColors.surface2,
-              border: Border.all(
-                color: on ? HaloColors.amber : HaloColors.line,
-                width: on ? 1.2 : 0.5,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: HaloColors.amber.withValues(alpha: on ? 0.16 : 0),
-                  blurRadius: 18,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+    final tap = onTap;
+    final card = AnimatedContainer(
+      duration: Duration(milliseconds: still ? 0 : 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: on
+            ? Color.alphaBlend(
+                HaloColors.amber.withValues(alpha: 0.10),
+                HaloColors.surface2,
+              )
+            : HaloColors.surface2,
+        border: Border.all(
+          color: on ? HaloColors.amber : HaloColors.line,
+          width: on ? 1.2 : 0.5,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: HaloColors.amber.withValues(alpha: on ? 0.16 : 0),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (tap != null) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: _Radio(on: on),
             ),
-            child: Row(
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  child: _Radio(on: on),
+                Text(
+                  title,
+                  style: HaloType.serif(size: 18, color: HaloColors.text),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            title,
-                            style: HaloType.serif(
-                              size: 18,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                          if (tag != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.amber,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                tag!,
-                                style: HaloType.mono(
-                                  size: 10,
-                                  weight: FontWeight.w600,
-                                  color: HaloColors.onAmber,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      // the cost first, then what it buys: a card that lists
-                      // only benefits sends everyone to the fastest one
-                      Text(
-                        cost,
-                        style: HaloType.sans(
-                          size: 13,
-                          color: HaloColors.text,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        gain,
-                        style: HaloType.sans(
-                          size: 13,
-                          color: HaloColors.text2,
-                          height: 1.45,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 5),
+                // the cost first, then what it buys: a card that lists
+                // only benefits sends everyone to the fastest one
+                Text(
+                  cost,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  gain,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.45,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
+      ),
+    );
+    if (tap == null) return MergeSemantics(child: card);
+    // read as one radio: the title, the cost, the gain, and whether it is on
+    return MergeSemantics(
+      child: Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: on,
+        child: PressScale(scale: 0.98, onTap: tap, child: card),
       ),
     );
   }

@@ -3819,9 +3819,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingAboutASecondWorks => '大约一秒。在 tor 被封锁的地方也能用。';
 
   @override
-  String get onboardingAboutASecondSkipsTor => '大约一秒，不经过 Tor。';
-
-  @override
   String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
 
   @override
@@ -6660,9 +6657,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       '在这里，Kryfo 绝不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
-
-  @override
-  String get bridgesRecommended => '推荐';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -11718,9 +11712,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
 
   @override
-  String get onboardingAboutASecondSkipsTor => '大約一秒，不經過 Tor。';
-
-  @override
   String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
 
   @override
@@ -14558,9 +14549,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       '在這裡，Kryfo 絕不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
-
-  @override
-  String get bridgesRecommended => '推薦';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';

@@ -6309,12 +6309,6 @@ abstract class AppLocalizations {
   /// **'About a second. Works where tor is blocked.'**
   String get onboardingAboutASecondWorks;
 
-  /// screens/onboarding_screen.dart: on the Relay card when the person said Tor is blocked at the start
-  ///
-  /// In en, this message translates to:
-  /// **'About a second, and it skips Tor.'**
-  String get onboardingAboutASecondSkipsTor;
-
   /// screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start
   ///
   /// In en, this message translates to:
@@ -11180,12 +11174,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.'**
   String get torBootSplashNeverTriesTorPlainly;
-
-  /// screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended'**
-  String get bridgesRecommended;
 
   /// screens/bridges_screen.dart
   ///

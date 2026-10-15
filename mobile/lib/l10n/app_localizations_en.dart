@@ -3983,10 +3983,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'About a second. Works where tor is blocked.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'About a second, and it skips Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Automatic finds a way around the block by itself.';
 
@@ -6947,9 +6943,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.';
-
-  @override
-  String get bridgesRecommended => 'Recommended';
 
   @override
   String get bridgesTryingAnotherWay => 'Trying another way…';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a new install that says tor is blocked or watched: bridges only, no relay
-// on the way in, while relay stays in settings. closing the sheet leaves
-// the question, and the send step follows the answer
+// or fast on the way in, while relay stays in settings. closing the sheet
+// leaves the question
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -152,7 +152,8 @@ void main() {
     });
   });
 
-  testWidgets('relay stays in settings', (t) async {
+  testWidgets('relay stays in settings, blocked or watched too', (t) async {
+    await appState.pickFirstRun(risky: true);
     phone(t);
     await t.pumpWidget(devApp(const ModesScreen()));
     await t.pump(const Duration(seconds: 2));
@@ -220,7 +221,7 @@ void main() {
           await t.pump();
           await t.pump(const Duration(seconds: 1));
           expect(
-            find.text(l10n.onboardingKeepOnion).hitTestable(),
+            find.text(l10n.onboardingContinue).hitTestable(),
             findsOneWidget,
             reason: now,
           );
@@ -246,31 +247,17 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     }
 
-    testWidgets('tor not blocked: as before', (t) async {
+    testWidgets('connect picked: onion, relay and fast, as before', (t) async {
       await appState.pickFirstRun(risky: false);
       await toSend(t);
-      expect(find.text(l10n.bridgesRecommended), findsNothing);
       expect(find.text(l10n.onboardingHidesYourAddressFrom), findsOneWidget);
+      expect(find.text(l10n.onboardingAutoFindsAWay), findsNothing);
+      expect(find.text(l10n.onboardingRelay), findsOneWidget);
       expect(find.text(l10n.onboardingAboutASecondWorks), findsOneWidget);
+      expect(find.text(l10n.onboardingFast), findsOneWidget);
+      expect(find.text(l10n.onboardingSkipOnionIsA), findsOneWidget);
       expect(checked(t, l10n.onboardingOnion), isTrue);
-      await done(t);
-    });
-
-    testWidgets('blocked, automatic: onion leads, picked and recommended', (
-      t,
-    ) async {
-      await appState.pickFirstRun(risky: true);
-      await toSend(t);
-      expect(find.text(l10n.bridgesRecommended), findsOneWidget);
-      expect(find.text(l10n.onboardingAutoFindsAWay), findsOneWidget);
-      expect(find.text(l10n.onboardingAboutASecondSkipsTor), findsOneWidget);
-      expect(find.text(l10n.onboardingAboutASecondWorks), findsNothing);
-      expect(
-        t.getRect(find.text(l10n.onboardingOnion)).top,
-        lessThan(t.getRect(find.text(l10n.onboardingRelay)).top),
-      );
-      expect(checked(t, l10n.onboardingOnion), isTrue);
-      // relay is still there to take
+      // relay is there to take
       await t.tap(find.text(l10n.onboardingRelay));
       await t.pump(const Duration(milliseconds: 300));
       expect(checked(t, l10n.onboardingRelay), isTrue);
@@ -283,5 +270,53 @@ void main() {
       expect(appState.sendMode, 'balanced');
       await done(t);
     });
+
+    for (final still in [false, true]) {
+      testWidgets('blocked or watched: onion through a bridge only '
+          '(still: $still)', (t) async {
+        await appState.pickFirstRun(risky: true);
+        phone(t);
+        await t.pumpWidget(
+          devApp(
+            OnboardingScreen(appState: appState, onComplete: () {}),
+            still: still,
+          ),
+        );
+        await t.pump(const Duration(seconds: 6));
+        t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
+        await t.pump();
+        await t.pump(const Duration(seconds: 1));
+        expect(find.text(l10n.onboardingOnion), findsOneWidget);
+        expect(find.text(l10n.onboardingAutoFindsAWay), findsOneWidget);
+        // nothing of relay or fast, and nothing that reads as a choice
+        expect(find.text(l10n.onboardingRelay), findsNothing);
+        expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
+        expect(find.text(l10n.onboardingFast), findsNothing);
+        expect(find.text(l10n.onboardingEveryRelayYouUse), findsNothing);
+        expect(find.text(l10n.onboardingKeepOnion), findsNothing);
+        expect(find.text(l10n.onboardingSkipOnionIsA), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.checked != null,
+          ),
+          findsNothing,
+        );
+        if (still) expect(t.hasRunningAnimations, isFalse);
+        await t.tap(find.text(l10n.onboardingContinue));
+        await t.pump();
+        // the mode is written first, then the step moves on
+        final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+        for (var i = 0; i < 20 && pages.page != 4; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 100)),
+          );
+          await t.pump(const Duration(milliseconds: 300));
+        }
+        expect(appState.sendMode, 'private');
+        // on to the next step
+        expect(pages.page, 4);
+        await done(t);
+      });
+    }
   });
 }

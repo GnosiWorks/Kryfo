@@ -3539,7 +3539,6 @@ void main() {
     expect(l.supportMoveToInbox, "Move to inbox");
     expect(l.supportMovedToInbox, "Moved to inbox");
     expect(l.bridgesFindingAWayIn, "Finding a way in…");
-    expect(l.bridgesRecommended, "Recommended");
     expect(l.torBootSplashStartThroughABridge, "Start through a bridge");
     expect(
       l.torBootSplashNeverTriesTorPlainly,
@@ -3548,10 +3547,6 @@ void main() {
     expect(
       l.onboardingAutoFindsAWay,
       "Automatic finds a way around the block by itself.",
-    );
-    expect(
-      l.onboardingAboutASecondSkipsTor,
-      "About a second, and it skips Tor.",
     );
     expect(l.pairCodeKeyNumber, "Key number");
     expect(l.pairCodeNumberDiffers, "The number is different");

@@ -12701,7 +12701,11 @@ class AppState extends ChangeNotifier {
   }
 
   @visibleForTesting
-  set sendModeForTest(String m) => _sendMode = _engineMode = m;
+  set sendModeForTest(String m) {
+    _sendMode = _engineMode = m;
+    // a switch left waiting by an earlier test never completes
+    _modeQueue = Future.value();
+  }
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {

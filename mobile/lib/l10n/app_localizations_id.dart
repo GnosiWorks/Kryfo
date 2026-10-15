@@ -3983,10 +3983,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Sekitar satu detik. Tetap jalan di tempat tor diblokir.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'Sekitar satu detik, dan tanpa Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Otomatis mencari sendiri jalan melewati blokir.';
 
@@ -6950,9 +6946,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Di sini Kryfo tidak pernah mencoba Tor secara langsung. Kryfo mencari jembatan yang berfungsi, atau kamu bisa memilih sendiri setelah ini.';
-
-  @override
-  String get bridgesRecommended => 'Disarankan';
 
   @override
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';

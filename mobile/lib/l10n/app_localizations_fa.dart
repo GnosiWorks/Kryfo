@@ -3998,10 +3998,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'حدود یک ثانیه. جایی که tor مسدود است هم کار می‌کند.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'حدود یک ثانیه، و از Tor نمی‌گذرد.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
 
@@ -6962,9 +6958,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'این‌جا Kryfo هرگز Tor را مستقیم امتحان نمی‌کند. خودش پلی پیدا می‌کند که کار کند، یا می‌توانید در گام بعد پل خودتان را انتخاب کنید.';
-
-  @override
-  String get bridgesRecommended => 'پیشنهادی';
 
   @override
   String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';

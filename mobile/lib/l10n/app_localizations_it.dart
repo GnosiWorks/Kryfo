@@ -4030,9 +4030,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Circa un secondo. Funziona dove tor è bloccato.';
 
   @override
-  String get onboardingAboutASecondSkipsTor => 'Circa un secondo, e senza Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Automatico trova da solo un modo per aggirare il blocco.';
 
@@ -7020,9 +7017,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Qui Kryfo non prova mai Tor in chiaro. Trova da solo un bridge che funziona, oppure scegline uno tuo subito dopo.';
-
-  @override
-  String get bridgesRecommended => 'Consigliato';
 
   @override
   String get bridgesTryingAnotherWay => 'Provo un\'altra strada…';

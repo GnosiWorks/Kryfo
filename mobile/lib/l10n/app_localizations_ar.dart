@@ -4089,9 +4089,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب tor.';
 
   @override
-  String get onboardingAboutASecondSkipsTor => 'نحو ثانية، ولا يمر عبر Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
 
@@ -7068,9 +7065,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'لن يحاول Kryfo الوصول إلى Tor مباشرةً هنا أبدًا. سيجد جسرًا يعمل بنفسه، أو يمكنك اختيار جسرك في الخطوة التالية.';
-
-  @override
-  String get bridgesRecommended => 'موصى به';
 
   @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';

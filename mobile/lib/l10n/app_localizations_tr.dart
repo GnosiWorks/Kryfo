@@ -4004,10 +4004,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'Yaklaşık bir saniye ve Tor’u atlar.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Otomatik, engeli aşmanın yolunu kendisi bulur.';
 
@@ -6974,9 +6970,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get torBootSplashNeverTriesTorPlainly =>
       'Kryfo burada Tor\'u asla doğrudan denemez. Çalışan bir köprüyü kendisi bulur ya da bir sonraki adımda kendi köprünü seçebilirsin.';
-
-  @override
-  String get bridgesRecommended => 'Önerilen';
 
   @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
