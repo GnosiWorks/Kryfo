@@ -583,6 +583,19 @@ void main() {
       expect(looksLikeBridges('kryfo://add/abc'), isFalse);
       expect(looksLikeBridges('snowflake 192.0.2.3:80 F url=x'), isTrue);
     });
+
+    test('vanilla lines, with or without the bridge word', () {
+      const fp = '0123456789ABCDEF0123456789ABCDEF01234567';
+      expect(bridgeLinesFrom('Bridge 198.51.100.7:9001 $fp'), [
+        '198.51.100.7:9001 $fp',
+      ]);
+      expect(looksLikeBridges("['198.51.100.7:9001 $fp']"), isTrue);
+      expect(looksLikeBridges('[2001:db8::7]:443 $fp'), isTrue);
+      expect(bridgeTransport('198.51.100.7:9001 $fp'), 'vanilla');
+      expect(bridgeTransport('198.51.100.7 $fp'), isNull);
+      expect(bridgeTransport('example.org:443 $fp'), isNull);
+      expect(bridgeTransport('obfs4 198.51.100.7:9001 $fp cert=x'), 'obfs4');
+    });
   });
 
   group('the tor project', () {
@@ -1601,6 +1614,25 @@ void main() {
         FlutterError.onError = was;
       }
       expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+    });
+  });
+
+  group('vanilla', () {
+    testWidgets('a kept vanilla line shows its kind and address', (t) async {
+      await _open(
+        t,
+        size: const Size(400, 1400),
+        setup: const BridgeSetup(
+          choice: BridgeChoice.friend,
+          friendLines:
+              '198.51.100.7:9001 0123456789ABCDEF0123456789ABCDEF01234567',
+        ),
+      );
+      await t.tap(find.text(l10n.bridgesMore));
+      await _in(t);
+      expect(find.text('vanilla  198.51.100.7:9001'), findsOneWidget);
+      expect(find.textContaining('0123456789ABCDEF'), findsNothing);
+      await _done(t);
     });
   });
 

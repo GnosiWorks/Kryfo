@@ -1473,6 +1473,9 @@ func linesMethod() string {
 	if !bridgesEnabled() || len(ls) == 0 {
 		return "direct"
 	}
+	if b, err := parseBridgeLine(ls[0]); err == nil {
+		return b.transport
+	}
 	return strings.Fields(ls[0])[0]
 }
 

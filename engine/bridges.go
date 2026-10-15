@@ -67,6 +67,10 @@ var bridgeDeadFor = 10 * time.Minute
 // handed over. meek_lite only reaches moat and has no listener.
 var ptNames = []string{"obfs4", "webtunnel", "snowflake"}
 
+// a vanilla line names no transport: tor dials the bridge itself, so it
+// has no listener and takes no arguments
+const vanillaName = "vanilla"
+
 // one local socks5 listener. ports never change within a process: tor is
 // never restarted, and it keeps the plugin lines it was given.
 type ptListen struct {
@@ -155,6 +159,7 @@ func ownNetworkDown(err error) bool {
 //	obfs4 1.2.3.4:443 FINGERPRINT cert=... iat-mode=0
 //	webtunnel [2001:db8::1]:443 FINGERPRINT url=https://... ver=0.0.1
 //	snowflake 192.0.2.3:80 FINGERPRINT fingerprint=... url=... fronts=... ice=...
+//	198.51.100.7:9001 FINGERPRINT
 type bridgeLine struct {
 	transport string
 	addr      string
@@ -177,11 +182,16 @@ const ptArgsMax = 510
 func parseBridgeLine(s string) (bridgeLine, error) {
 	var b bridgeLine
 	f := strings.Fields(strings.TrimSpace(s))
+	if len(f) > 0 {
+		if _, _, err := net.SplitHostPort(f[0]); err == nil {
+			f = append([]string{vanillaName}, f...)
+		}
+	}
 	if len(f) < 2 {
 		return b, errLineUnknown
 	}
 	b.transport = strings.ToLower(f[0])
-	known := false
+	known := b.transport == vanillaName
 	for _, n := range ptNames {
 		known = known || n == b.transport
 	}
@@ -253,6 +263,13 @@ func checkBridgeLine(s string) (bridgeLine, error) {
 	b, err := parseBridgeLine(s)
 	if err != nil {
 		return b, err
+	}
+	// tor refuses arguments on a line without a transport
+	if b.transport == vanillaName {
+		if len(b.kv) > 0 {
+			return b, fmt.Errorf("vanilla: %w", errLineArgs)
+		}
+		return b, nil
 	}
 	if ptArgsLen(append(append([]string(nil), b.kv...), ptTokenArg+"="+ptToken)) > ptArgsMax {
 		return b, errLineLong
@@ -339,6 +356,9 @@ func normaliseBridgeLine(s string) (string, bool) {
 		kv = append(append([]string(nil), kv...), "iat-mode=0")
 	}
 	f := []string{b.transport, b.addr}
+	if b.transport == vanillaName {
+		f = f[1:]
+	}
 	if b.fp != "" {
 		f = append(f, b.fp)
 	}
@@ -501,6 +521,9 @@ func torBridgeLines() []string {
 	lines := bridgeLines()
 	noteBridgeSecrets(lines)
 	for i, ln := range lines {
+		if b, err := parseBridgeLine(ln); err == nil && b.transport == vanillaName {
+			continue
+		}
 		lines[i] = ln + " " + ptTokenArg + "=" + ptToken
 	}
 	return lines

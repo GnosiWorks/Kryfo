@@ -1128,7 +1128,7 @@ class _LineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final f = line.split(RegExp(r'\s+'));
     final name = bridgeTransport(line) ?? f.first;
-    final where = f.length > 1 ? f[1] : '';
+    final where = name == 'vanilla' ? f.first : (f.length > 1 ? f[1] : '');
     final c = check;
     final bad = c != null && c.broken;
     return Padding(
