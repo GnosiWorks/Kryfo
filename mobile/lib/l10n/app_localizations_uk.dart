@@ -8428,4 +8428,8 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Це зображення не можна очистити. Відомості на кшталт місця зйомки підуть разом із ним. Надішли його як фото, щоб очистити.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Голосові повідомлення зупиняються на 30 хвилинах. Прослухай і надішли.';
 }

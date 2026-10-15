@@ -8307,4 +8307,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder.';
 }

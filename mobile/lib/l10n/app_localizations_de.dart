@@ -8377,4 +8377,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Dieses Bild kann nicht bereinigt werden. Angaben wie der Aufnahmeort gehen mit. Sende es als Foto, um es zu bereinigen.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Sprachnachrichten enden nach 30 Minuten. Hör sie dir an und sende sie dann.';
 }

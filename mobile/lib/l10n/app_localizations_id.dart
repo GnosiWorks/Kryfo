@@ -8279,4 +8279,8 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 }

@@ -3627,5 +3627,9 @@ void main() {
       l.fileRawPictureLine,
       "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
     );
+    expect(
+      l.voiceStoppedAtLimit,
+      "Voice notes stop at 30 minutes. Listen to it, then send it.",
+    );
   });
 }

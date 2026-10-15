@@ -13364,6 +13364,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This picture can\'t be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.'**
   String get fileRawPictureLine;
+
+  /// widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Voice notes stop at 30 minutes. Listen to it, then send it.'**
+  String get voiceStoppedAtLimit;
 }
 
 class _AppLocalizationsDelegate

@@ -169,7 +169,7 @@ void main() {
     expect(kMaxFileSlices, lessThan(1400));
     final recv = sourceOf('lib/main.dart');
     final at = recv.indexOf(
-      'if (env.fileB64 != null && !env.voice && total > kMaxFileSlices) {',
+      'total > (env.voice ? kMaxVoiceSlices : kMaxFileSlices)) {',
     );
     expect(at, greaterThan(0));
     // before a slice is kept

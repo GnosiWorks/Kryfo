@@ -8345,4 +8345,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Esta imagem não pode ser limpa. Detalhes como onde foi tirada vão junto. Envie como foto para limpá-la.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'As mensagens de voz param aos 30 minutos. Ouça e depois envie.';
 }

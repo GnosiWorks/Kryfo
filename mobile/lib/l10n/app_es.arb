@@ -2180,5 +2180,6 @@
   "fileTooBig": "Este archivo pesa {size}. Los archivos pueden pesar hasta {max}.",
   "fileGoesAsItIs": "Este archivo sale tal cual. Kryfo solo limpia JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 y MOV.",
   "fileRawPictureTitle": "¿Enviar esta imagen tal cual?",
-  "fileRawPictureLine": "Esta imagen no se puede limpiar. Datos como dónde se tomó van con ella. Envíala como foto para limpiarla."
+  "fileRawPictureLine": "Esta imagen no se puede limpiar. Datos como dónde se tomó van con ella. Envíala como foto para limpiarla.",
+  "voiceStoppedAtLimit": "Las notas de voz se detienen a los 30 minutos. Escúchala y luego envíala."
 }

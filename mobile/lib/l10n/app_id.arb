@@ -2180,5 +2180,6 @@
   "fileTooBig": "File ini berukuran {size}. Ukuran file maksimal {max}.",
   "fileGoesAsItIs": "File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.",
   "fileRawPictureTitle": "Kirim gambar ini apa adanya?",
-  "fileRawPictureLine": "Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya."
+  "fileRawPictureLine": "Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.",
+  "voiceStoppedAtLimit": "Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim."
 }

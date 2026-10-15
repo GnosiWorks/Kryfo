@@ -22,9 +22,11 @@ import 'package:kryfo/media_resend.dart'
         kUnfinishedBytes,
         kUnfinishedFiles,
         sliceWeight,
-        kMaxFileSlices;
+        kMaxFileSlices,
+        kMaxVoiceSlices;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/voice_length.dart' show kVoiceMax;
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -69,6 +71,7 @@ class _World {
     int index = 0,
     int total = 100,
     String? group,
+    bool voice = false,
   }) async => from(
     who,
     await wrapMessage(
@@ -79,7 +82,8 @@ class _World {
       chunkTotal: total,
       groupId: group,
       fileB64: base64Encode(List.filled(300, index % 256)),
-      fileName: 'x.bin',
+      fileName: voice ? 'voice.wav' : 'x.bin',
+      voice: voice,
       sender: asSender(who),
     ),
   );
@@ -119,6 +123,16 @@ void main() {
         await w.slice(_s, 'big$m', total: kMaxFileSlices);
       }
       expect(w.live.chunks.keys, ['big0', 'big1']);
+    });
+
+    test('a voice note longer than the mic records is not kept', () async {
+      final w = await _World.make();
+      await w.slice(_s, 'long', total: kMaxVoiceSlices + 1, voice: true);
+      await w.slice(_s, 'note', total: kMaxVoiceSlices, voice: true);
+      expect(w.live.chunks.keys, ['note']);
+      // the mic's longest take fits under the cap
+      final bytes = 44 + 16000 * 2 * kVoiceMax.inSeconds;
+      expect((bytes + 12287) ~/ 12288, lessThanOrEqualTo(kMaxVoiceSlices));
     });
 
     test(

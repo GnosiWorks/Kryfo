@@ -8410,4 +8410,8 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'لا يمكن تنظيف هذه الصورة. تُرسل معها تفاصيل مثل مكان التقاطها. أرسلها كصورة عادية لتنظيفها.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'تتوقف الرسائل الصوتية عند ٣٠ دقيقة. استمع إليها ثم أرسلها.';
 }

@@ -8297,4 +8297,8 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'این تصویر را نمی‌شود تمیز کرد. جزئیاتی مثل جای گرفتنش همراهش می‌رود. برای تمیز شدن، آن را به‌صورت عکس بفرستید.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'پیام‌های صوتی در ۳۰ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.';
 }

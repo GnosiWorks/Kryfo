@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/voice_length.dart' show kVoiceMax;
 import 'package:kryfo/voice_mask.dart' show LiveMask;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
@@ -244,6 +245,47 @@ void main() {
     await devClose(t);
     await settle(t);
   }
+
+  group('the longest note', () {
+    tearDown(() => HoldToTalkMicState.maxLength = kVoiceMax);
+
+    testWidgets('a held note stops by itself into the preview, and the lift '
+        'keeps it', (t) async {
+      HoldToTalkMicState.maxLength = const Duration(seconds: 2);
+      await open(t);
+      final g = await hold(t);
+      await t.pump(const Duration(seconds: 3));
+      await until(t, () => mic(t).stage == VoiceStage.preview);
+      expect(find.text(l10n.voiceStoppedAtLimit), findsOneWidget);
+      expect(asked, contains('stop'));
+      await g.up();
+      await settle(t, turns: 4);
+      expect(mic(t).stage, VoiceStage.preview);
+      await close(t);
+    });
+
+    testWidgets('a locked note stops by itself too', (t) async {
+      HoldToTalkMicState.maxLength = const Duration(seconds: 2);
+      await open(t);
+      final g = await hold(t);
+      await g.moveBy(const Offset(0, -40));
+      await t.pump();
+      await g.moveBy(const Offset(0, -60));
+      await t.pump();
+      await g.up();
+      await t.pump();
+      expect(mic(t).stage, VoiceStage.locked);
+      await t.pump(const Duration(seconds: 3));
+      await until(t, () => mic(t).stage == VoiceStage.preview);
+      expect(find.text(l10n.voiceStoppedAtLimit), findsOneWidget);
+      await close(t);
+    });
+
+    test('the mic stops at half an hour', () {
+      expect(kVoiceMax, const Duration(minutes: 30));
+      expect(HoldToTalkMicState.maxLength, kVoiceMax);
+    });
+  });
 
   group('the gestures', () {
     testWidgets('let go and the note goes', (t) async {

@@ -8272,4 +8272,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fileRawPictureLine =>
       'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 }

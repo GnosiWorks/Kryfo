@@ -110,6 +110,14 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @visibleForTesting
   static Future<LiveMask?> Function(String path) startLive = LiveMask.start;
 
+  // the longest a take runs before it stops by itself into the preview
+  @visibleForTesting
+  static Duration maxLength = kVoiceMax;
+
+  // stopped at the limit with the finger still down: its lift keeps the
+  // preview
+  bool _liftKeeps = false;
+
   // the disguise made while a disguised note records
   Future<LiveMask?>? _streaming;
   // the preview: the disguised take, made once, and its file to play
@@ -208,6 +216,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       }
       _ms = 0;
       _heardAt = null;
+      _liftKeeps = false;
       _willCancel = false;
       _dragDx = 0;
       _dragUp = 0;
@@ -231,6 +240,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         final from = _heardAt;
         _ms = from == null ? 0 : (t.tick - from) * 100;
         _overlay?.rebuild();
+        if (_ms >= maxLength.inMilliseconds) _atLimit();
       });
       if (mounted) {
         // the safe area and the scaffold strip both insets from the media
@@ -273,7 +283,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   Future<void> _end() async {
     // still starting: _start sees the finger is gone and cleans up itself
     if (_busy) return;
-    if (_stage == VoiceStage.preview) return _discard();
+    if (_stage == VoiceStage.preview) {
+      if (_liftKeeps) {
+        _liftKeeps = false;
+        return;
+      }
+      return _discard();
+    }
     // stopping into the preview: the preview takes it from there
     if (_stopping && !_willCancel) return;
     _release();
@@ -336,6 +352,20 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   void _abort() {
     _willCancel = true;
     _end();
+  }
+
+  // the longest note: it stops into the preview, where it is heard and
+  // sent like any other, and says so once
+  void _atLimit() {
+    if (_stopping) return;
+    if (_stage == VoiceStage.holding) {
+      _liftKeeps = true;
+      _stage = VoiceStage.locked;
+      _willCancel = false;
+    }
+    if (_stage != VoiceStage.locked) return;
+    if (mounted) showHaloToast(context, l10n.voiceStoppedAtLimit);
+    _stop();
   }
 
   void _lock() {

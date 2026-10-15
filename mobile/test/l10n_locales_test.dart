@@ -3146,6 +3146,7 @@ final _calls = <_Call>[
   ('fileGoesAsItIs', [], (l) => l.fileGoesAsItIs),
   ('fileRawPictureTitle', [], (l) => l.fileRawPictureTitle),
   ('fileRawPictureLine', [], (l) => l.fileRawPictureLine),
+  ('voiceStoppedAtLimit', [], (l) => l.voiceStoppedAtLimit),
 ];
 
 void main() {
