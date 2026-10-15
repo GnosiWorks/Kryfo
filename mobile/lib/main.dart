@@ -19345,7 +19345,9 @@ class AppState extends ChangeNotifier {
       );
       // filed on its own: the request says the name it gave
       final said = env.senderHaloId;
-      if (said != null && said != h) await _noteOtherKey(db, h, said);
+      if (said != null && said != h && await _saidHeldHere(said)) {
+        await _noteOtherKey(db, h, said);
+      }
     }
     final x = env.senderXPub;
     if (!opened.heard) {
@@ -19407,6 +19409,20 @@ class AppState extends ChangeNotifier {
     if (held == null) return false;
     final given = _rowIdentity({'xpub': env.senderXPub ?? ''});
     return given == null || !_eqBytes(held, given);
+  }
+
+  // the name a first contact gave is someone's here: a row on the everyday
+  // side or in the open vault, words they let go, or a hidden chat's person
+  // the list names. "this isn't them" marks alone file the sender apart, and
+  // say nothing
+  Future<bool> _saidHeldHere(String said) async {
+    if (_router.cardOf(said) != null) return true;
+    for (final d in [live, ?_openVault]) {
+      if (await d.getContact(said) != null || await d.tombed(said)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // a request filed on its own id says which name it gave, once
