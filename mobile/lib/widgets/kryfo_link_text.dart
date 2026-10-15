@@ -208,14 +208,22 @@ Future<String> addScanned(String link) => handleHaloUri(link, scanned: true);
 /// the question when a link names someone here whose words a request, an
 /// introduction or a group gave, on another key, and nobody checked them:
 /// true lets the link have them. [chat]: the other one's chat goes too
-Future<bool> askTakeNameSheet(String id, {required bool chat}) async {
+Future<bool> askTakeNameSheet(
+  String id, {
+  required bool chat,
+  bool deleted = false,
+}) async {
   final ctx = rootNavKey.currentContext;
   if (ctx == null || !ctx.mounted || lockGuard.isLocked()) return false;
   return showConfirmSheet(
     ctx,
     title: l10n.nameTakenTitle,
     figure: id,
-    line: chat ? l10n.nameTakenChatLine : l10n.nameTakenLine,
+    line: chat
+        ? l10n.nameTakenChatLine
+        : deleted
+        ? l10n.nameTakenDeletedLine
+        : l10n.nameTakenLine,
     yes: l10n.nameTakenUse,
     keep: l10n.nameTakenKeep,
     // a chat goes with a yes

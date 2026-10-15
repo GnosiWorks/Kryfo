@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/key_number.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloDb, appState, kNameAsk, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/blocked_screen.dart';
@@ -53,8 +54,12 @@ class _Db extends SayHiDb {
   @override
   Future<String?> heldKey(String haloId) async => held;
   @override
-  Future<void> removeAndBlockKey(String haloId, String keyHex) =>
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) =>
       real.removeAndBlockKey(haloId, keyHex);
+  @override
+  Future<bool> tombed(String name) => real.tombed(name);
+  @override
+  Future<void> dropSeats(String haloId) => real.dropSeats(haloId);
   @override
   Future<bool> keyBlocked(String keyHex) => real.keyBlocked(keyHex);
   @override
@@ -77,6 +82,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({'send_mode': 'balanced'});
     appState.sendModeForTest = 'balanced';
     useEngineForTest(SayHiRelay());
+    lockState.openForTest();
     docs = Directory.systemTemp.createTempSync('not_them_ui');
     mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
     mockChannel('com.llfbandit.record/messages', (_) async => null);
@@ -145,40 +151,26 @@ void main() {
     await settle(t, 10);
   }
 
-  testWidgets('on the compare card: numbers different, this isn\'t them, '
-      'and its yes takes them off this phone and blocks the key', (t) async {
+  testWidgets('on the compare card, numbers different opens the safety '
+      'number with this isn\'t them up, and its yes takes them off this phone '
+      'and blocks the key', (t) async {
     await person();
     await devOpen(t, chat);
     await settle(t);
     expect(find.text(l10n.notThemButton), findsNothing);
     await t.tap(find.text(l10n.notThemNumbersDiffer));
     await settle(t);
+    expect(find.byType(KeyVerificationScreen), findsOneWidget);
     expect(find.text(l10n.notThemLine), findsOneWidget);
+    expect(find.bySemanticsLabel(l10n.notThemButton), findsOneWidget);
     await t.tap(find.text(l10n.notThemButton));
     await settle(t);
     await answer(t, yes: true);
     expect(gone(), isTrue);
     expect(blocked(), [_key]);
+    expect(mem.rows('name_tombs').map((r) => r['name']), [_peer]);
     expect(find.text(l10n.notThemDone), findsOneWidget);
-    await devClose(t);
-  });
-
-  testWidgets('the card turns over in place, and back turns it again', (
-    t,
-  ) async {
-    await person();
-    await devOpen(t, chat);
-    await settle(t);
-    await t.tap(find.text(l10n.notThemNumbersDiffer));
-    await settle(t);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    expect(find.text(l10n.notThemButton), findsOneWidget);
-    expect(find.bySemanticsLabel(l10n.notThemButton), findsOneWidget);
-    await t.tap(find.text(l10n.commonBack));
-    await settle(t);
-    expect(find.text(l10n.chatCompareTitle), findsOneWidget);
-    expect(find.text(l10n.notThemButton), findsNothing);
-    expect(gone(), isFalse);
+    expect(find.byType(KeyVerificationScreen), findsNothing);
     await devClose(t);
   });
 
@@ -319,9 +311,13 @@ void main() {
             ratio: 3,
           );
           await settle(t);
-          await t.tap(find.text(l10n.notThemNumbersDiffer));
-          await settle(t);
-          expect(find.text(l10n.notThemButton), findsOneWidget);
+          if (name == 'number') {
+            await t.tap(find.text(l10n.notThemNumbersDiffer));
+            await settle(t);
+            expect(find.text(l10n.notThemButton), findsOneWidget);
+          } else {
+            expect(find.text(l10n.notThemNumbersDiffer), findsOneWidget);
+          }
           expect(t.takeException(), isNull);
           if (shots != null) {
             final b = t.renderObject<RenderRepaintBoundary>(

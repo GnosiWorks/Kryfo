@@ -5,13 +5,15 @@
 // from is blocked, by the key alone. the person beside them keeps all of
 // theirs. an upgrade from 79 makes the table and keeps every row. the
 // database runs on the host's sqlite
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show HaloDb;
+import 'package:kryfo/main.dart' show HaloDb, kAdminGone, tidyIfOwed;
+import 'package:kryfo/router.dart' show RouterRows;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -51,6 +53,7 @@ const _apart = {
   'vault_inbox',
   'devchat',
   'blocked_keys',
+  'name_tombs',
   'sqlite_sequence',
   'contacts',
   'messages',
@@ -220,7 +223,9 @@ void main() {
       "SELECT name FROM sqlite_master WHERE type = 'table'",
     )) {
       final t = r['name'] as String;
-      if (t == 'blocked_keys' || t.startsWith('msg_fts')) continue;
+      if (t == 'blocked_keys' || t == 'name_tombs' || t.startsWith('msg_fts')) {
+        continue;
+      }
       for (final row in await raw.query(t)) {
         for (final e in row.entries) {
           final v = e.value;
@@ -293,9 +298,28 @@ void main() {
     expect(await naming(raw, _p), isNotEmpty);
     final qBefore = (await naming(raw, _q)).toSet();
 
-    await db.removeAndBlockKey(_p, _key);
+    // a group they ran, and one they did not
+    await raw.insert('groups', {
+      'group_id': 'gran0000001',
+      'name': 'theirs',
+      'created_at': 1,
+      'admin_id': _p,
+    });
+    final went = await db.removeAndBlockKey(_p, _key);
+    expect(went.toSet(), {uid(_p), 'u-out-$_p', groupUid(_p), pollUid(_p)});
 
     expect(await naming(raw, _p), isEmpty);
+    // the words are let go, and the group they ran has no admin
+    expect(await db.tombed(_p), isTrue);
+    expect(await db.tombed(_q), isFalse);
+    final ran = await raw.query(
+      'groups',
+      where: 'group_id = ?',
+      whereArgs: ['gran0000001'],
+    );
+    expect(ran.single['admin_id'], kAdminGone);
+    await db.clearTomb(_p);
+    expect(await db.tombed(_p), isFalse);
     // the reaction they made on the other's message went; the other's own
     // rows are all there
     expect((await naming(raw, _q)).toSet(), qBefore);
@@ -335,6 +359,35 @@ void main() {
     ]);
   });
 
+  test('a seat elsewhere goes: group seats, a key-only row and an admin, '
+      'never a chat', () async {
+    if (skip()) return;
+    final raw = await db.open();
+    await person(_q);
+    await raw.insert('contacts', {
+      'halo_id': _p,
+      'onion': 'o',
+      'xpub': 'x',
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 0,
+    });
+    await db.createGroup(
+      _gid,
+      'walkers',
+      [_p, _q],
+      isAdmin: false,
+      adminId: _p,
+    );
+    await db.dropSeats(_p);
+    await db.dropSeats(_q);
+    expect(await db.getGroupMembers(_gid), isEmpty);
+    expect(await db.getContact(_p), isNull);
+    // a chat of their own stays
+    expect(await db.getContact(_q), isNotNull);
+    expect((await db.getGroup(_gid))?['admin_id'], kAdminGone);
+  });
+
   test('an unblock lets the key go and nothing else', () async {
     if (skip()) return;
     await person(_q);
@@ -360,6 +413,63 @@ void main() {
       hasLength(4),
     );
   });
+
+  // every word of [words] in any file of the container's folder
+  List<String> inFiles(List<String> words) {
+    final hits = <String>{};
+    for (final f in docs.listSync(recursive: true)) {
+      if (f is! File) continue;
+      final text = latin1.decode(f.readAsBytesSync(), allowInvalid: true);
+      for (final w in words) {
+        if (text.contains(w)) hits.add(w);
+      }
+    }
+    return hits.toList()..sort();
+  }
+
+  for (final how in ['not them', 'delete chat']) {
+    test('$how: once its owed tidy ran, no word of theirs is left in the '
+        'file', () async {
+      if (skip()) return;
+      final raw = await db.open();
+      for (final (who, x) in [(_p, 'ab'), (_q, 'cd')]) {
+        await raw.insert('contacts', {
+          'halo_id': who,
+          'onion': 'o',
+          'xpub': x * 32,
+          'first_seen': 1,
+          'last_seen': 1,
+          'accepted': 1,
+        });
+      }
+      for (var i = 0; i < 300; i++) {
+        await db.saveMessage(
+          _p,
+          'in',
+          'zqxjfakeword$i plumbuscrypt secretfakephrase',
+          msgUid: 'uf$i',
+        );
+        await db.saveMessage(_q, 'in', 'keepme$i harmless', msgUid: 'uo$i');
+      }
+      if (how == 'not them') {
+        await db.removeAndBlockKey(_p, _key);
+      } else {
+        await db.deleteConversation(_p);
+      }
+      const theirs = ['plumbuscrypt', 'secretfakephrase', 'zqxjfakeword'];
+      // the search index still holds them in leaves it no longer reads
+      await raw.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+      expect(inFiles(theirs), isNotEmpty);
+      await tidyIfOwed(raw);
+      await raw.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+      await db.close();
+      expect(inFiles(theirs), isEmpty);
+      expect(inFiles(['keepme']), ['keepme']);
+      // done: nothing owed any more
+      final again = await db.open();
+      expect(await RouterRows.tidyOwed(again), isFalse);
+    });
+  }
 
   test('an upgrade from 79 makes the table and keeps every row', () async {
     if (skip()) return;

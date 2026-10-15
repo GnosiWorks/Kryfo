@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../dlog.dart';
+import '../lock_guard.dart';
 import '../main.dart' show appState;
 import '../theme.dart';
 import 'confirm_sheet.dart';
@@ -28,10 +30,18 @@ Future<bool> removeAsNotThem(
     line: l10n.notThemSheetLine,
     yes: l10n.notThemRemove,
     keep: l10n.commonCancel,
+    shutOnLock: lockGuard,
   );
-  if (!yes || !context.mounted) return false;
+  if (!yes || !context.mounted || lockGuard.isLocked()) return false;
   final nav = Navigator.of(context);
-  final done = await appState.notThem(peer, keyHex);
+  bool done;
+  try {
+    done = await appState.notThem(peer, keyHex);
+  } catch (e) {
+    dlog('not them: failed (${e.runtimeType})');
+    if (context.mounted) showHaloToast(context, l10n.commonTryAgain);
+    return false;
+  }
   if (!context.mounted) return done;
   if (!done) {
     // the number moved while the sheet was up: the new one is compared
@@ -93,25 +103,35 @@ class NotThemAsk extends StatelessWidget {
 // under the safety number: the ask, which opens into what it means and
 // the one way to act on it
 class NotThemFold extends StatefulWidget {
-  const NotThemFold({super.key, required this.peer, required this.keyHex});
+  const NotThemFold({
+    super.key,
+    required this.peer,
+    required this.keyHex,
+    this.open = false,
+  });
 
   final String peer;
   // the key the number on screen was made from
   final String keyHex;
+  // come from the compare card's ask: already open
+  final bool open;
 
   @override
   State<NotThemFold> createState() => _NotThemFoldState();
 }
 
 class _NotThemFoldState extends State<NotThemFold> {
-  bool _open = false;
+  late bool _open = widget.open;
   bool _busy = false;
 
   Future<void> _remove() async {
     if (_busy) return;
     setState(() => _busy = true);
-    await removeAsNotThem(context, widget.peer, widget.keyHex);
-    if (mounted) setState(() => _busy = false);
+    try {
+      await removeAsNotThem(context, widget.peer, widget.keyHex);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override

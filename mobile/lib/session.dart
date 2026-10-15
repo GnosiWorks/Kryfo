@@ -616,7 +616,7 @@ class Session {
       (await _ofUid(uid)).stickerOf(uid);
 
   // "this isn't them": in the container that holds them, and nowhere else
-  Future<void> removeAndBlockKey(String haloId, String keyHex) =>
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) =>
       _ofPeer(haloId).removeAndBlockKey(haloId, keyHex);
 
   // ---- every chat ----
@@ -628,10 +628,18 @@ class Session {
     return false;
   }
 
+  // once each, the newest block of a key both hold
   Future<List<({String x, int at})>> blockedKeys() async {
     final v = vault;
-    final all = [...await primary.blockedKeys(), ...?await v?.blockedKeys()];
-    return all..sort((a, b) => b.at.compareTo(a.at));
+    final newest = <String, int>{};
+    for (final k in [
+      ...await primary.blockedKeys(),
+      ...?await v?.blockedKeys(),
+    ]) {
+      if ((newest[k.x] ?? -1) < k.at) newest[k.x] = k.at;
+    }
+    return [for (final e in newest.entries) (x: e.key, at: e.value)]
+      ..sort((a, b) => b.at.compareTo(a.at));
   }
 
   Future<void> unblockKey(String keyHex) async {

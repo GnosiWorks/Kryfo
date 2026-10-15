@@ -542,7 +542,26 @@ void main() {
         w.live.people.containsKey(unboundIdOf([5, ...List.filled(32, 0xf0)])),
         isFalse,
       );
-      // the same words on another key are someone else, and seated
+      // the same words on another key are someone else: while the words are
+      // let go ("this isn't them") on an id of their own
+      w.live.tombedNames.add(words);
+      final realId = unboundIdOf([5, ...List.filled(32, 0xa7)]);
+      await w.control(
+        _a,
+        GroupControl(
+          type: 'add',
+          members: const [words],
+          participants: [
+            {'h': words, 'o': 'o-real', 'x': real},
+          ],
+        ),
+      );
+      expect(w.members, contains(realId));
+      expect(w.members, isNot(contains(words)));
+      expect(w.live.people[realId], containsPair('xpub', real));
+      // and once the person took the words back by an add of their own,
+      // under the words
+      w.live.tombedNames.clear();
       await w.control(
         _a,
         GroupControl(

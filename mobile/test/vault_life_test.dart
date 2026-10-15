@@ -1449,6 +1449,7 @@ void main() {
       'vault_inbox',
       // keys blocked as not who they said: no chat's rows
       'blocked_keys',
+      'name_tombs',
     };
     final src = [
       'lib/main.dart',

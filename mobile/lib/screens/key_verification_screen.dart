@@ -45,6 +45,8 @@ class KeyVerificationScreen extends StatefulWidget {
   // what the page that opened this already knows, so it opens in the right
   // state and only a tap here animates
   final bool? initialVerified;
+  // come from the compare card's "the numbers are different"
+  final bool notThemOpen;
   const KeyVerificationScreen({
     super.key,
     required this.peerHaloId,
@@ -52,6 +54,7 @@ class KeyVerificationScreen extends StatefulWidget {
     required this.myXpub,
     required this.peerXpub,
     this.initialVerified,
+    this.notThemOpen = false,
   });
 
   @override
@@ -251,6 +254,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                                   key: ValueKey('not-them-$_key'),
                                   peer: widget.peerHaloId,
                                   keyHex: _key,
+                                  open: widget.notThemOpen,
                                 ),
                               )
                             : const SizedBox(width: double.infinity),

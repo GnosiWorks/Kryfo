@@ -139,7 +139,6 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
-import '../widgets/ease_size.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -951,8 +950,6 @@ class _ChatScreenState extends State<ChatScreen>
   // the ask put off for later: a quiet line in place of the card
   bool _nameFolded = false;
   int _nameFlags = 0;
-  // the key their number is made from, while the card asks for it
-  String? _heldKey;
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
@@ -982,8 +979,7 @@ class _ChatScreenState extends State<ChatScreen>
           held != _keyHeld ||
           unchecked != _nameUnchecked ||
           asks != _nameAsks ||
-          folded != _nameFolded ||
-          key != _heldKey) {
+          folded != _nameFolded) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
@@ -991,7 +987,6 @@ class _ChatScreenState extends State<ChatScreen>
           _nameUnchecked = unchecked;
           _nameAsks = asks;
           _nameFolded = folded;
-          _heldKey = key;
         });
       }
     } catch (e) {
@@ -5011,7 +5006,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  Future<void> _openKeyVerification() async {
+  Future<void> _openKeyVerification({bool notThem = false}) async {
     await Navigator.of(context).push(
       haloRoute(
         KeyVerificationScreen(
@@ -5020,9 +5015,11 @@ class _ChatScreenState extends State<ChatScreen>
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
           initialVerified: _verified,
+          notThemOpen: notThem,
         ),
       ),
     );
+    if (!mounted) return;
     // checked again there: what waited for it goes now
     await _readKeyState();
     if (!_keyHeld) unawaited(appState.drainOutbox());
@@ -5394,12 +5391,12 @@ class _ChatScreenState extends State<ChatScreen>
                           ? _CompareSlot(
                               key: const ValueKey('compare'),
                               folded: _nameFolded,
-                              peer: widget.peerHaloId,
-                              heldKey: _heldKey,
                               peerName: _nickname ?? widget.peerHaloId,
                               onVerify: _openKeyVerification,
                               onLater: _compareLater,
                               onDismiss: _compareDismiss,
+                              onNotThem: () =>
+                                  _openKeyVerification(notThem: true),
                             )
                           : const SizedBox(
                               key: ValueKey('compare-none'),
@@ -8419,21 +8416,19 @@ PrivacyMode _pmFrom(String m) => m == 'fast'
 // asks for no movement
 class _CompareSlot extends StatelessWidget {
   final bool folded;
-  final String peer;
-  final String? heldKey;
   final String peerName;
   final VoidCallback onVerify;
   final VoidCallback onLater;
   final VoidCallback onDismiss;
+  final VoidCallback onNotThem;
   const _CompareSlot({
     super.key,
     required this.folded,
-    required this.peer,
-    required this.heldKey,
     required this.peerName,
     required this.onVerify,
     required this.onLater,
     required this.onDismiss,
+    required this.onNotThem,
   });
 
   @override
@@ -8446,11 +8441,10 @@ class _CompareSlot extends StatelessWidget {
           )
         : _CompareCard(
             key: const ValueKey('compare-card'),
-            peer: peer,
-            heldKey: heldKey,
             peerName: peerName,
             onVerify: onVerify,
             onLater: onLater,
+            onNotThem: onNotThem,
           );
     // an animated size cannot take a zero time: with no movement the swap
     // is plain
@@ -8557,156 +8551,86 @@ class _CompareRow extends StatelessWidget {
 // at the top of a chat added by a code or a link, or taken in from a
 // request: three words prove nothing, the safety number does. it goes once
 // they are verified, and folds into a line for later. a number read out
-// that is another turns it, in place, to "this isn't them"
-class _CompareCard extends StatefulWidget {
-  final String peer;
-  final String? heldKey;
+// that is another opens the safety number with "this isn't them" up
+class _CompareCard extends StatelessWidget {
   final String peerName;
   final VoidCallback onVerify;
   final VoidCallback onLater;
+  final VoidCallback onNotThem;
   const _CompareCard({
     super.key,
-    required this.peer,
-    required this.heldKey,
     required this.peerName,
     required this.onVerify,
     required this.onLater,
+    required this.onNotThem,
   });
 
   @override
-  State<_CompareCard> createState() => _CompareCardState();
-}
-
-class _CompareCardState extends State<_CompareCard> {
-  bool _differ = false;
-  bool _busy = false;
-
-  Future<void> _remove() async {
-    final k = widget.heldKey;
-    if (_busy || k == null) return;
-    _busy = true;
-    await removeAsNotThem(context, widget.peer, k);
-    _busy = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final differ = _differ && widget.heldKey != null;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 6),
       decoration: BoxDecoration(
-        color: differ
-            ? Color.alphaBlend(
-                HaloColors.rose.withValues(alpha: 0.07),
-                HaloColors.surface2,
-              )
-            : HaloColors.surface2,
-        border: Border.all(
-          color: differ
-              ? HaloColors.rose.withValues(alpha: 0.35)
-              : HaloColors.line,
-          width: 0.5,
-        ),
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
-      // the same card turns over: its line and its two buttons swap in
-      // place, and its height eases to the new one
-      child: EaseSize(
-        child: FadeSwap(
-          child: KeyedSubtree(
-            key: ValueKey(differ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      differ
-                          ? Icons.gpp_bad_outlined
-                          : Icons.verified_user_outlined,
-                      size: 14,
-                      color: differ ? HaloColors.rose : HaloColors.amber,
-                    ),
-                    const SizedBox(width: 7),
-                    Flexible(
-                      child: Text(
-                        differ
-                            ? l10n.notThemNumbersDiffer
-                            : l10n.chatCompareTitle,
-                        style: HaloType.serif(size: 13, color: HaloColors.text),
-                      ),
-                    ),
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 14,
+                color: HaloColors.amber,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  l10n.chatCompareTitle,
+                  style: HaloType.serif(size: 13, color: HaloColors.text),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  differ
-                      ? l10n.notThemLine
-                      : l10n.chatCompareLine(widget.peerName),
-                  style: HaloType.sans(
-                    size: 12.5,
-                    color: HaloColors.text2,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 11),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: differ
-                          ? _barBtn(
-                              l10n.commonBack,
-                              HaloColors.text,
-                              HaloColors.surface,
-                              () => setState(() => _differ = false),
-                            )
-                          : _barBtn(
-                              l10n.chatCompareLater,
-                              HaloColors.text,
-                              HaloColors.surface,
-                              widget.onLater,
-                            ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 3,
-                      child: differ
-                          ? Semantics(
-                              button: true,
-                              label: l10n.notThemButton,
-                              excludeSemantics: true,
-                              child: _barBtn(
-                                l10n.notThemButton,
-                                HaloColors.rose,
-                                HaloColors.rose.withValues(alpha: 0.16),
-                                _remove,
-                                bold: true,
-                              ),
-                            )
-                          : _barBtn(
-                              l10n.chatVerify,
-                              HaloColors.onAmber,
-                              HaloColors.amber,
-                              widget.onVerify,
-                              bold: true,
-                            ),
-                    ),
-                  ],
-                ),
-                // compared already, and their number was another
-                if (!differ && widget.heldKey != null) ...[
-                  const SizedBox(height: 2),
-                  NotThemAsk(
-                    compact: true,
-                    onTap: () => setState(() => _differ = true),
-                  ),
-                ],
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            l10n.chatCompareLine(peerName),
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
             ),
           ),
-        ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _barBtn(
+                  l10n.chatCompareLater,
+                  HaloColors.text,
+                  HaloColors.surface,
+                  onLater,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: _barBtn(
+                  l10n.chatVerify,
+                  HaloColors.onAmber,
+                  HaloColors.amber,
+                  onVerify,
+                  bold: true,
+                ),
+              ),
+            ],
+          ),
+          // compared already, and their number was another
+          NotThemAsk(compact: true, onTap: onNotThem),
+        ],
       ),
     );
   }

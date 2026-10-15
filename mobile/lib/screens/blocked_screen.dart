@@ -11,6 +11,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart' show dayMonthMaybeYear;
 
 // blocked contacts, and the keys "this isn't them" blocked, by their key
 // number. blocking never notifies the other side. an unblocked row folds
@@ -139,7 +140,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                                         leaving: _leaving.contains(
                                           'key:${k.x}',
                                         ),
-                                        child: _keyRow(k.x),
+                                        child: _keyRow(k.x, k.at),
                                       ),
                                     ),
                                   ),
@@ -188,7 +189,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
   }
 
   // a key blocked with no one's name on it: the number it shows as
-  Widget _keyRow(String x) {
+  Widget _keyRow(String x, int at) {
     final number = keyNumber(_bytes(x)) ?? x;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(20, 10, 16, 10),
@@ -215,11 +216,27 @@ class _BlockedScreenState extends State<BlockedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.blockedKey,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 14, weight: FontWeight.w500),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.blockedKey,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 14,
+                            weight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        dayMonthMaybeYear(
+                          DateTime.fromMillisecondsSinceEpoch(at),
+                        ),
+                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                      ),
+                    ],
                   ),
                   // the same digits in every language, as on a pair code
                   Semantics(

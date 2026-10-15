@@ -259,7 +259,8 @@ final Map<String, List<(int, String?)>> _shownFor = {};
 // burned takes its own one down
 final Map<String, (String, int, String?)> _shownForMsg = {};
 
-Future<void> clearNotificationsFor(String chat) async {
+// [tags]: read before the chat's rows went, when they are gone already
+Future<void> clearNotificationsFor(String chat, {Set<String>? tags}) async {
   unawaited(_forgetRings(chat: chat));
   _shownForMsg.removeWhere((_, v) => v.$1 == chat);
   final shown = _shownFor.remove(chat) ?? const <(int, String?)>[];
@@ -268,19 +269,20 @@ Future<void> clearNotificationsFor(String chat) async {
   }
   // what an earlier run or the receiving job showed: the shade gives back
   // tags, never payloads
-  final tags = <String>{for (final (_, tag) in shown) ?tag};
+  final known = tags;
+  final all = <String>{for (final (_, tag) in shown) ?tag, ...?known};
   try {
-    tags.addAll(await notifTagsOf(chat));
+    if (known == null) all.addAll(await notifTagsOf(chat));
   } catch (e) {
     dlog('shade: tags not read (${e.runtimeType})');
   }
-  if (tags.isEmpty) return;
+  if (all.isEmpty) return;
   try {
     final active = await notifPlugin.getActiveNotifications();
     for (final a in active) {
       final id = a.id;
       final tag = a.tag;
-      if (id == null || tag == null || !tags.contains(tag)) continue;
+      if (id == null || tag == null || !all.contains(tag)) continue;
       if (shown.contains((id, tag))) continue;
       await cancelWithRetry(
         () => notifPlugin.cancel(id: id, tag: tag),

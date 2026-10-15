@@ -60,6 +60,12 @@ class DevTestDb implements HaloDb {
       .rows('blocked_keys')
       .any((r) => r['x'] == keyHex.trim().toLowerCase());
   @override
+  Future<bool> tombed(String name) async =>
+      mem.rows('name_tombs').any((r) => r['name'] == name);
+  @override
+  Future<void> clearTomb(String name) async =>
+      mem.delete('name_tombs', where: 'name = ?', whereArgs: [name]);
+  @override
   Future<List<({String x, int at})>> blockedKeys() async => [
     for (final r in mem.rows('blocked_keys'))
       (x: r['x'] as String, at: r['at'] as int),

@@ -31,6 +31,8 @@ class _Db implements HaloDb {
   Future<List<({String x, int at})>> blockedKeys() async => const [];
   @override
   Future<bool> keyBlocked(String keyHex) async => false;
+  @override
+  Future<bool> tombed(String name) async => false;
   List<Map<String, Object?>> people = [];
   List<Map<String, Object?>> requests = [];
   List<Map<String, Object?>> saved = [];

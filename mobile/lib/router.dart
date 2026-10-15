@@ -29,6 +29,11 @@ const kHiddenGroup = 'group';
 // a chat of a vault that was replaced or taken away: its arrivals are
 // dropped. a group's card says so with g
 const kHiddenGone = 'gone';
+// a key "this isn't them" blocked in the vault, and words it let go there:
+// what comes on that key is dropped, and nobody who writes first is given
+// those words, while the vault is shut as well
+const kHiddenKeyMark = 'key';
+const kHiddenTombMark = 'tomb';
 
 // relays keep a wrap fourteen days (nip17.go). a block is listened on a
 // day past that, so nothing it held is left there
@@ -276,6 +281,24 @@ class RouterRows {
     return r.isEmpty ? null : r.first['v'] as String?;
   }
 
+  // a removal owes the file a tidy (tidyIfOwed in main.dart), kept with the
+  // other marks of this database
+  static Future<void> oweTidy(DatabaseExecutor t) => t.insert('vault_meta', {
+    'k': kTidyOwed,
+    'v': '1',
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+  static Future<bool> tidyOwed(DatabaseExecutor t) async => (await t.query(
+    'vault_meta',
+    columns: ['v'],
+    where: 'k = ?',
+    whereArgs: [kTidyOwed],
+    limit: 1,
+  )).isNotEmpty;
+
+  static Future<void> tidyDone(DatabaseExecutor t) =>
+      t.delete('vault_meta', where: 'k = ?', whereArgs: [kTidyOwed]);
+
   static Future<void> putMeta(
     DatabaseExecutor t,
     String k,
@@ -442,6 +465,11 @@ abstract class VaultSeal {
   List<String?> openMany(String priv, List<String> b64s);
 }
 
+const kTidyOwed = 'tidy_owed';
+const _kKeyAt = 'key:';
+const _kTombAt = 'tomb:';
+const _kSeatsGone = 'seats_gone';
+
 class VaultRouter {
   VaultRouter(
     this._store,
@@ -464,6 +492,8 @@ class VaultRouter {
   // people and groups of a vault that went
   final Set<String> _gonePeople = {};
   final Set<String> _goneGroups = {};
+  final Set<String> _keys = {};
+  final Set<String> _tombs = {};
   final List<PendingMove> _pending = [];
   String? _pub;
   bool _loaded = false;
@@ -481,6 +511,8 @@ class VaultRouter {
     final groups = <String, List<RouterCard>>{};
     final gonePeople = <String>{};
     final goneGroups = <String>{};
+    final keys = <String>{};
+    final tombs = <String>{};
     final pending = <PendingMove>[];
     for (final r in await _store.hidden()) {
       final id = r['chat_id'] as String;
@@ -515,6 +547,10 @@ class VaultRouter {
           } else {
             gonePeople.add(id);
           }
+        case kHiddenKeyMark:
+          keys.add(id.substring(_kKeyAt.length));
+        case kHiddenTombMark:
+          tombs.add(id.substring(_kTombAt.length));
       }
     }
     final pub = await _store.meta('pub');
@@ -537,6 +573,12 @@ class VaultRouter {
     _goneGroups
       ..clear()
       ..addAll(goneGroups);
+    _keys
+      ..clear()
+      ..addAll(keys);
+    _tombs
+      ..clear()
+      ..addAll(tombs);
     _pending
       ..clear()
       ..addAll(pending);
@@ -565,6 +607,63 @@ class VaultRouter {
     for (final id in _peers.keys) (id, false),
     for (final id in _groups.keys) (id, true),
   ];
+
+  // a vault is set up: its key is here
+  bool get hasVault => _pub != null;
+
+  // what the vault blocked and let go, by the marks it left here
+  bool keyBlocked(String keyHex) => _keys.contains(keyHex.trim().toLowerCase());
+  bool tombed(String id) => _tombs.contains(id);
+  Set<String> get blockedKeys => Set.unmodifiable(_keys);
+
+  Future<void> markKey(String keyHex, {required bool on}) =>
+      _mark('$_kKeyAt${keyHex.trim().toLowerCase()}', kHiddenKeyMark, on: on);
+
+  Future<void> markTomb(String id, {required bool on}) =>
+      _mark('$_kTombAt$id', kHiddenTombMark, on: on);
+
+  Future<void> _mark(String at, String kind, {required bool on}) async {
+    if (on) {
+      await _store.putHidden(
+        at,
+        kind,
+        '{}',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } else {
+      await _store.deleteHidden(at);
+    }
+    await load();
+  }
+
+  // the marks go with the vault that made them
+  Future<void> _unmarkAll() async {
+    for (final r in await _store.hidden()) {
+      final kind = r['kind'];
+      if (kind == kHiddenKeyMark || kind == kHiddenTombMark) {
+        await _store.deleteHidden(r['chat_id'] as String);
+      }
+    }
+  }
+
+  // seats in the vault's groups of someone the everyday side let go while
+  // it was shut: taken out as it next opens
+  Future<List<String>> seatsGone() async {
+    final j = _json(await _store.meta(_kSeatsGone));
+    return [
+      if (j is List)
+        for (final x in j)
+          if (x is String) x,
+    ];
+  }
+
+  Future<void> queueSeatGone(String id) async {
+    final now = await seatsGone();
+    if (now.contains(id)) return;
+    await _store.putMeta(_kSeatsGone, jsonEncode([...now, id]));
+  }
+
+  Future<void> clearSeatsGone() => _store.putMeta(_kSeatsGone, null);
 
   // a new vault's key, written before any chat is listed
   Future<void> start(String pub) async {
@@ -663,6 +762,8 @@ class VaultRouter {
     }
     await _store.putMeta('pub', null);
     await _store.inboxClear();
+    await _unmarkAll();
+    await clearSeatsGone();
     _maybeSealed = false;
     await load();
   }
@@ -680,6 +781,8 @@ class VaultRouter {
   Future<void> retire() async {
     await _store.putMeta('pub', null);
     await _store.inboxClear();
+    await _unmarkAll();
+    await clearSeatsGone();
     _maybeSealed = false;
     await load();
   }

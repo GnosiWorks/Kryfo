@@ -10,7 +10,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
+    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow, kAdminGone;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -285,6 +285,9 @@ class ArrivalIo implements AppIo {
   // what was taken out of the shade, by payload
   final unrang = <String>[];
   @override
+  Future<void> unnotifyGone(String payload, Set<String> tags) =>
+      unnotify(payload);
+  @override
   Future<void> unnotify(String payload) async => unrang.add(payload);
 }
 
@@ -554,11 +557,23 @@ class ArrivalRows implements HaloDb {
   // keys "this isn't them" blocked here, with when
   final blockedKeyAt = <String, int>{};
 
+  // words "this isn't them" let go here
+  final tombedNames = <String>{};
+
   @override
-  Future<void> removeAndBlockKey(String haloId, String keyHex) async {
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) async {
     _hit('removeAndBlockKey', haloId, null);
+    final uids = [
+      for (final m in msgs)
+        if (m['peer_id'] == haloId)
+          if (m['msg_uid'] case final String u) u,
+    ];
     people.remove(haloId);
     msgs.removeWhere((m) => m['peer_id'] == haloId);
+    for (final g in groupRows.values) {
+      if (g['admin_id'] == haloId) g['admin_id'] = kAdminGone;
+    }
+    tombedNames.add(haloId);
     heldRows.remove(haloId);
     for (final m in members.values) {
       m.remove(haloId);
@@ -570,6 +585,30 @@ class ArrivalRows implements HaloDb {
     shields.remove(haloId);
     blockedKeyAt[keyHex.trim().toLowerCase()] =
         DateTime.now().millisecondsSinceEpoch;
+    return uids;
+  }
+
+  @override
+  Future<bool> tombed(String name) async => tombedNames.contains(name);
+
+  @override
+  Future<void> clearTomb(String name) async => tombedNames.remove(name);
+
+  @override
+  Future<void> dropSeats(String haloId) async {
+    _hit('dropSeats', haloId, null);
+    for (final m in members.values) {
+      m.remove(haloId);
+    }
+    for (final g in groupRows.values) {
+      if (g['admin_id'] == haloId) g['admin_id'] = kAdminGone;
+    }
+    final p = people[haloId];
+    if (p != null &&
+        p['accepted'] != 1 &&
+        !msgs.any((m) => m['peer_id'] == haloId && m['group_id'] == null)) {
+      people.remove(haloId);
+    }
   }
 
   @override
