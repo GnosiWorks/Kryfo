@@ -344,8 +344,9 @@ class _Msg with WordLinks {
   // theirs, counting since before it was read (kBurnWaitMost)
   bool burnUnseen;
   String? msgUid;
-  // msg_uid of the message this one replies to, or null.
-  final String? replyTo;
+  // msg_uid of the message this one replies to, or null. set again on a
+  // pick's first bubble that is ready when the one before would not go
+  String? replyTo;
   // sender asked that this not be screenshotted
   final bool secure;
   bool sending;
@@ -3804,6 +3805,8 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
       return null;
     }
+    // the chat went while it was cleaned: nothing is written
+    if (!mounted) return null;
     final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
@@ -3889,6 +3892,8 @@ class _ChatScreenState extends State<ChatScreen>
       sent: 0,
       secure: wantSecure,
       album: msg.album,
+      // the time its bubble shows, kept by a resend after a restart
+      writtenAt: msg.when.millisecondsSinceEpoch,
     );
     unawaited(appState.refreshContacts());
     if (wantSecure && mounted) setState(() => _secureNext = false);
@@ -3965,6 +3970,8 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return;
     }
+    // the answer goes with the first that is ready
+    if (ready.isNotEmpty && reply != null) ready.first.$1.replyTo = reply;
     if (ready.length < waiting.length) {
       // what would not go leaves, and the rest are counted again
       final again = albumPlan(
@@ -3983,8 +3990,14 @@ class _ChatScreenState extends State<ChatScreen>
         }
       });
     }
-    for (final (m, x) in ready) {
-      if (!mounted) return;
+    for (final (k, (m, x)) in ready.indexed) {
+      // the chat went part way: what was made ready and not sent goes
+      if (!mounted) {
+        for (final (_, rest) in ready.skip(k)) {
+          await shredFile(rest.path);
+        }
+        return;
+      }
       await _sendReady(x, m.text, shown: m);
     }
   }

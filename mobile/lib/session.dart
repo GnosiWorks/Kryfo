@@ -439,6 +439,8 @@ class Session {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    // when it was written, if not now: a bubble shown before it was saved
+    int? writtenAt,
   }) => _ofEither(peerId, groupId).saveMessage(
     peerId,
     direction,
@@ -459,6 +461,7 @@ class Session {
     poll: poll,
     sticker: sticker,
     album: album,
+    writtenAt: writtenAt,
   );
   Future<bool> saveInGroup(
     String peerId,
@@ -476,6 +479,7 @@ class Session {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    int? writtenAt,
   }) => _ofGroup(groupId).saveInGroup(
     peerId,
     plaintext,
@@ -492,6 +496,7 @@ class Session {
     poll: poll,
     sticker: sticker,
     album: album,
+    writtenAt: writtenAt,
   );
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,

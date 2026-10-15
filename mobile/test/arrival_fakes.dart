@@ -1101,7 +1101,7 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<({int n, Set<int> taken, int first})?> albumHeld(
+  Future<({int n, Set<int> taken, int first, int came})?> albumHeld(
     String albumId,
     String sender,
     String? groupId,
@@ -1121,6 +1121,9 @@ class ArrivalRows implements HaloDb {
       n: rows.first['album_n'] as int,
       taken: {for (final r in rows) r['album_i'] as int},
       first: rows.map(at).reduce((a, b) => a < b ? a : b),
+      came: rows
+          .map((r) => (r['sent_at'] as num).toInt())
+          .reduce((a, b) => a < b ? a : b),
     );
   }
 
@@ -1141,6 +1144,7 @@ class ArrivalRows implements HaloDb {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    int? writtenAt,
   }) async {
     if (!groupRows.containsKey(groupId)) return false;
     await saveMessage(
@@ -1160,6 +1164,7 @@ class ArrivalRows implements HaloDb {
       poll: poll,
       sticker: sticker,
       album: album,
+      writtenAt: writtenAt,
     );
     return true;
   }

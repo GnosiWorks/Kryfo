@@ -146,6 +146,20 @@ void main() {
     },
   );
 
+  test('one deleted by hand leaves its album open to what comes', () async {
+    if (skip()) return;
+    final db = HaloDb();
+    await db.open();
+    await theirs(db, 'd0', 0, burnSecs: null);
+    await db.deleteMessage('d0');
+    expect(await db.goneFrom(goneKey(_alice), 'd0'), isTrue);
+    expect(await db.goneFrom(goneKey(_alice), albumGoneUid(_id)), isFalse);
+    await theirs(db, 'c0', 0, burnSecs: null);
+    await db.clearConversation(_alice);
+    expect(await db.goneFrom(goneKey(_alice), albumGoneUid(_id)), isFalse);
+    await db.close();
+  });
+
   test(
     'an album that burns is remembered, so nothing joins it after',
     () async {

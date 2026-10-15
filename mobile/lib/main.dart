@@ -3420,6 +3420,8 @@ class HaloDb implements GroupOwedStore {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    // when it was written, if not now: a bubble shown before it was saved
+    int? writtenAt,
   }) async {
     final db = await open();
     final id = await db.transaction((t) async {
@@ -3437,7 +3439,7 @@ class HaloDb implements GroupOwedStore {
         'direction': 'out',
         'plaintext': unmarked(plaintext),
         'sent_at': now,
-        'written_at': now,
+        'written_at': writtenAt ?? now,
         'burn_secs': burnSecs,
         'msg_uid': msgUid,
         'reply_to': replyTo,
@@ -4483,8 +4485,11 @@ class HaloDb implements GroupOwedStore {
   // kGoneFor and a day for clocks
   static Future<void> _noteGone(
     DatabaseExecutor db,
-    Iterable<Map<String, Object?>> rows,
-  ) async {
+    Iterable<Map<String, Object?>> rows, {
+    // burned on its timer: its album takes nothing after it. a delete or a
+    // clear by hand leaves later items to show and ring as their own
+    bool burned = false,
+  }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final from =
         now - kGoneFor.inMilliseconds - const Duration(days: 1).inMilliseconds;
@@ -4504,8 +4509,8 @@ class HaloDb implements GroupOwedStore {
         'peer_id': goneKey(peer, group: group),
         'at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
-      // an album that went takes nothing that comes after (albumGone)
-      if (r['album_id'] case final String album) {
+      // an album that burned takes nothing that comes after (albumGone)
+      if (r['album_id'] case final String album when burned) {
         b.insert('gone_in', {
           'msg_uid': albumGoneUid(album),
           'peer_id': goneKey(peer, group: group),
@@ -4707,7 +4712,7 @@ class HaloDb implements GroupOwedStore {
     ];
     final rows = [...due, ...waited];
     await _unreadGo(db, rows);
-    await _noteGone(db, rows);
+    await _noteGone(db, rows, burned: true);
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
@@ -5901,8 +5906,9 @@ class HaloDb implements GroupOwedStore {
   }
 
   // what is here of [sender]'s album [albumId]: its count, the places
-  // taken, and when its first row was written. null while none is
-  Future<({int n, Set<int> taken, int first})?> albumHeld(
+  // taken, when its first row was written and when its first row came.
+  // null while none is
+  Future<({int n, Set<int> taken, int first, int came})?> albumHeld(
     String albumId,
     String sender,
     String? groupId,
@@ -5918,13 +5924,16 @@ class HaloDb implements GroupOwedStore {
     );
     if (rows.isEmpty) return null;
     var first = rowWrittenAt(rows.first);
+    var came = (rows.first['sent_at'] as num).toInt();
     for (final r in rows) {
       first = min(first, rowWrittenAt(r));
+      came = min(came, (r['sent_at'] as num).toInt());
     }
     return (
       n: (rows.first['album_n'] as num?)?.toInt() ?? 0,
       taken: {for (final r in rows) (r['album_i'] as num?)?.toInt() ?? -1},
       first: first,
+      came: came,
     );
   }
 
@@ -6087,7 +6096,7 @@ class HaloDb implements GroupOwedStore {
     ];
     final media = [...due, ...waited];
     await _unreadGo(db, media);
-    await _noteGone(db, media);
+    await _noteGone(db, media, burned: true);
     await db.delete(
       'gone_in',
       where: 'at < ?',
@@ -16265,10 +16274,13 @@ class AppState extends ChangeNotifier {
         albumGone = true;
         album = null;
       } else if (held != null) {
+        // near the first by when it was written and by when it came: a time
+        // set back never slips a late one in
         final fits =
             held.n == album.n &&
             !held.taken.contains(album.i) &&
-            albumInWindow(held.first, writtenAt);
+            albumInWindow(held.first, writtenAt) &&
+            albumInWindow(held.came, arrivedAt ?? now);
         albumSeen = fits;
         if (!fits) album = null;
       }

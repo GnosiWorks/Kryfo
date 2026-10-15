@@ -135,4 +135,27 @@ void main() {
     );
     expect(w.io.rang, isEmpty);
   });
+
+  test(
+    'a backdated item for an album that came long ago stands alone',
+    () async {
+      final w = await _World.make();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // its first row came half an hour ago
+      await w.live.saveMessage(
+        _x,
+        'in',
+        '',
+        msgUid: 'old0',
+        mediaPath: '/m/old0.jpg',
+        sentAt: now - 30 * _min,
+        writtenAt: t0,
+        album: const AlbumTag(_id, 3, 0),
+      );
+      // written, it says, a second after it: it came now
+      await w.item('late', 1, 3, t0 + 1000);
+      expect(w.tagOf('late'), isNull);
+      expect(w.io.rang, hasLength(1));
+    },
+  );
 }

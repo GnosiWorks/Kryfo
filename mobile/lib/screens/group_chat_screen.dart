@@ -2445,6 +2445,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       return;
     }
+    // the answer goes with the first that is ready
+    if (ready.isNotEmpty && reply != null) ready.first.$1.replyTo = reply;
     if (ready.length < waiting.length) {
       // what would not go leaves, and the rest are counted again
       final again = albumPlan([for (final (m, _) in ready) m], r.caption);
@@ -2459,8 +2461,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
       });
     }
-    for (final (m, x) in ready) {
-      if (!mounted) return;
+    for (final (k, (m, x)) in ready.indexed) {
+      // the chat went part way: what was made ready and not sent goes
+      if (!mounted) {
+        for (final (_, rest) in ready.skip(k)) {
+          await shredFile(rest.path);
+        }
+        return;
+      }
       await _sendGroupReady(x, m.text, shown: m);
     }
   }
@@ -2578,6 +2586,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         fileName: m.fileName,
         burnSecs: burn,
         album: album,
+        // the time its bubble shows, kept by a resend after a restart
+        writtenAt: m.when.millisecondsSinceEpoch,
       ),
     );
     if (!kept) return _unkept(m);
@@ -4356,7 +4366,9 @@ class _GMsg with WordLinks {
   // theirs, counting since before it was read (kBurnWaitMost)
   bool burnUnseen;
   final String? msgUid;
-  final String? replyTo;
+  // set again on a pick's first bubble that is ready when the one before
+  // would not go
+  String? replyTo;
   bool sending;
   bool failed = false;
   // online, a failed row retries itself and reads as pending; the count

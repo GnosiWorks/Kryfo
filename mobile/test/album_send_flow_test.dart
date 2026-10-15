@@ -76,4 +76,38 @@ void main() {
       contains('showConfirmSheet('),
     );
   });
+
+  test('a row keeps the time its bubble showed, for a resend', () {
+    expect(
+      bodyOf(chat, 'Future<void> _sendReady('),
+      contains('writtenAt: msg.when.millisecondsSinceEpoch,'),
+    );
+    expect(
+      bodyOf(group, 'Future<void> _sendGroupReady('),
+      contains('writtenAt: m.when.millisecondsSinceEpoch,'),
+    );
+  });
+
+  test('the answer goes with the first item that is ready', () {
+    for (final src in [chat, group]) {
+      final body = bodyOf(src, 'Future<void> _sendPicked(');
+      final carried = body.indexOf(r'ready.first.$1.replyTo = reply;');
+      expect(carried, greaterThan(0));
+      // after the readying, before any is sent
+      expect(carried, greaterThan(body.indexOf('ready.add(')));
+      expect(carried, lessThan(body.indexOf('shown: m')));
+    }
+  });
+
+  test('a chat gone part way leaves no file made ready behind', () {
+    for (final src in [chat, group]) {
+      final body = bodyOf(src, 'Future<void> _sendPicked(');
+      expect(body, contains('ready.skip(k)'));
+      expect(body, contains('await shredFile(rest.path);'));
+    }
+    final photo = bodyOf(chat, 'Future<_Ready?> _readyPhoto(');
+    final gone = photo.indexOf('if (!mounted) return null;');
+    expect(gone, greaterThan(0));
+    expect(gone, lessThan(photo.indexOf('mediaDirOf')));
+  });
 }
