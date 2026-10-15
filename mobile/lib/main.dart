@@ -8883,13 +8883,18 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
 // was replaced whole (INSERT OR REPLACE fires no delete trigger). the
 // default ('') is never a chat's
 Future<void> dropOrphanWallpapers(DatabaseExecutor db) async {
-  await db.execute(
-    "DELETE FROM wallpapers WHERE chat <> '' AND NOT EXISTS "
-    "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
-    "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
-    "(SELECT 1 FROM groups g WHERE 'group:' || g.group_id = wallpapers.chat "
-    "AND g.atmosphere = '$kPhotoWall')",
+  const orphan =
+      "chat <> '' AND NOT EXISTS "
+      "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
+      "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
+      "(SELECT 1 FROM groups g WHERE 'group:' || g.group_id = wallpapers.chat "
+      "AND g.atmosphere = '$kPhotoWall')";
+  // an open with nothing to sweep writes nothing
+  final any = await db.rawQuery(
+    'SELECT 1 FROM wallpapers WHERE $orphan LIMIT 1',
   );
+  if (any.isEmpty) return;
+  await db.execute('DELETE FROM wallpapers WHERE $orphan');
 }
 
 // the photos an older version kept as files in the clear, taken in at the
