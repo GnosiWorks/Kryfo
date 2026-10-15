@@ -8327,7 +8327,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      'Vengono mescolati falsi risvegli, così per il server dell\'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto e per qualche giorno, un contatto normale aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+      'Vengono mescolati falsi risvegli, così per il server dell\'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
 
   @override
   String get helperSheetNeedTitle => 'Ti serve un\'app di supporto';
@@ -8374,5 +8374,5 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperRefused =>
-      'Il nostro relay al momento non accetta alcune registrazioni di questo telefono. Quelle chat arrivano con il controllo ogni 15 minuti, e Kryfo continua a provare.';
+      'Il nostro relay al momento non accetta alcune registrazioni di questo telefono. Quelle chat arrivano con il controllo ogni 15 minuti, e Kryfo continua a provare. Anche scegliere un\'altra app di supporto o un altro server può aiutare.';
 }

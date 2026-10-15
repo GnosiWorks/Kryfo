@@ -2175,7 +2175,7 @@
   "settingsDisguiseByDefault": "Sesimi varsayılan olarak gizle",
   "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir",
   "gettingMessagesHelperBody": "Anında ve pili yormaz. Yardımcının sunucusu telefonunun IP adresini görür ve mesaj aldığın anı öğrenir, içeriğini asla.",
-  "gettingMessagesHelperNote": "Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, birkaç günlüğüne, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.",
+  "gettingMessagesHelperNote": "Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.",
   "helperSheetNeedTitle": "Bir yardımcı uygulama gerekiyor",
   "helperSheetNeedLine": "Yardımcı uygulama tüm uygulamaların için tek bir hafif bağlantı tutar ve bir şey geldiğinde Kryfo’yu uyandırır. Her UnifiedPush yardımcısı olur, ntfy iyi bir başlangıç.",
   "helperSheetGetNtfy": "ntfy’yi indir",
@@ -2188,5 +2188,5 @@
   "homeHelperGoneLine": "Kryfo, başka bir yol seçene kadar 15 dakikada bir kontrol eder.",
   "homeHelperGoneChoose": "Başka yol seç",
   "homeHelperRelayTitle": "Aktarıcı artık Kryfo’yu uyandırmıyor",
-  "gettingMessagesHelperRefused": "Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder."
+  "gettingMessagesHelperRefused": "Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder. Başka bir yardımcı uygulama ya da sunucu seçmek de işe yarayabilir."
 }

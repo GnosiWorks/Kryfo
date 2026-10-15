@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/helper_slots.dart';
+import 'package:kryfo/l10n/app_localizations.dart';
 
 // an address in group g
 KnockAddress at(String a, String g) => KnockAddress(a, g);
@@ -229,4 +231,13 @@ void main() {
       expect(changeDays.length, greaterThan(100));
     },
   );
+
+  test('the getting messages note says how long a contact rests', () {
+    expect(kRestWindowMs, 30 * 24 * 60 * 60 * 1000);
+    expect(kRestOneIn, 5);
+    expect(
+      lookupAppLocalizations(const Locale('en')).gettingMessagesHelperNote,
+      contains('about one month in five'),
+    );
+  });
 }

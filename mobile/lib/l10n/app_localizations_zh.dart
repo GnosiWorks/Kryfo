@@ -7895,7 +7895,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperNote =>
-      '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔会有几天，某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+      '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get helperSheetNeedTitle => '你需要一个辅助应用';
@@ -7940,7 +7940,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperRefused =>
-      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。';
+      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。 换一个辅助应用或服务器也可能有帮助。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15714,7 +15714,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperNote =>
-      '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾會有幾天，某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+      '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get helperSheetNeedTitle => '你需要一個輔助應用程式';
@@ -15759,5 +15759,5 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperRefused =>
-      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。';
+      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。 換一個輔助應用程式或伺服器也可能有幫助。';
 }
