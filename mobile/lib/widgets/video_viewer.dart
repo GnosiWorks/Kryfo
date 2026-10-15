@@ -37,6 +37,7 @@ Future<void> openVideo(
   String? fileName,
   // the other person's, in a chat that blocks: no other app (shotsKeeps)
   bool kept = false,
+  bool room = false,
 }) async {
   FocusManager.instance.primaryFocus?.unfocus();
   final still = MediaQuery.disableAnimationsOf(context);
@@ -54,6 +55,7 @@ Future<void> openVideo(
           fileName: fileName,
           route: anim,
           kept: kept,
+          room: room,
         ),
       ),
     );
@@ -90,11 +92,13 @@ class _VideoViewer extends StatefulWidget {
   final String? fileName;
   final Animation<double> route;
   final bool kept;
+  final bool room;
   const _VideoViewer({
     required this.path,
     this.fileName,
     required this.route,
     this.kept = false,
+    this.room = false,
   });
   @override
   State<_VideoViewer> createState() => _VideoViewerState();
@@ -556,7 +560,7 @@ class _VideoViewerState extends State<_VideoViewer>
           // the other person's, in a chat that blocks: no other app
           if (widget.kept)
             Text(
-              l10n.chatShotsKeptOpen,
+              widget.room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: Colors.white, height: 1.4),
             )

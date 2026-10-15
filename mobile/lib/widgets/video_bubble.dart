@@ -26,9 +26,14 @@ Future<void> openReceivedFile(
   String path,
   String? name, {
   bool kept = false,
+  // a room's, which says so in its own words
+  bool room = false,
 }) async {
   if (kept) {
-    showHaloToast(context, l10n.chatShotsKeptOpen);
+    showHaloToast(
+      context,
+      room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
+    );
     return;
   }
   final opened = await lockState.hold(

@@ -21,6 +21,8 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/open_outside.dart' show openOutsideForTest;
+import 'package:kryfo/widgets/link_stub.dart' show LinkStub;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
@@ -343,6 +345,82 @@ void main() {
       },
     );
   }
+
+  testWidgets('the menus are kept from the first frame, from what the list '
+      'knows, while the chat\'s own read is still out', (t) async {
+    final db = await person(on: true, can: 10);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'the plan for friday',
+      'sent_at': 1000,
+      'written_at': 1000,
+      'msg_uid': 'm1',
+    });
+    db.slow = Completer<void>();
+    await open(t);
+    await t.longPress(
+      find.textContaining('the plan for friday', findRichText: true).first,
+    );
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
+    final card = find.byType(MessageMenuCard);
+    expect(
+      find.descendant(of: card, matching: find.text(l10n.commonCopy)),
+      findsNothing,
+    );
+    db.slow!.complete();
+    await settle(t);
+    await devClose(t);
+  });
+
+  testWidgets('their link in a chat that blocks still opens where it leads', (
+    t,
+  ) async {
+    final opened = <Uri>[];
+    openOutsideForTest = (u) async {
+      opened.add(u);
+      return true;
+    };
+    addTearDown(() => openOutsideForTest = null);
+    await person(on: true, can: 10);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'look https://example.org/plan',
+      'sent_at': 1000,
+      'written_at': 1000,
+      'msg_uid': 'm1',
+    });
+    await open(t);
+    await t.tap(find.byType(LinkStub));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(opened, [Uri.parse('https://example.org/plan')]);
+    await devClose(t);
+  });
+
+  testWidgets('a room\'s file says so in the room\'s own words', (t) async {
+    late BuildContext ctx;
+    await devOpen(
+      t,
+      Scaffold(
+        body: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox.expand();
+          },
+        ),
+      ),
+    );
+    unawaited(
+      openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true, room: true),
+    );
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.roomShotsKeptOpen), findsOneWidget);
+    expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
+    await t.pump(const Duration(seconds: 4));
+    await devClose(t);
+  });
 
   testWidgets('a file kept in its chat goes to no other app, with one line '
       'saying so', (t) async {

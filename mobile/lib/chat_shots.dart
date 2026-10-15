@@ -113,8 +113,9 @@ class ChatShots {
 }
 
 /// a message a chat keeps to itself: the other person's, in a chat that
-/// blocks. it is not copied, forwarded, shared, saved or opened in another
-/// app. this phone's own are its own
+/// blocks. it is not copied, forwarded, shared or saved, and its files open
+/// in no other app. a link or a place in it still opens where it leads.
+/// this phone's own are its own
 bool shotsKeeps({required bool blocking, required bool mine}) =>
     blocking && !mine;
 

@@ -3065,7 +3065,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final kept = _keeps(target);
     final words = target.text.isNotEmpty && target.sticker == null && !kept;
     return MessageMenuCard(
-      note: kept ? l10n.chatShotsMenuNote : null,
+      note: kept ? l10n.roomShotsMenuNote : null,
       actions: [
         MenuAction(
           icon: target.pinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -5176,6 +5176,7 @@ class _GroupBubble extends StatelessWidget {
                                                 path: m.filePath!,
                                                 fileName: m.fileName,
                                                 kept: kept,
+                                                room: true,
                                               );
                                             },
                                             stamp: m.failed
@@ -5194,6 +5195,7 @@ class _GroupBubble extends StatelessWidget {
                                                   m.filePath!,
                                                   m.fileName,
                                                   kept: kept,
+                                                  room: true,
                                                 );
                                               }
                                             },

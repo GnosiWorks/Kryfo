@@ -797,7 +797,7 @@ void main() {
         );
         expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
         expect(
-          inCard(l10n.chatShotsMenuNote),
+          inCard(l10n.roomShotsMenuNote),
           kept ? findsOneWidget : findsNothing,
         );
         await _close(t);

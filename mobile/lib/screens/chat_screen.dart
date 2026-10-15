@@ -1222,8 +1222,12 @@ class _ChatScreenState extends State<ChatScreen>
     });
     // held before the first frame, from what the list knows, so the push
     // never draws the chat uncovered; the read below settles it
-    if (!_isDev && !widget.support) {
-      _shotsHold.want(appState.shotsBlocksChat(widget.peerHaloId), now: true);
+    if (!_isDev &&
+        !widget.support &&
+        appState.shotsBlocksChat(widget.peerHaloId)) {
+      // and the menus are kept from the first frame on
+      _shots = const ChatShots(on: true, can: 1, known: true);
+      _shotsHold.want(true, now: true);
     }
     _loadShots();
     appState.addListener(_onAppStateChanged);
