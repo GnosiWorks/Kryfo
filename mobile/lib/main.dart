@@ -14018,6 +14018,7 @@ class AppState extends ChangeNotifier {
     // queued first: a route that is down carries it later
     await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
     _bumpChatRev(peer);
+    notifyListeners();
     try {
       await refreshContacts();
     } catch (e) {
@@ -14051,6 +14052,7 @@ class AppState extends ChangeNotifier {
       );
       if (!changed) return;
       _bumpChatRev(peer);
+      notifyListeners();
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {
@@ -14077,6 +14079,17 @@ class AppState extends ChangeNotifier {
     }
     _shotsHeard(peer, word);
     return shotsPut(body, word);
+  }
+
+  // the chat blocks screenshots on this phone, as its rows say. one that
+  // will not read rings as it did before the block
+  Future<bool> _shotsBlock(HaloDb db, String peer) async {
+    try {
+      return (await db.shotsOf(peer)).blocking;
+    } catch (e) {
+      dlog('shots: not read for the shade (${e.runtimeType})');
+      return false;
+    }
   }
 
   /// the chat blocks screenshots on this phone, as the list knows it: read
@@ -16135,7 +16148,7 @@ class AppState extends ChangeNotifier {
       notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
-    } else if ((await db.shotsOf(senderHaloId)).blocking) {
+    } else if (await _shotsBlock(db, senderHaloId)) {
       // a chat that blocks screenshots puts none of itself in the shade
       notifTitle = 'Kryfo';
       notifBody = l10n.notificationsNewMessage;

@@ -118,10 +118,15 @@ void main() {
     await open(t);
     expect(told.where((on) => on), isEmpty);
     expect(find.text(l10n.chatShotsBlocksBoth), findsOneWidget);
-    await t.runAsync(() async {
-      await appState.setChatShots(_peer, true);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+    // their phone turned it on: the row changes and the chat is marked
+    await mem.update('contacts', {
+      'shots_on': 1,
+      'shots_at': 7,
+      'shots_by': 2,
+      'shots_when': 1,
     });
+    appState.chatChanged(_peer);
+    await t.pump();
     await t.pump(const Duration(seconds: 1));
     expect(find.text(l10n.chatShotsBothPhones), findsOneWidget);
     expect(told.last, isTrue);

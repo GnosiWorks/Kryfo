@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
@@ -1877,6 +1878,11 @@ class ArrivalRows implements HaloDb {
     _hit('dropMediaWant', mediaId, null);
     wants.remove(mediaId);
   }
+
+  // a chat's screenshot block, as its row says
+  @override
+  Future<ChatShots> shotsOf(String peer) async =>
+      ChatShots.ofRow(people[peer], quiet: container.quiet);
 
   @override
   dynamic noSuchMethod(Invocation i) =>
