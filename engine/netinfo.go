@@ -21,6 +21,9 @@ type netInfo struct {
 	Limited   bool   `json:"limited"`
 	VPN       bool   `json:"vpn"`
 	Kind      string `json:"kind"`
+	// android's handle for the network, the same for as long as it lasts.
+	// zero when there is none, or the app did not say
+	Net int64 `json:"net"`
 	// whether the app has said anything yet. before it has, the network is
 	// taken as present and validated, as the engine always did
 	known bool
@@ -44,7 +47,7 @@ func setNetInfo(n netInfo) {
 		n.Kind = "other"
 	}
 	if !n.On {
-		n.Validated, n.Limited = false, false
+		n.Validated, n.Limited, n.Net = false, false, 0
 	}
 	n.known = true
 	netInfoMu.Lock()
@@ -70,6 +73,10 @@ func setNetInfo(n netInfo) {
 		// what proved the network that went proves nothing now
 		routeBump()
 		go netPark()
+	case prev.known && prev.On && n.On && prev.Net != 0 && n.Net != 0 && prev.Net != n.Net:
+		// another network in place of the one there, wifi to another wifi
+		// among them. the app says so too, and the bounce takes both as one
+		networkChanged()
 	}
 	// a check-in puts the way of the network that is there now
 	if n.On && (was || prev.Kind != n.Kind) && inCheckIn() {
@@ -96,7 +103,20 @@ func netDetailNow() (netInfo, bool) {
 var netDisproved *netInfo
 
 func sameNet(a, b netInfo) bool {
-	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.Kind == b.Kind
+	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.Kind == b.Kind && a.Net == b.Net
+}
+
+// one network by the watch's word: there or not, its type, and android's
+// handle when both have one. before the watch has spoken nothing tells two
+// apart
+func sameNetwork(a, b netInfo) bool {
+	if !a.known || !b.known {
+		return true
+	}
+	if a.On != b.On || a.Kind != b.Kind {
+		return false
+	}
+	return a.Net == 0 || b.Net == 0 || a.Net == b.Net
 }
 
 // android's word on the default network, and whether it is to be taken:
@@ -133,7 +153,7 @@ func currentNet() netInfo {
 }
 
 // the default network as android sees it, as json:
-// {"on":true,"validated":true,"limited":false,"vpn":false,"kind":"wifi"}.
+// {"on":true,"validated":true,"limited":false,"vpn":false,"kind":"wifi","net":123}.
 // once it has come, whether there is a network is its word, not
 // HaloNetworkState's. tor leaves the network when it says none, and a
 // network back is bounced on if nothing else will.
