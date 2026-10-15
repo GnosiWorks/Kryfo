@@ -5263,15 +5263,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mở trong trình duyệt của bạn, bên ngoài Kryfo.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'Mở ứng dụng Nostr của bạn, bên ngoài Kryfo. Nếu không có, địa chỉ sẽ được sao chép.';
-
-  @override
   String get settingsFollowOpen => 'Mở';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'Không có ứng dụng Nostr nào. Đã sao chép địa chỉ.';
 
   @override
   String settingsFollowOn(Object name) {

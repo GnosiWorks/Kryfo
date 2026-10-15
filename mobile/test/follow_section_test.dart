@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// where Kryfo's maker posts, in settings: mastodon, nostr, x, instagram, in
-// that order. a tap says the link leaves Kryfo, and opens only on a second
-// yes. with no nostr app the address is copied instead
+// where Kryfo's maker posts, in settings: mastodon, x, instagram, in that
+// order. a tap says the link leaves Kryfo, and opens only on a second yes
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,11 +57,12 @@ void main() {
     await t.pump();
   }
 
-  testWidgets('four links, in order, under their heading', (t) async {
+  testWidgets('three links, in order, under their heading', (t) async {
     await page(t);
     expect(find.text(l10n.settingsFollowTitle), findsOneWidget);
+    expect(find.text('Nostr'), findsNothing);
     final xs = [
-      for (final n in ['Mastodon', 'Nostr', 'X', 'Instagram'])
+      for (final n in ['Mastodon', 'X', 'Instagram'])
         t.getCenter(find.text(n)).dx,
     ];
     expect(xs, orderedEquals([...xs]..sort()));
@@ -83,22 +83,5 @@ void main() {
     await t.tap(find.text(l10n.settingsFollowOpen));
     await settle(t);
     expect(opened, ['https://www.instagram.com/kryfoapp/']);
-  });
-
-  testWidgets('nostr goes to a nostr app, and with none copies the address', (
-    t,
-  ) async {
-    launches = false;
-    await page(t);
-    await t.tap(find.text('Nostr'));
-    await settle(t);
-    expect(find.text(l10n.settingsFollowNostrNote), findsOneWidget);
-    await t.tap(find.text(l10n.settingsFollowOpen));
-    await settle(t);
-    expect(opened, ['nostr:$kGnosiworksNpub']);
-    final copied = asked.where((c) => c.method == 'Clipboard.setData');
-    expect(copied.single.arguments, {'text': kGnosiworksNpub});
-    expect(find.text(l10n.settingsFollowNpubCopied), findsOneWidget);
-    await t.pump(const Duration(seconds: 4));
   });
 }

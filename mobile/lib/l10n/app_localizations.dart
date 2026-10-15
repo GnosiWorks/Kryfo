@@ -8526,20 +8526,8 @@ abstract class AppLocalizations {
   /// screens/follow_section.dart
   ///
   /// In en, this message translates to:
-  /// **'Opens your Nostr app, outside Kryfo. With none, the address is copied.'**
-  String get settingsFollowNostrNote;
-
-  /// screens/follow_section.dart
-  ///
-  /// In en, this message translates to:
   /// **'Open'**
   String get settingsFollowOpen;
-
-  /// screens/follow_section.dart
-  ///
-  /// In en, this message translates to:
-  /// **'No Nostr app here. The address is copied.'**
-  String get settingsFollowNpubCopied;
 
   /// screens/follow_section.dart
   ///

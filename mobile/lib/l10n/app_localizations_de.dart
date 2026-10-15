@@ -5329,15 +5329,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Öffnet sich in deinem Browser, außerhalb von Kryfo.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'Öffnet deine Nostr-App, außerhalb von Kryfo. Ohne App wird die Adresse kopiert.';
-
-  @override
   String get settingsFollowOpen => 'Öffnen';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'Keine Nostr-App vorhanden. Die Adresse ist kopiert.';
 
   @override
   String settingsFollowOn(Object name) {

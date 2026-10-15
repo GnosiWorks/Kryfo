@@ -5039,13 +5039,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsFollowBrowserNote => '在你的浏览器中打开，离开 Kryfo。';
 
   @override
-  String get settingsFollowNostrNote => '打开你的 Nostr 应用，离开 Kryfo。没有的话会复制地址。';
-
-  @override
   String get settingsFollowOpen => '打开';
-
-  @override
-  String get settingsFollowNpubCopied => '这里没有 Nostr 应用，地址已复制。';
 
   @override
   String settingsFollowOn(Object name) {
@@ -12942,13 +12936,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsFollowBrowserNote => '在你的瀏覽器中開啟，離開 Kryfo。';
 
   @override
-  String get settingsFollowNostrNote => '開啟你的 Nostr App，離開 Kryfo。沒有的話會複製地址。';
-
-  @override
   String get settingsFollowOpen => '開啟';
-
-  @override
-  String get settingsFollowNpubCopied => '這裡沒有 Nostr App，地址已複製。';
 
   @override
   String settingsFollowOn(Object name) {

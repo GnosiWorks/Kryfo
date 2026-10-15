@@ -5267,15 +5267,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Terbuka di browser-mu, di luar Kryfo.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'Membuka aplikasi Nostr-mu, di luar Kryfo. Kalau tidak ada, alamatnya disalin.';
-
-  @override
   String get settingsFollowOpen => 'Buka';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'Tidak ada aplikasi Nostr. Alamatnya sudah disalin.';
 
   @override
   String settingsFollowOn(Object name) {
