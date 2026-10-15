@@ -82,6 +82,9 @@ const (
 	knockNewFailFor     = time.Hour
 	knockNewFailSpan    = 30 * time.Minute
 	knockNewFailGap     = 10 * time.Minute
+	// new endpoints on one server whose name passed unchecked, past the
+	// lookup pace: a few, so checked names keep the rest of its room
+	knockUncheckedEPs = 8
 )
 
 // the mean gap between decoy runs to one endpoint. a run is shaped like a
@@ -182,6 +185,8 @@ type knockEP struct {
 	fails        int
 	failingSince time.Time
 	lastFail     time.Time
+	// its name passed unchecked, past the lookup pace
+	unchecked bool
 	// when the relay first took it, and whether a knock to it ever went
 	// through: one a day old that did gets a lane new ones cannot fill
 	born      time.Time
@@ -292,23 +297,24 @@ const (
 // whether a name has a public address, an ipv4 one while posts go over
 // ipv4: "" when it has, or the answer to give. asked with a context of its
 // own, so a caller that goes away cannot cut the lookup short, and at most
-// so many a second for everyone. past that pace a name passes unchecked,
-// so names that do not exist cannot keep everyone else's out: the endpoint
-// is a new one, the post checks the address, and a name that is not there
-// lets it go. only a definite answer is remembered: an hour when the name
-// has a public address, ten minutes when it does not exist or has none. a
-// timeout or a failing resolver is never remembered
-func (k *knocker) nameCheck(host string) string {
+// so many a second for everyone. past that pace a name passes unchecked, a
+// few per server, so names that do not exist cannot keep everyone else's
+// out: the endpoint is a new one, the post checks the address, and a name
+// that is not there lets it go. only a definite answer is remembered: an
+// hour when the name has a public address, ten minutes when it does not
+// exist or has none. a timeout or a failing resolver is never remembered.
+// checked is false for a name that passed unchecked
+func (k *knocker) nameCheck(host string) (msg string, checked bool) {
 	host = strings.ToLower(host)
 	now := time.Now()
 	k.namesMu.Lock()
 	if n, ok := k.names[host]; ok && now.Before(n.until) {
 		k.namesMu.Unlock()
-		return n.msg
+		return n.msg, true
 	}
 	if !k.lookups.take(now) {
 		k.namesMu.Unlock()
-		return ""
+		return "", false
 	}
 	k.namesMu.Unlock()
 	lctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -317,9 +323,9 @@ func (k *knocker) nameCheck(host string) string {
 	var dnsErr *net.DNSError
 	definite := err == nil || (errors.As(err, &dnsErr) && dnsErr.IsNotFound)
 	if !definite {
-		return "error: the name could not be looked up, try again"
+		return "error: the name could not be looked up, try again", true
 	}
-	msg := knockNoName
+	msg = knockNoName
 	if err == nil {
 		for _, ip := range ips {
 			if !publicIP(ip) || selfIP(ip) {
@@ -340,7 +346,7 @@ func (k *knocker) nameCheck(host string) string {
 	k.namesMu.Lock()
 	k.rememberLocked(host, knockName{msg, now.Add(hold)})
 	k.namesMu.Unlock()
-	return msg
+	return msg, true
 }
 
 // a full cache lets one entry go, an expired one where it finds one
@@ -363,7 +369,10 @@ func (k *knocker) rememberLocked(host string, n knockName) {
 }
 
 // for the tests: whether a name passes
-func (k *knocker) resolves(_ context.Context, host string) bool { return k.nameCheck(host) == "" }
+func (k *knocker) resolves(_ context.Context, host string) bool {
+	msg, _ := k.nameCheck(host)
+	return msg == ""
+}
 
 // sha256 of the address: the table lists no address, a wrap's p tag finds
 // its registration by the same hash
@@ -693,13 +702,20 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 	// a server outside the list must have a name that resolves: looked up
 	// for a new endpoint only, after every other check, with the lock let
 	// go only then, and everything checked again after
+	unchecked := false
 	if !k.push[domain] && ep == nil && !strings.HasSuffix(host, ".onion") {
 		k.mu.Unlock()
-		msg := k.nameCheck(host)
+		msg, checked := k.nameCheck(host)
 		k.mu.Lock()
 		if msg == "" {
 			// things may have moved while the name was looked up
 			_, msg = k.checkLocked(ev)
+		}
+		if msg == "" && !checked {
+			if d := k.domains[domain]; d != nil && d.unchecked >= knockUncheckedEPs {
+				msg = "error: too many new endpoints on this push server, try later"
+			}
+			unchecked = true
 		}
 		if msg != "" {
 			if tookFresh {
@@ -713,6 +729,11 @@ func (k *knocker) take(ctx context.Context, ev *nostr.Event) (bool, string) {
 	delete(k.forgets, key)
 	k.setLocked(key, ev.Content, made, time.Unix(made, 0).Add(knockTTL).Unix())
 	r := k.regs[key]
+	// counted while it holds a new one's room
+	if _, pend := sh.pending[r.ep]; unchecked && pend && !r.ep.unchecked {
+		r.ep.unchecked = true
+		k.domainLocked(r.ep.domain).unchecked++
+	}
 	k.store.put(key, ev.Content, made, r.expires, r.ep.born.Unix(), r.ep.delivered)
 	return false, ""
 }
@@ -843,7 +864,11 @@ func (k *knocker) settledLocked(ep *knockEP) {
 	delete(sh.pending, ep)
 	if d := k.domains[ep.domain]; d != nil {
 		d.pending--
+		if ep.unchecked {
+			d.unchecked--
+		}
 	}
+	ep.unchecked = false
 }
 
 // exponential, so the gaps keep no rhythm of their own

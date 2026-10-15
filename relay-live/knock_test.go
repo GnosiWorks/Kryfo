@@ -1657,6 +1657,50 @@ func TestKnockMadeUpNamesKeepNoOneOut(t *testing.T) {
 	}
 }
 
+// names past the lookup pace hold a few of one server's new places, so
+// names that were checked keep the rest
+func TestKnockUncheckedNamesHoldAFew(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.lookups = newBucket(0, 0)
+	n := 0
+	for i := 0; i < knockUncheckedEPs+5; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://nx%d.victim.org/x", i), tk.clock.now())
+		if rej, _ := tk.take(nil, &ev); !rej {
+			n++
+		}
+	}
+	if n != knockUncheckedEPs {
+		t.Fatalf("%d unchecked names taken on one server, the cap is %d", n, knockUncheckedEPs)
+	}
+	// another server is not held by them
+	other := r3reg(r3key(1000), "https://push.other.org/x", tk.clock.now())
+	if rej, msg := tk.take(nil, &other); rej {
+		t.Fatalf("another server's unchecked name: %q", msg)
+	}
+	// a checked name on the same server gets in
+	tk.lookups = newBucket(20, 40)
+	legit := r3reg(r3key(1001), "https://push.victim.org/u", tk.clock.now())
+	if rej, msg := tk.take(nil, &legit); rej {
+		t.Fatalf("a checked name on the held server: %q", msg)
+	}
+	if tk.eps["https://push.victim.org/u"].unchecked {
+		t.Fatal("a checked name counted as unchecked")
+	}
+	// one that delivers or goes gives its place back
+	tk.lookups = newBucket(0, 0)
+	tk.q.result(tk.eps["https://nx0.victim.org/x"], true, 201, nil)
+	tk.gone("https://nx1.victim.org/x")
+	for i, want := range []bool{false, false, true} {
+		ev := r3reg(r3key(2000+i), fmt.Sprintf("https://late%d.victim.org/x", i), tk.clock.now())
+		if rej, _ := tk.take(nil, &ev); rej != want {
+			t.Fatalf("unchecked name %d after two places came back: refused %v", i, rej)
+		}
+	}
+	if d := tk.domains["victim.org"]; d.unchecked != knockUncheckedEPs {
+		t.Fatalf("%d unchecked counted", d.unchecked)
+	}
+}
+
 // posts go over ipv4, so a server with ipv6 addresses only is refused up
 // front, with an answer the app shows
 func TestKnockNameNeedsAnIPv4Address(t *testing.T) {

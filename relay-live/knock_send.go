@@ -74,6 +74,8 @@ type knockDomain struct {
 	rate   *bucket
 	// posts in flight, from the name lookup on
 	inflight int
+	// pending endpoints whose name passed unchecked
+	unchecked int
 }
 
 func (d *knockDomain) waiting() int {
