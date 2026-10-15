@@ -14015,10 +14015,11 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _turnShots(String peer, bool on, HaloDb db) async {
+    final was = (await db.shotsOf(peer)).blocking;
     final at = await db.turnShots(peer, on: on);
     if (at == null) return;
-    // blocking now: what the shade still shows of the chat goes
-    if (on && (await db.shotsOf(peer)).blocking) {
+    // blocking from now: what the shade still shows of the chat goes
+    if (!was && (await db.shotsOf(peer)).blocking) {
       unawaited(_io.unnotify(peer));
     }
     // queued first: a route that is down carries it later
@@ -14050,6 +14051,7 @@ class AppState extends ChangeNotifier {
   Future<void> _takeShots(String peer, UnwrappedMessage env, HaloDb db) async {
     if (env.groupId != null || isDevId(peer)) return;
     try {
+      final was = (await db.shotsOf(peer)).blocking;
       final changed = await db.takeShots(
         peer,
         env.shots,
@@ -14059,8 +14061,11 @@ class AppState extends ChangeNotifier {
       if (!changed) return;
       _bumpChatRev(peer);
       notifyListeners();
-      // blocking now: what the shade still shows of the chat goes
-      if ((await db.shotsOf(peer)).blocking) unawaited(_io.unnotify(peer));
+      // blocking from now: what the shade still shows of the chat goes,
+      // once, and never what rang since
+      if (!was && (await db.shotsOf(peer)).blocking) {
+        unawaited(_io.unnotify(peer));
+      }
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {
@@ -16145,7 +16150,10 @@ class AppState extends ChangeNotifier {
         : nickname;
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
-      notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
+      // a room always blocks: not even its name in the shade
+      notifTitle = g?['room_pub'] != null
+          ? 'Kryfo'
+          : (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = sticker != null
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null

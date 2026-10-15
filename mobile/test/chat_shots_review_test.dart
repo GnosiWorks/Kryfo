@@ -418,6 +418,9 @@ void main() {
       await app.receiveRelay([(peer: 'x-$_c', cipher: 'g-$g')]);
     }
     final bodies = [for (final (_, b) in io.shown) b];
+    // not even its name
+    expect([for (final (t, _) in io.shown) t], contains('Kryfo'));
+    expect([for (final (t, _) in io.shown) t], isNot(contains('room-1')));
     expect(bodies.where((b) => b.contains('the plan in room-1')), isEmpty);
     expect(bodies, contains(l10n.notificationsNewMessage));
     expect(

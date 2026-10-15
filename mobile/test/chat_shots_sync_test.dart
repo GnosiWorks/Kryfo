@@ -292,5 +292,12 @@ void main() {
     expect(bob.io.unrang, isNot(contains('amy')));
     await bob.take('amy', await amy.wire('bob'));
     expect(bob.io.unrang, contains('amy'));
+    // already blocking: what comes after takes nothing down, so what it
+    // rings stays
+    final went = amy.io.unrang.length;
+    for (final n in [2, 3, 4]) {
+      await text(bob, amy, 'b$n');
+    }
+    expect(amy.io.unrang, hasLength(went));
   });
 }
