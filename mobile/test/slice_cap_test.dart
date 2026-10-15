@@ -17,7 +17,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/media_resend.dart'
-    show kMaxSlices, kUnfinishedBytes, kUnfinishedFiles, sliceWeight;
+    show
+        kMaxSlices,
+        kUnfinishedBytes,
+        kUnfinishedFiles,
+        sliceWeight,
+        kMaxFileSlices;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -111,10 +116,20 @@ void main() {
     test('keeps no more files in flight than the cap', () async {
       final w = await _World.make();
       for (var m = 0; m < 20; m++) {
-        await w.slice(_s, 'big$m', total: 100000);
+        await w.slice(_s, 'big$m', total: kMaxFileSlices);
       }
       expect(w.live.chunks.keys, ['big0', 'big1']);
     });
+
+    test(
+      'a file saying more slices than any kryfo sends is not kept',
+      () async {
+        final w = await _World.make();
+        await w.slice(_s, 'huge', total: kMaxFileSlices + 1);
+        await w.slice(_s, 'fits', total: kMaxFileSlices);
+        expect(w.live.chunks.keys, ['fits']);
+      },
+    );
 
     test('still sends the rest of a file in flight', () async {
       final w = await _World.make();

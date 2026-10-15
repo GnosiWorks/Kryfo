@@ -15502,6 +15502,12 @@ class AppState extends ChangeNotifier {
         dlog('recv: slice out of range, dropped');
         return to;
       }
+      // a file is no bigger than any kryfo sends. a voice note has no limit
+      // of its own, so it is not held to one
+      if (env.fileB64 != null && !env.voice && total > kMaxFileSlices) {
+        dlog('recv: a file over the size any kryfo sends, dropped');
+        return to;
+      }
       // a file's slices come from one sender
       final owner = await db.mediaChunkSender(mid);
       if (owner != null && owner != senderHaloId) {
