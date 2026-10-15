@@ -242,7 +242,7 @@ func TestSearchAsksGiphyWithTheRatingAndNothingOfTheCaller(t *testing.T) {
 	}
 	r := reqs[0]
 	q := r.URL.Query()
-	if r.URL.Path != "/v1/gifs/search" || q.Get("q") != "happy seal" || q.Get("rating") != "pg-13" ||
+	if r.URL.Path != "/v1/gifs/search" || q.Get("q") != "happy seal" || q.Get("rating") != "r" ||
 		q.Get("lang") != "de" || q.Get("limit") != "24" {
 		t.Fatalf("asked %s", r.URL)
 	}
@@ -489,7 +489,7 @@ func TestTrendingIsKeptAWhile(t *testing.T) {
 		t.Fatalf("%d upstream calls for one trending page", n)
 	}
 	r := f.seen.all()[0]
-	if r.URL.Path != "/v1/gifs/trending" || r.URL.Query().Get("rating") != "pg-13" {
+	if r.URL.Path != "/v1/gifs/trending" || r.URL.Query().Get("rating") != "r" {
 		t.Fatalf("asked %s", r.URL)
 	}
 	if code, _ := f.get("/gif/v1/trending?offset=x"); code != 400 {
