@@ -87,6 +87,10 @@ put you in danger, read all of it.
   they stop renewing: in our tests ntfy.sh's share filled in 3 h 50 min,
   and the common share took 75 registrable domains and 18 hours.
   registrations already there are still renewed and knocked.
+  the hourly pace is per server, not per person: anyone can spend a
+  server's new sign-ups for the hour, and new users on that server then
+  wait for the next hour, on check-ins meanwhile. we accept this: the relay
+  asks for no account it could count per person.
   check-ins and always on involve no one else.
 - forensics on a seized unlocked device or on backups of it.
 - a forensic copy of the phone. the decoy pin and hidden chats are for a
