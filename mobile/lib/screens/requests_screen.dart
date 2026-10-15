@@ -226,11 +226,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
     final row = _rows.rows.where((r) => r['halo_id'] == id).firstOrNull;
-    await session.acceptRequest(id);
-    await appState.afterAccept(id);
-    _answering.remove(id);
-    if (mounted) showHaloToast(context, l10n.requestsAccepted);
-    await _load();
+    // the card answers once more only after the list read again, so a tap
+    // on a card still shown answers nothing twice
+    try {
+      await session.acceptRequest(id);
+      await appState.afterAccept(id);
+      if (mounted) showHaloToast(context, l10n.requestsAccepted);
+      await _load();
+    } finally {
+      _answering.remove(id);
+    }
     // their chat opens, in place of this screen when no one else waits.
     // not under the lock, nor once they went somewhere else
     if (row == null || !mounted || lockGuard.isLocked()) return;
@@ -245,10 +250,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _decline(String id) async {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
-    await session.declineRequest(id);
-    _answering.remove(id);
-    await appState.refreshContacts();
-    await _load();
+    try {
+      await session.declineRequest(id);
+      await appState.refreshContacts();
+      await _load();
+    } finally {
+      _answering.remove(id);
+    }
   }
 
   Future<void> _block(String id) async {
@@ -261,12 +269,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (!ok || !mounted || !_answering.add(id)) return;
     // the sheet says their messages go: decline drops them, block shuts
     // the door
-    await session.declineRequest(id);
-    await appState.block(id);
-    await session.clearUnread(id);
-    _answering.remove(id);
-    await appState.refreshContacts();
-    await _load();
+    try {
+      await session.declineRequest(id);
+      await appState.block(id);
+      await session.clearUnread(id);
+      await appState.refreshContacts();
+      await _load();
+    } finally {
+      _answering.remove(id);
+    }
   }
 
   Future<void> _shield(String id) async {

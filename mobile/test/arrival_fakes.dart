@@ -225,7 +225,7 @@ class ArrivalIo implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
   final unheard = <String>[];
   @override
   void unlisten(String xPub) => unheard.add(xPub);
@@ -466,6 +466,7 @@ class ArrivalRows implements HaloDb {
     String onion,
     String xpub, {
     int accepted = 1,
+    bool owe = false,
   }) async {
     _hit('upsertContact', haloId, null);
     final p = people[haloId];
@@ -753,6 +754,24 @@ class ArrivalRows implements HaloDb {
     _hit('markBackPaired', peerId, null);
     people[peerId]?['back_paired'] = 1;
   }
+
+  // an accept's word still owed, on the row as the app keeps it
+  @override
+  Future<void> setAckOwed(String haloId, bool owed) async =>
+      people[haloId]?['ack_owed'] = owed ? 1 : 0;
+  @override
+  Future<bool> isAckOwed(String haloId) async =>
+      people[haloId]?['ack_owed'] == 1 &&
+      people[haloId]?['accepted'] == 1 &&
+      people[haloId]?['blocked'] != 1;
+  @override
+  Future<List<String>> ackOwed() async => [
+    for (final e in people.entries)
+      if (e.value['ack_owed'] == 1 &&
+          e.value['accepted'] == 1 &&
+          e.value['blocked'] != 1)
+        e.key,
+  ];
 
   @override
   Future<void> setContactBadge(String haloId, String? tier) async =>

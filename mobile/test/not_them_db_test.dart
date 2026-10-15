@@ -3,7 +3,7 @@
 // in every table there is, with what they wrote in groups and their seat
 // there, in one go, and their files after it. the key their number was made
 // from is blocked, by the key alone. the person beside them keeps all of
-// theirs. an upgrade from 79 makes the table and keeps every row. the
+// theirs. an upgrade from 80 makes the tables and keeps every row. the
 // database runs on the host's sqlite
 import 'dart:convert';
 import 'dart:io';
@@ -471,19 +471,24 @@ void main() {
     });
   }
 
-  test('an upgrade from 79 makes the table and keeps every row', () async {
+  test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
-    expect(await raw.getVersion(), 80);
+    expect(await raw.getVersion(), 81);
     await person(_q);
     await raw.execute('DROP TABLE blocked_keys');
-    await raw.setVersion(79);
+    await raw.execute('DROP TABLE name_tombs');
+    await raw.setVersion(80);
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 80);
+    expect(await raw.getVersion(), 81);
     expect(
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
+      hasLength(2),
+    );
+    expect(
+      await raw.rawQuery("PRAGMA table_info('name_tombs')"),
       hasLength(2),
     );
     expect(await db.getContact(_q), isNotNull);

@@ -754,6 +754,7 @@ void main() {
       "They need to accept before you can keep chatting.",
     );
     expect(l.chatWaitingForThemTo, "Waiting for them to accept your request");
+    expect(l.chatTheyMayNotKnow, "They may not know you accepted");
     expect(l.chatYouBlockedThisContact, "You blocked this contact");
     expect(l.chatSupporter, "Supporter");
     expect(l.chatEncryptedViaRelay, "Encrypted · via relay");

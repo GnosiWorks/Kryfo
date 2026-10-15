@@ -1709,6 +1709,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatWaitingForThemTo => 'بانتظار قبوله لطلبك';
 
   @override
+  String get chatTheyMayNotKnow => 'ربما لا يعرف أنك قبلت';
+
+  @override
   String get chatYouBlockedThisContact => 'لقد حظرت جهة الاتصال هذه';
 
   @override

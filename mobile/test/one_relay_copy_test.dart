@@ -64,7 +64,7 @@ class _Engine implements HaloEngine {
   @override
   void nostrFirst(String peerXPubHex) => first.add(peerXPubHex);
   @override
-  void nostrSubscribeBg(String peerXPubHex) {}
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
