@@ -167,7 +167,8 @@ class _ContactScreenState extends State<ContactScreen> {
   // the chat's media is here too: held while the chat blocks, from what
   // the list knows before the first read
   late final _shotsHold = ShotsPacer(appState.forceSecure);
-  late int _rev = appState.chatRevOf(widget.haloId);
+  // read as the page opens: a change after that reads the rows again
+  int _rev = 0;
 
   ChatShots get _shots => ChatShots.ofRow(_c, quiet: sessionQuiet);
 
@@ -175,6 +176,7 @@ class _ContactScreenState extends State<ContactScreen> {
   void initState() {
     super.initState();
     _shotsHold.want(appState.shotsBlocksChat(widget.haloId), now: true);
+    _rev = appState.chatRevOf(widget.haloId);
     appState.addListener(_changed);
     _load();
   }
