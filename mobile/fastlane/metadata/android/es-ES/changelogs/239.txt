@@ -1,7 +1,5 @@
+Actualiza a la 0.5.1, por favor: incluye correcciones de seguridad. Publicaremos los detalles en una semana aproximadamente.
+
 Nuevo: puentes que se activan si Tor está bloqueado, una voz disfrazada más clara por chat, un número de clave que comprobar al emparejar y búsqueda privada de GIFs.
 
 Corregido: primeros mensajes perdidos a alguien nuevo, Tor atascado tras un cambio de red y un cierre al abrir en algunos móviles recientes.
-
-Las copias de seguridad y la mudanza de móvil son más fiables.
-
-Después de actualizar, puede que tengas que escribir tu PIN una vez antes de que el desbloqueo con huella vuelva a funcionar.

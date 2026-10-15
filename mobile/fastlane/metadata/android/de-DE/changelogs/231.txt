@@ -1,9 +1,5 @@
+Bitte aktualisiere auf 0.5.1: Sie enthält Sicherheitskorrekturen. Die Details veröffentlichen wir in etwa einer Woche.
+
 Neu: Brücken bei blockiertem Tor, klarere Stimmverfremdung pro Chat, eine Schlüsselnummer zum Abgleich beim Koppeln und private GIF-Suche.
 
 Behoben: verlorene erste Nachrichten an neue Kontakte, ein hängendes Tor nach einem Netzwechsel und ein Absturz beim Start auf einigen neueren Handys.
-
-Backups und der Umzug aufs neue Handy sind zuverlässiger.
-
-Nach dem Update musst du eventuell einmal deine PIN eingeben, bevor das Entsperren mit Fingerabdruck wieder geht.
-
-Mehr Stabilität und Privatsphäre.
