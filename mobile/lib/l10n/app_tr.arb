@@ -2181,5 +2181,5 @@
   "fileGoesAsItIs": "Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.",
   "fileRawPictureTitle": "Bu resim olduğu gibi gönderilsin mi?",
   "fileRawPictureLine": "Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.",
-  "voiceStoppedAtLimit": "Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder."
+  "voiceStoppedAtLimit": "Sesli mesajlar 2 dakikada durur. Dinle, sonra gönder."
 }

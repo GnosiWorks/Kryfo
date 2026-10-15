@@ -10450,8 +10450,8 @@
   "@fileRawPictureLine": {
     "description": "chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details"
   },
-  "voiceStoppedAtLimit": "Voice notes stop at 30 minutes. Listen to it, then send it.",
+  "voiceStoppedAtLimit": "Voice notes stop at 2 minutes. Listen to it, then send it.",
   "@voiceStoppedAtLimit": {
-    "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
+    "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 2 minutes) and stops into the preview by itself"
   }
 }

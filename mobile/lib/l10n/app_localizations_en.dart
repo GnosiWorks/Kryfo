@@ -8280,5 +8280,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Voice notes stop at 30 minutes. Listen to it, then send it.';
+      'Voice notes stop at 2 minutes. Listen to it, then send it.';
 }

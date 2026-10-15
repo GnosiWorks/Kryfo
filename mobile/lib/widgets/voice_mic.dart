@@ -350,6 +350,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   // kill the note from the bar itself, or from the lock: any stage
   void _abort() {
+    _liftKeeps = false;
     _willCancel = true;
     _end();
   }
@@ -741,6 +742,9 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           _overlay?.rebuild();
         },
         onLongPressEnd: (_) {
+          // the lift after a stop at the limit is spent here: a bin or a
+          // lock after it throws the note away as always
+          _liftKeeps = false;
           // locked: the note records on with no finger on it
           if (_stage == VoiceStage.locked || _stage == VoiceStage.preview) {
             return;

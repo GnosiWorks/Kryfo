@@ -8441,5 +8441,5 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Голосовые сообщения останавливаются на 30 минутах. Прослушай и отправь.';
+      'Голосовые сообщения останавливаются на 2 минутах. Прослушай и отправь.';
 }

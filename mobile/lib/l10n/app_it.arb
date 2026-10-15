@@ -2181,5 +2181,5 @@
   "fileGoesAsItIs": "Questo file parte così com'è. Kryfo pulisce solo JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 e MOV.",
   "fileRawPictureTitle": "Inviare questa immagine così com'è?",
   "fileRawPictureLine": "Questa immagine non si può pulire. Dettagli come il luogo dello scatto partono con lei. Inviala come foto per pulirla.",
-  "voiceStoppedAtLimit": "I messaggi vocali si fermano a 30 minuti. Ascoltalo, poi invialo."
+  "voiceStoppedAtLimit": "I messaggi vocali si fermano a 2 minuti. Ascoltalo, poi invialo."
 }

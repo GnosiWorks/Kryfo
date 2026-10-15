@@ -8348,5 +8348,5 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'As mensagens de voz param aos 30 minutos. Ouça e depois envie.';
+      'As mensagens de voz param aos 2 minutos. Ouça e depois envie.';
 }

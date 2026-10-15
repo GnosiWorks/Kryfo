@@ -281,8 +281,41 @@ void main() {
       await close(t);
     });
 
-    test('the mic stops at half an hour', () {
-      expect(kVoiceMax, const Duration(minutes: 30));
+    for (final (how, act) in <(String, Future<void> Function(WidgetTester))>[
+      (
+        'the app lock',
+        (t) async {
+          lockGuard.locking();
+        },
+      ),
+      (
+        'one tap on the bin',
+        (t) async {
+          await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+        },
+      ),
+    ]) {
+      testWidgets('stopped at the limit and lifted, $how throws it away', (
+        t,
+      ) async {
+        HoldToTalkMicState.maxLength = const Duration(seconds: 2);
+        await open(t);
+        final g = await hold(t);
+        await t.pump(const Duration(seconds: 3));
+        await until(t, () => mic(t).stage == VoiceStage.preview);
+        await g.up();
+        await settle(t, turns: 4);
+        expect(mic(t).stage, VoiceStage.preview);
+        await act(t);
+        await settle(t);
+        expect(mic(t).stage, VoiceStage.idle);
+        expect(sent, isEmpty);
+        await close(t);
+      });
+    }
+
+    test('the mic stops at two minutes', () {
+      expect(kVoiceMax, const Duration(minutes: 2));
       expect(HoldToTalkMicState.maxLength, kVoiceMax);
     });
   });

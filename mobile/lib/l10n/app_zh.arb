@@ -2181,5 +2181,5 @@
   "fileGoesAsItIs": "这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。",
   "fileRawPictureTitle": "按原样发送这张图片？",
   "fileRawPictureLine": "这张图片无法清理。拍摄地点等信息会随它一起发出。以照片形式发送即可清理。",
-  "voiceStoppedAtLimit": "语音消息最长 30 分钟，已自动停止。听一遍后再发送。"
+  "voiceStoppedAtLimit": "语音消息最长 2 分钟，已自动停止。听一遍后再发送。"
 }

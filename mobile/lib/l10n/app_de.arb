@@ -2181,5 +2181,5 @@
   "fileGoesAsItIs": "Diese Datei geht genau so raus, wie sie ist. Kryfo bereinigt nur JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 und MOV.",
   "fileRawPictureTitle": "Dieses Bild so senden, wie es ist?",
   "fileRawPictureLine": "Dieses Bild kann nicht bereinigt werden. Angaben wie der Aufnahmeort gehen mit. Sende es als Foto, um es zu bereinigen.",
-  "voiceStoppedAtLimit": "Sprachnachrichten enden nach 30 Minuten. Hör sie dir an und sende sie dann."
+  "voiceStoppedAtLimit": "Sprachnachrichten enden nach 2 Minuten. Hör sie dir an und sende sie dann."
 }
