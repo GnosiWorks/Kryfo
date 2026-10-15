@@ -31,7 +31,13 @@ import '../widgets/secret_field.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import 'backup_screen.dart'
-    show ChoiceCard, SaveAnswer, SaveState, saveDocumentOut, shredMade;
+    show
+        ChoiceCard,
+        SaveAnswer,
+        SaveState,
+        saveDocumentOut,
+        shredMade,
+        stopSaveForDrop;
 import 'lock_file_screen.dart' show ageErrorBody, ageErrorTitle;
 import 'notes_screen.dart' show kNotesPeerId;
 
@@ -319,7 +325,11 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       if (save) {
         await lockState.hold(() async {
           await there();
-          answer = await saveDocumentOut(made.path, made.name);
+          answer = await notesExportSaving(
+            made.path,
+            stop: stopSaveForDrop,
+            save: () => saveDocumentOut(made.path, made.name),
+          );
           _lost = answer.lost;
           // a lock or a switch only unlinks it while android may read it
           if (_lost) notesExportHanded(made.path);
@@ -349,6 +359,10 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       dlog('notes export: not handed over (${e.runtimeType})');
     }
     _saving = false;
+    // a drop during the copy shredded what it read: never a saved file
+    if (notesExportRun.value != _madeRun) {
+      answer = (state: SaveState.failed, where: null, lost: answer.lost);
+    }
     final checked = answer.state == SaveState.saved;
     final out = checked || answer.state == SaveState.unchecked || shared;
     if (out || dropped || !mounted) {

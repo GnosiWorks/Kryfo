@@ -9,6 +9,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,6 +63,11 @@ void main() {
   late String shares;
   late List<Map<Object?, Object?>> shared;
   late List<List<int>> saved;
+  // android's copy as a lock finds it, and what it was told
+  late String stage;
+  late int stopping;
+  late List<Object?> cancels;
+  late List<bool> intactAtCancel;
 
   setUp(() {
     asked = [];
@@ -69,6 +75,11 @@ void main() {
     shares = 'picked';
     shared = [];
     saved = [];
+    stage = 'idle';
+    stopping = 0;
+    cancels = [];
+    intactAtCancel = [];
+    String? saving;
     tmp = Directory.systemTemp.createTempSync('notes_export_screen');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(
@@ -83,12 +94,24 @@ void main() {
         case 'saveDocument':
           // what the save window would copy, read as it opens
           final path = (call.arguments as Map)['path'] as String;
+          saving = path;
           saved.add(File(path).readAsBytesSync());
           final d = Completer<Object?>();
           dialogs.add(d);
           return d.future;
         case 'saveDocumentState':
-          return {'stage': 'idle', 'copied': 0};
+          final now = stage;
+          // a stopped copy ends a beat later
+          if (stopping > 0 && --stopping == 0) stage = 'idle';
+          return {'stage': now, 'copied': 0};
+        case 'saveDocumentCancel':
+          cancels.add(call.arguments);
+          final f = File(saving ?? '');
+          intactAtCancel.add(
+            f.existsSync() && listEquals(f.readAsBytesSync(), saved.lastOrNull),
+          );
+          if (stage == 'copying') stopping = 2;
+          return stage;
         case 'shareFile':
           shared.add(call.arguments as Map<Object?, Object?>);
           return shares;
@@ -563,6 +586,35 @@ void main() {
     expect(find.text(l10n.notesExportNotSaved), findsNothing);
     expect(find.text(l10n.commonTryAgain), findsNothing);
     expect(find.text(l10n.backupShareInstead), findsNothing);
+    expect(asked, isNot(contains('shareFile')));
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a lock during the save copy: gone, never saved', (t) async {
+    await plain(t);
+    expect(left(), hasLength(1));
+    // the person picked a place and android is copying when the lock comes
+    stage = 'copying';
+    var dropped = false;
+    unawaited(dropNotesExports(tmp).then((_) => dropped = true));
+    await until(t, () => dropped);
+    // the copy was told before a byte was zeroed, and ended before the shred
+    expect(cancels, [
+      {'drop': true},
+    ]);
+    expect(intactAtCancel, [true]);
+    expect(stage, 'idle');
+    expect(left(), isEmpty);
+    // whatever android answers, the file it read is not a saved one
+    dialogs.single.complete({'state': 'saved', 'where': 'Download'});
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.notesExportGone), findsOneWidget);
+    expect(find.text(l10n.notesExportSaved), findsNothing);
+    expect(find.text(l10n.notesExportSavedIn('Download')), findsNothing);
+    expect(find.text(l10n.notesExportSavedUnchecked), findsNothing);
+    expect(find.text(l10n.commonTryAgain), findsNothing);
     expect(asked, isNot(contains('shareFile')));
     await t.pumpAndSettle(const Duration(seconds: 5));
   });

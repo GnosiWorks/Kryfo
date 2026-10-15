@@ -188,6 +188,75 @@ class SaveDocTest {
     }
 
     @Test
+    fun aLockMidCopyFailsAndTakesWhatItWroteAway() {
+        val p = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(p.code)
+        var blocks = 0
+        val out = object : OutputStream() {
+            override fun write(b: Int) {}
+            override fun write(b: ByteArray, off: Int, len: Int) {
+                if (++blocks == 1) {
+                    assertEquals(SaveDoc.COPYING, SaveDoc.cancel(drop = true))
+                    // the drop zeroes the file under the copy
+                    src.writeBytes(ByteArray(src.length().toInt()))
+                }
+            }
+        }
+        var dropped = 0
+        val state = SaveDoc.copyInto(
+            src, 0L, { out }, { src.length() },
+            { throw SecurityException("write only") },
+        ) { dropped++ }
+        assertEquals(SaveDoc.FAILED, state)
+        assertEquals(1, blocks)
+        assertEquals(1, dropped)
+        p.reply(state)
+    }
+
+    @Test
+    fun aLockInTheCheckFailsAndTakesTheFileAway() {
+        val p = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(p.code)
+        val out = ByteArrayOutputStream()
+        var dropped = 0
+        val state = SaveDoc.copyInto(src, 0L, { out }, { null }, {
+            assertEquals(SaveDoc.CHECKING, SaveDoc.cancel(drop = true))
+            ByteArrayInputStream(out.toByteArray())
+        }) { dropped++ }
+        assertEquals(SaveDoc.FAILED, state)
+        assertEquals(1, dropped)
+        p.reply(state)
+        // the next save starts clean
+        val q = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(q.code)
+        val again = SaveDoc.copyInto(
+            src, 0L, { ByteArrayOutputStream() }, { null }, { null },
+        ) { dropped++ }
+        assertEquals(SaveDoc.UNCHECKED, again)
+        assertEquals(1, dropped)
+        q.reply(again)
+    }
+
+    @Test
+    fun aDocumentThatHeldSomethingIsNeverTakenAway() {
+        val p = SaveDoc.begin(src.path) {}!!
+        SaveDoc.take(p.code)
+        val out = object : OutputStream() {
+            override fun write(b: Int) {}
+            override fun write(b: ByteArray, off: Int, len: Int) {
+                SaveDoc.cancel(drop = true)
+            }
+        }
+        var dropped = 0
+        val state = SaveDoc.copyInto(src, 5000L, { out }, { null }, { null }) {
+            dropped++
+        }
+        assertEquals(SaveDoc.FAILED, state)
+        assertEquals(0, dropped)
+        p.reply(state)
+    }
+
+    @Test
     fun aCancelAnswersADialogStillUp() {
         val got = mutableListOf<Map<String, Any?>>()
         val p = SaveDoc.begin(src.path) { got.add(it) }!!

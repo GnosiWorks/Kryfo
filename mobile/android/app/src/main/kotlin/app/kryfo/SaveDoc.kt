@@ -56,6 +56,8 @@ object SaveDoc {
     @Volatile private var covered = false
     // dart gave up on the copy: it stops at the next block
     @Volatile private var aborted = false
+    // a lock took the file being copied: nothing of this copy is kept
+    @Volatile private var taken = false
     private var seq = 0
 
     fun isCode(code: Int) = code >= FIRST_CODE && code < FIRST_CODE + CODES
@@ -74,6 +76,7 @@ object SaveDoc {
         moved = 0L
         covered = false
         aborted = false
+        taken = false
         return p
     }
 
@@ -98,12 +101,16 @@ object SaveDoc {
     fun state(): Map<String, Any?> = mapOf("stage" to stage, "copied" to moved)
 
     // dart stopped waiting. a dialog still up is answered now; a copy stops
-    // at its next block and answers itself. what was running, if anything
-    fun cancel(): String {
+    // at its next block and answers itself. [drop]: the file it reads was
+    // taken, so it fails even in its check. what was running, if anything
+    fun cancel(drop: Boolean = false): String {
         val was = stage
         when (was) {
             PICKING -> current?.reply(FAILED)
-            COPYING, CHECKING -> aborted = true
+            COPYING, CHECKING -> {
+                if (drop) taken = true
+                aborted = true
+            }
         }
         return was
     }
@@ -142,8 +149,9 @@ object SaveDoc {
         onCopied: (Long) -> Unit = SaveDoc::progress,
         stop: () -> Boolean = { aborted },
         onChecking: () -> Unit = SaveDoc::checking,
+        gone: () -> Boolean = { taken },
     ): String {
-        return try {
+        val state = try {
             val want = src.length()
             if (want <= 0L) return FAILED
             val out = open() ?: return FAILED
@@ -184,6 +192,29 @@ object SaveDoc {
         } catch (e: Throwable) {
             FAILED
         }
+        return if (gone()) FAILED else state
+    }
+
+    // the copy into what was picked. a document not kept is taken away
+    // when it held nothing before, so no half of a file stays there
+    fun copyInto(
+        src: File,
+        before: Long?,
+        open: (String) -> OutputStream?,
+        sizeThere: () -> Long?,
+        readBack: () -> InputStream?,
+        drop: () -> Unit,
+    ): String {
+        var opened = false
+        val state = copy(
+            src,
+            open = { openWith(before, open).also { opened = it != null } },
+            sizeThere = sizeThere,
+            readBack = readBack,
+        )
+        val kept = state == SAVED || state == UNCHECKED
+        if (!kept && mayDrop(before, opened)) drop()
+        return state
     }
 
     private fun digestOf(

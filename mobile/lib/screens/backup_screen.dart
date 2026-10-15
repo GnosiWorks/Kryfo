@@ -965,6 +965,25 @@ Future<bool> _saveIdle({required bool unknown}) async {
   }
 }
 
+/// a lock took the file a save is copying: android's copy fails, also in
+/// its check, and takes away what it wrote. true once it was told, which
+/// it heeds before its next read. waits [wait] at most for it to end
+Future<bool> stopSaveForDrop({
+  Duration wait = const Duration(seconds: 3),
+}) async {
+  try {
+    await _platform.invokeMethod<Object?>('saveDocumentCancel', {'drop': true});
+  } catch (_) {
+    return false;
+  }
+  const beat = Duration(milliseconds: 100);
+  for (var waited = Duration.zero; waited < wait; waited += beat) {
+    if (!_running(await _saveStage())) break;
+    await Future<void>.delayed(beat);
+  }
+  return true;
+}
+
 // made files a copy android was told to stop may still read. each goes
 // once a stage reads idle: on the next look, the next resume, the next
 // unlock. never before, so no copy ever saves a file shredded under it
