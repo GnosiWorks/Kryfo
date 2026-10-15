@@ -2188,5 +2188,5 @@
   "homeHelperGoneLine": "在你选择其他方式之前，Kryfo 每 15 分钟查收一次。",
   "homeHelperGoneChoose": "选择其他方式",
   "homeHelperRelayTitle": "中继不再唤醒 Kryfo",
-  "gettingMessagesHelperRefused": "我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。 换一个辅助应用或服务器也可能有帮助。"
+  "gettingMessagesHelperRefused": "我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。换一个辅助应用或服务器也可能有帮助。"
 }

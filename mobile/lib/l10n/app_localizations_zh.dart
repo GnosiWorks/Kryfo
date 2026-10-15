@@ -7940,7 +7940,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperRefused =>
-      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。 换一个辅助应用或服务器也可能有帮助。';
+      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。换一个辅助应用或服务器也可能有帮助。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15759,5 +15759,5 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperRefused =>
-      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。 換一個輔助應用程式或伺服器也可能有幫助。';
+      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。換一個輔助應用程式或伺服器也可能有幫助。';
 }
