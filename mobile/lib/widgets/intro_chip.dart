@@ -88,7 +88,7 @@ class _IntroducedByState extends State<IntroducedBy>
                   style: HaloType.sans(
                     size: widget.size,
                     weight: FontWeight.w500,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     height: 1.2,
                   ),
                 ),

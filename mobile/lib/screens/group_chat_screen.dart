@@ -240,7 +240,7 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                 style: HaloType.serif(
                   size: 20,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
               const SizedBox(height: 14),
@@ -282,7 +282,7 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w500,
-                        color: HaloColors.amber,
+                        color: HaloColors.amberText,
                       ),
                     ),
                   ),
@@ -2830,7 +2830,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               style: HaloType.sans(
                                 size: 14,
                                 color: opt.$1 == _burnSeconds
-                                    ? HaloColors.amber
+                                    ? HaloColors.amberText
                                     : HaloColors.text,
                               ),
                             ),
@@ -4178,7 +4178,7 @@ class _Header extends StatelessWidget {
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
-                            color: room ? HaloColors.violet : HaloColors.amber,
+                            color: room ? HaloColors.violet : HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -4302,7 +4302,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                       : l10n.groupChatReplyingTo(target.senderName),
                   style: HaloType.mono(
                     size: 9.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.6,
                   ),
                 ),
@@ -4419,7 +4419,7 @@ class _Composer extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 10.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                               letter: 0.2,
                             ),
                           ),
@@ -4928,7 +4928,7 @@ class _GroupBubble extends StatelessWidget {
                                 maxLines: 1,
                                 style: HaloType.mono(
                                   size: 9,
-                                  color: HaloColors.amber,
+                                  color: HaloColors.amberText,
                                 ),
                               ),
                             ),
@@ -5114,7 +5114,7 @@ class _GroupBubble extends StatelessWidget {
                                                                   .withValues(
                                                                     alpha: 0.7,
                                                                   )
-                                                            : HaloColors.amber,
+                                                            : HaloColors.amberText,
                                                         letter: 0.6,
                                                       ),
                                                     ),
@@ -5775,7 +5775,7 @@ class _GroupBubble extends StatelessWidget {
                 fontFamily: HaloType.monoFamily,
                 fontFamilyFallback: HaloType.monoFallbackNow,
                 fontSize: 11,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
                 fontWeight: FontWeight.w700,
                 height: 1,
               ),

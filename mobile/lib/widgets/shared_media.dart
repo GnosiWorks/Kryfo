@@ -156,7 +156,7 @@ class _Tile extends StatelessWidget {
                   '+${whole(more)}',
                   style: HaloType.mono(
                     size: 15,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     weight: FontWeight.w600,
                   ),
                 ),

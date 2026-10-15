@@ -209,7 +209,7 @@ class UnreadDivider extends StatelessWidget {
                   maxLines: 1,
                   style: HaloType.mono(
                     size: 10,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     weight: FontWeight.w500,
                     letter: 0.06,
                   ),
@@ -420,7 +420,7 @@ class _ReactionChipState extends State<ReactionChip>
               count: widget.count,
               style: HaloType.mono(
                 size: 10,
-                color: widget.mine ? HaloColors.amber : HaloColors.text2,
+                color: widget.mine ? HaloColors.amberText : HaloColors.text2,
                 weight: FontWeight.w600,
               ),
             ),
@@ -922,10 +922,10 @@ List<TextSpan> searchLit(String text, String query, {required bool onAmber}) {
   if (q.isEmpty) return [TextSpan(text: text)];
   final lower = text.toLowerCase();
   final lit = TextStyle(
-    color: HaloColors.amber,
+    color: HaloColors.amberText,
     backgroundColor: onAmber
         ? HaloColors.onAmber
-        : HaloColors.amber.withValues(alpha: 0.22),
+        : HaloColors.amberText.withValues(alpha: 0.22),
     fontWeight: FontWeight.w600,
   );
   final spans = <TextSpan>[];

@@ -481,7 +481,7 @@ class VoiceRecordBar extends StatelessWidget {
                 hiddenLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(size: 11, color: HaloColors.amber),
+                style: HaloType.mono(size: 11, color: HaloColors.amberText),
               ),
             ),
           ]

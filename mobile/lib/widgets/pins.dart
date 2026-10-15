@@ -407,7 +407,7 @@ class _PinAction extends StatelessWidget {
           style: HaloType.sans(
             size: 12.5,
             weight: FontWeight.w600,
-            color: amber ? HaloColors.amber : HaloColors.text2,
+            color: amber ? HaloColors.amberText : HaloColors.text2,
           ),
         ),
       ),

@@ -535,7 +535,7 @@ class _ChoiceCard extends StatelessWidget {
                                     weight: FontWeight.w600,
                                     color: t == l10n.bridgesConnected
                                         ? HaloColors.green
-                                        : HaloColors.amber,
+                                        : HaloColors.amberText,
                                   ),
                                 ),
                         ),
@@ -589,7 +589,7 @@ class _FriendLinesRow extends StatelessWidget {
                 style: HaloType.mono(
                   size: 12,
                   weight: FontWeight.w600,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
             ),
@@ -683,7 +683,7 @@ class _MoreToggle extends StatelessWidget {
                 style: HaloType.mono(
                   size: 12.5,
                   weight: FontWeight.w600,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
             ),
@@ -782,7 +782,7 @@ class _MoreSection extends StatelessWidget {
               style: HaloType.mono(
                 size: 11,
                 weight: FontWeight.w600,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
               ),
             ),
           ),

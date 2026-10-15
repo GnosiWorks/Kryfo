@@ -74,7 +74,23 @@ void main() {
           final washed = Color.alphaBlend(HaloColors.amberSoft, ground);
           need('accent / soft on $name', HaloColors.amber, washed, 3);
           need('text / soft on $name', HaloColors.text, washed, 4.5);
+          // the accent's own words on its wash: a chip's label
+          need('words / soft on $name', HaloColors.amberText, washed, 4.5);
         }
+        // the accent's own words, a mention or a small line, on every
+        // ground one sits on: pages, cards, their bubble
+        for (final (name, ground) in [
+          ('ink', HaloColors.ink),
+          ('surface', HaloColors.surface),
+          ('surface2', HaloColors.surface2),
+          ('surface3', HaloColors.surface3),
+          ('bubbleIn', HaloColors.bubbleIn),
+        ]) {
+          need('words / $name', HaloColors.amberText, ground, 4.5);
+          need('warn words / $name', HaloColors.warnText, ground, 4.5);
+          need('warn / $name', HaloColors.warn, ground, 3);
+        }
+        need('on warn / warn', HaloColors.onWarn, HaloColors.warn, 4.5);
         // the light theme draws the deep tone on the page itself
         if (light) {
           need('deep / surface', HaloColors.amberDeep, HaloColors.surface, 3);
@@ -96,6 +112,68 @@ void main() {
       });
     }
   }
+
+  // what a status or a warning wears, and the onion pill's own lilac
+  List<(String, Color)> statusColours() => [
+    ('violet', HaloColors.violet),
+    ('green', HaloColors.green),
+    ('sky', HaloColors.sky),
+    ('rose', HaloColors.rose),
+    ('lilac', const Color(0xFFB79CFF)),
+  ];
+
+  double distance(Color x, Color y) {
+    final a = oklab(x), b = oklab(y);
+    return math.sqrt(
+      math.pow(a.l - b.l, 2) + math.pow(a.a - b.a, 2) + math.pow(a.b - b.b, 2),
+    );
+  }
+
+  test('no accent passes for a status colour', () {
+    final close = <String>[];
+    for (final accent in HaloAccent.values) {
+      for (final light in [false, true]) {
+        HaloColors.setLight(light);
+        HaloColors.setAccent(accent);
+        for (final (name, c) in statusColours()) {
+          final d = distance(HaloColors.amber, c);
+          if (d < 0.12) {
+            close.add(
+              '${accent.name} ${light ? 'light' : 'dark'} ~ $name '
+              '${d.toStringAsFixed(3)}',
+            );
+          }
+        }
+      }
+    }
+    expect(close, isEmpty);
+  });
+
+  test('the warn tone is the yellow whatever the accent', () {
+    for (final light in [false, true]) {
+      HaloColors.setLight(light);
+      for (final accent in HaloAccent.values) {
+        HaloColors.setAccent(accent);
+        final y = HaloAccent.yellow.tones(light);
+        expect(
+          (HaloColors.warn, HaloColors.warnText, HaloColors.onWarn),
+          (y.accent, y.text, y.on),
+          reason: accent.name,
+        );
+      }
+    }
+  });
+
+  test('velvet\'s words stay clear of the rose too', () {
+    for (final light in [false, true]) {
+      HaloColors.setLight(light);
+      HaloColors.setAccent(HaloAccent.velvet);
+      expect(
+        distance(HaloColors.amberText, HaloColors.rose),
+        greaterThanOrEqualTo(0.12),
+      );
+    }
+  });
 
   test('the wash is the accent itself, faint', () {
     for (final accent in HaloAccent.values) {

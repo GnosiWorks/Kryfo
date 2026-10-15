@@ -129,7 +129,7 @@ class PreviewStrip extends StatelessWidget {
                                     : l10n.previewStripAddPreview,
                                 style: HaloType.mono(
                                   size: 10.5,
-                                  color: HaloColors.amber,
+                                  color: HaloColors.amberText,
                                   weight: FontWeight.w600,
                                 ),
                               ),

@@ -168,7 +168,7 @@ Future<bool> showConfirmSheet(
         _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
         if (figure != null) ...[
           const SizedBox(height: 8),
-          Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
+          Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amberText)),
         ],
         const SizedBox(height: 8),
         _line(line),

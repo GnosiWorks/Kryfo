@@ -24985,7 +24985,7 @@ class _AddSheetState extends State<_AddSheet>
                     style: HaloType.sans(
                       size: 13.5,
                       weight: FontWeight.w600,
-                      color: typed ? HaloColors.onAmber : HaloColors.amber,
+                      color: typed ? HaloColors.onAmber : HaloColors.amberText,
                     ),
                     child: Text(l10n.appAddThem),
                   ),
@@ -25130,7 +25130,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
           backgroundColor: HaloColors.surface2,
           title: Text(
             l10n.appAddAKryfo,
-            style: HaloType.sans(color: HaloColors.amber),
+            style: HaloType.sans(color: HaloColors.amberText),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -25190,7 +25190,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
               onPressed: () => Navigator.pop(ctx, ('paste', ctrl.text)),
               child: Text(
                 l10n.appImport,
-                style: HaloType.sans(color: HaloColors.amber),
+                style: HaloType.sans(color: HaloColors.amberText),
               ),
             ),
           ],
@@ -25309,13 +25309,13 @@ class _DevScreenState extends State<DevScreen> {
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 appState.myId,
-                style: HaloType.mono(size: 18, color: HaloColors.amber),
+                style: HaloType.mono(size: 18, color: HaloColors.amberText),
               ),
               const SizedBox(height: 16),
               Container(
@@ -25338,7 +25338,7 @@ class _DevScreenState extends State<DevScreen> {
                 ),
                 child: SelectableText(
                   uri,
-                  style: HaloType.mono(size: 9, color: HaloColors.amber),
+                  style: HaloType.mono(size: 9, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 12),
@@ -25349,7 +25349,7 @@ class _DevScreenState extends State<DevScreen> {
                 },
                 child: Text(
                   l10n.appCopyUri,
-                  style: HaloType.sans(color: HaloColors.amber),
+                  style: HaloType.sans(color: HaloColors.amberText),
                 ),
               ),
             ],
@@ -25432,7 +25432,7 @@ class _DevScreenState extends State<DevScreen> {
                   size: 56,
                   weight: FontWeight.w300,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   height: 1,
                 ),
               ),
@@ -25458,7 +25458,7 @@ class _DevScreenState extends State<DevScreen> {
                   appState.myId.isEmpty ? '...' : appState.myId,
                   style: HaloType.mono(
                     size: 18,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.04,
                   ),
                 ),
@@ -25562,7 +25562,7 @@ class _DevScreenState extends State<DevScreen> {
                     Navigator.of(context).push(haloRoute(const ModesScreen())),
                 child: Text(
                   l10n.appSpeedPrivacy,
-                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                  style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 8),
@@ -25572,7 +25572,7 @@ class _DevScreenState extends State<DevScreen> {
                 ).push(haloRoute(const GettingMessagesScreen())),
                 child: Text(
                   l10n.appGettingMessages,
-                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                  style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 8),
@@ -25632,7 +25632,7 @@ class _DevScreenState extends State<DevScreen> {
                   animation: lockState,
                   builder: (_, _) => Text(
                     lockState.lockOn ? l10n.appAppLockOn : l10n.appAppLockOff,
-                    style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    style: HaloType.mono(size: 11, color: HaloColors.amberText),
                   ),
                 ),
               ),
@@ -26103,14 +26103,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               : off
               ? HaloColors.text2
               : said.kind == 'offline'
-              ? HaloColors.amber
+              ? HaloColors.warn
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
               : appState.sendMode == 'fast'
               ? torGreen
               : ready
               ? const Color(0xFFB79CFF)
-              : HaloColors.amber;
+              : HaloColors.warn;
           final t = _c.value;
           Widget dot(Color accent) => SizedBox(
             width: 18,

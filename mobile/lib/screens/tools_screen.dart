@@ -159,7 +159,7 @@ class _Head extends StatelessWidget {
                 HaloType.serif(
                   size: 31,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ).copyWith(
                   letterSpacing: track(-0.62),
                   height: 1.1,

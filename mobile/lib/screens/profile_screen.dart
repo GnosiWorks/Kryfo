@@ -166,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           id.isEmpty ? '...' : id,
                           style: HaloType.mono(
                             size: 16,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -394,7 +394,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: Text(
                 id,
                 textAlign: TextAlign.center,
-                style: HaloType.mono(size: 16, color: HaloColors.amber),
+                style: HaloType.mono(size: 16, color: HaloColors.amberText),
               ),
             ),
             // the pill pops in on the house curve and out again
@@ -437,12 +437,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Text(
             tierGlyph(t),
-            style: TextStyle(color: HaloColors.amber, fontSize: 10),
+            style: TextStyle(color: HaloColors.amberText, fontSize: 10),
           ),
           const SizedBox(width: 4),
           Text(
             tierLabel(t),
-            style: HaloType.mono(size: 10, color: HaloColors.amber),
+            style: HaloType.mono(size: 10, color: HaloColors.amberText),
           ),
         ],
       ),

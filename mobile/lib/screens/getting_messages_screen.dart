@@ -389,7 +389,7 @@ class _ModeCard extends StatelessWidget {
                             style: HaloType.mono(
                               size: 10,
                               letter: 0.06,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ),

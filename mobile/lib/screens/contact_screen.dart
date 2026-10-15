@@ -403,7 +403,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     const SizedBox(height: 4),
                     Text(
                       widget.haloId,
-                      style: HaloType.mono(size: 12.5, color: HaloColors.amber),
+                      style: HaloType.mono(size: 12.5, color: HaloColors.amberText),
                     ),
                   ],
                   const SizedBox(height: 10),
@@ -661,7 +661,7 @@ class _Stats extends StatelessWidget {
           onTap: onVouches,
           child: Text(
             '$vouches',
-            style: HaloType.serif(size: 24, color: HaloColors.amber),
+            style: HaloType.serif(size: 24, color: HaloColors.amberText),
           ),
         ),
       if (since != null)

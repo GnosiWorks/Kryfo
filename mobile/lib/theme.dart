@@ -74,15 +74,18 @@ const _light = _Palette(
 );
 
 /// one accent in one theme: the colour, a deeper one for gradients and
-/// presses, a faint wash, and what is written on it
+/// presses, a faint wash, what is written on it, and the tone it takes as
+/// words of its own (4.5:1 on every ground a line of it sits on)
 class AccentTones {
-  final Color accent, deep, soft, on;
-  const AccentTones(this.accent, this.deep, this.soft, this.on);
+  final Color accent, deep, soft, on, text;
+  const AccentTones(this.accent, this.deep, this.soft, this.on, this.text);
 }
 
-/// the colour buttons, own bubbles, links and the nav pill wear. the app
+/// the colour buttons, own bubbles, links and the nav pill wear: chrome
+/// only. a status or a warning never takes it (HaloColors.warn). the app
 /// icon, notifications and the website keep the yellow whatever is picked.
-/// every tone is held to its contrast in accent_contrast_test.
+/// every tone is held to its contrast, and kept clear of the status
+/// colours, in accent_contrast_test.
 enum HaloAccent {
   yellow(
     dark: AccentTones(
@@ -90,6 +93,7 @@ enum HaloAccent {
       Color(0xFFD97706),
       Color(0x24F59E0B),
       Color(0xFF1A0F04),
+      Color(0xFFF59E0B),
     ),
     // a shade under the old b66a07: the cream on it reaches 4.5
     light: AccentTones(
@@ -97,6 +101,7 @@ enum HaloAccent {
       Color(0xFF8F5205),
       Color(0x1FA55F06),
       Color(0xFFFFFBF4),
+      Color(0xFF824900),
     ),
     bright: Color(0xFFE8960B),
     brightDeep: Color(0xFFCC7006),
@@ -107,41 +112,48 @@ enum HaloAccent {
       Color(0xFFA39D93),
       Color(0x24C9C3B9),
       Color(0xFF1A1714),
+      Color(0xFFC9C3B9),
     ),
     light: AccentTones(
       Color(0xFF5C564C),
       Color(0xFF45403A),
       Color(0x1F5C564C),
       Color(0xFFFFFBF4),
+      Color(0xFF5B554B),
     ),
   ),
+  // a deep purple that leans to orchid, away from the violet tor and
+  // groups wear
   purple(
     dark: AccentTones(
-      Color(0xFFD08CF0),
-      Color(0xFFAE62D6),
-      Color(0x24D08CF0),
-      Color(0xFF1E0A28),
-    ),
-    // leans to orchid, away from the violet tor and groups wear
-    light: AccentTones(
-      Color(0xFF9B3FC0),
-      Color(0xFF7C2F9C),
-      Color(0x1F9B3FC0),
+      Color(0xFF9D4ED1),
+      Color(0xFF8837BA),
+      Color(0x249D4ED1),
       Color(0xFFFFFBF4),
+      Color(0xFFC879FF),
+    ),
+    light: AccentTones(
+      Color(0xFFAA30BA),
+      Color(0xFF930DA3),
+      Color(0x1FAA30BA),
+      Color(0xFFFFFBF4),
+      Color(0xFF930DA3),
     ),
   ),
   lime(
     dark: AccentTones(
-      Color(0xFFA8D94A),
-      Color(0xFF86B92B),
-      Color(0x24A8D94A),
-      Color(0xFF172005),
+      Color(0xFFABDB47),
+      Color(0xFF9CCA32),
+      Color(0x24ABDB47),
+      Color(0xFF1A1418),
+      Color(0xFFABDB47),
     ),
     light: AccentTones(
-      Color(0xFF4F7A12),
-      Color(0xFF3E620C),
-      Color(0x1F4F7A12),
+      Color(0xFF4D7800),
+      Color(0xFF3E6204),
+      Color(0x1F4D7800),
       Color(0xFFFFFBF4),
+      Color(0xFF3D6002),
     ),
   ),
   // a wine red, kept apart from the rose that errors and warnings wear
@@ -151,26 +163,31 @@ enum HaloAccent {
       Color(0xFF9C2B39),
       Color(0x1FC83E4E),
       Color(0xFFFFF7F5),
+      Color(0xFFEF7E60),
     ),
     light: AccentTones(
       Color(0xFF92202E),
       Color(0xFF721824),
       Color(0x1F92202E),
       Color(0xFFFFFBF4),
+      Color(0xFF92202E),
     ),
   ),
+  // a royal blue, apart from the sky relay wears and tor's violet
   blue(
     dark: AccentTones(
-      Color(0xFF6AAEF5),
-      Color(0xFF3D8BE8),
-      Color(0x246AAEF5),
-      Color(0xFF06172B),
+      Color(0xFF359CFC),
+      Color(0xFF1F8CEB),
+      Color(0x24359CFC),
+      Color(0xFF1A1418),
+      Color(0xFF43A1FC),
     ),
     light: AccentTones(
-      Color(0xFF2458B8),
-      Color(0xFF1A4593),
-      Color(0x1F2458B8),
+      Color(0xFF1B3FCC),
+      Color(0xFF0E24B4),
+      Color(0x1F1B3FCC),
       Color(0xFFFFFBF4),
+      Color(0xFF1B3FCC),
     ),
   );
 
@@ -244,6 +261,8 @@ class HaloColors {
   static Color get amberDeep => _a.deep;
   static Color get amberSoft => _a.soft;
   static Color get onAmber => _a.on;
+  // the accent as a line of words: a mention, a small label
+  static Color get amberText => _a.text;
   static Color get amberBright => _accent.bright;
   static Color get amberBrightDeep => _accent.brightDeep;
   static Color get onAmberBright => _accent.onBright;
@@ -254,6 +273,13 @@ class HaloColors {
   static Color get yellow => _y.accent;
   static Color get yellowDeep => _y.deep;
   static Color get onYellow => _y.on;
+
+  // a status that needs a look (offline, connecting, a key that changed, a
+  // name not checked): the yellow, never the accent, so it reads the same
+  // whatever is picked and no accent passes for it
+  static Color get warn => _y.accent;
+  static Color get warnText => _y.text;
+  static Color get onWarn => _y.on;
 }
 
 // persian and arabic join their letters. letter spacing pulls the joins
@@ -391,7 +417,7 @@ ThemeData buildHaloTheme() {
           .copyWith(
             surface: HaloColors.surface,
             onSurface: HaloColors.text,
-            primary: HaloColors.amber,
+            primary: HaloColors.amberText,
             onPrimary: HaloColors.onAmber,
             secondary: HaloColors.violet,
             error: HaloColors.rose,

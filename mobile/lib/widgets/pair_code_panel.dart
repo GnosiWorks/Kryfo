@@ -303,7 +303,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
             style: HaloType.mono(
               size: widget.compact ? 34 : 40,
               weight: FontWeight.w600,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
               letter: 0.16,
             ),
           ),

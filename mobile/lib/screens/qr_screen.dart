@@ -480,7 +480,7 @@ class _QrScreenState extends State<QrScreen> {
                                         style: HaloType.sans(
                                           size: 13,
                                           height: 1.4,
-                                          color: HaloColors.amber,
+                                          color: HaloColors.amberText,
                                         ),
                                       )
                                     : Row(
@@ -640,7 +640,7 @@ class _Pill extends StatelessWidget {
                   style: HaloType.sans(
                     size: 12,
                     weight: on ? FontWeight.w600 : FontWeight.w400,
-                    color: on ? HaloColors.amber : HaloColors.warm,
+                    color: on ? HaloColors.amberText : HaloColors.warm,
                   ),
                 ),
               ),

@@ -219,7 +219,7 @@ _Cols _cellWidth(BuildContext context, List<_Row> rows) {
 
 Color _tint(_Tone t) => switch (t) {
   _Tone.good => HaloColors.green,
-  _Tone.warn => HaloColors.amber,
+  _Tone.warn => HaloColors.warnText,
   _Tone.bad => HaloColors.rose,
 };
 
@@ -275,7 +275,7 @@ class _Header extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: _headStyle(cols.shrink).copyWith(
                           color: i == active
-                              ? HaloColors.amber
+                              ? HaloColors.amberText
                               : HaloColors.text2,
                         ),
                       ),

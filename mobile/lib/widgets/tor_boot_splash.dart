@@ -166,7 +166,7 @@ class _TorBootSplashState extends State<TorBootSplash>
                           textAlign: TextAlign.center,
                           style: HaloType.mono(
                             size: 12,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -312,7 +312,7 @@ class _TorBootSplashState extends State<TorBootSplash>
         child: Text(
           l10n.bootFailedCloseAndReopen,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 13, color: HaloColors.amber),
+          style: HaloType.sans(size: 13, color: HaloColors.amberText),
         ),
       ),
     ],

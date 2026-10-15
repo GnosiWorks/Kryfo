@@ -489,7 +489,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   l10n.restoreItHoldsOfPhotos(_mb(s.bytes)),
                   style: HaloType.sans(
                     size: 13.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     height: 1.45,
                   ),
                 ),
@@ -877,7 +877,7 @@ class _StepMark extends StatelessWidget {
     final s = MediaQuery.textScalerOf(context);
     final style = HaloType.mono(
       size: 10,
-      color: HaloColors.amber,
+      color: HaloColors.amberText,
       letter: 0.2,
       weight: FontWeight.w600,
     );
@@ -944,7 +944,7 @@ class _SummaryCard extends StatelessWidget {
             style: HaloType.mono(
               size: 16,
               weight: FontWeight.w600,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ),
           ),
           const SizedBox(height: 10),

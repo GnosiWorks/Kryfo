@@ -175,7 +175,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                     style: HaloType.mono(
                       size: 22,
                       weight: FontWeight.w600,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       letter: 0.02,
                     ),
                   ),
@@ -500,7 +500,7 @@ class _Way2Card extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.mono(
                         size: 9.5,
-                        color: ready ? HaloColors.amber : HaloColors.text3,
+                        color: ready ? HaloColors.amberText : HaloColors.text3,
                       ),
                     ),
                   ),

@@ -465,7 +465,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                                     size: 9,
                                     color: out
                                         ? HaloColors.onAmber
-                                        : HaloColors.amber,
+                                        : HaloColors.amberText,
                                   ),
                                 ),
                               ),

@@ -504,7 +504,7 @@ class _HowRow extends StatelessWidget {
             Flexible(
               child: Text(
                 l10n.pinsHowThisWorks,
-                style: HaloType.sans(size: 13.5, color: HaloColors.amber),
+                style: HaloType.sans(size: 13.5, color: HaloColors.amberText),
               ),
             ),
           ],

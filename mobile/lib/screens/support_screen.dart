@@ -549,7 +549,7 @@ class _Head extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(
                   size: 10.5,
-                  color: waiting > 0 ? HaloColors.amber : HaloColors.text2,
+                  color: waiting > 0 ? HaloColors.amberText : HaloColors.text2,
                   letter: 0.06,
                 ),
               ),
@@ -877,7 +877,7 @@ class _Tile extends StatelessWidget {
                           _when(DateTime.fromMillisecondsSinceEpoch(c.at)),
                           style: HaloType.mono(
                             size: 10.5,
-                            color: unread ? HaloColors.amber : HaloColors.text2,
+                            color: unread ? HaloColors.amberText : HaloColors.text2,
                             weight: unread ? FontWeight.w600 : FontWeight.w400,
                           ),
                         ),

@@ -473,7 +473,7 @@ class GifPanelState extends State<GifPanel> {
                   child: Text(
                     '${l10n.gifCouldNotLoadMore} · ${l10n.commonTryAgain}',
                     textAlign: TextAlign.center,
-                    style: HaloType.sans(size: 13, color: HaloColors.amber),
+                    style: HaloType.sans(size: 13, color: HaloColors.amberText),
                   ),
                 ),
               )

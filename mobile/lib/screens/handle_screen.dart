@@ -378,7 +378,7 @@ class _ListingCardState extends State<_ListingCard> {
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
                       l10n.handleShownAs(name),
-                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                      style: HaloType.mono(size: 11, color: HaloColors.amberText),
                     ),
                   )
                 : const SizedBox(width: double.infinity),
@@ -613,7 +613,7 @@ class _RiskBlock extends StatelessWidget {
             l10n.handleWhatAHandleDoes,
             style: HaloType.mono(
               size: 11,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
               weight: FontWeight.w600,
               letter: 0.1,
             ),
@@ -688,7 +688,7 @@ class _FieldState extends State<_Field> {
                     widget.prefix!,
                     style: HaloType.mono(
                       size: 14,
-                      color: _lit ? HaloColors.amber : HaloColors.text3,
+                      color: _lit ? HaloColors.amberText : HaloColors.text3,
                     ),
                   ),
                 ),

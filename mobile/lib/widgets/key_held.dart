@@ -138,8 +138,8 @@ class KeyHeldCard extends StatelessWidget {
       margin: margin,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
       decoration: BoxDecoration(
-        color: HaloColors.amber.withValues(alpha: 0.10),
-        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
+        color: HaloColors.warn.withValues(alpha: 0.10),
+        border: Border.all(color: HaloColors.warn.withValues(alpha: 0.45)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -148,7 +148,7 @@ class KeyHeldCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.gpp_maybe_outlined, size: 16, color: HaloColors.amber),
+              Icon(Icons.gpp_maybe_outlined, size: 16, color: HaloColors.warn),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -180,8 +180,8 @@ class KeyHeldCard extends StatelessWidget {
                 flex: 3,
                 child: _Btn(
                   label: l10n.chatCheckTheNumber,
-                  fg: HaloColors.onAmber,
-                  bg: HaloColors.amber,
+                  fg: HaloColors.onWarn,
+                  bg: HaloColors.warn,
                   onTap: onCheck,
                   bold: true,
                 ),
@@ -273,7 +273,7 @@ class KeyHeldMark extends StatelessWidget {
                   Icon(
                     Icons.gpp_maybe_outlined,
                     size: 12,
-                    color: HaloColors.amber,
+                    color: HaloColors.warn,
                   ),
                   const SizedBox(width: 4),
                   Flexible(
@@ -281,7 +281,7 @@ class KeyHeldMark extends StatelessWidget {
                       l10n.chatSecurityCodeChanged,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 11.5, color: HaloColors.amber),
+                      style: HaloType.sans(size: 11.5, color: HaloColors.warnText),
                     ),
                   ),
                 ],

@@ -193,7 +193,7 @@ class _DonateScreenState extends State<DonateScreen> {
           TextSpan(
             children: markedSpans(
               l10n.donateKeepKryfo,
-              HaloType.serif(size: 25, italic: true, color: HaloColors.amber),
+              HaloType.serif(size: 25, italic: true, color: HaloColors.amberText),
             ),
           ),
           textAlign: TextAlign.center,
@@ -218,7 +218,7 @@ class _DonateScreenState extends State<DonateScreen> {
               TextSpan(
                 children: markedSpans(
                   l10n.donateBackItAnonymouslyBadge,
-                  HaloType.mono(size: 11, color: HaloColors.amber),
+                  HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
               textAlign: TextAlign.center,
@@ -393,7 +393,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   style: HaloType.mono(
                     size: 16,
                     weight: FontWeight.w600,
-                    color: sel ? HaloColors.amber : HaloColors.text,
+                    color: sel ? HaloColors.amberText : HaloColors.text,
                     letter: 0,
                   ),
                   child: Text(dollars(amt)),
@@ -405,7 +405,7 @@ class _DonateScreenState extends State<DonateScreen> {
                       : const Duration(milliseconds: 220),
                   style: HaloType.mono(
                     size: 10.5,
-                    color: sel ? HaloColors.amber : HaloColors.text2,
+                    color: sel ? HaloColors.amberText : HaloColors.text2,
                   ),
                   // one word, shrunk rather than broken mid-word
                   child: FittedBox(
@@ -585,7 +585,7 @@ class _DonateScreenState extends State<DonateScreen> {
               chunkAddress(addr),
               style: HaloType.mono(
                 size: 11.5,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
               ).copyWith(height: 1.6),
             ),
           ),
@@ -678,7 +678,7 @@ class _DonateScreenState extends State<DonateScreen> {
                         style: HaloType.sans(
                           size: 13,
                           weight: FontWeight.w600,
-                          color: can ? HaloColors.amber : HaloColors.text3,
+                          color: can ? HaloColors.amberText : HaloColors.text3,
                         ),
                       ),
                     ),
@@ -1220,7 +1220,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             chunkAddress(value),
             style: HaloType.mono(
               size: 11.5,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ).copyWith(height: 1.6),
           ),
         ],
@@ -1263,7 +1263,7 @@ class _StaticAddress extends StatelessWidget {
             chunkAddress(address),
             style: HaloType.mono(
               size: 11.5,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ).copyWith(height: 1.6),
           ),
           const SizedBox(height: 10),

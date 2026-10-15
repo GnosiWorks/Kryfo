@@ -124,7 +124,7 @@ class _Tab extends StatelessWidget {
               curve: Curves.easeOutCubic,
               style: HaloType.mono(
                 size: 11,
-                color: on ? HaloColors.amber : HaloColors.text2,
+                color: on ? HaloColors.amberText : HaloColors.text2,
               ),
               child: Text(label),
             ),

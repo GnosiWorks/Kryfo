@@ -165,7 +165,7 @@ class _ProtectionLineState extends State<ProtectionLine>
                   textAlign: TextAlign.end,
                   style: HaloType.mono(
                     size: 10,
-                    color: on ? HaloColors.amber : HaloColors.text3,
+                    color: on ? HaloColors.amberText : HaloColors.text3,
                   ),
                 ),
               ),
@@ -403,7 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               l10n.settingsYourProtections,
                               style: HaloType.mono(
                                 size: 11,
-                                color: HaloColors.amber,
+                                color: HaloColors.amberText,
                               ),
                             ),
                           ),

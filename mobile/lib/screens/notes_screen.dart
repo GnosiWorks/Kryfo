@@ -926,7 +926,7 @@ class _NoteBubble extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: HaloType.sans(
                     size: 12.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     weight: FontWeight.w600,
                   ),
                 ),

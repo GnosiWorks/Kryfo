@@ -265,7 +265,7 @@ Future<bool> showNoteSheet(
                     style: HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                     ),
                   ),
                 ),
@@ -5565,7 +5565,7 @@ class _ChatScreenState extends State<ChatScreen>
                           textAlign: TextAlign.center,
                           style: HaloType.mono(
                             size: 10,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -6182,7 +6182,7 @@ class _BlockedBar extends StatelessWidget {
               style: HaloType.sans(
                 size: 14,
                 weight: FontWeight.w500,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
               ),
             ),
           ),
@@ -6326,7 +6326,7 @@ class _ChatHead extends StatelessWidget {
                             l10n.chatSupporter,
                             style: HaloType.mono(
                               size: 7.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ),
@@ -6346,7 +6346,9 @@ class _ChatHead extends StatelessWidget {
                         Icon(
                           Icons.lock_outline,
                           size: 10,
-                          color: relay ? HaloColors.sky : HaloColors.amber,
+                          // relay and tor told apart by their own colours,
+                          // never by the accent
+                          color: relay ? HaloColors.sky : HaloColors.violet,
                         ),
                         const SizedBox(width: 4),
                         // a longer language at a big font size would run
@@ -6389,7 +6391,7 @@ class _ChatHead extends StatelessWidget {
                               style: HaloType.serif(
                                 size: 12,
                                 italic: true,
-                                color: HaloColors.amber,
+                                color: HaloColors.amberText,
                               ),
                             ),
                           ),
@@ -6592,7 +6594,7 @@ class _SearchHeadState extends State<SearchHead> {
                                       ),
                                       HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.amber,
+                                        color: HaloColors.amberText,
                                         weight: FontWeight.w500,
                                       ),
                                     ),
@@ -7391,7 +7393,7 @@ class _Bubble extends StatelessWidget {
                                                 fontFamilyFallback:
                                                     HaloType.monoFallbackNow,
                                                 fontSize: 9,
-                                                color: HaloColors.amber,
+                                                color: HaloColors.amberText,
                                                 fontStyle: slant(),
                                                 letterSpacing: track(0.4),
                                               ),
@@ -7798,7 +7800,7 @@ class _ViaDevTag extends StatelessWidget {
               fontFamily: HaloType.monoFamily,
               fontFamilyFallback: HaloType.monoFallbackNow,
               fontSize: 9,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
               letterSpacing: track(0.4),
             ),
           ),
@@ -7846,7 +7848,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                       : l10n.chatReplyingTo,
                   style: HaloType.mono(
                     size: 9.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.6,
                   ),
                 ),
@@ -8066,7 +8068,7 @@ class _Composer extends StatelessWidget {
                                   text: l10n.chatGhostMode,
                                   style: HaloType.serif(
                                     size: 12,
-                                    color: HaloColors.amber,
+                                    color: HaloColors.amberText,
                                     italic: true,
                                   ),
                                 ),
@@ -8513,7 +8515,7 @@ class _CompareRow extends StatelessWidget {
                   style: HaloType.sans(
                     size: 12.5,
                     weight: FontWeight.w600,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                   ),
                 ),
               ),

@@ -641,7 +641,7 @@ class StickerSheetState extends State<StickerSheet>
                                 ? FontWeight.w600
                                 : FontWeight.w500,
                             color: k == _kind
-                                ? HaloColors.amber
+                                ? HaloColors.amberText
                                 : HaloColors.text2,
                           ),
                         ),

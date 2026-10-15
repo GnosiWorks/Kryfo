@@ -190,7 +190,7 @@ class _ArchivedListState extends State<ArchivedList> {
                             style: HaloType.serif(
                               size: 15,
                               italic: true,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                           TextSpan(
@@ -463,7 +463,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                     semanticsLabel: '',
                     style: HaloType.mono(
                       size: 9,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       letter: 0.08,
                     ),
                   ),
@@ -587,7 +587,7 @@ class _ArchivedDevRowState extends State<_ArchivedDevRow> {
                     semanticsLabel: '',
                     style: HaloType.mono(
                       size: 9,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       letter: 0.08,
                     ),
                   ),

@@ -925,7 +925,7 @@ class _CameraScreenState extends State<CameraScreen>
                     size: 11,
                     letter: 0.12,
                     weight: FontWeight.w600,
-                    color: on ? HaloColors.amber : HaloColors.text2,
+                    color: on ? HaloColors.amberText : HaloColors.text2,
                   ),
                   child: ExcludeSemantics(child: Text(label)),
                 ),

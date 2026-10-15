@@ -445,7 +445,7 @@ class _Done extends StatelessWidget {
                           size: 20,
                           weight: FontWeight.w300,
                           italic: true,
-                          color: HaloColors.amber,
+                          color: HaloColors.amberText,
                         ),
                       ),
                     ],

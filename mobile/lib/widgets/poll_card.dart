@@ -230,7 +230,7 @@ class _PollCardState extends State<PollCard> {
                     style: HaloType.mono(
                       size: 10,
                       weight: FontWeight.w700,
-                      color: closed ? HaloColors.text : HaloColors.amber,
+                      color: closed ? HaloColors.text : HaloColors.amberText,
                       letter: 0.6,
                     ),
                   ),
@@ -353,7 +353,7 @@ class _PollCardState extends State<PollCard> {
                             style: HaloType.mono(
                               size: 10,
                               color: voters > 0
-                                  ? HaloColors.amber
+                                  ? HaloColors.amberText
                                   : HaloColors.text2,
                               letter: 0.3,
                             ),
@@ -438,7 +438,7 @@ class _Link extends StatelessWidget {
             style: HaloType.sans(
               size: 12,
               weight: strong ? FontWeight.w600 : FontWeight.w400,
-              color: strong ? HaloColors.amber : HaloColors.text2,
+              color: strong ? HaloColors.amberText : HaloColors.text2,
             ),
           ),
         ),
@@ -576,7 +576,7 @@ class _ResultRow extends StatelessWidget {
                     style: HaloType.mono(
                       size: 11,
                       color: mine || leader
-                          ? HaloColors.amber
+                          ? HaloColors.amberText
                           : HaloColors.text2,
                       letter: 0.2,
                     ),
@@ -630,7 +630,7 @@ class _Mark extends StatelessWidget {
               height: 18,
               decoration: shape.copyWith(
                 border: Border.all(
-                  color: on ? HaloColors.amber : HaloColors.line2,
+                  color: on ? HaloColors.amberText : HaloColors.line2,
                   width: 1.4,
                 ),
               ),
@@ -768,7 +768,7 @@ class _VotersSheet extends StatelessWidget {
                             '${whole(tally.counts[i])} · ${percent(tally.share(i))}',
                             style: HaloType.mono(
                               size: 10.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ],

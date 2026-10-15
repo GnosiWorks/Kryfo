@@ -518,7 +518,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             l10n.groupInfoAdmin,
                             style: HaloType.mono(
                               size: 9.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                               weight: FontWeight.w600,
                               letter: 0.1,
                             ),
@@ -888,7 +888,7 @@ class _MembersCardState extends State<MembersCard> {
                     l10n.groupInfoYou,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       letter: 0.3,
                     ),
                   ),
