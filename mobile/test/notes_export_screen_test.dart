@@ -545,6 +545,28 @@ void main() {
     expect(left(), isEmpty);
   });
 
+  testWidgets('a lock in the save window: a failed save is not retried', (
+    t,
+  ) async {
+    await plain(t);
+    expect(left(), hasLength(1));
+    // the person left the save window open and the lock took the file
+    var dropped = false;
+    unawaited(dropNotesExports(tmp).then((_) => dropped = true));
+    await until(t, () => dropped);
+    expect(left(), isEmpty);
+    dialogs.single.complete({'state': 'failed'});
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.notesExportGone), findsOneWidget);
+    expect(find.text(l10n.notesExportNotSaved), findsNothing);
+    expect(find.text(l10n.commonTryAgain), findsNothing);
+    expect(find.text(l10n.backupShareInstead), findsNothing);
+    expect(asked, isNot(contains('shareFile')));
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
   // a decoy with notes of its own, open in place of the everyday ones
   _Db intoDecoy() {
     final decoy = _Db(HaloContainer.decoy)

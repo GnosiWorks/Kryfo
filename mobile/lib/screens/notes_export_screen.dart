@@ -366,7 +366,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       Navigator.of(context).pop();
       return;
     }
-    if (gone) {
+    // a lock during the save took the file: it is not offered again
+    if (gone || notesExportRun.value != _madeRun) {
       _made = null;
       unawaited(shredMade(made.path, lost: _lost));
       setState(() {
