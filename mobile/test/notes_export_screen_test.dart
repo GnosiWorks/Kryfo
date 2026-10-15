@@ -57,14 +57,15 @@ void main() {
   late _Db db;
   late List<String> asked;
   late List<Completer<Object?>> dialogs;
-  late bool shares;
+  // how the share sheet ends: picked, closed, or failed to open
+  late String shares;
   late List<Map<Object?, Object?>> shared;
   late List<List<int>> saved;
 
   setUp(() {
     asked = [];
     dialogs = [];
-    shares = true;
+    shares = 'picked';
     shared = [];
     saved = [];
     tmp = Directory.systemTemp.createTempSync('notes_export_screen');
@@ -311,7 +312,7 @@ void main() {
   testWidgets('backed out with no share sheet: no plaintext once left', (
     t,
   ) async {
-    shares = false;
+    shares = 'failed';
     await plain(t);
     dialogs.single.complete({'state': 'cancelled'});
     await until(t, () => asked.contains('shareFile'));
@@ -328,10 +329,34 @@ void main() {
     expect(left(), isEmpty);
   });
 
+  testWidgets('a share sheet closed with nothing picked keeps the file', (
+    t,
+  ) async {
+    shares = 'closed';
+    await plain(t);
+    dialogs.single.complete({'state': 'cancelled'});
+    await until(t, () => asked.contains('shareFile'));
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.notesExportNotSaved), findsOneWidget);
+    expect(find.text(l10n.commonTryAgain), findsOneWidget);
+    expect(find.text(l10n.backupShareInstead), findsOneWidget);
+    expect(left(), hasLength(1));
+    // both are offered again, and a pick this time lets the file go
+    shares = 'picked';
+    await t.tap(find.text(l10n.backupShareInstead));
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(shared, hasLength(2));
+    await until(t, () => left().isEmpty);
+    expect(left(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
   testWidgets('locked: only the locked file waits, and nothing once left', (
     t,
   ) async {
-    shares = false;
+    shares = 'closed';
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
@@ -463,7 +488,7 @@ void main() {
   // the scrypt work in a locked file's header: the same in a decoy, so it
   // takes as long there as anywhere
   Future<String> lockedHeader(WidgetTester t) async {
-    shares = false;
+    shares = 'closed';
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));

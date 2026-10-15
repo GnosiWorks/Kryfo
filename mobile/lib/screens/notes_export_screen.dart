@@ -275,6 +275,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         });
       }
       if ((!save || answer.state == SaveState.cancelled) && mounted) {
+        // only an app picked from the sheet has it: one closed keeps the file
         shared =
             await lockState.hold(
               () => shareFileOut(
@@ -284,8 +285,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                 // plaintext never outlives the lock in the cache
                 quiet: !made.name.endsWith('.age'),
               ),
-            ) !=
-            ShareEnd.failed;
+            ) ==
+            ShareEnd.picked;
       }
     } on LockDropped {
       dropped = true;
