@@ -277,10 +277,13 @@ type knockName struct {
 
 // whether a name has a public address: "" when it has, or the answer to
 // give. asked with a context of its own, so a caller that goes away cannot
-// cut the lookup short, and at most so many a second for everyone. only a
-// definite answer is remembered: an hour when the name has a public
-// address, ten minutes when it does not exist or has none. a timeout or a
-// failing resolver is never remembered
+// cut the lookup short, and at most so many a second for everyone. past
+// that pace a name passes unchecked, so names that do not exist cannot
+// keep everyone else's out: the endpoint is a new one, the post checks
+// the address, and a name that is not there lets it go. only a definite
+// answer is remembered: an hour when the name has a public address, ten
+// minutes when it does not exist or has none. a timeout or a failing
+// resolver is never remembered
 func (k *knocker) nameCheck(host string) string {
 	host = strings.ToLower(host)
 	now := time.Now()
@@ -294,7 +297,7 @@ func (k *knocker) nameCheck(host string) string {
 	}
 	if !k.lookups.take(now) {
 		k.namesMu.Unlock()
-		return "rate-limited: too many names to look up, try later"
+		return ""
 	}
 	k.namesMu.Unlock()
 	lctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

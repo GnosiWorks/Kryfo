@@ -1446,23 +1446,56 @@ func TestKnockRenewalNeedsNoLookup(t *testing.T) {
 	}
 }
 
-// lookups have a pace for everyone; past it the answer is to try later,
-// and nothing is remembered
+// lookups have a pace for everyone; past it a name passes unchecked and
+// nothing is remembered
 func TestKnockLookupsArePaced(t *testing.T) {
 	tk := newTestKnocks(t)
 	tk.lookups = newBucket(0, 3)
-	refused := 0
+	asked := 0
+	tk.lookup = func(ctx context.Context, host string) ([]net.IP, error) {
+		asked++
+		return fakeLookup(ctx, host)
+	}
 	for i := 0; i < 10; i++ {
 		ev := r3reg(r3key(i), fmt.Sprintf("https://push.s%d.org/x", i), tk.clock.now())
 		if rej, msg := tk.take(nil, &ev); rej {
-			if !strings.HasPrefix(msg, "rate-limited:") {
-				t.Fatalf("past the pace: %q", msg)
-			}
-			refused++
+			t.Fatalf("past the pace: %q", msg)
 		}
 	}
-	if refused != 7 || len(tk.names) != 3 {
-		t.Fatalf("%d refused, %d names remembered", refused, len(tk.names))
+	if asked != 3 || len(tk.names) != 3 || len(tk.eps) != 10 {
+		t.Fatalf("%d asked, %d names remembered, %d endpoints", asked, len(tk.names), len(tk.eps))
+	}
+}
+
+// names that do not exist, sent as fast as the relay takes them on fresh
+// connections, keep no community server out; once the posts find them not
+// there they are gone
+func TestKnockMadeUpNamesKeepNoOneOut(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.q.resolve = func(ctx context.Context, host string) ([]net.IP, error) { return fakeLookup(ctx, host) }
+	tk.q.post = func(context.Context, string) (int, error) { return 201, nil }
+	for i := 0; i < 500; i++ {
+		ev := r3reg(r3key(i), fmt.Sprintf("https://up.nx%d.org/x", i), tk.clock.now())
+		tk.take(nil, &ev)
+	}
+	legit := "https://push.community.org/up"
+	ev := r3reg(r3key(900000), legit, tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("a community server after a flood of made-up names: %q", msg)
+	}
+	tk.drain()
+	tk.log = nil
+	tk.advance(10 * time.Minute)
+	for _, j := range tk.log {
+		if ep := tk.eps[j.url]; ep != nil {
+			tk.mu.Lock()
+			tk.domainLocked(ep.domain).inflight++
+			tk.mu.Unlock()
+			tk.q.send(context.Background(), ep, j.decoy)
+		}
+	}
+	if len(tk.eps) != 1 || tk.eps[legit] == nil || !tk.eps[legit].delivered {
+		t.Fatalf("%d endpoints left after the posts", len(tk.eps))
 	}
 }
 
