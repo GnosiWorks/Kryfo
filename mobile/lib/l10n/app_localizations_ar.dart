@@ -8361,6 +8361,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNotDisguised => 'تعذّر تمويه هذه الرسالة، لذا لم تُرسل';
 
   @override
+  String get voiceNoRoom =>
+      'لا توجد مساحة فارغة كافية على هذا الهاتف. أفرغ بعض المساحة ثم حاول مجددًا.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'لم تكن هناك مساحة كافية لتمويه هذه الرسالة، لذا لم تُرسل';
+
+  @override
+  String get voiceDisguising => 'جارٍ التمويه';
+
+  @override
   String get settingsDisguiseByDefault => 'تمويه صوتي افتراضيًا';
 
   @override

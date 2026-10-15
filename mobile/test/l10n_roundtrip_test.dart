@@ -3472,6 +3472,15 @@ void main() {
       l.voiceNotDisguised,
       "This note could not be disguised, so it was not sent",
     );
+    expect(
+      l.voiceNoRoom,
+      "Not enough free space on this phone. Free up some space and try again.",
+    );
+    expect(
+      l.voiceNoRoomNotSent,
+      "There was not enough free space to disguise this note, so it was not sent",
+    );
+    expect(l.voiceDisguising, "Disguising");
     expect(l.settingsDisguiseByDefault, "Disguise my voice by default");
     expect(
       l.settingsDisguiseByDefaultHint,

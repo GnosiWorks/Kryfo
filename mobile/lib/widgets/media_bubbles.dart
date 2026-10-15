@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -692,6 +693,79 @@ class VoiceBubbleState extends State<VoiceBubble> {
       onTap: _toggle,
       excludeSemantics: true,
       child: bubble,
+    );
+  }
+}
+
+/// a voice note sent while its disguise is still being made: a ring that
+/// fills as it goes, and the wave once the note is there. still with less
+/// movement
+class VoiceMakingBubble extends StatelessWidget {
+  final ValueListenable<double?> progress;
+  final bool isOut;
+  const VoiceMakingBubble({
+    super.key,
+    required this.progress,
+    required this.isOut,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final out = isOut;
+    final still = motionStill(context);
+    final fg = out ? HaloColors.onAmber : HaloColors.amber;
+    final rest = out
+        ? HaloColors.onAmber.withValues(alpha: 0.3)
+        : HaloColors.text3.withValues(alpha: 0.45);
+    return Semantics(
+      container: true,
+      label: '${l10n.appVoiceMessage}, ${l10n.voiceDisguising}',
+      excludeSemantics: true,
+      child: SizedBox(
+        width: 184,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 34,
+              height: 34,
+              child: ValueListenableBuilder<double?>(
+                valueListenable: progress,
+                builder: (_, p, _) => CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: fg,
+                  backgroundColor: rest,
+                  value: still ? (p ?? 0) : p,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VoiceWave(peaks: null, progress: 0, played: fg, rest: rest),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.theater_comedy_outlined, size: 11, color: fg),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          l10n.voiceDisguising,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.mono(size: 9, color: fg),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

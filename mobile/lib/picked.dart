@@ -17,6 +17,7 @@ import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
 import 'open_file.dart' show nameSaysVideo;
 import 'shred.dart';
+import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'voice_mask.dart' show maskWavFile;
 
 // only a path inside the app's own cache is ours to destroy. a picker that
@@ -268,15 +269,50 @@ Future<bool> placeVoice(
     }
     if (masked != null && await _moveFile(masked, dest)) return true;
     if (!await File(take).exists()) return false;
-    return await maskWavFile(take, dest);
+    // made beside the take, where the start sweeps, and moved in whole: a
+    // crash leaves nothing of it in the chat's folder
+    if (!await maskWavFile(take, sendPathOf(take))) return false;
+    return await _moveFile(sendPathOf(take), dest);
   } catch (e) {
     dlog('voice: not placed (${e.runtimeType})');
     await shredFile(dest);
     return false;
   } finally {
     if (masked != null) await shredFile(masked);
+    if (disguise) await shredFile(sendPathOf(take));
     await shredFile(take);
   }
+}
+
+/// where [placeVoice] makes the disguise of the take at [take] before it
+/// moves it in
+@visibleForTesting
+String sendPathOf(String take) => take.endsWith('.wav')
+    ? '${take.substring(0, take.length - 4)}_s.wav'
+    : '$take.s';
+
+/// what the phone has free where notes are made, or null when it cannot
+/// say. a test stands in for it
+@visibleForTesting
+Future<int?> Function() voiceFreeBytes = () => ToolsBridge.instance.freeBytes();
+
+/// the disk a note of [ms] takes to disguise: the side file at four bytes
+/// a sample, the note, and with [withTake] the take too, with room to
+/// spare. about 250 mb for half an hour with the take
+int voiceRoomNeeded(int ms, {bool withTake = false}) {
+  final secs = (ms + 999) ~/ 1000;
+  return secs * 32000 * (withTake ? 4 : 3) + 16 * 1024 * 1024;
+}
+
+/// false only when the phone says there is not room for [voiceRoomNeeded]
+Future<bool> roomForVoice(int ms, {bool withTake = false}) async {
+  final int? free;
+  try {
+    free = await voiceFreeBytes();
+  } catch (_) {
+    return true;
+  }
+  return free == null || free >= voiceRoomNeeded(ms, withTake: withTake);
 }
 
 /// a voice note that will not go: its take and any disguise made of it

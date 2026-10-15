@@ -8301,6 +8301,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo disfrazar esta nota, así que no se envió';
 
   @override
+  String get voiceNoRoom =>
+      'No hay suficiente espacio libre en este teléfono. Libera algo de espacio y vuelve a intentarlo.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'No había espacio suficiente para disfrazar esta nota, así que no se envió';
+
+  @override
+  String get voiceDisguising => 'Disfrazando';
+
+  @override
   String get settingsDisguiseByDefault => 'Disfrazar mi voz por defecto';
 
   @override

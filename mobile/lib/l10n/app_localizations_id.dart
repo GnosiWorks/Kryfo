@@ -8230,6 +8230,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan ini tidak bisa disamarkan, jadi tidak dikirim';
 
   @override
+  String get voiceNoRoom =>
+      'Ruang kosong di ponsel ini tidak cukup. Kosongkan sedikit ruang, lalu coba lagi.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Ruang kosong tidak cukup untuk menyamarkan pesan ini, jadi tidak dikirim';
+
+  @override
+  String get voiceDisguising => 'Sedang disamarkan';
+
+  @override
   String get settingsDisguiseByDefault => 'Samarkan suaraku secara bawaan';
 
   @override

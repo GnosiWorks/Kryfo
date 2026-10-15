@@ -8306,6 +8306,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non è stato possibile camuffare questa nota, quindi non è stata inviata';
 
   @override
+  String get voiceNoRoom =>
+      'Non c\'è abbastanza spazio libero su questo telefono. Libera un po\' di spazio e riprova.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Non c\'era abbastanza spazio per camuffare questa nota, quindi non è stata inviata';
+
+  @override
+  String get voiceDisguising => 'Camuffamento in corso';
+
+  @override
   String get settingsDisguiseByDefault => 'Camuffa la mia voce di default';
 
   @override

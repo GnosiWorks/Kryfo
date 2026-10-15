@@ -7030,6 +7030,45 @@ class HaloDb implements GroupOwedStore {
     await trimUnfinishedMedia();
   }
 
+  // a voice note of ours moved into the media folder and never written
+  // down, as a crash between the two leaves it. an hour on nothing will
+  // write it down, so it goes; one a row names by uid or path stays
+  Future<void> sweepUnkeptVoice({DateTime? now}) async {
+    final dir = await container.mediaDir();
+    final at = now ?? DateTime.now();
+    final old = <File>[];
+    await for (final e in dir.list(followLinks: false)) {
+      final name = p.basename(e.path);
+      if (e is! File || !name.startsWith('vn_') || !name.endsWith('.wav')) {
+        continue;
+      }
+      final DateTime made;
+      try {
+        made = (await e.stat()).modified;
+      } catch (_) {
+        continue;
+      }
+      if (at.difference(made) >= const Duration(hours: 1)) old.add(e);
+    }
+    if (old.isEmpty) return;
+    final db = await open();
+    for (final f in old) {
+      final name = p.basename(f.path);
+      final uid = name.substring(3, name.length - 4);
+      for (final (col, v) in [('msg_uid', uid), ('file_path', f.path)]) {
+        final r = await db.query(
+          'messages',
+          columns: ['msg_uid'],
+          where: '$col = ?',
+          whereArgs: [v],
+          limit: 1,
+        );
+        if (r.isNotEmpty) break;
+        if (col == 'file_path') await shredFile(f.path);
+      }
+    }
+  }
+
   // an accepted contact, or a member of a group here
   Future<bool> _heldHere(String id) async {
     final db = await open();
@@ -19624,6 +19663,11 @@ class AppState extends ChangeNotifier {
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
+    unawaited(
+      live.sweepUnkeptVoice().catchError((Object e) {
+        dlog('sweep: unkept voice (${e.runtimeType})');
+      }),
+    );
     _deliveryMode = await loadDeliveryMode();
     // drafts written down by a restart, asked for or not
     await restoreKeptDrafts().catchError((Object e) {

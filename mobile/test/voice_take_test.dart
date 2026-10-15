@@ -4,16 +4,27 @@
 // shredded once the disguise is there, in a group as in a chat, and not
 // left for the next start to find. one cancelled, held back, cut off by the
 // chat closing or left by a crash is shredded too
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show sweepVoiceLeftovers;
+import 'package:kryfo/main.dart' show HaloDb, sweepVoiceLeftovers;
 import 'package:kryfo/picked.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
+import 'mem_db.dart';
 import 'shred_twin.dart';
 import 'source_body.dart';
+
+class _Rows extends HaloDb {
+  _Rows(this.mem);
+  final MemDb mem;
+  @override
+  Future<Database> open() async => mem;
+}
 
 // [secs] of a voiced tone, as the recorder writes it
 Uint8List _wav(double secs) {
@@ -150,8 +161,10 @@ void main() {
     expect(send, isNot(contains('readAsBytes')));
     expect(send, isNot(contains('writeAsBytes')));
     expect(send, isNot(contains('.delete(')));
-    // a send a request holds back shreds it too, with its disguise
-    expect(send, contains('dropTake(srcPath, take.masked)'));
+    // a send a request holds back shreds it too, with its disguise, one
+    // still being made stopped first
+    expect(send, contains('dropTake(srcPath, masked ?? take.masked)'));
+    expect(send, contains('making?.cancel()'));
     // and the mic shreds a cancelled one itself
     final mic = sourceOf('lib/widgets/voice_mic.dart');
     final end = bodyOf(mic, 'Future<void> _end(');
@@ -163,7 +176,8 @@ void main() {
     final mic = sourceOf('lib/widgets/voice_mic.dart');
     for (final sig in [
       'Future<void> _toPreview(',
-      'Future<String?> _makeMask(',
+      '_Masking _startMask(',
+      'Future<String?> _run(',
     ]) {
       final body = bodyOf(mic, sig);
       expect(body, isNot(contains('readAsBytes')), reason: sig);
@@ -215,6 +229,126 @@ void main() {
       'void _onVoice(',
     );
     expect('dropTake(take.path, take.masked)'.allMatches(on), hasLength(2));
+  });
+
+  test('disguised on the way out, the media folder only ever sees the '
+      'note whole', () async {
+    final take = File('${tmp.path}/vn_1757693091006.wav')
+      ..writeAsBytesSync(_wav(150));
+    final media = Directory('${tmp.path}/media')..createSync();
+    final dest = '${media.path}/vn_u.wav';
+    final seen = <String>{};
+    final watch = Timer.periodic(const Duration(milliseconds: 2), (_) {
+      for (final e in media.listSync()) {
+        seen.add(e.uri.pathSegments.last);
+      }
+    });
+    final placed = placeVoice(take.path, dest, disguise: true);
+    expect(await placed, isTrue);
+    watch.cancel();
+    // a crash on the way leaves its pieces where the start sweeps
+    expect(seen.difference({'vn_u.wav'}), isEmpty);
+    expect(media.listSync().map((e) => e.path), [dest]);
+    expect(tmp.listSync().whereType<File>(), isEmpty);
+    expect(sendPathOf(take.path), '${tmp.path}/vn_1757693091006_s.wav');
+  });
+
+  group('a note of ours never written down', () {
+    late Directory docs;
+    setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      docs = Directory('${tmp.path}/docs')..createSync();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (_) async => docs.path,
+          );
+    });
+    tearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            null,
+          ),
+    );
+
+    test(
+      'goes from the media folder an hour on, and nothing else does',
+      () async {
+        final db = _Rows(MemDb());
+        final media = await db.container.mediaDir();
+        final now = DateTime(2026, 10, 15, 12);
+        final old = now.subtract(const Duration(hours: 2));
+        File f(String name, {DateTime? at}) => File('${media.path}/$name')
+          ..writeAsBytesSync(List.filled(4096, 7))
+          ..setLastModifiedSync(at ?? old);
+        final kept = f('vn_kept.wav');
+        final byPath = f('vn_other.wav');
+        final unkept = f('vn_lost.wav');
+        final side = f('vn_lost_f.wav');
+        final fresh = f('vn_new.wav', at: now);
+        final photo = f('p_lost.jpg');
+        await db.mem.insert('messages', {
+          'peer_id': 'x',
+          'direction': 'out',
+          'plaintext': '',
+          'sent_at': 1,
+          'msg_uid': 'kept',
+          'file_path': kept.path,
+        });
+        await db.mem.insert('messages', {
+          'peer_id': 'x',
+          'direction': 'out',
+          'plaintext': '',
+          'sent_at': 2,
+          'msg_uid': 'moved',
+          'file_path': byPath.path,
+        });
+        final twin = twinOf(unkept.path, twins);
+        await db.sweepUnkeptVoice(now: now);
+        expect(unkept.existsSync(), isFalse);
+        expect(zeroed(twin), isTrue);
+        expect(side.existsSync(), isFalse);
+        for (final k in [kept, byPath, fresh, photo]) {
+          expect(k.existsSync(), isTrue, reason: k.path);
+        }
+      },
+    );
+  });
+
+  test('a send keeps going once the chat is left, never past the '
+      'lock', () {
+    final send = bodyOf(
+      sourceOf('lib/screens/chat_screen.dart'),
+      'Future<void> _sendVoice(',
+    );
+    final group = bodyOf(
+      sourceOf('lib/screens/group_chat_screen.dart'),
+      'Future<void> _sendGroupVoice(',
+    );
+    for (final body in [send, group]) {
+      expect(body, contains('lockGuard.closeOnLock('));
+      expect(body, contains('if (locked)'));
+      expect(body, isNot(contains('if (!mounted) return shredFile(')));
+      // the media folder is asked inside a guard that drops the take
+      final at = body.indexOf('mediaDirOf(');
+      final placed = body.indexOf('await placeVoice(');
+      final caught = body.indexOf('} catch', at);
+      expect(caught, inExclusiveRange(at, placed));
+      expect(body.substring(caught, placed), contains('dropTake('));
+      // every setState once the note is placed asks for mounted first
+      for (
+        var i = body.indexOf('setState(', placed);
+        i > 0;
+        i = body.indexOf('setState(', i + 1)
+      ) {
+        expect(
+          body.substring(i - 60, i),
+          contains('mounted'),
+          reason: body.substring(i - 60, i + 20),
+        );
+      }
+    }
   });
 
   test(

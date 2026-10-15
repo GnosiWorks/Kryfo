@@ -8296,6 +8296,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não deu para disfarçar este áudio, então ele não foi enviado';
 
   @override
+  String get voiceNoRoom =>
+      'Não há espaço livre suficiente neste celular. Libere um pouco de espaço e tente de novo.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Não havia espaço suficiente para disfarçar este áudio, então ele não foi enviado';
+
+  @override
+  String get voiceDisguising => 'Disfarçando';
+
+  @override
   String get settingsDisguiseByDefault => 'Disfarçar minha voz por padrão';
 
   @override

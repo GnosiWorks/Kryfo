@@ -8223,6 +8223,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể đổi giọng cho tin này nên tin chưa được gửi';
 
   @override
+  String get voiceNoRoom =>
+      'Điện thoại không còn đủ dung lượng trống. Hãy giải phóng bớt dung lượng rồi thử lại.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Không đủ dung lượng để đổi giọng cho tin này nên tin chưa được gửi';
+
+  @override
+  String get voiceDisguising => 'Đang đổi giọng';
+
+  @override
   String get settingsDisguiseByDefault => 'Mặc định đổi giọng của tôi';
 
   @override

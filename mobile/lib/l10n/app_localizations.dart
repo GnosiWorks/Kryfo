@@ -13281,6 +13281,24 @@ abstract class AppLocalizations {
   /// **'This note could not be disguised, so it was not sent'**
   String get voiceNotDisguised;
 
+  /// the phone is too full to record or disguise a voice note; the note waits where it is
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough free space on this phone. Free up some space and try again.'**
+  String get voiceNoRoom;
+
+  /// a voice note that was to go out disguised could not be, because the phone is too full: it is not sent as it was recorded
+  ///
+  /// In en, this message translates to:
+  /// **'There was not enough free space to disguise this note, so it was not sent'**
+  String get voiceNoRoomNotSent;
+
+  /// under a voice note sent while its disguise is still being made
+  ///
+  /// In en, this message translates to:
+  /// **'Disguising'**
+  String get voiceDisguising;
+
   /// settings: voice notes go out disguised in every chat that has not chosen for itself
   ///
   /// In en, this message translates to:

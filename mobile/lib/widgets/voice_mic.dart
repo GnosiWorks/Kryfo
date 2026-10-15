@@ -5,6 +5,7 @@
 // disguised, before it goes. the raw take never outlives the note
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -14,6 +15,7 @@ import 'package:record/record.dart';
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../picked.dart' show roomForVoice;
 import '../shred.dart';
 import '../theme.dart';
 import '../tor_valve.dart' show restartHolds;
@@ -26,18 +28,99 @@ import 'voice_parts.dart';
 
 /// a note as the mic hands it on. [path] is the raw take, the sender's to
 /// shred. [masked] is the file of the disguised one made for the preview,
-/// sent as heard, the sender's too
+/// sent as heard, the sender's too. [making] is that disguise still being
+/// made when send was tapped: the sender owns it then
 class VoiceTake {
   final String path;
   final int ms;
   final bool disguise;
   final String? masked;
+  final VoiceMaking? making;
   const VoiceTake({
     required this.path,
     required this.ms,
     required this.disguise,
     this.masked,
+    this.making,
   });
+}
+
+/// a disguise on its way. [file] is the disguised take, null when none
+/// came; [cancel] lets it go and shreds what it made; [progress] is how far
+/// it is, 0 to 1, null before it is known
+class VoiceMaking {
+  const VoiceMaking(this.file, this.cancel, this.progress);
+  final Future<String?> file;
+  final VoidCallback cancel;
+  final ValueListenable<double?> progress;
+}
+
+// the preview's disguise of one held take: the live one finished, or the
+// take made whole, with a stop for when it is no longer wanted
+class _Masking {
+  _Masking(this.take, Future<LiveMask?>? live, this.room) {
+    file = _run(live);
+  }
+
+  final String take;
+  // whether the disk has room to make it
+  final Future<bool> Function() room;
+  final progress = ValueNotifier<double?>(null);
+  late final Future<String?> file;
+  MaskJob? _job;
+  bool dropped = false;
+  bool ended = false;
+  // the disk was too full for it
+  bool noRoom = false;
+  String? made;
+
+  Future<String?> _run(Future<LiveMask?>? live) async {
+    String? m;
+    try {
+      final lm = await live;
+      if (dropped) {
+        lm?.cancel();
+      } else {
+        m = await lm?.finish();
+      }
+    } catch (e) {
+      dlog('voice: the live disguise failed (${e.runtimeType})');
+    }
+    if (m == null && !dropped) {
+      if (!await room()) {
+        noRoom = true;
+      } else if (!dropped) {
+        final j = _job = HoldToTalkMicState.startWhole(
+          take,
+          maskPathOf(take),
+          (p) => progress.value = p,
+        );
+        try {
+          if (await j.done) m = j.to;
+        } catch (e) {
+          dlog('voice: no disguise (${e.runtimeType})');
+        }
+        if (m == null && !dropped && !await room()) noRoom = true;
+      }
+    }
+    ended = true;
+    if (m != null && dropped) {
+      await shredFile(m);
+      m = null;
+    }
+    made = m;
+    return m;
+  }
+
+  // not wanted any more: stopped where it is, what it made shredded
+  void cancel() {
+    if (dropped) return;
+    dropped = true;
+    _job?.cancel();
+    final m = made;
+    made = null;
+    if (m != null) shredFile(m).ignore();
+  }
 }
 
 /// where a note is between the first touch and the send
@@ -103,7 +186,10 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   bool get chip => _chip;
   // the disguised take is made and can be played
   @visibleForTesting
-  bool get heard => _maskedPath != null;
+  bool get heard => _mask?.made != null;
+  // a disguise of the held take is being made or is made
+  @visibleForTesting
+  bool get masking => _mask != null;
 
   // how the disguise made while recording starts: a test stands in for it
   @visibleForTesting
@@ -113,23 +199,43 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @visibleForTesting
   static Duration maxLength = kVoiceMax;
 
+  // notes shorter than this are disguised as the preview opens, so the
+  // chip switches at once; longer ones only once the chip asks
+  @visibleForTesting
+  static Duration maskAhead = const Duration(minutes: 2);
+
+  // how a take is disguised whole: a test stands in for it
+  @visibleForTesting
+  static MaskJob Function(
+    String from,
+    String to,
+    void Function(double done) onProgress,
+  )
+  startWhole = _startWhole;
+
+  static MaskJob _startWhole(
+    String from,
+    String to,
+    void Function(double done) onProgress,
+  ) => startMaskFile(from, to, onProgress: onProgress);
+
   // stopped at the limit with the finger still down: its lift keeps the
   // preview
   bool _liftKeeps = false;
 
   // the disguise made while a disguised note records
   Future<LiveMask?>? _streaming;
-  // the preview: the disguised take's file, made once, to play and send
-  Future<String?>? _maskJob;
-  String? _maskedPath;
+  // the preview's disguise: made once, to play and send
+  _Masking? _mask;
   List<double>? _peaks;
   AudioPlayer? _player;
   String? _loaded;
   bool _playing = false;
   bool _playWhenReady = false;
   Duration _pos = Duration.zero;
-  bool _sending = false;
   bool _stopping = false;
+  // the send is asking the disk for room
+  bool _asking = false;
   final List<StreamSubscription<Object?>> _subs = [];
 
   @override
@@ -258,6 +364,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _unguard = recordingUntil(lockGuard.closeOnLock(_abort));
       // a restart now would cut the note off
       restartHolds.add(this);
+      // no room for a minute of it, disguised: it stops as it starts, asked
+      // beside the start so the mic opens no later
+      roomForVoice(60 * 1000, withTake: true).then((room) {
+        if (room || _path != path) return;
+        _abort();
+        if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+      }).ignore();
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
@@ -425,9 +538,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     HapticFeedback.lightImpact();
     setState(() => _stage = VoiceStage.preview);
     _overlay?.rebuild();
-    // made at once, so the chip has it by the time it is touched
     handed();
-    _maskJob = _makeMask(take, live);
+    // made at once when it goes disguised, or when it is short enough that
+    // the chip switches at once. a long one waits for the chip
+    if (live != null || _chip || _ms < maskAhead.inMilliseconds) {
+      _startMask(take, live);
+    }
     // read from the file a piece at a time, however long the note
     final peaks = await takePeaks(take);
     final ms = await wavFileMs(take);
@@ -439,48 +555,43 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   }
 
   // the disguise made while recording when there is one, else the whole
-  // take now. its file is the preview's until the note goes
-  Future<String?> _makeMask(String take, [Future<LiveMask?>? live]) async {
-    String? m;
-    try {
-      m = await (await live)?.finish();
-    } catch (e) {
-      dlog('voice: the live disguise failed (${e.runtimeType})');
-    }
-    if (m == null && _held == take) {
-      final p = maskPathOf(take);
-      try {
-        if (await maskWavFile(take, p)) m = p;
-      } catch (e) {
-        dlog('voice: no disguise (${e.runtimeType})');
-      }
-    }
-    if (m == null || _held != take) {
-      if (m != null) await shredFile(m);
+  // take. its file is the preview's until the note goes
+  _Masking _startMask(String take, [Future<LiveMask?>? live]) {
+    final mk = _mask = _Masking(take, live, () => roomForVoice(_ms));
+    mk.progress.addListener(() {
+      if (_mask == mk) _overlay?.rebuild();
+    });
+    mk.file.then((m) {
+      if (_mask != mk) return;
       _overlay?.rebuild();
-      return null;
-    }
-    _maskedPath = m;
-    _overlay?.rebuild();
-    if (_playWhenReady && _chip) {
+      if (m != null) {
+        if (_playWhenReady && _chip) {
+          _playWhenReady = false;
+          _play(m);
+        }
+        return;
+      }
       _playWhenReady = false;
-      await _play(m);
-    }
-    return m;
+      // no room for it: the take stays, and the chip or the send tries
+      // again
+      if (mk.noRoom && _chip && mounted) {
+        showHaloToast(context, l10n.voiceNoRoom);
+      }
+    });
+    return mk;
   }
 
-  // the preview goes: its player, and both takes shredded. [keep] is the
-  // disguised one when it goes with the note
-  void _dropPreview({bool keep = false}) {
-    final held = _held, masked = _maskedPath;
+  // the preview goes: its player, both takes shredded, and a disguise
+  // still being made of it stopped
+  void _dropPreview() {
+    final held = _held, mask = _mask;
     _held = null;
-    _maskedPath = null;
-    _maskJob = null;
+    _mask = null;
     _peaks = null;
     _playWhenReady = false;
     _pos = Duration.zero;
+    mask?.cancel();
     if (held != null) shredFile(held).ignore();
-    if (masked != null && !keep) shredFile(masked).ignore();
   }
 
   void _discard() {
@@ -497,17 +608,41 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   Future<void> _sendHeld() async {
     final held = _held;
-    if (held == null || _sending) return;
-    _sending = true;
+    if (held == null || _asking) return;
     final chip = _chip;
     final ms = _ms;
-    final masked = chip ? await _maskJob : null;
-    _sending = false;
-    // thrown away or locked out while the disguise was being made
-    if (_held != held) return;
+    var mk = _mask;
+    if (chip) {
+      // the disk had no room for it: tried again if there is room now,
+      // else the take waits here
+      if (mk != null && mk.ended && mk.made == null) {
+        _asking = true;
+        final room = await roomForVoice(ms);
+        _asking = false;
+        if (_held != held || _chip != chip) return;
+        if (!room) {
+          if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+          return;
+        }
+        mk = null;
+      }
+      mk ??= _startMask(held);
+    } else {
+      // as recorded: a disguise made or being made of it goes
+      mk?.cancel();
+      mk = null;
+    }
+    final masked = mk?.made;
+    // still being made: the send owns it from here, so leaving the chat
+    // does not lose it
+    final making = mk != null && !mk.ended
+        ? VoiceMaking(mk.file, mk.cancel, mk.progress)
+        : null;
+    // handed on with the note, not stopped with the preview
+    _mask = null;
     _held = null;
     _stopPlayer();
-    _dropPreview(keep: masked != null);
+    _dropPreview();
     _release();
     _stage = VoiceStage.idle;
     _overlay?.leave();
@@ -515,7 +650,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     HapticFeedback.mediumImpact();
     if (mounted) setState(() {});
     widget.onSend(
-      VoiceTake(path: held, ms: ms, disguise: chip, masked: masked),
+      VoiceTake(
+        path: held,
+        ms: ms,
+        disguise: chip,
+        masked: masked,
+        making: making,
+      ),
     );
   }
 
@@ -527,10 +668,16 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     }
     HapticFeedback.selectionClick();
     setState(() => _chip = !_chip);
+    // a long note is disguised once it is asked for
+    final held = _held;
+    final mk = _mask;
+    if (_chip && held != null && (mk == null || mk.ended && mk.made == null)) {
+      _startMask(held);
+    }
     _overlay?.rebuild();
     // a note playing carries on in the other voice from where it was
     if (_playing) {
-      final to = _chip ? _maskedPath : _held;
+      final to = _chip ? _mask?.made : _held;
       if (to == null) {
         _player?.pause();
         _playWhenReady = true;
@@ -595,10 +742,10 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _overlay?.rebuild();
       return;
     }
-    final path = _chip ? _maskedPath : _held;
+    final path = _chip ? _mask?.made : _held;
     if (path == null) {
       // the disguised take is still being made: it plays once it is
-      _playWhenReady = _chip && _maskJob != null;
+      _playWhenReady = _chip && _mask != null && !_mask!.ended;
       _overlay?.rebuild();
       return;
     }
@@ -636,7 +783,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           progress: preview && _ms > 0 ? _pos.inMilliseconds / _ms : 0,
           playing: _playing || _playWhenReady,
           disguise: _chip,
-          masking: _chip && _maskedPath == null && _maskJob != null,
+          masking: _chip && _mask != null && !_mask!.ended,
+          maskProgress: _mask?.progress.value,
           onDelete: _abort,
           onStop: _stop,
           onSend: preview ? _sendHeld : _end,
@@ -931,8 +1079,9 @@ class VoiceLockedBar extends StatelessWidget {
   final double progress;
   final bool playing;
   final bool disguise;
-  // the disguised take is still being made
+  // the disguised take is still being made, and how far, 0 to 1
   final bool masking;
+  final double? maskProgress;
   final VoidCallback onDelete;
   final VoidCallback onStop;
   final VoidCallback onSend;
@@ -950,6 +1099,7 @@ class VoiceLockedBar extends StatelessWidget {
     required this.playing,
     required this.disguise,
     required this.masking,
+    this.maskProgress,
     required this.onDelete,
     required this.onStop,
     required this.onSend,
@@ -1089,7 +1239,12 @@ class VoiceLockedBar extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               if (preview)
-                MaskChip(on: disguise, busy: masking, onTap: onChip)
+                MaskChip(
+                  on: disguise,
+                  busy: masking,
+                  progress: maskProgress,
+                  onTap: onChip,
+                )
               else
                 _Round(
                   label: l10n.voiceStopRecording,
@@ -1187,12 +1342,15 @@ class _Round extends StatelessWidget {
 class MaskChip extends StatelessWidget {
   final bool on;
   final bool busy;
+  // how far the disguise is, 0 to 1, while it is made
+  final double? progress;
   final VoidCallback onTap;
   const MaskChip({
     super.key,
     required this.on,
     required this.onTap,
     this.busy = false,
+    this.progress,
   });
 
   @override
@@ -1208,7 +1366,14 @@ class MaskChip extends StatelessWidget {
             key: const ValueKey('busy'),
             width: 14,
             height: 14,
-            child: CircularProgressIndicator(strokeWidth: 1.6, color: ink),
+            // a ring that fills as it goes; with less movement it never
+            // spins, even before it knows how far it is
+            child: CircularProgressIndicator(
+              strokeWidth: 1.6,
+              color: ink,
+              backgroundColor: ink.withValues(alpha: 0.25),
+              value: still ? (progress ?? 0) : progress,
+            ),
           )
         : Icon(
             on ? Icons.theater_comedy : Icons.theater_comedy_outlined,

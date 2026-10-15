@@ -8327,6 +8327,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Nachricht ließ sich nicht verfremden und wurde nicht gesendet';
 
   @override
+  String get voiceNoRoom =>
+      'Auf diesem Telefon ist nicht genug Speicher frei. Gib etwas Speicher frei und versuch es noch einmal.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Zum Verfremden war nicht genug Speicher frei, daher wurde die Nachricht nicht gesendet';
+
+  @override
+  String get voiceDisguising => 'Wird verfremdet';
+
+  @override
   String get settingsDisguiseByDefault =>
       'Meine Stimme standardmäßig verfremden';
 

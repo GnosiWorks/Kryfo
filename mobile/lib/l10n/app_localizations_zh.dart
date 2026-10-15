@@ -7874,6 +7874,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNotDisguised => '这条语音无法变声，所以没有发出';
 
   @override
+  String get voiceNoRoom => '手机可用空间不足。请清理一些空间后再试。';
+
+  @override
+  String get voiceNoRoomNotSent => '空间不足，无法为这条语音变声，所以没有发出';
+
+  @override
+  String get voiceDisguising => '正在变声';
+
+  @override
   String get settingsDisguiseByDefault => '默认给我的语音变声';
 
   @override
@@ -15672,6 +15681,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotDisguised => '這則語音無法變聲，所以沒有送出';
+
+  @override
+  String get voiceNoRoom => '手機可用空間不足。請清出一些空間後再試。';
+
+  @override
+  String get voiceNoRoomNotSent => '空間不足，無法為這則語音變聲，所以沒有送出';
+
+  @override
+  String get voiceDisguising => '正在變聲';
 
   @override
   String get settingsDisguiseByDefault => '預設給我的語音變聲';

@@ -22,7 +22,12 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
-    show ImageCaptionScreen, VoiceBubble, fileCard, fileTooBigLine;
+    show
+        ImageCaptionScreen,
+        VoiceBubble,
+        VoiceMakingBubble,
+        fileCard,
+        fileTooBigLine;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../widgets/confirm_sheet.dart';
@@ -367,6 +372,8 @@ class _Msg with WordLinks {
   String? filePath;
   String? fileName;
   bool voiceDisguised;
+  // a voice note sent while its disguise is made: how far it is
+  ValueListenable<double?>? making;
   bool saved;
   Map<String, String> reactions;
   bool fresh = false;
@@ -3348,88 +3355,169 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _sendVoice(VoiceTake take) async {
     final srcPath = take.path;
-    final src = File(srcPath);
+    final making = take.making;
+    // the note is not going: its take, and a disguise of it made or still
+    // being made, shredded
+    Future<void> drop([String? masked]) async {
+      making?.cancel();
+      await dropTake(srcPath, masked ?? take.masked);
+    }
+
     // the chat went while the note was made: the raw voice goes, unsent
     if (!mounted || _requestLocked) {
       // one that will not go is swept at the next start
-      dropTake(srcPath, take.masked).ignore();
+      drop().ignore();
       return;
     }
-    if (!await src.exists()) return dropTake(srcPath, take.masked);
-    if (!mounted) return dropTake(srcPath, take.masked);
-    if (_isDev && !await _ensureDevStarted()) {
-      await dropTake(srcPath, take.masked);
-      return;
-    }
+    if (!await File(srcPath).exists()) return drop();
+    if (!mounted) return drop();
+    if (_isDev && !await _ensureDevStarted()) return drop();
     // read after the start: an anonymous chat is disguised whatever the
     // note says
     final disguise = take.disguise || _devAnon;
     final msgUid = newMsgUid();
-    final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final filePath = '${mediaDir.path}/vn_$msgUid.wav';
-    // the recorder's own file is the voice before any disguise: it is the
-    // copy kept with the message, or it goes once the disguise is there
-    final placed = await placeVoice(
-      srcPath,
-      filePath,
-      disguise: disguise,
-      masked: take.masked,
-    );
-    // never sent as recorded when it was to go disguised
-    if (!placed) {
-      if (disguise && mounted) showHaloToast(context, l10n.voiceNotDisguised);
-      return;
-    }
-    if (!mounted) return shredFile(filePath);
-    if (_requestPending) setState(() => _sentCount++);
     final replyToUid = _replyTo?.msgUid;
-    final msg = _Msg(
-      'out',
-      '',
-      DateTime.now(),
-      sending: true,
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      filePath: filePath,
-      fileName: 'voice.wav',
-      voiceDisguised: disguise,
-      burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: null,
-    );
-    setState(() {
-      _messages.add(msg);
-      _normaliseMessages();
-      _status = '';
-      _replyTo = null;
+    // sent is sent: leaving the chat does not stop it. the lock does, and
+    // nothing of it outlives the lock
+    var locked = false;
+    final unguard = lockGuard.closeOnLock(() {
+      locked = true;
+      making?.cancel();
     });
-    _scrollToEnd();
-    HapticFeedback.lightImpact();
-    await _answerSupport();
-    await session.saveMessage(
-      widget.peerHaloId,
-      'out',
-      '',
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      filePath: filePath,
-      fileName: 'voice.wav',
-      voiceDisguised: disguise,
-      burnAt: msg.burnAt,
-      burnSecs: msg.burnSecs,
-      sent: 0,
-    );
-    // the home row moves up on what you sent too
-    unawaited(appState.refreshContacts());
-    _sendChunkedMedia(
-      path: filePath,
-      msgUid: msgUid,
-      fileName: 'voice.wav',
-      voice: true,
-      voiceDisguised: disguise,
-      burnSeconds: _ghost ? _burnSeconds : null,
-      replyTo: replyToUid,
-      writtenAt: msg.when.millisecondsSinceEpoch,
-    ).then((result) => _finishMediaSend(msg, result));
+    _Msg? pending;
+    void unpend() {
+      final m = pending;
+      if (m == null || !mounted) return;
+      setState(() => _messages.remove(m));
+    }
+
+    try {
+      var masked = take.masked;
+      if (making != null) {
+        // its bubble shows at once, waiting for its disguise
+        final m = pending = _Msg(
+          'out',
+          '',
+          DateTime.now(),
+          sending: true,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+          fileName: 'voice.wav',
+          voiceDisguised: true,
+          burnSecs: _ghost ? _burnSeconds : null,
+        )..making = making.progress;
+        setState(() {
+          _messages.add(m);
+          _normaliseMessages();
+          _status = '';
+          _replyTo = null;
+        });
+        _scrollToEnd();
+        masked = await making.file;
+        if (locked) return dropTake(srcPath, masked);
+      }
+      // not made yet: made now, if the disk has room for it
+      if (disguise && masked == null && !await roomForVoice(take.ms)) {
+        unpend();
+        await dropTake(srcPath, null);
+        if (mounted) showHaloToast(context, l10n.voiceNoRoomNotSent);
+        return;
+      }
+      final String filePath;
+      try {
+        final mediaDir = await session.mediaDirOf(widget.peerHaloId);
+        filePath = '${mediaDir.path}/vn_$msgUid.wav';
+      } catch (e) {
+        dlog('voice: no media folder (${e.runtimeType})');
+        unpend();
+        await dropTake(srcPath, masked);
+        return;
+      }
+      // the recorder's own file is the voice before any disguise: it is the
+      // copy kept with the message, or it goes once the disguise is there
+      final placed = await placeVoice(
+        srcPath,
+        filePath,
+        disguise: disguise,
+        masked: masked,
+      );
+      // never sent as recorded when it was to go disguised
+      if (!placed) {
+        unpend();
+        if (disguise && mounted) {
+          final room = await roomForVoice(take.ms);
+          if (mounted) {
+            showHaloToast(
+              context,
+              room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent,
+            );
+          }
+        }
+        return;
+      }
+      if (locked) {
+        unpend();
+        return shredFile(filePath);
+      }
+      if (_requestPending && mounted) setState(() => _sentCount++);
+      final msg =
+          pending ??
+          _Msg(
+            'out',
+            '',
+            DateTime.now(),
+            sending: true,
+            msgUid: msgUid,
+            replyTo: replyToUid,
+            fileName: 'voice.wav',
+            voiceDisguised: disguise,
+            burnSecs: _ghost ? _burnSeconds : null,
+            burnAt: null,
+          );
+      msg
+        ..filePath = filePath
+        ..making = null;
+      if (mounted) {
+        setState(() {
+          if (!_messages.contains(msg)) _messages.add(msg);
+          _normaliseMessages();
+          _status = '';
+          _replyTo = null;
+        });
+        _scrollToEnd();
+        HapticFeedback.lightImpact();
+      }
+      await _answerSupport();
+      await session.saveMessage(
+        widget.peerHaloId,
+        'out',
+        '',
+        msgUid: msgUid,
+        replyTo: replyToUid,
+        filePath: filePath,
+        fileName: 'voice.wav',
+        voiceDisguised: disguise,
+        burnAt: msg.burnAt,
+        burnSecs: msg.burnSecs,
+        sent: 0,
+      );
+      // the home row moves up on what you sent too
+      unawaited(appState.refreshContacts());
+      // left while it was made: the screen showing the chat now hears of it
+      if (!mounted) appState.chatChanged(widget.peerHaloId);
+      _sendChunkedMedia(
+        path: filePath,
+        msgUid: msgUid,
+        fileName: 'voice.wav',
+        voice: true,
+        voiceDisguised: disguise,
+        burnSeconds: msg.burnSecs,
+        replyTo: replyToUid,
+        writtenAt: msg.when.millisecondsSinceEpoch,
+      ).then((result) => _finishMediaSend(msg, result));
+    } finally {
+      unguard();
+    }
   }
 
   // rough wire time: 16k slices, base64 adds a third, five in flight at
@@ -6999,7 +7087,17 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (msg.fileName == 'voice.wav' &&
+                                    if (msg.making != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: VoiceMakingBubble(
+                                          progress: msg.making!,
+                                          isOut: isOut,
+                                        ),
+                                      )
+                                    else if (msg.fileName == 'voice.wav' &&
                                         msg.filePath != null)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(

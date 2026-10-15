@@ -8378,6 +8378,17 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося змінити голос, тому повідомлення не надіслано';
 
   @override
+  String get voiceNoRoom =>
+      'На телефоні недостатньо вільного місця. Звільни трохи місця і спробуй ще раз.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Не вистачило місця, щоб змінити голос, тому повідомлення не надіслано';
+
+  @override
+  String get voiceDisguising => 'Голос змінюється';
+
+  @override
   String get settingsDisguiseByDefault =>
       'Змінювати мій голос за замовчуванням';
 

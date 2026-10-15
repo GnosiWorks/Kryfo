@@ -10381,6 +10381,18 @@
   "@voiceNotDisguised": {
     "description": "a voice note that was to go out disguised and could not be: it is not sent as it was recorded"
   },
+  "voiceNoRoom": "Not enough free space on this phone. Free up some space and try again.",
+  "@voiceNoRoom": {
+    "description": "the phone is too full to record or disguise a voice note; the note waits where it is"
+  },
+  "voiceNoRoomNotSent": "There was not enough free space to disguise this note, so it was not sent",
+  "@voiceNoRoomNotSent": {
+    "description": "a voice note that was to go out disguised could not be, because the phone is too full: it is not sent as it was recorded"
+  },
+  "voiceDisguising": "Disguising",
+  "@voiceDisguising": {
+    "description": "under a voice note sent while its disguise is still being made"
+  },
   "settingsDisguiseByDefault": "Disguise my voice by default",
   "@settingsDisguiseByDefault": {
     "description": "settings: voice notes go out disguised in every chat that has not chosen for itself"

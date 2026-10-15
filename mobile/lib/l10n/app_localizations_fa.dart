@@ -8248,6 +8248,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotDisguised => 'صدای این پیام تغییر داده نشد، پس ارسال نشد';
 
   @override
+  String get voiceNoRoom =>
+      'فضای خالی کافی روی این گوشی نیست. کمی فضا آزاد کنید و دوباره امتحان کنید.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'فضای کافی برای تغییر صدای این پیام نبود، پس ارسال نشد';
+
+  @override
+  String get voiceDisguising => 'در حال تغییر صدا';
+
+  @override
   String get settingsDisguiseByDefault => 'تغییر صدای من به‌طور پیش‌فرض';
 
   @override

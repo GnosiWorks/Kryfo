@@ -8320,6 +8320,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette note n’a pas pu être déguisée, elle n’a donc pas été envoyée';
 
   @override
+  String get voiceNoRoom =>
+      'Il n’y a pas assez d’espace libre sur ce téléphone. Libérez de l’espace, puis réessayez.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Il n’y avait pas assez d’espace pour déguiser cette note, elle n’a donc pas été envoyée';
+
+  @override
+  String get voiceDisguising => 'Déguisement en cours';
+
+  @override
   String get settingsDisguiseByDefault => 'Déguiser ma voix par défaut';
 
   @override

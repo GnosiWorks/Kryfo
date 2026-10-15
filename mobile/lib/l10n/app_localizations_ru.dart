@@ -8389,6 +8389,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось изменить голос, поэтому сообщение не отправлено';
 
   @override
+  String get voiceNoRoom =>
+      'На телефоне недостаточно свободного места. Освободи немного места и попробуй снова.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Не хватило места, чтобы изменить голос, поэтому сообщение не отправлено';
+
+  @override
+  String get voiceDisguising => 'Голос меняется';
+
+  @override
   String get settingsDisguiseByDefault => 'Изменять мой голос по умолчанию';
 
   @override

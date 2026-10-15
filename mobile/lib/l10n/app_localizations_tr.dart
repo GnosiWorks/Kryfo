@@ -8258,6 +8258,17 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu notta ses gizlenemedi, bu yüzden gönderilmedi';
 
   @override
+  String get voiceNoRoom =>
+      'Bu telefonda yeterli boş alan yok. Biraz yer aç ve tekrar dene.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Sesi gizlemek için yeterli boş alan yoktu, bu yüzden not gönderilmedi';
+
+  @override
+  String get voiceDisguising => 'Ses gizleniyor';
+
+  @override
   String get settingsDisguiseByDefault => 'Sesimi varsayılan olarak gizle';
 
   @override

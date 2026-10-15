@@ -18,8 +18,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/picked.dart' show voiceFreeBytes;
 import 'package:kryfo/voice_length.dart' show kVoiceMax;
-import 'package:kryfo/voice_mask.dart' show LiveMask;
+import 'package:kryfo/voice_mask.dart' show LiveMask, MaskJob;
+import 'package:kryfo/widgets/media_bubbles.dart' show VoiceMakingBubble;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
@@ -93,6 +95,38 @@ class _Spy implements LiveMask {
   Future<void> get exited => real.exited;
 }
 
+// a whole-take disguise held open, with what was asked of it
+class _Whole implements MaskJob {
+  _Whole(this.to, this.onProgress, this.log);
+  @override
+  final String to;
+  final void Function(double done) onProgress;
+  final List<String> log;
+  final _gate = Completer<bool>();
+  bool _stopped = false;
+
+  @override
+  Future<bool> get done => _gate.future;
+
+  @override
+  bool get cancelled => _stopped;
+
+  @override
+  void cancel() {
+    if (_stopped) return;
+    _stopped = true;
+    log.add('stop');
+    if (!_gate.isCompleted) _gate.complete(false);
+  }
+
+  // made: a file stands for the disguise
+  void make() {
+    if (_gate.isCompleted) return;
+    File(to).writeAsBytesSync(List.filled(64, 3));
+    _gate.complete(true);
+  }
+}
+
 void main() {
   late Directory tmp;
   late List<String> asked;
@@ -102,6 +136,20 @@ void main() {
   // what the mic asked of its live disguises
   final live = <String>[];
   final spies = <_Spy>[];
+  // and of its whole ones, when they stand in
+  final whole = <String>[];
+  final wholes = <_Whole>[];
+  final freeBytes = voiceFreeBytes;
+  final realWhole = HoldToTalkMicState.startWhole;
+  int? free;
+
+  void holdWhole() {
+    HoldToTalkMicState.startWhole = (from, to, onProgress) {
+      final j = _Whole(to, onProgress, whole);
+      wholes.add(j);
+      return j;
+    };
+  }
 
   void spyLive() {
     HoldToTalkMicState.startLive = (p) async {
@@ -146,6 +194,10 @@ void main() {
     stopThrows = false;
     live.clear();
     spies.clear();
+    whole.clear();
+    wholes.clear();
+    free = null;
+    voiceFreeBytes = () async => free;
     lockState.openForTest();
     _mock('plugins.flutter.io/path_provider', (_) async => tmp.path);
     _mock(_rec, (c) async {
@@ -170,6 +222,9 @@ void main() {
 
   tearDown(() {
     HoldToTalkMicState.startLive = LiveMask.start;
+    HoldToTalkMicState.startWhole = realWhole;
+    voiceFreeBytes = freeBytes;
+    HoldToTalkMicState.maskAhead = const Duration(minutes: 2);
     _mock('plugins.flutter.io/path_provider', null);
     _mock(_rec, null);
     tmp.deleteSync(recursive: true);
@@ -684,6 +739,222 @@ void main() {
     });
   });
 
+  group('a long note', () {
+    setUp(() {
+      // every note counts as long here
+      HoldToTalkMicState.maskAhead = Duration.zero;
+      holdWhole();
+    });
+
+    List<String> disguises() => [
+      for (final f in tmp.listSync().whereType<File>())
+        if (f.path.endsWith('_m.wav') || f.path.endsWith('_f.wav')) f.path,
+    ];
+
+    testWidgets('in your voice it is not disguised until the chip asks', (
+      t,
+    ) async {
+      await open(t);
+      await toPreview(t);
+      await settle(t);
+      expect(mic(t).masking, isFalse);
+      expect(wholes, isEmpty);
+      expect(disguises(), isEmpty);
+      await t.tap(find.byType(MaskChip));
+      await settle(t, turns: 4);
+      expect(wholes, hasLength(1));
+      expect(t.widget<MaskChip>(find.byType(MaskChip)).busy, isTrue);
+      // the ring fills as it goes
+      wholes.single.onProgress(0.4);
+      await t.pump();
+      expect(t.widget<MaskChip>(find.byType(MaskChip)).progress, 0.4);
+      final ring = t.widget<CircularProgressIndicator>(
+        find.descendant(
+          of: find.byType(MaskChip),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+      );
+      expect(ring.value, 0.4);
+      wholes.single.make();
+      await until(t, () => mic(t).heard);
+      expect(t.widget<MaskChip>(find.byType(MaskChip)).busy, isFalse);
+      // switched off and on again, it is not made twice
+      await t.tap(find.byType(MaskChip));
+      await t.tap(find.byType(MaskChip));
+      await settle(t, turns: 4);
+      expect(wholes, hasLength(1));
+      await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+      await settle(t);
+      await close(t);
+    });
+
+    testWidgets('with less movement the ring never spins', (t) async {
+      await open(t, still: true);
+      await toPreview(t);
+      await t.tap(find.byType(MaskChip));
+      await settle(t, turns: 4);
+      final ring = t.widget<CircularProgressIndicator>(
+        find.descendant(
+          of: find.byType(MaskChip),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+      );
+      expect(ring.value, isNotNull);
+      await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+      await settle(t);
+      await close(t);
+    });
+
+    for (final (how, act) in <(String, Future<void> Function(WidgetTester))>[
+      (
+        'sent in your voice',
+        (t) async {
+          await t.tap(find.byType(MaskChip));
+          await t.pump(const Duration(milliseconds: 400));
+          await t.tap(find.bySemanticsLabel(l10n.commonSend));
+        },
+      ),
+      (
+        'thrown away',
+        (t) async {
+          await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+        },
+      ),
+      (
+        'locked out',
+        (t) async {
+          lockGuard.locking();
+        },
+      ),
+      ('the chat closing', (t) => devClose(t)),
+    ]) {
+      testWidgets('$how while its disguise is made: the disguise stops', (
+        t,
+      ) async {
+        await open(t);
+        await toPreview(t);
+        await t.tap(find.byType(MaskChip));
+        await settle(t, turns: 4);
+        expect(wholes, hasLength(1));
+        await act(t);
+        await settle(t);
+        expect(whole, ['stop']);
+        expect(disguises(), isEmpty);
+        if (how == 'sent in your voice') {
+          expect(sent.single.disguise, isFalse);
+          expect(sent.single.making, isNull);
+          expect(sent.single.masked, isNull);
+        } else {
+          expect(sent, isEmpty);
+        }
+        if (how != 'the chat closing') await close(t);
+      });
+    }
+
+    testWidgets('sent while its disguise is made, the send owns it: the chat '
+        'closing does not lose it', (t) async {
+      await open(t);
+      await toPreview(t);
+      await t.tap(find.byType(MaskChip));
+      await settle(t, turns: 4);
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t, turns: 4);
+      // gone at once, the disguise still on its way with it
+      expect(mic(t).stage, VoiceStage.idle);
+      final take = sent.single;
+      expect(take.disguise, isTrue);
+      expect(take.masked, isNull);
+      expect(take.making, isNotNull);
+      await close(t);
+      // nothing of it stopped or shredded by the chat going
+      expect(whole, isEmpty);
+      expect(File(take.path).existsSync(), isTrue);
+      wholes.single.make();
+      String? made;
+      await t.runAsync(() async => made = await take.making!.file);
+      expect(made, wholes.single.to);
+      expect(File(made!).existsSync(), isTrue);
+    });
+
+    testWidgets('a send it was handed to can still stop it', (t) async {
+      await open(t);
+      await toPreview(t);
+      await t.tap(find.byType(MaskChip));
+      await settle(t, turns: 4);
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t, turns: 4);
+      sent.single.making!.cancel();
+      String? made = 'x';
+      await t.runAsync(() async => made = await sent.single.making!.file);
+      expect(whole, ['stop']);
+      expect(made, isNull);
+      await close(t);
+    });
+  });
+
+  group('a full disk', () {
+    testWidgets('the mic says so and keeps nothing', (t) async {
+      free = 1024;
+      await open(t);
+      final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
+      await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await settle(t);
+      expect(find.text(l10n.voiceNoRoom), findsOneWidget);
+      expect(mic(t).stage, VoiceStage.idle);
+      expect(find.byType(VoiceRecordBar), findsNothing);
+      await shredded(t, recording!);
+      expect(File(recording!).existsSync(), isFalse);
+      await g.up();
+      await settle(t);
+      expect(sent, isEmpty);
+      await close(t);
+    });
+
+    testWidgets('the take waits in the preview until there is room', (t) async {
+      HoldToTalkMicState.maskAhead = Duration.zero;
+      holdWhole();
+      await open(t);
+      await toPreview(t);
+      final take = recording!;
+      free = 1024;
+      await t.tap(find.byType(MaskChip));
+      await settle(t);
+      expect(find.text(l10n.voiceNoRoom), findsOneWidget);
+      expect(wholes, isEmpty);
+      expect(mic(t).chip, isTrue);
+      await t.pump(const Duration(seconds: 4));
+      // asked to send disguised, it stays, and so does the take
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t);
+      expect(find.text(l10n.voiceNoRoom), findsOneWidget);
+      expect(sent, isEmpty);
+      expect(mic(t).stage, VoiceStage.preview);
+      expect(File(take).existsSync(), isTrue);
+      await t.pump(const Duration(seconds: 4));
+      // room again: it goes, its disguise on the way
+      free = null;
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t);
+      expect(sent.single.making, isNotNull);
+      expect(wholes, hasLength(1));
+      wholes.single.make();
+      await close(t);
+    });
+
+    testWidgets('in your voice it still goes', (t) async {
+      HoldToTalkMicState.maskAhead = Duration.zero;
+      holdWhole();
+      await open(t);
+      await toPreview(t);
+      free = 1024;
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t);
+      expect(sent.single.disguise, isFalse);
+      expect(find.text(l10n.voiceNoRoom), findsNothing);
+      await close(t);
+    });
+  });
+
   group('the look', () {
     testWidgets('the mic takes a 48 square tap, clear of the edge', (t) async {
       await open(t);
@@ -731,6 +1002,32 @@ void main() {
       await g.up();
       await settle(t);
       await close(t);
+    });
+
+    testWidgets('a note sent while it is disguised: a ring that fills, '
+        'still with less movement', (t) async {
+      final p = ValueNotifier<double?>(null);
+      Widget bubble(bool still) => devApp(
+        Center(child: VoiceMakingBubble(progress: p, isOut: true)),
+        still: still,
+      );
+      await t.pumpWidget(bubble(false));
+      expect(find.text(l10n.voiceDisguising), findsOneWidget);
+      CircularProgressIndicator ring() =>
+          t.widget(find.byType(CircularProgressIndicator));
+      expect(ring().value, isNull);
+      p.value = 0.3;
+      await t.pump();
+      expect(ring().value, 0.3);
+      p.value = null;
+      await t.pumpWidget(bubble(true));
+      expect(ring().value, 0);
+      expect(
+        find.bySemanticsLabel(
+          '${l10n.appVoiceMessage}, ${l10n.voiceDisguising}',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a small phone with large text: the bar fits, the chip is '
