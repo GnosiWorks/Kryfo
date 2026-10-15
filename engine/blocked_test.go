@@ -246,6 +246,21 @@ func TestDescriptorDownloadKeepsABridge(t *testing.T) {
 	}
 }
 
+// a cold start on a cached consensus: tor holds its progress back until
+// the first connection, then jumps straight to the descriptors. the bridge
+// brought no consensus, so it keeps its own limit
+func TestCachedConsensusJumpKeepsTheLimit(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	limit := methodLimit["obfs4"]
+	a := newSeen(t0)
+	a.firstDial = t0
+	a.bootstrap(bootPhase{Progress: 2, Tag: "conn_done_pt"}, true, t0)
+	a.bootstrap(bootPhase{Progress: 50, Tag: "loading_descriptors"}, true, t0.Add(5*time.Second))
+	if v, _ := judgeBridge(a, limit, t0.Add(5*time.Second+limit)); v != seenFailed {
+		t.Fatalf("a jump on a cached consensus got the longer stall: %s", v)
+	}
+}
+
 // a slow bootstrap that keeps moving keeps its method, whatever the method,
 // a stalled one fails at its own limit, and none runs past the cap
 func TestSteadyProgressKeepsAMethod(t *testing.T) {
