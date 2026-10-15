@@ -648,19 +648,56 @@ class VaultRouter {
 
   // seats in the vault's groups of someone the everyday side let go while
   // it was shut: taken out as it next opens
-  Future<List<String>> seatsGone() async {
+  // each with the key their seat was on
+  Future<List<(String, String)>> seatsGone() async {
     final j = _json(await _store.meta(_kSeatsGone));
     return [
       if (j is List)
         for (final x in j)
-          if (x is String) x,
+          if (x is List && x.length == 2)
+            if ((x[0], x[1]) case (final String id, final String key))
+              (id, key),
     ];
   }
 
-  Future<void> queueSeatGone(String id) async {
+  Future<void> queueSeatGone(String id, String keyHex) async {
     final now = await seatsGone();
-    if (now.contains(id)) return;
-    await _store.putMeta(_kSeatsGone, jsonEncode([...now, id]));
+    if (now.contains((id, keyHex))) return;
+    await _store.putMeta(
+      _kSeatsGone,
+      jsonEncode([
+        for (final (i, k) in [...now, (id, keyHex)]) [i, k],
+      ]),
+    );
+  }
+
+  // the vault's own marks, read again from its rows as it opens
+  Future<void> remark({
+    required Iterable<String> keys,
+    required Iterable<String> tombs,
+  }) async {
+    final want = {
+      for (final k in keys) '$_kKeyAt${k.trim().toLowerCase()}': kHiddenKeyMark,
+      for (final t in tombs) '$_kTombAt$t': kHiddenTombMark,
+    };
+    final have = <String>{};
+    for (final r in await _store.hidden()) {
+      final kind = r['kind'];
+      if (kind != kHiddenKeyMark && kind != kHiddenTombMark) continue;
+      final id = r['chat_id'] as String;
+      if (want.containsKey(id)) {
+        have.add(id);
+      } else {
+        await _store.deleteHidden(id);
+      }
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final e in want.entries) {
+      if (!have.contains(e.key)) {
+        await _store.putHidden(e.key, e.value, '{}', now);
+      }
+    }
+    await load();
   }
 
   Future<void> clearSeatsGone() => _store.putMeta(_kSeatsGone, null);

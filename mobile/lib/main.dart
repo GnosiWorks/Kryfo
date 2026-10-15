@@ -2978,10 +2978,23 @@ class HaloDb implements GroupOwedStore {
   }
 
   // someone let go in the other container: no seat in a group here, no
-  // row that only held their key, and no admin in a group they ran
-  Future<void> dropSeats(String haloId) async {
+  // row that only held their key, and no admin in a group they ran. only
+  // where the row here has [keyHex], or no key at all: the same words on
+  // another key are someone else
+  Future<void> dropSeats(String haloId, String keyHex) async {
     final db = await open();
     await db.transaction((t) async {
+      final row = await t.query(
+        'contacts',
+        columns: ['xpub'],
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      final x = row.isEmpty
+          ? ''
+          : ((row.first['xpub'] as String?) ?? '').trim().toLowerCase();
+      if (x.isNotEmpty && x != keyHex.trim().toLowerCase()) return;
       for (final (table, col) in const [
         ('group_members', 'halo_id'),
         ('group_media_owed', 'member'),
@@ -14162,8 +14175,12 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
-    // left the screen: a quiet moment for what a removal owes the file
-    if (!front) unawaited(_tidyEveryday());
+    // left the screen: a quiet moment for what a removal owes the file.
+    // a vault is tidied as it shuts
+    if (!front) {
+      unawaited(_tidy(live));
+      if (sessionQuiet) unawaited(_tidy(_session.primary));
+    }
     if (front) {
       unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
@@ -18213,8 +18230,12 @@ class AppState extends ChangeNotifier {
       if (decoy) {
         await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
       }
-      // seats of people the everyday side let go while it was shut
-      if (!decoy) await _seatsGoneInto(v);
+      // seats of people the everyday side let go while it was shut, and its
+      // blocks and let-go words as its own rows hold them
+      if (!decoy) {
+        await _seatsGoneInto(v);
+        await _remarkFrom(v);
+      }
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -18387,7 +18408,11 @@ class AppState extends ChangeNotifier {
   // once a move under way is done, and its key goes with the handle
   Future<void> _closeDecoyVault(HaloDb v) async {
     try {
-      await _serial(v.close);
+      await _serial(() async {
+        // what a removal in it owes the file, before its key goes
+        await _tidy(v);
+        await v.close();
+      });
     } catch (e) {
       dlog('vault: close (${e.runtimeType})');
     }
@@ -18417,6 +18442,8 @@ class AppState extends ChangeNotifier {
         } catch (e) {
           dlog('vault: cards left as they were (${e.runtimeType})');
         }
+        // what a removal in it owes the file, before its key goes
+        await _tidy(v);
         await v.close();
       });
     } catch (e) {
@@ -20995,7 +21022,7 @@ class AppState extends ChangeNotifier {
           });
         }
       }
-      await _seatsGoElsewhere(s, haloId, hidden: hidden);
+      await _seatsGoElsewhere(s, haloId, key, hidden: hidden);
       final v = s.vault;
       if (hidden && v != null && identical(_session.vault, v)) {
         try {
@@ -21019,19 +21046,20 @@ class AppState extends ChangeNotifier {
   // open, else as the vault next opens. the everyday side is always open
   Future<void> _seatsGoElsewhere(
     Session s,
-    String haloId, {
+    String haloId,
+    String keyHex, {
     required bool hidden,
   }) async {
     try {
       if (hidden) {
-        await s.primary.dropSeats(haloId);
+        await s.primary.dropSeats(haloId, keyHex);
         return;
       }
       final v = s.vault;
       if (v != null) {
-        await v.dropSeats(haloId);
+        await v.dropSeats(haloId, keyHex);
       } else if (!sessionQuiet && _router.hasVault) {
-        await _router.queueSeatGone(haloId);
+        await _router.queueSeatGone(haloId, keyHex);
       }
     } catch (e) {
       dlog('not them: seats elsewhere not let go (${e.runtimeType})');
@@ -21041,24 +21069,54 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Future<void> seatsGoneIntoForTest(HaloDb vault) => _seatsGoneInto(vault);
 
+  @visibleForTesting
+  Future<void> remarkForTest(HaloDb vault) => _remarkFrom(vault);
+
+  Future<void> _remarkFrom(HaloDb vault) async {
+    try {
+      await _router.remark(
+        keys: [for (final k in await vault.blockedKeys()) k.x],
+        tombs: [for (final t in await vault.tombs()) t.name],
+      );
+    } catch (e) {
+      dlog('vault: marks not read (${e.runtimeType})');
+    }
+  }
+
   // what the everyday side let go while the vault was shut, out of it now
   Future<void> _seatsGoneInto(HaloDb vault) async {
     try {
-      final ids = await _router.seatsGone();
-      for (final id in ids) {
-        await vault.dropSeats(id);
+      final gone = await _router.seatsGone();
+      for (final (id, key) in gone) {
+        await vault.dropSeats(id, key);
       }
-      if (ids.isNotEmpty) await _router.clearSeatsGone();
+      if (gone.isNotEmpty) await _router.clearSeatsGone();
     } catch (e) {
       dlog('vault: seats not let go (${e.runtimeType})');
     }
   }
 
-  Future<void> _tidyEveryday() async {
+  // a tidy that failed waits before it is tried again: ten minutes, then
+  // twice as long each time, up to a day
+  final _tidyWait = <String, ({int at, int wait})>{};
+
+  @visibleForTesting
+  Future<void> tidyForTest(HaloDb d, {int? now}) => _tidy(d, now: now);
+
+  Future<void> _tidy(HaloDb d, {int? now}) async {
     if (haloWiping) return;
+    final k = d.container.dbFile;
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    final was = _tidyWait[k];
+    if (was != null && at < was.at + was.wait) return;
     try {
-      await tidyIfOwed(await live.open());
+      await tidyIfOwed(await d.open());
+      _tidyWait.remove(k);
     } catch (e) {
+      final wait = was == null
+          ? const Duration(minutes: 10).inMilliseconds
+          : min(was.wait * 2, const Duration(days: 1).inMilliseconds);
+      _tidyWait[k] = (at: at, wait: wait);
       dlog('tidy: not done (${e.runtimeType})');
     }
   }
