@@ -124,6 +124,9 @@ class Session {
     return v != null && _groups.contains(groupId) ? v : primary;
   }
 
+  /// the container that holds [groupId] in this session
+  HaloDb groupDb(String groupId) => _ofGroup(groupId);
+
   HaloDb _ofChat(String chatId) {
     final v = vault;
     if (v == null) return primary;

@@ -3810,6 +3810,15 @@ class HaloDb implements GroupOwedStore {
     dropDraft(container.chatKey(groupId), group: true);
     await clearGroupConversation(groupId, noteGone: false);
     final db = await open();
+    // its wallpaper too: the line stays on a plain page
+    final atmo = (await getGroup(groupId))?['atmosphere'];
+    await db.update(
+      'groups',
+      {'atmosphere': null},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    await _dropPhotos([atmo]);
     for (final table in const ['group_media_owed', 'group_resent']) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
@@ -13057,14 +13066,13 @@ class AppState extends ChangeNotifier {
     GroupControl gc, {
     List<String>? to,
     HaloDb? on,
-    int? now,
   }) async {
     final d = on ?? _ownerOf(groupId);
     await d.queueGroupCtl(
       groupId,
       await _othersIn(d, groupId, to),
       gc,
-      now: now ?? DateTime.now().millisecondsSinceEpoch,
+      now: DateTime.now().millisecondsSinceEpoch,
     );
     // the first try goes now, whatever the route says
     if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
@@ -24346,20 +24354,14 @@ class AppState extends ChangeNotifier {
   // message saying so, which this one never keeps
   Future<bool> endGroupAndAnnounce(String groupId) async {
     if (!mayEndGroup(await session.getGroup(groupId), sessionId)) return false;
-    final d = _ownerOf(groupId);
+    // the session's own: a decoy's group is the decoy's
+    final d = session.groupDb(groupId);
     final now = DateTime.now().millisecondsSinceEpoch;
     // its lanes are read before the wipe: the end goes to everyone in it
     final to = await _othersIn(d, groupId);
     if (!await _endHere(groupId, d, by: sessionId, at: now)) return false;
     // a quiet session keeps it on this phone: nothing leaves
     if (sessionQuiet) return true;
-    await _queueControl(
-      groupId,
-      const GroupControl(type: 'end'),
-      to: to,
-      on: d,
-      now: now,
-    );
     final notice = await wrapMessage(
       l10n.groupEndedOldNotice,
       msgUid: newMsgUid(),
@@ -24368,7 +24370,15 @@ class AppState extends ChangeNotifier {
       endNotice: true,
       writtenAt: now,
     );
+    // both wait in each member's lane before either goes: the end first
+    await d.queueGroupCtl(
+      groupId,
+      to,
+      const GroupControl(type: 'end'),
+      now: now,
+    );
     await d.queueGroupWrapped(groupId, to, notice, now: now);
+    if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
     return true;
   }
 
@@ -24381,7 +24391,7 @@ class AppState extends ChangeNotifier {
       return leaveRoom(groupId);
     }
     final d = _ownerOf(groupId);
-    final ended = groupEndOf(await d.getGroup(groupId)) != null;
+    final ended = groupEndOf(await session.getGroup(groupId)) != null;
     final members = sessionQuiet || ended
         ? const <String>[]
         : await d.getGroupMembers(groupId);
