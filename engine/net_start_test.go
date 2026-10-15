@@ -17,6 +17,8 @@ func keepNetOn(t *testing.T) {
 		netMu.Lock()
 		netOnAt, netOnNet = time.Time{}, netInfo{}
 		netMu.Unlock()
+		// tor not on the network yet, as it starts
+		netWentOff()
 	}
 	reset()
 	t.Cleanup(reset)
@@ -110,5 +112,26 @@ func TestSameNetworkByTheWatch(t *testing.T) {
 		if got := sameNetwork(c.a, c.b); got != c.want {
 			t.Errorf("sameNetwork(%+v, %+v) = %v, want %v", c.a, c.b, got, c.want)
 		}
+	}
+}
+
+// a 0 to a tor that was on already, a wake that was not one, is not tor
+// going on the network: the change before it is still bounced
+func TestANoopNetworkOnKeepsTheBounce(t *testing.T) {
+	r := rigFlips(t, 80*time.Millisecond, 50*time.Millisecond, 100*time.Millisecond)
+	r.prove.Store(true)
+	keepNetDetail(t)
+	keepNetOn(t)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":100}`)
+	netWentOn()
+	time.Sleep(20 * time.Millisecond)
+	networkDetail(`{"on":true,"validated":true,"kind":"cellular","net":200}`)
+	networkChangedTo(true)
+	time.Sleep(20 * time.Millisecond)
+	netWentOn()
+	// a relay through the old connections: the check alone would be content
+	routeNoteOK()
+	if got := waitCalls(r, 1, time.Second); got != 1 {
+		t.Fatalf("%d reconnects after a real change, want 1", got)
 	}
 }
