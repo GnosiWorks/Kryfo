@@ -133,6 +133,7 @@ import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
 import 'widgets/shift_tap_guard.dart';
+import 'wire_pad.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -370,8 +371,14 @@ class HaloEngine {
       devGate.nostrSend(
         peerXPubHex,
         b64Cipher,
+        // a frame no signal seal covers is filled out here, inside the
+        // relay's encryption
         out: () =>
-            _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
+            _sendOnIsolate((
+              nostr: true,
+              a: peerXPubHex,
+              b: padRumor(b64Cipher),
+            )).timeout(
               const Duration(seconds: 60),
               onTimeout: () => 'error: relay timeout',
             ),
@@ -690,7 +697,7 @@ class HaloEngine {
     peerXPubHex,
     fcPk,
     b64Cipher,
-    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, b64Cipher).timeout(
+    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
       const Duration(seconds: 60),
       onTimeout: () => 'error: relay timeout',
     ),
@@ -956,7 +963,11 @@ class HaloEngine {
         peerPub,
         msg,
         out: () =>
-            _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
+            _roomFfiOnIsolate('HaloRoomSend', [
+              priv,
+              peerPub,
+              padRumor(msg),
+            ]).timeout(
               const Duration(seconds: 60),
               onTimeout: () => 'error: relay timeout',
             ),
@@ -977,7 +988,7 @@ class HaloEngine {
           priv,
           peerPub,
           fcPk,
-          msg,
+          padRumor(msg),
         ]).timeout(
           const Duration(seconds: 60),
           onTimeout: () => 'error: relay timeout',
@@ -9376,7 +9387,7 @@ Future<String?> signalDecrypt(
   final ss = await signalFor(peerId);
   if (ss == null) return null;
   void check(Uint8List p) {
-    if (keep != null && !keep(utf8.decode(p))) throw const ShelfFull();
+    if (keep != null && !keep(unpad(utf8.decode(p)))) throw const ShelfFull();
   }
 
   try {
@@ -9437,7 +9448,7 @@ Future<String?> signalDecrypt(
     });
     if (moved) await _keyMoved?.call(peerId);
     if (plain == null) return null;
-    final text = utf8.decode(plain);
+    final text = unpad(utf8.decode(plain));
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
   } on ShelfFull {

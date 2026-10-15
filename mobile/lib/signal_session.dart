@@ -10,6 +10,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'signal_stores.dart';
 import 'dlog.dart';
+import 'wire_pad.dart';
 
 class SignalSession {
   late HaloIdentityKeyStore identityStore;
@@ -476,7 +477,10 @@ class SignalSession {
       identityStore,
       SignalProtocolAddress(peer, 1),
     );
-    final msg = await cipher.encrypt(Uint8List.fromList(utf8.encode(plain)));
+    // filled out before the seal, so the filler is sealed with the rest
+    final msg = await cipher.encrypt(
+      Uint8List.fromList(utf8.encode(padSeal(plain))),
+    );
     return base64Encode([msg.getType(), ...msg.serialize()]);
   }
 
