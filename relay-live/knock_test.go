@@ -1230,6 +1230,48 @@ func TestKnockProvenSurvivesItsFirstAddress(t *testing.T) {
 	}
 }
 
+// an address loaded at a start and forgotten within the hour gives back
+// no token: it took none of this hour's
+func TestKnockLoadedForgetGivesNothingBack(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "knock.sqlite")
+	st, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st.start()
+	tk := newTestKnocks(t)
+	tk.store = st
+	now := tk.clock.now()
+	sk, _ := keypair()
+	ev := signedReg(t, sk, "https://ntfy.sh/kept", now)
+	tk.take(nil, &ev)
+	st.flush(time.Minute)
+	st.close()
+
+	st2, err := openKnockStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st2.start()
+	defer st2.close()
+	tk2 := newTestKnocks(t)
+	tk2.store = st2
+	tk2.clock.set(now.Add(2 * time.Hour))
+	if err := tk2.load(); err != nil {
+		t.Fatal(err)
+	}
+	_, sh := tk2.shareOf("ntfy.sh")
+	sh.fresh.tokens = 0
+	tk2.clock.set(now.Add(2*time.Hour + time.Minute))
+	forget := signedReg(t, sk, "", tk2.clock.now())
+	if rej, msg := tk2.take(nil, &forget); rej {
+		t.Fatal(msg)
+	}
+	if len(tk2.regs) != 0 || sh.fresh.tokens != 0 {
+		t.Fatalf("a forget after a start gave back %.0f tokens", sh.fresh.tokens)
+	}
+}
+
 // one connection's wraps set off a bounded number of knocks
 func TestKnockConnectionKnockBudget(t *testing.T) {
 	url, tk := testKnockRelay(t)

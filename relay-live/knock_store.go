@@ -357,6 +357,8 @@ func (k *knocker) load() error {
 			continue
 		}
 		k.setLocked(key, ep, made, exp)
+		// taken before the restart: no token of this hour to give back
+		k.regs[key].first = 0
 		// its age and whether it ever delivered, as they were before the
 		// restart. a row from before born was kept counts from its signing
 		e := k.eps[ep]
