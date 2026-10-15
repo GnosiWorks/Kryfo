@@ -32,4 +32,6 @@ GifTabs appGifTabs() => GifTabs(
   route: gifRouteOf(appState.sendMode),
   loadOn: () => loadGifSearchOn(session.container),
   saveOn: (on) => saveGifSearchOn(on, session.container),
+  loadAsked: () => loadGifAsked(session.container),
+  markAsked: () => markGifAsked(session.container),
 );

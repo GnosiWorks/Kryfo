@@ -107,6 +107,8 @@ class GifTabs {
     required this.route,
     required this.loadOn,
     required this.saveOn,
+    required this.loadAsked,
+    required this.markAsked,
   });
 
   // a quiet session's refuses every question: nothing reaches the network
@@ -114,6 +116,9 @@ class GifTabs {
   final GifRoute route;
   final Future<bool> Function() loadOn;
   final Future<void> Function(bool on) saveOn;
+  // the one question about turning it on, asked once per identity
+  final Future<bool> Function() loadAsked;
+  final Future<void> Function() markAsked;
 }
 
 /// opens the picker. the pick comes back with the recents already updated;
@@ -168,6 +173,9 @@ class StickerSheetState extends State<StickerSheet>
   _Kind _kind = _Kind.stickers;
   // null until read
   bool? _gifOn;
+  bool? _gifAsked;
+  // the question is up for this visit to the gifs tab
+  bool _asking = false;
   final _drag = DraggableScrollableController();
 
   late final AnimationController _in = AnimationController(
@@ -194,8 +202,14 @@ class StickerSheetState extends State<StickerSheet>
     _load();
     final g = widget.gifs;
     if (g != null) {
-      g.loadOn().then((v) {
-        if (mounted) setState(() => _gifOn = v);
+      Future.wait([g.loadOn(), g.loadAsked()]).then((v) {
+        if (!mounted) return;
+        setState(() {
+          _gifOn = v[0];
+          _gifAsked = v[1];
+        });
+        _maybeAsk();
+        if (v[0]) _growSoon();
       });
     }
   }
@@ -214,19 +228,51 @@ class StickerSheetState extends State<StickerSheet>
     HapticFeedback.selectionClick();
     FocusManager.instance.primaryFocus?.unfocus();
     _closePreviewNow();
-    setState(() => _kind = k);
-    // gifs want the room: the opt-in whole, or more of the grid. after the
-    // new tab is laid out, so its list takes over the sheet first
+    setState(() {
+      _kind = k;
+      _asking = false;
+    });
     if (k == _Kind.gifs) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _kind == _Kind.gifs) _grow();
-      });
+      _maybeAsk();
+      if (_gifOn ?? false) _growSoon();
     }
   }
 
+  // the first visit to the gifs tab while search is off asks, once ever
+  void _maybeAsk() {
+    final g = widget.gifs;
+    if (g == null || _kind != _Kind.gifs) return;
+    if (_gifOn != false || _gifAsked != false) return;
+    setState(() {
+      _asking = true;
+      _gifAsked = true;
+    });
+    g.markAsked();
+  }
+
+  // gifs want more of the grid. after the new tab is laid out, so its list
+  // takes over the sheet first
+  void _growSoon() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _kind == _Kind.gifs) _grow();
+    });
+  }
+
   Future<void> _turnGifsOn() async {
-    setState(() => _gifOn = true);
+    setState(() {
+      _gifOn = true;
+      _asking = false;
+    });
+    _growSoon();
     await widget.gifs?.saveOn(true);
+  }
+
+  // the quiet line is shorter than the question: back to the top first, so
+  // it is not left above the fold
+  void _notNow() {
+    final s = _scroll;
+    if (s != null && s.hasClients && s.offset > 0) s.jumpTo(0);
+    setState(() => _asking = false);
   }
 
   void _gifPicked(Uint8List b) {
@@ -562,26 +608,62 @@ class StickerSheetState extends State<StickerSheet>
 
   Widget _gifBody(GifTabs g, ScrollController controller) {
     final on = _gifOn;
-    if (on == null) return ListView(controller: controller);
+    if (on == null || _gifAsked == null) {
+      return ListView(controller: controller);
+    }
     if (!on) {
+      // one list for both, so the sheet's controller has one view: the
+      // question gives way to the quiet line inside it
       return ListView(
         controller: controller,
         children: [
-          GifOptIn(
-            overTor: g.route == GifRoute.onion,
-            onTurnOn: _turnGifsOn,
-            onNotNow: () => _setKind(_Kind.stickers),
+          AnimatedSwitcher(
+            duration: _reduce
+                ? Duration.zero
+                : const Duration(milliseconds: 240),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            transitionBuilder: (child, a) => FadeTransition(
+              opacity: a,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.06),
+                  end: Offset.zero,
+                ).animate(a),
+                child: child,
+              ),
+            ),
+            child: _asking
+                ? GifAsk(
+                    key: const ValueKey('ask'),
+                    overTor: g.route == GifRoute.onion,
+                    brand: kGifBrand,
+                    onTurnOn: _turnGifsOn,
+                    onNotNow: _notNow,
+                  )
+                : GifOff(
+                    key: const ValueKey('off'),
+                    onTurnOn: _turnGifsOn,
+                    onPhone: () => _setKind(_Kind.phone),
+                  ),
           ),
           SizedBox(height: MediaQuery.paddingOf(context).bottom),
         ],
       );
     }
-    return GifPanel(
-      source: g.source,
-      controller: controller,
-      route: g.route,
-      onPick: _gifPicked,
-      onSearchFocus: _searchFocused,
+    return _FadeIn(
+      key: const ValueKey('gifs on'),
+      child: GifPanel(
+        source: g.source,
+        controller: controller,
+        route: g.route,
+        onPick: _gifPicked,
+        onSearchFocus: _searchFocused,
+      ),
     );
   }
 

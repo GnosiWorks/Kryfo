@@ -323,7 +323,15 @@ void main() {
           await rest(t);
           final prefs = await SharedPreferences.getInstance();
           expect(prefs.getBool(c.key('kryfo.gif.on')), isTrue);
+          // on from settings counts as asked: the picker never asks after
+          expect(prefs.getBool(c.key('kryfo.gif.asked')), isTrue);
           if (quiet) expect(prefs.getBool('kryfo.gif.on'), isNull);
+          if (quiet) expect(prefs.getBool('kryfo.gif.asked'), isNull);
+          // and off again with one tap
+          await t.tap(find.text(l10n.settingsGifSearch));
+          await rest(t);
+          expect(find.text(l10n.gifOptInTitle), findsNothing);
+          expect(prefs.getBool(c.key('kryfo.gif.on')), isFalse);
           await devClose(t);
         },
       );

@@ -8116,6 +8116,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gifNotNow => 'Để sau';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'Tìm GIF đi qua máy chủ của Kryfo bằng Tor. $brand không bao giờ thấy bạn. Bật lên nhé?';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'Tìm GIF đi qua máy chủ của Kryfo. $brand không bao giờ thấy bạn. Bật lên nhé?';
+  }
+
+  @override
+  String get gifAskTurnOn => 'Bật';
+
+  @override
+  String get gifSearchOff => 'Tìm GIF đang tắt';
+
+  @override
+  String get gifSavedOnPhone =>
+      'GIF đã lưu trên điện thoại nằm ở *Trên điện thoại này*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override

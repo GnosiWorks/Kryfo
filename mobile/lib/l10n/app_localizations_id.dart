@@ -8125,6 +8125,26 @@ class AppLocalizationsId extends AppLocalizations {
   String get gifNotNow => 'Nanti saja';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'Pencarian GIF lewat server Kryfo melalui Tor. $brand tidak pernah melihatmu. Nyalakan?';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'Pencarian GIF lewat server Kryfo. $brand tidak pernah melihatmu. Nyalakan?';
+  }
+
+  @override
+  String get gifAskTurnOn => 'Nyalakan';
+
+  @override
+  String get gifSearchOff => 'Pencarian GIF mati';
+
+  @override
+  String get gifSavedOnPhone =>
+      'GIF yang tersimpan di ponselmu ada di *Di ponsel ini*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override

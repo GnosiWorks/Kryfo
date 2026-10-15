@@ -10245,7 +10245,37 @@
   },
   "gifNotNow": "Not now",
   "@gifNotNow": {
-    "description": "gifs/gif_opt_in.dart: the second button, leaves it off"
+    "description": "gifs/gif_opt_in.dart: the second button of the opt-in sheet and of the gifs tab's one question, leaves it off"
+  },
+  "gifAskOverTor": "GIF search goes through Kryfo's server over Tor. {brand} never sees you. Turn it on?",
+  "@gifAskOverTor": {
+    "description": "gifs/gif_opt_in.dart: the one question the gifs tab of the picker asks the first time it opens while gif search is off, on the onion route (tor). brand is GIPHY or Klipy",
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "gifAskThroughKryfo": "GIF search goes through Kryfo's server. {brand} never sees you. Turn it on?",
+  "@gifAskThroughKryfo": {
+    "description": "gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy",
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "gifAskTurnOn": "Turn on",
+  "@gifAskTurnOn": {
+    "description": "gifs/gif_opt_in.dart: the button under that question, and the quiet button next to \"GIF search is off\": turns gif search on"
+  },
+  "gifSearchOff": "GIF search is off",
+  "@gifSearchOff": {
+    "description": "gifs/gif_opt_in.dart: the gifs tab once it has asked and search is still off"
+  },
+  "gifSavedOnPhone": "GIFs saved on your phone are in *On this phone*.",
+  "@gifSavedOnPhone": {
+    "description": "gifs/gif_opt_in.dart: under \"GIF search is off\", taps to the tab of gifs saved on the phone. the words between asterisks are that tab's name, as gifPhoneTab says it"
   },
   "gifTab": "GIFs",
   "@gifTab": {

@@ -13083,11 +13083,41 @@ abstract class AppLocalizations {
   /// **'Turn on GIF search'**
   String get gifTurnOn;
 
-  /// gifs/gif_opt_in.dart: the second button, leaves it off
+  /// gifs/gif_opt_in.dart: the second button of the opt-in sheet and of the gifs tab's one question, leaves it off
   ///
   /// In en, this message translates to:
   /// **'Not now'**
   String get gifNotNow;
+
+  /// gifs/gif_opt_in.dart: the one question the gifs tab of the picker asks the first time it opens while gif search is off, on the onion route (tor). brand is GIPHY or Klipy
+  ///
+  /// In en, this message translates to:
+  /// **'GIF search goes through Kryfo\'s server over Tor. {brand} never sees you. Turn it on?'**
+  String gifAskOverTor(String brand);
+
+  /// gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy
+  ///
+  /// In en, this message translates to:
+  /// **'GIF search goes through Kryfo\'s server. {brand} never sees you. Turn it on?'**
+  String gifAskThroughKryfo(String brand);
+
+  /// gifs/gif_opt_in.dart: the button under that question, and the quiet button next to "GIF search is off": turns gif search on
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get gifAskTurnOn;
+
+  /// gifs/gif_opt_in.dart: the gifs tab once it has asked and search is still off
+  ///
+  /// In en, this message translates to:
+  /// **'GIF search is off'**
+  String get gifSearchOff;
+
+  /// gifs/gif_opt_in.dart: under "GIF search is off", taps to the tab of gifs saved on the phone. the words between asterisks are that tab's name, as gifPhoneTab says it
+  ///
+  /// In en, this message translates to:
+  /// **'GIFs saved on your phone are in *On this phone*.'**
+  String get gifSavedOnPhone;
 
   /// stickers/sticker_sheet.dart: a tab of the sticker picker
   ///

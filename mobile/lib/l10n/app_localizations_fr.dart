@@ -8214,6 +8214,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gifNotNow => 'Pas maintenant';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'La recherche de GIF passe par le serveur de Kryfo via Tor. $brand ne vous voit jamais. L’activer ?';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'La recherche de GIF passe par le serveur de Kryfo. $brand ne vous voit jamais. L’activer ?';
+  }
+
+  @override
+  String get gifAskTurnOn => 'Activer';
+
+  @override
+  String get gifSearchOff => 'La recherche de GIF est désactivée';
+
+  @override
+  String get gifSavedOnPhone =>
+      'Les GIF enregistrés sur votre téléphone sont dans *Sur ce téléphone*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override

@@ -7774,6 +7774,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifNotNow => '暂不';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'GIF 搜索经由 Tor 通过 Kryfo 的服务器进行，$brand 永远看不到你。要开启吗？';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'GIF 搜索通过 Kryfo 的服务器进行，$brand 永远看不到你。要开启吗？';
+  }
+
+  @override
+  String get gifAskTurnOn => '开启';
+
+  @override
+  String get gifSearchOff => 'GIF 搜索已关闭';
+
+  @override
+  String get gifSavedOnPhone => '手机上保存的 GIF 在*这台手机上*标签里。';
+
+  @override
   String get gifTab => 'GIF';
 
   @override
@@ -15555,6 +15574,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gifNotNow => '暫時不要';
+
+  @override
+  String gifAskOverTor(String brand) {
+    return 'GIF 搜尋經由 Tor 透過 Kryfo 的伺服器進行，$brand 永遠看不到你。要開啟嗎？';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'GIF 搜尋透過 Kryfo 的伺服器進行，$brand 永遠看不到你。要開啟嗎？';
+  }
+
+  @override
+  String get gifAskTurnOn => '開啟';
+
+  @override
+  String get gifSearchOff => 'GIF 搜尋已關閉';
+
+  @override
+  String get gifSavedOnPhone => '手機上儲存的 GIF 在*這支手機上*分頁裡。';
 
   @override
   String get gifTab => 'GIF';

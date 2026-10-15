@@ -29,6 +29,11 @@ const kGifRelay = kHandleRegistry;
 const kGifPage = 24;
 
 const _onKey = 'kryfo.gif.on';
+// the picker asked once whether to turn it on
+const _askedKey = 'kryfo.gif.asked';
+
+/// the provider named before a page says which
+const kGifBrand = 'GIPHY';
 
 /// whether gif search is on for [c]. off until someone turns it on
 Future<bool> loadGifSearchOn([HaloContainer c = HaloContainer.everyday]) async {
@@ -42,7 +47,19 @@ Future<void> saveGifSearchOn(
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(c.key(_onKey), on);
+  if (on) await prefs.setBool(c.key(_askedKey), true);
   if (!on) gifMemory.clear();
+}
+
+/// whether the picker has asked [c] about gif search
+Future<bool> loadGifAsked([HaloContainer c = HaloContainer.everyday]) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(c.key(_askedKey)) ?? false;
+}
+
+Future<void> markGifAsked([HaloContainer c = HaloContainer.everyday]) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(c.key(_askedKey), true);
 }
 
 class GifMedia {
@@ -125,7 +142,7 @@ GifPage parseGifPage(String body) {
     return GifPage(
       items: items,
       provider: provider,
-      brand: provider == 'klipy' ? 'Klipy' : 'GIPHY',
+      brand: provider == 'klipy' ? 'Klipy' : kGifBrand,
       next: next is int && next > 0 ? next : null,
     );
   } catch (_) {
