@@ -1373,8 +1373,8 @@ void main() {
       await expectLater(w.app.hideChats(people: [_v]), throwsStateError);
     });
 
-    test('R3-4 a replace keeps what "this isn\'t them" blocked and let go '
-        'in the old vault as unseen marks, never as everyday rows', () async {
+    test('R3-4 a replace keeps what "this isn\'t them" blocked in the old '
+        'vault as unseen marks, never as everyday rows', () async {
       final w = await _World.make(docs);
       await w.app.createVault('246810');
       await w.app.hideChats(people: [_h]);
@@ -1388,12 +1388,12 @@ void main() {
       expect(w.live['name_tombs'], isEmpty);
       // the marks still hold, and no screen may name them
       expect(w.router.keyBlocked('ab' * 32), isTrue);
-      expect(w.router.tombed('let-go-words'), isTrue);
       expect(w.app.keyBlockedWhileShut('ab' * 32), isTrue);
+      // its let-go words go: with no vault, the first writer gets them
+      expect(w.router.tombed('let-go-words'), isFalse);
       // the new vault reads its own marks as it opens: the old ones stay
       await w.app.remarkForTest(w.vaultDb);
       expect(w.router.keyBlocked('ab' * 32), isTrue);
-      expect(w.router.tombed('let-go-words'), isTrue);
       // an unblock asked of the open vault leaves them too
       await w.router.markKey('ab' * 32, on: false);
       expect(w.router.keyBlocked('ab' * 32), isTrue);
