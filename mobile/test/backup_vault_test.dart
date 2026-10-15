@@ -330,6 +330,13 @@ class _MemDb implements Database, Transaction {
 class _Db implements HaloDb {
   _Db(this.container, this.docs, {this.key, this.held});
 
+  // what a vault going hands over from its marks: nothing to keep here
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {}
+
   @override
   final HaloContainer container;
   final String docs;
