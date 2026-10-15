@@ -19416,11 +19416,10 @@ class AppState extends ChangeNotifier {
   }
 
   // the name a first contact gave is someone's here: a row on the everyday
-  // side or in the open vault, words they let go, or a hidden chat's person
-  // the list names. "this isn't them" marks alone file the sender apart, and
-  // say nothing
+  // side or in the open vault, or words they let go. what only the router
+  // knows, a shut vault's people and its marks, files the sender apart and
+  // says nothing
   Future<bool> _saidHeldHere(String said) async {
-    if (_router.cardOf(said) != null) return true;
     for (final d in [live, ?_openVault]) {
       if (await d.getContact(said) != null || await d.tombed(said)) {
         return true;
