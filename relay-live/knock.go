@@ -75,9 +75,13 @@ const (
 	knockSweepChunk  = 1000
 	knockFailFor     = 24 * time.Hour
 	knockFailAtLeast = 5
-	// an endpoint that never delivered: so many failures within the hour
+	// an endpoint that never delivered: so many failures within the hour,
+	// at least half an hour apart from first to last, one counted per ten
+	// minutes, so a short outage lets no new user go
 	knockNewFailAtLeast = 3
 	knockNewFailFor     = time.Hour
+	knockNewFailSpan    = 30 * time.Minute
+	knockNewFailGap     = 10 * time.Minute
 )
 
 // the mean gap between decoy runs to one endpoint. a run is shaped like a
@@ -174,9 +178,10 @@ type knockEP struct {
 	decoyGen int
 	// waiting in its domain's queue
 	queuedReal, queuedDecoy bool
-	// failures in a row, since when
+	// failures in a row, since when, and the last one counted
 	fails        int
 	failingSince time.Time
+	lastFail     time.Time
 	// when the relay first took it, and whether a knock to it ever went
 	// through: one a day old that did gets a lane new ones cannot fill
 	born      time.Time

@@ -474,7 +474,7 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 		return
 	case err == nil && code < 400:
 		k.mu.Lock()
-		ep.fails, ep.failingSince = 0, time.Time{}
+		ep.fails, ep.failingSince, ep.lastFail = 0, time.Time{}, time.Time{}
 		if !ep.delivered {
 			ep.delivered = true
 			k.store.proven(ep.url)
@@ -500,13 +500,19 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 		k.gone(ep.url)
 		return
 	}
-	ep.fails++
+	// one that never worked counts one failure per gap: a burst of knocks
+	// into a short outage is one
+	if ep.delivered || ep.lastFail.IsZero() || now.Sub(ep.lastFail) >= knockNewFailGap {
+		ep.fails++
+		ep.lastFail = now
+	}
 	if ep.failingSince.IsZero() {
 		ep.failingSince = now
 	}
-	drop := ep.fails >= knockFailAtLeast && now.Sub(ep.failingSince) >= knockFailFor
+	failing := now.Sub(ep.failingSince)
+	drop := ep.fails >= knockFailAtLeast && failing >= knockFailFor
 	// one that never worked goes sooner
-	drop = drop || !ep.delivered && ep.fails >= knockNewFailAtLeast && now.Sub(ep.failingSince) <= knockNewFailFor
+	drop = drop || !ep.delivered && ep.fails >= knockNewFailAtLeast && failing >= knockNewFailSpan && failing <= knockNewFailFor
 	k.mu.Unlock()
 	if drop {
 		k.gone(ep.url)

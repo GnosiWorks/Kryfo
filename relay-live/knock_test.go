@@ -1372,14 +1372,14 @@ func TestKnockUnprovenEndpointSurvivesABusyServer(t *testing.T) {
 	if tk.eps[ep.url] == nil {
 		t.Fatal("a new endpoint went at one timeout")
 	}
-	// three failures within the hour let a new one go
+	// three failures over half an hour within the hour let a new one go
 	ep = fresh()
 	for i := 0; i < knockNewFailAtLeast; i++ {
 		if tk.eps[ep.url] == nil {
 			t.Fatalf("a new endpoint went after %d failures", i)
 		}
 		tk.q.result(ep, false, 503, nil)
-		tk.clock.set(tk.clock.now().Add(10 * time.Minute))
+		tk.clock.set(tk.clock.now().Add(15 * time.Minute))
 	}
 	if tk.eps[ep.url] != nil {
 		t.Fatal("a new endpoint failing three times within the hour was kept")
@@ -1402,6 +1402,44 @@ func TestKnockUnprovenEndpointSurvivesABusyServer(t *testing.T) {
 	tk.q.result(ep, false, 0, errNotPublic)
 	if tk.eps[ep.url] == nil {
 		t.Fatal("a proven endpoint went within minutes")
+	}
+}
+
+// a new user whose server fails for a few minutes is kept, however many
+// knocks went into the outage
+func TestKnockNewEndpointSurvivesAShortOutage(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i, c := range []struct {
+		outage time.Duration
+		err    error
+	}{
+		{5 * time.Minute, nil},
+		{10 * time.Minute, nil},
+		{10 * time.Minute, context.DeadlineExceeded},
+		{29 * time.Minute, nil},
+	} {
+		url := fmt.Sprintf("https://ntfy.sh/outage%d", i)
+		ev := r3reg(r3key(i), url, tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatal(msg)
+		}
+		ep := tk.eps[url]
+		start := tk.clock.now()
+		for tk.clock.now().Sub(start) < c.outage {
+			if c.err != nil {
+				tk.q.result(ep, false, 0, c.err)
+			} else {
+				tk.q.result(ep, false, 503, nil)
+			}
+			tk.clock.set(tk.clock.now().Add(time.Minute))
+		}
+		if tk.eps[url] == nil {
+			t.Fatalf("a new endpoint went in a %v outage", c.outage)
+		}
+		tk.q.result(ep, false, 201, nil)
+		if !ep.delivered || ep.fails != 0 {
+			t.Fatalf("after the outage: delivered %v, %d failures", ep.delivered, ep.fails)
+		}
 	}
 }
 
