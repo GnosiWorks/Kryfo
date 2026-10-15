@@ -8882,13 +8882,17 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
 // a photo no chat here says it shows: one written for a row that went or
 // was replaced whole (INSERT OR REPLACE fires no delete trigger). the
 // default ('') is never a chat's
+@visibleForTesting
+const kOrphanWallpapers =
+    "chat <> '' AND NOT EXISTS "
+    "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
+    "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
+    "(SELECT 1 FROM groups g WHERE substr(wallpapers.chat, 1, 6) = 'group:' "
+    "AND g.group_id = substr(wallpapers.chat, 7) "
+    "AND g.atmosphere = '$kPhotoWall')";
+
 Future<void> dropOrphanWallpapers(DatabaseExecutor db) async {
-  const orphan =
-      "chat <> '' AND NOT EXISTS "
-      "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
-      "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
-      "(SELECT 1 FROM groups g WHERE 'group:' || g.group_id = wallpapers.chat "
-      "AND g.atmosphere = '$kPhotoWall')";
+  const orphan = kOrphanWallpapers;
   // an open with nothing to sweep writes nothing
   final any = await db.rawQuery(
     'SELECT 1 FROM wallpapers WHERE $orphan LIMIT 1',

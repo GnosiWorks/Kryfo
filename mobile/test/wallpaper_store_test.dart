@@ -13,6 +13,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         adoptWallpaperFiles,
         dropOrphanWallpapers,
+        kOrphanWallpapers,
         kPhotoWall,
         wallKey,
         wallpaperTable;
@@ -402,6 +403,25 @@ void main() {
     expect(body, contains('await photoToSendOffUi('));
     expect(body, isNot(contains('photoToSend(')));
   });
+
+  test(
+    'the sweep finds a group by its key, not by reading every group',
+    () async {
+      final db = await chats();
+      final plan = await db.rawQuery(
+        'EXPLAIN QUERY PLAN SELECT 1 FROM wallpapers WHERE $kOrphanWallpapers',
+      );
+      final lines = [for (final r in plan) '${r['detail']}'];
+      final groups = lines.where((l) => l.contains('groups')).toList();
+      expect(groups, isNotEmpty, reason: '$lines');
+      expect(
+        groups.every((l) => l.contains('USING') && !l.startsWith('SCAN')),
+        isTrue,
+        reason: '$lines',
+      );
+    },
+    skip: skip,
+  );
 }
 
 class _On extends HaloDb {
