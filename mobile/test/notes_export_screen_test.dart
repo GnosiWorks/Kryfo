@@ -510,6 +510,41 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
+  List<String> typed() => [
+    for (final e in find.byType(TextField).evaluate())
+      (e.widget as TextField).controller!.text,
+  ];
+
+  testWidgets('a lock clears the typed passphrase', (t) async {
+    await page(t);
+    await typePass(t, 'four random words here');
+    expect(typed(), ['four random words here', 'four random words here']);
+    await lockAndBack(t);
+    await t.pumpAndSettle();
+    expect(screen, findsOneWidget);
+    expect(typed(), ['', '']);
+    expect(find.text(l10n.notesExportGone), findsNothing);
+    expect(left(), isEmpty);
+  });
+
+  testWidgets('a lock while a locked file is made clears the words too', (
+    t,
+  ) async {
+    bigPhoto(db, 2 << 30);
+    await page(t);
+    await typePass(t, 'four random words here');
+    await press(t, find.text(l10n.notesExport));
+    await t.pump();
+    await until(t, () => left().isNotEmpty);
+    expect(find.text(l10n.notesExportWorking), findsOneWidget);
+    await lockAndBack(t);
+    await t.pumpAndSettle();
+    expect(find.text(l10n.notesExportGone), findsOneWidget);
+    expect(typed(), ['', '']);
+    expect(asked, isNot(contains('saveDocument')));
+    expect(left(), isEmpty);
+  });
+
   // a decoy with notes of its own, open in place of the everyday ones
   _Db intoDecoy() {
     final decoy = _Db(HaloContainer.decoy)

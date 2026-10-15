@@ -80,9 +80,12 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   }
 
   // a lock took the waiting file with it. one being made stops on its own,
-  // one being saved is seen to when the save ends
+  // one being saved is seen to when the save ends. typed words go too
   void _runMoved() {
-    if (!mounted || _made == null || _saving) return;
+    if (!mounted) return;
+    _p1.clear();
+    _p2.clear();
+    if (_made == null || _saving) return;
     setState(() {
       _made = null;
       _notSaved = false;
