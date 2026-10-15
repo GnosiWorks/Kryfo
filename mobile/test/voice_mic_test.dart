@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/voice_live.dart' show voiceRecording;
 import 'package:kryfo/voice_mask.dart' show LiveMask;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
@@ -98,6 +99,8 @@ void main() {
   String? recording;
   late List<VoiceTake> sent;
   late bool stopThrows;
+  // held shut, the recorder's start waits for it
+  Completer<void>? starting;
   // what the mic asked of its live disguises
   final live = <String>[];
   final spies = <_Spy>[];
@@ -143,6 +146,7 @@ void main() {
     recording = null;
     sent = [];
     stopThrows = false;
+    starting = null;
     live.clear();
     spies.clear();
     lockState.openForTest();
@@ -158,6 +162,7 @@ void main() {
         case 'start':
           recording = (c.arguments as Map)['path'] as String;
           File(recording!).writeAsBytesSync(_wav());
+          await starting?.future;
           return null;
         case 'stop':
           if (stopThrows) throw PlatformException(code: 'stop');
@@ -552,6 +557,37 @@ void main() {
       expect(sent, isEmpty);
       expect(File(recording!).existsSync(), isFalse);
       await ended(t);
+    });
+
+    testWidgets('the chat closing while the recorder starts: the take is '
+        'shredded', (t) async {
+      await open(t);
+      starting = Completer<void>();
+      final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
+      await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await until(t, () => recording != null);
+      await close(t);
+      starting!.complete();
+      await shredded(t, recording!);
+      expect(File(recording!).existsSync(), isFalse);
+      expect(voiceRecording.value, 0);
+      expect(sent, isEmpty);
+      await g.cancel();
+    });
+
+    testWidgets('the touch taken away mid-hold: the note is thrown away', (
+      t,
+    ) async {
+      await open(t);
+      final g = await hold(t);
+      await g.cancel();
+      await shredded(t, recording!);
+      expect(asked, contains('stop'));
+      expect(mic(t).stage, VoiceStage.idle);
+      expect(File(recording!).existsSync(), isFalse);
+      expect(voiceRecording.value, 0);
+      expect(sent, isEmpty);
+      await close(t);
     });
 
     testWidgets('a recorder that will not stop: the live disguise ends', (

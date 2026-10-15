@@ -1694,6 +1694,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatWaitingForThemTo => 'Đang chờ họ chấp nhận yêu cầu của bạn';
 
   @override
+  String get chatTheyMayNotKnow => 'Có thể họ chưa biết bạn đã chấp nhận';
+
+  @override
   String get chatYouBlockedThisContact => 'Bạn đã chặn liên hệ này';
 
   @override

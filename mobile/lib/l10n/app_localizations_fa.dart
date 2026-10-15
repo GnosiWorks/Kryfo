@@ -1708,6 +1708,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatWaitingForThemTo => 'در انتظار اینکه درخواستتان را بپذیرد';
 
   @override
+  String get chatTheyMayNotKnow => 'شاید نداند که پذیرفته‌اید';
+
+  @override
   String get chatYouBlockedThisContact => 'این مخاطب را مسدود کرده‌اید';
 
   @override

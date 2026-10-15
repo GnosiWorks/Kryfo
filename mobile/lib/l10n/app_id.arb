@@ -539,6 +539,7 @@
   "chatMessageRequest": "Permintaan pesan",
   "chatTheyNeedToAccept": "Dia perlu menerima dulu sebelum kalian bisa lanjut mengobrol.",
   "chatWaitingForThemTo": "Menunggu dia menerima permintaanmu",
+  "chatTheyMayNotKnow": "Dia mungkin belum tahu kamu sudah menerima",
   "chatYouBlockedThisContact": "Kamu memblokir kontak ini",
   "chatSupporter": "Pendukung",
   "chatEncryptedViaRelay": "Terenkripsi · lewat relay",

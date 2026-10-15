@@ -539,6 +539,7 @@
   "chatMessageRequest": "Mesaj isteği",
   "chatTheyNeedToAccept": "Sohbete devam edebilmen için önce onun kabul etmesi gerekiyor.",
   "chatWaitingForThemTo": "İsteğini kabul etmesi bekleniyor",
+  "chatTheyMayNotKnow": "Kabul ettiğini bilmiyor olabilir",
   "chatYouBlockedThisContact": "Bu kişiyi engelledin",
   "chatSupporter": "Destekçi",
   "chatEncryptedViaRelay": "Şifreli · aktarıcı ile",

@@ -130,6 +130,8 @@ class ContactScreen extends StatefulWidget {
   final String haloId;
   final String avatarSeed;
   final int? face;
+  // the name the opening page shows, for the first frame
+  final String? nickname;
   // the key the chat already holds, for the safety number page
   final String peerXPub;
   const ContactScreen({
@@ -138,6 +140,7 @@ class ContactScreen extends StatefulWidget {
     required this.avatarSeed,
     required this.peerXPub,
     this.face,
+    this.nickname,
   });
   @override
   State<ContactScreen> createState() => _ContactScreenState();
@@ -223,8 +226,9 @@ class _ContactScreenState extends State<ContactScreen> {
     };
   }
 
-  String? get _nickname =>
-      _c != null ? _c!['nickname'] as String? : _seen?.nickname;
+  String? get _nickname => _c != null
+      ? _c!['nickname'] as String?
+      : widget.nickname ?? _seen?.nickname;
   String get _name => _nickname ?? widget.haloId;
 
   Future<void> _setMuted(bool on) async {

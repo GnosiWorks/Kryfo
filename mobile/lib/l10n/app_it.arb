@@ -539,6 +539,7 @@
   "chatMessageRequest": "Richiesta di messaggio",
   "chatTheyNeedToAccept": "Deve accettare prima che possiate continuare a scrivervi.",
   "chatWaitingForThemTo": "In attesa che accetti la tua richiesta",
+  "chatTheyMayNotKnow": "Potrebbe non sapere che hai accettato",
   "chatYouBlockedThisContact": "Hai bloccato questo contatto",
   "chatSupporter": "Sostenitore",
   "chatEncryptedViaRelay": "Cifrato · tramite relay",

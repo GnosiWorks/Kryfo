@@ -539,6 +539,7 @@
   "chatMessageRequest": "Yêu cầu nhắn tin",
   "chatTheyNeedToAccept": "Họ cần chấp nhận thì bạn mới trò chuyện tiếp được.",
   "chatWaitingForThemTo": "Đang chờ họ chấp nhận yêu cầu của bạn",
+  "chatTheyMayNotKnow": "Có thể họ chưa biết bạn đã chấp nhận",
   "chatYouBlockedThisContact": "Bạn đã chặn liên hệ này",
   "chatSupporter": "Người ủng hộ",
   "chatEncryptedViaRelay": "Được mã hóa · qua relay",

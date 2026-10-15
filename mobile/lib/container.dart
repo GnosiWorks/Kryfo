@@ -145,7 +145,7 @@ class HaloContainer {
   Future<Directory> mediaDir() => folder('media');
 
   // anything of it on disk: its database, a sidecar or a folder
-  Future<bool> _onDisk() async {
+  Future<bool> onDisk() async {
     final path = await dbPath();
     for (final f in [path, '$path-wal', '$path-shm', '$path-journal']) {
       if (await File(f).exists()) return true;
@@ -243,7 +243,7 @@ Future<void> sweepContainers(
                   listed.contains(c.extendsId))
         : listed.contains(c.id);
     if (mayOpen) continue;
-    if (await c._onDisk()) await c.wipeFiles();
+    if (await c.onDisk()) await c.wipeFiles();
   }
 }
 

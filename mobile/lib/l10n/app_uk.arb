@@ -539,6 +539,7 @@
   "chatMessageRequest": "Запит на листування",
   "chatTheyNeedToAccept": "Співрозмовник має прийняти запит, щоб ви могли спілкуватися далі.",
   "chatWaitingForThemTo": "Чекаємо, поки співрозмовник прийме твій запит",
+  "chatTheyMayNotKnow": "Співрозмовник може не знати, що запит прийнято",
   "chatYouBlockedThisContact": "Цей контакт заблоковано",
   "chatSupporter": "Прихильник",
   "chatEncryptedViaRelay": "Зашифровано · через ретранслятор",

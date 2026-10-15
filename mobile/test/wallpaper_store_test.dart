@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat's wallpaper photo and the default live in the container's own
-// encrypted database: made on create and on the upgrade to 80, the last
+// encrypted database: made on create and on the upgrade to 81, the last
 // step. a photo lasts while its chat's atmosphere says photo: a chat
 // deleted, or a built-in or the default picked, takes it. the default stays
 import 'dart:io';
@@ -69,19 +69,19 @@ void main() {
     upgrade,
   );
 
-  test('made on create, and on the upgrade to 80 after every older step', () {
+  test('made on create, and on the upgrade to 81 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), greaterThanOrEqualTo(80));
+    expect(int.parse(version), greaterThanOrEqualTo(81));
     expect(create, contains('await wallpaperTable(db);'));
     expect(
       RegExp(
-        r'if \(oldV < 80\) \{[^}]*await wallpaperTable\(db\);',
+        r'if \(oldV < 81\) \{[^}]*await wallpaperTable\(db\);',
       ).hasMatch(steps),
       isTrue,
     );
-    final at80 = steps.indexOf('if (oldV < 80) {');
+    final at81 = steps.indexOf('if (oldV < 81) {');
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
-      if (int.parse(m.group(1)!) < 80) expect(m.start, lessThan(at80));
+      if (int.parse(m.group(1)!) < 81) expect(m.start, lessThan(at81));
     }
     // it moves with a chat into the vault and back
     expect(chatTables, contains('wallpapers'));
@@ -201,7 +201,7 @@ void main() {
     expect(await walls(db), ['', _other]);
   }, skip: skip);
 
-  test('a phone from 79 gets the table once, and a photo reads back byte '
+  test('a phone from 80 gets the table once, and a photo reads back byte '
       'for byte', () async {
     final db = SqliteMem.open()!;
     await db.execute(
@@ -296,7 +296,7 @@ void main() {
   }, skip: skip);
 
   test('the upgrade shreds what it took in once it is written', () {
-    final at = steps.indexOf('if (oldV < 80) {');
+    final at = steps.indexOf('if (oldV < 81) {');
     expect(
       steps.substring(at),
       contains('adopted = await adoptWallpaperFiles(db);'),

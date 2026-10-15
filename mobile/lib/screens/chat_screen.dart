@@ -887,10 +887,12 @@ class _ChatScreenState extends State<ChatScreen>
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
-  bool _sending = false;
-  // stickers and waves being sealed. the composer does not wait for them,
-  // a retry does
-  int _stickerSends = 0;
+  // sends being ground and sealed, typed or not. the composer does not
+  // wait for them, a retry does
+  int _sealing = 0;
+  // texts, stickers and waves seal in the order they were sent: a later
+  // one grinds beside an earlier one and waits for it to be handed on
+  Future<void> _sendTurn = Future.value();
   // the pack's waving sticker, once the packs are read; null for the emoji
   (StickerPack, Sticker)? _hi;
   bool _hiKnown = false;
@@ -948,6 +950,8 @@ class _ChatScreenState extends State<ChatScreen>
   bool _nameAsks = false;
   // the ask put off for later: a quiet line in place of the card
   bool _nameFolded = false;
+  // the accept's word to them never got through: they may not know
+  bool _ackLost = false;
   int _nameFlags = 0;
 
   // what this chat shows about their key, read again whenever a key changes
@@ -1002,6 +1006,26 @@ class _ChatScreenState extends State<ChatScreen>
     final name = _nickname ?? widget.peerHaloId;
     if (!await acceptNewKeyAsked(context, widget.peerHaloId, name)) return;
     await _readKeyState();
+  }
+
+  // whether the accept's word to them was let go. a quiet session says
+  // nothing of it: it sends nothing anyway
+  Future<void> _readAckLost() async {
+    if (_isDev) return;
+    try {
+      final lost = !sessionQuiet && await session.ackLost(widget.peerHaloId);
+      if (mounted && lost != _ackLost) setState(() => _ackLost = lost);
+    } catch (e) {
+      dlog('ack line: not read (${e.runtimeType})');
+    }
+  }
+
+  // the line's button: the accept's word goes again, and the line with it
+  Future<void> _retryAck() async {
+    HapticFeedback.selectionClick();
+    setState(() => _ackLost = false);
+    await appState.retryAck(widget.peerHaloId);
+    await _readAckLost();
   }
 
   Future<void> _dismissKeyChanged() async {
@@ -1292,6 +1316,7 @@ class _ChatScreenState extends State<ChatScreen>
       // a held chat never shows the composer first
       _readKeyState(),
     ];
+    unawaited(_readAckLost());
     // the bottom bar waits for these, so a blocked chat or a request never
     // shows the composer first
     Future.wait(barReads)
@@ -1389,6 +1414,7 @@ class _ChatScreenState extends State<ChatScreen>
       for (final m in expired) {
         m.removing = true;
         m.burnedAway = true;
+        if (m.msgUid != null) _earlier.drop(m.msgUid!);
       }
       if (back) {
         // it burned while the chat was out of view: gone, as it would be
@@ -1439,6 +1465,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _refreshRequestState();
     unawaited(_readKeyState());
+    unawaited(_readAckLost());
     if (!_accepted && _flag == null && !_isDev) _loadShield();
     if (_isDev) {
       _syncDev();
@@ -1568,7 +1595,7 @@ class _ChatScreenState extends State<ChatScreen>
   // goes, then it is shown as failed. the reconnect retry below covers the
   // offline case; this covers a route that was simply slow or flaky.
   void _autoRetryTick() {
-    if (!mounted || _sending || _stickerSends > 0 || _cannotSend()) return;
+    if (!mounted || _sealing > 0 || _cannotSend()) return;
     for (final m in _messages) {
       if (m.direction != 'out' ||
           !m.failed ||
@@ -2787,14 +2814,19 @@ class _ChatScreenState extends State<ChatScreen>
   // leaving, taken back or burned, is no longer there to see
   void _lookEarlier() {
     if (!mounted || _earlier.count == 0) return;
-    final leaving = {
-      for (final m in _messages)
-        if (m.removing && m.msgUid != null) m.msgUid!,
-    };
-    for (final id in leaving) {
-      _earlier.drop(id);
+    var went = false;
+    for (final m in _messages) {
+      if (m.removing && m.msgUid != null && _earlier.drop(m.msgUid!)) {
+        went = true;
+      }
     }
-    if (_earlier.seenIn(_anchors) || leaving.isNotEmpty) setState(() {});
+    if (_earlier.seenIn(_anchors) || went) setState(() {});
+  }
+
+  // a row that comes in, grows or folds moves the others without a scroll
+  bool _threadResized(ScrollMetricsNotification n) {
+    if (n.depth == 0) _lookEarlier();
+    return false;
   }
 
   // after a reload: only what is still in the database stays counted
@@ -2828,17 +2860,6 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _lookEarlierSoon() =>
       WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
-
-  // the line, and after each frame it shows a count, a look for rows that
-  // went since or came on screen
-  Widget _earlierChip({
-    required int count,
-    required bool lifted,
-    required VoidCallback onTap,
-  }) {
-    if (count > 0) _lookEarlierSoon();
-    return EarlierChip(count: count, lifted: lifted, onTap: onTap);
-  }
 
   // the line's tap: to the first one up the thread, the thread brought in
   // whole when it is above the pages held
@@ -3037,7 +3058,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _retry(_Msg msg, {bool claimed = false}) async {
-    if (_sending || _stickerSends > 0) return;
+    if (_sealing > 0) return;
     if (await _stillHeld(msg)) return;
     // still going, here or in the outbox, or it went after all: a second
     // copy is only a duplicate
@@ -4003,7 +4024,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
-    if (text.isEmpty || _sending || (_devOpening?.busy ?? false)) return;
+    if (text.isEmpty || (_devOpening?.busy ?? false)) return;
     await _sendBody(text);
   }
 
@@ -4039,6 +4060,9 @@ class _ChatScreenState extends State<ChatScreen>
     // claimed from the start: a reload while it grinds or seals keeps it
     // sending, and no retry sends it alongside
     appState.claimSend(msgUid);
+    final before = _sendTurn;
+    final turn = Completer<void>();
+    _sendTurn = turn.future;
     var handed = false;
     try {
       final replyToUid = _replyTo?.msgUid;
@@ -4060,15 +4084,7 @@ class _ChatScreenState extends State<ChatScreen>
       );
       msg.preview = preview;
       onRow?.call(msg);
-      // a sticker or a wave leaves the composer as it is: what was typed
-      // stays typed
-      void sealing(bool on) {
-        if (typed) {
-          _sending = on;
-        } else {
-          _stickerSends += on ? 1 : -1;
-        }
-      }
+      void sealing(bool on) => _sealing += on ? 1 : -1;
 
       setState(() {
         _messages.add(msg);
@@ -4083,8 +4099,9 @@ class _ChatScreenState extends State<ChatScreen>
       // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
 
-      await _answerSupport();
       try {
+        // inside, so a throw here settles the row and the count too
+        await _answerSupport();
         await session.saveMessage(
           widget.peerHaloId,
           'out',
@@ -4098,8 +4115,8 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: sticker?.value,
         );
       } catch (e) {
-        // a throw must not leave _sending true: that disables the composer
-        // and the auto retry until the chat is reopened
+        // a throw must not leave it counted: that holds the auto retry
+        // until the chat is reopened
         dlog('send: save failed: $e');
         if (!mounted) return;
         giveBack();
@@ -4163,6 +4180,7 @@ class _ChatScreenState extends State<ChatScreen>
             dlog('send: opener not kept (${e.runtimeType})');
           });
         }
+        await before;
         final prev = _encryptGate;
         final gate = Completer<void>();
         _encryptGate = gate.future;
@@ -4206,6 +4224,9 @@ class _ChatScreenState extends State<ChatScreen>
           .then((result) => _finishTextSend(msg, result));
     } finally {
       if (!handed) appState.releaseSend(msgUid);
+      // one that ended early still lets the next go only after the one
+      // before it
+      unawaited(before.whenComplete(turn.complete));
     }
   }
 
@@ -4868,6 +4889,7 @@ class _ChatScreenState extends State<ChatScreen>
           avatarSeed: widget.avatarSeed,
           peerXPub: widget.peerXPub,
           face: _peerFace,
+          nickname: _nickname,
         ),
       ),
     );
@@ -5337,6 +5359,17 @@ class _ChatScreenState extends State<ChatScreen>
                             ),
                     ),
                     _Fold(
+                      _ackLost && !_blocked && !_isDev
+                          ? _AckLostLine(
+                              key: const ValueKey('ack-lost'),
+                              onRetry: _retryAck,
+                            )
+                          : const SizedBox(
+                              key: ValueKey('ack-lost-none'),
+                              width: 0,
+                            ),
+                    ),
+                    _Fold(
                       _keyChanged && !_keyHeld && !_isDev
                           ? _KeyChangedBanner(
                               key: const ValueKey('key-changed'),
@@ -5393,51 +5426,62 @@ class _ChatScreenState extends State<ChatScreen>
                                 : const _EmptyConversation(
                                     key: ValueKey('empty'),
                                   )
-                          : ListView.builder(
+                          : NotificationListener<ScrollMetricsNotification>(
                               key: const ValueKey('list'),
-                              controller: _scrollCtrl,
-                              reverse: true,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              onNotification: _threadResized,
+                              // the newest bubble's time rests above the line
+                              child: EarlierRoom(
+                                shown: _earlier.count > 0,
+                                controller: _scrollCtrl,
+                                reversed: true,
+                                builder: (_, room) => ListView.builder(
+                                  controller: _scrollCtrl,
+                                  reverse: true,
+                                  padding: EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    12 + room,
+                                  ),
+                                  itemCount: _messages.length,
+                                  findChildIndexCallback: _indexOfRow,
+                                  itemBuilder: (c, i) {
+                                    // one unbuildable message must never cost
+                                    // the whole conversation. draw a stub and
+                                    // carry on.
+                                    try {
+                                      // keyed by the message at the top, where
+                                      // the list looks: in a reversed list every
+                                      // arrival moves every index, and a voice
+                                      // note must keep its player. the same id
+                                      // is the anchor a jump lands on.
+                                      final id = _rowKey(
+                                        _messages[_messages.length - 1 - i],
+                                      );
+                                      return RowAnchor(
+                                        key: ValueKey(id),
+                                        anchors: _anchors,
+                                        id: id,
+                                        child: _buildRow(c, i, searchActive),
+                                      );
+                                    } catch (e) {
+                                      dlog('bubble failed: $e');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                        ),
+                                        child: Text(
+                                          l10n.chatThisMessageCanT,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
-                              itemCount: _messages.length,
-                              findChildIndexCallback: _indexOfRow,
-                              itemBuilder: (c, i) {
-                                // one unbuildable message must never cost
-                                // the whole conversation. draw a stub and
-                                // carry on.
-                                try {
-                                  // keyed by the message at the top, where
-                                  // the list looks: in a reversed list every
-                                  // arrival moves every index, and a voice
-                                  // note must keep its player. the same id
-                                  // is the anchor a jump lands on.
-                                  final id = _rowKey(
-                                    _messages[_messages.length - 1 - i],
-                                  );
-                                  return RowAnchor(
-                                    key: ValueKey(id),
-                                    anchors: _anchors,
-                                    id: id,
-                                    child: _buildRow(c, i, searchActive),
-                                  );
-                                } catch (e) {
-                                  dlog('bubble failed: $e');
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
-                                    ),
-                                    child: Text(
-                                      l10n.chatThisMessageCanT,
-                                      style: HaloType.sans(
-                                        size: 12,
-                                        color: HaloColors.text2,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
                             ),
                     ),
                     // over the thread, so its first row comes in under it
@@ -5474,7 +5518,7 @@ class _ChatScreenState extends State<ChatScreen>
                       right: 16,
                       bottom: 0,
                       child: Center(
-                        child: _earlierChip(
+                        child: EarlierChip(
                           count: _earlier.count,
                           lifted: _showScrollDown,
                           onTap: _toEarlier,
@@ -5719,7 +5763,6 @@ class _ChatScreenState extends State<ChatScreen>
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,
                             focusNode: _composerFocus,
-                            sending: _sending,
                             onSend: _send,
                             disguise: _voiceDisguise,
                             disguiseLocked: _devAnon,
@@ -7931,7 +7974,6 @@ class _EmptyConversation extends StatelessWidget {
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
-  final bool sending;
   final VoidCallback onSend;
   final bool ghost;
   final VoidCallback onToggleGhost;
@@ -7950,7 +7992,6 @@ class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     this.focusNode,
-    required this.sending,
     required this.onSend,
     required this.ghost,
     required this.onToggleGhost,
@@ -8172,9 +8213,10 @@ class _Composer extends StatelessWidget {
                 builder: (context, value, _) {
                   final still = motionStill(context);
                   final hasText = value.text.trim().isNotEmpty;
-                  final canSend = !sending && hasText;
+                  // a send still grinding takes the next one behind it
+                  final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut
-                  final Widget end = (!hasText && !sending)
+                  final Widget end = !hasText
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
                           child: HoldToTalkMic(
@@ -8578,6 +8620,65 @@ class _CompareCard extends StatelessWidget {
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead
 // of alarming. ok dismisses until the key changes again.
+// the accept's word to them was tried as long as it is and never got
+// through: a calm line, and a way to send it again
+class _AckLostLine extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _AckLostLine({super.key, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.chatTheyMayNotKnow,
+              style: HaloType.sans(
+                size: 12.5,
+                weight: FontWeight.w500,
+                color: HaloColors.text,
+                height: 1.35,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Semantics(
+            button: true,
+            child: _ScaleTap(
+              onTap: onRetry,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 36),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  l10n.commonTryAgain,
+                  maxLines: 1,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    weight: FontWeight.w600,
+                    color: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _KeyChangedBanner extends StatelessWidget {
   final String peerName;
   final VoidCallback onVerify;

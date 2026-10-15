@@ -1745,6 +1745,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ждём, когда собеседник примет твой запрос';
 
   @override
+  String get chatTheyMayNotKnow =>
+      'Собеседник может не знать, что запрос принят';
+
+  @override
   String get chatYouBlockedThisContact => 'Этот контакт заблокирован';
 
   @override

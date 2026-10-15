@@ -539,6 +539,7 @@
   "chatMessageRequest": "消息请求",
   "chatTheyNeedToAccept": "对方接受之后，你们才能继续聊。",
   "chatWaitingForThemTo": "正在等待对方接受你的请求",
+  "chatTheyMayNotKnow": "对方可能还不知道你已接受",
   "chatYouBlockedThisContact": "你已屏蔽这位联系人",
   "chatSupporter": "支持者",
   "chatEncryptedViaRelay": "已加密 · 经由中继",

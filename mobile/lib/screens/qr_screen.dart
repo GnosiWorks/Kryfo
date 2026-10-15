@@ -6,6 +6,7 @@ import '../store.dart';
 import '../theme.dart';
 import '../tools/qr_payload.dart';
 import '../tools/qr_png.dart';
+import '../open_file.dart' show ShareEnd;
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart';
@@ -282,8 +283,9 @@ class _QrScreenState extends State<QrScreen> {
           _ => l10n.qrCouldNotSaveIt,
         };
       } else {
-        final ok = await ToolsBridge.instance.shareOut(path, 'image/png');
-        if (!ok) said = l10n.qrNoAppOnThis;
+        final end = await ToolsBridge.instance.shareOut(path, 'image/png');
+        // a sheet closed with nothing picked is the person's own answer
+        if (end == ShareEnd.failed) said = l10n.qrNoAppOnThis;
       }
     } on LockDropped {
       // the session it was asked in is gone: nothing to say

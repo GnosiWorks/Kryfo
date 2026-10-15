@@ -205,6 +205,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           avatarSeed: c.avatarSeed,
           peerXPub: (row['xpub'] as String?) ?? '',
           face: c.avatar,
+          nickname: c.nickname,
         ),
       ),
     );

@@ -1713,6 +1713,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatWaitingForThemTo => 'Esperando a pessoa aceitar seu pedido';
 
   @override
+  String get chatTheyMayNotKnow => 'A pessoa pode não saber que você aceitou';
+
+  @override
   String get chatYouBlockedThisContact => 'Você bloqueou este contato';
 
   @override

@@ -1739,6 +1739,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чекаємо, поки співрозмовник прийме твій запит';
 
   @override
+  String get chatTheyMayNotKnow =>
+      'Співрозмовник може не знати, що запит прийнято';
+
+  @override
   String get chatYouBlockedThisContact => 'Цей контакт заблоковано';
 
   @override

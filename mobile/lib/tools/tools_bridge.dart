@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../open_file.dart' show ShareEnd, shareEndOf;
 import '../share_text.dart';
 
 class PickedFile {
@@ -148,17 +149,18 @@ class ToolsBridge {
     }
   }
 
-  Future<bool> shareOut(String path, String mime) async {
+  Future<ShareEnd> shareOut(String path, String mime) async {
     try {
-      return await lockState.hold<bool?>(
-            () => _ch.invokeMethod<bool>('shareOut', {
-              'path': path,
-              'mime': mime,
-            }),
-          ) ??
-          false;
+      return shareEndOf(
+        await lockState.hold<Object?>(
+          () => _ch.invokeMethod<Object>('shareOut', {
+            'path': path,
+            'mime': mime,
+          }),
+        ),
+      );
     } on PlatformException {
-      return false;
+      return ShareEnd.failed;
     }
   }
 

@@ -37,6 +37,7 @@ import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/voice_mask.dart' show LiveMask;
 import 'package:kryfo/widgets/burn_fade.dart' show LeaveFold;
 import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip, kChipRoom;
 import 'package:kryfo/widgets/empty_chat.dart';
@@ -44,7 +45,8 @@ import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/link_stub.dart';
 import 'package:kryfo/widgets/place_stub.dart';
-import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic, MicGlyph;
+import 'package:kryfo/widgets/voice_mic.dart'
+    show HoldToTalkMic, HoldToTalkMicState, MicGlyph;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/room_countdown.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
@@ -427,6 +429,19 @@ void main() {
       }
     }
 
+    // the shred runs in real time after the note is made: turns until the
+    // name is gone, however slow the machine
+    Future<void> shredded(WidgetTester t, String path) async {
+      final clock = Stopwatch()..start();
+      while (File(path).existsSync() &&
+          clock.elapsed < const Duration(seconds: 20)) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 20));
+      }
+    }
+
     Future<TestGesture> hold(WidgetTester t) async {
       final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
       await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
@@ -454,6 +469,10 @@ void main() {
 
     testWidgets('the last one gone while it records: the voice is '
         'shredded, not left behind', (t) async {
+      // the disguise made as it records, held until the finger is up
+      final made = Completer<LiveMask?>();
+      HoldToTalkMicState.startLive = (_) => made.future;
+      addTearDown(() => HoldToTalkMicState.startLive = LiveMask.start);
       final db = _use(t, _Db(room: true, members: [_roomPub, _joiner]));
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
@@ -472,6 +491,10 @@ void main() {
       expect(find.text(l10n.groupChatNobodyHereYet), findsOneWidget);
       await g.up();
       await settle(t);
+      // the take waits for its disguise, then goes unsent
+      expect(File(recording!).existsSync(), isTrue);
+      made.complete(null);
+      await shredded(t, recording!);
       expect(find.text(l10n.groupChatNobodyToReadIt), findsWidgets);
       expect(File(recording!).existsSync(), isFalse);
       expect(find.byType(EmptyChat), findsOneWidget);

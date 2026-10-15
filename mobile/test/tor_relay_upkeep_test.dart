@@ -146,7 +146,7 @@ class _Io extends ArrivalIo {
   _Io(this.log);
   final List<String> log;
   @override
-  void listen(String xPub) {
+  void listen(String xPub, {bool fresh = false}) {
     log.add('listen:$xPub');
     super.listen(xPub);
   }
