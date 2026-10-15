@@ -1,7 +1,8 @@
 package main
 
-// the knock table: a hash of the address, the endpoint, the signed time and
-// the expiry. a forget is a row with no endpoint, kept for the skew window.
+// the knock table: a hash of the address, the endpoint, the signed time,
+// the expiry, when the endpoint was first taken and whether it ever
+// delivered. a forget is a row with no endpoint, kept for the skew window.
 // registrations go through one goroutine in batches, never waited on under
 // the knocker's lock, so a slow disk never holds up a wrap. half that queue
 // is kept for them: the sweep's deletes may be skipped, a start deletes

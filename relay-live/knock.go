@@ -10,7 +10,8 @@ package main
 // only whoever can read the address can point it somewhere, and it comes
 // over the same lane as the address's subscription. its content is the
 // endpoint, empty to forget it. nothing else is kept: a hash of the
-// address, the endpoint, the registration's time and when it expires. no
+// address, the endpoint, the registration's time and when it expires,
+// when the relay first took the endpoint and whether it ever delivered. no
 // ip, no connection, nothing logged per endpoint.
 //
 // every endpoint also gets decoy knocks, each on a timer of its own, so its
