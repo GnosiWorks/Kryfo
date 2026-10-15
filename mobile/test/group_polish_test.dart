@@ -1841,6 +1841,37 @@ void main() {
       await _close(t);
     });
 
+    testWidgets('its info page shows no one: no members, no count', (t) async {
+      me(t);
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      final db = _use(
+        t,
+        _Db()
+          ..member = true
+          ..adminId = _anna,
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      // running: the members and their count are there
+      expect(find.text(l10n.groupInfoMembers2), findsOneWidget);
+      expect(find.text('Anna'), findsOneWidget);
+      expect(find.text(l10n.groupInfo1Member(2)), findsOneWidget);
+      // ended: opened again, the line and a delete alone
+      db.endedBy = _anna;
+      await t.pumpWidget(const SizedBox());
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupInfoMembers2), findsNothing);
+      expect(find.text('Anna'), findsNothing);
+      expect(find.text(l10n.groupInfo1Member(2)), findsNothing);
+      expect(find.byType(MembersCard), findsNothing);
+      expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
+      await _close(t);
+    });
+
     testWidgets('the one its admin ended here says so', (t) async {
       me(t);
       _use(

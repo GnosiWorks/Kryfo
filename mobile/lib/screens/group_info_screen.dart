@@ -519,43 +519,45 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.groupInfo1Member(
-                          _loaded ? _members.length : _seenCount,
-                        ),
-                        style: HaloType.mono(
-                          size: 11,
-                          color: HaloColors.text2,
-                          letter: 0.1,
-                        ),
-                      ),
-                      if (_isAdmin && !_ended) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
+                  // an ended group counts no one: its line says what it is
+                  if (!_ended)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.groupInfo1Member(
+                            _loaded ? _members.length : _seenCount,
                           ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.amberSoft,
-                            borderRadius: BorderRadius.circular(999),
+                          style: HaloType.mono(
+                            size: 11,
+                            color: HaloColors.text2,
+                            letter: 0.1,
                           ),
-                          child: Text(
-                            l10n.groupInfoAdmin,
-                            style: HaloType.mono(
-                              size: 9.5,
-                              color: HaloColors.amber,
-                              weight: FontWeight.w600,
-                              letter: 0.1,
+                        ),
+                        if (_isAdmin && !_ended) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: HaloColors.amberSoft,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              l10n.groupInfoAdmin,
+                              style: HaloType.mono(
+                                size: 9.5,
+                                color: HaloColors.amber,
+                                weight: FontWeight.w600,
+                                letter: 0.1,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
                   // ended: who did, grown in under the count
                   EaseSize(
                     child: FadeSwap(
@@ -566,7 +568,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             )
                           : Padding(
                               key: const ValueKey('ended'),
-                              padding: const EdgeInsets.only(top: 10),
+                              padding: const EdgeInsets.only(top: 4),
                               child: Text(
                                 endedLine(_end!),
                                 textAlign: TextAlign.center,
@@ -656,52 +658,64 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               ],
             ),
           ),
-          PageSection(
-            l10n.groupInfoMembers2,
-            actions: [
-              if (_isRoom)
-                _Pill(
-                  icon: Icons.qr_code_2_outlined,
-                  label: l10n.groupInfoInvite,
-                  color: HaloColors.violet,
-                  onTap: () async {
-                    final link = await appState.roomLinkFor(widget.groupId);
-                    if (link != null && context.mounted) {
-                      await showRoomLinkSheet(context, link);
-                    }
-                  },
+          // an ended group's members are kept for its end alone: none show
+          _fold(
+            'members',
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageSection(
+                  l10n.groupInfoMembers2,
+                  actions: [
+                    if (_isRoom)
+                      _Pill(
+                        icon: Icons.qr_code_2_outlined,
+                        label: l10n.groupInfoInvite,
+                        color: HaloColors.violet,
+                        onTap: () async {
+                          final link = await appState.roomLinkFor(
+                            widget.groupId,
+                          );
+                          if (link != null && context.mounted) {
+                            await showRoomLinkSheet(context, link);
+                          }
+                        },
+                      ),
+                    if (_isAdmin && !_isRoom && !_ended)
+                      _Pill(
+                        icon: Icons.add_rounded,
+                        label: l10n.commonAdd,
+                        color: HaloColors.amber,
+                        onTap: _addMembers,
+                      ),
+                  ],
                 ),
-              if (_isAdmin && !_isRoom && !_ended)
-                _Pill(
-                  icon: Icons.add_rounded,
-                  label: l10n.commonAdd,
-                  color: HaloColors.amber,
-                  onTap: _addMembers,
+                // the card comes in whole once the members are read, over a
+                // blank one the size the list said
+                EaseSize(
+                  child: FadeSwap(
+                    child: _loaded
+                        ? MembersCard(
+                            key: const ValueKey('members'),
+                            // under the lock nothing is being watched
+                            quiet: lockGuard.isLocked(),
+                            members: _members,
+                            isMe: (m) =>
+                                m == myId || (_isRoom && m == _roomPub),
+                            canRemove: _isAdmin && !_ended,
+                            onRemove: _confirmRemove,
+                            contactOf: _contactOf,
+                            onOpen: _openMember,
+                            held: _held,
+                            onHeld: _openHeld,
+                          )
+                        : _MembersWaiting(
+                            key: const ValueKey('members-waiting'),
+                            count: _seenCount,
+                          ),
+                  ),
                 ),
-            ],
-          ),
-          // the card comes in whole once the members are read, over a
-          // blank one the size the list said
-          EaseSize(
-            child: FadeSwap(
-              child: _loaded
-                  ? MembersCard(
-                      key: const ValueKey('members'),
-                      // under the lock nothing is being watched
-                      quiet: lockGuard.isLocked(),
-                      members: _members,
-                      isMe: (m) => m == myId || (_isRoom && m == _roomPub),
-                      canRemove: _isAdmin && !_ended,
-                      onRemove: _confirmRemove,
-                      contactOf: _contactOf,
-                      onOpen: _openMember,
-                      held: _held,
-                      onHeld: _openHeld,
-                    )
-                  : _MembersWaiting(
-                      key: const ValueKey('members-waiting'),
-                      count: _seenCount,
-                    ),
+              ],
             ),
           ),
           const SizedBox(height: 14),
