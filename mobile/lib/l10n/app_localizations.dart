@@ -13368,7 +13368,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: under that title: ending deletes the group's messages and media for everyone
   ///
   /// In en, this message translates to:
-  /// **'It\'s deleted for everyone: its messages and media are removed from every member\'s phone.'**
+  /// **'It\'s deleted for everyone: its messages and media are removed from every updated member\'s phone.'**
   String get groupInfoEndGroupLine;
 
   /// group info and the chat list menu: in place of Leave group once the group has ended

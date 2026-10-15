@@ -2181,7 +2181,7 @@
   "groupEndedBar": "Bu grup sonlandı",
   "groupInfoEndGroup": "Grubu sonlandır",
   "groupInfoEndThisGroup": "Bu grup herkes için sonlandırılsın mı?",
-  "groupInfoEndGroupLine": "Herkes için silinir: mesajları ve medyası her üyenin telefonundan kaldırılır.",
+  "groupInfoEndGroupLine": "Herkes için silinir: mesajları ve medyası, güncellemeyi almış her üyenin telefonundan kaldırılır.",
   "groupInfoDeleteGroup": "Grubu sil",
   "groupInfoDeleteThisGroup": "Bu grup silinsin mi?",
   "groupInfoDeleteGroupLine": "Sonlanan grup sohbet listenden kalkar.",

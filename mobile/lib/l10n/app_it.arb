@@ -2181,7 +2181,7 @@
   "groupEndedBar": "Questo gruppo è stato chiuso",
   "groupInfoEndGroup": "Chiudi gruppo",
   "groupInfoEndThisGroup": "Chiudere questo gruppo per tutti?",
-  "groupInfoEndGroupLine": "Viene eliminato per tutti: messaggi e media vengono rimossi dal telefono di ogni membro.",
+  "groupInfoEndGroupLine": "Viene eliminato per tutti: messaggi e media vengono rimossi dal telefono di ogni membro aggiornato.",
   "groupInfoDeleteGroup": "Elimina gruppo",
   "groupInfoDeleteThisGroup": "Eliminare questo gruppo?",
   "groupInfoDeleteGroupLine": "Il gruppo chiuso sparisce dall'elenco delle chat.",

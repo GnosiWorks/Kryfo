@@ -889,6 +889,9 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     'FROM v.group_members gm JOIN v.contacts c ON c.halo_id = gm.halo_id '
     'WHERE gm.group_id = ?1 AND NOT EXISTS '
     '(SELECT 1 FROM main.contacts x WHERE x.halo_id = gm.halo_id) '
+    // an ended group's members are kept for its end alone
+    'AND NOT EXISTS (SELECT 1 FROM v.groups g WHERE g.group_id = ?1 '
+    'AND g.ended_at IS NOT NULL) '
     'ORDER BY c.halo_id',
     [c.id],
   );

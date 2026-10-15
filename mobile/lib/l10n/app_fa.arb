@@ -2181,7 +2181,7 @@
   "groupEndedBar": "این گروه پایان یافته",
   "groupInfoEndGroup": "پایان دادن به گروه",
   "groupInfoEndThisGroup": "این گروه برای همه پایان یابد؟",
-  "groupInfoEndGroupLine": "برای همه حذف می‌شود: پیام‌ها و رسانه‌هایش از گوشی همه‌ی اعضا پاک می‌شود.",
+  "groupInfoEndGroupLine": "برای همه حذف می‌شود: پیام‌ها و رسانه‌هایش از گوشی هر عضوی که به‌روزرسانی کرده پاک می‌شود.",
   "groupInfoDeleteGroup": "حذف گروه",
   "groupInfoDeleteThisGroup": "این گروه حذف شود؟",
   "groupInfoDeleteGroupLine": "گروهِ پایان‌یافته از فهرست گفت‌وگوهای شما حذف می‌شود.",

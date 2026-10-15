@@ -8300,7 +8300,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'برای همه حذف می‌شود: پیام‌ها و رسانه‌هایش از گوشی همه‌ی اعضا پاک می‌شود.';
+      'برای همه حذف می‌شود: پیام‌ها و رسانه‌هایش از گوشی هر عضوی که به‌روزرسانی کرده پاک می‌شود.';
 
   @override
   String get groupInfoDeleteGroup => 'حذف گروه';

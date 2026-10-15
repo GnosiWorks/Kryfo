@@ -89,6 +89,8 @@ void main() {
     await w.from(_h, await w.end(_h, _g2));
     // shut: both wait sealed, and nothing of the group moved or rang
     expect(w.store.inbox, hasLength(2));
+    // the end waits apart, so no flood of arrivals takes it
+    expect([for (final r in w.store.inbox) r['part']], [null, kKeepPart]);
     expect(groupEndOf(w.vault.groupRows[_g2]), isNull);
     expect(w.vault.calls.where((c) => c.contains(_g2)), isEmpty);
     expect(w.live.groupRows.containsKey(_g2), isFalse);

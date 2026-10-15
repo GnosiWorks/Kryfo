@@ -8432,7 +8432,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Її буде видалено для всіх: її повідомлення й медіа зникнуть з телефона кожного учасника.';
+      'Її буде видалено для всіх: її повідомлення й медіа зникнуть з телефона кожного учасника з оновленням.';
 
   @override
   String get groupInfoDeleteGroup => 'Видалити групу';

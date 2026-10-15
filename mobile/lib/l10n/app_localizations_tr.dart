@@ -8310,7 +8310,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Herkes için silinir: mesajları ve medyası her üyenin telefonundan kaldırılır.';
+      'Herkes için silinir: mesajları ve medyası, güncellemeyi almış her üyenin telefonundan kaldırılır.';
 
   @override
   String get groupInfoDeleteGroup => 'Grubu sil';

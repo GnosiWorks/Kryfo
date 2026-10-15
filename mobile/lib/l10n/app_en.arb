@@ -10457,7 +10457,7 @@
   "@groupInfoEndThisGroup": {
     "description": "screens/group_info_screen.dart: the title of the sheet that asks before ending the group"
   },
-  "groupInfoEndGroupLine": "It's deleted for everyone: its messages and media are removed from every member's phone.",
+  "groupInfoEndGroupLine": "It's deleted for everyone: its messages and media are removed from every updated member's phone.",
   "@groupInfoEndGroupLine": {
     "description": "screens/group_info_screen.dart: under that title: ending deletes the group's messages and media for everyone"
   },

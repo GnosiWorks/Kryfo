@@ -2181,7 +2181,7 @@
   "groupEndedBar": "Ce groupe est terminé",
   "groupInfoEndGroup": "Mettre fin au groupe",
   "groupInfoEndThisGroup": "Mettre fin à ce groupe pour tout le monde ?",
-  "groupInfoEndGroupLine": "Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre.",
+  "groupInfoEndGroupLine": "Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre à jour.",
   "groupInfoDeleteGroup": "Supprimer le groupe",
   "groupInfoDeleteThisGroup": "Supprimer ce groupe ?",
   "groupInfoDeleteGroupLine": "Le groupe terminé disparaît de votre liste de discussions.",

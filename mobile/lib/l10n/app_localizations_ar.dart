@@ -8413,7 +8413,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو.';
+      'تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو حدّث التطبيق.';
 
   @override
   String get groupInfoDeleteGroup => 'حذف المجموعة';

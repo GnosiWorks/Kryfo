@@ -8275,7 +8275,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi điện thoại của mọi thành viên.';
+      'Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi điện thoại của mọi thành viên đã cập nhật.';
 
   @override
   String get groupInfoDeleteGroup => 'Xóa nhóm';

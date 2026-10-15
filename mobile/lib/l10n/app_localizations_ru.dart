@@ -8442,7 +8442,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Она удаляется у всех: её сообщения и медиа стираются с телефона каждого участника.';
+      'Она удаляется у всех: её сообщения и медиа стираются с телефона каждого участника с обновлением.';
 
   @override
   String get groupInfoDeleteGroup => 'Удалить группу';

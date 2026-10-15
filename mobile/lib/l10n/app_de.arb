@@ -2181,7 +2181,7 @@
   "groupEndedBar": "Diese Gruppe wurde beendet",
   "groupInfoEndGroup": "Gruppe beenden",
   "groupInfoEndThisGroup": "Diese Gruppe für alle beenden?",
-  "groupInfoEndGroupLine": "Sie wird für alle gelöscht: Ihre Nachrichten und Medien werden vom Handy jedes Mitglieds entfernt.",
+  "groupInfoEndGroupLine": "Sie wird für alle gelöscht: Ihre Nachrichten und Medien werden vom Handy jedes Mitglieds mit dem Update entfernt.",
   "groupInfoDeleteGroup": "Gruppe löschen",
   "groupInfoDeleteThisGroup": "Diese Gruppe löschen?",
   "groupInfoDeleteGroupLine": "Die beendete Gruppe verschwindet aus deiner Chatliste.",

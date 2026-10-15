@@ -87,13 +87,9 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int, bool)>> inboxSizes() async => [
+  Future<List<(int, int, int?)>> inboxSizes() async => [
     for (final r in inbox)
-      (
-        r['id'] as int,
-        (r['sealed'] as List<int>).length,
-        r['part'] == kNotePart,
-      ),
+      (r['id'] as int, (r['sealed'] as List<int>).length, r['part'] as int?),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -1139,6 +1135,29 @@ void main() {
       }
       await r.seal(Unsealed(_h, 'real-1', false, 9), uid: 'r1');
       expect([for (final x in w.store.inbox) x['uid']], ['r0', 'n2', 'r1']);
+    });
+
+    test('a hidden group\'s end, sealed first, outlasts a flood', () async {
+      final w = await _World.make();
+      final r = await capped(w);
+      expect(await r.seal(Unsealed(_h, 'end', false, 0), keep: true), isTrue);
+      for (var i = 0; i < 5; i++) {
+        await r.seal(Unsealed(_h, 'w$i', false, i + 1), uid: 'u$i');
+      }
+      expect(
+        [for (final x in w.store.inbox) x['part']],
+        [kKeepPart, null, null],
+      );
+      expect([for (final x in w.store.inbox) x['uid']], [null, 'u3', 'u4']);
+      // and the kept ones are held to a cap of their own
+      final k = await capped(w, n: kMaxSealedKept + 10);
+      for (var i = 0; i < kMaxSealedKept + 5; i++) {
+        await k.seal(Unsealed(_h, 'end$i', false, i), keep: true);
+      }
+      expect(
+        w.store.inbox.where((x) => x['part'] == kKeepPart),
+        hasLength(kMaxSealedKept),
+      );
     });
 
     test('keeps at most the cap, the oldest going first', () async {

@@ -2181,7 +2181,7 @@
   "groupEndedBar": "انتهت هذه المجموعة",
   "groupInfoEndGroup": "إنهاء المجموعة",
   "groupInfoEndThisGroup": "إنهاء هذه المجموعة للجميع؟",
-  "groupInfoEndGroupLine": "تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو.",
+  "groupInfoEndGroupLine": "تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو حدّث التطبيق.",
   "groupInfoDeleteGroup": "حذف المجموعة",
   "groupInfoDeleteThisGroup": "حذف هذه المجموعة؟",
   "groupInfoDeleteGroupLine": "تختفي المجموعة المنتهية من قائمة محادثاتك.",

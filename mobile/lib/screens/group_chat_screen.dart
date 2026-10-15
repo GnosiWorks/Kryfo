@@ -980,7 +980,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _holdSeen();
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
-        _memberCount = members.length;
+        // an ended group counts no one
+        _memberCount = groupEndOf(g) != null ? 0 : members.length;
         _alone = !members.any((m) => m != _me && m != appState.sessionId);
         _roomExpiresAt = g['expires_at'] as int?;
         _joiningAt = joining;
@@ -3770,6 +3771,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       memberCount: _memberCount,
                       expiresAt: _roomExpiresAt,
                       joiningAt: _waiting ? _joiningAt : null,
+                      ended: _end != null,
                       onBack: () => Navigator.of(context).pop(),
                       onSearch: _waiting || _end != null ? null : _openSearch,
                       pinnedCount: _end != null ? 0 : _pinCount,
@@ -4183,6 +4185,8 @@ class _Header extends StatelessWidget {
   final int? expiresAt; // a room: the subtitle is the clock, not the count
   // a room not let in yet: its subtitle says so, and there is no info page
   final int? joiningAt;
+  // its admin ended it: no count under the name
+  final bool ended;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -4195,6 +4199,7 @@ class _Header extends StatelessWidget {
     required this.memberCount,
     this.expiresAt,
     this.joiningAt,
+    this.ended = false,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -4271,7 +4276,10 @@ class _Header extends StatelessWidget {
                           ),
                           // let in, the waiting line rises into the clock
                           RiseSwap(
-                            child: joiningAt != null
+                            child: ended
+                                // the page and its bar say it: no count
+                                ? const SizedBox(key: ValueKey('ended'))
+                                : joiningAt != null
                                 ? RoomJoinLine(
                                     key: const ValueKey('joining'),
                                     joiningAt: joiningAt!,

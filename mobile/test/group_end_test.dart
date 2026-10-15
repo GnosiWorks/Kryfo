@@ -513,6 +513,190 @@ void main() {
     }, skip: skip);
   });
 
+  group('an end cut short, raced or left behind', () {
+    test('a wipe a stop cut short finishes when the end comes again', () async {
+      final photo = await filled();
+      await s.execute('ALTER TABLE media_chunks RENAME TO mc_away');
+      try {
+        await comes('bob', await ctl(const GroupControl(type: 'end')));
+      } catch (_) {}
+      await s.execute('ALTER TABLE mc_away RENAME TO media_chunks');
+      expect(groupEndOf(await row(_theirs))?.by, 'bob');
+      app = await start();
+      await comes('bob', await ctl(const GroupControl(type: 'end')));
+      expect(
+        await count('SELECT 1 FROM messages WHERE group_id = ?', [_theirs]),
+        0,
+      );
+      expect(
+        await count("SELECT 1 FROM msg_fts WHERE msg_fts MATCH 'lake'"),
+        0,
+      );
+      expect(photo.existsSync(), isFalse);
+    }, skip: skip);
+
+    test('and at the next start, with no end again', () async {
+      await comes('bob', await said('m1'));
+      // as a stop leaves it: ended, its rows still there
+      await s.update(
+        'groups',
+        {'ended_at': 1, 'ended_by': 'bob'},
+        where: 'group_id = ?',
+        whereArgs: [_theirs],
+      );
+      for (final g in await db.endedGroupIds()) {
+        await db.wipeEnded(g);
+      }
+      expect(
+        await count('SELECT 1 FROM messages WHERE group_id = ?', [_theirs]),
+        0,
+      );
+      // the older sweep takes an ended group's rows too
+      await comes('carol', await said('m2', by: 'carol', g: _mine));
+      await s.update(
+        'groups',
+        {'ended_at': 1, 'ended_by': 'me'},
+        where: 'group_id = ?',
+        whereArgs: [_mine],
+      );
+      await db.dropGroupLeftovers();
+      expect(
+        await count('SELECT 1 FROM messages WHERE group_id = ?', [_mine]),
+        0,
+      );
+    }, skip: skip);
+
+    test('a message filed as the end lands is taken with it, and does not '
+        'ring', () async {
+      for (var i = 0; i < 5; i++) {
+        final c1 = 'cc-${n++}';
+        final c2 = 'cc-${n++}';
+        io.opens[c1] = ('carol', await said('race$i', by: 'carol'));
+        io.opens[c2] = ('bob', await ctl(const GroupControl(type: 'end')));
+        await Future.wait([
+          app.receiveOnion([c1]),
+          app.receiveOnion([c2]),
+        ]);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        if (groupEndOf(await row(_theirs)) != null) break;
+      }
+      expect(groupEndOf(await row(_theirs)), isNotNull);
+      expect(
+        await count('SELECT 1 FROM messages WHERE group_id = ?', [_theirs]),
+        0,
+      );
+      expect((await row(_theirs))['unread'], 0);
+      expect(io.rang.where((r) => r.contains(_theirs)), isEmpty);
+    }, skip: skip);
+
+    test('a remove still owed goes to the member it takes out', () async {
+      io.cut.add('carol');
+      await app.removeMembersFromGroup(_mine, ['carol']);
+      await app.ctlPassForTest;
+      expect(await app.endGroupAndAnnounce(_mine), isTrue);
+      await app.ctlPassForTest;
+      io.cut.clear();
+      await s.update('group_ctl_out', {'next_at': 0});
+      await app.drainOutbox();
+      await app.ctlPassForTest;
+      expect(io.got('carol'), contains('ctl:remove'));
+      expect(io.got('carol'), isNot(contains('ctl:end')));
+      expect(io.got('bob'), contains('ctl:end'));
+    }, skip: skip);
+
+    test(
+      'an admin who left ends nothing, renames nothing, removes no one',
+      () async {
+        await comes('bob', await said('m1'));
+        await comes('bob', await ctl(const GroupControl(type: 'leave')));
+        await comes('bob', await ctl(const GroupControl(type: 'end')));
+        await comes(
+          'bob',
+          await ctl(const GroupControl(type: 'rename', name: 'Gone')),
+        );
+        await comes(
+          'bob',
+          await ctl(const GroupControl(type: 'remove', members: ['carol'])),
+        );
+        final g = await row(_theirs);
+        expect(groupEndOf(g), isNull);
+        expect(g['name'], 'Friends');
+        expect(
+          await count('SELECT 1 FROM messages WHERE group_id = ?', [_theirs]),
+          1,
+        );
+        expect(
+          await count(
+            "SELECT 1 FROM group_members WHERE group_id = 'g1' AND halo_id = 'carol'",
+          ),
+          1,
+        );
+      },
+      skip: skip,
+    );
+
+    test('the end is queued before the wipe: a wipe that stops loses no '
+        'send', () async {
+      io.cut.addAll(['bob', 'carol']);
+      await s.execute('ALTER TABLE media_chunks RENAME TO mc_away');
+      try {
+        await app.endGroupAndAnnounce(_mine);
+      } catch (_) {}
+      await s.execute('ALTER TABLE mc_away RENAME TO media_chunks');
+      io.cut.clear();
+      await s.update('group_ctl_out', {'next_at': 0});
+      await app.drainOutbox();
+      await app.ctlPassForTest;
+      for (final m in ['bob', 'carol']) {
+        expect(io.got(m), ['ctl:end', l10n.groupEndedOldNotice]);
+      }
+    }, skip: skip);
+
+    test('past its tries an end for a group gone from here goes', () async {
+      io.cut.addAll(['bob', 'carol']);
+      expect(await app.endGroupAndAnnounce(_mine), isTrue);
+      await app.ctlPassForTest;
+      await app.leaveGroupAndAnnounce(_mine);
+      await s.update('group_ctl_out', {'tries': 150, 'next_at': 0});
+      await app.drainOutbox();
+      await app.ctlPassForTest;
+      expect(await count('SELECT 1 FROM group_ctl_out'), 0);
+    }, skip: skip);
+
+    test('past its tries an end for a group still here stays', () async {
+      io.cut.addAll(['bob', 'carol']);
+      expect(await app.endGroupAndAnnounce(_mine), isTrue);
+      await app.ctlPassForTest;
+      await s.update('group_ctl_out', {'tries': 150, 'next_at': 0});
+      await app.drainOutbox();
+      await app.ctlPassForTest;
+      expect(
+        await count('SELECT ctl FROM group_ctl_out WHERE ctl LIKE ?', [
+          '%"end"%',
+        ]),
+        2,
+      );
+    }, skip: skip);
+
+    test('an ended group counts no one, and holds no one here', () async {
+      await comes('bob', await ctl(const GroupControl(type: 'end')));
+      expect(
+        app.groups.singleWhere((x) => x.groupId == _theirs).memberCount,
+        0,
+      );
+      // carol is in the running group too: there she still counts
+      expect(await db.inAnyGroup('carol'), isTrue);
+      await s.delete(
+        'group_members',
+        where: 'group_id = ? AND halo_id = ?',
+        whereArgs: [_mine, 'carol'],
+      );
+      expect(await db.inAnyGroup('carol'), isFalse);
+      // the members stay for the end alone
+      expect(await db.getGroupMembers(_theirs), contains('carol'));
+    }, skip: skip);
+  });
+
   group('older versions', () {
     test('an end reads as a control of its own kind, nothing else', () async {
       final w = await ctl(const GroupControl(type: 'end'));

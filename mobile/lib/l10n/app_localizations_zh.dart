@@ -7924,7 +7924,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoEndThisGroup => '要为所有人结束这个群组吗？';
 
   @override
-  String get groupInfoEndGroupLine => '将为所有人删除：消息和媒体会从每位成员的手机上移除。';
+  String get groupInfoEndGroupLine => '将为所有人删除：消息和媒体会从每位已更新成员的手机上移除。';
 
   @override
   String get groupInfoDeleteGroup => '删除群组';
@@ -15742,7 +15742,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoEndThisGroup => '要為所有人結束這個群組嗎？';
 
   @override
-  String get groupInfoEndGroupLine => '將為所有人刪除：訊息和媒體會從每位成員的手機上移除。';
+  String get groupInfoEndGroupLine => '將為所有人刪除：訊息和媒體會從每位已更新成員的手機上移除。';
 
   @override
   String get groupInfoDeleteGroup => '刪除群組';

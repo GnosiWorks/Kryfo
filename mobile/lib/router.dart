@@ -46,6 +46,12 @@ const kMaxSealedBytes = 100 << 20;
 const kNotePart = -1;
 const kMaxSealedNotes = 2000;
 
+// a hidden group's end waits under this part. they go last when the cap is
+// reached, so a flood of arrivals never takes an end with it, and no more
+// than this many wait
+const kKeepPart = -2;
+const kMaxSealedKept = 500;
+
 // the three tables, in every container. the vault's are unused but for
 // vault_meta, which holds its own key
 Future<void> routerTables(Database db) async {
@@ -227,9 +233,9 @@ abstract class RouterStore {
   Future<bool> inboxHas(String uid, int? part);
   Future<int> inboxParts(String uid);
   Future<int> inboxCount();
-  // every row's id and size, oldest first, without what it holds, and
-  // whether it is a note (kNotePart)
-  Future<List<(int, int, bool)>> inboxSizes();
+  // every row's id and size, oldest first, without what it holds, and its
+  // part: a note (kNotePart) and a kept one (kKeepPart) are trimmed apart
+  Future<List<(int, int, int?)>> inboxSizes();
   // oldest first
   // past [after], by id
   Future<List<Map<String, Object?>>> inboxOldest(int limit, {int after = 0});
@@ -397,14 +403,14 @@ class SqlRouterStore implements RouterStore {
   }
 
   @override
-  Future<List<(int, int, bool)>> inboxSizes() async => [
+  Future<List<(int, int, int?)>> inboxSizes() async => [
     for (final r in await (await _open()).rawQuery(
       'SELECT id, length(sealed) n, part FROM vault_inbox ORDER BY id ASC',
     ))
       (
         (r['id'] as num).toInt(),
         (r['n'] as num? ?? 0).toInt(),
-        r['part'] == kNotePart,
+        (r['part'] as num?)?.toInt(),
       ),
   ];
 
@@ -744,7 +750,13 @@ class VaultRouter {
 
   // an arrival sealed to the vault. false when there is nothing to seal to,
   // or when it alone is past the cap
-  Future<bool> seal(Unsealed a, {String? uid, int? part}) async {
+  Future<bool> seal(
+    Unsealed a, {
+    String? uid,
+    int? part,
+    // a hidden group's end: trimmed last (kKeepPart)
+    bool keep = false,
+  }) async {
     final pub = _pub;
     if (pub == null) return false;
     final plain = utf8.encode(
@@ -766,7 +778,11 @@ class VaultRouter {
     if (sealed == null) return false;
     await _store.inboxAdd(
       uid,
-      a.blockedDrop != null ? kNotePart : part,
+      a.blockedDrop != null
+          ? kNotePart
+          : keep
+          ? kKeepPart
+          : part,
       base64Decode(sealed),
       a.at,
     );
@@ -775,9 +791,9 @@ class VaultRouter {
     return _trim();
   }
 
-  // what waits sealed held to the cap, notes first and then the oldest.
-  // false when the newest is past it on its own: it goes, and takes
-  // nothing with it
+  // what waits sealed held to the cap: notes first, then the oldest, and
+  // kept ones last. false when the newest is past it on its own: it goes,
+  // and takes nothing with it
   Future<bool> _trim() async {
     final rows = await _store.inboxSizes();
     if (rows.isEmpty) return false;
@@ -788,27 +804,44 @@ class VaultRouter {
     }
     var n = rows.length;
     var bytes = 0;
-    var notes = 0;
-    for (final (_, size, note) in rows) {
-      bytes += size;
-      if (note) notes++;
+    for (final r in rows) {
+      bytes += r.$2;
     }
-    for (final (id, size, note) in [
-      for (final r in rows)
-        if (r.$3) r,
-      for (final r in rows)
-        if (!r.$3) r,
-    ]) {
-      if (n <= maxSealed &&
-          bytes <= maxSealedBytes &&
-          (!note || notes <= kMaxSealedNotes)) {
-        if (note) continue;
-        break;
-      }
-      await _store.inboxDelete(id);
+    bool over() => n > maxSealed || bytes > maxSealedBytes;
+    Future<void> drop((int, int, int?) r) async {
+      await _store.inboxDelete(r.$1);
       n--;
-      bytes -= size;
-      if (note) notes--;
+      bytes -= r.$2;
+    }
+
+    final notes = [
+      for (final r in rows)
+        if (r.$3 == kNotePart) r,
+    ];
+    final kept = [
+      for (final r in rows)
+        if (r.$3 == kKeepPart) r,
+    ];
+    var left = notes.length;
+    for (final r in notes) {
+      if (!over() && left <= kMaxSealedNotes) continue;
+      await drop(r);
+      left--;
+    }
+    // kept ones past their own cap go, oldest first, whatever else waits
+    var keep = kept.length;
+    for (final r in kept) {
+      if (keep <= kMaxSealedKept) break;
+      await drop(r);
+      keep--;
+    }
+    for (final r in [
+      for (final r in rows)
+        if (r.$3 != kNotePart && r.$3 != kKeepPart) r,
+      ...kept.skip(kept.length - keep),
+    ]) {
+      if (!over()) break;
+      await drop(r);
     }
     return true;
   }

@@ -2786,14 +2786,15 @@ class HaloDb implements GroupOwedStore {
   // a member of a group or a room here
   Future<bool> inAnyGroup(String haloId) async {
     final db = await open();
-    for (final (t, c) in const [
-      ('group_members', 'halo_id'),
-      ('room_keys', 'member'),
+    for (final (t, c, w) in const [
+      // an ended group's members are kept for its end alone
+      ('group_members', 'halo_id', _kRunningGroup),
+      ('room_keys', 'member', ''),
     ]) {
       final r = await db.query(
         t,
         columns: [c],
-        where: '$c = ?',
+        where: '$c = ?$w',
         whereArgs: [haloId],
         limit: 1,
       );
@@ -3422,7 +3423,7 @@ class HaloDb implements GroupOwedStore {
       final there = await t.query(
         'groups',
         columns: ['group_id'],
-        where: 'group_id = ?',
+        where: 'group_id = ? AND ended_at IS NULL',
         whereArgs: [groupId],
         limit: 1,
       );
@@ -3810,11 +3811,11 @@ class HaloDb implements GroupOwedStore {
     dropDraft(container.chatKey(groupId), group: true);
     await clearGroupConversation(groupId, noteGone: false);
     final db = await open();
-    // its wallpaper too: the line stays on a plain page
+    // its wallpaper too: the line stays on a plain page, with no count
     final atmo = (await getGroup(groupId))?['atmosphere'];
     await db.update(
       'groups',
-      {'atmosphere': null},
+      {'atmosphere': null, 'unread': 0, 'mentioned': 0},
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
@@ -3835,7 +3836,12 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ?',
       whereArgs: [groupId],
     )) {
-      if (groupUnsendOf(r['ctl']) != null || groupEndOut(r['ctl'])) continue;
+      // a remove still owed: the one taken out drops the group by it
+      if (groupUnsendOf(r['ctl']) != null ||
+          groupEndOut(r['ctl']) ||
+          groupRemoveOut(r['ctl'])) {
+        continue;
+      }
       await db.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
     }
     await db.delete(
@@ -3843,6 +3849,46 @@ class HaloDb implements GroupOwedStore {
       where: 'chat = ?',
       whereArgs: ['group:$groupId'],
     );
+  }
+
+  /// the groups here their admin ended
+  Future<List<String>> endedGroupIds() async {
+    final db = await open();
+    return [
+      for (final r in await db.query(
+        'groups',
+        columns: ['group_id'],
+        where: 'ended_at IS NOT NULL',
+      ))
+        r['group_id'] as String,
+    ];
+  }
+
+  /// the end and its words for older versions, in each member's lane at
+  /// once: a stop between the two can lose neither
+  Future<void> queueGroupEnd(
+    String groupId,
+    Iterable<String> members,
+    String notice, {
+    required int now,
+  }) async {
+    final end = jsonEncode(const GroupControl(type: 'end').toWire());
+    final words = jsonEncode(groupWrappedRow(notice));
+    final db = await open();
+    await db.transaction((t) async {
+      for (final ctl in [end, words]) {
+        for (final m in members) {
+          await t.insert('group_ctl_out', {
+            'group_id': groupId,
+            'member': m,
+            'ctl': ctl,
+            'since': now,
+            'tries': 0,
+            'next_at': now,
+          });
+        }
+      }
+    });
   }
 
   Future<void> deleteGroup(String groupId) async {
@@ -4332,6 +4378,10 @@ class HaloDb implements GroupOwedStore {
   static const _kFileCols = ['media_path', 'file_path'];
   // a person's own chat: what they wrote in groups is the groups'
   static const _kOneToOne = 'peer_id = ? AND group_id IS NULL';
+  // a group_members row of a group still running
+  static const _kRunningGroup =
+      ' AND group_id NOT IN (SELECT group_id FROM groups '
+      'WHERE ended_at IS NOT NULL)';
 
   // the files go too, not just the rows. zeros first, then unlink, so a raw
   // read of the flash finds nothing either.
@@ -7404,7 +7454,7 @@ class HaloDb implements GroupOwedStore {
     final g = await db.query(
       'group_members',
       columns: ['group_id'],
-      where: 'halo_id = ?',
+      where: 'halo_id = ?$_kRunningGroup',
       whereArgs: [id],
       limit: 1,
     );
@@ -7940,7 +7990,8 @@ Future<List<Map<String, Object?>>> dropGroupLeftoversIn(
 ) async {
   const gone =
       "group_id IS NOT NULL AND group_id != '' "
-      'AND group_id NOT IN (SELECT group_id FROM groups)';
+      'AND (group_id NOT IN (SELECT group_id FROM groups) '
+      'OR group_id IN (SELECT group_id FROM groups WHERE ended_at IS NOT NULL))';
   final files = await db.rawQuery(
     'SELECT media_path, file_path FROM messages WHERE $gone',
   );
@@ -8994,6 +9045,16 @@ String? groupUnsendOf(Object? ctl) {
 // a group pin, vote or poll close held by a decoy waits in each member's
 // lane as it was sealed for them all, and goes once the decoy is left
 Map<String, String> groupWrappedRow(String wrapped) => {'wr': wrapped};
+
+/// a remove of ours in a lane
+bool groupRemoveOut(Object? ctl) {
+  if (ctl is! String || !ctl.contains('"remove"')) return false;
+  try {
+    return GroupControl.fromWire(jsonDecode(ctl))?.type == 'remove';
+  } catch (_) {
+    return false;
+  }
+}
 
 /// an end of ours in a lane, or its words for older versions: each still
 /// goes to the members it was queued for once the group went from here
@@ -12906,7 +12967,11 @@ class AppState extends ChangeNotifier {
           // group would stay open there for good. a take-back stays too:
           // the message is theirs to keep without it. each goes on a send
           // of ours to them, or when their session comes up
-          if (un == null && gc?.type != 'create' && gc?.type != 'end') {
+          // an end outlives its group here only while it may still go
+          final kept =
+              gc?.type == 'create' ||
+              gc?.type == 'end' && await d.groupExists(groupId);
+          if (un == null && !kept) {
             await d.dropGroupCtl(id);
             continue;
           }
@@ -16286,6 +16351,11 @@ class AppState extends ChangeNotifier {
     );
     changed();
     if (sliced != null) await db.dropMediaChunks(sliced);
+    // an end filed while this one was: it goes with the rest
+    if (isGroup && groupEndOf(await db.getGroup(env.groupId!)) != null) {
+      await _wipeAgain(env.groupId!, db);
+      return to;
+    }
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
     if (env.senderAvatar != null) {
@@ -16357,6 +16427,11 @@ class AppState extends ChangeNotifier {
         : nickname;
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
+      // ended as this one was filed: it goes, and nothing rings
+      if (groupEndOf(g) != null) {
+        await _wipeAgain(env.groupId!, db);
+        return to;
+      }
       notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = sticker != null
           ? l10n.stickerLabel
@@ -16539,6 +16614,8 @@ class AppState extends ChangeNotifier {
       ),
       uid: uid,
       part: part,
+      // a hidden group's end outlasts a flood of arrivals while it waits
+      keep: env.groupControl?.type == 'end',
     );
     if (!kept) {
       dlog('seal: not kept');
@@ -16905,8 +16982,21 @@ class AppState extends ChangeNotifier {
     final end = groupEndOf(await db.getGroup(groupId));
     if (end == null) return false;
     dlog('group: ended, dropped');
-    if (env.groupControl == null) await _endAgain(db, groupId, sender, end);
+    final gc = env.groupControl;
+    if (gc == null) {
+      await _endAgain(db, groupId, sender, end);
+    } else if (gc.type == 'end' && sender == end.by) {
+      // its end again: a wipe cut short here finishes now
+      await _wipeAgain(groupId, db);
+    }
     return true;
+  }
+
+  // an ended group's wipe, run again: whatever a stop left goes
+  Future<void> _wipeAgain(String groupId, HaloDb db) async {
+    await db.wipeEnded(groupId);
+    await _io.unnotify('group:$groupId');
+    _bumpChatRev('group:$groupId');
   }
 
   // an end, from its admin or this phone's own: what the group held goes
@@ -16919,9 +17009,10 @@ class AppState extends ChangeNotifier {
     required int at,
   }) async {
     if (groupEndOf(await db.getGroup(groupId)) != null) return false;
-    await _io.unnotify('group:$groupId');
     dropGroupDraft(groupId);
     if (!await db.endGroup(groupId, by: by, at: at)) return false;
+    // after the wipe: a notification of one filed as it ran goes too
+    await _io.unnotify('group:$groupId');
     _bumpChatRev('group:$groupId');
     await refreshContacts();
     await refreshGroups();
@@ -16978,6 +17069,9 @@ class AppState extends ChangeNotifier {
     // room's admin is its creator's key. leave speaks only for its sender
     final exists = await db.groupExists(groupId);
     final fromAdmin = exists && senderHaloId == await db.groupAdminId(groupId);
+    // an admin who left speaks for the group no more
+    Future<bool> adminHere() async =>
+        (await db.getGroupMembers(groupId)).contains(senderHaloId);
     switch (gc.type) {
       case 'join':
         // only ever valid off a room drop box, handled there
@@ -17106,6 +17200,7 @@ class AppState extends ChangeNotifier {
         break;
       case 'remove':
         if (gc.members == null || !fromAdmin) return;
+        if (!await adminHere()) return;
         // in a room this phone is its room key, never the kryfo id
         final room = await _roomOf(groupId, db);
         final me = room?.pub ?? myId;
@@ -17147,6 +17242,7 @@ class AppState extends ChangeNotifier {
         break;
       case 'rename':
         if (gc.name == null || !fromAdmin) return;
+        if (!await adminHere()) return;
         await db.renameGroup(groupId, gc.name!);
         _bumpChatRev('group:$groupId');
         await refreshGroups();
@@ -17154,6 +17250,7 @@ class AppState extends ChangeNotifier {
       case 'end':
         // a room ends its own way, when its maker leaves
         if (!fromAdmin || await _roomOf(groupId, db) != null) return;
+        if (!await adminHere()) return;
         await _endHere(
           groupId,
           db,
@@ -20078,6 +20175,14 @@ class AppState extends ChangeNotifier {
 
   // the rows go now, their files in the background as above
   Future<void> _dropGroupLeftovers(HaloDb d) async {
+    // an ended group's wipe a stop cut short finishes here
+    try {
+      for (final g in await d.endedGroupIds()) {
+        await d.wipeEnded(g);
+      }
+    } catch (e) {
+      dlog('groups: an ended one not swept (${e.runtimeType})');
+    }
     try {
       final files = await d.dropGroupLeftovers();
       if (files.isEmpty) return;
@@ -21631,7 +21736,10 @@ class AppState extends ChangeNotifier {
     for (final r in rows) {
       final gid = r['group_id'] as String;
       if (_leavingRooms.contains(gid)) continue;
-      final members = await s.getGroupMembers(gid);
+      // an ended group counts no one: its members are kept for its end
+      final members = groupEndOf(r) != null
+          ? const <String>[]
+          : await s.getGroupMembers(gid);
       list.add(
         GroupPreview(
           groupId: gid,
@@ -24357,28 +24465,29 @@ class AppState extends ChangeNotifier {
     // the session's own: a decoy's group is the decoy's
     final d = session.groupDb(groupId);
     final now = DateTime.now().millisecondsSinceEpoch;
-    // its lanes are read before the wipe: the end goes to everyone in it
-    final to = await _othersIn(d, groupId);
+    // queued before anything here goes, the end first and its words after
+    // it, in one go: a stop on the way loses neither, nor the wipe
+    // (_dropGroupLeftovers). a quiet session keeps it on this phone
+    if (!sessionQuiet) {
+      final notice = await wrapMessage(
+        l10n.groupEndedOldNotice,
+        msgUid: newMsgUid(),
+        groupId: groupId,
+        sender: _mySender(),
+        endNotice: true,
+        writtenAt: now,
+      );
+      await d.queueGroupEnd(
+        groupId,
+        await _othersIn(d, groupId),
+        notice,
+        now: now,
+      );
+    }
     if (!await _endHere(groupId, d, by: sessionId, at: now)) return false;
-    // a quiet session keeps it on this phone: nothing leaves
-    if (sessionQuiet) return true;
-    final notice = await wrapMessage(
-      l10n.groupEndedOldNotice,
-      msgUid: newMsgUid(),
-      groupId: groupId,
-      sender: _mySender(),
-      endNotice: true,
-      writtenAt: now,
-    );
-    // both wait in each member's lane before either goes: the end first
-    await d.queueGroupCtl(
-      groupId,
-      to,
-      const GroupControl(type: 'end'),
-      now: now,
-    );
-    await d.queueGroupWrapped(groupId, to, notice, now: now);
-    if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
+    if (!sessionQuiet && !haloWiping && !everydayHeld) {
+      unawaited(_drainGroupCtl());
+    }
     return true;
   }
 

@@ -2181,7 +2181,7 @@
   "groupEndedBar": "這個群組已結束",
   "groupInfoEndGroup": "結束群組",
   "groupInfoEndThisGroup": "要為所有人結束這個群組嗎？",
-  "groupInfoEndGroupLine": "將為所有人刪除：訊息和媒體會從每位成員的手機上移除。",
+  "groupInfoEndGroupLine": "將為所有人刪除：訊息和媒體會從每位已更新成員的手機上移除。",
   "groupInfoDeleteGroup": "刪除群組",
   "groupInfoDeleteThisGroup": "要刪除這個群組嗎？",
   "groupInfoDeleteGroupLine": "這個已結束的群組會從你的聊天列表中移除。",

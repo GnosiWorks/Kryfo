@@ -2181,7 +2181,7 @@
   "groupEndedBar": "Цю групу завершено",
   "groupInfoEndGroup": "Завершити групу",
   "groupInfoEndThisGroup": "Завершити цю групу для всіх?",
-  "groupInfoEndGroupLine": "Її буде видалено для всіх: її повідомлення й медіа зникнуть з телефона кожного учасника.",
+  "groupInfoEndGroupLine": "Її буде видалено для всіх: її повідомлення й медіа зникнуть з телефона кожного учасника з оновленням.",
   "groupInfoDeleteGroup": "Видалити групу",
   "groupInfoDeleteThisGroup": "Видалити цю групу?",
   "groupInfoDeleteGroupLine": "Завершена група зникне зі списку чатів.",

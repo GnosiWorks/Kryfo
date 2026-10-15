@@ -8348,7 +8348,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Ele é excluído para todos: as mensagens e mídias são removidas do celular de cada membro.';
+      'Ele é excluído para todos: as mensagens e mídias são removidas do celular de cada membro que atualizou o app.';
 
   @override
   String get groupInfoDeleteGroup => 'Excluir grupo';

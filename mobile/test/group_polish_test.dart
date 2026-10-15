@@ -1908,6 +1908,8 @@ void main() {
         expect(find.text(l10n.groupEndedBar), findsOneWidget);
         expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
         expect(find.byType(TextField), findsNothing);
+        // and no count under its name
+        expect(find.text(l10n.groupChatMembers(2)), findsNothing);
         await _close(t);
       });
     }

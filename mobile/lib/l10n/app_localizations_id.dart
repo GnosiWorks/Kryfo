@@ -8282,7 +8282,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Grup ini dihapus untuk semua: pesan dan medianya dihapus dari ponsel setiap anggota.';
+      'Grup ini dihapus untuk semua: pesan dan medianya dihapus dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
 
   @override
   String get groupInfoDeleteGroup => 'Hapus grup';

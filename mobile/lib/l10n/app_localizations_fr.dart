@@ -8374,7 +8374,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupLine =>
-      'Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre.';
+      'Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre à jour.';
 
   @override
   String get groupInfoDeleteGroup => 'Supprimer le groupe';
