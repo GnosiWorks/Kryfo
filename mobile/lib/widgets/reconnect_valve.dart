@@ -106,7 +106,7 @@ class _ReconnectValveState extends State<ReconnectValve> {
     final restart = stage == ValveStage.restart;
     // working, or resting after a reconnect tor took: not again yet
     final busy = stage == ValveStage.working || stage == ValveStage.cooling;
-    final tint = restart ? HaloColors.rose : HaloColors.amber;
+    final tint = restart ? HaloColors.rose : HaloColors.warn;
     final still = motionStill(context);
     final line = restart
         ? l10n.valveCouldNotReconnect
@@ -137,7 +137,7 @@ class _ReconnectValveState extends State<ReconnectValve> {
           ),
           const SizedBox(width: 10),
           _Pill(
-            ink: restart ? HaloColors.amberInk : HaloColors.onAmber,
+            ink: restart ? HaloColors.amberInk : HaloColors.onWarn,
             label: busy
                 ? l10n.homeReconnecting
                 : restart

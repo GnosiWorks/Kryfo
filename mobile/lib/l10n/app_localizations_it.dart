@@ -51,6 +51,50 @@ class AppLocalizationsIt extends AppLocalizations {
   String get atmospherePaper => 'Carta';
 
   @override
+  String get accentYellow => 'Giallo';
+
+  @override
+  String get accentGrey => 'Grigio';
+
+  @override
+  String get accentPurple => 'Viola';
+
+  @override
+  String get accentLime => 'Lime';
+
+  @override
+  String get accentVelvet => 'Velluto';
+
+  @override
+  String get accentBlue => 'Blu';
+
+  @override
+  String get appearancePreview => 'Anteprima delle tue chat in questo colore';
+
+  @override
+  String get appearanceSampleIn => 'Confermato per stasera?';
+
+  @override
+  String get appearanceSampleOut => 'Sì. Alle otto, al solito posto.';
+
+  @override
+  String get appearanceSampleButton => 'Rispondi';
+
+  @override
+  String get appearanceAccentHint =>
+      'I pulsanti, i tuoi messaggi e i link lo usano. L\'icona dell\'app resta gialla.';
+
+  @override
+  String get appearanceChatWallpaper => 'Sfondo delle chat';
+
+  @override
+  String get appearanceEveryChat => 'Tutte le chat';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Lo sfondo di una chat, scelto dal suo menu, ha la precedenza. Le foto restano su questo telefono, cifrate con le tue chat.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Questa passphrase non apre il file';
 
@@ -5215,6 +5259,15 @@ class AppLocalizationsIt extends AppLocalizations {
       'Stessa protezione, più luminoso';
 
   @override
+  String get settingsAppearance => 'Aspetto';
+
+  @override
+  String get settingsAccentColour => 'Colore principale';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Colori e sfondo';
+
+  @override
   String get settingsAppLock2 => 'Blocco app';
 
   @override
@@ -5694,6 +5747,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'La tua foto';
+
+  @override
+  String get wallpaperDefault => 'Predefinito';
+
+  @override
+  String get wallpaperNotSet => 'Lo sfondo non è stato impostato. Riprova.';
 
   @override
   String get wallpaperFromYourPhotos => 'Dalle tue foto';

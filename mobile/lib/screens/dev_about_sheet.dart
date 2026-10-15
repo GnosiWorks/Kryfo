@@ -293,7 +293,7 @@ class _About extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                   style: HaloType.mono(
                     size: 12.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.04,
                   ),
                 ),
@@ -347,7 +347,7 @@ class _Marks extends StatelessWidget {
                 l10n.devPinned,
                 style: HaloType.mono(
                   size: 10.5,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   letter: 0.3,
                 ),
               ),
@@ -367,7 +367,7 @@ class _Marks extends StatelessWidget {
             ),
             child: Text(
               l10n.devAnonymous,
-              style: HaloType.mono(size: 10, color: HaloColors.amber),
+              style: HaloType.mono(size: 10, color: HaloColors.amberText),
             ),
           ),
       ],

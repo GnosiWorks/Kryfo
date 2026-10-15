@@ -302,6 +302,7 @@ const deviceKeys = {
   'send_mode',
   'block_screenshots',
   'theme_light',
+  'theme_accent',
   'bridge_lines',
   'bridges_on',
   'bridge_hint_off',

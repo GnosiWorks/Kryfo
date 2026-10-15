@@ -300,7 +300,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
         textAlign: TextAlign.center,
         style: HaloType.mono(
           size: 10,
-          color: refill == null ? HaloColors.text3 : HaloColors.amber,
+          color: refill == null ? HaloColors.text3 : HaloColors.amberText,
         ),
       ),
     );

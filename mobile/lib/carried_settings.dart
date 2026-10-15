@@ -15,11 +15,13 @@ import 'delivery_mode.dart';
 import 'dlog.dart';
 import 'l10n/app_locale.dart';
 import 'secure_store.dart';
+import 'theme.dart' show HaloAccent;
 
 // where each is kept. the identity's own take the container's prefix; the
 // phone's are one for every identity on it
 const _kShots = 'block_screenshots';
 const _kLight = 'theme_light';
+const _kAccent = 'theme_accent';
 const _kRoute = 'send_mode';
 const _kVoice = 'disguise_on';
 const _kPreviews = 'notif_hide_content';
@@ -30,6 +32,9 @@ const _kIntros = 'kryfo.intro.accept';
 // (sendModeAtBoot)
 const _kRoutes = {'private', 'balanced', 'fast'};
 
+// the accents a file may set
+final _kAccents = {for (final a in HaloAccent.values) a.name};
+
 // the ways of getting messages a file may set. a helper app is this phone's
 const _kDeliveries = {'always', 'checkins'};
 
@@ -37,6 +42,7 @@ const _kDeliveries = {'always', 'checkins'};
 abstract final class Carried {
   static const screenshots = 'screenshots';
   static const light = 'light';
+  static const accent = 'accent';
   static const route = 'route';
   static const delivery = 'delivery';
   static const language = 'language';
@@ -60,6 +66,8 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
     Carried.shield: prefs.getBool(c.key(_kShield)) ?? true,
     Carried.intros: prefs.getBool(c.key(_kIntros)) ?? true,
   };
+  final accent = await st.read(key: c.key(_kAccent)) ?? 'yellow';
+  if (_kAccents.contains(accent)) out[Carried.accent] = accent;
   final route = await st.read(key: c.key(_kRoute)) ?? 'private';
   if (_kRoutes.contains(route)) out[Carried.route] = route;
   final delivery = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';
@@ -104,6 +112,10 @@ Future<bool> landCarriedSettings(
   if (!phone) return true;
   await flag(Carried.screenshots, _kShots, 'true', 'false');
   await flag(Carried.light, _kLight, 'true', 'false');
+  final accent = carried[Carried.accent];
+  if (accent is String && _kAccents.contains(accent)) {
+    await st.write(key: c.key(_kAccent), value: accent);
+  }
   final route = carried[Carried.route];
   if (route is String && _kRoutes.contains(route)) {
     await st.write(key: c.key(_kRoute), value: route);

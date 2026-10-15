@@ -559,7 +559,7 @@ class _VideoViewerState extends State<_VideoViewer>
                 style: HaloType.sans(
                   size: 14,
                   weight: FontWeight.w600,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
             ),

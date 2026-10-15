@@ -17,6 +17,8 @@ import 'dart:convert';
 import 'key_verification_screen.dart';
 import 'contact_screen.dart';
 import 'wallpaper_sheet.dart';
+import '../wallpaper.dart';
+import '../widgets/chat_backdrop.dart';
 import 'introduce_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
@@ -263,7 +265,7 @@ Future<bool> showNoteSheet(
                     style: HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                     ),
                   ),
                 ),
@@ -880,10 +882,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool _loaded = false;
-  Atmo _atmosphere = Atmo.none;
-  // a photo of their own behind this chat. lives in the app's folder, so
-  // it goes with a wipe; stored as image:<path> in the atmosphere column.
-  String? _wallpaperPath;
+  // what this chat shows behind it (wallpaper.dart)
+  ChatWall _wall = ChatWall.none;
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
@@ -1269,17 +1269,9 @@ class _ChatScreenState extends State<ChatScreen>
       _loadVouches();
       _loadShield();
     }
-    session.getAtmosphere(widget.peerHaloId).then((a) {
-      if (!mounted) return;
-      setState(() {
-        if (a != null && a.startsWith('image:')) {
-          _wallpaperPath = a.substring(6);
-          _atmosphere = Atmo.none;
-        } else {
-          _atmosphere = atmoFromName(a);
-        }
-      });
-    });
+    _loadWall();
+    // a new default under appearance shows here at once
+    wallpaperRevision.addListener(_loadWall);
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
@@ -4561,6 +4553,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
+    wallpaperRevision.removeListener(_loadWall);
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
@@ -4934,62 +4927,60 @@ class _ChatScreenState extends State<ChatScreen>
     if (saved && mounted) showHaloToast(context, l10n.chatNoteSaved);
   }
 
-  // the sheet previews live: each swatch changes the room behind it, and
-  // backing out puts the old one back
-  Future<void> _pickAtmosphere() async {
-    final before = _atmosphere;
-    final picked = await showWallpaperSheet(
-      context,
-      before,
-      allowPhoto: true,
-      onPreview: (a) {
-        if (mounted) setState(() => _atmosphere = a);
-      },
-    );
-    if (!mounted) return;
-    if (picked is WallpaperFromPhotos) {
-      setState(() => _atmosphere = before);
-      await _pickWallpaperImage();
-      return;
-    }
-    if (picked is! Atmo) {
-      setState(() => _atmosphere = before);
-      return;
-    }
-    HapticFeedback.selectionClick();
-    await session.setAtmosphere(widget.peerHaloId, picked.name);
-    if (!mounted) return;
-    setState(() {
-      _atmosphere = picked;
-      _wallpaperPath = null;
+  void _loadWall() {
+    chatWall(widget.peerHaloId).then((w) {
+      if (mounted && !w.sameAs(_wall)) setState(() => _wall = w);
     });
   }
 
-  // a picture from the gallery, shrunk by the picker, copied into the
-  // app's own folder. the gallery copy is not touched; ours goes on wipe.
-  Future<void> _pickWallpaperImage() async {
-    final x = await lockState.hold(
-      () => ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 80,
-      ),
-    );
-    if (x == null) return;
-    final Uint8List bytes;
-    try {
-      bytes = await x.readAsBytes();
-    } finally {
-      await shredPickedImages([x]);
-    }
-    final path = await session.setWallpaperPhoto(widget.peerHaloId, bytes);
+  // the sheet previews live: each swatch changes the room behind it, and
+  // backing out puts the old one back
+  Future<void> _pickAtmosphere() async {
+    final id = widget.peerHaloId;
+    final before = _wall;
+    final follows = await followsDefault(id);
     if (!mounted) return;
+    final picked = await showWallpaperSheet(
+      context,
+      before.atmo,
+      allowPhoto: true,
+      allowDefault: true,
+      followsDefault: follows,
+      hasPhoto: !follows && before.photo != null,
+      onPreview: (a) {
+        if (mounted) setState(() => _wall = ChatWall(a));
+      },
+      onPreviewDefault: () => defaultWall().then((w) {
+        if (mounted) setState(() => _wall = w);
+      }),
+    );
+    if (!mounted) return;
+    if (picked is WallpaperFromPhotos) {
+      setState(() => _wall = before);
+      final r = await pickWallpaperPhoto(
+        context,
+        save: (at, photo) => at.setChatPhoto(id, photo),
+        failed: (r) {
+          if (!mounted) return;
+          showHaloToast(
+            context,
+            r == Picked.missed
+                ? l10n.wallpaperNotSet
+                : l10n.cameraCouldNotStripThat,
+          );
+        },
+      );
+      if (r != Picked.kept) return;
+    } else if (picked is WallpaperDefault) {
+      await session.setChatAtmosphere(id, null);
+    } else if (picked is Atmo) {
+      await session.setChatAtmosphere(id, picked.name);
+    } else {
+      setState(() => _wall = before);
+      return;
+    }
     HapticFeedback.selectionClick();
-    setState(() {
-      _wallpaperPath = path;
-      _atmosphere = Atmo.none;
-    });
+    _loadWall();
   }
 
   Future<void> _clearConversation() async {
@@ -5421,28 +5412,11 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             Expanded(
               child: AtmoScope(
-                atmo: _atmosphere,
+                atmo: _wall.atmo,
                 child: Stack(
                   key: _listKey,
                   children: [
-                    if (_wallpaperPath != null) ...[
-                      Positioned.fill(
-                        child: Image.file(
-                          File(_wallpaperPath!),
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                          cacheWidth: screenPx(context),
-                        ),
-                      ),
-                      // a wash so the bubbles keep reading over any photo
-                      Positioned.fill(
-                        child: ColoredBox(
-                          color: HaloColors.ink.withValues(alpha: 0.42),
-                        ),
-                      ),
-                    ],
-                    if (_atmosphere != Atmo.none)
-                      Positioned.fill(child: AtmosphereWash(_atmosphere)),
+                    Positioned.fill(child: ChatBackdrop(_wall, chat: _memo)),
                     // a slow first read fades the thread up, not a cut
                     FadeSwap(
                       // an empty chat waits for what its card depends on,
@@ -5597,7 +5571,7 @@ class _ChatScreenState extends State<ChatScreen>
                           textAlign: TextAlign.center,
                           style: HaloType.mono(
                             size: 10,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -6214,7 +6188,7 @@ class _BlockedBar extends StatelessWidget {
               style: HaloType.sans(
                 size: 14,
                 weight: FontWeight.w500,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
               ),
             ),
           ),
@@ -6358,7 +6332,7 @@ class _ChatHead extends StatelessWidget {
                             l10n.chatSupporter,
                             style: HaloType.mono(
                               size: 7.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ),
@@ -6378,7 +6352,9 @@ class _ChatHead extends StatelessWidget {
                         Icon(
                           Icons.lock_outline,
                           size: 10,
-                          color: relay ? HaloColors.sky : HaloColors.amber,
+                          // relay and tor told apart by their own colours,
+                          // never by the accent
+                          color: relay ? HaloColors.sky : HaloColors.violet,
                         ),
                         const SizedBox(width: 4),
                         // a longer language at a big font size would run
@@ -6421,7 +6397,7 @@ class _ChatHead extends StatelessWidget {
                               style: HaloType.serif(
                                 size: 12,
                                 italic: true,
-                                color: HaloColors.amber,
+                                color: HaloColors.amberText,
                               ),
                             ),
                           ),
@@ -6624,7 +6600,7 @@ class _SearchHeadState extends State<SearchHead> {
                                       ),
                                       HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.amber,
+                                        color: HaloColors.amberText,
                                         weight: FontWeight.w500,
                                       ),
                                     ),
@@ -7423,7 +7399,7 @@ class _Bubble extends StatelessWidget {
                                                 fontFamilyFallback:
                                                     HaloType.monoFallbackNow,
                                                 fontSize: 9,
-                                                color: HaloColors.amber,
+                                                color: HaloColors.amberText,
                                                 fontStyle: slant(),
                                                 letterSpacing: track(0.4),
                                               ),
@@ -7830,7 +7806,7 @@ class _ViaDevTag extends StatelessWidget {
               fontFamily: HaloType.monoFamily,
               fontFamilyFallback: HaloType.monoFallbackNow,
               fontSize: 9,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
               letterSpacing: track(0.4),
             ),
           ),
@@ -7878,7 +7854,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                       : l10n.chatReplyingTo,
                   style: HaloType.mono(
                     size: 9.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.6,
                   ),
                 ),
@@ -8098,7 +8074,7 @@ class _Composer extends StatelessWidget {
                                   text: l10n.chatGhostMode,
                                   style: HaloType.serif(
                                     size: 12,
-                                    color: HaloColors.amber,
+                                    color: HaloColors.amberText,
                                     italic: true,
                                   ),
                                 ),
@@ -8545,7 +8521,7 @@ class _CompareRow extends StatelessWidget {
                   style: HaloType.sans(
                     size: 12.5,
                     weight: FontWeight.w600,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                   ),
                 ),
               ),

@@ -631,7 +631,7 @@ class _Ghost extends StatelessWidget {
                 style: HaloType.sans(
                   size: 13,
                   weight: FontWeight.w600,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
             ),

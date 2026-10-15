@@ -364,7 +364,7 @@ class _GroupFace extends StatelessWidget {
     ),
     child: Text(
       name.isEmpty ? '·' : name.characters.first.toUpperCase(),
-      style: HaloType.serif(size: 19, italic: true, color: HaloColors.amber),
+      style: HaloType.serif(size: 19, italic: true, color: HaloColors.amberText),
     ),
   );
 }

@@ -131,7 +131,8 @@ void main() {
           expect(_lockColour(t), HaloColors.sky);
         } else {
           expect(_textColour(t, mode), HaloColors.text2);
-          expect(_lockColour(t), HaloColors.amber);
+          // tor and direct wear tor's own violet, never the accent
+          expect(_lockColour(t), HaloColors.violet);
         }
         await devClose(t);
       });

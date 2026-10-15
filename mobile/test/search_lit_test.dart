@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // an in-chat search marks its hits the same way in both chats: every hit,
-// whatever its case, amber on a tint in their bubble and amber on ink in
-// ours, and the bubble with the hit in view gets its ring.
+// whatever its case, their words on an accent mark in their bubble and the
+// accent on its on colour in ours, and the bubble with the hit in view gets
+// its ring.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/theme.dart';
@@ -18,13 +19,13 @@ void main() {
     expect(s.map((x) => x.text).join(), 'Ramen? RAMEN. ramen!');
   });
 
-  test('their bubble: amber on its tint', () {
+  test('their bubble: their words on an accent mark', () {
     final s = searchLit('see you at eight', 'eight', onAmber: false);
     final hit = s.firstWhere((x) => x.style != null);
-    expect(hit.style!.color, HaloColors.amber);
+    expect(hit.style!.color, HaloColors.text);
     expect(
       hit.style!.backgroundColor,
-      HaloColors.amber.withValues(alpha: 0.22),
+      HaloColors.amber.withValues(alpha: kLitMark),
     );
   });
 

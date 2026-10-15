@@ -64,7 +64,7 @@ class FileReachPill extends StatelessWidget {
               style: HaloType.mono(
                 size: 9.5,
                 letter: 0.5,
-                color: lost ? HaloColors.rose : HaloColors.amber,
+                color: lost ? HaloColors.rose : HaloColors.amberText,
               ),
             ),
           ),

@@ -580,7 +580,7 @@ class _Body extends StatelessWidget {
                               height: 1.15,
                               weight: FontWeight.w300,
                               italic: true,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ],
@@ -715,7 +715,7 @@ class _NothingFound extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
                     child: Text(
                       l10n.photoKnowsLookedFor,
-                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                      style: HaloType.mono(size: 11, color: HaloColors.amberText),
                     ),
                   ),
                   for (var i = 0; i < fields.length; i++)

@@ -288,19 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           offstage: t != _tab,
                           child: TickerMode(
                             enabled: t == _tab,
-                            // keyed on the theme so a switch rebuilds the
-                            // whole tab from scratch. HaloColors is a palette
-                            // swapped in place, and a const widget handed back
-                            // to a rebuild is skipped, so anything const in
-                            // here would keep the colours it was built with.
-                            child: KeyedSubtree(
-                              key: ValueKey(HaloColors.isLight),
-                              child: _Arrive(
-                                on: t == _tab,
-                                towards: _towards,
-                                fresh: t == _picked,
-                                child: _body(t),
-                              ),
+                            // a theme switch rebuilds every widget in place
+                            // (ThemeRefresh): a tab keeps its scroll and state
+                            child: _Arrive(
+                              on: t == _tab,
+                              towards: _towards,
+                              fresh: t == _picked,
+                              child: _body(t),
                             ),
                           ),
                         ),
@@ -739,7 +733,7 @@ class _HomeHead extends StatelessWidget {
                     style: HaloType.serif(
                       size: 26,
                       weight: FontWeight.w300,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       italic: true,
                     ),
                     textScaler: TextScaler.linear(
@@ -768,7 +762,7 @@ class _HomeHead extends StatelessWidget {
                     softWrap: false,
                     style: HaloType.mono(
                       size: 20,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       weight: FontWeight.w700,
                       letter: 0.02,
                     ),
@@ -1363,7 +1357,9 @@ class _OfflineStrip extends StatelessWidget {
   }
 
   Widget _strip(BuildContext context, int n, bool offline) {
-    final tint = offline ? HaloColors.rose : HaloColors.amber;
+    // a status: the warn yellow, never the accent
+    final tint = offline ? HaloColors.rose : HaloColors.warn;
+    final words = offline ? HaloColors.rose : HaloColors.warnText;
     final head = offline ? l10n.homeOffline : l10n.homeWaiting;
     // say whether anything is queued, not only that the phone is offline.
     // it only shows when the phone cannot send, so it offers no retry
@@ -1391,7 +1387,7 @@ class _OfflineStrip extends StatelessWidget {
             head,
             style: HaloType.mono(
               size: 12,
-              color: tint,
+              color: words,
               weight: FontWeight.w500,
               letter: 0.08,
             ),
@@ -1402,7 +1398,7 @@ class _OfflineStrip extends StatelessWidget {
               tail,
               style: HaloType.mono(
                 size: 11.5,
-                color: tint.withValues(alpha: 0.85),
+                color: words.withValues(alpha: 0.85),
                 weight: FontWeight.w500,
               ),
               maxLines: 2,
@@ -2073,7 +2069,9 @@ class _GroupRow extends StatelessWidget {
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
-                        color: g.isRoom ? HaloColors.violet : HaloColors.amber,
+                        color: g.isRoom
+                            ? HaloColors.violet
+                            : HaloColors.amberText,
                       ),
                     ),
                   ),
@@ -2127,7 +2125,7 @@ class _GroupRow extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: HaloType.mono(
                                   size: 10,
-                                  color: HaloColors.amber,
+                                  color: HaloColors.amberText,
                                   weight: FontWeight.w600,
                                   letter: 0.06,
                                 ),
@@ -2167,7 +2165,7 @@ Widget _supporterPill() {
     ),
     child: Text(
       l10n.homeSupporter,
-      style: HaloType.mono(size: 8, color: HaloColors.amber),
+      style: HaloType.mono(size: 8, color: HaloColors.amberText),
     ),
   );
 }
@@ -2553,7 +2551,7 @@ class _DevRowTile extends StatelessWidget {
                             style: HaloType.mono(
                               size: 10.5,
                               color: unread
-                                  ? HaloColors.amber
+                                  ? HaloColors.amberText
                                   : HaloColors.text2,
                               weight: unread
                                   ? FontWeight.w600
@@ -2720,7 +2718,7 @@ class _Row extends StatelessWidget {
                                 style: HaloType.mono(
                                   size: 10.5,
                                   color: c.unread > 0
-                                      ? HaloColors.amber
+                                      ? HaloColors.amberText
                                       : HaloColors.text2,
                                   weight: c.unread > 0
                                       ? FontWeight.w600

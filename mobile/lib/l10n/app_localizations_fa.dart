@@ -51,6 +51,50 @@ class AppLocalizationsFa extends AppLocalizations {
   String get atmospherePaper => 'کاغذ';
 
   @override
+  String get accentYellow => 'زرد';
+
+  @override
+  String get accentGrey => 'خاکستری';
+
+  @override
+  String get accentPurple => 'بنفش';
+
+  @override
+  String get accentLime => 'لیمویی';
+
+  @override
+  String get accentVelvet => 'مخملی';
+
+  @override
+  String get accentBlue => 'آبی';
+
+  @override
+  String get appearancePreview => 'پیش‌نمایش گفتگوهای شما با این رنگ';
+
+  @override
+  String get appearanceSampleIn => 'امشب هنوز سر قرار هستیم؟';
+
+  @override
+  String get appearanceSampleOut => 'بله. ساعت هشت، همان جای همیشگی.';
+
+  @override
+  String get appearanceSampleButton => 'پاسخ';
+
+  @override
+  String get appearanceAccentHint =>
+      'دکمه‌ها، پیام‌های خودتان و پیوندها این رنگ را می‌گیرند. نماد برنامه زرد می‌ماند.';
+
+  @override
+  String get appearanceChatWallpaper => 'تصویر زمینه گفتگو';
+
+  @override
+  String get appearanceEveryChat => 'همه گفتگوها';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'تصویر زمینه‌ای که از منوی خود گفتگو انتخاب شود، اولویت دارد. عکس‌ها روی همین گوشی، رمزگذاری‌شده همراه گفتگوهای شما، می‌مانند.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'این عبارت عبور این فایل را باز نمی‌کند';
 
@@ -5174,6 +5218,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'همان محافظت، روشن‌تر';
 
   @override
+  String get settingsAppearance => 'ظاهر';
+
+  @override
+  String get settingsAccentColour => 'رنگ تأکیدی';
+
+  @override
+  String get settingsColoursAndWallpaper => 'رنگ‌ها و تصویر زمینه';
+
+  @override
   String get settingsAppLock2 => 'قفل برنامه';
 
   @override
@@ -5648,6 +5701,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'عکس شما';
+
+  @override
+  String get wallpaperDefault => 'پیش‌فرض';
+
+  @override
+  String get wallpaperNotSet => 'تصویر زمینه تنظیم نشد. دوباره امتحان کنید.';
 
   @override
   String get wallpaperFromYourPhotos => 'از عکس‌هایتان';

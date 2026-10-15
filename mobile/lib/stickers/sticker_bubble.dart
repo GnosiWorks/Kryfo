@@ -451,7 +451,7 @@ class StickerStamp extends StatelessWidget {
               Text(
                 burn,
                 style: style.copyWith(
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -595,7 +595,7 @@ class StickerQuoteCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: HaloType.mono(
                             size: 10,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                             letter: 0.4,
                           ),
                         ),

@@ -700,7 +700,6 @@ void main() {
         'halo.db',
         'onion.key',
         'media/v1.jpg',
-        'wallpapers/w.jpg',
       ]);
       // nothing is read from the hidden side's files
       expect(
@@ -768,7 +767,6 @@ void main() {
         'halo.db',
         'onion.key',
         'media/v1.jpg',
-        'wallpapers/w.jpg',
       ]);
     });
 
@@ -801,11 +799,9 @@ void main() {
         'halo.db',
         'onion.key',
         'media/v1.jpg',
-        'wallpapers/w.jpg',
         kHiddenDb,
         'vault/media/docs/h2.pdf',
         'vault/media/h1.jpg',
-        'vault/wallpapers/hw.jpg',
       ]);
       // the list goes along: on the new phone arrivals still find the vault
       expect(side.scrubbedWith, isNull);
@@ -849,7 +845,6 @@ void main() {
       for (final (from, to) in [
         ('media_v/h1.jpg', 'media_v/h1.jpg'),
         ('media_v/docs/h2.pdf', 'media_v/docs/h2.pdf'),
-        ('wallpapers_v/hw.jpg', 'wallpapers_v/hw.jpg'),
         ('media/v1.jpg', 'media/v1.jpg'),
       ]) {
         expect(
@@ -859,6 +854,7 @@ void main() {
         );
       }
       expect(File(p.join(docs2, 'media_v', 'old.jpg')).existsSync(), isFalse);
+      expect(File(p.join(docs2, 'wallpapers_v', 'hw.jpg')).existsSync(), isFalse);
       expect(Directory(hiddenAt).existsSync(), isFalse);
       expect(Directory(p.join(docs2, 'vault')).existsSync(), isFalse);
       expect(
@@ -1011,12 +1007,10 @@ void main() {
       expect(d.manifest['vault'], {'key': host.entry});
       expect(
         _names(d.manifest),
-        containsAll([
-          kHiddenDb,
-          'vault/media/h1.jpg',
-          'vault/wallpapers/hw.jpg',
-        ]),
+        containsAll([kHiddenDb, 'vault/media/h1.jpg']),
       );
+      // a wallpaper file from before is never carried, cleaned or not
+      expect(_names(d.manifest), isNot(contains('vault/wallpapers/hw.jpg')));
       // the list of the chats it hid goes along
       expect(side.scrubbedWith, isNull);
       await expectLater(

@@ -51,6 +51,50 @@ class AppLocalizationsRu extends AppLocalizations {
   String get atmospherePaper => 'Бумага';
 
   @override
+  String get accentYellow => 'Жёлтый';
+
+  @override
+  String get accentGrey => 'Серый';
+
+  @override
+  String get accentPurple => 'Фиолетовый';
+
+  @override
+  String get accentLime => 'Лайм';
+
+  @override
+  String get accentVelvet => 'Бархатный';
+
+  @override
+  String get accentBlue => 'Синий';
+
+  @override
+  String get appearancePreview => 'Так будут выглядеть твои чаты в этом цвете';
+
+  @override
+  String get appearanceSampleIn => 'Сегодня вечером в силе?';
+
+  @override
+  String get appearanceSampleOut => 'Да. В восемь, на том же месте.';
+
+  @override
+  String get appearanceSampleButton => 'Ответить';
+
+  @override
+  String get appearanceAccentHint =>
+      'Этим цветом будут кнопки, твои сообщения и ссылки. Значок приложения останется жёлтым.';
+
+  @override
+  String get appearanceChatWallpaper => 'Обои чатов';
+
+  @override
+  String get appearanceEveryChat => 'Все чаты';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Собственные обои чата, выбранные в его меню, важнее. Фото остаются на этом телефоне, зашифрованные вместе с твоими чатами.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Эта парольная фраза не открывает этот файл';
 
@@ -5272,6 +5316,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'Та же защита, только светлее';
 
   @override
+  String get settingsAppearance => 'Оформление';
+
+  @override
+  String get settingsAccentColour => 'Цвет акцента';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Цвета и обои';
+
+  @override
   String get settingsAppLock2 => 'Блокировка';
 
   @override
@@ -5754,6 +5807,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Твоё фото';
+
+  @override
+  String get wallpaperDefault => 'По умолчанию';
+
+  @override
+  String get wallpaperNotSet => 'Обои не установлены. Попробуй ещё раз.';
 
   @override
   String get wallpaperFromYourPhotos => 'Из галереи';

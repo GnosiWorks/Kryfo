@@ -51,6 +51,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get atmospherePaper => 'ورق';
 
   @override
+  String get accentYellow => 'أصفر';
+
+  @override
+  String get accentGrey => 'رمادي';
+
+  @override
+  String get accentPurple => 'بنفسجي';
+
+  @override
+  String get accentLime => 'ليموني';
+
+  @override
+  String get accentVelvet => 'مخملي';
+
+  @override
+  String get accentBlue => 'أزرق';
+
+  @override
+  String get appearancePreview => 'معاينة محادثاتك بهذا اللون';
+
+  @override
+  String get appearanceSampleIn => 'هل ما زال موعد الليلة قائمًا؟';
+
+  @override
+  String get appearanceSampleOut => 'نعم. الساعة الثامنة، في المكان المعتاد.';
+
+  @override
+  String get appearanceSampleButton => 'رد';
+
+  @override
+  String get appearanceAccentHint =>
+      'تأخذ الأزرار ورسائلك والروابط هذا اللون. تبقى أيقونة التطبيق صفراء.';
+
+  @override
+  String get appearanceChatWallpaper => 'خلفية المحادثات';
+
+  @override
+  String get appearanceEveryChat => 'كل المحادثات';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'خلفية المحادثة الخاصة، المختارة من قائمتها، تأتي أولًا. تبقى الصور على هذا الهاتف، مشفرة مع محادثاتك.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'عبارة المرور هذه لا تفتح هذا الملف';
 
@@ -5251,6 +5295,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'الحماية نفسها، بإضاءة أكثر';
 
   @override
+  String get settingsAppearance => 'المظهر';
+
+  @override
+  String get settingsAccentColour => 'لون التمييز';
+
+  @override
+  String get settingsColoursAndWallpaper => 'الألوان والخلفية';
+
+  @override
   String get settingsAppLock2 => 'قفل التطبيق';
 
   @override
@@ -5739,6 +5792,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'صورتك';
+
+  @override
+  String get wallpaperDefault => 'الافتراضي';
+
+  @override
+  String get wallpaperNotSet => 'لم تُضبط الخلفية. حاول مرة أخرى.';
 
   @override
   String get wallpaperFromYourPhotos => 'من صورك';

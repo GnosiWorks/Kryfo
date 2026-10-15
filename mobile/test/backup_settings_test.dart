@@ -143,6 +143,7 @@ const _never = {
 const _changedSecure = {
   'block_screenshots': 'true',
   'theme_light': 'true',
+  'theme_accent': 'velvet',
   'send_mode': 'balanced',
   'disguise_on': '1',
 };
@@ -168,6 +169,7 @@ const _phoneOnly = <String, Object>{
 const _everydaySettings = {
   Carried.screenshots: true,
   Carried.light: true,
+  Carried.accent: 'velvet',
   Carried.voice: true,
   Carried.previewsHidden: false,
   Carried.shield: false,
@@ -180,6 +182,7 @@ const _everydaySettings = {
 const _defaults = {
   Carried.screenshots: false,
   Carried.light: false,
+  Carried.accent: 'yellow',
   Carried.voice: false,
   Carried.previewsHidden: true,
   Carried.shield: true,
@@ -316,6 +319,7 @@ void main() {
     return {
       Carried.screenshots: (await st.read(key: 'block_screenshots')) == 'true',
       Carried.light: (await st.read(key: 'theme_light')) == 'true',
+      Carried.accent: await st.read(key: 'theme_accent') ?? 'yellow',
       Carried.voice: (await st.read(key: c.key('disguise_on'))) == '1',
       Carried.previewsHidden: await loadHideNotifContent(c),
       Carried.shield: await loadScamShieldOn(c),
@@ -661,6 +665,7 @@ void main() {
         // the phone's, as the decoy sees them
         Carried.screenshots: true,
         Carried.light: true,
+        Carried.accent: 'velvet',
         Carried.route: 'balanced',
         Carried.delivery: 'checkins',
         Carried.language: 'de',

@@ -156,18 +156,20 @@ class AtmoScope extends InheritedWidget {
 class PatternPainter extends CustomPainter {
   final Atmo atmo;
   final double scale;
-  PatternPainter(this.atmo, {this.scale = 1});
+  // read when made: a theme switch makes a new one, which repaints
+  final Color ink;
+  PatternPainter(this.atmo, {this.scale = 1}) : ink = HaloColors.line2;
 
   @override
   void paint(Canvas canvas, Size size) {
     final p = Paint()
-      ..color = HaloColors.line2.withValues(alpha: 0.55)
+      ..color = ink.withValues(alpha: 0.55)
       ..strokeWidth = 1 * scale
       ..style = PaintingStyle.stroke;
     switch (atmo) {
       case Atmo.dots:
         final step = 26.0 * scale;
-        final fill = Paint()..color = HaloColors.line2.withValues(alpha: 0.7);
+        final fill = Paint()..color = ink.withValues(alpha: 0.7);
         for (var y = step / 2; y < size.height; y += step) {
           for (var x = step / 2; x < size.width; x += step) {
             canvas.drawCircle(Offset(x, y), 1.2 * scale, fill);
@@ -199,7 +201,7 @@ class PatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PatternPainter old) =>
-      old.atmo != atmo || old.scale != scale;
+      old.atmo != atmo || old.scale != scale || old.ink != ink;
 }
 
 // the slow element of a mood. phase runs 0..1 over about a minute
@@ -265,11 +267,12 @@ class _DriftPainter extends CustomPainter {
 
 // paper's grain, static: a few faint fibres in the line colour
 class _GrainPainter extends CustomPainter {
+  final Color ink = HaloColors.line2;
   @override
   void paint(Canvas canvas, Size size) {
     final rnd = math.Random(11);
     final p = Paint()
-      ..color = HaloColors.line2.withValues(alpha: 0.35)
+      ..color = ink.withValues(alpha: 0.35)
       ..strokeWidth = 0.6;
     for (var i = 0; i < 120; i++) {
       final x = rnd.nextDouble() * size.width;
@@ -284,7 +287,7 @@ class _GrainPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GrainPainter old) => false;
+  bool shouldRepaint(_GrainPainter old) => old.ink != ink;
 }
 
 class AtmosphereWash extends StatefulWidget {

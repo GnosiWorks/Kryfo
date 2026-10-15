@@ -179,7 +179,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                               l10n.keyVerificationNewNumber,
                               style: HaloType.sans(
                                 size: 13.5,
-                                color: HaloColors.amber,
+                                color: HaloColors.warnText,
                                 height: 1.45,
                               ),
                             ),

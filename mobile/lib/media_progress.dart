@@ -109,7 +109,7 @@ class SendProgressLabel extends StatelessWidget {
             style: HaloType.mono(
               size: 10.5,
               weight: FontWeight.w700,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ),
           ),
         );
@@ -189,7 +189,7 @@ class IncomingMediaBanner extends StatelessWidget {
                         : l10n.mediaProgressReceivingMedia(percent(v)),
                     style: HaloType.mono(
                       size: 10.5,
-                      color: stalled ? HaloColors.text2 : HaloColors.amber,
+                      color: stalled ? HaloColors.text2 : HaloColors.amberText,
                     ),
                   ),
                 ),

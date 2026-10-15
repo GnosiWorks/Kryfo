@@ -209,7 +209,7 @@ class UnreadDivider extends StatelessWidget {
                   maxLines: 1,
                   style: HaloType.mono(
                     size: 10,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     weight: FontWeight.w500,
                     letter: 0.06,
                   ),
@@ -420,7 +420,7 @@ class _ReactionChipState extends State<ReactionChip>
               count: widget.count,
               style: HaloType.mono(
                 size: 10,
-                color: widget.mine ? HaloColors.amber : HaloColors.text2,
+                color: widget.mine ? HaloColors.amberText : HaloColors.text2,
                 weight: FontWeight.w600,
               ),
             ),
@@ -914,18 +914,22 @@ class CornerSwap extends StatelessWidget {
   }
 }
 
+// how strongly a search hit's mark is laid in their bubble
+const kLitMark = 0.30;
+
 // a message's words with each hit of an in-chat search marked like a
-// highlighter: amber on its own tint in their bubble, amber on ink in ours,
-// where amber text alone would vanish. the same in both chats
+// highlighter: their words on an accent mark in their bubble, the accent on
+// its on colour in ours. 4.5:1 either way (accent_contrast_test). the same
+// in both chats
 List<TextSpan> searchLit(String text, String query, {required bool onAmber}) {
   final q = query.toLowerCase();
   if (q.isEmpty) return [TextSpan(text: text)];
   final lower = text.toLowerCase();
   final lit = TextStyle(
-    color: HaloColors.amber,
+    color: onAmber ? HaloColors.amberOnOn : HaloColors.text,
     backgroundColor: onAmber
         ? HaloColors.onAmber
-        : HaloColors.amber.withValues(alpha: 0.22),
+        : HaloColors.amber.withValues(alpha: kLitMark),
     fontWeight: FontWeight.w600,
   );
   final spans = <TextSpan>[];

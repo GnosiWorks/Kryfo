@@ -28,10 +28,11 @@ import '../atmosphere.dart';
 import 'shield_sheet.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
-import 'chat_screen.dart'
-    show SearchHead, Atmo, AtmosphereWash, atmoFromName, firstUrl;
+import 'chat_screen.dart' show SearchHead, firstUrl;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
+import '../wallpaper.dart';
+import '../widgets/chat_backdrop.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../stickers/sticker_bubble.dart';
@@ -239,7 +240,7 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                 style: HaloType.serif(
                   size: 20,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
               const SizedBox(height: 14),
@@ -281,7 +282,7 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w500,
-                        color: HaloColors.amber,
+                        color: HaloColors.amberText,
                       ),
                     ),
                   ),
@@ -462,7 +463,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   String _query = '';
   Set<int> _matchSet = {};
   int _matchPos = 0;
-  Atmo _atmosphere = Atmo.none;
+  // what this group shows behind it (wallpaper.dart)
+  ChatWall _wall = ChatWall.none;
   static const _pageSize = 60;
   bool _hasMore = true;
   bool _loadingOlder = false;
@@ -496,6 +498,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void initState() {
     super.initState();
     _memo = session.chatKey(widget.groupId);
+    _loadWall();
+    // set from its info page or under appearance: shown at once
+    wallpaperRevision.addListener(_loadWall);
     // the chat list already knows the header: the tile flies in with its
     // letter and the count is right from the first frame
     for (final g in appState.groups) {
@@ -887,14 +892,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  void _loadWall() {
+    chatWall(widget.groupId, group: true).then((w) {
+      if (mounted && !w.sameAs(_wall)) setState(() => _wall = w);
+    });
+  }
+
   Future<void> _load() async {
     _loading = true;
     try {
       _dayKeys.clear();
       _dayMsOf.clear();
-      session.getGroupAtmosphere(widget.groupId).then((a) {
-        if (mounted) setState(() => _atmosphere = atmoFromName(a));
-      });
       final g = await session.getGroup(widget.groupId);
       // a room that ended, or a group this phone was taken out of, is gone,
       // so is the screen
@@ -2822,7 +2830,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               style: HaloType.sans(
                                 size: 14,
                                 color: opt.$1 == _burnSeconds
-                                    ? HaloColors.amber
+                                    ? HaloColors.amberText
                                     : HaloColors.text,
                               ),
                             ),
@@ -3686,6 +3694,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
     if (open != null && open.isEmpty) _openGroups.remove(widget.groupId);
     for (final land in List.of(_flights)) {
@@ -3836,13 +3845,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             )
                     : AtmoScope(
                         key: const ValueKey('list'),
-                        atmo: _atmosphere,
+                        atmo: _wall.atmo,
                         child: Stack(
                           children: [
-                            if (_atmosphere != Atmo.none)
-                              Positioned.fill(
-                                child: AtmosphereWash(_atmosphere),
-                              ),
+                            Positioned.fill(
+                              child: ChatBackdrop(_wall, chat: _memo),
+                            ),
                             NotificationListener<ScrollMetricsNotification>(
                               onNotification: _threadResized,
                               // the newest bubble's time rests above the line
@@ -4172,7 +4180,9 @@ class _Header extends StatelessWidget {
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
-                            color: room ? HaloColors.violet : HaloColors.amber,
+                            color: room
+                                ? HaloColors.violet
+                                : HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -4296,7 +4306,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                       : l10n.groupChatReplyingTo(target.senderName),
                   style: HaloType.mono(
                     size: 9.5,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.6,
                   ),
                 ),
@@ -4413,7 +4423,7 @@ class _Composer extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 10.5,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                               letter: 0.2,
                             ),
                           ),
@@ -4922,7 +4932,7 @@ class _GroupBubble extends StatelessWidget {
                                 maxLines: 1,
                                 style: HaloType.mono(
                                   size: 9,
-                                  color: HaloColors.amber,
+                                  color: HaloColors.amberText,
                                 ),
                               ),
                             ),
@@ -5108,7 +5118,8 @@ class _GroupBubble extends StatelessWidget {
                                                                   .withValues(
                                                                     alpha: 0.7,
                                                                   )
-                                                            : HaloColors.amber,
+                                                            : HaloColors
+                                                                  .amberText,
                                                         letter: 0.6,
                                                       ),
                                                     ),
@@ -5769,7 +5780,7 @@ class _GroupBubble extends StatelessWidget {
                 fontFamily: HaloType.monoFamily,
                 fontFamilyFallback: HaloType.monoFallbackNow,
                 fontSize: 11,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
                 fontWeight: FontWeight.w700,
                 height: 1,
               ),

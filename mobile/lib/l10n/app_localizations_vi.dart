@@ -51,6 +51,51 @@ class AppLocalizationsVi extends AppLocalizations {
   String get atmospherePaper => 'Giấy';
 
   @override
+  String get accentYellow => 'Vàng';
+
+  @override
+  String get accentGrey => 'Xám';
+
+  @override
+  String get accentPurple => 'Tím';
+
+  @override
+  String get accentLime => 'Xanh chanh';
+
+  @override
+  String get accentVelvet => 'Đỏ nhung';
+
+  @override
+  String get accentBlue => 'Xanh dương';
+
+  @override
+  String get appearancePreview =>
+      'Xem trước các cuộc trò chuyện của bạn với màu này';
+
+  @override
+  String get appearanceSampleIn => 'Tối nay vẫn hẹn chứ?';
+
+  @override
+  String get appearanceSampleOut => 'Ừ. Tám giờ, chỗ cũ.';
+
+  @override
+  String get appearanceSampleButton => 'Trả lời';
+
+  @override
+  String get appearanceAccentHint =>
+      'Các nút, tin nhắn của bạn và liên kết sẽ mang màu này. Biểu tượng ứng dụng vẫn màu vàng.';
+
+  @override
+  String get appearanceChatWallpaper => 'Hình nền trò chuyện';
+
+  @override
+  String get appearanceEveryChat => 'Mọi cuộc trò chuyện';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Hình nền riêng của một cuộc trò chuyện, chọn từ menu của nó, được ưu tiên. Ảnh ở lại trên điện thoại này, được mã hóa cùng các cuộc trò chuyện của bạn.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Cụm mật khẩu đó không mở được tệp này';
 
@@ -5162,6 +5207,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'Vẫn bảo vệ như vậy, sáng hơn';
 
   @override
+  String get settingsAppearance => 'Giao diện';
+
+  @override
+  String get settingsAccentColour => 'Màu nhấn';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Màu sắc và hình nền';
+
+  @override
   String get settingsAppLock2 => 'Khóa ứng dụng';
 
   @override
@@ -5637,6 +5691,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Ảnh của bạn';
+
+  @override
+  String get wallpaperDefault => 'Mặc định';
+
+  @override
+  String get wallpaperNotSet => 'Chưa đặt được hình nền. Hãy thử lại.';
 
   @override
   String get wallpaperFromYourPhotos => 'Từ thư viện ảnh';
