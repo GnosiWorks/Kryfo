@@ -11048,7 +11048,7 @@ class AppIo {
         await appState.releaseName(h);
         dlog('back-pair: a deleted name let go');
       } else if ((bound != null && !_eqBytes(bound, key)) ||
-          (bound == null && await _receiving._tombed(h))) {
+          (bound == null && await _receiving._tombedArriving(h))) {
         // bound to another key, or let go by "this isn't them": the words
         // go to no one who writes first
         at = unboundIdOf(key);
@@ -17099,7 +17099,7 @@ class AppState extends ChangeNotifier {
         row: db.getContact,
       );
       if ((held != null && !_eqBytes(held, key)) ||
-          (held == null && await _tombed(h))) {
+          (held == null && await _tombedArriving(h))) {
         out[h] = unboundIdOf(key);
       }
     }
@@ -21038,17 +21038,19 @@ class AppState extends ChangeNotifier {
     return false;
   }
 
-  // words "this isn't them" let go: on the everyday side, in the vault,
-  // open or shut. a decoy reads its own rows
-  Future<bool> _tombed(String id) async {
-    if (sessionQuiet) {
-      for (final d in [session.primary, ?session.vault]) {
-        if (await d.tombed(id)) return true;
-      }
-      return false;
-    }
-    if (_router.tombed(id)) return true;
-    for (final d in [live, ?_openVault]) {
+  // words "this isn't them" let go, for an add the person makes: in the
+  // session on screen, a decoy's own rows in a decoy
+  Future<bool> _tombed(String id) async => sessionQuiet
+      ? _tombedIn([session.primary, ?session.vault], id)
+      : _tombedArriving(id);
+
+  // the same for what arrives: it is filed on the everyday side or in its
+  // vault, open or shut, whatever is on screen
+  Future<bool> _tombedArriving(String id) async =>
+      _router.tombed(id) || await _tombedIn([live, ?_openVault], id);
+
+  static Future<bool> _tombedIn(List<HaloDb> dbs, String id) async {
+    for (final d in dbs) {
       if (await d.tombed(id)) return true;
     }
     return false;
