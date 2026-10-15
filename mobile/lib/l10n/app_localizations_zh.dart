@@ -7880,6 +7880,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsKeptOpen => '此聊天中不能用其他应用打开对方的文件';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条结果 · 打开聊天查看',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat => '保存自禁止截屏的聊天 · 打开聊天查看';
+
+  @override
+  String get roomShotsMenuNote => '此聊天室中不能复制、转发或保存别人的消息';
+
+  @override
+  String get roomShotsKeptOpen => '此聊天室中不能用其他应用打开别人的文件';
+
+  @override
   String get chatShotsYouTurnedOn => '你开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
 
   @override
@@ -7917,7 +7940,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeShotsLeaveOff => '保持关闭';
 
   @override
-  String get homeShotsTheySeeIt => 'Kryfo 也会在对方手机上禁止截屏，对方会看到是你开启的。';
+  String get homeShotsTheySeeIt =>
+      'Kryfo 也会在对方手机上禁止截屏，并关闭复制、转发和保存彼此的消息。对方会看到是你开启的。';
 
   @override
   String homeShotsTurnedOn(int count) {
@@ -15720,6 +15744,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsKeptOpen => '此聊天中不能用其他應用程式開啟對方的檔案';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則結果 · 打開聊天查看',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat => '儲存自禁止截圖的聊天 · 打開聊天查看';
+
+  @override
+  String get roomShotsMenuNote => '此聊天室中不能複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get roomShotsKeptOpen => '此聊天室中不能用其他應用程式開啟別人的檔案';
+
+  @override
   String get chatShotsYouTurnedOn => '你開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
@@ -15757,7 +15804,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeShotsLeaveOff => '維持關閉';
 
   @override
-  String get homeShotsTheySeeIt => 'Kryfo 也會在對方手機上禁止截圖，對方會看到是你開啟的。';
+  String get homeShotsTheySeeIt =>
+      'Kryfo 也會在對方手機上禁止截圖，並關閉複製、轉傳和儲存彼此的訊息。對方會看到是你開啟的。';
 
   @override
   String homeShotsTurnedOn(int count) {

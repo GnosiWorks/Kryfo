@@ -8238,6 +8238,32 @@ class AppLocalizationsId extends AppLocalizations {
       'Membuka filenya di aplikasi lain mati di obrolan ini';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString hasil · buka obrolan untuk melihatnya',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Disimpan dari obrolan yang memblokir tangkapan layar · buka obrolan untuk melihatnya';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesan orang lain mati di ruang ini';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Membuka file orang lain di aplikasi lain mati di ruang ini';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Kamu menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
 
@@ -8280,7 +8306,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo juga memblokirnya di ponsel lawan, dan dia akan melihat bahwa kamu menyalakannya.';
+      'Kryfo juga memblokirnya di ponsel lawan, dan menyalin, meneruskan, serta menyimpan pesan satu sama lain jadi mati. Dia akan melihat bahwa kamu menyalakannya.';
 
   @override
   String homeShotsTurnedOn(int count) {

@@ -10396,6 +10396,28 @@
   "@chatShotsKeptOpen": {
     "description": "widgets/video_bubble.dart: toast when a file of the other person's in a chat that blocks screenshots is tapped to open in another app"
   },
+  "searchKeptMatches": "{count, plural, one{{count} match · open the chat to see it} other{{count} matches · open the chat to see them}}",
+  "@searchKeptMatches": {
+    "description": "screens/search_screen.dart: the one line a chat that blocks screenshots, or a room, shows in search: how many matched, and to open the chat",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "savedKeptInChat": "Saved from a chat that blocks screenshots · open the chat to see it",
+  "@savedKeptInChat": {
+    "description": "screens/saved_screen.dart: what a saved message from a chat that blocks screenshots, or from a room, shows in Saved"
+  },
+  "roomShotsMenuNote": "Copying, forwarding and saving others’ messages is off in this room",
+  "@roomShotsMenuNote": {
+    "description": "screens/group_chat_screen.dart: one quiet line under a room message menu for someone else's message"
+  },
+  "roomShotsKeptOpen": "Opening others’ files in other apps is off in this room",
+  "@roomShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: toast when someone else's file in a room is tapped to open in another app"
+  },
   "chatShotsYouTurnedOn": "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
   "@chatShotsYouTurnedOn": {
     "description": "widgets/shots_line.dart: the line in the chat where you turned the block on"
@@ -10450,7 +10472,7 @@
   "@homeShotsLeaveOff": {
     "description": "screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good"
   },
-  "homeShotsTheySeeIt": "Kryfo blocks them on the other phone too, and they’ll see that you turned it on.",
+  "homeShotsTheySeeIt": "Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.",
   "@homeShotsTheySeeIt": {
     "description": "screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on"
   },

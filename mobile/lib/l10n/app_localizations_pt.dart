@@ -8304,6 +8304,33 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abrir os arquivos dessa pessoa em outros apps está desativado nesta conversa';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString resultados · abra a conversa para ver',
+      one: '$countString resultado · abra a conversa para ver',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Salvo de uma conversa que bloqueia capturas de tela · abra a conversa para ver';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Copiar, encaminhar e salvar as mensagens dos outros está desativado nesta sala';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Abrir arquivos dos outros em outros apps está desativado nesta sala';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Você ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
 
@@ -8347,7 +8374,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'O Kryfo também bloqueia no outro celular, e a outra pessoa vai ver que você ativou.';
+      'O Kryfo também bloqueia no outro celular, e copiar, encaminhar e salvar as mensagens do outro fica desativado. A outra pessoa vai ver que você ativou.';
 
   @override
   String homeShotsTurnedOn(int count) {

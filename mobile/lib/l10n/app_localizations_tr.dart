@@ -8266,6 +8266,33 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbette onun dosyalarını başka uygulamalarda açmak kapalı';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sonuç · görmek için sohbeti aç',
+      one: '$countString sonuç · görmek için sohbeti aç',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Ekran görüntüsünü engelleyen bir sohbetten · görmek için sohbeti aç';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Bu odada başkalarının mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Bu odada başkalarının dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Ekran görüntüsü engelini açtın. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
 
@@ -8307,7 +8334,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo karşı telefonda da engeller ve karşı taraf bunu senin açtığını görür.';
+      'Kryfo karşı telefonda da engeller; birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapanır. Karşı taraf bunu senin açtığını görür.';
 
   @override
   String homeShotsTurnedOn(int count) {

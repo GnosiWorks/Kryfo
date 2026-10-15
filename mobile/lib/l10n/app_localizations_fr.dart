@@ -8327,6 +8327,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ouvrir ses fichiers dans d’autres applis est désactivé dans cette discussion';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString résultats · ouvrez la discussion pour les voir',
+      one: '$countString résultat · ouvrez la discussion pour le voir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Enregistré dans une discussion qui bloque les captures · ouvrez-la pour le voir';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Copier, transférer et enregistrer les messages des autres est désactivé dans ce salon';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Ouvrir les fichiers des autres dans d’autres applis est désactivé dans ce salon';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Vous avez activé le blocage des captures. Copier, transférer et enregistrer les messages de l’autre est aussi désactivé.';
 
@@ -8370,7 +8397,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo les bloque aussi sur l’autre téléphone, et la personne verra que vous l’avez activé.';
+      'Kryfo les bloque aussi sur l’autre téléphone, et copier, transférer ou enregistrer les messages de l’autre est désactivé. La personne verra que vous l’avez activé.';
 
   @override
   String homeShotsTurnedOn(int count) {

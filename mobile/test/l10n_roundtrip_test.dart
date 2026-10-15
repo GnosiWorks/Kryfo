@@ -3477,6 +3477,20 @@ void main() {
       l.chatShotsKeptOpen,
       "Opening their files in other apps is off in this chat",
     );
+    expect(l.searchKeptMatches(1), "1 match · open the chat to see it");
+    expect(l.searchKeptMatches(4), "4 matches · open the chat to see them");
+    expect(
+      l.savedKeptInChat,
+      "Saved from a chat that blocks screenshots · open the chat to see it",
+    );
+    expect(
+      l.roomShotsMenuNote,
+      "Copying, forwarding and saving others’ messages is off in this room",
+    );
+    expect(
+      l.roomShotsKeptOpen,
+      "Opening others’ files in other apps is off in this room",
+    );
     expect(
       l.chatShotsYouTurnedOn,
       "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
@@ -3499,7 +3513,7 @@ void main() {
     expect(l.homeShotsTurnOnForAll, "Turn it on for all your chats?");
     expect(
       l.homeShotsTheySeeIt,
-      "Kryfo blocks them on the other phone too, and they’ll see that you turned it on.",
+      "Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.",
     );
     expect(l.homeShotsTurnOn, "Turn on for all");
     expect(l.homeShotsLeaveOff, "Leave them off");

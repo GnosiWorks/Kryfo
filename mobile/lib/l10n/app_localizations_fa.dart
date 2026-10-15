@@ -8257,6 +8257,33 @@ class AppLocalizationsFa extends AppLocalizations {
       'باز کردن فایل‌های او در برنامه‌های دیگر در این گفت‌وگو خاموش است';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نتیجه · برای دیدن، گفت‌وگو را باز کنید',
+      one: '⁨$countString⁩ نتیجه · برای دیدن، گفت‌وگو را باز کنید',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'ذخیره‌شده از گفت‌وگویی که جلوی اسکرین‌شات را می‌گیرد · برای دیدن، گفت‌وگو را باز کنید';
+
+  @override
+  String get roomShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های دیگران در این اتاق خاموش است';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'باز کردن فایل‌های دیگران در برنامه‌های دیگر در این اتاق خاموش است';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'شما جلوگیری از اسکرین‌شات را روشن کردید. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
 
@@ -8300,7 +8327,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo روی گوشی طرف مقابل هم جلوی آن را می‌گیرد و او می‌بیند که شما آن را روشن کرده‌اید.';
+      'Kryfo روی گوشی طرف مقابل هم جلوی آن را می‌گیرد و کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر خاموش می‌شود. او می‌بیند که شما آن را روشن کرده‌اید.';
 
   @override
   String homeShotsTurnedOn(int count) {

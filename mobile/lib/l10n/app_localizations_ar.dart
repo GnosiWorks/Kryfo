@@ -8368,6 +8368,37 @@ class AppLocalizationsAr extends AppLocalizations {
       'فتح ملفاته في تطبيقات أخرى متوقف في هذه المحادثة';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+      many: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+      few: '⁨$countString⁩ نتائج · افتح المحادثة لرؤيتها',
+      two: 'نتيجتان · افتح المحادثة لرؤيتهما',
+      one: 'نتيجة واحدة · افتح المحادثة لرؤيتها',
+      zero: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'محفوظة من محادثة تمنع لقطات الشاشة · افتح المحادثة لرؤيتها';
+
+  @override
+  String get roomShotsMenuNote =>
+      'نسخ رسائل الآخرين وإعادة توجيهها وحفظها متوقف في هذه الغرفة';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'فتح ملفات الآخرين في تطبيقات أخرى متوقف في هذه الغرفة';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'فعّلت منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
 
@@ -8408,7 +8439,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'يمنعها Kryfo على الهاتف الآخر أيضًا، وسيرى الطرف الآخر أنك فعّلته.';
+      'يمنعها Kryfo على الهاتف الآخر أيضًا، ويتوقف نسخ رسائل كل منكما وإعادة توجيهها وحفظها. سيرى الطرف الآخر أنك فعّلته.';
 
   @override
   String homeShotsTurnedOn(int count) {

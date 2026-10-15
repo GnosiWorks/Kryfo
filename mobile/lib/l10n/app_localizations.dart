@@ -13281,6 +13281,30 @@ abstract class AppLocalizations {
   /// **'Opening their files in other apps is off in this chat'**
   String get chatShotsKeptOpen;
 
+  /// screens/search_screen.dart: the one line a chat that blocks screenshots, or a room, shows in search: how many matched, and to open the chat
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} match · open the chat to see it} other{{count} matches · open the chat to see them}}'**
+  String searchKeptMatches(int count);
+
+  /// screens/saved_screen.dart: what a saved message from a chat that blocks screenshots, or from a room, shows in Saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saved from a chat that blocks screenshots · open the chat to see it'**
+  String get savedKeptInChat;
+
+  /// screens/group_chat_screen.dart: one quiet line under a room message menu for someone else's message
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving others’ messages is off in this room'**
+  String get roomShotsMenuNote;
+
+  /// widgets/video_bubble.dart: toast when someone else's file in a room is tapped to open in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opening others’ files in other apps is off in this room'**
+  String get roomShotsKeptOpen;
+
   /// widgets/shots_line.dart: the line in the chat where you turned the block on
   ///
   /// In en, this message translates to:
@@ -13350,7 +13374,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on
   ///
   /// In en, this message translates to:
-  /// **'Kryfo blocks them on the other phone too, and they’ll see that you turned it on.'**
+  /// **'Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.'**
   String get homeShotsTheySeeIt;
 
   /// screens/home_screen.dart: toast after the card turned the block on

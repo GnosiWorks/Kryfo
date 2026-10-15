@@ -107,7 +107,17 @@ class _SavedScreenState extends State<SavedScreen> {
     _leaving.remove(uid);
   }
 
+  // saved from a chat that blocks screenshots, or from a room, which
+  // always does: none of it shows here, only that it is there
+  bool _kept(Map<String, Object?> r) {
+    final gid = r['group_id'] as String?;
+    if (gid != null) return appState.shotsBlocksGroup(gid);
+    final peer = r['peer_id'] as String?;
+    return peer != null && appState.shotsBlocksChat(peer);
+  }
+
   String _preview(Map<String, Object?> r) {
+    if (_kept(r)) return l10n.savedKeptInChat;
     if (r['sticker'] != null) return l10n.stickerLabel;
     final fn = r['file_name'] as String?;
     if (fn == 'voice.wav') return l10n.savedVoiceNote;
@@ -241,9 +251,10 @@ class _SavedScreenState extends State<SavedScreen> {
     final uid = r['msg_uid'] as String?;
     final ms = rowWrittenAt(r);
     final accent = _authorColor(peer);
-    final isVoice = _isVoice(r);
-    final isPhoto = _isPhoto(r);
-    final sticker = StickerWire.parse(r['sticker']);
+    final kept = _kept(r);
+    final isVoice = !kept && _isVoice(r);
+    final isPhoto = !kept && _isPhoto(r);
+    final sticker = kept ? null : StickerWire.parse(r['sticker']);
     return PressScale(
       onTap: () => _open(r),
       child: Stack(

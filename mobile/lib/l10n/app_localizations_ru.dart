@@ -8396,6 +8396,35 @@ class AppLocalizationsRu extends AppLocalizations {
       'В этом чате нельзя открывать чужие файлы в других приложениях';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString совпадения · открой чат, чтобы увидеть',
+      many: '$countString совпадений · открой чат, чтобы увидеть',
+      few: '$countString совпадения · открой чат, чтобы увидеть',
+      one: '$countString совпадение · открой чат, чтобы увидеть',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Из чата, где запрещены скриншоты · открой чат, чтобы увидеть';
+
+  @override
+  String get roomShotsMenuNote =>
+      'В этой комнате нельзя копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'В этой комнате нельзя открывать чужие файлы в других приложениях';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Ты включил(а) запрет скриншотов. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
 
@@ -8438,7 +8467,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo запретит их и на втором телефоне, а собеседник увидит, что это включил(а) ты.';
+      'Kryfo запретит их и на втором телефоне, а копировать, пересылать и сохранять сообщения друг друга станет нельзя. Собеседник увидит, что это включил(а) ты.';
 
   @override
   String homeShotsTurnedOn(int count) {

@@ -8231,6 +8231,32 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể mở tệp của người kia bằng ứng dụng khác trong cuộc trò chuyện này';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString kết quả · mở cuộc trò chuyện để xem',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Đã lưu từ cuộc trò chuyện chặn chụp màn hình · mở cuộc trò chuyện để xem';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác trong phòng này';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Không thể mở tệp của người khác bằng ứng dụng khác trong phòng này';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Bạn đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
 
@@ -8273,7 +8299,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo cũng chặn trên điện thoại bên kia, và người đó sẽ thấy bạn đã bật.';
+      'Kryfo cũng chặn trên điện thoại bên kia, và việc sao chép, chuyển tiếp, lưu tin nhắn của nhau sẽ tắt. Người đó sẽ thấy bạn đã bật.';
 
   @override
   String homeShotsTurnedOn(int count) {

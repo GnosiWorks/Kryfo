@@ -8385,6 +8385,35 @@ class AppLocalizationsUk extends AppLocalizations {
       'У цьому чаті не можна відкривати чужі файли в інших застосунках';
 
   @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString збігу · відкрий чат, щоб побачити',
+      many: '$countString збігів · відкрий чат, щоб побачити',
+      few: '$countString збіги · відкрий чат, щоб побачити',
+      one: '$countString збіг · відкрий чат, щоб побачити',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'З чату, де заблоковано знімки екрана · відкрий чат, щоб побачити';
+
+  @override
+  String get roomShotsMenuNote =>
+      'У цій кімнаті не можна копіювати, пересилати й зберігати чужі повідомлення';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'У цій кімнаті не можна відкривати чужі файли в інших застосунках';
+
+  @override
   String get chatShotsYouTurnedOn =>
       'Ти увімкнув(-ла) блокування знімків екрана. Копіювати, пересилати й зберігати повідомлення одне одного теж не можна.';
 
@@ -8428,7 +8457,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeShotsTheySeeIt =>
-      'Kryfo заблокує їх і на другому телефоні, а співрозмовник побачить, що це увімкнув(-ла) ти.';
+      'Kryfo заблокує їх і на другому телефоні, а копіювати, пересилати й зберігати повідомлення одне одного стане неможливо. Співрозмовник побачить, що це увімкнув(-ла) ти.';
 
   @override
   String homeShotsTurnedOn(int count) {
