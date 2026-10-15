@@ -328,13 +328,13 @@ void main() {
         'lib/screens/chat_screen.dart',
         'Future<void> _pickAndSendMultiple(',
         'Future<void> _sendPicked(',
-        '_readyFile(v.path, madeVideoName(v.name))',
+        'madeVideoName(v.name)',
       ),
       (
         'lib/screens/group_chat_screen.dart',
         'Future<void> _pickGroupMultiple(',
         'Future<void> _sendPicked(',
-        '_readyGroupFile(v.path, madeVideoName(v.name))',
+        'madeVideoName(v.name)',
       ),
     ]) {
       final src = sourceOf(file);

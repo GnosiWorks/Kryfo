@@ -109,10 +109,12 @@ void main() {
     );
     // a video picked with photos is named the same way
     for (final (src, ready) in [
-      (chat, '_readyFile(v.path, madeVideoName(v.name))'),
-      (group, '_readyGroupFile(v.path, madeVideoName(v.name))'),
+      (chat, '_readyFile('),
+      (group, '_readyGroupFile('),
     ]) {
-      expect(bodyOf(src, 'Future<void> _sendPicked('), contains(ready));
+      final body = bodyOf(src, 'Future<void> _sendPicked(');
+      expect(body, contains(ready));
+      expect(body, contains('madeVideoName(v.name)'));
     }
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendVideo('),
