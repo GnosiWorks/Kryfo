@@ -56,6 +56,15 @@ const kDupRetryMs = 20 * 60 * 1000;
 const kAskAgainMs = 60 * 60 * 1000;
 // a forget for an address the engine cannot sign for is tried this often
 const kForgetTries = 3;
+// slot -> [gen, tries, due ms]: a registration the relay took on an endpoint
+// it had not seen, with no knock come on it since. the relay drops an
+// endpoint it never reached after half an hour of failures, and knocks a
+// new one within minutes. so without a knock the slot is registered again
+// two hours on, then four, then eight, each with a part of its own on top;
+// after that the renewal days take it. the first knock ends it
+const kHelperQuietKey = 'helper_quiet';
+const kQuietRetryMs = 2 * 60 * 60 * 1000;
+const kQuietRetries = 3;
 
 /// the engine calls the mode needs. the app's engine, or a stand-in in tests
 abstract class KnockEngine {
@@ -273,15 +282,42 @@ class HelperDelivery {
       await prefs.setString(kHelperForgetKey, jsonEncode(keep));
     }
 
+    // a slot quiet too long goes again with its group. only what the relay
+    // took as it is: a refused or not newer one keeps its own wait. when
+    // android cannot say what was knocked, nothing is counted quiet
+    final knocked = await push.knocked();
+    final quiet = _quiet(prefs, book);
+    final quietBefore = quiet.length;
+    if (knocked != null) {
+      quiet.removeWhere((s, _) => knocked.contains(book.instance(s)));
+    }
+    final overdue = {
+      if (knocked != null)
+        for (final e in quiet.entries)
+          // a due further off than any wait: the clock was set back
+          if (now >= e.value.$2 ||
+              e.value.$2 - now > (kQuietRetryMs << e.value.$1) * 3 ~/ 2)
+            e.key,
+    };
+    bool again(KnockItem it) {
+      final had = synced[it.name];
+      return overdue.contains(it.slot) &&
+          it.endpoint.isNotEmpty &&
+          had != null &&
+          !had.waiting &&
+          had.endpoint == it.endpoint;
+    }
+
     String groupOf(KnockItem it) =>
         it.address != null ? 'g:${book.owner[it.slot]}' : 's${it.slot}';
     final due = [
       for (final it in wanted)
-        if (_due(synced[it.name], it.endpoint, now)) it,
+        if (_due(synced[it.name], it.endpoint, now) || again(it)) it,
     ];
     if (due.isEmpty) {
       _more = false;
       await _saveSynced(synced);
+      if (quiet.length != quietBefore) await _saveQuiet(prefs, book, quiet);
       return 0;
     }
     final groups = <String, List<KnockItem>>{};
@@ -318,6 +354,9 @@ class HelperDelivery {
     final refused = _namesOf(r, 'refused') ?? const {};
     final tried = _tried(prefs);
     final standIn = Map<int, String>.from(book.standIn);
+    // slot -> whether the relay took one on an endpoint new to it, and
+    // whether the endpoint changed
+    final took = <int, (bool, bool)>{};
     for (final it in batch) {
       if (it.endpoint.isEmpty && !done.contains(it.name)) {
         // a stand-in's forget: the relay holding something newer is as
@@ -366,6 +405,12 @@ class HelperDelivery {
         synced.remove(it.name);
         standIn.remove(it.slot);
       } else {
+        final had = synced[it.name];
+        final fresh = had == null || had.waiting || had.endpoint != it.endpoint;
+        final moved =
+            had != null && !had.waiting && had.endpoint != it.endpoint;
+        final t = took[it.slot] ?? (false, false);
+        took[it.slot] = (t.$1 || fresh, t.$2 || moved);
         synced[it.name] = _Synced(
           it.endpoint,
           now,
@@ -373,6 +418,27 @@ class HelperDelivery {
         );
       }
     }
+    if (knocked != null) {
+      for (final e in took.entries) {
+        final s = e.key;
+        final w = quiet[s];
+        if (knocked.contains(book.instance(s))) {
+          quiet.remove(s);
+        } else if (e.value.$2 || (w == null && e.value.$1)) {
+          // a new endpoint, or one the relay may never have reached
+          quiet[s] = (0, now + _quietWait(0));
+        } else if (w != null && overdue.contains(s)) {
+          // sent again for being quiet: one more step, or the renewal days
+          final n = w.$1 + 1;
+          if (n >= kQuietRetries) {
+            quiet.remove(s);
+          } else {
+            quiet[s] = (n, now + _quietWait(n));
+          }
+        }
+      }
+    }
+    await _saveQuiet(prefs, book, quiet);
     if (standIn.length != book.standIn.length) {
       await _saveBook(book.copyWith(standIn: standIn));
     }
@@ -426,6 +492,43 @@ class HelperDelivery {
     }
   }
 
+  // how long a slot may stay quiet at step [n], with a part of its own
+  int _quietWait(int n) {
+    final base = kQuietRetryMs << n;
+    return base + _rnd.nextInt(base ~/ 2);
+  }
+
+  // the quiet slots of the book's generations, slot -> (tries, due ms)
+  Map<int, (int, int)> _quiet(SharedPreferences prefs, SlotBook book) {
+    try {
+      final j = jsonDecode(prefs.getString(kHelperQuietKey) ?? '{}') as Map;
+      final out = <int, (int, int)>{};
+      for (final e in j.entries) {
+        final s = int.tryParse('${e.key}');
+        final v = e.value;
+        if (s == null || s < 0 || s >= kHelperSlots) continue;
+        if (v is! List || v.length != 3 || v.any((x) => x is! int)) continue;
+        if (v[0] != (book.gen[s] ?? 0)) continue;
+        out[s] = (v[1] as int, v[2] as int);
+      }
+      return out;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _saveQuiet(
+    SharedPreferences prefs,
+    SlotBook book,
+    Map<int, (int, int)> m,
+  ) => prefs.setString(
+    kHelperQuietKey,
+    jsonEncode({
+      for (final e in m.entries)
+        '${e.key}': [book.gen[e.key] ?? 0, e.value.$1, e.value.$2],
+    }),
+  );
+
   bool _due(_Synced? had, String endpoint, int now) {
     if (had == null) return true;
     // a refused one whose endpoint changed is tried at once
@@ -468,6 +571,7 @@ class HelperDelivery {
     await prefs.setString(kHelperForgetKey, jsonEncode(queued));
     await push.unregister();
     await prefs.remove(kHelperSyncedKey);
+    await prefs.remove(kHelperQuietKey);
     // the next set-up starts on new endpoints: every slot one generation on
     await _saveBook(
       SlotBook(

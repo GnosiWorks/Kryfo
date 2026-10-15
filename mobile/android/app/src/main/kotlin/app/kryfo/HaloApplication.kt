@@ -39,6 +39,7 @@ class HaloApplication : Application() {
                     "helperApps" -> result.success(HelperPush.distributors(this))
                     "helperChosen" -> result.success(HelperPush.distributor(this))
                     "helperEndpoints" -> result.success(HelperPush.endpoints(this))
+                    "helperKnocked" -> result.success(HelperPush.knockedOnes(this))
                     "helperRegister" -> {
                         val pkg = call.argument<String>("package")
                         val instance = call.argument<String>("instance")

@@ -326,6 +326,7 @@ const deviceKeys = {
   'helper_synced',
   'helper_forget',
   'helper_asked',
+  'helper_quiet',
   'helper_forget_tried',
   'helper_relay_knocks',
   'helper_gone',

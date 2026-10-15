@@ -32,6 +32,7 @@ object HelperPush {
     private const val KEY_DISTRIBUTOR = "distributor"
     private const val TOKEN_PREFIX = "token."
     private const val ENDPOINT_PREFIX = "endpoint."
+    private const val KNOCKED_PREFIX = "knocked."
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -103,7 +104,7 @@ object HelperPush {
         val pkg = p.getString(KEY_DISTRIBUTOR, null)
         val edit = p.edit()
         for ((k, v) in p.all) {
-            if (k.startsWith(ENDPOINT_PREFIX)) {
+            if (k.startsWith(ENDPOINT_PREFIX) || k.startsWith(KNOCKED_PREFIX)) {
                 edit.remove(k)
                 continue
             }
@@ -136,7 +137,8 @@ object HelperPush {
             } catch (e: Exception) {
             }
         }
-        p.edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance).apply()
+        p.edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance)
+            .remove(KNOCKED_PREFIX + instance).apply()
     }
 
     // https, or plain http to an onion: an ntfy of one's own behind tor
@@ -157,12 +159,37 @@ object HelperPush {
     }
 
     fun forget(c: Context, instance: String) {
-        prefs(c).edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance).apply()
+        prefs(c).edit().remove(TOKEN_PREFIX + instance).remove(ENDPOINT_PREFIX + instance)
+            .remove(KNOCKED_PREFIX + instance).apply()
     }
 
-    // an endpoint that came while dart was not listening is read from here
+    // an endpoint that came while dart was not listening is read from here.
+    // a new one has had no knock yet
     fun keepEndpoint(c: Context, instance: String, endpoint: String) {
-        prefs(c).edit().putString(ENDPOINT_PREFIX + instance, endpoint).apply()
+        val p = prefs(c)
+        val edit = p.edit().putString(ENDPOINT_PREFIX + instance, endpoint)
+        if (p.getString(ENDPOINT_PREFIX + instance, null) != endpoint) {
+            edit.remove(KNOCKED_PREFIX + instance)
+        }
+        edit.apply()
+    }
+
+    // a push came on this registration's endpoint, so the relay holds it
+    // and the helper's server delivers. whether, never when
+    fun knocked(c: Context, instance: String) {
+        val p = prefs(c)
+        if (!p.getBoolean(KNOCKED_PREFIX + instance, false)) {
+            p.edit().putBoolean(KNOCKED_PREFIX + instance, true).apply()
+        }
+    }
+
+    // the registrations still held whose endpoint has had a push
+    fun knockedOnes(c: Context): List<String> {
+        val all = prefs(c).all
+        return all.filter { (k, v) ->
+            k.startsWith(KNOCKED_PREFIX) && v == true &&
+                all.containsKey(TOKEN_PREFIX + k.removePrefix(KNOCKED_PREFIX))
+        }.map { it.key.removePrefix(KNOCKED_PREFIX) }
     }
 
     // instance -> endpoint, for the registrations this phone still holds
@@ -202,6 +229,7 @@ class HelperPushReceiver : BroadcastReceiver() {
                 // the body is never read. a job, not a call into dart: a
                 // process this broadcast started has no dart listening yet,
                 // and the job keeps it alive for the check-in
+                HelperPush.knocked(context, instance)
                 val v = KnockGate.allow(context)
                 when {
                     v.go -> {

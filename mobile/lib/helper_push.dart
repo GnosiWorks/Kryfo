@@ -83,6 +83,17 @@ class HelperPush {
     return ok;
   }
 
+  /// the instances whose endpoint has had a knock, or null when android
+  /// cannot say
+  Future<Set<String>?> knocked() async {
+    final raw = await _call<List<Object?>>('helperKnocked');
+    if (raw == null) return null;
+    return {
+      for (final r in raw)
+        if (r is String) r,
+    };
+  }
+
   Future<void> unregisterOne(String instance) =>
       _call<bool>('helperUnregisterOne', {'instance': instance});
 

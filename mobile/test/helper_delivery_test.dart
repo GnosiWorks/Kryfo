@@ -26,6 +26,9 @@ class FakeDistributor {
   String? chosen;
   // the book's generations as they stood when a registration was let go
   final List<String> bookAtDrop = [];
+  // instances whose endpoint has had a push. null: an android that cannot
+  // say
+  Set<String>? knocked;
   FakeDistributor(this.package);
 
   Future<Object?> handle(MethodCall call) async {
@@ -39,6 +42,8 @@ class FakeDistributor {
         return chosen;
       case 'helperEndpoints':
         return endpoints;
+      case 'helperKnocked':
+        return knocked?.where(endpoints.containsKey).toList();
       case 'helperRegister':
         if (a['package'] != package || !installed) return false;
         chosen = package;
@@ -46,6 +51,7 @@ class FakeDistributor {
         if (answers) {
           endpoints[a['instance'] as String] =
               'https://push.example.org/up${_n++}?up=1';
+          knocked?.remove(a['instance']);
         }
         return true;
       case 'helperUnregisterOne':
@@ -53,11 +59,13 @@ class FakeDistributor {
         bookAtDrop.add(prefs.getString(kHelperSlotsKey) ?? '');
         dropped.add(a['instance'] as String);
         endpoints.remove(a['instance']);
+        knocked?.remove(a['instance']);
         events.add('drop ${a['instance']}');
         return true;
       case 'helperUnregister':
         dropped.addAll(endpoints.keys);
         endpoints.clear();
+        knocked?.clear();
         chosen = null;
         events.add('unregister');
         return true;
@@ -720,6 +728,225 @@ void main() {
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await Future.wait([helper.sync(), helper.sync()]);
       expect(engine.sent.length, 1);
+    });
+  });
+
+  group('a registration that hears nothing', () {
+    const hour = 60 * 60 * 1000;
+    const step = 15 * 60 * 1000;
+    final contacts = [
+      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:${i % 4}'),
+    ];
+    const fc = KnockAddress('fc', 'firstcontact:aa');
+
+    // slot -> how many batches since [from] registered it again
+    Map<int, int> again(int from) {
+      final slotOf = {
+        for (final e in ntfy.endpoints.entries)
+          e.value: instanceSlot(e.key)!.$1,
+      };
+      final out = <int, int>{};
+      for (final b in engine.sent.skip(from)) {
+        final slots = {
+          for (final i in b)
+            if ((i['e'] as String).isNotEmpty) slotOf[i['e']],
+        };
+        for (final s in slots) {
+          if (s != null) out[s] = (out[s] ?? 0) + 1;
+        }
+      }
+      return out;
+    }
+
+    Future<void> setUpAll() async {
+      engine.live = [...contacts, fc];
+      ntfy.knocked = {};
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+    }
+
+    // a check-in every quarter hour until [until], each with what rounds
+    // it takes. slot -> the times it was sent again
+    Future<Map<int, List<int>>> checkIns(int until) async {
+      final at = <int, List<int>>{};
+      while (now < until) {
+        now += step;
+        final before = engine.sent.length;
+        await rounds();
+        for (final s in again(before).keys) {
+          (at[s] ??= []).add(now);
+        }
+      }
+      return at;
+    }
+
+    test('no knock two hours after the relay took it: each slot is '
+        'registered again, once', () async {
+      await setUpAll();
+      final start = now;
+      final before = engine.sent.length;
+      now = start + 2 * hour - 60 * 1000;
+      await rounds();
+      expect(engine.sent.length, before);
+      now = start + 3 * hour;
+      await rounds();
+      final once = again(before);
+      expect(once.length, kHelperSlots);
+      expect(once.values.every((n) => n == 1), isTrue, reason: '$once');
+      // what went is what the relay held, on the same endpoints
+      expect(engine.relay.length, kHelperSlots);
+      final more = engine.sent.length;
+      await rounds();
+      expect(engine.sent.length, more);
+    });
+
+    test('then four hours, then eight, each with a part of its own, then '
+        'the renewal days', () async {
+      await setUpAll();
+      final start = now;
+      final at = await checkIns(start + kRefreshMinMs - hour);
+      expect(at.length, kHelperSlots);
+      final firsts = <int>{};
+      for (final e in at.entries) {
+        final t = e.value;
+        expect(t.length, kQuietRetries, reason: 'slot ${e.key}: $t');
+        expect(t[0] - start, inInclusiveRange(2 * hour, 3 * hour + step));
+        expect(t[1] - t[0], inInclusiveRange(4 * hour, 6 * hour + step));
+        expect(t[2] - t[1], inInclusiveRange(8 * hour, 12 * hour + step));
+        firsts.add(t[0]);
+      }
+      // not all at one check-in
+      expect(firsts.length, greaterThan(1));
+      final prefs = await SharedPreferences.getInstance();
+      expect(jsonDecode(prefs.getString(kHelperQuietKey)!), isEmpty);
+    });
+
+    test(
+      'the first knock ends it, and a new endpoint starts it again',
+      () async {
+        await setUpAll();
+        final start = now;
+        final book = SlotBook.read(
+          (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
+        );
+        final s = book.slotOf(c[0])!;
+        final inst = book.instance(s);
+        now = start + 3 * hour;
+        await rounds();
+        // a decoy comes through on the slot of c0
+        ntfy.knocked!.add(inst);
+        final at = await checkIns(start + 3 * 24 * hour);
+        expect(at[s], isNull);
+        expect(at.length, kHelperSlots - 1);
+        final prefs = await SharedPreferences.getInstance();
+        final q = jsonDecode(prefs.getString(kHelperQuietKey)!) as Map;
+        expect(q.containsKey('$s'), isFalse);
+        // the helper app hands the slot a new endpoint, unknocked
+        ntfy.endpoints[inst] = 'https://push.example.org/upNew';
+        ntfy.knocked!.remove(inst);
+        final moved = now;
+        final later = await checkIns(moved + 3 * hour + step);
+        expect(later.keys, contains(s));
+        expect(later[s]!.length, 2, reason: 'registered, then once again');
+        expect(later[s]![1] - later[s]![0], greaterThanOrEqualTo(2 * hour));
+      },
+    );
+
+    test(
+      'kept across a restart: the step it was on, not from the start',
+      () async {
+        await setUpAll();
+        final start = now;
+        HelperDelivery restarted() => HelperDelivery(
+          engine: engine,
+          push: HelperPush(_ch),
+          rnd: Random(now),
+          nowMs: () => now,
+        );
+        now = start + 3 * hour;
+        helper = restarted();
+        var before = engine.sent.length;
+        await rounds();
+        expect(again(before).length, kHelperSlots);
+        // two and a half hours on is too soon for the second step
+        now += 2 * hour + 30 * 60 * 1000;
+        helper = restarted();
+        before = engine.sent.length;
+        await rounds();
+        expect(engine.sent.length, before);
+        now += 4 * hour;
+        helper = restarted();
+        await rounds();
+        expect(again(before).length, kHelperSlots);
+      },
+    );
+
+    test(
+      'knocks coming: nothing is sent again before the renewal days',
+      () async {
+        await setUpAll();
+        ntfy.knocked!.addAll(ntfy.endpoints.keys);
+        final before = engine.sent.length;
+        await checkIns(now + kRefreshMinMs - hour);
+        expect(engine.sent.length, before);
+        final prefs = await SharedPreferences.getInstance();
+        expect(jsonDecode(prefs.getString(kHelperQuietKey)!), isEmpty);
+      },
+    );
+
+    test(
+      'an android that cannot say what was knocked sends nothing again',
+      () async {
+        await setUpAll();
+        ntfy.knocked = null;
+        final before = engine.sent.length;
+        await checkIns(now + kRefreshMinMs - hour);
+        expect(engine.sent.length, before);
+      },
+    );
+
+    test('sixteen quiet slots: one group a round, never a slot twice in '
+        'a window, and a refusal keeps its own wait', () async {
+      await setUpAll();
+      final start = now;
+      final from = engine.sent.length;
+      final groupOf = {for (final a in engine.live) a.address: a.group};
+      engine.refuse = {c[1]};
+      final at = await checkIns(start + 3 * 24 * hour);
+      for (final b in engine.sent.skip(from)) {
+        final groups = {
+          for (final i in b) groupOf[i['i']] ?? 'stand-in ${i['s']}',
+        };
+        expect(groups.length, 1, reason: '$b');
+      }
+      final s1 = SlotBook.read(
+        (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
+      ).slotOf(c[1])!;
+      for (final e in at.entries) {
+        if (e.key == s1) continue;
+        expect(e.value.length, kQuietRetries, reason: 'slot ${e.key}');
+        for (var i = 1; i < e.value.length; i++) {
+          expect(e.value[i] - e.value[i - 1], greaterThanOrEqualTo(4 * hour));
+        }
+      }
+      // c1 refused: sent an hour on, then two, up to a day, never each
+      // quarter hour
+      final tries = engine.sent
+          .skip(from)
+          .where((b) => b.any((i) => i['i'] == c[1]))
+          .length;
+      expect(tries, inInclusiveRange(1, 8));
+    });
+
+    test('leaving the mode forgets which slots were quiet', () async {
+      await setUpAll();
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        (jsonDecode(prefs.getString(kHelperQuietKey)!) as Map).length,
+        kHelperSlots,
+      );
+      await helper.stop();
+      expect(prefs.getString(kHelperQuietKey), isNull);
     });
   });
 }
