@@ -739,6 +739,12 @@ void main() {
         io.noSession.add('carol');
         await app.unsendInGroup(g, 'u1');
         await app.ctlPassForTest;
+        // the admin speaks for the group while in it
+        await mem.insert('group_members', {
+          'group_id': g,
+          'halo_id': 'someone-else',
+          'joined_at': 9,
+        });
         final out = await wrapMessage(
           '',
           groupId: g,
