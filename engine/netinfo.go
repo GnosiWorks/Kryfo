@@ -73,6 +73,10 @@ func setNetInfo(n netInfo) {
 		// what proved the network that went proves nothing now
 		routeBump()
 		go netPark()
+	case prev.known && prev.On && n.On && prev.Net != 0 && n.Net != 0 && prev.Net != n.Net:
+		// another network in place of the one there, wifi to another wifi
+		// among them. the app says so too, and the bounce takes both as one
+		networkChanged()
 	}
 	// a check-in puts the way of the network that is there now
 	if n.On && (was || prev.Kind != n.Kind) && inCheckIn() {

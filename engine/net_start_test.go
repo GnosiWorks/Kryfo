@@ -163,3 +163,23 @@ func TestADroppedBounceStillChecks(t *testing.T) {
 		t.Fatalf("%d reconnects, want none", got)
 	}
 }
+
+// the watch names another network and the app says nothing: the engine
+// takes it as a change by itself
+func TestANewHandleAloneBounces(t *testing.T) {
+	r := rigFlips(t, 40*time.Millisecond, 50*time.Millisecond, 100*time.Millisecond)
+	r.prove.Store(true)
+	keepNetDetail(t)
+	keepNetOn(t)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":100}`)
+	netWentOn()
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":100}`)
+	time.Sleep(200 * time.Millisecond)
+	if got := r.n(); got != 0 {
+		t.Fatalf("the same handle again: %d reconnects", got)
+	}
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":101}`)
+	if got := waitCalls(r, 1, time.Second); got != 1 {
+		t.Fatalf("a new handle alone: %d reconnects, want 1", got)
+	}
+}
