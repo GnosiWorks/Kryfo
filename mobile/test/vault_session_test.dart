@@ -383,6 +383,17 @@ class _Db implements HaloDb {
 
   final HaloContainer _container;
   final _Rows r;
+
+  // nothing blocked or let go by "this isn't them" in these rows
+  @override
+  Future<List<({String x, int at})>> blockedKeys() async => const [];
+  @override
+  Future<List<({String name, int at})>> tombs() async => const [];
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {}
   bool closed = false;
   final calls = <String>[];
   // what a read of the home list waits for, when a test holds it
