@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.1] - 2026-10-11
+## [0.5.1] - 2026-10-15
 
 ### Added
 - bridges for places where tor is blocked. in automatic mode, Kryfo notices when tor can't get through, tries a disguised way in by itself, and remembers what worked on that kind of network, wi-fi or mobile data. you can still pick a bridge yourself or ask the tor project for one. when tor is blocked during setup, Kryfo suggests automatic first.
