@@ -1206,7 +1206,7 @@ void main() {
   });
 
   test('a hidden group\'s member keeps their name while the vault is '
-      'shut', () async {
+      'shut, and no line says so', () async {
     final member = await _phone();
     final memberEd = _rndHex(32);
     _idOf[memberEd] = _hidden;
@@ -1220,9 +1220,10 @@ void main() {
     expect(await hasSessionWith(_hidden), isFalse);
     final own = unboundIdOf(_keyOf(other));
     expect(live.msgs.where((m) => m['peer_id'] == own), hasLength(1));
+    // and nothing on the everyday side says something hidden goes by it
     expect(
       ShieldFlag.fromRow(live.shields[own])?.headline,
-      l10n.scamShieldGivesUsedName(_hidden),
+      isNot(l10n.scamShieldGivesUsedName(_hidden)),
     );
     // the member's own first message is sealed for the vault
     await app.receiveOnion([
