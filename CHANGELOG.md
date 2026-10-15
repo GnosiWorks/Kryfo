@@ -69,6 +69,7 @@
 - deleting a chat or turning away a request also removes the wallpaper photo set for it.
 - if you back out of saving a backup and close the share sheet too, the backup is kept and Kryfo says it wasn't saved.
 - on a wi-fi that wants a sign-in first, the home screen says so and opens the wi-fi settings.
+- tor no longer restarts once right after it connects at startup, and a move from one wi-fi to another is now noticed.
 
 ### Security
 - the engine is built with go 1.26.9, and its crypto and network libraries are updated: x/crypto 0.57.0 and x/net 0.60.0.
