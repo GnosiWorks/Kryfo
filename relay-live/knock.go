@@ -478,36 +478,46 @@ func (k *knocker) endpointOK(raw string) bool {
 	if net.ParseIP(host) != nil || numericHost(host) {
 		return false
 	}
-	if !knockQueryOK(u.Query(), u.RawQuery) {
+	if !knockQueryOK(u.RawQuery, host == knockFCMHost) {
 		return false
 	}
 	return knockDomainOf(host) != ""
 }
 
+// the unifiedpush fcm distributor's server
+const knockFCMHost = "fcm.distributor.unifiedpush.org"
+
 // a query only as the unifiedpush distributors write it: ntfy's up=1, the
 // token of gotify's and the fcm distributor's, the fcm distributor's
 // instance and v2. any other could make a push server answer every knock
-// with an error while the endpoint is kept
-func knockQueryOK(q url.Values, raw string) bool {
+// with an error while the endpoint is kept. the fcm distributor's server
+// takes any short name with a token's characters, so a change of its
+// format is not refused
+func knockQueryOK(raw string, fcm bool) bool {
 	if raw == "" {
 		return true
 	}
 	if len(raw) > 256 {
 		return false
 	}
+	q, err := url.ParseQuery(raw)
+	if err != nil {
+		return false
+	}
 	for k, vs := range q {
 		for _, v := range vs {
-			switch k {
-			case "up":
+			switch {
+			case fcm && queryName(k) && tokenChars(v):
+			case k == "up":
 				if v != "1" {
 					return false
 				}
-			case "v2":
+			case k == "v2":
 				if v != "" {
 					return false
 				}
-			case "token", "instance":
-				if v == "" || strings.Trim(v, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.") != "" {
+			case k == "token" || k == "instance":
+				if v == "" || !tokenChars(v) {
 					return false
 				}
 			default:
@@ -516,6 +526,15 @@ func knockQueryOK(q url.Values, raw string) bool {
 		}
 	}
 	return true
+}
+
+// what a push token or an instance is made of: fcm's have a colon
+func tokenChars(v string) bool {
+	return strings.Trim(v, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.:") == ""
+}
+
+func queryName(k string) bool {
+	return k != "" && len(k) <= 16 && strings.Trim(k, "abcdefghijklmnopqrstuvwxyz0123456789_") == ""
 }
 
 // the endpoint check with the default ports, for the tests and the loader
