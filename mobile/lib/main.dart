@@ -21158,7 +21158,7 @@ class AppState extends ChangeNotifier {
   Future<bool> _tombed(String id) async => sessionQuiet
       ? _tombedIn([session.primary, ?session.vault], id)
       : _openVault != null
-      ? _tombedArriving(id)
+      ? _router.tombedLive(id) || await _tombedIn([live, ?_openVault], id)
       : _tombedIn([live], id);
 
   // an everyday add took words the shut vault let go: its mark comes off,
@@ -21205,7 +21205,12 @@ class AppState extends ChangeNotifier {
     for (final d in [live, ?_openVault]) {
       await d.clearTomb(id);
     }
-    if (_router.tombed(id)) await _router.markTomb(id, on: false);
+    // a shut vault's own tomb goes as it next opens, its mark now
+    if (_openVault == null) {
+      await _untombShut(id);
+    } else if (_router.tombedLive(id)) {
+      await _router.markTomb(id, on: false);
+    }
   }
 
   Future<void> archive(String haloId) async {
