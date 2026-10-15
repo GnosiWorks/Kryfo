@@ -17728,10 +17728,7 @@ class AppState extends ChangeNotifier {
     if (c == HaloContainer.vault) {
       // what a move cut short left in the everyday folders goes with it
       await _repairMoves();
-      // its database cannot be read now, its marks can: what it blocked and
-      // let go stays so on the everyday side, as no more than they say
-      final m = await _router.marks();
-      await live.takeBlocks(m.keys, m.tombs);
+      // its marks of "this isn't them" stay with the list, unseen, and hold
       await _router.forget();
       await _forgetPeers(_router.ids);
     }
@@ -22512,9 +22509,11 @@ class AppState extends ChangeNotifier {
 
   /// [id] is someone a shut vault holds: nothing here may show they are
   /// known
-  // a key the shut vault blocked, as its marks on the router say
+  // a key no screen here may name as blocked: the shut vault's, or one a
+  // vault that went blocked, as the marks on the router say
   bool keyBlockedWhileShut(String keyHex) =>
-      _openVault == null && _router.keyBlocked(keyHex);
+      !sessionQuiet &&
+      _router.keyBlockedUnseen(keyHex, vaultOpen: _openVault != null);
 
   bool hiddenWhileShut(String id) =>
       _openVault == null && _router.cardOf(id) != null;
