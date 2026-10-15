@@ -216,12 +216,14 @@ class _LockFileScreenState extends State<LockFileScreen> {
   late final SeenJob _poll = _timers.until(
     () => _working ? const Duration(milliseconds: 120) : null,
     (_) {
-      if (mounted) setState(() => _done = ageProgress());
+      if (mounted) setState(() => _done = _job.progress());
     },
   );
   bool _shown = false;
   bool _hideName = false;
   bool _working = false;
+  // this lock's own stop and count
+  var _job = AgeJob();
   bool _busy = false;
   int _done = 0;
   AgeError? _error;
@@ -250,7 +252,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
   @override
   void dispose() {
     _timers.dispose();
-    if (_working) ageCancel();
+    if (_working) _job.cancel();
     // the listeners go first: clear() notifies, and a notify after the
     // element is defunct asserts inside setState.
     _pw1.removeListener(_typed);
@@ -297,6 +299,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
     FocusScope.of(context).unfocus();
     final pass = _pw1.text;
     final name = lockedName(_file.name, hide: _hideName);
+    final job = _job = AgeJob();
     setState(() {
       _working = true;
       _done = 0;
@@ -315,7 +318,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
       return;
     }
     _poll.poke();
-    final err = await ageLock(inFd, out.fd, pass);
+    final err = await ageLock(inFd, out.fd, pass, job);
     if (err != null) {
       try {
         File(out.path).parent.deleteSync(recursive: true);
@@ -376,7 +379,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
     return PopScope(
       canPop: !_working,
       onPopInvokedWithResult: (done, _) {
-        if (!done && _working) ageCancel();
+        if (!done && _working) _job.cancel();
       },
       child: Scaffold(
         backgroundColor: HaloColors.surface,
@@ -437,7 +440,11 @@ class _LockFileScreenState extends State<LockFileScreen> {
   }
 
   Widget _buttons(bool locked) => _working
-      ? ToolWideButton(label: l10n.commonStop, filled: false, onTap: ageCancel)
+      ? ToolWideButton(
+          label: l10n.commonStop,
+          filled: false,
+          onTap: _job.cancel,
+        )
       : locked
       ? Row(
           children: [

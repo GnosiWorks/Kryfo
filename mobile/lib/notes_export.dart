@@ -78,11 +78,43 @@ final _run = ValueNotifier<int>(0);
 /// the run an export belongs to, and a screen's word that a drop came
 ValueListenable<int> get notesExportRun => _run;
 
+// the made file a save window is copying out, and how a drop stops that
+({Object token, String path, Future<bool> Function() stop})? _save;
+
+/// [save] copies the made file at [path] out. a drop meanwhile calls [stop]
+/// before the file is zeroed: true once that copy can no longer finish
+Future<T> notesExportSaving<T>(
+  String path, {
+  required Future<bool> Function() stop,
+  required Future<T> Function() save,
+}) async {
+  final token = Object();
+  _save = (token: token, path: path, stop: stop);
+  try {
+    return await save();
+  } finally {
+    if (_save?.token == token) _save = null;
+  }
+}
+
 /// what this session's exports left, at a lock or a switch to another pin:
-/// any export being made stops, then every file is shredded, but one
-/// android may still read is only unlinked
+/// any export being made stops, a save being copied is stopped and its
+/// half goes, then every file is shredded, but one android may still read
+/// is only unlinked
 Future<void> dropNotesExports([Directory? cache]) async {
   _run.value++;
+  // a copy that read zeros would save them: it stops before any shred
+  String? spare;
+  final save = _save;
+  if (save != null) {
+    var stopped = false;
+    try {
+      stopped = await save.stop();
+    } catch (e) {
+      dlog('notes export: save not stopped (${e.runtimeType})');
+    }
+    if (!stopped) spare = save.path;
+  }
   while (_making > 0) {
     await (_idle ??= Completer<void>()).future;
   }
@@ -92,7 +124,8 @@ Future<void> dropNotesExports([Directory? cache]) async {
     );
     if (!await dir.exists()) return;
     await for (final e in dir.list(followLinks: false)) {
-      if (e is File && !_handed.remove(e.path)) {
+      final handed = _handed.remove(e.path);
+      if (e is File && !handed && e.path != spare) {
         await shredFile(e.path);
       } else {
         await e.delete(recursive: true);
@@ -281,15 +314,16 @@ Future<({String path, String name})> _make(
       return (path: plain, name: name);
     }
     final size = await File(plain).length();
+    final job = AgeJob();
     final watch = Timer.periodic(const Duration(milliseconds: 120), (_) {
-      if (halt()) ageCancel();
+      if (halt()) job.cancel();
       if (size > 0) {
-        progress?.call(share + (1 - share) * min(1, ageProgress() / size));
+        progress?.call(share + (1 - share) * min(1, job.progress() / size));
       }
     });
     final AgeError? err;
     try {
-      err = await ageLockPath(plain, locked, passphrase);
+      err = await ageLockPath(plain, locked, passphrase, job);
     } finally {
       watch.cancel();
     }

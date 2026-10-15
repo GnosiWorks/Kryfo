@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
@@ -54,36 +55,90 @@ AgeError? ageErrorOf(String result) {
 @visibleForTesting
 String ageLockSymbol = 'HaloAgeLock';
 
-// the engine owns both descriptors once HaloAgeLock is called. until then
-// they are this side's, and closed on any way out
-Future<AgeError?> ageLock(int inFd, int outFd, String pass) async {
-  final symbol = ageLockSymbol;
-  try {
-    return await Isolate.run(() {
-      var p = nullptr.cast<Utf8>();
-      var handed = false;
+/// one lock or open of a file, with a stop and a count of its own. the
+/// engine keeps one of each for every job, so jobs take turns and only the
+/// one running ever reaches them
+class AgeJob {
+  bool _stopped = false;
+
+  void cancel() {
+    _stopped = true;
+    if (identical(_running, this)) _engineCancel();
+  }
+
+  /// bytes done, 0 while it waits its turn
+  int progress() => identical(_running, this) ? _engineProgress() : 0;
+}
+
+AgeJob? _running;
+Future<void> _turn = Future.value();
+
+// one job in the engine at a time, in the order asked. a stop is said
+// again while it runs: the engine clears it as a job begins. the turn is
+// kept in the root zone, so a caller's zone that goes away never holds it
+Future<T> _inTurn<T>(AgeJob job, Future<T> Function() body) =>
+    Zone.root.run(() async {
+      final before = _turn;
+      final mine = Completer<void>();
+      _turn = mine.future;
+      Timer? again;
       try {
-        final lock = _lib().lookupFunction<_LockC, _LockD>(symbol);
-        p = pass.toNativeUtf8();
-        handed = true;
-        return ageErrorOf(engineTake(lock(inFd, outFd, p)));
-      } catch (_) {
-        return AgeError.io;
+        await before;
+        _running = job;
+        again = Timer.periodic(const Duration(milliseconds: 50), (_) {
+          if (job._stopped) _engineCancel();
+        });
+        return await body();
       } finally {
-        if (!handed) {
-          closeFd(inFd);
-          closeFd(outFd);
-        }
-        freeSecret(p);
+        again?.cancel();
+        if (identical(_running, job)) _running = null;
+        mine.complete();
       }
     });
-  } catch (_) {
-    // the body never throws: the isolate did not run, the descriptors are
-    // still ours
-    closeFd(inFd);
-    closeFd(outFd);
-    return AgeError.io;
-  }
+
+// the engine owns both descriptors once HaloAgeLock is called. until then
+// they are this side's, and closed on any way out
+Future<AgeError?> ageLock(
+  int inFd,
+  int outFd,
+  String pass, [
+  AgeJob? job,
+]) async {
+  final symbol = ageLockSymbol;
+  final mine = job ?? AgeJob();
+  return _inTurn(mine, () async {
+    if (mine._stopped) {
+      closeFd(inFd);
+      closeFd(outFd);
+      return AgeError.cancelled;
+    }
+    try {
+      return await Isolate.run(() {
+        var p = nullptr.cast<Utf8>();
+        var handed = false;
+        try {
+          final lock = _lib().lookupFunction<_LockC, _LockD>(symbol);
+          p = pass.toNativeUtf8();
+          handed = true;
+          return ageErrorOf(engineTake(lock(inFd, outFd, p)));
+        } catch (_) {
+          return AgeError.io;
+        } finally {
+          if (!handed) {
+            closeFd(inFd);
+            closeFd(outFd);
+          }
+          freeSecret(p);
+        }
+      });
+    } catch (_) {
+      // the body never throws: the isolate did not run, the descriptors are
+      // still ours
+      closeFd(inFd);
+      closeFd(outFd);
+      return AgeError.io;
+    }
+  });
 }
 
 Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
@@ -99,13 +154,23 @@ Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
   }
 });
 
-Future<AgeError?> ageOpenFinish(int outFd) => Isolate.run(
-  () => ageErrorOf(
-    engineTake(
-      _lib().lookupFunction<_FinishC, _FinishD>('HaloAgeOpenFinish')(outFd),
-    ),
-  ),
-);
+Future<AgeError?> ageOpenFinish(int outFd, [AgeJob? job]) {
+  final mine = job ?? AgeJob();
+  return _inTurn(mine, () {
+    if (mine._stopped) {
+      closeFd(outFd);
+      ageOpenDrop();
+      return Future.value(AgeError.cancelled);
+    }
+    return Isolate.run(
+      () => ageErrorOf(
+        engineTake(
+          _lib().lookupFunction<_FinishC, _FinishD>('HaloAgeOpenFinish')(outFd),
+        ),
+      ),
+    );
+  });
+}
 
 typedef _OpenFdC = Int32 Function(Pointer<Utf8>, Int32, VarArgs<(Uint32,)>);
 typedef _OpenFdD = int Function(Pointer<Utf8>, int, int);
@@ -138,22 +203,28 @@ void closeFd(int fd) =>
     _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
 
 /// [inPath] locked into [outPath], which must not exist yet
-Future<AgeError?> ageLockPath(String inPath, String outPath, String pass) {
+Future<AgeError?> ageLockPath(
+  String inPath,
+  String outPath,
+  String pass, [
+  AgeJob? job,
+]) {
   final inFd = openFd(inPath);
   final outFd = inFd < 0 ? -1 : openFd(outPath, write: true);
   if (outFd < 0) {
     if (inFd >= 0) closeFd(inFd);
     return Future.value(AgeError.io);
   }
-  return ageLock(inFd, outFd, pass);
+  return ageLock(inFd, outFd, pass, job);
 }
 
 void ageOpenDrop() =>
     _lib().lookupFunction<_VoidC, _VoidD>('HaloAgeOpenDrop')();
 
-void ageCancel() => _lib().lookupFunction<_VoidC, _VoidD>('HaloAgeCancel')();
+void _engineCancel() =>
+    _lib().lookupFunction<_VoidC, _VoidD>('HaloAgeCancel')();
 
-int ageProgress() =>
+int _engineProgress() =>
     _lib().lookupFunction<_ProgressC, _ProgressD>('HaloAgeProgress')();
 
 String suggestPassphrase() => engineTakeSecret(
