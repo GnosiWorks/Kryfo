@@ -177,8 +177,10 @@ type knockEP struct {
 	// the last knock out, real or decoy, and whether one waits for the floor
 	last     time.Time
 	trailing bool
-	// a decoy timer from before is let go by its generation
-	decoyGen int
+	// a decoy timer from before is let go by its generation, a run going
+	// on by its own, and when the next run is due
+	decoyGen, runGen int
+	decoyAt          time.Time
 	// waiting in its domain's queue
 	queuedReal, queuedDecoy bool
 	// failures in a row, since when, and the last one counted
@@ -396,17 +398,31 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		names:   map[string]knockName{},
 		lookups: newBucket(20, 40),
 		v4:      true,
-		lookup: func(ctx context.Context, host string) ([]net.IP, error) {
-			addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-			var ips []net.IP
-			for _, a := range addrs {
-				ips = append(ips, a.IP)
-			}
-			return ips, err
-		},
 	}
+	k.lookup = k.lookupOn(net.DefaultResolver)
 	k.q.init(k)
 	return k
+}
+
+// a name's addresses on r. while posts go over ipv4 only its A records are
+// asked for, so an A lookup that fails is a failed lookup and never a name
+// without ipv4. a name with no A record is asked for AAAA only to tell the
+// two invalid answers apart
+func (k *knocker) lookupOn(r *net.Resolver) func(ctx context.Context, host string) ([]net.IP, error) {
+	return func(ctx context.Context, host string) ([]net.IP, error) {
+		if !k.v4 {
+			return r.LookupIP(ctx, "ip", host)
+		}
+		ips, err := r.LookupIP(ctx, "ip4", host)
+		var dnsErr *net.DNSError
+		if err == nil || !errors.As(err, &dnsErr) || !dnsErr.IsNotFound {
+			return ips, err
+		}
+		if v6, err6 := r.LookupIP(ctx, "ip6", host); err6 == nil && len(v6) > 0 {
+			return v6, nil
+		}
+		return nil, err
+	}
 }
 
 // the push server an endpoint belongs to: its registrable domain under an
@@ -842,6 +858,7 @@ func (k *knocker) dropEPLocked(ep *knockEP) {
 	delete(k.eps, ep.url)
 	// its timers and queue places see it gone and do nothing
 	ep.decoyGen++
+	ep.runGen++
 	k.settledLocked(ep)
 	_, sh := k.shareOf(ep.domain)
 	sh.eps--
@@ -885,7 +902,35 @@ func (k *knocker) decoyLocked(ep *knockEP) {
 func (k *knocker) decoyAfterLocked(ep *knockEP, wait time.Duration) {
 	ep.decoyGen++
 	gen := ep.decoyGen
+	ep.decoyAt = k.now().Add(wait)
 	k.after(wait, func() { k.decoyDue(ep, gen) })
+}
+
+// a new endpoint failing inside the hour: its next decoy run a gap, a
+// floor and up to half a gap after the last failure counted, the last one
+// needed once the span is up, so a dead one is let go within the hour and
+// not after a day. a knock that keeps the run back inside the floor is
+// counted itself. a run like any other, in the same queue at the same pace
+func (k *knocker) recheckLocked(ep *knockEP) {
+	now := k.now()
+	if ep.delivered || ep.fails == 0 || now.Sub(ep.failingSince) >= knockNewFailFor {
+		return
+	}
+	from := ep.lastFail.Add(knockNewFailGap + k.floor)
+	at := from
+	if ep.fails >= knockNewFailAtLeast-1 {
+		if end := ep.failingSince.Add(knockNewFailSpan + k.floor); end.After(at) {
+			at = end
+		}
+	}
+	if soon := now.Add(k.floor); soon.After(at) {
+		at = soon
+	}
+	at = at.Add(time.Duration(k.rnd.Int64N(int64(knockNewFailGap / 2))))
+	// one due before the failure would count, or later, is moved
+	if ep.decoyAt.Before(from) || ep.decoyAt.After(at) {
+		k.decoyAfterLocked(ep, at.Sub(now))
+	}
 }
 
 func (k *knocker) decoyDue(ep *knockEP, gen int) {
@@ -894,10 +939,13 @@ func (k *knocker) decoyDue(ep *knockEP, gen int) {
 	if k.eps[ep.url] != ep || ep.decoyGen != gen {
 		return
 	}
+	// a new run ends the one before
+	ep.runGen++
 	if k.ringLocked(ep, true) {
-		k.decoyRunLocked(ep, gen, k.decoyRun()-1)
+		k.decoyRunLocked(ep, ep.runGen, k.decoyRun()-1)
 	}
 	k.decoyLocked(ep)
+	k.recheckLocked(ep)
 }
 
 // the rest of a decoy run, as a conversation's knocks follow its first:
@@ -913,7 +961,7 @@ func (k *knocker) decoyRunLocked(ep *knockEP, gen, left int) {
 	k.after(wait, func() {
 		k.mu.Lock()
 		defer k.mu.Unlock()
-		if k.eps[ep.url] != ep || ep.decoyGen != gen+1 {
+		if k.eps[ep.url] != ep || ep.runGen != gen {
 			return
 		}
 		if k.ringLocked(ep, true) {

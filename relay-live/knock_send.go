@@ -515,6 +515,9 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 	drop := ep.fails >= knockFailAtLeast && failing >= knockFailFor
 	// one that never worked goes sooner
 	drop = drop || !ep.delivered && ep.fails >= knockNewFailAtLeast && failing >= knockNewFailSpan && failing <= knockNewFailFor
+	if !drop {
+		k.recheckLocked(ep)
+	}
 	k.mu.Unlock()
 	if drop {
 		k.gone(ep.url)
@@ -632,17 +635,22 @@ func publicOnly(network, address string, _ syscall.RawConn) error {
 
 // the addresses a host may be posted to, public ones only
 func knockResolver(netw string) func(ctx context.Context, host string) ([]net.IP, error) {
+	return knockResolverOn(net.DefaultResolver, netw)
+}
+
+// over ipv4 only A records are asked for: an A lookup that fails is a
+// failed lookup, not a name without a public address
+func knockResolverOn(r *net.Resolver, netw string) func(ctx context.Context, host string) ([]net.IP, error) {
+	family := "ip"
+	if netw == "tcp4" {
+		family = "ip4"
+	}
 	return func(ctx context.Context, host string) ([]net.IP, error) {
-		var all []net.IP
-		if ip := net.ParseIP(host); ip != nil {
-			all = []net.IP{ip}
-		} else {
-			addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-			if err != nil {
+		all := []net.IP{net.ParseIP(host)}
+		if all[0] == nil {
+			var err error
+			if all, err = r.LookupIP(ctx, family, host); err != nil {
 				return nil, err
-			}
-			for _, a := range addrs {
-				all = append(all, a.IP)
 			}
 		}
 		var out []net.IP

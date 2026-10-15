@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,6 +28,7 @@ import (
 	"github.com/fiatjaf/eventstore/slicestore"
 	"github.com/fiatjaf/khatru"
 	"github.com/nbd-wtf/go-nostr"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 const testEP = "https://push.example.org/upAbCdEf?up=1"
@@ -1443,6 +1445,95 @@ func TestKnockNewEndpointSurvivesAShortOutage(t *testing.T) {
 	}
 }
 
+// with no wraps at all, a dead new endpoint gets its decoys again a gap
+// after each failure and goes within the hour, never before half an hour;
+// one whose server is down for less than half an hour stays
+func TestKnockDeadNewEndpointGoesWithinTheHour(t *testing.T) {
+	for _, outage := range []time.Duration{time.Hour, 25 * time.Minute} {
+		tk := newTestKnocks(t)
+		start := tk.clock.now()
+		urls := make([]string, 50)
+		for i := range urls {
+			urls[i] = fmt.Sprintf("https://ntfy.sh/dead%d", i)
+			ev := r3reg(r3key(i), urls[i], start)
+			if rej, msg := tk.take(nil, &ev); rej {
+				t.Fatal(msg)
+			}
+		}
+		live := func() int {
+			n := 0
+			for _, u := range urls {
+				if tk.eps[u] != nil {
+					n++
+				}
+			}
+			return n
+		}
+		for tk.clock.now().Sub(start) < time.Hour {
+			tk.advance(10 * time.Second)
+			for _, j := range tk.log {
+				ep := tk.eps[j.url]
+				if ep == nil {
+					continue
+				}
+				if !j.decoy {
+					t.Fatal("a real knock with no wrap")
+				}
+				if j.at.Sub(start) < outage {
+					tk.q.result(ep, true, 503, nil)
+				} else {
+					tk.q.result(ep, true, 201, nil)
+				}
+			}
+			tk.log = nil
+			if tk.clock.now().Sub(start) == 30*time.Minute && live() != len(urls) {
+				t.Fatalf("%d of %d new endpoints went inside half an hour", len(urls)-live(), len(urls))
+			}
+		}
+		want := 0
+		if outage < 30*time.Minute {
+			want = len(urls)
+		}
+		if got := live(); got != want {
+			t.Fatalf("server down %v: %d of %d new endpoints left after an hour, want %d", outage, got, len(urls), want)
+		}
+	}
+}
+
+// a failure brings the next decoy run closer and leaves the one going on
+// as it is: a failed knock says nothing about whether the next is real
+func TestKnockFailureKeepsTheDecoyRun(t *testing.T) {
+	tk := newTestKnocks(t)
+	url := "https://ntfy.sh/run"
+	ev := r3reg(r3key(1), url, tk.clock.now())
+	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatal(msg)
+	}
+	tk.drain()
+	ep := tk.eps[url]
+	// the next run far off, one of five going on, its first knock out
+	tk.mu.Lock()
+	tk.decoyAfterLocked(ep, 10*time.Hour)
+	ep.last = tk.clock.now()
+	ep.runGen++
+	tk.decoyRunLocked(ep, ep.runGen, 4)
+	tk.mu.Unlock()
+	tk.q.result(ep, true, 503, nil)
+	failed := tk.clock.now()
+	if ep.decoyAt.Before(failed.Add(knockNewFailGap+tk.floor)) || !ep.decoyAt.Before(failed.Add(knockNewFailGap*3/2+tk.floor)) {
+		t.Fatalf("next decoy run %v after a failure", ep.decoyAt.Sub(failed))
+	}
+	tk.advance(knockNewFailGap - 15*time.Second)
+	if len(tk.log) == 0 {
+		t.Fatal("a failure cut the decoy run short")
+	}
+	for _, j := range tk.log {
+		if !j.decoy {
+			t.Fatal("a real knock with no wrap")
+		}
+	}
+}
+
 // a redirect is not a knock delivered: it counts as a failure
 func TestKnockRedirectIsNotDelivered(t *testing.T) {
 	tk := newTestKnocks(t)
@@ -1732,6 +1823,114 @@ func TestKnockNameNeedsAnIPv4Address(t *testing.T) {
 	tk.names = map[string]knockName{}
 	ev = r3reg(r3key(4), "https://v6only.community.org/z", tk.clock.now())
 	if rej, msg := tk.take(nil, &ev); rej {
+		t.Fatalf("an ipv6-only server with posts over both: %q", msg)
+	}
+}
+
+// a resolver on a dns server of the test's own: answer gives, by a name's
+// first label and the type asked, the addresses or the failure
+func testResolver(t *testing.T, answer func(label string, aaaa bool) ([]net.IP, dnsmessage.RCode)) *net.Resolver {
+	t.Helper()
+	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { pc.Close() })
+	go func() {
+		buf := make([]byte, 1500)
+		for {
+			n, addr, err := pc.ReadFrom(buf)
+			if err != nil {
+				return
+			}
+			var m dnsmessage.Message
+			if m.Unpack(buf[:n]) != nil || len(m.Questions) == 0 {
+				continue
+			}
+			q := m.Questions[0]
+			resp := dnsmessage.Message{Header: dnsmessage.Header{ID: m.ID, Response: true, RecursionAvailable: true, RecursionDesired: true}, Questions: m.Questions}
+			if q.Type == dnsmessage.TypeA || q.Type == dnsmessage.TypeAAAA {
+				label, _, _ := strings.Cut(q.Name.String(), ".")
+				ips, rc := answer(label, q.Type == dnsmessage.TypeAAAA)
+				resp.RCode = rc
+				for _, ip := range ips {
+					h := dnsmessage.ResourceHeader{Name: q.Name, Type: q.Type, Class: q.Class, TTL: 60}
+					if q.Type == dnsmessage.TypeA {
+						resp.Answers = append(resp.Answers, dnsmessage.Resource{Header: h, Body: &dnsmessage.AResource{A: [4]byte(ip.To4())}})
+					} else {
+						resp.Answers = append(resp.Answers, dnsmessage.Resource{Header: h, Body: &dnsmessage.AAAAResource{AAAA: [16]byte(ip.To16())}})
+					}
+				}
+			}
+			if out, err := resp.Pack(); err == nil {
+				pc.WriteTo(out, addr)
+			}
+		}
+	}()
+	return &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, _, _ string) (net.Conn, error) {
+		var d net.Dialer
+		return d.DialContext(ctx, "udp", pc.LocalAddr().String())
+	}}
+}
+
+// a resolver that fails on A but answers AAAA is a lookup that failed, not
+// a server without ipv4: nothing is remembered, and once A answers again the
+// name passes. the same at send time
+func TestKnockFailedALookupIsNoAnswer(t *testing.T) {
+	var mu sync.Mutex
+	aFails := true
+	v4, v6 := net.ParseIP("1.1.1.1"), net.ParseIP("2606:4700::1111")
+	res := testResolver(t, func(label string, aaaa bool) ([]net.IP, dnsmessage.RCode) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch {
+		case label == "dual" && !aaaa && aFails:
+			return nil, dnsmessage.RCodeServerFailure
+		case label == "dual" && !aaaa, label == "v4" && !aaaa:
+			return []net.IP{v4}, dnsmessage.RCodeSuccess
+		case label == "dual", label == "v6only" && aaaa:
+			return []net.IP{v6}, dnsmessage.RCodeSuccess
+		case label == "v6only", label == "v4":
+			return nil, dnsmessage.RCodeSuccess
+		}
+		return nil, dnsmessage.RCodeNameError
+	})
+	tk := newTestKnocks(t)
+	tk.lookup = tk.lookupOn(res)
+	if msg, _ := tk.nameCheck("dual.community.org"); msg != "error: the name could not be looked up, try again" {
+		t.Fatalf("A failing, AAAA there: %q", msg)
+	}
+	if _, kept := tk.names["dual.community.org"]; kept {
+		t.Fatal("a failed lookup was remembered")
+	}
+	send := knockResolverOn(res, "tcp4")
+	_, err := send(context.Background(), "dual.community.org")
+	var dnsErr *net.DNSError
+	if err == nil || errors.Is(err, errNotPublic) || errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+		t.Fatalf("A failing at send time: %v", err)
+	}
+	mu.Lock()
+	aFails = false
+	mu.Unlock()
+	if msg, _ := tk.nameCheck("dual.community.org"); msg != "" {
+		t.Fatalf("A back: %q", msg)
+	}
+	if ips, err := send(context.Background(), "dual.community.org"); err != nil || len(ips) != 1 || !ips[0].Equal(v4) {
+		t.Fatalf("A back at send time: %v %v", ips, err)
+	}
+	for host, want := range map[string]string{
+		"v4.community.org":     "",
+		"v6only.community.org": knockNoV4,
+		"gone.community.org":   knockNoName,
+	} {
+		if msg, _ := tk.nameCheck(host); msg != want {
+			t.Fatalf("%s: %q, want %q", host, msg, want)
+		}
+	}
+	// posting over both, ipv6 alone will do
+	tk.v4 = false
+	tk.names = map[string]knockName{}
+	if msg, _ := tk.nameCheck("v6only.community.org"); msg != "" {
 		t.Fatalf("an ipv6-only server with posts over both: %q", msg)
 	}
 }
