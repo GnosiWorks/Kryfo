@@ -2941,6 +2941,36 @@ class HaloDb implements GroupOwedStore {
     return r.isNotEmpty;
   }
 
+  Future<List<({String name, int at})>> tombs() async {
+    final db = await open();
+    return [
+      for (final r in await db.query('name_tombs'))
+        (name: r['name'] as String, at: (r['at'] as num).toInt()),
+    ];
+  }
+
+  // what another container blocked and let go, kept here as it goes
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    final db = await open();
+    await db.transaction((t) async {
+      for (final k in keys) {
+        await t.insert('blocked_keys', {
+          'x': k.x,
+          'at': k.at,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      for (final n in tombs) {
+        await t.insert('name_tombs', {
+          'name': n.name,
+          'at': n.at,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+  }
+
   // an add the person made takes the words again
   Future<void> clearTomb(String name) async {
     final db = await open();
@@ -17755,6 +17785,8 @@ class AppState extends ChangeNotifier {
       // what is still listed the vault no longer holds: deleted inside it
       await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
     }
+    // its blocked keys and let-go words stay, on the side its chats went to
+    await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());
     await _host.clearEntry(v.container);
     if (everyday) await _router.retire();
     if (identical(_session.vault, v)) {
