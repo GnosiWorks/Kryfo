@@ -238,6 +238,12 @@ void main() {
       'next_at': 5,
     });
     await s.insert('notif_tags', {'chat': 'group:$_theirs', 'tag': 't1'});
+    await s.update(
+      'groups',
+      {'atmosphere': 'dusk'},
+      where: 'group_id = ?',
+      whereArgs: [_theirs],
+    );
     return photo;
   }
 
@@ -271,6 +277,7 @@ void main() {
       final g = await row(_theirs);
       expect(groupEndOf(g)?.by, 'bob');
       expect(g['unread'], 0);
+      expect(g['atmosphere'], isNull);
       expect(
         await count('SELECT 1 FROM group_members WHERE group_id = ?', [
           _theirs,
