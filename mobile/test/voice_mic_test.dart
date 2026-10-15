@@ -314,9 +314,18 @@ void main() {
       });
     }
 
-    test('the mic stops at two minutes', () {
-      expect(kVoiceMax, const Duration(minutes: 2));
+    test('the mic stops at half an hour', () {
+      expect(kVoiceMax, const Duration(minutes: 30));
       expect(HoldToTalkMicState.maxLength, kVoiceMax);
+    });
+
+    test('the stop says half an hour, in every language', () {
+      // in the digits each language writes
+      final thirty = RegExp('30|\u0663\u0660|\u06f3\u06f0');
+      for (final locale in AppLocalizations.supportedLocales) {
+        final l = lookupAppLocalizations(locale);
+        expect(l.voiceStoppedAtLimit, matches(thirty), reason: '$locale');
+      }
     });
   });
 

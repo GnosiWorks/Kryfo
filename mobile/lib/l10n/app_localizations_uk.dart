@@ -8431,5 +8431,5 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Голосові повідомлення зупиняються на 2 хвилинах. Прослухай і надішли.';
+      'Голосові повідомлення зупиняються на 30 хвилинах. Прослухай і надішли.';
 }

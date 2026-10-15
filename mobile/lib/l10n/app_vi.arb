@@ -2181,5 +2181,5 @@
   "fileGoesAsItIs": "Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.",
   "fileRawPictureTitle": "Gửi ảnh này nguyên trạng?",
   "fileRawPictureLine": "Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.",
-  "voiceStoppedAtLimit": "Tin nhắn thoại dừng ở 2 phút. Hãy nghe lại rồi gửi đi."
+  "voiceStoppedAtLimit": "Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi."
 }

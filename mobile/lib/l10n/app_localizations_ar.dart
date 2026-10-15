@@ -8413,5 +8413,5 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'تتوقف الرسائل الصوتية عند دقيقتين. استمع إليها ثم أرسلها.';
+      'تتوقف الرسائل الصوتية عند ٣٠ دقيقة. استمع إليها ثم أرسلها.';
 }

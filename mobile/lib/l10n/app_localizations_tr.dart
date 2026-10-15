@@ -8310,5 +8310,5 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Sesli mesajlar 2 dakikada durur. Dinle, sonra gönder.';
+      'Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder.';
 }

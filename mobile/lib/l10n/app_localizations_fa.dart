@@ -8300,5 +8300,5 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'پیام‌های صوتی در ۲ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.';
+      'پیام‌های صوتی در ۳۰ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.';
 }

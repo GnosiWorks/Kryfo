@@ -7921,7 +7921,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileRawPictureLine => '这张图片无法清理。拍摄地点等信息会随它一起发出。以照片形式发送即可清理。';
 
   @override
-  String get voiceStoppedAtLimit => '语音消息最长 2 分钟，已自动停止。听一遍后再发送。';
+  String get voiceStoppedAtLimit => '语音消息最长 30 分钟，已自动停止。听一遍后再发送。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15721,5 +15721,5 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get fileRawPictureLine => '這張圖片無法清理。拍攝地點等資訊會隨它一起送出。以照片形式傳送即可清理。';
 
   @override
-  String get voiceStoppedAtLimit => '語音訊息最長 2 分鐘，已自動停止。聽一遍後再傳送。';
+  String get voiceStoppedAtLimit => '語音訊息最長 30 分鐘，已自動停止。聽一遍後再傳送。';
 }

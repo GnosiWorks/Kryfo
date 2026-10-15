@@ -8282,5 +8282,5 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Pesan suara berhenti di 2 menit. Dengarkan dulu, lalu kirim.';
+      'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 }

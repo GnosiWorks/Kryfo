@@ -8353,5 +8353,5 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Las notas de voz se detienen a los 2 minutos. Escúchala y luego envíala.';
+      'Las notas de voz se detienen a los 30 minutos. Escúchala y luego envíala.';
 }

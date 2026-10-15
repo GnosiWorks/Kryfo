@@ -8275,5 +8275,5 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Tin nhắn thoại dừng ở 2 phút. Hãy nghe lại rồi gửi đi.';
+      'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 }

@@ -8380,5 +8380,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceStoppedAtLimit =>
-      'Sprachnachrichten enden nach 2 Minuten. Hör sie dir an und sende sie dann.';
+      'Sprachnachrichten enden nach 30 Minuten. Hör sie dir an und sende sie dann.';
 }

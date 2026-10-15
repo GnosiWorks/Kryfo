@@ -27,10 +27,8 @@ const kMaxSlices = 100000;
 // room above that, and a file envelope saying more is not kept. older
 // versions send 8 mb at most
 const kMaxFileSlices = 1300;
-// a voice note: 16 khz mono wav is 32000 bytes a second. the mic stops at
-// two minutes now, but older versions record without a limit and a voice
-// note is never held whole on the way in, so up to 30 minutes (4688
-// slices) is kept. one saying more is not
+// a voice note stops at 30 minutes: 16 khz mono wav is 32000 bytes a
+// second, 4688 slices. one saying more is not kept either
 const kMaxVoiceSlices = 4800;
 
 class NeedFrame {
