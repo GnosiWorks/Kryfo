@@ -567,6 +567,27 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 
+  testWidgets('undo does not bring the words back after a lock', (t) async {
+    await page(t);
+    await typePass(t, 'four random words here');
+    await t.pump(const Duration(seconds: 1));
+    await lockAndBack(t);
+    await t.pumpAndSettle();
+    expect(typed(), ['', '']);
+    // a keyboard's ctrl+z, twice in each field
+    for (final i in [0, 1]) {
+      await t.showKeyboard(find.byType(TextField).at(i));
+      await t.pump(const Duration(seconds: 1));
+      for (var n = 0; n < 2; n++) {
+        await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await t.sendKeyEvent(LogicalKeyboardKey.keyZ);
+        await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await t.pump();
+      }
+    }
+    expect(typed(), ['', '']);
+  });
+
   // a decoy with notes of its own, open in place of the everyday ones
   _Db intoDecoy() {
     final decoy = _Db(HaloContainer.decoy)

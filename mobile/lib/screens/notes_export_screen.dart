@@ -68,6 +68,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   bool _lost = false;
   bool _notSaved = false;
   final _ways = GlobalKey();
+  // new fields each time the words are cleared: undo cannot bring them back
+  int _fieldsGen = 0;
 
   @override
   void initState() {
@@ -83,8 +85,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   // one being saved is seen to when the save ends. typed words go too
   void _runMoved() {
     if (!mounted) return;
-    _p1.clear();
-    _p2.clear();
+    _forget();
     if (_made == null || _saving) return;
     setState(() {
       _made = null;
@@ -104,6 +105,12 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         _files = files;
       });
     }
+  }
+
+  void _forget() {
+    _p1.clear();
+    _p2.clear();
+    setState(() => _fieldsGen++);
   }
 
   // words typed after a file was made make a new one
@@ -267,8 +274,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       await shredFile(made.path);
       return;
     }
-    _p1.clear();
-    _p2.clear();
+    _forget();
     if (notesExportRun.value != run) {
       // a lock came as it ended: nothing of it is offered
       await shredFile(made.path);
@@ -621,6 +627,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SecretField(
+          key: ValueKey(('p1', _fieldsGen)),
           label: l10n.backupPassphrase,
           controller: _p1,
           shown: _shown,
@@ -677,6 +684,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         ),
         const SizedBox(height: 4),
         SecretField(
+          key: ValueKey(('p2', _fieldsGen)),
           label: l10n.backupConfirmPassphrase,
           controller: _p2,
           shown: _shown,
