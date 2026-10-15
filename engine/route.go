@@ -619,6 +619,8 @@ func netBounceWorker() {
 		if netOnAt.After(netChangedAt) && !torParked.Load() && sameNetwork(netOnNet, now) {
 			netMu.Unlock()
 			log.Println("halo: tor went on this network after the change, no bounce")
+			// the check still runs: tor has to prove itself here all the same
+			go netCheckFor(netEpoch.Load())
 			return
 		}
 		lastNetBounce = time.Now()
@@ -676,6 +678,11 @@ var netLeaveDirect = func(ons int64) {
 var netBounce func()
 
 func init() { netBounce = bounceForNetwork }
+
+// the check alone, for a bounce left out. set in init as netBounce
+var netCheckFor func(int64) string
+
+func init() { netCheckFor = netCheck }
 
 func bounceForNetwork() {
 	log.Println("halo: network changed, bouncing tor")

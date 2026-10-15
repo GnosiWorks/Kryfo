@@ -44,6 +44,7 @@ func TestAStartOnOneNetworkIsNotBouncedAfterTorIsUp(t *testing.T) {
 	networkChangedTo(true)
 	time.Sleep(50 * time.Millisecond)
 	netWentOn()
+	routeNoteOK()
 	networkDetail(wifi)
 	time.Sleep(600 * time.Millisecond)
 	if got := r.n(); got != 1 {
@@ -133,5 +134,32 @@ func TestANoopNetworkOnKeepsTheBounce(t *testing.T) {
 	routeNoteOK()
 	if got := waitCalls(r, 1, time.Second); got != 1 {
 		t.Fatalf("%d reconnects after a real change, want 1", got)
+	}
+}
+
+// a bounce left out still has tor prove itself on the network
+func TestADroppedBounceStillChecks(t *testing.T) {
+	r := rigFlips(t, 30*time.Millisecond, 50*time.Millisecond, 200*time.Millisecond)
+	keepNetDetail(t)
+	keepNetOn(t)
+	netCheckOutcome.Store("")
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":100}`)
+	networkChangedTo(true)
+	time.Sleep(10 * time.Millisecond)
+	netWentOn()
+	waitUntil(time.Second, func() bool {
+		netMu.Lock()
+		defer netMu.Unlock()
+		return !netWorker
+	})
+	time.Sleep(20 * time.Millisecond)
+	routeBump()
+	routeNoteOK()
+	waitUntil(time.Second, func() bool { return lastNetCheck() != "" })
+	if got := lastNetCheck(); len(got) < 2 || got[:2] != "ok" {
+		t.Fatalf("check after a dropped bounce: %q", got)
+	}
+	if got := r.n(); got != 0 {
+		t.Fatalf("%d reconnects, want none", got)
 	}
 }
