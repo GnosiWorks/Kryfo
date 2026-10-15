@@ -212,6 +212,7 @@ Future<bool> askTakeNameSheet(
   String id, {
   required bool chat,
   bool deleted = false,
+  bool tombed = false,
 }) async {
   final ctx = rootNavKey.currentContext;
   if (ctx == null || !ctx.mounted || lockGuard.isLocked()) return false;
@@ -221,6 +222,8 @@ Future<bool> askTakeNameSheet(
     figure: id,
     line: chat
         ? l10n.nameTakenChatLine
+        : tombed
+        ? l10n.nameTakenTombLine
         : deleted
         ? l10n.nameTakenDeletedLine
         : l10n.nameTakenLine,

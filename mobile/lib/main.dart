@@ -9837,9 +9837,15 @@ Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
 /// asked when a link names someone here under a name a request, an
 /// introduction or a group gave, never checked, or a deleted chat's, on
 /// another key: true lets the link take the name. [chat] says the other one
-/// has a chat that goes, [deleted] that its chat was deleted
+/// has a chat that goes, [deleted] that its chat was deleted, [tombed] that
+/// "this isn't them" let the words go
 @visibleForTesting
-Future<bool> Function(String id, {required bool chat, bool deleted})
+Future<bool> Function(
+  String id, {
+  required bool chat,
+  bool deleted,
+  bool tombed,
+})
 askTakeName = askTakeNameSheet;
 
 /// what a link may do about the one here its name is bound to on another
@@ -10080,8 +10086,11 @@ Future<(String, bool)> handleHaloUriAdded(
       taken = true;
     }
   } else if (bound == null && await appState._tombed(parsed['id']!)) {
-    // words "this isn't them" let go: this add, the person's own, takes them
-    await appState._untomb(parsed['id']!);
+    // words "this isn't them" let go: this add, the person's own, takes
+    // them once asked, and only once the contact is written
+    if (!await askTakeName(parsed['id']!, chat: false, tombed: true)) {
+      return ('', false);
+    }
     taken = untombed = true;
   }
   // someone blocked stays blocked: an add would say they can be written to
@@ -10111,6 +10120,7 @@ Future<(String, bool)> handleHaloUriAdded(
       owe: asked,
     );
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    if (untombed) await appState._untomb(id);
     await _noteHowAdded(
       id,
       scanned: scanned,
@@ -10159,6 +10169,7 @@ Future<(String, bool)> handleHaloUriAdded(
       parsed['xpub']!,
       owe: asked,
     );
+    if (untombed) await appState._untomb(id);
     await _noteHowAdded(
       id,
       scanned: scanned,
@@ -10558,6 +10569,10 @@ Future<(LinkKin, String)> _linkKin(
       // their chat was deleted: nobody here goes by it
       NameHold.free => (LinkKin.stranger, id),
     };
+  }
+  // words "this isn't them" let go: the door asks before it takes them
+  if (bound == null && await appState._tombed(id)) {
+    return (LinkKin.claimed, id);
   }
   if (row != null && row['accepted'] == 1 && row['blocked'] != 1) {
     return (LinkKin.kept, name);
