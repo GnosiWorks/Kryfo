@@ -17,6 +17,7 @@ import '../theme.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/halo_switch.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
@@ -774,18 +775,7 @@ class _MoreSection extends StatelessWidget {
           ],
         ),
         if (friend.isNotEmpty || project.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 8),
-            child: Text(
-              l10n.bridgesSavedLines,
-              style: HaloType.mono(
-                size: 11,
-                weight: FontWeight.w600,
-                color: HaloColors.amberText,
-              ),
-            ),
-          ),
+          HaloSection(l10n.bridgesSavedLines),
           _Box(
             children: [
               for (var i = 0; i < friend.length; i++)

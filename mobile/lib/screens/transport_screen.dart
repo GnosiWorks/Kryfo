@@ -10,6 +10,7 @@ import '../main.dart' hide live;
 import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
@@ -69,13 +70,11 @@ class TransportScreen extends StatelessWidget {
                 l10n.transportNothingHereLeavesThe,
                 style: HaloType.mono(size: 12, color: HaloColors.text2),
               ),
-              const SizedBox(height: 24),
 
-              _Head(l10n.transportStayingAlive),
+              HaloSection(l10n.transportStayingAlive, flush: true),
               const _Alive(),
-              const SizedBox(height: 24),
 
-              _Head(l10n.appTor),
+              HaloSection(l10n.appTor, flush: true),
               _Line(l10n.transportStatus, _torWord(tor), _torTint(tor)),
               // always in the list, so the rows under it keep their place
               Unfold(
@@ -115,8 +114,7 @@ class TransportScreen extends StatelessWidget {
                 ),
               ],
 
-              const SizedBox(height: 20),
-              _Head(l10n.transportNetwork),
+              HaloSection(l10n.transportNetwork, flush: true),
               _Line(
                 l10n.transportConnectivity,
                 appState.online ? l10n.transportOnline : l10n.transportOffline,
@@ -140,9 +138,7 @@ class TransportScreen extends StatelessWidget {
                 uploads > 0 ? HaloColors.green : HaloColors.rose,
               ),
 
-              const SizedBox(height: 20),
-
-              _Head(l10n.transportRelays),
+              HaloSection(l10n.transportRelays, flush: true),
 
               for (final r in relays)
                 _Line(
@@ -161,9 +157,7 @@ class TransportScreen extends StatelessWidget {
                       : HaloColors.green,
                 ),
 
-              const SizedBox(height: 20),
-
-              _Head(l10n.transportTraffic),
+              HaloSection(l10n.transportTraffic, flush: true),
 
               _Line(
                 l10n.transportRelaySubscriptions,
@@ -185,8 +179,7 @@ class TransportScreen extends StatelessWidget {
                 HaloColors.text2,
               ),
 
-              const SizedBox(height: 20),
-              _Head(l10n.transportContacts),
+              HaloSection(l10n.transportContacts, flush: true),
               // zero contacts means zero relay subscriptions, so nothing
               // can arrive
               _Line(
@@ -240,24 +233,6 @@ String _relayLabel(String url) {
   final bare = url.replaceFirst(RegExp(r'^wss?://'), '');
   if (bare.contains('.onion')) return l10n.transportOurRelayOnion;
   return bare;
-}
-
-class _Head extends StatelessWidget {
-  const _Head(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text(
-      text,
-      style: HaloType.mono(
-        size: 11,
-        color: HaloColors.text2,
-        weight: FontWeight.w600,
-        letter: 0.14,
-      ),
-    ),
-  );
 }
 
 String _code(String c) => c.isEmpty ? '-' : c;

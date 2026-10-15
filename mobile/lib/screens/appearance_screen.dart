@@ -123,18 +123,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         ),
         children: staggerAll([
           AccentPreview(background: ChatBackdrop(_default, chat: 'appearance')),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 4, 10),
-            child: Text(
-              l10n.settingsAccentColour,
-              style: HaloType.mono(
-                size: 10.5,
-                color: HaloColors.text2,
-                letter: 0.06,
-              ),
-            ),
-          ),
+          HaloSection(l10n.settingsAccentColour),
           Container(
             padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
             decoration: BoxDecoration(
@@ -162,7 +151,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
           ),
-          const SizedBox(height: 24),
           HaloSection(l10n.appearanceChatWallpaper),
           HaloGroup(
             children: [

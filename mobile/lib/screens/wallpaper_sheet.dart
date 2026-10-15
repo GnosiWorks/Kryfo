@@ -12,6 +12,7 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
 import '../widgets/halo_sheet.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
@@ -117,9 +118,7 @@ class _PickerState extends State<_Picker> {
                 l10n.wallpaperJustForYouThey,
                 style: HaloType.sans(size: 12, color: HaloColors.text2),
               ),
-              const SizedBox(height: 16),
-              _Head(l10n.wallpaperMoods),
-              const SizedBox(height: 10),
+              HaloSection(l10n.wallpaperMoods, flush: true),
               _Swatches(
                 items: [if (widget.allowDefault) null, Atmo.none, ...moods],
                 current: current,
@@ -128,9 +127,7 @@ class _PickerState extends State<_Picker> {
                 from: 0,
                 cell: cell,
               ),
-              const SizedBox(height: 16),
-              _Head(l10n.wallpaperGradients),
-              const SizedBox(height: 10),
+              HaloSection(l10n.wallpaperGradients, flush: true),
               _Swatches(
                 items: gradients,
                 current: current,
@@ -138,9 +135,7 @@ class _PickerState extends State<_Picker> {
                 from: 7,
                 cell: cell,
               ),
-              const SizedBox(height: 16),
-              _Head(l10n.wallpaperPatterns),
-              const SizedBox(height: 10),
+              HaloSection(l10n.wallpaperPatterns, flush: true),
               _Swatches(
                 items: patterns,
                 current: current,
@@ -149,9 +144,7 @@ class _PickerState extends State<_Picker> {
                 cell: cell,
               ),
               if (widget.allowPhoto) ...[
-                const SizedBox(height: 16),
-                _Head(l10n.wallpaperYourPhoto),
-                const SizedBox(height: 10),
+                HaloSection(l10n.wallpaperYourPhoto, flush: true),
                 // a picture from the gallery, copied into the app's own
                 // folder and drawn behind this chat only
                 PressScale(
@@ -220,21 +213,6 @@ class _PickerState extends State<_Picker> {
       ),
     );
   }
-}
-
-class _Head extends StatelessWidget {
-  final String t;
-  const _Head(this.t);
-  @override
-  Widget build(BuildContext context) => Text(
-    t,
-    style: HaloType.mono(
-      size: 10,
-      color: HaloColors.text2,
-      letter: 0.14,
-      weight: FontWeight.w600,
-    ),
-  );
 }
 
 // the widest word of any name, at least 62: names wrap, words never break

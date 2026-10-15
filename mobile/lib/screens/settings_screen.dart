@@ -462,7 +462,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
           HaloSection(l10n.settingsPrivacy),
           HaloGroup(
             children: [
@@ -592,8 +591,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsSecurity),
           HaloGroup(
             children: [
@@ -638,8 +635,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsAppearance),
           HaloGroup(
             children: [
@@ -666,8 +661,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsBackup),
           HaloGroup(
             children: [
@@ -688,8 +681,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsVoice),
           HaloGroup(
             children: [
@@ -707,8 +698,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsAbout),
           HaloGroup(
             children: [
@@ -829,11 +818,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
-
           const FollowSection(),
-          const SizedBox(height: 24),
-
           HaloSection(l10n.settingsDangerZone),
           HaloGroup(
             rose: true,

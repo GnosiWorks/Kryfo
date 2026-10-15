@@ -5,16 +5,54 @@ import '../theme.dart';
 import 'halo_switch.dart';
 import 'swap.dart';
 
+// a section's title, the same on every settings page and sheet. it brings
+// its own gaps, so a page puts no spacer before it
 class HaloSection extends StatelessWidget {
   final String label;
-  const HaloSection(this.label, {super.key});
+  // the words start where flush content does, not at a group's tiles
+  final bool flush;
+  // before the words, as a step's number
+  final Widget? lead;
+  const HaloSection(this.label, {super.key, this.flush = false, this.lead});
+
+  static const double above = 28;
+  static const double below = 10;
+  // where a group's row tiles start
+  static const double inset = 12;
+
+  // the rows' size, set apart by weight and the accent's text tone, which
+  // holds 4.5:1 on every ground. the fonts are variable: the weight goes on
+  // their axis too
+  static TextStyle style() => HaloType.sans(
+    size: 14,
+    weight: FontWeight.w600,
+    color: HaloColors.amberText,
+    height: 1.3,
+    letter: 0.1,
+  ).copyWith(fontVariations: const [FontVariation.weight(600)]);
+
   @override
   Widget build(BuildContext context) {
+    final words = Text(label, style: style());
+    final lead = this.lead;
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(6, 4, 4, 8),
-      child: Text(
-        label,
-        style: HaloType.mono(size: 10.5, color: HaloColors.text2, letter: 0.06),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        flush ? 0 : inset,
+        above,
+        flush ? 0 : inset,
+        below,
+      ),
+      child: Semantics(
+        header: true,
+        child: lead == null
+            ? words
+            : Row(
+                children: [
+                  lead,
+                  const SizedBox(width: 10),
+                  Expanded(child: words),
+                ],
+              ),
       ),
     );
   }
