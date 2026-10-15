@@ -681,17 +681,21 @@ class VaultRouter {
     }
   }
 
-  // a vault that went, its rows unread: its marks stay, out of every list
+  // a vault that went, its rows unread: its blocked keys stay, out of
+  // every list. its let-go words go: with no vault, whoever writes first
+  // under them is what a fresh phone would see
   Future<void> _marksGone() async {
     for (final r in await _store.hidden()) {
       final kind = r['kind'];
-      if (kind == kHiddenKeyMark || kind == kHiddenTombMark) {
+      if (kind == kHiddenKeyMark) {
         await _store.putHidden(
           r['chat_id'] as String,
           kind as String,
           jsonEncode({'g': 1}),
           r['at'] as int,
         );
+      } else if (kind == kHiddenTombMark) {
+        await _store.deleteHidden(r['chat_id'] as String);
       }
     }
   }
@@ -762,8 +766,9 @@ class VaultRouter {
       if (kind != kHiddenKeyMark && kind != kHiddenTombMark) continue;
       final id = r['chat_id'] as String;
       if (_markGone(_json(r['card']))) {
-        // a vault that went: kept as it is, whatever this one holds
-        have.add(id);
+        // a vault that went: kept as it is, unless this one holds it too,
+        // and then the mark is this one's
+        if (!want.containsKey(id)) have.add(id);
         continue;
       }
       if (want.containsKey(id)) {
