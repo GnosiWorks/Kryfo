@@ -761,6 +761,49 @@ void main() {
       await _close(t);
     });
 
+    // a room always blocks: someone else's message is kept in it, this
+    // phone's own is not, and a plain group keeps nothing
+    for (final (room, out, kept) in [
+      (true, false, true),
+      (true, true, false),
+      (false, false, false),
+    ]) {
+      testWidgets('${room ? 'a room' : 'a group'}: '
+          '${out ? 'my own' : 'their'} message '
+          '${kept ? 'is not copied, forwarded or saved' : 'can be copied'}', (
+        t,
+      ) async {
+        _use(
+          t,
+          _Db(
+            room: room,
+            members: room ? [_roomPub, _anna] : ['me', _anna],
+            rows: [
+              {..._in(1, _anna, 'hello there'), if (out) 'direction': 'out'},
+            ],
+          ),
+        );
+        await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+        await t.pump(const Duration(seconds: 1));
+        await t.longPress(find.text('hello there'));
+        await t.pump(const Duration(milliseconds: 500));
+        final card = find.byKey(const ValueKey('group-menu-actions'));
+        Finder inCard(String s) =>
+            find.descendant(of: card, matching: find.text(s));
+        expect(inCard(l10n.commonCopy), kept ? findsNothing : findsOneWidget);
+        expect(
+          inCard(l10n.groupChatForward),
+          kept ? findsNothing : findsOneWidget,
+        );
+        expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
+        expect(
+          inCard(l10n.chatShotsMenuNote),
+          kept ? findsOneWidget : findsNothing,
+        );
+        await _close(t);
+      });
+    }
+
     testWidgets('the menu: reactions above, actions under, and it leaves', (
       t,
     ) async {

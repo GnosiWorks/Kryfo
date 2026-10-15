@@ -3462,18 +3462,29 @@ void main() {
     expect(l.chatShotsWhenTheyUpdate, "Available when they update");
     expect(
       l.chatShotsBothPhones,
-      "Kryfo blocks screenshots and screen recording of this chat on both phones",
+      "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
     );
     expect(
       l.chatShotsBlocksBoth,
-      "Blocks screenshots and screen recording on both phones",
+      "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
     );
     expect(l.chatShotsBlockedHere, "Kryfo blocks screenshots in this chat");
-    expect(l.chatShotsYouTurnedOn, "You turned on screenshot blocking");
+    expect(
+      l.chatShotsMenuNote,
+      "Copying, forwarding and saving their messages is off in this chat",
+    );
+    expect(
+      l.chatShotsKeptOpen,
+      "Opening their files in other apps is off in this chat",
+    );
+    expect(
+      l.chatShotsYouTurnedOn,
+      "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
+    );
     expect(l.chatShotsYouTurnedOff, "You turned off screenshot blocking");
     expect(
       l.chatShotsTheyTurnedOn("<name>"),
-      "<name> turned on screenshot blocking",
+      "<name> turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
     );
     expect(
       l.chatShotsTheyTurnedOff("<name>"),
@@ -3481,7 +3492,7 @@ void main() {
     );
     expect(
       l.roomShotsBlocked,
-      "Kryfo blocks screenshots and screen recording of this room on every phone in it",
+      "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
     );
     expect(l.roomShotsAlwaysOn, "Always on in a room, on every phone in it");
     expect(l.homeShotsPerChat, "Screenshot blocking is now per chat.");

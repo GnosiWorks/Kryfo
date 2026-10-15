@@ -8294,18 +8294,27 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blocca screenshot e registrazione dello schermo di questa chat su entrambi i telefoni';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa chat su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blocca screenshot e registrazione dello schermo su entrambi i telefoni';
+      'Blocca screenshot e registrazione dello schermo su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo blocca gli screenshot in questa chat';
 
   @override
-  String get chatShotsYouTurnedOn => 'Hai attivato il blocco degli screenshot';
+  String get chatShotsMenuNote =>
+      'Copiare, inoltrare e salvare i suoi messaggi è disattivato in questa chat';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Aprire i suoi file in altre app è disattivato in questa chat';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Hai attivato il blocco degli screenshot. Anche copiare, inoltrare e salvare i messaggi dell\'altro è disattivato.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8313,7 +8322,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name ha attivato il blocco degli screenshot';
+    return '$name ha attivato il blocco degli screenshot. Anche copiare, inoltrare e salvare i messaggi dell\'altro è disattivato.';
   }
 
   @override
@@ -8323,7 +8332,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono, e anche copiare, inoltrare o salvare i messaggi degli altri';
 
   @override
   String get roomShotsAlwaysOn =>

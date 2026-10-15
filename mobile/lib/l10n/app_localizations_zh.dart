@@ -7865,23 +7865,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
 
   @override
-  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天';
+  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息';
 
   @override
-  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏';
+  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截屏';
 
   @override
-  String get chatShotsYouTurnedOn => '你开启了禁止截屏';
+  String get chatShotsMenuNote => '此聊天中不能复制、转发或保存对方的消息';
+
+  @override
+  String get chatShotsKeptOpen => '此聊天中不能用其他应用打开对方的文件';
+
+  @override
+  String get chatShotsYouTurnedOn => '你开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
 
   @override
   String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name 开启了禁止截屏';
+    return '$name 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
   }
 
   @override
@@ -7890,7 +7896,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏';
+  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息';
 
   @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
@@ -15699,23 +15705,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
 
   @override
-  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天';
+  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息';
 
   @override
-  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影';
+  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截圖';
 
   @override
-  String get chatShotsYouTurnedOn => '你開啟了禁止截圖';
+  String get chatShotsMenuNote => '此聊天中不能複製、轉傳或儲存對方的訊息';
+
+  @override
+  String get chatShotsKeptOpen => '此聊天中不能用其他應用程式開啟對方的檔案';
+
+  @override
+  String get chatShotsYouTurnedOn => '你開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
   String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name 開啟了禁止截圖';
+    return '$name 開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
   }
 
   @override
@@ -15724,7 +15736,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影';
+  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息';
 
   @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';

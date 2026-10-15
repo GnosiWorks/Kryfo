@@ -8288,24 +8288,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos';
+      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos';
+      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo bloquea las capturas en este chat';
 
   @override
-  String get chatShotsYouTurnedOn => 'Activaste el bloqueo de capturas';
+  String get chatShotsMenuNote =>
+      'Copiar, reenviar y guardar sus mensajes está desactivado en este chat';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Abrir sus archivos en otras apps está desactivado en este chat';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Activaste el bloqueo de capturas. Copiar, reenviar y guardar los mensajes del otro también queda desactivado.';
 
   @override
   String get chatShotsYouTurnedOff => 'Desactivaste el bloqueo de capturas';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name activó el bloqueo de capturas';
+    return '$name activó el bloqueo de capturas. Copiar, reenviar y guardar los mensajes del otro también queda desactivado.';
   }
 
   @override
@@ -8315,7 +8324,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos';
+      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos, y copiar, reenviar o guardar los mensajes de los demás';
 
   @override
   String get roomShotsAlwaysOn =>

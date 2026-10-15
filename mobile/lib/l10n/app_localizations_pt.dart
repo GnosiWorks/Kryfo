@@ -8285,19 +8285,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares';
+      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloqueia capturas e gravação de tela nos dois celulares';
+      'Bloqueia capturas e gravação de tela nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
 
   @override
   String get chatShotsBlockedHere =>
       'O Kryfo bloqueia capturas de tela nesta conversa';
 
   @override
+  String get chatShotsMenuNote =>
+      'Copiar, encaminhar e salvar as mensagens dessa pessoa está desativado nesta conversa';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Abrir os arquivos dessa pessoa em outros apps está desativado nesta conversa';
+
+  @override
   String get chatShotsYouTurnedOn =>
-      'Você ativou o bloqueio de capturas de tela';
+      'Você ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8305,7 +8313,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name ativou o bloqueio de capturas de tela';
+    return '$name ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
   }
 
   @override
@@ -8315,7 +8323,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela';
+      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela, e também copiar, encaminhar ou salvar as mensagens dos outros';
 
   @override
   String get roomShotsAlwaysOn =>

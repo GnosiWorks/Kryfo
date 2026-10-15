@@ -8238,18 +8238,27 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این گفت‌وگو را در هر دو گوشی مسدود می‌کند';
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این گفت‌وگو را در هر دو گوشی مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم';
 
   @override
   String get chatShotsBlocksBoth =>
-      'جلوی اسکرین‌شات و ضبط صفحه را در هر دو گوشی می‌گیرد';
+      'جلوی اسکرین‌شات و ضبط صفحه را در هر دو گوشی می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo در این گفت‌وگو جلوی اسکرین‌شات را می‌گیرد';
 
   @override
-  String get chatShotsYouTurnedOn => 'شما جلوگیری از اسکرین‌شات را روشن کردید';
+  String get chatShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های او در این گفت‌وگو خاموش است';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'باز کردن فایل‌های او در برنامه‌های دیگر در این گفت‌وگو خاموش است';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'شما جلوگیری از اسکرین‌شات را روشن کردید. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8257,7 +8266,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد';
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
   }
 
   @override
@@ -8267,7 +8276,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند';
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های دیگران را هم';
 
   @override
   String get roomShotsAlwaysOn =>

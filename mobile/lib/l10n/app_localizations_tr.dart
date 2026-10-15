@@ -8247,25 +8247,34 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller';
+      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
 
   @override
   String get chatShotsBlocksBoth =>
-      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller';
+      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo bu sohbette ekran görüntüsünü engeller';
 
   @override
-  String get chatShotsYouTurnedOn => 'Ekran görüntüsü engelini açtın';
+  String get chatShotsMenuNote =>
+      'Bu sohbette onun mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Bu sohbette onun dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Ekran görüntüsü engelini açtın. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
 
   @override
   String get chatShotsYouTurnedOff => 'Ekran görüntüsü engelini kapattın';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name ekran görüntüsü engelini açtı';
+    return '$name ekran görüntüsü engelini açtı. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
   }
 
   @override
@@ -8275,7 +8284,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller';
+      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
 
   @override
   String get roomShotsAlwaysOn =>

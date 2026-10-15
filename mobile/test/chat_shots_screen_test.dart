@@ -14,13 +14,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:kryfo/widgets/shots_line.dart';
+import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -78,9 +81,13 @@ void main() {
   late MemDb mem;
   late Directory docs;
   late List<bool> told;
+  final calls = <String>[];
 
   setUp(() async {
+    // the menu opens only over an unlocked app
+    lockState.openForTest();
     told = [];
+    calls.clear();
     SharedPreferences.setMockInitialValues({
       'battery_opt_prompt_seen': true,
       'miui_autostart_prompt_seen': true,
@@ -92,6 +99,7 @@ void main() {
     mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
     mockChannel('com.llfbandit.record/messages', (_) async => null);
     mockChannel('halo/platform', (c) async {
+      calls.add(c.method);
       if (c.method == 'setSecure') {
         told.add((c.arguments as Map)['on'] as bool);
       }
@@ -291,6 +299,70 @@ void main() {
     final y = t.getCenter(line).dy;
     expect(y, greaterThan(t.getCenter(find.text('text m1')).dy));
     expect(y, lessThan(t.getCenter(find.text('text m2')).dy));
+    await devClose(t);
+  });
+
+  // theirs in a chat that blocks is kept in it; mine never is; nothing is
+  // kept once it is off, or while their phone does not know the block
+  for (final (on, can, dir, kept, what) in [
+    (true, 10, 'in', true, 'their message in a chat that blocks'),
+    (true, 10, 'out', false, 'my own message in a chat that blocks'),
+    (false, 10, 'in', false, 'their message once it is turned off'),
+    (true, 0, 'in', false, 'their message while their phone does not know'),
+  ]) {
+    testWidgets(
+      '$what: ${kept ? 'not copied, forwarded or saved, and '
+                'opened in no other app' : 'copied, forwarded and saved as ever'}',
+      (t) async {
+        await person(on: on, can: can);
+        await mem.insert('messages', {
+          'peer_id': _peer,
+          'direction': dir,
+          'plaintext': 'the plan for friday',
+          'sent_at': 1000,
+          'written_at': 1000,
+          'msg_uid': 'm1',
+        });
+        await open(t);
+        await t.longPress(
+          find.textContaining('the plan for friday', findRichText: true).first,
+        );
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        final card = find.byType(MessageMenuCard);
+        Finder inCard(String s) =>
+            find.descendant(of: card, matching: find.text(s));
+        expect(inCard(l10n.commonCopy), kept ? findsNothing : findsOneWidget);
+        expect(inCard(l10n.chatForward), kept ? findsNothing : findsOneWidget);
+        expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
+        expect(
+          inCard(l10n.chatShotsMenuNote),
+          kept ? findsOneWidget : findsNothing,
+        );
+        await devClose(t);
+      },
+    );
+  }
+
+  testWidgets('a file kept in its chat goes to no other app, with one line '
+      'saying so', (t) async {
+    late BuildContext ctx;
+    await devOpen(
+      t,
+      Scaffold(
+        body: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox.expand();
+          },
+        ),
+      ),
+    );
+    unawaited(openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
+    expect(find.text(l10n.chatShotsKeptOpen), findsOneWidget);
+    await t.pump(const Duration(seconds: 4));
     await devClose(t);
   });
 

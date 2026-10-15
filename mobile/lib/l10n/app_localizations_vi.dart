@@ -8212,25 +8212,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo chặn chụp màn hình và quay màn hình cuộc trò chuyện này trên cả hai điện thoại';
+      'Kryfo chặn chụp màn hình và quay màn hình cuộc trò chuyện này trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Chặn chụp màn hình và quay màn hình trên cả hai điện thoại';
+      'Chặn chụp màn hình và quay màn hình trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo chặn chụp màn hình trong cuộc trò chuyện này';
 
   @override
-  String get chatShotsYouTurnedOn => 'Bạn đã bật chặn chụp màn hình';
+  String get chatShotsMenuNote =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của người kia trong cuộc trò chuyện này';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Không thể mở tệp của người kia bằng ứng dụng khác trong cuộc trò chuyện này';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Bạn đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
 
   @override
   String get chatShotsYouTurnedOff => 'Bạn đã tắt chặn chụp màn hình';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name đã bật chặn chụp màn hình';
+    return '$name đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
   }
 
   @override
@@ -8240,7 +8249,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó';
+      'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác';
 
   @override
   String get roomShotsAlwaysOn =>

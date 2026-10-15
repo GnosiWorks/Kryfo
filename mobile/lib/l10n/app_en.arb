@@ -10376,11 +10376,11 @@
   "@chatShotsWhenTheyUpdate": {
     "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
   },
-  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones",
+  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
   "@chatShotsBothPhones": {
     "description": "screens/contact_screen.dart: under the switch while it is on"
   },
-  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones",
+  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
   "@chatShotsBlocksBoth": {
     "description": "screens/contact_screen.dart: under the switch while it is off, what it does"
   },
@@ -10388,7 +10388,15 @@
   "@chatShotsBlockedHere": {
     "description": "screens/chat_screen.dart: screen reader label of the small mark in the chat header"
   },
-  "chatShotsYouTurnedOn": "You turned on screenshot blocking",
+  "chatShotsMenuNote": "Copying, forwarding and saving their messages is off in this chat",
+  "@chatShotsMenuNote": {
+    "description": "screens/chat_screen.dart, screens/group_chat_screen.dart: one quiet line under a message menu for the other person's message in a chat that blocks screenshots"
+  },
+  "chatShotsKeptOpen": "Opening their files in other apps is off in this chat",
+  "@chatShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: toast when a file of the other person's in a chat that blocks screenshots is tapped to open in another app"
+  },
+  "chatShotsYouTurnedOn": "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
   "@chatShotsYouTurnedOn": {
     "description": "widgets/shots_line.dart: the line in the chat where you turned the block on"
   },
@@ -10396,7 +10404,7 @@
   "@chatShotsYouTurnedOff": {
     "description": "widgets/shots_line.dart: the line in the chat where you turned the block off"
   },
-  "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking",
+  "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
   "@chatShotsTheyTurnedOn": {
     "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block on",
     "placeholders": {
@@ -10414,7 +10422,7 @@
       }
     }
   },
-  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it",
+  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
   "@roomShotsBlocked": {
     "description": "screens/group_chat_screen.dart: the line a room shows on its first open"
   },

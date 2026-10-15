@@ -8350,24 +8350,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين';
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها';
 
   @override
   String get chatShotsBlocksBoth =>
-      'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين';
+      'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها';
 
   @override
   String get chatShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المحادثة';
 
   @override
-  String get chatShotsYouTurnedOn => 'فعّلت منع لقطات الشاشة';
+  String get chatShotsMenuNote =>
+      'نسخ رسائله وإعادة توجيهها وحفظها متوقف في هذه المحادثة';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'فتح ملفاته في تطبيقات أخرى متوقف في هذه المحادثة';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'فعّلت منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
 
   @override
   String get chatShotsYouTurnedOff => 'أوقفت منع لقطات الشاشة';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return 'فعّل ⁨$name⁩ منع لقطات الشاشة';
+    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
   }
 
   @override
@@ -8377,7 +8386,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها';
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها';
 
   @override
   String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';

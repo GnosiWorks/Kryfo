@@ -64,7 +64,9 @@ Widget _rowIn(
 // phone asks for no movement
 class MessageMenuCard extends StatefulWidget {
   final List<MenuAction> actions;
-  const MessageMenuCard({super.key, required this.actions});
+  // one quiet line under the actions, for what is not there and why
+  final String? note;
+  const MessageMenuCard({super.key, required this.actions, this.note});
 
   @override
   State<MessageMenuCard> createState() => _MessageMenuCardState();
@@ -118,6 +120,32 @@ class _MessageMenuCardState extends State<MessageMenuCard>
         );
       }
       rows.add(_rowIn(_in, i, live.length, _beat, 6, _MenuRow(action: a)));
+    }
+    final note = widget.note;
+    if (note != null) {
+      rows.add(
+        _rowIn(
+          _in,
+          live.length - 1,
+          live.length,
+          _beat,
+          6,
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 14, 8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 210),
+              child: Text(
+                note,
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.text2,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),

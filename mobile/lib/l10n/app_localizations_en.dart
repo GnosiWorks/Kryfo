@@ -8218,24 +8218,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blocks screenshots and screen recording of this chat on both phones';
+      'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blocks screenshots and screen recording on both phones';
+      'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo blocks screenshots in this chat';
 
   @override
-  String get chatShotsYouTurnedOn => 'You turned on screenshot blocking';
+  String get chatShotsMenuNote =>
+      'Copying, forwarding and saving their messages is off in this chat';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Opening their files in other apps is off in this chat';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.';
 
   @override
   String get chatShotsYouTurnedOff => 'You turned off screenshot blocking';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name turned on screenshot blocking';
+    return '$name turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.';
   }
 
   @override
@@ -8245,7 +8254,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blocks screenshots and screen recording of this room on every phone in it';
+      'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages';
 
   @override
   String get roomShotsAlwaysOn => 'Always on in a room, on every phone in it';

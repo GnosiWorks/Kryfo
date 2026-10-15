@@ -111,7 +111,7 @@ import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
 import '../widgets/shots_line.dart';
 import '../chat_shots.dart'
-    show ChatShots, ShotsPacer, kShotsByMe, kShotsByNone;
+    show ChatShots, ShotsPacer, kShotsByMe, kShotsByNone, shotsKeeps;
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
@@ -1916,6 +1916,7 @@ class _ChatScreenState extends State<ChatScreen>
     _touched(target);
     // his first line is the app's own: it is copied and nothing else
     final welcome = target.welcome;
+    final kept = _keeps(target);
     // a row without a uid gets a local one. the peer doesn't know it, so the
     // reaction stays local.
     if (target.msgUid == null && !welcome) {
@@ -2096,6 +2097,7 @@ class _ChatScreenState extends State<ChatScreen>
                   fromRight: alignRight,
                   closing: closing,
                   child: MessageMenuCard(
+                    note: kept ? l10n.chatShotsMenuNote : null,
                     actions: [
                       // his first line: copy, and nothing else
                       if (!welcome)
@@ -2118,13 +2120,18 @@ class _ChatScreenState extends State<ChatScreen>
                               ? l10n.chatUnsave
                               : l10n.commonSave,
                           tint: target.saved ? HaloColors.amber : null,
-                          onTap: () =>
-                              dismiss(then: () => _toggleSaved(target)),
+                          // one saved before stays, and can be let go
+                          onTap: kept && !target.saved
+                              ? null
+                              : () => dismiss(then: () => _toggleSaved(target)),
                         ),
                       MenuAction(
                         icon: Icons.copy_rounded,
                         label: l10n.commonCopy,
-                        onTap: target.text.isEmpty || target.sticker != null
+                        onTap:
+                            kept ||
+                                target.text.isEmpty ||
+                                target.sticker != null
                             ? null
                             : () {
                                 dismiss();
@@ -2141,12 +2148,13 @@ class _ChatScreenState extends State<ChatScreen>
                           icon: Icons.forward_rounded,
                           label: l10n.chatForward,
                           onTap:
-                              !canForward(
-                                text: target.text,
-                                mediaPath: target.mediaPath,
-                                filePath: target.filePath,
-                                sticker: target.sticker != null,
-                              )
+                              kept ||
+                                  !canForward(
+                                    text: target.text,
+                                    mediaPath: target.mediaPath,
+                                    filePath: target.filePath,
+                                    sticker: target.sticker != null,
+                                  )
                               ? null
                               : () {
                                   // a sheet takes its place: no copy over it
@@ -2159,7 +2167,8 @@ class _ChatScreenState extends State<ChatScreen>
                         icon: Icons.ios_share_rounded,
                         label: l10n.commonShare,
                         onTap:
-                            target.filePath == null ||
+                            kept ||
+                                target.filePath == null ||
                                 target.fileName == 'voice.wav'
                             ? null
                             : () {
@@ -4356,6 +4365,11 @@ class _ChatScreenState extends State<ChatScreen>
     _shotsHold.want(_shots.blocking, now: true);
   }
 
+  // theirs, in a chat that blocks: not copied, forwarded, shared, saved
+  // or opened elsewhere (shotsKeeps)
+  bool _keeps(_Msg m) =>
+      shotsKeeps(blocking: _shots.blocking, mine: m.direction == 'out');
+
   Future<void> _loadShots() async {
     if (_isDev || widget.support) return;
     final ChatShots s;
@@ -4541,6 +4555,7 @@ class _ChatScreenState extends State<ChatScreen>
                   if (added) _flashReaction(m);
                 },
           secure: m.secure,
+          kept: _keeps(m),
           quotedText: quoted,
           onQuoteTap: m.replyTo == null
               ? null
@@ -4901,7 +4916,7 @@ class _ChatScreenState extends State<ChatScreen>
                     ? l10n.chatAcceptThemFirst
                     : !_shots.peerCan
                     ? l10n.chatShotsWhenTheyUpdate
-                    : null,
+                    : l10n.chatShotsBlocksBoth,
                 toggled: _shots.blocking,
                 onTap: _accepted && _shots.peerCan ? onShots : null,
               ),
@@ -6856,6 +6871,8 @@ class _Bubble extends StatelessWidget {
   final StickerWire? quotedSticker;
   // sent, with no receipt yet, to someone who has not added us back
   final bool unconfirmed;
+  // theirs, in a chat that blocks: opened in no other app
+  final bool kept;
   const _Bubble({
     super.key,
     required this.msg,
@@ -6882,6 +6899,7 @@ class _Bubble extends StatelessWidget {
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
+    this.kept = false,
   });
 
   // builds the message body, underlining query matches in amber. plain
@@ -7199,6 +7217,7 @@ class _Bubble extends StatelessWidget {
                                             context,
                                             path: msg.filePath!,
                                             fileName: msg.fileName,
+                                            kept: kept,
                                           );
                                         },
                                         stamp: _mediaCorner(
@@ -7219,6 +7238,7 @@ class _Bubble extends StatelessWidget {
                                               context,
                                               msg.filePath!,
                                               msg.fileName,
+                                              kept: kept,
                                             );
                                           }
                                         },

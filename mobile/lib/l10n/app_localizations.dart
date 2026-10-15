@@ -13254,13 +13254,13 @@ abstract class AppLocalizations {
   /// screens/contact_screen.dart: under the switch while it is on
   ///
   /// In en, this message translates to:
-  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones'**
+  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages'**
   String get chatShotsBothPhones;
 
   /// screens/contact_screen.dart: under the switch while it is off, what it does
   ///
   /// In en, this message translates to:
-  /// **'Blocks screenshots and screen recording on both phones'**
+  /// **'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages'**
   String get chatShotsBlocksBoth;
 
   /// screens/chat_screen.dart: screen reader label of the small mark in the chat header
@@ -13269,10 +13269,22 @@ abstract class AppLocalizations {
   /// **'Kryfo blocks screenshots in this chat'**
   String get chatShotsBlockedHere;
 
+  /// screens/chat_screen.dart, screens/group_chat_screen.dart: one quiet line under a message menu for the other person's message in a chat that blocks screenshots
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving their messages is off in this chat'**
+  String get chatShotsMenuNote;
+
+  /// widgets/video_bubble.dart: toast when a file of the other person's in a chat that blocks screenshots is tapped to open in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opening their files in other apps is off in this chat'**
+  String get chatShotsKeptOpen;
+
   /// widgets/shots_line.dart: the line in the chat where you turned the block on
   ///
   /// In en, this message translates to:
-  /// **'You turned on screenshot blocking'**
+  /// **'You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.'**
   String get chatShotsYouTurnedOn;
 
   /// widgets/shots_line.dart: the line in the chat where you turned the block off
@@ -13284,7 +13296,7 @@ abstract class AppLocalizations {
   /// widgets/shots_line.dart: the line in the chat where the other person turned the block on
   ///
   /// In en, this message translates to:
-  /// **'{name} turned on screenshot blocking'**
+  /// **'{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.'**
   String chatShotsTheyTurnedOn(String name);
 
   /// widgets/shots_line.dart: the line in the chat where the other person turned the block off
@@ -13296,7 +13308,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart: the line a room shows on its first open
   ///
   /// In en, this message translates to:
-  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it'**
+  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages'**
   String get roomShotsBlocked;
 
   /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off

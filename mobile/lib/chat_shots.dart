@@ -108,12 +108,15 @@ class ChatShots {
   bool get peerCan => quiet || can > 0;
   // what this phone does now. someone blocked holds nothing
   bool get blocking => on && peerCan && !blocked;
-  // copying, forwarding, sharing and saving their messages ask this once
-  // the owner decides how a blocking chat treats them
-  bool get guardsTheirs => blocking;
 
   ShotsWord get word => ShotsWord(on: on, at: at);
 }
+
+/// a message a chat keeps to itself: the other person's, in a chat that
+/// blocks. it is not copied, forwarded, shared, saved or opened in another
+/// app. this phone's own are its own
+bool shotsKeeps({required bool blocking, required bool mine}) =>
+    blocking && !mine;
 
 /// [w] takes the place of the state held as ([on], [at])
 bool shotsWins(ShotsWord w, {required bool on, required int at}) =>

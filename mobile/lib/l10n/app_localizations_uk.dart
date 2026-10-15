@@ -8367,18 +8367,26 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo блокує знімки екрана й запис екрана цього чату на обох телефонах';
+      'Kryfo блокує знімки екрана й запис екрана цього чату на обох телефонах, а також копіювання, пересилання й збереження повідомлень одне одного';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Блокує знімки екрана й запис екрана на обох телефонах';
+      'Блокує знімки екрана й запис екрана на обох телефонах, а також копіювання, пересилання й збереження повідомлень одне одного';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo блокує знімки екрана в цьому чаті';
 
   @override
+  String get chatShotsMenuNote =>
+      'У цьому чаті не можна копіювати, пересилати й зберігати чужі повідомлення';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'У цьому чаті не можна відкривати чужі файли в інших застосунках';
+
+  @override
   String get chatShotsYouTurnedOn =>
-      'Ти увімкнув(-ла) блокування знімків екрана';
+      'Ти увімкнув(-ла) блокування знімків екрана. Копіювати, пересилати й зберігати повідомлення одне одного теж не можна.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8386,7 +8394,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name увімкнув(-ла) блокування знімків екрана';
+    return '$name увімкнув(-ла) блокування знімків екрана. Копіювати, пересилати й зберігати повідомлення одне одного теж не можна.';
   }
 
   @override
@@ -8396,7 +8404,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo блокує знімки екрана й запис екрана цієї кімнати на кожному телефоні в ній';
+      'Kryfo блокує знімки екрана й запис екрана цієї кімнати на кожному телефоні в ній, а також копіювання, пересилання й збереження чужих повідомлень';
 
   @override
   String get roomShotsAlwaysOn =>

@@ -8315,19 +8315,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys';
+      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo blockiert Screenshots in diesem Chat';
 
   @override
+  String get chatShotsMenuNote =>
+      'Kopieren, Weiterleiten und Speichern dieser Nachrichten ist in diesem Chat aus';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Diese Dateien in anderen Apps zu öffnen ist in diesem Chat aus';
+
+  @override
   String get chatShotsYouTurnedOn =>
-      'Du hast das Blockieren von Screenshots eingeschaltet';
+      'Du hast das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8335,7 +8343,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name hat das Blockieren von Screenshots eingeschaltet';
+    return '$name hat das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.';
   }
 
   @override
@@ -8345,7 +8353,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen';
 
   @override
   String get roomShotsAlwaysOn =>

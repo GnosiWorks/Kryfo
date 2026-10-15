@@ -3044,6 +3044,8 @@ final _calls = <_Call>[
   ('chatShotsBothPhones', [], (l) => l.chatShotsBothPhones),
   ('chatShotsBlocksBoth', [], (l) => l.chatShotsBlocksBoth),
   ('chatShotsBlockedHere', [], (l) => l.chatShotsBlockedHere),
+  ('chatShotsMenuNote', [], (l) => l.chatShotsMenuNote),
+  ('chatShotsKeptOpen', [], (l) => l.chatShotsKeptOpen),
   ('chatShotsYouTurnedOn', [], (l) => l.chatShotsYouTurnedOn),
   ('chatShotsYouTurnedOff', [], (l) => l.chatShotsYouTurnedOff),
   (

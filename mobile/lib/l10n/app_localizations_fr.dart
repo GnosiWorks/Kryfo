@@ -8308,18 +8308,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bloque les captures et l’enregistrement d’écran de cette discussion sur les deux téléphones';
+      'Kryfo bloque les captures et l’enregistrement d’écran de cette discussion sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloque les captures et l’enregistrement d’écran sur les deux téléphones';
+      'Bloque les captures et l’enregistrement d’écran sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo bloque les captures dans cette discussion';
 
   @override
-  String get chatShotsYouTurnedOn => 'Vous avez activé le blocage des captures';
+  String get chatShotsMenuNote =>
+      'Copier, transférer et enregistrer ses messages est désactivé dans cette discussion';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Ouvrir ses fichiers dans d’autres applis est désactivé dans cette discussion';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Vous avez activé le blocage des captures. Copier, transférer et enregistrer les messages de l’autre est aussi désactivé.';
 
   @override
   String get chatShotsYouTurnedOff =>
@@ -8327,7 +8336,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name a activé le blocage des captures';
+    return '$name a activé le blocage des captures. Copier, transférer et enregistrer les messages de l’autre est aussi désactivé.';
   }
 
   @override
@@ -8337,7 +8346,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bloque les captures et l’enregistrement d’écran de ce salon sur chaque téléphone';
+      'Kryfo bloque les captures et l’enregistrement d’écran de ce salon sur chaque téléphone, ainsi que la copie, le transfert et l’enregistrement des messages des autres';
 
   @override
   String get roomShotsAlwaysOn =>

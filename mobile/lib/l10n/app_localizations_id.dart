@@ -8219,25 +8219,34 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel';
+      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Memblokir tangkapan layar dan rekaman layar di kedua ponsel';
+      'Memblokir tangkapan layar dan rekaman layar di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
 
   @override
   String get chatShotsBlockedHere =>
       'Kryfo memblokir tangkapan layar di obrolan ini';
 
   @override
-  String get chatShotsYouTurnedOn => 'Kamu menyalakan blokir tangkapan layar';
+  String get chatShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesannya mati di obrolan ini';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Membuka filenya di aplikasi lain mati di obrolan ini';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Kamu menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
 
   @override
   String get chatShotsYouTurnedOff => 'Kamu mematikan blokir tangkapan layar';
 
   @override
   String chatShotsTheyTurnedOn(String name) {
-    return '$name menyalakan blokir tangkapan layar';
+    return '$name menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
   }
 
   @override
@@ -8247,7 +8256,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya';
+      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain';
 
   @override
   String get roomShotsAlwaysOn =>
