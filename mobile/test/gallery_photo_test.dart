@@ -155,8 +155,11 @@ void main() {
   // with a caption or without, the in-app camera and the gif tile, in a
   // chat, a group or a room
   for (final (file, fn) in [
-    ('lib/screens/chat_screen.dart', 'Future<void> _sendOneImage('),
-    ('lib/screens/group_chat_screen.dart', 'Future<void> _sendGroupImage('),
+    ('lib/screens/chat_screen.dart', 'Future<_Ready?> _readyPhoto('),
+    (
+      'lib/screens/group_chat_screen.dart',
+      'Future<_GReady?> _readyGroupPhoto(',
+    ),
   ]) {
     test('$fn cleans before anything touches disk', () {
       final body = bodyOf(sourceOf(file), fn);
@@ -169,22 +172,44 @@ void main() {
   }
 
   test('the gallery pickers send through those two and nothing else', () {
-    for (final (file, picker, send) in [
+    for (final (file, picker, send, ready) in [
       (
         'lib/screens/chat_screen.dart',
         'Future<void> _pickAndSendMultiple(',
-        '_sendOneImage(',
+        'Future<void> _sendPicked(',
+        '_readyPhoto(',
       ),
       (
         'lib/screens/group_chat_screen.dart',
         'Future<void> _pickGroupMultiple(',
-        '_sendGroupImage(',
+        'Future<void> _sendPicked(',
+        '_readyGroupPhoto(',
       ),
     ]) {
-      final body = bodyOf(sourceOf(file), picker);
-      expect(body, contains(send));
-      expect(body, isNot(contains('mediaDirOf')));
-      expect(body, isNot(contains('writeAsBytes')));
+      final src = sourceOf(file);
+      final body = bodyOf(src, picker);
+      expect(body, contains('send: _sendPicked'));
+      final sends = bodyOf(src, send);
+      expect(sends, contains(ready));
+      for (final b in [body, sends]) {
+        expect(b, isNot(contains('mediaDirOf')));
+        expect(b, isNot(contains('writeAsBytes')));
+      }
+    }
+    // the single photo, the camera's and the gif's, the same way
+    for (final (file, one, ready) in [
+      (
+        'lib/screens/chat_screen.dart',
+        'Future<void> _sendOneImage(',
+        '_readyPhoto(raw)',
+      ),
+      (
+        'lib/screens/group_chat_screen.dart',
+        'Future<void> _sendGroupImage(',
+        '_readyGroupPhoto(raw)',
+      ),
+    ]) {
+      expect(bodyOf(sourceOf(file), one), contains(ready));
     }
   });
 }

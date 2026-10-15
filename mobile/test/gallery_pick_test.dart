@@ -189,7 +189,10 @@ void main() {
       final dropped = <String>[];
       var sends = 0;
       await sendGalleryPicks(
-        [pick('a.mp4', [9]), pick('b.jpg', jpeg)],
+        [
+          pick('a.mp4', [9]),
+          pick('b.jpg', jpeg),
+        ],
         shrink: shrink,
         drop: (x) async => dropped.addAll([for (final f in x) f.name]),
         preview: (_, _) async => null,
@@ -200,11 +203,16 @@ void main() {
     });
 
     test('more picked from the preview joins the end', () async {
-      final more = [pick('c.jpg', jpeg), pick('VID_3.mp4', [7])];
+      final more = [
+        pick('c.jpg', jpeg),
+        pick('VID_3.mp4', [7]),
+      ];
       final dropped = <String>[];
       final sent = <String>[];
       await sendGalleryPicks(
-        [pick('a.mp4', [9])],
+        [
+          pick('a.mp4', [9]),
+        ],
         shrink: shrink,
         pickMore: () async => more,
         drop: (x) async => dropped.addAll([for (final f in x) f.name]),
@@ -226,7 +234,10 @@ void main() {
       final dropped = <String>[];
       await expectLater(
         sendGalleryPicks(
-          [pick('a.mp4', [9]), pick('b.mp4', [8])],
+          [
+            pick('a.mp4', [9]),
+            pick('b.mp4', [8]),
+          ],
           drop: (x) async => dropped.addAll([for (final f in x) f.name]),
           preview: (items, _) async => MediaSendResult(items: items),
           send: (_) async => throw StateError('gone'),

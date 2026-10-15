@@ -12,8 +12,8 @@ import 'source_body.dart';
 
 void main() {
   const screens = {
-    'lib/screens/chat_screen.dart': 'Future<void> _sendFileFrom(',
-    'lib/screens/group_chat_screen.dart': 'Future<void> _sendGroupFileFrom(',
+    'lib/screens/chat_screen.dart': 'Future<_Ready?> _readyFile(',
+    'lib/screens/group_chat_screen.dart': 'Future<_GReady?> _readyGroupFile(',
   };
 
   test('a copy that cannot be cleaned is shredded', () {
@@ -24,12 +24,12 @@ void main() {
       final video = body.substring(body.indexOf('videoNameNeedsStrip'));
       final picture = body.substring(body.indexOf('stripPictureFileOffUi'));
       expect(
-        video.substring(0, video.indexOf('return;')),
+        video.substring(0, video.indexOf('return null;')),
         contains('await shredFile(dest.path);'),
         reason: file,
       );
       expect(
-        picture.substring(0, picture.indexOf('return;')),
+        picture.substring(0, picture.indexOf('return null;')),
         contains('await shredFile(dest.path);'),
         reason: file,
       );
@@ -43,7 +43,7 @@ void main() {
       expect(empty, greaterThan(0), reason: file);
       final refusal = body.substring(empty, body.indexOf('}', empty));
       expect(refusal, contains('CouldNotReadThat'), reason: file);
-      expect(refusal, contains('return;'), reason: file);
+      expect(refusal, contains('return null;'), reason: file);
       // before anything is copied or counted
       expect(empty, lessThan(body.indexOf('newMsgUid()')), reason: file);
     });

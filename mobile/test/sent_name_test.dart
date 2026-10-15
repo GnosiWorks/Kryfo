@@ -100,13 +100,20 @@ void main() {
     final chat = sourceOf('lib/screens/chat_screen.dart');
     final group = sourceOf('lib/screens/group_chat_screen.dart');
     expect(
-      bodyOf(chat, 'Future<void> _sendFileFrom('),
+      bodyOf(chat, 'Future<_Ready?> _readyFile('),
       contains('final name = sentFileName(picked);'),
     );
     expect(
-      bodyOf(group, 'Future<void> _sendGroupFileFrom('),
+      bodyOf(group, 'Future<_GReady?> _readyGroupFile('),
       contains('final name = sentFileName(picked);'),
     );
+    // a video picked with photos is named the same way
+    for (final (src, ready) in [
+      (chat, '_readyFile(v.path, madeVideoName(v.name))'),
+      (group, '_readyGroupFile(v.path, madeVideoName(v.name))'),
+    ]) {
+      expect(bodyOf(src, 'Future<void> _sendPicked('), contains(ready));
+    }
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendVideo('),
       (group, 'Future<void> _pickGroupVideo('),

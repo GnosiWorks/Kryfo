@@ -5,7 +5,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'album.dart' show AlbumTag, kAlbumWire;
+import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
 import 'dlog.dart';
 import 'media_resend.dart';
@@ -404,7 +404,7 @@ Future<String> wrapMessage(
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
-  if (album != null) body[kAlbumWire] = album.toWire();
+  if (album != null) body['al'] = album.toWire();
 
   if (sender != null) {
     body['h'] = sender.haloId;
@@ -554,7 +554,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         final num n => n.toInt(),
         _ => null,
       },
-      album: AlbumTag.fromWire(json[kAlbumWire]),
+      album: AlbumTag.fromWire(json['al']),
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,

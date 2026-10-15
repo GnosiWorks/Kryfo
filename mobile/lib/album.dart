@@ -15,9 +15,6 @@ const kPickMax = 30;
 /// the most an album that came in may say it holds
 const kAlbumMaxIn = 32;
 
-/// the wire key
-const kAlbumWire = 'al';
-
 final _albumId = RegExp(r'^[0-9a-f]{16,32}$');
 final _rnd = math.Random.secure();
 

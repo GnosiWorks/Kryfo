@@ -166,7 +166,8 @@ void main() {
           r'\(\) => appState\.sendMediaToGroup\(',
         ).allMatches(screen).length,
       );
-      expect('_sendGroupMedia(\n'.allMatches(screen).length, 4);
+      // what is ready to go, a voice note, and a retry
+      expect('_sendGroupMedia(\n'.allMatches(screen).length, 3);
     });
   });
 }

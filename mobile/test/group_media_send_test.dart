@@ -404,15 +404,21 @@ void main() {
     });
 
     test('a photo, voice or file sent in answer keeps its quote', () {
+      // a photo and a file go through the one that sends what is ready
       for (final sig in [
-        'Future<void> _sendGroupImage(',
+        'Future<void> _sendGroupReady(',
         'Future<void> _sendGroupVoice(',
-        'Future<void> _sendGroupFileFrom(',
       ]) {
         final body = bodyOf(screen, sig);
         expect(body, contains('final reply = _takeReply();'), reason: sig);
         // on the bubble, the row and the wire
         expect('replyTo: reply,'.allMatches(body).length, 3, reason: sig);
+      }
+      for (final sig in [
+        'Future<void> _sendGroupImage(',
+        'Future<void> _sendGroupFileFrom(',
+      ]) {
+        expect(bodyOf(screen, sig), contains('_sendGroupReady('), reason: sig);
       }
       final take = bodyOf(screen, 'String? _takeReply(');
       expect(take, contains('_replyTo = null'));

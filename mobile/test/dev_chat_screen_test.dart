@@ -37,6 +37,7 @@ import 'package:kryfo/media_progress.dart'
     show IncomingMediaBanner, mediaProgressEnd, mediaProgressStart;
 import 'package:kryfo/screens/chat_screen.dart' show grindPowForTest;
 import 'package:kryfo/screens/contact_screen.dart' show ContactScreen;
+import 'package:kryfo/screens/media_send_screen.dart';
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
@@ -480,6 +481,15 @@ Future<void> _attach(WidgetTester t, String tile, bool Function() done) async {
   await _beat(t, 500);
   await t.tap(find.text(tile));
   await _beat(t, 300);
+  // a gallery pick waits in the send preview until it is sent
+  if (tile == l10n.chatGallery) {
+    final preview = find.byType(MediaSendScreen);
+    await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
+    await t.tap(
+      find.descendant(of: preview, matching: find.byIcon(Icons.arrow_upward)),
+    );
+    await _beat(t, 400);
+  }
   await _io(t, done);
 }
 
@@ -1030,18 +1040,18 @@ void main() {
       }
       expect(
         makers,
-        containsAll([
-          '_sendBody',
-          '_sendVoice',
-          '_sendOneImage',
-          '_sendFileFrom',
-        ]),
+        // a photo and a file both go out through _sendReady
+        containsAll(['_sendBody', '_sendVoice', '_sendReady']),
       );
       // a failed one tried again asks too
       for (final r in ['_retry', '_retryImage', '_retryMedia']) {
         expect(body[r], contains('_ensureDevStarted()'), reason: r);
       }
-      // the camera, the gallery, a gif, a clip and a file end in those
+      // the camera, the gallery, a gif, a clip and a file end in those,
+      // the camera's photo and the gallery's through the send preview
+      expect(body['_sendPicked'], contains('_sendReady('));
+      expect(body['_sendOneImage'], contains('_sendReady('));
+      expect(body['_sendFileFrom'], contains('_sendReady('));
       for (final p in [
         '_openCamera',
         '_pickAndSendMultiple',
@@ -1052,7 +1062,8 @@ void main() {
         expect(body[p], isNot(contains('saveMessage(')), reason: p);
         expect(
           body[p]!.contains('_sendOneImage(') ||
-              body[p]!.contains('_sendFileFrom('),
+              body[p]!.contains('_sendFileFrom(') ||
+              body[p]!.contains('_sendPicked'),
           isTrue,
           reason: p,
         );
