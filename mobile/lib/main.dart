@@ -10059,6 +10059,11 @@ Future<(String, bool)> handleHaloUriAdded(
       ? _bundleIdentity(parsed['bundle']!)
       : _xIdentity(parsed['xpub']!.toLowerCase());
   if (cardKey == null) return (l10n.appInvalidUri, false);
+  // a key "this isn't them" blocked here takes no link, whatever words it
+  // gives, and says so before anything a shut vault holds is asked
+  if (await session.keyBlocked(_keyHex(cardKey))) {
+    return (l10n.appKeyBlocked, false);
+  }
   // the signal store holds a shut vault's people too: a link of one of
   // theirs reads as any link that does not take, on their key or another.
   // an add would put an everyday row beside the hidden one and a fresh
@@ -10075,10 +10080,6 @@ Future<(String, bool)> handleHaloUriAdded(
         false,
       );
     }
-  }
-  // a key "this isn't them" blocked takes no link, whatever words it gives
-  if (await session.keyBlocked(_keyHex(cardKey))) {
-    return (l10n.appKeyBlocked, false);
   }
   final bound = await _boundIdentity(
     parsed['id']!,
