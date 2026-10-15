@@ -408,24 +408,29 @@ class ToolsBridge(private val activity: Activity) {
         return FileProvider.getUriForFile(activity, "${activity.packageName}.open", f)
     }
 
+    // the installer check reads the file's end, so it runs off the ui thread
     private fun shareOut(path: String?, mime: String?, result: MethodChannel.Result) {
-        val uri = path?.let { outUri(it) }
-        if (uri == null || Installer.refused(File(path), null, mime)) {
-            result.success(false)
-            return
-        }
-        val send = Intent(Intent.ACTION_SEND).apply {
-            type = mime ?: "application/octet-stream"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            clipData = ClipData.newRawUri("", uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        try {
-            activity.startActivity(Intent.createChooser(send, null))
-            result.success(true)
-        } catch (e: Exception) {
-            result.success(false)
-        }
+        Thread {
+            val uri = path?.let { outUri(it) }
+            if (uri == null || Installer.refused(File(path), null, mime)) {
+                activity.runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = mime ?: "application/octet-stream"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                clipData = ClipData.newRawUri("", uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            activity.runOnUiThread {
+                try {
+                    activity.startActivity(Intent.createChooser(send, null))
+                    result.success(true)
+                } catch (e: Exception) {
+                    result.success(false)
+                }
+            }
+        }.start()
     }
 
     private fun saveToGallery(path: String?, name: String?, mime: String?, result: MethodChannel.Result) {

@@ -210,14 +210,17 @@ abstract class NoInstallCheck : DefaultTask() {
     fun check() {
         val doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
             .newDocumentBuilder().parse(manifest.get().asFile)
-        val asks = doc.getElementsByTagName("uses-permission")
         val banned = setOf(
             "android.permission.REQUEST_INSTALL_PACKAGES",
             "android.permission.INSTALL_PACKAGES",
         )
-        for (i in 0 until asks.length) {
-            val p = (asks.item(i) as org.w3c.dom.Element).getAttribute("android:name")
-            if (p in banned) throw GradleException("the merged manifest asks for $p")
+        // the permission can be asked for on every element that asks for one
+        for (tag in listOf("uses-permission", "uses-permission-sdk-23", "uses-permission-sdk-m")) {
+            val asks = doc.getElementsByTagName(tag)
+            for (i in 0 until asks.length) {
+                val p = (asks.item(i) as org.w3c.dom.Element).getAttribute("android:name")
+                if (p in banned) throw GradleException("the merged manifest asks for $p in $tag")
+            }
         }
     }
 }

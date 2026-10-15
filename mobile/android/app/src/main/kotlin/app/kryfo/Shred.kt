@@ -27,10 +27,33 @@ object Shred {
         else -> "share"
     }
 
-    // the name a handed copy is given: plain characters only, at most 80,
-    // and never one of dots alone, which names the folder or the one above
+    // the name a handed copy is given: the person's own, in whatever
+    // letters, so the app it goes to shows it. no folder in it, nothing
+    // hidden, at most LEAF_BYTES of utf-8 with the end kept for the
+    // extension, and never one of dots alone, which names the folder or
+    // the one above
+    const val LEAF_BYTES = 200
+
     fun leaf(name: String): String {
-        val safe = name.replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+        val sb = StringBuilder()
+        var i = 0
+        while (i < name.length) {
+            val cp = name.codePointAt(i)
+            i += Character.charCount(cp)
+            val type = Character.getType(cp)
+            when {
+                cp == 0x200C || cp == 0x200D -> sb.appendCodePoint(cp)
+                type == Character.FORMAT.toInt() -> {}
+                type == Character.CONTROL.toInt() ||
+                    type == Character.SURROGATE.toInt() ||
+                    cp < 0x80 && "/\\:*?\"<>|".indexOf(cp.toChar()) >= 0 -> sb.append('_')
+                else -> sb.appendCodePoint(cp)
+            }
+        }
+        var safe = sb.toString()
+        while (safe.toByteArray(Charsets.UTF_8).size > LEAF_BYTES) {
+            safe = safe.substring(safe.offsetByCodePoints(0, 1))
+        }
         return if (safe.all { it == '.' || it == ' ' }) "file" else safe
     }
 

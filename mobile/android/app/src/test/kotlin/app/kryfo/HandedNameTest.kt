@@ -20,12 +20,30 @@ class HandedNameTest {
     }
 
     @Test
-    fun noSeparatorAndNoMoreThanEighty() {
+    fun noSeparatorAndNoMoreThanTheCap() {
         assertEquals(".._.._etc_passwd", Shred.leaf("../../etc/passwd"))
         assertEquals("__", Shred.leaf("/\u0000"))
-        val long = "x".repeat(100) + ".jpg"
-        assertEquals(80, Shred.leaf(long).length)
+        assertEquals("a_b_c.txt", Shred.leaf("a\\b:c.txt"))
+        val long = "x".repeat(300) + ".jpg"
+        assertEquals(Shred.LEAF_BYTES, Shred.leaf(long).length)
         assertEquals(true, Shred.leaf(long).endsWith(".jpg"))
+        val wide = "ж".repeat(300) + ".pdf"
+        val cut = Shred.leaf(wide)
+        assertEquals(true, cut.toByteArray(Charsets.UTF_8).size <= Shred.LEAF_BYTES)
+        assertEquals(true, cut.endsWith("ж.pdf"))
+    }
+
+    @Test
+    fun aNameInAnyLettersStaysTheSame() {
+        assertEquals("фото отпуска.jpg", Shred.leaf("фото отпуска.jpg"))
+        assertEquals("گزارش\u200Cها.pdf", Shred.leaf("گزارش\u200Cها.pdf"))
+        assertEquals("报告.pdf", Shred.leaf("报告.pdf"))
+    }
+
+    @Test
+    fun aHiddenMarkGoes() {
+        assertEquals("invoicefdp.apk", Shred.leaf("invoice\u202Efdp.apk"))
+        assertEquals("ab.pdf", Shred.leaf("a\u200Bb.pdf"))
     }
 
     @Test

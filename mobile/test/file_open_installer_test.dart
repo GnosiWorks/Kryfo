@@ -182,18 +182,31 @@ void main() {
         out.indexOf('Installer.refused('),
         lessThan(out.indexOf('startActivity(')),
       );
+      // the check reads the file, so not on the ui thread
+      expect(
+        out.indexOf('Thread {'),
+        lessThan(out.indexOf('Installer.refused(')),
+      );
+      expect(out, contains('activity.runOnUiThread {'));
     });
   });
 
   group('no permission to install', () {
     test('the manifest takes it out of whatever a plugin merges in', () {
-      expect(
-        sourceOf('android/app/src/main/AndroidManifest.xml'),
-        contains(
-          '<uses-permission android:name="android.permission.'
-          'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
-        ),
-      );
+      for (final tag in [
+        'uses-permission',
+        'uses-permission-sdk-23',
+        'uses-permission-sdk-m',
+      ]) {
+        expect(
+          sourceOf('android/app/src/main/AndroidManifest.xml'),
+          contains(
+            '<$tag android:name="android.permission.'
+            'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
+          ),
+          reason: tag,
+        );
+      }
     });
 
     test('gradle checks the merged manifest before every apk and bundle', () {
@@ -205,6 +218,13 @@ void main() {
         contains('tasks.register<NoInstallCheck>("check\${name}NoInstall")'),
       );
       expect(gradle, contains('dependsOn(labelCheck, noInstall)'));
+      expect(
+        gradle,
+        contains(
+          'listOf("uses-permission", "uses-permission-sdk-23", '
+          '"uses-permission-sdk-m")',
+        ),
+      );
     });
   });
 }
