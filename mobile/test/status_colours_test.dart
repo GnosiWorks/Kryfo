@@ -139,10 +139,8 @@ void main() {
       'List<TextSpan> searchLit(',
       'fontWeight: FontWeight.w600,',
     );
-    expect(
-      lit,
-      contains('onAmber ? HaloColors.amberOnOn : HaloColors.amberText'),
-    );
+    expect(lit, contains('onAmber ? HaloColors.amberOnOn : HaloColors.text'));
+    expect(lit, contains('HaloColors.amber.withValues(alpha: kLitMark)'));
     final join = _between(
       _src('lib/widgets/kryfo_link_text.dart'),
       'l10n.kryfoLinkTextJoin2,',

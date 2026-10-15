@@ -8,6 +8,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show kLitMark;
 
 double ratio(Color a, Color b) {
   final x = a.computeLuminance();
@@ -66,6 +67,16 @@ void main() {
         // the accent's words on its on colour: a search hit or a join
         // button inside your own bubble
         need('words / on', HaloColors.amberOnOn, HaloColors.onAmber, 4.5);
+        // a search hit in their bubble: their words on the accent's mark
+        need(
+          'hit / their bubble',
+          HaloColors.text,
+          Color.alphaBlend(
+            HaloColors.amber.withValues(alpha: kLitMark),
+            HaloColors.bubbleIn,
+          ),
+          4.5,
+        );
         // the accent as an icon, a ring or large text
         for (final (name, ground) in [
           ('ink', HaloColors.ink),
