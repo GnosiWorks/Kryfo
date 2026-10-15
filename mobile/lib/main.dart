@@ -14232,7 +14232,7 @@ class AppState extends ChangeNotifier {
   // chats
   String? get homeBridgeCard {
     if (inDecoyView || lockState.inVault) return null;
-    if (autoStruggling) return 'auto';
+    if (autoStruggling || captiveWait) return 'auto';
     if (suggestBridgesOff) return 'stuck';
     if (suggestBridges) return 'hint';
     if (_bridge.offerAuto &&
@@ -14697,9 +14697,12 @@ class AppState extends ChangeNotifier {
   // new install that was never asked. once a process
   bool _askDue = false;
   bool _askShown = false;
-  // never over hidden chats either
+  // never over hidden chats either, and never once tor is in: the ask can
+  // wait a long while behind onboarding
   bool get bridgeAskDue =>
-      _askDue && !_askShown && !inDecoyView && !lockState.inVault;
+      _askDue && !_askShown && !_torIn && !inDecoyView && !lockState.inVault;
+  bool get _torIn =>
+      _bridgeStatus.phase == 'connected' || _bridgeStatus.canSend || torUsable;
   void bridgeAskTaken() => _askShown = true;
   void bridgeAskAgain() => _askShown = false;
 
@@ -14756,7 +14759,11 @@ class AppState extends ChangeNotifier {
     if (s == _bridgeStatus) return;
     final was = _bridgeStatus;
     _bridgeStatus = s;
-    if (s.askConsent && _bridge.consent == 'ask') _askDue = true;
+    if (s.phase == 'connected' || s.canSend) {
+      _askDue = false;
+    } else if (s.askConsent && _bridge.consent == 'ask') {
+      _askDue = true;
+    }
     // what automatic learnt is kept once something gets through
     if (s.phase == 'connected' && was.phase != 'connected') {
       unawaited(_keepBridgeMemory());
@@ -18285,6 +18292,13 @@ class AppState extends ChangeNotifier {
     if (_bridge.choice != BridgeChoice.direct) return false;
     return _torLooksBlockedAt(now);
   }
+
+  // a wi-fi that wants a sign-in first: its line and the way to the
+  // settings go on home, whatever way tor is set to take
+  bool get captiveWait =>
+      !inDecoyView &&
+      _sendMode == 'private' &&
+      _bridgeStatus.phase == 'captive';
 
   // automatic is past the usual way, or gave up: the home shows its line
   bool get autoStruggling =>
