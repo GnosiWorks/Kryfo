@@ -11070,6 +11070,8 @@ class AppState extends ChangeNotifier {
   // first, and past a share of one message or one sender theirs do
   final _early = <_Early>[];
   var _earlyChars = 0;
+  @visibleForTesting
+  List<String> get earlyWiresForTest => [for (final e in _early) e.wire];
   static const _kEarlyChars = 1 << 20;
   static const _kEarlyPerUid = 32;
   static const _kEarlyPerSender = 64;
@@ -19586,13 +19588,15 @@ class AppState extends ChangeNotifier {
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+      // seen by the bytes that came, kept without the filler
+      final content = unpad(m.cipher);
       // a knock on a room busy with a reset waits on its own, and the
       // inbox goes on. it is offered again until it is seen
-      if (m.peer.startsWith('roomfc:') && _roomBusy(m.cipher)) {
-        _knockLater(m.peer, m.cipher, h, reached);
+      if (m.peer.startsWith('roomfc:') && _roomBusy(content)) {
+        _knockLater(m.peer, content, h, reached);
         throw const _KnockWaits();
       }
-      await _handleRoomFrame(m.peer, m.cipher, reached: reached);
+      await _handleRoomFrame(m.peer, content, reached: reached);
       await live.markSeen(h);
       notifyListeners();
       arrived();
@@ -19601,7 +19605,7 @@ class AppState extends ChangeNotifier {
     if (m.cipher.startsWith('{')) {
       // control frame riding the transport outside signal (bundle
       // exchange). signal wire is base64, never starts with '{'.
-      await _handleBundleCtl(m.peer, m.cipher, h);
+      await _handleBundleCtl(m.peer, unpad(m.cipher), h);
       arrived();
       return;
     }
@@ -21903,6 +21907,9 @@ class AppState extends ChangeNotifier {
         rethrow;
       } on KeyHeld {
         // waits on a check of their new number: their session is fine
+        rethrow;
+      } on FrameTooLarge {
+        // too big for any route: their session is fine
         rethrow;
       } catch (e) {
         // a corrupt session (InvalidKeyException or bad state) can't encrypt.

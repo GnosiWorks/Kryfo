@@ -13,6 +13,7 @@ import (
 const (
 	inboxMaxConns = 8
 	inboxMaxLines = 256
+	// about 147 full media slices, each filled to 28 kB
 	inboxMaxBytes = 4 << 20
 	// a wrapped 16k media slice is about 40k on the wire; nothing honest
 	// comes near this

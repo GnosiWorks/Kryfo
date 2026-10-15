@@ -17,6 +17,8 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
+import 'package:kryfo/stranger_gate.dart'
+    show kShelfBytes, kShelfFileSlices, kShelfPlaces;
 import 'package:kryfo/wire_pad.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
@@ -461,8 +463,12 @@ void main() {
       expect(utf8Length(padSeal(text(2 * step))), 3 * step - 1);
       // up to the longest line the onion door takes
       expect(utf8Length(padSeal(text(3 * step))), kSealOnionMost);
-      final huge = text(kSealOnionMost);
-      expect(padSeal(huge), huge);
+      // past it nothing is sealed, so no size of its own goes out
+      expect(utf8Length(padSeal(text(kSealOnionMost - 30))), kSealOnionMost);
+      expect(
+        () => padSeal(text(kSealOnionMost)),
+        throwsA(isA<FrameTooLarge>()),
+      );
       // no relay takes a rumor past the last size: it is left as it is
       final big = text(kRumorSizes.last);
       expect(padRumor(big), big);
@@ -648,6 +654,31 @@ void main() {
       final full = await slice(12288, 0);
       final last = await slice(10, 2);
       expect(last.length, full.length);
+    });
+
+    test('a frame too big for any route is not sealed', () async {
+      final huge = 'halo/1:${jsonEncode({'m': 'x' * kSealOnionMost})}';
+      await expectLater(
+        alice.ss.encryptTo('bob', huge),
+        throwsA(isA<FrameTooLarge>()),
+      );
+      // the session goes on as it was
+      final env = await wrapMessage('after', sender: _me);
+      expect(
+        unpad(await _open(bob, 'alice', await alice.ss.encryptTo('bob', env))),
+        env,
+      );
+    });
+
+    test('a stranger\'s shelf has the room it had before the filler', () {
+      // the largest file a stranger may leave, in opener slices, and a short
+      // opener in every other place. 0.5.1 sealed them to 22496 and 588
+      int room(int slice, int short) =>
+          kShelfBytes - kShelfFileSlices * slice - (kShelfPlaces - 1) * short;
+      expect(
+        room(_openerWire[3], _openerWire[0]),
+        greaterThanOrEqualTo((16 << 20) - kShelfFileSlices * 22496 - 19 * 588),
+      );
     });
 
     test('the filler is inside the seal', () async {

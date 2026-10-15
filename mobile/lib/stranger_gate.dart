@@ -66,7 +66,7 @@ const kShelfPlaces = 20;
 const kShelfFileSlices = 512;
 
 // what one stranger's shelf may take on disk, whatever it holds
-const kShelfBytes = 16 << 20;
+const kShelfBytes = 20 << 20;
 
 // what the shelf does with a row: keeps it, has no place for it (it waits
 // on the relay), or drops it for good

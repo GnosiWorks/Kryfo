@@ -12,11 +12,12 @@ const kPadField = 'pz';
 // plaintext bytes a signal seal is filled to. each is the most that keeps
 // a plain message and an opener on one gift wrap size (3949, 8729, 27841,
 // 55149 and 76993 bytes) and one count of tor cells. the fourth holds a
-// media slice, the last is the most a relay takes
+// media slice, the last is the largest a gift wrap can hold
 const kSealSizes = [847, 2767, 10447, 21135, 30399];
 
-// past the last size only the onion takes it: whole multiples of that
-// size, up to the longest line the door reads
+// past the last size only the onion carries it: filled to whole multiples
+// of 30400 bytes less one, up to the longest line the door reads. past that
+// it is not sealed
 const kSealOnionMost = 98143;
 
 // the same five gift wraps for a frame that is the rumor itself (a room
@@ -24,12 +25,18 @@ const kSealOnionMost = 98143;
 // the last no relay takes it, and it is left as it is
 const kRumorSizes = [1200, 3760, 14000, 28340, 40604];
 
+// a frame past what any route takes is not sealed at all: no size of its
+// own goes out, and no message key is spent on it
+class FrameTooLarge implements Exception {
+  const FrameTooLarge();
+}
+
 const _prefix = 'halo/1:';
 const _zero = 0x30;
 
-// the size a slice of a file in several is filled to at least, so the last
-// one looks like the rest
-const _sliceSize = 3;
+// where in the sizes a slice of a file in several starts, so the last one
+// is filled like the rest
+const _sliceFrom = 3;
 
 /// [plain] filled to the next seal size, as signal seals it
 String padSeal(String plain) => _pad(plain, _sealTarget, utf8Length);
@@ -86,17 +93,17 @@ int rumorLength(String s) {
 }
 
 int? _sealTarget(int need, bool slice) {
-  for (final s in kSealSizes.skip(slice ? _sliceSize : 0)) {
+  for (final s in kSealSizes.skip(slice ? _sliceFrom : 0)) {
     if (need <= s) return s;
   }
+  if (need > kSealOnionMost) throw const FrameTooLarge();
   final step = kSealSizes.last + 1;
   final t = (need + step) ~/ step * step - 1;
-  if (t <= kSealOnionMost) return t;
-  return need <= kSealOnionMost ? kSealOnionMost : null;
+  return t <= kSealOnionMost ? t : kSealOnionMost;
 }
 
 int? _rumorTarget(int need, bool slice) {
-  for (final s in kRumorSizes.skip(slice ? _sliceSize : 0)) {
+  for (final s in kRumorSizes.skip(slice ? _sliceFrom : 0)) {
     if (need <= s) return s;
   }
   return null;
