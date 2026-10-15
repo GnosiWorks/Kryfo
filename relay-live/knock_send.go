@@ -472,7 +472,7 @@ func (q *knockQueue) result(ep *knockEP, decoy bool, code int, err error) {
 		// the server is pacing us, not refusing the endpoint
 		k.stats.failed.Add(1)
 		return
-	case err == nil && code < 400:
+	case err == nil && code >= 200 && code < 300:
 		k.mu.Lock()
 		ep.fails, ep.failingSince, ep.lastFail = 0, time.Time{}, time.Time{}
 		if !ep.delivered {

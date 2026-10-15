@@ -1443,6 +1443,24 @@ func TestKnockNewEndpointSurvivesAShortOutage(t *testing.T) {
 	}
 }
 
+// a redirect is not a knock delivered: it counts as a failure
+func TestKnockRedirectIsNotDelivered(t *testing.T) {
+	tk := newTestKnocks(t)
+	for i, code := range []int{301, 302, 303, 307, 308} {
+		url := fmt.Sprintf("https://ntfy.sh/moved%d", i)
+		ev := r3reg(r3key(i), url, tk.clock.now())
+		if rej, msg := tk.take(nil, &ev); rej {
+			t.Fatal(msg)
+		}
+		ep := tk.eps[url]
+		tk.q.result(ep, true, code, nil)
+		_, sh := tk.shareOf("ntfy.sh")
+		if _, pend := sh.pending[ep]; ep.delivered || !pend || ep.fails != 1 {
+			t.Fatalf("%d: delivered %v, still new %v, %d failures", code, ep.delivered, pend, ep.fails)
+		}
+	}
+}
+
 // at send time a name that is not there lets a new endpoint go; a resolver
 // that fails does not
 func TestKnockNewEndpointWithoutANameGoes(t *testing.T) {
