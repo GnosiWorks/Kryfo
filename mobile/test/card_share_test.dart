@@ -39,7 +39,7 @@ void main() {
       asked.add(args);
       // the native side copies it before it answers
       read.add(File(args['path']! as String).readAsStringSync());
-      return true;
+      return 'picked';
     });
   });
 

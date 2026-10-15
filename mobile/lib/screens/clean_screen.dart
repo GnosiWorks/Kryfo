@@ -11,6 +11,7 @@ import '../meta/meta_reader.dart';
 import '../shred.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
+import '../open_file.dart' show ShareEnd;
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_sheet.dart';
@@ -164,10 +165,10 @@ class _CleanScreenState extends State<CleanScreen>
     final r = _result;
     if (r == null || _busy) return;
     setState(() => _busy = true);
-    final ok = await ToolsBridge.instance.shareOut(r.path!, r.mime!);
+    final end = await ToolsBridge.instance.shareOut(r.path!, r.mime!);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (!ok) _say(l10n.cleanNoAppOnThis);
+    if (end == ShareEnd.failed) _say(l10n.cleanNoAppOnThis);
   }
 
   Future<void> _saveIt() async {

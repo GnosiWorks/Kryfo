@@ -301,6 +301,10 @@ var (
 	netChangedAt  time.Time
 	netWorker     bool
 	lastNetBounce time.Time
+	// when tor last went on the network, and the network the watch said
+	// was there then
+	netOnAt  time.Time
+	netOnNet netInfo
 )
 
 // vars rather than consts so the test can run the debounce in milliseconds
@@ -418,11 +422,27 @@ func netParked() {
 // DisableNetwork 0 commands tor took, counted under the control lock
 var netOns atomic.Int64
 
+// tor was told DisableNetwork 1 and has not gone on since. it starts that
+// way. under the control lock
+var torNetOff atomic.Bool
+
+func init() { torNetOff.Store(true) }
+
+// tor took DisableNetwork 1: every connection it held is closed
+func netWentOff() { torNetOff.Store(true) }
+
 // tor went on the network. a park that came meanwhile found it parked
 // still and left it, so it is looked at again. under the control lock
 func netWentOn() {
 	netOns.Add(1)
 	torParked.Store(false)
+	// a 0 to a tor that was on already keeps what it held on the old network
+	if torNetOff.Swap(false) {
+		n, _ := netDetailNow()
+		netMu.Lock()
+		netOnAt, netOnNet = time.Now(), n
+		netMu.Unlock()
+	}
 	if netAway() {
 		go netPark()
 	}
@@ -581,6 +601,7 @@ func networkChanged() {
 
 func netBounceWorker() {
 	for {
+		now, _ := netDetailNow()
 		netMu.Lock()
 		wait := time.Until(netChangedAt.Add(netQuiet))
 		if gap := time.Until(lastNetBounce.Add(netGap)); gap > wait {
@@ -591,8 +612,18 @@ func netBounceWorker() {
 			time.Sleep(wait)
 			continue
 		}
-		lastNetBounce = time.Now()
 		netWorker = false
+		// tor went on the network after the last change, on the network that
+		// is there now: all it holds was made on this one. a bounce asked for
+		// before tor came up has nothing left to do
+		if netOnAt.After(netChangedAt) && !torParked.Load() && sameNetwork(netOnNet, now) {
+			netMu.Unlock()
+			log.Println("halo: tor went on this network after the change, no bounce")
+			// the check still runs: tor has to prove itself here all the same
+			go netCheckFor(netEpoch.Load())
+			return
+		}
+		lastNetBounce = time.Now()
 		bounce := netBounce
 		netMu.Unlock()
 
@@ -631,7 +662,11 @@ var netLeaveDirect = func(ons int64) {
 		if netOns.Load() != ons || autoDirectOK.Load() {
 			return nil
 		}
-		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		if err := c.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+			return err
+		}
+		netWentOff()
+		return nil
 	})
 	if err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
@@ -643,6 +678,11 @@ var netLeaveDirect = func(ons int64) {
 var netBounce func()
 
 func init() { netBounce = bounceForNetwork }
+
+// the check alone, for a bounce left out. set in init as netBounce
+var netCheckFor func(int64) string
+
+func init() { netCheckFor = netCheck }
 
 func bounceForNetwork() {
 	log.Println("halo: network changed, bouncing tor")

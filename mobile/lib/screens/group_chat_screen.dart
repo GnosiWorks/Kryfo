@@ -977,6 +977,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (_waiting && joining == null && _loaded) {
         HapticFeedback.lightImpact();
       }
+      _holdSeen();
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
         _memberCount = members.length;
@@ -1442,7 +1443,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         went = true;
       }
     }
-    if (_earlier.seenIn(_anchors) || went) setState(() {});
+    if ((!_reloading && _earlier.seenIn(_anchors)) || went) setState(() {});
+  }
+
+  // a reload's first frame can lay rows out where they do not stay: none
+  // counts as seen until the frame after
+  bool _reloading = false;
+  void _holdSeen() {
+    _reloading = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reloading = false;
+        _lookEarlier();
+      });
+      WidgetsBinding.instance.scheduleFrame();
+    });
   }
 
   // a row that comes in, grows or folds moves the others without a scroll
@@ -4054,35 +4069,43 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               ),
                             NotificationListener<ScrollMetricsNotification>(
                               onNotification: _threadResized,
-                              child: ListView.builder(
-                                key: _listKey,
+                              // the newest bubble's time rests above the line
+                              child: EarlierRoom(
+                                shown: _earlier.count > 0,
                                 controller: _scrollCtrl,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
-                                itemCount: _messages.length,
-                                itemBuilder: (_, i) {
-                                  // one unbuildable message must not cost the
-                                  // whole conversation.
-                                  try {
-                                    return _buildGroupRow(i);
-                                  } catch (e) {
-                                    dlog('group bubble failed: \$e');
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      child: Text(
-                                        l10n.groupChatThisMessageCanT,
-                                        style: HaloType.sans(
-                                          size: 12,
-                                          color: HaloColors.text2,
+                                reversed: false,
+                                builder: (_, room) => ListView.builder(
+                                  key: _listKey,
+                                  controller: _scrollCtrl,
+                                  padding: EdgeInsets.fromLTRB(
+                                    14,
+                                    12,
+                                    14,
+                                    12 + room,
+                                  ),
+                                  itemCount: _messages.length,
+                                  itemBuilder: (_, i) {
+                                    // one unbuildable message must not cost the
+                                    // whole conversation.
+                                    try {
+                                      return _buildGroupRow(i);
+                                    } catch (e) {
+                                      dlog('group bubble failed: \$e');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
                                         ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                        child: Text(
+                                          l10n.groupChatThisMessageCanT,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                             Positioned(
