@@ -74,8 +74,13 @@ Uint8List? _maskWith(Uint8List wav, MaskDraw draw) {
   }
   final out = maskSamples(mono, rate, draw);
   mono.fillRange(0, frames, 0);
-  final res = Uint8List.fromList(wav);
+  // the head and the disguised samples: nothing past them, which could be
+  // samples a short length left out
+  final res = Uint8List.fromList(
+    Uint8List.sublistView(wav, 0, start + 2 * channels * frames),
+  );
   final o = ByteData.sublistView(res);
+  o.setUint32(4, res.length - 8, Endian.little);
   for (var i = 0; i < out.length; i++) {
     final v = out[i].round().clamp(-32767, 32767);
     for (var c = 0; c < channels; c++) {
@@ -90,7 +95,117 @@ Uint8List? _maskWith(Uint8List wav, MaskDraw draw) {
 /// note [maskWav] makes. false, and nothing at [to], for anything that is
 /// not 16-bit pcm or a take that will not read
 Future<bool> maskWavFile(String from, String to, {int? seed}) =>
-    Isolate.run(() => _maskFile(from, to, _drawOf(seed)));
+    startMaskFile(from, to, seed: seed).done;
+
+/// [maskWavFile] that can be stopped. [onProgress] hears how far it is,
+/// 0 to 1, on the calling isolate
+MaskJob startMaskFile(
+  String from,
+  String to, {
+  int? seed,
+  void Function(double done)? onProgress,
+}) {
+  final job = MaskJob._(to);
+  final port = ReceivePort();
+  var made = false;
+  port.listen((msg) {
+    if (msg is SendPort) {
+      job._port = msg;
+      if (job._stopped) msg.send('stop');
+    } else if (msg is int) {
+      if (!job._stopped) onProgress?.call(msg / 100);
+    } else if (msg is bool) {
+      made = msg;
+    } else if (msg == null) {
+      // the isolate is out: what it left that is not wanted goes
+      port.close();
+      job._end(made);
+    }
+  });
+  Isolate.spawn(
+    _fileMain,
+    (port.sendPort, from, to, _drawOf(seed)),
+    onExit: port.sendPort,
+    onError: port.sendPort,
+  ).catchError((Object _) {
+    port.close();
+    job._end(false);
+    return Isolate.current;
+  });
+  return job;
+}
+
+/// a whole-take disguise under way, see [startMaskFile]
+class MaskJob {
+  MaskJob._(this.to);
+
+  /// where the note is written
+  final String to;
+  final _done = Completer<bool>();
+  SendPort? _port;
+  bool _stopped = false;
+
+  /// true once the note is at [to]; false when it failed or was stopped,
+  /// and then nothing of it is left
+  Future<bool> get done => _done.future;
+
+  /// stopped: [done] is false and what was made is shredded
+  void cancel() {
+    if (_stopped) return;
+    _stopped = true;
+    _port?.send('stop');
+  }
+
+  bool get cancelled => _stopped;
+
+  Future<void> _end(bool made) async {
+    if (!made || _stopped) {
+      // a crash leaves its pieces, a stop that came late leaves the note
+      await Isolate.run(() {
+        _shredSync(_prePath(to));
+        _shredSync(to);
+      }).catchError((Object _) {});
+    }
+    if (!_done.isCompleted) _done.complete(made && !_stopped);
+  }
+}
+
+// the whole-take disguise in its own isolate, a piece at a time, with a
+// turn between pieces for a stop to get in
+Future<void> _fileMain((SendPort, String, String, MaskDraw) a) async {
+  final (out, from, to, draw) = a;
+  final inbox = ReceivePort();
+  var stop = false;
+  inbox.listen((_) => stop = true);
+  out.send(inbox.sendPort);
+  final f = _FileMask(to, draw);
+  var ok = false;
+  try {
+    if (f.open(from)) {
+      var told = -1;
+      while (f.more && !stop) {
+        f.step();
+        final p = f.frames == 0 ? 100 : 100 * f.done ~/ f.frames;
+        if (p != told) {
+          told = p;
+          out.send(p);
+        }
+        await Future<void>.delayed(Duration.zero);
+      }
+      if (!stop) {
+        f.finish();
+        ok = true;
+      }
+    }
+  } catch (_) {
+    ok = false;
+  } finally {
+    f.close();
+    if (!ok) _shredSync(to);
+    inbox.close();
+  }
+  Isolate.exit(out, ok);
+}
 
 /// where the disguise of the take at [take] is written
 String maskPathOf(String take) => take.endsWith('.wav')
@@ -108,48 +223,89 @@ const _headMax = 64 * 1024;
 const _chunk = 1 << 15;
 
 bool _maskFile(String from, String to, MaskDraw draw) {
-  RandomAccessFile? src;
-  _MaskOut? m;
+  final f = _FileMask(to, draw);
   var ok = false;
   try {
-    src = File(from).openSync();
-    final size = src.lengthSync();
-    final at = _pcmAt(src.readSync(math.min(size, _headMax)), size);
-    if (at == null) return false;
-    final (start, len, channels, rate) = at;
-    final frames = len ~/ (2 * channels);
-    m = _MaskOut(to, rate, draw);
-    src.setPositionSync(start);
-    final d = Float64List(_chunk);
-    final raw = Uint8List(2 * channels * _chunk);
-    for (var done = 0; done < frames;) {
-      final k = math.min(_chunk, frames - done);
-      final b = _readFull(src, 2 * channels * k, raw);
-      final v = ByteData.sublistView(b);
-      for (var i = 0; i < k; i++) {
-        var s = 0;
-        for (var c = 0; c < channels; c++) {
-          s += v.getInt16(2 * (i * channels + c), Endian.little);
-        }
-        d[i] = s / channels;
-      }
-      b.fillRange(0, b.length, 0);
-      m.add(Float64List.sublistView(d, 0, k));
-      done += k;
+    if (!f.open(from)) return false;
+    while (f.more) {
+      f.step();
     }
-    d.fillRange(0, d.length, 0);
-    raw.fillRange(0, raw.length, 0);
-    m.finish(src, start, frames, channels);
+    f.finish();
     ok = true;
     return true;
   } catch (_) {
     return false;
   } finally {
-    try {
-      src?.closeSync();
-    } catch (_) {}
-    m?.drop();
+    f.close();
     if (!ok) _shredSync(to);
+  }
+}
+
+// a take disguised whole into [to], a piece at a time
+class _FileMask {
+  _FileMask(this.to, this.draw);
+
+  final String to;
+  final MaskDraw draw;
+  RandomAccessFile? _src;
+  _MaskOut? _m;
+  int _start = 0, _channels = 1;
+  int frames = 0, done = 0;
+  Float64List? _d;
+  Uint8List? _raw;
+
+  // false for anything that is not 16-bit pcm
+  bool open(String from) {
+    final src = _src = File(from).openSync();
+    final size = src.lengthSync();
+    final at = _pcmAt(src.readSync(math.min(size, _headMax)), size);
+    if (at == null) return false;
+    final (start, len, channels, rate) = at;
+    _start = start;
+    _channels = channels;
+    frames = len ~/ (2 * channels);
+    _m = _MaskOut(to, rate, draw);
+    src.setPositionSync(start);
+    _d = Float64List(_chunk);
+    _raw = Uint8List(2 * channels * _chunk);
+    return true;
+  }
+
+  bool get more => done < frames;
+
+  void step() {
+    final d = _d!, channels = _channels;
+    final k = math.min(_chunk, frames - done);
+    final b = _readFull(_src!, 2 * channels * k, _raw);
+    final v = ByteData.sublistView(b);
+    for (var i = 0; i < k; i++) {
+      var s = 0;
+      for (var c = 0; c < channels; c++) {
+        s += v.getInt16(2 * (i * channels + c), Endian.little);
+      }
+      d[i] = s / channels;
+    }
+    b.fillRange(0, b.length, 0);
+    _m!.add(Float64List.sublistView(d, 0, k));
+    done += k;
+  }
+
+  void finish() {
+    _zero();
+    _m!.finish(_src!, _start, frames, _channels);
+  }
+
+  void _zero() {
+    _d?.fillRange(0, _d!.length, 0);
+    _raw?.fillRange(0, _raw!.length, 0);
+  }
+
+  void close() {
+    _zero();
+    try {
+      _src?.closeSync();
+    } catch (_) {}
+    _m?.drop();
   }
 }
 
@@ -239,8 +395,8 @@ class _MaskOut {
     }
   }
 
-  // the note at [to]: [src] up to [start], the [frames] made at the level
-  // on each of [channels], then the rest of [src]
+  // the note at [to]: [src] up to [start], then the [frames] made at the
+  // level on each of [channels]
   void finish(RandomAccessFile src, int start, int frames, int channels) {
     s.end();
     s.drain(_write);
@@ -268,7 +424,13 @@ class _MaskOut {
         done += k;
       }
       o.fillRange(0, o.length, 0);
-      _copy(src, out, start + 2 * channels * frames, src.lengthSync());
+      // nothing past the samples made: bytes there could be samples a
+      // short length left out
+      final size = ByteData(4)
+        ..setUint32(0, start + 2 * channels * frames - 8, Endian.little);
+      out
+        ..setPositionSync(4)
+        ..writeFromSync(size.buffer.asUint8List());
       out.flushSync();
     } finally {
       out.closeSync();
@@ -509,9 +671,13 @@ class MaskStreamer {
   /// [to] reads them before it returns: they are zeroed after
   void drain(void Function(Float64List made) to) {
     if (_outLen == 0) return;
-    to(Float64List.sublistView(_out, 0, _outLen));
-    _out.fillRange(0, _outLen, 0);
-    _outLen = 0;
+    try {
+      to(Float64List.sublistView(_out, 0, _outLen));
+    } finally {
+      // let go even when [to] throws, or the next drain hands them again
+      _out.fillRange(0, _outLen, 0);
+      _outLen = 0;
+    }
   }
 
   /// the end of the note: its last frames, left for [drain]. the samples
@@ -832,25 +998,35 @@ void _liveMain((SendPort, String, int, int?, int, int) a) {
       return;
     }
     gone = 0;
+    final int n;
     try {
-      final w = m ??= _MaskOut(to, rate, draw);
-      file ??= File(path).openSync();
-      final f = file!;
+      final f = file ??= File(path).openSync();
       var want = f.lengthSync() - at;
       want -= want & 1;
       if (want > turn) want = turn;
       if (want <= 0) return;
       f.setPositionSync(at);
-      final n = f.readIntoSync(buf, 0, want);
-      final got = n - (n & 1);
-      hash = _hash16(hash, Int16List.sublistView(buf, 0, got));
-      w.addPcm16(Uint8List.sublistView(buf, 0, got));
-      buf.fillRange(0, n, 0);
-      at += got;
-      out.send(w.s.made);
+      n = f.readIntoSync(buf, 0, want);
     } catch (_) {
       // not readable now: the finish reads it whole
+      return;
     }
+    final got = n - (n & 1);
+    final _MaskOut w;
+    try {
+      w = m ??= _MaskOut(to, rate, draw);
+      w.addPcm16(Uint8List.sublistView(buf, 0, got));
+    } catch (_) {
+      // what is made cannot be written, a full disk most likely: this
+      // ends here, and the finish disguises the take whole or says why not
+      buf.fillRange(0, n, 0);
+      quit(const _Failed());
+    }
+    // counted as read only once it is in
+    hash = _hash16(hash, Int16List.sublistView(buf, 0, got));
+    buf.fillRange(0, n, 0);
+    at += got;
+    out.send(w.s.made);
   }
 
   tick = Timer.periodic(Duration(milliseconds: every), (_) => pull());

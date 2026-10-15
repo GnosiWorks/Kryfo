@@ -182,6 +182,36 @@ void main() {
       expect(p.first, lessThan(0.4));
     });
 
+    test('samples a block apart are read two bytes at a time', () {
+      final dir = Directory.systemTemp.createTempSync('wave');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      // one bar over 16 million frames: a sample read every 80 kb. sparse,
+      // so it takes no disk
+      const n = 400 * 40000;
+      final f = File('${dir.path}/far.wav').openSync(mode: FileMode.write)
+        ..writeFromSync(wav(const []))
+        ..truncateSync(44 + 2 * n);
+      final v = ByteData(2)..setInt16(0, 1000, Endian.little);
+      for (var i = 0; i < n; i += 40000 * 7) {
+        f
+          ..setPositionSync(44 + 2 * i)
+          ..writeFromSync(v.buffer.asUint8List());
+      }
+      f
+        ..setPositionSync(40)
+        ..writeFromSync(
+          (ByteData(
+            4,
+          )..setUint32(0, 2 * n, Endian.little)).buffer.asUint8List(),
+        )
+        ..closeSync();
+      wavPeaksRead = 0;
+      final p = wavFilePeaks('${dir.path}/far.wav', 1);
+      expect(wavPeaksRead, lessThan(128 * 1024));
+      expect(p, wavPeaks(File('${dir.path}/far.wav').readAsBytesSync(), 1));
+      expect(p!.single, 1);
+    });
+
     test('anything but 16-bit pcm has no wave', () {
       expect(wavPeaks(wav(_quietThenLoud(400), format: 3), 6), isNull);
       expect(wavPeaks(Uint8List.fromList(List.filled(60, 7)), 6), isNull);

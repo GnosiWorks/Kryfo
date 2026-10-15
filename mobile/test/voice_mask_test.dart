@@ -2,6 +2,7 @@
 // the voice disguise: as many samples out as in, so the speed stays; the
 // pitch moves; the same seed gives the same note and each note draws its
 // own; the hiss of a consonant is kept; nothing clips
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -229,7 +230,7 @@ void main() {
         _hissy(5.3),
         // two channels, read as one
         _stereo(wav(1.3)),
-        // a chunk after the samples, kept as it was
+        // a chunk after the samples, left out
         _tail(wav(0.9)),
       ].indexed) {
         final from = put('vn_$i.wav', w);
@@ -259,6 +260,58 @@ void main() {
         await maskWavFile('${dir.path}/gone.wav', '${dir.path}/gone_m.wav'),
         isFalse,
       );
+    });
+
+    test('a length short of the samples: nothing past it goes, made whole '
+        'or a piece at a time', () async {
+      final w = wav(2);
+      final half = (w.length - 44) ~/ 2;
+      ByteData.sublistView(w).setUint32(40, half, Endian.little);
+      final from = put('vn_short.wav', w);
+      final to = '${dir.path}/vn_short_m.wav';
+      expect(await maskWavFile(from, to, seed: 4), isTrue);
+      for (final m in [File(to).readAsBytesSync(), maskWav(w, seed: 4)!]) {
+        expect(m.length, 44 + half);
+        final d = ByteData.sublistView(m);
+        // the head says what the file holds
+        expect(d.getUint32(4, Endian.little), m.length - 8);
+        expect(d.getUint32(40, Endian.little), half);
+        expect(m.sublist(44), isNot(w.sublist(44, 44 + half)));
+      }
+    });
+
+    test('stopped part way: false, and nothing of it is left', () async {
+      final from = put('vn_long.wav', wav(240));
+      final to = '${dir.path}/vn_long_m.wav';
+      var last = 0.0;
+      final first = Completer<void>();
+      final job = startMaskFile(
+        from,
+        to,
+        onProgress: (p) {
+          last = p;
+          if (!first.isCompleted) first.complete();
+        },
+      );
+      await first.future;
+      job.cancel();
+      expect(await job.done, isFalse);
+      expect(last, lessThan(0.5));
+      expect(dir.listSync().map((e) => e.path), [from]);
+    });
+
+    test('run out, it says how far it went, to the end', () async {
+      final from = put('vn_p.wav', wav(5));
+      final to = '${dir.path}/vn_p_m.wav';
+      final seen = <double>[];
+      final job = startMaskFile(from, to, seed: 2, onProgress: seen.add);
+      expect(await job.done, isTrue);
+      expect(seen.last, 1.0);
+      expect(File(to).readAsBytesSync(), maskWav(wav(5), seed: 2));
+      // a stop after the end leaves the note to whoever has it
+      job.cancel();
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(File(to).existsSync(), isTrue);
     });
 
     test('the disguise goes next to its take', () {

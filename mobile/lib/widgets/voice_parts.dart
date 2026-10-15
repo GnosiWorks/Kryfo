@@ -75,15 +75,30 @@ List<double>? wavFilePeaks(String path, int bars) {
     final (start, frame, frames) = at;
     final block = Uint8List(64 * 1024);
     final view = ByteData.sublistView(block);
-    var from = 0, len = 0;
+    final one = Uint8List(2);
+    final oneView = ByteData.sublistView(one);
+    var from = 0, len = 0, last = -1;
     return _peaks(frames, bars, (i) {
       final pos = start + i * frame;
-      if (pos < from || pos + 2 > from + len) {
-        from = pos;
-        f.setPositionSync(pos);
-        len = f.readIntoSync(block, 0, math.min(block.length, size - pos));
-        if (len < 2) throw const FileSystemException('short read');
+      final far = last >= 0 && (pos - last).abs() >= block.length;
+      last = pos;
+      if (pos >= from && pos + 2 <= from + len) {
+        return view.getInt16(pos - from, Endian.little);
       }
+      if (far) {
+        // samples a block apart: the two bytes alone
+        f.setPositionSync(pos);
+        if (f.readIntoSync(one) < 2) {
+          throw const FileSystemException('short read');
+        }
+        wavPeaksRead += 2;
+        return oneView.getInt16(0, Endian.little);
+      }
+      from = pos;
+      f.setPositionSync(pos);
+      len = f.readIntoSync(block, 0, math.min(block.length, size - pos));
+      if (len < 2) throw const FileSystemException('short read');
+      wavPeaksRead += len;
       return view.getInt16(pos - from, Endian.little);
     });
   } catch (_) {
@@ -95,6 +110,10 @@ List<double>? wavFilePeaks(String path, int bars) {
 
 // how far into a file its samples are looked for
 const _headMax = 64 * 1024;
+
+/// the sample bytes [wavFilePeaks] has read, for tests
+@visibleForTesting
+int wavPeaksRead = 0;
 
 // where a 16-bit pcm wav's samples are in [b], the head of a file of
 // [size]: their start, the bytes of a frame, and how many frames. null for

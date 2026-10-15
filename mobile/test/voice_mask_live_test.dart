@@ -167,6 +167,45 @@ void main() {
     s.end();
   });
 
+  test('a drain whose writer fails lets go of what it was handed', () {
+    final x = _mono(_wav(3));
+    final s = MaskStreamer(_rate, MaskDraw.from(math.Random(2)));
+    s.add(Float64List.sublistView(x, 0, _rate));
+    expect(
+      () => s.drain((_) => throw const FileSystemException('full')),
+      throwsA(isA<FileSystemException>()),
+    );
+    s.add(Float64List.sublistView(x, _rate, 2 * _rate));
+    var got = 0;
+    s.drain((v) => got += v.length);
+    // what the second second made, not the first again with it
+    expect(got, inInclusiveRange(_rate - 2048, _rate + 2048));
+  });
+
+  test('a disk that takes nothing more: the live disguise ends at once, '
+      'and the finish says so', () async {
+    if (!File('/dev/full').existsSync()) {
+      markTestSkipped('no /dev/full here');
+      return;
+    }
+    final r = _Recorder(dir, _wav(20));
+    // what it makes before the level lands on a full disk
+    final side = maskPathOf(r.path).replaceFirst(RegExp(r'\.wav$'), '_f.wav');
+    Link(side).createSync('/dev/full');
+    final live = (await LiveMask.start(
+      r.path,
+      seed: 3,
+      every: const Duration(milliseconds: 5),
+    ))!;
+    await _record(r, pause: const Duration(milliseconds: 5));
+    r.stop();
+    // it does not go round on the same samples while the note records on
+    await live.exited.timeout(const Duration(seconds: 10));
+    expect(await live.finish(), isNull);
+    // nothing it made is left, and the way to the full disk is gone too
+    expect(dir.listSync().map((e) => e.path), [r.path]);
+  });
+
   test('read off the file as it records: the take made whole', () async {
     final take = _wav(4.2);
     final r = _Recorder(dir, take);
