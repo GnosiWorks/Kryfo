@@ -4,9 +4,7 @@
 // free. stopped there, the note can be heard first, as recorded or
 // disguised, before it goes. the raw take never outlives the note
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -27,12 +25,13 @@ import 'press_scale.dart';
 import 'voice_parts.dart';
 
 /// a note as the mic hands it on. [path] is the raw take, the sender's to
-/// shred. [masked] is the disguised one made for the preview, sent as heard
+/// shred. [masked] is the file of the disguised one made for the preview,
+/// sent as heard, the sender's too
 class VoiceTake {
   final String path;
   final int ms;
   final bool disguise;
-  final Uint8List? masked;
+  final String? masked;
   const VoiceTake({
     required this.path,
     required this.ms,
@@ -120,8 +119,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   // the disguise made while a disguised note records
   Future<LiveMask?>? _streaming;
-  // the preview: the disguised take, made once, and its file to play
-  Future<Uint8List?>? _maskJob;
+  // the preview: the disguised take's file, made once, to play and send
+  Future<String?>? _maskJob;
   String? _maskedPath;
   List<double>? _peaks;
   AudioPlayer? _player;
@@ -156,7 +155,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   // a live disguise finished: null when there was none or it failed, and
   // the take is disguised whole
-  static Future<Uint8List?> _finishLive(Future<LiveMask?>? s) async {
+  static Future<String?> _finishLive(Future<LiveMask?>? s) async {
     try {
       return await (await s)?.finish();
     } catch (e) {
@@ -338,6 +337,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       // the chat went while it was made: the raw take goes, unsent
       if (!mounted) {
         await shredFile(take);
+        if (masked != null) await shredFile(masked);
         return;
       }
       widget.onSend(
@@ -425,73 +425,53 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     HapticFeedback.lightImpact();
     setState(() => _stage = VoiceStage.preview);
     _overlay?.rebuild();
-    Uint8List? raw;
-    try {
-      raw = await File(take).readAsBytes();
-    } catch (e) {
-      dlog('voice: the take did not read (${e.runtimeType})');
-    }
-    if (raw == null || _held != take) {
-      raw?.fillRange(0, raw.length, 0);
-      return;
-    }
-    _peaks = wavPeaks(raw, kVoiceBars);
-    // the preview shows what the note holds, as its bubble will
-    _ms = wavMs(raw) ?? _ms;
-    _overlay?.rebuild();
     // made at once, so the chip has it by the time it is touched
     handed();
-    _maskJob = _makeMask(raw, take, live);
+    _maskJob = _makeMask(take, live);
+    // read from the file a piece at a time, however long the note
+    final peaks = await takePeaks(take);
+    final ms = await wavFileMs(take);
+    if (_held != take) return;
+    _peaks = peaks;
+    // the preview shows what the note holds, as its bubble will
+    _ms = ms ?? _ms;
+    _overlay?.rebuild();
   }
 
   // the disguise made while recording when there is one, else the whole
-  // take now
-  Future<Uint8List?> _makeMask(
-    Uint8List raw,
-    String take, [
-    Future<LiveMask?>? live,
-  ]) async {
-    Uint8List? m;
+  // take now. its file is the preview's until the note goes
+  Future<String?> _makeMask(String take, [Future<LiveMask?>? live]) async {
+    String? m;
     try {
       m = await (await live)?.finish();
     } catch (e) {
       dlog('voice: the live disguise failed (${e.runtimeType})');
     }
-    try {
-      m ??= await maskWavOff(raw);
-    } catch (e) {
-      dlog('voice: no disguise (${e.runtimeType})');
+    if (m == null && _held == take) {
+      final p = maskPathOf(take);
+      try {
+        if (await maskWavFile(take, p)) m = p;
+      } catch (e) {
+        dlog('voice: no disguise (${e.runtimeType})');
+      }
     }
-    // the take's bytes in memory, zeroed once they are not needed
-    raw.fillRange(0, raw.length, 0);
     if (m == null || _held != take) {
+      if (m != null) await shredFile(m);
       _overlay?.rebuild();
-      return m;
+      return null;
     }
-    final dir = await getTemporaryDirectory();
-    final p = '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}_m.wav';
-    try {
-      await File(p).writeAsBytes(m, flush: true);
-    } catch (e) {
-      dlog('voice: the disguised take did not write (${e.runtimeType})');
-      await shredFile(p);
-      return m;
-    }
-    if (_held != take) {
-      await shredFile(p);
-      return m;
-    }
-    _maskedPath = p;
+    _maskedPath = m;
     _overlay?.rebuild();
     if (_playWhenReady && _chip) {
       _playWhenReady = false;
-      await _play(p);
+      await _play(m);
     }
     return m;
   }
 
-  // the preview goes: its player, and both takes shredded
-  void _dropPreview() {
+  // the preview goes: its player, and both takes shredded. [keep] is the
+  // disguised one when it goes with the note
+  void _dropPreview({bool keep = false}) {
     final held = _held, masked = _maskedPath;
     _held = null;
     _maskedPath = null;
@@ -500,7 +480,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _playWhenReady = false;
     _pos = Duration.zero;
     if (held != null) shredFile(held).ignore();
-    if (masked != null) shredFile(masked).ignore();
+    if (masked != null && !keep) shredFile(masked).ignore();
   }
 
   void _discard() {
@@ -527,7 +507,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     if (_held != held) return;
     _held = null;
     _stopPlayer();
-    _dropPreview();
+    _dropPreview(keep: masked != null);
     _release();
     _stage = VoiceStage.idle;
     _overlay?.leave();

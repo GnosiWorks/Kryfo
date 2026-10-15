@@ -2,6 +2,7 @@
 // the voice disguise: as many samples out as in, so the speed stays; the
 // pitch moves; the same seed gives the same note and each note draws its
 // own; the hiss of a consonant is kept; nothing clips
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -207,8 +208,91 @@ void main() {
     expect(maskWav(Uint8List.fromList('not a wav'.codeUnits)), isNull);
   });
 
-  test('off the calling isolate it is the same note', () async {
-    final w = wav(0.8);
-    expect(await maskWavOff(w, seed: 11), maskWav(w, seed: 11));
+  group('from file to file', () {
+    late Directory dir;
+    setUp(() => dir = Directory.systemTemp.createTempSync('mask_file'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    String put(String name, Uint8List b) {
+      final f = File('${dir.path}/$name')..writeAsBytesSync(b);
+      return f.path;
+    }
+
+    test('a piece at a time, off the calling isolate, it is the note made '
+        'whole', () async {
+      for (final (i, w) in [
+        wav(0.8),
+        _hissy(2.2),
+        wav(0.0),
+        wav(0.01),
+        // longer than a piece
+        _hissy(5.3),
+        // two channels, read as one
+        _stereo(wav(1.3)),
+        // a chunk after the samples, kept as it was
+        _tail(wav(0.9)),
+      ].indexed) {
+        final from = put('vn_$i.wav', w);
+        final to = '${dir.path}/vn_${i}_m.wav';
+        expect(await maskWavFile(from, to, seed: 11), isTrue, reason: '$i');
+        expect(File(to).readAsBytesSync(), maskWav(w, seed: 11), reason: '$i');
+        // the take is left as it was, and nothing on the way is left
+        expect(File(from).readAsBytesSync(), w);
+        expect(dir.listSync().map((e) => e.path).toSet(), {
+          from,
+          to,
+        }, reason: '$i');
+        File(from).deleteSync();
+        File(to).deleteSync();
+      }
+    });
+
+    test('anything but 16-bit pcm: false, and nothing written', () async {
+      final eight = Uint8List.fromList(wav(0.5))..[34] = 8;
+      for (final w in [eight, Uint8List.fromList('not a wav'.codeUnits)]) {
+        final from = put('vn_x.wav', w);
+        final to = '${dir.path}/vn_x_m.wav';
+        expect(await maskWavFile(from, to), isFalse);
+        expect(dir.listSync().map((e) => e.path), [from]);
+      }
+      expect(
+        await maskWavFile('${dir.path}/gone.wav', '${dir.path}/gone_m.wav'),
+        isFalse,
+      );
+    });
+
+    test('the disguise goes next to its take', () {
+      expect(maskPathOf('/c/vn_1757.wav'), '/c/vn_1757_m.wav');
+    });
   });
 }
+
+// the same samples on two channels
+Uint8List _stereo(Uint8List w) {
+  final n = (w.length - 44) ~/ 2;
+  final d = ByteData.sublistView(w);
+  final b = ByteData(44 + n * 4);
+  final o = b.buffer.asUint8List()..setRange(0, 44, w);
+  b.setUint32(4, 36 + n * 4, Endian.little);
+  b.setUint16(22, 2, Endian.little);
+  b.setUint32(28, 16000 * 4, Endian.little);
+  b.setUint16(32, 4, Endian.little);
+  b.setUint32(40, n * 4, Endian.little);
+  for (var i = 0; i < n; i++) {
+    final v = d.getInt16(44 + 2 * i, Endian.little);
+    b.setInt16(44 + 4 * i, v, Endian.little);
+    b.setInt16(46 + 4 * i, (v * 0.7).round(), Endian.little);
+  }
+  return o;
+}
+
+// a chunk after the samples, as some recorders write
+Uint8List _tail(Uint8List w) => Uint8List.fromList([
+  ...w,
+  ...'LIST'.codeUnits,
+  6,
+  0,
+  0,
+  0,
+  ...'kryfo!'.codeUnits,
+]);

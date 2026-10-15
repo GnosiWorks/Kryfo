@@ -25,7 +25,6 @@ import '../widgets/media_bubbles.dart'
     show ImageCaptionScreen, VoiceBubble, fileCard, fileTooBigLine;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
-import '../voice_mask.dart' show maskWavOff;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
@@ -3353,36 +3352,36 @@ class _ChatScreenState extends State<ChatScreen>
     // the chat went while the note was made: the raw voice goes, unsent
     if (!mounted || _requestLocked) {
       // one that will not go is swept at the next start
-      shredFile(srcPath).ignore();
+      dropTake(srcPath, take.masked).ignore();
       return;
     }
-    if (!await src.exists()) return;
-    if (!mounted) return shredFile(srcPath);
+    if (!await src.exists()) return dropTake(srcPath, take.masked);
+    if (!mounted) return dropTake(srcPath, take.masked);
     if (_isDev && !await _ensureDevStarted()) {
-      await shredFile(srcPath);
+      await dropTake(srcPath, take.masked);
       return;
     }
     // read after the start: an anonymous chat is disguised whatever the
     // note says
     final disguise = take.disguise || _devAnon;
-    // the recorder's own file is the voice before any disguise, so it goes
-    // once read. the copy kept with the message is below
-    final raw = await takeRecording(srcPath);
-    if (raw == null) return;
-    final bytes = disguise ? take.masked ?? await maskWavOff(raw) : raw;
-    // never sent as recorded when it was to go disguised
-    if (bytes == null) {
-      if (mounted) showHaloToast(context, l10n.voiceNotDisguised);
-      return;
-    }
-    if (!identical(bytes, raw)) raw.fillRange(0, raw.length, 0);
-    if (!mounted) return;
-    if (_requestPending) setState(() => _sentCount++);
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final dest = File('${mediaDir.path}/vn_$msgUid.wav');
-    await dest.writeAsBytes(bytes);
-    final filePath = dest.path;
+    final filePath = '${mediaDir.path}/vn_$msgUid.wav';
+    // the recorder's own file is the voice before any disguise: it is the
+    // copy kept with the message, or it goes once the disguise is there
+    final placed = await placeVoice(
+      srcPath,
+      filePath,
+      disguise: disguise,
+      masked: take.masked,
+    );
+    // never sent as recorded when it was to go disguised
+    if (!placed) {
+      if (disguise && mounted) showHaloToast(context, l10n.voiceNotDisguised);
+      return;
+    }
+    if (!mounted) return shredFile(filePath);
+    if (_requestPending) setState(() => _sentCount++);
     final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',

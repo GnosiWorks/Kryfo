@@ -121,7 +121,6 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart' show photoHeroTag;
 import '../widgets/voice_mic.dart';
-import '../voice_mask.dart' show maskWavOff;
 import '../polls.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
@@ -1948,12 +1947,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _onVoice(VoiceTake take) {
     // the chat went while the note was made: the raw voice goes, unsent
     if (!mounted) {
-      unawaited(shredFile(take.path));
+      unawaited(dropTake(take.path, take.masked));
       return;
     }
     // the last one left while it recorded: the raw voice goes, unsent
     if (_nobodyToRead()) {
-      unawaited(shredFile(take.path));
+      unawaited(dropTake(take.path, take.masked));
       return;
     }
     _sendGroupVoice(take);
@@ -2333,22 +2332,25 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _sendGroupVoice(VoiceTake take) async {
     final srcPath = take.path;
     final disguise = take.disguise;
-    // the recorder's file is the voice before any disguise: it goes once read
-    final raw = await takeRecording(srcPath);
-    if (raw == null) return;
-    final bytes = disguise ? take.masked ?? await maskWavOff(raw) : raw;
-    // never sent as recorded when it was to go disguised
-    if (bytes == null) {
-      if (mounted) showHaloToast(context, l10n.voiceNotDisguised);
-      return;
-    }
-    if (!identical(bytes, raw)) raw.fillRange(0, raw.length, 0);
-    // ended while it was recorded: nothing is written
-    if (!await _stillHere()) return;
+    if (!await File(srcPath).exists()) return dropTake(srcPath, take.masked);
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final dest = File('${mediaDir.path}/vn_$uid.wav');
-    await dest.writeAsBytes(bytes);
+    // the recorder's file is the voice before any disguise: it is the copy
+    // kept with the message, or it goes once the disguise is there
+    final placed = await placeVoice(
+      srcPath,
+      dest.path,
+      disguise: disguise,
+      masked: take.masked,
+    );
+    // never sent as recorded when it was to go disguised
+    if (!placed) {
+      if (disguise && mounted) showHaloToast(context, l10n.voiceNotDisguised);
+      return;
+    }
+    // ended while it was recorded: nothing is kept
+    if (!await _stillHere()) return shredFile(dest.path);
     final burn = _ghost ? _burnSeconds : null;
     final reply = _takeReply();
     final m = _GMsg(

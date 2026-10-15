@@ -71,10 +71,10 @@ class _Spy implements LiveMask {
   final List<String> log;
   // held shut, the finish waits for it
   Completer<void>? gate;
-  Uint8List? made;
+  String? made;
 
   @override
-  Future<Uint8List?> finish() async {
+  Future<String?> finish() async {
     log.add('finish');
     await gate?.future;
     return made = await real.finish();
@@ -458,17 +458,16 @@ void main() {
       final take = sent.single;
       expect(take.disguise, isTrue);
       expect(take.path, recording);
-      expect(take.masked, isNotNull);
-      expect(take.masked!.length, raw.length);
-      expect(take.masked, isNot(raw));
-      // the disguised copy made for the preview is gone
-      await shredded(t, heard.single.path);
-      expect(
-        tmp.listSync().whereType<File>().where(
-          (f) => f.path.endsWith('_m.wav'),
-        ),
-        isEmpty,
-      );
+      // the disguised copy made for the preview goes with it, as heard
+      expect(take.masked, heard.single.path);
+      final masked = File(take.masked!).readAsBytesSync();
+      expect(masked.length, raw.length);
+      expect(masked, isNot(raw));
+      // and nothing else of it is left
+      expect(tmp.listSync().whereType<File>().map((f) => f.path).toSet(), {
+        recording,
+        take.masked,
+      });
       await close(t);
     });
 
@@ -485,6 +484,11 @@ void main() {
       await settle(t);
       expect(sent.single.disguise, isFalse);
       expect(sent.single.masked, isNull);
+      // the disguise made for the preview does not stay behind
+      bool left() =>
+          tmp.listSync().whereType<File>().any((f) => f.path != recording);
+      await until(t, () => !left());
+      expect(left(), isFalse);
       await close(t);
     });
 
@@ -498,9 +502,9 @@ void main() {
       final take = sent.single;
       expect(take.disguise, isTrue);
       expect(take.path, recording);
-      expect(take.masked, isNotNull);
-      expect(take.masked!.length, raw.length);
-      expect(take.masked, isNot(raw));
+      final masked = File(take.masked!).readAsBytesSync();
+      expect(masked.length, raw.length);
+      expect(masked, isNot(raw));
       await close(t);
     });
 
@@ -520,7 +524,7 @@ void main() {
       await t.tap(find.bySemanticsLabel(l10n.commonSend));
       await settle(t);
       final raw = File(recording!).readAsBytesSync();
-      final masked = sent.single.masked!;
+      final masked = File(sent.single.masked!).readAsBytesSync();
       expect(masked.length, raw.length);
       // a wav like the take, its samples not the take's
       expect(masked.sublist(0, 44), raw.sublist(0, 44));
@@ -543,7 +547,7 @@ void main() {
         expect(sent.single.disguise, isTrue);
         expect(sent.single.masked, isNotNull);
         expect(sent.single.masked, spies.single.made);
-        expect(sent.single.masked, isNot(raw));
+        expect(File(sent.single.masked!).readAsBytesSync(), isNot(raw));
         await ended(t);
         await close(t);
       },
