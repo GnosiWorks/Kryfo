@@ -722,8 +722,11 @@ func captiveWay(gen int64) {
 	}
 }
 
-// a var for the tests
-var captiveBounce = func() { _ = reconnectAuto() }
+// vars for the tests
+var (
+	captiveBounce = func() { _ = reconnectAuto() }
+	holdBounce    = func() { _ = reconnectNow() }
+)
 
 // one pass and what it began with
 type passCtx struct {
@@ -1252,6 +1255,7 @@ func applyBridgeMode(mode, raw string) string {
 		return "error: unknown mode"
 	}
 
+	heldBefore := networkHold()
 	autoMu.Lock()
 	prevMode, prevOpts := bmMode, bmOpts
 	same := prevMode == mode && optsEqual(prevOpts, o)
@@ -1288,6 +1292,11 @@ func applyBridgeMode(mode, raw string) string {
 	gateDrop()
 	if mode == bmAuto {
 		stSet(func() { autoSt.phase, autoSt.method, autoSt.source = "trying", "", "" })
+		// the direct step tor was on is over: off the network now, not when
+		// a pass gets to it, as none may run behind a portal
+		if prevMode == bmAuto && heldBefore == "" && networkHold() == errAutoWait && torStarted() && !torIsPaused() {
+			go holdBounce()
+		}
 		autoStart(gen)
 		return "ok"
 	}

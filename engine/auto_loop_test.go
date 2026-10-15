@@ -6,6 +6,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cretz/bine/control"
+	"github.com/cretz/bine/tor"
 )
 
 // the loop that starts passes, the gate's owner, and what a network change,
@@ -253,6 +256,50 @@ func TestCaptiveKeepsTheKnownWay(t *testing.T) {
 	if why := networkHold(); why != errAutoWait {
 		t.Fatalf("an unknown way put in place behind a portal: %q", why)
 	}
+}
+
+// direct put back behind a portal, then direct turned off in the options:
+// tor leaves the network at once, as no pass runs there to do it
+func TestSkipDirectTakesTorOffBehindAPortal(t *testing.T) {
+	f := useFakeAuto(t, netInfo{On: true, Limited: true, Kind: "wifi"})
+	memRemember("wifi", autoStep{Method: "direct"}, dayOf(f.now))
+	var bounces atomic.Int32
+	oldH, oldC := holdBounce, captiveBounce
+	holdBounce = func() { bounces.Add(1) }
+	captiveBounce = func() {}
+	mu.Lock()
+	had := torNode
+	torNode = &tor.Tor{Control: &control.Conn{}}
+	mu.Unlock()
+	defer func() {
+		holdBounce, captiveBounce = oldH, oldC
+		mu.Lock()
+		torNode = had
+		mu.Unlock()
+	}()
+	if r := setBridgeMode(bmAuto, `{"consent":"no"}`); r != "ok" {
+		t.Fatalf("auto: %s", r)
+	}
+	captiveWay(autoGen())
+	if why := networkHold(); why != "" {
+		t.Fatalf("direct not back behind the portal: %q", why)
+	}
+	if n := bounces.Load(); n != 0 {
+		t.Fatalf("bounced %d times before the change", n)
+	}
+	if r := setBridgeMode(bmAuto, `{"consent":"no","skip_direct":true}`); r != "ok" {
+		t.Fatalf("skip direct: %s", r)
+	}
+	for end := time.Now().Add(time.Second); bounces.Load() == 0 && time.Now().Before(end); {
+		time.Sleep(time.Millisecond)
+	}
+	if n := bounces.Load(); n != 1 {
+		t.Fatalf("tor taken off the direct path %d times", n)
+	}
+	if why := networkHold(); why != errAutoWait {
+		t.Fatalf("hold after skip direct: %q", why)
+	}
+	stopLoop()
 }
 
 // a method that failed in a pass is no longer the one to check in by
