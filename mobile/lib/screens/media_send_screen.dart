@@ -107,14 +107,22 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     if (live.isEmpty) return;
     final to = i.clamp(0, live.length - 1);
     setState(() => _at = to);
-    // once the pages are laid out again: one just added is not there yet
-    final still = motionStill(context);
+    _moveTo(to, motionStill(context));
+  }
+
+  // after the frame that lays the pages out with what was added
+  void _moveTo(int to, bool still) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pages.hasClients) return;
       if (still) {
         _pages.jumpToPage(to);
       } else {
-        _pages.animateToPage(to, duration: kHouseTime, curve: kHouseCurve);
+        // no overshoot: a page that ends moving back snaps to the one before
+        _pages.animateToPage(
+          to,
+          duration: kHouseTime,
+          curve: Curves.easeOutCubic,
+        );
       }
     });
   }
@@ -230,9 +238,12 @@ class MediaSendScreenState extends State<MediaSendScreen> {
                   controller: _pages,
                   itemCount: n,
                   onPageChanged: (i) => setState(() => _at = i),
+                  // keyed by the count too: the pages learn how many there
+                  // are only when the one in view is put in again
                   itemBuilder: (_, i) => Padding(
+                    key: ValueKey((live[i].key, n)),
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                    child: _Large(key: live[i].key, media: live[i].media),
+                    child: _Large(media: live[i].media),
                   ),
                 ),
               ),
@@ -425,7 +436,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
 // the item large: a photo whole, a video by its first frame
 class _Large extends StatelessWidget {
   final PickedMedia media;
-  const _Large({super.key, required this.media});
+  const _Large({required this.media});
 
   @override
   Widget build(BuildContext context) {

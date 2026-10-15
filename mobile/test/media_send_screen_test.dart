@@ -142,6 +142,10 @@ void main() {
     expect(asked, 1);
     expect(screen(t).items.map(_tagOf), [1, 2, 3, 4]);
     expect(find.text('3 of 4'), findsOneWidget);
+    // a thumb tapped brings its item up large
+    await t.tap(find.bySemanticsLabel('Photo, 1 of 4'));
+    await t.pumpAndSettle();
+    expect(find.text('1 of 4'), findsOneWidget);
     await send(t);
     expect((await got)!.items.map(_tagOf), [1, 2, 3, 4]);
   });
