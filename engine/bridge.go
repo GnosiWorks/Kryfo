@@ -355,6 +355,8 @@ func startListener(dataDir string) string {
 
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
+	// torArgs start it with DisableNetwork 1
+	netWentOff()
 	choosePinnedSocks()
 	start := func() (*tor.Tor, error) {
 		return tor.Start(nil, &tor.StartConf{
@@ -518,7 +520,11 @@ func torRefused(err error) bool {
 func reconnectParks(t *tor.Tor) string {
 	log.Println("halo: leaving tor off the network (no network)")
 	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		if err := c.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+			return err
+		}
+		netWentOff()
+		return nil
 	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 	}
@@ -989,7 +995,11 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		return superseded
 	}
 	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		if err := c.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+			return err
+		}
+		netWentOff()
+		return nil
 	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 		if !reconnectMine(me) {
@@ -1139,7 +1149,11 @@ func torStop() string {
 		return "ok"
 	}
 	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		if err := c.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+			return err
+		}
+		netWentOff()
+		return nil
 	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 		atomic.StoreInt32(&torPaused, 0)

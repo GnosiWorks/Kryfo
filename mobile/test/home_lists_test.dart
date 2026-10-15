@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
@@ -657,6 +658,49 @@ void main() {
       expect(opened(t, l10n.homeOurRelayIsQuiet), lessThan(1));
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      await drain(t);
+    });
+
+    testWidgets('a wi-fi that wants a sign-in says so, with the way there', (
+      t,
+    ) async {
+      phone(t);
+      final wifi = <String>[];
+      final m = t.binding.defaultBinaryMessenger;
+      const ch = MethodChannel('halo/platform');
+      m.setMockMethodCallHandler(ch, (c) async {
+        wifi.add(c.method);
+        return true;
+      });
+      addTearDown(() => m.setMockMethodCallHandler(ch, null));
+      appState.sendModeForTest = 'private';
+      appState.setBridgeStatusForTest(
+        const BridgeStatus(
+          mode: 'auto',
+          phase: 'captive',
+          errorCode: 'limited',
+        ),
+      );
+      addTearDown(() => appState.setBridgeStatusForTest(BridgeStatus.none));
+      await t.pumpWidget(framed(_home()));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.bridgesSignInToThisWifi), findsOneWidget);
+      await t.tap(find.text(l10n.bridgesOpenWifiSettings));
+      await t.pump(const Duration(seconds: 1));
+      expect(wifi.where((m) => m == 'openWifiSettings'), hasLength(1));
+      expect(find.text(l10n.bridgesTorIsBlockedOnThis), findsNothing);
+      // signed in: the card goes
+      appState.setBridgeStatusForTest(
+        const BridgeStatus(
+          mode: 'auto',
+          phase: 'connected',
+          method: 'direct',
+          canSend: true,
+        ),
+      );
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.bridgesSignInToThisWifi), findsNothing);
       await drain(t);
     });
 
