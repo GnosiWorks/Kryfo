@@ -10438,8 +10438,16 @@
       }
     }
   },
-  "fileGoesAsItIs": "This file goes exactly as it is. Kryfo only cleans photos and videos.",
+  "fileGoesAsItIs": "This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.",
   "@fileGoesAsItIs": {
     "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
+  },
+  "fileRawPictureTitle": "Send this picture as it is?",
+  "@fileRawPictureTitle": {
+    "description": "chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)"
+  },
+  "fileRawPictureLine": "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
+  "@fileRawPictureLine": {
+    "description": "chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details"
   }
 }

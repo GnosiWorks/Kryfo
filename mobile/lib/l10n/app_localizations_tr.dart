@@ -8299,5 +8299,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'Bu dosya olduğu gibi gider. Kryfo yalnızca fotoğrafları ve videoları temizler.';
+      'Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.';
+
+  @override
+  String get fileRawPictureTitle => 'Bu resim olduğu gibi gönderilsin mi?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.';
 }

@@ -8420,5 +8420,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'Цей файл піде як є. Kryfo очищує лише фото й відео.';
+      'Цей файл піде як є. Kryfo очищує лише JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 і MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Надіслати це зображення як є?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Це зображення не можна очистити. Відомості на кшталт місця зйомки підуть разом із ним. Надішли його як фото, щоб очистити.';
 }

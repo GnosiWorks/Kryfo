@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "Gespeichert, aber Kryfo konnte die Kopie nicht prüfen",
   "fileNotSaved": "Konnte die Datei nicht speichern",
   "fileTooBig": "Diese Datei hat {size}. Dateien dürfen bis zu {max} groß sein.",
-  "fileGoesAsItIs": "Diese Datei geht genau so raus, wie sie ist. Kryfo bereinigt nur Fotos und Videos."
+  "fileGoesAsItIs": "Diese Datei geht genau so raus, wie sie ist. Kryfo bereinigt nur JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 und MOV.",
+  "fileRawPictureTitle": "Dieses Bild so senden, wie es ist?",
+  "fileRawPictureLine": "Dieses Bild kann nicht bereinigt werden. Angaben wie der Aufnahmeort gehen mit. Sende es als Foto, um es zu bereinigen."
 }

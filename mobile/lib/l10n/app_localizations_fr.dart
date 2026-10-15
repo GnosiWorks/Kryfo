@@ -8361,5 +8361,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'Ce fichier part tel quel. Kryfo ne nettoie que les photos et les vidéos.';
+      'Ce fichier part tel quel. Kryfo ne nettoie que les JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 et MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Envoyer cette image telle quelle ?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Cette image ne peut pas être nettoyée. Des détails comme le lieu de la prise de vue partent avec. Envoyez-la comme photo pour la nettoyer.';
 }

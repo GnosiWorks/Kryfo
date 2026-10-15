@@ -42,6 +42,7 @@ import '../file_kind.dart'
         fileFits,
         fileShapeNow,
         knownInstaller,
+        readFileFactsFresh,
         sendLaneCleans;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/notice_banner.dart';
@@ -3451,18 +3452,27 @@ class _ChatScreenState extends State<ChatScreen>
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out - a dialog on a 40kb photo would just be noise.
-  // [asItIs]: a kind the send lane does not clean, which it says
-  Future<bool> _confirmBigSend(int bytes, {bool asItIs = false}) async {
-    if (bytes < 512 * 1024) return true;
+  // [asItIs]: a kind the send lane does not clean, which it says. [raw]: a
+  // picture it cannot clean, which is always asked, whatever its size
+  Future<bool> _confirmBigSend(
+    int bytes, {
+    bool asItIs = false,
+    bool raw = false,
+  }) async {
+    final big = bytes >= 512 * 1024;
+    if (!big && !raw) return true;
     if (!mounted) return false;
+    final why = raw ? l10n.fileRawPictureLine : l10n.fileGoesAsItIs;
     final ok = await showConfirmSheet(
       context,
-      title: l10n.chatSendThis,
+      title: raw ? l10n.fileRawPictureTitle : l10n.chatSendThis,
       figure: appState.sendMode == 'private'
           ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
           : _humanBytes(bytes),
-      line: asItIs
-          ? '${l10n.chatBigFilesGoOut}\n\n${l10n.fileGoesAsItIs}'
+      line: !big
+          ? why
+          : asItIs || raw
+          ? '${l10n.chatBigFilesGoOut}\n\n$why'
           : l10n.chatBigFilesGoOut,
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
@@ -3542,9 +3552,11 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return;
     }
+    final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
     if (!await _confirmBigSend(
       size,
       asItIs: !await sendLaneCleans(src, name),
+      raw: raw,
     )) {
       return;
     }
@@ -3565,7 +3577,10 @@ class _ChatScreenState extends State<ChatScreen>
     // a gallery video carries where, on what and when, like a photo. it is
     // stripped in place on our own copy, and one that cannot be walked is
     // not sent. one renamed is told by its bytes
-    if (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path)) {
+    // a raw picture is not one, whatever it is called: the video cleaner
+    // would break it without cleaning it
+    if (!raw &&
+        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {

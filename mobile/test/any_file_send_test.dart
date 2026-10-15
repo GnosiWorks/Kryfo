@@ -6,6 +6,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/media_resend.dart' show kMaxFileSlices;
 import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
 
 import 'source_body.dart';
@@ -87,15 +88,42 @@ void main() {
 
   test('a video is cleaned by its bytes as well as its name', () {
     screens.forEach((file, sig) {
-      final send = bodyOf(sourceOf(file), sig.$2);
+      final send = bodyOf(
+        sourceOf(file),
+        sig.$2,
+      ).replaceAll(RegExp(r'\s+'), ' ');
       expect(
         send,
         contains(
-          'if (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path)) {',
+          'if (!raw && (videoNameNeedsStrip(name) || '
+          'await bytesSayIsoVideo(dest.path))) {',
         ),
         reason: file,
       );
     });
+  });
+
+  test('a picture the lane cannot clean is always asked about', () {
+    screens.forEach((file, sig) {
+      final send = bodyOf(sourceOf(file), sig.$2);
+      expect(
+        send,
+        contains('readFileFactsFresh(src, name))?.raw'),
+        reason: file,
+      );
+    });
+    final chat = sourceOf('lib/screens/chat_screen.dart');
+    final sheet = bodyOf(chat, 'Future<bool> _confirmBigSend(');
+    expect(sheet, contains('if (!big && !raw) return true;'));
+    expect(sheet, contains('l10n.fileRawPictureLine'));
+    expect(sheet, contains('l10n.fileRawPictureTitle'));
+    final group = bodyOf(
+      sourceOf('lib/screens/group_chat_screen.dart'),
+      'Future<void> _sendGroupFileFrom(',
+    );
+    final ask = group.indexOf('line: l10n.fileRawPictureLine');
+    expect(ask, greaterThan(0));
+    expect(ask, lessThan(group.indexOf('newMsgUid()')));
   });
 
   test('a big file the lane does not clean says it goes as it is', () {
@@ -132,5 +160,20 @@ void main() {
       sourceOf('lib/screens/group_chat_screen.dart'),
       contains('fileCard('),
     );
+  });
+
+  test('a receiver keeps no file bigger than any kryfo sends', () {
+    // the largest file is whole slices of 12288 bytes, with room to spare
+    expect((kMaxFileBytes + 12287) ~/ 12288, 1280);
+    expect(kMaxFileSlices, greaterThanOrEqualTo(1280));
+    expect(kMaxFileSlices, lessThan(1400));
+    final recv = sourceOf('lib/main.dart');
+    final at = recv.indexOf(
+      'if (env.fileB64 != null && !env.voice && total > kMaxFileSlices) {',
+    );
+    expect(at, greaterThan(0));
+    // before a slice is kept
+    expect(at, lessThan(recv.indexOf('await db.putMediaChunk(', at - 4000)));
+    expect(recv.substring(at, recv.indexOf('}', at)), contains('return to;'));
   });
 }

@@ -3144,6 +3144,8 @@ final _calls = <_Call>[
   ('fileNotSaved', [], (l) => l.fileNotSaved),
   ('fileTooBig', ["⟨size⟩", "⟨max⟩"], (l) => l.fileTooBig("⟨size⟩", "⟨max⟩")),
   ('fileGoesAsItIs', [], (l) => l.fileGoesAsItIs),
+  ('fileRawPictureTitle', [], (l) => l.fileRawPictureTitle),
+  ('fileRawPictureLine', [], (l) => l.fileRawPictureLine),
 ];
 
 void main() {

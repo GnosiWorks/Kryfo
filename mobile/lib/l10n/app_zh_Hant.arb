@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "已儲存，但 Kryfo 無法檢查這份副本",
   "fileNotSaved": "無法儲存檔案",
   "fileTooBig": "這個檔案有 {size}。檔案最大為 {max}。",
-  "fileGoesAsItIs": "這個檔案會原樣送出。Kryfo 只清理照片和影片。"
+  "fileGoesAsItIs": "這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。",
+  "fileRawPictureTitle": "按原樣傳送這張圖片？",
+  "fileRawPictureLine": "這張圖片無法清理。拍攝地點等資訊會隨它一起送出。以照片形式傳送即可清理。"
 }

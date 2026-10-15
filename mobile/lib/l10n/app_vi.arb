@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "Đã lưu, nhưng Kryfo không kiểm tra được bản sao",
   "fileNotSaved": "Không lưu được tệp",
   "fileTooBig": "Tệp này nặng {size}. Tệp chỉ được tối đa {max}.",
-  "fileGoesAsItIs": "Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch ảnh và video."
+  "fileGoesAsItIs": "Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.",
+  "fileRawPictureTitle": "Gửi ảnh này nguyên trạng?",
+  "fileRawPictureLine": "Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch."
 }

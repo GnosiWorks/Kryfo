@@ -13350,8 +13350,20 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)
   ///
   /// In en, this message translates to:
-  /// **'This file goes exactly as it is. Kryfo only cleans photos and videos.'**
+  /// **'This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.'**
   String get fileGoesAsItIs;
+
+  /// chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)
+  ///
+  /// In en, this message translates to:
+  /// **'Send this picture as it is?'**
+  String get fileRawPictureTitle;
+
+  /// chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details
+  ///
+  /// In en, this message translates to:
+  /// **'This picture can\'t be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.'**
+  String get fileRawPictureLine;
 }
 
 class _AppLocalizationsDelegate

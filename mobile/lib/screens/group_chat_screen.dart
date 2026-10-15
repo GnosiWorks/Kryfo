@@ -29,7 +29,8 @@ import '../file_kind.dart'
         fileFactsRead,
         fileFits,
         fileShapeNow,
-        knownInstaller;
+        knownInstaller,
+        readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
@@ -2468,6 +2469,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       return;
     }
+    // a picture the lane cannot clean goes only once the sender has read
+    // that its details go with it
+    final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
+    if (raw && mounted) {
+      final ok = await showConfirmSheet(
+        context,
+        title: l10n.fileRawPictureTitle,
+        figure: humanFileSize(size),
+        line: l10n.fileRawPictureLine,
+        yes: l10n.chatSendIt,
+        keep: l10n.commonCancel,
+        rose: false,
+      );
+      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
+      if (!ok) return;
+    }
     // ended while it was picked: nothing is copied
     if (!await _stillHere()) return;
     final uid = newMsgUid();
@@ -2479,7 +2496,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // and when. stripped in place on our own copy; a file that cannot be
     // walked is not sent, the same as a jpeg that cannot be. one renamed is
     // told by its bytes
-    if (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path)) {
+    // a raw picture is not one, whatever it is called: the video cleaner
+    // would break it without cleaning it
+    if (!raw &&
+        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {

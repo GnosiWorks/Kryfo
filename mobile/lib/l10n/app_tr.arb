@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "Kaydedildi ama Kryfo kopyayı kontrol edemedi",
   "fileNotSaved": "Dosya kaydedilemedi",
   "fileTooBig": "Bu dosya {size}. Dosyalar en fazla {max} olabilir.",
-  "fileGoesAsItIs": "Bu dosya olduğu gibi gider. Kryfo yalnızca fotoğrafları ve videoları temizler."
+  "fileGoesAsItIs": "Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.",
+  "fileRawPictureTitle": "Bu resim olduğu gibi gönderilsin mi?",
+  "fileRawPictureLine": "Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder."
 }

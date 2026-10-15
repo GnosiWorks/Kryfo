@@ -8271,5 +8271,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'File ini dikirim apa adanya. Kryfo hanya membersihkan foto dan video.';
+      'File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Kirim gambar ini apa adanya?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
 }

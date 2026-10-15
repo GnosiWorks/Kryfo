@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "Збережено, але Kryfo не зміг перевірити копію",
   "fileNotSaved": "Не вдалося зберегти файл",
   "fileTooBig": "Цей файл важить {size}. Файли можуть бути до {max}.",
-  "fileGoesAsItIs": "Цей файл піде як є. Kryfo очищує лише фото й відео."
+  "fileGoesAsItIs": "Цей файл піде як є. Kryfo очищує лише JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 і MOV.",
+  "fileRawPictureTitle": "Надіслати це зображення як є?",
+  "fileRawPictureLine": "Це зображення не можна очистити. Відомості на кшталт місця зйомки підуть разом із ним. Надішли його як фото, щоб очистити."
 }

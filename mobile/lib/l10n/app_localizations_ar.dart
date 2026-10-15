@@ -8402,5 +8402,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo الصور والفيديوهات فقط.';
+      'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV فقط.';
+
+  @override
+  String get fileRawPictureTitle => 'إرسال هذه الصورة كما هي؟';
+
+  @override
+  String get fileRawPictureLine =>
+      'لا يمكن تنظيف هذه الصورة. تُرسل معها تفاصيل مثل مكان التقاطها. أرسلها كصورة عادية لتنظيفها.';
 }

@@ -7911,7 +7911,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get fileGoesAsItIs => '这个文件会原样发出。Kryfo 只清理照片和视频。';
+  String get fileGoesAsItIs =>
+      '这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+
+  @override
+  String get fileRawPictureTitle => '按原样发送这张图片？';
+
+  @override
+  String get fileRawPictureLine => '这张图片无法清理。拍摄地点等信息会随它一起发出。以照片形式发送即可清理。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15701,5 +15708,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get fileGoesAsItIs => '這個檔案會原樣送出。Kryfo 只清理照片和影片。';
+  String get fileGoesAsItIs =>
+      '這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+
+  @override
+  String get fileRawPictureTitle => '按原樣傳送這張圖片？';
+
+  @override
+  String get fileRawPictureLine => '這張圖片無法清理。拍攝地點等資訊會隨它一起送出。以照片形式傳送即可清理。';
 }

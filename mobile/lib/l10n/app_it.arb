@@ -2178,5 +2178,7 @@
   "fileSavedUnchecked": "Salvato, ma Kryfo non ha potuto verificare la copia",
   "fileNotSaved": "Impossibile salvare il file",
   "fileTooBig": "Questo file pesa {size}. I file possono arrivare a {max}.",
-  "fileGoesAsItIs": "Questo file parte così com'è. Kryfo pulisce solo foto e video."
+  "fileGoesAsItIs": "Questo file parte così com'è. Kryfo pulisce solo JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 e MOV.",
+  "fileRawPictureTitle": "Inviare questa immagine così com'è?",
+  "fileRawPictureLine": "Questa immagine non si può pulire. Dettagli come il luogo dello scatto partono con lei. Inviala come foto per pulirla."
 }

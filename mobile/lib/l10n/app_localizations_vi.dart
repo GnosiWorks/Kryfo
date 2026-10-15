@@ -8264,5 +8264,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fileGoesAsItIs =>
-      'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch ảnh và video.';
+      'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Gửi ảnh này nguyên trạng?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
 }
