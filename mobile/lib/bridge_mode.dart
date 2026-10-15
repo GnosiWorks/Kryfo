@@ -143,7 +143,7 @@ const _transports = ['obfs4', 'webtunnel', 'snowflake'];
 
 // a vanilla line starts with the address: 1.2.3.4:443 or [2001:db8::1]:443
 final _vanillaAddr = RegExp(
-  r'^(\d{1,3}(\.\d{1,3}){3}|\[[0-9a-f:.]+\]):\d{1,5}$',
+  r'^(\d{1,3}(\.\d{1,3}){3}|\[[0-9a-f.]*:[0-9a-f:.]*\]):\d{1,5}$',
   caseSensitive: false,
 );
 

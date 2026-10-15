@@ -593,6 +593,7 @@ void main() {
       expect(looksLikeBridges('[2001:db8::7]:443 $fp'), isTrue);
       expect(bridgeTransport('198.51.100.7:9001 $fp'), 'vanilla');
       expect(bridgeTransport('198.51.100.7 $fp'), isNull);
+      expect(bridgeTransport('[198.51.100.7]:443 $fp'), isNull);
       expect(bridgeTransport('example.org:443 $fp'), isNull);
       expect(bridgeTransport('obfs4 198.51.100.7:9001 $fp cert=x'), 'obfs4');
     });

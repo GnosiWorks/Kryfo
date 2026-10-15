@@ -13,6 +13,7 @@ func TestVanillaLinesAccepted(t *testing.T) {
 		tbVanilla,
 		"198.51.100.7:9001",
 		"[2001:db8::7]:443 " + testFP,
+		"[::ffff:192.0.2.9]:443",
 	} {
 		b, err := checkBridgeLine(ln)
 		if err != nil || b.transport != vanillaName {
@@ -25,6 +26,8 @@ func TestVanillaLinesAccepted(t *testing.T) {
 		"bridge.example:9001 " + testFP,
 		"198.51.100.7 " + testFP,
 		"198.51.100.7:0 " + testFP,
+		"[198.51.100.7]:443 " + testFP,
+		"obfs4 [198.51.100.7]:443 " + testFP + " cert=" + randomCert() + " iat-mode=0",
 	} {
 		if validBridgeLine(ln) {
 			t.Errorf("%q passed", ln)

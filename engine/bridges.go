@@ -210,6 +210,10 @@ func parseBridgeLine(s string) (bridgeLine, error) {
 	if net.ParseIP(host) == nil {
 		return b, fmt.Errorf("address is not an ip")
 	}
+	// tor reads brackets as ipv6 only: [1.2.3.4]:443 fails the whole set
+	if strings.HasPrefix(f[1], "[") && !strings.Contains(host, ":") {
+		return b, fmt.Errorf("ipv4 address in brackets")
+	}
 	b.addr = f[1]
 	rest := f[2:]
 	if len(rest) > 0 && !strings.Contains(rest[0], "=") {
