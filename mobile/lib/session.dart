@@ -306,8 +306,6 @@ class Session {
       _ofPeer(haloId).setArchived(haloId, archived);
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
       _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
-  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) =>
-      _ofPeer(peerId).setWallpaperPhoto(peerId, bytes);
   // their timed messages in the other container's groups start counting
   // too, and nothing queued for them there goes. the block holds
   // whatever happens there: one shut meanwhile starts them a day after

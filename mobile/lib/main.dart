@@ -4808,22 +4808,6 @@ class HaloDb implements GroupOwedStore {
     if (was != atmosphere) await _dropPhotos([was]);
   }
 
-  // a photo from the gallery behind a chat, under a new random name: the
-  // old file is shredded, not written over, no cached image of it shows,
-  // and the name says nothing of whose chat it is. the path it was kept at
-  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) async {
-    final dir = await container.folder('wallpapers');
-    final f = File(p.join(dir.path, _freshWallLeaf()));
-    try {
-      await f.writeAsBytes(bytes, flush: true);
-      await setAtmosphere(peerId, 'image:${f.path}');
-    } catch (_) {
-      await shredFile(f.path);
-      rethrow;
-    }
-    return f.path;
-  }
-
   // a chat's own voice disguise choice, null until one is made here
   Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) async {
     final db = await open();
@@ -4888,14 +4872,32 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  // a chat's own photo behind it, and its atmosphere saying so
+  // what a chat's atmosphere says now, as its row has it
+  static Future<String?> _wallOf(
+    DatabaseExecutor t,
+    String chatId,
+    bool group,
+  ) async {
+    final r = await t.query(
+      group ? 'groups' : 'contacts',
+      columns: ['atmosphere'],
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['atmosphere'] as String?;
+  }
+
+  // a chat's own photo behind it, and its atmosphere saying so. a file an
+  // older version kept for it is shredded once the row is written
   Future<void> setChatPhoto(
     String chatId,
     Uint8List photo, {
     bool group = false,
   }) async {
     final db = await open();
-    await db.transaction((t) async {
+    final was = await db.transaction((t) async {
+      final was = await _wallOf(t, chatId, group);
       await t.insert('wallpapers', {
         'chat': wallKey(chatId, group: group),
         'atmo': kPhotoWall,
@@ -4907,7 +4909,9 @@ class HaloDb implements GroupOwedStore {
         where: group ? 'group_id = ?' : 'halo_id = ?',
         whereArgs: [chatId],
       );
+      return was;
     });
+    await _dropPhotos([was]);
   }
 
   // a built-in by name, or null to follow the default. a photo it had goes
@@ -4917,7 +4921,8 @@ class HaloDb implements GroupOwedStore {
     bool group = false,
   }) async {
     final db = await open();
-    await db.transaction((t) async {
+    final was = await db.transaction((t) async {
+      final was = await _wallOf(t, chatId, group);
       await t.delete(
         'wallpapers',
         where: 'chat = ?',
@@ -4929,7 +4934,9 @@ class HaloDb implements GroupOwedStore {
         where: group ? 'group_id = ?' : 'halo_id = ?',
         whereArgs: [chatId],
       );
+      return was;
     });
+    await _dropPhotos([was]);
   }
 
   // the default: a built-in by name, or kPhotoWall with its photo

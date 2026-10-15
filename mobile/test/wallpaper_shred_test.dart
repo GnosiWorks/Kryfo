@@ -161,17 +161,24 @@ void main() {
     expect(next.existsSync(), isTrue);
   });
 
-  test('a new photo lands under a name of its own', () async {
+  test('a new photo lands in the database, never a file, and the one an '
+      'older version kept is shredded', () async {
     final db = await rows();
-    final a = await db.setWallpaperPhoto(_peer, Uint8List.fromList([1]));
-    final b = await db.setWallpaperPhoto(_peer, Uint8List.fromList([2, 2]));
-    expect(a, isNot(b));
-    expect(File(a).existsSync(), isFalse);
-    expect(File(b).readAsBytesSync(), [2, 2]);
-    expect(atmo(db, _peer), 'image:$b');
-    expect(p.basename(File(b).parent.path), 'wallpapers');
-    // nothing in the name says whose chat it is
-    expect(p.basename(b), matches(RegExp(r'^wp_[0-9a-f]{32}\.jpg$')));
+    final old = await photo(db);
+    final dir = await db.container.folder('wallpapers');
+    await db.setChatPhoto(_peer, Uint8List.fromList([2, 2]));
+    expect(old.existsSync(), isFalse);
+    expect(dir.listSync(), isEmpty);
+    expect(atmo(db, _peer), 'photo');
+    expect((await db.wallpaperRow(_peer))?.photo, [2, 2]);
+  });
+
+  test('a built-in picked over an old photo shreds it', () async {
+    final db = await rows();
+    final old = await photo(db);
+    await db.setChatAtmosphere(_peer, 'dusk');
+    expect(old.existsSync(), isFalse);
+    expect(atmo(db, _peer), 'dusk');
   });
 
   test('the photo stays when the row is not written', () async {
