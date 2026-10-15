@@ -1373,6 +1373,29 @@ void main() {
       await expectLater(w.app.hideChats(people: [_v]), throwsStateError);
     });
 
+    test('destroy keeps what "this isn\'t them" blocked and let go in it, '
+        'on the everyday side, from its marks alone', () async {
+      final w = await _World.make(docs);
+      await w.app.createVault('246810');
+      await w.app.hideChats(people: [_h]);
+      await w.router.markKey('AB' * 32, on: true);
+      await w.router.markTomb('let-go-words', on: true);
+      final at = {
+        for (final r in await w.store.hidden())
+          r['chat_id'] as String: r['at'] as int,
+      };
+      await w.app.destroyVault();
+      expect(w.live['blocked_keys'], [
+        {'x': 'ab' * 32, 'at': at['key:${'ab' * 32}']},
+      ]);
+      expect(w.live['name_tombs'], [
+        {'name': 'let-go-words', 'at': at['tomb:let-go-words']},
+      ]);
+      // the marks themselves go with the vault
+      expect(w.router.keyBlocked('ab' * 32), isFalse);
+      expect(w.store.kinds(), {_h: kHiddenGone});
+    });
+
     test('never from inside the vault', () async {
       final w = await _World.make(docs);
       await w.app.createVault('246810');

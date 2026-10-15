@@ -17726,6 +17726,10 @@ class AppState extends ChangeNotifier {
     if (c == HaloContainer.vault) {
       // what a move cut short left in the everyday folders goes with it
       await _repairMoves();
+      // its database cannot be read now, its marks can: what it blocked and
+      // let go stays so on the everyday side, as no more than they say
+      final m = await _router.marks();
+      await live.takeBlocks(m.keys, m.tombs);
       await _router.forget();
       await _forgetPeers(_router.ids);
     }

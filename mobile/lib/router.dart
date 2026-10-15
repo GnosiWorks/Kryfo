@@ -636,6 +636,26 @@ class VaultRouter {
     await load();
   }
 
+  // the marks as kept, each with when it was made: what a vault that
+  // cannot be read any more still says it blocked and let go
+  Future<
+    ({List<({String x, int at})> keys, List<({String name, int at})> tombs})
+  >
+  marks() async {
+    final keys = <({String x, int at})>[];
+    final tombs = <({String name, int at})>[];
+    for (final r in await _store.hidden()) {
+      final id = r['chat_id'] as String;
+      final at = (r['at'] as num).toInt();
+      if (r['kind'] == kHiddenKeyMark) {
+        keys.add((x: id.substring(_kKeyAt.length), at: at));
+      } else if (r['kind'] == kHiddenTombMark) {
+        tombs.add((name: id.substring(_kTombAt.length), at: at));
+      }
+    }
+    return (keys: keys, tombs: tombs);
+  }
+
   // the marks go with the vault that made them
   Future<void> _unmarkAll() async {
     for (final r in await _store.hidden()) {
