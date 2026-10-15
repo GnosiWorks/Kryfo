@@ -922,7 +922,7 @@ List<TextSpan> searchLit(String text, String query, {required bool onAmber}) {
   if (q.isEmpty) return [TextSpan(text: text)];
   final lower = text.toLowerCase();
   final lit = TextStyle(
-    color: HaloColors.amberText,
+    color: onAmber ? HaloColors.amberOnOn : HaloColors.amberText,
     backgroundColor: onAmber
         ? HaloColors.onAmber
         : HaloColors.amberText.withValues(alpha: 0.22),

@@ -130,7 +130,7 @@ enum HaloAccent {
       Color(0xFF8837BA),
       Color(0x249D4ED1),
       Color(0xFFFFFBF4),
-      Color(0xFFC879FF),
+      Color(0xFFF55AFD),
     ),
     light: AccentTones(
       Color(0xFFAA30BA),
@@ -180,7 +180,7 @@ enum HaloAccent {
       Color(0xFF1F8CEB),
       Color(0x24359CFC),
       Color(0xFF1A1418),
-      Color(0xFF43A1FC),
+      Color(0xFF97CEFF),
     ),
     light: AccentTones(
       Color(0xFF1B3FCC),
@@ -263,6 +263,9 @@ class HaloColors {
   static Color get onAmber => _a.on;
   // the accent as a line of words: a mention, a small label
   static Color get amberText => _a.text;
+  // the accent's words on its own on colour (a chip or a button inside your
+  // bubble): the accent itself, 4.5:1 there as its on colour is to it
+  static Color get amberOnOn => _a.accent;
   static Color get amberBright => _accent.bright;
   static Color get amberBrightDeep => _accent.brightDeep;
   static Color get onAmberBright => _accent.onBright;

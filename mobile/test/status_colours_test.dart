@@ -132,4 +132,25 @@ void main() {
       }
     });
   }
+
+  test('words on the on colour inside your own bubble take the accent', () {
+    final lit = _between(
+      _src('lib/widgets/chat_parts.dart'),
+      'List<TextSpan> searchLit(',
+      'fontWeight: FontWeight.w600,',
+    );
+    expect(
+      lit,
+      contains('onAmber ? HaloColors.amberOnOn : HaloColors.amberText'),
+    );
+    final join = _between(
+      _src('lib/widgets/kryfo_link_text.dart'),
+      'l10n.kryfoLinkTextJoin2,',
+      '),',
+    );
+    expect(
+      join,
+      contains('onAmber ? HaloColors.amberOnOn : HaloColors.onAmber'),
+    );
+  });
 }

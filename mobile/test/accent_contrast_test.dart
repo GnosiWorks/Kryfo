@@ -63,6 +63,9 @@ void main() {
         // labels and message text on the accent: own bubbles, buttons
         need('on / accent', HaloColors.onAmber, HaloColors.amber, 4.5);
         need('on / deep', HaloColors.onAmber, HaloColors.amberDeep, 4.5);
+        // the accent's words on its on colour: a search hit or a join
+        // button inside your own bubble
+        need('words / on', HaloColors.amberOnOn, HaloColors.onAmber, 4.5);
         // the accent as an icon, a ring or large text
         for (final (name, ground) in [
           ('ink', HaloColors.ink),
@@ -136,12 +139,18 @@ void main() {
         HaloColors.setLight(light);
         HaloColors.setAccent(accent);
         for (final (name, c) in statusColours()) {
-          final d = distance(HaloColors.amber, c);
-          if (d < 0.12) {
-            close.add(
-              '${accent.name} ${light ? 'light' : 'dark'} ~ $name '
-              '${d.toStringAsFixed(3)}',
-            );
+          // the accent itself, and its words
+          for (final (what, tone) in [
+            ('accent', HaloColors.amber),
+            ('words', HaloColors.amberText),
+          ]) {
+            final d = distance(tone, c);
+            if (d < 0.12) {
+              close.add(
+                '${accent.name} ${light ? 'light' : 'dark'} $what ~ $name '
+                '${d.toStringAsFixed(3)}',
+              );
+            }
           }
         }
       }

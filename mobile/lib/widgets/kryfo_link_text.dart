@@ -409,7 +409,7 @@ class RoomInviteCard extends StatelessWidget {
                   style: HaloType.sans(
                     size: 13.5,
                     weight: FontWeight.w600,
-                    color: onAmber ? HaloColors.amberText : HaloColors.onAmber,
+                    color: onAmber ? HaloColors.amberOnOn : HaloColors.onAmber,
                   ),
                 ),
               ),
