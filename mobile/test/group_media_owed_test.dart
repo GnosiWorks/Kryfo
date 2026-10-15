@@ -1511,11 +1511,11 @@ void main() {
       });
     }
 
-    test('its colour is the app\'s amber, never a grey', () {
+    test('its colour is the accent\'s text tone, never a grey', () {
       final src = sourceOf('lib/widgets/file_reach.dart');
       expect(
         src,
-        contains('color: lost ? HaloColors.rose : HaloColors.amber,'),
+        contains('color: lost ? HaloColors.rose : HaloColors.amberText,'),
       );
       expect(src, isNot(contains('text2')));
       expect(src, isNot(contains('text3')));
