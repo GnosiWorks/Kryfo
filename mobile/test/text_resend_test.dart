@@ -258,7 +258,7 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex) {}
+  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
   @override
   void nostrUnsubscribeBg(String peerXPubHex) {}
   @override

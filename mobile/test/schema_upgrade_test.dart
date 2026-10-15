@@ -6,7 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show addColumn;
+import 'package:kryfo/main.dart' show addColumn, upgradeTo80;
 import 'package:sqflite_sqlcipher/sqflite.dart' show DatabaseExecutor;
 
 class _Db implements DatabaseExecutor {
@@ -73,4 +73,23 @@ void main() {
       expect(through, all, reason: f);
     }
   });
+
+  // a file at 78 may come from a build that had the ack column at 78: the
+  // order column and the rings table come again, then the ack column
+  test(
+    'the step to 80 makes up 78 and 79 for a file already past them',
+    () async {
+      bool ran(_Db db, String s) => db.ran.any((x) => x.contains(s));
+      final past = _Db(null);
+      await upgradeTo80(past, 78);
+      expect(ran(past, 'ADD COLUMN written_at'), isTrue);
+      expect(ran(past, 'notif_rings'), isTrue);
+      expect(past.ran.last, contains('ADD COLUMN ack_owed'));
+      // one from before 78 has them from their own steps
+      final before = _Db(null);
+      await upgradeTo80(before, 77);
+      expect(before.ran, hasLength(1));
+      expect(before.ran.single, contains('ADD COLUMN ack_owed'));
+    },
+  );
 }

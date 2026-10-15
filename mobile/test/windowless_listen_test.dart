@@ -102,7 +102,7 @@ class _Io extends ArrivalIo {
   var failsFor = 0;
 
   @override
-  void listen(String xPub) {
+  void listen(String xPub, {bool fresh = false}) {
     if (xPub == failing && failsFor > 0) {
       failsFor--;
       throw StateError('no runner');

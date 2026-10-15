@@ -201,6 +201,66 @@ func TestBridgeTimeStartsAtTheFirstDial(t *testing.T) {
 	}
 }
 
+// a cold start through built-in obfs4: the bridges bring the consensus,
+// then tor sits on 50% for over a minute while it fetches descriptors
+// through them. that bridge is working and is kept; one that never got
+// past the consensus in this attempt still ends at its own limit
+func TestDescriptorDownloadKeepsABridge(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	limit := methodLimit["obfs4"]
+	a := newSeen(t0)
+	a.firstDial = t0
+	steps := []bootPhase{
+		{Progress: 2, Tag: "conn_done_pt"}, {Progress: 10, Tag: "conn_done"},
+		{Progress: 25, Tag: "requesting_status"}, {Progress: 30, Tag: "loading_status"},
+		{Progress: 45, Tag: "requesting_descriptors"}, {Progress: 50, Tag: "loading_descriptors"},
+	}
+	for i, p := range steps {
+		a.bootstrap(p, true, t0.Add(time.Duration(i)*4*time.Second))
+	}
+	at50 := t0.Add(20 * time.Second)
+	// 88s on one percent, as a healthy built-in bridge did
+	if v, _ := judgeBridge(a, limit, at50.Add(88*time.Second)); v != seenTrying {
+		t.Fatalf("a bridge loading descriptors left at 88s: %s", v)
+	}
+	a.bootstrap(bootPhase{Progress: 52, Tag: "loading_descriptors"}, true, at50.Add(90*time.Second))
+	a.circ("BUILT", nil, at50.Add(150*time.Second))
+	if v, _ := judgeBridge(a, limit, at50.Add(150*time.Second)); v != seenOK {
+		t.Fatalf("got through: %s", v)
+	}
+	// stuck there for good: ends after the longer stall, never past the cap
+	b := newSeen(t0)
+	b.firstDial = t0
+	for i, p := range steps {
+		b.bootstrap(p, true, t0.Add(time.Duration(i)*4*time.Second))
+	}
+	if v, _ := judgeBridge(b, limit, at50.Add(descStall)); v != seenFailed {
+		t.Fatalf("stuck past the longer stall: %s", v)
+	}
+	// 50% from an earlier attempt, never moved in this one: its own limit
+	c := newSeen(t0)
+	c.firstDial = t0
+	c.bootstrap(bootPhase{Progress: 50, Tag: "loading_descriptors"}, true, t0)
+	if v, _ := judgeBridge(c, limit, t0.Add(limit)); v != seenFailed {
+		t.Fatalf("a bridge that brought nothing kept: %s", v)
+	}
+}
+
+// a cold start on a cached consensus: tor holds its progress back until
+// the first connection, then jumps straight to the descriptors. the bridge
+// brought no consensus, so it keeps its own limit
+func TestCachedConsensusJumpKeepsTheLimit(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	limit := methodLimit["obfs4"]
+	a := newSeen(t0)
+	a.firstDial = t0
+	a.bootstrap(bootPhase{Progress: 2, Tag: "conn_done_pt"}, true, t0)
+	a.bootstrap(bootPhase{Progress: 50, Tag: "loading_descriptors"}, true, t0.Add(5*time.Second))
+	if v, _ := judgeBridge(a, limit, t0.Add(5*time.Second+limit)); v != seenFailed {
+		t.Fatalf("a jump on a cached consensus got the longer stall: %s", v)
+	}
+}
+
 // a slow bootstrap that keeps moving keeps its method, whatever the method,
 // a stalled one fails at its own limit, and none runs past the cap
 func TestSteadyProgressKeepsAMethod(t *testing.T) {

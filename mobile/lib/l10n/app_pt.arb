@@ -523,6 +523,7 @@
   "chatMessageRequest": "Pedido de mensagem",
   "chatTheyNeedToAccept": "A pessoa precisa aceitar para vocês continuarem conversando.",
   "chatWaitingForThemTo": "Esperando a pessoa aceitar seu pedido",
+  "chatTheyMayNotKnow": "A pessoa pode não saber que você aceitou",
   "chatYouBlockedThisContact": "Você bloqueou este contato",
   "chatSupporter": "Apoiador",
   "chatEncryptedViaRelay": "Criptografado · via retransmissor",

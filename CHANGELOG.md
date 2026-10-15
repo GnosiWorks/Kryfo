@@ -20,6 +20,7 @@
 ### Changed
 - if tor stops answering while Kryfo is in the background, tor can restart itself. if it still can't connect, Kryfo says so plainly and offers a restart that keeps your messages.
 - when the network drops for a while, Kryfo gets going again much sooner once it's back.
+- messages are shown in the order they were sent, not the order they arrived.
 - the disguised voice is easier to understand.
 - a voice note's length counts from the first sound, rounded to the nearest second.
 - when someone you verified gets a new security code, Kryfo waits for you to check it or accept it before sending to them. their messages still arrive.
@@ -59,6 +60,15 @@
 - a group no longer keeps saying "Mentioned you" after that message is taken back.
 - a room its maker left now shows as closed.
 - sheets you type in, like the one for editing a message, close cleanly.
+- on the google keyboard, moving the cursor no longer selects text.
+- the camera stays upright when you turn the phone.
+- the startup screen is centred on all phones.
+- accepting a request while offline reaches them once you're back online. if it still can't, the chat says so and offers to try again.
+- someone you just added is heard right away, and a message you send while the first one is still being prepared keeps its place.
+- a voice note is thrown away if the chat closes as you start recording, or if android takes the touch away while you hold the mic.
+- deleting a chat or turning away a request also removes the wallpaper photo set for it.
+- if you back out of saving a backup and close the share sheet too, the backup is kept and Kryfo says it wasn't saved.
+- on a wi-fi that wants a sign-in first, the home screen says so and opens the wi-fi settings.
 
 ### Security
 - the engine is built with go 1.26.9, and its crypto and network libraries are updated: x/crypto 0.57.0 and x/net 0.60.0.

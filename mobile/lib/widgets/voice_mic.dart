@@ -127,6 +127,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
   @override
   void dispose() {
+    // a start still in flight sees no finger and shreds what it began
+    _live = false;
     _release();
     _ticker?.cancel();
     _level?.cancel();
@@ -717,6 +719,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           }
           _live = false;
           _end();
+        },
+        // the system took the touch mid-hold: no one let go, so nothing goes
+        onLongPressCancel: () {
+          if (!_live || (!_busy && _stage != VoiceStage.holding)) return;
+          _live = false;
+          _abort();
         },
         // a short tap says how it works instead of doing nothing
         onTap: () {

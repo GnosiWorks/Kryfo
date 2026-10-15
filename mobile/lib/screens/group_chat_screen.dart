@@ -684,6 +684,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (expired != null) {
       for (final m in expired) {
         m.removing = true;
+        if (m.msgUid != null) _earlier.drop(m.msgUid!);
       }
       if (back) {
         // it burned while the group was out of view: gone, as it would be
@@ -718,7 +719,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     right: 16,
     bottom: 0,
     child: Center(
-      child: _earlierChip(
+      child: EarlierChip(
         count: _earlier.count,
         lifted: _showScrollDown,
         onTap: _toEarlier,
@@ -971,6 +972,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (_waiting && joining == null && _loaded) {
         HapticFeedback.lightImpact();
       }
+      _holdSeen();
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
         _memberCount = members.length;
@@ -1428,14 +1430,33 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // leaving, taken back or burned, is no longer there to see
   void _lookEarlier() {
     if (!mounted || _earlier.count == 0) return;
-    final leaving = {
-      for (final m in _messages)
-        if (m.removing && m.msgUid != null) m.msgUid!,
-    };
-    for (final id in leaving) {
-      _earlier.drop(id);
+    var went = false;
+    for (final m in _messages) {
+      if (m.removing && m.msgUid != null && _earlier.drop(m.msgUid!)) {
+        went = true;
+      }
     }
-    if (_earlier.seenIn(_anchors) || leaving.isNotEmpty) setState(() {});
+    if ((!_reloading && _earlier.seenIn(_anchors)) || went) setState(() {});
+  }
+
+  // a reload's first frame can lay rows out where they do not stay: none
+  // counts as seen until the frame after
+  bool _reloading = false;
+  void _holdSeen() {
+    _reloading = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reloading = false;
+        _lookEarlier();
+      });
+      WidgetsBinding.instance.scheduleFrame();
+    });
+  }
+
+  // a row that comes in, grows or folds moves the others without a scroll
+  bool _threadResized(ScrollMetricsNotification n) {
+    if (n.depth == 0) _lookEarlier();
+    return false;
   }
 
   // after a reload: only what is still in the database stays counted
@@ -1469,17 +1490,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _lookEarlierSoon() =>
       WidgetsBinding.instance.addPostFrameCallback((_) => _lookEarlier());
-
-  // the line, and after each frame it shows a count, a look for rows that
-  // went since or came on screen
-  Widget _earlierChip({
-    required int count,
-    required bool lifted,
-    required VoidCallback onTap,
-  }) {
-    if (count > 0) _lookEarlierSoon();
-    return EarlierChip(count: count, lifted: lifted, onTap: onTap);
-  }
 
   // the line's tap: to the first one up the thread, the thread brought in
   // whole when it is above the pages held
@@ -3833,35 +3843,46 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               Positioned.fill(
                                 child: AtmosphereWash(_atmosphere),
                               ),
-                            ListView.builder(
-                              key: _listKey,
-                              controller: _scrollCtrl,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
+                            NotificationListener<ScrollMetricsNotification>(
+                              onNotification: _threadResized,
+                              // the newest bubble's time rests above the line
+                              child: EarlierRoom(
+                                shown: _earlier.count > 0,
+                                controller: _scrollCtrl,
+                                reversed: false,
+                                builder: (_, room) => ListView.builder(
+                                  key: _listKey,
+                                  controller: _scrollCtrl,
+                                  padding: EdgeInsets.fromLTRB(
+                                    14,
+                                    12,
+                                    14,
+                                    12 + room,
+                                  ),
+                                  itemCount: _messages.length,
+                                  itemBuilder: (_, i) {
+                                    // one unbuildable message must not cost the
+                                    // whole conversation.
+                                    try {
+                                      return _buildGroupRow(i);
+                                    } catch (e) {
+                                      dlog('group bubble failed: \$e');
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                        ),
+                                        child: Text(
+                                          l10n.groupChatThisMessageCanT,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
-                              itemCount: _messages.length,
-                              itemBuilder: (_, i) {
-                                // one unbuildable message must not cost the
-                                // whole conversation.
-                                try {
-                                  return _buildGroupRow(i);
-                                } catch (e) {
-                                  dlog('group bubble failed: \$e');
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
-                                    ),
-                                    child: Text(
-                                      l10n.groupChatThisMessageCanT,
-                                      style: HaloType.sans(
-                                        size: 12,
-                                        color: HaloColors.text2,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
                             ),
                             Positioned(
                               top: 8,

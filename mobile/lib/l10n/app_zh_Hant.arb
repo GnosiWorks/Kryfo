@@ -523,6 +523,7 @@
   "chatMessageRequest": "訊息請求",
   "chatTheyNeedToAccept": "對方需要先接受，你們才能繼續聊天。",
   "chatWaitingForThemTo": "正在等對方接受你的請求",
+  "chatTheyMayNotKnow": "對方可能還不知道你已接受",
   "chatYouBlockedThisContact": "你已封鎖這位聯絡人",
   "chatSupporter": "支持者",
   "chatEncryptedViaRelay": "已加密 · 經由中繼",

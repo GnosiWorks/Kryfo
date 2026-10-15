@@ -1672,6 +1672,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'En attente de l’acceptation de votre demande';
 
   @override
+  String get chatTheyMayNotKnow =>
+      'Cette personne ne sait peut-être pas que vous avez accepté';
+
+  @override
   String get chatYouBlockedThisContact => 'Vous avez bloqué ce contact';
 
   @override

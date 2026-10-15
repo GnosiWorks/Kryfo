@@ -411,7 +411,7 @@ class ToolsBridge(private val activity: Activity) {
     private fun shareOut(path: String?, mime: String?, result: MethodChannel.Result) {
         val uri = path?.let { outUri(it) }
         if (uri == null) {
-            result.success(false)
+            result.success(SharePick.FAILED)
             return
         }
         val send = Intent(Intent.ACTION_SEND).apply {
@@ -420,11 +420,8 @@ class ToolsBridge(private val activity: Activity) {
             clipData = ClipData.newRawUri("", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        try {
-            activity.startActivity(Intent.createChooser(send, null))
-            result.success(true)
-        } catch (e: Exception) {
-            result.success(false)
+        if (!SharePick.start(activity, send) { result.success(it) }) {
+            result.success(SharePick.FAILED)
         }
     }
 
