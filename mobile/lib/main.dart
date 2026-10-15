@@ -18017,6 +18017,8 @@ class AppState extends ChangeNotifier {
   bool _draining = false;
   bool _polling = false;
   TorStatus _torStatus = TorStatus.off;
+  // whether the poll has read tor's status yet, or it is still the default
+  bool _torStatusRead = false;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
   @visibleForTesting
@@ -18136,6 +18138,9 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   void backInFront({DateTime? now}) {
     if (_sendMode != 'private' || _torHeld || !_online || sessionQuiet) return;
+    // a start in front comes before the boot started tor or read its status:
+    // off is then only where the status starts, and there is nothing to kick
+    if (!_torStatusRead) return;
     if (torReady) return;
     final at = now ?? DateTime.now();
     final moved = _pctMovedAt ?? _torTryingSince;
@@ -18153,6 +18158,7 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   TorStatus takeTorStatus(String raw, {DateTime? now}) {
     final at = now ?? DateTime.now();
+    _torStatusRead = true;
     final fresh = _torTryNew;
     _torTryNew = false;
     if (fresh) {
@@ -20222,18 +20228,22 @@ class AppState extends ChangeNotifier {
   Future<void> _initConnectivity() async {
     // what the network was when we started, so the first event the listener
     // delivers is not taken for a change and bounced
-    var lastKinds = '';
     try {
       final init = await Connectivity().checkConnectivity();
-      _connSeen = init.any((r) => r != ConnectivityResult.none);
-      _online = _netWatchOn ?? _connSeen;
-      engine.connectivitySeen(_connSeen);
-      lastKinds = (init.map((r) => r.name).toList()..sort()).join(',');
-      notifyListeners();
+      if (_lastKinds != null) {
+        // a recheck in front got the start already: this is a word like any
+        connectivityEvent(init);
+      } else {
+        _connSeen = init.any((r) => r != ConnectivityResult.none);
+        _online = _netWatchOn ?? _connSeen;
+        engine.connectivitySeen(_connSeen);
+        _lastKinds = (init.map((r) => r.name).toList()..sort()).join(',');
+        notifyListeners();
+      }
     } catch (e) {
+      // the listener's first event is the start then
       dlog('connectivity init: $e');
     }
-    _lastKinds = lastKinds;
     Connectivity().onConnectivityChanged.listen(connectivityEvent);
     unawaited(listenNetDetail(netDetailEvent));
   }
@@ -20259,17 +20269,30 @@ class AppState extends ChangeNotifier {
     _lastNetDetail = json;
     engine.networkDetail(json);
     bool? on;
+    int? net;
     try {
       final m = jsonDecode(json);
       if (m is Map && m['on'] is bool) on = m['on'] as bool;
+      if (m is Map && m['net'] is int) net = m['net'] as int;
     } catch (_) {}
     if (on == null) return;
     _netWatchOn = on;
-    if (on == _online) return;
+    // another network in place of the one there, of the same type or not:
+    // wifi to another wifi is a change connectivity does not see
+    final was = _netWatchNet;
+    _netWatchNet = on ? net : null;
+    final moved = on && was != null && net != null && net != was;
+    if (on == _online) {
+      if (moved) networkMoved();
+      return;
+    }
     // back on a network connectivity may not have reported
     if (on) networkMoved();
     noteOnline(on);
   }
+
+  // android's handle for the network the watch last said is there
+  int? _netWatchNet;
 
   // back in front: connectivity and the watch are asked again, as either
   // may have missed a change while the app slept
@@ -20282,8 +20305,10 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // the kinds of network the last event named, sorted: "mobile,vpn"
-  String _lastKinds = '';
+  // the kinds of network the last event named, sorted: "mobile,vpn". null
+  // until connectivity has said anything: its first word is where the
+  // network starts, not a change
+  String? _lastKinds;
 
   // every change reaches the engine: wifi and mobile data either way, a vpn
   // up or down, airplane mode on and off, offline and back. tor's open
@@ -20297,12 +20322,15 @@ class AppState extends ChangeNotifier {
     // connectivity's own word goes to the engine, which weighs it against
     // the watch's: a word the watch outranks is a dispute, not a change
     engine.connectivitySeen(seen);
-    final flip = networkFlip(
-      wasOnline: _connSeen,
-      lastKinds: _lastKinds,
-      on: seen,
-      kinds: kinds,
-    );
+    final last = _lastKinds;
+    final flip = last == null
+        ? null
+        : networkFlip(
+            wasOnline: _connSeen,
+            lastKinds: last,
+            on: seen,
+            kinds: kinds,
+          );
     _connSeen = seen;
     _lastKinds = kinds;
     if (flip == true) networkMoved();

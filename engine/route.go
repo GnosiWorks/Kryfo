@@ -301,6 +301,10 @@ var (
 	netChangedAt  time.Time
 	netWorker     bool
 	lastNetBounce time.Time
+	// when tor last went on the network, and the network the watch said
+	// was there then
+	netOnAt  time.Time
+	netOnNet netInfo
 )
 
 // vars rather than consts so the test can run the debounce in milliseconds
@@ -423,6 +427,10 @@ var netOns atomic.Int64
 func netWentOn() {
 	netOns.Add(1)
 	torParked.Store(false)
+	n, _ := netDetailNow()
+	netMu.Lock()
+	netOnAt, netOnNet = time.Now(), n
+	netMu.Unlock()
 	if netAway() {
 		go netPark()
 	}
@@ -581,6 +589,7 @@ func networkChanged() {
 
 func netBounceWorker() {
 	for {
+		now, _ := netDetailNow()
 		netMu.Lock()
 		wait := time.Until(netChangedAt.Add(netQuiet))
 		if gap := time.Until(lastNetBounce.Add(netGap)); gap > wait {
@@ -591,8 +600,16 @@ func netBounceWorker() {
 			time.Sleep(wait)
 			continue
 		}
-		lastNetBounce = time.Now()
 		netWorker = false
+		// tor went on the network after the last change, on the network that
+		// is there now: all it holds was made on this one. a bounce asked for
+		// before tor came up has nothing left to do
+		if netOnAt.After(netChangedAt) && !torParked.Load() && sameNetwork(netOnNet, now) {
+			netMu.Unlock()
+			log.Println("halo: tor went on this network after the change, no bounce")
+			return
+		}
+		lastNetBounce = time.Now()
 		bounce := netBounce
 		netMu.Unlock()
 
