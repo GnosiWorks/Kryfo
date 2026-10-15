@@ -288,19 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           offstage: t != _tab,
                           child: TickerMode(
                             enabled: t == _tab,
-                            // keyed on the theme so a switch rebuilds the
-                            // whole tab from scratch. HaloColors is a palette
-                            // swapped in place, and a const widget handed back
-                            // to a rebuild is skipped, so anything const in
-                            // here would keep the colours it was built with.
-                            child: KeyedSubtree(
-                              key: ValueKey(HaloColors.isLight),
-                              child: _Arrive(
-                                on: t == _tab,
-                                towards: _towards,
-                                fresh: t == _picked,
-                                child: _body(t),
-                              ),
+                            // a theme switch rebuilds every widget in place
+                            // (ThemeRefresh): a tab keeps its scroll and state
+                            child: _Arrive(
+                              on: t == _tab,
+                              towards: _towards,
+                              fresh: t == _picked,
+                              child: _body(t),
                             ),
                           ),
                         ),
@@ -2075,7 +2069,9 @@ class _GroupRow extends StatelessWidget {
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
-                        color: g.isRoom ? HaloColors.violet : HaloColors.amberText,
+                        color: g.isRoom
+                            ? HaloColors.violet
+                            : HaloColors.amberText,
                       ),
                     ),
                   ),

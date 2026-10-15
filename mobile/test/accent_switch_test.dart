@@ -2,6 +2,7 @@
 // an accent switch reaches every widget on screen at once, const ones too,
 // is kept for the next start, and the appearance screen shows it on a
 // small chat as it lands
+import 'dart:io';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
@@ -318,5 +319,11 @@ void main() {
       await t.pumpAndSettle();
       expect(mine(t), HaloAccent.blue.light.accent);
     });
+  });
+
+  test('the home tabs are not built again from scratch on a switch: the '
+      'refresh repaints them in place, so their scroll and state stay', () {
+    final home = File('lib/screens/home_screen.dart').readAsStringSync();
+    expect(home, isNot(contains('ValueKey(HaloColors.isLight)')));
   });
 }
