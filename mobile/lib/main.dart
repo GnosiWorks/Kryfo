@@ -2161,11 +2161,16 @@ class HaloDb implements GroupOwedStore {
           // chats' wallpaper photos and the default, kept in here, and the
           // photo files of before taken in
           await wallpaperTable(db);
-          adopted = await adoptWallpaperFiles(db);
+          adopted = await adoptWallpaperFiles(
+            db,
+            p.join(p.dirname(path), 'wallpapers${container.suffix}'),
+          );
         }
       },
     );
-    for (final f in adopted) {
+    // a backup reading the folder or a restore replacing it keeps them:
+    // nothing names them now, so the start sweep takes them after
+    for (final f in backupRunning || restoreRunning ? const [] : adopted) {
       try {
         await shredFile(f);
       } catch (_) {
@@ -8882,11 +8887,15 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
 }
 
 // the photos an older version kept as files in the clear, taken in at the
-// upgrade to 80: each cleaned as a photo that leaves is, kept here, its
+// upgrade to 81: each cleaned as a photo that leaves is, kept here, its
 // chat marked photo. one that will not read or clean leaves its chat on the
 // default. the files are handed back to be shredded once the upgrade is
-// written; only a file in a wallpapers folder is ever named
-Future<List<String>> adoptWallpaperFiles(DatabaseExecutor db) async {
+// written; only a file in this container's own [folder] is ever read or
+// named
+Future<List<String>> adoptWallpaperFiles(
+  DatabaseExecutor db,
+  String folder,
+) async {
   final files = <String>[];
   for (final (table, id, group) in const [
     ('contacts', 'halo_id', false),
@@ -8903,7 +8912,7 @@ Future<List<String>> adoptWallpaperFiles(DatabaseExecutor db) async {
         continue;
       }
       final path = atmo.substring(6);
-      final inFolder = p.basename(p.dirname(path)).startsWith('wallpapers');
+      final inFolder = p.equals(p.dirname(path), folder);
       Uint8List? photo;
       if (inFolder) {
         try {

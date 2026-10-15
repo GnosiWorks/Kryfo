@@ -267,13 +267,20 @@ void main() {
       'group_id': _group,
       'atmosphere': 'image:${broken.path}',
     });
+    // another container's photo is not this one's to take
+    final theirs = Directory('${docs.path}/wallpapers_d')..createSync();
+    final decoyFile = File('${theirs.path}/d.jpg')..writeAsBytesSync(gps);
+    await db.insert('contacts', {
+      'halo_id': 'elsewhere',
+      'atmosphere': 'image:${decoyFile.path}',
+    });
     // a path nothing here wrote is never named for a shred
     await db.insert('contacts', {
       'halo_id': 'odd',
       'atmosphere': 'image:${docs.path}/notes.txt',
     });
     await wallpaperTable(db);
-    final files = await adoptWallpaperFiles(db);
+    final files = await adoptWallpaperFiles(db, dir.path);
     expect(files.toSet(), {kept.path, '${dir.path}/gone.jpg', broken.path});
     final row = await db.rawQuery(
       'SELECT photo FROM wallpapers WHERE chat = ?',
@@ -281,10 +288,12 @@ void main() {
     );
     final photo = row.single['photo']! as Uint8List;
     expect(jpegHasExif(photo), isFalse);
+    expect(decoyFile.existsSync(), isTrue);
     expect(await db.rawQuery('SELECT halo_id, atmosphere FROM contacts'), [
       {'halo_id': _peer, 'atmosphere': kPhotoWall},
       {'halo_id': _other, 'atmosphere': null},
       {'halo_id': 'plain', 'atmosphere': 'dusk'},
+      {'halo_id': 'elsewhere', 'atmosphere': null},
       {'halo_id': 'odd', 'atmosphere': null},
     ]);
     expect(await db.rawQuery('SELECT atmosphere FROM groups'), [
@@ -295,11 +304,12 @@ void main() {
     ]);
   }, skip: skip);
 
-  test('the upgrade shreds what it took in once it is written', () {
+  test('the upgrade shreds what it took in once it is written, and not '
+      'while a backup or a restore holds the folder', () {
     final at = steps.indexOf('if (oldV < 81) {');
     expect(
       steps.substring(at),
-      contains('adopted = await adoptWallpaperFiles(db);'),
+      contains('adopted = await adoptWallpaperFiles('),
     );
     final after = src.substring(
       src.indexOf('adopted = await adoptWallpaperFiles'),
@@ -307,5 +317,14 @@ void main() {
     final shred = after.indexOf('await shredFile(f);');
     expect(shred, greaterThan(0));
     expect(shred, lessThan(after.indexOf('// retired while it was opening')));
+    expect(
+      after.substring(0, shred),
+      contains('backupRunning || restoreRunning ? const [] : adopted'),
+    );
+    // its own folder, by the database's own place and suffix
+    expect(
+      steps,
+      contains("p.join(p.dirname(path), 'wallpapers\${container.suffix}')"),
+    );
   });
 }
