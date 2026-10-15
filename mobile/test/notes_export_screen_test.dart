@@ -80,6 +80,7 @@ void main() {
     cancels = [];
     intactAtCancel = [];
     String? saving;
+    var taken = false;
     tmp = Directory.systemTemp.createTempSync('notes_export_screen');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(
@@ -95,10 +96,14 @@ void main() {
           // what the save window would copy, read as it opens
           final path = (call.arguments as Map)['path'] as String;
           saving = path;
+          taken = false;
           saved.add(File(path).readAsBytesSync());
           final d = Completer<Object?>();
           dialogs.add(d);
-          return d.future;
+          // a copy a drop reached fails, whatever it got to
+          return d.future.then(
+            (a) => taken ? {'state': 'failed', 'where': null} : a,
+          );
         case 'saveDocumentState':
           final now = stage;
           // a stopped copy ends a beat later
@@ -110,7 +115,10 @@ void main() {
           intactAtCancel.add(
             f.existsSync() && listEquals(f.readAsBytesSync(), saved.lastOrNull),
           );
-          if (stage == 'copying') stopping = 2;
+          if (stage == 'copying') {
+            stopping = 2;
+            if ((call.arguments as Map?)?['drop'] == true) taken = true;
+          }
           return stage;
         case 'shareFile':
           shared.add(call.arguments as Map<Object?, Object?>);
@@ -605,7 +613,7 @@ void main() {
     expect(intactAtCancel, [true]);
     expect(stage, 'idle');
     expect(left(), isEmpty);
-    // whatever android answers, the file it read is not a saved one
+    // the copy android was running ends failed, never saved
     dialogs.single.complete({'state': 'saved', 'where': 'Download'});
     await beats(t);
     await t.pumpAndSettle();
@@ -616,6 +624,27 @@ void main() {
     expect(find.text(l10n.notesExportSavedUnchecked), findsNothing);
     expect(find.text(l10n.commonTryAgain), findsNothing);
     expect(asked, isNot(contains('shareFile')));
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a lock just after the save copy: still saved', (t) async {
+    await plain(t);
+    expect(left(), hasLength(1));
+    // every byte went out and android's answer is on its way
+    var dropped = false;
+    unawaited(dropNotesExports(tmp).then((_) => dropped = true));
+    await until(t, () => dropped);
+    expect(cancels, [
+      {'drop': true},
+    ]);
+    expect(left(), isEmpty);
+    dialogs.single.complete({'state': 'saved', 'where': 'Download'});
+    await beats(t);
+    await t.pumpAndSettle();
+    expect(find.text(l10n.notesExportSavedIn('Download')), findsOneWidget);
+    expect(find.text(l10n.notesExportGone), findsNothing);
+    expect(asked, isNot(contains('shareFile')));
+    await until(t, () => screen.evaluate().isEmpty);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
 

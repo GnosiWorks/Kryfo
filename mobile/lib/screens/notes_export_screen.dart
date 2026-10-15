@@ -359,8 +359,11 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
       dlog('notes export: not handed over (${e.runtimeType})');
     }
     _saving = false;
-    // a drop during the copy shredded what it read: never a saved file
-    if (notesExportRun.value != _madeRun) {
+    // a drop that reached the copy made it fail and took it away, so a
+    // saved or unchecked answer had every byte out before it
+    if (notesExportRun.value != _madeRun &&
+        answer.state != SaveState.saved &&
+        answer.state != SaveState.unchecked) {
       answer = (state: SaveState.failed, where: null, lost: answer.lost);
     }
     final checked = answer.state == SaveState.saved;
