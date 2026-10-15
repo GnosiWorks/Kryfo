@@ -229,7 +229,7 @@ class Session {
       (await (group ? _ofGroup(chatId) : _ofPeer(chatId)).wallpaperRow(
         wallKey(chatId, group: group),
       ))?.photo;
-  Future<void> setChatPhoto(
+  Future<bool> setChatPhoto(
     String chatId,
     Uint8List photo, {
     bool group = false,
@@ -304,8 +304,6 @@ class Session {
   }) => _ofPeer(peerId).messagesFrom(peerId, rowid: rowid, at: at);
   Future<void> setArchived(String haloId, bool archived) =>
       _ofPeer(haloId).setArchived(haloId, archived);
-  Future<void> setAtmosphere(String peerId, String atmosphere) =>
-      _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
   // their timed messages in the other container's groups start counting
   // too, and nothing queued for them there goes. the block holds
   // whatever happens there: one shut meanwhile starts them a day after
@@ -440,8 +438,6 @@ class Session {
       _ofGroup(groupId).removeGroupMember(groupId, haloId);
   Future<void> renameGroup(String groupId, String name) =>
       _ofGroup(groupId).renameGroup(groupId, name);
-  Future<void> setGroupAtmosphere(String groupId, String atmosphere) =>
-      _ofGroup(groupId).setGroupAtmosphere(groupId, atmosphere);
 
   // ---- a chat of either kind ----
   Future<void> saveMessage(

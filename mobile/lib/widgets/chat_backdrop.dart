@@ -10,16 +10,19 @@ import '../atmosphere.dart';
 import '../theme.dart';
 import '../wallpaper.dart';
 import 'motion.dart' show motionStill;
+import 'wall_images.dart';
 
 class ChatBackdrop extends StatelessWidget {
   final ChatWall wall;
-  const ChatBackdrop(this.wall, {super.key});
+  // whose photo it is (Session.chatKey): one decoded image each
+  final String chat;
+  const ChatBackdrop(this.wall, {super.key, this.chat = ''});
 
   @override
   Widget build(BuildContext context) {
     final photo = wall.photo;
     final Widget layer = photo != null
-        ? _Photo(photo, key: ObjectKey(photo))
+        ? _Photo(photo, chat, key: ObjectKey(photo))
         : wall.atmo != Atmo.none
         ? AtmosphereWash(wall.atmo, key: ValueKey(wall.atmo))
         : const SizedBox.expand(key: ValueKey('none'));
@@ -38,43 +41,51 @@ class ChatBackdrop extends StatelessWidget {
 
 class _Photo extends StatefulWidget {
   final Uint8List bytes;
-  const _Photo(this.bytes, {super.key});
+  final String chat;
+  const _Photo(this.bytes, this.chat, {super.key});
   @override
   State<_Photo> createState() => _PhotoState();
 }
 
 class _PhotoState extends State<_Photo> {
-  double? _lum;
+  List<Color>? _samples;
+  Size? _size;
 
   @override
   void initState() {
     super.initState();
-    photoLuminance(widget.bytes).then((l) {
-      if (mounted) setState(() => _lum = l);
+    photoSize(widget.bytes).then((s) {
+      if (mounted) setState(() => _size = s);
+    });
+    photoSamples(widget.bytes).then((s) {
+      if (mounted) setState(() => _samples = s);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final ground = HaloColors.ink;
-    final veil = veilFor(
-      _lum,
-      ground.computeLuminance(),
-      light: HaloColors.isLight,
-    );
+    final veil = veilFor(_samples, ground, light: HaloColors.isLight);
+    final size = _size;
+    final mq = MediaQuery.of(context);
+    final still = motionStill(context);
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.memory(
-          widget.bytes,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          excludeFromSemantics: true,
-        ),
+        if (size != null)
+          Image(
+            image: WallImages.of(
+              widget.chat,
+              widget.bytes,
+              size,
+              mq.size * mq.devicePixelRatio,
+            ),
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            excludeFromSemantics: true,
+          ),
         AnimatedContainer(
-          duration: motionStill(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
+          duration: still ? Duration.zero : const Duration(milliseconds: 200),
           color: ground.withValues(alpha: veil),
         ),
       ],

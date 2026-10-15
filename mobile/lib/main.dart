@@ -6,6 +6,7 @@ import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
 import 'widgets/theme_refresh.dart';
+import 'widgets/wall_images.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -19,7 +20,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'image_strip.dart' show photoToSend;
+import 'image_strip.dart' show photoToSendOffUi;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
@@ -2176,6 +2177,11 @@ class HaloDb implements GroupOwedStore {
       } catch (_) {
         // shredFile logs its own failure
       }
+    }
+    try {
+      await dropOrphanWallpapers(_db!);
+    } catch (e) {
+      dlog('wallpaper: orphans not swept (${e.runtimeType})');
     }
     // retired while it was opening
     if (_retired) {
@@ -4775,15 +4781,10 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  Future<void> setGroupAtmosphere(String groupId, String atmosphere) async {
-    final db = await open();
-    await db.update(
-      'groups',
-      {'atmosphere': atmosphere},
-      where: 'group_id = ?',
-      whereArgs: [groupId],
-    );
-  }
+  // the same as setChatAtmosphere: one way in, so a photo always goes with
+  // the choice that replaced it
+  Future<void> setGroupAtmosphere(String groupId, String atmosphere) =>
+      setChatAtmosphere(groupId, atmosphere, group: true);
 
   Future<String?> getGroupAtmosphere(String groupId) async {
     final db = await open();
@@ -4797,21 +4798,9 @@ class HaloDb implements GroupOwedStore {
     return rows.first['atmosphere'] as String?;
   }
 
-  // the photo it had goes once the row is written
-  Future<void> setAtmosphere(String peerId, String atmosphere) async {
-    final db = await open();
-    final was = await db.transaction((t) async {
-      final was = await _atmosphereOf(t, peerId);
-      await t.update(
-        'contacts',
-        {'atmosphere': atmosphere},
-        where: 'halo_id = ?',
-        whereArgs: [peerId],
-      );
-      return was;
-    });
-    if (was != atmosphere) await _dropPhotos([was]);
-  }
+  // the photo it had goes once the row is written (setChatAtmosphere)
+  Future<void> setAtmosphere(String peerId, String atmosphere) =>
+      setChatAtmosphere(peerId, atmosphere);
 
   // a chat's own voice disguise choice, null until one is made here
   Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) async {
@@ -4893,30 +4882,34 @@ class HaloDb implements GroupOwedStore {
     return r.isEmpty ? null : r.first['atmosphere'] as String?;
   }
 
-  // a chat's own photo behind it, and its atmosphere saying so. a file an
-  // older version kept for it is shredded once the row is written
-  Future<void> setChatPhoto(
+  // a chat's own photo behind it, and its atmosphere saying so. the row is
+  // written first and the photo only when it found its chat, so a photo
+  // never lands where no chat names it. a file an older version kept for
+  // it is shredded once the row is written. whether it was kept
+  Future<bool> setChatPhoto(
     String chatId,
     Uint8List photo, {
     bool group = false,
   }) async {
     final db = await open();
-    final was = await db.transaction((t) async {
+    final (kept, was) = await db.transaction((t) async {
       final was = await _wallOf(t, chatId, group);
-      await t.insert('wallpapers', {
-        'chat': wallKey(chatId, group: group),
-        'atmo': kPhotoWall,
-        'photo': photo,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-      await t.update(
+      final n = await t.update(
         group ? 'groups' : 'contacts',
         {'atmosphere': kPhotoWall},
         where: group ? 'group_id = ?' : 'halo_id = ?',
         whereArgs: [chatId],
       );
-      return was;
+      if (n != 1) return (false, null);
+      await t.insert('wallpapers', {
+        'chat': wallKey(chatId, group: group),
+        'atmo': kPhotoWall,
+        'photo': photo,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return (true, was);
     });
     await _dropPhotos([was]);
+    return kept;
   }
 
   // a built-in by name, or null to follow the default. a photo it had goes
@@ -8886,6 +8879,19 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
   }
 }
 
+// a photo no chat here says it shows: one written for a row that went or
+// was replaced whole (INSERT OR REPLACE fires no delete trigger). the
+// default ('') is never a chat's
+Future<void> dropOrphanWallpapers(DatabaseExecutor db) async {
+  await db.execute(
+    "DELETE FROM wallpapers WHERE chat <> '' AND NOT EXISTS "
+    "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
+    "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
+    "(SELECT 1 FROM groups g WHERE 'group:' || g.group_id = wallpapers.chat "
+    "AND g.atmosphere = '$kPhotoWall')",
+  );
+}
+
 // the photos an older version kept as files in the clear, taken in at the
 // upgrade to 81: each cleaned as a photo that leaves is, kept here, its
 // chat marked photo. one that will not read or clean leaves its chat on the
@@ -8916,7 +8922,8 @@ Future<List<String>> adoptWallpaperFiles(
       Uint8List? photo;
       if (inFolder) {
         try {
-          photo = photoToSend(await File(path).readAsBytes());
+          // off the ui thread, as every photo cleaning is
+          photo = await photoToSendOffUi(await File(path).readAsBytes());
         } catch (e) {
           dlog('wallpaper: an old file did not read (${e.runtimeType})');
         }
@@ -10751,6 +10758,7 @@ final navRevision = ValueNotifier<int>(0);
 
 void renewRootNavigator() {
   haloClearToasts();
+  WallImages.clear();
   _rootNavKey = GlobalKey<NavigatorState>();
   navRevision.value++;
 }

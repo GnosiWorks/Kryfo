@@ -334,14 +334,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     );
     if (!mounted) return;
     if (picked is WallpaperFromPhotos) {
-      final photo = await pickWallpaperPhoto(
+      final r = await pickWallpaperPhoto(
         context,
+        save: (at, photo) => at.setChatPhoto(id, photo, group: true),
         failed: () {
           if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
         },
       );
-      if (photo == null) return;
-      await session.setChatPhoto(id, photo, group: true);
+      if (r != Picked.kept) return;
     } else if (picked is WallpaperDefault) {
       await session.setChatAtmosphere(id, null, group: true);
     } else if (picked is Atmo) {

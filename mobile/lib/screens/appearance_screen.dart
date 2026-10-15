@@ -75,14 +75,14 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     if (!mounted) return;
     if (picked is WallpaperFromPhotos) {
       setState(() => _default = before);
-      final photo = await pickWallpaperPhoto(
+      final r = await pickWallpaperPhoto(
         context,
+        save: (at, photo) => at.setDefaultWallpaper(kPhotoWall, photo),
         failed: () {
           if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
         },
       );
-      if (photo == null) return;
-      await session.setDefaultWallpaper(kPhotoWall, photo);
+      if (r != Picked.kept) return;
     } else if (picked is Atmo) {
       await session.setDefaultWallpaper(picked.name);
     } else {
@@ -119,7 +119,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           32 + MediaQuery.paddingOf(context).bottom,
         ),
         children: staggerAll([
-          AccentPreview(background: ChatBackdrop(_default)),
+          AccentPreview(background: ChatBackdrop(_default, chat: 'appearance')),
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 4, 10),

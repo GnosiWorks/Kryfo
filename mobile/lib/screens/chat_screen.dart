@@ -4957,14 +4957,14 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return;
     if (picked is WallpaperFromPhotos) {
       setState(() => _wall = before);
-      final photo = await pickWallpaperPhoto(
+      final r = await pickWallpaperPhoto(
         context,
+        save: (at, photo) => at.setChatPhoto(id, photo),
         failed: () {
           if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
         },
       );
-      if (photo == null) return;
-      await session.setChatPhoto(id, photo);
+      if (r != Picked.kept) return;
     } else if (picked is WallpaperDefault) {
       await session.setChatAtmosphere(id, null);
     } else if (picked is Atmo) {
@@ -5410,7 +5410,7 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Stack(
                   key: _listKey,
                   children: [
-                    Positioned.fill(child: ChatBackdrop(_wall)),
+                    Positioned.fill(child: ChatBackdrop(_wall, chat: _memo)),
                     // a slow first read fades the thread up, not a cut
                     FadeSwap(
                       // an empty chat waits for what its card depends on,

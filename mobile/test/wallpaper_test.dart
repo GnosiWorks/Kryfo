@@ -17,6 +17,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/wallpaper.dart';
 import 'package:kryfo/widgets/chat_backdrop.dart';
+import 'package:kryfo/widgets/wall_images.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
@@ -158,30 +159,76 @@ void main() {
     expect(out, isNotNull);
     expect(jpegHasExif(out!), isFalse);
     expect(out.length, lessThanOrEqualTo(gps.length));
-    final lum = await t.runAsync(() => photoLuminance(out));
-    expect(lum, isNotNull);
-    expect(lum, inInclusiveRange(0.0, 1.0));
+    final samples = await t.runAsync(() => photoSamples(out));
+    expect(samples, hasLength(64));
   });
 
   group('the veil', () {
-    final darkInk = const Color(0xFF0D0B09).computeLuminance();
-    final paleInk = const Color(0xFFF2ECDF).computeLuminance();
+    const darkInk = Color(0xFF0D0B09);
+    const paleInk = Color(0xFFF2ECDF);
+    // the page under the bubbles, as the screen mixes it
+    double under(Color photo, Color ground, double a) =>
+        Color.lerp(photo, ground, a)!.computeLuminance();
+    List<Color> shot(Color c, int n, [Color? rest]) => [
+      for (var i = 0; i < 64; i++) i < n ? c : (rest ?? c),
+    ];
 
     test('dark theme: a bright photo is pulled down further than a dark '
-        'one', () {
-      final bright = veilFor(0.8, darkInk, light: false);
-      final dim = veilFor(0.08, darkInk, light: false);
+        'one, and lands dark', () {
+      const white = Color(0xFFFFFFFF);
+      final bright = veilFor(shot(white, 64), darkInk, light: false);
+      final dim = veilFor(
+        shot(const Color(0xFF202020), 64),
+        darkInk,
+        light: false,
+      );
       expect(bright, greaterThan(dim));
       expect(bright, lessThanOrEqualTo(0.86));
       expect(dim, greaterThanOrEqualTo(0.4));
+      expect(
+        under(
+          const Color(0xFF808080),
+          darkInk,
+          veilFor(shot(const Color(0xFF808080), 64), darkInk, light: false),
+        ),
+        lessThanOrEqualTo(0.0601),
+      );
     });
 
-    test('light theme: a dark photo is lifted further than a pale one', () {
-      final dark = veilFor(0.05, paleInk, light: true);
-      final pale = veilFor(0.7, paleInk, light: true);
+    test('light theme: a dark photo is lifted further than a pale one, and '
+        'lands pale', () {
+      const black = Color(0xFF000000);
+      final dark = veilFor(shot(black, 64), paleInk, light: true);
+      final pale = veilFor(
+        shot(const Color(0xFFE0E0E0), 64),
+        paleInk,
+        light: true,
+      );
       expect(dark, greaterThan(pale));
       expect(dark, lessThanOrEqualTo(0.86));
       expect(pale, greaterThanOrEqualTo(0.4));
+      const mid = Color(0xFF606060);
+      expect(
+        under(mid, paleInk, veilFor(shot(mid, 64), paleInk, light: true)),
+        greaterThanOrEqualTo(0.5499),
+      );
+    });
+
+    test('a bright patch on a dark photo is covered too: the veil follows '
+        'its brightest tenth, not its average', () {
+      // a night photo with a lamp in a corner: an eighth of it white
+      final lamp = shot(const Color(0xFFFFFFFF), 8, const Color(0xFF101010));
+      final mean = shot(const Color(0xFF5A5A5A), 64);
+      final v = veilFor(lamp, darkInk, light: false);
+      // the average of it alone would ask far less
+      expect(v, greaterThan(veilFor(mean, darkInk, light: false)));
+      expect(
+        under(const Color(0xFFFFFFFF), darkInk, v),
+        lessThanOrEqualTo(0.0601),
+      );
+      // and the light theme looks at its darkest tenth
+      final snow = shot(const Color(0xFF000000), 8, const Color(0xFFF0F0F0));
+      expect(veilFor(snow, paleInk, light: true), greaterThan(0.75));
     });
 
     test('a photo not read yet gets a middle veil, never none', () {
@@ -191,24 +238,15 @@ void main() {
       }
     });
 
-    testWidgets('over a white photo the dark theme lands dark and the light '
-        'theme pale', (t) async {
+    testWidgets('a white photo read back as white, a black one as black', (
+      t,
+    ) async {
       final white = (await t.runAsync(() => _png(const Color(0xFFFFFFFF))))!;
       final black = (await t.runAsync(() => _png(const Color(0xFF000000))))!;
-      final lw = (await t.runAsync(() => photoLuminance(white)))!;
-      final lb = (await t.runAsync(() => photoLuminance(black)))!;
-      expect(lw, greaterThan(0.95));
-      expect(lb, lessThan(0.01));
-      // the page under the bubbles, roughly, once veiled
-      double under(double lum, double ink, double a) => a * ink + (1 - a) * lum;
-      expect(
-        under(lw, darkInk, veilFor(lw, darkInk, light: false)),
-        lessThan(0.2),
-      );
-      expect(
-        under(lb, paleInk, veilFor(lb, paleInk, light: true)),
-        greaterThan(0.45),
-      );
+      final w = (await t.runAsync(() => photoSamples(white)))!;
+      final b = (await t.runAsync(() => photoSamples(black)))!;
+      expect(w.every((c) => c.computeLuminance() > 0.95), isTrue);
+      expect(b.every((c) => c.computeLuminance() < 0.01), isTrue);
     });
   });
 
@@ -277,16 +315,177 @@ void main() {
   test('a picked photo is re-encoded at the screen\'s size, cleaned, and '
       'the picker\'s copy shredded whatever happens', () {
     final src = File('lib/wallpaper.dart').readAsStringSync();
-    final at = src.indexOf('Future<Uint8List?> pickWallpaperPhoto(');
+    final at = src.indexOf('Future<Picked> pickWallpaperPhoto(');
     final body = src.substring(at, src.indexOf('\n}\n', at));
     expect(body, contains('maxWidth: side'));
     expect(body, contains('maxHeight: side'));
+    expect(body, contains('kWallSide'));
     expect(body, contains('imageQuality:'));
-    expect(body, contains('wallpaperBytes('));
+    expect(body, contains('keepPicked(at, raw, save)'));
+    expect(
+      body.indexOf('final at = session;'),
+      lessThan(body.indexOf('lockState.hold(')),
+    );
     expect(body, contains('} finally {'));
     expect(body, contains('shredPickedImages'));
     expect(body, contains('lockState.hold('));
     // never a file of its own
     expect(src, isNot(contains('writeAsBytes')));
+  });
+
+  test('a kept photo is never larger than kWallSide', () {
+    expect(kWallSide, 2048);
+  });
+
+  group('a picked photo', () {
+    late _Rows live;
+    late _Rows vault;
+    late Session s;
+    setUp(() async {
+      live = await _db();
+      vault = await _db(HaloContainer.vault);
+      // the everyday side knows the hidden one by key alone: a photo
+      // routed here would find a row to land on
+      await live.mem.update(
+        'contacts',
+        {'accepted': 0, 'archived': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_hidden],
+      );
+      await vault.mem.delete(
+        'contacts',
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      s = await Session.withVault(live, vault);
+      useDatabasesForTest(live, s);
+    });
+
+    testWidgets('lands in the session it was picked in', (t) async {
+      final r = await t.runAsync(
+        () => keepPicked(s, gps, (at, p) => at.setChatPhoto(_hidden, p)),
+      );
+      expect(r, Picked.kept);
+      expect(await vault.wallpaperRow(_hidden), isNotNull);
+      expect(await live.mem.query('wallpapers'), isEmpty);
+    });
+
+    testWidgets('a hidden chat\'s photo goes nowhere when the vault shuts '
+        'while it is cleaned', (t) async {
+      final r = await t.runAsync(() {
+        final f = keepPicked(s, gps, (at, p) => at.setChatPhoto(_hidden, p));
+        // the lock comes down: the everyday session alone is open
+        useDatabasesForTest(live, Session(live));
+        return f;
+      });
+      expect(r, Picked.none);
+      expect(await live.mem.query('wallpapers'), isEmpty);
+      expect(await vault.mem.query('wallpapers'), isEmpty);
+      expect(await live.getAtmosphere(_hidden), isNull);
+    });
+
+    testWidgets('one that will not clean is said so and kept nowhere', (
+      t,
+    ) async {
+      final r = await t.runAsync(
+        () => keepPicked(
+          s,
+          Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE1, 0, 9]),
+          (at, p) => at.setChatPhoto(_hidden, p),
+        ),
+      );
+      expect(r, Picked.unclean);
+      expect(await vault.mem.query('wallpapers'), isEmpty);
+    });
+  });
+
+  test('a photo for a chat that is not here is not kept', () async {
+    final live = await _db();
+    useDatabasesForTest(live, Session(live));
+    expect(await live.setChatPhoto('nobody-here', Uint8List(4)), isFalse);
+    expect(
+      await live.setChatPhoto('g-gone', Uint8List(4), group: true),
+      isFalse,
+    );
+    expect(await live.mem.query('wallpapers'), isEmpty);
+    expect(await live.setChatPhoto(_peer, Uint8List(4)), isTrue);
+  });
+
+  group('the decoded photo', () {
+    tearDown(WallImages.clear);
+
+    test('is decoded to cover the screen and no larger', () {
+      final bytes = Uint8List.fromList([1, 2, 3]);
+      // wider than the screen: its height decides
+      final wide =
+          WallImages.of(
+                'a',
+                bytes,
+                const Size(4000, 1000),
+                const Size(1080, 2400),
+              )
+              as ResizeImage;
+      expect((wide.width, wide.height), (null, 1000));
+      WallImages.clear();
+      final tall =
+          WallImages.of(
+                'a',
+                bytes,
+                const Size(2000, 8000),
+                const Size(1080, 2400),
+              )
+              as ResizeImage;
+      expect((tall.width, tall.height), (1080, null));
+    });
+
+    test('is one per chat: the same photo read again shares it', () {
+      final a = Uint8List.fromList([1, 2, 3]);
+      final same = Uint8List.fromList([1, 2, 3]);
+      const photo = Size(100, 100), screen = Size(50, 50);
+      final first = WallImages.of('chat', a, photo, screen);
+      expect(
+        identical(WallImages.of('chat', same, photo, screen), first),
+        isTrue,
+      );
+      final other = WallImages.of(
+        'chat',
+        Uint8List.fromList([4]),
+        photo,
+        screen,
+      );
+      expect(identical(other, first), isFalse);
+      WallImages.of('else', a, photo, screen);
+      expect(WallImages.count, 2);
+    });
+
+    testWidgets('leaves the image cache when the lock comes down', (t) async {
+      final png = (await t.runAsync(() => _png(const Color(0xFF808080))))!;
+      final image = WallImages.of(
+        'chat',
+        png,
+        const Size(16, 16),
+        const Size(8, 8),
+      );
+      await t.pumpWidget(Image(image: image));
+      await t.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await t.pump();
+      final key = await image.obtainKey(ImageConfiguration.empty);
+      final cache = PaintingBinding.instance.imageCache;
+      expect(cache.containsKey(key), isTrue);
+      WallImages.clear();
+      expect(cache.containsKey(key), isFalse);
+      expect(WallImages.count, 0);
+      // the lock and a session switch both put them out
+      expect(
+        File('lib/lock_layer.dart').readAsStringSync(),
+        contains('WallImages.clear();'),
+      );
+      final main = File('lib/main.dart').readAsStringSync();
+      final renew = main.indexOf('void renewRootNavigator() {');
+      expect(
+        main.substring(renew, main.indexOf('}', renew)),
+        contains('WallImages.clear();'),
+      );
+    });
   });
 }

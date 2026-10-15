@@ -136,10 +136,7 @@ void main() {
     final picked = sourceOf('lib/picked.dart');
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendVideo('),
-      (
-        sourceOf('lib/wallpaper.dart'),
-        'Future<Uint8List?> pickWallpaperPhoto(',
-      ),
+      (sourceOf('lib/wallpaper.dart'), 'Future<Picked> pickWallpaperPhoto('),
       (group, 'Future<void> _pickGroupVideo('),
       (picked, 'Future<List<Uint8List>> readPickedPhotos('),
       (picked, 'Future<void> sendGalleryPicks('),

@@ -3848,7 +3848,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         atmo: _wall.atmo,
                         child: Stack(
                           children: [
-                            Positioned.fill(child: ChatBackdrop(_wall)),
+                            Positioned.fill(
+                              child: ChatBackdrop(_wall, chat: _memo),
+                            ),
                             NotificationListener<ScrollMetricsNotification>(
                               onNotification: _threadResized,
                               // the newest bubble's time rests above the line
@@ -4178,7 +4180,9 @@ class _Header extends StatelessWidget {
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
-                            color: room ? HaloColors.violet : HaloColors.amberText,
+                            color: room
+                                ? HaloColors.violet
+                                : HaloColors.amberText,
                           ),
                         ),
                       ),
@@ -5114,7 +5118,8 @@ class _GroupBubble extends StatelessWidget {
                                                                   .withValues(
                                                                     alpha: 0.7,
                                                                   )
-                                                            : HaloColors.amberText,
+                                                            : HaloColors
+                                                                  .amberText,
                                                         letter: 0.6,
                                                       ),
                                                     ),

@@ -9,7 +9,13 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
 import 'package:kryfo/main.dart'
-    show HaloDb, adoptWallpaperFiles, kPhotoWall, wallKey, wallpaperTable;
+    show
+        HaloDb,
+        adoptWallpaperFiles,
+        dropOrphanWallpapers,
+        kPhotoWall,
+        wallKey,
+        wallpaperTable;
 import 'package:kryfo/vault_life.dart' show chatTables;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -327,4 +333,80 @@ void main() {
       contains("p.join(p.dirname(path), 'wallpapers\${container.suffix}')"),
     );
   });
+
+  test('a photo no chat says it shows is swept: one left by a group taken '
+      'again whole, one for a chat that went; the default and the chats\' '
+      'own stay', () async {
+    final db = await chats();
+    // INSERT OR REPLACE takes the row again with no delete trigger
+    await db.execute(
+      "INSERT OR REPLACE INTO groups (group_id, atmosphere) "
+      "VALUES ('$_group', NULL)",
+    );
+    await db.insert('wallpapers', {
+      'chat': 'nobody-here',
+      'atmo': kPhotoWall,
+      'photo': _photo,
+    });
+    await db.execute(
+      "UPDATE contacts SET atmosphere = 'photo' WHERE halo_id = '$_other'",
+    );
+    expect(await walls(db), [
+      '',
+      'group:$_group',
+      'nobody-here',
+      _other,
+      _peer,
+    ]);
+    await dropOrphanWallpapers(db);
+    expect(await walls(db), ['', _other, _peer]);
+  }, skip: skip);
+
+  test('the sweep runs at every open', () {
+    final at = src.indexOf('await dropOrphanWallpapers(_db!);');
+    expect(at, greaterThan(src.indexOf('onUpgrade: (db, oldV, newV) async {')));
+    expect(at, lessThan(src.indexOf('// retired while it was opening')));
+  });
+
+  test('a photo is written only once its chat took the mark', () async {
+    final db = SqliteMem.open()!;
+    await db.execute(
+      'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, atmosphere TEXT)',
+    );
+    await db.execute(
+      'CREATE TABLE groups (group_id TEXT PRIMARY KEY, atmosphere TEXT)',
+    );
+    await wallpaperTable(db);
+    final on = _On(db);
+    expect(await on.setChatPhoto(_peer, _photo), isFalse);
+    expect(await walls(db), isEmpty);
+    await db.insert('contacts', {'halo_id': _peer});
+    expect(await on.setChatPhoto(_peer, _photo), isTrue);
+    expect(await walls(db), [_peer]);
+  }, skip: skip);
+
+  test('the old setters take the same way in: a photo goes with the choice '
+      'that replaced it', () async {
+    final db = await _seeded();
+    await db.setChatPhoto(_group, _photo, group: true);
+    await db.setGroupAtmosphere(_group, 'dusk');
+    expect(await db.wallpaperRow('group:$_group'), isNull);
+    await db.setChatPhoto(_peer, _photo);
+    await db.setAtmosphere(_peer, 'rain');
+    expect(await db.wallpaperRow(_peer), isNull);
+  });
+
+  test('the upgrade cleans each old photo off the ui thread', () {
+    final at = src.indexOf('Future<List<String>> adoptWallpaperFiles(');
+    final body = src.substring(at, src.indexOf('\n}\n', at));
+    expect(body, contains('await photoToSendOffUi('));
+    expect(body, isNot(contains('photoToSend(')));
+  });
+}
+
+class _On extends HaloDb {
+  _On(this.db);
+  final SqliteMem db;
+  @override
+  Future<Database> open() async => db;
 }

@@ -6,6 +6,7 @@
 // as bytes in the encrypted database of the container that holds the chat
 // (HaloDb.setChatPhoto): never a file, never shared storage, gone with the
 // chat. never sent: the other person sees their own.
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,7 @@ import 'lock_guard.dart' show LockDropped;
 import 'lock_state.dart';
 import 'main.dart' show kPhotoWall, session;
 import 'picked.dart';
+import 'session.dart' show Session;
 
 class ChatWall {
   final Atmo atmo;
@@ -100,16 +102,27 @@ Future<bool> followsDefault(String chatId, {bool group = false}) async =>
 /// stripper, refused when a tag survives. null: dropped
 Future<Uint8List?> wallpaperBytes(Uint8List picked) => photoToSendOffUi(picked);
 
+/// the largest side a kept photo has: a screen's worth, never more
+const kWallSide = 2048.0;
+
+/// what became of a picked photo
+enum Picked { kept, none, unclean }
+
 /// a photo from the gallery, re-encoded by the picker no larger than the
-/// screen's longest side, cleaned, and the picker's copy shredded. null
-/// when nothing was picked, the lock dropped it, or it could not be cleaned
-/// ([failed] then says why the person gets no wallpaper)
-Future<Uint8List?> pickWallpaperPhoto(
+/// screen's longest side (kWallSide at most), cleaned, and handed to [save]
+/// with the session it was picked in. the picker's copy is shredded
+/// whatever happens. [failed] says when it could not be cleaned
+Future<Picked> pickWallpaperPhoto(
   BuildContext context, {
+  required Future<Object?> Function(Session at, Uint8List photo) save,
   VoidCallback? failed,
 }) async {
+  final at = session;
   final mq = MediaQuery.of(context);
-  final side = (mq.size.longestSide * mq.devicePixelRatio).ceilToDouble();
+  final side = math.min(
+    (mq.size.longestSide * mq.devicePixelRatio).ceilToDouble(),
+    kWallSide,
+  );
   final XFile? x;
   try {
     x = await lockState.hold(
@@ -122,24 +135,45 @@ Future<Uint8List?> pickWallpaperPhoto(
       ),
     );
   } on LockDropped {
-    return null;
+    return Picked.none;
   }
-  if (x == null) return null;
-  Uint8List? out;
+  if (x == null) return Picked.none;
+  Uint8List? raw;
   try {
-    out = await wallpaperBytes(await x.readAsBytes());
+    raw = await x.readAsBytes();
   } catch (e) {
     dlog('wallpaper: the pick did not read (${e.runtimeType})');
   } finally {
     await shredPickedImages([x]);
   }
-  if (out == null) failed?.call();
-  return out;
+  final r = raw == null ? Picked.unclean : await keepPicked(at, raw, save);
+  if (r == Picked.unclean) failed?.call();
+  return r;
 }
 
-/// a photo's mean luminance, from a few pixels of it. null when it does
-/// not decode
-Future<double?> photoLuminance(Uint8List bytes) async {
+/// a picked photo cleaned, then saved into [at] only if that is still the
+/// session open: one the lock closed, or another pin replaced, while it
+/// was cleaned would route a hidden chat's photo elsewhere, so it goes
+/// nowhere
+@visibleForTesting
+Future<Picked> keepPicked(
+  Session at,
+  Uint8List raw,
+  Future<Object?> Function(Session at, Uint8List photo) save,
+) async {
+  final out = await wallpaperBytes(raw);
+  if (out == null) return Picked.unclean;
+  if (!identical(session, at)) {
+    dlog('wallpaper: the session changed while it was cleaned, dropped');
+    return Picked.none;
+  }
+  await save(at, out);
+  return Picked.kept;
+}
+
+/// a photo read at 8 by 8: what its corners and middle are made of, enough
+/// to size its veil. null when it does not decode
+Future<List<Color>?> photoSamples(Uint8List bytes) async {
   try {
     final codec = await ui.instantiateImageCodec(
       bytes,
@@ -153,32 +187,52 @@ Future<double?> photoLuminance(Uint8List bytes) async {
     );
     frame.image.dispose();
     if (data == null) return null;
-    var sum = 0.0;
     final n = data.lengthInBytes ~/ 4;
-    for (var i = 0; i < n; i++) {
-      sum += Color.fromARGB(
-        255,
-        data.getUint8(i * 4),
-        data.getUint8(i * 4 + 1),
-        data.getUint8(i * 4 + 2),
-      ).computeLuminance();
-    }
-    return n == 0 ? null : sum / n;
+    if (n == 0) return null;
+    return [
+      for (var i = 0; i < n; i++)
+        Color.fromARGB(
+          255,
+          data.getUint8(i * 4),
+          data.getUint8(i * 4 + 1),
+          data.getUint8(i * 4 + 2),
+        ),
+    ];
   } catch (_) {
     return null;
   }
 }
 
-/// how strongly the page's ground lies over a photo of mean luminance
-/// [lum], [ground] being that ground's: in the dark theme a bright photo is
-/// pulled down to a dark one, in the light theme a dark one is lifted to a
-/// pale one, so dates, names and lines read on it as on the plain page.
+/// how strongly the page's [ground] lies over a photo, from its [samples]:
+/// enough that its brightest tenth (dark theme) or darkest tenth (light
+/// theme) lands where the plain page's lines read, so a bright patch
+/// behind a date or a name is covered too, not only the average. the veil
+/// is mixed as the screen mixes it and the result judged in linear light.
 /// never less than a veil, never all of it
-double veilFor(double? lum, double ground, {required bool light}) {
+double veilFor(List<Color>? samples, Color ground, {required bool light}) {
+  const least = 0.4, most = 0.86;
+  if (samples == null || samples.isEmpty) return 0.6;
+  final byLum = [...samples]
+    ..sort((a, b) => a.computeLuminance().compareTo(b.computeLuminance()));
+  final at = light
+      ? byLum[(byLum.length * 0.1).floor()]
+      : byLum[math.min(byLum.length - 1, (byLum.length * 0.9).floor())];
   // where the page under the bubbles should land
-  final target = light ? 0.55 : 0.06;
-  final l = lum ?? (light ? 0.2 : 0.5);
-  final a = light ? (target - l) / (ground - l) : (l - target) / (l - ground);
-  if (a.isNaN) return 0.4;
-  return a.clamp(0.4, 0.86);
+  bool reads(double a) {
+    final l = Color.lerp(at, ground, a)!.computeLuminance();
+    return light ? l >= 0.55 : l <= 0.06;
+  }
+
+  if (reads(least)) return least;
+  if (!reads(most)) return most;
+  var lo = least, hi = most;
+  for (var i = 0; i < 20; i++) {
+    final mid = (lo + hi) / 2;
+    if (reads(mid)) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return hi;
 }
