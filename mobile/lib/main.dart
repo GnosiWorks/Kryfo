@@ -18414,11 +18414,7 @@ class AppState extends ChangeNotifier {
   // once a move under way is done, and its key goes with the handle
   Future<void> _closeDecoyVault(HaloDb v) async {
     try {
-      await _serial(() async {
-        // what a removal in it owes the file, before its key goes
-        await _tidy(v);
-        await v.close();
-      });
+      await _serial(v.close);
     } catch (e) {
       dlog('vault: close (${e.runtimeType})');
     }
@@ -18448,8 +18444,6 @@ class AppState extends ChangeNotifier {
         } catch (e) {
           dlog('vault: cards left as they were (${e.runtimeType})');
         }
-        // what a removal in it owes the file, before its key goes
-        await _tidy(v);
         await v.close();
       });
     } catch (e) {
