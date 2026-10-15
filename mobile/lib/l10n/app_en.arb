@@ -10147,6 +10147,10 @@
   "@nameTakenDeletedLine": {
     "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words was added here by hand and their chat was deleted. only an add the person makes is asked; nothing that came by itself takes the words"
   },
+  "nameTakenTombLine": "You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenTombLine": {
+    "description": "widgets/kryfo_link_text.dart: as nameTakenLine, for words whose holder was taken off this phone by notThemButton. only an add the person makes takes them again, after this"
+  },
   "nameTakenUse": "Use this link",
   "@nameTakenUse": {
     "description": "widgets/kryfo_link_text.dart: button, the link takes the words over"
@@ -10202,7 +10206,7 @@
   "@notThemSheetTitle": {
     "description": "widgets/not_them.dart: sheet title after notThemButton"
   },
-  "notThemSheetLine": "The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.",
+  "notThemSheetLine": "The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.",
   "@notThemSheetLine": {
     "description": "widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked"
   },

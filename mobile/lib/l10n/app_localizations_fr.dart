@@ -8141,6 +8141,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez supprimé une discussion sous ces mots, qui utilisait une autre clé. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.';
 
   @override
+  String get nameTakenTombLine =>
+      'Vous avez retiré de ce téléphone quelqu’un sous ces mots, car ce n’était pas la personne annoncée. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.';
+
+  @override
   String get nameTakenUse => 'Utiliser ce lien';
 
   @override
@@ -8180,7 +8184,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Ses trois mots sont de nouveau libres sur ce téléphone. Si quelqu’un vous ajoute ensuite sous ces mots, comparez le numéro de sécurité avec cette personne.';
+      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Seul un lien ou un code que vous ajoutez reprend ses trois mots. Comparez le numéro de sécurité avec la personne que vous ajoutez.';
 
   @override
   String get notThemRemove => 'Retirer et bloquer';

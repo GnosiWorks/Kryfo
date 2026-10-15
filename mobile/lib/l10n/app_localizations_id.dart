@@ -8052,6 +8052,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Kamu sudah menghapus obrolan dengan kata-kata ini, yang memakai kunci lain. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
 
   @override
+  String get nameTakenTombLine =>
+      'Kamu sudah menghapus seseorang dengan kata-kata ini dari ponsel ini karena dia bukan orang yang dia akui. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
+
+  @override
   String get nameTakenUse => 'Pakai tautan ini';
 
   @override
@@ -8091,7 +8095,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Tiga katanya bebas lagi di ponsel ini. Siapa pun yang menambahkanmu dengan kata-kata itu berikutnya, bandingkan nomor keamanan dengannya.';
+      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Hanya tautan atau kode yang kamu tambahkan yang bisa memakai tiga katanya lagi. Bandingkan nomor keamanan dengan siapa pun yang kamu tambahkan.';
 
   @override
   String get notThemRemove => 'Hapus dan blokir';

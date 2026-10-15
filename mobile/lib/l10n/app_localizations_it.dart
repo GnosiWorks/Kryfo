@@ -8128,6 +8128,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Hai eliminato una chat con queste parole, che usava un\'altra chiave. Se questo link viene dalla persona che conosci, usalo e poi confronta con lei il numero di sicurezza.';
 
   @override
+  String get nameTakenTombLine =>
+      'Hai rimosso da questo telefono qualcuno con queste parole perché non era chi diceva di essere. Se questo link viene dalla persona che conosci, usalo e poi confronta con lei il numero di sicurezza.';
+
+  @override
   String get nameTakenUse => 'Usa questo link';
 
   @override
@@ -8168,7 +8172,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Le sue tre parole tornano libere su questo telefono. Con chi ti aggiunge dopo con queste parole, confronta il numero di sicurezza.';
+      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Solo un link o un codice che aggiungi tu riprende le sue tre parole. Confronta il numero di sicurezza con chi aggiungi.';
 
   @override
   String get notThemRemove => 'Rimuovi e blocca';

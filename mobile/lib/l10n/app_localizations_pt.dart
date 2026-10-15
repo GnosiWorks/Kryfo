@@ -8116,6 +8116,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você apagou uma conversa com estas palavras, que usava outra chave. Se este link veio da pessoa que você conhece, use-o e depois compare o número de segurança com ela.';
 
   @override
+  String get nameTakenTombLine =>
+      'Você removeu deste celular alguém com estas palavras porque não era quem dizia ser. Se este link veio da pessoa que você conhece, use-o e depois compare o número de segurança com ela.';
+
+  @override
   String get nameTakenUse => 'Usar este link';
 
   @override
@@ -8156,7 +8160,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'A conversa, as mensagens e os arquivos somem deste celular. As três palavras ficam livres de novo neste celular. Com quem adicionar você com elas depois, compare o número de segurança.';
+      'A conversa, as mensagens e os arquivos somem deste celular. Só um link ou código que você adicionar fica de novo com as três palavras. Compare o número de segurança com quem você adicionar.';
 
   @override
   String get notThemRemove => 'Remover e bloquear';

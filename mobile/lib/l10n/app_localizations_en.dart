@@ -8053,6 +8053,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.';
 
   @override
+  String get nameTakenTombLine =>
+      'You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.';
+
+  @override
   String get nameTakenUse => 'Use this link';
 
   @override
@@ -8092,7 +8096,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.';
+      'The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.';
 
   @override
   String get notThemRemove => 'Remove and block';

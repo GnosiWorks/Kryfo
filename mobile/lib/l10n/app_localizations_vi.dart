@@ -8043,6 +8043,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn đã xóa một cuộc trò chuyện dưới ba từ này, vốn dùng một khóa khác. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
 
   @override
+  String get nameTakenTombLine =>
+      'Bạn đã xóa khỏi điện thoại này một người dưới ba từ này vì đó không phải người họ nói. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
+
+  @override
   String get nameTakenUse => 'Dùng liên kết này';
 
   @override
@@ -8082,7 +8086,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi điện thoại này. Ba từ của họ lại được tự do trên điện thoại này. Ai thêm bạn bằng ba từ đó lần tới, hãy so sánh số an toàn với người đó.';
+      'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi điện thoại này. Chỉ một liên kết hoặc mã do bạn thêm mới lấy lại được ba từ của họ. Hãy so sánh số an toàn với người bạn thêm.';
 
   @override
   String get notThemRemove => 'Xóa và chặn';

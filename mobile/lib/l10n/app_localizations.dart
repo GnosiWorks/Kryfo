@@ -12969,6 +12969,12 @@ abstract class AppLocalizations {
   /// **'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.'**
   String get nameTakenDeletedLine;
 
+  /// widgets/kryfo_link_text.dart: as nameTakenLine, for words whose holder was taken off this phone by notThemButton. only an add the person makes takes them again, after this
+  ///
+  /// In en, this message translates to:
+  /// **'You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.'**
+  String get nameTakenTombLine;
+
   /// widgets/kryfo_link_text.dart: button, the link takes the words over
   ///
   /// In en, this message translates to:
@@ -13032,7 +13038,7 @@ abstract class AppLocalizations {
   /// widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked
   ///
   /// In en, this message translates to:
-  /// **'The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.'**
+  /// **'The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.'**
   String get notThemSheetLine;
 
   /// widgets/not_them.dart: the yes of that sheet

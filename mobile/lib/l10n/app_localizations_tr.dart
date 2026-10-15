@@ -8081,6 +8081,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu kelimelerle, farklı bir anahtarla çalışan bir sohbeti sildin. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra güvenlik numarasını onunla karşılaştır.';
 
   @override
+  String get nameTakenTombLine =>
+      'Bu kelimelerle olan birini, söylediği kişi olmadığı için bu telefondan kaldırdın. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra güvenlik numarasını onunla karşılaştır.';
+
+  @override
   String get nameTakenUse => 'Bu bağlantıyı kullan';
 
   @override
@@ -8121,7 +8125,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Üç kelimesi bu telefonda yeniden boşa çıkar. Seni bundan sonra bu kelimelerle ekleyen kişiyle güvenlik numarasını karşılaştır.';
+      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Üç kelimesini yeniden ancak senin eklediğin bir bağlantı ya da kod alır. Eklediğin kişiyle güvenlik numarasını karşılaştır.';
 
   @override
   String get notThemRemove => 'Kaldır ve engelle';

@@ -7706,6 +7706,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '你删除过一个用这三个词的聊天，它用的是另一把密钥。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
 
   @override
+  String get nameTakenTombLine =>
+      '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+
+  @override
   String get nameTakenUse => '使用这个链接';
 
   @override
@@ -7743,7 +7747,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      '聊天及其中的消息和文件都会从这部手机上消失。这三个词在这部手机上重新空出来。下一个用这三个词添加你的人，请和对方核对安全码。';
+      '聊天及其中的消息和文件都会从这部手机上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
 
   @override
   String get notThemRemove => '删除并屏蔽';
@@ -15524,6 +15528,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '你刪除過一個用這三個詞的聊天，它用的是另一把金鑰。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
 
   @override
+  String get nameTakenTombLine =>
+      '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+
+  @override
   String get nameTakenUse => '使用這個連結';
 
   @override
@@ -15561,7 +15569,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notThemSheetLine =>
-      '聊天及其中的訊息和檔案都會從這支手機上消失。這三個詞在這支手機上重新空出來。下一個用這三個詞新增你的人，請和對方核對安全碼。';
+      '聊天及其中的訊息和檔案都會從這支手機上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
 
   @override
   String get notThemRemove => '刪除並封鎖';
