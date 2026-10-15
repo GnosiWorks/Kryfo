@@ -72,6 +72,7 @@ class _World {
     int total = 100,
     String? group,
     bool voice = false,
+    bool image = false,
   }) async => from(
     who,
     await wrapMessage(
@@ -81,8 +82,9 @@ class _World {
       chunkIndex: index,
       chunkTotal: total,
       groupId: group,
-      fileB64: base64Encode(List.filled(300, index % 256)),
-      fileName: voice ? 'voice.wav' : 'x.bin',
+      fileB64: image ? null : base64Encode(List.filled(300, index % 256)),
+      imageB64: image ? base64Encode(List.filled(300, index % 256)) : null,
+      fileName: image ? null : (voice ? 'voice.wav' : 'x.bin'),
       voice: voice,
       sender: asSender(who),
     ),
@@ -123,6 +125,21 @@ void main() {
         await w.slice(_s, 'big$m', total: kMaxFileSlices);
       }
       expect(w.live.chunks.keys, ['big0', 'big1']);
+    });
+
+    test('a photo is held to the file cap, voice flag or not', () async {
+      final w = await _World.make();
+      await w.slice(_s, 'pic', total: kMaxFileSlices + 1, image: true);
+      await w.slice(
+        _s,
+        'vpic',
+        total: kMaxFileSlices + 1,
+        image: true,
+        voice: true,
+      );
+      expect(w.live.chunks.keys, isEmpty);
+      await w.slice(_s, 'ok', total: kMaxFileSlices, image: true);
+      expect(w.live.chunks.keys, ['ok']);
     });
 
     test('a voice note longer than the mic records is not kept', () async {

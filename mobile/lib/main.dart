@@ -15502,9 +15502,11 @@ class AppState extends ChangeNotifier {
         dlog('recv: slice out of range, dropped');
         return to;
       }
-      // a file or a voice note is no bigger than any kryfo sends
-      if (env.fileB64 != null &&
-          total > (env.voice ? kMaxVoiceSlices : kMaxFileSlices)) {
+      // a file, a photo or a voice note is no bigger than any kryfo sends.
+      // only a voice note's own slices get the longer cap
+      final voiceSlices =
+          env.voice && env.fileB64 != null && env.imageB64 == null;
+      if (total > (voiceSlices ? kMaxVoiceSlices : kMaxFileSlices)) {
         dlog('recv: a file over the size any kryfo sends, dropped');
         return to;
       }
