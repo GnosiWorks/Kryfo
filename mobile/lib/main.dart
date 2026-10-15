@@ -9972,7 +9972,10 @@ Future<(String, bool)> handleHaloUriAdded(
   bool Function(String id)? hidden,
   bool Function(String keyHex)? shutKeys,
   bool scanned = false,
+  @visibleForTesting AppState? app,
 }) async {
+  // the one app on a phone; a test hands in the one it built
+  final appState = app ?? _app;
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
@@ -10166,6 +10169,7 @@ Future<(String, bool)> handleHaloUriAdded(
     );
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
     if (untombed) await appState._untomb(id);
+    await appState._untombShut(id);
     await _noteHowAdded(
       id,
       scanned: scanned,
@@ -10215,6 +10219,7 @@ Future<(String, bool)> handleHaloUriAdded(
       owe: asked,
     );
     if (untombed) await appState._untomb(id);
+    await appState._untombShut(id);
     await _noteHowAdded(
       id,
       scanned: scanned,
@@ -10566,7 +10571,9 @@ enum LinkKin {
 Future<(LinkKin, String)> linkKinOf(
   String link, {
   bool Function(String id)? hidden,
+  @visibleForTesting AppState? app,
 }) async {
+  final appState = app ?? _app;
   final parsed = parseHaloUri(link);
   if (parsed == null) return (LinkKin.stranger, '');
   final id = parsed['id']!;
@@ -10580,7 +10587,7 @@ Future<(LinkKin, String)> linkKinOf(
         return (LinkKin.stranger, id);
       }
     }
-    return await _linkKin(parsed, id);
+    return await _linkKin(parsed, id, appState);
   } catch (e) {
     dlog('link kin: ${e.runtimeType}');
     return (LinkKin.stranger, id);
@@ -10590,6 +10597,7 @@ Future<(LinkKin, String)> linkKinOf(
 Future<(LinkKin, String)> _linkKin(
   Map<String, String> parsed,
   String id,
+  AppState appState,
 ) async {
   final cardKey = parsed['bundle'] != null
       ? _bundleIdentity(parsed['bundle']!)
@@ -18235,10 +18243,7 @@ class AppState extends ChangeNotifier {
       }
       // seats of people the everyday side let go while it was shut, and its
       // blocks and let-go words as its own rows hold them
-      if (!decoy) {
-        await _seatsGoneInto(v);
-        await _remarkFrom(v);
-      }
+      if (!decoy) await _marksAtOpen(v);
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -21067,7 +21072,15 @@ class AppState extends ChangeNotifier {
   Future<void> seatsGoneIntoForTest(HaloDb vault) => _seatsGoneInto(vault);
 
   @visibleForTesting
-  Future<void> remarkForTest(HaloDb vault) => _remarkFrom(vault);
+  Future<void> remarkForTest(HaloDb vault) => _marksAtOpen(vault);
+
+  // a vault opening: what the everyday side let go and took back while it
+  // was shut goes from it first, then its marks are read from its rows
+  Future<void> _marksAtOpen(HaloDb vault) async {
+    await _seatsGoneInto(vault);
+    await _tombsGoneInto(vault);
+    await _remarkFrom(vault);
+  }
 
   Future<void> _remarkFrom(HaloDb vault) async {
     try {
@@ -21140,11 +21153,34 @@ class AppState extends ChangeNotifier {
     return false;
   }
 
-  // words "this isn't them" let go, for an add the person makes: in the
-  // session on screen, a decoy's own rows in a decoy
+  // words "this isn't them" let go, for an add the person makes: what the
+  // session on screen holds. a shut vault's marks are never shown to it
   Future<bool> _tombed(String id) async => sessionQuiet
       ? _tombedIn([session.primary, ?session.vault], id)
-      : _tombedArriving(id);
+      : _openVault != null
+      ? _tombedArriving(id)
+      : _tombedIn([live], id);
+
+  // an everyday add took words the shut vault let go: its mark comes off,
+  // and the vault's own tomb as it next opens
+  Future<void> _untombShut(String id) async {
+    if (sessionQuiet || _openVault != null || !_router.tombedLive(id)) return;
+    await _router.markTomb(id, on: false);
+    await _router.queueTombGone(id);
+  }
+
+  // what the everyday side took back while the vault was shut
+  Future<void> _tombsGoneInto(HaloDb vault) async {
+    try {
+      final ids = await _router.tombsGone();
+      for (final id in ids) {
+        await vault.clearTomb(id);
+      }
+      if (ids.isNotEmpty) await _router.clearTombsGone();
+    } catch (e) {
+      dlog('vault: let-go words not taken back (${e.runtimeType})');
+    }
+  }
 
   // the same for what arrives: it is filed on the everyday side or in its
   // vault, open or shut, whatever is on screen
@@ -24964,6 +25000,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+AppState get _app => appState;
 
 // the way out of a send stuck on tor, shared by every chat and the home card
 final torValve = TorValve(
