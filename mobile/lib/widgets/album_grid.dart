@@ -68,6 +68,9 @@ class AlbumGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final n = tiles.length;
     final cells = albumCells(n, width);
+    // a place still coming opens the viewer over what is here, so no tile
+    // is a dead end
+    final any = tiles.any((t) => t?.path != null);
     final h = albumHeight(n, width);
     const r = Radius.circular(radius);
     return Semantics(
@@ -96,7 +99,7 @@ class AlbumGrid extends StatelessWidget {
                     at: c.slot,
                     of: n,
                     more: c.more,
-                    onOpen: onOpen,
+                    onOpen: any ? onOpen : null,
                     onLongPress: onLongPress,
                   ),
                 ),
@@ -167,15 +170,15 @@ class _Cell extends StatelessWidget {
     );
     return Semantics(
       container: true,
-      button: path != null,
+      button: onOpen != null,
       label: '$what, ${l10n.albumCounter(whole(at + 1), whole(of))}',
       value: more > 0 ? l10n.albumMore(whole(more)) : null,
       excludeSemantics: true,
-      onTap: path == null || onOpen == null ? null : () => onOpen!(at),
+      onTap: onOpen == null ? null : () => onOpen!(at),
       child: PressScale(
         scale: 0.97,
         haptic: false,
-        onTap: path == null || onOpen == null ? null : () => onOpen!(at),
+        onTap: onOpen == null ? null : () => onOpen!(at),
         onLongPress: onLongPress == null ? null : () => onLongPress!(at),
         child: Stack(
           fit: StackFit.expand,

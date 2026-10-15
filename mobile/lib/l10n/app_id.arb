@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Tambah lagi",
   "mediaSendRemove": "Hapus",
   "mediaSendProtect": "Lindungi dari tangkapan layar",
-  "mediaSendProtectedOn": "Terlindung · dia tidak bisa mengambil tangkapan layarnya",
+  "mediaSendProtectedOn": "Terlindung · tangkapan layar diblokir",
   "mediaSendUpTo": "Maksimal {count} sekaligus",
-  "mediaSendVideo": "Kirim video"
+  "mediaSendVideo": "Kirim video",
+  "mediaSendUntilAccepted": "Sampai dia menerima, {count} bisa terkirim"
 }

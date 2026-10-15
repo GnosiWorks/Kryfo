@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Mehr hinzufügen",
   "mediaSendRemove": "Entfernen",
   "mediaSendProtect": "Vor Screenshots schützen",
-  "mediaSendProtectedOn": "Geschützt · die andere Person kann keinen Screenshot davon machen",
+  "mediaSendProtectedOn": "Geschützt · Screenshots sind gesperrt",
   "mediaSendUpTo": "Bis zu {count} auf einmal",
-  "mediaSendVideo": "Video senden"
+  "mediaSendVideo": "Video senden",
+  "mediaSendUntilAccepted": "Bis zur Annahme können {count} gehen"
 }

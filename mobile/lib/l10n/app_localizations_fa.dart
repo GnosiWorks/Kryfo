@@ -8315,8 +8315,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get mediaSendProtect => 'محافظت در برابر اسکرین‌شات';
 
   @override
-  String get mediaSendProtectedOn =>
-      'محافظت‌شده · او نمی‌تواند از آن‌ها اسکرین‌شات بگیرد';
+  String get mediaSendProtectedOn => 'محافظت‌شده · اسکرین‌شات مسدود است';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8325,4 +8324,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'ارسال ویدیو';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'تا وقتی قبول نکند، ⁨$count⁩ مورد می‌تواند برود';
+  }
 }

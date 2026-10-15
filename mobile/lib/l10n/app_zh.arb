@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "添加更多",
   "mediaSendRemove": "移除",
   "mediaSendProtect": "防止截屏",
-  "mediaSendProtectedOn": "已保护 · 对方无法截屏",
+  "mediaSendProtectedOn": "已保护 · 已阻止截屏",
   "mediaSendUpTo": "一次最多 {count} 个",
-  "mediaSendVideo": "发送视频"
+  "mediaSendVideo": "发送视频",
+  "mediaSendUntilAccepted": "对方接受前，可以发送 {count} 个"
 }

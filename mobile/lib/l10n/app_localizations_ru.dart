@@ -8457,8 +8457,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mediaSendProtect => 'Защитить от скриншотов';
 
   @override
-  String get mediaSendProtectedOn =>
-      'Защищено · собеседник не сможет сделать скриншот';
+  String get mediaSendProtectedOn => 'Защищено · скриншоты заблокированы';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8467,4 +8466,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Отправить видео';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Пока собеседник не примет, можно отправить $count';
+  }
 }

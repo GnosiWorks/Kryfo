@@ -26,6 +26,8 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/album_grid.dart';
+import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
+import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -253,6 +255,9 @@ void main() {
     String dir = 'in',
     String caption = '',
     String id = _id,
+    bool secure = false,
+    bool sent = true,
+    bool delivered = true,
   }) async {
     final f = File('${docs.path}/p_$id$i.png')..writeAsBytesSync(_png);
     await mem.insert('messages', {
@@ -263,8 +268,9 @@ void main() {
       'written_at': base + 60000 + i * 1000,
       'msg_uid': '$dir-$id-$i',
       'media_path': f.path,
-      'sent': 1,
-      'delivered': 1,
+      'sent': sent ? 1 : 0,
+      'delivered': delivered ? 1 : 0,
+      'secure': secure ? 1 : 0,
       ...AlbumTag(id, n, i).toRow(),
     });
   }
@@ -412,6 +418,88 @@ void main() {
     }
     expect(find.text(l10n.albumUnsendTitle), findsNothing);
     expect(db.deleted, isEmpty);
+    await devClose(t);
+  });
+
+  // the actions the open menu offers, by label
+  List<String> offered(WidgetTester t) => [
+    for (final a
+        in t.widget<MessageMenuCard>(find.byType(MessageMenuCard)).actions)
+      if (a.onTap != null) a.label,
+  ];
+
+  testWidgets('theirs, sent protected, is neither saved nor shared', (t) async {
+    for (var i = 0; i < 2; i++) {
+      await item(i, 2, secure: true);
+    }
+    await devOpen(t, chat());
+    await settle(t);
+    await t.longPress(tile(0));
+    await settle(t, 4);
+    // the menu is up, with what it may offer and nothing that lets it out
+    expect(offered(t), contains(l10n.chatPin));
+    expect(offered(t), isNot(contains(l10n.commonSave)));
+    expect(offered(t), isNot(contains(l10n.commonShare)));
+    await devClose(t);
+  });
+
+  testWidgets('a video of theirs sent protected is not shared either', (
+    t,
+  ) async {
+    for (final (uid, secure) in [('v-kept', true), ('v-open', false)]) {
+      final f = File('${docs.path}/$uid.mp4')..writeAsBytesSync([0, 0, 0, 8]);
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'in',
+        'plaintext': '',
+        'sent_at': base + (secure ? 1000 : 2000),
+        'written_at': base + (secure ? 1000 : 2000),
+        'msg_uid': uid,
+        'file_path': f.path,
+        'file_name': 'video_$uid.mp4',
+        'sent': 1,
+        'secure': secure ? 1 : 0,
+      });
+    }
+    await devOpen(t, chat());
+    await settle(t);
+    final videos = find.byType(VideoBubble);
+    expect(videos, findsNWidgets(2));
+    Finder video(String uid) => find.byWidgetPredicate(
+      (w) => w is VideoBubble && w.path.endsWith('$uid.mp4'),
+    );
+    await t.longPress(video('v-kept'));
+    await settle(t, 4);
+    expect(offered(t), isNot(contains(l10n.commonShare)));
+    expect(offered(t), isNot(contains(l10n.commonSave)));
+    await t.tapAt(const Offset(4, 300));
+    await settle(t, 4);
+    await t.longPress(video('v-open'));
+    await settle(t, 4);
+    expect(offered(t), contains(l10n.commonShare));
+    await devClose(t);
+  });
+
+  testWidgets('a caption on a later item is the album\'s', (t) async {
+    await item(0, 3);
+    await item(1, 3);
+    await item(2, 3, caption: 'all three');
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.text('all three', findRichText: true), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('with its first places missing, what came is drawn and '
+      'opens', (t) async {
+    await item(2, 4);
+    await item(3, 4);
+    await devOpen(t, chat());
+    await settle(t);
+    final grid = t.widget<AlbumGrid>(find.byType(AlbumGrid));
+    expect(grid.tiles, hasLength(2));
+    expect(grid.tiles.every((x) => x?.path != null), isTrue);
     await devClose(t);
   });
 }

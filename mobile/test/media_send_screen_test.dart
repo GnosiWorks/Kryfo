@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:kryfo/album.dart' show kPickMax;
 import 'package:kryfo/picked.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
@@ -39,6 +40,10 @@ void main() {
     bool? protect,
     bool still = false,
     Locale locale = const Locale('en'),
+    int? max,
+    bool request = false,
+    Future<bool> Function(List<PickedMedia> items)? beforeSend,
+    void Function(List<XFile> videos)? onGone,
   }) async {
     phone(t);
     secure = [];
@@ -68,8 +73,15 @@ void main() {
     );
     final got = Navigator.of(ctx).push<MediaSendResult?>(
       MaterialPageRoute(
-        builder: (_) =>
-            MediaSendScreen(items: items, addMore: more, secure: protect),
+        builder: (_) => MediaSendScreen(
+          items: items,
+          addMore: more,
+          secure: protect,
+          max: max ?? kPickMax,
+          request: request,
+          beforeSend: beforeSend,
+          onGone: onGone,
+        ),
       ),
     );
     await t.pumpAndSettle();
@@ -212,5 +224,75 @@ void main() {
     await t.tap(find.byIcon(Icons.arrow_upward));
     await t.pumpAndSettle();
     expect((await got)!.items.map(_tagOf), [1]);
+  });
+
+  testWidgets('before they accept, only the slots left go, and it says so', (
+    t,
+  ) async {
+    final got = await open(
+      t,
+      [_photo(1), _photo(2), _photo(3)],
+      max: 1,
+      request: true,
+      more: () async => [_photo(4)],
+    );
+    expect(screen(t).items.map(_tagOf), [1]);
+    expect(find.text('Until they accept, 1 can go'), findsOneWidget);
+    // nothing more can join
+    expect(find.bySemanticsLabel('Add more'), findsNothing);
+    await send(t);
+    expect((await got)!.items.map(_tagOf), [1]);
+  });
+
+  testWidgets('a big file is asked about in the preview, and a no keeps '
+      'it open', (t) async {
+    var answer = false;
+    final asked = <int>[];
+    final got = await open(
+      t,
+      [_photo(1), _photo(2)],
+      beforeSend: (items) async {
+        asked.add(items.length);
+        return answer;
+      },
+    );
+    await send(t);
+    expect(asked, [2]);
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    answer = true;
+    await send(t);
+    expect(asked, [2, 2]);
+    expect((await got)!.items.map(_tagOf), [1, 2]);
+  });
+
+  testWidgets('taken away with nothing sent, its video copies go at once', (
+    t,
+  ) async {
+    final gone = <String>[];
+    final v = PickedMedia.video(XFile('/cache/abc/clip.mp4'));
+    _made[v] = 9;
+    await open(
+      t,
+      [_photo(1), v],
+      more: () async => [PickedMedia.video(XFile('/cache/def/more.mp4'))],
+      onGone: (videos) => gone.addAll(videos.map((x) => x.name)),
+    );
+    await t.tap(find.bySemanticsLabel('Add more'));
+    await t.pumpAndSettle();
+    // a lock or a session switch takes the screen, its route never ends
+    await t.pumpWidget(const SizedBox());
+    expect(gone, ['clip.mp4', 'more.mp4']);
+  });
+
+  testWidgets('sent, it leaves its copies to the send', (t) async {
+    final gone = <String>[];
+    final v = PickedMedia.video(XFile('/cache/abc/clip.mp4'));
+    _made[v] = 9;
+    final got = await open(t, [
+      v,
+    ], onGone: (videos) => gone.addAll(videos.map((x) => x.name)));
+    await send(t);
+    expect((await got)!.items.map(_tagOf), [9]);
+    expect(gone, isEmpty);
   });
 }

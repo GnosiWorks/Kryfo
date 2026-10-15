@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Додати ще",
   "mediaSendRemove": "Прибрати",
   "mediaSendProtect": "Захистити від знімків екрана",
-  "mediaSendProtectedOn": "Захищено · співрозмовник не зможе зробити знімок екрана",
+  "mediaSendProtectedOn": "Захищено · знімки екрана заблоковано",
   "mediaSendUpTo": "Не більше {count} за раз",
-  "mediaSendVideo": "Надіслати відео"
+  "mediaSendVideo": "Надіслати відео",
+  "mediaSendUntilAccepted": "Поки співрозмовник не прийме, можна надіслати {count}"
 }

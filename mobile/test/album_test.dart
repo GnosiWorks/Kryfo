@@ -11,7 +11,16 @@ class _Row {
   final AlbumTag? tag;
   final bool media;
   final String name;
-  const _Row(this.name, this.tag, {this.who = 'in', this.media = true});
+  final int at;
+  final String text;
+  const _Row(
+    this.name,
+    this.tag, {
+    this.who = 'in',
+    this.media = true,
+    this.at = 0,
+    this.text = '',
+  });
   @override
   String toString() => name;
 }
@@ -21,6 +30,7 @@ AlbumIndex<_Row> _index(List<_Row> rows) => AlbumIndex<_Row>(
   tag: (r) => r.tag,
   owner: (r) => r.who,
   media: (r) => r.media,
+  written: (r) => r.at,
 );
 
 const _a = '00112233445566aa';
@@ -220,6 +230,68 @@ void main() {
       final ix = _index([plain]);
       expect(ix.runOf(plain), isNull);
       expect(ix.runs, isEmpty);
+    });
+  });
+
+  group('round two', () {
+    const min = 60000;
+
+    test('one written past the window stands alone, within it joins', () {
+      final r0 = const _Row('r0', AlbumTag(_a, 3, 0));
+      final near = const _Row('near', AlbumTag(_a, 3, 1), at: 10 * min);
+      final far = const _Row('far', AlbumTag(_a, 3, 2), at: 10 * min + 1);
+      final ix = _index([r0, near, far]);
+      expect(ix.runOf(r0)!.present, [r0, near]);
+      expect(ix.runOf(far), isNull);
+      expect(ix.hidden(far), isFalse);
+      expect(albumInWindow(0, 10 * min), isTrue);
+      expect(albumInWindow(10 * min + 1, 0), isFalse);
+    });
+
+    test('with its first places missing, what is here is drawn', () {
+      final rows = [
+        for (var i = 4; i < 9; i++) _Row('r$i', AlbumTag(_a, 9, i)),
+      ];
+      final run = _index(rows).runOf(rows.first)!;
+      expect(run.drawn, rows);
+      // with the first here, a place for each
+      final r0 = const _Row('r0', AlbumTag(_b, 3, 0));
+      final full = _index([r0]).runOf(r0)!;
+      expect(full.drawn, [r0, null, null]);
+    });
+
+    test('any tile opens the viewer on what is here', () {
+      expect(albumOpenAt(['a', null, 'c', null], 0), 0);
+      expect(albumOpenAt(['a', null, 'c', null], 1), 1);
+      expect(albumOpenAt(['a', null, 'c', null], 2), 1);
+      expect(albumOpenAt(['a', null, 'c', null], 3), 1);
+      expect(albumOpenAt([null, null, 'c'], 0), 0);
+      expect(albumOpenAt(<String?>[null, null], 0), isNull);
+    });
+
+    test('the caption is the first words any item carries', () {
+      final rows = [
+        const _Row('r0', AlbumTag(_a, 3, 0)),
+        const _Row('r1', AlbumTag(_a, 3, 1), text: '  '),
+        const _Row('r2', AlbumTag(_a, 3, 2), text: 'look'),
+      ];
+      expect(_index(rows).runOf(rows[0])!.caption((r) => r.text), 'look');
+      final quiet = [const _Row('q', AlbumTag(_b, 2, 0))];
+      expect(_index(quiet).runOf(quiet[0])!.caption((r) => r.text), '');
+    });
+
+    test('a late item takes the album\'s clock, but never under the '
+        'grace, and never past its own', () {
+      const now = 1000000;
+      final grace = kAlbumBurnGrace.inMilliseconds;
+      // the album burns well after now: the late item burns with it
+      expect(albumItemBurnAt(now + 60000, [now + 30000], now), now + 30000);
+      // the album is about to burn: the late item still shows a while
+      expect(albumItemBurnAt(now + 60000, [now + 1000], now), now + grace);
+      // its own window is shorter than the grace: its own
+      expect(albumItemBurnAt(now + 3000, [now + 1000], now), now + 3000);
+      // alone, its own
+      expect(albumItemBurnAt(now + 3000, [null], now), now + 3000);
     });
   });
 

@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "افزودن بیشتر",
   "mediaSendRemove": "حذف",
   "mediaSendProtect": "محافظت در برابر اسکرین‌شات",
-  "mediaSendProtectedOn": "محافظت‌شده · او نمی‌تواند از آن‌ها اسکرین‌شات بگیرد",
+  "mediaSendProtectedOn": "محافظت‌شده · اسکرین‌شات مسدود است",
   "mediaSendUpTo": "حداکثر ⁨{count}⁩ مورد در هر بار",
-  "mediaSendVideo": "ارسال ویدیو"
+  "mediaSendVideo": "ارسال ویدیو",
+  "mediaSendUntilAccepted": "تا وقتی قبول نکند، ⁨{count}⁩ مورد می‌تواند برود"
 }

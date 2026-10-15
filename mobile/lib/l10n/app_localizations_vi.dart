@@ -8290,7 +8290,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaSendProtect => 'Bảo vệ khỏi chụp màn hình';
 
   @override
-  String get mediaSendProtectedOn => 'Đã bảo vệ · họ không thể chụp màn hình';
+  String get mediaSendProtectedOn => 'Đã bảo vệ · đã chặn chụp màn hình';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8299,4 +8299,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Gửi video';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Đến khi họ chấp nhận, có thể gửi $count';
+  }
 }

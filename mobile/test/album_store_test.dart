@@ -107,14 +107,60 @@ void main() {
     if (skip()) return;
     final db = HaloDb();
     await db.open();
-    expect(await db.albumHas(_id, _alice, null), isFalse);
+    expect(await db.albumHeld(_id, _alice, null), isNull);
     await theirs(db, 'u2', 2);
+    await theirs(db, 'u0', 0);
     expect(AlbumTag.ofRow(await row(db, 'u2')), const AlbumTag(_id, 3, 2));
-    expect(await db.albumHas(_id, _alice, null), isTrue);
-    expect(await db.albumHas(_id, _bob, null), isFalse);
-    expect(await db.albumHas(_id, _alice, 'g1'), isFalse);
+    final held = (await db.albumHeld(_id, _alice, null))!;
+    expect(held.n, 3);
+    expect(held.taken, {0, 2});
+    expect(await db.albumHeld(_id, _bob, null), isNull);
+    expect(await db.albumHeld(_id, _alice, 'g1'), isNull);
     await db.close();
   });
+
+  test(
+    'a late item never takes a clock that leaves it under the grace',
+    () async {
+      if (skip()) return;
+      final db = HaloDb();
+      await db.open();
+      for (var i = 0; i < 2; i++) {
+        await db.saveMessage(
+          _alice,
+          'out',
+          '',
+          msgUid: 'g$i',
+          mediaPath: '/m/g$i.jpg',
+          burnSecs: 60,
+          sent: 0,
+          album: AlbumTag(_id, 2, i),
+        );
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.setMsgBurnAt('g0', now + 1000);
+      final at = await db.setMsgBurnAt('g1', now + 60000);
+      expect(at, greaterThanOrEqualTo(now + kAlbumBurnGrace.inMilliseconds));
+      expect(at, lessThan(now + 60000));
+      await db.close();
+    },
+  );
+
+  test(
+    'an album that burns is remembered, so nothing joins it after',
+    () async {
+      if (skip()) return;
+      final db = HaloDb();
+      await db.open();
+      await theirs(db, 'b0', 0, burnSecs: null);
+      await db.setMsgBurnAt('b0', DateTime.now().millisecondsSinceEpoch - 1000);
+      await db.purgeExpired();
+      expect(await db.messageExists('b0'), isFalse);
+      expect(await db.goneFrom(goneKey(_alice), albumGoneUid(_id)), isTrue);
+      expect(await db.goneFrom(goneKey(_bob), albumGoneUid(_id)), isFalse);
+      await db.close();
+    },
+  );
 
   test('ours burns on the first clock set', () async {
     if (skip()) return;

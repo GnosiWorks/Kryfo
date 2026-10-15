@@ -7940,7 +7940,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaSendProtect => '防止截屏';
 
   @override
-  String get mediaSendProtectedOn => '已保护 · 对方无法截屏';
+  String get mediaSendProtectedOn => '已保护 · 已阻止截屏';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -7949,6 +7949,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mediaSendVideo => '发送视频';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return '对方接受前，可以发送 $count 个';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15767,7 +15772,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaSendProtect => '防止截圖';
 
   @override
-  String get mediaSendProtectedOn => '已保護 · 對方無法截圖';
+  String get mediaSendProtectedOn => '已保護 · 已阻止截圖';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -15776,4 +15781,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mediaSendVideo => '傳送影片';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return '對方接受前，可以傳送 $count 個';
+  }
 }

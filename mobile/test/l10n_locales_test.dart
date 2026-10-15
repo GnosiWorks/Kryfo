@@ -3156,6 +3156,11 @@ final _calls = <_Call>[
   ('mediaSendProtectedOn', [], (l) => l.mediaSendProtectedOn),
   ('mediaSendUpTo', ["⟨count⟩"], (l) => l.mediaSendUpTo("⟨count⟩")),
   ('mediaSendVideo', [], (l) => l.mediaSendVideo),
+  (
+    'mediaSendUntilAccepted',
+    ["⟨count⟩"],
+    (l) => l.mediaSendUntilAccepted("⟨count⟩"),
+  ),
 ];
 
 void main() {

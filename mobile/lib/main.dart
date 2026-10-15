@@ -11,7 +11,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'shred.dart';
-import 'album.dart' show AlbumTag, albumBurnAt;
+import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;
 export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
@@ -4470,7 +4470,7 @@ class HaloDb implements GroupOwedStore {
   // what a row needs for _unreadGo to place it
   static const _kUnreadCols = ['id', 'peer_id', 'group_id', 'direction'];
   // and for _noteGone, with those
-  static const _kGoneCols = ['msg_uid', 'sent_at'];
+  static const _kGoneCols = ['msg_uid', 'sent_at', 'album_id'];
 
   // how long one that came in and went is known by its uid: as far back
   // as a resend reaches, and our relay's fortnight, which a fresh install
@@ -4504,6 +4504,14 @@ class HaloDb implements GroupOwedStore {
         'peer_id': goneKey(peer, group: group),
         'at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      // an album that went takes nothing that comes after (albumGone)
+      if (r['album_id'] case final String album) {
+        b.insert('gone_in', {
+          'msg_uid': albumGoneUid(album),
+          'peer_id': goneKey(peer, group: group),
+          'at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
       any = true;
     }
     if (any) await b.commit(noResult: true);
@@ -5892,19 +5900,32 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  // a row of [sender]'s album [albumId] is here already
-  Future<bool> albumHas(String albumId, String sender, String? groupId) async {
+  // what is here of [sender]'s album [albumId]: its count, the places
+  // taken, and when its first row was written. null while none is
+  Future<({int n, Set<int> taken, int first})?> albumHeld(
+    String albumId,
+    String sender,
+    String? groupId,
+  ) async {
     final db = await open();
-    final r = await db.query(
+    final rows = await db.query(
       'messages',
-      columns: ['id'],
+      columns: ['album_n', 'album_i', 'written_at', 'sent_at'],
       where:
           "album_id = ? AND peer_id = ? AND IFNULL(group_id, '') = ? "
           "AND direction = 'in'",
       whereArgs: [albumId, sender, groupId ?? ''],
-      limit: 1,
     );
-    return r.isNotEmpty;
+    if (rows.isEmpty) return null;
+    var first = rowWrittenAt(rows.first);
+    for (final r in rows) {
+      first = min(first, rowWrittenAt(r));
+    }
+    return (
+      n: (rows.first['album_n'] as num?)?.toInt() ?? 0,
+      taken: {for (final r in rows) (r['album_i'] as num?)?.toInt() ?? -1},
+      first: first,
+    );
   }
 
   Future<bool> messageExists(String msgUid) async {
@@ -5924,7 +5945,11 @@ class HaloDb implements GroupOwedStore {
   Future<int> setMsgBurnAt(String msgUid, int burnAt) async {
     final db = await open();
     return db.transaction((t) async {
-      final at = albumBurnAt([burnAt, ...await _albumClocks(t, msgUid)])!;
+      final at = albumItemBurnAt(
+        burnAt,
+        await _albumClocks(t, msgUid),
+        DateTime.now().millisecondsSinceEpoch,
+      );
       await t.update(
         'messages',
         {'burn_at': at},
@@ -7553,7 +7578,7 @@ class HaloDb implements GroupOwedStore {
         var at = min(lit ?? from + secs * 1000, from + secs * 1000);
         // an album is read as one and burns as one
         if (uid != null) {
-          at = albumBurnAt([at, ...await _albumClocks(t, uid)])!;
+          at = albumItemBurnAt(at, await _albumClocks(t, uid), now);
         }
         await t.update(
           'messages',
@@ -16221,19 +16246,40 @@ class AppState extends ChangeNotifier {
       since: env.groupId == null ? null : await db.groupJoinedAt(env.groupId!),
     );
     // an album rings once, for the first of it to land. only a photo or a
-    // video takes a place in one
-    final album = env.imageB64 != null || env.fileB64 != null || _sliced(env)
+    // video takes a place in one, and only a place that is free, of the
+    // count the album has, written near its first row: any other stands
+    // alone and rings for itself. one of an album that burned already
+    // joins nothing and burns as it lands
+    var album = env.imageB64 != null || env.fileB64 != null || _sliced(env)
         ? env.album
         : null;
-    final albumSeen =
-        album != null && await db.albumHas(album.id, senderHaloId, env.groupId);
+    var albumSeen = false;
+    var albumGone = false;
+    if (album != null) {
+      final held = await db.albumHeld(album.id, senderHaloId, env.groupId);
+      if (held == null &&
+          await db.goneFrom(
+            goneKey(senderHaloId, group: env.groupId),
+            albumGoneUid(album.id),
+          )) {
+        albumGone = true;
+        album = null;
+      } else if (held != null) {
+        final fits =
+            held.n == album.n &&
+            !held.taken.contains(album.i) &&
+            albumInWindow(held.first, writtenAt);
+        albumSeen = fits;
+        if (!fits) album = null;
+      }
+    }
     await db.saveMessage(
       senderHaloId,
       'in',
       text,
       album: album,
-      burnSecs: waits ? burnSecs : null,
-      burnAt: burnAt,
+      burnSecs: albumGone || !waits ? null : burnSecs,
+      burnAt: albumGone ? DateTime.now().millisecondsSinceEpoch : burnAt,
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
@@ -16325,7 +16371,7 @@ class AppState extends ChangeNotifier {
     // new preview, time and unread dot without needing the chat opened.
     await refreshContacts();
     if (isGroup) await refreshGroups();
-    if (albumSeen) return to;
+    if (albumSeen || albumGone) return to;
     final String notifTitle;
     final String notifBody;
     final String notifPayload;

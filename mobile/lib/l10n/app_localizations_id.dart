@@ -8297,8 +8297,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get mediaSendProtect => 'Lindungi dari tangkapan layar';
 
   @override
-  String get mediaSendProtectedOn =>
-      'Terlindung · dia tidak bisa mengambil tangkapan layarnya';
+  String get mediaSendProtectedOn => 'Terlindung · tangkapan layar diblokir';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8307,4 +8306,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Kirim video';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Sampai dia menerima, $count bisa terkirim';
+  }
 }

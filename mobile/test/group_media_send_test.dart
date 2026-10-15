@@ -410,7 +410,7 @@ void main() {
         'Future<void> _sendGroupVoice(',
       ]) {
         final body = bodyOf(screen, sig);
-        expect(body, contains('final reply = _takeReply();'), reason: sig);
+        expect(body, contains('_takeReply()'), reason: sig);
         // on the bubble, the row and the wire
         expect('replyTo: reply,'.allMatches(body).length, 3, reason: sig);
       }
@@ -420,6 +420,10 @@ void main() {
       ]) {
         expect(bodyOf(screen, sig), contains('_sendGroupReady('), reason: sig);
       }
+      // a pick's first bubble takes the answer, before any is ready
+      final picked = bodyOf(screen, 'Future<void> _sendPicked(');
+      expect(picked, contains('final reply = _takeReply();'));
+      expect(picked, contains('replyTo: k == 0 ? reply : null,'));
       final take = bodyOf(screen, 'String? _takeReply(');
       expect(take, contains('_replyTo = null'));
       expect(

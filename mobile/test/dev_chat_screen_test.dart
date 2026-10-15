@@ -38,6 +38,7 @@ import 'package:kryfo/media_progress.dart'
 import 'package:kryfo/screens/chat_screen.dart' show grindPowForTest;
 import 'package:kryfo/screens/contact_screen.dart' show ContactScreen;
 import 'package:kryfo/screens/media_send_screen.dart';
+import 'package:kryfo/widgets/album_grid.dart' show AlbumGrid;
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
@@ -992,8 +993,8 @@ void main() {
       _answer = DevStart.keyFailed;
       for (final kind in ['sticker', 'photos', 'video', 'file', 'voice']) {
         final (send, rows) = _kinds[kind]!;
-        // each photo asks, as each goes on its own
-        final asked = _begun.length + rows;
+        // a pick asks once, before any of it shows
+        final asked = _begun.length + 1;
         await send(t, () => _begun.length >= asked);
         // a recording is shredded only once the start has said no, on real
         // file io that a busy machine can hold up
@@ -1005,7 +1006,7 @@ void main() {
         expect(_mem.rows('messages'), isEmpty, reason: kind);
         expect(find.text(l10n.devKeyCheckFailed), findsOneWidget);
       }
-      expect(_begun, List.filled(6, false));
+      expect(_begun, List.filled(5, false));
       expect(_row()!.state, DevState.fresh);
       // what was copied or recorded for the send went with it
       expect(_leftovers(), isEmpty);
@@ -1491,6 +1492,35 @@ void main() {
   // with android's photo picker the gallery hands back photos and videos
   // together; without it, photos alone, as a mixed pick there is the file
   // browser
+  group('a pick sent from the preview', () {
+    testWidgets('shows its bubbles at once, before anything is saved', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+      await _beat(t, 500);
+      await t.tap(find.text(l10n.chatGallery));
+      await _beat(t, 300);
+      final preview = find.byType(MediaSendScreen);
+      await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
+      await t.tap(
+        find.descendant(of: preview, matching: find.byIcon(Icons.arrow_upward)),
+      );
+      // a frame or two: the photos are still being cleaned
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      expect(preview, findsNothing);
+      // before they accept each goes on its own: a waiting tile each
+      expect(find.byType(AlbumGrid), findsNWidgets(2));
+      expect(_sent(), isEmpty);
+      // then they are saved, as they were shown, and the waiting tiles go
+      await _io(t, () => _sent().length >= 2);
+      expect(find.byType(AlbumGrid), findsNothing);
+      await _close(t);
+    });
+  });
+
   group('the video tile', () {
     testWidgets('opens the send preview and sends nothing straight away', (
       t,

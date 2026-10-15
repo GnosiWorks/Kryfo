@@ -8396,8 +8396,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mediaSendProtect => 'Vor Screenshots schützen';
 
   @override
-  String get mediaSendProtectedOn =>
-      'Geschützt · die andere Person kann keinen Screenshot davon machen';
+  String get mediaSendProtectedOn => 'Geschützt · Screenshots sind gesperrt';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8406,4 +8405,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Video senden';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Bis zur Annahme können $count gehen';
+  }
 }

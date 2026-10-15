@@ -13392,7 +13392,7 @@ abstract class AppLocalizations {
   /// send preview: the protect switch turned on
   ///
   /// In en, this message translates to:
-  /// **'Protected · they cannot screenshot these'**
+  /// **'Protected · screenshots are blocked'**
   String get mediaSendProtectedOn;
 
   /// send preview: more were picked than one send takes
@@ -13406,6 +13406,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send video'**
   String get mediaSendVideo;
+
+  /// send preview: before they accept, only this many go
+  ///
+  /// In en, this message translates to:
+  /// **'Until they accept, {count} can go'**
+  String mediaSendUntilAccepted(Object count);
 }
 
 class _AppLocalizationsDelegate

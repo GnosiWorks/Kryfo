@@ -14,6 +14,8 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' show appState;
 import '../open_file.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
+
 import '../picked.dart' show MediaSendResult, PickedMedia;
 import '../theme.dart';
 import '../widgets/decode_px.dart';
@@ -31,12 +33,26 @@ class MediaSendScreen extends StatefulWidget {
   final bool? secure;
   // the chat blocks screenshots, so this screen does too
   final bool holdSecure;
+  // the most that go in this send. before they accept, the slots a
+  // request has left ([request])
+  final int max;
+  final bool request;
+  // asked on send, with this screen still up: a big file's question.
+  // false keeps it open
+  final Future<bool> Function(List<PickedMedia> items)? beforeSend;
+  // the screen went with nothing sent, a lock or a session switch with it:
+  // every video copy it was handed, to go at once
+  final void Function(List<XFile> videos)? onGone;
   const MediaSendScreen({
     super.key,
     required this.items,
     this.addMore,
     this.secure,
     this.holdSecure = false,
+    this.max = kPickMax,
+    this.request = false,
+    this.beforeSend,
+    this.onGone,
   });
   @override
   State<MediaSendScreen> createState() => MediaSendScreenState();
@@ -51,9 +67,13 @@ class _Entry {
 }
 
 class MediaSendScreenState extends State<MediaSendScreen> {
+  late final int _max = widget.max.clamp(1, kPickMax);
   late final List<_Entry> _items = [
-    for (final m in widget.items.take(kPickMax)) _Entry(m),
+    for (final m in widget.items.take(_max)) _Entry(m),
   ];
+  // every video it was handed, sent or dropped
+  late final List<XFile> _videos = [for (final m in widget.items) ?m.video];
+  bool _sent = false;
   late final PageController _pages = PageController();
   final _caption = TextEditingController();
   int _at = 0;
@@ -78,16 +98,24 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     super.initState();
     _hold(widget.holdSecure || _secure);
     // more picked than one send takes: the rest stays behind, and says so
-    if (widget.items.length > kPickMax) {
+    if (widget.items.length > _max) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        showHaloToast(context, l10n.mediaSendUpTo(whole(kPickMax)));
+        if (mounted) _capped();
       });
     }
   }
 
+  // never a quiet drop: what stays behind is said
+  void _capped() => showHaloToast(
+    context,
+    widget.request
+        ? l10n.mediaSendUntilAccepted(whole(_max))
+        : l10n.mediaSendUpTo(whole(_max)),
+  );
+
   @override
   void dispose() {
+    if (!_sent) widget.onGone?.call(_videos);
     _hold(false);
     _pages.dispose();
     _caption.dispose();
@@ -153,11 +181,10 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     _adding = true;
     try {
       final got = await add();
+      _videos.addAll([for (final m in got) ?m.video]);
       if (!mounted || got.isEmpty) return;
-      final room = kPickMax - _live.length;
-      if (got.length > room) {
-        showHaloToast(context, l10n.mediaSendUpTo(whole(kPickMax)));
-      }
+      final room = _max - _live.length;
+      if (got.length > room) _capped();
       final take = got.take(room.clamp(0, got.length)).toList();
       if (take.isEmpty) return;
       final first = _live.length;
@@ -199,11 +226,18 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     Navigator.of(context).pop();
   }
 
-  void _send() {
+  Future<void> _send() async {
     if (_done) return;
     final list = items;
     if (list.isEmpty) return;
     _done = true;
+    final ask = widget.beforeSend;
+    if (ask != null && !await ask(list)) {
+      if (mounted) _done = false;
+      return;
+    }
+    if (!mounted) return;
+    _sent = true;
     HapticFeedback.lightImpact();
     Navigator.of(context).pop(
       MediaSendResult(
@@ -316,7 +350,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
             Material(type: MaterialType.transparency, child: child),
         itemCount: _items.length,
         onReorder: _reorder,
-        footer: widget.addMore == null || live.length >= kPickMax
+        footer: widget.addMore == null || live.length >= _max
             ? null
             : _AddTile(onTap: _more),
         itemBuilder: (_, i) {

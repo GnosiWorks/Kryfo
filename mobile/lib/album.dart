@@ -160,16 +160,30 @@ List<AlbumCell> albumCells(int n, double w) {
   ];
 }
 
+/// how far apart an album's items may have been written. one written
+/// further from the album's first row is no part of it and stands alone
+const kAlbumWindow = Duration(minutes: 10);
+
+/// what an album that came in and went is remembered under in gone_in,
+/// beside the uids of its items
+String albumGoneUid(String albumId) => 'al:$albumId';
+
+/// whether an item written at [written] may join an album whose first row
+/// was written at [first]
+bool albumInWindow(int first, int written) =>
+    (written - first).abs() <= kAlbumWindow.inMilliseconds;
+
 /// one album as a chat holds it: a slot per place, null for one not here
 /// yet. [lead] is the first of it in the chat's order, the row that draws
-/// the whole album. the grid is laid out for the count it says from its
-/// first row on, so nothing moves as the rest lands
+/// the whole album, and [start] when that row was written
 class AlbumRun<T> {
   final String key;
   final AlbumTag tag;
   final List<T?> slots;
+  final int start;
   T lead;
-  AlbumRun(this.key, this.tag, this.lead) : slots = List.filled(tag.n, null);
+  AlbumRun(this.key, this.tag, this.lead, this.start)
+    : slots = List.filled(tag.n, null);
 
   int get n => tag.n;
 
@@ -178,13 +192,29 @@ class AlbumRun<T> {
 
   bool get whole => slots.every((s) => s != null);
 
+  /// what the grid draws: a place for each, so nothing moves as the rest
+  /// lands, while the first is here; with the first places missing, only
+  /// what is here, so nothing that came hides behind an empty tile
+  List<T?> get drawn => slots.first == null ? present : slots;
+
+  /// the caption: the first words any of it carries, the first item's as
+  /// sent
+  String caption(String Function(T) text) {
+    for (final s in present) {
+      final t = text(s);
+      if (t.trim().isNotEmpty) return t;
+    }
+    return '';
+  }
+
   /// what the album's reactions, replies and pins go to: its first item, or
   /// the first one here while that one is still on its way
   T get anchor => present.isEmpty ? lead : present.first;
 }
 
 /// a chat's albums. a row is in one when it carries a tag, is a photo or a
-/// video ([media]), and its place is free and agrees on the count; any
+/// video ([media]), its place is free, it agrees on the count, and it was
+/// written within [kAlbumWindow] of the album's first row ([written]); any
 /// other row stands alone. [owner] keeps two senders' albums apart
 class AlbumIndex<T> {
   final Map<String, AlbumRun<T>> _runs = {};
@@ -195,13 +225,18 @@ class AlbumIndex<T> {
     required AlbumTag? Function(T) tag,
     required String Function(T) owner,
     required bool Function(T) media,
+    required int Function(T) written,
   }) {
     for (final r in rows) {
       final t = tag(r);
       if (t == null || !media(r)) continue;
       final key = '${owner(r)}\u0000${t.id}';
-      final run = _runs.putIfAbsent(key, () => AlbumRun<T>(key, t, r));
+      final run = _runs.putIfAbsent(
+        key,
+        () => AlbumRun<T>(key, t, r, written(r)),
+      );
       if (run.n != t.n || run.slots[t.i] != null) continue;
+      if (!albumInWindow(run.start, written(r))) continue;
       run.slots[t.i] = r;
       _of[r] = run;
     }
@@ -221,6 +256,19 @@ class AlbumIndex<T> {
   }
 
   Iterable<AlbumRun<T>> get runs => _runs.values;
+}
+
+/// where the viewer opens for tile [at] of [drawn]: its own item, or for a
+/// place still coming the next item here, else the last one before it.
+/// counted over what is here. null when nothing is
+int? albumOpenAt<T>(List<T?> drawn, int at) {
+  final here = [
+    for (final (i, x) in drawn.indexed)
+      if (x != null) i,
+  ];
+  if (here.isEmpty) return null;
+  final next = here.indexWhere((i) => i >= at);
+  return next >= 0 ? next : here.length - 1;
 }
 
 /// the reactions an album shows: each reactor once, from the first item
@@ -243,4 +291,16 @@ int? albumBurnAt(Iterable<int?> clocks) {
     if (c != null && (at == null || c < at)) at = c;
   }
   return at;
+}
+
+/// the least an item that joins an album late is shown for: it never
+/// lands burned already
+const kAlbumBurnGrace = Duration(seconds: 10);
+
+/// the clock an item of an album takes: the album's ([mates]), held to at
+/// least [kAlbumBurnGrace] from [now], and never past its own ([own])
+int albumItemBurnAt(int own, Iterable<int?> mates, int now) {
+  final album = albumBurnAt(mates);
+  if (album == null) return own;
+  return math.min(own, math.max(album, now + kAlbumBurnGrace.inMilliseconds));
 }

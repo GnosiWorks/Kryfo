@@ -10486,7 +10486,7 @@
   "@mediaSendProtect": {
     "description": "send preview: the protect switch"
   },
-  "mediaSendProtectedOn": "Protected · they cannot screenshot these",
+  "mediaSendProtectedOn": "Protected · screenshots are blocked",
   "@mediaSendProtectedOn": {
     "description": "send preview: the protect switch turned on"
   },
@@ -10502,5 +10502,14 @@
   "mediaSendVideo": "Send video",
   "@mediaSendVideo": {
     "description": "send preview: title for one video"
+  },
+  "mediaSendUntilAccepted": "Until they accept, {count} can go",
+  "@mediaSendUntilAccepted": {
+    "description": "send preview: before they accept, only this many go",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
   }
 }

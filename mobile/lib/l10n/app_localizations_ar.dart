@@ -8428,7 +8428,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mediaSendProtect => 'حماية من لقطات الشاشة';
 
   @override
-  String get mediaSendProtectedOn => 'محمية · لا يمكنه التقاط لقطة شاشة لها';
+  String get mediaSendProtectedOn => 'محمية · لقطات الشاشة محظورة';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8437,4 +8437,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'إرسال الفيديو';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'حتى يقبل، يمكن إرسال ⁨$count⁩';
+  }
 }

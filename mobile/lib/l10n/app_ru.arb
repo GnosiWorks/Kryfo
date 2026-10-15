@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Добавить ещё",
   "mediaSendRemove": "Убрать",
   "mediaSendProtect": "Защитить от скриншотов",
-  "mediaSendProtectedOn": "Защищено · собеседник не сможет сделать скриншот",
+  "mediaSendProtectedOn": "Защищено · скриншоты заблокированы",
   "mediaSendUpTo": "Не больше {count} за раз",
-  "mediaSendVideo": "Отправить видео"
+  "mediaSendVideo": "Отправить видео",
+  "mediaSendUntilAccepted": "Пока собеседник не примет, можно отправить {count}"
 }

@@ -8363,8 +8363,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mediaSendProtect => 'Proteger de capturas de tela';
 
   @override
-  String get mediaSendProtectedOn =>
-      'Protegidas · a pessoa não consegue fazer captura de tela delas';
+  String get mediaSendProtectedOn => 'Protegidas · capturas de tela bloqueadas';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8373,4 +8372,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Enviar vídeo';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Até a pessoa aceitar, podem ir $count';
+  }
 }

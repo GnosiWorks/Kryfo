@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "إضافة المزيد",
   "mediaSendRemove": "إزالة",
   "mediaSendProtect": "حماية من لقطات الشاشة",
-  "mediaSendProtectedOn": "محمية · لا يمكنه التقاط لقطة شاشة لها",
+  "mediaSendProtectedOn": "محمية · لقطات الشاشة محظورة",
   "mediaSendUpTo": "حتى ⁨{count}⁩ في المرة الواحدة",
-  "mediaSendVideo": "إرسال الفيديو"
+  "mediaSendVideo": "إرسال الفيديو",
+  "mediaSendUntilAccepted": "حتى يقبل، يمكن إرسال ⁨{count}⁩"
 }

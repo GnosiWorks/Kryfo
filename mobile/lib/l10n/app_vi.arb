@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Thêm nữa",
   "mediaSendRemove": "Bỏ",
   "mediaSendProtect": "Bảo vệ khỏi chụp màn hình",
-  "mediaSendProtectedOn": "Đã bảo vệ · họ không thể chụp màn hình",
+  "mediaSendProtectedOn": "Đã bảo vệ · đã chặn chụp màn hình",
   "mediaSendUpTo": "Tối đa {count} mỗi lần",
-  "mediaSendVideo": "Gửi video"
+  "mediaSendVideo": "Gửi video",
+  "mediaSendUntilAccepted": "Đến khi họ chấp nhận, có thể gửi {count}"
 }

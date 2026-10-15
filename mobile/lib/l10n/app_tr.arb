@@ -2185,7 +2185,8 @@
   "mediaSendAddMore": "Daha fazla ekle",
   "mediaSendRemove": "Kaldır",
   "mediaSendProtect": "Ekran görüntüsüne karşı koru",
-  "mediaSendProtectedOn": "Korumalı · ekran görüntüsünü alamaz",
+  "mediaSendProtectedOn": "Korumalı · ekran görüntüsü engellendi",
   "mediaSendUpTo": "Bir seferde en fazla {count}",
-  "mediaSendVideo": "Video gönder"
+  "mediaSendVideo": "Video gönder",
+  "mediaSendUntilAccepted": "Kabul edene kadar {count} tane gidebilir"
 }

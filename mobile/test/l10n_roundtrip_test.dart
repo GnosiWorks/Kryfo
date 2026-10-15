@@ -3619,8 +3619,12 @@ void main() {
     expect(l.mediaSendAddMore, "Add more");
     expect(l.mediaSendRemove, "Remove");
     expect(l.mediaSendProtect, "Protect from screenshots");
-    expect(l.mediaSendProtectedOn, "Protected · they cannot screenshot these");
+    expect(l.mediaSendProtectedOn, "Protected · screenshots are blocked");
     expect(l.mediaSendUpTo("<count>"), "Up to <count> at a time");
     expect(l.mediaSendVideo, "Send video");
+    expect(
+      l.mediaSendUntilAccepted("<count>"),
+      "Until they accept, <count> can go",
+    );
   });
 }

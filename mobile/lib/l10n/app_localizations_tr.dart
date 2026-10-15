@@ -8325,7 +8325,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaSendProtect => 'Ekran görüntüsüne karşı koru';
 
   @override
-  String get mediaSendProtectedOn => 'Korumalı · ekran görüntüsünü alamaz';
+  String get mediaSendProtectedOn => 'Korumalı · ekran görüntüsü engellendi';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8334,4 +8334,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Video gönder';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Kabul edene kadar $count tane gidebilir';
+  }
 }

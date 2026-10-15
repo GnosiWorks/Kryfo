@@ -1101,14 +1101,28 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<bool> albumHas(String albumId, String sender, String? groupId) async =>
-      msgs.any(
-        (m) =>
-            m['album_id'] == albumId &&
+  Future<({int n, Set<int> taken, int first})?> albumHeld(
+    String albumId,
+    String sender,
+    String? groupId,
+  ) async {
+    final rows = [
+      for (final m in msgs)
+        if (m['album_id'] == albumId &&
             m['peer_id'] == sender &&
             m['group_id'] == groupId &&
-            m['direction'] == 'in',
-      );
+            m['direction'] == 'in')
+          m,
+    ];
+    if (rows.isEmpty) return null;
+    int at(Map<String, Object?> r) =>
+        ((r['written_at'] ?? r['sent_at']) as num).toInt();
+    return (
+      n: rows.first['album_n'] as int,
+      taken: {for (final r in rows) r['album_i'] as int},
+      first: rows.map(at).reduce((a, b) => a < b ? a : b),
+    );
+  }
 
   @override
   Future<bool> saveInGroup(

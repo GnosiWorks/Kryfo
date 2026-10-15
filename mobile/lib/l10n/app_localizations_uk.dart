@@ -8447,8 +8447,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mediaSendProtect => 'Захистити від знімків екрана';
 
   @override
-  String get mediaSendProtectedOn =>
-      'Захищено · співрозмовник не зможе зробити знімок екрана';
+  String get mediaSendProtectedOn => 'Захищено · знімки екрана заблоковано';
 
   @override
   String mediaSendUpTo(Object count) {
@@ -8457,4 +8456,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mediaSendVideo => 'Надіслати відео';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Поки співрозмовник не прийме, можна надіслати $count';
+  }
 }

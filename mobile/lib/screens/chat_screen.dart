@@ -381,8 +381,12 @@ class _Msg with WordLinks {
   final bool welcome;
   // a contact's, through the developer chat: his phone tags it
   final bool viaDev;
-  // its place in an album (album.dart)
-  final AlbumTag? album;
+  // its place in an album (album.dart). set again while it is still
+  // being made ready, when one before it would not go
+  AlbumTag? album;
+  // shown at once on send, while its photo or video is still cleaned:
+  // not saved, not sent yet
+  bool preparing = false;
   _Msg(
     this.direction,
     this.text,
@@ -528,16 +532,18 @@ void _openFullImage(
 // an album full screen from its tile [at]: what is here of it, in its
 // order. one marked item keeps the whole viewer protected
 void _openAlbumAt(BuildContext context, List<_Msg?> shown, int at) {
-  final items = <AlbumItem>[];
-  var start = 0;
-  for (final (i, x) in shown.indexed) {
-    final path = x?.mediaPath ?? x?.filePath;
-    if (x == null || path == null) continue;
-    if (i == at) start = items.length;
-    items.add(
-      AlbumItem(path, video: x.mediaPath == null, fileName: x.fileName),
-    );
-  }
+  final items = <AlbumItem>[
+    for (final x in shown)
+      if (x != null && (x.mediaPath ?? x.filePath) != null)
+        AlbumItem(
+          (x.mediaPath ?? x.filePath)!,
+          video: x.mediaPath == null,
+          fileName: x.fileName,
+        ),
+  ];
+  final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+  final start = albumOpenAt(paths, at);
+  if (start == null) return;
   openAlbum(
     context,
     items,
@@ -1970,12 +1976,19 @@ class _ChatScreenState extends State<ChatScreen>
     // what the album's actions land on: its first item, the one held, and
     // the one holding this phone's reaction
     final anchor = album?.anchor ?? target;
-    final held = album != null && tile != null && tile < album.slots.length
-        ? album.slots[tile]
+    final held = album != null && tile != null && tile < album.drawn.length
+        ? album.drawn[tile]
         : null;
     final reactOn = album == null ? target : _reactOn(album);
-    final saveOn = held ?? anchor;
+    // a photo or video of theirs that came protected is neither saved nor
+    // shared from here: what its mark promises holds on this phone
+    final saveOn = _keptHere(held ?? anchor) ? null : held ?? anchor;
     final shareOn = album == null ? target : held;
+    final canShare =
+        shareOn != null &&
+        !_keptHere(shareOn) &&
+        shareOn.filePath != null &&
+        shareOn.fileName != 'voice.wav';
     final going = album == null
         ? target.sending &&
               (target.mediaPath != null || target.filePath != null)
@@ -2182,15 +2195,18 @@ class _ChatScreenState extends State<ChatScreen>
                       // in an album, the one held
                       if (!welcome)
                         MenuAction(
-                          icon: saveOn.saved
+                          icon: saveOn?.saved ?? false
                               ? Icons.bookmark
                               : Icons.bookmark_outline,
-                          label: saveOn.saved
+                          label: saveOn?.saved ?? false
                               ? l10n.chatUnsave
                               : l10n.commonSave,
-                          tint: saveOn.saved ? HaloColors.amber : null,
-                          onTap: () =>
-                              dismiss(then: () => _toggleSaved(saveOn)),
+                          tint: saveOn?.saved ?? false
+                              ? HaloColors.amber
+                              : null,
+                          onTap: saveOn == null
+                              ? null
+                              : () => dismiss(then: () => _toggleSaved(saveOn)),
                         ),
                       MenuAction(
                         icon: Icons.copy_rounded,
@@ -2229,10 +2245,7 @@ class _ChatScreenState extends State<ChatScreen>
                       MenuAction(
                         icon: Icons.ios_share_rounded,
                         label: l10n.commonShare,
-                        onTap:
-                            shareOn == null ||
-                                shareOn.filePath == null ||
-                                shareOn.fileName == 'voice.wav'
+                        onTap: !canShare
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -2416,6 +2429,12 @@ class _ChatScreenState extends State<ChatScreen>
     await _sendUnsendFrame(m.msgUid!);
   }
 
+  // theirs, photo or video, sent protected: kept to this chat
+  static bool _keptHere(_Msg m) =>
+      m.secure &&
+      m.direction == 'in' &&
+      (m.mediaPath != null || m.filePath != null);
+
   // an album taken back whole, ours only: each item's row and file go
   // here and each is unsent there, so a phone without albums drops them all
   Future<void> _unsendAlbum(AlbumRun<_Msg> run) async {
@@ -2431,8 +2450,12 @@ class _ChatScreenState extends State<ChatScreen>
     await _takeBackAlbum(run);
   }
 
-  // stopped part way: what went is taken back with what had not
-  Future<void> _stopAlbum(AlbumRun<_Msg> run) => _takeBackAlbum(run);
+  // stopped part way: what went is taken back with what had not. once any
+  // of it reached them, that is an unsend, asked as one
+  Future<void> _stopAlbum(AlbumRun<_Msg> run) async {
+    if (run.present.any((x) => x.delivered)) return _unsendAlbum(run);
+    await _takeBackAlbum(run);
+  }
 
   Future<void> _takeBackAlbum(AlbumRun<_Msg> run) async {
     final ms = [
@@ -3678,9 +3701,9 @@ class _ChatScreenState extends State<ChatScreen>
     await shredPicked([res]);
   }
 
-  // the in-app camera: a stripped photo goes through the send preview as a
-  // picked one does; a clip goes as a file and its private copy is
-  // shredded once it has been read
+  // the in-app camera: a stripped photo or a clip goes through the send
+  // preview as a pick does; the clip's private copy is shredded once it is
+  // done with, sent or not
   Future<void> _openCamera() async {
     final r = await Navigator.of(
       context,
@@ -3693,9 +3716,16 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final path = r.videoPath;
     if (path == null) return;
-    if (!mounted) return;
-    await _sendFileFrom(path, madeVideoName());
-    await shredFile(path);
+    try {
+      if (!mounted) return;
+      // the preview too, as every pick has it
+      final sent = await _preview([
+        PickedMedia.video(XFile(path, name: madeVideoName())),
+      ]);
+      if (sent != null) await _sendPicked(sent);
+    } finally {
+      await shredFile(path);
+    }
   }
 
   // src is a file this app can read: the picker's copy or a camera clip.
@@ -3709,7 +3739,14 @@ class _ChatScreenState extends State<ChatScreen>
   // a file made ready to go: checked, copied into the media folder under
   // its own uid and cleaned there. nothing shows or leaves yet; null when
   // it will not go, and the toast has said why
-  Future<_Ready?> _readyFile(String src, String picked) async {
+  Future<_Ready?> _readyFile(
+    String src,
+    String picked, {
+    // its bubble's, when it shows before it is ready
+    String? uid,
+    // the big file's question was asked in the preview
+    bool asked = false,
+  }) async {
     final name = sentFileName(picked);
     final int size;
     try {
@@ -3727,8 +3764,8 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
       return null;
     }
-    if (!await _confirmBigSend(size)) return null;
-    final msgUid = newMsgUid();
+    if (!asked && !await _confirmBigSend(size)) return null;
+    final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
@@ -3761,13 +3798,13 @@ class _ChatScreenState extends State<ChatScreen>
 
   // a photo made ready the same way: cleaned of what the gallery's
   // re-encode copied across, and written under its own uid
-  Future<_Ready?> _readyPhoto(Uint8List raw) async {
+  Future<_Ready?> _readyPhoto(Uint8List raw, {String? uid}) async {
     final bytes = await photoToSendOffUi(raw);
     if (bytes == null) {
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
       return null;
     }
-    final msgUid = newMsgUid();
+    final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
@@ -3783,13 +3820,23 @@ class _ChatScreenState extends State<ChatScreen>
     String caption, {
     bool? secure,
     AlbumTag? album,
+    // its bubble, shown on send while it was made ready
+    _Msg? shown,
   }) async {
+    void drop() {
+      if (shown != null && mounted) {
+        setState(() => _messages.remove(shown));
+      }
+    }
+
     if (_isDev && !await _ensureDevStarted()) {
       await shredFile(ready.path);
+      drop();
       return;
     }
     if (_requestLocked) {
       await shredFile(ready.path);
+      drop();
       return;
     }
     if (_requestPending) setState(() => _sentCount++);
@@ -3797,37 +3844,41 @@ class _ChatScreenState extends State<ChatScreen>
     final msgUid = ready.uid;
     // read it once: the toggle is cleared below and the save reads it after.
     // a file goes protected only when asked for in the preview
-    final wantSecure = secure ?? (!isFile && _secureNext);
+    final wantSecure = shown?.secure ?? secure ?? (!isFile && _secureNext);
     // a few photos at once: the first one answers
-    final replyToUid = _replyTo?.msgUid;
-    final msg = _Msg(
-      'out',
-      caption,
-      DateTime.now(),
-      sending: true,
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      mediaPath: isFile ? null : ready.path,
-      filePath: isFile ? ready.path : null,
-      fileName: ready.fileName,
-      burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: null,
-      secure: wantSecure,
-      album: album,
-    );
+    final replyToUid = shown == null ? _replyTo?.msgUid : shown.replyTo;
+    final msg =
+        shown ??
+        _Msg(
+          'out',
+          caption,
+          DateTime.now(),
+          sending: true,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+          burnSecs: _ghost ? _burnSeconds : null,
+          burnAt: null,
+          secure: wantSecure,
+          album: album,
+        );
     setState(() {
-      _messages.add(msg);
+      msg
+        ..mediaPath = isFile ? null : ready.path
+        ..filePath = isFile ? ready.path : null
+        ..fileName = ready.fileName
+        ..preparing = false;
+      if (!_messages.contains(msg)) _messages.add(msg);
       _normaliseMessages();
       _status = '';
-      _replyTo = null;
+      if (shown == null) _replyTo = null;
     });
-    _scrollToEnd();
+    if (shown == null) _scrollToEnd();
     HapticFeedback.lightImpact();
     await _answerSupport();
     await session.saveMessage(
       widget.peerHaloId,
       'out',
-      caption,
+      msg.text,
       msgUid: msgUid,
       replyTo: replyToUid,
       mediaPath: msg.mediaPath,
@@ -3837,7 +3888,7 @@ class _ChatScreenState extends State<ChatScreen>
       burnSecs: msg.burnSecs,
       sent: 0,
       secure: wantSecure,
-      album: album,
+      album: msg.album,
     );
     unawaited(appState.refreshContacts());
     if (wantSecure && mounted) setState(() => _secureNext = false);
@@ -3845,55 +3896,150 @@ class _ChatScreenState extends State<ChatScreen>
       _sendChunkedMedia(
         path: ready.path,
         msgUid: msgUid,
-        caption: caption,
+        caption: msg.text,
         fileName: ready.fileName,
-        burnSeconds: _ghost ? _burnSeconds : null,
+        burnSeconds: msg.burnSecs,
         secure: wantSecure,
         replyTo: replyToUid,
-        album: album,
+        album: msg.album,
         writtenAt: msg.when.millisecondsSinceEpoch,
       ).then((r) => _finishMediaSend(msg, r)),
     );
   }
 
-  // what the send preview gave back: each item made ready in its order,
-  // then the lot as albums of up to kAlbumMax, the caption on the first.
-  // one that will not go is left out before the albums are counted, so an
-  // album never names a place nothing fills. to someone who has not
-  // accepted yet each goes on its own, as the two they may hold count
+  // what the send preview gave back. its bubbles show at once, waiting,
+  // as albums of up to kAlbumMax with the caption on the first; then each
+  // item is made ready in its order. one that will not go is taken out and
+  // the rest counted again before anything is saved or sent, so an album
+  // never names a place nothing fills. to someone who has not accepted yet
+  // each goes on its own, as the slots they may hold count
   Future<void> _sendPicked(MediaSendResult r) async {
-    final ready = <_Ready>[];
-    for (final it in r.items) {
+    if (r.items.isEmpty || !mounted) return;
+    // his chat starts before anything of it shows
+    if (_isDev && !await _ensureDevStarted()) return;
+    if (!mounted) return;
+    final alone = _requestPending;
+    final plan = albumPlan(r.items, r.caption, alone: alone);
+    final reply = _replyTo?.msgUid;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final waiting = [
+      for (final (k, go) in plan.indexed)
+        _Msg(
+          'out',
+          go.caption,
+          // a millisecond apart, so they keep their order
+          DateTime.fromMillisecondsSinceEpoch(now + k),
+          sending: true,
+          msgUid: newMsgUid(),
+          replyTo: k == 0 ? reply : null,
+          burnSecs: _ghost ? _burnSeconds : null,
+          secure: r.secure,
+          album: go.album,
+        )..preparing = true,
+    ];
+    setState(() {
+      _messages.addAll(waiting);
+      _normaliseMessages();
+      _status = '';
+      _replyTo = null;
+    });
+    _scrollToEnd();
+    final ready = <(_Msg, _Ready)>[];
+    for (final (k, go) in plan.indexed) {
       if (!mounted) break;
-      final v = it.video;
+      final m = waiting[k];
+      final v = go.item.video;
       final one = v != null
-          ? await _readyFile(v.path, madeVideoName(v.name))
-          : await _readyPhoto(it.photo!);
-      if (one != null) ready.add(one);
+          ? await _readyFile(
+              v.path,
+              madeVideoName(v.name),
+              uid: m.msgUid,
+              asked: true,
+            )
+          : await _readyPhoto(go.item.photo!, uid: m.msgUid);
+      if (one != null) ready.add((m, one));
     }
     if (!mounted) {
-      for (final x in ready) {
+      for (final (_, x) in ready) {
         await shredFile(x.path);
       }
       return;
     }
-    for (final go in albumPlan(ready, r.caption, alone: _requestPending)) {
+    if (ready.length < waiting.length) {
+      // what would not go leaves, and the rest are counted again
+      final again = albumPlan(
+        [for (final (m, _) in ready) m],
+        r.caption,
+        alone: alone,
+      );
+      setState(() {
+        _messages.removeWhere(
+          (m) => waiting.contains(m) && !again.any((g) => identical(g.item, m)),
+        );
+        for (final g in again) {
+          g.item
+            ..album = g.album
+            ..text = g.caption;
+        }
+      });
+    }
+    for (final (m, x) in ready) {
       if (!mounted) return;
-      await _sendReady(go.item, go.caption, secure: r.secure, album: go.album);
+      await _sendReady(x, m.text, shown: m);
     }
   }
 
-  // the send preview: null when the person backed out
+  // the slots a request has left: to someone who has not accepted yet, two
+  // things in all (kDevCap to the developer)
+  int get _roomLeft => _requestPending && !_vouched
+      ? (_isDev ? kDevCap : 2) - _sentCount
+      : kPickMax;
+
+  // a big file's question, asked over the preview before it closes
+  Future<bool> _askBig(List<PickedMedia> items) async {
+    var bytes = 0;
+    for (final m in items) {
+      final v = m.video;
+      if (v == null) continue;
+      try {
+        bytes += await File(v.path).length();
+      } catch (_) {
+        // one that cannot be read is told so when it is made ready
+      }
+    }
+    return _confirmBigSend(bytes);
+  }
+
+  // the send preview: null when the person backed out. what it was handed
+  // goes at once when it closes with nothing sent: a lock or a session
+  // switch that takes it never leaves a video copy for the boot sweep
   Future<MediaSendResult?> _preview(
     List<PickedMedia> items, [
     Future<List<PickedMedia>> Function()? more,
   ]) async {
     if (!mounted) return null;
+    final room = _roomLeft;
+    if (room <= 0) {
+      for (final m in items) {
+        if (m.video case final v?) unawaited(shredPickedImages([v]));
+      }
+      showHaloToast(context, l10n.mediaSendUntilAccepted(whole(0)));
+      return null;
+    }
     return Navigator.of(context).push<MediaSendResult?>(
       haloRoute<MediaSendResult?>(
-        // holdSecure is where the chat's own screenshot block
-        // (ChatShots.blocking) keeps this screen from screenshots too
-        MediaSendScreen(items: items, addMore: more, secure: _secureNext),
+        // holdSecure stays false here: the chat's own screenshot block
+        // (ChatShots.blocking) is wired in at the merge with the
+        // screenshots branch
+        MediaSendScreen(
+          items: items,
+          addMore: more,
+          secure: _secureNext,
+          max: room,
+          request: room < kPickMax,
+          beforeSend: _askBig,
+          onGone: (videos) => unawaited(shredPickedImages(videos)),
+        ),
       ),
     );
   }
@@ -4500,12 +4646,14 @@ class _ChatScreenState extends State<ChatScreen>
   static AlbumIndex<_Msg> _indexAlbums(Iterable<_Msg> rows) => AlbumIndex<_Msg>(
     rows,
     tag: (m) => m.album,
+    written: (m) => m.when.millisecondsSinceEpoch,
     owner: (m) => m.direction,
     // a photo or a video; one of theirs whose file could not be kept
     // still holds its place
     media: (m) =>
         m.sticker == null &&
-        (m.mediaPath != null ||
+        (m.preparing ||
+            m.mediaPath != null ||
             (m.filePath != null &&
                 m.fileName != 'voice.wav' &&
                 nameSaysVideo(m.fileName)) ||
@@ -4517,7 +4665,6 @@ class _ChatScreenState extends State<ChatScreen>
   static _Msg _albumFace(AlbumRun<_Msg> run) {
     final ms = run.present;
     final a = run.anchor;
-    final first = run.slots.first;
     final media = a.mediaPath ?? a.filePath ?? '';
     String? replyTo;
     for (final x in ms) {
@@ -4525,7 +4672,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final face = _Msg(
       a.direction,
-      first?.text ?? '',
+      run.caption((x) => x.text),
       a.when,
       msgUid: a.msgUid,
       replyTo: replyTo,
@@ -4567,7 +4714,13 @@ class _ChatScreenState extends State<ChatScreen>
   Widget _buildRow(BuildContext c, int i, bool searchActive) {
     final ix = _messages.length - 1 - i;
     final row = _messages[ix];
-    final run = _albums.runOf(row);
+    // one alone still made ready shows as a waiting tile of its own
+    final run =
+        _albums.runOf(row) ??
+        (row.preparing
+            ? (AlbumRun<_Msg>('', const AlbumTag('', 1, 0), row, 0)
+                ..slots[0] = row)
+            : null);
     // drawn by its album's first row
     if (run != null && !identical(run.lead, row)) {
       return const SizedBox.shrink();
@@ -4584,6 +4737,7 @@ class _ChatScreenState extends State<ChatScreen>
       return const SizedBox.shrink();
     }
     final members = run?.present ?? [row];
+    final making = members.any((x) => x.preparing);
     String? quoted;
     String? quotedAuthor;
     StickerWire? quotedSticker;
@@ -4689,9 +4843,12 @@ class _ChatScreenState extends State<ChatScreen>
                     if (x.failed || x.parked) _tapRetry(x);
                   }
                 },
-          onLongPress: (ctx) =>
-              _showEmojiPickerAt(ctx, run == null ? row : m, album: run),
-          onLongPressTile: run == null
+          // nothing to act on while it is still made ready
+          onLongPress: making
+              ? null
+              : (ctx) =>
+                    _showEmojiPickerAt(ctx, run == null ? row : m, album: run),
+          onLongPressTile: run == null || making
               ? null
               : (ctx, tile) =>
                     _showEmojiPickerAt(ctx, m, album: run, tile: tile),
@@ -7888,7 +8045,7 @@ class _Bubble extends StatelessWidget {
     AlbumRun<_Msg> run, {
     required Widget stamp,
   }) {
-    final shown = run.slots;
+    final shown = run.drawn;
     final w = (MediaQuery.sizeOf(context).width * 0.72).clamp(200.0, 340.0);
     final hold = onLongPressTile;
     return AlbumGrid(
@@ -7907,7 +8064,7 @@ class _Bubble extends StatelessWidget {
   static AlbumTile _tileOf(_Msg x) => AlbumTile(
     path: x.mediaPath ?? x.filePath,
     video: x.mediaPath == null && x.filePath != null,
-    lost: x.mediaPath == null && x.filePath == null,
+    lost: !x.preparing && x.mediaPath == null && x.filePath == null,
     sendingUid: x.direction == 'out' && x.sending ? x.msgUid : null,
   );
 
