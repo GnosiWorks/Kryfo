@@ -8074,6 +8074,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın. Bağlantının nereden geldiğinden emin değil misin? Mevcut olanı tut.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Bu kelimelerle, farklı bir anahtarla çalışan bir sohbeti sildin. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra güvenlik numarasını onunla karşılaştır.';
+
+  @override
   String get nameTakenUse => 'Bu bağlantıyı kullan';
 
   @override
@@ -8103,7 +8107,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'O zaman bu sohbet tanıdığın kişiyle değil. Belki başka biri onun adını kullanıyor.';
+      'Numaralar gerçekten farklıysa, belki başka biri onun adını kullanıyor ya da aranıza giriyor.';
 
   @override
   String get notThemButton => 'Bu o değil';
@@ -8114,13 +8118,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Gerçek kişi sana bağlantısını gönderirse, her zamanki gibi çalışır.';
+      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Üç kelimesi bu telefonda yeniden boşa çıkar. Seni bundan sonra bu kelimelerle ekleyen kişiyle güvenlik numarasını karşılaştır.';
 
   @override
   String get notThemRemove => 'Kaldır ve engelle';
 
   @override
   String get notThemDone => 'Kaldırıldı, anahtarı engellendi';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Yöneticisi bu telefondan kaldırıldı. Gruptaki değişiklikler artık sana ulaşmıyor.';
 
   @override
   String get blockedKey => 'Engellenen anahtar';

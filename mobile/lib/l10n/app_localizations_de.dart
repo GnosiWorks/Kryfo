@@ -8141,6 +8141,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Chat unter diesen Wörtern kam über eine Anfrage, eine Vorstellung oder eine Gruppe, mit einem anderen Schlüssel, und niemand hat ihn geprüft. Wörter kann man kopieren. Wenn dieser Link von der Person kommt, die du kennst, nutz ihn: Der alte Chat wird gelöscht, und im neuen vergleichst du die Sicherheitsnummer. Nicht sicher, woher der Link kommt? Behalte den bisherigen.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Du hast einen Chat unter diesen Wörtern gelöscht, der mit einem anderen Schlüssel lief. Wenn dieser Link von der Person kommt, die du kennst, nutz ihn und vergleich dann die Sicherheitsnummer mit ihr.';
+
+  @override
   String get nameTakenUse => 'Diesen Link nutzen';
 
   @override
@@ -8170,7 +8174,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Dann ist dieser Chat nicht mit der Person, die du kennst. Vielleicht nutzt jemand anderes ihren Namen.';
+      'Wenn die Nummern wirklich verschieden sind, nutzt vielleicht jemand anderes den Namen oder sitzt zwischen euch.';
 
   @override
   String get notThemButton => 'Das ist jemand anderes';
@@ -8181,13 +8185,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Der Chat, seine Nachrichten und Dateien verschwinden von diesem Handy. Wenn dir die echte Person ihren Link schickt, funktioniert er ganz normal.';
+      'Der Chat, seine Nachrichten und Dateien verschwinden von diesem Handy. Die drei Wörter sind auf diesem Handy wieder frei. Wer dich als Nächstes unter ihnen hinzufügt: Vergleich mit dieser Person die Sicherheitsnummer.';
 
   @override
   String get notThemRemove => 'Entfernen und blockieren';
 
   @override
   String get notThemDone => 'Entfernt, der Schlüssel ist blockiert';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Der Admin wurde von diesem Handy entfernt. Änderungen an der Gruppe kommen nicht mehr bei dir an.';
 
   @override
   String get blockedKey => 'Blockierter Schlüssel';

@@ -8133,6 +8133,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre discussion sous ces mots vient d’une demande, d’une présentation ou d’un groupe, avec une autre clé, et personne ne l’a vérifiée. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le : cette discussion est supprimée, et vous comparez le numéro de sécurité dans la nouvelle. Vous ne savez pas d’où vient le lien ? Gardez celui que vous avez.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Vous avez supprimé une discussion sous ces mots, qui utilisait une autre clé. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.';
+
+  @override
   String get nameTakenUse => 'Utiliser ce lien';
 
   @override
@@ -8162,7 +8166,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Alors cette discussion n’est pas avec la personne que vous connaissez. Quelqu’un d’autre utilise peut-être son nom.';
+      'Si les numéros sont vraiment différents, quelqu’un d’autre utilise peut-être son nom ou se trouve entre vous.';
 
   @override
   String get notThemButton => 'Ce n’est pas cette personne';
@@ -8172,13 +8176,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Si la vraie personne vous envoie son lien, il fonctionnera normalement.';
+      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Ses trois mots sont de nouveau libres sur ce téléphone. Si quelqu’un vous ajoute ensuite sous ces mots, comparez le numéro de sécurité avec cette personne.';
 
   @override
   String get notThemRemove => 'Retirer et bloquer';
 
   @override
   String get notThemDone => 'Retiré, et sa clé est bloquée';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Son admin a été retiré de ce téléphone. Les changements du groupe ne vous parviennent plus.';
 
   @override
   String get blockedKey => 'Clé bloquée';

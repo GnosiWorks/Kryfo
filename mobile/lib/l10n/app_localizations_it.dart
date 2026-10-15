@@ -8121,6 +8121,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'La tua chat con queste parole è arrivata da una richiesta, una presentazione o un gruppo, con un\'altra chiave, e nessuno l\'ha verificata. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo: quella chat viene eliminata e confronti il numero di sicurezza in quella nuova. Non sei sicuro da dove arrivi il link? Tieni quello che hai.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Hai eliminato una chat con queste parole, che usava un\'altra chiave. Se questo link viene dalla persona che conosci, usalo e poi confronta con lei il numero di sicurezza.';
+
+  @override
   String get nameTakenUse => 'Usa questo link';
 
   @override
@@ -8150,7 +8154,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Allora questa chat non è con la persona che conosci. Forse qualcun altro sta usando il suo nome.';
+      'Se i numeri sono davvero diversi, forse qualcun altro sta usando il suo nome o si è messo tra voi.';
 
   @override
   String get notThemButton => 'Non è questa persona';
@@ -8161,13 +8165,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Se la persona vera ti manda il suo link, funzionerà normalmente.';
+      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Le sue tre parole tornano libere su questo telefono. Con chi ti aggiunge dopo con queste parole, confronta il numero di sicurezza.';
 
   @override
   String get notThemRemove => 'Rimuovi e blocca';
 
   @override
   String get notThemDone => 'Rimosso, e la sua chiave è bloccata';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Il suo admin è stato rimosso da questo telefono. Le modifiche al gruppo non ti arrivano più.';
 
   @override
   String get blockedKey => 'Chiave bloccata';

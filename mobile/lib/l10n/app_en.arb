@@ -10139,6 +10139,10 @@
   "@nameTakenChatLine": {
     "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat"
   },
+  "nameTakenDeletedLine": "You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenDeletedLine": {
+    "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words was added here by hand and their chat was deleted. only an add the person makes is asked; nothing that came by itself takes the words"
+  },
   "nameTakenUse": "Use this link",
   "@nameTakenUse": {
     "description": "widgets/kryfo_link_text.dart: button, the link takes the words over"
@@ -10182,7 +10186,7 @@
   "@notThemNumbersDiffer": {
     "description": "widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton"
   },
-  "notThemLine": "Then this chat is not with the person you know. Someone else may be using their name.",
+  "notThemLine": "If the numbers really differ, someone else may be using their name or sitting between you.",
   "@notThemLine": {
     "description": "widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means"
   },
@@ -10194,7 +10198,7 @@
   "@notThemSheetTitle": {
     "description": "widgets/not_them.dart: sheet title after notThemButton"
   },
-  "notThemSheetLine": "The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.",
+  "notThemSheetLine": "The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.",
   "@notThemSheetLine": {
     "description": "widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked"
   },
@@ -10205,6 +10209,10 @@
   "notThemDone": "Removed, and their key is blocked",
   "@notThemDone": {
     "description": "widgets/not_them.dart: toast once the contact is gone and the key blocked"
+  },
+  "groupAdminGoneLine": "Its admin was removed from this phone. Group changes no longer reach you.",
+  "@groupAdminGoneLine": {
+    "description": "screens/group_chat_screen.dart: a line at the top of a group whose admin was taken off this phone by notThemButton. nothing that changes the group is taken any more; Leave beside it"
   },
   "blockedKey": "Blocked key",
   "@blockedKey": {

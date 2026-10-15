@@ -8046,6 +8046,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.';
+
+  @override
   String get nameTakenUse => 'Use this link';
 
   @override
@@ -8075,7 +8079,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Then this chat is not with the person you know. Someone else may be using their name.';
+      'If the numbers really differ, someone else may be using their name or sitting between you.';
 
   @override
   String get notThemButton => 'This isn\'t them';
@@ -8085,13 +8089,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.';
+      'The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.';
 
   @override
   String get notThemRemove => 'Remove and block';
 
   @override
   String get notThemDone => 'Removed, and their key is blocked';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Its admin was removed from this phone. Group changes no longer reach you.';
 
   @override
   String get blockedKey => 'Blocked key';

@@ -12957,6 +12957,12 @@ abstract class AppLocalizations {
   /// **'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.'**
   String get nameTakenChatLine;
 
+  /// widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words was added here by hand and their chat was deleted. only an add the person makes is asked; nothing that came by itself takes the words
+  ///
+  /// In en, this message translates to:
+  /// **'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.'**
+  String get nameTakenDeletedLine;
+
   /// widgets/kryfo_link_text.dart: button, the link takes the words over
   ///
   /// In en, this message translates to:
@@ -13002,7 +13008,7 @@ abstract class AppLocalizations {
   /// widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means
   ///
   /// In en, this message translates to:
-  /// **'Then this chat is not with the person you know. Someone else may be using their name.'**
+  /// **'If the numbers really differ, someone else may be using their name or sitting between you.'**
   String get notThemLine;
 
   /// widgets/not_them.dart: button, rose: the contact goes from this phone and the key the number was made from is blocked. asks first (notThemSheetTitle)
@@ -13020,7 +13026,7 @@ abstract class AppLocalizations {
   /// widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked
   ///
   /// In en, this message translates to:
-  /// **'The chat, its messages and its files go from this phone. If the real person sends you their link, it will work normally.'**
+  /// **'The chat, its messages and its files go from this phone. Their three words are free on this phone again. Whoever adds you under them next, compare the safety number with them.'**
   String get notThemSheetLine;
 
   /// widgets/not_them.dart: the yes of that sheet
@@ -13034,6 +13040,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed, and their key is blocked'**
   String get notThemDone;
+
+  /// screens/group_chat_screen.dart: a line at the top of a group whose admin was taken off this phone by notThemButton. nothing that changes the group is taken any more; Leave beside it
+  ///
+  /// In en, this message translates to:
+  /// **'Its admin was removed from this phone. Group changes no longer reach you.'**
+  String get groupAdminGoneLine;
 
   /// screens/blocked_screen.dart: a row on the Blocked page for a key blocked by notThemButton. no name is kept for it; its key number shows under it
   ///

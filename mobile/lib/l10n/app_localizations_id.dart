@@ -8045,6 +8045,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolanmu dengan kata-kata ini datang dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja: obrolan itu dihapus, dan kamu membandingkan nomor keamanan di obrolan yang baru. Tidak yakin dari mana tautan ini? Tetap pakai yang sudah ada.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Kamu sudah menghapus obrolan dengan kata-kata ini, yang memakai kunci lain. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
+
+  @override
   String get nameTakenUse => 'Pakai tautan ini';
 
   @override
@@ -8074,7 +8078,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Berarti obrolan ini bukan dengan orang yang kamu kenal. Mungkin ada orang lain yang memakai namanya.';
+      'Kalau nomornya memang berbeda, mungkin ada orang lain yang memakai namanya atau berada di antara kalian.';
 
   @override
   String get notThemButton => 'Ini bukan dia';
@@ -8084,13 +8088,17 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Kalau orang yang asli mengirim tautannya, tautan itu akan berfungsi seperti biasa.';
+      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Tiga katanya bebas lagi di ponsel ini. Siapa pun yang menambahkanmu dengan kata-kata itu berikutnya, bandingkan nomor keamanan dengannya.';
 
   @override
   String get notThemRemove => 'Hapus dan blokir';
 
   @override
   String get notThemDone => 'Dihapus, dan kuncinya diblokir';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Admin grup ini sudah dihapus dari ponsel ini. Perubahan grup tidak lagi sampai ke kamu.';
 
   @override
   String get blockedKey => 'Kunci diblokir';

@@ -8112,6 +8112,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu chat con estas palabras llegó por una solicitud, una presentación o un grupo, con otra clave, y nadie lo comprobó. Las palabras se pueden copiar. Si este enlace viene de la persona que conoces, úsalo: ese chat se borra y comparas el número de seguridad en el nuevo. ¿No sabes de dónde viene el enlace? Quédate con el que tienes.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Borraste un chat con estas palabras que usaba otra clave. Si este enlace viene de la persona que conoces, úsalo y luego compara el número de seguridad con ella.';
+
+  @override
   String get nameTakenUse => 'Usar este enlace';
 
   @override
@@ -8141,7 +8145,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notThemLine =>
-      'Entonces este chat no es con la persona que conoces. Puede que otra persona esté usando su nombre.';
+      'Si los números de verdad son distintos, puede que otra persona esté usando su nombre o se haya puesto en medio.';
 
   @override
   String get notThemButton => 'No es esa persona';
@@ -8151,13 +8155,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'El chat, sus mensajes y sus archivos desaparecen de este teléfono. Si la persona real te envía su enlace, funcionará con normalidad.';
+      'El chat, sus mensajes y sus archivos desaparecen de este teléfono. Sus tres palabras vuelven a quedar libres en este teléfono. Con quien te añada después con ellas, compara el número de seguridad.';
 
   @override
   String get notThemRemove => 'Quitar y bloquear';
 
   @override
   String get notThemDone => 'Quitado, y su clave bloqueada';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Su admin se quitó de este teléfono. Los cambios del grupo ya no te llegan.';
 
   @override
   String get blockedKey => 'Clave bloqueada';
