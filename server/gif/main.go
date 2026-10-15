@@ -37,9 +37,8 @@ import (
 const (
 	// what every upstream request says it is, whoever asked
 	userAgent = "kryfo-gif/1"
-	// the rating every giphy request carries: its highest, giphy hosts no
-	// adult content
-	rating = "r"
+	// the rating every request carries
+	rating = "pg-13"
 	// items a page may hold
 	maxLimit = 24
 	// giphy answers nothing past this offset
