@@ -74,12 +74,18 @@ class _Synced {
   final int sent, due;
   const _Synced(this.endpoint, this.sent, this.due);
   static const dup = '!dup';
-  // a refusal, with how many in a row
+  // a refusal, with how many in a row and the endpoint refused:
+  // '!refused:<n>:<endpoint>'
   static const refused = '!refused:';
   bool get waiting => endpoint.startsWith('!');
-  int get refusals => endpoint.startsWith(refused)
-      ? int.tryParse(endpoint.substring(refused.length)) ?? 0
-      : 0;
+  int get refusals =>
+      endpoint.startsWith(refused) ? int.tryParse(_refusal.$1) ?? 0 : 0;
+  String get refusedEndpoint => endpoint.startsWith(refused) ? _refusal.$2 : '';
+  (String, String) get _refusal {
+    final rest = endpoint.substring(refused.length);
+    final i = rest.indexOf(':');
+    return i < 0 ? (rest, '') : (rest.substring(0, i), rest.substring(i + 1));
+  }
 }
 
 class HelperDelivery {
@@ -331,10 +337,22 @@ class HelperDelivery {
       }
       if (refused.contains(it.name)) {
         // refused: tried again later, longer each time, and the others go
-        // on meanwhile
-        final n = (synced[it.name]?.refusals ?? 0) + 1;
-        final wait = min(kRefusedRetryMs << (n - 1), kRefusedRetryMaxMs);
-        synced[it.name] = _Synced('${_Synced.refused}$n', now, now + wait);
+        // on meanwhile. a new endpoint starts the count again
+        final had = synced[it.name];
+        final n =
+            (had != null && had.refusedEndpoint == it.endpoint
+                ? had.refusals
+                : 0) +
+            1;
+        final wait = min(
+          kRefusedRetryMs << (min(n, 6) - 1),
+          kRefusedRetryMaxMs,
+        );
+        synced[it.name] = _Synced(
+          '${_Synced.refused}$n:${it.endpoint}',
+          now,
+          now + wait,
+        );
         continue;
       }
       if (dup.contains(it.name)) {
@@ -410,6 +428,8 @@ class HelperDelivery {
 
   bool _due(_Synced? had, String endpoint, int now) {
     if (had == null) return true;
+    // a refused one whose endpoint changed is tried at once
+    if (had.refusals > 0 && had.refusedEndpoint != endpoint) return true;
     if (had.waiting) return now >= had.due;
     if (had.endpoint != endpoint) return true;
     return now >= had.due || had.sent > now;

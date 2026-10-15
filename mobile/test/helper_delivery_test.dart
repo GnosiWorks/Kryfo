@@ -375,6 +375,60 @@ void main() {
       expect(engine.relay.containsKey(room.address), isTrue);
     });
 
+    test('a refusal waits an hour to a day however many came before', () async {
+      engine.live = [contacts.first];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      await rounds();
+      final ep = engine.relay[c[0]]!;
+      engine.refuse = {c[0]};
+      final prefs = await SharedPreferences.getInstance();
+      for (final before in [0, 1, 5, 42, 43, 62, 63, 64, 100]) {
+        now += 1000;
+        final s = jsonDecode(prefs.getString(kHelperSyncedKey)!) as Map;
+        s[c[0]] = ['!refused:$before:$ep', now - 1, now - 1];
+        await prefs.setString(kHelperSyncedKey, jsonEncode(s));
+        await rounds();
+        final after = jsonDecode(prefs.getString(kHelperSyncedKey)!) as Map;
+        final due = (after[c[0]] as List)[2] as int;
+        expect(
+          due - now,
+          inInclusiveRange(kRefusedRetryMs, kRefusedRetryMaxMs),
+          reason: 'after $before refusals',
+        );
+      }
+    });
+
+    test('a refused registration whose endpoint changes is tried at once, '
+        'its count started again', () async {
+      engine.live = [contacts.first];
+      await helper.setUp(ntfy.package, wait: Duration.zero);
+      engine.refuse = {c[0]};
+      for (var i = 0; i < kRefusedLasting; i++) {
+        await rounds();
+        now += kRefusedRetryMaxMs + 1;
+      }
+      expect(await helper.refusedLasting(), isTrue);
+      now -= kRefusedRetryMaxMs;
+      final s = SlotBook.read(
+        (await SharedPreferences.getInstance()).getString(kHelperSlotsKey),
+      ).slotOf(c[0])!;
+      ntfy.endpoints['kryfo-$s.0'] = 'https://push.example.org/upNew';
+      final tries = engine.sent
+          .where((b) => b.any((it) => it['i'] == c[0]))
+          .length;
+      await rounds();
+      expect(
+        engine.sent.where((b) => b.any((it) => it['i'] == c[0])).length,
+        tries + 1,
+      );
+      expect(await helper.refusedLasting(), isFalse);
+      engine.refuse = {};
+      now += 60 * 1000;
+      ntfy.endpoints['kryfo-$s.0'] = 'https://push.example.org/upNewer';
+      await rounds();
+      expect(engine.relay[c[0]], 'https://push.example.org/upNewer');
+    });
+
     test('the relay says not newer: tried again later, newer', () async {
       engine.live = [contacts.first];
       await helper.setUp(ntfy.package, wait: Duration.zero);
