@@ -124,6 +124,12 @@ void main() {
     s = SqliteMem.open(path: p.join(docs.path, 'halo.db'))!;
     await appSchemaOn(s);
     await searchTables(s, fresh: true);
+    // made apart in the app (its poll tables), a statement of pieces
+    await s.execute(
+      'CREATE TRIGGER IF NOT EXISTS poll_votes_follow AFTER DELETE ON messages '
+      'WHEN old.msg_uid IS NOT NULL BEGIN '
+      'DELETE FROM poll_votes WHERE poll_uid = old.msg_uid; END',
+    );
     for (final who in ['bob', 'carol']) {
       await s.insert('contacts', {
         'halo_id': who,
@@ -319,6 +325,7 @@ void main() {
     test('nothing for the group comes in after it, from anyone', () async {
       await comes('bob', await said('m1'));
       await comes('bob', await ctl(const GroupControl(type: 'end')));
+      io.rang.clear();
       // written before the end or after: all of it is gone here
       await comes('carol', await said('late', by: 'carol'));
       await comes('bob', await said('again'));

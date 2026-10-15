@@ -1778,11 +1778,13 @@ void main() {
       await t.scrollUntilVisible(row, 200);
       await t.tap(row);
       await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(milliseconds: 600));
       expect(find.text(l10n.groupInfoEndThisGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroupLine), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroupDetail), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroup), findsNWidgets(2));
       await t.tap(find.text(l10n.commonCancel));
+      await t.pump(const Duration(milliseconds: 600));
       await t.pump(const Duration(milliseconds: 600));
       expect(find.text(l10n.groupInfoEndThisGroup), findsNothing);
       // still running: its leave is a leave
@@ -1823,6 +1825,7 @@ void main() {
           ..endedBy = _anna,
       );
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
       expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);

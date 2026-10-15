@@ -4,6 +4,7 @@
 // then it ends in their own container. a decoy's own group ends on the
 // phone alone, and nothing of the real side reaches it. the databases,
 // signal and the engine are stand-ins
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_end.dart';
@@ -13,6 +14,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
 
@@ -74,6 +76,12 @@ class _World {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+  });
+
   test('a shut vault holds the end sealed, and its group ends in the vault '
       'on its next opening', () async {
     final w = await _World.make();
