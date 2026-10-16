@@ -364,7 +364,7 @@ void main() {
       'lib/screens/settings_screen.dart',
     ).readAsStringSync();
     expect(settings, contains('appState.torUsable'));
-    final main = File('lib/main.dart').readAsStringSync();
+    final main = File('lib/app/gates.dart').readAsStringSync();
     final pill = main.substring(main.indexOf('class TorHaloState'));
     expect(pill, contains('final ready = appState.torUsable;'));
   });

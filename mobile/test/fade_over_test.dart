@@ -173,7 +173,7 @@ void main() {
   });
 
   test('the onboarding gate hands over to home through it', () {
-    final src = sourceOf('lib/main.dart');
+    final src = sourceOf('lib/app/gates.dart');
     final from = src.indexOf('class _OnboardingGateState');
     final gate = src.substring(from, src.indexOf('\nclass ', from + 1));
     expect(gate, contains('key: _onboardingKey,'));

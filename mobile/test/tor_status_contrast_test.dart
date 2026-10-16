@@ -97,7 +97,10 @@ void main() {
   });
 
   test('no status colour fixed for dark in the pill or the tor graph', () {
-    final main = File('lib/main.dart').readAsStringSync();
+    final main = [
+      'lib/main.dart',
+      for (final f in Directory('lib/app').listSync()) f.path,
+    ].map((f) => File(f).readAsStringSync()).join('\n');
     final motion = File('lib/widgets/motion.dart').readAsStringSync();
     for (final hex in ['0xFF34D399', '0xFFB79CFF']) {
       expect(main.contains('Color($hex)'), isFalse, reason: 'main.dart $hex');

@@ -61,7 +61,7 @@ void main() {
     );
     expect(_accent.hasMatch(plain), isFalse, reason: 'plain export warning');
     expect(plain, contains('HaloColors.warn'));
-    final main = _src('lib/main.dart');
+    final main = _src('lib/app/gates.dart');
     final pill = _between(
       main,
       '// relay does not go through tor, so tor being off never greys it',
