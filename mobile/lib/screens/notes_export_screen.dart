@@ -687,7 +687,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                             style: HaloType.sans(
                               size: 12.5,
                               weight: FontWeight.w600,
-                              color: HaloColors.amber,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ),
@@ -717,7 +717,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                   padding: const EdgeInsetsDirectional.fromSTEB(4, 7, 4, 0),
                   child: Text(
                     l10n.lockFileTheTwoDoNot,
-                    style: HaloType.sans(size: 12, color: HaloColors.amber),
+                    style: HaloType.sans(size: 12, color: HaloColors.amberText),
                   ),
                 ),
         ),
