@@ -210,7 +210,7 @@ void main() {
   });
 
   test('the call an unlisten makes is one the engine exports', () {
-    final app = File('lib/main.dart').readAsStringSync();
+    final app = File('lib/app/engine.dart').readAsStringSync();
     final call = RegExp(
       r"void nostrUnsubscribeBg\(String \w+\) => _background\(\s*"
       r"_roomFfiOnIsolate\('(\w+)'",

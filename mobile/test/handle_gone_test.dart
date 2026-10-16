@@ -194,7 +194,7 @@ void main() {
     final m = RegExp(r'var handleWait = (\d+) \* time\.Second').firstMatch(go);
     expect(m, isNotNull);
     expect(registryWait, greaterThan(Duration(seconds: int.parse(m![1]!))));
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/engine.dart').readAsStringSync();
     for (final call in [
       'HaloHandleCheck',
       'HaloHandleClaim',

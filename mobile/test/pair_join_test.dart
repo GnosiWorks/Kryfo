@@ -379,7 +379,7 @@ void main() {
       publish!.group(0),
       contains('context.WithTimeout(context.Background(), publishWait)'),
     );
-    final app = File('lib/main.dart').readAsStringSync();
+    final app = File('lib/app/engine.dart').readAsStringSync();
     final wait = RegExp(
       r'Future<String> pairCodePublish\([^;]*Duration\(seconds: (\d+)\)',
     ).firstMatch(app);

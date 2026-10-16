@@ -75,7 +75,7 @@ void main() {
 
   test('every binding hands its string to the take helpers', () {
     final bindings = [
-      'lib/main.dart',
+      'lib/app/engine.dart',
       'lib/lock_state.dart',
       'lib/backup.dart',
       'lib/tools/age_ffi.dart',
@@ -93,7 +93,7 @@ void main() {
 
   test('what can hold a key or plaintext is zeroed', () {
     final secret = {
-      'lib/main.dart': [
+      'lib/app/engine.dart': [
         'myEdPrivkey() => engineTakeSecret(',
         'myXPrivkey() => engineTakeSecret(',
         'engineTakeSecret(_decryptBackup(',

@@ -522,7 +522,10 @@ void main() {
   // read off the source: every 1:1 door of the engine asks the gate, and
   // the raw calls behind them are reached from those doors alone
   test('the engine asks the gate at every door', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = [
+      'lib/main.dart',
+      for (final f in Directory('lib/app').listSync()) f.path,
+    ].map((f) => File(f).readAsStringSync()).join('\n');
     final start = src.indexOf('class HaloEngine {');
     final end = src.indexOf('\n}\n', start);
     expect(start, isNonNegative);

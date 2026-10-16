@@ -34,7 +34,7 @@ void main() {
   });
 
   test('every call that hands a secret to the engine zeroes its copy', () {
-    final main = File('lib/main.dart').readAsStringSync();
+    final main = File('lib/app/engine.dart').readAsStringSync();
     final backup = File('lib/backup.dart').readAsStringSync();
     final age = File('lib/tools/age_ffi.dart').readAsStringSync();
     final calls = {
