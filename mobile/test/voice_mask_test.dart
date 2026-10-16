@@ -300,6 +300,25 @@ void main() {
       expect(dir.listSync().map((e) => e.path), [from]);
     });
 
+    test('stopped on its last tick: false, and the note made is shredded '
+        'too', () async {
+      for (var i = 0; i < 4; i++) {
+        final from = put('vn_t$i.wav', wav(3));
+        final to = '${dir.path}/vn_t${i}_m.wav';
+        late MaskJob job;
+        job = startMaskFile(
+          from,
+          to,
+          onProgress: (p) {
+            if (p >= 1.0) job.cancel();
+          },
+        );
+        expect(await job.done, isFalse, reason: '$i');
+        expect(dir.listSync().map((e) => e.path), [from], reason: '$i');
+        File(from).deleteSync();
+      }
+    });
+
     test('run out, it says how far it went, to the end', () async {
       final from = put('vn_p.wav', wav(5));
       final to = '${dir.path}/vn_p_m.wav';

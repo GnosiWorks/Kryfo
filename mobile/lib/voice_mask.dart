@@ -159,16 +159,18 @@ class MaskJob {
   bool get cancelled => _stopped;
 
   Future<void> _end(bool made) async {
-    if (!made || _stopped) {
-      // a crash leaves its pieces, a stop that came late leaves the note
-      await Isolate.run(() {
-        _shredSync(_prePath(to));
-        _shredSync(to);
-      }).catchError((Object _) {});
-    }
+    // a crash leaves its pieces, a stop that came late leaves the note
+    if (!made || _stopped) await _shredMade(to);
     if (!_done.isCompleted) _done.complete(made && !_stopped);
   }
 }
+
+// top level, so the closure Isolate.run gets holds the path alone: one made
+// in a method would take the job and its completer, which cannot be sent
+Future<void> _shredMade(String to) => Isolate.run(() {
+  _shredSync(_prePath(to));
+  _shredSync(to);
+}).catchError((Object _) {});
 
 // the whole-take disguise in its own isolate, a piece at a time, with a
 // turn between pieces for a stop to get in
