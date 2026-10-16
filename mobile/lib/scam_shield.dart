@@ -111,7 +111,7 @@ bool shieldRowOpen(Map<String, Object?> r) =>
     (r['dismissed'] as int? ?? 0) == 0;
 
 // the id a sender is filed on when the name it gave is bound here to
-// another key (unboundIdOf in main.dart): 16 hex, never three words
+// another key (unboundIdOf in app/signal.dart): 16 hex, never three words
 final _ownId = RegExp(r'^[0-9a-f]{16}$');
 
 /// what a request is called: its three words, or for a sender filed on an

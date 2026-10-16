@@ -200,7 +200,7 @@ class _LockLayerState extends State<LockLayer>
 }
 
 // the lock as the app runs it: read at the start, up when the app is left.
-// main.dart hands it the app's state, the tests hand it stand-ins.
+// app/gates.dart hands it the app's state, the tests hand it stand-ins.
 class LockGate extends StatefulWidget {
   const LockGate({
     super.key,

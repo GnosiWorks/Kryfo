@@ -3023,8 +3023,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // the receiver in main.dart owns the engine inbox and routes every message
-  // through _applyIncomingPayload. this only pulls new rows from the db.
+  // the receiver in app/state.dart owns the engine inbox and routes every
+  // message through _applyIncomingPayload. this only pulls new rows from the
+  // db.
   Future<void> _checkInbox() async {
     if (!_loaded || _searching) return;
     // cheap tick: only rows newer than our newest. never a full reload here,

@@ -214,10 +214,10 @@ func TestNoTurnStillCounts(t *testing.T) {
 	}
 }
 
-// the app's check-in budget from its job's start (main.dart, kCheck*): tor
-// carries by 90, the listeners by 95, the kick by 105 or never, the answers
-// are waited for until 120. then the tail: a wait for the drain, the
-// missing-slice asks and the outbox, and tor's sleep
+// the app's check-in budget from its job's start (app/engine.dart,
+// kCheck*): tor carries by 90, the listeners by 95, the kick by 105 or
+// never, the answers are waited for until 120. then the tail: a wait for the
+// drain, the missing-slice asks and the outbox, and tor's sleep
 const (
 	checkInKickBy    = 105 * time.Second
 	checkInLoopBy    = 120 * time.Second

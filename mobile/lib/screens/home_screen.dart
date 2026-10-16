@@ -590,7 +590,7 @@ class ContactPreview {
   });
 }
 
-// minimal shape needed by home for rendering a group row. main.dart
+// minimal shape needed by home for rendering a group row. app/shell.dart
 // builds these from appState.groups.
 class GroupSummary {
   final String groupId;

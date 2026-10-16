@@ -296,8 +296,8 @@ class RouterRows {
     return r.isEmpty ? null : r.first['v'] as String?;
   }
 
-  // a removal owes the file a tidy (tidyIfOwed in main.dart), kept with the
-  // other marks of this database
+  // a removal owes the file a tidy (tidyIfOwed in app/database.dart), kept
+  // with the other marks of this database
   static Future<void> oweTidy(DatabaseExecutor t) => t.insert('vault_meta', {
     'k': kTidyOwed,
     'v': '1',

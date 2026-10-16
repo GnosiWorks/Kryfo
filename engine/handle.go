@@ -92,7 +92,7 @@ var handleHTTP = func() (*http.Client, error) {
 
 // a cold circuit can take most of a minute to answer. one bound for the
 // whole call, from before the client is fetched: building it can wait on
-// tor's locks. the app waits a little longer than this (main.dart,
+// tor's locks. the app waits a little longer than this (app/engine.dart,
 // registryWait). a var for the tests
 var handleWait = 60 * time.Second
 

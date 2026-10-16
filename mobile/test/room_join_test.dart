@@ -34,8 +34,8 @@ import 'arrival_fakes.dart';
 import 'mem_db.dart';
 import 'real_sqlite.dart';
 
-// the app's own database code over rows in maps, its tables as main.dart
-// makes them
+// the app's own database code over rows in maps, its tables as
+// app/database.dart makes them
 class _Rows extends HaloDb {
   _Rows(this.mem);
   final MemDb mem;

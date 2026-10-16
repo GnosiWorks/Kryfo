@@ -574,7 +574,7 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 	}
 }
 
-// the lists the app hands over, relaysFor in main.dart: our relay is the
+// the lists the app hands over, relaysFor in app/state.dart: our relay is the
 // onion and its clearnet name in private mode, and the clearnet name alone
 // in the others. no public relay is ours.
 func TestOurRelaysEntriesInTheAppsLists(t *testing.T) {

@@ -493,8 +493,8 @@ func catchupHoldOf(key string) catchup.Hold {
 
 // our relay's clearnet name. the app puts our relay first in every list: in
 // private mode its onion, with this name right after it, and in the other
-// modes this name (relaysFor in main.dart). a var so tests can point it at a
-// stand-in.
+// modes this name (relaysFor in app/state.dart). a var so tests can point
+// it at a stand-in.
 var ownRelayHost = "relay.kryfo.app"
 
 // the entries of a relay list that reach our relay: the first, and any on

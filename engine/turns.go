@@ -23,7 +23,7 @@ var subSpread = time.Minute
 
 // in a check-in the turns are short and over this long after the job
 // began, and a dial and a long catch-up are cut, so the last answer is in
-// well before the app stops waiting, 120 s into the job (main.dart,
+// well before the app stops waiting, 120 s into the job (app/engine.dart,
 // kCheckLoopBy). the job stops at 170 (HaloPeriodicJobService)
 var (
 	checkInSpread   = 10 * time.Second

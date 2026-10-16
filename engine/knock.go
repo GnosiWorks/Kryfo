@@ -54,7 +54,7 @@ const (
 	laneKnockInfo = "knockinfo"
 )
 
-// the call's bound, the app waits a little longer (main.dart)
+// the call's bound, the app waits a little longer (app/engine.dart)
 var knockWait = 90 * time.Second
 
 // an address the engine listens on, with what it takes to register it

@@ -18,7 +18,7 @@ import (
 var servicesPoll = 250 * time.Millisecond
 
 // people search and the badge calls: the wait for tor and the request
-// together. the app waits 80 s (main.dart, torPost)
+// together. the app waits 80 s (app/engine.dart, torPost)
 var servicesWait = 45 * time.Second
 
 // the services lane's client, through tor whatever the route. a tor not
