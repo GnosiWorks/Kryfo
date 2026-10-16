@@ -195,7 +195,10 @@ void main() {
   });
 
   test('one proof-of-work check for a first contact, shared', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = [
+      'lib/main.dart',
+      for (final f in Directory('lib/app').listSync()) f.path,
+    ].map((f) => File(f).readAsStringSync()).join('\n');
     // the gate and a deleted chat's words ask the same thing
     expect(RegExp(r'verifyPow\(').allMatches(src), hasLength(1));
     expect(

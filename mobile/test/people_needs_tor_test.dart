@@ -272,7 +272,7 @@ void main() {
     expect(post, contains('return engine.torPost(url, body);'));
     expect(RegExp(r'engine\.\w+\(').allMatches(post).length, 1);
     // a handle's lookup goes the same way
-    final main = File('lib/main.dart').readAsStringSync();
+    final main = File('lib/app/links.dart').readAsStringSync();
     expect(main, contains('_torGetJsonOnIsolate,\n      idOf:'));
     // in the engine the registry, search and badge calls take the services
     // client, built from tor's socks port whatever the route
