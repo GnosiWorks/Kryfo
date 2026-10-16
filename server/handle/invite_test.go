@@ -65,7 +65,7 @@ func TestInviteTakesOnlyURLCharacters(t *testing.T) {
 }
 
 // the longest invite the app builds: v3, eight-letter words, a five digit
-// registration id and the bundle as makePreKeyBundleB64 (mobile/lib/main.dart)
+// registration id and the bundle as makePreKeyBundleB64 (mobile/lib/app/signal.dart)
 // writes it
 func longestInvite() string {
 	key := base64.StdEncoding.EncodeToString(make([]byte, 33))

@@ -162,7 +162,7 @@ class _PhotoViewerState extends State<PhotoViewer>
     Navigator.of(context).pop();
   }
 
-  // eases the photo to [m], at once when motion is reduced
+  // eases the photo to [m], at once with reduced motion
   void _zoomTo(Matrix4 m) {
     final z = m.getMaxScaleOnAxis() > 1.01;
     if (z != _zoomed) setState(() => _zoomed = z);

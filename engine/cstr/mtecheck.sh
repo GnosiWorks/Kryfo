@@ -21,9 +21,9 @@ run /tmp/cstr.test -test.v -test.run "^(TestMTEOn|TestString)\$"
 echo "== old C.GoString, has to crash"
 if run -E MTECHECK_OLD=1 /tmp/cstr.test -test.v -test.run "^TestOldGoString\$" >/tmp/old.log 2>&1; then
   tail -5 /tmp/old.log
-  echo "FAIL: old C.GoString did not trap, the check proves nothing"
+  echo "fail: old C.GoString did not trap, the check proves nothing"
   exit 1
 fi
-grep -m1 "SIGSEGV.*code=0x9" /tmp/old.log || { tail -20 /tmp/old.log; echo "FAIL: no mte fault"; exit 1; }
+grep -m1 "SIGSEGV.*code=0x9" /tmp/old.log || { tail -20 /tmp/old.log; echo "fail: no mte fault"; exit 1; }
 echo "ok: cstr.String passes, C.GoString traps"
 '
