@@ -8297,6 +8297,26 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gifNotNow => 'Не зараз';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'Пошук GIF іде через сервер Kryfo мережею Tor. $brand ніколи тебе не бачить. Увімкнути?';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'Пошук GIF іде через сервер Kryfo. $brand ніколи тебе не бачить. Увімкнути?';
+  }
+
+  @override
+  String get gifAskTurnOn => 'Увімкнути';
+
+  @override
+  String get gifSearchOff => 'Пошук GIF вимкнено';
+
+  @override
+  String get gifSavedOnPhone =>
+      'GIF, збережені на телефоні, є у вкладці *На цьому телефоні*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override

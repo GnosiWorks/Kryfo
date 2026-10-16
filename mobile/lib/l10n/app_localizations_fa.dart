@@ -8162,6 +8162,26 @@ class AppLocalizationsFa extends AppLocalizations {
   String get gifNotNow => 'حالا نه';
 
   @override
+  String gifAskOverTor(String brand) {
+    return 'جست‌وجوی گیف از راه Tor و از طریق سرور Kryfo انجام می‌شود. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
+  }
+
+  @override
+  String gifAskThroughKryfo(String brand) {
+    return 'جست‌وجوی گیف از طریق سرور Kryfo انجام می‌شود. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
+  }
+
+  @override
+  String get gifAskTurnOn => 'روشن کردن';
+
+  @override
+  String get gifSearchOff => 'جست‌وجوی گیف خاموش است';
+
+  @override
+  String get gifSavedOnPhone =>
+      'گیف‌های ذخیره‌شده روی گوشی شما در *روی این گوشی* هستند.';
+
+  @override
   String get gifTab => 'گیف‌ها';
 
   @override

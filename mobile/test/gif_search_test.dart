@@ -113,6 +113,7 @@ class _Harness {
   SheetPick? picked;
   bool closed = false;
   bool on = false;
+  bool asked = false;
   final saved = <bool>[];
   final gifs = _FakeGifs();
 
@@ -151,7 +152,7 @@ class _Harness {
   }
 
   // [tabs]: the app's own, as a chat hands them in
-  Future<void> open({GifTabs? tabs}) async {
+  Future<void> open({GifTabs? tabs, GifRoute route = GifRoute.onion}) async {
     closed = false;
     picked = null;
     showHaloSheet<SheetPick>(
@@ -164,12 +165,15 @@ class _Harness {
             tabs ??
             GifTabs(
               source: gifs,
-              route: GifRoute.onion,
+              route: route,
               loadOn: () async => on,
               saveOn: (v) async {
                 on = v;
+                if (v) asked = true;
                 saved.add(v);
               },
+              loadAsked: () async => asked,
+              markAsked: () async => asked = true,
             ),
       ),
     ).then((r) {
@@ -203,7 +207,21 @@ class _Harness {
   }
 
   Finder tile(int i) => find.bySemanticsLabel(l10n.gifTileA11y(whole(i + 1)));
+
+  Future<void> close() async {
+    Navigator.of(home).pop();
+    await frames(20);
+  }
 }
+
+const _askTor =
+    "GIF search goes through Kryfo's server over Tor. GIPHY never sees you. "
+    'Turn it on?';
+const _askKryfo =
+    "GIF search goes through Kryfo's server. GIPHY never sees you. "
+    'Turn it on?';
+const _off = 'GIF search is off';
+const _pointer = 'GIFs saved on your phone are in On this phone.';
 
 void main() {
   final lib = useLibrary();
@@ -440,6 +458,26 @@ void main() {
     expect(await loadGifSearchOn(), false);
   });
 
+  test('asked is each identity\'s own; turning on counts as asked', () async {
+    expect(await loadGifAsked(), false);
+    await markGifAsked(HaloContainer.decoy);
+    expect(await loadGifAsked(HaloContainer.decoy), true);
+    expect(await loadGifAsked(), false);
+    await saveGifSearchOn(true);
+    expect(await loadGifAsked(), true);
+    await saveGifSearchOn(false);
+    expect(await loadGifAsked(), true);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('d.kryfo.gif.asked'), true);
+    expect(prefs.getBool('kryfo.gif.asked'), true);
+  });
+
+  test('a wiped identity is asked again', () async {
+    await markGifAsked(HaloContainer.decoy);
+    await HaloContainer.decoy.wipeFiles();
+    expect(await loadGifAsked(HaloContainer.decoy), false);
+  });
+
   group('the picker', () {
     testWidgets('tabs: stickers, gifs, on this phone', (t) async {
       final h = _Harness(t, lib);
@@ -473,15 +511,16 @@ void main() {
       expect(find.text('GIFs'), findsOneWidget);
       expect(find.text('On this phone'), findsOneWidget);
       await h.tab('GIFs');
-      expect(find.text('Search GIFs, privately'), findsOneWidget);
-      await h.reveal('Turn on GIF search');
+      expect(find.text(_askTor), findsOneWidget);
       // the answer comes after a wait like one that went out, never at once
       quietWait = () => const Duration(seconds: 3);
-      await t.tap(find.text('Turn on GIF search'));
+      await t.tap(find.text('Turn on'));
       await h.frames(30);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('d.kryfo.gif.on'), isTrue);
+      expect(prefs.getBool('d.kryfo.gif.asked'), isTrue);
       expect(prefs.getBool('kryfo.gif.on'), isNull);
+      expect(prefs.getBool('kryfo.gif.asked'), isNull);
       const calm = "Couldn't reach Kryfo's GIF service.";
       expect(find.text(calm), findsNothing);
       await t.pump(const Duration(seconds: 3));
@@ -498,29 +537,68 @@ void main() {
       await h.frames(20);
     });
 
-    testWidgets('off: the opt-in first, nothing asked until it is on', (
-      t,
-    ) async {
+    for (final reduce in [false, true]) {
+      testWidgets('off: the first visit asks once, then only says it is off'
+          '${reduce ? ', reduced motion' : ''}', (t) async {
+        final h = _Harness(t, lib);
+        await h.pump(reduce: reduce);
+        await h.open();
+        await h.tab('GIFs');
+        expect(find.text(_askTor), findsOneWidget);
+        expect(find.text('Search GIFs, privately'), findsNothing);
+        expect(find.text(_off), findsNothing);
+        expect(h.asked, isTrue);
+        expect(h.gifs.asked, isEmpty);
+
+        await t.tap(find.text('Not now'));
+        await h.frames(20);
+        expect(find.text(_askTor), findsNothing);
+        expect(find.text(_off), findsOneWidget);
+        expect(find.text(_pointer, findRichText: true), findsOneWidget);
+        expect(find.text('Search GIFs, privately'), findsNothing);
+        // still on the gifs tab
+        expect(find.text('Choose a GIF'), findsNothing);
+        expect(h.saved, isEmpty);
+        expect(h.gifs.asked, isEmpty);
+
+        // the stickers and back: no second question
+        await h.tab('Stickers');
+        await h.tab('GIFs');
+        expect(find.text(_askTor), findsNothing);
+        expect(find.text(_off), findsOneWidget);
+
+        // the next time the picker opens: no question either
+        await h.close();
+        await h.open();
+        await h.tab('GIFs');
+        expect(find.text(_askTor), findsNothing);
+        expect(find.text(_off), findsOneWidget);
+
+        await t.tap(find.text('Turn on'));
+        await h.frames(30);
+        expect(h.saved, [true]);
+        expect(h.gifs.asked, ['@0']);
+        expect(find.text(_off), findsNothing);
+        expect(find.text('Trending'), findsOneWidget);
+        expect(h.tile(0), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+    }
+
+    testWidgets('turn on from the question shows the grid', (t) async {
       final h = _Harness(t, lib);
       await h.pump();
       await h.open();
       await h.tab('GIFs');
-      expect(find.text('Search GIFs, privately'), findsOneWidget);
-      expect(find.text('Searched over Tor'), findsOneWidget);
-      expect(h.gifs.asked, isEmpty);
-      await h.reveal('Not now');
-      await t.tap(find.text('Not now'));
-      await h.frames(20);
-      expect(find.text('Search GIFs, privately'), findsNothing);
-      expect(h.saved, isEmpty);
-
-      await h.tab('GIFs');
-      await h.reveal('Turn on GIF search');
-      await t.tap(find.text('Turn on GIF search'));
+      expect(find.text(_askTor), findsOneWidget);
+      await t.tap(find.text('Turn on'));
       await h.frames(30);
       expect(h.saved, [true]);
       expect(h.gifs.asked, ['@0']);
+      expect(find.text(_askTor), findsNothing);
+      expect(find.text(_off), findsNothing);
       expect(find.text('Trending'), findsOneWidget);
+      expect(h.tile(0), findsOneWidget);
       expect(find.text('Powered by GIPHY'), findsOneWidget);
       expect(
         find.text('Searched through Kryfo, GIPHY never sees you.'),
@@ -529,6 +607,84 @@ void main() {
       expect(find.text('Onion · 3 hops'), findsOneWidget);
       expect(find.text('The GIF service never sees you'), findsOneWidget);
     });
+
+    testWidgets('asked before, still off: no question, the quiet line', (
+      t,
+    ) async {
+      final h = _Harness(t, lib)..asked = true;
+      await h.pump();
+      await h.open();
+      await h.tab('GIFs');
+      expect(find.text(_askTor), findsNothing);
+      expect(find.text('Search GIFs, privately'), findsNothing);
+      expect(find.text(_off), findsOneWidget);
+      // where the phone's own gifs are, a tap away
+      await t.tap(find.text(_pointer, findRichText: true));
+      await h.frames(25);
+      expect(find.text('Choose a GIF'), findsOneWidget);
+      expect(h.gifs.asked, isEmpty);
+    });
+
+    testWidgets('on already: the grid, never a question', (t) async {
+      final h = _Harness(t, lib)..on = true;
+      await h.pump();
+      await h.open();
+      await h.tab('GIFs');
+      expect(find.text(_askTor), findsNothing);
+      expect(find.text(_off), findsNothing);
+      expect(h.tile(0), findsOneWidget);
+    });
+
+    testWidgets('the question says tor only on the onion route', (t) async {
+      for (final route in GifRoute.values) {
+        final h = _Harness(t, lib);
+        await h.pump();
+        await h.open(route: route);
+        await h.tab('GIFs');
+        final onion = route == GifRoute.onion;
+        expect(find.text(_askTor), onion ? findsOneWidget : findsNothing);
+        expect(find.text(_askKryfo), onion ? findsNothing : findsOneWidget);
+        await h.close();
+      }
+    });
+
+    for (final quiet in [false, true]) {
+      testWidgets('the app\'s own tabs ask once per identity'
+          '${quiet ? ': the decoy the same' : ''}', (t) async {
+        final wire = _GifLane();
+        useEngineForTest(wire);
+        appState.sendModeForTest = 'balanced';
+        final c = quiet ? HaloContainer.decoy : HaloContainer.everyday;
+        final db = HaloDb(c);
+        useDatabasesForTest(HaloDb(), Session(db));
+        addTearDown(() {
+          final e = HaloDb();
+          useDatabasesForTest(e, Session(e));
+          appState.sendModeForTest = 'private';
+        });
+        final h = _Harness(t, lib);
+        await h.pump();
+        await h.open(tabs: appGifTabs());
+        await h.tab('GIFs');
+        expect(find.text(_askKryfo), findsOneWidget);
+        expect(find.text(_askTor), findsNothing);
+        await t.tap(find.text('Not now'));
+        await h.frames(20);
+        expect(find.text(_off), findsOneWidget);
+        await h.close();
+        await h.open(tabs: appGifTabs());
+        await h.tab('GIFs');
+        expect(find.text(_askKryfo), findsNothing);
+        expect(find.text(_off), findsOneWidget);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool(c.key('kryfo.gif.asked')), isTrue);
+        expect(prefs.getBool(c.key('kryfo.gif.on')), isNull);
+        final other = quiet ? HaloContainer.everyday : HaloContainer.decoy;
+        expect(prefs.getBool(other.key('kryfo.gif.asked')), isNull);
+        expect(wire.calls, isEmpty);
+        await h.close();
+      });
+    }
 
     testWidgets('loading, then results; empty; error with a retry', (t) async {
       final h = _Harness(t, lib)..on = true;
@@ -702,9 +858,14 @@ void main() {
         await h.pump(scale: 1.6, size: const Size(360, 740), locale: loc);
         await h.open();
         await h.tab(words.gifTab);
-        expect(find.text(words.gifOptInTitle), findsOneWidget);
-        await h.reveal(words.gifTurnOn);
-        await t.tap(find.text(words.gifTurnOn));
+        expect(find.text(words.gifAskOverTor(kGifBrand)), findsOneWidget);
+        // the question keeps the sheet's height: its buttons scroll into view
+        await t.ensureVisible(find.text(words.gifNotNow));
+        await h.frames(10);
+        await t.tap(find.text(words.gifNotNow));
+        await h.frames(20);
+        expect(find.text(words.gifSearchOff), findsOneWidget);
+        await t.tap(find.text(words.gifAskTurnOn));
         await h.frames(30);
         expect(find.text(words.gifSearchHint), findsOneWidget);
         expect(t.takeException(), isNull);
@@ -764,23 +925,20 @@ void main() {
                       ),
                     ),
                   ),
-                  GifSentLine(path: path),
                 ],
               ),
             ),
           ),
         );
 
-    testWidgets('a gif plays with its badge and says it went inside', (
-      t,
-    ) async {
+    testWidgets('a gif plays with its badge and no line under it', (t) async {
       final f = File('${tmp.path}/a.jpg')..writeAsBytesSync(_gif);
       await t.runAsync(() => isGifFile(f.path));
       await bubble(t, f.path);
       await t.pump();
       expect(find.byKey(const ValueKey('playing')), findsOneWidget);
       expect(find.byType(GifBadge), findsOneWidget);
-      expect(find.text('Sent inside your message'), findsOneWidget);
+      expect(find.text('Sent inside your message'), findsNothing);
     });
 
     testWidgets('reduced motion: a still and a play mark', (t) async {

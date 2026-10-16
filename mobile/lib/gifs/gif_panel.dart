@@ -66,7 +66,7 @@ class GifPanelState extends State<GifPanel> {
   String _shown = '';
   List<GifItem> _items = const [];
   String? _provider;
-  String _brand = 'GIPHY';
+  String _brand = kGifBrand;
   int? _next;
   bool _loading = true;
   bool _more = false;

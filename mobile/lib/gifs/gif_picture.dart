@@ -183,18 +183,11 @@ Future<bool> isGifFile(String path) async {
 /// what a photo bubble shows: the picture as it is, or a gif with its badge,
 /// still under reduced motion until its play mark is tapped
 class ChatPicture extends StatefulWidget {
-  const ChatPicture({
-    super.key,
-    required this.path,
-    required this.child,
-    this.out = false,
-  });
+  const ChatPicture({super.key, required this.path, required this.child});
 
   final String path;
   // the picture as the bubble draws it, playing
   final Widget child;
-  // ours: says it went inside the message
-  final bool out;
 
   @override
   State<ChatPicture> createState() => _ChatPictureState();
@@ -230,7 +223,10 @@ class _ChatPictureState extends State<ChatPicture> {
   Widget build(BuildContext context) {
     if (_gif != true) return widget.child;
     final still = motionStill(context) && !_playing;
+    // the bubble's constraints reach the picture as they would without the
+    // badge, so a small gif fills its box the way a photo does
     return Stack(
+      fit: StackFit.passthrough,
       children: [
         if (still)
           StillFrame(
@@ -247,50 +243,6 @@ class _ChatPictureState extends State<ChatPicture> {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// under our own gif: it travelled inside the message, nothing fetched it
-class GifSentLine extends StatefulWidget {
-  const GifSentLine({super.key, required this.path});
-  final String path;
-
-  @override
-  State<GifSentLine> createState() => _GifSentLineState();
-}
-
-class _GifSentLineState extends State<GifSentLine> {
-  late bool _gif = _gifFiles[widget.path] ?? false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_gifFiles.containsKey(widget.path)) {
-      isGifFile(widget.path).then((g) {
-        if (mounted && g != _gif) setState(() => _gif = g);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_gif) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(top: 5, start: 2, end: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.lock_rounded, size: 11, color: HaloColors.amber),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              l10n.gifSentInside,
-              style: HaloType.sans(size: 11.5, color: HaloColors.text2),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
