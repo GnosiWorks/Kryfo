@@ -5730,7 +5730,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KRI-fo · bahasa Yunani untuk tersembunyi.\nTempat untuk bicara, dibuat agar tidak ada yang mengawasi.';
+      'Kryfo · KRI-fo · bahasa Yunani untuk tersembunyi.\nTempat tenang untuk bicara, dibuat agar tidak ada yang mengawasi.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'Dirutekan lewat Tor';

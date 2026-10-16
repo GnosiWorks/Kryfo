@@ -9252,7 +9252,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo · KREE-fo · greek for hidden.\nA place to talk, built so no one is watching.'**
+  /// **'Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.'**
   String get whyKryfoKryfoKreeFoGreek;
 
   /// screens/why_kryfo_screen.dart

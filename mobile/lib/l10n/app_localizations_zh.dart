@@ -5490,7 +5490,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个聊天的地方，从设计上就没有人在看。';
+      'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个安静的聊天之处，从设计上就没有人在看。';
 
   @override
   String get whyKryfoRoutedThroughTor => '经由 Tor 路由';
@@ -13792,7 +13792,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個聊天空間，打造成沒有任何人在監看。';
+      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個安靜的聊天空間，打造成沒有任何人在監看。';
 
   @override
   String get whyKryfoRoutedThroughTor => '經由 Tor 路由';

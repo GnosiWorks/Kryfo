@@ -5725,7 +5725,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · tiếng Hy Lạp nghĩa là ẩn giấu.\nMột nơi để trò chuyện, được làm ra để không ai theo dõi.';
+      'Kryfo · KREE-fo · tiếng Hy Lạp nghĩa là ẩn giấu.\nMột nơi yên tĩnh để trò chuyện, được làm ra để không ai theo dõi.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'Định tuyến qua Tor';

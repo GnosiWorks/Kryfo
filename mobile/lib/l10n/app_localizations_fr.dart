@@ -5792,7 +5792,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KRI-fo · « caché » en grec.\nUn endroit pour parler, conçu pour que personne n’observe.';
+      'Kryfo · KRI-fo · « caché » en grec.\nUn endroit tranquille pour parler, conçu pour que personne n’observe.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'Acheminé par Tor';

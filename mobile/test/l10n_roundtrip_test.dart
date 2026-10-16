@@ -2617,7 +2617,7 @@ void main() {
     expect(l.whyKryfoWhyKryfo, "Why Kryfo");
     expect(
       l.whyKryfoKryfoKreeFoGreek,
-      "Kryfo · KREE-fo · greek for hidden.\nA place to talk, built so no one is watching.",
+      "Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.",
     );
     expect(l.whyKryfoRoutedThroughTor, "Routed through Tor");
     expect(

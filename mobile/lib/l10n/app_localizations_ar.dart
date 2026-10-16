@@ -5831,7 +5831,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · كري-فو · تعني «مخفي» باليونانية.\nمكان للحديث، بُني كي لا يراقبك أحد.';
+      'Kryfo · كري-فو · تعني «مخفي» باليونانية.\nمكان هادئ للحديث، بُني كي لا يراقبك أحد.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'يمر عبر Tor';
