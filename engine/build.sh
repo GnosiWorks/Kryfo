@@ -1,6 +1,6 @@
 #!/bin/bash
-# READ BEFORE TOUCHING ./vendor: headers under
-# vendor/github.com/alexballas/go-libtor are patched, see VENDOR_PATCHES.md.
+# headers under vendor/github.com/alexballas/go-libtor are patched, see
+# VENDOR_PATCHES.md.
 # upstream ships 64-bit ones for every target, and without the patch the
 # 32-bit engine builds but tor never bootstraps. rebuild vendor/ with
 # ./vendor.sh, never a bare `go mod vendor`. go's cache does not see the
@@ -34,7 +34,7 @@ case "${HALO_TOR_BLOCKED:-}" in
     ;;
 esac
 
-# ── locate the ndk ──
+# the ndk
 NDK_ROOT="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${NDK_HOME:-}}}"
 if [ -z "$NDK_ROOT" ]; then
   SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android-sdk}}"
@@ -51,11 +51,11 @@ fi
 NDK="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
 [ -d "$NDK" ] || { echo "error: no linux-x86_64 toolchain in $NDK_ROOT"; exit 1; }
 
-# ── output dir, relative to this script ──
+# output dir, relative to this script
 JNI="${JNI_LIBS_DIR:-$ENGINE_DIR/../mobile/android/app/src/main/jniLibs}"
 mkdir -p "$JNI/arm64-v8a" "$JNI/armeabi-v7a" "$JNI/x86_64"
 
-# ── offline, reproducible-ish flags ──
+# offline, reproducible flags
 export GOFLAGS="-mod=vendor -trimpath"
 export GOPROXY=off
 export GOCACHE="${GOCACHE:-$ENGINE_DIR/.gocache}"
@@ -75,17 +75,17 @@ BUILD_FLAGS="$BUILD_FLAGS -buildvcs=false $TAGS"
 echo "ndk: $NDK_ROOT"
 echo "out: $JNI"
 
-echo "→ arm64 (phone)…"
+echo "arm64 (phone)"
 CC="$NDK/aarch64-linux-android27-clang" GOOS=android GOARCH=arm64 \
   go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/arm64-v8a/libhalo.so" .
 
-echo "→ armeabi-v7a (32-bit phones)…"
+echo "armeabi-v7a (32-bit phones)"
 CC="$NDK/armv7a-linux-androideabi24-clang" GOOS=android GOARCH=arm GOARM=7 \
   go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/armeabi-v7a/libhalo.so" .
 
-echo "→ x86_64 (emulator)…"
+echo "x86_64 (emulator)"
 CC="$NDK/x86_64-linux-android24-clang" GOOS=android GOARCH=amd64 \
   go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/x86_64/libhalo.so" .
 
 ls -la "$JNI"/*/libhalo.so
-echo "✓ all three archs built (offline)"
+echo "built arm64, armeabi-v7a and x86_64"

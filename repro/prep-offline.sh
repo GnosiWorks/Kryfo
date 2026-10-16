@@ -27,7 +27,7 @@ if [ ! -f "$GO_TGZ.ok" ]; then
     | grep '"sha256"' | head -1 | sed 's/.*"sha256": "\([a-f0-9]*\)".*/\1/')
   GOT=$(sha256sum "$GO_TGZ" | cut -d' ' -f1)
   if [ -n "$WANT" ] && [ "$WANT" != "$GOT" ]; then
-    echo "go tarball sha256 mismatch vs go.dev - do not trust, deleting"
+    echo "go tarball sha256 mismatch vs go.dev: do not trust, deleting"
     rm -f "$GO_TGZ"; exit 1
   fi
   [ -z "$WANT" ] && echo "  (couldn't reach go.dev index to cross-check, using local hash)"
@@ -41,7 +41,7 @@ if [ ! -f "$NDK_TGZ" ]; then
     fetch "https://dl.google.com/android/repository/android-ndk-r28b-linux.zip" "$NDK_ZIP"
     GOT=$(sha1sum "$NDK_ZIP" | cut -d' ' -f1)
     if [ "$GOT" != "$NDK_SHA1_GOOGLE" ]; then
-      echo "ndk sha1 mismatch (got $GOT) - partial or tampered, deleting"
+      echo "ndk sha1 mismatch (got $GOT): partial or tampered, deleting"
       rm -f "$NDK_ZIP"; exit 1
     fi
     touch "$NDK_ZIP.ok"

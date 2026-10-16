@@ -20,9 +20,9 @@ Z="${ZXING_DIR:-$HOME/.cache/zxing}"
 CP="$Z/core-3.5.3.jar:$Z/javase-3.5.3.jar:$Z/jcommander-1.82.jar"
 
 for j in core javase; do
-  [ -f "$Z/$j-3.5.3.jar" ] || { echo "no $j jar in $Z - see the header"; exit 2; }
+  [ -f "$Z/$j-3.5.3.jar" ] || { echo "no $j jar in $Z, see the header"; exit 2; }
 done
-[ -d "$DIR" ] || { echo "no $DIR - run the test first"; exit 2; }
+[ -d "$DIR" ] || { echo "no $DIR: run the test first"; exit 2; }
 
 pass=0
 fail=0

@@ -11,7 +11,7 @@
 # apks in /out. verify.sh on the host drives it and diffs entries.
 FROM debian:bookworm-20250630-slim
 
-# ── pins ──
+# pins
 # jdk: bookworm ships 17, which is what f-droid's buildserver uses. a build
 # made with another major can differ in classes.dex; that is a finding, not
 # a bug in this file.
