@@ -17109,19 +17109,19 @@ class AppState extends ChangeNotifier {
     final primary = _primaryOf(vault);
     final m = _host.mover(primary, vault);
     await m.attach();
-    final done = everyday ? Completer<void>() : null;
-    if (done != null) _moveDone = done;
+    // the decoy's moves wait the same way: a row of ours written meanwhile
+    // goes with its chat, and the two take the same time
+    final done = Completer<void>();
+    _moveDone = done;
     try {
-      if (everyday) {
-        for (final c in chats) {
-          _moving.add(c.id);
-          if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
-        }
-        // what is being filed for them lands first, and no unseal runs
-        // while rows move
-        while (_unsealing || _arriving.keys.any(_moving.contains)) {
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
+      for (final c in chats) {
+        _moving.add(c.id);
+        if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
+      }
+      // what is being filed for them lands first, and no unseal runs
+      // while rows move
+      while (_unsealing || _arriving.keys.any(_moving.contains)) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
       }
       await _settle(m, vault);
       return await work(m);
@@ -17153,11 +17153,9 @@ class AppState extends ChangeNotifier {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
       }
-      if (done != null) {
-        _moving.clear();
-        _moveDone = null;
-        done.complete();
-      }
+      _moving.clear();
+      _moveDone = null;
+      done.complete();
     }
   }
 
@@ -17175,6 +17173,24 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // what waits for a move to end
+  int _onMove = 0;
+  @visibleForTesting
+  int get waitingOnMoveForTest => _onMove;
+
+  // a move of [chats] under way until the call handed back ends it
+  @visibleForTesting
+  void Function() holdMoveForTest(Iterable<String> chats) {
+    final done = Completer<void>();
+    _moveDone = done;
+    _moving.addAll(chats);
+    return () {
+      _moving.clear();
+      _moveDone = null;
+      done.complete();
+    };
+  }
+
   Future<void> _afterMove(String sender, String? groupId) async {
     while (true) {
       final done = _moveDone;
@@ -17183,7 +17199,12 @@ class AppState extends ChangeNotifier {
       if (!_moving.contains(sender) && (g == null || !_moving.contains(g))) {
         return;
       }
-      await done.future;
+      _onMove++;
+      try {
+        await done.future;
+      } finally {
+        _onMove--;
+      }
     }
   }
 
