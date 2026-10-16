@@ -3,7 +3,7 @@
 // card agree, in relay mode where tor never matters and in onion mode where
 // tor's word is not enough while no relay gets through. a send left
 // 'sending' settles by the same rule in a group as in a 1:1 chat. the home
-// pill says offline in every mode, holds still with less movement, and a
+// pill says offline in every mode, holds still with reduced motion, and a
 // long connecting says what it waits for
 import 'dart:io';
 
@@ -264,7 +264,7 @@ void main() {
       await gone(t);
     });
 
-    testWidgets('with less movement a new state shows at once', (t) async {
+    testWidgets('reduced motion: a new state shows at once', (t) async {
       addTearDown(() => appState.noteOnline(true));
       _set('private', TorStatus.publishing);
       await pill(t);

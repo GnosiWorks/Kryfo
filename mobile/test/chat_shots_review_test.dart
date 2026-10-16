@@ -2,7 +2,7 @@
 // what a chat that blocks screenshots keeps out of everywhere else, and how
 // it stands up to a phone that pushes it. the shade, the list and the
 // search show none of it. someone blocked holds nothing. a phone flipping
-// the block fast moves the window and the line at a calm pace. a chat shut
+// the block fast moves the window and the line at an even pace. a chat shut
 // away in the vault still says what an open one would. the stamp is one
 // width whatever it is, and none from far ahead is taken. a decoy's switch
 // works as anyone's, on its own phone

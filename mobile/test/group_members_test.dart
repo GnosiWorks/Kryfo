@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a group's frames come from its members and its controls from its admin.
-// a message, a poll or a slice with a group id is kept only from a current
-// member, as it arrives and when a sealed one is opened. add, remove,
-// rename and a new roster for a group here come only from its admin, and
-// never past the member cap; leave takes out its sender and no one else. a
-// burner room's roster changes only by its creator's key, within the room's
-// cap. someone a list names under words held here on another key is seated
-// as someone else, and whoever holds the words gets no seat from it. the
-// databases, signal and the engine are stand-ins
+// who may send a group's frames and controls: members, the admin and a
+// room's creator. the databases, signal and the engine are stand-ins
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

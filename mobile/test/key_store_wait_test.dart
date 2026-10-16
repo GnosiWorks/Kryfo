@@ -274,7 +274,7 @@ void main() {
         keyStoreSlow.value = true;
         await t.pump();
         if (still) {
-          // nothing fades with less movement: it is there at once
+          // nothing fades with reduced motion: it is there at once
           expect(find.text(l10n.torBootSplashFirstLaunchTakesA), findsNothing);
         } else {
           await t.pump(const Duration(milliseconds: 400));

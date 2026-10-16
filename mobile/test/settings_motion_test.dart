@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the settings page moves only when something changes: a protection that
 // turns on fills its ring, washes its line and settles; an on or off row is
-// a switch; and with less movement all of it is simply there.
+// a switch; and with reduced motion all of it shows at once.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/screens/settings_screen.dart';
@@ -66,7 +66,7 @@ void main() {
       expect(t.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('reduced motion: the change is simply there', (t) async {
+    testWidgets('reduced motion: the change shows at once', (t) async {
       await t.pumpWidget(
         host(const ProtectionLine('App lock', false, 'Off'), still: true),
       );

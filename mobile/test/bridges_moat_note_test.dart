@@ -38,7 +38,9 @@ void main() {
 
   tearDown(() => appState.setTorStatusForTest(TorStatus.off));
 
-  testWidgets('the moat note is honest about the address, and calm', (t) async {
+  testWidgets('the moat note says what the tor project sees, never in red', (
+    t,
+  ) async {
     t.view.physicalSize = const Size(1800, 9000);
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);

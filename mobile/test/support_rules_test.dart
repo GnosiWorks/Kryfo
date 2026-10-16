@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the developer's own phone. developer mode takes his pinned private key,
-// read once as the identity loads, and never holds in a decoy. a chat
-// started from the Marios row lands in support by its marker; without one
-// a stranger stays a request, and a blocked sender is dropped before
-// anything is filed. requests, their count and the contacts leave support
-// chats out, while the receive side still tries them. a support chat never
-// brings in a group, a room or an introduction, and takes five messages
-// before he answers, its proof of work still owed. his first reply takes
-// it on and it stays in support. a waiting chat rings as a count, once a
-// gap, never with its words; an answered one rings per message. the reset
-// link is off on his phone. a contact who writes through the row stays in
-// their chat, the message marked, and moves between the two by hand only.
-// each guard, broken once, is caught. the databases are kept in maps;
-// signal, the engine and android are stand-ins
+// the developer's own phone: developer mode, and how support chats are
+// filed, counted and rung. the databases are maps; signal, the engine and
+// android are stand-ins
 import 'dart:convert';
 import 'dart:io';
 

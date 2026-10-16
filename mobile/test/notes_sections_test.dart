@@ -2,7 +2,7 @@
 // notes under their headings: today, yesterday, this week from the
 // language's first day, then a month each. the heading of the notes under
 // the top is held there and the next one pushes it out. a long note folds
-// with a way to open it, simply open with less movement, and all of it
+// with a way to open it, open at once with reduced motion, and all of it
 // holds right to left and on a small phone with large text
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

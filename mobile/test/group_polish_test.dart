@@ -728,7 +728,7 @@ void main() {
       await _close(t);
     });
 
-    testWidgets('the timed line grows in, at once with less movement', (
+    testWidgets('the timed line grows in, at once with reduced motion', (
       t,
     ) async {
       _use(t, _Db());
@@ -756,7 +756,7 @@ void main() {
       await _close(t);
     });
 
-    testWidgets('mic and send pop, and simply swap with less movement', (
+    testWidgets('mic and send pop, and swap at once with reduced motion', (
       t,
     ) async {
       double sendScale() {
@@ -931,7 +931,7 @@ void main() {
       await _close(t);
     });
 
-    testWidgets('with less movement the menu goes at once', (t) async {
+    testWidgets('reduced motion: the menu goes at once', (t) async {
       _use(t, _Db(rows: [_in(1, _anna, 'hello there')]));
       await t.pumpWidget(
         app(const GroupChatScreen(groupId: _group), still: true),
@@ -1100,7 +1100,7 @@ void main() {
     testWidgets('the wait runs out: not answering, try again or leave', (
       t,
     ) async {
-      // a breath before the end of the wait
+      // just before the end of the wait
       joined(t, kRoomJoinWait - const Duration(milliseconds: 300));
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(milliseconds: 100));
@@ -1267,7 +1267,7 @@ void main() {
       expect(find.byType(RoomCountdown), findsOneWidget);
       await _close(t);
 
-      // with less movement it is simply there
+      // with reduced motion it shows at once
       final db2 = joined(t, Duration.zero);
       await t.pumpWidget(
         app(const GroupChatScreen(groupId: _group), still: true),
@@ -1626,9 +1626,7 @@ void main() {
       await _close(t);
     });
 
-    testWidgets('with less movement the first message is simply there', (
-      t,
-    ) async {
+    testWidgets('reduced motion: the first message shows at once', (t) async {
       final rows = <Map<String, Object?>>[];
       _use(t, _Db(rows: rows));
       await t.pumpWidget(
@@ -1933,7 +1931,7 @@ void main() {
 
     for (final still in [false, true]) {
       testWidgets('its chat is the line and the ended bar, no composer'
-          '${still ? ', at once with less movement' : ''}', (t) async {
+          '${still ? ', at once with reduced motion' : ''}', (t) async {
         me(t);
         appState.contacts = [_contact(_anna, nick: 'Anna')];
         _use(

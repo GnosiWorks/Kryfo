@@ -32,7 +32,7 @@ void main() {
       expect(cleanName('clip.mov', MetaKind.mp4), 'clip clean.mov');
       expect(cleanName('clip.mov', MetaKind.jpeg), 'clip clean.jpg');
     });
-    test('handles separators and empty names', () {
+    test('separators and empty names give a safe name', () {
       expect(
         cleanName('../../etc/passwd', MetaKind.png),
         '_.._etc_passwd clean.png',

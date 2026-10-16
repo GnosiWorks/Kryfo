@@ -136,7 +136,7 @@ void main() {
       expect(has(out, 'iCCP'), true);
       expect(has(out, 'IEND'), true);
     });
-    test('returns a clean file as is', () {
+    test('a clean file comes back unchanged', () {
       final clean = stripPictureBytes(src)!;
       expect(identical(stripPictureBytes(clean), clean), true);
     });

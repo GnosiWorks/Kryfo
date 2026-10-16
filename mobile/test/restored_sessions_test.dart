@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a restore brings back signal sessions older than the far side's view of
-// them. the phone the file was made on went on sealing after it, a
-// delivery receipt at least, so the next seal on a restored session can
-// repeat a message key the far side has spent: it drops that as a
-// duplicate, and the text stays at one tick for good. a restored session
-// is never sealed on again: the next seal starts one afresh from their
-// card, the old one archived so what they sealed on it still opens. with
-// no card kept the seal waits and asks them for one. the restored phone
-// asks its people to start afresh too, as does a phone that cannot open
-// what a contact sent, and whoever is asked puts out again what of theirs
-// never came back delivered. real libsignal over rows kept in maps; this
-// phone is the one restored
+// a restored signal session is never sealed on again: it starts afresh and
+// asks the far side to do the same. real libsignal over rows in maps
 import 'dart:convert';
 import 'dart:typed_data';
 

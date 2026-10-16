@@ -210,7 +210,9 @@ void main() {
     expect(find.byTooltip('Protect from screenshots'), findsNothing);
   });
 
-  testWidgets('right to left and with no movement it still works', (t) async {
+  testWidgets('right to left and with reduced motion it still works', (
+    t,
+  ) async {
     final got = await open(
       t,
       [_photo(1), _photo(2)],

@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the developer chat as people see it. its row sits at the very top on a
-// fresh install, after an update and in a decoy, with no count while
-// nothing has arrived, and it is never offered to the hidden chats. mute,
-// archive and unpin work from the row; a delete is for good, and only
-// Write to Marios brings a fresh chat back. the sheet says who he is and
-// prints his key left to right. search finds him by his name, and his
-// chat's messages once there are some; a forward reaches the chat once it
-// has started. with no pinned key, and on his own phone, none of it shows.
-// less movement and right to left are kept
+// the developer chat as people see it: its row, the sheet, search, and when
+// none of it shows
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -631,7 +624,7 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('under the lock the tick is simply there', (t) async {
+    testWidgets('under the lock the tick shows at once', (t) async {
       popDevTickAgainForTest();
       await devWorld();
       await devOpen(t, devHome(groups: _groups));
@@ -639,9 +632,7 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('with less movement the row and its tick are simply there', (
-      t,
-    ) async {
+    testWidgets('reduced motion: the row and its tick show at once', (t) async {
       popDevTickAgainForTest();
       final was = devTickGuard;
       devTickGuard = LockGuard(isLocked: () => false);

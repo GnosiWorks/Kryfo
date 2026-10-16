@@ -1,21 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// keeping the route honest. relay mode reads its relay on its own clock, so
-// an outage shows while tor sits still and a mended relay clears the hint. a
-// tor wake that fails is tried again while the app is open, and a tor the
-// engine already lets run is put to sleep again. a mode switch sets its
-// relay list before anything subscribes, one switch at a time, and moves
-// everyone listened for. a spell offline or another mode's outage never
-// shows as our relay's. a friend's lines count only when the engine took one.
-// a tor stuck on a network that blocks it brings up the bridges card on time
-// alone, and a route torn down that climbs back to where it stuck keeps it.
-// bridges, a reconnect, a mode or a network the person changed start a try
-// of their own, and no card shows while it climbs. a mode that does not
-// save moves nothing, runners that did not move go on the next try, the
-// app takes a mode once the engine has it, and a tap on the modes page is
-// never undone by a read still on its way or a tap before it. a stop tor
-// refuses is tried again, further apart each time, a check-in no relay
-// answered is not taken for one and a slow wake leaves the relays their
-// time, and automatic stuck is asked again on coming back, once a minute.
+// relay and tor upkeep: outages, retries, mode switches and the bridges card.
 // the engine and the rows are stand-ins
 import 'dart:async';
 import 'dart:collection';

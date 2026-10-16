@@ -101,7 +101,7 @@ Future<void> _tapOutside(WidgetTester t) => t.tapAt(const Offset(10, 10));
 
 void main() {
   for (final still in [false, true]) {
-    final how = still ? ' with less movement' : '';
+    final how = still ? ' with reduced motion' : '';
 
     group('note sheet$how', () {
       const title = 'Note on this contact';

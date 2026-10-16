@@ -53,7 +53,7 @@ void main() {
       _openFileIsLive(t),
       isTrue,
       reason:
-          'typing a password must rebuild the button with a handler - '
+          'typing a password must rebuild the button with a handler: '
           'without that rebuild it stays dead however much is typed',
     );
   });

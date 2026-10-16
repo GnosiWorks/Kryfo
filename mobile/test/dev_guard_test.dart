@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the guards around the developer chat, before any screen shows it: the
-// signal store takes his pinned key and no other for a dev: address, and
-// writes nothing when another comes; no id, card, member or sender from
-// the wire becomes him or a dev chat, whatever it claims; the trial loops,
-// the boot and the mode switch never reach the dev chat on the everyday
-// lane; a link with his words opens his chat only with his key; what comes
-// from him lands only while his chat runs, only as his chat may carry it,
-// and only said by his pinned key. everyone else is received, filed and
-// listened for as before. the databases,
-// signal and the engine are stand-ins, as in the router's tests; the store
-// runs real libsignal over a database kept in maps
+// the guards around the developer chat below the screens: his pinned key,
+// the lanes and what may land. signal and the engine are stand-ins; the
+// store runs real libsignal over a database in maps
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';

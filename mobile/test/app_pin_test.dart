@@ -1,13 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pin on the App lock card. a change asks for the pin there is first,
-// as the advanced flows do. inside the decoy a turn off pauses the lock and
-// shows its wipe pin gone while its entry stays, a pin set again there
-// locks again and drops that wipe pin for good. while a decoy pin is set
-// the everyday app is pin only: no switch and no offer there, and a seal
-// for it opens nothing. the decoy has its own switch and offer, as any
-// install does, and the decoy setup says what a finger opens on a phone
-// with one. a long hold reads in minutes and hours, not in thousands of
-// seconds
+// the pin on the App lock card, inside and outside a decoy
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

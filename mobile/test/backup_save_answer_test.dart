@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the save dialog always ends somewhere clear: saved with a toast, the share
-// sheet when it was backed out of, or a calm not-saved line with the file
+// sheet when it was backed out of, or a plain not-saved line with the file
 // kept to try again. an answer android never hands back, a copy that
 // failed or stopped moving, count as not saved. the platform is a stand-in
 import 'dart:async';

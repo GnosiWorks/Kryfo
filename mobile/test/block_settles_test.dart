@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a block settles what was queued for them: an edit, a pin, a reaction or
-// a receipt goes, in the container that holds them and in the other one, a
-// decoy's own too, and in a vault opened later. a take-back only withdraws
-// and still goes. while it holds an edit or a pin stays here and nobody
-// blocked is introduced. our texts and files to them that have not gone
-// are not sent, in the container that blocked: the unblock sends none of
-// them, a tap does. a block in the other container only holds them back,
-// and they go once it is lifted. an edit, a pin or a reaction on a row a
-// block kept waits for its tap, and nothing it kept is finished off for
-// them. the queues read the block list in
-// the database, never as a list of variables. a receipt from them ticks
-// only what went before the block, and a back-pair leaves their row as the
-// block left it but for a new key's warning. the database methods are the
-// real ones over rows kept in maps; the wire and signal are stand-ins
+// what a block does to what was queued for them, in both containers and a
+// vault. real database methods over rows in maps; the wire and signal are
+// stand-ins
 import 'dart:io';
 import 'dart:math';
 

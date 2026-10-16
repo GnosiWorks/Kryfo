@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // search: the amber pill slides from the kind that was on to the one
 // picked and rests there, in either direction; the empty screen's glyph
-// pops in once. with less movement both are simply there.
+// pops in once. with reduced motion both show at once.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -97,7 +97,7 @@ void main() {
       expect(pill(t).left, closeTo(photos.left, 0.5));
     });
 
-    testWidgets('reduced motion: the pill is simply there', (t) async {
+    testWidgets('reduced motion: the pill shows at once', (t) async {
       quiet(t);
       await t.pumpWidget(host(const _Bar(), still: true));
       await t.pump();
@@ -147,7 +147,7 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('reduced motion: it is simply there', (t) async {
+    testWidgets('reduced motion: no animation', (t) async {
       await open(t, still: true);
       await t.pump();
       expect(glyphScale(t), 1);

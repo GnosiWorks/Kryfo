@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the me, support, add someone, share, backup and onboarding screens: what
-// moves settles, what copies says so, and with less movement nothing moves.
+// moves settles, what copies says so, and with reduced motion nothing moves.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -104,7 +104,7 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('reduced motion: the page is simply there', (t) async {
+    testWidgets('reduced motion: the page shows at once', (t) async {
       phone(t);
       await t.pumpWidget(framed(const ProfileScreen(), still: true));
       await t.pump();
@@ -545,7 +545,7 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('reduced motion: each step is simply there', (t) async {
+    testWidgets('reduced motion: each step shows at once', (t) async {
       phone(t);
       await t.pumpWidget(
         framed(
@@ -595,7 +595,9 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('reduced motion: back is simply the step before', (t) async {
+    testWidgets('reduced motion: back shows the step before at once', (
+      t,
+    ) async {
       phone(t);
       quiet(t);
       await t.pumpWidget(

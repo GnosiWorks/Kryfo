@@ -287,7 +287,7 @@ void main() {
     expect(h.picked, isNull);
   });
 
-  testWidgets('reduced motion: it all works, without the pops', (t) async {
+  testWidgets('reduced motion: no pops', (t) async {
     final h = _Harness(t, lib);
     await h.pump(reduce: true);
     await h.open();

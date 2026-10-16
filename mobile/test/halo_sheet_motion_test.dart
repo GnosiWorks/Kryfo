@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the one sheet: it rises, and with less movement it is simply there
+// the one sheet: it rises, and with reduced motion it shows at once
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/widgets/halo_sheet.dart';
@@ -35,9 +35,7 @@ void main() {
     expect(find.text('inside'), findsOneWidget);
   });
 
-  testWidgets('with less movement it is there at once, and gone at once', (
-    t,
-  ) async {
+  testWidgets('reduced motion: in and out at once', (t) async {
     await t.pumpWidget(_app(still: true));
     await t.tap(find.text('open'));
     await t.pump();

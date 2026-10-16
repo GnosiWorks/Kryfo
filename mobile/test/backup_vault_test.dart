@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// backup, move and restore with hidden chats. an everyday backup carries
-// nothing of them, one made with them open or from their setup carries them
-// whole with their key, a restore brings them back behind a new hidden chats
-// PIN, and the backup screen reads the same with and without them. no
-// backup and no move carries the name an anonymous dev chat was made with:
-// the chat goes along and lands without it. the databases are stand-ins
-// kept as json in real files in a scratch folder, the cipher one for the
-// engine's
+// backup, move and restore with hidden chats. the databases are json
+// stand-ins in a scratch folder
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -703,11 +697,7 @@ void main() {
       final m = d.manifest;
       expect(m['v'], 2);
       expect(m.containsKey('vault'), isFalse);
-      expect(_names(m), [
-        'halo.db',
-        'onion.key',
-        'media/v1.jpg',
-      ]);
+      expect(_names(m), ['halo.db', 'onion.key', 'media/v1.jpg']);
       // nothing is read from the hidden side's files
       expect(
         d.sources.values.where(
@@ -770,11 +760,7 @@ void main() {
       await _phone(docs, hidden: false);
       final d = await draftBackup(stage, side: side);
       expect(d.manifest.containsKey('vault'), isFalse);
-      expect(_names(d.manifest), [
-        'halo.db',
-        'onion.key',
-        'media/v1.jpg',
-      ]);
+      expect(_names(d.manifest), ['halo.db', 'onion.key', 'media/v1.jpg']);
     });
 
     test('a move from the everyday session carries nothing of them '
@@ -861,7 +847,10 @@ void main() {
         );
       }
       expect(File(p.join(docs2, 'media_v', 'old.jpg')).existsSync(), isFalse);
-      expect(File(p.join(docs2, 'wallpapers_v', 'hw.jpg')).existsSync(), isFalse);
+      expect(
+        File(p.join(docs2, 'wallpapers_v', 'hw.jpg')).existsSync(),
+        isFalse,
+      );
       expect(Directory(hiddenAt).existsSync(), isFalse);
       expect(Directory(p.join(docs2, 'vault')).existsSync(), isFalse);
       expect(
@@ -1472,7 +1461,7 @@ void main() {
       h.dispose();
     });
 
-    testWidgets('with reduced motion the line changes at once', (t) async {
+    testWidgets('reduced motion: the line changes at once', (t) async {
       phone(t);
       await show(t, still: true);
       await t.tap(find.text(l10n.backupMoveToAnotherDevice));

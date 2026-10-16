@@ -2,7 +2,7 @@
 // making a poll: an answer taken out folds away where it was and is let go,
 // the way to take one out pops in once there is a third. the result's
 // shares and the count of votes roll to their new figures. all of it rests,
-// with less movement nothing slides, and the rows mirror right to left.
+// with reduced motion nothing slides, and the rows mirror right to left.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

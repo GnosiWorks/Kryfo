@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat row's swipe: the glyph behind grows with the drag and lights with
 // a click once the swipe counts, the row slides back and the action runs.
-// mirrored in a right-to-left language, still with less movement, and at
+// mirrored in a right-to-left language, still with reduced motion, and at
 // rest afterwards.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -137,7 +137,7 @@ void main() {
     expect(done, ['mute']);
   });
 
-  testWidgets('reduced motion: the glyph is simply there', (t) async {
+  testWidgets('reduced motion: the glyph shows at once', (t) async {
     listen(t);
     await t.pumpWidget(host(row(), still: true));
     final g = await t.startGesture(t.getCenter(find.text('Wren')));

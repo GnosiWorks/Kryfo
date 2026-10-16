@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // onboarding: steps fade through, the bar counts, a new name lands word by
 // word, every step's button stays in reach on a small phone, the shade on the
-// notification step pulls down once and fits, and with less movement nothing
+// notification step pulls down once and fits, and with reduced motion nothing
 // moves.
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show SemanticsNode;
@@ -314,7 +314,7 @@ void main() {
     sem.dispose();
   });
 
-  testWidgets('reduced motion: the shade is simply there', (t) async {
+  testWidgets('reduced motion: the shade shows at once', (t) async {
     phone(t);
     quiet(t);
     await t.pumpWidget(onboarding(still: true));

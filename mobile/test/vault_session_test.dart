@@ -2124,7 +2124,7 @@ void main() {
       sem.dispose();
     });
 
-    testWidgets('with reduced motion it is simply there', (tester) async {
+    testWidgets('reduced motion: no animation', (tester) async {
       await tester.pumpWidget(row(false, still: true));
       await tester.pumpWidget(row(true, still: true));
       await tester.pump();

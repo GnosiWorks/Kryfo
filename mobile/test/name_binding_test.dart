@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a name stays with the key first seen for it. a first contact or a card
-// that gives the name of someone here with another key leaves their
-// session, row and chat as they were; such a first contact is filed on an
-// id of its own, with a line saying the name it gave. a first message opens
-// under a name only with the key that name is bound to, and a name with a
-// key but no session yet takes a first message only with its proof of work.
-// words a request, an introduction or a group gave, never checked, do not
-// turn a link away: the person chooses which one keeps them, a verified one
-// is never replaced, and a deleted chat holds no name at all.
-// real libsignal over rows kept in maps; the engine derives an id from an
-// ed key the way the app asks it to
+// a name stays with the key first seen for it. real libsignal over rows in
+// maps; the engine derives ids the way the app asks
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

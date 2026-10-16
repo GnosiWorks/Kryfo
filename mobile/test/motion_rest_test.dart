@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // small moving parts that have to come to rest: the map pin's rings, the
-// tick after a copy, a code assembling, the boot splash with less movement.
+// tick after a copy, a code assembling, the boot splash with reduced motion.
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -189,7 +189,7 @@ void main() {
       await t.pump(const Duration(milliseconds: 200));
     });
 
-    testWidgets('reduced motion: the code is simply there', (t) async {
+    testWidgets('reduced motion: the code shows at once', (t) async {
       await t.pumpWidget(
         host(const QrWipe(child: white), shot: shot, still: true),
       );
@@ -225,7 +225,7 @@ void main() {
       return (c.decoration as BoxDecoration).color!.a;
     }
 
-    testWidgets('breathes three times, then rests', (t) async {
+    testWidgets('pulses three times, then stops', (t) async {
       await t.pumpWidget(host(ring));
       await t.pump(const Duration(milliseconds: 500));
       expect(t.hasRunningAnimations, isTrue);

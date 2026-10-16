@@ -90,7 +90,7 @@ void main() {
     expect(t.hasRunningAnimations, false);
   });
 
-  testWidgets('the dot breathes twice as the tab opens, then rests', (t) async {
+  testWidgets('the dot pulses twice as the tab opens, then stops', (t) async {
     await t.pumpWidget(host(const ToolsScreen()));
     await t.pump(const Duration(milliseconds: 600));
     expect(t.hasRunningAnimations, isTrue);

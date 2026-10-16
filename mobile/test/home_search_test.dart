@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // search opens from a round button in the home header: the field grows out
 // of it with the keyboard up once it lands, and shrinks back on the way out.
-// with less movement the page only fades. the header keeps its four
+// with reduced motion the page only fades. the header keeps its four
 // controls, each button a full finger wide, on a small phone at a big font
 // in the long languages, both themes, and mirrors right to left.
 import 'dart:io';
@@ -206,9 +206,7 @@ void main() {
     sem.dispose();
   });
 
-  testWidgets('with less movement the page only fades, nothing flies', (
-    t,
-  ) async {
+  testWidgets('reduced motion: the page only fades, nothing flies', (t) async {
     _phone(t);
     await t.pumpWidget(_app(still: true));
     await _settle(t);

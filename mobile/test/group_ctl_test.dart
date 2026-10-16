@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a group's controls are queued per member and go in the order they were
-// made, after a route that was down or a restart too: a member never gets
-// a message of the group before the create that makes it there. a text, a
-// poll or a sticker that missed a member reads sent once someone has it,
-// is owed to the rest the way a file is, and its bubble says how many have
-// it until they all do. a take-back rides the same lanes, once to each
-// member. the database methods and the app's sends are the real ones, over
-// rows kept in maps; signal and the wire are stand-ins
+// group controls are queued per member and go in order, and what missed a
+// member is owed. real database methods over rows in maps; signal and the
+// wire are stand-ins
 import 'dart:convert';
 import 'dart:io';
 

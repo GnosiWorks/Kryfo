@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the onboarding fades out over home once instead of a cut. home is made
 // once, under it, and stays; the onboarding keeps its state on the way out.
-// with less movement it is a plain cut
+// with reduced motion it is a plain cut
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/widgets/fade_over.dart';
@@ -158,7 +158,7 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('with less movement it is a cut', (t) async {
+  testWidgets('reduced motion: a cut', (t) async {
     final state = ValueNotifier(0);
     await t.pumpWidget(_app(state, still: true));
     state.value = 1;

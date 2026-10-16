@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // people search goes over tor or not at all, on every route. with tor not
-// up a calm line takes the place of the wait or the error and leads to the
+// up a plain line takes the place of the wait or the error and leads to the
 // qr and link ways in; tor coming up asks again. a slow but working tor
 // says it is still reaching the registry, and a ready one searches as
 // before. on balanced and fast it is tor that counts, not the direct route.
@@ -153,7 +153,7 @@ void main() {
     await t.pump(const Duration(seconds: 1));
   }
 
-  testWidgets('tor not up: the calm line, and nothing goes out', (t) async {
+  testWidgets('tor not up: a plain line, and nothing goes out', (t) async {
     tor(false);
     await open(t);
     await ask(t);
@@ -222,8 +222,9 @@ void main() {
     group('on $mode', () {
       setUp(() => appState.sendModeForTest = mode);
 
-      testWidgets('tor down shows the calm line, the direct route up or '
-          'not', (t) async {
+      testWidgets('tor down shows the plain line, the direct route up or not', (
+        t,
+      ) async {
         // off onion the route's relays can be up with tor still starting
         tor(false, route: mode != 'private');
         await open(t);

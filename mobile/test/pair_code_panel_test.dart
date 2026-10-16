@@ -197,7 +197,7 @@ void main() {
     expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
   });
 
-  testWidgets('with less movement the code is simply there', (t) async {
+  testWidgets('reduced motion: the code shows at once', (t) async {
     phone(t);
     e.answer = 'ok';
     await t.pumpWidget(app(const Scaffold(body: PairCodePanel()), still: true));

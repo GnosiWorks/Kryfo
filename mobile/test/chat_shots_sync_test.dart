@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a chat's screenshot block between two phones. the switch does nothing
-// until their phone has said it knows the block. turned on on one phone it
-// is on on the other, with a line naming who, and either one turns it off
-// again. the frame is no message on either side. a request sets nothing on
-// this screen, someone blocked hears nothing of it, and a newer message
-// without the key takes the switch back to waiting. the database methods
-// are the real ones over rows kept in maps; the wire and signal are
-// stand-ins, so the seal's stamp is put on here as signalEncrypt puts it
+// a chat's screenshot block between two phones. real database methods over
+// rows in maps; the wire and signal are stand-ins
 import 'dart:io';
 
 import 'package:flutter/services.dart';

@@ -4,8 +4,8 @@
 // group's too, and says so when that chat is gone; a request's answers fit
 // in a long language on a small phone; notes wait for their first load and
 // a held note can be copied or deleted; a held group or chat opens the
-// house menu; a card over the list opens its height and folds away, simply
-// there with less movement. the database is a stand-in in memory.
+// house menu; a card over the list opens its height and folds away, at once
+// with reduced motion. the database is a stand-in in memory.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -704,9 +704,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the card is simply there, and gone', (
-      t,
-    ) async {
+    testWidgets('reduced motion: the card shows and goes at once', (t) async {
       phone(t);
       await t.pumpWidget(framed(_home(), still: true));
       await t.pump(const Duration(seconds: 1));

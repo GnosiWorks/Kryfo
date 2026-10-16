@@ -256,7 +256,7 @@ void main() {
   );
 
   for (final still in [false, true]) {
-    testWidgets('the strip, reconnect then restart (no movement: $still)', (
+    testWidgets('the strip, reconnect then restart (reduced motion: $still)', (
       tester,
     ) async {
       var now = t0;
@@ -358,7 +358,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('a card answer that changes its words with no movement asked', (
+  testWidgets('a card answer that changes its words with reduced motion', (
     tester,
   ) async {
     Widget card(String label) => MaterialApp(

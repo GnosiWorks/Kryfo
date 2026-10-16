@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the file bubble: its kind from the bytes, the real extension always in
-// view, the size, and for an app installer one calm line and a save mark.
+// view, the size, and for an app installer one plain line and a save mark.
 // it shows a save under way, keeps still when the phone asks for no
 // movement, reads right to left where the name does, and follows the theme
 import 'dart:io';

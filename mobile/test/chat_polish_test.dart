@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the 1:1 chat's finish: the long-press menu folds back before it goes, a
-// reply raises the keyboard, a reply or a reaction from the menu waits for
-// the copy to land, the composer lays out what is typed in its own
-// direction, the full date grows in, a reaction chip toggles, the mic says
-// how it works and the group mic takes a tap off its icon, unsend can be
-// kept, the forward sheet shows real faces, a blocked chat never shows the
-// composer first, a dismissed banner folds, the send button only fades with
-// less movement, the record bar slides back down before it goes, and a
-// map link opens in a maps app
+// the 1:1 chat's finish: menus, replies, the composer, reactions, the mic,
+// banners, the send button and map links
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -601,7 +594,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('with less movement the send button only fades in', (t) async {
+  testWidgets('reduced motion: the send button only fades in', (t) async {
     await devOpen(
       t,
       const ChatScreen(

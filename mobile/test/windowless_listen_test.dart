@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a process the service or the job started has no window and draws no
-// frame: it listens for its contacts, its hidden chats, its rooms and the
-// dev chat's lane all the same, once, and a window opening later adds
-// nothing. a shut vault stays shut, its arrivals sealed, and a check-in
-// kicks the relays only once the keys are listened on, also when the job
-// knocks before the boot got that far. one contact that fails is tried
-// again once, and the contacts wait a while for signal. no frame is drawn
-// in a plain test unless one is asked for, as on a phone with no surface
+// a process with no window listens for everything once, and a window
+// opening later adds nothing
 import 'dart:async';
 import 'dart:io';
 

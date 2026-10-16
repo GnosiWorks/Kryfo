@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a file in slices from someone not accepted counts toward the two they
-// get into requests, from its first slice. a slice has its place inside
-// its file, a file has one sender, and a recall drops only that sender's
-// slices. a stranger's unfinished file is kept a day, a contact's a week.
-// what waits unfinished has a ceiling, all senders together: past it whole
-// files go, the one whose last slice came longest ago first, and a finished
-// message is never touched.
-// the arrivals run against stand-ins, the database rules against rows kept
-// in maps
+// slices from someone not accepted: how they count, how long they are kept
+// and the ceiling. arrivals run on stand-ins, the rules on rows in maps
 import 'dart:convert';
 import 'dart:io';
 

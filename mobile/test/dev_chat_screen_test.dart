@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the developer chat's own screen, before its first message and at it. his
-// first line is the app's: stored nowhere, fetched from nowhere. the note
-// says who he will see and the pill writes anonymously instead, making
-// nothing until a message goes. every kind of message asks for the start
-// once, before anything of it is saved, and the choice is fixed from then
-// on. nothing reaches the engine before the user writes. his header has no
-// nickname, no contact page, no block and no hide, and an anonymous chat's
-// voice is always disguised. an anonymous chat restored without the name it
-// was made with reads, and a new chat takes its place once asked. less
-// movement and right to left are kept
+// the developer chat's own screen, before its first message and at it: the
+// start, the header, anonymous chats, reduced motion and right to left
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -1602,8 +1594,9 @@ void main() {
   });
 
   group('motion and direction', () {
-    testWidgets('less movement: the note is there at once, swaps at once and '
-        'goes at once', (t) async {
+    testWidgets('reduced motion: the note shows, swaps and goes at once', (
+      t,
+    ) async {
       await _world();
       await _open(t, still: true);
       final note = find.byType(DevNote);

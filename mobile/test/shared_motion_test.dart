@@ -2,7 +2,7 @@
 // the house pieces every screen shares: a page opening, a bar that a page
 // scrolls under, a value or a page swapping in place, and the bottom tabs
 // sliding in from the side they lie on. each comes to rest, holds still
-// with less movement and mirrors right to left.
+// with reduced motion and mirrors right to left.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -154,7 +154,7 @@ void main() {
       expect(t.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('reduced motion: the change is simply there', (t) async {
+    testWidgets('reduced motion: the change shows at once', (t) async {
       await t.pumpWidget(value('Off', still: true));
       await t.pumpWidget(value('On', still: true));
       await t.pump();
@@ -179,7 +179,7 @@ void main() {
       expect(t.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('reduced motion: the next page is simply there', (t) async {
+    testWidgets('reduced motion: the next page shows at once', (t) async {
       await t.pumpWidget(page('form', still: true));
       await t.pumpWidget(page('done', still: true));
       await t.pump();
@@ -295,7 +295,7 @@ void main() {
       final mid = toolsX(t);
       await t.pump(const Duration(seconds: 1));
       expect(mid, greaterThan(toolsX(t) + 4));
-      // the tools tab's own welcome breathes a while longer, then rests
+      // the tools tab's own welcome pulses a while longer, then rests
       await t.pump(const Duration(seconds: 12));
       expect(t.hasRunningAnimations, isFalse);
       await t.pumpWidget(const SizedBox());
@@ -314,7 +314,7 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
 
-    testWidgets('reduced motion: the tab is simply there', (t) async {
+    testWidgets('reduced motion: the tab shows at once', (t) async {
       await open(t, still: true);
       await t.tap(find.text(l10n.navBarTools));
       await t.pump();

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the chat list's rows: a new one grows in, one that goes folds where it was
-// and is let go, one that moves glides, a status dot rests after a few
-// breaths. all of it comes to rest and none of it moves when the phone asks
+// and is let go, one that moves slides, a status dot rests after a few
+// pulses. all of it comes to rest and none of it moves when the phone asks
 // for no movement
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +23,7 @@ Future<void> settles(WidgetTester t) async {
   expect(t.binding.transientCallbackCount, 0);
 }
 
-// a list the way home draws it: each row glides, folds and grows
+// a list the way home draws it: each row slides, folds and grows
 class _List extends StatefulWidget {
   final List<String> rows;
   final bool quiet;
@@ -139,7 +139,7 @@ void main() {
       expect(find.text('b'), findsNothing);
     });
 
-    testWidgets('nothing grows or folds when motion is reduced', (t) async {
+    testWidgets('reduced motion: nothing grows or folds', (t) async {
       await t.pumpWidget(host(const _List(['a', 'b']), still: true));
       await t.pumpWidget(host(const _List(['n', 'a']), still: true));
       await t.pump();
@@ -152,7 +152,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('a row that moves is simply there when motion is reduced', (
+    testWidgets('reduced motion: a row that moves is in its place at once', (
       t,
     ) async {
       await t.pumpWidget(host(const _List(['a', 'b', 'c']), still: true));
@@ -186,7 +186,7 @@ void main() {
     });
   });
 
-  group('breath dot', () {
+  group('status dot', () {
     Color dot(WidgetTester t) {
       final box = t.widget<Container>(
         find.descendant(
@@ -197,7 +197,7 @@ void main() {
       return (box.decoration! as BoxDecoration).color!;
     }
 
-    testWidgets('given breaths, it rests full once they are done', (t) async {
+    testWidgets('given pulses, it rests full once they are done', (t) async {
       await t.pumpWidget(
         host(const BreathDot(color: Colors.amber, size: 7, breaths: 3)),
       );
@@ -209,7 +209,7 @@ void main() {
       expect(dot(t).a, 1);
     });
 
-    testWidgets('without, it breathes on as before', (t) async {
+    testWidgets('without, it pulses on as before', (t) async {
       await t.pumpWidget(host(const BreathDot(color: Colors.amber)));
       await t.pump(const Duration(seconds: 12));
       expect(t.binding.transientCallbackCount, greaterThan(0));

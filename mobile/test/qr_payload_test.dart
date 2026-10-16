@@ -18,7 +18,7 @@ void main() {
       expect(q.data, r'WIFI:T:WPA;S:Home\;net;P:p\:ss\\word\"1;;');
       expect(q.caption, 'SCAN TO JOIN · HOME;NET');
     });
-    test('handles wpa3, open and short passwords', () {
+    test('wpa3, open and short passwords make a wifi code', () {
       expect(
         buildQr(QrKind.wifi, {
           'ssid': 'n',

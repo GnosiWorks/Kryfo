@@ -2,7 +2,7 @@
 // the settings pages of this pass: a handle's answer rising in as it is
 // typed and its field lighting, a pin's state rising in when it changes,
 // a backup's error easing in, a bridge card picked. each rests, and with
-// less movement each change is simply there.
+// reduced motion each change shows at once.
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -171,7 +171,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the answer is simply there', (t) async {
+    testWidgets('reduced motion: the answer shows at once', (t) async {
       phone(t);
       await t.pumpWidget(framed(const HandleScreen(), still: true));
       await t.pump();
@@ -238,7 +238,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: it is simply there', (t) async {
+    testWidgets('reduced motion: no animation', (t) async {
       await open(t, still: true);
       await t.pump();
       expect(find.text(l10n.pinsSet), findsOneWidget);
@@ -264,7 +264,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the error is simply there', (t) async {
+    testWidgets('reduced motion: the error shows at once', (t) async {
       phone(t);
       await t.pumpWidget(framed(const BackupScreen(), still: true));
       await t.pump();
@@ -282,7 +282,7 @@ void main() {
       useDatabasesForTest(db, Session(db));
     });
 
-    // tor through, so nothing on the page breathes while it rests
+    // tor through, so nothing on the page pulses while it rests
     void through(WidgetTester t) {
       phone(t);
       t.view.physicalSize = const Size(1000, 3600);
@@ -316,7 +316,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the pick is simply there', (t) async {
+    testWidgets('reduced motion: the pick shows at once', (t) async {
       through(t);
       await t.pumpWidget(framed(const BridgesScreen(), still: true));
       await t.pump();

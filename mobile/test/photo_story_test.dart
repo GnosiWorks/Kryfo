@@ -42,7 +42,7 @@ void main() {
     expect(s.everything.any((l) => l.startsWith('Location: 37.97')), true);
   });
 
-  test('works without the map data', () {
+  test('without the map data the story still reads', () {
     final s = storyOf(read(jpeg(tiff: cameraTiff())));
     expect(s.rows.first.title, 'Far from any town');
   });

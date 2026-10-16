@@ -3,8 +3,8 @@
 // the key number of the invite the code led to and said it matches. the
 // three words are shown as a name, never as the thing to check. a different
 // number adds nothing, a code that points at two invites is refused
-// outright, the card springs in under 300 ms or simply appears with less
-// movement, and words and digits stay left to right in a right-to-left
+// outright, the card springs in under 300 ms or appears at once with reduced
+// motion, and words and digits stay left to right in a right-to-left
 // language. the sharing side shows its own words and key number.
 import 'dart:io';
 import 'dart:math';
@@ -202,7 +202,7 @@ void main() {
     await t.pumpAndSettle();
   });
 
-  testWidgets('with less movement the card is simply there', (t) async {
+  testWidgets('reduced motion: the card shows at once', (t) async {
     phone(t);
     final p = _Pair([_invite]);
     await t.pumpWidget(app(p.widget(), still: true));
@@ -220,7 +220,7 @@ void main() {
     expect(t.widget<Transform>(face.first).transform.storage[0], 1);
   });
 
-  testWidgets('with less movement a refusal line is simply there', (t) async {
+  testWidgets('reduced motion: a refusal line shows at once', (t) async {
     phone(t);
     final p = _Pair(['twice']);
     await t.pumpWidget(app(p.widget(), still: true));

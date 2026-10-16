@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pad's looks may move, its timing may not: a wrong pin clears at the
-// same moment with or without movement, the backdrop breathes once and
+// same moment with or without movement, the backdrop pulses once and
 // rests, and the setup's second step comes in from the side reading goes
 // towards.
 import 'package:flutter/material.dart' hide LockState;
@@ -62,7 +62,7 @@ Future<(int, double)> wrong(WidgetTester t, {required bool still}) async {
 
 void main() {
   group('the lock screen', () {
-    testWidgets('the backdrop breathes in once, then rests', (t) async {
+    testWidgets('the backdrop pulses once, then stops', (t) async {
       phone(t);
       final lock = await makeLock(appOnly);
       await t.pumpWidget(framed(LockScreen(lock: lock.state)));
@@ -81,7 +81,7 @@ void main() {
       expect(movingAt, greaterThan(0));
       expect(stillAt, movingAt);
       expect(movingBy, greaterThan(1), reason: 'the dots shake');
-      expect(stillBy, 0, reason: 'with less movement they hold still');
+      expect(stillBy, 0, reason: 'with reduced motion they hold still');
     });
   });
 
@@ -135,7 +135,7 @@ void main() {
     });
   });
 
-  testWidgets('the boot splash holds still with less movement', (t) async {
+  testWidgets('reduced motion: the boot splash holds still', (t) async {
     phone(t);
     await t.pumpWidget(framed(const TorBootSplash(), still: true));
     await t.pump();

@@ -1,17 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the support inbox as the developer sees it. its pin sits on home on his
-// phone alone, counts the chats waiting and breathes while someone waits.
-// the inbox lists them waiting, answered and done, the done ones folded;
-// a row has the face its three words make, the words left to right, the
-// last line, the time and what is unread, and no chip saying how they
-// wrote. a swipe puts a chat away or brings it back, the menu blocks or
-// deletes it, and the inbox's own menu puts every waiting chat away. with
-// nobody yet it says so. a notification's tap opens it or the chat it
-// names, never in a decoy. the reset link is off on his phone. less
-// movement and right to left are kept. a contact's message that came
-// through the developer chat says so, such a chat moves to the inbox from
-// its menu and an answered one back to Chats, and someone added whose
-// chat is in the inbox is asked where it goes
+// the support inbox as the developer sees it: its pin on home, the inbox
+// and its rows, swipes, menus and notification taps
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -287,35 +276,37 @@ void main() {
   });
 
   group('the pin', () {
-    testWidgets('his phone: the chats waiting, a breathing dot, and a tap '
-        'into the inbox', (t) async {
-      await _world();
-      expect(appState.supportWaiting, 1);
-      await devOpen(t, _home());
-      expect(_pin, findsOneWidget);
-      expect(find.text(l10n.supportWaiting(1)), findsOneWidget);
-      expect(find.byKey(const ValueKey('support-breath')), findsOneWidget);
-      final pin = find.byType(SupportPin);
-      expect(
-        t
-            .widget<CountBadge>(
-              find.descendant(of: pin, matching: find.byType(CountBadge)),
-            )
-            .count,
-        1,
-      );
-      // none of them in the list or the requests
-      for (final id in [_s, _t, _r]) {
-        expect(find.text(id), findsNothing, reason: id);
-      }
-      expect(find.text(l10n.homeRequests), findsNothing);
-      // and his own row to himself is not there
-      expect(find.text(l10n.devRowTitle), findsNothing);
-      await t.tap(_pin);
-      await _settle(t);
-      expect(find.byType(SupportScreen), findsOneWidget);
-      await devClose(t);
-    });
+    testWidgets(
+      'his phone: the chats waiting, a pulsing dot, and a tap into the inbox',
+      (t) async {
+        await _world();
+        expect(appState.supportWaiting, 1);
+        await devOpen(t, _home());
+        expect(_pin, findsOneWidget);
+        expect(find.text(l10n.supportWaiting(1)), findsOneWidget);
+        expect(find.byKey(const ValueKey('support-breath')), findsOneWidget);
+        final pin = find.byType(SupportPin);
+        expect(
+          t
+              .widget<CountBadge>(
+                find.descendant(of: pin, matching: find.byType(CountBadge)),
+              )
+              .count,
+          1,
+        );
+        // none of them in the list or the requests
+        for (final id in [_s, _t, _r]) {
+          expect(find.text(id), findsNothing, reason: id);
+        }
+        expect(find.text(l10n.homeRequests), findsNothing);
+        // and his own row to himself is not there
+        expect(find.text(l10n.devRowTitle), findsNothing);
+        await t.tap(_pin);
+        await _settle(t);
+        expect(find.byType(SupportScreen), findsOneWidget);
+        await devClose(t);
+      },
+    );
 
     testWidgets('nobody waiting: the pin stays, quiet', (t) async {
       await _world();
@@ -336,7 +327,7 @@ void main() {
       await _world(dev: false);
       await devOpen(t, _home());
       expect(find.byType(SupportPin), findsNothing);
-      // an answered chat there is simply a contact
+      // an answered chat there is just a contact
       expect(find.text(_t), findsOneWidget);
       await devClose(t);
 
@@ -521,7 +512,7 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('with less movement it is simply there', (t) async {
+    testWidgets('reduced motion: no animation', (t) async {
       await _world();
       await devOpen(t, const SupportScreen(), still: true);
       for (final o in t.widgetList<AnimatedOpacity>(

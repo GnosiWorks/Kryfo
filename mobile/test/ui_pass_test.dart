@@ -2,7 +2,7 @@
 // small things that move or sit right: the reach pill rolls its count in
 // place, the shared sheet buttons give under a finger, the pin pad reads
 // left to right in every language, and a poll's hint folds away once
-// voted. each one still with less movement.
+// voted. each one still with reduced motion.
 import 'package:flutter/gestures.dart' show kPressTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,7 +78,7 @@ void main() {
       expect(find.bySemanticsLabel('Sent · 3 of 4 have it'), findsOneWidget);
     });
 
-    testWidgets('at once with less movement', (t) async {
+    testWidgets('at once with reduced motion', (t) async {
       await t.pumpWidget(pill(2, still: true));
       await t.pumpWidget(pill(3, still: true));
       await t.pump();
@@ -138,7 +138,7 @@ void main() {
       expect(find.text('Keep'), findsNothing);
     });
 
-    testWidgets('with less movement the press takes no time', (t) async {
+    testWidgets('reduced motion: the press takes no time', (t) async {
       await open(t, still: true);
       final scale = find.ancestor(
         of: find.text('Delete'),
@@ -229,7 +229,7 @@ void main() {
       expect(find.text(l10n.pollTakeBack), findsOneWidget);
     });
 
-    testWidgets('with less movement the hint is simply gone', (t) async {
+    testWidgets('reduced motion: the hint goes at once', (t) async {
       quiet(t);
       await t.pumpWidget(card({}, still: true));
       await t.pump();

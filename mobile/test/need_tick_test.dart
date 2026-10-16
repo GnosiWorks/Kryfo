@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the receiver's side of asking for missing slices, run against the app: a
-// tick every 15 s that reads one small table and sends nothing while no
-// file is due, an ask stamped before it goes so no second one follows it
-// out, a count of asks that starts again once one brings slices, and no
-// ask while a catch-up may still be bringing the slices in. with no network
-// neither an ask nor an outbox try goes or counts, in any mode. back online
-// the poll sends at once, and after a spell offline the tries start again;
-// a drop of a second or two while the phone changes networks keeps them.
-// the rows are kept in maps, the wire and the engine are stand-ins
+// asking for missing slices: the 15 s tick, ask stamps and counts, and what
+// goes offline. rows in maps; the wire and the engine are stand-ins
 import 'dart:async';
 import 'dart:io';
 

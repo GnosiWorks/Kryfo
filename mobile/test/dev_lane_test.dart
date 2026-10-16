@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the dev chat's way through signal, with real libsignal over a database
-// kept in maps. an anonymous chat seals in a store of its own under the
-// dev_ tables, made only to open a session, and the everyday store is
-// never touched. every frame the app can build goes through the one seal:
-// what reaches the developer, cipher and envelope, holds nothing of the
-// everyday identity, and the wire takes that cipher and nothing else. a
-// chat with three words seals in the everyday store, without the onion,
-// face and tier. a chat that is fresh, gone, or restored without its made
-// name has no store at all. each guard broken once shows the checks catch it
+// the dev chat's way through signal and the stores it seals in. real
+// libsignal over a database in maps
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';

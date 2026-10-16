@@ -17,7 +17,7 @@ Widget host(Widget child) => MaterialApp(
   home: MediaQuery(
     data: const MediaQueryData(
       size: Size(360, 760),
-      // these screens breathe; a settled tree never arrives otherwise
+      // these screens pulse; a settled tree never arrives otherwise
       disableAnimations: true,
     ),
     child: Material(color: const Color(0xFF161310), child: child),

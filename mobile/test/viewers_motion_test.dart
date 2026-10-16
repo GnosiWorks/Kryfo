@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the photo viewer flies out of its photo and back, closes on a pull and
 // springs back from a short one; the video player asks nothing of the
-// player while it is paused. all of it comes to rest, and with less
-// movement nothing flies.
+// player while it is paused. all of it comes to rest, and with reduced
+// motion nothing flies.
 import 'dart:convert';
 
 import 'dart:ui' as ui;
@@ -316,7 +316,7 @@ void main() {
   });
 
   group('the photo tile', () {
-    testWidgets('fades up once, and a cached one is simply there', (t) async {
+    testWidgets('fades up once, and a cached one shows at once', (t) async {
       await t.pumpWidget(
         host(const PhotoTileFade(shown: false, child: SizedBox(width: 20))),
       );

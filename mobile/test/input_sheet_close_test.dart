@@ -92,7 +92,7 @@ Future<void> _closesClean(WidgetTester t, TextEditingController ctrl) async {
 
 void main() {
   for (final still in [false, true]) {
-    final how = still ? ' with less movement' : '';
+    final how = still ? ' with reduced motion' : '';
 
     testWidgets('save closes the sheet cleanly$how', (t) async {
       final got = await _open(t, still: still);

@@ -2,7 +2,7 @@
 // the registry's yes is kept even when the handle page is gone before it
 // arrives: a handle let go is forgotten, so the next check does not claim
 // it again, and a handle taken is remembered, so it can be let go later.
-// a slow registry is said calmly while it is asked, and the app waits on it
+// a slow registry is said plainly while it is asked, and the app waits on it
 // past the engine's own bound.
 import 'dart:async';
 import 'dart:io';

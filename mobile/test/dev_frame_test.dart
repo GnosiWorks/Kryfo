@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what a frame to or from the developer may carry. every frame the app can
-// build, alone and in random mixes, is put through the rewrite for an
-// anonymous chat: nothing of the everyday identity (its three words, keys,
-// onion, first-contact address, face, tier, handle) and no other contact
-// comes out, a group, an introduction or a poll does not come out at all,
-// and the message comes out as it went in. the same for a chat with three
-// words, minus the onion, face and tier. what comes from him is held to
-// his pinned key and to what his chat may carry. the token set, the
-// support marker, and each guard broken once to show the checks catch it
+// what a frame to or from the developer may carry, anonymous or with three
+// words, and each guard broken once
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';

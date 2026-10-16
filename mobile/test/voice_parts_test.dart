@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a voice note's wave is read from its own samples and rises once; the
 // recording bar follows the finger toward the start side in either
-// direction; the red dot breathes only while the mic is live and the app is
+// direction; the red dot pulses only while the mic is live and the app is
 // in front; the mask pops when switched. all of it comes to rest.
 import 'dart:io';
 import 'dart:typed_data';
@@ -239,7 +239,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('one known from the start is simply there', (t) async {
+    testWidgets('one known from the start shows at once', (t) async {
       await t.pumpWidget(host(wave(List.filled(kVoiceBars, 0.5))));
       await t.pump();
       expect(t.binding.transientCallbackCount, 0);
@@ -318,7 +318,7 @@ void main() {
       await t.pumpWidget(host(bar(drag: 100, cancel: true)));
       await t.pump(const Duration(milliseconds: 200));
       expect(find.text('Release to cancel'), findsOneWidget);
-      // the dot stops breathing once the note is on its way out
+      // the dot stops pulsing once the note is on its way out
       await settles(t);
     });
 
@@ -334,7 +334,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('reduced motion: nothing slides, nothing breathes', (t) async {
+    testWidgets('reduced motion: nothing slides or pulses', (t) async {
       await t.pumpWidget(host(bar(), still: true));
       await t.pump(const Duration(milliseconds: 250));
       expect(t.binding.transientCallbackCount, 0);
@@ -346,7 +346,7 @@ void main() {
   });
 
   group('the red dot', () {
-    testWidgets('breathes while the mic is live, and rests after', (t) async {
+    testWidgets('pulses while the mic is live, and rests after', (t) async {
       await t.pumpWidget(host(const RecordDot(color: Colors.red)));
       await t.pump(const Duration(milliseconds: 400));
       expect(t.binding.transientCallbackCount, greaterThan(0));
@@ -371,7 +371,7 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('reduced motion: simply lit', (t) async {
+    testWidgets('reduced motion: lit, still', (t) async {
       await t.pumpWidget(host(const RecordDot(color: Colors.red), still: true));
       await t.pump(const Duration(milliseconds: 100));
       expect(t.binding.transientCallbackCount, 0);

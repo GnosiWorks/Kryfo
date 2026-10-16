@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the tools' own screens: a code assembles as it first appears, each stage
-// fades into the next, a finished file's padlock snaps and is felt once,
-// a button that cannot be used yet is quieter in its own colours rather
-// than faded, and with less movement all of it is simply there.
+// fades into the next, a finished file's padlock snaps with one haptic
+// tap, a button that cannot be used yet is quieter in its own colours
+// rather than faded, and with reduced motion all of it shows at once.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,7 +134,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the code is simply there', (t) async {
+    testWidgets('reduced motion: the code shows at once', (t) async {
       phone(t);
       await t.pumpWidget(framed(const QrScreen(), still: true));
       await t.pump();
@@ -161,7 +161,7 @@ void main() {
   });
 
   group('a finished file', () {
-    testWidgets('the padlock pops in, its shackle snaps shut, felt once', (
+    testWidgets('the padlock pops in, its shackle snaps shut, one haptic tap', (
       t,
     ) async {
       final felt = phone(t);
@@ -272,7 +272,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the next stage is simply there', (t) async {
+    testWidgets('reduced motion: the next stage shows at once', (t) async {
       phone(t);
       failingCopy(t);
       await t.pumpWidget(framed(const CleanScreen(file: _photo), still: true));

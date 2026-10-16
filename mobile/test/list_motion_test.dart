@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the archived chats and a group's members: someone new grows in, someone
 // who went folds away where they were and is let go, the archived count
-// rolls to its new word. all of it rests, and with less movement nothing
+// rolls to its new word. all of it rests, and with reduced motion nothing
 // grows or folds.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -169,7 +169,7 @@ void main() {
       expect(find.text('wren'), findsNothing);
     });
 
-    testWidgets('reduced motion: someone gone simply goes', (t) async {
+    testWidgets('reduced motion: someone gone goes at once', (t) async {
       await t.pumpWidget(card(['me', 'wren'], still: true));
       await t.pump();
       final full = heightOf(t, 'wren');

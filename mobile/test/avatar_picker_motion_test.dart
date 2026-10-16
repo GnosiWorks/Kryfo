@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the face editor: a new face pops in over the last, the turn row opens and
-// folds with the page, and with less movement the face only fades and the
-// row is simply there.
+// folds with the page, and with reduced motion the face only fades and the
+// row shows at once.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

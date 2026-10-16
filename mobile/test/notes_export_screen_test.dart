@@ -2,7 +2,7 @@
 // the notes menu offers export in the everyday notes and a decoy's, the same
 // menu in both, and never with hidden chats open. a decoy exports its own
 // notes, as slowly as anywhere. the export page asks for a passphrase by the
-// backup's rules, turns it off only past a calm warning, and goes through the
+// backup's rules, turns it off only past a plain warning, and goes through the
 // backup's save window. a save backed out of, or a lock while the file is
 // made, leaves no file in the app. a locked export needs the engine built
 // for this computer

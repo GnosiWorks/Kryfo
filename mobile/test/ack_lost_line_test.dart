@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // an accept's word that was tried as long as it is and never got through
-// leaves a calm line in their chat, with a way to send it again. a tap on
+// leaves a plain line in their chat, with a way to send it again. a tap on
 // it sends the word and the line goes. someone blocked, and a decoy, show
 // none. the chat's own screen, with real signal over rows kept in maps
 import 'dart:io';
@@ -182,7 +182,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('with less movement it is simply there', (t) async {
+  testWidgets('reduced motion: no animation', (t) async {
     t.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the scanner's frame: its corners close in as it opens and come to rest,
 // each corner is drawn for the corner it sits in whichever way the language
-// reads, and with less movement nothing sweeps.
+// reads, and with reduced motion nothing sweeps.
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';

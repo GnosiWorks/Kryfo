@@ -232,7 +232,9 @@ void main() {
       expect(at(t), 1);
     });
 
-    testWidgets('it flies from its tile, or with no movement fades', (t) async {
+    testWidgets('it flies from its tile, or fades with reduced motion', (
+      t,
+    ) async {
       Finder hero() => find.descendant(
         of: find.byType(AlbumViewer),
         matching: find.byType(Hero),

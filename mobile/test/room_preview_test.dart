@@ -277,7 +277,7 @@ void main() {
     expect(w.result, isFalse);
   });
 
-  testWidgets('with less movement the sheet is the same, and still', (t) async {
+  testWidgets('reduced motion: the sheet is the same, and still', (t) async {
     final w = _World();
     await w.start(t, still: true);
     await w.sheet(t, _link());

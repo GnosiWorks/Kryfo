@@ -64,7 +64,7 @@ void main() {
     expect(dev, 1);
   });
 
-  testWidgets('a tab gives under the finger, at once with less movement', (
+  testWidgets('a tab gives under the finger, at once with reduced motion', (
     t,
   ) async {
     for (final still in [false, true]) {

@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// "this isn't them", as it is seen: under the safety number and on the
-// compare card in a chat, saying the numbers are different brings up the
-// button, which asks once in plain words. its yes takes the contact off
-// this phone and blocks the key; cancel leaves all as it was. a verified
-// number shows none of it. the Blocked page shows the key by its key
-// number, with an unblock. it fits a small phone in every language asked,
-// light and dark, right to left too, with finger-sized taps, and with less
-// movement it simply opens. the real database methods over rows kept in
-// maps
+// "this isn't them" as seen: the button, its question, the Blocked page,
+// small phones, languages and reduced motion. real database methods over
+// rows in maps
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -243,7 +237,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('finger-sized, and with less movement it simply opens', (
+  testWidgets('finger-sized, and with reduced motion it opens at once', (
     t,
   ) async {
     await person();

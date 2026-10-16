@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat added by a code or a link, or taken in from a request, asks for
-// the safety number: a calm card with one tap to the number, which asks for
+// the safety number: a plain card with one tap to the number, which asks for
 // all of it. it goes once they are verified. later folds it into one quiet
 // line that stays until the number is compared or the line is closed. words
 // a request, an introduction or a group gave read as not checked beside the
-// name until then. with less movement the card is simply there, and folds
+// name until then. with reduced motion the card shows at once, and folds
 // at once. the chat's own screen over rows kept in maps
 import 'dart:io';
 import 'dart:math' as math;
@@ -300,8 +300,9 @@ void main() {
         .value;
   }
 
-  testWidgets('the card folds in, and with less movement it is simply '
-      'there', (t) async {
+  testWidgets('the card folds in, and with reduced motion it shows at once', (
+    t,
+  ) async {
     await person(flags: kNameAsk);
     expect(await firstFrame(t, still: false), lessThan(1));
     await settle(t);
@@ -348,8 +349,9 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('with less movement later swaps the card for the line at '
-      'once', (t) async {
+  testWidgets('reduced motion: later swaps the card for the line at once', (
+    t,
+  ) async {
     await person(flags: kNameAsk);
     expect(await foldFrame(t, still: true), 0);
     // nothing on its way: no fade, no size moving

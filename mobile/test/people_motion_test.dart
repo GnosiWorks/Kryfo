@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the safety number turns green group by group when it is marked verified
-// here, and is simply green when it was verified before; the what we can
+// here, and is green at once when it was verified before; the what we can
 // see table marks the route in use with a band, never by dimming the other
 // words; introductions come in row by row and a pick pops its tick. all of
 // it rests, reading order is followed right to left (the safety number
-// keeps its own), and with less movement nothing cascades or pops.
+// keeps its own), and with reduced motion nothing cascades or pops.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,7 +78,7 @@ void main() {
       expect(colourOf(t, _groups.last), HaloColors.green);
     });
 
-    testWidgets('verified before, it is simply green', (t) async {
+    testWidgets('verified before, it is green at once', (t) async {
       await t.pumpWidget(card(false, celebrate: false));
       await settles(t);
       await t.pumpWidget(card(true, celebrate: false));
@@ -210,7 +210,9 @@ void main() {
       expect(band.right, greaterThan(relay.dx));
     });
 
-    testWidgets('a row opens and rests; with less movement at once', (t) async {
+    testWidgets('a row opens and rests, at once with reduced motion', (
+      t,
+    ) async {
       await open(t);
       await t.tap(find.text(l10n.seenWhatYouSay));
       await t.pump(const Duration(milliseconds: 80));

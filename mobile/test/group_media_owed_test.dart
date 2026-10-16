@@ -1424,7 +1424,7 @@ void main() {
       expect(find.bySemanticsLabel('Sent · 3 of 4 have it'), findsOneWidget);
     });
 
-    testWidgets('at once when the phone asks for no movement', (t) async {
+    testWidgets('reduced motion: at once', (t) async {
       await t.pumpWidget(pill(2, 4, still: true));
       await t.pumpWidget(pill(3, 4, still: true));
       await t.pump();
@@ -1465,7 +1465,7 @@ void main() {
 
     for (final still in [false, true]) {
       testWidgets('follows the members live in the open chat'
-          '${still ? ', at once with no movement' : ''}', (t) async {
+          '${still ? ', at once with reduced motion' : ''}', (t) async {
         final db = await openScreen(t, still: still);
         expect(find.text('Sent · 1 of 3 has it'), findsOneWidget);
 

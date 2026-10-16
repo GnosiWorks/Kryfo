@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the wallpaper picker: each swatch shows its atmosphere, the one picked
 // gets its ring and tick with a pop that comes to rest, the tick sits at
-// the end side in either direction, nothing pops with less movement, and
+// the end side in either direction, nothing pops with reduced motion, and
 // the moods heading speaks the phone's language.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

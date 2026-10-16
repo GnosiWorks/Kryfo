@@ -360,7 +360,7 @@ void main() {
       expect(mid, isNot(end));
     });
 
-    testWidgets('with less movement it only brightens', (t) async {
+    testWidgets('reduced motion: it only brightens', (t) async {
       await t.pumpWidget(flame(waiting: true, still: true));
       expect(scale(t), 1);
       expect(opacity(t), BurnFlame.restOpacity);

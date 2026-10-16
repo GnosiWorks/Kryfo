@@ -56,7 +56,7 @@ void main() {
     expect(replies, 1);
   });
 
-  testWidgets('with less movement nothing scales', (t) async {
+  testWidgets('reduced motion: nothing scales', (t) async {
     await t.pumpWidget(_framed(picker(), still: true));
     await t.pump();
     expect(_pops(), findsNothing);

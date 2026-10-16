@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the lists off the chat list: requests, saved, notes and blocked. what
 // goes folds away and the empty page fades in after it, a new note grows up
-// from the bar, the empty pages breathe three times and rest, and with less
-// movement all of it is simply there. the database is a stand-in that keeps
+// from the bar, the empty pages pulse three times and rest, and with reduced
+// motion all of it shows at once. the database is a stand-in that keeps
 // rows in memory.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -268,7 +268,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('the empty inbox breathes three times, then rests', (t) async {
+    testWidgets('the empty inbox pulses three times, then stops', (t) async {
       phone(t);
       await t.pumpWidget(framed(const RequestsScreen()));
       await t.pump(const Duration(milliseconds: 500));
@@ -279,7 +279,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: cards and the empty page are simply there', (
+    testWidgets('reduced motion: cards and the empty page show at once', (
       t,
     ) async {
       phone(t);

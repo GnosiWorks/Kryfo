@@ -114,7 +114,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('only fades when motion is reduced', (t) async {
+    testWidgets('reduced motion: only fades', (t) async {
       await t.pumpWidget(
         host(
           const BubbleEntrance(isOut: true, active: true, child: bubble),
@@ -209,7 +209,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('only fades when motion is reduced', (t) async {
+    testWidgets('reduced motion: only fades', (t) async {
       await t.pumpWidget(host(const CountBadge(count: 0), still: true));
       await t.pumpWidget(host(const CountBadge(count: 2), still: true));
       await t.pump(const Duration(milliseconds: 30));
@@ -267,7 +267,7 @@ void main() {
       expect(taps, 1);
     });
 
-    testWidgets('does not grow when motion is reduced', (t) async {
+    testWidgets('reduced motion: does not grow', (t) async {
       await t.pumpWidget(
         host(
           JumpDownButton(shown: false, count: 0, label: 'Newest', onTap: () {}),
@@ -301,7 +301,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('only fades when motion is reduced', (t) async {
+    testWidgets('reduced motion: only fades', (t) async {
       await t.pumpWidget(
         host(
           const ReactionChip(emoji: '🔥', count: 1, popKey: 'uid-b:🔥'),
@@ -346,7 +346,7 @@ void main() {
       await still(t);
     });
 
-    testWidgets('no growing or nodding when motion is reduced', (t) async {
+    testWidgets('reduced motion: no growing or nodding', (t) async {
       await t.pumpWidget(tick(false, still: true));
       await t.pumpWidget(tick(true, still: true));
       await t.pump(const Duration(milliseconds: 30));
@@ -406,7 +406,7 @@ void main() {
       expect(t.getSize(find.byType(GrowSwap)).height, 0);
     });
 
-    testWidgets('instant when motion is reduced', (t) async {
+    testWidgets('reduced motion: instant', (t) async {
       Widget at(bool a) => host(
         GrowSwap(
           child: a
@@ -468,7 +468,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('all there at once when motion is reduced', (t) async {
+    testWidgets('reduced motion: all there at once', (t) async {
       await t.pumpWidget(
         host(MessageMenuCard(actions: actions([])), still: true),
       );
@@ -564,7 +564,7 @@ void main() {
       expect(dx(t), 0);
     });
 
-    testWidgets('goes back at once when motion is reduced', (t) async {
+    testWidgets('reduced motion: goes back at once', (t) async {
       await t.pumpWidget(swipe(still: true));
       final g = await t.startGesture(t.getCenter(find.text('hi')));
       await g.moveBy(const Offset(30, 0));

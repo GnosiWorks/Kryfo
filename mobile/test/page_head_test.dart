@@ -107,7 +107,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('stays put when motion is reduced', (t) async {
+    testWidgets('reduced motion: stays put', (t) async {
       await t.pumpWidget(host(const _Page(), still: true));
       await t.drag(find.byType(ListView), const Offset(0, -140));
       await t.pump();
@@ -141,7 +141,7 @@ void main() {
       expect(find.text('99'), findsOneWidget);
     });
 
-    testWidgets('only fades when motion is reduced', (t) async {
+    testWidgets('reduced motion: only fades', (t) async {
       await t.pumpWidget(host(const PinHeaderButton(count: 0), still: true));
       await t.pumpWidget(host(const PinHeaderButton(count: 2), still: true));
       await t.pump(const Duration(milliseconds: 30));
@@ -202,7 +202,7 @@ void main() {
       expect(find.byType(AttachGrid), findsNothing);
     });
 
-    testWidgets('all there at once when motion is reduced', (t) async {
+    testWidgets('reduced motion: all there at once', (t) async {
       await t.pumpWidget(host(AttachGrid(items: items([])), still: true));
       await t.pump();
       await t.pump();
@@ -248,7 +248,7 @@ void main() {
       await settles(t);
     });
 
-    testWidgets('only fades when motion is reduced', (t) async {
+    testWidgets('reduced motion: only fades', (t) async {
       await t.pumpWidget(
         host(
           const MenuPop(

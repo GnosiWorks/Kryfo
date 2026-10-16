@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the shield's line: calm amber, never the alarm red, words in the text
+// the shield's line: amber, never the alarm red, words in the text
 // colour, no exclamation mark in any language. the cross is a 44 px target
 // with a name, sits at the line's end in either direction, and folds the
-// line away; with less movement nothing grows or slides. a theme switch
+// line away; with reduced motion nothing grows or slides. a theme switch
 // repaints it
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,7 +47,7 @@ void main() {
     setL10nLocale(const Locale('en'));
   });
 
-  testWidgets('calm: text colour words, amber tint, nothing red', (t) async {
+  testWidgets('text colour words, amber tint, nothing red', (t) async {
     await t.pumpWidget(_host(ShieldNote(flag: _flag, onDismiss: () async {})));
     await t.pumpAndSettle();
     expect(_textColour(t), HaloColors.text);
@@ -145,7 +145,7 @@ void main() {
     expect(find.byTooltip(l10n.scamShieldDismiss), findsOne);
   });
 
-  testWidgets('with less movement it neither grows in nor folds', (t) async {
+  testWidgets('reduced motion: it neither grows in nor folds', (t) async {
     await t.pumpWidget(
       _host(
         Column(

@@ -206,7 +206,7 @@ void main() {
     await drain(t);
   });
 
-  testWidgets('reduced motion: a new coin is simply there', (t) async {
+  testWidgets('reduced motion: a new coin shows at once', (t) async {
     phone(t);
     await t.pumpWidget(framed(const DonateScreen(), still: true));
     await t.pump(const Duration(seconds: 1));

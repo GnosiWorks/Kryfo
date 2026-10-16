@@ -4,7 +4,7 @@
 // at once, with no save, and quick taps reach the engine once. the tor
 // project is asked only after a yes, and the one-time sheet only comes on
 // a new install. a friend's lines are judged by the engine. 0.5.0's keys
-// move over once. right to left, less movement and a small phone at a
+// move over once. right to left, reduced motion and a small phone at a
 // large text size hold. the engine is a stand-in
 
 import 'package:flutter/material.dart';
@@ -216,7 +216,7 @@ void main() {
       expect(l.tone, BridgeTone.amber);
     });
 
-    test('no way in yet, as after a wake: connecting, calmly', () {
+    test('no way in yet, as after a wake: connecting, in amber', () {
       for (final phase in ['trying', 'connected']) {
         final l = line(
           BridgeStatus(mode: 'auto', phase: phase, errorCode: 'auto_wait'),
@@ -362,7 +362,7 @@ void main() {
       expect(line(s, c: 'yes').detail, l10n.bridgesKryfoTriesAgainOnItsOwn);
     });
 
-    test('a wi-fi that wants a sign-in says so, calmly', () {
+    test('a wi-fi that wants a sign-in says so, in amber', () {
       final l = line(const BridgeStatus(mode: 'auto', phase: 'captive'));
       expect(l.head, l10n.bridgesSignInToThisWifi);
       expect(l.tone, BridgeTone.amber);
@@ -1506,7 +1506,7 @@ void main() {
       expect(_eng.calls, ['direct {}']);
     });
 
-    testWidgets('the dot rests after a few breaths, the clock goes on', (
+    testWidgets('the dot rests after a few pulses, the clock goes on', (
       t,
     ) async {
       await _open(
@@ -1539,7 +1539,7 @@ void main() {
       await _done(t);
     });
 
-    testWidgets('less movement: nothing moves while tor tries', (t) async {
+    testWidgets('reduced motion: nothing moves while tor tries', (t) async {
       await _open(t, status: _another, still: true);
       await t.pump(const Duration(milliseconds: 100));
       expect(find.byType(BreathDot), findsOneWidget);

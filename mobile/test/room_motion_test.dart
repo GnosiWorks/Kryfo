@@ -153,7 +153,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('reduced motion: the code is simply there', (t) async {
+    testWidgets('reduced motion: the code shows at once', (t) async {
       await open(t, still: true);
       await t.pump();
       await t.pump();

@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the dev chat on the wire, with real libsignal over a phone's rows kept in
-// maps. nothing reaches his keys before the first send, either way of
-// writing: nothing listened for, sent or kept. the first send checks his
-// card, builds his session in the store the chat uses and listens on the
-// chat's own lane. an anonymous start makes a name that shares nothing
-// with the everyday one. what comes on his lanes lands only in the chat
-// running on that lane, opened in its own store, and the rest is dropped
-// and marked seen. a delete lets go of all of it and stays a delete, a
-// decoy never reaches the wire, and each new guard broken once is caught
+// the dev chat on the wire: the first send, anonymous starts, its lanes and
+// a delete. real libsignal over rows in maps
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the developer chat's row in a container's database: seeded fresh on a new
-// install and on an upgrade, never overwritten by a seed, started once, and
-// deleted for good: every row of it goes, its files are shredded, and no
-// migration, key list or restart brings it back. only the settings row
-// does. home keeps it beside the contacts, a decoy shows its own, and a
-// vault never holds it. an anonymous chat's own signal store sits in the
-// dev_ tables of v55, goes with a delete, and stays behind with its made
-// name when a copy of the database leaves the phone: the copy reads, and
-// sends and hears nothing. the database is a stand-in with the app's own
-// tables (mem_db.dart), so nothing here needs sqlite
+// the developer chat's row in a container's database: seeding, delete and
+// its own signal store. the database is mem_db.dart, no sqlite
 import 'dart:io';
 
 import 'package:flutter/services.dart';

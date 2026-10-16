@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the in-app camera, driven over the camera plugin's channel: a refused
-// permission says so and offers a way out, a recording shows its running
-// time in minutes and seconds beside a live dot, left to right in every
-// language and from zero each time, a flip fades through dark unless the
-// phone asks for no movement, the photo and video tabs are full-size
-// targets read out as chosen or not, and a refused microphone only stops
-// video. the screen stays portrait however the phone is held: the icons
-// turn with the phone, captures are told the side it is held on, and the
-// picture keeps the frame's shape on a screen of either shape.
+// the in-app camera over the plugin's channel: permissions, recording,
+// flips, tabs and orientation
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show Tristate;
@@ -440,7 +433,7 @@ void main() {
     testWidgets(
       still
           ? 'reduced motion: the dot holds still'
-          : 'the dot breathes while it records',
+          : 'the dot pulses while it records',
       (t) async {
         phone(t);
         plugin(t);
@@ -499,7 +492,9 @@ void main() {
     await settle(t);
   });
 
-  testWidgets('reduced motion: a flip is simply the other camera', (t) async {
+  testWidgets('reduced motion: a flip shows the other camera at once', (
+    t,
+  ) async {
     phone(t);
     plugin(t);
     await t.pumpWidget(framed(still: true));

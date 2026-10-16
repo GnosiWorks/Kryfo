@@ -450,7 +450,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('with no movement asked for, the card neither rises, waves '
+  testWidgets('reduced motion: the card neither rises, waves '
       'nor lingers', (t) async {
     final (rise, turn) = await watchOpening(t, still: true);
     expect(card, findsOneWidget);

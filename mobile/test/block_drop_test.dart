@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what someone blocked sends while the block holds is dropped for good: a
-// copy of it after the unblock, sent again or held by the relays, never
-// lands in requests or the chat. what they send after the unblock does.
-// an ended block keeps out what may have reached the relay while it held,
-// by this clock, whatever its stamps say, and what their own two stamps
-// say was written while it held, however slow or fast their clock is.
-// what it alone turns away is not noted, so a copy sent again lands. the
-// block takes what of theirs is in the shade with it, outside the decoy.
-// signal and the database are the app's stand-ins
+// what someone blocked sends while the block holds is dropped for good.
+// signal and the database are stand-ins
 import 'dart:convert';
 import 'dart:io';
 

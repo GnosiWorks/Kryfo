@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// an opener of ours that never came back delivered is not left at one try.
-// while they have not added us back it goes again after ten minutes, an
-// hour, six hours and a day, by its first-contact address too and the last
-// time by its onion and the pair address, until a
-// receipt, a block, a new key or their add stops it. the moment they add
-// us back, what went to them with no receipt goes once more on the lane
-// they read now, its uid the same, a row a block kept back never. the
-// database methods are the real ones over rows kept in maps; the wire and
+// an opener that never came back delivered goes again, and once more when
+// they add us back. real database methods over rows in maps; the wire and
 // signal are stand-ins
 import 'dart:io';
 

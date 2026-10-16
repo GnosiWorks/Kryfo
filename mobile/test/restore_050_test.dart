@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a backup made by 0.5.0 comes back on this version. the two files were
-// written by 0.5.0's own writer and cipher (fixtures/upgrade_050,
-// make_050_backups.sh), one without the hidden chats and one made with
-// them open. each goes in through the real restore, the engine's own cipher
-// included, onto a phone of this version with an account of its own: what
-// 0.5.0 had comes back, the database opens at 85, the sessions go on, the
-// settings the file carries apply and the ones it predates keep the phone's
-// own or their defaults. a wrong passphrase leaves the phone as it was.
-// without the engine built for this computer (tool/host_engine.sh) these
-// say so and skip
+// a 0.5.0 backup, with and without hidden chats, comes back on this version
+// (fixtures/upgrade_050). without the host engine (tool/host_engine.sh)
+// these skip
 import 'dart:convert';
 import 'dart:io';
 

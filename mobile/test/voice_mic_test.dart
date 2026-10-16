@@ -3,7 +3,7 @@
 // start side and it is thrown away, slide up and it records hands free. a
 // stopped note waits with a mask chip, and what goes is what the chip says.
 // the mask sits on the mic while the chat disguises. a finger-sized target,
-// still with less movement, mirrored in a right-to-left language, and whole
+// still with reduced motion, mirrored in a right-to-left language, and whole
 // on a small phone with large text. the recorder is a stand-in over its
 // channel
 import 'dart:async';
@@ -824,7 +824,7 @@ void main() {
       await close(t);
     });
 
-    testWidgets('with less movement the ring never spins', (t) async {
+    testWidgets('reduced motion: the ring never spins', (t) async {
       await open(t, still: true);
       await toPreview(t);
       await t.tap(find.byType(MaskChip));
@@ -1004,27 +1004,29 @@ void main() {
       await close(t);
     });
 
-    testWidgets('the mask pops onto the mic, and with less movement it only '
-        'fades', (t) async {
-      Widget glyph(bool on, bool still) => devApp(
-        Center(child: MicGlyph(disguise: on)),
-        still: still,
-      );
-      await t.pumpWidget(glyph(false, false));
-      await t.pumpWidget(glyph(true, false));
-      await t.pump(const Duration(milliseconds: 60));
-      final scale = t.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scale.scale, 1);
-      expect(scale.duration, greaterThan(Duration.zero));
-      await t.pumpAndSettle();
-      await t.pumpWidget(glyph(false, true));
-      await t.pumpWidget(glyph(true, true));
-      final still = t.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(still.duration, Duration.zero);
-      await t.pumpAndSettle();
-    });
+    testWidgets(
+      'the mask pops onto the mic, and with reduced motion it only fades',
+      (t) async {
+        Widget glyph(bool on, bool still) => devApp(
+          Center(child: MicGlyph(disguise: on)),
+          still: still,
+        );
+        await t.pumpWidget(glyph(false, false));
+        await t.pumpWidget(glyph(true, false));
+        await t.pump(const Duration(milliseconds: 60));
+        final scale = t.widget<AnimatedScale>(find.byType(AnimatedScale));
+        expect(scale.scale, 1);
+        expect(scale.duration, greaterThan(Duration.zero));
+        await t.pumpAndSettle();
+        await t.pumpWidget(glyph(false, true));
+        await t.pumpWidget(glyph(true, true));
+        final still = t.widget<AnimatedScale>(find.byType(AnimatedScale));
+        expect(still.duration, Duration.zero);
+        await t.pumpAndSettle();
+      },
+    );
 
-    testWidgets('less movement: the lock does not bob or rise', (t) async {
+    testWidgets('reduced motion: the lock does not bob or rise', (t) async {
       await open(t, still: true);
       final g = await hold(t);
       expect(find.byType(VoiceLockPill), findsOneWidget);
@@ -1040,31 +1042,33 @@ void main() {
       await close(t);
     });
 
-    testWidgets('a note sent while it is disguised: a ring that fills, '
-        'still with less movement', (t) async {
-      final p = ValueNotifier<double?>(null);
-      Widget bubble(bool still) => devApp(
-        Center(child: VoiceMakingBubble(progress: p, isOut: true)),
-        still: still,
-      );
-      await t.pumpWidget(bubble(false));
-      expect(find.text(l10n.voiceDisguising), findsOneWidget);
-      CircularProgressIndicator ring() =>
-          t.widget(find.byType(CircularProgressIndicator));
-      expect(ring().value, isNull);
-      p.value = 0.3;
-      await t.pump();
-      expect(ring().value, 0.3);
-      p.value = null;
-      await t.pumpWidget(bubble(true));
-      expect(ring().value, 0);
-      expect(
-        find.bySemanticsLabel(
-          '${l10n.appVoiceMessage}, ${l10n.voiceDisguising}',
-        ),
-        findsOneWidget,
-      );
-    });
+    testWidgets(
+      'a note sent disguised: a ring that fills, still with reduced motion',
+      (t) async {
+        final p = ValueNotifier<double?>(null);
+        Widget bubble(bool still) => devApp(
+          Center(child: VoiceMakingBubble(progress: p, isOut: true)),
+          still: still,
+        );
+        await t.pumpWidget(bubble(false));
+        expect(find.text(l10n.voiceDisguising), findsOneWidget);
+        CircularProgressIndicator ring() =>
+            t.widget(find.byType(CircularProgressIndicator));
+        expect(ring().value, isNull);
+        p.value = 0.3;
+        await t.pump();
+        expect(ring().value, 0.3);
+        p.value = null;
+        await t.pumpWidget(bubble(true));
+        expect(ring().value, 0);
+        expect(
+          find.bySemanticsLabel(
+            '${l10n.appVoiceMessage}, ${l10n.voiceDisguising}',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('a small phone with large text: the bar fits, the chip is '
         'the mask alone', (t) async {

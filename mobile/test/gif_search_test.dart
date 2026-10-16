@@ -813,9 +813,7 @@ void main() {
       await h.frames(200);
     });
 
-    testWidgets('reduced motion: stills only, everything still works', (
-      t,
-    ) async {
+    testWidgets('reduced motion: stills only', (t) async {
       final h = _Harness(t, lib)..on = true;
       await h.pump(reduce: true);
       await h.open();
