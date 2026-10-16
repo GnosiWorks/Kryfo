@@ -4332,14 +4332,20 @@ class HaloDb implements GroupOwedStore {
     ];
   }
 
-  /// the wipes of ended groups a stop cut short, finished. one that fails
-  /// leaves the rest to go on; how many were finished
-  Future<int> finishEndedWipes() async {
+  /// the wipes of ended groups a stop cut short, finished, each one's
+  /// notifications handed to [unshade] by the tag read before it went. one
+  /// that fails leaves the rest to go on; how many were finished
+  Future<int> finishEndedWipes({
+    Future<void> Function(String chat, Set<String> tags)? unshade,
+  }) async {
     var n = 0;
     for (final g in await endedGroupIds()) {
       try {
+        final chat = 'group:$g';
+        final tags = {?await notifTagOf(chat)};
         await wipeEnded(g);
         n++;
+        await unshade?.call(chat, tags);
       } catch (e) {
         dlog('groups: an ended one not swept (${e.runtimeType})');
       }
@@ -18540,10 +18546,12 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
-  // an ended group's wipe, run again: whatever a stop left goes
+  // an ended group's wipe, run again: whatever a stop left goes, its
+  // notifications by the tag read before the wipe took it
   Future<void> _wipeAgain(String groupId, HaloDb db) async {
+    final tags = {?await db.notifTagOf('group:$groupId')};
     await db.wipeEnded(groupId);
-    await _io.unnotify('group:$groupId');
+    await _io.unnotifyGone('group:$groupId', tags);
     _bumpChatRev('group:$groupId');
   }
 
@@ -18558,9 +18566,11 @@ class AppState extends ChangeNotifier {
   }) async {
     if (groupEndOf(await db.getGroup(groupId)) != null) return false;
     dropGroupDraft(groupId);
+    // the wipe takes its tag: read first, for the shade
+    final tags = {?await db.notifTagOf('group:$groupId')};
     if (!await db.endGroup(groupId, by: by, at: at)) return false;
     // after the wipe: a notification of one filed as it ran goes too
-    await _io.unnotify('group:$groupId');
+    await _io.unnotifyGone('group:$groupId', tags);
     _bumpChatRev('group:$groupId');
     await refreshContacts();
     await refreshGroups();
@@ -21803,7 +21813,7 @@ class AppState extends ChangeNotifier {
   Future<void> _dropGroupLeftovers(HaloDb d) async {
     // an ended group's wipe a stop cut short finishes here
     try {
-      await d.finishEndedWipes();
+      await d.finishEndedWipes(unshade: _io.unnotifyGone);
     } catch (e) {
       dlog('groups: ended ones not swept (${e.runtimeType})');
     }

@@ -282,8 +282,9 @@ void main() {
       expect(await count('SELECT 1 FROM group_media_owed'), 0);
       expect(await count('SELECT 1 FROM notif_tags'), 0);
       expect(photo.existsSync(), isFalse);
-      // its notifications leave the shade
+      // its notifications leave the shade, by the tag the wipe took
       expect(io.unrang, contains('group:$_theirs'));
+      expect(io.unrangTags, contains('t1'));
       // the row stays, ended by bob, with its members
       final g = await row(_theirs);
       expect(groupEndOf(g)?.by, 'bob');
@@ -453,6 +454,7 @@ void main() {
         'words for older versions', () async {
       await comes('bob', await said('m1', g: _mine));
       io.sent.clear();
+      await s.insert('notif_tags', {'chat': 'group:$_mine', 'tag': 't2'});
       expect(await app.endGroupAndAnnounce(_mine), isTrue);
       await app.ctlPassForTest;
       expect(
@@ -461,6 +463,7 @@ void main() {
       );
       expect(groupEndOf(await row(_mine))?.by, 'me');
       expect(io.unrang, contains('group:$_mine'));
+      expect(io.unrangTags, contains('t2'));
       for (final m in ['bob', 'carol']) {
         expect(io.got(m), ['ctl:end', l10n.groupEndedOldNotice]);
         final notice = io.to(m).last;
@@ -544,6 +547,27 @@ void main() {
         0,
       );
       expect(photo.existsSync(), isFalse);
+      expect(io.unrangTags, contains('t1'));
+    }, skip: skip);
+
+    test('a wipe a stop cut short finishes at the next start, and takes '
+        'its notifications from the shade', () async {
+      await comes('bob', await said('m1'));
+      await s.insert('notif_tags', {'chat': 'group:$_theirs', 'tag': 't3'});
+      await s.update(
+        'groups',
+        {'ended_at': 1, 'ended_by': 'bob'},
+        where: 'group_id = ?',
+        whereArgs: [_theirs],
+      );
+      await app.tidyAtStart(DateTime.now());
+      expect(
+        await count('SELECT 1 FROM messages WHERE group_id = ?', [_theirs]),
+        0,
+      );
+      expect(await count('SELECT 1 FROM notif_tags'), 0);
+      expect(io.unrang, contains('group:$_theirs'));
+      expect(io.unrangTags, contains('t3'));
     }, skip: skip);
 
     test('and at the next start, with no end again', () async {

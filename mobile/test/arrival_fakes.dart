@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         groupRemoveOut,
         groupUnsendOf,
         groupUnsendRow,
-        kAdminGone;
+        kAdminGone,
+        session;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -289,13 +290,23 @@ class ArrivalIo implements AppIo {
   Future<void> unnotifyMessage(String msgUid) async =>
       unrangMessages.add(msgUid);
 
-  // what was taken out of the shade, by payload
+  // what was taken out of the shade, by payload, and the tags it went by
   final unrang = <String>[];
+  final unrangTags = <String>{};
   @override
-  Future<void> unnotifyGone(String payload, Set<String> tags) =>
-      unnotify(payload);
+  Future<void> unnotifyGone(String payload, Set<String> tags) async {
+    unrang.add(payload);
+    unrangTags.addAll(tags);
+  }
+
+  // as the shade does: by the tags the open containers keep for it now
   @override
-  Future<void> unnotify(String payload) async => unrang.add(payload);
+  Future<void> unnotify(String payload) async {
+    unrang.add(payload);
+    try {
+      unrangTags.addAll(await session.notifTagsOf(payload));
+    } catch (_) {}
+  }
 }
 
 // a database in memory: the rows the receive side reads and writes, and a
@@ -1511,6 +1522,7 @@ class ArrivalRows implements HaloDb {
   Future<void> wipeEnded(String groupId) async {
     _hit('wipeEnded', groupId, null);
     _dropGroupRows(groupId);
+    notifTags.remove('group:$groupId');
     ctlOut.removeWhere(
       (r) =>
           r['group_id'] == groupId &&
@@ -1521,10 +1533,14 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<int> finishEndedWipes() async {
+  Future<int> finishEndedWipes({
+    Future<void> Function(String chat, Set<String> tags)? unshade,
+  }) async {
     final ended = await endedGroupIds();
     for (final g in ended) {
+      final tags = {?notifTags['group:$g']};
       await wipeEnded(g);
+      await unshade?.call('group:$g', tags);
     }
     return ended.length;
   }
