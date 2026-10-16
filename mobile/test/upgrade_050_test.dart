@@ -294,11 +294,11 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 82 with the schema of a new install', () async {
+    test('$f opens at 83 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();
-      expect(await raw.getVersion(), 82);
+      expect(await raw.getVersion(), 83);
       final got = await _schema(raw);
       // key by key, so a miss names the table and the column
       for (final k in {...fresh[f]!.keys, ...got.keys}) {
@@ -323,6 +323,7 @@ void main() {
         'ALTER TABLE contacts ADD COLUMN ack_owed',
         'CREATE TABLE IF NOT EXISTS blocked_keys',
         'ALTER TABLE groups ADD COLUMN ended_at',
+        'ALTER TABLE contacts ADD COLUMN shots_on',
       ];
       final at = [
         for (final s in steps) sql!.said.indexWhere((x) => x.startsWith(s)),
@@ -382,7 +383,7 @@ void main() {
       final again = _files[f]!();
       final raw = await again.open();
       final said = sql!.said.sublist(from);
-      expect(await raw.getVersion(), 82);
+      expect(await raw.getVersion(), 83);
       expect(
         said.where(
           (s) => RegExp(
@@ -592,7 +593,7 @@ void main() {
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);
     final otherRaw = await other.open();
-    expect(await otherRaw.getVersion(), 82);
+    expect(await otherRaw.getVersion(), 83);
     final mine = await _store(raw, (await peerIdentityHex(otherRaw, _me))!);
     final hers = await _store(
       otherRaw,

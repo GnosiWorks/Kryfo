@@ -5199,17 +5199,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsScamShieldHint => 'يُفحص على هاتفك فقط، ولا شيء يغادره';
 
   @override
-  String get settingsBlockScreenshots => 'منع لقطات الشاشة';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'التطبيق كله مخفي من التطبيقات الأخيرة ولقطات الشاشة · يسري بعد التشغيل التالي';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'التطبيق كله مخفي من التطبيقات الأخيرة ولقطات الشاشة';
-
-  @override
   String get settingsLightTheme => 'المظهر الفاتح';
 
   @override
@@ -6785,9 +6774,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsBlocked2 => 'ممنوعة';
 
   @override
-  String get settingsAllowed => 'مسموحة';
-
-  @override
   String get settingsOn => 'مفعّل';
 
   @override
@@ -7581,10 +7567,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinPickDifferent => 'اختر رمز PIN آخر';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'يبقى مفعّلًا ما دام قفل التطبيق مفعّلًا.';
-
-  @override
   String get lockFingerAfterPin =>
       'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
 
@@ -8349,6 +8331,124 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'تمويه صوتي هنا';
+
+  @override
+  String get chatBlockScreenshots => 'منع لقطات الشاشة';
+
+  @override
+  String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
+
+  @override
+  String get chatShotsBothPhones =>
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها';
+
+  @override
+  String get chatShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المحادثة';
+
+  @override
+  String get chatShotsMenuNote =>
+      'نسخ رسائله وإعادة توجيهها وحفظها متوقف في هذه المحادثة';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'فتح ملفاته في تطبيقات أخرى متوقف في هذه المحادثة';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+      many: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+      few: '⁨$countString⁩ نتائج · افتح المحادثة لرؤيتها',
+      two: 'نتيجتان · افتح المحادثة لرؤيتهما',
+      one: 'نتيجة واحدة · افتح المحادثة لرؤيتها',
+      zero: '⁨$countString⁩ نتيجة · افتح المحادثة لرؤيتها',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'محفوظة من محادثة تمنع لقطات الشاشة · افتح المحادثة لرؤيتها';
+
+  @override
+  String get roomShotsMenuNote =>
+      'نسخ رسائل الآخرين وإعادة توجيهها وحفظها متوقف في هذه الغرفة';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'فتح ملفات الآخرين في تطبيقات أخرى متوقف في هذه الغرفة';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'فعّلت منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
+
+  @override
+  String get chatShotsYouTurnedOff => 'أوقفت منع لقطات الشاشة';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return 'أوقف ⁨$name⁩ منع لقطات الشاشة';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها';
+
+  @override
+  String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
+
+  @override
+  String get settingsPerChat => 'حسب المحادثة';
+
+  @override
+  String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'هل تريد تفعيله في كل محادثاتك؟';
+
+  @override
+  String get homeShotsTurnOn => 'تفعيل للكل';
+
+  @override
+  String get homeShotsLeaveOff => 'اتركه متوقفًا';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'يمنعها Kryfo على الهاتف الآخر أيضًا، ويتوقف نسخ رسائل كل منكما وإعادة توجيهها وحفظها. سيرى الطرف الآخر أنك فعّلته.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
+      many: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
+      few: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثات',
+      two: 'يمنع Kryfo الآن لقطات الشاشة في محادثتين',
+      one: 'يمنع Kryfo الآن لقطات الشاشة في محادثة واحدة',
+      zero: 'يمنع Kryfo الآن لقطات الشاشة في ⁨$countString⁩ محادثة',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'صوتك مموّه في هذه المحادثة';

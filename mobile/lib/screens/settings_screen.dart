@@ -376,9 +376,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // would be a promise nothing is trying to keep
               final onTor = appState.sendMode == 'private';
               final torOn = onTor && tor;
+              // the app lock covers every screen, and so does the old
+              // switch until home's card about it is answered. without
+              // them each chat has its own switch
               final shots =
-                  appState.blockScreenshotsApplied ||
-                  appState.screenSecureByLock;
+                  appState.screenSecureByLock || appState.shotsCardCovers;
               // as the App lock screen reads it: a lock turned off in a
               // decoy session is off
               final lock = lockState.lockOn;
@@ -425,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ProtectionLine(
                       l10n.settingsScreenshots,
                       shots,
-                      shots ? l10n.settingsBlocked2 : l10n.settingsAllowed,
+                      shots ? l10n.settingsBlocked2 : l10n.settingsPerChat,
                     ),
                     ProtectionLine(
                       l10n.settingsAppLock,
@@ -596,30 +598,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           HaloSection(l10n.settingsSecurity),
           HaloGroup(
             children: [
-              // one switch for the whole app, applied at the next start:
-              // changing the flag live recreates the surface and flashes
-              HaloRow(
-                icon: Icons.visibility_off_outlined,
-                label: l10n.settingsBlockScreenshots,
-                // with an app lock the screen stays covered, whatever the
-                // switch says, and the row says so
-                hint: appState.screenSecureByLock
-                    ? l10n.settingsKeptOnWhileLock
-                    : appState.blockScreenshotsPending
-                    ? l10n.settingsWholeAppHiddenFrom
-                    : l10n.settingsWholeAppHiddenFromRecentsAnd,
-                // the hint says when a change waits for the next start
-                toggled:
-                    appState.screenSecureByLock || appState.blockScreenshots,
-                onTap: appState.screenSecureByLock
-                    ? null
-                    : () async {
-                        await appState.setBlockScreenshots(
-                          !appState.blockScreenshots,
-                        );
-                        if (mounted) setState(() {});
-                      },
-              ),
               HaloRow(
                 icon: Icons.light_mode_outlined,
                 label: l10n.settingsLightTheme,

@@ -578,7 +578,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 82);
+    expect(await raw.getVersion(), 83);
     final cols = await raw.rawQuery("PRAGMA table_info('contacts')");
     expect(cols.any((c) => c['name'] == 'ack_owed'), isTrue);
     expect(
@@ -590,7 +590,7 @@ void main() {
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
-    expect(await raw.getVersion(), 82);
+    expect(await raw.getVersion(), 83);
     await person(_q);
     await raw.execute('DROP TABLE blocked_keys');
     await raw.execute('DROP TABLE name_tombs');
@@ -598,7 +598,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 82);
+    expect(await raw.getVersion(), 83);
     expect(
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
       hasLength(2),

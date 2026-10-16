@@ -17,7 +17,9 @@ import 'l10n/app_locale.dart';
 import 'secure_store.dart';
 
 // where each is kept. the identity's own take the container's prefix; the
-// phone's are one for every identity on it
+// phone's are one for every identity on it. the old switch for the whole
+// app is no setting now: what travels is that home's card about the chats'
+// own switches still waits
 const _kShots = 'block_screenshots';
 const _kLight = 'theme_light';
 const _kRoute = 'send_mode';
@@ -53,6 +55,7 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
   const st = secureStore;
   final prefs = await SharedPreferences.getInstance();
   final out = <String, Object>{
+    // home's card about the old switch, still waiting
     Carried.screenshots: (await st.read(key: c.key(_kShots))) == 'true',
     Carried.light: (await st.read(key: c.key(_kLight))) == 'true',
     Carried.voice: (await st.read(key: c.key(_kVoice))) == '1',
@@ -102,7 +105,9 @@ Future<bool> landCarriedSettings(
   await pref(Carried.shield, _kShield);
   await pref(Carried.intros, _kIntros);
   if (!phone) return true;
-  await flag(Carried.screenshots, _kShots, 'true', 'false');
+  if (carried[Carried.screenshots] == true) {
+    await st.write(key: c.key(_kShots), value: 'true');
+  }
   await flag(Carried.light, _kLight, 'true', 'false');
   final route = carried[Carried.route];
   if (route is String && _kRoutes.contains(route)) {

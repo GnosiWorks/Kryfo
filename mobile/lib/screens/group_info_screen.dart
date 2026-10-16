@@ -617,6 +617,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   label: l10n.groupInfoWallpaper,
                   onTap: _pickAtmosphere,
                 ),
+                // always on in a room, on every phone in it
+                if (_isRoom || _roomAtOpen)
+                  HaloRow(
+                    icon: Icons.phonelink_lock_outlined,
+                    label: l10n.chatBlockScreenshots,
+                    hint: l10n.roomShotsAlwaysOn,
+                    toggled: true,
+                  ),
                 // the maker's alone: known from the list's row, so it is
                 // there from the first frame
                 if ((_isRoom || _roomAtOpen) && _isAdmin)

@@ -6406,18 +6406,6 @@
   "@settingsScamShieldHint": {
     "description": "screens/settings_screen.dart: under the scam shield switch"
   },
-  "settingsBlockScreenshots": "Block screenshots",
-  "@settingsBlockScreenshots": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsWholeAppHiddenFrom": "Whole app hidden from recents and screenshots · takes effect after the next start",
-  "@settingsWholeAppHiddenFrom": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsWholeAppHiddenFromRecentsAnd": "Whole app hidden from recents and screenshots",
-  "@settingsWholeAppHiddenFromRecentsAnd": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsLightTheme": "Light theme",
   "@settingsLightTheme": {
     "description": "screens/settings_screen.dart"
@@ -8457,10 +8445,6 @@
   "@settingsBlocked2": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsAllowed": "Allowed",
-  "@settingsAllowed": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
@@ -9459,10 +9443,6 @@
   "@pinPickDifferent": {
     "description": "setting a PIN that is already in use; never says which one it matched"
   },
-  "settingsKeptOnWhileLock": "Kept on while the app lock is on.",
-  "@settingsKeptOnWhileLock": {
-    "description": "hint under Block screenshots when the app lock forces it on"
-  },
   "lockFingerAfterPin": "Type your PIN once to use your fingerprint again.",
   "@lockFingerAfterPin": {
     "description": "lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)"
@@ -10369,6 +10349,124 @@
   "voiceDisguiseHere": "Disguise my voice here",
   "@voiceDisguiseHere": {
     "description": "a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat"
+  },
+  "chatBlockScreenshots": "Block screenshots",
+  "@chatBlockScreenshots": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart, screens/group_info_screen.dart: the per-chat switch that blocks screenshots on both phones"
+  },
+  "chatShotsWhenTheyUpdate": "Available when they update",
+  "@chatShotsWhenTheyUpdate": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
+  },
+  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
+  "@chatShotsBothPhones": {
+    "description": "screens/contact_screen.dart: under the switch while it is on"
+  },
+  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
+  "@chatShotsBlocksBoth": {
+    "description": "screens/contact_screen.dart: under the switch while it is off, what it does"
+  },
+  "chatShotsBlockedHere": "Kryfo blocks screenshots in this chat",
+  "@chatShotsBlockedHere": {
+    "description": "screens/chat_screen.dart: screen reader label of the small mark in the chat header"
+  },
+  "chatShotsMenuNote": "Copying, forwarding and saving their messages is off in this chat",
+  "@chatShotsMenuNote": {
+    "description": "screens/chat_screen.dart, screens/group_chat_screen.dart: one quiet line under a message menu for the other person's message in a chat that blocks screenshots"
+  },
+  "chatShotsKeptOpen": "Opening their files in other apps is off in this chat",
+  "@chatShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: toast when a file of the other person's in a chat that blocks screenshots is tapped to open in another app"
+  },
+  "searchKeptMatches": "{count, plural, one{{count} match · open the chat to see it} other{{count} matches · open the chat to see them}}",
+  "@searchKeptMatches": {
+    "description": "screens/search_screen.dart: the one line a chat that blocks screenshots, or a room, shows in search: how many matched, and to open the chat",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "savedKeptInChat": "Saved from a chat that blocks screenshots · open the chat to see it",
+  "@savedKeptInChat": {
+    "description": "screens/saved_screen.dart: what a saved message from a chat that blocks screenshots, or from a room, shows in Saved"
+  },
+  "roomShotsMenuNote": "Copying, forwarding and saving others’ messages is off in this room",
+  "@roomShotsMenuNote": {
+    "description": "screens/group_chat_screen.dart: one quiet line under a room message menu for someone else's message"
+  },
+  "roomShotsKeptOpen": "Opening others’ files in other apps is off in this room",
+  "@roomShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: toast when someone else's file in a room is tapped to open in another app"
+  },
+  "chatShotsYouTurnedOn": "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
+  "@chatShotsYouTurnedOn": {
+    "description": "widgets/shots_line.dart: the line in the chat where you turned the block on"
+  },
+  "chatShotsYouTurnedOff": "You turned off screenshot blocking",
+  "@chatShotsYouTurnedOff": {
+    "description": "widgets/shots_line.dart: the line in the chat where you turned the block off"
+  },
+  "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
+  "@chatShotsTheyTurnedOn": {
+    "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block on",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatShotsTheyTurnedOff": "{name} turned off screenshot blocking",
+  "@chatShotsTheyTurnedOff": {
+    "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block off",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
+  "@roomShotsBlocked": {
+    "description": "screens/group_chat_screen.dart: the line a room shows on its first open"
+  },
+  "roomShotsAlwaysOn": "Always on in a room, on every phone in it",
+  "@roomShotsAlwaysOn": {
+    "description": "screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off"
+  },
+  "settingsPerChat": "Per chat",
+  "@settingsPerChat": {
+    "description": "screens/settings_screen.dart: the screenshots line of your protections, without an app lock"
+  },
+  "homeShotsPerChat": "Screenshot blocking is now per chat.",
+  "@homeShotsPerChat": {
+    "description": "screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on"
+  },
+  "homeShotsTurnOnForAll": "Turn it on for all your chats?",
+  "@homeShotsTurnOnForAll": {
+    "description": "screens/home_screen.dart: the card line"
+  },
+  "homeShotsTurnOn": "Turn on for all",
+  "@homeShotsTurnOn": {
+    "description": "screens/home_screen.dart: the card button that turns the block on in every chat that can"
+  },
+  "homeShotsLeaveOff": "Leave them off",
+  "@homeShotsLeaveOff": {
+    "description": "screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good"
+  },
+  "homeShotsTheySeeIt": "Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.",
+  "@homeShotsTheySeeIt": {
+    "description": "screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on"
+  },
+  "homeShotsTurnedOn": "{count, plural, one{Kryfo now blocks screenshots in {count} chat} other{Kryfo now blocks screenshots in {count} chats}}",
+  "@homeShotsTurnedOn": {
+    "description": "screens/home_screen.dart: toast after the card turned the block on",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   },
   "voiceDisguisedHere": "Your voice is disguised in this chat",
   "@voiceDisguisedHere": {

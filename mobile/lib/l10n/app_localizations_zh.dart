@@ -4897,15 +4897,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
 
   @override
-  String get settingsBlockScreenshots => '禁止截屏';
-
-  @override
-  String get settingsWholeAppHiddenFrom => '整个应用不出现在最近任务和截屏中 · 下次启动后生效';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd => '整个应用不出现在最近任务和截屏中';
-
-  @override
   String get settingsLightTheme => '浅色主题';
 
   @override
@@ -6390,9 +6381,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsBlocked2 => '已禁止';
 
   @override
-  String get settingsAllowed => '已允许';
-
-  @override
   String get settingsOn => '开';
 
   @override
@@ -7142,9 +7130,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinPickDifferent => '请换一个 PIN 码';
 
   @override
-  String get settingsKeptOnWhileLock => '应用锁开启时保持开启。';
-
-  @override
   String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
 
   @override
@@ -7866,6 +7851,105 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => '在这里给我的语音变声';
+
+  @override
+  String get chatBlockScreenshots => '禁止截屏';
+
+  @override
+  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+
+  @override
+  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息';
+
+  @override
+  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息';
+
+  @override
+  String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截屏';
+
+  @override
+  String get chatShotsMenuNote => '此聊天中不能复制、转发或保存对方的消息';
+
+  @override
+  String get chatShotsKeptOpen => '此聊天中不能用其他应用打开对方的文件';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条结果 · 打开聊天查看',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat => '保存自禁止截屏的聊天 · 打开聊天查看';
+
+  @override
+  String get roomShotsMenuNote => '此聊天室中不能复制、转发或保存别人的消息';
+
+  @override
+  String get roomShotsKeptOpen => '此聊天室中不能用其他应用打开别人的文件';
+
+  @override
+  String get chatShotsYouTurnedOn => '你开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name 关闭了禁止截屏';
+  }
+
+  @override
+  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息';
+
+  @override
+  String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get settingsPerChat => '按聊天设置';
+
+  @override
+  String get homeShotsPerChat => '禁止截屏现在按聊天设置。';
+
+  @override
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中开启吗？';
+
+  @override
+  String get homeShotsTurnOn => '全部开启';
+
+  @override
+  String get homeShotsLeaveOff => '保持关闭';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo 也会在对方手机上禁止截屏，并关闭复制、转发和保存彼此的消息。对方会看到是你开启的。';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo 现已在 $countString 个聊天中禁止截屏',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => '在这个聊天里，你的语音会变声';
@@ -12826,15 +12910,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
 
   @override
-  String get settingsBlockScreenshots => '禁止截圖';
-
-  @override
-  String get settingsWholeAppHiddenFrom => '在最近使用畫面和截圖中隱藏整個應用程式 · 下次啟動後生效';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd => '在最近使用畫面和截圖中隱藏整個應用程式';
-
-  @override
   String get settingsLightTheme => '淺色主題';
 
   @override
@@ -14319,9 +14394,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsBlocked2 => '已禁止';
 
   @override
-  String get settingsAllowed => '已允許';
-
-  @override
   String get settingsOn => '開啟';
 
   @override
@@ -15071,9 +15143,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinPickDifferent => '請換一組 PIN 碼';
 
   @override
-  String get settingsKeptOnWhileLock => '應用程式鎖開啟時保持開啟。';
-
-  @override
   String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
 
   @override
@@ -15675,6 +15744,105 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceDisguiseHere => '在這裡給我的語音變聲';
+
+  @override
+  String get chatBlockScreenshots => '禁止截圖';
+
+  @override
+  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+
+  @override
+  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息';
+
+  @override
+  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息';
+
+  @override
+  String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截圖';
+
+  @override
+  String get chatShotsMenuNote => '此聊天中不能複製、轉傳或儲存對方的訊息';
+
+  @override
+  String get chatShotsKeptOpen => '此聊天中不能用其他應用程式開啟對方的檔案';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則結果 · 打開聊天查看',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat => '儲存自禁止截圖的聊天 · 打開聊天查看';
+
+  @override
+  String get roomShotsMenuNote => '此聊天室中不能複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get roomShotsKeptOpen => '此聊天室中不能用其他應用程式開啟別人的檔案';
+
+  @override
+  String get chatShotsYouTurnedOn => '你開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name 開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name 關閉了禁止截圖';
+  }
+
+  @override
+  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get settingsPerChat => '依聊天設定';
+
+  @override
+  String get homeShotsPerChat => '禁止截圖現在依聊天設定。';
+
+  @override
+  String get homeShotsTurnOnForAll => '要在你的所有聊天中開啟嗎？';
+
+  @override
+  String get homeShotsTurnOn => '全部開啟';
+
+  @override
+  String get homeShotsLeaveOff => '維持關閉';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo 也會在對方手機上禁止截圖，並關閉複製、轉傳和儲存彼此的訊息。對方會看到是你開啟的。';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo 現已在 $countString 個聊天中禁止截圖',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => '在這個聊天裡，你的語音會變聲';

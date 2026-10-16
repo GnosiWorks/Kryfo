@@ -597,6 +597,37 @@ void main() {
     expect(await loadScamShieldOn(), isFalse);
   });
 
+  test('home\'s card about the old switch travels while it waits, and its '
+      'answer too; it never lands in a decoy', () async {
+    oldPhone();
+    final d = await draftBackup(stage, side: const _Side());
+    expect((d.manifest['settings'] as Map)[Carried.screenshots], isTrue);
+    // answered: the next backup says so
+    await const FlutterSecureStorage().delete(key: 'block_screenshots');
+    final after = await draftBackup(stage, side: const _Side());
+    expect((after.manifest['settings'] as Map)[Carried.screenshots], isFalse);
+    newPhone();
+    const st = FlutterSecureStorage();
+    await landCarriedSettings(
+      {Carried.screenshots: false},
+      HaloContainer.everyday,
+      phone: true,
+    );
+    expect(await st.read(key: 'block_screenshots'), isNull);
+    await landCarriedSettings(
+      {Carried.screenshots: true},
+      HaloContainer.decoy,
+      phone: true,
+    );
+    expect(await st.read(key: 'block_screenshots'), isNull);
+    await landCarriedSettings(
+      {Carried.screenshots: true},
+      HaloContainer.everyday,
+      phone: true,
+    );
+    expect(await st.read(key: 'block_screenshots'), 'true');
+  });
+
   test('landed for a decoy, the phone\'s are never written, even when '
       'asked', () async {
     newPhone();

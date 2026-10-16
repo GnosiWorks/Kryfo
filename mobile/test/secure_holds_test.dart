@@ -69,7 +69,7 @@ void main() {
       lockState.openForTest();
     });
     final app = await make();
-    await app.loadScreenshotPref();
+    await app.loadScreenSecure();
     expect(app.screenSecureByLock, isTrue);
     expect(told.last, isTrue);
     lockState.inDecoy = true;

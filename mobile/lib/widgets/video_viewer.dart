@@ -35,6 +35,9 @@ Future<void> openVideo(
   BuildContext context, {
   required String path,
   String? fileName,
+  // the other person's, in a chat that blocks: no other app (shotsKeeps)
+  bool kept = false,
+  bool room = false,
 }) async {
   FocusManager.instance.primaryFocus?.unfocus();
   final still = MediaQuery.disableAnimationsOf(context);
@@ -47,8 +50,13 @@ Future<void> openVideo(
         opaque: false,
         transitionDuration: Duration(milliseconds: still ? 0 : 280),
         reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-        pageBuilder: (_, anim, _) =>
-            _VideoViewer(path: path, fileName: fileName, route: anim),
+        pageBuilder: (_, anim, _) => _VideoViewer(
+          path: path,
+          fileName: fileName,
+          route: anim,
+          kept: kept,
+          room: room,
+        ),
       ),
     );
   } finally {
@@ -83,7 +91,15 @@ class _VideoViewer extends StatefulWidget {
   final String path;
   final String? fileName;
   final Animation<double> route;
-  const _VideoViewer({required this.path, this.fileName, required this.route});
+  final bool kept;
+  final bool room;
+  const _VideoViewer({
+    required this.path,
+    this.fileName,
+    required this.route,
+    this.kept = false,
+    this.room = false,
+  });
   @override
   State<_VideoViewer> createState() => _VideoViewerState();
 }
@@ -541,29 +557,40 @@ class _VideoViewerState extends State<_VideoViewer>
             style: HaloType.sans(size: 14, color: Colors.white, height: 1.45),
           ),
           const SizedBox(height: 18),
-          PressScale(
-            scale: 0.96,
-            onTap: () async {
-              final nav = Navigator.of(context);
-              await openReceivedFile(context, widget.path, widget.fileName);
-              if (mounted) nav.pop();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: HaloColors.amber, width: 1),
-              ),
-              child: Text(
-                l10n.videoViewerOpenElsewhere,
-                style: HaloType.sans(
-                  size: 14,
-                  weight: FontWeight.w600,
-                  color: HaloColors.amber,
+          // the other person's, in a chat that blocks: no other app
+          if (widget.kept)
+            Text(
+              widget.room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 13, color: Colors.white, height: 1.4),
+            )
+          else
+            PressScale(
+              scale: 0.96,
+              onTap: () async {
+                final nav = Navigator.of(context);
+                await openReceivedFile(context, widget.path, widget.fileName);
+                if (mounted) nav.pop();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 11,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: HaloColors.amber, width: 1),
+                ),
+                child: Text(
+                  l10n.videoViewerOpenElsewhere,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
                 ),
               ),
             ),
-          ),
           const SizedBox(height: 10),
           // the dark theme's text2 on the viewer's black in both themes, a
           // full finger wide

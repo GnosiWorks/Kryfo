@@ -5112,17 +5112,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
 
   @override
-  String get settingsBlockScreenshots => 'Blokir tangkapan layar';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Seluruh aplikasi disembunyikan dari aplikasi terbaru dan tangkapan layar · berlaku setelah mulai ulang berikutnya';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Seluruh aplikasi disembunyikan dari aplikasi terbaru dan tangkapan layar';
-
-  @override
   String get settingsLightTheme => 'Tema terang';
 
   @override
@@ -6661,9 +6650,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsBlocked2 => 'Diblokir';
 
   @override
-  String get settingsAllowed => 'Diizinkan';
-
-  @override
   String get settingsOn => 'Aktif';
 
   @override
@@ -7448,10 +7434,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinPickDifferent => 'Pilih PIN lain';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Tetap aktif selama kunci aplikasi aktif.';
-
-  @override
   String get lockFingerAfterPin =>
       'Ketik PIN sekali untuk memakai sidik jari lagi.';
 
@@ -8217,6 +8199,118 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Samarkan suaraku di sini';
+
+  @override
+  String get chatBlockScreenshots => 'Blokir tangkapan layar';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Tersedia setelah dia memperbarui aplikasinya';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Memblokir tangkapan layar dan rekaman layar di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Kryfo memblokir tangkapan layar di obrolan ini';
+
+  @override
+  String get chatShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesannya mati di obrolan ini';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Membuka filenya di aplikasi lain mati di obrolan ini';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString hasil · buka obrolan untuk melihatnya',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Disimpan dari obrolan yang memblokir tangkapan layar · buka obrolan untuk melihatnya';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesan orang lain mati di ruang ini';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Membuka file orang lain di aplikasi lain mati di ruang ini';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Kamu menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Kamu mematikan blokir tangkapan layar';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name mematikan blokir tangkapan layar';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Selalu menyala di ruang, di setiap ponsel di dalamnya';
+
+  @override
+  String get settingsPerChat => 'Per obrolan';
+
+  @override
+  String get homeShotsPerChat =>
+      'Blokir tangkapan layar sekarang diatur per obrolan.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'Nyalakan untuk semua obrolanmu?';
+
+  @override
+  String get homeShotsTurnOn => 'Nyalakan untuk semua';
+
+  @override
+  String get homeShotsLeaveOff => 'Biarkan mati';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo juga memblokirnya di ponsel lawan, dan menyalin, meneruskan, serta menyimpan pesan satu sama lain jadi mati. Dia akan melihat bahwa kamu menyalakannya.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo kini memblokir tangkapan layar di $countString obrolan',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Suaramu disamarkan di obrolan ini';

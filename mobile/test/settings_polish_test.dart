@@ -265,7 +265,8 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('a lock turned off in the decoy frees the screenshot switch', (
+    testWidgets('screenshots are per chat now: no switch for the whole app, '
+        'and a lock turned off in the decoy leaves them to each chat', (
       t,
     ) async {
       SharedPreferences.setMockInitialValues({
@@ -285,15 +286,40 @@ void main() {
       addTearDown(t.view.reset);
       await t.pumpWidget(devApp(const SettingsScreen()));
       await t.pump(const Duration(seconds: 1));
-      final row = t.widget<HaloRow>(
-        find.ancestor(
-          of: find.text(l10n.settingsBlockScreenshots),
-          matching: find.byType(HaloRow),
+      expect(find.text(l10n.chatBlockScreenshots), findsNothing);
+      // as after a turn off in the everyday app
+      expect(find.text(l10n.settingsPerChat), findsOneWidget);
+      await devClose(t);
+    });
+
+    testWidgets('the old switch still waiting on home\'s card: the '
+        'protections say the window is covered', (t) async {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+      });
+      await devWorld();
+      FlutterSecureStorage.setMockInitialValues({'block_screenshots': 'true'});
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (_) async => null,
+      );
+      await t.runAsync(() => appState.loadScreenSecure());
+      addTearDown(() async {
+        FlutterSecureStorage.setMockInitialValues({});
+        await appState.loadScreenSecure();
+      });
+      t.view.physicalSize = const Size(1000, 6000);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(devApp(const SettingsScreen()));
+      await t.pump(const Duration(seconds: 1));
+      final line = t.widget<ProtectionLine>(
+        find.byWidgetPredicate(
+          (w) => w is ProtectionLine && w.label == l10n.settingsScreenshots,
         ),
       );
-      // as after a turn off in the everyday app
-      expect(row.hint, isNot(l10n.settingsKeptOnWhileLock));
-      expect(row.onTap, isNotNull);
+      expect((line.on, line.state), (true, l10n.settingsBlocked2));
       await devClose(t);
     });
   });

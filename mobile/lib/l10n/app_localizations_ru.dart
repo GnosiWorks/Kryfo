@@ -5221,17 +5221,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверка только на твоём телефоне, ничего не покидает его';
 
   @override
-  String get settingsBlockScreenshots => 'Запретить скриншоты';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Приложение целиком скрыто из недавних и скриншотов · сработает после следующего запуска';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Приложение целиком скрыто из недавних и скриншотов';
-
-  @override
   String get settingsLightTheme => 'Светлая тема';
 
   @override
@@ -6797,9 +6786,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsBlocked2 => 'Запрещены';
 
   @override
-  String get settingsAllowed => 'Разрешены';
-
-  @override
   String get settingsOn => 'Вкл.';
 
   @override
@@ -7601,10 +7587,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pinPickDifferent => 'Выбери другой PIN-код';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Остаётся включённым, пока включена блокировка приложения.';
-
-  @override
   String get lockFingerAfterPin =>
       'Введи PIN-код один раз, чтобы снова входить по отпечатку.';
 
@@ -8380,6 +8362,123 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Изменять мой голос здесь';
+
+  @override
+  String get chatBlockScreenshots => 'Запретить скриншоты';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Станет доступно, когда собеседник обновит приложение';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo запрещает скриншоты и запись экрана этого чата на обоих телефонах, а также копировать, пересылать и сохранять сообщения друг друга';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Запрещает скриншоты и запись экрана на обоих телефонах, а также копировать, пересылать и сохранять сообщения друг друга';
+
+  @override
+  String get chatShotsBlockedHere => 'Kryfo запрещает скриншоты в этом чате';
+
+  @override
+  String get chatShotsMenuNote =>
+      'В этом чате нельзя копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'В этом чате нельзя открывать чужие файлы в других приложениях';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString совпадения · открой чат, чтобы увидеть',
+      many: '$countString совпадений · открой чат, чтобы увидеть',
+      few: '$countString совпадения · открой чат, чтобы увидеть',
+      one: '$countString совпадение · открой чат, чтобы увидеть',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Из чата, где запрещены скриншоты · открой чат, чтобы увидеть';
+
+  @override
+  String get roomShotsMenuNote =>
+      'В этой комнате нельзя копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'В этой комнате нельзя открывать чужие файлы в других приложениях';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Ты включил(а) запрет скриншотов. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Ты выключил(а) запрет скриншотов';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name включил(а) запрет скриншотов. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name выключил(а) запрет скриншотов';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo запрещает скриншоты и запись экрана этой комнаты на каждом телефоне в ней, а также копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'В комнате включено всегда, на каждом телефоне';
+
+  @override
+  String get settingsPerChat => 'Для каждого чата';
+
+  @override
+  String get homeShotsPerChat =>
+      'Запрет скриншотов теперь настраивается в каждом чате.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'Включить во всех твоих чатах?';
+
+  @override
+  String get homeShotsTurnOn => 'Включить везде';
+
+  @override
+  String get homeShotsLeaveOff => 'Оставить выключенным';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo запретит их и на втором телефоне, а копировать, пересылать и сохранять сообщения друг друга станет нельзя. Собеседник увидит, что это включил(а) ты.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo теперь запрещает скриншоты в $countString чата',
+      many: 'Kryfo теперь запрещает скриншоты в $countString чатах',
+      few: 'Kryfo теперь запрещает скриншоты в $countString чатах',
+      one: 'Kryfo теперь запрещает скриншоты в $countString чате',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Твой голос в этом чате изменён';

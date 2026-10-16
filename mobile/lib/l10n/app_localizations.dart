@@ -8256,24 +8256,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Block screenshots'**
-  String get settingsBlockScreenshots;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Whole app hidden from recents and screenshots · takes effect after the next start'**
-  String get settingsWholeAppHiddenFrom;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Whole app hidden from recents and screenshots'**
-  String get settingsWholeAppHiddenFromRecentsAnd;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Light theme'**
   String get settingsLightTheme;
 
@@ -10662,12 +10644,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Allowed'**
-  String get settingsAllowed;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'On'**
   String get settingsOn;
 
@@ -12003,12 +11979,6 @@ abstract class AppLocalizations {
   /// **'Pick a different PIN'**
   String get pinPickDifferent;
 
-  /// hint under Block screenshots when the app lock forces it on
-  ///
-  /// In en, this message translates to:
-  /// **'Kept on while the app lock is on.'**
-  String get settingsKeptOnWhileLock;
-
   /// lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)
   ///
   /// In en, this message translates to:
@@ -13256,6 +13226,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disguise my voice here'**
   String get voiceDisguiseHere;
+
+  /// screens/chat_screen.dart, screens/contact_screen.dart, screens/group_info_screen.dart: the per-chat switch that blocks screenshots on both phones
+  ///
+  /// In en, this message translates to:
+  /// **'Block screenshots'**
+  String get chatBlockScreenshots;
+
+  /// screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet
+  ///
+  /// In en, this message translates to:
+  /// **'Available when they update'**
+  String get chatShotsWhenTheyUpdate;
+
+  /// screens/contact_screen.dart: under the switch while it is on
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages'**
+  String get chatShotsBothPhones;
+
+  /// screens/contact_screen.dart: under the switch while it is off, what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages'**
+  String get chatShotsBlocksBoth;
+
+  /// screens/chat_screen.dart: screen reader label of the small mark in the chat header
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks screenshots in this chat'**
+  String get chatShotsBlockedHere;
+
+  /// screens/chat_screen.dart, screens/group_chat_screen.dart: one quiet line under a message menu for the other person's message in a chat that blocks screenshots
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving their messages is off in this chat'**
+  String get chatShotsMenuNote;
+
+  /// widgets/video_bubble.dart: toast when a file of the other person's in a chat that blocks screenshots is tapped to open in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opening their files in other apps is off in this chat'**
+  String get chatShotsKeptOpen;
+
+  /// screens/search_screen.dart: the one line a chat that blocks screenshots, or a room, shows in search: how many matched, and to open the chat
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} match · open the chat to see it} other{{count} matches · open the chat to see them}}'**
+  String searchKeptMatches(int count);
+
+  /// screens/saved_screen.dart: what a saved message from a chat that blocks screenshots, or from a room, shows in Saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saved from a chat that blocks screenshots · open the chat to see it'**
+  String get savedKeptInChat;
+
+  /// screens/group_chat_screen.dart: one quiet line under a room message menu for someone else's message
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving others’ messages is off in this room'**
+  String get roomShotsMenuNote;
+
+  /// widgets/video_bubble.dart: toast when someone else's file in a room is tapped to open in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opening others’ files in other apps is off in this room'**
+  String get roomShotsKeptOpen;
+
+  /// widgets/shots_line.dart: the line in the chat where you turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.'**
+  String get chatShotsYouTurnedOn;
+
+  /// widgets/shots_line.dart: the line in the chat where you turned the block off
+  ///
+  /// In en, this message translates to:
+  /// **'You turned off screenshot blocking'**
+  String get chatShotsYouTurnedOff;
+
+  /// widgets/shots_line.dart: the line in the chat where the other person turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.'**
+  String chatShotsTheyTurnedOn(String name);
+
+  /// widgets/shots_line.dart: the line in the chat where the other person turned the block off
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned off screenshot blocking'**
+  String chatShotsTheyTurnedOff(String name);
+
+  /// screens/group_chat_screen.dart: the line a room shows on its first open
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages'**
+  String get roomShotsBlocked;
+
+  /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off
+  ///
+  /// In en, this message translates to:
+  /// **'Always on in a room, on every phone in it'**
+  String get roomShotsAlwaysOn;
+
+  /// screens/settings_screen.dart: the screenshots line of your protections, without an app lock
+  ///
+  /// In en, this message translates to:
+  /// **'Per chat'**
+  String get settingsPerChat;
+
+  /// screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is now per chat.'**
+  String get homeShotsPerChat;
+
+  /// screens/home_screen.dart: the card line
+  ///
+  /// In en, this message translates to:
+  /// **'Turn it on for all your chats?'**
+  String get homeShotsTurnOnForAll;
+
+  /// screens/home_screen.dart: the card button that turns the block on in every chat that can
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on for all'**
+  String get homeShotsTurnOn;
+
+  /// screens/home_screen.dart: the card button that leaves the chats as they are and closes the card for good
+  ///
+  /// In en, this message translates to:
+  /// **'Leave them off'**
+  String get homeShotsLeaveOff;
+
+  /// screens/home_screen.dart: the card's line after its question: the other phone blocks too, and the other person sees who turned it on
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.'**
+  String get homeShotsTheySeeIt;
+
+  /// screens/home_screen.dart: toast after the card turned the block on
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Kryfo now blocks screenshots in {count} chat} other{Kryfo now blocks screenshots in {count} chats}}'**
+  String homeShotsTurnedOn(int count);
 
   /// the mic's screen reader hint while voice notes in this chat go out disguised
   ///

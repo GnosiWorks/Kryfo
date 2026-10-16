@@ -7,9 +7,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, nameUnchecked, session;
+import '../main.dart' show appState, nameUnchecked, session, sessionQuiet;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
@@ -165,17 +166,61 @@ class _ContactScreenState extends State<ContactScreen> {
   bool? _pinnedNow;
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
+  bool? _shotsNow;
+  // the chat's media is here too: held while the chat blocks, from what
+  // the list knows before the first read
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  // read as the page opens: a change after that reads the rows again
+  int _rev = 0;
+
+  ChatShots get _shots => ChatShots.ofRow(_c, quiet: sessionQuiet);
 
   @override
   void initState() {
     super.initState();
+    _shotsHold.want(appState.shotsBlocksChat(widget.haloId), now: true);
+    _rev = appState.chatRevOf(widget.haloId);
+    appState.addListener(_changed);
+    _load();
+  }
+
+  // a change from their phone shows here while the page is open
+  void _changed() {
+    final rev = appState.chatRevOf(widget.haloId);
+    if (rev == _rev) return;
+    _rev = rev;
     _load();
   }
 
   @override
+  void deactivate() {
+    _shotsHold.release();
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _shotsHold.want(_shots.blocking, now: true);
+  }
+
+  @override
   void dispose() {
+    appState.removeListener(_changed);
+    _shotsHold.release();
     _scroll.dispose();
     super.dispose();
+  }
+
+  Future<void> _setShots(bool on) async {
+    HapticFeedback.selectionClick();
+    setState(() => _shotsNow = on);
+    await appState.setChatShots(widget.haloId, on);
+    await _load();
+    if (!mounted) return;
+    // this phone's own tap: at once either way
+    _shotsHold.want(_shots.blocking, now: true);
+    setState(() => _shotsNow = null);
   }
 
   Future<void> _load() async {
@@ -211,6 +256,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _held = held;
       _loaded = true;
     });
+    _shotsHold.want(_shots.blocking);
   }
 
   bool _flag(String k) {
@@ -533,6 +579,22 @@ class _ContactScreenState extends State<ContactScreen> {
                 toggled: pinned,
                 onTap: () => _setPinned(!pinned),
               ),
+              // both phones or neither, once theirs knows how
+              if (accepted && !blocked)
+                HaloRow(
+                  icon: Icons.phonelink_lock_outlined,
+                  label: l10n.chatBlockScreenshots,
+                  hint: !_shots.peerCan
+                      ? l10n.chatShotsWhenTheyUpdate
+                      : (_shotsNow ?? _shots.on)
+                      ? l10n.chatShotsBothPhones
+                      : l10n.chatShotsBlocksBoth,
+                  toggled: _shotsNow ?? _shots.blocking,
+                  pending: !_loaded,
+                  onTap: _shots.peerCan
+                      ? () => _setShots(!(_shotsNow ?? _shots.on))
+                      : null,
+                ),
               HaloRow(
                 icon: Icons.archive_outlined,
                 label: l10n.contactArchive,

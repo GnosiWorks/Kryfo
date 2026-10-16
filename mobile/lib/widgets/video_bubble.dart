@@ -19,12 +19,23 @@ import 'video_viewer.dart';
 
 /// a tap on a file or a video: open it in whatever the phone has for it,
 /// or the share sheet when nothing does. held against the app lock: leaving
-/// for the viewer is not leaving.
+/// for the viewer is not leaving. [kept]: the other person's, in a chat
+/// that blocks, which goes to no other app (shotsKeeps)
 Future<void> openReceivedFile(
   BuildContext context,
   String path,
-  String? name,
-) async {
+  String? name, {
+  bool kept = false,
+  // a room's, which says so in its own words
+  bool room = false,
+}) async {
+  if (kept) {
+    showHaloToast(
+      context,
+      room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
+    );
+    return;
+  }
   final opened = await lockState.hold(
     () => openWithAnotherApp(path, name: name),
   );

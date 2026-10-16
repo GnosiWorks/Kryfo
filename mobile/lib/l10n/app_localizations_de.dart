@@ -5175,17 +5175,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nur auf deinem Handy geprüft, nichts verlässt es';
 
   @override
-  String get settingsBlockScreenshots => 'Screenshots blockieren';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Ganze App in „Zuletzt verwendet“ und auf Screenshots verborgen · gilt ab dem nächsten Start';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Ganze App in „Zuletzt verwendet“ und auf Screenshots verborgen';
-
-  @override
   String get settingsLightTheme => 'Helles Design';
 
   @override
@@ -6739,9 +6728,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsBlocked2 => 'Blockiert';
 
   @override
-  String get settingsAllowed => 'Erlaubt';
-
-  @override
   String get settingsOn => 'An';
 
   @override
@@ -7537,10 +7523,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinPickDifferent => 'Wähl eine andere PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Bleibt an, solange die App-Sperre an ist.';
-
-  @override
   String get lockFingerAfterPin =>
       'Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.';
 
@@ -8315,6 +8297,120 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Meine Stimme hier verfremden';
+
+  @override
+  String get chatBlockScreenshots => 'Screenshots blockieren';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Verfügbar, sobald die andere Person aktualisiert';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Kryfo blockiert Screenshots in diesem Chat';
+
+  @override
+  String get chatShotsMenuNote =>
+      'Kopieren, Weiterleiten und Speichern dieser Nachrichten ist in diesem Chat aus';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Diese Dateien in anderen Apps zu öffnen ist in diesem Chat aus';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Treffer · öffne den Chat, um sie zu sehen',
+      one: '$countString Treffer · öffne den Chat, um ihn zu sehen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Aus einem Chat, der Screenshots blockiert · öffne den Chat, um sie zu sehen';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Kopieren, Weiterleiten und Speichern der Nachrichten anderer ist in diesem Raum aus';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Dateien anderer in anderen Apps zu öffnen ist in diesem Raum aus';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Du hast das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'Du hast das Blockieren von Screenshots ausgeschaltet';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name hat das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name hat das Blockieren von Screenshots ausgeschaltet';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'In einem Raum immer an, auf jedem Handy darin';
+
+  @override
+  String get settingsPerChat => 'Pro Chat';
+
+  @override
+  String get homeShotsPerChat => 'Screenshots blockierst du jetzt pro Chat.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'Für alle deine Chats einschalten?';
+
+  @override
+  String get homeShotsTurnOn => 'Für alle einschalten';
+
+  @override
+  String get homeShotsLeaveOff => 'Ausgeschaltet lassen';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo blockiert sie auch auf dem anderen Handy, und Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist aus. Die andere Person sieht, dass du es eingeschaltet hast.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo blockiert jetzt Screenshots in $countString Chats',
+      one: 'Kryfo blockiert jetzt Screenshots in $countString Chat',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere =>

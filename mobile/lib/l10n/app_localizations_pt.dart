@@ -5146,17 +5146,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Verificado só no seu celular, nada sai dele';
 
   @override
-  String get settingsBlockScreenshots => 'Bloquear capturas de tela';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'App inteiro oculto dos recentes e das capturas de tela · vale depois de reiniciar';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'App inteiro oculto dos recentes e das capturas de tela';
-
-  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override
@@ -6712,9 +6701,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsBlocked2 => 'Bloqueadas';
 
   @override
-  String get settingsAllowed => 'Permitidas';
-
-  @override
   String get settingsOn => 'Ativado';
 
   @override
@@ -7506,10 +7492,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pinPickDifferent => 'Escolha outro PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Fica ativado enquanto o bloqueio do app estiver ativado.';
-
-  @override
   String get lockFingerAfterPin =>
       'Digite seu PIN uma vez para usar a digital de novo.';
 
@@ -8283,6 +8265,122 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Disfarçar minha voz aqui';
+
+  @override
+  String get chatBlockScreenshots => 'Bloquear capturas de tela';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Disponível quando a pessoa atualizar o app';
+
+  @override
+  String get chatShotsBothPhones =>
+      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Bloqueia capturas e gravação de tela nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'O Kryfo bloqueia capturas de tela nesta conversa';
+
+  @override
+  String get chatShotsMenuNote =>
+      'Copiar, encaminhar e salvar as mensagens dessa pessoa está desativado nesta conversa';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Abrir os arquivos dessa pessoa em outros apps está desativado nesta conversa';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString resultados · abra a conversa para ver',
+      one: '$countString resultado · abra a conversa para ver',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Salvo de uma conversa que bloqueia capturas de tela · abra a conversa para ver';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Copiar, encaminhar e salvar as mensagens dos outros está desativado nesta sala';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Abrir arquivos dos outros em outros apps está desativado nesta sala';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Você ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'Você desativou o bloqueio de capturas de tela';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name desativou o bloqueio de capturas de tela';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela, e também copiar, encaminhar ou salvar as mensagens dos outros';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Sempre ativado numa sala, em todos os celulares dela';
+
+  @override
+  String get settingsPerChat => 'Por conversa';
+
+  @override
+  String get homeShotsPerChat =>
+      'O bloqueio de capturas de tela agora é por conversa.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'Ativar em todas as suas conversas?';
+
+  @override
+  String get homeShotsTurnOn => 'Ativar em todas';
+
+  @override
+  String get homeShotsLeaveOff => 'Deixar desativado';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'O Kryfo também bloqueia no outro celular, e copiar, encaminhar e salvar as mensagens do outro fica desativado. A outra pessoa vai ver que você ativou.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'O Kryfo agora bloqueia capturas de tela em $countString conversas',
+      one: 'O Kryfo agora bloqueia capturas de tela em $countString conversa',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Sua voz vai disfarçada nesta conversa';

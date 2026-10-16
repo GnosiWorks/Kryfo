@@ -111,6 +111,7 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../chat_shots.dart' show shotsKeeps;
 import '../widgets/photo_viewer.dart' show photoHeroTag;
 import '../widgets/voice_mic.dart';
 import '../voice_mask.dart' show maskWavOff;
@@ -1606,6 +1607,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   child: _GroupBubble(
                     m: m,
                     showSender: showSender,
+                    kept: _keeps(m),
                     stickers: _stickers,
                     stickerOrder: _messages.length - 1 - i,
                     landing: landing,
@@ -3049,10 +3051,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     unguard = lockGuard.closeOnLock(finish);
   }
 
+  // someone else's, in a room, which always blocks: not copied,
+  // forwarded, shared, saved or opened elsewhere (shotsKeeps)
+  bool _keeps(_GMsg m) =>
+      shotsKeeps(blocking: _isRoom, mine: m.direction == 'out');
+
   // what can be done to one message, under it while the menu is open
   Widget _menuCard(_GMsg target, bool isOut, VoidCallback dismiss) {
-    final words = target.text.isNotEmpty && target.sticker == null;
+    final kept = _keeps(target);
+    final words = target.text.isNotEmpty && target.sticker == null && !kept;
     return MessageMenuCard(
+      note: kept ? l10n.roomShotsMenuNote : null,
       actions: [
         MenuAction(
           icon: target.pinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -3066,10 +3075,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           icon: target.saved ? Icons.bookmark : Icons.bookmark_outline,
           label: target.saved ? l10n.groupChatUnsave : l10n.commonSave,
           tint: target.saved ? HaloColors.amber : null,
-          onTap: () {
-            dismiss();
-            _toggleSavedGroup(target);
-          },
+          // one saved before stays, and can be let go
+          onTap: kept && !target.saved
+              ? null
+              : () {
+                  dismiss();
+                  _toggleSavedGroup(target);
+                },
         ),
         // a sticker is not copied, forwarded or edited
         MenuAction(
@@ -3087,12 +3099,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           icon: Icons.forward_rounded,
           label: l10n.groupChatForward,
           onTap:
-              !canForward(
-                text: target.text,
-                mediaPath: target.mediaPath,
-                filePath: target.filePath,
-                sticker: target.sticker != null,
-              )
+              kept ||
+                  !canForward(
+                    text: target.text,
+                    mediaPath: target.mediaPath,
+                    filePath: target.filePath,
+                    sticker: target.sticker != null,
+                  )
               ? null
               : () {
                   dismiss();
@@ -3103,7 +3116,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         MenuAction(
           icon: Icons.ios_share_rounded,
           label: l10n.commonShare,
-          onTap: (target.filePath == null || target.fileName == 'voice.wav')
+          onTap:
+              (kept ||
+                  target.filePath == null ||
+                  target.fileName == 'voice.wav')
               ? null
               : () {
                   dismiss();
@@ -3759,18 +3775,32 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             // instead of shoving it when the room is known
             EaseSize(
               child: _isRoom && _roomBanner && !_waiting
-                  ? NoticeBanner(
-                      glyph: NoticeGlyph.clock,
-                      text: l10n.groupChatThisRoomAndEverything(
-                        expiryWords(
-                          DateTime.fromMillisecondsSinceEpoch(
-                            _roomExpiresAt!,
-                          ).difference(DateTime.now()),
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NoticeBanner(
+                          glyph: NoticeGlyph.clock,
+                          text: l10n.groupChatThisRoomAndEverything(
+                            expiryWords(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                _roomExpiresAt!,
+                              ).difference(DateTime.now()),
+                            ),
+                          ),
+                          color: HaloColors.violet,
+                          margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                          delay: const Duration(milliseconds: 160),
                         ),
-                      ),
-                      color: HaloColors.violet,
-                      margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-                      delay: const Duration(milliseconds: 160),
+                        // every phone that opens a room holds the flag on
+                        // it, since the first version with rooms
+                        NoticeBanner(
+                          glyph: NoticeGlyph.shield,
+                          text: l10n.roomShotsBlocked,
+                          color: HaloColors.violet,
+                          margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+                          delay: const Duration(milliseconds: 220),
+                        ),
+                      ],
                     )
                   : const SizedBox(width: double.infinity, height: 0),
             ),
@@ -4884,7 +4914,11 @@ class _GroupBubble extends StatelessWidget {
     this.onReplyTap,
     this.linkTitle,
     this.linkBySender = false,
+    this.kept = false,
   });
+
+  // someone else's, in a room: opened in no other app
+  final bool kept;
 
   // a search steps what is not a hit back, as in the 1:1 chat
   @override
@@ -5167,6 +5201,8 @@ class _GroupBubble extends StatelessWidget {
                                                 context,
                                                 path: m.filePath!,
                                                 fileName: m.fileName,
+                                                kept: kept,
+                                                room: true,
                                               );
                                             },
                                             stamp: m.failed
@@ -5184,6 +5220,8 @@ class _GroupBubble extends StatelessWidget {
                                                   context,
                                                   m.filePath!,
                                                   m.fileName,
+                                                  kept: kept,
+                                                  room: true,
                                                 );
                                               }
                                             },

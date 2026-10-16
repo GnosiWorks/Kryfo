@@ -5157,17 +5157,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se revisa solo en tu teléfono, nada sale de él';
 
   @override
-  String get settingsBlockScreenshots => 'Bloquear capturas';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Toda la app oculta en recientes y capturas · se aplica tras el próximo inicio';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Toda la app oculta en recientes y capturas';
-
-  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override
@@ -6720,9 +6709,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsBlocked2 => 'Bloqueadas';
 
   @override
-  String get settingsAllowed => 'Permitidas';
-
-  @override
   String get settingsOn => 'Activado';
 
   @override
@@ -7515,10 +7501,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinPickDifferent => 'Elige otro PIN';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Sigue activado mientras el bloqueo de la app esté activado.';
-
-  @override
   String get lockFingerAfterPin =>
       'Escribe tu PIN una vez para volver a usar tu huella.';
 
@@ -8288,6 +8270,117 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Disfrazar mi voz aquí';
+
+  @override
+  String get chatBlockScreenshots => 'Bloquear capturas';
+
+  @override
+  String get chatShotsWhenTheyUpdate => 'Disponible cuando actualice la app';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
+
+  @override
+  String get chatShotsBlockedHere => 'Kryfo bloquea las capturas en este chat';
+
+  @override
+  String get chatShotsMenuNote =>
+      'Copiar, reenviar y guardar sus mensajes está desactivado en este chat';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Abrir sus archivos en otras apps está desactivado en este chat';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString coincidencias · abre el chat para verlas',
+      one: '$countString coincidencia · abre el chat para verla',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Guardado de un chat que bloquea capturas · abre el chat para verlo';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Copiar, reenviar y guardar los mensajes de los demás está desactivado en esta sala';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Abrir archivos de los demás en otras apps está desactivado en esta sala';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Activaste el bloqueo de capturas. Copiar, reenviar y guardar los mensajes del otro también queda desactivado.';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Desactivaste el bloqueo de capturas';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name activó el bloqueo de capturas. Copiar, reenviar y guardar los mensajes del otro también queda desactivado.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name desactivó el bloqueo de capturas';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos, y copiar, reenviar o guardar los mensajes de los demás';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Siempre activado en una sala, en todos sus teléfonos';
+
+  @override
+  String get settingsPerChat => 'Por chat';
+
+  @override
+  String get homeShotsPerChat => 'El bloqueo de capturas ahora es por chat.';
+
+  @override
+  String get homeShotsTurnOnForAll => '¿Activarlo en todos tus chats?';
+
+  @override
+  String get homeShotsTurnOn => 'Activar en todos';
+
+  @override
+  String get homeShotsLeaveOff => 'Dejarlo apagado';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo también las bloquea en el otro teléfono, y copiar, reenviar y guardar los mensajes del otro queda desactivado. La otra persona verá que lo activaste.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo ahora bloquea las capturas en $countString chats',
+      one: 'Kryfo ahora bloquea las capturas en $countString chat',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Tu voz va disfrazada en este chat';

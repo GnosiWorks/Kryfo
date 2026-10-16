@@ -98,7 +98,7 @@ void main() {
     await old.close();
   });
 
-  test('it opens at 82 with the schema of a new install', () async {
+  test('it opens at 83 with the schema of a new install', () async {
     if (skip()) return;
     final fresh = Directory.systemTemp.createTempSync('upgrade_042_fresh');
     m.setMockMethodCallHandler(paths, (_) async => fresh.path);
@@ -112,7 +112,7 @@ void main() {
     final from = sql!.said.length;
     final db = HaloDb();
     final raw = await db.open();
-    expect(await raw.getVersion(), 82);
+    expect(await raw.getVersion(), 83);
     final got = await _schema(raw);
     for (final k in {...want.keys, ...got.keys}) {
       expect(got[k], want[k], reason: k);
@@ -132,7 +132,9 @@ void main() {
     // and the steps from 81 after it, in order
     final keys = at('CREATE TABLE IF NOT EXISTS blocked_keys');
     expect(keys, greaterThan(ack));
-    expect(at('ALTER TABLE groups ADD COLUMN ended_at'), greaterThan(keys));
+    final ended = at('ALTER TABLE groups ADD COLUMN ended_at');
+    expect(ended, greaterThan(keys));
+    expect(at('ALTER TABLE contacts ADD COLUMN shots_on'), greaterThan(ended));
     await db.close();
   });
 
@@ -176,7 +178,7 @@ void main() {
     final from = sql!.said.length;
     final again = HaloDb();
     final raw = await again.open();
-    expect(await raw.getVersion(), 82);
+    expect(await raw.getVersion(), 83);
     expect(
       sql!.said
           .sublist(from)

@@ -5129,17 +5129,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yalnızca telefonunda kontrol edilir, hiçbir şey dışarı çıkmaz';
 
   @override
-  String get settingsBlockScreenshots => 'Ekran görüntüsünü engelle';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir · bir sonraki açılışta etkili olur';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir';
-
-  @override
   String get settingsLightTheme => 'Açık tema';
 
   @override
@@ -6684,9 +6673,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsBlocked2 => 'Engelli';
 
   @override
-  String get settingsAllowed => 'İzinli';
-
-  @override
   String get settingsOn => 'Açık';
 
   @override
@@ -7477,10 +7463,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinPickDifferent => 'Başka bir PIN seç';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'Uygulama kilidi açık olduğu sürece açık kalır.';
-
-  @override
   String get lockFingerAfterPin =>
       'Parmak izini yeniden kullanmak için PIN\'ini bir kez gir.';
 
@@ -8246,6 +8228,119 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'Burada sesimi gizle';
+
+  @override
+  String get chatBlockScreenshots => 'Ekran görüntüsünü engelle';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'Karşı taraf güncelleyince kullanılabilir';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Kryfo bu sohbette ekran görüntüsünü engeller';
+
+  @override
+  String get chatShotsMenuNote =>
+      'Bu sohbette onun mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'Bu sohbette onun dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sonuç · görmek için sohbeti aç',
+      one: '$countString sonuç · görmek için sohbeti aç',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'Ekran görüntüsünü engelleyen bir sohbetten · görmek için sohbeti aç';
+
+  @override
+  String get roomShotsMenuNote =>
+      'Bu odada başkalarının mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'Bu odada başkalarının dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'Ekran görüntüsü engelini açtın. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
+  String get chatShotsYouTurnedOff => 'Ekran görüntüsü engelini kapattın';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '$name ekran görüntüsü engelini açtı. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '$name ekran görüntüsü engelini kapattı';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'Odada her zaman açık, içindeki her telefonda';
+
+  @override
+  String get settingsPerChat => 'Sohbete göre';
+
+  @override
+  String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'Tüm sohbetlerinde açılsın mı?';
+
+  @override
+  String get homeShotsTurnOn => 'Hepsinde aç';
+
+  @override
+  String get homeShotsLeaveOff => 'Kapalı kalsın';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo karşı telefonda da engeller; birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapanır. Karşı taraf bunu senin açtığını görür.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo artık $countString sohbette ekran görüntüsünü engelliyor',
+      one: 'Kryfo artık $countString sohbette ekran görüntüsünü engelliyor',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'Bu sohbette sesin gizleniyor';

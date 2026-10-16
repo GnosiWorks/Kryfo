@@ -89,6 +89,8 @@ class _Chat {
   final String name;
   final int? avatar;
   final List<_Hit> hits = [];
+  // matches in a chat that keeps its messages to itself, counted only
+  int kept = 0;
   _Chat({this.groupId, this.peer, required this.name, this.avatar});
 }
 
@@ -393,6 +395,14 @@ class _SearchScreenState extends State<SearchScreen> {
             ? _Chat(groupId: gid, name: groupName[gid] ?? '')
             : _Chat(peer: peer, name: _nameOfPeer(peer), avatar: _faceOf(peer)),
       );
+      // a chat that blocks screenshots, or a room, which always does,
+      // shows none of itself here: only how many matched
+      if (gid == null
+          ? appState.shotsBlocksChat(peer)
+          : appState.shotsBlocksGroup(gid)) {
+        chat.kept++;
+        continue;
+      }
       final fileName = r['file_name'] as String?;
       final poll = PollSpec.parse(r['poll']);
       final plain = (r['plaintext'] as String?) ?? '';
@@ -417,7 +427,9 @@ class _SearchScreenState extends State<SearchScreen> {
     dlog('search: ${sw.elapsedMilliseconds}ms, ${rows.length} rows');
     setState(() {
       _names = names;
-      _chats = byChat.values.where((c) => c.hits.isNotEmpty).toList();
+      _chats = byChat.values
+          .where((c) => c.hits.isNotEmpty || c.kept > 0)
+          .toList();
       _done = true;
       _shown = kind;
     });
@@ -1758,16 +1770,35 @@ class _ChatBlockState extends State<_ChatBlock> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.searchMatches(c.hits.length),
-                        style: HaloType.mono(size: 10, color: HaloColors.amber),
-                      ),
+                      if (c.kept == 0) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.searchMatches(c.hits.length),
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.amber,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
-              if (photos)
+              // one plain line: how many, and where to read them
+              if (c.kept > 0)
+                PressScale(
+                  scale: 0.99,
+                  haptic: false,
+                  onTap: () => widget.onOpen(groupId: c.groupId, peer: c.peer),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
+                    child: Text(
+                      l10n.searchKeptMatches(c.kept),
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
+                  ),
+                )
+              else if (photos)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
                   child: LayoutBuilder(

@@ -9,6 +9,7 @@ import 'dart:typed_data';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'chat_shots.dart' show ShotsWord;
 import 'dlog.dart';
 import 'relay_poll.dart' show Reached;
 
@@ -102,6 +103,7 @@ class RouterCard {
     this.blockedFrom,
     this.verifiedKey,
     this.markRead = true,
+    this.shots,
   });
 
   final String id;
@@ -118,6 +120,9 @@ class RouterCard {
   // false on a card written before cards kept the mark: whether they were
   // verified is not known until the vault opens
   final bool markRead;
+  // the chat's screenshot block as the vault last had it: what goes to them
+  // while it is shut, as their row would say (chat_shots.dart)
+  final ShotsWord? shots;
 
   Map<String, Object> toJson() => {
     'h': id,
@@ -130,6 +135,8 @@ class RouterCard {
     if (blocked && blockedFrom != null)
       'bs': (blockedFrom! + kDay - 1) ~/ kDay * kDay,
     'vk': verifiedKey ?? '',
+    // one width whether set or not
+    'ss': (shots ?? const ShotsWord(on: false, at: 0)).toWire(),
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -149,6 +156,7 @@ class RouterCard {
       blockedFrom: j['bl'] == 1 && bs is int ? bs : null,
       verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
       markRead: vk is String,
+      shots: ShotsWord.fromWire(j['ss']),
     );
   }
 }

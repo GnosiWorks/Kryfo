@@ -5120,17 +5120,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'فقط روی گوشی شما بررسی می‌شود، چیزی از آن بیرون نمی‌رود';
 
   @override
-  String get settingsBlockScreenshots => 'جلوگیری از اسکرین‌شات';
-
-  @override
-  String get settingsWholeAppHiddenFrom =>
-      'کل برنامه از فهرست اخیر و اسکرین‌شات‌ها پنهان می‌شود · از اجرای بعدی اعمال می‌شود';
-
-  @override
-  String get settingsWholeAppHiddenFromRecentsAnd =>
-      'کل برنامه از فهرست اخیر و اسکرین‌شات‌ها پنهان می‌شود';
-
-  @override
   String get settingsLightTheme => 'پوسته‌ی روشن';
 
   @override
@@ -6672,9 +6661,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsBlocked2 => 'مسدود';
 
   @override
-  String get settingsAllowed => 'مجاز';
-
-  @override
   String get settingsOn => 'روشن';
 
   @override
@@ -7463,10 +7449,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinPickDifferent => 'PIN دیگری انتخاب کنید';
 
   @override
-  String get settingsKeptOnWhileLock =>
-      'تا وقتی قفل برنامه روشن است، روشن می‌ماند.';
-
-  @override
   String get lockFingerAfterPin =>
       'یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید.';
 
@@ -8234,6 +8216,121 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceDisguiseHere => 'تغییر صدای من در اینجا';
+
+  @override
+  String get chatBlockScreenshots => 'جلوگیری از اسکرین‌شات';
+
+  @override
+  String get chatShotsWhenTheyUpdate =>
+      'وقتی برنامه‌اش را به‌روز کند در دسترس است';
+
+  @override
+  String get chatShotsBothPhones =>
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این گفت‌وگو را در هر دو گوشی مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم';
+
+  @override
+  String get chatShotsBlocksBoth =>
+      'جلوی اسکرین‌شات و ضبط صفحه را در هر دو گوشی می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم';
+
+  @override
+  String get chatShotsBlockedHere =>
+      'Kryfo در این گفت‌وگو جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get chatShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های او در این گفت‌وگو خاموش است';
+
+  @override
+  String get chatShotsKeptOpen =>
+      'باز کردن فایل‌های او در برنامه‌های دیگر در این گفت‌وگو خاموش است';
+
+  @override
+  String searchKeptMatches(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نتیجه · برای دیدن، گفت‌وگو را باز کنید',
+      one: '⁨$countString⁩ نتیجه · برای دیدن، گفت‌وگو را باز کنید',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedKeptInChat =>
+      'ذخیره‌شده از گفت‌وگویی که جلوی اسکرین‌شات را می‌گیرد · برای دیدن، گفت‌وگو را باز کنید';
+
+  @override
+  String get roomShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های دیگران در این اتاق خاموش است';
+
+  @override
+  String get roomShotsKeptOpen =>
+      'باز کردن فایل‌های دیگران در برنامه‌های دیگر در این اتاق خاموش است';
+
+  @override
+  String get chatShotsYouTurnedOn =>
+      'شما جلوگیری از اسکرین‌شات را روشن کردید. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
+  String get chatShotsYouTurnedOff =>
+      'شما جلوگیری از اسکرین‌شات را خاموش کردید';
+
+  @override
+  String chatShotsTheyTurnedOn(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+  }
+
+  @override
+  String chatShotsTheyTurnedOff(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را خاموش کرد';
+  }
+
+  @override
+  String get roomShotsBlocked =>
+      'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های دیگران را هم';
+
+  @override
+  String get roomShotsAlwaysOn =>
+      'در اتاق همیشه روشن است، روی همه‌ی گوشی‌های آن';
+
+  @override
+  String get settingsPerChat => 'برای هر گفت‌وگو';
+
+  @override
+  String get homeShotsPerChat =>
+      'جلوگیری از اسکرین‌شات حالا برای هر گفت‌وگو جداست.';
+
+  @override
+  String get homeShotsTurnOnForAll => 'برای همه‌ی گفت‌وگوهایتان روشن شود؟';
+
+  @override
+  String get homeShotsTurnOn => 'روشن برای همه';
+
+  @override
+  String get homeShotsLeaveOff => 'خاموش بماند';
+
+  @override
+  String get homeShotsTheySeeIt =>
+      'Kryfo روی گوشی طرف مقابل هم جلوی آن را می‌گیرد و کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر خاموش می‌شود. او می‌بیند که شما آن را روشن کرده‌اید.';
+
+  @override
+  String homeShotsTurnedOn(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo حالا در ⁨$countString⁩ گفت‌وگو جلوی اسکرین‌شات را می‌گیرد',
+      one: 'Kryfo حالا در ⁨$countString⁩ گفت‌وگو جلوی اسکرین‌شات را می‌گیرد',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get voiceDisguisedHere => 'صدای شما در این گفت‌وگو تغییر داده می‌شود';

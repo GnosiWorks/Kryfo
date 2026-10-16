@@ -2449,15 +2449,6 @@ void main() {
       "Friends can introduce you to theirs",
     );
     expect(l.settingsScamShield, "Scam shield");
-    expect(l.settingsBlockScreenshots, "Block screenshots");
-    expect(
-      l.settingsWholeAppHiddenFrom,
-      "Whole app hidden from recents and screenshots · takes effect after the next start",
-    );
-    expect(
-      l.settingsWholeAppHiddenFromRecentsAnd,
-      "Whole app hidden from recents and screenshots",
-    );
     expect(l.settingsLightTheme, "Light theme");
     expect(l.settingsSameProtectionBrighter, "Same protection, brighter");
     expect(l.settingsAppLock2, "App lock");
@@ -3102,7 +3093,7 @@ void main() {
     expect(l.settingsConnected, "Connected");
     expect(l.settingsScreenshots, "Screenshots");
     expect(l.settingsBlocked2, "Blocked");
-    expect(l.settingsAllowed, "Allowed");
+    expect(l.settingsPerChat, "Per chat");
     expect(l.settingsOn, "On");
     expect(l.settingsOff, "Off");
     expect(l.settingsNotifications, "Notifications");
@@ -3418,6 +3409,67 @@ void main() {
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");
     expect(l.voiceDisguiseHere, "Disguise my voice here");
+    expect(l.chatBlockScreenshots, "Block screenshots");
+    expect(l.chatShotsWhenTheyUpdate, "Available when they update");
+    expect(
+      l.chatShotsBothPhones,
+      "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
+    );
+    expect(
+      l.chatShotsBlocksBoth,
+      "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
+    );
+    expect(l.chatShotsBlockedHere, "Kryfo blocks screenshots in this chat");
+    expect(
+      l.chatShotsMenuNote,
+      "Copying, forwarding and saving their messages is off in this chat",
+    );
+    expect(
+      l.chatShotsKeptOpen,
+      "Opening their files in other apps is off in this chat",
+    );
+    expect(l.searchKeptMatches(1), "1 match · open the chat to see it");
+    expect(l.searchKeptMatches(4), "4 matches · open the chat to see them");
+    expect(
+      l.savedKeptInChat,
+      "Saved from a chat that blocks screenshots · open the chat to see it",
+    );
+    expect(
+      l.roomShotsMenuNote,
+      "Copying, forwarding and saving others’ messages is off in this room",
+    );
+    expect(
+      l.roomShotsKeptOpen,
+      "Opening others’ files in other apps is off in this room",
+    );
+    expect(
+      l.chatShotsYouTurnedOn,
+      "You turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
+    );
+    expect(l.chatShotsYouTurnedOff, "You turned off screenshot blocking");
+    expect(
+      l.chatShotsTheyTurnedOn("<name>"),
+      "<name> turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
+    );
+    expect(
+      l.chatShotsTheyTurnedOff("<name>"),
+      "<name> turned off screenshot blocking",
+    );
+    expect(
+      l.roomShotsBlocked,
+      "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
+    );
+    expect(l.roomShotsAlwaysOn, "Always on in a room, on every phone in it");
+    expect(l.homeShotsPerChat, "Screenshot blocking is now per chat.");
+    expect(l.homeShotsTurnOnForAll, "Turn it on for all your chats?");
+    expect(
+      l.homeShotsTheySeeIt,
+      "Kryfo blocks them on the other phone too, and copying, forwarding and saving each other’s messages turns off. They’ll see that you turned it on.",
+    );
+    expect(l.homeShotsTurnOn, "Turn on for all");
+    expect(l.homeShotsLeaveOff, "Leave them off");
+    expect(l.homeShotsTurnedOn(1), "Kryfo now blocks screenshots in 1 chat");
+    expect(l.homeShotsTurnedOn(3), "Kryfo now blocks screenshots in 3 chats");
     expect(l.voiceDisguisedHere, "Your voice is disguised in this chat");
     expect(l.voiceSlideUpToLock, "Slide up to lock");
     expect(l.voiceStopRecording, "Stop recording");
