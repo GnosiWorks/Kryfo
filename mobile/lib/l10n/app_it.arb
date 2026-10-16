@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Tieni la passphrase",
   "notesExportNotSaved": "Le note non sono state salvate. Il file è ancora qui.",
   "notesExportGone": "Il file è stato cancellato quando Kryfo si è bloccato. Esporta di nuovo per crearne uno nuovo.",
+  "notesExportHoldsInstaller": "Questa esportazione contiene il file di installazione di un'app, quindi non si può condividere. Salvala invece sul tuo telefono.",
   "notesExportSaved": "Note salvate",
   "notesExportSavedIn": "Note salvate in {place}",
   "notesExportSavedUnchecked": "Note salvate, ma Kryfo non ha potuto verificare la copia",

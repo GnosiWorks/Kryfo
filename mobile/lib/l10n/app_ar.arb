@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "إبقاء عبارة المرور",
   "notesExportNotSaved": "لم تُحفظ الملاحظات. الملف ما زال هنا.",
   "notesExportGone": "مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.",
+  "notesExportHoldsInstaller": "يحتوي هذا التصدير على ملف لتثبيت تطبيق، لذا لا يمكن مشاركته. احفظه على هاتفك بدلًا من ذلك.",
   "notesExportSaved": "حُفظت الملاحظات",
   "notesExportSavedIn": "حُفظت الملاحظات في ⁨{place}⁩",
   "notesExportSavedUnchecked": "حُفظت الملاحظات، لكن Kryfo لم يتمكن من التحقق من النسخة",

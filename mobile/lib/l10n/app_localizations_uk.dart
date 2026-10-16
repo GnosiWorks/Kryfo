@@ -4052,6 +4052,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Файл видалено, коли Kryfo заблокувався. Експортуй ще раз, щоб створити новий.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'У цьому експорті є інсталятор застосунку, тому ним не можна поділитися. Збережи його на телефон.';
+
+  @override
   String get notesExportSaved => 'Нотатки збережено';
 
   @override

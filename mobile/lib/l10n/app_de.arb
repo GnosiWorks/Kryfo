@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Passphrase behalten",
   "notesExportNotSaved": "Die Notizen wurden nicht gespeichert. Die Datei ist noch da.",
   "notesExportGone": "Die Datei wurde gelöscht, als Kryfo gesperrt wurde. Exportiere noch einmal, um eine neue zu erstellen.",
+  "notesExportHoldsInstaller": "Dieser Export enthält eine Installationsdatei für eine App und kann deshalb nicht geteilt werden. Speichere ihn stattdessen auf deinem Handy.",
   "notesExportSaved": "Notizen gespeichert",
   "notesExportSavedIn": "Notizen gespeichert in {place}",
   "notesExportSavedUnchecked": "Notizen gespeichert, aber Kryfo konnte die Kopie nicht prüfen",

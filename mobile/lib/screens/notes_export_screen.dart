@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../backup.dart' show kBackupMinPassphrase, sessionBackupHasHidden;
 import '../bidi_safe.dart' show unmarked;
 import '../dlog.dart';
+import '../file_kind.dart' show readFileFacts;
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show LockDropped;
 import '../lock_state.dart';
@@ -73,6 +74,8 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
   // kryfo stopped waiting for the last save: android may still read the file
   bool _lost = false;
   bool _notSaved = false;
+  // the made file holds an app installer: no share sheet takes it
+  bool _installer = false;
   final _ways = GlobalKey();
   // new fields each time the words are cleared: undo cannot bring them back
   int _fieldsGen = 0;
@@ -294,6 +297,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     }
     _made = made;
     _madeRun = run;
+    _installer = false;
     setState(() => _writing = false);
     await _handOver(save: true);
   }
@@ -341,13 +345,19 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         shared =
             await lockState.hold(() async {
               await there();
-              return shareFileOut(
+              final end = await shareFileOut(
                 made.path,
                 name: made.name,
                 subject: l10n.notesExportSubject,
                 // plaintext never outlives the lock in the cache
                 quiet: !made.name.endsWith('.age'),
               );
+              // an app installer is never shared: the page says why
+              if (end == ShareEnd.failed &&
+                  (await readFileFacts(made.path, made.name)).installer) {
+                _installer = true;
+              }
+              return end;
             }) ==
             ShareEnd.picked;
       }
@@ -555,13 +565,21 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                           width: double.infinity,
                         )
                       : Padding(
-                          key: ValueKey(_gone ? 'gone' : 'not saved'),
+                          key: ValueKey(
+                            _gone
+                                ? 'gone'
+                                : _installer
+                                ? 'installer'
+                                : 'not saved',
+                          ),
                           padding: const EdgeInsets.only(bottom: 12),
                           child: SizedBox(
                             width: double.infinity,
                             child: Text(
                               _gone
                                   ? l10n.notesExportGone
+                                  : _installer
+                                  ? l10n.notesExportHoldsInstaller
                                   : l10n.notesExportNotSaved,
                               textAlign: TextAlign.center,
                               style: HaloType.sans(
@@ -593,7 +611,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
               EaseSize(
                 child: RiseSwap(
                   alignment: Alignment.topCenter,
-                  child: !_notSaved
+                  child: !_notSaved || _installer
                       ? const SizedBox(
                           key: ValueKey(false),
                           width: double.infinity,

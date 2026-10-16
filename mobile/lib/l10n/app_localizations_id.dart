@@ -3959,6 +3959,10 @@ class AppLocalizationsId extends AppLocalizations {
       'File-nya dihapus saat Kryfo terkunci. Ekspor lagi untuk membuat yang baru.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Ekspor ini berisi file penginstal aplikasi, jadi tidak bisa dibagikan. Simpan saja ke ponselmu.';
+
+  @override
   String get notesExportSaved => 'Catatan tersimpan';
 
   @override

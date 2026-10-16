@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Garder la phrase secrète",
   "notesExportNotSaved": "Les notes n’ont pas été enregistrées. Le fichier est toujours là.",
   "notesExportGone": "Le fichier a été effacé quand Kryfo s’est verrouillé. Exportez à nouveau pour en créer un autre.",
+  "notesExportHoldsInstaller": "Cet export contient le fichier d’installation d’une appli, il ne peut donc pas être partagé. Enregistrez-le plutôt sur votre téléphone.",
   "notesExportSaved": "Notes enregistrées",
   "notesExportSavedIn": "Notes enregistrées dans {place}",
   "notesExportSavedUnchecked": "Notes enregistrées, mais Kryfo n’a pas pu vérifier la copie",

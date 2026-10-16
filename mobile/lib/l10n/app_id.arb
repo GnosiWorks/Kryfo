@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Tetap pakai frasa sandi",
   "notesExportNotSaved": "Catatan tidak tersimpan. File-nya masih ada.",
   "notesExportGone": "File-nya dihapus saat Kryfo terkunci. Ekspor lagi untuk membuat yang baru.",
+  "notesExportHoldsInstaller": "Ekspor ini berisi file penginstal aplikasi, jadi tidak bisa dibagikan. Simpan saja ke ponselmu.",
   "notesExportSaved": "Catatan tersimpan",
   "notesExportSavedIn": "Catatan tersimpan di {place}",
   "notesExportSavedUnchecked": "Catatan tersimpan, tapi Kryfo tidak bisa memeriksa salinannya",

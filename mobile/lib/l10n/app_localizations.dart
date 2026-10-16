@@ -6273,6 +6273,12 @@ abstract class AppLocalizations {
   /// **'The file was cleared when Kryfo locked. Export again to make a new one.'**
   String get notesExportGone;
 
+  /// screens/notes_export_screen.dart. a plain export holds an app installer, which is never shared: it can only be saved
+  ///
+  /// In en, this message translates to:
+  /// **'This export holds an app installer, so it can\'t be shared. Save it to your phone instead.'**
+  String get notesExportHoldsInstaller;
+
   /// screens/notes_export_screen.dart. toast
   ///
   /// In en, this message translates to:

@@ -3148,6 +3148,7 @@ final _calls = <_Call>[
   ),
   ('fileInstallerLine', [], (l) => l.fileInstallerLine),
   ('fileAppInstaller', [], (l) => l.fileAppInstaller),
+  ('notesExportHoldsInstaller', [], (l) => l.notesExportHoldsInstaller),
   ('fileSaveToDevice', [], (l) => l.fileSaveToDevice),
   ('fileOpenHint', [], (l) => l.fileOpenHint),
   ('fileSaved', [], (l) => l.fileSaved),

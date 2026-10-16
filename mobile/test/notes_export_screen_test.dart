@@ -361,6 +361,42 @@ void main() {
     expect(left(), isEmpty);
   });
 
+  testWidgets('an export holding an app installer says why it is not '
+      'shared, and saves', (t) async {
+    final apk = File(p.join(tmp.path, 'tool.apk'))
+      ..writeAsBytesSync([0x50, 0x4B, 0x03, 0x04, 0, 0, 0, 0]);
+    db.notes = [
+      ...db.notes,
+      {
+        'plaintext': 'the app',
+        'sent_at': 2,
+        'file_path': apk.path,
+        'file_name': 'tool.apk',
+      },
+    ];
+    await plain(t);
+    dialogs.single.complete({'state': 'cancelled'});
+    await until(
+      t,
+      () => find.text(l10n.notesExportHoldsInstaller).evaluate().isNotEmpty,
+    );
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    expect(asked, isNot(contains('shareFile')));
+    expect(find.text(l10n.notesExportHoldsInstaller), findsOneWidget);
+    expect(find.text(l10n.notesExportNotSaved), findsNothing);
+    expect(find.text(l10n.backupShareInstead), findsNothing);
+    expect(left(), hasLength(1));
+    // the save window again, and saved this time
+    await t.tap(find.text(l10n.commonTryAgain));
+    await until(t, () => dialogs.length == 2);
+    dialogs.last.complete({'state': 'saved', 'where': 'Download'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await until(t, () => left().isEmpty);
+    expect(left(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
   testWidgets('a share sheet closed with nothing picked keeps the file', (
     t,
   ) async {

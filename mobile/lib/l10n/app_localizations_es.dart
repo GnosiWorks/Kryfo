@@ -4006,6 +4006,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'El archivo se borró cuando Kryfo se bloqueó. Exporta de nuevo para crear uno nuevo.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Esta exportación contiene el instalador de una app, así que no se puede compartir. Mejor guárdala en tu teléfono.';
+
+  @override
   String get notesExportSaved => 'Notas guardadas';
 
   @override

@@ -3953,6 +3953,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp đã bị xóa khi Kryfo khóa. Hãy xuất lại để tạo tệp mới.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Bản xuất này có tệp cài đặt ứng dụng nên không thể chia sẻ. Hãy lưu nó vào điện thoại của bạn.';
+
+  @override
   String get notesExportSaved => 'Đã lưu ghi chú';
 
   @override

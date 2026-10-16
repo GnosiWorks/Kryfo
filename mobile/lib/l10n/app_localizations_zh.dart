@@ -3800,6 +3800,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesExportGone => 'Kryfo 锁定时，文件已清除。再导出一次即可生成新文件。';
 
   @override
+  String get notesExportHoldsInstaller => '这份导出里有一个应用安装包，所以不能分享。请改为保存到手机上。';
+
+  @override
   String get notesExportSaved => '笔记已保存';
 
   @override
@@ -12099,6 +12102,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesExportGone => 'Kryfo 鎖定時，檔案已清除。再匯出一次即可產生新檔案。';
+
+  @override
+  String get notesExportHoldsInstaller => '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到手機上。';
 
   @override
   String get notesExportSaved => '筆記已儲存';

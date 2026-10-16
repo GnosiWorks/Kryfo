@@ -3651,6 +3651,10 @@ void main() {
       "This is an app installer. Only install apps from people you trust.",
     );
     expect(l.fileAppInstaller, "App installer");
+    expect(
+      l.notesExportHoldsInstaller,
+      "This export holds an app installer, so it can't be shared. Save it to your phone instead.",
+    );
     expect(l.fileSaveToDevice, "Save to device");
     expect(l.fileOpenHint, "Opens in another app");
     expect(l.fileSaved, "Saved");

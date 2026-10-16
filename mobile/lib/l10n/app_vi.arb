@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Giữ cụm mật khẩu",
   "notesExportNotSaved": "Ghi chú chưa được lưu. Tệp vẫn còn đây.",
   "notesExportGone": "Tệp đã bị xóa khi Kryfo khóa. Hãy xuất lại để tạo tệp mới.",
+  "notesExportHoldsInstaller": "Bản xuất này có tệp cài đặt ứng dụng nên không thể chia sẻ. Hãy lưu nó vào điện thoại của bạn.",
   "notesExportSaved": "Đã lưu ghi chú",
   "notesExportSavedIn": "Đã lưu ghi chú vào {place}",
   "notesExportSavedUnchecked": "Đã lưu ghi chú, nhưng Kryfo không kiểm tra được bản sao",

@@ -3975,6 +3975,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'فایل وقتی Kryfo قفل شد پاک شد. برای ساختن فایلی تازه دوباره برون‌بری کنید.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'این برون‌بری فایلِ نصبِ یک برنامه را دارد، پس نمی‌شود هم‌رسانی‌اش کرد. به‌جایش آن را در گوشی‌تان ذخیره کنید.';
+
+  @override
   String get notesExportSaved => 'یادداشت‌ها ذخیره شدند';
 
   @override

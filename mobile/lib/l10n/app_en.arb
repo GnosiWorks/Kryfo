@@ -4940,6 +4940,10 @@
   "@notesExportGone": {
     "description": "screens/notes_export_screen.dart. a lock stopped the export or cleared the made file"
   },
+  "notesExportHoldsInstaller": "This export holds an app installer, so it can't be shared. Save it to your phone instead.",
+  "@notesExportHoldsInstaller": {
+    "description": "screens/notes_export_screen.dart. a plain export holds an app installer, which is never shared: it can only be saved"
+  },
   "notesExportSaved": "Notes saved",
   "@notesExportSaved": {
     "description": "screens/notes_export_screen.dart. toast"

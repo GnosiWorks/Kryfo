@@ -1131,6 +1131,7 @@
   "notesExportKeepLock": "Оставить парольную фразу",
   "notesExportNotSaved": "Заметки не сохранены. Файл всё ещё здесь.",
   "notesExportGone": "Файл удалён, когда Kryfo заблокировался. Экспортируй ещё раз, чтобы создать новый.",
+  "notesExportHoldsInstaller": "В этом экспорте есть установщик приложения, поэтому им нельзя поделиться. Сохрани его на телефон.",
   "notesExportSaved": "Заметки сохранены",
   "notesExportSavedIn": "Заметки сохранены в {place}",
   "notesExportSavedUnchecked": "Заметки сохранены, но Kryfo не смог проверить копию",

@@ -4009,6 +4009,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le fichier a été effacé quand Kryfo s’est verrouillé. Exportez à nouveau pour en créer un autre.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Cet export contient le fichier d’installation d’une appli, il ne peut donc pas être partagé. Enregistrez-le plutôt sur votre téléphone.';
+
+  @override
   String get notesExportSaved => 'Notes enregistrées';
 
   @override

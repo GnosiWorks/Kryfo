@@ -4070,6 +4070,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'يحتوي هذا التصدير على ملف لتثبيت تطبيق، لذا لا يمكن مشاركته. احفظه على هاتفك بدلًا من ذلك.';
+
+  @override
   String get notesExportSaved => 'حُفظت الملاحظات';
 
   @override

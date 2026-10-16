@@ -3981,6 +3981,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo kilitlenince dosya silindi. Yenisini oluşturmak için tekrar dışa aktar.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Bu dışa aktarımda bir uygulama yükleyicisi var, bu yüzden paylaşılamaz. Bunun yerine telefonuna kaydet.';
+
+  @override
   String get notesExportSaved => 'Notlar kaydedildi';
 
   @override

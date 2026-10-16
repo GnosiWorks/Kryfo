@@ -4013,6 +4013,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Datei wurde gelöscht, als Kryfo gesperrt wurde. Exportiere noch einmal, um eine neue zu erstellen.';
 
   @override
+  String get notesExportHoldsInstaller =>
+      'Dieser Export enthält eine Installationsdatei für eine App und kann deshalb nicht geteilt werden. Speichere ihn stattdessen auf deinem Handy.';
+
+  @override
   String get notesExportSaved => 'Notizen gespeichert';
 
   @override
