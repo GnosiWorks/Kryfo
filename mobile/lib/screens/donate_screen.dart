@@ -693,7 +693,7 @@ class _DonateScreenState extends State<DonateScreen> {
   }
 }
 
-// ─────────────────────── live bitcoin invoice flow ───────────────────────
+// ---- live bitcoin invoice ----
 
 enum _Phase { needsOnion, loading, unreachable, invoice, confirmed, expired }
 
@@ -938,7 +938,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     }
   }
 
-  // ── loading ──
+  // ---- loading ----
   String _fmtLeft() {
     final m = _secsLeft ~/ 60;
     final sec = _secsLeft % 60;
@@ -1001,7 +1001,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     );
   }
 
-  // ── off onion: nothing was asked ──
+  // ---- off onion: nothing was asked ----
   Widget _needsOnionView() {
     return Center(
       key: const ValueKey('onion'),
@@ -1036,7 +1036,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     );
   }
 
-  // ── unreachable → static fallback ──
+  // ---- unreachable: the static address ----
   Widget _unreachableView() {
     final addr = widget.fallbackAddress;
     return SingleChildScrollView(
@@ -1072,7 +1072,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     );
   }
 
-  // ── live invoice ──
+  // ---- live invoice ----
   Widget _invoiceView() {
     final inv = _inv!;
     return SingleChildScrollView(
@@ -1166,7 +1166,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     );
   }
 
-  // ── expired ──
+  // ---- expired ----
   Widget _expiredView() {
     return Center(
       key: const ValueKey('exp'),
@@ -1202,7 +1202,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     );
   }
 
-  // ── shared bits ──
+  // ---- shared bits ----
   Widget _copyRow(String label, String value) {
     return Container(
       padding: const EdgeInsets.all(12),

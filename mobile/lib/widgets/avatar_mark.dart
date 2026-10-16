@@ -43,7 +43,7 @@ class AvatarMarkPainter extends CustomPainter {
       case 0: // ring
         c.drawCircle(Offset(cx, cy), r, p);
         break;
-      case 1: // crescent - a ring with a bite taken out
+      case 1: // crescent: a ring with a bite out
         c.drawArc(
           Rect.fromCircle(center: Offset(cx, cy), radius: r),
           -math.pi * 0.35,
@@ -129,7 +129,7 @@ class AvatarMarkPainter extends CustomPainter {
         );
         c.drawPath(path, p);
         break;
-      case 10: // ring with a dot at the centre - an eye, barely
+      case 10: // ring with a dot in the middle
         c.drawCircle(Offset(cx, cy), r, p);
         c.drawCircle(Offset(cx, cy), w * 0.06, fill);
         break;

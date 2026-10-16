@@ -674,7 +674,7 @@ class _ChatScreenState extends State<ChatScreen>
   static const _pageSize = 60;
   bool _hasMore = false;
   bool _loadingOlder = false;
-  // set once the user paged deep or jumped - reloads keep the full thread
+  // set once the user paged deep or jumped, so reloads keep the full thread
   // so their scroll position doesn't collapse back to one page.
   bool _pagedOut = false;
 
@@ -3734,7 +3734,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
-  // straight out - a dialog on a 40kb photo would just be noise.
+  // straight out: a dialog on a 40kb photo is noise.
   // [asItIs]: a kind the send lane does not clean, which it says. [raw]: a
   // picture it cannot clean, which is always asked, whatever its size
   Future<bool> _confirmBigSend(
@@ -4286,7 +4286,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThatGif);
       return;
     }
-    // send raw through the image path - Image.memory animates gifs by the bytes,
+    // send raw through the image path: Image.memory animates gifs by the bytes,
     // the name follows the bytes.
     await _sendOneImage(clean, '');
   }
@@ -7523,7 +7523,7 @@ class _Bubble extends StatelessWidget {
     final willAnimate = (justArrived || (isOut && msg.fresh && !alreadyPlayed));
     if (willAnimate && entranceKey.isNotEmpty) {
       _Bubble._entered.add(entranceKey);
-      // insertion-ordered set - drop the oldest so this never grows unbounded
+      // insertion ordered, so drop the oldest and it never grows unbounded
       if (_Bubble._entered.length > 400) {
         _Bubble._entered.remove(_Bubble._entered.first);
       }

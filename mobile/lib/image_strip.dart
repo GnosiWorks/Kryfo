@@ -193,7 +193,7 @@ int _u32(Uint8List b, int i) =>
 int _u32le(Uint8List b, int i) =>
     b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24);
 
-// ---------------------------------------------------------------- png
+// ---- png ----
 
 // what a png needs to be drawn in the right colours, and the three that make
 // an animated one move. everything else goes: a keep list is not surprised
@@ -231,7 +231,7 @@ Uint8List? _png(Uint8List src) {
   return dropped ? out.toBytes() : src;
 }
 
-// --------------------------------------------------------------- webp
+// ---- webp ----
 
 Uint8List? _webp(Uint8List src) {
   final chunks = <Uint8List>[];
@@ -282,7 +282,7 @@ Uint8List? _webp(Uint8List src) {
   return out.toBytes();
 }
 
-// ---------------------------------------------------------------- gif
+// ---- gif ----
 
 // the application blocks that make it loop; the rest (xmp, mostly) go
 const _gifApps = {'NETSCAPE2.0', 'ANIMEXTS1.0'};
@@ -350,7 +350,7 @@ Uint8List? _gif(Uint8List src) {
   return dropped ? out.toBytes() : src;
 }
 
-// --------------------------------------------------------------- heif
+// ---- heif ----
 
 class _Box {
   final String type;

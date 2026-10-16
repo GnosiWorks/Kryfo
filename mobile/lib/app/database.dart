@@ -2276,7 +2276,7 @@ class HaloDb implements GroupOwedStore {
       // it: a back-pair passing accepted:0 must not demote a real contact.
       final priorAccepted = (existing.first['accepted'] as int?) ?? 0;
       final nextAccepted = accepted == 1 ? 1 : priorAccepted;
-      // parked = deleted (archived AND unaccepted). a real archived chat is
+      // parked = deleted (archived and unaccepted). a real archived chat is
       // still accepted, so this can't un-archive one the user archived on
       // purpose. any touch on a parked row brings it back as a request.
       final wasParked =
@@ -5561,7 +5561,8 @@ class HaloDb implements GroupOwedStore {
     };
   }
 
-  // --- chunked media, buffered on disk so a restart doesn't lose a transfer ---
+  // ---- chunked media ----
+  // buffered on disk so a restart doesn't lose a transfer
 
   // store one slice from [from], return how many of this media's slices we
   // now hold. [group] is the group the file is posted in

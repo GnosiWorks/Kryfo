@@ -43,7 +43,7 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  // zxing-cpp under the hood. the controller arrives via onControllerCreated
+  // zxing-cpp reads the frames. the controller arrives via onControllerCreated
   // and is only used for the torch.
   CameraController? _cam;
   bool _handled = false;
@@ -182,7 +182,6 @@ class _ScanScreenState extends State<ScanScreen>
       _detectedSuccess = true;
       _hint = null;
     });
-    // short success pulse before popping
     Future.delayed(const Duration(milliseconds: 380), () {
       if (!mounted || !_inFront) return;
       Navigator.of(context).pop(raw);
@@ -280,7 +279,6 @@ class _ScanScreenState extends State<ScanScreen>
                 painter: _MaskPainter(boxSize: boxSize),
               ),
             ),
-            // viewfinder frame (corner brackets + animated scan line)
             Center(
               child: ScanFrame(
                 size: boxSize,
@@ -289,7 +287,6 @@ class _ScanScreenState extends State<ScanScreen>
                 scanAnim: _scanAnim,
               ),
             ),
-            // top bar - back + title + torch
             Positioned(
               top: 0,
               left: 0,
@@ -330,7 +327,7 @@ class _ScanScreenState extends State<ScanScreen>
                             );
                             setState(() => _torchOn = on);
                           } catch (_) {
-                            // no flash unit - leave the icon as-is
+                            // no flash: leave the icon
                           }
                         },
                         icon: Icon(
@@ -345,8 +342,7 @@ class _ScanScreenState extends State<ScanScreen>
                 ),
               ),
             ),
-            // bottom helper text - switches to a transient warning when a
-            // non-kryfo qr appears in frame.
+            // the hint, or a short warning while a non-kryfo qr is in frame
             Positioned(
               bottom: 0,
               left: 0,
@@ -524,7 +520,7 @@ class _Viewfinder extends StatelessWidget {
       height: size,
       child: Stack(
         children: [
-          // corner brackets - 4 L-shapes. placed by side, not by reading
+          // corner brackets, placed by side, not by reading
           // direction: each one is drawn for the corner it sits in
           Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
           Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
@@ -562,7 +558,6 @@ class _Viewfinder extends StatelessWidget {
                 );
               },
             ),
-          // success overlay - amber/green wash + checkmark
           AnimatedOpacity(
             opacity: success ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 260),

@@ -296,7 +296,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   }
 }
 
-// ───────── the ways in ─────────
+// ---- the ways in ----
 
 // a card that opens. the head is the outcome in serif with one plain line
 // under it; the body is the mechanism, revealed with a size change and a

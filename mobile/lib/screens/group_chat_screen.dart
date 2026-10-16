@@ -518,7 +518,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // a message of ours some members still lack, by uid
   Map<String, ({int have, int of, int gaveUp})> _reach = const {};
   bool _reloadQueued = false;
-  bool _loaded = false; // first full load done - gates the append-fast-path
+  bool _loaded = false; // first full load done, gates the fast append
   int _seenRev = -1; // last group rev we reloaded for
   // this group in the session that opened it, for what is kept between
   // visits
@@ -885,7 +885,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         older.add(m);
       }
       // divider anchors change after the prepend (day boundaries move), so
-      // drop the maps - they repopulate on build.
+      // drop the maps, build fills them again.
       _dayKeys.clear();
       _dayMsOf.clear();
       setState(() {
@@ -1525,7 +1525,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // .position asserts exactly one attached scroll view, and during a route
-  // transition two can be. hasClients is not enough on its own - the
+  // transition two can be. hasClients is not enough on its own: the
   // controller attaches before the list has dimensions to read.
   bool get _scrollReady =>
       _scrollCtrl.positions.length == 1 &&
@@ -2513,7 +2513,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotCleanThat);
       return;
     }
-    // raw bytes through the image lane - re-encoding kills the animation.
+    // raw bytes through the image lane: re-encoding kills the animation.
     await _sendGroupImage(clean, '');
   }
 
@@ -3136,8 +3136,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final current = target.reactions[''];
     final isUnreact = current == emoji;
     final newEmoji = isUnreact ? '' : emoji;
-    // land the chip on screen now - don't wait for the db write + tor multicast
-    // to round-trip back through a full reload. '' is our own reaction slot.
+    // land the chip now, not after the db write and the send come back
+    // through a full reload. '' is our own reaction slot.
     setState(() {
       if (newEmoji.isEmpty) {
         target.reactions.remove('');
@@ -3753,7 +3753,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             _scrollCtrl.jumpTo(want);
           }
         } catch (_) {
-          // element swapped by a reload mid-settle - next pass re-finds it.
+          // element swapped by a reload mid-settle, the next pass finds it again.
         }
         if (attempt < 4) _settleJump(attempt + 1);
       } else if (attempt < 10) {
@@ -3763,7 +3763,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // rough-jump so the target gets built, then ensureVisible lands it. this
-  // list is NOT reversed (unlike 1:1), older sits near offset 0.
+  // list is not reversed, unlike 1:1: older sits near offset 0.
   void _scrollToIndex(int idx) {
     if (idx < 0 || idx >= _messages.length || !_scrollReady) return;
     final m = _messages[idx];
@@ -4873,7 +4873,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ───────── composer + reply bar ─────────
+// ---- composer and reply bar ----
 
 class _ReplyQuoteBar extends StatelessWidget {
   final _GMsg target;
@@ -5233,7 +5233,7 @@ class _Composer extends StatelessWidget {
   }
 }
 
-// ───────── bubble ─────────
+// ---- bubble ----
 
 // stable accent per sender so each person reads as their own colour
 Color _authorColor(String id) {

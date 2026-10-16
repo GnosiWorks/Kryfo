@@ -20,49 +20,48 @@ class UnwrappedMessage {
   final String? senderEdPub; // 'e' field, hex
   final String? senderOnion; // 'o' field
   final String? senderXPub; // 'x' field, hex
-  final int? senderAvatar; // 'av' - the face they picked, drawn from a number
-  final int? burnSeconds; // 'b' field - seconds-from-receive
-  final String? msgUid; // 'u' field - stable cross-device message id
-  final ReactionFrame? reaction; // 'r' field - present on reaction control msgs
-  final PinFrame? pin; // 'pn' field - shared pin/unpin control msgs
-  final EditFrame? edit; // 'ed' field - present on edit control msgs
-  final String? replyTo; // 'q' field - msg_uid this message replies to
-  final String? groupId; // 'g' field - present for group messages
-  final GroupControl?
-  groupControl; // 'gc' field - present on group control msgs
-  final String? imageB64; // 'i' field - base64-encoded compressed jpeg
-  final String? unsend; // 'un' field - recalled msg_uid
-  final String? fileB64; // 'f' field - base64 file bytes
-  final String? fileName; // 'fn' field - original display name
-  final bool voice; // 'vo' field - true when the file is a voice note
-  final bool voiceDisguised; // 'vd' field - voice note was pitch-shifted
-  final Map<String, String>? preview; // 'pv' field - link preview card data
-  final String? mediaId; // 'mid' - groups chunks of one big media together
-  final int? chunkIndex; // 'ci' - this chunk's position, 0-based
-  final int? chunkTotal; // 'ct' - how many chunks make the whole media
-  final bool pvImg; // 'pi' - reassembled chunks are a preview thumbnail
-  final List<String>? roster; // 'rs' - admin's full member list, self-heals
+  final int? senderAvatar; // 'av': the face they picked, drawn from a number
+  final int? burnSeconds; // 'b' field: seconds-from-receive
+  final String? msgUid; // 'u' field: stable cross-device message id
+  final ReactionFrame? reaction; // 'r' field: present on reaction control msgs
+  final PinFrame? pin; // 'pn' field: shared pin/unpin control msgs
+  final EditFrame? edit; // 'ed' field: present on edit control msgs
+  final String? replyTo; // 'q' field: msg_uid this message replies to
+  final String? groupId; // 'g' field: present for group messages
+  final GroupControl? groupControl; // 'gc' field: present on group control msgs
+  final String? imageB64; // 'i' field: base64-encoded compressed jpeg
+  final String? unsend; // 'un' field: recalled msg_uid
+  final String? fileB64; // 'f' field: base64 file bytes
+  final String? fileName; // 'fn' field: original display name
+  final bool voice; // 'vo' field: true when the file is a voice note
+  final bool voiceDisguised; // 'vd' field: voice note was pitch-shifted
+  final Map<String, String>? preview; // 'pv' field: link preview card data
+  final String? mediaId; // 'mid': groups chunks of one big media together
+  final int? chunkIndex; // 'ci': this chunk's position, 0-based
+  final int? chunkTotal; // 'ct': how many chunks make the whole media
+  final bool pvImg; // 'pi': reassembled chunks are a preview thumbnail
+  final List<String>? roster; // 'rs': admin's full member list, self-heals
   final List<Map<String, String>>?
-  rosterParticipants; // 'rp' - {h,o,x} keys for roster members
-  final int? powNonce; // 'pw' - proof-of-work nonce (first-contact only)
-  final int? powBitsUsed; // 'pb' - difficulty the sender solved to
-  final String? supporterBadge; // 'bg' - sender's shared supporter tier
-  final String? deliveredUid; // 'dr' - receipt: uid the peer just stored
-  final bool secure; // 'sc' - sender asked that this not be screenshotted
-  final IntroFrame? intro; // 'in' - a contact's card, vouched by the sender
-  final NeedFrame? need; // 'nd' - slices of a file the receiver never got
-  final bool canResend; // 'cr' - on a slice: this sender answers an 'nd'
-  final Object? poll; // 'pl' - the options of a poll; the question is 'm'
-  final VoteFrame? vote; // 'vt' - a vote on a poll
-  final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
-  final String? sticker; // 'st' - pack:id:since, drawn from our own pack
-  final int? supportMarker; // 'sp' - written in a chat with the developer
-  // 'ge' - an ended group's words for versions that cannot read its end.
+  rosterParticipants; // 'rp': {h,o,x} keys for roster members
+  final int? powNonce; // 'pw': proof-of-work nonce (first-contact only)
+  final int? powBitsUsed; // 'pb': difficulty the sender solved to
+  final String? supporterBadge; // 'bg': sender's shared supporter tier
+  final String? deliveredUid; // 'dr': receipt: uid the peer just stored
+  final bool secure; // 'sc': sender asked that this not be screenshotted
+  final IntroFrame? intro; // 'in': a contact's card, vouched by the sender
+  final NeedFrame? need; // 'nd': slices of a file the receiver never got
+  final bool canResend; // 'cr': on a slice: this sender answers an 'nd'
+  final Object? poll; // 'pl': the options of a poll; the question is 'm'
+  final VoteFrame? vote; // 'vt': a vote on a poll
+  final PollCloseFrame? pollClose; // 'pc': the creator closed a poll
+  final String? sticker; // 'st': pack:id:since, drawn from our own pack
+  final int? supportMarker; // 'sp': written in a chat with the developer
+  // 'ge': an ended group's words for versions that cannot read its end.
   // they show it as a message, this version never keeps it
   final bool endNotice;
-  final ShotsWord? shots; // 'ss' - a 1:1 chat's screenshot block (chat_shots)
-  final AlbumTag? album; // 'al' - its place in an album, on every slice
-  // 'w' - when the sender wrote it, ms by their clock. set once and kept on
+  final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
+  final AlbumTag? album; // 'al': its place in an album, on every slice
+  // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
   final int? writtenAt;

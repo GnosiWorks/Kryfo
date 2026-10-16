@@ -469,7 +469,7 @@ Future<void> _landV1InDecoy(
   });
 }
 
-// ───────────────────────── v2: the streamed file ─────────────────────────
+// ---- v2: the streamed file ----
 //
 // one key from the passphrase, every record sealed on its own, the files
 // read and written a chunk at a time. see backup_stream.dart for the

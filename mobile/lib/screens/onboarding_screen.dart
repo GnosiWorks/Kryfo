@@ -2,7 +2,7 @@
 // onboarding, shown once. three things in the first minute, everything else
 // when it is needed: your name is three words, nobody gets in unless you let
 // them, the first connection takes a minute.
-// welcome → identity → face → transport → three things → notification → add
+// the steps: welcome, identity, face, transport, three things, notification, add
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -305,7 +305,7 @@ class _StepBar extends StatelessWidget {
   }
 }
 
-// === 01 · WELCOME ===
+// ---- 01 welcome ----
 
 class _WelcomeScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -556,7 +556,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
   }
 }
 
-// === 02 · IDENTITY REVEAL ===
+// ---- 02 identity reveal ----
 
 class _IdentityScreen extends StatefulWidget {
   final AppState appState;
@@ -1087,7 +1087,7 @@ class _HaloRingPainter extends CustomPainter {
       old.sweep != sweep || old.glow != glow;
 }
 
-// === 03 · PICK A FACE ===
+// ---- 03 pick a face ----
 //
 // straight after the identity reveal, because the face is drawn from the id
 // you have just been shown
@@ -1154,7 +1154,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
   }
 }
 
-// === 04 · HOW YOUR MESSAGES TRAVEL ===
+// ---- 04 how your messages travel ----
 // three ways, each with its cost in plain words, onion picked already. one
 // tap skips it and keeps the safest.
 
@@ -1407,7 +1407,7 @@ class _Radio extends StatelessWidget {
   }
 }
 
-// === 05 · THREE THINGS ===
+// ---- 05 three things ----
 //
 // the same three points the welcome page opened with, each with its why.
 // rooms, vouching, the shield and modes are explained when they come up.
@@ -1458,7 +1458,7 @@ class _ThreeThingsScreen extends StatelessWidget {
   }
 }
 
-// === 06 · ONE NOTIFICATION ===
+// ---- 06 one notification ----
 //
 // the one android fact worth a page: a background listener needs a visible
 // notification, so the tray will show one. two lines and the shade, then on.
@@ -1720,7 +1720,7 @@ class _ShadeArtState extends State<_ShadeArt>
   }
 }
 
-// === 07 · ADD SOMEONE ===
+// ---- 07 add someone ----
 
 class _AddSomeoneScreen extends StatelessWidget {
   final VoidCallback onComplete;
@@ -1796,7 +1796,7 @@ class _AddSomeoneScreen extends StatelessWidget {
   }
 }
 
-// ───────── shared pieces ─────────
+// ---- shared pieces ----
 
 // every step sits under the step bar with the same margins
 const _pagePad = EdgeInsets.fromLTRB(28, 16, 28, 20);

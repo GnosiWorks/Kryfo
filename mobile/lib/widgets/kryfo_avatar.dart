@@ -137,16 +137,14 @@ Widget _markedAvatar(int ch, double size) {
 class _Palette {
   final Color start;
   final Color end;
-  // ink = the letter color. high contrast on the gradient.
   final Color ink;
-  // mark = accent color used for the divider and tag.
   final Color mark;
   const _Palette(this.start, this.end, this.ink, this.mark);
 }
 
 // the yellow, not the accent: a face looks the same whatever is picked
 List<_Palette> get _palettes => <_Palette>[
-  // dark-bg palettes - cream letter, varied tag accents
+  // dark palettes: cream letter
   _Palette(
     HaloColors.ink,
     HaloColors.yellowDeep,
@@ -210,7 +208,7 @@ List<_Palette> get _palettes => <_Palette>[
     HaloColors.text,
     HaloColors.rose,
   ),
-  // bright palettes - ink letter, cream/dark tag
+  // bright palettes: ink letter
   _Palette(
     HaloColors.yellowDeep,
     HaloColors.rose,
@@ -259,7 +257,7 @@ List<_Palette> get _palettes => <_Palette>[
   ),
 ];
 
-// FNV-1a-like rolling mix produces a stable byte stream from a string.
+// the same seed gives the same bytes on every phone
 List<int> _seedBytes(String s) {
   final out = <int>[];
   var h = 2166136261;

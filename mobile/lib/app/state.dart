@@ -4996,7 +4996,7 @@ class AppState extends ChangeNotifier {
       return to;
     }
     if (await _endRefuses(senderHaloId, env.groupId, env, db)) return to;
-    // 1) group control
+    // a group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env, db, at: arrivedAt);
       changed();
@@ -5085,7 +5085,7 @@ class AppState extends ChangeNotifier {
       changed();
       return to;
     }
-    // 2) reaction
+    // a reaction
     if (env.reaction != null) {
       final r = env.reaction!;
       // the frame names a uid and nothing else, so only someone in the chat
@@ -5214,7 +5214,7 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return to;
     }
-    // 3) data message: could be 1:1 or group
+    // a data message, 1:1 or group
     final blockedKey = env.msgUid ?? env.mediaId;
     if (blockedKey != null &&
         await db.droppedWhileBlocked(senderHaloId, blockedKey)) {
@@ -12009,7 +12009,7 @@ class AppState extends ChangeNotifier {
         return false;
       }
       String cipher;
-      // a member with no session AND no stored bundle can't be reached
+      // a member with no session and no stored bundle can't be reached
       // (e.g. a dead identity still in the roster). don't burn a relay
       // timeout on it every send: skip fast so live members deliver now.
       if (!await _io.hasSession(memberId) && to.bundle == null) {

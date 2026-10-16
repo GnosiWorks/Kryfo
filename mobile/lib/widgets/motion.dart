@@ -135,7 +135,7 @@ int parseRouteGen(String raw) {
   return int.tryParse(parts[4]) ?? 0;
 }
 
-// === TOR WARMUP GRAPH ===
+// ---- tor warmup graph ----
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
 // tor progresses, the active onion glows with expanding rings, and on
 // REACHABLE everything turns green and breathes in sequence.
@@ -733,8 +733,8 @@ class _LockTrailPainter extends CustomPainter {
       o.t != t || o.color != color;
 }
 
-// === SEND PILL (mode-aware) ===
-// fast = no pill (delivered ✓ shows inline in bubble meta)
+// ---- send pill, by mode ----
+// fast: no pill, the delivered tick shows in the bubble
 // normal = "1 hop" + a padlock with two dots trailing it
 // private = "3 hops" + 3 rotating onions, staggered
 
@@ -942,7 +942,7 @@ class _OnionSpinPainter extends CustomPainter {
       old.t != t || old.phase != phase || old.color != color;
 }
 
-// === TYPING DOTS ===
+// ---- typing dots ----
 // unused on purpose: kryfo sends no typing signal over the wire, and the why
 // kryfo screen promises that. do not wire this to the transport.
 class TypingDots extends StatefulWidget {
@@ -1016,7 +1016,7 @@ class _TypingDotsState extends State<TypingDots>
   }
 }
 
-// === BREATH STATUS DOT ===
+// ---- status dot ----
 class BreathDot extends StatefulWidget {
   final Color color;
   final double size;
@@ -1080,7 +1080,7 @@ class _BreathDotState extends State<BreathDot>
   }
 }
 
-// === BLINKING CURSOR ===
+// ---- blinking cursor ----
 class BlinkCursor extends StatefulWidget {
   final Color color;
   final double height;

@@ -173,7 +173,7 @@ class SignalSession {
     clamped[31] |= 0x40;
     final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
     final priv = Curve.decodePrivatePoint(clamped);
-    // do NOT zero `clamped` here: decodePrivatePoint keeps a reference to this
+    // do not zero `clamped` here: decodePrivatePoint keeps a reference to this
     // buffer, and wiping it corrupts every signature this identity makes
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 

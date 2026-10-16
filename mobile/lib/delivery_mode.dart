@@ -239,7 +239,7 @@ bool checkInOk(String stored) {
 }
 
 // the per-relay catch-up line: host and seconds, and for a slow or dropped
-// relay its slowest subscription - how many of the relay's subscriptions
+// relay its slowest subscription: how many of the relay's subscriptions
 // were held up, how long its connect took, and how far back it walked
 String catchupLine(String stored) {
   final m = _json(stored);

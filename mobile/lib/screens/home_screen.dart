@@ -619,7 +619,7 @@ class GroupSummary {
   bool get ended => endedBy != null;
 }
 
-// ───────── date header ─────────
+// ---- date header ----
 
 // a header button: a round of kDoorRound in a full finger's room of
 // kDoorBox, top-aligned so the rounds line up with the date beside them
@@ -1521,7 +1521,7 @@ class _OfflineStrip extends StatelessWidget {
   }
 }
 
-// ───────── empty state ─────────
+// ---- empty state ----
 
 // no chats yet: the developer chat's row on top, and under it the page
 // still asks to add someone. short phones and big fonts scroll it

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // one-time fade + slide-up entrance for list items. delay scales with index
-// (capped) so a list assembles gracefully instead of popping in at once.
+// (capped) so a list comes in row by row, not all at once.
 import 'dart:async';
 
 import 'package:flutter/material.dart';

@@ -135,7 +135,7 @@ class _Tab extends StatelessWidget {
   }
 }
 
-// ───────── show a code ─────────
+// ---- show a code ----
 
 class _ShareSide extends StatelessWidget {
   const _ShareSide();
@@ -148,7 +148,7 @@ class _ShareSide extends StatelessWidget {
   }
 }
 
-// ───────── enter one ─────────
+// ---- enter one ----
 
 class _JoinSide extends StatelessWidget {
   const _JoinSide();
