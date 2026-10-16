@@ -30,7 +30,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
-import 'package:kryfo/screens/shield_sheet.dart' show ShieldFlag;
+import 'package:kryfo/scam_shield.dart' show ShieldFlag;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -317,7 +317,7 @@ void main() {
           '  after:  ${jsonEncode(after)}\n'
           '  other filed at $own: ${jsonEncode(live.people[own])}\n'
           '  their texts: ${textsOf(own)}\n'
-          '  shield: ${ShieldFlag.fromRow(live.shields[own])?.headline}',
+          '  shield: ${ShieldFlag.fromRow(live.shields[own])?.lead.noticed}',
         );
         expect(after, before);
         expect(live.people[words], containsPair('xpub', real.xPub));
@@ -336,7 +336,7 @@ void main() {
         expect(live.people[own], containsPair('xpub', other.xPub));
         expect(nameUnchecked(live.people[own]), isTrue);
         expect(
-          ShieldFlag.fromRow(live.shields[own])?.headline,
+          ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
           l10n.scamShieldGivesUsedName(words),
         );
         // and what they send next lands there too
@@ -367,7 +367,7 @@ void main() {
     expect(live.people[own], containsPair('accepted', 0));
     expect(nameUnchecked(live.people[own]), isTrue);
     expect(
-      ShieldFlag.fromRow(live.shields[own])?.headline,
+      ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
       l10n.scamShieldGivesUsedName(words),
     );
   }, skip: engineThere ? false : 'no host engine');
@@ -383,6 +383,6 @@ void main() {
     expect(textsOf(words), [said]);
     expect(live.people[words], containsPair('accepted', 0));
     expect(nameUnchecked(live.people[words]), isTrue);
-    expect(ShieldFlag.fromRow(live.shields[words])?.headline ?? '', '');
+    expect(ShieldFlag.fromRow(live.shields[words])?.lead.noticed ?? '', '');
   }, skip: engineThere ? false : 'no host engine');
 }
