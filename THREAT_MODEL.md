@@ -32,8 +32,8 @@ put you in danger, read all of it.
 - someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
   just installed. while it is open your own account sends nothing, not even
   delivery ticks. what arrives for it is still kept, unseen, and what waits
-  goes once your own PIN opens Kryfo again. ticks for hidden
-  chats may wait until the hidden chats are opened. hidden chats open only
+  goes once your own pin opens Kryfo again. ticks for hidden chats may wait
+  until the hidden chats are opened. hidden chats open only
   with their own pin and show no trace in the everyday app: no row, no
   count, no notification while they are shut. a wipe pin removes Kryfo
   from the phone.
@@ -43,7 +43,7 @@ put you in danger, read all of it.
 ## what it does not protect against
 
 - a compromised device. malware or someone holding your unlocked phone sees
-  what you see. no messenger fixes an owned endpoint.
+  what you see.
 - the person you talk to. they can screenshot, copy, forward, or tell people
   they talk to you.
 - global traffic analysis. tor raises the cost of correlation. an adversary
@@ -95,12 +95,11 @@ put you in danger, read all of it.
   wait for the next hour, on check-ins meanwhile. we accept this: the relay
   asks for no account it could count per person.
   check-ins and always on involve no one else.
-- forensics on a seized unlocked device or on backups of it.
-- a forensic copy of the phone. the decoy pin and hidden chats are for a
-  quick look, someone scrolling through a phone you were made to unlock. they
-  are not built to survive a lab. a copy of the phone can show that Kryfo
-  holds more than it shows, and a short pin against such a copy can be
-  guessed. android's storage and battery figures for the app are not hidden
+- forensics on a seized unlocked phone or its backups, or on a forensic copy
+  of the phone. the decoy pin and hidden chats are for a quick look, someone
+  scrolling through a phone you were made to unlock. they are not built to
+  survive a lab. a copy of the phone can show that Kryfo holds more than it
+  shows, and a short pin against such a copy can be guessed. android's storage and battery figures for the app are not hidden
   either. if a forensic copy is the fear, the wipe pin is the tool, and not
   having the data on the phone at all is better still.
 - what the everyday side keeps to reach a hidden chat while it is shut. the
