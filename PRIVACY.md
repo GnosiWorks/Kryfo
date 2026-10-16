@@ -1,10 +1,8 @@
-# Privacy Policy
-
-Kryfo is built so there is almost nothing to collect.
+# Privacy policy
 
 ## what we collect
 
-nothing. there is no Kryfo account, no sign-up, no email, no phone number. we run no server that stores your messages, your contacts, or who you talk to. we have no analytics, no tracking, no crash reporting that phones home. nothing about how you use the app is sent to us, because there is no "us" on the other end to receive it.
+nothing. there is no Kryfo account, no sign-up, no email, no phone number. we run no server that stores your messages in readable form, your contacts, or who you talk to. we have no analytics, no tracking, no crash reporting that phones home. nothing about how you use the app is sent to us.
 
 ## what stays on your phone
 
@@ -66,11 +64,11 @@ leaving the mode tells the helper app to drop the endpoints at once, so our rela
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
+Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
 
 ## law enforcement and data requests
 
-we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over. we cannot produce what we never collected.
+we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over.
 
 ## children
 
@@ -78,11 +76,11 @@ Kryfo is not directed at children. you should be old enough to consent to using 
 
 ## who maintains Kryfo
 
-Kryfo is an open-source project maintained by an independent developer. the code is public so anyone can check these claims against what the app actually does.
+Kryfo is an open-source project maintained by an independent developer. the code is public, so anyone can check these claims against what the app does.
 
 ## changes
 
-Kryfo is in alpha and open source. this policy may change as the app does. the current version always lives in the repository.
+Kryfo is in alpha and open source. this policy may change as the app does. the current version is in the repository.
 
 ## contact
 
