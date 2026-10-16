@@ -1,0 +1,5 @@
+New: albums, send any kind of file, export your notes, accent colours, and screenshot blocking per chat that holds on both phones.
+
+Safer: every message is padded to a few fixed sizes, and "This isn't them" when safety numbers don't match.
+
+Fixed: GIFs line up on the right, Tor's status reads in the light theme, and sheets stay above the keyboard.

@@ -1,0 +1,5 @@
+Mới: album, gửi mọi loại tệp, xuất ghi chú, màu nhấn và chặn chụp màn hình theo từng cuộc trò chuyện, áp dụng trên cả hai điện thoại.
+
+An toàn hơn: mỗi tin nhắn được đệm đến một trong vài kích thước cố định, và có “Đây không phải họ” khi số an toàn không khớp.
+
+Đã sửa: GIF nằm bên phải, trạng thái Tor dễ đọc ở giao diện sáng, và các bảng luôn nằm trên bàn phím.

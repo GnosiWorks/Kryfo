@@ -1,0 +1,5 @@
+Neu: Alben, Dateien jeder Art senden, Notizen exportieren, Akzentfarben und Screenshot-Sperre pro Chat, die auf beiden Handys gilt.
+
+Sicherer: Jede Nachricht wird auf wenige feste Größen aufgefüllt, und „Das ist jemand anderes“, wenn die Sicherheitsnummern nicht passen.
+
+Behoben: GIFs stehen rechts, der Tor-Status ist im hellen Design gut lesbar, und Fenster bleiben über der Tastatur.

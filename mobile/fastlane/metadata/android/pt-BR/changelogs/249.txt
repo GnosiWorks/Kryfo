@@ -1,0 +1,5 @@
+Novo: álbuns, enviar qualquer tipo de arquivo, exportar suas notas, cores de destaque e bloqueio de capturas por conversa, valendo nos dois celulares.
+
+Mais seguro: cada mensagem é preenchida até alguns tamanhos fixos, e “Não é essa pessoa” quando os números de segurança não batem.
+
+Corrigido: os GIFs ficam à direita, o status do Tor fica legível no tema claro e as janelas ficam acima do teclado.

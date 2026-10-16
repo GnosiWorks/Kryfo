@@ -1,0 +1,5 @@
+Nouveau : albums, envoi de tout type de fichier, export de vos notes, couleurs d’accent et blocage des captures par discussion, sur les deux téléphones.
+
+Plus sûr : chaque message est complété à quelques tailles fixes, et « Ce n’est pas cette personne » quand les numéros de sécurité ne correspondent pas.
+
+Corrigé : les GIF s’alignent à droite, l’état de Tor se lit bien en thème clair et les feuilles restent au-dessus du clavier.

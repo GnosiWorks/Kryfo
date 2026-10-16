@@ -1,0 +1,5 @@
+Novedades: álbumes, enviar cualquier tipo de archivo, exportar tus notas, colores de acento y bloqueo de capturas por chat que funciona en los dos móviles.
+
+Más seguro: cada mensaje se rellena a unos pocos tamaños fijos, y «No es esa persona» cuando los números de seguridad no coinciden.
+
+Corregido: los GIF se alinean a la derecha, el estado de Tor se lee bien en el tema claro y las hojas quedan por encima del teclado.

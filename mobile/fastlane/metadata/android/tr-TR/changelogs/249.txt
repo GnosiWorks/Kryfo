@@ -1,0 +1,5 @@
+Yeni: albümler, her türlü dosyayı gönderme, notları dışa aktarma, vurgu renkleri ve iki telefonda da geçerli sohbet başına ekran görüntüsü engeli.
+
+Daha güvenli: her mesaj birkaç sabit boyuttan birine doldurulur, güvenlik numaraları uyuşmazsa “Bu o değil” seçeneği çıkar.
+
+Düzeltildi: GIF’ler sağa hizalanır, Tor durumu açık temada rahat okunur ve paneller klavyenin üstünde kalır.

@@ -1,0 +1,5 @@
+Baru: album, kirim file jenis apa pun, ekspor catatan, warna aksen, dan blokir tangkapan layar per obrolan yang berlaku di kedua ponsel.
+
+Lebih aman: setiap pesan diisi hingga salah satu dari beberapa ukuran tetap, dan “Ini bukan dia” saat nomor keamanan tidak cocok.
+
+Diperbaiki: GIF rata kanan, status Tor mudah dibaca di tema terang, dan panel tetap di atas keyboard.
