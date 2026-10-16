@@ -21,12 +21,13 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   100 bytes per tag and 16 per string. a listener past its own bound, or
   one whose event would take all queues together past theirs, is closed:
   it reconnects and reads the rest from the store. `closeAfter` is the
-  page deadline below, `Relay.Queued` the bytes queued now. `hold` and
-  `release` keep a subscription's live events back until its eose is
-  written: upstream writes them among its stored events, where a reader
-  takes one for a stored event, and a wrap is stamped up to two days back,
-  so a catch-up judged by its stamp would step over stored wraps it never
-  got. held events count toward the bounds like queued ones.
+  page deadline below, `Relay.Queued` the bytes queued now.
+- `websocket.go`: `hold` and `release` keep a subscription's live events
+  back until its eose is written. upstream writes them among its stored
+  events, where a reader takes one for a stored event, and a wrap is
+  stamped up to two days back, so a catch-up judged by its stamp would step
+  over stored wraps it never got. held events count toward the bounds like
+  queued ones.
 - `responding.go`: a page of stored events gets `Relay.PageWait` in all,
   then the connection is closed with no eose. the store's read stays open
   until the last event is written, and each write has its own deadline, so

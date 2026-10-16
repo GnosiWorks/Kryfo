@@ -6,8 +6,9 @@ and golang-asm compile c and asm from the dirs next to them, and it knows
 nothing of the patches below. vendor.sh copies those modules whole from the
 module cache, drops what the repo does not keep and applies
 `vendor-patches/go-libtor.patch` and `vendor-patches/anet.patch`. after it,
-`git status` shows only what the go.mod change meant. go's build cache doesn't track the c headers, so build
-with `HALO_FULL=1 ./build.sh` after any change there.
+`git status` shows only what the go.mod change meant. go's build cache
+doesn't track the c headers, so build with `HALO_FULL=1 ./build.sh` after
+any change there.
 
 ## go-libtor: 32-bit headers
 
@@ -94,15 +95,15 @@ files differ, the new lines marked `kryfo:`:
   goroutine per event, so a later one can overtake an earlier one, and a
   catch-up page cut short could keep an older event and lose newer ones
   sent before it. `Events` is closed only while nothing is handing over, so
-  nothing sends on it once it is closed. `dispatchEose` takes the same lock
-  and queues the EOSE behind the stored events, and the same goroutine
-  hands it over on `EndOfStoredEvents`, which is unbuffered: an event after
-  it waits until it is taken, so a reader taking either channel cannot take
-  a live event for a stored one. an EOSE faked after `MaxWaitForEOSE`
-  waits behind the stored events still queued too, where upstream drops
-  them. a subscription that ends, or gets a CLOSED, drops what is still
-  queued, the EOSE with it. a reader that wants events after the EOSE has
-  to take it.
+  nothing sends on it once it is closed.
+- `subscription.go`: `dispatchEose` queues the EOSE behind the stored
+  events, under the same lock, and the same goroutine hands it over on
+  `EndOfStoredEvents`, which is unbuffered. an event after it waits until it
+  is taken, so a reader taking either channel cannot take a live event for a
+  stored one. an EOSE faked after `MaxWaitForEOSE` waits behind the stored
+  events still queued too, where upstream drops them. a subscription that
+  ends, or gets a CLOSED, drops what is still queued, the EOSE with it. a
+  reader that wants events after the EOSE has to take it.
 
 vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
 
