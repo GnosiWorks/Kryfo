@@ -8093,9 +8093,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get requestsSomeoneNew => 'Người mới';
 
   @override
-  String get nameNotChecked => 'Chưa kiểm tra';
-
-  @override
   String get nameTakenTitle => 'Người khác đang dùng ba từ này';
 
   @override

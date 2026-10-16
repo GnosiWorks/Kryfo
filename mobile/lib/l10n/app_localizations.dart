@@ -13059,12 +13059,6 @@ abstract class AppLocalizations {
   /// **'Someone new'**
   String get requestsSomeoneNew;
 
-  /// widgets/name_check_mark.dart: a small mark beside three words a request, an introduction or a group gave, until a qr scan or the safety number settles them
-  ///
-  /// In en, this message translates to:
-  /// **'Not checked'**
-  String get nameNotChecked;
-
   /// widgets/kryfo_link_text.dart: sheet title, a link gives three words someone here already goes by, with another key
   ///
   /// In en, this message translates to:

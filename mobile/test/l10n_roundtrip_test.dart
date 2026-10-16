@@ -3597,7 +3597,6 @@ void main() {
       l.seenScamShieldRequestsOnly,
       "Runs on your phone with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.",
     );
-    expect(l.nameNotChecked, "Not checked");
     expect(l.nameTakenTitle, "Someone else uses these words");
     expect(
       l.nameTakenLine,

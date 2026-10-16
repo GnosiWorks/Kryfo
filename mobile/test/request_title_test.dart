@@ -17,7 +17,6 @@ import 'package:kryfo/scam_shield.dart';
 import 'package:kryfo/screens/requests_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/widgets/name_check_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Db implements HaloDb {
@@ -109,18 +108,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('slow-kite-moss'), findsOneWidget);
-    // the words they gave are marked, someone new says them in its line
-    expect(find.byType(NameCheckMark), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.ancestor(
-          of: find.text('slow-kite-moss'),
-          matching: find.byType(Row),
-        ),
-        matching: find.byType(NameCheckMark),
-      ),
-      findsWidgets,
-    );
+    // no mark beside the words they gave
+    expect(find.text('Not checked'), findsNothing);
     for (var i = 0; i < 12; i++) {
       await t.pump(const Duration(seconds: 1));
     }

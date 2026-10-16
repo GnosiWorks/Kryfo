@@ -7759,9 +7759,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get requestsSomeoneNew => '陌生人';
 
   @override
-  String get nameNotChecked => '未核对';
-
-  @override
   String get nameTakenTitle => '有别人在用这三个词';
 
   @override
@@ -15905,9 +15902,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get requestsSomeoneNew => '陌生人';
-
-  @override
-  String get nameNotChecked => '未核對';
 
   @override
   String get nameTakenTitle => '有別人在用這三個詞';

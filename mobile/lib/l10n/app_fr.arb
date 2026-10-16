@@ -2130,7 +2130,6 @@
   "devVoiceDisguised": "Votre voix est déguisée dans cette discussion",
   "devChatOptions": "Options de la discussion",
   "requestsSomeoneNew": "Quelqu’un de nouveau",
-  "nameNotChecked": "Non vérifié",
   "nameTakenTitle": "Quelqu’un d’autre utilise ces mots",
   "nameTakenLine": "Quelqu’un ici a reçu ces mots par une demande, une présentation ou un groupe, avec une autre clé, et personne ne les a vérifiés. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.",
   "nameTakenChatLine": "Votre discussion sous ces mots vient d’une demande, d’une présentation ou d’un groupe, avec une autre clé, et personne ne l’a vérifiée. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le : cette discussion est supprimée, et vous comparez le numéro de sécurité dans la nouvelle. Vous ne savez pas d’où vient le lien ? Gardez celui que vous avez.",

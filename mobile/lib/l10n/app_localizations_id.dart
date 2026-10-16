@@ -8102,9 +8102,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get requestsSomeoneNew => 'Orang baru';
 
   @override
-  String get nameNotChecked => 'Belum dicek';
-
-  @override
   String get nameTakenTitle => 'Orang lain memakai kata-kata ini';
 
   @override

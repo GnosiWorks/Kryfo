@@ -8237,9 +8237,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requestsSomeoneNew => 'شخص جديد';
 
   @override
-  String get nameNotChecked => 'لم يُتحقَّق منه';
-
-  @override
   String get nameTakenTitle => 'شخص آخر يستخدم هذه الكلمات';
 
   @override

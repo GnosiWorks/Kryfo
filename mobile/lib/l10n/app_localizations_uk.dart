@@ -8255,9 +8255,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get requestsSomeoneNew => 'Хтось новий';
 
   @override
-  String get nameNotChecked => 'Не перевірено';
-
-  @override
   String get nameTakenTitle => 'Ці слова використовує хтось інший';
 
   @override

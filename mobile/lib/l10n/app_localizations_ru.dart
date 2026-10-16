@@ -8265,9 +8265,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get requestsSomeoneNew => 'Кто-то новый';
 
   @override
-  String get nameNotChecked => 'Не проверено';
-
-  @override
   String get nameTakenTitle => 'Эти слова использует кто-то другой';
 
   @override

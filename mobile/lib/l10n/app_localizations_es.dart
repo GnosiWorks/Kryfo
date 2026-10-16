@@ -8173,9 +8173,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestsSomeoneNew => 'Alguien nuevo';
 
   @override
-  String get nameNotChecked => 'Sin comprobar';
-
-  @override
   String get nameTakenTitle => 'Otra persona usa estas palabras';
 
   @override

@@ -3116,7 +3116,6 @@ final _calls = <_Call>[
   ('scamShieldDismiss', [], (l) => l.scamShieldDismiss),
   ('settingsScamShieldHint', [], (l) => l.settingsScamShieldHint),
   ('seenScamShieldRequestsOnly', [], (l) => l.seenScamShieldRequestsOnly),
-  ('nameNotChecked', [], (l) => l.nameNotChecked),
   ('nameTakenTitle', [], (l) => l.nameTakenTitle),
   ('nameTakenLine', [], (l) => l.nameTakenLine),
   ('nameTakenUse', [], (l) => l.nameTakenUse),

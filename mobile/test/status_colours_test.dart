@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the accent is chrome only. a status or a warning (offline, connecting, a
-// key that changed, a name not checked, a route that needs a look) wears the
-// warn yellow whatever is picked, the chat header tells relay from tor by
-// their own colours, and words drawn in the accent take its text tone
+// key that changed, a route that needs a look) wears the warn yellow
+// whatever is picked, the chat header tells relay from tor by their own
+// colours, and words drawn in the accent take its text tone
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/widgets/name_check_mark.dart';
 
 final _accent = RegExp(
   r'HaloColors\.(amber|onAmber|amberSoft|amberDeep|amberText)(?![A-Za-z])',
@@ -49,7 +46,6 @@ void main() {
 
   test('warning widgets never read the accent', () {
     for (final f in [
-      'lib/widgets/name_check_mark.dart',
       'lib/widgets/key_held.dart',
       'lib/widgets/reconnect_valve.dart',
     ]) {
@@ -106,32 +102,6 @@ void main() {
     }
     expect(bad, isEmpty);
   });
-
-  for (final light in [false, true]) {
-    testWidgets('a name not checked wears the warn yellow under any accent, '
-        '${light ? 'light' : 'dark'}', (t) async {
-      HaloColors.setLight(light);
-      for (final a in [HaloAccent.velvet, HaloAccent.blue, HaloAccent.lime]) {
-        HaloColors.setAccent(a);
-        await t.pumpWidget(
-          const MaterialApp(
-            home: Material(child: Center(child: NameCheckMark())),
-          ),
-        );
-        await t.pumpWidget(const SizedBox());
-        await t.pumpWidget(
-          const MaterialApp(
-            home: Material(child: Center(child: NameCheckMark())),
-          ),
-        );
-        final icon = t.widget<Icon>(find.byIcon(Icons.help_outline));
-        expect(icon.color, HaloColors.warn, reason: a.name);
-        expect(icon.color, isNot(HaloColors.amber), reason: a.name);
-        final words = t.widget<Text>(find.text(l10n.nameNotChecked));
-        expect(words.style!.color, HaloColors.warnText, reason: a.name);
-      }
-    });
-  }
 
   test('words on the on colour inside your own bubble take the accent', () {
     final lit = _between(

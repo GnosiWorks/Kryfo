@@ -27,7 +27,6 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
-import 'package:kryfo/widgets/name_check_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -137,7 +136,7 @@ void main() {
     expect(find.text(l10n.chatCompareTitle), findsOneWidget);
     expect(find.text(l10n.chatCompareLine(_peer)), findsOneWidget);
     // nothing said about the words: they were given by the link they chose
-    expect(find.byType(NameCheckMark), findsNothing);
+    expect(find.text('Not checked'), findsNothing);
     await t.tap(find.text(l10n.chatVerify));
     await settle(t);
     expect(find.byType(KeyVerificationScreen), findsOneWidget);
@@ -149,13 +148,13 @@ void main() {
     await person(flags: kNameAsk | kNameSays);
     await open(t);
     expect(find.text(l10n.chatCompareTitle), findsOneWidget);
-    expect(find.byType(NameCheckMark), findsOneWidget);
+    expect(find.text('Not checked'), findsNothing);
     await t.tap(find.text(l10n.chatCompareLater));
     await settle(t);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
     expect(find.text(l10n.chatCompareFolded), findsOneWidget);
     expect(flagsNow(), kNameAsk | kNameSays | kNameLater);
-    expect(find.byType(NameCheckMark), findsOneWidget);
+    expect(find.text('Not checked'), findsNothing);
     await devClose(t);
   });
 
@@ -213,13 +212,13 @@ void main() {
       'checked', (t) async {
     await person(flags: kNameAsk | kNameSays | kNameLater);
     await open(t);
-    expect(find.byType(NameCheckMark), findsOneWidget);
+    expect(find.text('Not checked'), findsNothing);
     await t.tap(find.byTooltip(l10n.chatCompareDismiss));
     await settle(t);
     expect(find.text(l10n.chatCompareFolded), findsNothing);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
     expect(flagsNow(), kNameSays);
-    expect(find.byType(NameCheckMark), findsOneWidget);
+    expect(find.text('Not checked'), findsNothing);
     await devClose(t);
     // and it does not come back with the chat
     await open(t);
@@ -240,7 +239,7 @@ void main() {
     await person(flags: kNameAsk | kNameSays, verified: 1);
     await open(t);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
-    expect(find.byType(NameCheckMark), findsNothing);
+    expect(find.text('Not checked'), findsNothing);
     await devClose(t);
   });
 
@@ -268,8 +267,7 @@ void main() {
       'and asks for nothing yet', (t) async {
     await person(flags: kNameAsk | kNameSays, accepted: 0);
     await open(t);
-    expect(find.byType(NameCheckMark), findsOneWidget);
-    expect(find.text(l10n.nameNotChecked), findsOneWidget);
+    expect(find.text('Not checked'), findsNothing);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
     await devClose(t);
   });

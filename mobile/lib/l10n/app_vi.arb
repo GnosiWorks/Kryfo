@@ -2130,7 +2130,6 @@
   "devVoiceDisguised": "Giọng của bạn được đổi trong cuộc trò chuyện này",
   "devChatOptions": "Tùy chọn trò chuyện",
   "requestsSomeoneNew": "Người mới",
-  "nameNotChecked": "Chưa kiểm tra",
   "nameTakenTitle": "Người khác đang dùng ba từ này",
   "nameTakenLine": "Một người ở đây có ba từ này qua một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.",
   "nameTakenChatLine": "Cuộc trò chuyện của bạn dưới ba từ này đến từ một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó: cuộc trò chuyện kia sẽ bị xóa, và bạn so sánh số an toàn trong cuộc trò chuyện mới. Không chắc liên kết từ đâu đến? Hãy giữ người đang có.",

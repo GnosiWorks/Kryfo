@@ -8121,9 +8121,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get requestsSomeoneNew => 'فردی تازه';
 
   @override
-  String get nameNotChecked => 'بررسی‌نشده';
-
-  @override
   String get nameTakenTitle => 'کس دیگری از این واژه‌ها استفاده می‌کند';
 
   @override
