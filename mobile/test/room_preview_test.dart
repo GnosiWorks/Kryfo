@@ -577,7 +577,10 @@ void main() {
   });
 
   test('every way a room link is opened in the app asks first', () {
-    final app = File('lib/main.dart').readAsStringSync();
+    final app = [
+      'lib/app/shell.dart',
+      'lib/main.dart',
+    ].map((f) => File(f).readAsStringSync()).join('\n');
     final add = RegExp(
       r'Future<void> showAddContact\(([\s\S]*?)\n}\n',
     ).firstMatch(app)?.group(1);
