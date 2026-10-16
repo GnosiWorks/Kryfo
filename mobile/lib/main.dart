@@ -20816,7 +20816,7 @@ class AppState extends ChangeNotifier {
       );
       // filed on its own: the request says the name it gave
       final said = env.senderHaloId;
-      if (said != null && said != h && await _saidHeldHere(said)) {
+      if (said != null && said != h && await _saidHeldHere(said, db)) {
         await _noteOtherKey(db, h, said);
       }
     }
@@ -20882,12 +20882,13 @@ class AppState extends ChangeNotifier {
     return given == null || !_eqBytes(held, given);
   }
 
-  // the name a first contact gave is someone's here: a row on the everyday
-  // side or in the open vault, or words they let go. what only the router
-  // knows, a shut vault's people and its marks, files the sender apart and
-  // says nothing
-  Future<bool> _saidHeldHere(String said) async {
-    for (final d in [live, ?_openVault]) {
+  // the name a first contact gave is someone's here: a row, or words let
+  // go, on the everyday side or in the vault it is filed in. an everyday
+  // request outlasts the vault being open, so it never learns of the
+  // vault's people. what only the router knows, a shut vault's people and
+  // its marks, files the sender apart and says nothing
+  Future<bool> _saidHeldHere(String said, HaloDb into) async {
+    for (final d in [live, if (!identical(into, live)) into]) {
       if (await d.getContact(said) != null || await d.tombed(said)) {
         return true;
       }

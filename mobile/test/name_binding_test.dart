@@ -1999,6 +1999,23 @@ void main() {
       expect(router.keyBlocked(mallory.xPub), isTrue);
     });
 
+    test('with the vault open, the real one writing first is filed on '
+        'their own id, and nothing after it shuts names the vault\'s '
+        'words', () async {
+      await hiddenFake();
+      await writes(alice);
+      final own = unboundIdOf(_keyOf(alice));
+      expect(live.people[own], containsPair('accepted', 0));
+      expect(textsOf(own), [_said]);
+      // the vault shuts
+      useDatabasesForTest(live, Session(live));
+      expect(
+        ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
+        isNot(l10n.scamShieldGivesUsedName(words)),
+      );
+      expect('${live.shields[own]}', isNot(contains(words)));
+    });
+
     test('an everyday contact\'s seat in the vault\'s groups goes now with '
         'the vault open, and as it next opens when shut', () async {
       for (final open in [true, false]) {
