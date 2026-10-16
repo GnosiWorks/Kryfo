@@ -2222,21 +2222,23 @@ class HaloDb implements GroupOwedStore {
           // an accept whose word to them has not gone yet
           await upgradeTo80(db, oldV);
         }
-        if (oldV < 81) {
+        // test builds of one step each took 81 for it: a file at 81 to 84
+        // runs every step to 85 again, each safe twice
+        if (oldV < 85) {
           // keys blocked as not who they said. a file made before this
           // build took 80 for itself may lack the column 80 adds
           await blockedKeysTable(db);
           await ackOwedColumn(db);
         }
-        if (oldV < 82) {
+        if (oldV < 85) {
           // a group its admin ended
           await groupEndColumns(db);
         }
-        if (oldV < 83) {
+        if (oldV < 85) {
           // a chat's screenshot block, as both phones hold it
           await shotsColumns(db);
         }
-        if (oldV < 84) {
+        if (oldV < 85) {
           // the album each photo or video was sent in
           await albumColumns(db);
         }

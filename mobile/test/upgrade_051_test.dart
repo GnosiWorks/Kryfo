@@ -54,6 +54,10 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   85: (wallpaperTable, 'CREATE TABLE IF NOT EXISTS wallpapers'),
 };
 
+// whether the step to [step] runs on a file at [from]. test builds took 81
+// for each step alone, so a file at 81 to 84 takes them all again
+bool _runs(int step, int from) => step > from || from > 80;
+
 // what the steps add, by table
 const _added = {
   'blocked_keys': <String>[],
@@ -276,16 +280,17 @@ void main() {
           expect(got[k], fresh[f]![k], reason: k);
         }
         await holdsEverything(raw);
-        // the steps after [from] ran, in order, and none before them
+        // the steps [from] takes ran, in order, and no other
         final said = sql!.said.sublist(start);
         final at = [
           for (final e in _steps.entries)
-            if (e.key > from) said.indexWhere((s) => s.startsWith(e.value.$2)),
+            if (_runs(e.key, from))
+              said.indexWhere((s) => s.startsWith(e.value.$2)),
         ];
         expect(at, everyElement(greaterThanOrEqualTo(0)));
         expect([...at]..sort(), at);
         for (final e in _steps.entries) {
-          if (e.key <= from) {
+          if (!_runs(e.key, from)) {
             expect(
               said.where((s) => s.startsWith(e.value.$2)),
               isEmpty,
@@ -294,6 +299,34 @@ void main() {
           }
         }
         expect(said.where((s) => s.contains('ADD COLUMN written_at')), isEmpty);
+        final after = await _rows(raw, only: beforeCols[f]);
+        for (final t in before[f]!.keys) {
+          expect(after[t], before[f]![t], reason: t);
+        }
+        await db.close();
+      });
+    }
+
+    // a test build of one step alone left the file at 81 with that step
+    for (final e in _steps.entries) {
+      test('$f at 81 with only the step to ${e.key} opens at $_version with '
+          'the schema of a new install and every row', () async {
+        if (skip()) return;
+        final one = await openDatabase(
+          p.join(docs.path, f),
+          singleInstance: false,
+        );
+        await e.value.$1(one);
+        await one.setVersion(81);
+        await one.close();
+        final db = _files[f]!();
+        final raw = await db.open();
+        expect(await raw.getVersion(), _version);
+        final got = await _schema(raw);
+        for (final k in {...fresh[f]!.keys, ...got.keys}) {
+          expect(got[k], fresh[f]![k], reason: k);
+        }
+        await holdsEverything(raw);
         final after = await _rows(raw, only: beforeCols[f]);
         for (final t in before[f]!.keys) {
           expect(after[t], before[f]![t], reason: t);
