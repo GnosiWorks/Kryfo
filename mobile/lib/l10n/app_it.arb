@@ -2110,7 +2110,6 @@
   "devVoiceDisguised": "La tua voce è camuffata in questa chat",
   "devChatOptions": "Opzioni della chat",
   "requestsSomeoneNew": "Qualcuno di nuovo",
-  "nameNotChecked": "Non verificato",
   "nameTakenTitle": "Qualcun altro usa queste parole",
   "nameTakenLine": "Qualcuno qui ha avuto queste parole da una richiesta, una presentazione o un gruppo, con un'altra chiave, e nessuno le ha verificate. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo, poi confronta con lei il numero di sicurezza.",
   "nameTakenChatLine": "La tua chat con queste parole è arrivata da una richiesta, una presentazione o un gruppo, con un'altra chiave, e nessuno l'ha verificata. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo: quella chat viene eliminata e confronti il numero di sicurezza in quella nuova. Non sei sicuro da dove arrivi il link? Tieni quello che hai.",

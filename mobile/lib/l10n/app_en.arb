@@ -10127,10 +10127,6 @@
   "@requestsSomeoneNew": {
     "description": "screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave"
   },
-  "nameNotChecked": "Not checked",
-  "@nameNotChecked": {
-    "description": "widgets/name_check_mark.dart: a small mark beside three words a request, an introduction or a group gave, until a qr scan or the safety number settles them"
-  },
   "nameTakenTitle": "Someone else uses these words",
   "@nameTakenTitle": {
     "description": "widgets/kryfo_link_text.dart: sheet title, a link gives three words someone here already goes by, with another key"

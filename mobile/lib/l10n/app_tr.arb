@@ -2110,7 +2110,6 @@
   "devVoiceDisguised": "Bu sohbette sesin gizleniyor",
   "devChatOptions": "Sohbet seçenekleri",
   "requestsSomeoneNew": "Yeni biri",
-  "nameNotChecked": "Kontrol edilmedi",
   "nameTakenTitle": "Bu kelimeleri başka biri kullanıyor",
   "nameTakenLine": "Buradaki biri bu kelimeleri bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla aldı ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra onunla güvenlik numarasını karşılaştır.",
   "nameTakenChatLine": "Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın. Bağlantının nereden geldiğinden emin değil misin? Mevcut olanı tut.",

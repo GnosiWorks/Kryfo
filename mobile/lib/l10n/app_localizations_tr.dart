@@ -8063,9 +8063,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get requestsSomeoneNew => 'Yeni biri';
 
   @override
-  String get nameNotChecked => 'Kontrol edilmedi';
-
-  @override
   String get nameTakenTitle => 'Bu kelimeleri başka biri kullanıyor';
 
   @override

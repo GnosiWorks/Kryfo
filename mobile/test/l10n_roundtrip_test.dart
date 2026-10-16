@@ -3584,7 +3584,6 @@ void main() {
       l.scamShieldGivesUsedName("<shown>"),
       "Says it is <shown>, a name someone here already goes by",
     );
-    expect(l.nameNotChecked, "Not checked");
     expect(l.nameTakenTitle, "Someone else uses these words");
     expect(
       l.nameTakenLine,

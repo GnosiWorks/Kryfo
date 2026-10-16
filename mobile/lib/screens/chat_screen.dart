@@ -64,7 +64,6 @@ import 'dev_about_sheet.dart'
         showDevAboutSheet,
         startNewDevChat;
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/name_check_mark.dart';
 import '../main.dart'
     show
         engine,
@@ -73,7 +72,6 @@ import '../main.dart'
         kNotSent,
         nameAsks,
         nameCheckOf,
-        nameUnchecked,
         session,
         sessionQuiet,
         signalEncrypt,
@@ -944,7 +942,6 @@ class _ChatScreenState extends State<ChatScreen>
   bool _keyAgain = false;
   // their words came with a request, an introduction or a group and
   // nothing has checked them
-  bool _nameUnchecked = false;
   // the chat asks for the safety number: added by a code or a link, or
   // taken in from a request, and not verified
   bool _nameAsks = false;
@@ -968,7 +965,6 @@ class _ChatScreenState extends State<ChatScreen>
       final verified = await session.isVerified(widget.peerHaloId);
       final held = await session.keyHeld(widget.peerHaloId);
       final row = await session.getContact(widget.peerHaloId);
-      final unchecked = nameUnchecked(row);
       // no key held, no number to compare: nothing to ask for yet
       final asks =
           nameAsks(row) && await session.heldKey(widget.peerHaloId) != null;
@@ -978,14 +974,12 @@ class _ChatScreenState extends State<ChatScreen>
       if (changed != _keyChanged ||
           verified != _verified ||
           held != _keyHeld ||
-          unchecked != _nameUnchecked ||
           asks != _nameAsks ||
           folded != _nameFolded) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
-          _nameUnchecked = unchecked;
           _nameAsks = asks;
           _nameFolded = folded;
         });
@@ -5312,7 +5306,6 @@ class _ChatScreenState extends State<ChatScreen>
                       nickname: _nickname,
                       note: _note,
                       verified: _verified,
-                      nameUnchecked: _nameUnchecked,
                       supporterBadge: _peerBadge,
                       onBlock: _openContact,
                       onMore: _chatActions,
@@ -6237,7 +6230,6 @@ class _ChatHead extends StatelessWidget {
   final int pinnedCount;
   final VoidCallback onPinned;
   final bool verified;
-  final bool nameUnchecked;
   final String? note;
   final String? supporterBadge;
   const _ChatHead({
@@ -6254,7 +6246,6 @@ class _ChatHead extends StatelessWidget {
     this.pinnedCount = 0,
     required this.onPinned,
     this.verified = false,
-    this.nameUnchecked = false,
     this.note,
     this.supporterBadge,
   });
@@ -6335,10 +6326,6 @@ class _ChatHead extends StatelessWidget {
                           size: 13,
                           color: HaloColors.amber,
                         ),
-                      ],
-                      if (nameUnchecked && !verified) ...[
-                        const SizedBox(width: 6),
-                        const NameCheckMark(),
                       ],
                       if (supporterBadge != null) ...[
                         const SizedBox(width: 6),

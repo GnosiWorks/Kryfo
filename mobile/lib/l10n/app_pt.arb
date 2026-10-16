@@ -2110,7 +2110,6 @@
   "devVoiceDisguised": "Sua voz vai disfarçada nesta conversa",
   "devChatOptions": "Opções da conversa",
   "requestsSomeoneNew": "Alguém novo",
-  "nameNotChecked": "Não conferido",
   "nameTakenTitle": "Outra pessoa usa estas palavras",
   "nameTakenLine": "Alguém aqui recebeu estas palavras por um pedido, uma apresentação ou um grupo, com outra chave, e ninguém as conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o e depois compare o número de segurança com ela.",
   "nameTakenChatLine": "Sua conversa com estas palavras veio de um pedido, uma apresentação ou um grupo, com outra chave, e ninguém a conferiu. Palavras podem ser copiadas. Se este link veio da pessoa que você conhece, use-o: aquela conversa é apagada e você compara o número de segurança na nova. Não sabe de onde veio o link? Fique com o que você já tem.",

@@ -8035,9 +8035,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestsSomeoneNew => 'Someone new';
 
   @override
-  String get nameNotChecked => 'Not checked';
-
-  @override
   String get nameTakenTitle => 'Someone else uses these words';
 
   @override

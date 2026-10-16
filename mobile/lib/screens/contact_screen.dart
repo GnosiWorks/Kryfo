@@ -9,14 +9,13 @@ import 'package:flutter/services.dart';
 
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, nameUnchecked, session;
+import '../main.dart' show appState, session;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/name_check_mark.dart';
 import '../widgets/motion.dart'
     show haloRoute, kHouseCurve, kHouseTime, motionStill;
 import '../widgets/halo_rows.dart';
@@ -421,15 +420,6 @@ class _ContactScreenState extends State<ContactScreen> {
                         letter: 0.04,
                       ),
                     ),
-                  ),
-                  // words a request, an introduction or a group gave
-                  EaseSize(
-                    child: nameUnchecked(c)
-                        ? const Padding(
-                            padding: EdgeInsets.only(top: 8),
-                            child: NameCheckMark(),
-                          )
-                        : const SizedBox(width: double.infinity),
                   ),
                   EaseSize(
                     child: note != null && note.isNotEmpty

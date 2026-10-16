@@ -8123,9 +8123,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestsSomeoneNew => 'Quelqu’un de nouveau';
 
   @override
-  String get nameNotChecked => 'Non vérifié';
-
-  @override
   String get nameTakenTitle => 'Quelqu’un d’autre utilise ces mots';
 
   @override
