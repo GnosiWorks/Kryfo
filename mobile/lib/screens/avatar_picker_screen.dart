@@ -263,7 +263,7 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
               l10n.commonSave,
               style: HaloType.mono(
                 size: 12.5,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
                 weight: FontWeight.w600,
               ),
             ),

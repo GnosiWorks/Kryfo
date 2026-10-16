@@ -217,7 +217,7 @@ class _StepBar extends StatelessWidget {
         key: ValueKey(step),
         style: HaloType.mono(
           size: 10,
-          color: HaloColors.amber,
+          color: HaloColors.amberText,
         ).copyWith(letterSpacing: track(2), fontWeight: FontWeight.w500),
       ),
     );
@@ -422,7 +422,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
             l10n.onboardingPrivateByDefault,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
           ),
           by: 8,
@@ -445,7 +445,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                   size: hero,
                   weight: FontWeight.w300,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   height: 1.08,
                 ),
               ),
@@ -738,7 +738,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
             textAlign: TextAlign.center,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
           ),
         ),
@@ -911,7 +911,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
           size: 20,
           weight: FontWeight.w300,
           italic: true,
-          color: HaloColors.amber,
+          color: HaloColors.amberText,
           height: 1.25,
         ),
       ),
@@ -1023,7 +1023,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
               ),
               child: Text(
                 word,
-                style: HaloType.mono(size: 15, color: HaloColors.amber)
+                style: HaloType.mono(size: 15, color: HaloColors.amberText)
                     .copyWith(
                       letterSpacing: track(0.4),
                       fontWeight: FontWeight.w500,
@@ -1892,7 +1892,7 @@ class _Headline extends StatelessWidget {
             size: 30,
             weight: FontWeight.w300,
             italic: true,
-            color: HaloColors.amber,
+            color: HaloColors.amberText,
             height: 1.1,
           ),
         ),
@@ -1957,7 +1957,7 @@ class _Card extends StatelessWidget {
                   ? Text(
                       twoDigits(num!),
                       textScaler: TextScaler.noScaling,
-                      style: HaloType.mono(size: 11, color: HaloColors.amber)
+                      style: HaloType.mono(size: 11, color: HaloColors.amberText)
                           .copyWith(
                             letterSpacing: track(0.5),
                             fontWeight: FontWeight.w600,

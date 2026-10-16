@@ -385,7 +385,7 @@ class _ScanScreenState extends State<ScanScreen>
                               style: HaloType.sans(
                                 size: 12.5,
                                 color: _hint != null
-                                    ? HaloColors.amber
+                                    ? HaloColors.amberText
                                     : Colors.white,
                               ),
                             ),

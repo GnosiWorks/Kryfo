@@ -374,7 +374,7 @@ class _Row extends StatelessWidget {
                         sub!,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: on ? HaloColors.amber : HaloColors.text2,
+                          color: on ? HaloColors.amberText : HaloColors.text2,
                         ),
                       ),
                     ],
@@ -406,7 +406,7 @@ class _Glyph extends StatelessWidget {
           size: g.length > 1 ? 17 : 21,
           weight: FontWeight.w500,
           italic: slanted,
-          color: on ? HaloColors.amber : HaloColors.text,
+          color: on ? HaloColors.amberText : HaloColors.text,
           height: 1.0,
         ),
       ),

@@ -159,7 +159,7 @@ class _Head extends StatelessWidget {
                 HaloType.serif(
                   size: 31,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ).copyWith(
                   letterSpacing: track(-0.62),
                   height: 1.1,
@@ -245,13 +245,13 @@ class _PhotoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = HaloColors.amberInk;
+    final ink = HaloColors.onAmberBright;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 22),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [HaloColors.amberBright, HaloColors.amberBrightDeep],
@@ -367,7 +367,7 @@ class _CardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = HaloColors.amberInk;
+    final ink = HaloColors.onAmberBright;
     final fg = filled ? HaloColors.amberBright : ink;
     return Semantics(
       button: true,

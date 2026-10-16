@@ -79,7 +79,7 @@ class GifOptIn extends StatelessWidget {
                 l10n.gifBadge,
                 style: HaloType.mono(
                   size: 16,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   letter: 1,
                 ),
               ),

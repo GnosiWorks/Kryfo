@@ -14,7 +14,7 @@ import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
 import 'dlog.dart';
-import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
+import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
@@ -228,6 +228,34 @@ class Session {
       _ofPeer(peerId).firstMessageAt(peerId);
   Future<String?> getAtmosphere(String peerId) =>
       _ofPeer(peerId).getAtmosphere(peerId);
+  // a chat's wallpaper, in the container that holds the chat
+  Future<Uint8List?> chatPhotoOf(String chatId, {bool group = false}) async =>
+      (await (group ? _ofGroup(chatId) : _ofPeer(chatId)).wallpaperRow(
+        wallKey(chatId, group: group),
+      ))?.photo;
+  Future<bool> setChatPhoto(
+    String chatId,
+    Uint8List photo, {
+    bool group = false,
+  }) => (group ? _ofGroup(chatId) : _ofPeer(chatId)).setChatPhoto(
+    chatId,
+    photo,
+    group: group,
+  );
+  Future<void> setChatAtmosphere(
+    String chatId,
+    String? atmo, {
+    bool group = false,
+  }) => (group ? _ofGroup(chatId) : _ofPeer(chatId)).setChatAtmosphere(
+    chatId,
+    atmo,
+    group: group,
+  );
+  // the default is the identity's, hidden chats' too: the primary's
+  Future<({String atmo, Uint8List? photo})?> defaultWallpaper() =>
+      primary.wallpaperRow('');
+  Future<void> setDefaultWallpaper(String atmo, [Uint8List? photo]) =>
+      primary.setDefaultWallpaper(atmo, photo);
   // a chat's own choice, in the container that holds the chat, so a hidden
   // chat's never lands on the everyday side
   Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) =>
@@ -282,10 +310,6 @@ class Session {
   }) => _ofPeer(peerId).messagesFrom(peerId, rowid: rowid, at: at);
   Future<void> setArchived(String haloId, bool archived) =>
       _ofPeer(haloId).setArchived(haloId, archived);
-  Future<void> setAtmosphere(String peerId, String atmosphere) =>
-      _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
-  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) =>
-      _ofPeer(peerId).setWallpaperPhoto(peerId, bytes);
   // their timed messages in the other container's groups start counting
   // too, and nothing queued for them there goes. the block holds
   // whatever happens there: one shut meanwhile starts them a day after
@@ -420,8 +444,6 @@ class Session {
       _ofGroup(groupId).removeGroupMember(groupId, haloId);
   Future<void> renameGroup(String groupId, String name) =>
       _ofGroup(groupId).renameGroup(groupId, name);
-  Future<void> setGroupAtmosphere(String groupId, String atmosphere) =>
-      _ofGroup(groupId).setGroupAtmosphere(groupId, atmosphere);
 
   // ---- a chat of either kind ----
   Future<void> saveMessage(

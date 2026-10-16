@@ -221,7 +221,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
               l10n.pollOptionsLabel,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.amber,
+                color: HaloColors.amberText,
                 letter: 0.6,
               ),
             ),

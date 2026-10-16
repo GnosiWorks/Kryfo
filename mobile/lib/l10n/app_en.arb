@@ -56,6 +56,62 @@
   "@atmospherePaper": {
     "description": "atmosphere.dart"
   },
+  "accentYellow": "Yellow",
+  "@accentYellow": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "accentGrey": "Grey",
+  "@accentGrey": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "accentPurple": "Purple",
+  "@accentPurple": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "accentLime": "Lime",
+  "@accentLime": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "accentVelvet": "Velvet",
+  "@accentVelvet": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "accentBlue": "Blue",
+  "@accentBlue": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearancePreview": "Preview of your chats in this colour",
+  "@appearancePreview": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceSampleIn": "Still on for tonight?",
+  "@appearanceSampleIn": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceSampleOut": "Yes. Eight, the usual place.",
+  "@appearanceSampleOut": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceSampleButton": "Reply",
+  "@appearanceSampleButton": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceAccentHint": "Buttons, your own messages and links wear it. The app icon stays yellow.",
+  "@appearanceAccentHint": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceChatWallpaper": "Chat wallpaper",
+  "@appearanceChatWallpaper": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceEveryChat": "Every chat",
+  "@appearanceEveryChat": {
+    "description": "screens/appearance_screen.dart"
+  },
+  "appearanceWallpaperHint": "A chat's own wallpaper, set from its menu, comes first. Photos stay on this phone, encrypted with your chats.",
+  "@appearanceWallpaperHint": {
+    "description": "screens/appearance_screen.dart"
+  },
   "backupThatPassphraseDoesNot": "That passphrase does not open this file",
   "@backupThatPassphraseDoesNot": {
     "description": "backup.dart"
@@ -6414,6 +6470,18 @@
   "@settingsSameProtectionBrighter": {
     "description": "screens/settings_screen.dart"
   },
+  "settingsAppearance": "Appearance",
+  "@settingsAppearance": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsAccentColour": "Accent colour",
+  "@settingsAccentColour": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsColoursAndWallpaper": "Colours and wallpaper",
+  "@settingsColoursAndWallpaper": {
+    "description": "screens/settings_screen.dart"
+  },
   "settingsAppLock2": "App lock",
   "@settingsAppLock2": {
     "description": "screens/settings_screen.dart"
@@ -7054,6 +7122,14 @@
   "wallpaperYourPhoto": "Your photo",
   "@wallpaperYourPhoto": {
     "description": "screens/wallpaper_sheet.dart"
+  },
+  "wallpaperDefault": "Default",
+  "@wallpaperDefault": {
+    "description": "screens/wallpaper_sheet.dart"
+  },
+  "wallpaperNotSet": "The wallpaper was not set. Try again.",
+  "@wallpaperNotSet": {
+    "description": "screens/chat_screen.dart"
   },
   "wallpaperFromYourPhotos": "From your photos",
   "@wallpaperFromYourPhotos": {

@@ -51,6 +51,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get atmospherePaper => 'Papier';
 
   @override
+  String get accentYellow => 'Jaune';
+
+  @override
+  String get accentGrey => 'Gris';
+
+  @override
+  String get accentPurple => 'Violet';
+
+  @override
+  String get accentLime => 'Citron vert';
+
+  @override
+  String get accentVelvet => 'Velours';
+
+  @override
+  String get accentBlue => 'Bleu';
+
+  @override
+  String get appearancePreview =>
+      'Aperçu de vos discussions dans cette couleur';
+
+  @override
+  String get appearanceSampleIn => 'Toujours d’accord pour ce soir ?';
+
+  @override
+  String get appearanceSampleOut => 'Oui. À huit heures, au même endroit.';
+
+  @override
+  String get appearanceSampleButton => 'Répondre';
+
+  @override
+  String get appearanceAccentHint =>
+      'Les boutons, vos propres messages et les liens la portent. L’icône de l’appli reste jaune.';
+
+  @override
+  String get appearanceChatWallpaper => 'Fond des discussions';
+
+  @override
+  String get appearanceEveryChat => 'Toutes les discussions';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Le fond propre à une discussion, choisi depuis son menu, passe en premier. Les photos restent sur ce téléphone, chiffrées avec vos discussions.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Cette phrase secrète n’ouvre pas ce fichier';
 
@@ -5173,6 +5218,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'Même protection, plus lumineux';
 
   @override
+  String get settingsAppearance => 'Apparence';
+
+  @override
+  String get settingsAccentColour => 'Couleur d’accent';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Couleurs et fond d’écran';
+
+  @override
   String get settingsAppLock2 => 'Verrouillage';
 
   @override
@@ -5655,6 +5709,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Votre photo';
+
+  @override
+  String get wallpaperDefault => 'Par défaut';
+
+  @override
+  String get wallpaperNotSet =>
+      'Le fond d’écran n’a pas été appliqué. Réessayez.';
 
   @override
   String get wallpaperFromYourPhotos => 'Depuis vos photos';

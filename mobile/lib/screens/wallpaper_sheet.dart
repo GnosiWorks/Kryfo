@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the atmosphere picker for chats and groups. kept in the encrypted db and
-// never sent: the other person sees their own. taps preview live behind the
-// sheet; backing out puts the old one back.
+// the wallpaper picker for chats, groups and the default under appearance.
+// kept in the encrypted db and never sent: the other person sees their own.
+// taps preview live behind the sheet; backing out puts the old one back.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -22,41 +22,71 @@ class WallpaperFromPhotos {
   const WallpaperFromPhotos();
 }
 
-// an Atmo to keep, a WallpaperFromPhotos to go and pick one, or null
+// what it hands back when the chat is to follow the default again
+class WallpaperDefault {
+  const WallpaperDefault();
+}
+
+// an Atmo to keep, a WallpaperFromPhotos to go and pick one, a
+// WallpaperDefault, or null for no change. [allowDefault] offers the default
+// first, [followsDefault] and [hasPhoto] say what is in use now
 Future<Object?> showWallpaperSheet(
   BuildContext context,
   Atmo current, {
   ValueChanged<Atmo>? onPreview,
+  VoidCallback? onPreviewDefault,
   bool allowPhoto = false,
+  bool allowDefault = false,
+  bool followsDefault = false,
+  bool hasPhoto = false,
 }) {
   return showHaloSheet<Object>(
     context,
     scroll: true,
-    builder: (ctx) =>
-        _Picker(current: current, onPreview: onPreview, allowPhoto: allowPhoto),
+    builder: (ctx) => _Picker(
+      current: followsDefault && allowDefault
+          ? const WallpaperDefault()
+          : hasPhoto
+          ? null
+          : current,
+      onPreview: onPreview,
+      onPreviewDefault: onPreviewDefault,
+      allowPhoto: allowPhoto,
+      allowDefault: allowDefault,
+    ),
   );
 }
 
 class _Picker extends StatefulWidget {
-  final Atmo current;
+  // an Atmo, a WallpaperDefault, or null for the photo in use
+  final Object? current;
   final ValueChanged<Atmo>? onPreview;
+  final VoidCallback? onPreviewDefault;
   final bool allowPhoto;
+  final bool allowDefault;
   const _Picker({
     required this.current,
     this.onPreview,
+    this.onPreviewDefault,
     this.allowPhoto = false,
+    this.allowDefault = false,
   });
   @override
   State<_Picker> createState() => _PickerState();
 }
 
 class _PickerState extends State<_Picker> {
-  late Atmo _pick = widget.current;
+  late Object? _pick = widget.current;
 
-  void _choose(Atmo a) {
+  // a null swatch is the default's
+  void _choose(Atmo? a) {
     HapticFeedback.selectionClick();
-    setState(() => _pick = a);
-    widget.onPreview?.call(a);
+    setState(() => _pick = a ?? const WallpaperDefault());
+    if (a == null) {
+      widget.onPreviewDefault?.call();
+    } else {
+      widget.onPreview?.call(a);
+    }
   }
 
   @override
@@ -66,7 +96,8 @@ class _PickerState extends State<_Picker> {
         .where((a) => a != Atmo.none && !atmoIsPattern(a) && !atmoIsMood(a))
         .toList();
     final patterns = Atmo.values.where(atmoIsPattern).toList();
-    final cell = _cellWidth(context);
+    final cell = _cellWidth(context, widget.allowDefault);
+    final current = _pick is WallpaperDefault ? null : _pick;
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -90,8 +121,9 @@ class _PickerState extends State<_Picker> {
               _Head(l10n.wallpaperMoods),
               const SizedBox(height: 10),
               _Swatches(
-                items: [Atmo.none, ...moods],
-                current: _pick,
+                items: [if (widget.allowDefault) null, Atmo.none, ...moods],
+                current: current,
+                defaultOn: _pick is WallpaperDefault,
                 onPick: _choose,
                 from: 0,
                 cell: cell,
@@ -101,7 +133,7 @@ class _PickerState extends State<_Picker> {
               const SizedBox(height: 10),
               _Swatches(
                 items: gradients,
-                current: _pick,
+                current: current,
                 onPick: _choose,
                 from: 7,
                 cell: cell,
@@ -111,7 +143,7 @@ class _PickerState extends State<_Picker> {
               const SizedBox(height: 10),
               _Swatches(
                 items: patterns,
-                current: _pick,
+                current: current,
                 onPick: _choose,
                 from: 11,
                 cell: cell,
@@ -126,11 +158,18 @@ class _PickerState extends State<_Picker> {
                   label: l10n.wallpaperFromYourPhotos,
                   onTap: () =>
                       Navigator.pop(context, const WallpaperFromPhotos()),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
                     height: 44,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      border: Border.all(color: HaloColors.line),
+                      // the photo in use
+                      border: Border.all(
+                        color: _pick == null
+                            ? HaloColors.amber
+                            : HaloColors.line,
+                        width: _pick == null ? 1.5 : 1,
+                      ),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: Row(
@@ -199,16 +238,16 @@ class _Head extends StatelessWidget {
 }
 
 // the widest word of any name, at least 62: names wrap, words never break
-double _cellWidth(BuildContext context) {
+double _cellWidth(BuildContext context, bool withDefault) {
   final scaler = MediaQuery.textScalerOf(context);
   final dir = Directionality.of(context);
   var w = 62.0;
-  for (final a in Atmo.values) {
+  for (final name in [
+    if (withDefault) l10n.wallpaperDefault,
+    for (final a in Atmo.values) atmoLabel(a),
+  ]) {
     final p = TextPainter(
-      text: TextSpan(
-        text: atmoLabel(a),
-        style: _Swatch.label(HaloColors.text2),
-      ),
+      text: TextSpan(text: name, style: _Swatch.label(HaloColors.text2)),
       textDirection: dir,
       textScaler: scaler,
     )..layout();
@@ -219,14 +258,17 @@ double _cellWidth(BuildContext context) {
 }
 
 class _Swatches extends StatelessWidget {
-  final List<Atmo> items;
-  final Atmo current;
-  final ValueChanged<Atmo> onPick;
+  // null is the default's
+  final List<Atmo?> items;
+  final Object? current;
+  final bool defaultOn;
+  final ValueChanged<Atmo?> onPick;
   final int from;
   final double cell;
   const _Swatches({
     required this.items,
     required this.current,
+    this.defaultOn = false,
     required this.onPick,
     required this.from,
     required this.cell,
@@ -243,7 +285,7 @@ class _Swatches extends StatelessWidget {
             index: from + i,
             child: _Swatch(
               atmo: a,
-              on: a == current,
+              on: a == null ? defaultOn : a == current,
               width: cell,
               onTap: () => onPick(a),
             ),
@@ -254,10 +296,11 @@ class _Swatches extends StatelessWidget {
 }
 
 // one atmosphere as a small round of itself: its gradient, its mood's tint
-// or its pattern. the one in use wears an amber ring a gap away and a tick
-// that pop in on the house spring; with less movement they only fade
+// or its pattern, and null the default. the one in use wears an amber ring
+// a gap away and a tick that pop in on the house spring; with less movement
+// they only fade
 class _Swatch extends StatelessWidget {
-  final Atmo atmo;
+  final Atmo? atmo;
   final bool on;
   final double width;
   final VoidCallback onTap;
@@ -272,8 +315,13 @@ class _Swatch extends StatelessWidget {
 
   static TextStyle label(Color color) => HaloType.mono(size: 9.5, color: color);
 
+  String get _name => atmo == null ? l10n.wallpaperDefault : atmoLabel(atmo!);
+
   Decoration _face() {
     final a = atmo;
+    if (a == null) {
+      return BoxDecoration(shape: BoxShape.circle, color: HaloColors.surface2);
+    }
     if (a == Atmo.none) {
       return BoxDecoration(shape: BoxShape.circle, color: HaloColors.surface3);
     }
@@ -316,7 +364,7 @@ class _Swatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: on,
-      label: atmoLabel(atmo),
+      label: _name,
       excludeSemantics: true,
       onTap: onTap,
       child: PressScale(
@@ -362,16 +410,22 @@ class _Swatch extends StatelessWidget {
                     ),
                     clipBehavior: Clip.antiAlias,
                     alignment: Alignment.center,
-                    child: atmo == Atmo.none
+                    child: atmo == null
+                        ? Icon(
+                            Icons.wallpaper_outlined,
+                            size: 17,
+                            color: HaloColors.text2,
+                          )
+                        : atmo == Atmo.none
                         ? Icon(
                             Icons.not_interested,
                             size: 16,
-                            color: HaloColors.text3,
+                            color: HaloColors.text2,
                           )
-                        : atmoIsPattern(atmo)
+                        : atmoIsPattern(atmo!)
                         ? CustomPaint(
                             size: const Size(_size, _size),
-                            painter: PatternPainter(atmo, scale: 0.55),
+                            painter: PatternPainter(atmo!, scale: 0.55),
                           )
                         : null,
                   ),
@@ -414,11 +468,11 @@ class _Swatch extends StatelessWidget {
             SizedBox(
               width: width,
               child: Text(
-                atmoLabel(atmo),
+                _name,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: label(on ? HaloColors.amber : HaloColors.text3),
+                style: label(on ? HaloColors.amber : HaloColors.text2),
               ),
             ),
           ],

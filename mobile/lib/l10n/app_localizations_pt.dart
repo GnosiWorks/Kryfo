@@ -51,6 +51,50 @@ class AppLocalizationsPt extends AppLocalizations {
   String get atmospherePaper => 'Papel';
 
   @override
+  String get accentYellow => 'Amarelo';
+
+  @override
+  String get accentGrey => 'Cinza';
+
+  @override
+  String get accentPurple => 'Roxo';
+
+  @override
+  String get accentLime => 'Lima';
+
+  @override
+  String get accentVelvet => 'Veludo';
+
+  @override
+  String get accentBlue => 'Azul';
+
+  @override
+  String get appearancePreview => 'Prévia das suas conversas nesta cor';
+
+  @override
+  String get appearanceSampleIn => 'Ainda está de pé hoje à noite?';
+
+  @override
+  String get appearanceSampleOut => 'Sim. Às oito, no lugar de sempre.';
+
+  @override
+  String get appearanceSampleButton => 'Responder';
+
+  @override
+  String get appearanceAccentHint =>
+      'Os botões, suas próprias mensagens e os links usam essa cor. O ícone do app continua amarelo.';
+
+  @override
+  String get appearanceChatWallpaper => 'Papel de parede das conversas';
+
+  @override
+  String get appearanceEveryChat => 'Todas as conversas';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'O papel de parede próprio de uma conversa, escolhido no menu dela, vem primeiro. As fotos ficam neste celular, criptografadas com suas conversas.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Essa frase-senha não abre este arquivo';
 
@@ -5152,6 +5196,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'Mesma proteção, mais claro';
 
   @override
+  String get settingsAppearance => 'Aparência';
+
+  @override
+  String get settingsAccentColour => 'Cor de destaque';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Cores e papel de parede';
+
+  @override
   String get settingsAppLock2 => 'Bloqueio do app';
 
   @override
@@ -5632,6 +5685,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Sua foto';
+
+  @override
+  String get wallpaperDefault => 'Padrão';
+
+  @override
+  String get wallpaperNotSet =>
+      'O papel de parede não foi aplicado. Tente de novo.';
 
   @override
   String get wallpaperFromYourPhotos => 'Das suas fotos';

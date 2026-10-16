@@ -5,6 +5,8 @@ import 'secure_store.dart';
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
+import 'widgets/theme_refresh.dart';
+import 'widgets/wall_images.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -19,6 +21,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
+import 'image_strip.dart' show photoToSendOffUi;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
@@ -1500,10 +1503,12 @@ class HaloDb implements GroupOwedStore {
     if (_db != null) return _db!;
     final path = await container.dbPath();
     final pw = await _passphrase();
+    // photo files an upgrade took in, shredded once it is written
+    var adopted = const <String>[];
     _db = await openDatabase(
       path,
       password: pw,
-      version: 84,
+      version: 85,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1684,10 +1689,11 @@ class HaloDb implements GroupOwedStore {
         await notifRingTables(db);
         await blockedKeysTable(db);
         await groupEndIndexes(db);
+        await wallpaperTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 84
+        // they add. 66 runs after it: it reads what they all make. 67 to 85
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2199,8 +2205,31 @@ class HaloDb implements GroupOwedStore {
           // the album each photo or video was sent in
           await albumColumns(db);
         }
+        if (oldV < 85) {
+          // chats' wallpaper photos and the default, kept in here, and the
+          // photo files of before taken in
+          await wallpaperTable(db);
+          adopted = await adoptWallpaperFiles(
+            db,
+            p.join(p.dirname(path), 'wallpapers${container.suffix}'),
+          );
+        }
       },
     );
+    // a backup reading the folder or a restore replacing it keeps them:
+    // nothing names them now, so the start sweep takes them after
+    for (final f in backupRunning || restoreRunning ? const [] : adopted) {
+      try {
+        await shredFile(f);
+      } catch (_) {
+        // shredFile logs its own failure
+      }
+    }
+    try {
+      await dropOrphanWallpapers(_db!);
+    } catch (e) {
+      dlog('wallpaper: orphans not swept (${e.runtimeType})');
+    }
     // retired while it was opening
     if (_retired) {
       await close();
@@ -5248,15 +5277,10 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  Future<void> setGroupAtmosphere(String groupId, String atmosphere) async {
-    final db = await open();
-    await db.update(
-      'groups',
-      {'atmosphere': atmosphere},
-      where: 'group_id = ?',
-      whereArgs: [groupId],
-    );
-  }
+  // the same as setChatAtmosphere: one way in, so a photo always goes with
+  // the choice that replaced it
+  Future<void> setGroupAtmosphere(String groupId, String atmosphere) =>
+      setChatAtmosphere(groupId, atmosphere, group: true);
 
   Future<String?> getGroupAtmosphere(String groupId) async {
     final db = await open();
@@ -5270,37 +5294,9 @@ class HaloDb implements GroupOwedStore {
     return rows.first['atmosphere'] as String?;
   }
 
-  // the photo it had goes once the row is written
-  Future<void> setAtmosphere(String peerId, String atmosphere) async {
-    final db = await open();
-    final was = await db.transaction((t) async {
-      final was = await _atmosphereOf(t, peerId);
-      await t.update(
-        'contacts',
-        {'atmosphere': atmosphere},
-        where: 'halo_id = ?',
-        whereArgs: [peerId],
-      );
-      return was;
-    });
-    if (was != atmosphere) await _dropPhotos([was]);
-  }
-
-  // a photo from the gallery behind a chat, under a new random name: the
-  // old file is shredded, not written over, no cached image of it shows,
-  // and the name says nothing of whose chat it is. the path it was kept at
-  Future<String> setWallpaperPhoto(String peerId, Uint8List bytes) async {
-    final dir = await container.folder('wallpapers');
-    final f = File(p.join(dir.path, _freshWallLeaf()));
-    try {
-      await f.writeAsBytes(bytes, flush: true);
-      await setAtmosphere(peerId, 'image:${f.path}');
-    } catch (_) {
-      await shredFile(f.path);
-      rethrow;
-    }
-    return f.path;
-  }
+  // the photo it had goes once the row is written (setChatAtmosphere)
+  Future<void> setAtmosphere(String peerId, String atmosphere) =>
+      setChatAtmosphere(peerId, atmosphere);
 
   // a chat's own voice disguise choice, null until one is made here
   Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) async {
@@ -5456,6 +5452,109 @@ class HaloDb implements GroupOwedStore {
     );
     if (rows.isEmpty) return null;
     return rows.first['atmosphere'] as String?;
+  }
+
+  // a wallpaper row by its key (wallKey, '' for the default)
+  Future<({String atmo, Uint8List? photo})?> wallpaperRow(String key) async {
+    final db = await open();
+    final rows = await db.query(
+      'wallpapers',
+      columns: ['atmo', 'photo'],
+      where: 'chat = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final photo = rows.first['photo'];
+    return (
+      atmo: rows.first['atmo'] as String,
+      photo: photo is Uint8List
+          ? photo
+          : photo is List<int>
+          ? Uint8List.fromList(photo)
+          : null,
+    );
+  }
+
+  // what a chat's atmosphere says now, as its row has it
+  static Future<String?> _wallOf(
+    DatabaseExecutor t,
+    String chatId,
+    bool group,
+  ) async {
+    final r = await t.query(
+      group ? 'groups' : 'contacts',
+      columns: ['atmosphere'],
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['atmosphere'] as String?;
+  }
+
+  // a chat's own photo behind it, and its atmosphere saying so. the row is
+  // written first and the photo only when it found its chat, so a photo
+  // never lands where no chat names it. a file an older version kept for
+  // it is shredded once the row is written. whether it was kept
+  Future<bool> setChatPhoto(
+    String chatId,
+    Uint8List photo, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    final (kept, was) = await db.transaction((t) async {
+      final was = await _wallOf(t, chatId, group);
+      final n = await t.update(
+        group ? 'groups' : 'contacts',
+        {'atmosphere': kPhotoWall},
+        where: group ? 'group_id = ?' : 'halo_id = ?',
+        whereArgs: [chatId],
+      );
+      if (n != 1) return (false, null);
+      await t.insert('wallpapers', {
+        'chat': wallKey(chatId, group: group),
+        'atmo': kPhotoWall,
+        'photo': photo,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return (true, was);
+    });
+    await _dropPhotos([was]);
+    return kept;
+  }
+
+  // a built-in by name, or null to follow the default. a photo it had goes
+  Future<void> setChatAtmosphere(
+    String chatId,
+    String? atmo, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    final was = await db.transaction((t) async {
+      final was = await _wallOf(t, chatId, group);
+      await t.delete(
+        'wallpapers',
+        where: 'chat = ?',
+        whereArgs: [wallKey(chatId, group: group)],
+      );
+      await t.update(
+        group ? 'groups' : 'contacts',
+        {'atmosphere': atmo},
+        where: group ? 'group_id = ?' : 'halo_id = ?',
+        whereArgs: [chatId],
+      );
+      return was;
+    });
+    await _dropPhotos([was]);
+  }
+
+  // the default: a built-in by name, or kPhotoWall with its photo
+  Future<void> setDefaultWallpaper(String atmo, [Uint8List? photo]) async {
+    final db = await open();
+    await db.insert('wallpapers', {
+      'chat': '',
+      'atmo': atmo,
+      'photo': photo,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> clearConversation(String peerId) async {
@@ -9547,6 +9646,121 @@ Future<void> notifRingTables(DatabaseExecutor db) async {
   );
 }
 
+// a chat's own wallpaper photo, and the default every chat without a choice
+// of its own shows. chat is a contact's id, 'group:' and a group's id, or
+// '' for the default. atmo is kPhotoWall with a photo, or for the default a
+// built-in by name. the photo's bytes live here, under the container's own
+// key, and nowhere else. a chat's photo lasts while its atmosphere says
+// photo: whatever clears that or drops the row (a delete, a wipe of the
+// chat's settings) takes the photo with it, by the triggers below
+const kPhotoWall = 'photo';
+
+String wallKey(String chatId, {bool group = false}) =>
+    group ? 'group:$chatId' : chatId;
+
+Future<void> wallpaperTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS wallpapers (
+      chat TEXT PRIMARY KEY,
+      atmo TEXT NOT NULL,
+      photo BLOB
+    )
+  ''');
+  for (final (table, key) in const [
+    ('contacts', 'X.halo_id'),
+    ('groups', "'group:' || X.group_id"),
+  ]) {
+    final oldKey = key.replaceAll('X.', 'old.');
+    final newKey = key.replaceAll('X.', 'new.');
+    await db.execute(
+      'CREATE TRIGGER IF NOT EXISTS wallpapers_${table}_gone AFTER DELETE ON '
+      '$table BEGIN DELETE FROM wallpapers WHERE chat = $oldKey; END',
+    );
+    await db.execute(
+      'CREATE TRIGGER IF NOT EXISTS wallpapers_${table}_off AFTER UPDATE OF '
+      "atmosphere ON $table WHEN new.atmosphere IS NOT '$kPhotoWall' BEGIN "
+      'DELETE FROM wallpapers WHERE chat = $newKey; END',
+    );
+  }
+}
+
+// a photo no chat here says it shows: one written for a row that went or
+// was replaced whole (INSERT OR REPLACE fires no delete trigger). the
+// default ('') is never a chat's
+@visibleForTesting
+const kOrphanWallpapers =
+    "chat <> '' AND NOT EXISTS "
+    "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
+    "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
+    "(SELECT 1 FROM groups g WHERE substr(wallpapers.chat, 1, 6) = 'group:' "
+    "AND g.group_id = substr(wallpapers.chat, 7) "
+    "AND g.atmosphere = '$kPhotoWall')";
+
+Future<void> dropOrphanWallpapers(DatabaseExecutor db) async {
+  const orphan = kOrphanWallpapers;
+  // an open with nothing to sweep writes nothing
+  final any = await db.rawQuery(
+    'SELECT 1 FROM wallpapers WHERE $orphan LIMIT 1',
+  );
+  if (any.isEmpty) return;
+  await db.execute('DELETE FROM wallpapers WHERE $orphan');
+}
+
+// the photos an older version kept as files in the clear, taken in at the
+// upgrade to 85: each cleaned as a photo that leaves is, kept here, its
+// chat marked photo. one that will not read or clean leaves its chat on the
+// default. the files are handed back to be shredded once the upgrade is
+// written; only a file in this container's own [folder] is ever read or
+// named
+Future<List<String>> adoptWallpaperFiles(
+  DatabaseExecutor db,
+  String folder,
+) async {
+  final files = <String>[];
+  for (final (table, id, group) in const [
+    ('contacts', 'halo_id', false),
+    ('groups', 'group_id', true),
+  ]) {
+    for (final r in await db.query(
+      table,
+      columns: [id, 'atmosphere'],
+      where: "atmosphere LIKE 'image:%'",
+    )) {
+      final chat = r[id];
+      final atmo = r['atmosphere'];
+      if (chat is! String || atmo is! String || !atmo.startsWith('image:')) {
+        continue;
+      }
+      final path = atmo.substring(6);
+      final inFolder = p.equals(p.dirname(path), folder);
+      Uint8List? photo;
+      if (inFolder) {
+        try {
+          // off the ui thread, as every photo cleaning is
+          photo = await photoToSendOffUi(await File(path).readAsBytes());
+        } catch (e) {
+          dlog('wallpaper: an old file did not read (${e.runtimeType})');
+        }
+      }
+      if (photo != null) {
+        await db.insert('wallpapers', {
+          'chat': wallKey(chat, group: group),
+          'atmo': kPhotoWall,
+          'photo': photo,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await db.update(
+        table,
+        {'atmosphere': photo == null ? null : kPhotoWall},
+        where: '$id = ?',
+        whereArgs: [chat],
+      );
+      if (inFolder) files.add(path);
+    }
+  }
+  return files;
+}
+
 // a group's texts sent again to a member who restored a backup: once per
 // restore, known by its backup's day (0 when the ask had none)
 Future<void> groupResentTables(DatabaseExecutor db) async {
@@ -11463,6 +11677,7 @@ final navRevision = ValueNotifier<int>(0);
 
 void renewRootNavigator() {
   haloClearToasts();
+  WallImages.clear();
   _rootNavKey = GlobalKey<NavigatorState>();
   navRevision.value++;
 }
@@ -15295,6 +15510,9 @@ class AppState extends ChangeNotifier {
     try {
       final v = (await secureStore.read(key: 'theme_light')) == 'true';
       HaloColors.setLight(v);
+      HaloColors.setAccent(
+        HaloAccent.byName(await secureStore.read(key: 'theme_accent')),
+      );
     } catch (e) {
       dlog('theme pref: $e');
     }
@@ -15305,6 +15523,16 @@ class AppState extends ChangeNotifier {
     themeRevision.value++;
     notifyListeners();
     await secureStore.write(key: 'theme_light', value: v.toString());
+  }
+
+  // one accent for the whole app, like the theme: every identity, hidden
+  // chats and the decoy show the same, so none of them stands out
+  Future<void> setAccent(HaloAccent a) async {
+    if (a == HaloColors.accent) return;
+    HaloColors.setAccent(a);
+    themeRevision.value++;
+    notifyListeners();
+    await secureStore.write(key: 'theme_accent', value: a.name);
   }
 
   // ---- how tor gets out ----
@@ -26095,7 +26323,9 @@ void main() async {
   // first. started before the window check so a headless start loads it too.
   unawaited(
     appState.loadThemePref().then((_) {
-      if (HaloColors.isLight) themeRevision.value++;
+      if (HaloColors.isLight || HaloColors.accent != HaloAccent.yellow) {
+        themeRevision.value++;
+      }
     }),
   );
   if (PlatformDispatcher.instance.implicitView == null) {
@@ -26167,17 +26397,20 @@ class HaloApp extends StatelessWidget {
   const HaloApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        themeRevision,
-        localeRevision,
-        navRevision,
-      ]),
-      builder: (context, _) => haloAppShell(
-        navigatorKey: rootNavKey,
-        locale: l10nLocale,
-        lock: (navigator) => _LockGate(child: navigator),
-        home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+    return ThemeRefresh(
+      revision: themeRevision,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([
+          themeRevision,
+          localeRevision,
+          navRevision,
+        ]),
+        builder: (context, _) => haloAppShell(
+          navigatorKey: rootNavKey,
+          locale: l10nLocale,
+          lock: (navigator) => _LockGate(child: navigator),
+          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        ),
       ),
     );
   }
@@ -26495,7 +26728,7 @@ class _AddSheetState extends State<_AddSheet>
                     style: HaloType.sans(
                       size: 13.5,
                       weight: FontWeight.w600,
-                      color: typed ? HaloColors.onAmber : HaloColors.amber,
+                      color: typed ? HaloColors.onAmber : HaloColors.amberText,
                     ),
                     child: Text(l10n.appAddThem),
                   ),
@@ -26640,7 +26873,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
           backgroundColor: HaloColors.surface2,
           title: Text(
             l10n.appAddAKryfo,
-            style: HaloType.sans(color: HaloColors.amber),
+            style: HaloType.sans(color: HaloColors.amberText),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -26700,7 +26933,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
               onPressed: () => Navigator.pop(ctx, ('paste', ctrl.text)),
               child: Text(
                 l10n.appImport,
-                style: HaloType.sans(color: HaloColors.amber),
+                style: HaloType.sans(color: HaloColors.amberText),
               ),
             ),
           ],
@@ -26819,13 +27052,13 @@ class _DevScreenState extends State<DevScreen> {
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 appState.myId,
-                style: HaloType.mono(size: 18, color: HaloColors.amber),
+                style: HaloType.mono(size: 18, color: HaloColors.amberText),
               ),
               const SizedBox(height: 16),
               Container(
@@ -26848,7 +27081,7 @@ class _DevScreenState extends State<DevScreen> {
                 ),
                 child: SelectableText(
                   uri,
-                  style: HaloType.mono(size: 9, color: HaloColors.amber),
+                  style: HaloType.mono(size: 9, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 12),
@@ -26859,7 +27092,7 @@ class _DevScreenState extends State<DevScreen> {
                 },
                 child: Text(
                   l10n.appCopyUri,
-                  style: HaloType.sans(color: HaloColors.amber),
+                  style: HaloType.sans(color: HaloColors.amberText),
                 ),
               ),
             ],
@@ -26942,7 +27175,7 @@ class _DevScreenState extends State<DevScreen> {
                   size: 56,
                   weight: FontWeight.w300,
                   italic: true,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   height: 1,
                 ),
               ),
@@ -26968,7 +27201,7 @@ class _DevScreenState extends State<DevScreen> {
                   appState.myId.isEmpty ? '...' : appState.myId,
                   style: HaloType.mono(
                     size: 18,
-                    color: HaloColors.amber,
+                    color: HaloColors.amberText,
                     letter: 0.04,
                   ),
                 ),
@@ -27072,7 +27305,7 @@ class _DevScreenState extends State<DevScreen> {
                     Navigator.of(context).push(haloRoute(const ModesScreen())),
                 child: Text(
                   l10n.appSpeedPrivacy,
-                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                  style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 8),
@@ -27082,7 +27315,7 @@ class _DevScreenState extends State<DevScreen> {
                 ).push(haloRoute(const GettingMessagesScreen())),
                 child: Text(
                   l10n.appGettingMessages,
-                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                  style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
               const SizedBox(height: 8),
@@ -27142,7 +27375,7 @@ class _DevScreenState extends State<DevScreen> {
                   animation: lockState,
                   builder: (_, _) => Text(
                     lockState.lockOn ? l10n.appAppLockOn : l10n.appAppLockOff,
-                    style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    style: HaloType.mono(size: 11, color: HaloColors.amberText),
                   ),
                 ),
               ),
@@ -27613,14 +27846,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               : off
               ? HaloColors.text2
               : said.kind == 'offline'
-              ? HaloColors.amber
+              ? HaloColors.warn
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
               : appState.sendMode == 'fast'
               ? torGreen
               : ready
               ? const Color(0xFFB79CFF)
-              : HaloColors.amber;
+              : HaloColors.warn;
           final t = _c.value;
           Widget dot(Color accent) => SizedBox(
             width: 18,

@@ -34,6 +34,9 @@ const _icons = {
       'M15.6 8.5a3.6 3.6 0 1 1-7.2 0 3.6 3.6 0 1 1 7.2 0zM5 19.5c1.3-3.4 4-4.9 7-4.9s5.7 1.5 7 4.9',
 };
 
+// a tab's glyph, for a drawing of the bar elsewhere
+String navTabIcon(HaloTab t) => _icons[t]!;
+
 class HaloNavBar extends StatelessWidget {
   final HaloTab active;
   final ValueChanged<HaloTab> onPick;

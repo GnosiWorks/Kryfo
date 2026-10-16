@@ -18,24 +18,24 @@ class NameCheckMark extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(5, 1, 6, 2),
           decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.12),
+            color: HaloColors.warn.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: HaloColors.amber.withValues(alpha: 0.4),
+              color: HaloColors.warn.withValues(alpha: 0.4),
               width: 0.5,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.help_outline, size: 10, color: HaloColors.amber),
+              Icon(Icons.help_outline, size: 10, color: HaloColors.warn),
               const SizedBox(width: 3),
               Flexible(
                 child: Text(
                   l10n.nameNotChecked,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: HaloType.sans(size: 10, color: HaloColors.amber),
+                  style: HaloType.sans(size: 10, color: HaloColors.warnText),
                 ),
               ),
             ],

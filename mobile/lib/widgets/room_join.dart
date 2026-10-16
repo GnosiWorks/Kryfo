@@ -102,7 +102,7 @@ class _RoomJoinLineState extends State<RoomJoinLine>
         overflow: TextOverflow.ellipsis,
         style: HaloType.mono(
           size: widget.size,
-          color: waiting ? HaloColors.violet : HaloColors.amber,
+          color: waiting ? HaloColors.violet : HaloColors.amberText,
         ),
       ),
     );

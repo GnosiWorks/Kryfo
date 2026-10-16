@@ -240,7 +240,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     'Kryfo',
                     style: HaloType.serif(
                       size: 40,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       italic: true,
                     ),
                   ),

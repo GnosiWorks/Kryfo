@@ -293,7 +293,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
             style: HaloType.sans(
               size: 12.5,
               weight: FontWeight.w600,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
             ),
           ),
         ),

@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import 'lock_guard.dart';
 import 'theme.dart';
+import 'widgets/wall_images.dart';
 
 class LockLayer extends StatefulWidget {
   const LockLayer({
@@ -314,6 +315,8 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     onLockUp: () {
       widget.guard.locking();
       haloClearToasts();
+      // no chat's photo stays decoded behind the pin
+      WallImages.clear();
       widget.lockingUp?.call();
     },
     onLifted: () {

@@ -97,7 +97,7 @@ TextSpan mentionRich(String text, TextStyle base, {Color? accent}) {
       TextSpan(
         text: m.group(0),
         style: base.copyWith(
-          color: accent ?? HaloColors.amber,
+          color: accent ?? HaloColors.amberText,
           fontWeight: FontWeight.w700,
           decoration: accent == null ? null : TextDecoration.underline,
           decorationColor: accent,

@@ -68,7 +68,7 @@ class WhyKryfoScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 l10n.whyKryfoTheHonestPart,
-                style: HaloType.serif(size: 16, color: HaloColors.amber),
+                style: HaloType.serif(size: 16, color: HaloColors.amberText),
               ),
               const SizedBox(height: 12),
               Text(

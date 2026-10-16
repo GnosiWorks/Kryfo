@@ -479,7 +479,7 @@ class PairKeyNumber extends StatelessWidget {
                     style: HaloType.mono(
                       size: size,
                       weight: FontWeight.w600,
-                      color: HaloColors.amber,
+                      color: HaloColors.amberText,
                       letter: 0.06,
                     ),
                   ),

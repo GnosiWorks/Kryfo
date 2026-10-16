@@ -51,6 +51,50 @@ class AppLocalizationsDe extends AppLocalizations {
   String get atmospherePaper => 'Papier';
 
   @override
+  String get accentYellow => 'Gelb';
+
+  @override
+  String get accentGrey => 'Grau';
+
+  @override
+  String get accentPurple => 'Lila';
+
+  @override
+  String get accentLime => 'Limette';
+
+  @override
+  String get accentVelvet => 'Samtrot';
+
+  @override
+  String get accentBlue => 'Blau';
+
+  @override
+  String get appearancePreview => 'Vorschau deiner Chats in dieser Farbe';
+
+  @override
+  String get appearanceSampleIn => 'Bleibt\'s bei heute Abend?';
+
+  @override
+  String get appearanceSampleOut => 'Ja. Um acht, wie immer.';
+
+  @override
+  String get appearanceSampleButton => 'Antworten';
+
+  @override
+  String get appearanceAccentHint =>
+      'Buttons, deine eigenen Nachrichten und Links tragen sie. Das App-Symbol bleibt gelb.';
+
+  @override
+  String get appearanceChatWallpaper => 'Chat-Hintergrund';
+
+  @override
+  String get appearanceEveryChat => 'Alle Chats';
+
+  @override
+  String get appearanceWallpaperHint =>
+      'Der eigene Hintergrund eines Chats, gesetzt über sein Menü, geht vor. Fotos bleiben auf diesem Telefon, verschlüsselt mit deinen Chats.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Diese Passphrase öffnet diese Datei nicht';
 
@@ -5181,6 +5225,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsSameProtectionBrighter => 'Gleicher Schutz, heller';
 
   @override
+  String get settingsAppearance => 'Darstellung';
+
+  @override
+  String get settingsAccentColour => 'Akzentfarbe';
+
+  @override
+  String get settingsColoursAndWallpaper => 'Farben und Hintergrund';
+
+  @override
   String get settingsAppLock2 => 'App-Sperre';
 
   @override
@@ -5662,6 +5715,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get wallpaperYourPhoto => 'Dein Foto';
+
+  @override
+  String get wallpaperDefault => 'Standard';
+
+  @override
+  String get wallpaperNotSet =>
+      'Der Hintergrund wurde nicht gesetzt. Versuch es noch einmal.';
 
   @override
   String get wallpaperFromYourPhotos => 'Aus deinen Fotos';

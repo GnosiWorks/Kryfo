@@ -1587,7 +1587,7 @@ class _PersonSheetState extends State<_PersonSheet>
                       style: HaloType.sans(
                         size: 15,
                         weight: FontWeight.w600,
-                        color: _adding ? HaloColors.amber : HaloColors.onAmber,
+                        color: _adding ? HaloColors.amberText : HaloColors.onAmber,
                       ),
                     ),
                   ),
@@ -1648,7 +1648,7 @@ Widget _face(
         style: HaloType.serif(
           size: s * 0.45,
           italic: true,
-          color: HaloColors.amber,
+          color: HaloColors.amberText,
           height: 1,
         ),
       ),
@@ -1776,7 +1776,7 @@ class _ChatBlockState extends State<_ChatBlock> {
                           l10n.searchMatches(c.hits.length),
                           style: HaloType.mono(
                             size: 10,
-                            color: HaloColors.amber,
+                            color: HaloColors.amberText,
                           ),
                         ),
                       ],
@@ -1852,7 +1852,7 @@ class _ChatBlockState extends State<_ChatBlock> {
                       style: HaloType.sans(
                         size: 12.5,
                         weight: FontWeight.w600,
-                        color: HaloColors.amber,
+                        color: HaloColors.amberText,
                       ),
                     ),
                   ),
@@ -1956,7 +1956,7 @@ class _HitRow extends StatelessWidget {
                             style: HaloType.mono(
                               size: 10,
                               color: hit.out
-                                  ? HaloColors.amber
+                                  ? HaloColors.amberText
                                   : HaloColors.text2,
                             ),
                           ),
@@ -2018,7 +2018,7 @@ class _Lit extends StatelessWidget {
     final spans = <TextSpan>[];
     var at = 0;
     final lit = style.copyWith(
-      color: HaloColors.amber,
+      color: HaloColors.amberText,
       fontWeight: FontWeight.w700,
     );
     for (final r in ranges) {

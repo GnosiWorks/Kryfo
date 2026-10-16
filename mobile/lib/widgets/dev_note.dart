@@ -197,7 +197,7 @@ class _Back extends StatelessWidget {
             style: HaloType.sans(
               size: 12.5,
               weight: FontWeight.w500,
-              color: HaloColors.amber,
+              color: HaloColors.amberText,
               height: 1.25,
             ),
           ),
@@ -343,7 +343,7 @@ class DevWhoSheet extends StatelessWidget {
                 l10n.devWhoChoiceStays,
                 style: HaloType.mono(
                   size: 11,
-                  color: HaloColors.amber,
+                  color: HaloColors.amberText,
                   letter: 0.2,
                 ),
               ),
@@ -421,7 +421,7 @@ class DevAnonChip extends StatelessWidget {
               l10n.devAnonymous,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: HaloType.mono(size: size, color: HaloColors.amber),
+              style: HaloType.mono(size: size, color: HaloColors.amberText),
             ),
           ),
         ],
@@ -552,7 +552,7 @@ class DevChatHead extends StatelessWidget {
                                           overflow: TextOverflow.ellipsis,
                                           style: HaloType.mono(
                                             size: 10,
-                                            color: HaloColors.amber,
+                                            color: HaloColors.amberText,
                                             letter: 0,
                                           ),
                                         ),

@@ -114,7 +114,7 @@ class HaloGhostButton extends StatelessWidget {
                     : HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
-                        color: HaloColors.amber,
+                        color: HaloColors.amberText,
                       ),
               ),
             ),
