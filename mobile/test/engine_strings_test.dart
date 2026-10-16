@@ -10,12 +10,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/engine_strings.dart';
 
-// the source without its comments
-String _code(String path) => File(path)
-    .readAsStringSync()
-    .split('\n')
-    .map((l) => l.replaceFirst(RegExp(r'//.*'), ''))
-    .join('\n');
+import 'engine_take_scan.dart';
 
 void main() {
   // what came back, and whether its bytes were zero when it did
@@ -74,21 +69,81 @@ void main() {
   });
 
   test('every binding hands its string to the take helpers', () {
-    final bindings = [
-      'lib/app/engine.dart',
-      'lib/lock_state.dart',
-      'lib/backup.dart',
-      'lib/tools/age_ffi.dart',
-    ];
-    for (final f in bindings) {
-      expect(_code(f), isNot(contains('.toDartString(')), reason: f);
-      expect(_code(f), contains('engineTake'), reason: f);
-    }
+    final bindings = bindingSources();
+    expect(
+      bindings.keys,
+      containsAll([
+        'lib/app/engine.dart',
+        'lib/lock_state.dart',
+        'lib/backup.dart',
+        'lib/tools/age_ffi.dart',
+      ]),
+    );
+    final strings = goStringExports();
+    expect(strings, containsAll(['HaloNostrKick', 'HaloVersion']));
+    expect(takeMisses(bindings, strings), isEmpty);
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart')) continue;
       if (f.path.endsWith('engine_strings.dart')) continue;
-      expect(_code(f.path), isNot(contains('.toDartString(')), reason: f.path);
+      final c = sourceCode(f.path);
+      expect(c, isNot(contains('.toDartString(')), reason: f.path);
     }
+  });
+
+  test('the scan sees a string left untaken', () {
+    final strings = {'HaloA', 'HaloB'};
+    const head = """
+typedef S = Pointer<Utf8> Function();
+typedef V = Void Function();
+class E {
+  late final S _a = _lib.lookupFunction<S, S>('HaloA');
+  static String _take(Pointer<Utf8> p) => engineTake(p);
+""";
+    List<String> scan(String body) =>
+        takeMisses({'x.dart': uncomment('$head$body\n}')}, strings);
+    expect(scan("String a() => _take(_a());"), isEmpty);
+    expect(scan("String a() => engineTakeSecret(_a());"), isEmpty);
+    expect(scan("void a() => _a();"), hasLength(1));
+    expect(scan("void a() { _a(); }"), hasLength(1));
+    expect(scan("String a() => _a().toString();"), hasLength(1));
+    expect(scan("final f = _a;"), hasLength(1));
+    expect(
+      scan("String b() => engineTake(lib.lookupFunction<S, S>('HaloB')());"),
+      isEmpty,
+    );
+    expect(
+      scan("void b() => lib.lookupFunction<S, S>('HaloB')();"),
+      hasLength(1),
+    );
+    expect(
+      scan("void b() => lib.lookupFunction<V, V>('HaloB')();"),
+      hasLength(1),
+    );
+    expect(
+      scan("void b(String s) => lib.lookupFunction<V, V>(s)();"),
+      hasLength(1),
+    );
+    expect(
+      scan("""
+String b() {
+  final fn = lib.lookupFunction<S, S>('HaloB');
+  return engineTake(fn());
+}
+void c() {
+  final fn = lib.lookupFunction<V, V>('HaloC');
+  fn();
+}"""),
+      isEmpty,
+    );
+    expect(
+      scan("""
+String b() {
+  final fn = lib.lookupFunction<S, S>('HaloB');
+  fn();
+  return engineTake(fn());
+}"""),
+      hasLength(1),
+    );
   });
 
   test('what can hold a key or plaintext is zeroed', () {
@@ -112,7 +167,7 @@ void main() {
       'lib/tools/age_ffi.dart': ["engineTakeSecret(\n  _lib().lookupFunction"],
     };
     for (final e in secret.entries) {
-      final src = _code(e.key);
+      final src = sourceCode(e.key);
       for (final need in e.value) {
         expect(src, contains(need), reason: '${e.key}: $need');
       }
