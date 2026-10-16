@@ -52,6 +52,7 @@ const _settingsFiles = {
   'backup_screen',
   'restore_screen',
   'getting_messages_screen',
+  'helper_sheet',
   'follow_section',
   'dev_about_sheet',
 };

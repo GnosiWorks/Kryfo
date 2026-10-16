@@ -200,7 +200,7 @@ class _NeedOne extends StatelessWidget {
             child: Center(
               child: Text(
                 l10n.helperSheetOtherApps,
-                style: HaloType.sans(size: 13.5, color: HaloColors.amber),
+                style: HaloType.sans(size: 13.5, color: HaloColors.amberText),
               ),
             ),
           ),
