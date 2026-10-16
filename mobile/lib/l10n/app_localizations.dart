@@ -2376,7 +2376,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No signal session. Pair again'**
+  /// **'No signal session: pair again'**
   String get chatNoSignalSessionRe;
 
   /// screens/chat_screen.dart

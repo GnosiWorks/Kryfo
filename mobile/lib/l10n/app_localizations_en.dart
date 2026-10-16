@@ -1498,7 +1498,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
 
   @override
-  String get chatNoSignalSessionRe => 'No signal session. Pair again';
+  String get chatNoSignalSessionRe => 'No signal session: pair again';
 
   @override
   String get chatMessageUnavailable => 'Message unavailable';

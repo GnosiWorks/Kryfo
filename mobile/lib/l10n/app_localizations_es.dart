@@ -5067,7 +5067,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get seenHonestAboutTheLast =>
-      'Para las últimas filas están el bloqueo de la app, el PIN de borrado y el almacenamiento cifrado, y ninguna herramienta te salva de alguien que tenga tu teléfono abierto. El modelo de amenazas completo está en THREAT_MODEL.md en el repositorio, redactado según LINDDUN. El código es abierto, así que puedes comprobar todo esto tú mismo.';
+      'Para las últimas filas están el bloqueo de la app, el PIN de borrado y el almacenamiento cifrado, y ninguna herramienta te salva de alguien que tenga tu teléfono abierto. El modelo de amenazas completo está en THREAT_MODEL.md en el repositorio, redactado según LINDDUN. El código es abierto, así que puedes comprobarlo todo.';
 
   @override
   String get seenHidden => 'Oculto';

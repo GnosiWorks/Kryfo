@@ -1890,7 +1890,7 @@
   "@chatCouldnTFetchIt": {
     "description": "screens/chat_screen.dart"
   },
-  "chatNoSignalSessionRe": "No signal session. Pair again",
+  "chatNoSignalSessionRe": "No signal session: pair again",
   "@chatNoSignalSessionRe": {
     "description": "screens/chat_screen.dart"
   },

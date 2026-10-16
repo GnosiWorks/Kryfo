@@ -644,7 +644,7 @@ void main() {
     expect(l.chatCouldnTReachIt, "Couldn't reach it · sending without");
     expect(l.chatNoTitleCameBack, "No title came back · sending without");
     expect(l.chatCouldnTFetchIt, "Couldn't fetch it · sending without");
-    expect(l.chatNoSignalSessionRe, "No signal session. Pair again");
+    expect(l.chatNoSignalSessionRe, "No signal session: pair again");
     expect(l.chatMessageUnavailable, "Message unavailable");
     expect(l.chatYou2, "You");
     expect(l.chatThem, "Them");

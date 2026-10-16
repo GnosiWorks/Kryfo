@@ -1430,7 +1430,7 @@
   "scanPointAtAKryfo": "Aponte para um QR do Kryfo · nada sai do seu celular",
   "seenWhatWeCanSee": "O que conseguimos ver",
   "seenEveryMessengerClaimsPrivacy": "Esta é a lista, por rota, incluindo os pontos fracos. Toque numa linha para ver o porquê.",
-  "seenHonestAboutTheLast": "Para as últimas linhas existem o bloqueio do app, o PIN de apagamento e o armazenamento criptografado, e nenhuma ferramenta protege você de alguém segurando seu celular desbloqueado. O modelo de ameaças completo está em THREAT_MODEL.md no repositório, escrito com base no LINDDUN. O código é aberto, então você mesmo pode conferir tudo isso.",
+  "seenHonestAboutTheLast": "Para as últimas linhas existem o bloqueio do app, o PIN de apagamento e o armazenamento criptografado, e nenhuma ferramenta protege você de alguém segurando seu celular desbloqueado. O modelo de ameaças completo está em THREAT_MODEL.md no repositório, escrito com base no LINDDUN. O código é aberto, então dá para conferir tudo isso.",
   "seenHidden": "Oculto",
   "seenNever": "Nunca",
   "seenOnDevice": "No aparelho",

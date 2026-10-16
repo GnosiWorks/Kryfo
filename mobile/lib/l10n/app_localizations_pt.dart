@@ -5053,7 +5053,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get seenHonestAboutTheLast =>
-      'Para as últimas linhas existem o bloqueio do app, o PIN de apagamento e o armazenamento criptografado, e nenhuma ferramenta protege você de alguém segurando seu celular desbloqueado. O modelo de ameaças completo está em THREAT_MODEL.md no repositório, escrito com base no LINDDUN. O código é aberto, então você mesmo pode conferir tudo isso.';
+      'Para as últimas linhas existem o bloqueio do app, o PIN de apagamento e o armazenamento criptografado, e nenhuma ferramenta protege você de alguém segurando seu celular desbloqueado. O modelo de ameaças completo está em THREAT_MODEL.md no repositório, escrito com base no LINDDUN. O código é aberto, então dá para conferir tudo isso.';
 
   @override
   String get seenHidden => 'Oculto';
