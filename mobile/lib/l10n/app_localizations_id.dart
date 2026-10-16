@@ -8345,6 +8345,55 @@ class AppLocalizationsId extends AppLocalizations {
       'Setiap obrolan bisa mengubahnya di menunya';
 
   @override
+  String albumLabel(Object count) {
+    return 'Album, $count item';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at dari $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '$count lagi';
+  }
+
+  @override
+  String get albumOnItsWay => 'Sedang dikirim';
+
+  @override
+  String get albumQuoted => 'Album';
+
+  @override
+  String get albumUnsendTitle => 'Tarik album ini?';
+
+  @override
+  String get mediaSendAddMore => 'Tambah lagi';
+
+  @override
+  String get mediaSendRemove => 'Hapus';
+
+  @override
+  String get mediaSendProtect => 'Lindungi dari tangkapan layar';
+
+  @override
+  String get mediaSendProtectedOn => 'Terlindung · tangkapan layar diblokir';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Maksimal $count sekaligus';
+  }
+
+  @override
+  String get mediaSendVideo => 'Kirim video';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Sampai dia menerima, $count bisa terkirim';
+  }
+
+  @override
   String get groupEndedYou => 'Kamu mengakhiri grup ini';
 
   @override

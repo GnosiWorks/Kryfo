@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
@@ -111,6 +112,7 @@ class _Db implements HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     notes.add({
       'rowid': notes.length + 1,

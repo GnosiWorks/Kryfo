@@ -13,8 +13,8 @@ void main() {
 
   test('every row the group chat saves for a send keeps the timer', () {
     final saves = callsOf(screen, 'session.saveInGroup(');
-    // a photo, a voice note, a file
-    expect(saves.length, 3);
+    // a photo or a file, ready to go, and a voice note
+    expect(saves.length, 2);
     for (final s in saves) {
       expect(s, contains('burnSecs: burn,'), reason: s);
     }

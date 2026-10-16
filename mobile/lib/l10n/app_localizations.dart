@@ -13431,6 +13431,84 @@ abstract class AppLocalizations {
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
 
+  /// widgets/album_grid.dart: what a screen reader says for an album; the notification and the chat list line too
+  ///
+  /// In en, this message translates to:
+  /// **'Album, {count} items'**
+  String albumLabel(Object count);
+
+  /// album viewer and send preview: which item is shown
+  ///
+  /// In en, this message translates to:
+  /// **'{at} of {total}'**
+  String albumCounter(Object at, Object total);
+
+  /// widgets/album_grid.dart: the last tile stands for this many more
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more'**
+  String albumMore(Object count);
+
+  /// widgets/album_grid.dart: an album item that has not landed yet
+  ///
+  /// In en, this message translates to:
+  /// **'On its way'**
+  String get albumOnItsWay;
+
+  /// a reply quoting an album
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get albumQuoted;
+
+  /// confirm sheet: taking back a whole album
+  ///
+  /// In en, this message translates to:
+  /// **'Unsend this album?'**
+  String get albumUnsendTitle;
+
+  /// send preview: the tile that reopens the picker
+  ///
+  /// In en, this message translates to:
+  /// **'Add more'**
+  String get mediaSendAddMore;
+
+  /// send preview: drop the item shown
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get mediaSendRemove;
+
+  /// send preview: the protect switch
+  ///
+  /// In en, this message translates to:
+  /// **'Protect from screenshots'**
+  String get mediaSendProtect;
+
+  /// send preview: the protect switch turned on
+  ///
+  /// In en, this message translates to:
+  /// **'Protected · screenshots are blocked'**
+  String get mediaSendProtectedOn;
+
+  /// send preview: more were picked than one send takes
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {count} at a time'**
+  String mediaSendUpTo(Object count);
+
+  /// send preview: title for one video
+  ///
+  /// In en, this message translates to:
+  /// **'Send video'**
+  String get mediaSendVideo;
+
+  /// send preview: before they accept, only this many go
+  ///
+  /// In en, this message translates to:
+  /// **'Until they accept, {count} can go'**
+  String mediaSendUntilAccepted(Object count);
+
   /// the line in a group this phone ended, in the chat and on its row in the chat list
   ///
   /// In en, this message translates to:

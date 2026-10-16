@@ -16,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
     show
@@ -78,6 +79,7 @@ class _Rows extends HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) {
     if (full) throw StateError('the disk is full');
     return super.saveMessage(
@@ -101,6 +103,7 @@ class _Rows extends HaloDb {
       sticker: sticker,
       sentAt: sentAt,
       viaDev: viaDev,
+      album: album,
     );
   }
 

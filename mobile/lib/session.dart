@@ -8,6 +8,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'album.dart' show AlbumTag;
 import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
@@ -442,6 +443,9 @@ class Session {
     bool secure = false,
     String? poll,
     String? sticker,
+    AlbumTag? album,
+    // when it was written, if not now: a bubble shown before it was saved
+    int? writtenAt,
   }) => _ofEither(peerId, groupId).saveMessage(
     peerId,
     direction,
@@ -461,6 +465,8 @@ class Session {
     secure: secure,
     poll: poll,
     sticker: sticker,
+    album: album,
+    writtenAt: writtenAt,
   );
   Future<bool> saveInGroup(
     String peerId,
@@ -477,6 +483,8 @@ class Session {
     String? preview,
     String? poll,
     String? sticker,
+    AlbumTag? album,
+    int? writtenAt,
   }) => _ofGroup(groupId).saveInGroup(
     peerId,
     plaintext,
@@ -492,6 +500,8 @@ class Session {
     preview: preview,
     poll: poll,
     sticker: sticker,
+    album: album,
+    writtenAt: writtenAt,
   );
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,
@@ -610,7 +620,7 @@ class Session {
       (await _ofUid(msgUid)).removeReaction(msgUid, reactor);
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (await _ofUid(msgUid)).sendState(msgUid);
-  Future<void> setMsgBurnAt(String msgUid, int burnAt) async =>
+  Future<int> setMsgBurnAt(String msgUid, int burnAt) async =>
       (await _ofUid(msgUid)).setMsgBurnAt(msgUid, burnAt);
   // the rows read in one chat are all its container's
   Future<Map<String, int>> lightReadBurns(

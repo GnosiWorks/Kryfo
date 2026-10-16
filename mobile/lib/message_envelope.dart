@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
@@ -60,6 +61,7 @@ class UnwrappedMessage {
   // they show it as a message, this version never keeps it
   final bool endNotice;
   final ShotsWord? shots; // 'ss' - a 1:1 chat's screenshot block (chat_shots)
+  final AlbumTag? album; // 'al' - its place in an album, on every slice
   // 'w' - when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
@@ -110,6 +112,7 @@ class UnwrappedMessage {
     this.sticker,
     this.supportMarker,
     this.shots,
+    this.album,
     this.writtenAt,
     this.endNotice = false,
   });
@@ -351,6 +354,7 @@ Future<String> wrapMessage(
   String? sticker,
   int? supportMarker,
   bool endNotice = false,
+  AlbumTag? album,
   // when it was written: a retry, a resend or a slice passes the time the
   // row was written, anything else is written now
   int? writtenAt,
@@ -410,6 +414,7 @@ Future<String> wrapMessage(
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
+  if (album != null) body['al'] = album.toWire();
 
   if (sender != null) {
     body['h'] = sender.haloId;
@@ -560,6 +565,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         _ => null,
       },
       shots: ShotsWord.fromWire(json[kShotsWire]),
+      album: AlbumTag.fromWire(json['al']),
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,

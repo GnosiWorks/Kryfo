@@ -8364,6 +8364,55 @@ class AppLocalizationsFa extends AppLocalizations {
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
 
   @override
+  String albumLabel(Object count) {
+    return 'آلبوم · ⁨$count⁩ مورد';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '⁨$at⁩ از ⁨$total⁩';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '⁨$count⁩ مورد دیگر';
+  }
+
+  @override
+  String get albumOnItsWay => 'در راه';
+
+  @override
+  String get albumQuoted => 'آلبوم';
+
+  @override
+  String get albumUnsendTitle => 'این آلبوم پس گرفته شود؟';
+
+  @override
+  String get mediaSendAddMore => 'افزودن بیشتر';
+
+  @override
+  String get mediaSendRemove => 'حذف';
+
+  @override
+  String get mediaSendProtect => 'محافظت در برابر اسکرین‌شات';
+
+  @override
+  String get mediaSendProtectedOn => 'محافظت‌شده · اسکرین‌شات مسدود است';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'حداکثر ⁨$count⁩ مورد در هر بار';
+  }
+
+  @override
+  String get mediaSendVideo => 'ارسال ویدیو';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'تا وقتی قبول نکند، ⁨$count⁩ مورد می‌تواند برود';
+  }
+
+  @override
   String get groupEndedYou => 'شما این گروه را پایان دادید';
 
   @override

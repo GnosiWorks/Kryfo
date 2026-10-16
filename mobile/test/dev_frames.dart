@@ -5,6 +5,7 @@
 // call site builds, and what a frame to him must never hold
 import 'dart:convert';
 
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/devchat/dev_frame.dart';
 import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/message_envelope.dart';
@@ -145,6 +146,7 @@ final frameParams = <String, Object>{
   'supportMarker': 1,
   'endNotice': true,
   'writtenAt': 1791393419123,
+  'album': const AlbumTag('0123456789abcdef', 4, 1),
 };
 
 // the parameters whose frames never go to him
@@ -203,6 +205,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       supportMarker: _param(on, 'supportMarker'),
       endNotice: on.contains('endNotice'),
       writtenAt: _param(on, 'writtenAt'),
+      album: _param(on, 'album'),
     );
 
 // the frames the app's own code builds, as each call site builds them
@@ -246,6 +249,19 @@ final madeFrames = <String, Set<String>>{
     'supporterBadge',
     'canResend',
     'writtenAt',
+  },
+  'album photo slice': {
+    'sender',
+    'msgUid',
+    'imageB64',
+    'mediaId',
+    'chunkIndex',
+    'chunkTotal',
+    'secure',
+    'supporterBadge',
+    'canResend',
+    'writtenAt',
+    'album',
   },
   'file slice': {
     'sender',
@@ -329,5 +345,6 @@ Map<String, Object?> frameRead(String wrapped) {
     'pw': u.powNonce,
     'pb': u.powBitsUsed,
     'w': u.writtenAt,
+    'al': u.album?.toWire(),
   };
 }

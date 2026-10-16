@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
@@ -1181,6 +1182,7 @@ class ArrivalRows implements HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     beforeSave?.call();
     final gate = saveGate;
@@ -1203,8 +1205,36 @@ class ArrivalRows implements HaloDb {
       'pinned': 0,
       'pinned_at': null,
       'edited': 0,
+      ...?album?.toRow(),
     });
     onSave?.call();
+  }
+
+  @override
+  Future<({int n, Set<int> taken, int first, int came})?> albumHeld(
+    String albumId,
+    String sender,
+    String? groupId,
+  ) async {
+    final rows = [
+      for (final m in msgs)
+        if (m['album_id'] == albumId &&
+            m['peer_id'] == sender &&
+            m['group_id'] == groupId &&
+            m['direction'] == 'in')
+          m,
+    ];
+    if (rows.isEmpty) return null;
+    int at(Map<String, Object?> r) =>
+        ((r['written_at'] ?? r['sent_at']) as num).toInt();
+    return (
+      n: rows.first['album_n'] as int,
+      taken: {for (final r in rows) r['album_i'] as int},
+      first: rows.map(at).reduce((a, b) => a < b ? a : b),
+      came: rows
+          .map((r) => (r['sent_at'] as num).toInt())
+          .reduce((a, b) => a < b ? a : b),
+    );
   }
 
   @override
@@ -1223,6 +1253,8 @@ class ArrivalRows implements HaloDb {
     String? preview,
     String? poll,
     String? sticker,
+    AlbumTag? album,
+    int? writtenAt,
   }) async {
     if (!groupRows.containsKey(groupId)) return false;
     await saveMessage(
@@ -1241,6 +1273,8 @@ class ArrivalRows implements HaloDb {
       preview: preview,
       poll: poll,
       sticker: sticker,
+      album: album,
+      writtenAt: writtenAt,
     );
     return true;
   }

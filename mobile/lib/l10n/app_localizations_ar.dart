@@ -8482,6 +8482,55 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكن لكل محادثة تغييره من قائمتها';
 
   @override
+  String albumLabel(Object count) {
+    return 'ألبوم · العناصر: ⁨$count⁩';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '⁨$at⁩ من ⁨$total⁩';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '⁨$count⁩ إضافية';
+  }
+
+  @override
+  String get albumOnItsWay => 'في الطريق';
+
+  @override
+  String get albumQuoted => 'ألبوم';
+
+  @override
+  String get albumUnsendTitle => 'سحب هذا الألبوم؟';
+
+  @override
+  String get mediaSendAddMore => 'إضافة المزيد';
+
+  @override
+  String get mediaSendRemove => 'إزالة';
+
+  @override
+  String get mediaSendProtect => 'حماية من لقطات الشاشة';
+
+  @override
+  String get mediaSendProtectedOn => 'محمية · لقطات الشاشة محظورة';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'حتى ⁨$count⁩ في المرة الواحدة';
+  }
+
+  @override
+  String get mediaSendVideo => 'إرسال الفيديو';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'حتى يقبل، يمكن إرسال ⁨$count⁩';
+  }
+
+  @override
   String get groupEndedYou => 'أنهيت هذه المجموعة';
 
   @override

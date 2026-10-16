@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
     show AppIo, AppState, HaloDb, useDatabasesForTest;
@@ -620,6 +621,7 @@ class _Mem implements HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     msgs.add({

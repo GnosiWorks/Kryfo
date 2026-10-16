@@ -106,8 +106,11 @@ void main() {
       'heic',
     );
     for (final (file, sig) in [
-      ('lib/screens/chat_screen.dart', 'Future<void> _sendOneImage('),
-      ('lib/screens/group_chat_screen.dart', 'Future<void> _sendGroupImage('),
+      ('lib/screens/chat_screen.dart', 'Future<_Ready?> _readyPhoto('),
+      (
+        'lib/screens/group_chat_screen.dart',
+        'Future<_GReady?> _readyGroupPhoto(',
+      ),
     ]) {
       final body = bodyOf(sourceOf(file), sig);
       expect(body, contains(r'.${pictureExt(bytes)}'), reason: file);
@@ -151,7 +154,11 @@ void main() {
       'pickMultipleMedia()',
     ]);
     final send = bodyOf(picked, 'Future<void> sendGalleryPicks(');
-    expect(send, contains('await readPickedPhotos('));
+    expect(send, contains('await readGalleryPicks('));
+    expect(
+      bodyOf(picked, 'Future<List<PickedMedia>> readGalleryPicks('),
+      contains('await readPickedPhotos('),
+    );
     for (final (file, sig) in [
       ('lib/screens/chat_screen.dart', 'Future<void> _pickAndSendMultiple('),
       (

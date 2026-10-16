@@ -147,7 +147,7 @@ void main() {
       expect(body, isNot(contains('shredFile(')), reason: fn);
     }
     // several at a time go through sendGalleryPicks, and its photos
-    // through readPickedPhotos
+    // through readGalleryPicks and readPickedPhotos
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendMultiple('),
       (group, 'Future<void> _pickGroupMultiple('),
@@ -156,6 +156,10 @@ void main() {
     }
     expect(
       bodyOf(picked, 'Future<void> sendGalleryPicks('),
+      contains('await readGalleryPicks('),
+    );
+    expect(
+      bodyOf(picked, 'Future<List<PickedMedia>> readGalleryPicks('),
       contains('await readPickedPhotos('),
     );
   });

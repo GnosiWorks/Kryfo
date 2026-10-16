@@ -14,6 +14,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
@@ -189,6 +190,7 @@ class _Db extends DevTestDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     await mem.insert('messages', {
       'peer_id': peerId,

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart' show draftPerGroup, draftPerPeer;
 import 'package:kryfo/lock_state.dart';
@@ -597,9 +598,10 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> setMsgBurnAt(String msgUid, int burnAt) async {
+  Future<int> setMsgBurnAt(String msgUid, int burnAt) async {
     _hit('setMsgBurnAt', msgUid, null);
     r.msg(msgUid)?['burn_at'] = burnAt;
+    return burnAt;
   }
 
   // ---- people ----
@@ -736,6 +738,7 @@ class _Db implements HaloDb {
     int? sentAt,
     int? writtenAt,
     bool viaDev = false,
+    AlbumTag? album,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     r.say(

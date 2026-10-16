@@ -8415,6 +8415,56 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cada chat puede cambiarlo en su menú';
 
   @override
+  String albumLabel(Object count) {
+    return 'Álbum, $count elementos';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at de $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return '$count más';
+  }
+
+  @override
+  String get albumOnItsWay => 'En camino';
+
+  @override
+  String get albumQuoted => 'Álbum';
+
+  @override
+  String get albumUnsendTitle => '¿Anular el envío del álbum?';
+
+  @override
+  String get mediaSendAddMore => 'Añadir más';
+
+  @override
+  String get mediaSendRemove => 'Quitar';
+
+  @override
+  String get mediaSendProtect => 'Proteger de capturas de pantalla';
+
+  @override
+  String get mediaSendProtectedOn =>
+      'Protegidas · las capturas de pantalla están bloqueadas';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Hasta $count a la vez';
+  }
+
+  @override
+  String get mediaSendVideo => 'Enviar video';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Hasta que acepte, pueden ir $count';
+  }
+
+  @override
   String get groupEndedYou => 'Terminaste este grupo';
 
   @override

@@ -8513,6 +8513,55 @@ class AppLocalizationsRu extends AppLocalizations {
       'В каждом чате это можно изменить в его меню';
 
   @override
+  String albumLabel(Object count) {
+    return 'Альбом · объектов: $count';
+  }
+
+  @override
+  String albumCounter(Object at, Object total) {
+    return '$at из $total';
+  }
+
+  @override
+  String albumMore(Object count) {
+    return 'Ещё $count';
+  }
+
+  @override
+  String get albumOnItsWay => 'В пути';
+
+  @override
+  String get albumQuoted => 'Альбом';
+
+  @override
+  String get albumUnsendTitle => 'Отозвать этот альбом?';
+
+  @override
+  String get mediaSendAddMore => 'Добавить ещё';
+
+  @override
+  String get mediaSendRemove => 'Убрать';
+
+  @override
+  String get mediaSendProtect => 'Защитить от скриншотов';
+
+  @override
+  String get mediaSendProtectedOn => 'Защищено · скриншоты заблокированы';
+
+  @override
+  String mediaSendUpTo(Object count) {
+    return 'Не больше $count за раз';
+  }
+
+  @override
+  String get mediaSendVideo => 'Отправить видео';
+
+  @override
+  String mediaSendUntilAccepted(Object count) {
+    return 'Пока собеседник не примет, можно отправить $count';
+  }
+
+  @override
   String get groupEndedYou => 'Ты завершил(а) эту группу';
 
   @override

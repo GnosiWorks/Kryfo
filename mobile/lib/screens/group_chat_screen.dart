@@ -13,6 +13,10 @@ import '../back_on_top.dart';
 import '../forward.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
+import '../album.dart';
+import '../widgets/album_grid.dart';
+import '../widgets/album_viewer.dart';
+import 'media_send_screen.dart';
 import '../sent_name.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
@@ -854,6 +858,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           pinned: ((r['pinned'] as int?) ?? 0) == 1,
           saved: ((r['saved'] as int?) ?? 0) == 1,
           edited: ((r['edited'] as int?) ?? 0) == 1,
+          album: AlbumTag.ofRow(r),
           reactions: rxMap,
         );
         m.preview = _decodePv(r['preview'] as String?);
@@ -1039,6 +1044,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 pinned: ((r['pinned'] as int?) ?? 0) == 1,
                 saved: ((r['saved'] as int?) ?? 0) == 1,
                 edited: ((r['edited'] as int?) ?? 0) == 1,
+                album: AlbumTag.ofRow(r),
                 sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
                 reactions: rxMap,
               );
@@ -1327,6 +1333,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         pinned: ((r['pinned'] as int?) ?? 0) == 1,
         saved: ((r['saved'] as int?) ?? 0) == 1,
         edited: ((r['edited'] as int?) ?? 0) == 1,
+        album: AlbumTag.ofRow(r),
         sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
         reactions: rxMap,
       );
@@ -1515,9 +1522,100 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // maxScrollExtent. the jump button shows above this
   bool get _nearNewest => !_scrollReady || _maxScroll - _pixels <= 240;
 
+  // the thread's albums, read again each time the thread is drawn
+  AlbumIndex<_GMsg> _albums = _indexAlbums(const []);
+
+  static AlbumIndex<_GMsg> _indexAlbums(Iterable<_GMsg> rows) =>
+      AlbumIndex<_GMsg>(
+        rows,
+        tag: (m) => m.album,
+        written: (m) => m.when.millisecondsSinceEpoch,
+        // each member's own, and ours apart from theirs
+        owner: (m) => m.direction == 'out' ? '' : m.sender,
+        // a photo or a video; one of theirs whose file could not be kept
+        // still holds its place
+        media: (m) =>
+            m.sticker == null &&
+            m.poll == null &&
+            (m.preparing ||
+                m.mediaPath != null ||
+                (m.filePath != null &&
+                    m.fileName != 'voice.wav' &&
+                    nameSaysVideo(m.fileName)) ||
+                (m.direction == 'in' && m.filePath == null)),
+      );
+
+  // one row standing for a whole album: the caption of its first item, the
+  // send state of all of it, its reactions, and the earliest clock
+  static _GMsg _albumFace(AlbumRun<_GMsg> run) {
+    final ms = run.present;
+    final a = run.anchor;
+    String? replyTo;
+    for (final x in ms) {
+      replyTo ??= x.replyTo;
+    }
+    final face = _GMsg(
+      sender: a.sender,
+      senderName: a.senderName,
+      direction: a.direction,
+      text: run.caption((x) => x.text),
+      when: a.when,
+      burnSecs: a.burnSecs,
+      burnUnseen: ms.any((x) => x.burnUnseen),
+      burnAt: albumBurnAt([for (final x in ms) x.burnAt]),
+      msgUid: a.msgUid,
+      replyTo: replyTo,
+      sending: ms.any((x) => x.sending),
+      mediaPath: a.mediaPath ?? a.filePath ?? '',
+      pinned: ms.any((x) => x.pinned),
+      saved: ms.any((x) => x.saved),
+      album: a.album,
+      reactions: albumReactions([for (final x in ms) x.reactions]),
+    );
+    face
+      ..cameAt = a.cameAt
+      ..rowid = a.rowid
+      ..failed = ms.any((x) => x.failed)
+      ..gaveUp = ms.any((x) => x.gaveUp)
+      ..removing = ms.any((x) => x.removing);
+    return face;
+  }
+
+  // the member a reaction from this phone goes on: the one already holding
+  // it, or the album's first
+  static _GMsg _reactOn(AlbumRun<_GMsg> run) {
+    for (final x in run.present) {
+      if (x.reactions.containsKey('')) return x;
+    }
+    return run.anchor;
+  }
+
+  // the row above as drawn: an album's other rows are not
+  _GMsg? _drawnBefore(int i) {
+    for (var j = i - 1; j >= 0; j--) {
+      final o = _messages[j];
+      if (!_albums.hidden(o)) return o;
+    }
+    return null;
+  }
+
   Widget _buildGroupRow(int i) {
-    final m = _messages[i];
-    final prev = i > 0 ? _messages[i - 1] : null;
+    final row = _messages[i];
+    // one alone still made ready shows as a waiting tile of its own
+    final run =
+        _albums.runOf(row) ??
+        (row.preparing
+            ? (AlbumRun<_GMsg>('', const AlbumTag('', 1, 0), row, 0)
+                ..slots[0] = row)
+            : null);
+    // drawn by its album's first row
+    if (run != null && !identical(run.lead, row)) {
+      return SizedBox.shrink(key: ValueKey(row.msgUid ?? 'r${row.rowid}'));
+    }
+    final m = run == null ? row : _albumFace(run);
+    final members = run?.present ?? [row];
+    final making = members.any((x) => x.preparing);
+    final prev = _drawnBefore(i);
     final showSender =
         m.direction == 'in' &&
         startsSenderRun(
@@ -1556,6 +1654,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         quoted = l10n.pollPreview(orig.text);
       } else if (orig.text.isNotEmpty) {
         quoted = orig.text;
+      } else if (_albums.runOf(orig) != null) {
+        quoted = l10n.albumQuoted;
       } else if (orig.mediaPath != null) {
         quoted = l10n.groupChatQuotedPhoto;
       } else if (orig.fileName == 'voice.wav') {
@@ -1567,106 +1667,165 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         quotedAuthor = null;
       }
     }
-    // an in-chat search marks its hits and dims the rest, as the 1:1 does
+    // an in-chat search marks its hits and dims the rest, as the 1:1 does.
+    // an album is a hit when its caption is
     final searchActive = _searching && _query.isNotEmpty;
-    final isMatch = searchActive && _matchSet.contains(i);
+    final rowsAt = run == null
+        ? [i]
+        : [for (final x in members) _messages.indexOf(x)];
+    final isMatch = searchActive && rowsAt.any(_matchSet.contains);
     final isCurrent =
-        searchActive && _matches.isNotEmpty && _matches[_matchPos] == i;
-    final animateIn = m.fresh;
-    m.fresh = false;
+        searchActive &&
+        _matches.isNotEmpty &&
+        rowsAt.contains(_matches[_matchPos]);
+    final animateIn = members.any((x) => x.fresh);
+    for (final x in members) {
+      x.fresh = false;
+    }
     final landing = m.msgUid == null ? null : _landings[m.msgUid];
     final showDate = i == 0 || (prev != null && !_sameDay(prev.when, m.when));
+    final react = run == null ? row : _reactOn(run);
+    final answer = run == null ? row : run.anchor;
+    final lifted = members.any(
+      (x) => x.msgUid != null && x.msgUid == _liftedUid,
+    );
+    // its other rows are read, and landed on, where the album is
+    Widget anchored(Widget child) {
+      var w = child;
+      for (final x in members) {
+        if (!identical(x, row)) {
+          w = RowAnchor(
+            anchors: _anchors,
+            id: x.msgUid ?? 'r${x.rowid}',
+            child: w,
+          );
+        }
+      }
+      return w;
+    }
+
     return Column(
-      key: ValueKey(m.msgUid ?? 'r${m.rowid}'),
+      key: ValueKey(row.msgUid ?? 'r${row.rowid}'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
+        if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
         // the bubble alone: what says it has been read
         RowAnchor(
           anchors: _anchors,
-          id: m.msgUid ?? 'r${m.rowid}',
-          child: RepaintBoundary(
-            key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
-            child: BubbleEntrance(
-              isOut: m.direction == 'out',
-              // a sticker pops or flies in on its own
-              active: animateIn && m.sticker == null,
-              // the row is the width of the list: a glow would light all of it
-              glow: false,
-              child: SwipeToReply(
-                onReply: () {
-                  _touched(m);
-                  setState(() => _replyTo = m);
-                },
-                // the lifted copy in the overlay is the one that animates;
-                // the row underneath just steps aside
-                child: Opacity(
-                  opacity: (m.msgUid != null && m.msgUid == _liftedUid)
-                      ? 0.0
-                      : 1.0,
-                  child: _GroupBubble(
-                    m: m,
-                    showSender: showSender,
-                    kept: _keeps(m),
-                    stickers: _stickers,
-                    stickerOrder: _messages.length - 1 - i,
-                    landing: landing,
-                    arriving: animateIn && landing == null,
-                    quotedSticker: quotedSticker,
-                    me: _me,
-                    nameOf: _nameOf,
-                    faceOf: _faceOf,
-                    onVote: m.poll == null || m.msgUid == null
-                        ? null
-                        : (c) {
-                            _touched(m);
-                            appState.votePoll(widget.groupId, m.msgUid!, c);
-                          },
-                    onAct: () => _touched(m),
-                    onClosePoll: m.poll == null || m.msgUid == null
-                        ? null
-                        : () => appState.closePoll(widget.groupId, m.msgUid!),
-                    senderBadge: _badgeFor(m.sender),
-                    linkTitle: _linkPreview(m)?['title'],
-                    linkBySender: _linkPreview(m)?['by'] == 'sender',
-                    quotedText: quoted,
-                    quotedAuthor: quotedAuthor,
-                    onLongPress: (ctx) => _showEmojiPickerAt(
-                      ctx,
-                      m,
+          id: row.msgUid ?? 'r${row.rowid}',
+          child: anchored(
+            RepaintBoundary(
+              key: members.any((x) => x.msgUid != null && x.msgUid == _jumpUid)
+                  ? _jumpKey
+                  : null,
+              child: BubbleEntrance(
+                isOut: m.direction == 'out',
+                // a sticker pops or flies in on its own
+                active: animateIn && m.sticker == null,
+                // the row is the width of the list: a glow would light all
+                // of it
+                glow: false,
+                child: SwipeToReply(
+                  onReply: () {
+                    for (final x in members) {
+                      _touched(x);
+                    }
+                    setState(() => _replyTo = answer);
+                  },
+                  // the lifted copy in the overlay is the one that animates;
+                  // the row underneath just steps aside
+                  child: Opacity(
+                    opacity: lifted ? 0.0 : 1.0,
+                    child: _GroupBubble(
+                      m: m,
+                      album: run,
                       showSender: showSender,
+                      kept: _keeps(m),
+                      stickers: _stickers,
+                      stickerOrder: _messages.length - 1 - i,
+                      landing: landing,
+                      arriving: animateIn && landing == null,
+                      quotedSticker: quotedSticker,
+                      me: _me,
+                      nameOf: _nameOf,
+                      faceOf: _faceOf,
+                      onVote: m.poll == null || m.msgUid == null
+                          ? null
+                          : (c) {
+                              _touched(m);
+                              appState.votePoll(widget.groupId, m.msgUid!, c);
+                            },
+                      onAct: () {
+                        for (final x in members) {
+                          _touched(x);
+                        }
+                      },
+                      onClosePoll: m.poll == null || m.msgUid == null
+                          ? null
+                          : () => appState.closePoll(widget.groupId, m.msgUid!),
+                      senderBadge: _badgeFor(m.sender),
+                      linkTitle: _linkPreview(m)?['title'],
+                      linkBySender: _linkPreview(m)?['by'] == 'sender',
                       quotedText: quoted,
                       quotedAuthor: quotedAuthor,
-                      quotedSticker: quotedSticker,
-                    ),
-                    onRetry: m.looksFailed
-                        ? () {
-                            m.autoRetries = 0;
-                            m.gaveUp = false;
-                            _retryGroup(m);
-                          }
-                        : null,
-                    onReact: m.msgUid == null
-                        ? null
-                        : (e) {
-                            final added = m.reactions[''] != e;
-                            _toggleReaction(m, e);
-                            if (added) _flashReaction(m);
-                          },
-                    ripple: m.msgUid != null && m.msgUid == _rippleUid,
-                    query: searchActive ? _query : '',
-                    isCurrentMatch: isCurrent,
-                    dimmed: searchActive && !isMatch,
-                    onReplyTap: m.replyTo == null
-                        ? null
-                        : () {
-                            for (final x in _messages) {
-                              if (x.msgUid != null && x.msgUid == m.replyTo) {
-                                _scrollToGroupMessage(x);
-                                break;
+                      // nothing to act on while it is still made ready
+                      onLongPress: making
+                          ? null
+                          : (ctx) => _showEmojiPickerAt(
+                              ctx,
+                              m,
+                              album: run,
+                              showSender: showSender,
+                              quotedText: quoted,
+                              quotedAuthor: quotedAuthor,
+                              quotedSticker: quotedSticker,
+                            ),
+                      onLongPressTile: run == null || making
+                          ? null
+                          : (ctx, tile) => _showEmojiPickerAt(
+                              ctx,
+                              m,
+                              album: run,
+                              tile: tile,
+                              showSender: showSender,
+                              quotedText: quoted,
+                              quotedAuthor: quotedAuthor,
+                              quotedSticker: quotedSticker,
+                            ),
+                      onRetry: m.looksFailed
+                          ? () {
+                              for (final x in members) {
+                                if (!x.failed) continue;
+                                x.autoRetries = 0;
+                                x.gaveUp = false;
+                                _retryGroup(x);
                               }
                             }
-                          },
+                          : null,
+                      onReact: m.msgUid == null
+                          ? null
+                          : (e) {
+                              final added = react.reactions[''] != e;
+                              _toggleReaction(react, e);
+                              if (added) _flashReaction(react);
+                            },
+                      ripple: members.any(
+                        (x) => x.msgUid != null && x.msgUid == _rippleUid,
+                      ),
+                      query: searchActive ? _query : '',
+                      isCurrentMatch: isCurrent,
+                      dimmed: searchActive && !isMatch,
+                      onReplyTap: m.replyTo == null
+                          ? null
+                          : () {
+                              for (final x in _messages) {
+                                if (x.msgUid != null && x.msgUid == m.replyTo) {
+                                  _scrollToGroupMessage(x);
+                                  break;
+                                }
+                              }
+                            },
+                    ),
                   ),
                 ),
               ),
@@ -1885,6 +2044,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           burnSeconds: m.burnSecs,
           // when it was written, not now
           writtenAt: m.when.millisecondsSinceEpoch,
+          album: m.album,
         ),
       );
       return;
@@ -2178,7 +2338,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       // a screen gone meanwhile sends nothing, and the copy still goes
       if (!mounted) return;
-      await _sendGroupFileFrom(x.path, madeVideoName(x.name));
+      // the send preview first, as every pick has it; named as a made
+      // video on its way (madeVideoName), never as it was picked
+      await sendGalleryPicks(
+        [x],
+        videos: true,
+        pickMore: () => lockState.hold(pickGallery),
+        preview: _preview,
+        send: _sendPicked,
+      );
     } finally {
       await shredPickedImages([x]);
     }
@@ -2189,28 +2357,108 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // too where android has its photo picker
     final picked = await lockState.hold(pickGallery);
     if (picked.isEmpty) return;
-    // the bytes are all that is kept, and a video goes the video tile's way
+    // one or several: the preview first, and nothing goes without its send
     await sendGalleryPicks(
       picked,
-      photo: (bytes, alone) async {
-        if (!mounted) return false;
-        if (alone) {
-          final caption = await Navigator.of(
-            context,
-          ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
-          if (caption == null) return false;
-          await _sendGroupImage(bytes, caption);
-          return true;
-        }
-        await _sendGroupImage(bytes, '');
-        return true;
-      },
-      video: (x) async {
-        if (!mounted) return false;
-        await _sendGroupFileFrom(x.path, madeVideoName(x.name));
-        return true;
-      },
+      pickMore: () => lockState.hold(pickGallery),
+      preview: _preview,
+      send: _sendPicked,
     );
+  }
+
+  // the send preview: null when the person backed out. a group's items
+  // carry no protect mark. what it was handed goes at once when it closes
+  // with nothing sent, a lock or a session switch with it
+  Future<MediaSendResult?> _preview(
+    List<PickedMedia> items, [
+    Future<List<PickedMedia>> Function()? more,
+  ]) async {
+    if (!mounted) return null;
+    return Navigator.of(context).push<MediaSendResult?>(
+      haloRoute<MediaSendResult?>(
+        MediaSendScreen(
+          items: items,
+          addMore: more,
+          onGone: (videos) => unawaited(shredPickedImages(videos)),
+        ),
+      ),
+    );
+  }
+
+  // what the send preview gave back. its bubbles show at once, waiting,
+  // as albums of up to kAlbumMax with the caption on the first; then each
+  // item is made ready in its order. one that will not go is taken out and
+  // the rest counted again before anything is saved or sent
+  Future<void> _sendPicked(MediaSendResult r) async {
+    if (r.items.isEmpty || !mounted) return;
+    final plan = albumPlan(r.items, r.caption);
+    final reply = _takeReply();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final burn = _ghost ? _burnSeconds : null;
+    final waiting = [
+      for (final (k, go) in plan.indexed)
+        _GMsg(
+            sender: appState.sessionId,
+            direction: 'out',
+            text: go.caption,
+            // a millisecond apart, so they keep their order
+            when: DateTime.fromMillisecondsSinceEpoch(now + k),
+            msgUid: newMsgUid(),
+            replyTo: k == 0 ? reply : null,
+            sending: true,
+            burnSecs: burn,
+            album: go.album,
+          )
+          ..preparing = true
+          ..fresh = true,
+    ];
+    setState(() {
+      _messages.addAll(waiting);
+      _normaliseMessages();
+    });
+    _scrollToEnd();
+    final ready = <(_GMsg, _GReady)>[];
+    for (final (k, go) in plan.indexed) {
+      if (!mounted) break;
+      final m = waiting[k];
+      final v = go.item.video;
+      final one = v != null
+          ? await _readyGroupFile(v.path, madeVideoName(v.name), uid: m.msgUid)
+          : await _readyGroupPhoto(go.item.photo!, uid: m.msgUid);
+      if (one != null) ready.add((m, one));
+    }
+    if (!mounted) {
+      for (final (_, x) in ready) {
+        await shredFile(x.path);
+      }
+      return;
+    }
+    // the answer goes with the first that is ready
+    if (ready.isNotEmpty && reply != null) ready.first.$1.replyTo = reply;
+    if (ready.length < waiting.length) {
+      // what would not go leaves, and the rest are counted again
+      final again = albumPlan([for (final (m, _) in ready) m], r.caption);
+      setState(() {
+        _messages.removeWhere(
+          (m) => waiting.contains(m) && !again.any((g) => identical(g.item, m)),
+        );
+        for (final g in again) {
+          g.item
+            ..album = g.album
+            ..text = g.caption;
+        }
+      });
+    }
+    for (final (k, (m, x)) in ready.indexed) {
+      // the chat went part way: what was made ready and not sent goes
+      if (!mounted) {
+        for (final (_, rest) in ready.skip(k)) {
+          await shredFile(rest.path);
+        }
+        return;
+      }
+      await _sendGroupReady(x, m.text, shown: m);
+    }
   }
 
   Future<void> _pickGroupGif() async {
@@ -2250,49 +2498,84 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _sendGroupImage(Uint8List raw, String caption) async {
-    // the gallery's re-encode copies the tags across; nothing leaves with them
+    final ready = await _readyGroupPhoto(raw);
+    if (ready != null) await _sendGroupReady(ready, caption);
+  }
+
+  // a photo cleaned of what the gallery's re-encode copied across and
+  // written under its own uid: nothing shows or leaves yet
+  Future<_GReady?> _readyGroupPhoto(Uint8List raw, {String? uid}) async {
     final bytes = await photoToSendOffUi(raw);
     if (bytes == null) {
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
-      return;
+      return null;
     }
     // ended while it was picked: nothing is written
-    if (!await _stillHere()) return;
-    final uid = newMsgUid();
+    if (!await _stillHere()) return null;
+    final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
-    final f = File('${mediaDir.path}/$uid.${pictureExt(bytes)}');
+    final f = File('${mediaDir.path}/$made.${pictureExt(bytes)}');
     await f.writeAsBytes(bytes);
-    final burn = _ghost ? _burnSeconds : null;
-    final reply = _takeReply();
-    final m = _GMsg(
-      sender: appState.sessionId,
-      direction: 'out',
-      text: caption,
-      when: DateTime.now(),
-      msgUid: uid,
-      replyTo: reply,
-      sending: true,
-      mediaPath: f.path,
-      burnSecs: burn,
-    );
-    m.fresh = true;
+    return _GReady(made, f.path);
+  }
+
+  // a ready photo or file shown, kept and sent
+  Future<void> _sendGroupReady(
+    _GReady ready,
+    String caption, {
+    AlbumTag? album,
+    // its bubble, shown on send while it was made ready
+    _GMsg? shown,
+  }) async {
+    final isFile = ready.fileName != null;
+    final uid = ready.uid;
+    final burn = shown == null
+        ? (_ghost ? _burnSeconds : null)
+        : shown.burnSecs;
+    // the message being answered: taken now, or by the first bubble shown
+    final reply = shown == null ? _takeReply() : shown.replyTo;
+    final m =
+        shown ??
+        (_GMsg(
+          sender: appState.sessionId,
+          direction: 'out',
+          text: caption,
+          when: DateTime.now(),
+          msgUid: uid,
+          replyTo: reply,
+          sending: true,
+          burnSecs: burn,
+          album: album,
+        )..fresh = true);
+    album = m.album;
+    caption = m.text;
     setState(() {
-      _messages.add(m);
+      m
+        ..mediaPath = isFile ? null : ready.path
+        ..filePath = isFile ? ready.path : null
+        ..fileName = ready.fileName
+        ..preparing = false;
+      if (!_messages.contains(m)) _messages.add(m);
       _normaliseMessages();
     });
-    _scrollToEnd();
+    if (shown == null) _scrollToEnd();
     HapticFeedback.lightImpact();
     final kept = await keepOwnGroupFile(
-      f.path,
+      ready.path,
       () => session.saveInGroup(
         appState.sessionId,
         caption,
         groupId: widget.groupId,
         msgUid: uid,
         replyTo: reply,
-        mediaPath: f.path,
+        mediaPath: m.mediaPath,
+        filePath: m.filePath,
+        fileName: m.fileName,
         burnSecs: burn,
+        album: album,
+        // the time its bubble shows, kept by a resend after a restart
+        writtenAt: m.when.millisecondsSinceEpoch,
       ),
     );
     if (!kept) return _unkept(m);
@@ -2301,11 +2584,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         m,
         () => appState.sendMediaToGroup(
           widget.groupId,
-          f.path,
+          ready.path,
           msgUid: uid,
           caption: caption,
           replyTo: reply,
+          fileName: ready.fileName,
           burnSeconds: burn,
+          album: album,
         ),
       ),
     );
@@ -2413,8 +2698,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await shredPicked([res]);
   }
 
-  // the in-app camera: a stripped photo goes through the caption screen; a
-  // clip goes as a file and its private copy is shredded once read
+  // the in-app camera: a stripped photo or a clip goes through the send
+  // preview; the clip's private copy is shredded once it is done with
   Future<void> _openGroupCamera() async {
     if (_nobodyToRead()) return;
     final r = await Navigator.of(
@@ -2422,44 +2707,61 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     ).push<CaptureResult>(haloRoute<CaptureResult>(const CameraScreen()));
     if (r == null || !mounted) return;
     if (r.photo != null) {
-      final caption = await Navigator.of(
-        context,
-      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: r.photo!)));
-      if (caption == null) return;
-      await _sendGroupImage(r.photo!, caption);
+      final sent = await _preview([PickedMedia.photo(r.photo!)]);
+      if (sent != null) await _sendPicked(sent);
       return;
     }
     final path = r.videoPath;
     if (path == null) return;
-    if (!mounted) return;
-    await _sendGroupFileFrom(path, madeVideoName());
-    await shredFile(path);
+    try {
+      if (!mounted) return;
+      // the preview too, as every pick has it
+      final sent = await _preview([
+        PickedMedia.video(XFile(path, name: madeVideoName())),
+      ]);
+      if (sent != null) await _sendPicked(sent);
+    } finally {
+      await shredFile(path);
+    }
   }
 
   Future<void> _sendGroupFileFrom(String src, String picked) async {
+    final ready = await _readyGroupFile(src, picked);
+    if (ready != null) await _sendGroupReady(ready, '');
+  }
+
+  // a file checked, copied into the media folder under its own uid and
+  // cleaned there: nothing shows or leaves yet. null when it will not go,
+  // and the toast has said why
+  Future<_GReady?> _readyGroupFile(
+    String src,
+    String picked, {
+    // its bubble's, when it shows before it is ready
+    String? uid,
+  }) async {
     final name = sentFileName(picked);
     final int size;
     try {
       size = await File(src).length();
     } catch (_) {
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
-      return;
+      return null;
     }
     // an empty file would read as sent with nothing gone
     if (size == 0) {
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
-      return;
+      return null;
     }
     if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
-      return;
+      return null;
     }
     // ended while it was picked: nothing is copied
-    if (!await _stillHere()) return;
-    final uid = newMsgUid();
+    if (!await _stillHere()) return null;
+    final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${uid}_$safe');
+    final dest = File('${mediaDir.path}/f_${made}_$safe');
     await File(src).copy(dest.path);
     // a gallery video carries what a gallery photo does: where, on what,
     // and when. stripped in place on our own copy; a file that cannot be
@@ -2472,7 +2774,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (mounted) {
           showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
         }
-        return;
+        return null;
       }
     }
     // a picture sent as a file is cleaned like one sent as a photo. it is
@@ -2484,56 +2786,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) {
         showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
       }
-      return;
+      return null;
     }
-    final burn = _ghost ? _burnSeconds : null;
-    final reply = _takeReply();
-    final m = _GMsg(
-      sender: appState.sessionId,
-      direction: 'out',
-      text: '',
-      when: DateTime.now(),
-      msgUid: uid,
-      replyTo: reply,
-      sending: true,
-      filePath: dest.path,
-      fileName: name,
-      burnSecs: burn,
-    );
-    m.fresh = true;
-    setState(() {
-      _messages.add(m);
-      _normaliseMessages();
-    });
-    _scrollToEnd();
-    HapticFeedback.lightImpact();
-    final kept = await keepOwnGroupFile(
-      dest.path,
-      () => session.saveInGroup(
-        appState.sessionId,
-        '',
-        groupId: widget.groupId,
-        msgUid: uid,
-        replyTo: reply,
-        filePath: dest.path,
-        fileName: name,
-        burnSecs: burn,
-      ),
-    );
-    if (!kept) return _unkept(m);
-    unawaited(
-      _sendGroupMedia(
-        m,
-        () => appState.sendMediaToGroup(
-          widget.groupId,
-          dest.path,
-          msgUid: uid,
-          replyTo: reply,
-          fileName: name,
-          burnSeconds: burn,
-        ),
-      ),
-    );
+    return _GReady(made, dest.path, fileName: name);
   }
 
   // the group is still here to send into. one gone closes the screen
@@ -2695,7 +2950,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     int? ba;
     if (ok && m.burnSecs != null && uid != null) {
       ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
-      await session.setMsgBurnAt(uid, ba);
+      // an album's item takes the clock the album already has
+      ba = await session.setMsgBurnAt(uid, ba);
     }
     if (!mounted) {
       // left and reopened while it uploaded: tell the screen showing it now
@@ -2836,12 +3092,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _showEmojiPickerAt(
     BuildContext bubbleCtx,
     _GMsg target, {
+    // an album: [target] stands for all of it, [tile] is the one held
+    AlbumRun<_GMsg>? album,
+    int? tile,
     bool showSender = false,
     String? quotedText,
     String? quotedAuthor,
     StickerWire? quotedSticker,
   }) async {
-    _touched(target);
+    for (final x in album?.present ?? [target]) {
+      _touched(x);
+    }
+    final anchor = album?.anchor ?? target;
+    final reactOn = album == null ? target : _reactOn(album);
+    final held = album != null && tile != null && tile < album.drawn.length
+        ? album.drawn[tile]
+        : null;
     // drop composer focus before anything opens: a route captures the
     // focused node at open and restores it at close, which would pull the
     // keyboard up after unsend, edit or forward
@@ -2979,6 +3245,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         type: MaterialType.transparency,
                         child: _GroupBubble(
                           m: target,
+                          album: album,
                           showSender: showSender,
                           faceOf: _faceOf,
                           senderBadge: _badgeFor(target.sender),
@@ -3011,13 +3278,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         selected: target.reactions[''],
                         onPick: (e) {
                           dismiss();
-                          final added = target.reactions[''] != e;
-                          _toggleReaction(target, e);
-                          if (added) _flashReaction(target);
+                          final added = reactOn.reactions[''] != e;
+                          _toggleReaction(reactOn, e);
+                          if (added) _flashReaction(reactOn);
                         },
                         onReply: () {
                           dismiss();
-                          setState(() => _replyTo = target);
+                          setState(() => _replyTo = anchor);
                         },
                       ),
                     ),
@@ -3034,7 +3301,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       fromRight: isOut,
                       child: Material(
                         color: Colors.transparent,
-                        child: _menuCard(target, isOut, dismiss),
+                        child: _menuCard(
+                          target,
+                          isOut,
+                          dismiss,
+                          album: album,
+                          held: held,
+                        ),
                       ),
                     ),
                   ),
@@ -3057,30 +3330,40 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       shotsKeeps(blocking: _isRoom, mine: m.direction == 'out');
 
   // what can be done to one message, under it while the menu is open
-  Widget _menuCard(_GMsg target, bool isOut, VoidCallback dismiss) {
+  Widget _menuCard(
+    _GMsg target,
+    bool isOut,
+    VoidCallback dismiss, {
+    // an album's pin goes on its first item, a save on the one held
+    AlbumRun<_GMsg>? album,
+    _GMsg? held,
+  }) {
     final kept = _keeps(target);
     final words = target.text.isNotEmpty && target.sticker == null && !kept;
+    final anchor = album?.anchor ?? target;
+    final saveOn = held ?? anchor;
+    final shareOn = album == null ? target : held;
     return MessageMenuCard(
       note: kept ? l10n.roomShotsMenuNote : null,
       actions: [
         MenuAction(
-          icon: target.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-          label: target.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
+          icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+          label: anchor.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
           onTap: () {
             dismiss();
-            _togglePinGroup(target);
+            _togglePinGroup(anchor);
           },
         ),
         MenuAction(
-          icon: target.saved ? Icons.bookmark : Icons.bookmark_outline,
-          label: target.saved ? l10n.groupChatUnsave : l10n.commonSave,
-          tint: target.saved ? HaloColors.amber : null,
+          icon: saveOn.saved ? Icons.bookmark : Icons.bookmark_outline,
+          label: saveOn.saved ? l10n.groupChatUnsave : l10n.commonSave,
+          tint: saveOn.saved ? HaloColors.amber : null,
           // one saved before stays, and can be let go
-          onTap: kept && !target.saved
+          onTap: kept && !saveOn.saved
               ? null
               : () {
                   dismiss();
-                  _toggleSavedGroup(target);
+                  _toggleSavedGroup(saveOn);
                 },
         ),
         // a sticker is not copied, forwarded or edited
@@ -3118,13 +3401,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           label: l10n.commonShare,
           onTap:
               (kept ||
-                  target.filePath == null ||
-                  target.fileName == 'voice.wav')
+                  shareOn == null ||
+                  shareOn.filePath == null ||
+                  shareOn.fileName == 'voice.wav')
               ? null
               : () {
                   dismiss();
                   lockState.hold(
-                    () => shareFileOut(target.filePath!, name: target.fileName),
+                    () =>
+                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
                   );
                 },
         ),
@@ -3133,7 +3418,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             icon: Icons.edit_outlined,
             label: l10n.commonEdit,
             tint: HaloColors.amber,
-            onTap: words
+            // an album's caption stays as it went
+            onTap: words && album == null
                 ? () {
                     dismiss();
                     _editGroupMessage(target);
@@ -3146,7 +3432,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             danger: true,
             onTap: () {
               dismiss();
-              _unsendGroupMessage(target);
+              if (album != null) {
+                _unsendGroupAlbum(album);
+              } else {
+                _unsendGroupMessage(target);
+              }
             },
           ),
         ],
@@ -3514,8 +3804,43 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await appState.editInGroup(widget.groupId, m.msgUid!, newText);
   }
 
+  // an album taken back whole, ours only: each item's row and file go
+  // here and each is unsent there, so a phone without albums drops them all.
+  // one still going stops where it is
+  Future<void> _unsendGroupAlbum(AlbumRun<_GMsg> run) async {
+    final ms = [
+      for (final x in run.present)
+        if (x.direction == 'out' && x.msgUid != null) x,
+    ];
+    if (ms.isEmpty || !await _confirmUnsend(album: true)) return;
+    for (final x in ms) {
+      mediaProgressEnd(x.msgUid!);
+    }
+    if (mounted) {
+      setState(() {
+        for (final x in ms) {
+          x.removing = true;
+        }
+      });
+    }
+    await Future.delayed(kLeaveGone);
+    if (mounted) setState(() => _messages.removeWhere(ms.contains));
+    // each stops a send still going, and goes from here and from them
+    for (final x in ms) {
+      await appState.unsendInGroup(widget.groupId, x.msgUid!);
+    }
+  }
+
   Future<void> _unsendGroupMessage(_GMsg m) async {
     if (m.msgUid == null) return;
+    if (!await _confirmUnsend()) return;
+    if (mounted) setState(() => m.removing = true);
+    await Future.delayed(kLeaveGone);
+    if (mounted) setState(() => _messages.remove(m));
+    await appState.unsendInGroup(widget.groupId, m.msgUid!);
+  }
+
+  Future<bool> _confirmUnsend({bool album = false}) async {
     // the confirm sheet hands focus back to the composer, popping the
     // keyboard for no reason. drop it.
     FocusManager.instance.primaryFocus?.unfocus();
@@ -3530,7 +3855,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
-                l10n.groupChatUnsendMessage,
+                album ? l10n.albumUnsendTitle : l10n.groupChatUnsendMessage,
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
             ),
@@ -3569,11 +3894,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
       ),
     );
-    if (confirm != true) return;
-    if (mounted) setState(() => m.removing = true);
-    await Future.delayed(kLeaveGone);
-    if (mounted) setState(() => _messages.remove(m));
-    await appState.unsendInGroup(widget.groupId, m.msgUid!);
+    return confirm == true;
   }
 
   // the lock lifted with this group on top: it is the one being read again
@@ -3726,6 +4047,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   Widget build(BuildContext context) {
+    // the albums as the thread stands now: a row of one is drawn by its lead
+    _albums = _indexAlbums(_messages);
     // a message that just started counting down gets its burn on time
     _burn.poke();
     // and one that waits is read once this frame shows it
@@ -4097,6 +4420,15 @@ Widget _groupStamp(_GMsg m) => Container(
   ),
 );
 
+// a photo or a file in the media folder under its uid, cleaned and ready
+// to go: nothing is shown or sent yet
+class _GReady {
+  final String uid;
+  final String path;
+  final String? fileName;
+  const _GReady(this.uid, this.path, {this.fileName});
+}
+
 class _GMsg with WordLinks {
   final String sender;
   final String senderName;
@@ -4115,7 +4447,9 @@ class _GMsg with WordLinks {
   // theirs, counting since before it was read (kBurnWaitMost)
   bool burnUnseen;
   final String? msgUid;
-  final String? replyTo;
+  // set again on a pick's first bubble that is ready when the one before
+  // would not go
+  String? replyTo;
   bool sending;
   bool failed = false;
   // online, a failed row retries itself and reads as pending; the count
@@ -4143,6 +4477,12 @@ class _GMsg with WordLinks {
   ({int have, int of, int gaveUp})? reach;
   // a sticker: drawn from our pack; text is its emoji
   final StickerWire? sticker;
+  // its place in an album (album.dart). set again while it is still
+  // being made ready, when one before it would not go
+  AlbumTag? album;
+  // shown at once on send, while its photo or video is still cleaned:
+  // not saved, not sent yet
+  bool preparing = false;
   _GMsg({
     required this.sender,
     String? senderName,
@@ -4163,6 +4503,7 @@ class _GMsg with WordLinks {
     this.pinned = false,
     this.saved = false,
     this.edited = false,
+    this.album,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
@@ -4887,8 +5228,14 @@ class _GroupBubble extends StatelessWidget {
   final bool arriving;
   // the quoted message is a sticker
   final StickerWire? quotedSticker;
+  // an album: [m] stands for all of it, and its grid is drawn
+  final AlbumRun<_GMsg>? album;
+  // a tile of the album held: the bubble's context and the tile
+  final void Function(BuildContext, int)? onLongPressTile;
   const _GroupBubble({
     required this.m,
+    this.album,
+    this.onLongPressTile,
     required this.showSender,
     this.stickers,
     this.stickerOrder = 0,
@@ -5172,7 +5519,14 @@ class _GroupBubble extends StatelessWidget {
                                             ),
                                           ),
                                         ],
-                                        if (m.fileName == 'voice.wav' &&
+                                        if (album case final run?)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: m.text.isNotEmpty ? 6 : 0,
+                                            ),
+                                            child: _grid(context, run),
+                                          )
+                                        else if (m.fileName == 'voice.wav' &&
                                             m.filePath != null)
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
@@ -5237,7 +5591,8 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           ),
-                                        if (m.mediaPath != null)
+                                        if (album == null &&
+                                            m.mediaPath != null)
                                           Padding(
                                             padding: EdgeInsets.only(
                                               bottom: m.text.isNotEmpty ? 6 : 0,
@@ -5328,6 +5683,7 @@ class _GroupBubble extends StatelessWidget {
                                             ),
                                           ),
                                         if (isOut &&
+                                            album == null &&
                                             m.text.isEmpty &&
                                             m.mediaPath != null)
                                           GifSentLine(path: m.mediaPath!),
@@ -5734,6 +6090,49 @@ class _GroupBubble extends StatelessWidget {
   );
 
   // no bubble: the sticker alone, its time in a pill
+  // the album's grid: a tile a place, each opening the viewer at itself.
+  // the time sits in the corner the reaction chip leaves free
+  Widget _grid(BuildContext context, AlbumRun<_GMsg> run) {
+    final shown = run.drawn;
+    final hold = onLongPressTile;
+    final isOut = m.direction == 'out';
+    return AlbumGrid(
+      tiles: [
+        for (final x in shown)
+          x == null
+              ? null
+              : AlbumTile(
+                  path: x.mediaPath ?? x.filePath,
+                  video: x.mediaPath == null && x.filePath != null,
+                  lost:
+                      !x.preparing && x.mediaPath == null && x.filePath == null,
+                  sendingUid: isOut && x.sending ? x.msgUid : null,
+                ),
+      ],
+      width: 260,
+      captioned: m.text.isNotEmpty,
+      stamp: m.text.isEmpty && !m.failed ? _groupStamp(m) : null,
+      // the reaction chip hangs at the end on ours, the start on theirs
+      stampAtStart: isOut,
+      onOpen: (i) {
+        onAct?.call();
+        final items = <AlbumItem>[
+          for (final x in shown)
+            if (x != null && (x.mediaPath ?? x.filePath) != null)
+              AlbumItem(
+                (x.mediaPath ?? x.filePath)!,
+                video: x.mediaPath == null,
+                fileName: x.fileName,
+              ),
+        ];
+        final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+        final start = albumOpenAt(paths, i);
+        if (start != null) openAlbum(context, items, start: start);
+      },
+      onLongPress: hold == null ? null : (i) => hold(context, i),
+    );
+  }
+
   Widget _sticker(StickerWire st) {
     final isOut = m.direction == 'out';
     final quoted = quotedText;
