@@ -5409,7 +5409,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsVersion => 'Версия';
 
   @override
-  String get settings030Alpha => '0.5.1 · альфа';
+  String get settings030Alpha => '0.5.2 · альфа';
 
   @override
   String get settingsReportAnIssue => 'Сообщить о проблеме';

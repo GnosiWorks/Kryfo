@@ -8586,7 +8586,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0.5.1 · alpha'**
+  /// **'0.5.2 · alpha'**
   String get settings030Alpha;
 
   /// screens/settings_screen.dart
