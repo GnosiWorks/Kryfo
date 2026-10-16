@@ -24,6 +24,8 @@ import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
 import 'package:kryfo/widgets/press_scale.dart';
 
+import 'bars_check.dart';
+
 const _cam = MethodChannel('plugins.flutter.io/camera');
 const _tilt = EventChannel('kryfo/tilt');
 const _codec = StandardMethodCodec();
@@ -798,5 +800,19 @@ void main() {
     ]);
     await t.pumpWidget(const SizedBox());
     await settle(t);
+  });
+
+  // the shutter, the switches and the notes stay off the cutout and the bars
+  testWidgets('the camera clears the bars', (t) async {
+    for (final nav in [gestureBar, buttonBar]) {
+      barsPhone(t, nav: nav);
+      plugin(t);
+      await t.pumpWidget(framed());
+      await settle(t);
+      expect(find.byType(Texture), findsOneWidget);
+      expectClearOfBars(t, reason: 'nav $nav');
+      await t.pumpWidget(const SizedBox());
+      await settle(t);
+    }
   });
 }

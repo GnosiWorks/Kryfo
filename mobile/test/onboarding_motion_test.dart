@@ -19,6 +19,8 @@ import 'package:kryfo/widgets/language_sheet.dart' show LanguageRow;
 import 'package:kryfo/widgets/tor_boot_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bars_check.dart';
+
 Widget framed(
   Widget home, {
   bool still = false,
@@ -406,6 +408,31 @@ void main() {
         expect(find.text(word), findsNothing, reason: '$loc');
       }
       await t.pumpWidget(const SizedBox());
+    }
+  });
+
+  // a cutout, a gesture or button bar, a keyboard: every step clear of them
+  testWidgets('every step clears the bars and the keyboard', (t) async {
+    quiet(t);
+    for (final (nav, kb) in [
+      (gestureBar, 0.0),
+      (buttonBar, 0.0),
+      (gestureBar, keyboardUp),
+    ]) {
+      barsPhone(t, nav: nav, keyboard: kb);
+      await t.pumpWidget(onboarding(still: true));
+      await t.pump(const Duration(seconds: 6));
+      final pos = pages(t).position;
+      final count = (pos.maxScrollExtent / pos.viewportDimension).round() + 1;
+      expect(count, greaterThan(3));
+      for (var i = 0; i < count; i++) {
+        pages(t).jumpToPage(i);
+        await t.pump();
+        await t.pump(const Duration(seconds: 1));
+        expectClearOfBars(t, reason: 'step $i, nav $nav keyboard $kb');
+      }
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
     }
   });
 }

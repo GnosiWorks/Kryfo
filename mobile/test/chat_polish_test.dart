@@ -33,6 +33,7 @@ import 'package:kryfo/widgets/voice_parts.dart'
     show RecordBarEntry, VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bars_check.dart';
 import 'dev_chat_fakes.dart';
 import 'mem_db.dart';
 
@@ -723,5 +724,38 @@ void main() {
     expect(find.text(l10n.linkNoAppOpens), findsOneWidget);
     await t.pump(const Duration(seconds: 5));
     await devClose(t);
+  });
+
+  // a cutout, a gesture or button bar, a keyboard: nothing under them, and
+  // the composer sits as far above each as above the others
+  testWidgets('the chat clears the bars and the keyboard', (t) async {
+    await world(text: geo);
+    final m = t.binding.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+    addTearDown(
+      () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    setL10nLocale(const Locale('en'));
+    final gaps = <double>[];
+    for (final (nav, kb) in [
+      (gestureBar, 0.0),
+      (buttonBar, 0.0),
+      (gestureBar, keyboardUp),
+    ]) {
+      barsPhone(t, nav: nav, keyboard: kb);
+      await t.pumpWidget(devApp(chat()));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(PlaceStub), findsOneWidget);
+      expectClearOfBars(t, reason: 'nav $nav keyboard $kb');
+      gaps.add(gapAboveBottom(t, find.byType(TextField).last));
+      final head = t.getRect(find.byTooltip(l10n.commonBack).first);
+      expect(head.top, greaterThanOrEqualTo(cutoutTop));
+      expect(head.top, lessThan(cutoutTop + 24), reason: 'padded twice');
+      await devClose(t);
+    }
+    expect(gaps.first, greaterThanOrEqualTo(0));
+    for (final g in gaps) {
+      expect(g, closeTo(gaps.first, 0.5), reason: 'gaps $gaps');
+    }
   });
 }

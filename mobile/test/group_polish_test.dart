@@ -52,6 +52,7 @@ import 'package:kryfo/widgets/room_countdown.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bars_check.dart';
 import 'pin_flow_fakes.dart' show app, phone;
 
 const _group = 'g1';
@@ -1749,5 +1750,32 @@ void main() {
       expect(find.text(l10n.previewStripAddPreview), findsNothing);
       await _close(t);
     });
+  });
+
+  // a cutout, a gesture or button bar, a keyboard: nothing under them, and
+  // the composer sits as far above each as above the others
+  testWidgets('the group clears the bars and the keyboard', (t) async {
+    final gaps = <double>[];
+    for (final (nav, kb) in [
+      (gestureBar, 0.0),
+      (buttonBar, 0.0),
+      (gestureBar, keyboardUp),
+    ]) {
+      _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
+      barsPhone(t, nav: nav, keyboard: kb);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text('hello'), findsOneWidget);
+      expectClearOfBars(t, reason: 'nav $nav keyboard $kb');
+      gaps.add(gapAboveBottom(t, find.byType(TextField).last));
+      final head = t.getRect(find.byTooltip(l10n.commonBack).first);
+      expect(head.top, greaterThanOrEqualTo(cutoutTop));
+      expect(head.top, lessThan(cutoutTop + 24), reason: 'padded twice');
+      await _close(t);
+    }
+    expect(gaps.first, greaterThanOrEqualTo(0));
+    for (final g in gaps) {
+      expect(g, closeTo(gaps.first, 0.5), reason: 'gaps $gaps');
+    }
   });
 }

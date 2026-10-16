@@ -12,6 +12,8 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/screens/scan_screen.dart';
 import 'package:kryfo/theme.dart';
 
+import 'bars_check.dart';
+
 late void Function(CameraController?, Exception?) created;
 late void Function(Code) scanned;
 int readers = 0;
@@ -144,6 +146,19 @@ void main() {
     expect(haptics, ['HapticFeedbackType.mediumImpact']);
     await t.pump(const Duration(milliseconds: 500));
     await t.pumpWidget(const SizedBox());
+  });
+
+  // the frame, its line and the way back stay off the cutout and the bars
+  testWidgets('the scanner clears the bars', (t) async {
+    for (final nav in [gestureBar, buttonBar]) {
+      barsPhone(t, nav: nav);
+      listen(t);
+      await t.pumpWidget(framed(still: true));
+      await t.pump(const Duration(milliseconds: 500));
+      expect(find.text(l10n.scanPointAtAKryfo), findsOneWidget);
+      expectClearOfBars(t, reason: 'nav $nav');
+      await t.pumpWidget(const SizedBox());
+    }
   });
 }
 
