@@ -453,7 +453,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
                         style: HaloType.mono(
                           size: 10,
                           weight: FontWeight.w700,
-                          color: HaloColors.amber,
+                          color: HaloColors.amberText,
                         ),
                       ),
                     ),
