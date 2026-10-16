@@ -10,7 +10,15 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow, kAdminGone;
+    show
+        AppIo,
+        FirstKept,
+        HaloDb,
+        groupEndOut,
+        groupRemoveOut,
+        groupUnsendOf,
+        groupUnsendRow,
+        kAdminGone;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -84,13 +92,9 @@ class ArrivalStore implements RouterStore {
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int, bool)>> inboxSizes() async => [
+  Future<List<(int, int, int?)>> inboxSizes() async => [
     for (final r in inbox)
-      (
-        r['id'] as int,
-        (r['sealed'] as List<int>).length,
-        r['part'] == kNotePart,
-      ),
+      (r['id'] as int, (r['sealed'] as List<int>).length, r['part'] as int?),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -1449,6 +1453,52 @@ class ArrivalRows implements HaloDb {
     _hit('removeGroupMember', groupId, null);
     members[groupId]?.remove(haloId);
   }
+
+  // an end: the row stays with its members, what it held goes, and of
+  // its lanes the take-backs and the end itself
+  @override
+  Future<bool> endGroup(
+    String groupId, {
+    required String by,
+    required int at,
+  }) async {
+    _hit('endGroup', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['ended_at'] != null || g['room_pub'] != null) {
+      return false;
+    }
+    g.addAll({'ended_at': at, 'ended_by': by, 'unread': 0, 'mentioned': 0});
+    await wipeEnded(groupId);
+    return true;
+  }
+
+  @override
+  Future<void> wipeEnded(String groupId) async {
+    _hit('wipeEnded', groupId, null);
+    _dropGroupRows(groupId);
+    ctlOut.removeWhere(
+      (r) =>
+          r['group_id'] == groupId &&
+          groupUnsendOf(r['ctl']) == null &&
+          !groupEndOut(r['ctl']) &&
+          !groupRemoveOut(r['ctl']),
+    );
+  }
+
+  @override
+  Future<int> finishEndedWipes() async {
+    final ended = await endedGroupIds();
+    for (final g in ended) {
+      await wipeEnded(g);
+    }
+    return ended.length;
+  }
+
+  @override
+  Future<List<String>> endedGroupIds() async => [
+    for (final e in groupRows.entries)
+      if (e.value['ended_at'] != null) e.key,
+  ];
 
   @override
   Future<void> deleteGroup(String groupId) async {

@@ -8380,4 +8380,43 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'يمكن لكل محادثة تغييره من قائمتها';
+
+  @override
+  String get groupEndedYou => 'أنهيت هذه المجموعة';
+
+  @override
+  String groupEndedBy(Object name) {
+    return 'أنهى ⁨$name⁩ هذه المجموعة';
+  }
+
+  @override
+  String get groupEndedBar => 'انتهت هذه المجموعة';
+
+  @override
+  String get groupInfoEndGroup => 'إنهاء المجموعة';
+
+  @override
+  String get groupInfoEndThisGroup => 'إنهاء هذه المجموعة للجميع؟';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو حدّث التطبيق.';
+
+  @override
+  String get groupInfoDeleteGroup => 'حذف المجموعة';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'حذف هذه المجموعة؟';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'تختفي المجموعة المنتهية من قائمة محادثاتك.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
 }

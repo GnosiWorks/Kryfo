@@ -55,6 +55,9 @@ class UnwrappedMessage {
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   final String? sticker; // 'st' - pack:id:since, drawn from our own pack
   final int? supportMarker; // 'sp' - written in a chat with the developer
+  // 'ge' - an ended group's words for versions that cannot read its end.
+  // they show it as a message, this version never keeps it
+  final bool endNotice;
   // 'w' - when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
@@ -105,12 +108,14 @@ class UnwrappedMessage {
     this.sticker,
     this.supportMarker,
     this.writtenAt,
+    this.endNotice = false,
   });
 }
 
 /// a group state update. the 'm' body is ignored when this is present.
 class GroupControl {
-  final String type; // 'create' | 'add' | 'remove' | 'rename' | 'leave'
+  // 'create' | 'add' | 'remove' | 'rename' | 'leave' | 'end'
+  final String type;
   final String? name; // present on 'create' and 'rename'
   final List<String>?
   members; // full member list on 'create'; the target kryfo id list on 'add'/'remove'
@@ -342,6 +347,7 @@ Future<String> wrapMessage(
   PollCloseFrame? pollClose,
   String? sticker,
   int? supportMarker,
+  bool endNotice = false,
   // when it was written: a retry, a resend or a slice passes the time the
   // row was written, anything else is written now
   int? writtenAt,
@@ -350,6 +356,7 @@ Future<String> wrapMessage(
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
+  if (endNotice) body['ge'] = 1;
   if (poll != null) body['pl'] = poll;
   if (vote != null) {
     body['vt'] = {'u': vote.pollUid, 'c': vote.choices, 's': vote.seq};
@@ -553,6 +560,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,
       },
+      endNotice: json['ge'] == 1,
     );
   } catch (e) {
     dlog(

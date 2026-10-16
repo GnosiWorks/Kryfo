@@ -143,6 +143,7 @@ final frameParams = <String, Object>{
   'pollClose': const PollCloseFrame(pollUid: 'uid0000poll', finalVotes: {}),
   'sticker': 'fokia:3:1',
   'supportMarker': 1,
+  'endNotice': true,
   'writtenAt': 1791393419123,
 };
 
@@ -156,6 +157,7 @@ const neverParams = {
   'poll',
   'vote',
   'pollClose',
+  'endNotice',
 };
 
 T? _param<T>(Set<String> on, String k) =>
@@ -199,6 +201,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       pollClose: _param(on, 'pollClose'),
       sticker: _param(on, 'sticker'),
       supportMarker: _param(on, 'supportMarker'),
+      endNotice: on.contains('endNotice'),
       writtenAt: _param(on, 'writtenAt'),
     );
 
@@ -275,6 +278,7 @@ final madeFrames = <String, Set<String>>{
   'accept ack': {'sender'},
   'introduction': {'intro', 'sender'},
   'group control': {'groupId', 'groupControl', 'sender'},
+  'group end notice': {'msgUid', 'groupId', 'sender', 'endNotice', 'writtenAt'},
   'group text': {
     'groupId',
     'msgUid',

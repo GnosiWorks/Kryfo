@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Disfarçar este áudio",
   "voiceNotDisguised": "Não deu para disfarçar este áudio, então ele não foi enviado",
   "settingsDisguiseByDefault": "Disfarçar minha voz por padrão",
-  "settingsDisguiseByDefaultHint": "Cada conversa pode mudar isso no próprio menu"
+  "settingsDisguiseByDefaultHint": "Cada conversa pode mudar isso no próprio menu",
+  "groupEndedYou": "Você encerrou este grupo",
+  "groupEndedBy": "{name} encerrou este grupo",
+  "groupEndedBar": "Este grupo foi encerrado",
+  "groupInfoEndGroup": "Encerrar grupo",
+  "groupInfoEndThisGroup": "Encerrar este grupo para todos?",
+  "groupInfoEndGroupLine": "Ele é excluído para todos: as mensagens e mídias são removidas do celular de cada membro que atualizou o app.",
+  "groupInfoDeleteGroup": "Excluir grupo",
+  "groupInfoDeleteThisGroup": "Excluir este grupo?",
+  "groupInfoDeleteGroupLine": "O grupo encerrado sai da sua lista de conversas.",
+  "groupEndedOldNotice": "Encerrei este grupo, então ninguém pode mais enviar mensagens nele. Atualize o Kryfo para vê-lo como encerrado.",
+  "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização."
 }

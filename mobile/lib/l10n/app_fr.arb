@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Déguiser cette note",
   "voiceNotDisguised": "Cette note n’a pas pu être déguisée, elle n’a donc pas été envoyée",
   "settingsDisguiseByDefault": "Déguiser ma voix par défaut",
-  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu"
+  "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu",
+  "groupEndedYou": "Vous avez mis fin à ce groupe",
+  "groupEndedBy": "{name} a mis fin à ce groupe",
+  "groupEndedBar": "Ce groupe est terminé",
+  "groupInfoEndGroup": "Mettre fin au groupe",
+  "groupInfoEndThisGroup": "Mettre fin à ce groupe pour tout le monde ?",
+  "groupInfoEndGroupLine": "Il est supprimé pour tout le monde : ses messages et médias sont retirés du téléphone de chaque membre à jour.",
+  "groupInfoDeleteGroup": "Supprimer le groupe",
+  "groupInfoDeleteThisGroup": "Supprimer ce groupe ?",
+  "groupInfoDeleteGroupLine": "Le groupe terminé disparaît de votre liste de discussions.",
+  "groupEndedOldNotice": "J’ai mis fin à ce groupe, plus personne ne peut y écrire. Mettez Kryfo à jour pour le voir comme terminé.",
+  "groupInfoEndGroupDetail": "Kryfo le retire du téléphone de chaque membre qui a la mise à jour."
 }

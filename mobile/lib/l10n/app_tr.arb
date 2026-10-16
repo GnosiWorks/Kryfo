@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Bu notta sesi gizle",
   "voiceNotDisguised": "Bu notta ses gizlenemedi, bu yüzden gönderilmedi",
   "settingsDisguiseByDefault": "Sesimi varsayılan olarak gizle",
-  "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir"
+  "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir",
+  "groupEndedYou": "Bu grubu sonlandırdın",
+  "groupEndedBy": "{name} bu grubu sonlandırdı",
+  "groupEndedBar": "Bu grup sonlandı",
+  "groupInfoEndGroup": "Grubu sonlandır",
+  "groupInfoEndThisGroup": "Bu grup herkes için sonlandırılsın mı?",
+  "groupInfoEndGroupLine": "Herkes için silinir: mesajları ve medyası, güncellemeyi almış her üyenin telefonundan kaldırılır.",
+  "groupInfoDeleteGroup": "Grubu sil",
+  "groupInfoDeleteThisGroup": "Bu grup silinsin mi?",
+  "groupInfoDeleteGroupLine": "Sonlanan grup sohbet listenden kalkar.",
+  "groupEndedOldNotice": "Bu grubu sonlandırdım, artık kimse buraya mesaj gönderemez. Sonlandığını görmek için Kryfo'yu güncelle.",
+  "groupInfoEndGroupDetail": "Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır."
 }

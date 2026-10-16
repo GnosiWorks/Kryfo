@@ -9,7 +9,9 @@ import 'sqlite_ffi.dart';
 
 Future<SqliteMem> _rows() async {
   final db = SqliteMem.open()!;
-  await db.execute('CREATE TABLE groups (group_id TEXT PRIMARY KEY)');
+  await db.execute(
+    'CREATE TABLE groups (group_id TEXT PRIMARY KEY, ended_at INTEGER)',
+  );
   await db.execute(
     'CREATE TABLE messages (id INTEGER PRIMARY KEY, msg_uid TEXT, '
     'peer_id TEXT, group_id TEXT, direction TEXT, sent INTEGER, '
@@ -18,7 +20,7 @@ Future<SqliteMem> _rows() async {
   await db.execute(
     'CREATE TABLE reactions (msg_uid TEXT, reactor TEXT, emoji TEXT)',
   );
-  await db.execute("INSERT INTO groups VALUES ('here')");
+  await db.execute("INSERT INTO groups (group_id) VALUES ('here')");
   final rows = <(String, String?, String?, String?)>[
     ('a', null, null, null),
     ('b', '', '/m/one-to-one.jpg', null),
@@ -63,9 +65,18 @@ void main() {
 
   test('nothing to take leaves everything', () async {
     final db = await _rows();
-    await db.execute("INSERT INTO groups VALUES ('gone')");
+    await db.execute("INSERT INTO groups (group_id) VALUES ('gone')");
     expect(await dropGroupLeftoversIn(db), isEmpty);
     expect(await db.rawQuery('SELECT id FROM messages'), hasLength(6));
     expect(await db.rawQuery('SELECT msg_uid FROM reactions'), hasLength(6));
+  }, skip: skip);
+
+  test('an ended group\'s rows go as a gone one\'s do', () async {
+    final db = await _rows();
+    await db.execute("INSERT INTO groups VALUES ('gone', 1)");
+    final files = await dropGroupLeftoversIn(db);
+    expect(files, hasLength(3));
+    final left = await db.rawQuery('SELECT msg_uid FROM messages');
+    expect([for (final r in left) r['msg_uid']], ['a', 'b', 'c']);
   }, skip: skip);
 }

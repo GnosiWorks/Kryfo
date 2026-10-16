@@ -3,6 +3,7 @@
 // queries make: what a query keeps is checked on rows, not on its text, and
 // what a delete or a vacuum leaves is read in the file's bytes. no cipher.
 // null where the host has no sqlite to load
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
@@ -360,22 +361,34 @@ class SqliteMem implements Database, Transaction {
   Future<int> delete(String table, {String? where, List<Object?>? whereArgs}) =>
       rawDelete('DELETE FROM $table${_where(where)}', whereArgs);
 
+  // one transaction at a time, as sqflite runs them: a second waits for
+  // the first to end instead of failing to begin
+  Future<void> _txnTail = Future<void>.value();
+
   @override
   Future<T> transaction<T>(
     Future<T> Function(Transaction txn) action, {
     bool? exclusive,
   }) async {
-    _run('BEGIN');
-    _inTxn = true;
+    final before = _txnTail;
+    final done = Completer<void>();
+    _txnTail = done.future;
+    await before;
     try {
-      final r = await action(this);
-      _run('COMMIT');
-      return r;
-    } catch (_) {
-      _run('ROLLBACK');
-      rethrow;
+      _run('BEGIN');
+      _inTxn = true;
+      try {
+        final r = await action(this);
+        _run('COMMIT');
+        return r;
+      } catch (_) {
+        _run('ROLLBACK');
+        rethrow;
+      } finally {
+        _inTxn = false;
+      }
     } finally {
-      _inTxn = false;
+      done.complete();
     }
   }
 

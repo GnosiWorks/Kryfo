@@ -53,7 +53,8 @@ import '../main.dart'
         torStrictGetOnIsolate,
         torValve,
         shredFile,
-        kAdminGone;
+        kAdminGone,
+        themeRevision;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
@@ -70,6 +71,7 @@ import '../read_burn.dart';
 import '../widgets/row_anchor.dart'
     show HoldScrollController, RowAnchor, RowAnchors, holdRowsInView;
 import 'group_info_screen.dart';
+import '../group_end.dart' show GroupEnd, groupEndOf;
 import '../widgets/motion.dart'
     show
         haloRoute,
@@ -420,6 +422,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // its admin was taken off this phone ("this isn't them"): no change to
   // the group reaches it any more
   bool _adminGone = false;
+  // its admin ended it: what it held is gone, and nothing is written here
+  GroupEnd? _end;
   bool _sending = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
@@ -516,6 +520,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _isAdmin = g.isAdmin;
       _roomExpiresAt = g.expiresAt;
       _joiningAt = g.joiningAt;
+      if (g.endedBy != null) _end = (at: 0, by: g.endedBy!);
       break;
     }
 
@@ -986,12 +991,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _holdSeen();
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
-        _memberCount = members.length;
+        // an ended group counts no one
+        _memberCount = groupEndOf(g) != null ? 0 : members.length;
         _alone = !members.any((m) => m != _me && m != appState.sessionId);
         _roomExpiresAt = g['expires_at'] as int?;
         _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
+        _end = groupEndOf(g);
         _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
@@ -1161,6 +1168,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rev = appState.chatRevOf('group:${widget.groupId}');
     if (rev == _seenRev) return;
     _seenRev = rev;
+    // ended while open: all of it went, read it whole again
+    if (_end == null &&
+        appState.groups.any((g) => g.groupId == widget.groupId && g.ended)) {
+      _replyTo = null;
+      if (_loading) {
+        _reloadQueued = true;
+      } else {
+        unawaited(_load());
+      }
+      return;
+    }
     unawaited(_settleOthersSends());
     // a single multicast fires notifyListeners() once per recipient, and a
     // full _load() per fire freezes the ui. if a load is already running,
@@ -3721,10 +3739,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       memberCount: _memberCount,
                       expiresAt: _roomExpiresAt,
                       joiningAt: _waiting ? _joiningAt : null,
+                      ended: _end != null,
                       onBack: () => Navigator.of(context).pop(),
-                      onSearch: _waiting ? null : _openSearch,
-                      pinnedCount: _pinCount,
-                      onPinned: _waiting ? null : _showGroupPinnedSheet,
+                      onSearch: _waiting || _end != null ? null : _openSearch,
+                      pinnedCount: _end != null ? 0 : _pinCount,
+                      onPinned: _waiting || _end != null
+                          ? null
+                          : _showGroupPinnedSheet,
                       onTapInfo: () async {
                         await Navigator.of(context).push(
                           haloRoute(GroupInfoScreen(groupId: widget.groupId)),
@@ -3755,7 +3776,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ),
             // its admin went with "this isn't them": the group is frozen here
             EaseSize(
-              child: _adminGone
+              child: _adminGone && _end == null
                   ? _AdminGoneLine(onLeave: _leaveAdminGone)
                   : const SizedBox(width: double.infinity, height: 0),
             ),
@@ -3778,8 +3799,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               child: FadeSwap(
                 child: !_loaded
                     ? const SizedBox.shrink(key: ValueKey('wait'))
-                    : _waiting || _messages.isEmpty
-                    ? _waiting
+                    : _waiting || _messages.isEmpty || _end != null
+                    ? _end != null
+                          // its admin ended it: the line alone
+                          ? EmptyChat(
+                              key: const ValueKey('ended'),
+                              icon: Icons.stop_circle_outlined,
+                              tint: HaloColors.text2,
+                              title: endedLine(_end!),
+                            )
+                          : _waiting
                           ? RoomJoinPanel(
                               key: const ValueKey('joining'),
                               name: _groupName,
@@ -3923,7 +3952,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             // grows in once the room does
             GrowSwap(
               alignment: Alignment.topCenter,
-              child: _waiting
+              child: _end != null
+                  ? const GroupEndedBar(key: ValueKey('ended'))
+                  : _waiting
                   ? const SizedBox(
                       key: ValueKey('no-composer'),
                       width: double.infinity,
@@ -3950,6 +3981,54 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         mayRecord: () => !_nobodyToRead(),
                       ),
                     ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// in place of the composer once the group has ended: what it is, calmly.
+/// its colours are read again on a theme switch, const as it is
+class GroupEndedBar extends StatelessWidget {
+  const GroupEndedBar({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      ListenableBuilder(listenable: themeRevision, builder: (c, _) => _bar());
+
+  Widget _bar() {
+    return Semantics(
+      container: true,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ExcludeSemantics(
+              child: Icon(
+                Icons.stop_circle_outlined,
+                size: 15,
+                color: HaloColors.text2,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Flexible(
+              child: Text(
+                l10n.groupEndedBar,
+                textAlign: TextAlign.center,
+                style: HaloType.serif(
+                  size: 14,
+                  italic: true,
+                  color: HaloColors.text2,
+                ),
+              ),
             ),
           ],
         ),
@@ -4080,6 +4159,8 @@ class _Header extends StatelessWidget {
   final int? expiresAt; // a room: the subtitle is the clock, not the count
   // a room not let in yet: its subtitle says so, and there is no info page
   final int? joiningAt;
+  // its admin ended it: no count under the name
+  final bool ended;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -4092,6 +4173,7 @@ class _Header extends StatelessWidget {
     required this.memberCount,
     this.expiresAt,
     this.joiningAt,
+    this.ended = false,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -4168,7 +4250,10 @@ class _Header extends StatelessWidget {
                           ),
                           // let in, the waiting line rises into the clock
                           RiseSwap(
-                            child: joiningAt != null
+                            child: ended
+                                // the page and its bar say it: no count
+                                ? const SizedBox(key: ValueKey('ended'))
+                                : joiningAt != null
                                 ? RoomJoinLine(
                                     key: const ValueKey('joining'),
                                     joiningAt: joiningAt!,

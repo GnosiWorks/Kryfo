@@ -10,14 +10,15 @@ import 'motion.dart';
 class EmptyChat extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String line;
+  // none when the title says it all
+  final String? line;
   // amber for a chat or a group, violet for a burner room
   final Color? tint;
   const EmptyChat({
     super.key,
     required this.icon,
     required this.title,
-    required this.line,
+    this.line,
     this.tint,
   });
 
@@ -75,16 +76,18 @@ class EmptyChat extends StatelessWidget {
                   color: HaloColors.text,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                line,
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
+              if (line != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  line!,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.5,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

@@ -23,6 +23,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         HaloEngine,
         appState,
+        themeRevision,
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/open_outside.dart';
@@ -37,6 +38,7 @@ import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/voice_mask.dart' show LiveMask;
 import 'package:kryfo/widgets/burn_fade.dart' show LeaveFold;
 import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip, kChipRoom;
@@ -77,6 +79,11 @@ class _Db implements HaloDb {
   final bool room;
   // a room joined off a link, not let in yet: when the join went
   int? joiningAt;
+  // the admin on record, and who ended the group
+  String? adminId;
+  String? endedBy;
+  // this phone is a member, not the admin
+  bool member = false;
   // when each knock again went
   final knocks = <int?>[];
   final Set<String> blocked;
@@ -102,7 +109,9 @@ class _Db implements HaloDb {
     return {
       'group_id': _group,
       'name': 'Friends',
-      'is_admin': joiningAt == null ? 1 : 0,
+      'is_admin': joiningAt == null && !member ? 1 : 0,
+      'admin_id': adminId,
+      if (endedBy != null) ...{'ended_at': 1, 'ended_by': endedBy},
       if (room) ...{
         'joining_at': joiningAt,
         'room_pub': _roomPub,
@@ -1747,6 +1756,200 @@ void main() {
       await t.enterText(find.byType(TextField), geo);
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.previewStripAddPreview), findsNothing);
+      await _close(t);
+    });
+  });
+
+  group('an ended group', () {
+    // this phone as the admin's key on record
+    void me(WidgetTester t) {
+      appState.myId = 'me';
+      addTearDown(() => appState.myId = '');
+    }
+
+    testWidgets('its admin finds End group, asked first, with Cancel', (
+      t,
+    ) async {
+      me(t);
+      _use(t, _Db()..adminId = 'me');
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final row = find.text(l10n.groupInfoEndGroup);
+      await t.scrollUntilVisible(row, 200);
+      await t.tap(row);
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.groupInfoEndThisGroup), findsOneWidget);
+      expect(find.text(l10n.groupInfoEndGroupLine), findsOneWidget);
+      expect(find.text(l10n.groupInfoEndGroupDetail), findsOneWidget);
+      expect(find.text(l10n.groupInfoEndGroup), findsNWidgets(2));
+      await t.tap(find.text(l10n.commonCancel));
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.groupInfoEndThisGroup), findsNothing);
+      // still running: its leave is a leave
+      expect(find.text(l10n.groupInfoLeaveGroup2), findsOneWidget);
+      await _close(t);
+    });
+
+    for (final (why, db) in [
+      (
+        'a member',
+        () => _Db()
+          ..member = true
+          ..adminId = _anna,
+      ),
+      ('a group with no admin on record', () => _Db()),
+      ('an admin under another key', () => _Db()..adminId = 'old-key'),
+      ('a burner room', () => _Db(room: true)..adminId = 'me'),
+    ]) {
+      testWidgets('no End group for $why', (t) async {
+        me(t);
+        _use(t, db());
+        await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+        await t.pump(const Duration(seconds: 1));
+        expect(find.text(l10n.groupInfoEndGroup), findsNothing);
+        await _close(t);
+      });
+    }
+
+    testWidgets('its info page keeps the line and a delete, nothing else to '
+        'change', (t) async {
+      me(t);
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      _use(
+        t,
+        _Db()
+          ..member = true
+          ..adminId = _anna
+          ..endedBy = _anna,
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
+      expect(find.text(l10n.groupInfoLeaveGroup2), findsNothing);
+      expect(find.text(l10n.groupInfoClearConversation), findsNothing);
+      expect(find.text(l10n.groupInfoEndGroup), findsNothing);
+      expect(find.text(l10n.groupInfoWallpaper), findsNothing);
+      expect(find.text(l10n.commonAdd), findsNothing);
+      await t.tap(find.text(l10n.groupInfoDeleteGroup));
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.groupInfoDeleteThisGroup), findsOneWidget);
+      expect(find.text(l10n.groupInfoDeleteGroupLine), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('its info page shows no one: no members, no count', (t) async {
+      me(t);
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      final db = _use(
+        t,
+        _Db()
+          ..member = true
+          ..adminId = _anna,
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      // running: the members and their count are there
+      expect(find.text(l10n.groupInfoMembers2), findsOneWidget);
+      expect(find.text('Anna'), findsOneWidget);
+      expect(find.text(l10n.groupInfo1Member(2)), findsOneWidget);
+      // ended: opened again, the line and a delete alone
+      db.endedBy = _anna;
+      await t.pumpWidget(const SizedBox());
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupInfoMembers2), findsNothing);
+      expect(find.text('Anna'), findsNothing);
+      expect(find.text(l10n.groupInfo1Member(2)), findsNothing);
+      expect(find.byType(MembersCard), findsNothing);
+      expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('the one its admin ended here says so', (t) async {
+      me(t);
+      _use(
+        t,
+        _Db()
+          ..adminId = 'me'
+          ..endedBy = 'me',
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupEndedYou), findsOneWidget);
+      expect(find.text(l10n.groupInfoEndGroup), findsNothing);
+      await _close(t);
+    });
+
+    for (final still in [false, true]) {
+      testWidgets('its chat is the line and the ended bar, no composer'
+          '${still ? ', at once with less movement' : ''}', (t) async {
+        me(t);
+        appState.contacts = [_contact(_anna, nick: 'Anna')];
+        _use(
+          t,
+          _Db()
+            ..member = true
+            ..adminId = _anna
+            ..endedBy = _anna,
+        );
+        await t.pumpWidget(
+          app(const GroupChatScreen(groupId: _group), still: still),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+        await t.pump(Duration(milliseconds: still ? 50 : 1000));
+        expect(find.byType(GroupEndedBar), findsOneWidget);
+        expect(find.text(l10n.groupEndedBar), findsOneWidget);
+        expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+        expect(find.byType(TextField), findsNothing);
+        // and no count under its name
+        expect(find.text(l10n.groupChatMembers(2)), findsNothing);
+        await _close(t);
+      });
+    }
+
+    testWidgets('its bar takes a theme switch, const as it is', (t) async {
+      addTearDown(() => HaloColors.setLight(false));
+      await t.pumpWidget(
+        ListenableBuilder(
+          listenable: themeRevision,
+          builder: (_, _) => app(const Scaffold(body: GroupEndedBar())),
+        ),
+      );
+      Color ink() =>
+          t.widget<Text>(find.text(l10n.groupEndedBar)).style!.color!;
+      for (final light in [true, false]) {
+        HaloColors.setLight(light);
+        themeRevision.value++;
+        await t.pump();
+        expect(ink(), HaloColors.text2, reason: '$light');
+      }
+    });
+
+    testWidgets('its bar reads right to left', (t) async {
+      me(t);
+      _use(
+        t,
+        _Db()
+          ..member = true
+          ..adminId = _anna
+          ..endedBy = _anna,
+      );
+      await t.pumpWidget(
+        app(const GroupChatScreen(groupId: _group), locale: const Locale('ar')),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(
+        Directionality.of(t.element(find.byType(GroupEndedBar))),
+        TextDirection.rtl,
+      );
+      expect(t.takeException(), isNull);
       await _close(t);
     });
   });

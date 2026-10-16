@@ -453,6 +453,9 @@ void main() {
           'CREATE TABLE v.group_members (group_id TEXT, halo_id TEXT)',
         );
         await db.execute(
+          'CREATE TABLE v.groups (group_id TEXT, ended_at INTEGER)',
+        );
+        await db.execute(
           'CREATE TABLE v.block_spans (peer_id TEXT, from_at INTEGER, '
           'to_at INTEGER, listen_from INTEGER)',
         );

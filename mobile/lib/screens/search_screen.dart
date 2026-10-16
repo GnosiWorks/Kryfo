@@ -18,6 +18,7 @@ import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' hide live;
+import 'group_info_screen.dart' show endedLine;
 import '../polls.dart';
 import '../rooms.dart';
 import '../search.dart';
@@ -335,18 +336,21 @@ class _SearchScreenState extends State<SearchScreen> {
             _Name(
               groupId: g.groupId,
               name: g.name,
-              // a room not let in yet has no members to count
-              sub: switch (roomJoinState(
-                g.expiresAt == null ? null : g.joiningAt,
-                now,
-              )) {
-                RoomJoin.waiting || RoomJoin.silent
-                    when appState.roomFull(g.groupId) =>
-                  l10n.roomJoinFullShort,
-                RoomJoin.waiting => l10n.roomJoinWaitingToJoin,
-                RoomJoin.silent => l10n.roomJoinNotAnswering,
-                RoomJoin.live => l10n.homeMembers(g.memberCount),
-              },
+              // an ended group's line in place of a count, and a room not
+              // let in yet has no members to count
+              sub: g.ended
+                  ? endedLine((at: 0, by: g.endedBy!))
+                  : switch (roomJoinState(
+                      g.expiresAt == null ? null : g.joiningAt,
+                      now,
+                    )) {
+                      RoomJoin.waiting || RoomJoin.silent
+                          when appState.roomFull(g.groupId) =>
+                        l10n.roomJoinFullShort,
+                      RoomJoin.waiting => l10n.roomJoinWaitingToJoin,
+                      RoomJoin.silent => l10n.roomJoinNotAnswering,
+                      RoomJoin.live => l10n.homeMembers(g.memberCount),
+                    },
             ),
           );
         }

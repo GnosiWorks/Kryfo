@@ -157,6 +157,8 @@ Future<bool> showConfirmSheet(
   required String yes,
   String? keep,
   String? figure,
+  // a smaller line under [line], for the fine print
+  String? detail,
   bool rose = true,
   LockGuard? shutOnLock,
   int? titleLines,
@@ -172,6 +174,17 @@ Future<bool> showConfirmSheet(
         ],
         const SizedBox(height: 8),
         _line(line),
+        if (detail != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            detail,
+            style: HaloType.sans(
+              size: 11.5,
+              color: HaloColors.text2,
+              height: 1.4,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
         const SizedBox(height: 6),

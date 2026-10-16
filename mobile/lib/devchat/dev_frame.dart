@@ -37,9 +37,9 @@ final kDevSender = _set('h e x o');
 // the face and the supporter tier: never sent to him, never taken from him
 final kDevIgnored = _set('av bg');
 
-// group controls and rosters, introductions and polls: no such frame goes
-// to him or is taken from him
-final kDevNever = _set('g gc rs rp in pl vt pc');
+// group controls and rosters, an ended group's words, introductions and
+// polls: no such frame goes to him or is taken from him
+final kDevNever = _set('g gc rs rp in pl vt pc ge');
 
 Set<String> _set(String keys) => Set.unmodifiable(keys.split(' '));
 

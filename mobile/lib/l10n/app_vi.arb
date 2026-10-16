@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Đổi giọng cho tin này",
   "voiceNotDisguised": "Không thể đổi giọng cho tin này nên tin chưa được gửi",
   "settingsDisguiseByDefault": "Mặc định đổi giọng của tôi",
-  "settingsDisguiseByDefaultHint": "Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó"
+  "settingsDisguiseByDefaultHint": "Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó",
+  "groupEndedYou": "Bạn đã kết thúc nhóm này",
+  "groupEndedBy": "{name} đã kết thúc nhóm này",
+  "groupEndedBar": "Nhóm này đã kết thúc",
+  "groupInfoEndGroup": "Kết thúc nhóm",
+  "groupInfoEndThisGroup": "Kết thúc nhóm này cho mọi người?",
+  "groupInfoEndGroupLine": "Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi điện thoại của mọi thành viên đã cập nhật.",
+  "groupInfoDeleteGroup": "Xóa nhóm",
+  "groupInfoDeleteThisGroup": "Xóa nhóm này?",
+  "groupInfoDeleteGroupLine": "Nhóm đã kết thúc sẽ biến mất khỏi danh sách trò chuyện.",
+  "groupEndedOldNotice": "Mình đã kết thúc nhóm này, nên không ai gửi tin nhắn trong nhóm được nữa. Hãy cập nhật Kryfo để thấy nhóm đã kết thúc.",
+  "groupInfoEndGroupDetail": "Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật."
 }

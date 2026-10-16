@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Disfrazar esta nota",
   "voiceNotDisguised": "No se pudo disfrazar esta nota, así que no se envió",
   "settingsDisguiseByDefault": "Disfrazar mi voz por defecto",
-  "settingsDisguiseByDefaultHint": "Cada chat puede cambiarlo en su menú"
+  "settingsDisguiseByDefaultHint": "Cada chat puede cambiarlo en su menú",
+  "groupEndedYou": "Terminaste este grupo",
+  "groupEndedBy": "{name} terminó este grupo",
+  "groupEndedBar": "Este grupo terminó",
+  "groupInfoEndGroup": "Terminar grupo",
+  "groupInfoEndThisGroup": "¿Terminar este grupo para todos?",
+  "groupInfoEndGroupLine": "Se elimina para todos: sus mensajes y archivos se quitan del teléfono de cada miembro que haya actualizado.",
+  "groupInfoDeleteGroup": "Eliminar grupo",
+  "groupInfoDeleteThisGroup": "¿Eliminar este grupo?",
+  "groupInfoDeleteGroupLine": "El grupo terminado desaparece de tu lista de chats.",
+  "groupEndedOldNotice": "Terminé este grupo, así que ya nadie puede enviar nada en él. Actualiza Kryfo para verlo como terminado.",
+  "groupInfoEndGroupDetail": "Kryfo lo quita del teléfono de cada miembro que tenga la actualización."
 }

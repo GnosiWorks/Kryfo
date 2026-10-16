@@ -8412,4 +8412,43 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsDisguiseByDefaultHint =>
       'В каждом чате это можно изменить в его меню';
+
+  @override
+  String get groupEndedYou => 'Ты завершил(а) эту группу';
+
+  @override
+  String groupEndedBy(Object name) {
+    return '$name завершил(а) эту группу';
+  }
+
+  @override
+  String get groupEndedBar => 'Эта группа завершена';
+
+  @override
+  String get groupInfoEndGroup => 'Завершить группу';
+
+  @override
+  String get groupInfoEndThisGroup => 'Завершить эту группу для всех?';
+
+  @override
+  String get groupInfoEndGroupLine =>
+      'Она удаляется у всех: её сообщения и медиа стираются с телефона каждого участника с обновлением.';
+
+  @override
+  String get groupInfoDeleteGroup => 'Удалить группу';
+
+  @override
+  String get groupInfoDeleteThisGroup => 'Удалить эту группу?';
+
+  @override
+  String get groupInfoDeleteGroupLine =>
+      'Завершённая группа исчезнет из списка чатов.';
+
+  @override
+  String get groupEndedOldNotice =>
+      'Я завершил(а) эту группу, так что писать в ней больше нельзя. Обнови Kryfo, чтобы видеть её завершённой.';
+
+  @override
+  String get groupInfoEndGroupDetail =>
+      'Kryfo стирает её с телефона каждого участника, у которого есть обновление.';
 }

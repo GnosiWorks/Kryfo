@@ -2172,5 +2172,16 @@
   "voiceDisguiseThisNote": "Изменить голос в этом сообщении",
   "voiceNotDisguised": "Не удалось изменить голос, поэтому сообщение не отправлено",
   "settingsDisguiseByDefault": "Изменять мой голос по умолчанию",
-  "settingsDisguiseByDefaultHint": "В каждом чате это можно изменить в его меню"
+  "settingsDisguiseByDefaultHint": "В каждом чате это можно изменить в его меню",
+  "groupEndedYou": "Ты завершил(а) эту группу",
+  "groupEndedBy": "{name} завершил(а) эту группу",
+  "groupEndedBar": "Эта группа завершена",
+  "groupInfoEndGroup": "Завершить группу",
+  "groupInfoEndThisGroup": "Завершить эту группу для всех?",
+  "groupInfoEndGroupLine": "Она удаляется у всех: её сообщения и медиа стираются с телефона каждого участника с обновлением.",
+  "groupInfoDeleteGroup": "Удалить группу",
+  "groupInfoDeleteThisGroup": "Удалить эту группу?",
+  "groupInfoDeleteGroupLine": "Завершённая группа исчезнет из списка чатов.",
+  "groupEndedOldNotice": "Я завершил(а) эту группу, так что писать в ней больше нельзя. Обнови Kryfo, чтобы видеть её завершённой.",
+  "groupInfoEndGroupDetail": "Kryfo стирает её с телефона каждого участника, у которого есть обновление."
 }
