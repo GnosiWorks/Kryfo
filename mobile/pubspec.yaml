@@ -72,6 +72,8 @@ dev_dependencies:
     sdk: flutter
   # the file picker's android side, driven over its channel in tests
   android_file_picker: ^2.0.0
+  # reads the notes export's zip back in its tests
+  archive: ^4.3.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

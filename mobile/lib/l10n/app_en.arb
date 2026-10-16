@@ -4905,6 +4905,109 @@
   "@notesJotSomethingDown": {
     "description": "screens/notes_screen.dart"
   },
+  "notesExportNotes": "Export notes",
+  "@notesExportNotes": {
+    "description": "screens/notes_screen.dart and notes_export_screen.dart. the notes menu row and the export page's title"
+  },
+  "notesExport": "Export",
+  "@notesExport": {
+    "description": "screens/notes_export_screen.dart. the button that makes the file"
+  },
+  "notesExportWorking": "Exporting…",
+  "@notesExportWorking": {
+    "description": "screens/notes_export_screen.dart. the button while the file is made"
+  },
+  "notesExportCount": "{count, plural, one{One note, oldest first.} other{{count} notes, oldest first.}}",
+  "@notesExportCount": {
+    "description": "screens/notes_export_screen.dart. how many notes go into the file, oldest at the top",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "notesExportZip": "Photos and voice notes go in a zip with them.",
+  "@notesExportZip": {
+    "description": "screens/notes_export_screen.dart. after the count, when some notes have a photo or a voice note"
+  },
+  "notesExportText": "Plain text",
+  "@notesExportText": {
+    "description": "screens/notes_export_screen.dart. format choice"
+  },
+  "notesExportTextLine": "A .txt file that opens anywhere",
+  "@notesExportTextLine": {
+    "description": "screens/notes_export_screen.dart. under the plain text choice"
+  },
+  "notesExportMarkdown": "Markdown",
+  "@notesExportMarkdown": {
+    "description": "screens/notes_export_screen.dart. format choice, the name of the format"
+  },
+  "notesExportMarkdownLine": "A .md file with headings, for note apps",
+  "@notesExportMarkdownLine": {
+    "description": "screens/notes_export_screen.dart. under the markdown choice"
+  },
+  "notesExportLock": "Lock with a passphrase",
+  "@notesExportLock": {
+    "description": "screens/notes_export_screen.dart. the switch, on by default"
+  },
+  "notesExportLockLine": "Open it in Tools with “Open a locked file”, or with age on a computer",
+  "@notesExportLockLine": {
+    "description": "screens/notes_export_screen.dart. under the switch. Tools is the tab, Open a locked file the tool in it, age the free desktop tool"
+  },
+  "notesExportPlainTitle": "Export without a passphrase?",
+  "@notesExportPlainTitle": {
+    "description": "screens/notes_export_screen.dart. asked when the passphrase switch is turned off"
+  },
+  "notesExportPlainLine": "Anyone who gets this file can read it.",
+  "@notesExportPlainLine": {
+    "description": "screens/notes_export_screen.dart. the calm warning for a file without a passphrase"
+  },
+  "notesExportPlainYes": "Export without one",
+  "@notesExportPlainYes": {
+    "description": "screens/notes_export_screen.dart. turns the passphrase off"
+  },
+  "notesExportKeepLock": "Keep the passphrase",
+  "@notesExportKeepLock": {
+    "description": "screens/notes_export_screen.dart. keeps the passphrase on"
+  },
+  "notesExportNotSaved": "The notes weren't saved. The file is still here.",
+  "@notesExportNotSaved": {
+    "description": "screens/notes_export_screen.dart. the save window was left or failed, the file waits to try again"
+  },
+  "notesExportGone": "The file was cleared when Kryfo locked. Export again to make a new one.",
+  "@notesExportGone": {
+    "description": "screens/notes_export_screen.dart. a lock stopped the export or cleared the made file"
+  },
+  "notesExportSaved": "Notes saved",
+  "@notesExportSaved": {
+    "description": "screens/notes_export_screen.dart. toast"
+  },
+  "notesExportSavedIn": "Notes saved in {place}",
+  "@notesExportSavedIn": {
+    "description": "screens/notes_export_screen.dart. toast. the placeholder is a folder path like Download, or the app that holds it",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "notesExportSavedUnchecked": "Notes saved, but Kryfo couldn't check the copy",
+  "@notesExportSavedUnchecked": {
+    "description": "screens/notes_export_screen.dart. toast"
+  },
+  "notesExportFailed": "Couldn't export the notes. Nothing was saved.",
+  "@notesExportFailed": {
+    "description": "screens/notes_export_screen.dart. the file could not be made"
+  },
+  "notesExportTooLarge": "Too large to export. The photos and voice notes come to 4 GB or more.",
+  "@notesExportTooLarge": {
+    "description": "screens/notes_export_screen.dart. the photos and voice notes are more than one zip can hold"
+  },
+  "notesExportSubject": "Kryfo notes",
+  "@notesExportSubject": {
+    "description": "screens/notes_export_screen.dart. subject line when the file is shared"
+  },
   "onboardingPrivateByDefault": "PRIVATE BY DEFAULT",
   "@onboardingPrivateByDefault": {
     "description": "screens/onboarding_screen.dart"

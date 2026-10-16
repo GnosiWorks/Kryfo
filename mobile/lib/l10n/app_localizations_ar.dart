@@ -4025,6 +4025,97 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesJotSomethingDown => 'دوّن شيئًا…';
 
   @override
+  String get notesExportNotes => 'تصدير الملاحظات';
+
+  @override
+  String get notesExport => 'تصدير';
+
+  @override
+  String get notesExportWorking => 'جارٍ التصدير…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ ملاحظة، الأقدم أولًا.',
+      many: '⁨$countString⁩ ملاحظة، الأقدم أولًا.',
+      few: '⁨$countString⁩ ملاحظات، الأقدم أولًا.',
+      two: 'ملاحظتان، الأقدم أولًا.',
+      one: 'ملاحظة واحدة، الأقدم أولًا.',
+      zero: 'لا ملاحظات.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'الصور والرسائل الصوتية تذهب معها في ملف zip.';
+
+  @override
+  String get notesExportText => 'نص عادي';
+
+  @override
+  String get notesExportTextLine => 'ملف ‎.txt يُفتح في أي مكان';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine => 'ملف ‎.md بعناوين، لتطبيقات الملاحظات';
+
+  @override
+  String get notesExportLock => 'القفل بعبارة مرور';
+
+  @override
+  String get notesExportLockLine =>
+      'افتحه من الأدوات عبر «فتح ملف مقفل»، أو بأداة age على حاسوب';
+
+  @override
+  String get notesExportPlainTitle => 'التصدير بلا عبارة مرور؟';
+
+  @override
+  String get notesExportPlainLine => 'أي شخص يحصل على هذا الملف يستطيع قراءته.';
+
+  @override
+  String get notesExportPlainYes => 'التصدير بدونها';
+
+  @override
+  String get notesExportKeepLock => 'إبقاء عبارة المرور';
+
+  @override
+  String get notesExportNotSaved => 'لم تُحفظ الملاحظات. الملف ما زال هنا.';
+
+  @override
+  String get notesExportGone =>
+      'مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.';
+
+  @override
+  String get notesExportSaved => 'حُفظت الملاحظات';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'حُفظت الملاحظات في ⁨$place⁩';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'حُفظت الملاحظات، لكن Kryfo لم يتمكن من التحقق من النسخة';
+
+  @override
+  String get notesExportFailed => 'تعذّر تصدير الملاحظات. لم يُحفظ شيء.';
+
+  @override
+  String get notesExportTooLarge =>
+      'أكبر من أن يُصدَّر. الصور والرسائل الصوتية تبلغ ٤ غ.ب أو أكثر.';
+
+  @override
+  String get notesExportSubject => 'ملاحظات Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'خاص افتراضيًا';
 
   @override

@@ -3911,6 +3911,95 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesJotSomethingDown => 'Ghi lại điều gì đó…';
 
   @override
+  String get notesExportNotes => 'Xuất ghi chú';
+
+  @override
+  String get notesExport => 'Xuất';
+
+  @override
+  String get notesExportWorking => 'Đang xuất…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ghi chú, cũ nhất trước.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip =>
+      'Ảnh và tin nhắn thoại được gói cùng trong một tệp zip.';
+
+  @override
+  String get notesExportText => 'Văn bản thuần';
+
+  @override
+  String get notesExportTextLine => 'Tệp .txt mở được ở mọi nơi';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Tệp .md có tiêu đề, cho các ứng dụng ghi chú';
+
+  @override
+  String get notesExportLock => 'Khóa bằng cụm mật khẩu';
+
+  @override
+  String get notesExportLockLine =>
+      'Mở bằng “Mở tệp đã khóa” trong Công cụ, hoặc bằng age trên máy tính';
+
+  @override
+  String get notesExportPlainTitle => 'Xuất mà không có cụm mật khẩu?';
+
+  @override
+  String get notesExportPlainLine => 'Ai có được tệp này cũng đọc được.';
+
+  @override
+  String get notesExportPlainYes => 'Xuất không khóa';
+
+  @override
+  String get notesExportKeepLock => 'Giữ cụm mật khẩu';
+
+  @override
+  String get notesExportNotSaved => 'Ghi chú chưa được lưu. Tệp vẫn còn đây.';
+
+  @override
+  String get notesExportGone =>
+      'Tệp đã bị xóa khi Kryfo khóa. Hãy xuất lại để tạo tệp mới.';
+
+  @override
+  String get notesExportSaved => 'Đã lưu ghi chú';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Đã lưu ghi chú vào $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Đã lưu ghi chú, nhưng Kryfo không kiểm tra được bản sao';
+
+  @override
+  String get notesExportFailed =>
+      'Không xuất được ghi chú. Chưa có gì được lưu.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Quá lớn để xuất. Ảnh và tin nhắn thoại cộng lại từ 4 GB trở lên.';
+
+  @override
+  String get notesExportSubject => 'Ghi chú Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'RIÊNG TƯ MẶC ĐỊNH';
 
   @override

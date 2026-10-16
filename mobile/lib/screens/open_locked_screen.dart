@@ -44,10 +44,12 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
   late final SeenJob _poll = _timers.until(
     () => _stage == _Stage.writing ? const Duration(milliseconds: 120) : null,
     (_) {
-      if (mounted) setState(() => _done = ageProgress());
+      if (mounted) setState(() => _done = _job.progress());
     },
   );
   var _stage = _Stage.form;
+  // this open's own stop and count
+  var _job = AgeJob();
   bool _shown = false;
   int _done = 0;
   AgeError? _error;
@@ -71,7 +73,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
   @override
   void dispose() {
     _timers.dispose();
-    if (_stage == _Stage.writing) ageCancel();
+    if (_stage == _Stage.writing) _job.cancel();
     if (_stage == _Stage.checking) ageOpenDrop();
     // the listener goes first: clear() notifies, and a notify after the
     // element is defunct asserts inside setState.
@@ -140,9 +142,10 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
       await ToolsBridge.instance.dropCreated(target);
       return _fail(AgeError.io);
     }
+    final job = _job = AgeJob();
     if (mounted) setState(() => _stage = _Stage.writing);
     _poll.poke();
-    final err = await ageOpenFinish(outFd);
+    final err = await ageOpenFinish(outFd, job);
     if (err != null) {
       await ToolsBridge.instance.dropCreated(target);
       return _fail(err);
@@ -161,7 +164,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
     return PopScope(
       canPop: !busy,
       onPopInvokedWithResult: (done, _) {
-        if (!done && _stage == _Stage.writing) ageCancel();
+        if (!done && _stage == _Stage.writing) _job.cancel();
       },
       child: Scaffold(
         backgroundColor: HaloColors.surface,
@@ -209,7 +212,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
                         _Stage.writing => ToolWideButton(
                           label: l10n.commonStop,
                           filled: false,
-                          onTap: ageCancel,
+                          onTap: _job.cancel,
                         ),
                         _Stage.done => ToolWideButton(
                           label: l10n.commonDone,

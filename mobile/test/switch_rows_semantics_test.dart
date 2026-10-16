@@ -14,11 +14,20 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/bridge_mode.dart' show BridgeSetup;
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, useEngineForTest;
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest;
+import 'package:kryfo/container.dart';
+import 'package:kryfo/session.dart';
 import 'package:kryfo/rooms.dart' show roomDefaultCap;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/screens/lock_file_screen.dart';
+import 'package:kryfo/screens/notes_export_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/screens/room_create_sheet.dart';
 import 'package:kryfo/theme.dart';
@@ -44,6 +53,19 @@ class _Bio implements LockBio {
   @override
   Future<BioOpened> unlock(String title, String cancel, String seal) async =>
       const BioOpened('none');
+}
+
+// the everyday notes, one of them
+class _Notes implements HaloDb {
+  @override
+  final HaloContainer container = HaloContainer.everyday;
+  @override
+  Future<List<Map<String, Object?>>> messagesFor(String peerId) async => [
+    {'plaintext': 'a note', 'sent_at': 1},
+  ];
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
 }
 
 class _Engine implements HaloEngine {
@@ -276,6 +298,39 @@ void main() {
     await done(t);
   });
 
+  // turned off only past the warning: the tap asks, the answer flips it
+  testWidgets('export notes: lock with a passphrase', (t) async {
+    phone(t);
+    final db = _Notes();
+    useDatabasesForTest(db, Session(db));
+    await _open(t, _page(const NotesExportScreen()));
+    final row = _toggles(
+      t,
+    ).where((n) => _said(n).startsWith(l10n.notesExportLock)).single;
+    expect(_said(row), contains(l10n.notesExportLockLine));
+    expect(
+      row,
+      isSemantics(hasToggledState: true, isToggled: true, hasTapAction: true),
+    );
+    expect(row.rect.width, greaterThan(120));
+    t.semantics.tap(
+      find.semantics.byPredicate(
+        (s) =>
+            !s.isMergedIntoParent &&
+            _said(s).startsWith(l10n.notesExportLock) &&
+            _on(s) != Tristate.none,
+      ),
+    );
+    await _rest(t);
+    await t.tap(find.text(l10n.notesExportPlainYes));
+    await _rest(t);
+    final off = _toggles(
+      t,
+    ).where((n) => _said(n).startsWith(l10n.notesExportLock)).single;
+    expect(off, isSemantics(hasToggledState: true, isToggled: false));
+    await done(t);
+  });
+
   testWidgets('new room: member cap', (t) async {
     phone(t);
     await _open(t, _app((ctx) => showRoomCreateSheet(ctx)));
@@ -348,6 +403,7 @@ void main() {
       'lock_file_screen.dart',
       'message_menu.dart',
       'new_poll_sheet.dart',
+      'notes_export_screen.dart',
       'pins_screen.dart',
       'room_create_sheet.dart',
     ]);

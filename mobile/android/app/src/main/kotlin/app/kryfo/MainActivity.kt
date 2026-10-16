@@ -588,7 +588,8 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                     "saveDocumentState" -> result.success(SaveDoc.state())
-                    "saveDocumentCancel" -> result.success(SaveDoc.cancel())
+                    "saveDocumentCancel" ->
+                        result.success(SaveDoc.cancel(call.argument<Boolean>("drop") == true))
                     else -> result.notImplemented()
                 }
             }
@@ -830,18 +831,15 @@ class MainActivity : FlutterFragmentActivity() {
         }
         Thread {
             val before = try { sizeOf(uri) } catch (e: Exception) { null }
-            var opened = false
-            val state = SaveDoc.copy(
+            val state = SaveDoc.copyInto(
                 File(p.path),
-                open = {
-                    SaveDoc.openWith(before) { contentResolver.openOutputStream(uri, it) }
-                        .also { opened = it != null }
-                },
+                before,
+                open = { contentResolver.openOutputStream(uri, it) },
                 sizeThere = { sizeOf(uri) },
                 readBack = { contentResolver.openInputStream(uri) },
+                drop = { dropDocument(uri) },
             )
             val kept = state == SaveDoc.SAVED || state == SaveDoc.UNCHECKED
-            if (!kept && SaveDoc.mayDrop(before, opened)) dropDocument(uri)
             val where = if (kept) placeOf(uri) else null
             runOnUiThread { p.reply(state, where) }
         }.start()

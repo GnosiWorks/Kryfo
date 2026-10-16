@@ -192,7 +192,7 @@ void main() {
     );
     expect(
       sourceOf('lib/open_file.dart'),
-      contains("'quiet': !backup && shareGoesWithLock(),"),
+      contains("'quiet': !backup && (quiet || shareGoesWithLock()),"),
     );
     expect(
       sourceOf('lib/main.dart'),

@@ -126,6 +126,7 @@ import 'text_send.dart' show kSendBlocked;
 import 'fast_gate.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
+import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
 import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
@@ -19237,6 +19238,8 @@ class AppState extends ChangeNotifier {
     await dropOpenCopies(
       all: from != null && from != containerFor(r, vaultKey: vaultKey),
     );
+    // an export's files go with the session that made them
+    await dropNotesExports();
     // a vault left open by a lock that never reached the screen shuts first
     _shutVault();
     // and what home shows after one shut is read again before anything
@@ -19469,6 +19472,7 @@ class AppState extends ChangeNotifier {
     // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
+    unawaited(dropNotesExports());
     unawaited(
       vaultSetupDone().catchError((Object e) {
         dlog('vault: setup key (${e.runtimeType})');
@@ -26288,6 +26292,7 @@ void main() async {
   everydayChats = () => live.draftChats();
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
+  unawaited(_sweepNotesAtLaunch());
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
   unawaited(sweepBackupLeftovers());
@@ -27958,6 +27963,16 @@ Future<void> _sweepPlaintextLeftovers() async {
     await sweepCardLeftovers(await getTemporaryDirectory());
   } catch (e) {
     dlog('sweep: card leftovers (${e.runtimeType})');
+  }
+}
+
+// at launch, before anything can be exported: an export the app did not
+// live through. later sweeps never look there
+Future<void> _sweepNotesAtLaunch() async {
+  try {
+    await sweepNotesExports(await getTemporaryDirectory());
+  } catch (e) {
+    dlog('sweep: notes exports (${e.runtimeType})');
   }
 }
 

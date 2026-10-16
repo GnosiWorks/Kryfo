@@ -4022,6 +4022,98 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesJotSomethingDown => 'Запиши что-нибудь…';
 
   @override
+  String get notesExportNotes => 'Экспорт заметок';
+
+  @override
+  String get notesExport => 'Экспортировать';
+
+  @override
+  String get notesExportWorking => 'Экспорт…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString заметки, от старых к новым.',
+      many: '$countString заметок, от старых к новым.',
+      few: '$countString заметки, от старых к новым.',
+      one: '$countString заметка, от старых к новым.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'Фото и голосовые лягут вместе с ними в zip.';
+
+  @override
+  String get notesExportText => 'Простой текст';
+
+  @override
+  String get notesExportTextLine => 'Файл .txt, который откроется где угодно';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Файл .md с заголовками, для приложений заметок';
+
+  @override
+  String get notesExportLock => 'Запереть парольной фразой';
+
+  @override
+  String get notesExportLockLine =>
+      'Открой в Инструментах через «Открыть запертый файл» или программой age на компьютере';
+
+  @override
+  String get notesExportPlainTitle => 'Экспортировать без парольной фразы?';
+
+  @override
+  String get notesExportPlainLine =>
+      'Любой, к кому попадёт этот файл, сможет его прочитать.';
+
+  @override
+  String get notesExportPlainYes => 'Экспортировать без неё';
+
+  @override
+  String get notesExportKeepLock => 'Оставить парольную фразу';
+
+  @override
+  String get notesExportNotSaved => 'Заметки не сохранены. Файл всё ещё здесь.';
+
+  @override
+  String get notesExportGone =>
+      'Файл удалён, когда Kryfo заблокировался. Экспортируй ещё раз, чтобы создать новый.';
+
+  @override
+  String get notesExportSaved => 'Заметки сохранены';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Заметки сохранены в $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Заметки сохранены, но Kryfo не смог проверить копию';
+
+  @override
+  String get notesExportFailed =>
+      'Не удалось экспортировать заметки. Ничего не сохранено.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Слишком много для экспорта. Фото и голосовые занимают 4 ГБ или больше.';
+
+  @override
+  String get notesExportSubject => 'Заметки Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'ПРИВАТНО ПО УМОЛЧАНИЮ';
 
   @override

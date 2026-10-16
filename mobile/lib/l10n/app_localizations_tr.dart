@@ -3936,6 +3936,98 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notesJotSomethingDown => 'Bir şey not al…';
 
   @override
+  String get notesExportNotes => 'Notları dışa aktar';
+
+  @override
+  String get notesExport => 'Dışa aktar';
+
+  @override
+  String get notesExportWorking => 'Dışa aktarılıyor…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString not, en eskisi önce.',
+      one: 'Bir not, en eskisi önce.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip =>
+      'Fotoğraflar ve sesli notlar onlarla birlikte bir zip’e girer.';
+
+  @override
+  String get notesExportText => 'Düz metin';
+
+  @override
+  String get notesExportTextLine => 'Her yerde açılan bir .txt dosyası';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Not uygulamaları için başlıklı bir .md dosyası';
+
+  @override
+  String get notesExportLock => 'Parola ifadesiyle kilitle';
+
+  @override
+  String get notesExportLockLine =>
+      'Araçlar’da “Kilitli dosya aç” ile ya da bilgisayarda age ile aç';
+
+  @override
+  String get notesExportPlainTitle =>
+      'Parola ifadesi olmadan dışa aktarılsın mı?';
+
+  @override
+  String get notesExportPlainLine =>
+      'Bu dosyayı ele geçiren herkes okuyabilir.';
+
+  @override
+  String get notesExportPlainYes => 'Parolasız dışa aktar';
+
+  @override
+  String get notesExportKeepLock => 'Parola ifadesini koru';
+
+  @override
+  String get notesExportNotSaved => 'Notlar kaydedilmedi. Dosya hâlâ burada.';
+
+  @override
+  String get notesExportGone =>
+      'Kryfo kilitlenince dosya silindi. Yenisini oluşturmak için tekrar dışa aktar.';
+
+  @override
+  String get notesExportSaved => 'Notlar kaydedildi';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Notlar kaydedildi: $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Notlar kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get notesExportFailed =>
+      'Notlar dışa aktarılamadı. Hiçbir şey kaydedilmedi.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Dışa aktarmak için çok büyük. Fotoğraflar ve sesli notlar 4 GB ya da daha fazla tutuyor.';
+
+  @override
+  String get notesExportSubject => 'Kryfo notları';
+
+  @override
   String get onboardingPrivateByDefault => 'VARSAYILAN OLARAK GİZLİ';
 
   @override

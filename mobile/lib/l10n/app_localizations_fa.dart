@@ -3930,6 +3930,98 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notesJotSomethingDown => 'چیزی بنویسید…';
 
   @override
+  String get notesExportNotes => 'برون‌بری یادداشت‌ها';
+
+  @override
+  String get notesExport => 'برون‌بری';
+
+  @override
+  String get notesExportWorking => 'در حال برون‌بری…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ یادداشت، از قدیمی‌ترین.',
+      one: '⁨$countString⁩ یادداشت، از قدیمی‌ترین.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip =>
+      'عکس‌ها و پیام‌های صوتی همراهشان در یک فایل zip می‌روند.';
+
+  @override
+  String get notesExportText => 'متن ساده';
+
+  @override
+  String get notesExportTextLine => 'فایل ‎.txt که همه‌جا باز می‌شود';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'فایل ‎.md با سرعنوان، برای برنامه‌های یادداشت';
+
+  @override
+  String get notesExportLock => 'قفل با عبارت عبور';
+
+  @override
+  String get notesExportLockLine =>
+      'از ابزارها با «باز کردن فایل قفل‌شده» بازش کنید، یا با age روی رایانه';
+
+  @override
+  String get notesExportPlainTitle => 'بدون عبارت عبور برون‌بری شود؟';
+
+  @override
+  String get notesExportPlainLine =>
+      'هر کس این فایل به دستش برسد می‌تواند آن را بخواند.';
+
+  @override
+  String get notesExportPlainYes => 'برون‌بری بدون آن';
+
+  @override
+  String get notesExportKeepLock => 'عبارت عبور بماند';
+
+  @override
+  String get notesExportNotSaved =>
+      'یادداشت‌ها ذخیره نشدند. فایل هنوز اینجاست.';
+
+  @override
+  String get notesExportGone =>
+      'فایل وقتی Kryfo قفل شد پاک شد. برای ساختن فایلی تازه دوباره برون‌بری کنید.';
+
+  @override
+  String get notesExportSaved => 'یادداشت‌ها ذخیره شدند';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'یادداشت‌ها در ⁨$place⁩ ذخیره شدند';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'یادداشت‌ها ذخیره شدند، ولی Kryfo نتوانست نسخه را بررسی کند';
+
+  @override
+  String get notesExportFailed =>
+      'برون‌بری یادداشت‌ها ممکن نشد. چیزی ذخیره نشد.';
+
+  @override
+  String get notesExportTooLarge =>
+      'برای برون‌بری بیش از حد بزرگ است. عکس‌ها و پیام‌های صوتی ۴ گیگابایت یا بیشتر می‌شوند.';
+
+  @override
+  String get notesExportSubject => 'یادداشت‌های Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'به‌طور پیش‌فرض خصوصی';
 
   @override

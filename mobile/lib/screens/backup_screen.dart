@@ -174,7 +174,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final made = _made;
     if (made == null || _saving) return;
     _made = null;
-    unawaited(_shredMade(made.path, lost: _lost));
+    unawaited(shredMade(made.path, lost: _lost));
     if (_notSaved && mounted) setState(() => _notSaved = false);
   }
 
@@ -234,7 +234,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (out) {
       // saved, or the share sheet has a copy of its own: this one goes
       _made = null;
-      unawaited(_shredMade(made.path, lost: _lost));
+      unawaited(shredMade(made.path, lost: _lost));
       if (dropped || !mounted) {
         // another session opened over the save: what went out is said, or
         // asked, once the chats it began in are open again
@@ -285,7 +285,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (!mounted || dropped) {
       // gone under a lock: nothing handed, nothing retired
       _made = null;
-      unawaited(_shredMade(made.path, lost: _lost));
+      unawaited(shredMade(made.path, lost: _lost));
       later();
       if (mounted) Navigator.of(context).pop();
       return;
@@ -331,7 +331,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final made = _made;
     if (made != null && !_saving) {
       _made = null;
-      unawaited(_shredMade(made.path, lost: _lost));
+      unawaited(shredMade(made.path, lost: _lost));
     }
     _p1.dispose();
     _p2.dispose();
@@ -357,14 +357,14 @@ class _BackupScreenState extends State<BackupScreen> {
           children: staggerAllIn(context, [
             // a setup's backup holds the chats it just hid: never a move
             if (!widget.withHiddenChats) ...[
-              _Choice(
+              ChoiceCard(
                 on: !_move,
                 title: l10n.backupBackUp,
                 line: l10n.backupACopyToKeep,
                 onTap: () => _choose(false),
               ),
               const SizedBox(height: 8),
-              _Choice(
+              ChoiceCard(
                 on: _move,
                 title: l10n.backupMoveToAnotherDevice,
                 line: l10n.backupTheFileTakesThis,
@@ -518,12 +518,13 @@ class _BackupScreenState extends State<BackupScreen> {
 
 // one of the two ways: the whole card takes the tap, and the picked one
 // fills its ring on the house spring
-class _Choice extends StatelessWidget {
+class ChoiceCard extends StatelessWidget {
   final bool on;
   final String title;
   final String line;
   final VoidCallback onTap;
-  const _Choice({
+  const ChoiceCard({
+    super.key,
     required this.on,
     required this.title,
     required this.line,
@@ -964,6 +965,25 @@ Future<bool> _saveIdle({required bool unknown}) async {
   }
 }
 
+/// a lock took the file a save is copying: android's copy fails, also in
+/// its check, and takes away what it wrote. true once it was told, which
+/// it heeds before its next read. waits [wait] at most for it to end
+Future<bool> stopSaveForDrop({
+  Duration wait = const Duration(seconds: 3),
+}) async {
+  try {
+    await _platform.invokeMethod<Object?>('saveDocumentCancel', {'drop': true});
+  } catch (_) {
+    return false;
+  }
+  const beat = Duration(milliseconds: 100);
+  for (var waited = Duration.zero; waited < wait; waited += beat) {
+    if (!_running(await _saveStage())) break;
+    await Future<void>.delayed(beat);
+  }
+  return true;
+}
+
 // made files a copy android was told to stop may still read. each goes
 // once a stage reads idle: on the next look, the next resume, the next
 // unlock. never before, so no copy ever saves a file shredded under it
@@ -1012,7 +1032,7 @@ Future<void> _retryShreds() async {
 
 // the made file goes. after a save kryfo stopped waiting for, only once
 // android's copy has ended
-Future<void> _shredMade(String path, {required bool lost}) async {
+Future<void> shredMade(String path, {required bool lost}) async {
   if (!lost) return shredFile(path);
   if (await _saveIdle(unknown: false)) return shredFile(path);
   dlog('backup: a copy may still run, the file waits for it');

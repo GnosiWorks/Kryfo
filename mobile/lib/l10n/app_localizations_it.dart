@@ -3963,6 +3963,96 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notesJotSomethingDown => 'Annota qualcosa…';
 
   @override
+  String get notesExportNotes => 'Esporta le note';
+
+  @override
+  String get notesExport => 'Esporta';
+
+  @override
+  String get notesExportWorking => 'Esportazione…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString note, dalla più vecchia.',
+      one: 'Una nota, dalla più vecchia.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => 'Foto e note vocali vanno con loro in uno zip.';
+
+  @override
+  String get notesExportText => 'Testo semplice';
+
+  @override
+  String get notesExportTextLine => 'Un file .txt che si apre ovunque';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine =>
+      'Un file .md con titoli, per le app di note';
+
+  @override
+  String get notesExportLock => 'Proteggi con una passphrase';
+
+  @override
+  String get notesExportLockLine =>
+      'Aprilo in Strumenti con «Apri un file protetto», o con age su un computer';
+
+  @override
+  String get notesExportPlainTitle => 'Esportare senza passphrase?';
+
+  @override
+  String get notesExportPlainLine => 'Chiunque abbia questo file può leggerlo.';
+
+  @override
+  String get notesExportPlainYes => 'Esporta senza';
+
+  @override
+  String get notesExportKeepLock => 'Tieni la passphrase';
+
+  @override
+  String get notesExportNotSaved =>
+      'Le note non sono state salvate. Il file è ancora qui.';
+
+  @override
+  String get notesExportGone =>
+      'Il file è stato cancellato quando Kryfo si è bloccato. Esporta di nuovo per crearne uno nuovo.';
+
+  @override
+  String get notesExportSaved => 'Note salvate';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return 'Note salvate in $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked =>
+      'Note salvate, ma Kryfo non ha potuto verificare la copia';
+
+  @override
+  String get notesExportFailed =>
+      'Impossibile esportare le note. Non è stato salvato nulla.';
+
+  @override
+  String get notesExportTooLarge =>
+      'Troppo grande da esportare. Foto e note vocali arrivano a 4 GB o più.';
+
+  @override
+  String get notesExportSubject => 'Note di Kryfo';
+
+  @override
   String get onboardingPrivateByDefault => 'PRIVATO DI SERIE';
 
   @override

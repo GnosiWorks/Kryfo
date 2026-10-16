@@ -40,13 +40,15 @@ ShareEnd shareEndOf(Object? answer) => switch (answer) {
 /// the share sheet with a copy of [path] the app keeps and shreds itself,
 /// not the share plugin's, which goes unzeroed at the next share. answers
 /// once the sheet is over: failed when the copy was not made or the sheet
-/// did not open. a [backup] is ciphertext, kept until the next one or a day
+/// did not open. a [backup] is ciphertext, kept until the next one or a day.
+/// a [quiet] copy goes with the next lock, wherever it was shared from
 Future<ShareEnd> shareFileOut(
   String path, {
   String? name,
   String? text,
   String? subject,
   bool backup = false,
+  bool quiet = false,
 }) async {
   try {
     return shareEndOf(
@@ -56,7 +58,7 @@ Future<ShareEnd> shareFileOut(
         'text': text,
         'subject': subject,
         'backup': backup,
-        'quiet': !backup && shareGoesWithLock(),
+        'quiet': !backup && (quiet || shareGoesWithLock()),
       }),
     );
   } catch (e) {

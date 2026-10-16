@@ -3762,6 +3762,88 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesJotSomethingDown => '记点什么…';
 
   @override
+  String get notesExportNotes => '导出笔记';
+
+  @override
+  String get notesExport => '导出';
+
+  @override
+  String get notesExportWorking => '正在导出…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条笔记，从最早的开始。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => '照片和语音会和它们一起放进一个 zip。';
+
+  @override
+  String get notesExportText => '纯文本';
+
+  @override
+  String get notesExportTextLine => '在哪儿都能打开的 .txt 文件';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine => '带标题的 .md 文件，适合笔记应用';
+
+  @override
+  String get notesExportLock => '用密码短语锁定';
+
+  @override
+  String get notesExportLockLine => '在“工具”里用“打开锁定的文件”打开，或在电脑上用 age 打开';
+
+  @override
+  String get notesExportPlainTitle => '不用密码短语导出？';
+
+  @override
+  String get notesExportPlainLine => '任何拿到这个文件的人都能读到内容。';
+
+  @override
+  String get notesExportPlainYes => '不加密导出';
+
+  @override
+  String get notesExportKeepLock => '保留密码短语';
+
+  @override
+  String get notesExportNotSaved => '笔记没有保存。文件还在。';
+
+  @override
+  String get notesExportGone => 'Kryfo 锁定时，文件已清除。再导出一次即可生成新文件。';
+
+  @override
+  String get notesExportSaved => '笔记已保存';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return '笔记已保存到 $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked => '笔记已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get notesExportFailed => '无法导出笔记。什么都没有保存。';
+
+  @override
+  String get notesExportTooLarge => '太大了，无法导出。照片和语音加起来有 4 GB 或更多。';
+
+  @override
+  String get notesExportSubject => 'Kryfo 笔记';
+
+  @override
   String get onboardingPrivateByDefault => '默认私密';
 
   @override
@@ -11894,6 +11976,88 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesJotSomethingDown => '記點什麼…';
+
+  @override
+  String get notesExportNotes => '匯出筆記';
+
+  @override
+  String get notesExport => '匯出';
+
+  @override
+  String get notesExportWorking => '正在匯出…';
+
+  @override
+  String notesExportCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則筆記，從最早的開始。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesExportZip => '照片和語音會和它們一起放進一個 zip。';
+
+  @override
+  String get notesExportText => '純文字';
+
+  @override
+  String get notesExportTextLine => '在哪裡都能開啟的 .txt 檔案';
+
+  @override
+  String get notesExportMarkdown => 'Markdown';
+
+  @override
+  String get notesExportMarkdownLine => '帶標題的 .md 檔案，適合筆記 App';
+
+  @override
+  String get notesExportLock => '用密碼短語鎖定';
+
+  @override
+  String get notesExportLockLine => '在「工具」裡用「開啟鎖定的檔案」開啟，或在電腦上用 age 開啟';
+
+  @override
+  String get notesExportPlainTitle => '不用密碼短語匯出？';
+
+  @override
+  String get notesExportPlainLine => '任何拿到這個檔案的人都能讀到內容。';
+
+  @override
+  String get notesExportPlainYes => '不加密匯出';
+
+  @override
+  String get notesExportKeepLock => '保留密碼短語';
+
+  @override
+  String get notesExportNotSaved => '筆記沒有儲存。檔案還在。';
+
+  @override
+  String get notesExportGone => 'Kryfo 鎖定時，檔案已清除。再匯出一次即可產生新檔案。';
+
+  @override
+  String get notesExportSaved => '筆記已儲存';
+
+  @override
+  String notesExportSavedIn(String place) {
+    return '筆記已儲存到 $place';
+  }
+
+  @override
+  String get notesExportSavedUnchecked => '筆記已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get notesExportFailed => '無法匯出筆記。什麼都沒有儲存。';
+
+  @override
+  String get notesExportTooLarge => '太大了，無法匯出。照片和語音加起來有 4 GB 以上。';
+
+  @override
+  String get notesExportSubject => 'Kryfo 筆記';
 
   @override
   String get onboardingPrivateByDefault => '預設就是私密';
