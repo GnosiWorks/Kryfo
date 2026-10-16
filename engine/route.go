@@ -140,8 +140,8 @@ func routeGeneration() int64 {
 
 // how long relays may all fail while tor claims ready before the route is
 // rebuilt, and the least time between two rebuilds. the gap doubles with
-// every rescue that did not bring a relay back, so a network that is simply
-// gone is not bounced every minute until the battery is.
+// every rescue that did not bring a relay back, so a network that is gone
+// is not bounced every minute until the battery is.
 const deadFor = 60 * time.Second
 
 func rescueGap(n int) time.Duration {
