@@ -13299,6 +13299,12 @@ abstract class AppLocalizations {
   /// **'Disguising'**
   String get voiceDisguising;
 
+  /// said after the next unlock: the app locked while a voice note was still being disguised or saved, and the note was dropped, not sent
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo locked before your voice note went out, so it was not sent'**
+  String get voiceLockedNotSent;
+
   /// settings: voice notes go out disguised in every chat that has not chosen for itself
   ///
   /// In en, this message translates to:

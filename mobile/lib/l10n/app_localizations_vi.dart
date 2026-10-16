@@ -8234,6 +8234,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceDisguising => 'Đang đổi giọng';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo đã khóa trước khi tin nhắn thoại được gửi đi nên tin chưa được gửi';
+
+  @override
   String get settingsDisguiseByDefault => 'Mặc định đổi giọng của tôi';
 
   @override

@@ -2340,6 +2340,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       making?.cancel();
       return dropTake(srcPath, take.masked);
     }
+    final group = widget.groupId;
+    // where the group is as the note leaves: one hidden or brought back
+    // while it is made keeps none of it
+    final home = session.chatKey(group);
+    // said wherever the person is once the lock is down, and only where
+    // the group is still there to see
+    void say(String line) => showHaloToastAnywhere(
+      line,
+      still: () => session.chatKey(group) == home,
+    );
     final uid = newMsgUid();
     final burn = _ghost ? _burnSeconds : null;
     // sent is sent: leaving the chat does not stop it. the lock does, and
@@ -2355,6 +2365,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final m = pending;
       if (m == null || !mounted) return;
       setState(() => _messages.remove(m));
+    }
+
+    // the lock stopped it: its bubble goes, and once the lock is down the
+    // person hears it did not go
+    Future<void> lockedOut(String? masked, {String? placed}) async {
+      unpend();
+      if (placed != null) await shredFile(placed);
+      await dropTake(srcPath, masked);
+      say(l10n.voiceLockedNotSent);
     }
 
     _GMsg bubble() => _GMsg(
@@ -2384,18 +2403,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           _scrollToEnd();
         }
         masked = await making.file;
-        if (locked) return dropTake(srcPath, masked);
+        if (locked) return lockedOut(masked);
       }
       // not made yet: made now, if the disk has room for it
       if (disguise && masked == null && !await roomForVoice(take.ms)) {
         unpend();
         await dropTake(srcPath, null);
-        if (mounted) showHaloToast(context, l10n.voiceNoRoomNotSent);
+        say(l10n.voiceNoRoomNotSent);
         return;
       }
       final File dest;
       try {
-        final mediaDir = await session.mediaDirOf(widget.groupId);
+        if (session.chatKey(group) != home) throw StateError('moved');
+        final mediaDir = await session.mediaDirOf(group);
         dest = File('${mediaDir.path}/vn_$uid.wav');
       } catch (e) {
         dlog('group voice: no media folder (${e.runtimeType})');
@@ -2414,19 +2434,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // never sent as recorded when it was to go disguised
       if (!placed) {
         unpend();
-        if (disguise && mounted) {
+        if (locked) {
+          say(l10n.voiceLockedNotSent);
+        } else if (disguise) {
           final room = await roomForVoice(take.ms);
-          if (mounted) {
-            showHaloToast(
-              context,
-              room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent,
-            );
-          }
+          say(room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent);
         }
         return;
       }
-      // ended while it was recorded, or locked: nothing is kept
-      if (locked || !await _stillHere()) {
+      if (locked) return lockedOut(null, placed: dest.path);
+      // ended while it was recorded: nothing is kept
+      if (!await _stillHere()) {
         unpend();
         return shredFile(dest.path);
       }
@@ -2443,28 +2461,35 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _scrollToEnd();
         HapticFeedback.lightImpact();
       }
+      // the bubble, the row and the wire all say when it was begun
+      final writtenAt = m.when.millisecondsSinceEpoch;
       final kept = await keepOwnGroupFile(
         dest.path,
-        () => session.saveInGroup(
-          appState.sessionId,
-          '',
-          groupId: widget.groupId,
-          msgUid: uid,
-          replyTo: reply,
-          filePath: dest.path,
-          fileName: 'voice.wav',
-          voiceDisguised: disguise,
-          burnSecs: burn,
+        () => appState.keepOwn(
+          group,
+          () => session.saveInGroup(
+            appState.sessionId,
+            '',
+            groupId: group,
+            msgUid: uid,
+            replyTo: reply,
+            filePath: dest.path,
+            fileName: 'voice.wav',
+            voiceDisguised: disguise,
+            burnSecs: burn,
+            writtenAt: writtenAt,
+            home: home,
+          ),
         ),
       );
       if (!kept) return _unkept(m);
       // left while it was made: the screen showing the group now hears of it
-      if (!mounted) appState.chatChanged('group:${widget.groupId}');
+      if (!mounted) appState.chatChanged('group:$group');
       unawaited(
         _sendGroupMedia(
           m,
           () => appState.sendMediaToGroup(
-            widget.groupId,
+            group,
             dest.path,
             msgUid: uid,
             replyTo: reply,
@@ -2472,6 +2497,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             voice: true,
             voiceDisguised: disguise,
             burnSeconds: burn,
+            writtenAt: writtenAt,
           ),
         ),
       );

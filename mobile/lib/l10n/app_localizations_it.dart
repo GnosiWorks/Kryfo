@@ -8317,6 +8317,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voiceDisguising => 'Camuffamento in corso';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo si è bloccato prima che il tuo messaggio vocale partisse, quindi non è stato inviato';
+
+  @override
   String get settingsDisguiseByDefault => 'Camuffa la mia voce di default';
 
   @override

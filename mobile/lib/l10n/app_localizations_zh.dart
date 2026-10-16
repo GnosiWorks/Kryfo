@@ -7883,6 +7883,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceDisguising => '正在变声';
 
   @override
+  String get voiceLockedNotSent => 'Kryfo 在语音消息发出前已锁定，所以没有发出';
+
+  @override
   String get settingsDisguiseByDefault => '默认给我的语音变声';
 
   @override
@@ -15690,6 +15693,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceDisguising => '正在變聲';
+
+  @override
+  String get voiceLockedNotSent => 'Kryfo 在語音訊息送出前已鎖定，所以沒有送出';
 
   @override
   String get settingsDisguiseByDefault => '預設給我的語音變聲';

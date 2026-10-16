@@ -2170,6 +2170,7 @@
   "voiceNoRoom": "Bu telefonda yeterli boş alan yok. Biraz yer aç ve tekrar dene.",
   "voiceNoRoomNotSent": "Sesi gizlemek için yeterli boş alan yoktu, bu yüzden not gönderilmedi",
   "voiceDisguising": "Ses gizleniyor",
+  "voiceLockedNotSent": "Sesli mesajın gitmeden önce Kryfo kilitlendi, bu yüzden gönderilmedi",
   "settingsDisguiseByDefault": "Sesimi varsayılan olarak gizle",
   "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir",
   "fileInstallerLine": "Bu bir uygulama yükleyicisi. Uygulamaları yalnızca güvendiğin kişilerden yükle.",

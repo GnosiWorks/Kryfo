@@ -8372,6 +8372,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceDisguising => 'جارٍ التمويه';
 
   @override
+  String get voiceLockedNotSent =>
+      'قُفل Kryfo قبل أن تُرسل رسالتك الصوتية، لذا لم تُرسل';
+
+  @override
   String get settingsDisguiseByDefault => 'تمويه صوتي افتراضيًا';
 
   @override

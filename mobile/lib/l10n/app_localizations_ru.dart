@@ -8400,6 +8400,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceDisguising => 'Голос меняется';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo заблокировался до отправки голосового сообщения, поэтому оно не отправлено';
+
+  @override
   String get settingsDisguiseByDefault => 'Изменять мой голос по умолчанию';
 
   @override

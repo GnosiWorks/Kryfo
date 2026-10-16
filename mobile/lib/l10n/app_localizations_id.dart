@@ -8241,6 +8241,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceDisguising => 'Sedang disamarkan';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo terkunci sebelum pesan suaramu terkirim, jadi pesan itu tidak dikirim';
+
+  @override
   String get settingsDisguiseByDefault => 'Samarkan suaraku secara bawaan';
 
   @override

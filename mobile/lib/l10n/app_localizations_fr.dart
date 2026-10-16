@@ -8331,6 +8331,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceDisguising => 'Déguisement en cours';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo s’est verrouillé avant l’envoi de votre message vocal, il n’a donc pas été envoyé';
+
+  @override
   String get settingsDisguiseByDefault => 'Déguiser ma voix par défaut';
 
   @override

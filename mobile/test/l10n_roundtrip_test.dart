@@ -3481,6 +3481,10 @@ void main() {
       "There was not enough free space to disguise this note, so it was not sent",
     );
     expect(l.voiceDisguising, "Disguising");
+    expect(
+      l.voiceLockedNotSent,
+      "Kryfo locked before your voice note went out, so it was not sent",
+    );
     expect(l.settingsDisguiseByDefault, "Disguise my voice by default");
     expect(
       l.settingsDisguiseByDefaultHint,

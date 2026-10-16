@@ -9,10 +9,11 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show HaloDb, sweepVoiceLeftovers;
 import 'package:kryfo/picked.dart';
+import 'package:kryfo/session.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
@@ -20,7 +21,7 @@ import 'shred_twin.dart';
 import 'source_body.dart';
 
 class _Rows extends HaloDb {
-  _Rows(this.mem);
+  _Rows(this.mem, [super.container]);
   final MemDb mem;
   @override
   Future<Database> open() async => mem;
@@ -253,67 +254,119 @@ void main() {
     expect(sendPathOf(take.path), '${tmp.path}/vn_1757693091006_s.wav');
   });
 
-  group('a note of ours never written down', () {
-    late Directory docs;
-    setUp(() {
-      TestWidgetsFlutterBinding.ensureInitialized();
-      docs = Directory('${tmp.path}/docs')..createSync();
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (_) async => docs.path,
-          );
-    });
-    tearDown(
-      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            null,
-          ),
+  group('a note kept once its disguise is made', () {
+    const peer = 'someone-we-know';
+    late _Rows live;
+    late Session session;
+    late String home;
+
+    Future<void> person(_Rows db, {int accepted = 1, int archived = 0}) =>
+        db.mem.insert('contacts', {
+          'halo_id': peer,
+          'onion': '',
+          'xpub': 'x',
+          'accepted': accepted,
+          'archived': archived,
+          'blocked': 0,
+          'first_seen': 1,
+          'last_seen': 1,
+        });
+
+    Future<bool> keep(Session s, {bool wasAccepted = true}) => s.saveInChat(
+      peer,
+      home: home,
+      msgUid: 'n1',
+      wasAccepted: wasAccepted,
+      writtenAt: 1000,
+      filePath: '/media/vn_n1.wav',
+      fileName: 'voice.wav',
+      voiceDisguised: true,
     );
 
-    test(
-      'goes from the media folder an hour on, and nothing else does',
-      () async {
-        final db = _Rows(MemDb());
-        final media = await db.container.mediaDir();
-        final now = DateTime(2026, 10, 15, 12);
-        final old = now.subtract(const Duration(hours: 2));
-        File f(String name, {DateTime? at}) => File('${media.path}/$name')
-          ..writeAsBytesSync(List.filled(4096, 7))
-          ..setLastModifiedSync(at ?? old);
-        final kept = f('vn_kept.wav');
-        final byPath = f('vn_other.wav');
-        final unkept = f('vn_lost.wav');
-        final side = f('vn_lost_f.wav');
-        final fresh = f('vn_new.wav', at: now);
-        final photo = f('p_lost.jpg');
-        await db.mem.insert('messages', {
-          'peer_id': 'x',
-          'direction': 'out',
-          'plaintext': '',
-          'sent_at': 1,
-          'msg_uid': 'kept',
-          'file_path': kept.path,
-        });
-        await db.mem.insert('messages', {
-          'peer_id': 'x',
-          'direction': 'out',
-          'plaintext': '',
-          'sent_at': 2,
-          'msg_uid': 'moved',
-          'file_path': byPath.path,
-        });
-        final twin = twinOf(unkept.path, twins);
-        await db.sweepUnkeptVoice(now: now);
-        expect(unkept.existsSync(), isFalse);
-        expect(zeroed(twin), isTrue);
-        expect(side.existsSync(), isFalse);
-        for (final k in [kept, byPath, fresh, photo]) {
-          expect(k.existsSync(), isTrue, reason: k.path);
-        }
-      },
-    );
+    List<Map<String, Object?>> rows(_Rows db) => db.mem.rows('messages');
+
+    setUp(() async {
+      live = _Rows(MemDb());
+      session = Session(live);
+      home = session.chatKey(peer);
+    });
+
+    test('the chat as it was: kept, dated when it was begun', () async {
+      await person(live);
+      expect(await keep(session), isTrue);
+      final r = rows(live).single;
+      expect(r['written_at'], 1000);
+      expect(r['sent_at'], greaterThan(1000));
+      expect(r['file_path'], '/media/vn_n1.wav');
+      expect(r['direction'], 'out');
+      expect(r['sent'], 0);
+    });
+
+    test('a chat that was never accepted stays as it was', () async {
+      await person(live, accepted: 0);
+      expect(await keep(session, wasAccepted: false), isTrue);
+      expect(rows(live), hasLength(1));
+    });
+
+    test('deleted meanwhile: nothing kept', () async {
+      await person(live, accepted: 0, archived: 1);
+      expect(await keep(session), isFalse);
+      expect(await keep(session, wasAccepted: false), isFalse);
+      expect(rows(live), isEmpty);
+    });
+
+    test('hidden from the setup meanwhile: at most a key is left here, and '
+        'nothing is kept', () async {
+      expect(await keep(session), isFalse);
+      await person(live, accepted: 0);
+      expect(await keep(session), isFalse);
+      expect(rows(live), isEmpty);
+    });
+
+    test('hidden from inside the vault meanwhile: nothing kept on either '
+        'side', () async {
+      await person(live);
+      final vault = _Rows(MemDb(), HaloContainer.vault);
+      await person(vault);
+      final open = await Session.withVault(live, vault);
+      expect(open.isHidden(peer), isTrue);
+      expect(await keep(open), isFalse);
+      expect(rows(live), isEmpty);
+      expect(rows(vault), isEmpty);
+    });
+
+    test('brought back out of the vault meanwhile: nothing kept', () async {
+      final vault = _Rows(MemDb(), HaloContainer.vault);
+      await person(vault);
+      final open = await Session.withVault(live, vault);
+      home = open.chatKey(peer);
+      await person(live);
+      expect(await keep(session), isFalse);
+      expect(rows(live), isEmpty);
+    });
+
+    test('a group hidden or brought back meanwhile keeps nothing', () async {
+      const g = 'grp000000001';
+      await live.mem.insert('groups', {
+        'group_id': g,
+        'name': 'g',
+        'created_at': 1,
+      });
+      Future<bool> keepIn(Session s, String home) => s.saveInGroup(
+        'me',
+        '',
+        groupId: g,
+        msgUid: 'g1',
+        filePath: '/media/vn_g1.wav',
+        fileName: 'voice.wav',
+        writtenAt: 1000,
+        home: home,
+      );
+      expect(await keepIn(session, 'elsewhere|$g'), isFalse);
+      expect(rows(live), isEmpty);
+      expect(await keepIn(session, session.chatKey(g)), isTrue);
+      expect(rows(live).single['written_at'], 1000);
+    });
   });
 
   test('a send keeps going once the chat is left, never past the '
@@ -349,6 +402,30 @@ void main() {
         );
       }
     }
+  });
+
+  test('a group note: the lock takes its bubble and says so after, a '
+      'failure says so with the chat closed, and the group as it was when '
+      'the send began keeps it', () {
+    final body = bodyOf(
+      sourceOf('lib/screens/group_chat_screen.dart'),
+      'Future<void> _sendGroupVoice(',
+    );
+    final out = bodyOf(body, 'Future<void> lockedOut(');
+    expect(out, contains('unpend();'));
+    expect(out, contains('say(l10n.voiceLockedNotSent)'));
+    expect('if (locked) return lockedOut('.allMatches(body).length, 2);
+    // nothing said waits on the screen being there
+    expect(body, isNot(contains('showHaloToast(context')));
+    expect(body, contains('showHaloToastAnywhere('));
+    // the home taken before the note is made, and handed to the save
+    final home = body.indexOf('final home = session.chatKey(group);');
+    expect(home, greaterThan(0));
+    expect(home, lessThan(body.indexOf('await making.file')));
+    expect(body, contains('home: home,'));
+    expect(body, contains('appState.keepOwn('));
+    // one time for the bubble, the row and the wire
+    expect('writtenAt: writtenAt,'.allMatches(body).length, 2);
   });
 
   test(

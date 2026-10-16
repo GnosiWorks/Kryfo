@@ -3372,6 +3372,21 @@ class _ChatScreenState extends State<ChatScreen>
     if (!await File(srcPath).exists()) return drop();
     if (!mounted) return drop();
     if (_isDev && !await _ensureDevStarted()) return drop();
+    final peer = widget.peerHaloId;
+    // where the chat is as the note leaves: one hidden, brought back or
+    // deleted while it is made keeps none of it
+    final home = session.chatKey(peer);
+    final bool wasAccepted;
+    try {
+      wasAccepted = await session.isAccepted(peer);
+    } catch (e) {
+      dlog('voice: chat not read (${e.runtimeType})');
+      return drop();
+    }
+    // said wherever the person is once the lock is down, and only where
+    // the chat is still there to see
+    void say(String line) =>
+        showHaloToastAnywhere(line, still: () => session.chatKey(peer) == home);
     // read after the start: an anonymous chat is disguised whatever the
     // note says
     final disguise = take.disguise || _devAnon;
@@ -3389,6 +3404,15 @@ class _ChatScreenState extends State<ChatScreen>
       final m = pending;
       if (m == null || !mounted) return;
       setState(() => _messages.remove(m));
+    }
+
+    // the lock stopped it: its bubble goes, and once the lock is down the
+    // person hears it did not go
+    Future<void> lockedOut(String? masked, {String? placed}) async {
+      unpend();
+      if (placed != null) await shredFile(placed);
+      await dropTake(srcPath, masked);
+      say(l10n.voiceLockedNotSent);
     }
 
     try {
@@ -3414,18 +3438,19 @@ class _ChatScreenState extends State<ChatScreen>
         });
         _scrollToEnd();
         masked = await making.file;
-        if (locked) return dropTake(srcPath, masked);
+        if (locked) return lockedOut(masked);
       }
       // not made yet: made now, if the disk has room for it
       if (disguise && masked == null && !await roomForVoice(take.ms)) {
         unpend();
         await dropTake(srcPath, null);
-        if (mounted) showHaloToast(context, l10n.voiceNoRoomNotSent);
+        say(l10n.voiceNoRoomNotSent);
         return;
       }
       final String filePath;
       try {
-        final mediaDir = await session.mediaDirOf(widget.peerHaloId);
+        if (session.chatKey(peer) != home) throw StateError('moved');
+        final mediaDir = await session.mediaDirOf(peer);
         filePath = '${mediaDir.path}/vn_$msgUid.wav';
       } catch (e) {
         dlog('voice: no media folder (${e.runtimeType})');
@@ -3444,21 +3469,15 @@ class _ChatScreenState extends State<ChatScreen>
       // never sent as recorded when it was to go disguised
       if (!placed) {
         unpend();
-        if (disguise && mounted) {
+        if (locked) {
+          say(l10n.voiceLockedNotSent);
+        } else if (disguise) {
           final room = await roomForVoice(take.ms);
-          if (mounted) {
-            showHaloToast(
-              context,
-              room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent,
-            );
-          }
+          say(room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent);
         }
         return;
       }
-      if (locked) {
-        unpend();
-        return shredFile(filePath);
-      }
+      if (locked) return lockedOut(null, placed: filePath);
       if (_requestPending && mounted) setState(() => _sentCount++);
       final msg =
           pending ??
@@ -3488,23 +3507,38 @@ class _ChatScreenState extends State<ChatScreen>
         HapticFeedback.lightImpact();
       }
       await _answerSupport();
-      await session.saveMessage(
-        widget.peerHaloId,
-        'out',
-        '',
-        msgUid: msgUid,
-        replyTo: replyToUid,
-        filePath: filePath,
-        fileName: 'voice.wav',
-        voiceDisguised: disguise,
-        burnAt: msg.burnAt,
-        burnSecs: msg.burnSecs,
-        sent: 0,
-      );
+      // the bubble, the row and the wire all say when it was begun
+      final writtenAt = msg.when.millisecondsSinceEpoch;
+      var kept = false;
+      try {
+        kept = await appState.keepOwn(
+          peer,
+          () => session.saveInChat(
+            peer,
+            home: home,
+            msgUid: msgUid,
+            wasAccepted: wasAccepted,
+            writtenAt: writtenAt,
+            replyTo: replyToUid,
+            filePath: filePath,
+            fileName: 'voice.wav',
+            voiceDisguised: disguise,
+            burnAt: msg.burnAt,
+            burnSecs: msg.burnSecs,
+            sent: 0,
+          ),
+        );
+      } catch (e) {
+        dlog('voice: row not kept (${e.runtimeType})');
+      }
+      if (!kept) {
+        if (mounted) setState(() => _messages.remove(msg));
+        return shredFile(filePath);
+      }
       // the home row moves up on what you sent too
       unawaited(appState.refreshContacts());
       // left while it was made: the screen showing the chat now hears of it
-      if (!mounted) appState.chatChanged(widget.peerHaloId);
+      if (!mounted) appState.chatChanged(peer);
       _sendChunkedMedia(
         path: filePath,
         msgUid: msgUid,
@@ -3513,7 +3547,7 @@ class _ChatScreenState extends State<ChatScreen>
         voiceDisguised: disguise,
         burnSeconds: msg.burnSecs,
         replyTo: replyToUid,
-        writtenAt: msg.when.millisecondsSinceEpoch,
+        writtenAt: writtenAt,
       ).then((result) => _finishMediaSend(msg, result));
     } finally {
       unguard();
@@ -4410,11 +4444,13 @@ class _ChatScreenState extends State<ChatScreen>
     final ix = _messages.length - 1 - i;
     final m = _messages[ix];
     // an empty control message that leaked through would be a blank bubble.
-    // a sticker this version does not have may have no text at all
+    // a sticker this version does not have may have no text at all. a voice
+    // note still being disguised has no file yet
     if (m.text.isEmpty &&
         m.sticker == null &&
         m.mediaPath == null &&
         m.filePath == null &&
+        m.making == null &&
         m.preview == null) {
       return const SizedBox.shrink();
     }

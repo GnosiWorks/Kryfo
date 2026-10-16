@@ -2170,6 +2170,7 @@
   "voiceNoRoom": "Non c'è abbastanza spazio libero su questo telefono. Libera un po' di spazio e riprova.",
   "voiceNoRoomNotSent": "Non c'era abbastanza spazio per camuffare questa nota, quindi non è stata inviata",
   "voiceDisguising": "Camuffamento in corso",
+  "voiceLockedNotSent": "Kryfo si è bloccato prima che il tuo messaggio vocale partisse, quindi non è stato inviato",
   "settingsDisguiseByDefault": "Camuffa la mia voce di default",
   "settingsDisguiseByDefaultHint": "Ogni chat può cambiarlo nel suo menu",
   "fileInstallerLine": "Questo è il file di installazione di un'app. Installa app solo da persone di cui ti fidi.",

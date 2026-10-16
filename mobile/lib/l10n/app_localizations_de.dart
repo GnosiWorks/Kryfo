@@ -8338,6 +8338,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceDisguising => 'Wird verfremdet';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo wurde gesperrt, bevor deine Sprachnachricht rausging, daher wurde sie nicht gesendet';
+
+  @override
   String get settingsDisguiseByDefault =>
       'Meine Stimme standardmäßig verfremden';
 

@@ -1094,6 +1094,7 @@ class ArrivalRows implements HaloDb {
     String? preview,
     String? poll,
     String? sticker,
+    int? writtenAt,
   }) async {
     if (!groupRows.containsKey(groupId)) return false;
     await saveMessage(
@@ -1112,6 +1113,7 @@ class ArrivalRows implements HaloDb {
       preview: preview,
       poll: poll,
       sticker: sticker,
+      writtenAt: writtenAt,
     );
     return true;
   }

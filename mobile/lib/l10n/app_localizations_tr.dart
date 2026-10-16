@@ -8269,6 +8269,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceDisguising => 'Ses gizleniyor';
 
   @override
+  String get voiceLockedNotSent =>
+      'Sesli mesajın gitmeden önce Kryfo kilitlendi, bu yüzden gönderilmedi';
+
+  @override
   String get settingsDisguiseByDefault => 'Sesimi varsayılan olarak gizle';
 
   @override

@@ -9,7 +9,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show HaloDb;
+import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -20,6 +21,16 @@ class _Rows extends HaloDb {
   final MemDb mem;
   @override
   Future<Database> open() async => mem;
+}
+
+// a start whose repair of a cut-short vault move fails, or goes through
+class _App extends AppState {
+  _App({required this.cut});
+  final bool cut;
+  @override
+  Future<void> repairVaultMoves() async {
+    if (cut) throw StateError('cut short');
+  }
 }
 
 const _peer = 'someone-we-know';
@@ -187,10 +198,59 @@ void main() {
     test('start sweeps them before anything else runs', () {
       final src = File('lib/main.dart').readAsStringSync();
       final boot = src.substring(src.indexOf('Future<void> _boot() async'));
-      final sweep = boot.indexOf('_sweepUnnamedMedia(');
+      final tidy = boot.indexOf('tidyAtStart(');
+      expect(tidy, greaterThan(0));
+      expect(tidy, lessThan(boot.indexOf('ready = true')));
+      final at = src.indexOf('Future<void> tidyAtStart(');
+      final body = src.substring(at, src.indexOf('\n  }\n', at));
+      final sweep = body.indexOf('_sweepUnnamedMedia(');
       expect(sweep, greaterThan(0));
-      expect(sweep, lessThan(boot.indexOf('ready = true')));
-      expect(boot.indexOf('repairVaultMoves()'), lessThan(sweep));
+      expect(body.indexOf('repairVaultMoves()'), lessThan(sweep));
+      // nothing else sweeps the media folder at start
+      expect('_sweepUnnamedMedia('.allMatches(src).length, 2);
+      expect(boot.indexOf('unnamedMedia('), -1);
+    });
+
+    group('at start', () {
+      // what a crash left: a note never written down and its level file,
+      // and a hidden chat's note whose row a cut-short move left in the
+      // vault
+      late List<File> left;
+      setUp(() {
+        useDatabasesForTest(db, Session(db));
+        final old = DateTime.now().subtract(const Duration(hours: 2));
+        left = [
+          for (final n in ['vn_lost.wav', 'vn_lost_f.wav', 'vn_hidden.wav'])
+            File(p.join(media.path, n))
+              ..writeAsBytesSync(List.filled(4096, 7))
+              ..setLastModifiedSync(old),
+        ];
+      });
+
+      Future<bool> gone(File f) async {
+        for (var i = 0; i < 100 && f.existsSync(); i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        return !f.existsSync();
+      }
+
+      test('a vault move still open keeps every file', () async {
+        final kept = await row('k1');
+        await _App(cut: true).tidyAtStart(DateTime.now());
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        for (final f in [...left, kept]) {
+          expect(f.existsSync(), isTrue, reason: f.path);
+        }
+      });
+
+      test('once the moves are settled what nothing names goes', () async {
+        final kept = await row('k1');
+        await _App(cut: false).tidyAtStart(DateTime.now());
+        for (final f in left) {
+          expect(await gone(f), isTrue, reason: f.path);
+        }
+        expect(kept.existsSync(), isTrue);
+      });
     });
   });
 }

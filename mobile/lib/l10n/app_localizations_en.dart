@@ -8240,6 +8240,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDisguising => 'Disguising';
 
   @override
+  String get voiceLockedNotSent =>
+      'Kryfo locked before your voice note went out, so it was not sent';
+
+  @override
   String get settingsDisguiseByDefault => 'Disguise my voice by default';
 
   @override

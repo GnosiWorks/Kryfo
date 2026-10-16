@@ -3310,6 +3310,65 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  /// a file of this phone's own in the chat with [peerId], kept in the
+  /// same go as a look that the chat is still here: one deleted, or hidden
+  /// away while it was made, keeps nothing. [wasAccepted] is what the chat
+  /// was when the send began. false then
+  Future<bool> saveInChat(
+    String peerId, {
+    required String msgUid,
+    required bool wasAccepted,
+    required int writtenAt,
+    String? replyTo,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int? burnAt,
+    int? burnSecs,
+    int sent = 0,
+  }) async {
+    final db = await open();
+    final id = await db.transaction((t) async {
+      final c = await t.query(
+        'contacts',
+        columns: ['accepted', 'archived'],
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+        limit: 1,
+      );
+      if (c.isEmpty) return null;
+      final accepted = c.first['accepted'] == 1;
+      // a deleted chat is parked: unaccepted and archived. a hidden one
+      // leaves at most a key here, unaccepted
+      if (!accepted && (wasAccepted || c.first['archived'] == 1)) return null;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      return t.insert('messages', {
+        'peer_id': peerId,
+        'direction': 'out',
+        'plaintext': '',
+        'sent_at': now,
+        'written_at': writtenAt,
+        'burn_at': burnAt,
+        'burn_secs': burnSecs,
+        'msg_uid': msgUid,
+        'reply_to': replyTo,
+        'file_path': filePath,
+        'file_name': fileName == null ? null : unmarked(fileName),
+        'voice_disguised': voiceDisguised ? 1 : 0,
+        'saved': 0,
+        'sent': sent,
+        'secure': 0,
+      });
+    });
+    if (id == null) return false;
+    try {
+      await indexSearchRow(db, id, {'plaintext': '', 'file_name': fileName});
+    } catch (e) {
+      dlog('search: not indexed now: $e');
+    }
+    return true;
+  }
+
   /// a row of this phone's own in group [groupId], kept in the same go as
   /// a look that the group is still here: one that ended, was left or was
   /// taken out of keeps nothing. false then
@@ -3328,6 +3387,8 @@ class HaloDb implements GroupOwedStore {
     String? preview,
     String? poll,
     String? sticker,
+    // when it was begun, if not now
+    int? writtenAt,
   }) async {
     final db = await open();
     final id = await db.transaction((t) async {
@@ -3345,7 +3406,7 @@ class HaloDb implements GroupOwedStore {
         'direction': 'out',
         'plaintext': unmarked(plaintext),
         'sent_at': now,
-        'written_at': now,
+        'written_at': writtenAt ?? now,
         'burn_secs': burnSecs,
         'msg_uid': msgUid,
         'reply_to': replyTo,
@@ -7028,45 +7089,6 @@ class HaloDb implements GroupOwedStore {
     // counted again from what is left, and held to the cap
     _unfinished = null;
     await trimUnfinishedMedia();
-  }
-
-  // a voice note of ours moved into the media folder and never written
-  // down, as a crash between the two leaves it. an hour on nothing will
-  // write it down, so it goes; one a row names by uid or path stays
-  Future<void> sweepUnkeptVoice({DateTime? now}) async {
-    final dir = await container.mediaDir();
-    final at = now ?? DateTime.now();
-    final old = <File>[];
-    await for (final e in dir.list(followLinks: false)) {
-      final name = p.basename(e.path);
-      if (e is! File || !name.startsWith('vn_') || !name.endsWith('.wav')) {
-        continue;
-      }
-      final DateTime made;
-      try {
-        made = (await e.stat()).modified;
-      } catch (_) {
-        continue;
-      }
-      if (at.difference(made) >= const Duration(hours: 1)) old.add(e);
-    }
-    if (old.isEmpty) return;
-    final db = await open();
-    for (final f in old) {
-      final name = p.basename(f.path);
-      final uid = name.substring(3, name.length - 4);
-      for (final (col, v) in [('msg_uid', uid), ('file_path', f.path)]) {
-        final r = await db.query(
-          'messages',
-          columns: ['msg_uid'],
-          where: '$col = ?',
-          whereArgs: [v],
-          limit: 1,
-        );
-        if (r.isNotEmpty) break;
-        if (col == 'file_path') await shredFile(f.path);
-      }
-    }
   }
 
   // an accepted contact, or a member of a group here
@@ -17139,6 +17161,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a row of ours for [chat] written after a wait, as a voice note's once
+  // its disguise is made: a move of the chat under way ends first, and one
+  // that starts waits for it, as for an arrival
+  Future<T> keepOwn<T>(String chat, Future<T> Function() work) async {
+    if (_moveDone != null) await _afterMove(chat, null);
+    _arriving[chat] = (_arriving[chat] ?? 0) + 1;
+    try {
+      return await work();
+    } finally {
+      final n = (_arriving[chat] ?? 1) - 1;
+      n > 0 ? _arriving[chat] = n : _arriving.remove(chat);
+    }
+  }
+
   Future<void> _afterMove(String sender, String? groupId) async {
     while (true) {
       final done = _moveDone;
@@ -19543,6 +19579,23 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a move a crash cut short put right, as its list entry says, then the
+  // files no message names any more go, before anything here can move or
+  // write one. with a move still open the rows may be on the other side,
+  // so nothing goes. a file from the last minutes may be one another start
+  // of the app is still filing
+  @visibleForTesting
+  Future<void> tidyAtStart(DateTime bootAt) async {
+    try {
+      await repairVaultMoves();
+    } catch (e) {
+      dlog('vault: repair left for the next start (${e.runtimeType})');
+      return;
+    }
+    await _dropGroupLeftovers(live);
+    await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
+  }
+
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
@@ -19571,22 +19624,7 @@ class AppState extends ChangeNotifier {
     // the hidden chats' list, before anything can arrive: without it an
     // arrival for one would land in the everyday container
     await _router.load();
-    // and a move a crash cut short put right, as its list entry says
-    var settled = true;
-    try {
-      await repairVaultMoves();
-    } catch (e) {
-      settled = false;
-      dlog('vault: repair left for the next start (${e.runtimeType})');
-    }
-    // files no message names any more go, before anything here can move
-    // or write one. with a move still open the rows may be on the other
-    // side. a file from the last minutes may be one another start of the
-    // app is still filing
-    if (settled) {
-      await _dropGroupLeftovers(live);
-      await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
-    }
+    await tidyAtStart(bootAt);
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;
@@ -19663,11 +19701,6 @@ class AppState extends ChangeNotifier {
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
-    unawaited(
-      live.sweepUnkeptVoice().catchError((Object e) {
-        dlog('sweep: unkept voice (${e.runtimeType})');
-      }),
-    );
     _deliveryMode = await loadDeliveryMode();
     // drafts written down by a restart, asked for or not
     await restoreKeptDrafts().catchError((Object e) {
