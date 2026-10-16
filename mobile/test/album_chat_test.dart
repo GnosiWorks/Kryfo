@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
+import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
@@ -26,6 +27,7 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/album_grid.dart';
+import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
@@ -47,6 +49,11 @@ class _Db extends DevTestDb {
 
   final deleted = <String>[];
   final frames = <String>[];
+
+  // the chat's screenshot block, as its row holds it
+  var shots = const ChatShots();
+  @override
+  Future<ChatShots> shotsOf(String peer) async => shots;
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {
@@ -500,6 +507,51 @@ void main() {
     final grid = t.widget<AlbumGrid>(find.byType(AlbumGrid));
     expect(grid.tiles, hasLength(2));
     expect(grid.tiles.every((x) => x?.path != null), isTrue);
+    await devClose(t);
+  });
+
+  // the line saying who changed the screenshot block last, as drawn
+  ChatShots changed(int when) =>
+      ChatShots(can: 10, by: kShotsByThem, when: when, known: true);
+
+  testWidgets('the screenshot line changed right after an album is drawn '
+      'under it', (t) async {
+    await text('t0', 'before', base);
+    for (var i = 0; i < 3; i++) {
+      await item(i, 3);
+    }
+    db.shots = changed(base + 600000);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.byType(ShotsLine), findsOneWidget);
+    expect(
+      t.getCenter(find.byType(ShotsLine)).dy,
+      greaterThan(t.getCenter(find.byType(AlbumGrid)).dy),
+    );
+    await devClose(t);
+  });
+
+  testWidgets('the screenshot line changed between an album\'s items goes '
+      'with the album, once', (t) async {
+    await text('t0', 'before', base);
+    for (var i = 0; i < 3; i++) {
+      await item(i, 3);
+    }
+    await text('t1', 'after', base + 600000);
+    // after the second item was written, before the third
+    db.shots = changed(base + 60000 + 1500);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.byType(ShotsLine), findsOneWidget);
+    final y = t.getCenter(find.byType(ShotsLine)).dy;
+    expect(
+      y,
+      greaterThan(t.getCenter(find.text('before', findRichText: true)).dy),
+    );
+    expect(y, lessThan(t.getCenter(find.byType(AlbumGrid)).dy));
+    expect(y, lessThan(t.getCenter(find.text('after', findRichText: true)).dy));
     await devClose(t);
   });
 }

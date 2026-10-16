@@ -4792,20 +4792,24 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // where the block last changed: over the first row since, or under the
-  // newest one when nothing came after it
+  // newest one when nothing came after it. an album's member is drawn by
+  // its lead, so the line goes with the lead's row
   Widget? _shotsLineAt(int ix, {required bool below}) {
     final s = _shots;
     if (s.by == kShotsByNone || s.when <= 0 || _messages.isEmpty) return null;
     final at = DateTime.fromMillisecondsSinceEpoch(s.when);
-    final m = _messages[ix];
-    if (below) {
-      if (ix != _messages.length - 1 || !m.when.isBefore(at)) return null;
-    } else {
-      if (m.when.isBefore(at)) return null;
-      if (ix == 0 ? _hasMore : !_messages[ix - 1].when.isBefore(at)) {
-        return null;
-      }
-    }
+    final row = _messages[ix];
+    final run = _albums.runOf(row);
+    final here = run == null
+        ? _shotsLineBy(ix, at, below: below)
+        : run.present.any(
+            (x) => _shotsLineBy(
+              _messages.lastIndexWhere((m) => identical(m, x)),
+              at,
+              below: below,
+            ),
+          );
+    if (!here) return null;
     return ShotsLine(
       key: const ValueKey('shots-line'),
       on: s.on,
@@ -4815,6 +4819,15 @@ class _ChatScreenState extends State<ChatScreen>
         name: _nickname ?? widget.peerHaloId,
       ),
     );
+  }
+
+  // whether the line falls over row [ix], or under it
+  bool _shotsLineBy(int ix, DateTime at, {required bool below}) {
+    if (ix < 0) return false;
+    final m = _messages[ix];
+    if (below) return ix == _messages.length - 1 && m.when.isBefore(at);
+    if (m.when.isBefore(at)) return false;
+    return ix == 0 ? !_hasMore : _messages[ix - 1].when.isBefore(at);
   }
 
   // a page title only while the words still lead with its link: an edit
