@@ -634,9 +634,6 @@ class _ZigZagWarmupPainter extends CustomPainter {
   }
 
   void _drawLabel(Canvas canvas, String text, double cx) {
-    final accent = green
-        ? kGreen.withValues(alpha: 0.7)
-        : kAmber.withValues(alpha: 0.7);
     final tp = TextPainter(
       text: TextSpan(
         text: text,
@@ -645,7 +642,10 @@ class _ZigZagWarmupPainter extends CustomPainter {
           fontFamilyFallback: HaloType.monoFallbackNow,
           fontSize: 7,
           fontWeight: FontWeight.w500,
-          color: green || activeIdx >= 0 || lit.isNotEmpty ? accent : kText3,
+          color: warmupLabelInk(
+            green: green,
+            on: green || activeIdx >= 0 || lit.isNotEmpty,
+          ),
           letterSpacing: track(1.3),
         ),
       ),
@@ -1119,4 +1119,16 @@ class _BlinkCursorState extends State<BlinkCursor>
       );
     },
   );
+}
+
+// the node names under the tor graph. dark keeps its soft tones; light
+// needs real ink, the canvas sits on the sheet's light ground
+@visibleForTesting
+Color warmupLabelInk({required bool green, required bool on}) {
+  if (HaloColors.isLight) {
+    if (!on) return HaloColors.text3;
+    return green ? HaloColors.greenText : HaloColors.warnText;
+  }
+  if (!on) return kText3;
+  return (green ? kGreen : kAmber).withValues(alpha: 0.7);
 }

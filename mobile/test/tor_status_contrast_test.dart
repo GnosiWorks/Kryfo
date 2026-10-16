@@ -76,6 +76,20 @@ void main() {
     }
   }
 
+  test('the graph node names read in light theme', () {
+    HaloColors.setLight(true);
+    for (final green in [true, false]) {
+      for (final on in [true, false]) {
+        final ink = warmupLabelInk(green: green, on: on);
+        expect(
+          _ratio(ink, HaloColors.surface2),
+          greaterThanOrEqualTo(4.5),
+          reason: 'green $green, on $on: $ink',
+        );
+      }
+    }
+  });
+
   test('the home pill words reach 4.5:1 on the surfaces, both themes', () {
     for (final light in [true, false]) {
       HaloColors.setLight(light);
