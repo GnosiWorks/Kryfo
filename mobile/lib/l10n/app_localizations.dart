@@ -537,79 +537,79 @@ abstract class AppLocalizations {
   /// **'Unlock Kryfo'**
   String get lockStateUnlockKryfo;
 
-  /// main.dart
+  /// app/links.dart
   ///
   /// In en, this message translates to:
   /// **'Invalid uri'**
   String get appInvalidUri;
 
-  /// main.dart
+  /// app/links.dart
   ///
   /// In en, this message translates to:
   /// **'Bundle error: {e}'**
   String appBundleError(Object e);
 
-  /// main.dart
+  /// app/links.dart
   ///
   /// In en, this message translates to:
   /// **'Already saved: {parsed}'**
   String appAlreadySaved(Object parsed);
 
-  /// main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
+  /// delivery_mode.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
   ///
   /// In en, this message translates to:
   /// **'{line} long window'**
   String appLongWindow(Object line);
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'{line} ({held} of {subs}, connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})'**
   String appOf(Object line, int held, int subs, Object c, int p, int e);
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'{line} (connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})'**
   String appConnectSPagesEvents(Object line, Object c, int p, int e);
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'{host} {secs}s dropped'**
   String appSDropped(Object host, Object secs);
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'{host} {secs}s'**
   String appS(Object host, Object secs);
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'Tor would not wake'**
   String get appTorWouldNotWake;
 
-  /// main.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line
+  /// delivery_mode.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line
   ///
   /// In en, this message translates to:
   /// **'Started'**
   String get appCheckStarted;
 
-  /// main.dart
+  /// delivery_mode.dart
   ///
   /// In en, this message translates to:
   /// **'Tor not ready in 75s'**
   String get appTorNotReadyIn;
 
-  /// main.dart
+  /// delivery_mode.dart, widgets/kryfo_link_text.dart, screens/room_preview_sheet.dart
   ///
   /// In en, this message translates to:
   /// **'OK'**
   String get appOk;
 
-  /// main.dart: a check-in that brought tor up but no relay started answering in 45s
+  /// delivery_mode.dart: a check-in that brought tor up but no relay started answering in 45s
   ///
   /// In en, this message translates to:
   /// **'OK, no relay began'**
@@ -621,109 +621,109 @@ abstract class AppLocalizations {
   /// **'No relay reached'**
   String get appNoRelayReached;
 
-  /// main.dart: a check-in that was cut off at 90s
+  /// delivery_mode.dart: a check-in that was cut off at 90s
   ///
   /// In en, this message translates to:
   /// **'OK, capped'**
   String get appOkCapped;
 
-  /// main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.
+  /// delivery_mode.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.
   ///
   /// In en, this message translates to:
   /// **'{why, select, push{{how}, {secs}s, by push} other{{how}, {secs}s, by job}}'**
   String appSBy(Object how, int secs, String why);
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'An attachment could not be saved on this phone'**
   String get appAnAttachmentCouldNot;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Group'**
   String get appGroup2;
 
-  /// main.dart
+  /// app/arrivals.dart
   ///
   /// In en, this message translates to:
   /// **'Voice message'**
   String get appVoiceMessage;
 
-  /// main.dart
+  /// app/state.dart and app/arrivals.dart
   ///
   /// In en, this message translates to:
   /// **'Photo'**
   String get appPhoto;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'New request'**
   String get appNewRequest;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Someone you have not added wrote to you'**
   String get appSomeoneYouHaveNot;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Setting up your keys'**
   String get appSettingUpYourKeys;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Opening your chats'**
   String get appOpeningYourChats;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Starting Tor'**
   String get appStartingTor;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Timed messages are not clearing. Restart Kryfo'**
   String get appTimedMessagesAreNot;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Voice message'**
   String get appVoiceMessage2;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'You: {body}'**
   String appYou(Object body);
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'This room has already expired'**
   String get appThisRoomHasAlready;
 
-  /// main.dart
+  /// app/state.dart and app/links.dart
   ///
   /// In en, this message translates to:
   /// **'You are already in this room'**
   String get appYouAreAlreadyIn;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Could not make a room key'**
   String get appCouldNotMakeA;
 
-  /// main.dart
+  /// app/state.dart
   ///
   /// In en, this message translates to:
   /// **'Joined {linkName}'**
@@ -783,361 +783,361 @@ abstract class AppLocalizations {
   /// **'No seat is free right now. Try again later, or ask whoever shared the link.'**
   String get roomJoinFullLine;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Booting...'**
   String get appBooting;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Setting up your identity...'**
   String get appSettingUpYourIdentity;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Add someone'**
   String get appAddSomeone;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Scan their code, or paste what they gave you: a link, an @handle, or a room link.'**
   String get appScanTheirCodeOr;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Scan their code'**
   String get appScanTheirCode;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'A Kryfo link, a room link or @wren'**
   String get appAKryfoLinkA;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Add them'**
   String get appAddThem;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Every way to add someone'**
   String get appEveryWayToAdd;
 
-  /// main.dart
+  /// app/shell.dart
   ///
   /// In en, this message translates to:
   /// **'Show your code, send a link, claim a handle'**
   String get appShowYourCodeSend;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Hello from the other side'**
   String get appHelloFromTheOther;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Identity restored'**
   String get appIdentityRestored;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Identity created'**
   String get appIdentityCreated;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Starting Tor (~30s)...'**
   String get appStartingTor30s;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Scan or import a peer first'**
   String get appScanOrImportA;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Encrypting + sending (~30s)...'**
   String get appEncryptingSending30s;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Tap start listening first'**
   String get appTapStartListeningFirst;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Your Kryfo'**
   String get appYourKryfo;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Uri copied'**
   String get appUriCopied;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Copy uri'**
   String get appCopyUri;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Add a Kryfo'**
   String get appAddAKryfo;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Scan qr'**
   String get appScanQr;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Pairing code'**
   String get appPairingCode;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'- Or paste -'**
   String get appOrPaste;
 
-  /// main.dart, media_progress.dart, screens/chat_screen.dart, screens/group_chat_screen.dart, screens/settings_screen.dart
+  /// app/dev_screen.dart, media_progress.dart, screens/chat_screen.dart, screens/group_chat_screen.dart, screens/settings_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
   String get commonCancel;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Import'**
   String get appImport;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Dev'**
   String get appDev;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Your Kryfo:'**
   String get appYourKryfo2;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Restored from disk'**
   String get appRestoredFromDisk;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Start listening'**
   String get appStartListening;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Listening'**
   String get appListening;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Show my qr'**
   String get appShowMyQr;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Import peer'**
   String get appImportPeer;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Peer:'**
   String get appPeer;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Message (will be encrypted)'**
   String get appMessageWillBeEncrypted;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Encrypt + send'**
   String get appEncryptSend;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Status: {status}'**
   String appStatus(Object status);
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Speed & privacy →'**
   String get appSpeedPrivacy;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Getting messages →'**
   String get appGettingMessages;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Disable app lock?'**
   String get appDisableAppLock;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'The PIN will be removed. Anyone with your phone will see Kryfo when they open it.'**
   String get appThePinWillBe;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Disable'**
   String get appDisable;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'App lock · on →'**
   String get appAppLockOn;
 
-  /// main.dart
+  /// app/dev_screen.dart
   ///
   /// In en, this message translates to:
   /// **'App lock · off →'**
   String get appAppLockOff;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor is off'**
   String get appTorIsOff;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Connected · routed through 3 relays'**
   String get appConnectedRoutedThrough3;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Ready to send · publishing your address'**
   String get appReadyToSendPublishing;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Ready to send · finishing setup'**
   String get appReadyToSendFinishing;
 
-  /// main.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
+  /// app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
   /// **'Connecting · {pct}'**
   String appConnecting(Object pct);
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor'**
   String get appTor;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor is off. Turn it on to connect privately.'**
   String get appTorIsOffTurn;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'The first connection takes a minute or two while Tor builds a private route. After that it is cached, so opening Kryfo later is much faster.'**
   String get appTheFirstConnectionTakes;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor is up, but no relay is answering yet. Kryfo keeps trying, and messages wait here until one does.'**
   String get appTorNoRelayYet;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.'**
   String get appRelayAndFastModes;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Via relay'**
   String get appViaRelay;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Offline'**
   String get appOffline;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Fast'**
   String get appFast;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor off'**
   String get appTorOff;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Tor ready'**
   String get appTorReady;
 
-  /// main.dart
+  /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Connecting'**
   String get appConnecting2;
 
-  /// main.dart. the home pill, when tor is up but no relay has answered for a while. keep it short
+  /// app/gates.dart. the home pill, when tor is up but no relay has answered for a while. keep it short
   ///
   /// In en, this message translates to:
   /// **'Waiting for a relay'**
@@ -4341,7 +4341,7 @@ abstract class AppLocalizations {
   /// **'New link. The old one no longer works.'**
   String get roomLinkNewLinkTheOld;
 
-  /// main.dart
+  /// app/groups.dart
   ///
   /// In en, this message translates to:
   /// **'{count, plural, one{A group holds up to {count} person} other{A group holds up to {count} people}}'**
@@ -12639,13 +12639,13 @@ abstract class AppLocalizations {
   /// **'Stickers could not be loaded'**
   String get stickerCouldNotLoad;
 
-  /// a sticker named in words: chat list row, notification, reply quote, pins, saved (main.dart and the chat screens)
+  /// a sticker named in words: chat list row, notification, reply quote, pins, saved (app/state.dart and the chat screens)
   ///
   /// In en, this message translates to:
   /// **'Sticker'**
   String get stickerLabel;
 
-  /// a timed message that came in and has not been read, named in words instead of its own: chat list row and reply quote (main.dart and the chat screens). its words show only on its bubble, where reading them starts its clock
+  /// a timed message that came in and has not been read, named in words instead of its own: chat list row and reply quote (app/state.dart and the chat screens). its words show only on its bubble, where reading them starts its clock
   ///
   /// In en, this message translates to:
   /// **'Timed message'**
@@ -12657,7 +12657,7 @@ abstract class AppLocalizations {
   /// **'From a newer Kryfo'**
   String get stickerNewer;
 
-  /// a scanned or pasted card with the developer's three words and another key (main.dart, handleHaloUriAdded). "Marios" stays in Latin letters
+  /// a scanned or pasted card with the developer's three words and another key (app/links.dart, handleHaloUriAdded). "Marios" stays in Latin letters
   ///
   /// In en, this message translates to:
   /// **'This link says it is Marios, but its key does not match. It was not added.'**
@@ -13071,25 +13071,25 @@ abstract class AppLocalizations {
   /// **'Keep the one I have'**
   String get nameTakenKeep;
 
-  /// main.dart: a link, card or handle that is your own was added
+  /// app/links.dart: a link, card or handle that is your own was added
   ///
   /// In en, this message translates to:
   /// **'This is your own invite. Share it with someone else to connect.'**
   String get appYourOwnInvite;
 
-  /// main.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
+  /// app/links.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
   ///
   /// In en, this message translates to:
   /// **'Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.'**
   String appLinkWordsTaken(Object id);
 
-  /// main.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced
+  /// app/links.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced
   ///
   /// In en, this message translates to:
   /// **'You verified {id} with a different key. Nothing was added.'**
   String appLinkWordsVerified(Object id);
 
-  /// main.dart: adding someone who is blocked; the Blocked page in Settings lets them back
+  /// app/links.dart: adding someone who is blocked; the Blocked page in Settings lets them back
   ///
   /// In en, this message translates to:
   /// **'You blocked {id}. Unblock them under Blocked in Settings to add them again.'**
@@ -13149,13 +13149,13 @@ abstract class AppLocalizations {
   /// **'Blocked key'**
   String get blockedKey;
 
-  /// main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back
+  /// app/links.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back
   ///
   /// In en, this message translates to:
   /// **'You blocked this key. Unblock it under Blocked in Settings to add it.'**
   String get appKeyBlocked;
 
-  /// main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one
+  /// app/links.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one
   ///
   /// In en, this message translates to:
   /// **'You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.'**

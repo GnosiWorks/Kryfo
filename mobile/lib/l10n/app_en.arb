@@ -346,11 +346,11 @@
   },
   "appInvalidUri": "Invalid uri",
   "@appInvalidUri": {
-    "description": "main.dart"
+    "description": "app/links.dart"
   },
   "appBundleError": "Bundle error: {e}",
   "@appBundleError": {
-    "description": "main.dart",
+    "description": "app/links.dart",
     "placeholders": {
       "e": {
         "type": "Object"
@@ -359,7 +359,7 @@
   },
   "appAlreadySaved": "Already saved: {parsed}",
   "@appAlreadySaved": {
-    "description": "main.dart",
+    "description": "app/links.dart",
     "placeholders": {
       "parsed": {
         "type": "Object"
@@ -368,7 +368,7 @@
   },
   "appLongWindow": "{line} long window",
   "@appLongWindow": {
-    "description": "main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual",
+    "description": "delivery_mode.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual",
     "placeholders": {
       "line": {
         "type": "Object"
@@ -377,7 +377,7 @@
   },
   "appOf": "{line} ({held} of {subs}, connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})",
   "@appOf": {
-    "description": "main.dart",
+    "description": "delivery_mode.dart",
     "placeholders": {
       "line": {
         "type": "Object"
@@ -405,7 +405,7 @@
   },
   "appConnectSPagesEvents": "{line} (connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})",
   "@appConnectSPagesEvents": {
-    "description": "main.dart",
+    "description": "delivery_mode.dart",
     "placeholders": {
       "line": {
         "type": "Object"
@@ -425,7 +425,7 @@
   },
   "appSDropped": "{host} {secs}s dropped",
   "@appSDropped": {
-    "description": "main.dart",
+    "description": "delivery_mode.dart",
     "placeholders": {
       "host": {
         "type": "Object"
@@ -437,7 +437,7 @@
   },
   "appS": "{host} {secs}s",
   "@appS": {
-    "description": "main.dart",
+    "description": "delivery_mode.dart",
     "placeholders": {
       "host": {
         "type": "Object"
@@ -449,23 +449,23 @@
   },
   "appTorWouldNotWake": "Tor would not wake",
   "@appTorWouldNotWake": {
-    "description": "main.dart"
+    "description": "delivery_mode.dart"
   },
   "appCheckStarted": "Started",
   "@appCheckStarted": {
-    "description": "main.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line"
+    "description": "delivery_mode.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line"
   },
   "appTorNotReadyIn": "Tor not ready in 75s",
   "@appTorNotReadyIn": {
-    "description": "main.dart"
+    "description": "delivery_mode.dart"
   },
   "appOk": "OK",
   "@appOk": {
-    "description": "main.dart"
+    "description": "delivery_mode.dart, widgets/kryfo_link_text.dart, screens/room_preview_sheet.dart"
   },
   "appOkNoRelayBegan": "OK, no relay began",
   "@appOkNoRelayBegan": {
-    "description": "main.dart: a check-in that brought tor up but no relay started answering in 45s"
+    "description": "delivery_mode.dart: a check-in that brought tor up but no relay started answering in 45s"
   },
   "appNoRelayReached": "No relay reached",
   "@appNoRelayReached": {
@@ -473,11 +473,11 @@
   },
   "appOkCapped": "OK, capped",
   "@appOkCapped": {
-    "description": "main.dart: a check-in that was cut off at 90s"
+    "description": "delivery_mode.dart: a check-in that was cut off at 90s"
   },
   "appSBy": "{why, select, push{{how}, {secs}s, by push} other{{how}, {secs}s, by job}}",
   "@appSBy": {
-    "description": "main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.",
+    "description": "delivery_mode.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.",
     "placeholders": {
       "how": {
         "type": "Object"
@@ -493,51 +493,51 @@
   },
   "appAnAttachmentCouldNot": "An attachment could not be saved on this phone",
   "@appAnAttachmentCouldNot": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appGroup2": "Group",
   "@appGroup2": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appVoiceMessage": "Voice message",
   "@appVoiceMessage": {
-    "description": "main.dart"
+    "description": "app/arrivals.dart"
   },
   "appPhoto": "Photo",
   "@appPhoto": {
-    "description": "main.dart"
+    "description": "app/state.dart and app/arrivals.dart"
   },
   "appNewRequest": "New request",
   "@appNewRequest": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appSomeoneYouHaveNot": "Someone you have not added wrote to you",
   "@appSomeoneYouHaveNot": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appSettingUpYourKeys": "Setting up your keys",
   "@appSettingUpYourKeys": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appOpeningYourChats": "Opening your chats",
   "@appOpeningYourChats": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appStartingTor": "Starting Tor",
   "@appStartingTor": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appTimedMessagesAreNot": "Timed messages are not clearing. Restart Kryfo",
   "@appTimedMessagesAreNot": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appVoiceMessage2": "Voice message",
   "@appVoiceMessage2": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appYou": "You: {body}",
   "@appYou": {
-    "description": "main.dart",
+    "description": "app/state.dart",
     "placeholders": {
       "body": {
         "type": "Object"
@@ -546,19 +546,19 @@
   },
   "appThisRoomHasAlready": "This room has already expired",
   "@appThisRoomHasAlready": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appYouAreAlreadyIn": "You are already in this room",
   "@appYouAreAlreadyIn": {
-    "description": "main.dart"
+    "description": "app/state.dart and app/links.dart"
   },
   "appCouldNotMakeA": "Could not make a room key",
   "@appCouldNotMakeA": {
-    "description": "main.dart"
+    "description": "app/state.dart"
   },
   "appJoined": "Joined {linkName}",
   "@appJoined": {
-    "description": "main.dart",
+    "description": "app/state.dart",
     "placeholders": {
       "linkName": {
         "type": "Object"
@@ -608,147 +608,147 @@
   },
   "appBooting": "Booting...",
   "@appBooting": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appSettingUpYourIdentity": "Setting up your identity...",
   "@appSettingUpYourIdentity": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appAddSomeone": "Add someone",
   "@appAddSomeone": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appScanTheirCodeOr": "Scan their code, or paste what they gave you: a link, an @handle, or a room link.",
   "@appScanTheirCodeOr": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appScanTheirCode": "Scan their code",
   "@appScanTheirCode": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appAKryfoLinkA": "A Kryfo link, a room link or @wren",
   "@appAKryfoLinkA": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appAddThem": "Add them",
   "@appAddThem": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appEveryWayToAdd": "Every way to add someone",
   "@appEveryWayToAdd": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appShowYourCodeSend": "Show your code, send a link, claim a handle",
   "@appShowYourCodeSend": {
-    "description": "main.dart"
+    "description": "app/shell.dart"
   },
   "appHelloFromTheOther": "Hello from the other side",
   "@appHelloFromTheOther": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appIdentityRestored": "Identity restored",
   "@appIdentityRestored": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appIdentityCreated": "Identity created",
   "@appIdentityCreated": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appStartingTor30s": "Starting Tor (~30s)...",
   "@appStartingTor30s": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appScanOrImportA": "Scan or import a peer first",
   "@appScanOrImportA": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appEncryptingSending30s": "Encrypting + sending (~30s)...",
   "@appEncryptingSending30s": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appTapStartListeningFirst": "Tap start listening first",
   "@appTapStartListeningFirst": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appYourKryfo": "Your Kryfo",
   "@appYourKryfo": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appUriCopied": "Uri copied",
   "@appUriCopied": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appCopyUri": "Copy uri",
   "@appCopyUri": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appAddAKryfo": "Add a Kryfo",
   "@appAddAKryfo": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appScanQr": "Scan qr",
   "@appScanQr": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appPairingCode": "Pairing code",
   "@appPairingCode": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appOrPaste": "- Or paste -",
   "@appOrPaste": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "commonCancel": "Cancel",
   "@commonCancel": {
-    "description": "main.dart, media_progress.dart, screens/chat_screen.dart, screens/group_chat_screen.dart, screens/settings_screen.dart"
+    "description": "app/dev_screen.dart, media_progress.dart, screens/chat_screen.dart, screens/group_chat_screen.dart, screens/settings_screen.dart"
   },
   "appImport": "Import",
   "@appImport": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appDev": "Dev",
   "@appDev": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appYourKryfo2": "Your Kryfo:",
   "@appYourKryfo2": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appRestoredFromDisk": "Restored from disk",
   "@appRestoredFromDisk": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appStartListening": "Start listening",
   "@appStartListening": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appListening": "Listening",
   "@appListening": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appShowMyQr": "Show my qr",
   "@appShowMyQr": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appImportPeer": "Import peer",
   "@appImportPeer": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appPeer": "Peer:",
   "@appPeer": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appMessageWillBeEncrypted": "Message (will be encrypted)",
   "@appMessageWillBeEncrypted": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appEncryptSend": "Encrypt + send",
   "@appEncryptSend": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appStatus": "Status: {status}",
   "@appStatus": {
-    "description": "main.dart",
+    "description": "app/dev_screen.dart",
     "placeholders": {
       "status": {
         "type": "Object"
@@ -757,51 +757,51 @@
   },
   "appSpeedPrivacy": "Speed & privacy →",
   "@appSpeedPrivacy": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appGettingMessages": "Getting messages →",
   "@appGettingMessages": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appDisableAppLock": "Disable app lock?",
   "@appDisableAppLock": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appThePinWillBe": "The PIN will be removed. Anyone with your phone will see Kryfo when they open it.",
   "@appThePinWillBe": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appDisable": "Disable",
   "@appDisable": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appAppLockOn": "App lock · on →",
   "@appAppLockOn": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appAppLockOff": "App lock · off →",
   "@appAppLockOff": {
-    "description": "main.dart"
+    "description": "app/dev_screen.dart"
   },
   "appTorIsOff": "Tor is off",
   "@appTorIsOff": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appConnectedRoutedThrough3": "Connected · routed through 3 relays",
   "@appConnectedRoutedThrough3": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appReadyToSendPublishing": "Ready to send · publishing your address",
   "@appReadyToSendPublishing": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appReadyToSendFinishing": "Ready to send · finishing setup",
   "@appReadyToSendFinishing": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appConnecting": "Connecting · {pct}",
   "@appConnecting": {
-    "description": "main.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
+    "description": "app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "pct": {
         "type": "Object"
@@ -810,51 +810,51 @@
   },
   "appTor": "Tor",
   "@appTor": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appTorIsOffTurn": "Tor is off. Turn it on to connect privately.",
   "@appTorIsOffTurn": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appTheFirstConnectionTakes": "The first connection takes a minute or two while Tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
   "@appTheFirstConnectionTakes": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appTorNoRelayYet": "Tor is up, but no relay is answering yet. Kryfo keeps trying, and messages wait here until one does.",
   "@appTorNoRelayYet": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appRelayAndFastModes": "Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
   "@appRelayAndFastModes": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appViaRelay": "Via relay",
   "@appViaRelay": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appOffline": "Offline",
   "@appOffline": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appFast": "Fast",
   "@appFast": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appTorOff": "Tor off",
   "@appTorOff": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appTorReady": "Tor ready",
   "@appTorReady": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appConnecting2": "Connecting",
   "@appConnecting2": {
-    "description": "main.dart"
+    "description": "app/gates.dart"
   },
   "appWaitingForARelay": "Waiting for a relay",
   "@appWaitingForARelay": {
-    "description": "main.dart. the home pill, when tor is up but no relay has answered for a while. keep it short"
+    "description": "app/gates.dart. the home pill, when tor is up but no relay has answered for a while. keep it short"
   },
   "mediaProgressSendingKeepTheApp": "Sending · {v} · keep the app open",
   "@mediaProgressSendingKeepTheApp": {
@@ -3413,7 +3413,7 @@
   },
   "appGroupHoldsUpTo": "{count, plural, one{A group holds up to {count} person} other{A group holds up to {count} people}}",
   "@appGroupHoldsUpTo": {
-    "description": "main.dart",
+    "description": "app/groups.dart",
     "placeholders": {
       "count": {
         "type": "int",
@@ -9892,11 +9892,11 @@
   },
   "stickerLabel": "Sticker",
   "@stickerLabel": {
-    "description": "a sticker named in words: chat list row, notification, reply quote, pins, saved (main.dart and the chat screens)"
+    "description": "a sticker named in words: chat list row, notification, reply quote, pins, saved (app/state.dart and the chat screens)"
   },
   "timedMessageLabel": "Timed message",
   "@timedMessageLabel": {
-    "description": "a timed message that came in and has not been read, named in words instead of its own: chat list row and reply quote (main.dart and the chat screens). its words show only on its bubble, where reading them starts its clock"
+    "description": "a timed message that came in and has not been read, named in words instead of its own: chat list row and reply quote (app/state.dart and the chat screens). its words show only on its bubble, where reading them starts its clock"
   },
   "stickerNewer": "From a newer Kryfo",
   "@stickerNewer": {
@@ -9904,7 +9904,7 @@
   },
   "devLinkMismatch": "This link says it is Marios, but its key does not match. It was not added.",
   "@devLinkMismatch": {
-    "description": "a scanned or pasted card with the developer's three words and another key (main.dart, handleHaloUriAdded). \"Marios\" stays in Latin letters"
+    "description": "a scanned or pasted card with the developer's three words and another key (app/links.dart, handleHaloUriAdded). \"Marios\" stays in Latin letters"
   },
   "devName": "Marios",
   "@devName": {
@@ -10203,11 +10203,11 @@
   },
   "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
   "@appYourOwnInvite": {
-    "description": "main.dart: a link, card or handle that is your own was added"
+    "description": "app/links.dart: a link, card or handle that is your own was added"
   },
   "appLinkWordsTaken": "Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.",
   "@appLinkWordsTaken": {
-    "description": "main.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells",
+    "description": "app/links.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells",
     "placeholders": {
       "id": {
         "type": "Object"
@@ -10216,7 +10216,7 @@
   },
   "appLinkWordsVerified": "You verified {id} with a different key. Nothing was added.",
   "@appLinkWordsVerified": {
-    "description": "main.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced",
+    "description": "app/links.dart, handleHaloUriAdded: a card names someone verified here under another key. a verified contact is never replaced",
     "placeholders": {
       "id": {
         "type": "Object"
@@ -10225,7 +10225,7 @@
   },
   "appTheyAreBlocked": "You blocked {id}. Unblock them under Blocked in Settings to add them again.",
   "@appTheyAreBlocked": {
-    "description": "main.dart: adding someone who is blocked; the Blocked page in Settings lets them back",
+    "description": "app/links.dart: adding someone who is blocked; the Blocked page in Settings lets them back",
     "placeholders": {
       "id": {
         "type": "Object"
@@ -10270,11 +10270,11 @@
   },
   "appKeyBlocked": "You blocked this key. Unblock it under Blocked in Settings to add it.",
   "@appKeyBlocked": {
-    "description": "main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back"
+    "description": "app/links.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back"
   },
   "devLinkGone": "You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.",
   "@devLinkGone": {
-    "description": "main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one"
+    "description": "app/links.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one"
   },
   "lockTooManyTriesFor": "Too many tries · {left}",
   "@lockTooManyTriesFor": {
