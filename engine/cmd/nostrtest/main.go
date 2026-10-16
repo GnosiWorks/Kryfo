@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 	defer relay.Close()
-	fmt.Println("connected ✓")
+	fmt.Println("connected")
 
 	ev := nostr.Event{
 		PubKey:    pk,
@@ -40,7 +40,7 @@ func main() {
 		fmt.Println("publish err:", err)
 		return
 	}
-	fmt.Println("published ✓")
+	fmt.Println("published")
 
 	time.Sleep(2 * time.Second)
 
@@ -60,7 +60,7 @@ func main() {
 	select {
 	case event := <-sub.Events:
 		fmt.Println("got back:", event.Content)
-		fmt.Println("ROUNDTRIP OK ✓✓✓")
+		fmt.Println("roundtrip ok")
 	case <-time.After(15 * time.Second):
 		fmt.Println("timeout waiting for event")
 	}

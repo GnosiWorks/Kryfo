@@ -114,15 +114,15 @@ func publishMulti(ctx context.Context, urls []string, ev nostr.Event) int {
 			defer cancel()
 			r, err := nostr.RelayConnect(rctx, u, nostr.RelayOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s - connect: %v\n", u, err)
+				fmt.Printf("fail %s connect: %v\n", u, err)
 				return
 			}
 			defer r.Close()
 			if err := r.Publish(rctx, ev); err != nil {
-				fmt.Printf("  ✗ %s - publish: %v\n", u, err)
+				fmt.Printf("fail %s publish: %v\n", u, err)
 				return
 			}
-			fmt.Printf("  ✓ %s - published\n", u)
+			fmt.Printf("ok %s published\n", u)
 			mu.Lock()
 			ok++
 			mu.Unlock()
@@ -144,7 +144,7 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 			defer wg.Done()
 			r, err := nostr.RelayConnect(rctx, u, nostr.RelayOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s - connect: %v\n", u, err)
+				fmt.Printf("fail %s connect: %v\n", u, err)
 				return
 			}
 			defer r.Close()
@@ -155,13 +155,13 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 			}
 			sub, err := r.Subscribe(rctx, f, nostr.SubscriptionOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s - subscribe: %v\n", u, err)
+				fmt.Printf("fail %s subscribe: %v\n", u, err)
 				return
 			}
 			select {
 			case ev := <-sub.Events:
 				if ev.ID.Hex() != "" {
-					fmt.Printf("  ✓ %s - got event\n", u)
+					fmt.Printf("ok %s got the event\n", u)
 					select {
 					case out <- ev:
 					default:
@@ -186,36 +186,36 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 }
 
 func main() {
-	fmt.Println("=== halo nostr full-stack probe (encrypt + ephemeral keys + fan-out) ===")
+	fmt.Println("nostr probe: encrypt, throwaway key, three relays")
 	fmt.Println()
 
-	// 1. two halos: alice + bob, each generates X25519
+	// two identities, each with an x25519 key
 	aliceXPriv, aliceXPub := genX25519()
 	bobXPriv, bobXPub := genX25519()
 	fmt.Printf("alice X25519 pub: %s...\n", hex.EncodeToString(aliceXPub[:8]))
 	fmt.Printf("bob X25519 pub:   %s...\n", hex.EncodeToString(bobXPub[:8]))
 
-	// 2. ECDH shared secret (both compute the same)
+	// both sides derive the same secret
 	aliceShared := ecdh(aliceXPriv, bobXPub)
 	bobShared := ecdh(bobXPriv, aliceXPub)
 	if hex.EncodeToString(aliceShared) != hex.EncodeToString(bobShared) {
-		fmt.Println("FAIL: ECDH shared secrets don't match")
+		fmt.Println("fail: the shared secrets don't match")
 		return
 	}
-	fmt.Printf("shared secret:    %s... ✓ (both peers derived identical)\n", hex.EncodeToString(aliceShared[:8]))
+	fmt.Printf("shared secret:    %s... (same on both sides)\n", hex.EncodeToString(aliceShared[:8]))
 
-	// 3. conversation id (deterministic from both pubkeys)
+	// the conversation id, from both public keys
 	convID := conversationID(aliceXPub, bobXPub)
 	fmt.Printf("conv id:          %s\n", hex.EncodeToString(convID))
 
-	// 4. derive ephemeral nostr key from shared secret + conv id
+	// a throwaway nostr key from the secret and the conversation id
 	nostrSeed := deriveNostrSeed(aliceShared, convID)
 	nostrSK := nostr.SecretKey(nostrSeed)
 	nostrPK := nostrSK.Public()
 	fmt.Printf("ephemeral nostr:  %s...\n", nostrPK.Hex()[:16])
-	fmt.Println("  → relays see this disposable address, NOT alice/bob's identity")
+	fmt.Println("relays see this address, not either identity")
 
-	// 5. encrypt a real message with chacha20-poly1305 (placeholder for libsignal)
+	// chacha20-poly1305 stands in for libsignal here
 	msgKey := deriveMessageKey(aliceShared, convID)
 	plaintext := []byte("hello bob, this is alice over halo+nostr+ephemeral keys")
 	ciphertext, err := encrypt(msgKey, plaintext)
@@ -225,7 +225,7 @@ func main() {
 	}
 	fmt.Printf("\nencrypted msg:    %d bytes ciphertext\n", len(ciphertext))
 
-	// 6. wrap in nostr event, sign with ephemeral key
+	// a nostr event signed with the throwaway key
 	ev := nostr.Event{
 		PubKey:    nostrPK,
 		CreatedAt: nostr.Now(),
@@ -239,28 +239,25 @@ func main() {
 	ev.Sign(nostrSK)
 	fmt.Printf("nostr event id:   %s...\n", ev.ID.Hex()[:16])
 
-	// 7. publish to 3 relays in parallel
-	fmt.Println("\n--- publishing to 3 relays ---")
+	fmt.Println("\npublishing to 3 relays")
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	publishOK := publishMulti(ctx, relayURLs, ev)
 	fmt.Printf("publish: %d/%d relays accepted\n", publishOK, len(relayURLs))
 	if publishOK == 0 {
-		fmt.Println("FAIL: no relays accepted")
+		fmt.Println("fail: no relays accepted")
 		return
 	}
 
-	// 8. subscribe from 3 relays, dedupe, pick first
-	fmt.Println("\n--- subscribing to 3 relays (dedupe by event id) ---")
+	fmt.Println("\nsubscribing to 3 relays, first event wins")
 	time.Sleep(2 * time.Second) // let the relays propagate
 	got, ok := subscribeMulti(ctx, relayURLs, nostrPK, haloKind)
 	if !ok {
-		fmt.Println("FAIL: no relay returned the event")
+		fmt.Println("fail: no relay returned the event")
 		return
 	}
 	fmt.Println("subscribe: got event back from relay network")
 
-	// 9. decrypt
 	gotCipher, err := hex.DecodeString(got.Content)
 	if err != nil {
 		fmt.Println("hex decode err:", err)
@@ -274,12 +271,11 @@ func main() {
 	fmt.Printf("\ndecrypted: %q\n", gotPlain)
 
 	if string(gotPlain) == string(plaintext) {
-		fmt.Println("\n✓✓✓ FULL ROUNDTRIP OK")
-		fmt.Println("encrypted halo message survived: ephemeral keys + 3-relay fan-out + retrieval + decrypt")
+		fmt.Println("\nroundtrip ok")
+		fmt.Println("the message came back through the relays and decrypted")
 	} else {
-		fmt.Println("FAIL: plaintext mismatch")
+		fmt.Println("fail: plaintext mismatch")
 	}
 
-	// suppress unused
 	_ = sort.Strings
 }
