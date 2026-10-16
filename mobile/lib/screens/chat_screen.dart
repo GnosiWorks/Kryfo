@@ -4851,7 +4851,7 @@ class _ChatScreenState extends State<ChatScreen>
             m.mediaPath != null ||
             (m.filePath != null &&
                 m.fileName != 'voice.wav' &&
-                nameSaysVideo(m.fileName)) ||
+                fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
             (m.direction == 'in' && m.filePath == null)),
   );
 
