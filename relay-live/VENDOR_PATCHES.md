@@ -34,7 +34,9 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   them.
 - `handlers.go`: each connection keeps its relay, for the bounds. a
   request holds its live events from before its listeners are added until
-  its eose is written, or until it is refused.
+  its eose is written, or until it is refused. an unexpected close is
+  logged without the caller's address (upstream logs X-Forwarded-For or
+  the remote address).
 - `relay.go`: `MaxQueuedSize` (8 MB unless set), `MaxQueuedTotal` and
   `PageWait` (no bound unless set), `clientsMutex` as a read-write lock,
   and a deadline on the handshake answer.

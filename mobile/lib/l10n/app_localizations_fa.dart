@@ -8527,6 +8527,61 @@ class AppLocalizationsFa extends AppLocalizations {
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'فوری و کم‌مصرف. سرور برنامه‌ی کمکی نشانی IP گوشی‌تان را می‌بیند و می‌فهمد کِی پیام می‌گیرید، هرگز نمی‌فهمد چه نوشته شده.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای سرور برنامه‌ی کمکی سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. سرور کمکی شخصی‌تان نشانی‌اش را به رله‌ی ما می‌گوید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+
+  @override
+  String get helperSheetNeedTitle => 'به یک برنامه‌ی کمکی نیاز دارید';
+
+  @override
+  String get helperSheetNeedLine =>
+      'برنامه‌ی کمکی یک اتصال سبک برای همه‌ی برنامه‌هایتان نگه می‌دارد و وقتی چیزی برسد Kryfo را بیدار می‌کند. هر برنامه‌ی UnifiedPush کار می‌کند، ntfy شروع خوبی است.';
+
+  @override
+  String get helperSheetGetNtfy => 'دریافت ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'برنامه‌های کمکی دیگر';
+
+  @override
+  String get helperSheetPickTitle => 'یک برنامه‌ی کمکی انتخاب کنید';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo فقط از آن می‌خواهد برنامه را بیدار کند. پیام‌هایتان هرگز از آن رد نمی‌شوند.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '⁨$name⁩ آماده است';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '⁨$name⁩ جواب نداد. دوباره امتحان کنید.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'برنامه‌ی کمکی شما دیگر نیست';
+
+  @override
+  String get homeHelperGoneLine =>
+      'تا وقتی راه دیگری انتخاب کنید، Kryfo هر ۱۵ دقیقه سرکشی می‌کند.';
+
+  @override
+  String get homeHelperGoneChoose => 'انتخاب راه دیگر';
+
+  @override
+  String get homeHelperRelayTitle => 'رله دیگر Kryfo را بیدار نمی‌کند';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'رله‌ی ما فعلاً بعضی از ثبت‌های این گوشی را نمی‌پذیرد. آن گفتگوها با سرکشی هر ۱۵ دقیقه می‌رسند و Kryfo همچنان تلاش می‌کند. انتخاب یک برنامه‌ی کمکی یا سرور دیگر هم می‌تواند کمک کند.';
+
+  @override
   String albumLabel(Object count) {
     return 'آلبوم · ⁨$count⁩ مورد';
   }

@@ -166,14 +166,17 @@ void main() {
       expect(plugin.of('write'), isEmpty);
     });
 
-    test('a slow call is flagged, and the flag goes when it gives up', () async {
-      plugin.hang.add('read');
-      final opening = open(HaloDb());
-      await Future<void>.delayed(const Duration(milliseconds: 140));
-      expect(keyStoreSlow.value, isTrue);
-      expect(await opening, isA<KeyStoreStuck>());
-      expect(keyStoreSlow.value, isFalse);
-    });
+    test(
+      'a slow call is flagged, and the flag goes when it gives up',
+      () async {
+        plugin.hang.add('read');
+        final opening = open(HaloDb());
+        await Future<void>.delayed(const Duration(milliseconds: 140));
+        expect(keyStoreSlow.value, isTrue);
+        expect(await opening, isA<KeyStoreStuck>());
+        expect(keyStoreSlow.value, isFalse);
+      },
+    );
   });
 
   group('boot', () {
@@ -272,10 +275,7 @@ void main() {
         await t.pump();
         if (still) {
           // nothing fades with less movement: it is there at once
-          expect(
-            find.text(l10n.torBootSplashFirstLaunchTakesA),
-            findsNothing,
-          );
+          expect(find.text(l10n.torBootSplashFirstLaunchTakesA), findsNothing);
         } else {
           await t.pump(const Duration(milliseconds: 400));
         }

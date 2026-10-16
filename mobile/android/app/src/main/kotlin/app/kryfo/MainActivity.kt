@@ -391,20 +391,6 @@ class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "lastExit" -> result.success(lastExit())
-                    "helperApps" -> result.success(HelperPush.distributors(this))
-                    "helperChosen" -> result.success(HelperPush.distributor(this))
-                    "helperRegister" -> {
-                        val pkg = call.argument<String>("package")
-                        val instance = call.argument<String>("instance")
-                        result.success(
-                            if (pkg == null || instance.isNullOrEmpty()) false
-                            else HelperPush.register(this, pkg, instance)
-                        )
-                    }
-                    "helperUnregister" -> {
-                        HelperPush.unregisterAll(this)
-                        result.success(true)
-                    }
                     // wall-clock time this phone was switched on. a gap in
                     // the app's heartbeat that spans it was the phone being
                     // off, not the app being killed.

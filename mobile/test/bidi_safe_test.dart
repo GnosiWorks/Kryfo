@@ -10,7 +10,8 @@ import 'package:kryfo/bidi_safe.dart';
 import 'package:kryfo/message_envelope.dart';
 
 // a line with one of each kind of control in it
-const marked = '\u2067one\u2069 \u202etwo\u202c \u200fthree\u200e \u2066four\u2069';
+const marked =
+    '\u2067one\u2069 \u202etwo\u202c \u200fthree\u200e \u2066four\u2069';
 
 void main() {
   test('strips direction controls, keeps the joiners', () {

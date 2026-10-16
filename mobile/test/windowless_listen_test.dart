@@ -18,6 +18,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
@@ -310,6 +311,54 @@ void main() {
       // the boot, then the job's knock before the start has listened
       w.app.listenAtStart();
       drainedIt(w, await w.app.drainNow());
+    },
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test('a knock from the helper app is the same check-in, locked and in a '
+      'decoy, and counts as a wake-up', () async {
+    final w = await waitingCheckIn();
+    w.app.deliveryModeForTest = DeliveryMode.helper;
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    lockState.inDecoy = true;
+    addTearDown(() {
+      lockState.inDecoy = false;
+      lockState.openForTest();
+    });
+    expect(lockState.locked, isTrue);
+    w.app.listenAtStart();
+    drainedIt(w, await w.app.drainNow(why: 'push'));
+    expect(w.app.lastCheckHow, contains('"why":"push"'));
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(kLastWakeKey), greaterThan(0));
+  }, timeout: const Timeout(Duration(seconds: 60)));
+
+  test(
+    'a knock while a check-in runs is owed, and asked for once it ends',
+    () async {
+      final asked = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/helper'), (
+            call,
+          ) async {
+            asked.add(call.method);
+            return true;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('halo/helper'), null),
+      );
+      final w = await waitingCheckIn();
+      w.app.deliveryModeForTest = DeliveryMode.helper;
+      w.app.listenAtStart();
+      final first = w.app.drainNow();
+      await _wait(50);
+      expect(w.app.checkingIn, isTrue);
+      expect(await w.app.drainNow(why: 'push'), 0);
+      expect(asked, isNot(contains('helperKnockAgain')));
+      await first;
+      expect(asked, contains('helperKnockAgain'));
     },
     timeout: const Timeout(Duration(seconds: 60)),
   );

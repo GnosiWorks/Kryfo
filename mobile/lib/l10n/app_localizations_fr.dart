@@ -8603,6 +8603,61 @@ class AppLocalizationsFr extends AppLocalizations {
       'Chaque discussion peut le changer dans son menu';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'Instantané et léger pour la batterie. Le serveur de l’appli auxiliaire voit l’adresse IP de votre téléphone et apprend quand vous recevez des messages, jamais ce qu’ils disent.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour le serveur de l’appli auxiliaire de savoir quand arrivent les vrais messages. Un serveur auxiliaire à vous indique son adresse à notre relais. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+
+  @override
+  String get helperSheetNeedTitle => 'Il vous faut une appli auxiliaire';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Une appli auxiliaire garde une connexion légère pour toutes vos applis et réveille Kryfo quand quelque chose arrive. Toute appli UnifiedPush convient, ntfy est un bon début.';
+
+  @override
+  String get helperSheetGetNtfy => 'Installer ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Autres applis auxiliaires';
+
+  @override
+  String get helperSheetPickTitle => 'Choisissez une appli auxiliaire';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo lui demande seulement de réveiller l’appli. Vos messages ne passent jamais par elle.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name est prêt';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name n’a pas répondu. Réessayez.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Votre appli auxiliaire a disparu';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo fait un relevé toutes les 15 minutes jusqu’à ce que vous choisissiez une autre façon.';
+
+  @override
+  String get homeHelperGoneChoose => 'Choisir une autre façon';
+
+  @override
+  String get homeHelperRelayTitle => 'Le relais ne réveille plus Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Notre relais n’accepte pas certaines inscriptions de ce téléphone pour le moment. Ces discussions arrivent avec le relevé toutes les 15 minutes, et Kryfo continue d’essayer. Choisir une autre appli auxiliaire ou un autre serveur peut aussi aider.';
+
+  @override
   String albumLabel(Object count) {
     return 'Album, $count éléments';
   }

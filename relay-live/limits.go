@@ -32,6 +32,12 @@ const (
 	// one live subscription per socket, catch-up pages one after another
 	reqsPerSec, reqBurst = 2, 100
 	maxIDs, maxAddrs     = 20, 10
+	// knocks the wraps of one connection may set off: a phone writes to
+	// one address at a time
+	knocksPerSec, knockBurst = 1, 20
+	// new knock registrations from one connection: a phone sends one group
+	// at a time
+	regsPerSec, regBurst = 1.0 / 30, 20
 	// a wrap carries its address and an expiration. every parsed tag costs
 	// about 100 bytes of memory while the wrap waits for a listener, and is
 	// looked at for every listener, whatever it holds
@@ -98,7 +104,9 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 	return true
 }
 
-type budget struct{ events, reqs *bucket }
+// a connection's events, reqs, the knocks its wraps may set off and the
+// new knock registrations it may make
+type budget struct{ events, reqs, knocks, regs *bucket }
 
 type limits struct {
 	mu       sync.Mutex
@@ -110,6 +118,8 @@ type limits struct {
 	diskLow atomic.Bool
 	// bytes taken since free space was last read
 	written atomic.Int64
+	// the helper app mode's registrations, nil when off
+	knock *knocker
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -181,7 +191,7 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst)}
+	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst), newBucket(regsPerSec, regBurst)}
 	l.mu.Unlock()
 }
 
@@ -208,10 +218,37 @@ func (l *limits) take(ctx context.Context, events bool) bool {
 	return b.reqs.take(time.Now())
 }
 
+// one knock from the connection's budget. one not seen open gets none
+func (l *limits) takeKnock(ctx context.Context) bool {
+	ws := khatru.GetConnection(ctx)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	b := l.conns[ws]
+	if b == nil {
+		return false
+	}
+	return b.knocks.take(time.Now())
+}
+
+// one new registration from the connection's budget
+func (l *limits) takeNewReg(ctx context.Context) bool {
+	ws := khatru.GetConnection(ctx)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	b := l.conns[ws]
+	if b == nil {
+		return false
+	}
+	return b.regs.take(time.Now())
+}
+
 // every event costs one from the connection, taken or refused
 func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !l.take(ctx, true) {
 		return true, "rate-limited: slow down"
+	}
+	if ev.Kind == knockKind && l.knock != nil {
+		return l.knock.take(ctx, ev)
 	}
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"

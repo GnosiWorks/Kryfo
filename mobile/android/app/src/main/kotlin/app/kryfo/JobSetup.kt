@@ -4,6 +4,8 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
+import android.os.PersistableBundle
 
 // the fifteen-minute floor is scheduled from every way into the process
 // (activity, boot receiver, application), so a job the system cleared comes
@@ -12,6 +14,8 @@ object JobSetup {
     const val PERIODIC_JOB_ID = 2001
     const val COPY_SWEEP_JOB_ID = 2002
     const val COME_BACK_JOB_ID = 2003
+    const val KNOCK_JOB_ID = 2004
+    const val KNOCK_LATER_JOB_ID = 2005
     private const val EVERY_MS = 15 * 60 * 1000L
     // a window of the last five minutes of each period, the least android
     // allows. with the whole period as its window two runs could land back
@@ -59,5 +63,69 @@ object JobSetup {
             .setOverrideDeadline(5 * 60_000L)
             .build()
         scheduler.schedule(jobInfo)
+    }
+
+    private fun pending(context: Context, id: Int): Boolean =
+        context.getSystemService(JobScheduler::class.java)?.getPendingJob(id) != null
+
+    private fun knockOwe(context: Context, id: Int, schedule: () -> Unit) =
+        KnockOwe({ pending(context, id) }, schedule, KnockOwe.Prefs(context, id))
+
+    // a knock from the helper app: one check-in, now. expedited where
+    // android has it, so it is not held for a maintenance window. one
+    // already waiting or running is owed another once it ends
+    fun scheduleKnock(context: Context) {
+        if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_JOB_ID) { knockNow(context) }.knock()
+    }
+
+    // a job of this service ended: a knock owed to it goes now
+    fun knockJobsEnded(context: Context) {
+        if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_JOB_ID) { knockNow(context) }.ended()
+        knockOwe(context, KNOCK_LATER_JOB_ID) { knockLaterNow(context, 5_000L) }.ended()
+    }
+
+    private fun knockNow(context: Context) {
+        val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+        val component = ComponentName(context, HaloPeriodicJobService::class.java)
+        val extras = PersistableBundle().apply { putString("why", "push") }
+        fun builder() = JobInfo.Builder(KNOCK_JOB_ID, component)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setExtras(extras)
+        if (Build.VERSION.SDK_INT >= 31) {
+            try {
+                if (scheduler.schedule(builder().setExpedited(true).build()) == JobScheduler.RESULT_SUCCESS) return
+            } catch (e: Exception) {
+            }
+        }
+        try {
+            scheduler.schedule(builder().build())
+        } catch (e: Exception) {
+        }
+    }
+
+    // a knock owed: one that came inside the floor, or while a check-in
+    // ran. one waiting at a time; another meanwhile is owed after it
+    fun scheduleKnockLater(context: Context, waitMs: Long) {
+        if (!KryfoState.hasData(context)) return
+        knockOwe(context, KNOCK_LATER_JOB_ID) { knockLaterNow(context, waitMs) }.knock()
+    }
+
+    private fun knockLaterNow(context: Context, waitMs: Long) {
+        val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+        val component = ComponentName(context, HaloPeriodicJobService::class.java)
+        val extras = PersistableBundle().apply { putString("why", "push") }
+        try {
+            scheduler.schedule(
+                JobInfo.Builder(KNOCK_LATER_JOB_ID, component)
+                    .setMinimumLatency(waitMs.coerceIn(1_000L, KnockGate.FLOOR_MS))
+                    .setOverrideDeadline(waitMs.coerceIn(1_000L, KnockGate.FLOOR_MS) + 60_000L)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setExtras(extras)
+                    .build()
+            )
+        } catch (e: Exception) {
+        }
     }
 }

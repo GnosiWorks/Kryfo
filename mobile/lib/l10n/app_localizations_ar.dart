@@ -8644,6 +8644,61 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكن لكل محادثة تغييره من قائمتها';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'فوري وخفيف على البطارية. يرى خادم التطبيق المساعد عنوان IP لهاتفك ويعرف متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على خادم التطبيق المساعد معرفة متى تصل الرسائل الحقيقية. خادم مساعد خاص بك يُعلم مُرحِّلنا بعنوانه. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+
+  @override
+  String get helperSheetNeedTitle => 'تحتاج إلى تطبيق مساعد';
+
+  @override
+  String get helperSheetNeedLine =>
+      'يحتفظ التطبيق المساعد باتصال خفيف واحد لكل تطبيقاتك ويوقظ Kryfo حين يصل شيء. يصلح أي تطبيق UnifiedPush، وntfy بداية جيدة.';
+
+  @override
+  String get helperSheetGetNtfy => 'احصل على ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'تطبيقات مساعدة أخرى';
+
+  @override
+  String get helperSheetPickTitle => 'اختر تطبيقًا مساعدًا';
+
+  @override
+  String get helperSheetPickLine =>
+      'لا يطلب Kryfo منه إلا إيقاظ التطبيق. لا تمر رسائلك عبره أبدًا.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return 'تم إعداد ⁨$name⁩';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return 'لم يستجب ⁨$name⁩. حاول مرة أخرى.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'تطبيقك المساعد لم يعد موجودًا';
+
+  @override
+  String get homeHelperGoneLine =>
+      'يتفقّد Kryfo كل ١٥ دقيقة إلى أن تختار طريقة أخرى.';
+
+  @override
+  String get homeHelperGoneChoose => 'اختر طريقة أخرى';
+
+  @override
+  String get homeHelperRelayTitle => 'لم يعد المُرحِّل يوقظ Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'لا يقبل مُرحِّلنا الآن بعض تسجيلات هذا الهاتف. تصل تلك المحادثات مع التفقّد كل ١٥ دقيقة، ويواصل Kryfo المحاولة. قد يفيد أيضًا اختيار تطبيق مساعد أو خادم آخر.';
+
+  @override
   String albumLabel(Object count) {
     return 'ألبوم · العناصر: ⁨$count⁩';
   }

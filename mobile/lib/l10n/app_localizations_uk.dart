@@ -8667,6 +8667,61 @@ class AppLocalizationsUk extends AppLocalizations {
       'У кожному чаті це можна змінити в його меню';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'Одразу й ощадливо для батареї. Сервер помічника бачить IP-адресу телефона й знає, коли приходять повідомлення, але не їхній зміст.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'До справжніх пробуджень домішуються фальшиві, тож серверу помічника важче зрозуміти, коли приходять справжні повідомлення. Власний сервер помічника повідомляє нашому ретранслятору свою адресу. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
+
+  @override
+  String get helperSheetNeedTitle => 'Потрібен застосунок-помічник';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Помічник тримає одне легке з’єднання для всіх застосунків і будить Kryfo, коли щось приходить. Підійде будь-який помічник UnifiedPush, наприклад ntfy.';
+
+  @override
+  String get helperSheetGetNtfy => 'Встановити ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Інші помічники';
+
+  @override
+  String get helperSheetPickTitle => 'Обери помічника';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo просить його лише розбудити застосунок. Твої повідомлення ніколи не проходять через нього.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name налаштовано';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name не відповів. Спробуй ще раз.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Твій помічник зник';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo робить перевірку кожні 15 хвилин, доки ти не обереш інший спосіб.';
+
+  @override
+  String get homeHelperGoneChoose => 'Обрати інший спосіб';
+
+  @override
+  String get homeHelperRelayTitle => 'Ретранслятор більше не будить Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Наш ретранслятор зараз не приймає частину реєстрацій цього телефона. Ці чати приходять із перевіркою кожні 15 хвилин, а Kryfo далі пробує. Може допомогти й інший помічник або інший сервер.';
+
+  @override
   String albumLabel(Object count) {
     return 'Альбом · об’єктів: $count';
   }

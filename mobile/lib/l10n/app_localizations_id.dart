@@ -8506,6 +8506,61 @@ class AppLocalizationsId extends AppLocalizations {
       'Setiap obrolan bisa mengubahnya di menunya';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'Seketika dan hemat baterai. Server aplikasi pembantu melihat alamat IP ponselmu dan tahu kapan pesan masuk, tidak pernah isinya.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Ada juga panggilan bangun palsu, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+
+  @override
+  String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Aplikasi pembantu menjaga satu koneksi ringan untuk semua aplikasimu dan membangunkan Kryfo saat ada yang masuk. Aplikasi UnifiedPush apa pun bisa dipakai, ntfy pilihan yang baik untuk mulai.';
+
+  @override
+  String get helperSheetGetNtfy => 'Pasang ntfy';
+
+  @override
+  String get helperSheetOtherApps => 'Aplikasi pembantu lain';
+
+  @override
+  String get helperSheetPickTitle => 'Pilih aplikasi pembantu';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo hanya memintanya membangunkan aplikasi. Pesanmu tidak pernah melewatinya.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name sudah siap';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name tidak menjawab. Coba lagi.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Aplikasi pembantumu sudah tidak ada';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo mengecek setiap 15 menit sampai kamu memilih cara lain.';
+
+  @override
+  String get homeHelperGoneChoose => 'Pilih cara lain';
+
+  @override
+  String get homeHelperRelayTitle => 'Relay tidak lagi membangunkan Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang bersama cek setiap 15 menit, dan Kryfo terus mencoba. Memilih aplikasi pembantu atau server lain juga bisa membantu.';
+
+  @override
   String albumLabel(Object count) {
     return 'Album, $count item';
   }

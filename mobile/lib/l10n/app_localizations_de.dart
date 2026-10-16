@@ -8611,6 +8611,61 @@ class AppLocalizationsDe extends AppLocalizations {
       'Jeder Chat kann das in seinem Menü ändern';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'Sofort und schont den Akku. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, aber nie, was darin steht.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Dazwischen kommen falsche Weckrufe. So kann der Server der Hilfs-App schwerer erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+
+  @override
+  String get helperSheetNeedTitle => 'Du brauchst eine Hilfs-App';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Eine Hilfs-App hält eine sparsame Verbindung für alle deine Apps und weckt Kryfo, wenn etwas ankommt. Jede UnifiedPush-App funktioniert, ntfy ist ein guter Anfang.';
+
+  @override
+  String get helperSheetGetNtfy => 'ntfy holen';
+
+  @override
+  String get helperSheetOtherApps => 'Andere Hilfs-Apps';
+
+  @override
+  String get helperSheetPickTitle => 'Wähle eine Hilfs-App';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo bittet sie nur, die App zu wecken. Deine Nachrichten laufen nie über sie.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name ist eingerichtet';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name hat nicht geantwortet. Versuch es noch einmal.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Deine Hilfs-App ist weg';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo schaut alle 15 Minuten nach, bis du einen anderen Weg wählst.';
+
+  @override
+  String get homeHelperGoneChoose => 'Anderen Weg wählen';
+
+  @override
+  String get homeHelperRelayTitle => 'Das Relais weckt Kryfo nicht mehr';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Unser Relais nimmt gerade einige Anmeldungen dieses Handys nicht an. Diese Chats kommen mit dem Check-in alle 15 Minuten, und Kryfo versucht es weiter. Eine andere Hilfs-App oder ein anderer Server kann auch helfen.';
+
+  @override
   String albumLabel(Object count) {
     return 'Album, $count Elemente';
   }

@@ -8538,6 +8538,61 @@ class AppLocalizationsTr extends AppLocalizations {
       'Her sohbet bunu kendi menüsünden değiştirebilir';
 
   @override
+  String get gettingMessagesHelperBody =>
+      'Anında ve pili yormaz. Yardımcının sunucusu telefonunun IP adresini görür ve mesaj aldığın anı öğrenir, içeriğini asla.';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      'Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+
+  @override
+  String get helperSheetNeedTitle => 'Bir yardımcı uygulama gerekiyor';
+
+  @override
+  String get helperSheetNeedLine =>
+      'Yardımcı uygulama tüm uygulamaların için tek bir hafif bağlantı tutar ve bir şey geldiğinde Kryfo’yu uyandırır. Her UnifiedPush yardımcısı olur, ntfy iyi bir başlangıç.';
+
+  @override
+  String get helperSheetGetNtfy => 'ntfy’yi indir';
+
+  @override
+  String get helperSheetOtherApps => 'Diğer yardımcı uygulamalar';
+
+  @override
+  String get helperSheetPickTitle => 'Bir yardımcı uygulama seç';
+
+  @override
+  String get helperSheetPickLine =>
+      'Kryfo ondan yalnızca uygulamayı uyandırmasını ister. Mesajların asla onun üzerinden geçmez.';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name hazır';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name yanıt vermedi. Tekrar dene.';
+  }
+
+  @override
+  String get homeHelperGoneTitle => 'Yardımcı uygulaman artık yok';
+
+  @override
+  String get homeHelperGoneLine =>
+      'Kryfo, başka bir yol seçene kadar 15 dakikada bir kontrol eder.';
+
+  @override
+  String get homeHelperGoneChoose => 'Başka yol seç';
+
+  @override
+  String get homeHelperRelayTitle => 'Aktarıcı artık Kryfo’yu uyandırmıyor';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      'Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder. Başka bir yardımcı uygulama ya da sunucu seçmek de işe yarayabilir.';
+
+  @override
   String albumLabel(Object count) {
     return 'Albüm, $count öğe';
   }

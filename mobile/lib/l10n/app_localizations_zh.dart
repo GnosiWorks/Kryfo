@@ -8135,6 +8135,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
 
   @override
+  String get gettingMessagesHelperBody =>
+      '即时送达，省电。辅助应用的服务器能看到你手机的 IP 地址，并知道你何时收到消息，但从不知道内容。';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+
+  @override
+  String get helperSheetNeedTitle => '你需要一个辅助应用';
+
+  @override
+  String get helperSheetNeedLine =>
+      '辅助应用为你的所有应用保持一条轻量连接，有消息时唤醒 Kryfo。任何 UnifiedPush 辅助应用都可以，ntfy 是不错的起点。';
+
+  @override
+  String get helperSheetGetNtfy => '获取 ntfy';
+
+  @override
+  String get helperSheetOtherApps => '其他辅助应用';
+
+  @override
+  String get helperSheetPickTitle => '选择辅助应用';
+
+  @override
+  String get helperSheetPickLine => 'Kryfo 只请它唤醒应用。你的消息从不经过它。';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name 已设置好';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name 没有回应。请再试一次。';
+  }
+
+  @override
+  String get homeHelperGoneTitle => '你的辅助应用不见了';
+
+  @override
+  String get homeHelperGoneLine => '在你选择其他方式之前，Kryfo 每 15 分钟查收一次。';
+
+  @override
+  String get homeHelperGoneChoose => '选择其他方式';
+
+  @override
+  String get homeHelperRelayTitle => '中继不再唤醒 Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。换一个辅助应用或服务器也可能有帮助。';
+
+  @override
   String albumLabel(Object count) {
     return '相册，$count 项';
   }
@@ -16228,6 +16281,59 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String get gettingMessagesHelperBody =>
+      '即時送達，省電。輔助應用程式的伺服器能看到你手機的 IP 位址，並知道你何時收到訊息，但從不知道內容。';
+
+  @override
+  String get gettingMessagesHelperNote =>
+      '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+
+  @override
+  String get helperSheetNeedTitle => '你需要一個輔助應用程式';
+
+  @override
+  String get helperSheetNeedLine =>
+      '輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。';
+
+  @override
+  String get helperSheetGetNtfy => '取得 ntfy';
+
+  @override
+  String get helperSheetOtherApps => '其他輔助應用程式';
+
+  @override
+  String get helperSheetPickTitle => '選擇輔助應用程式';
+
+  @override
+  String get helperSheetPickLine => 'Kryfo 只請它喚醒應用程式。你的訊息從不經過它。';
+
+  @override
+  String helperSheetSetUp(Object name) {
+    return '$name 已設定完成';
+  }
+
+  @override
+  String helperSheetNoAnswer(Object name) {
+    return '$name 沒有回應。請再試一次。';
+  }
+
+  @override
+  String get homeHelperGoneTitle => '你的輔助應用程式不見了';
+
+  @override
+  String get homeHelperGoneLine => '在你選擇其他方式之前，Kryfo 每 15 分鐘查收一次。';
+
+  @override
+  String get homeHelperGoneChoose => '選擇其他方式';
+
+  @override
+  String get homeHelperRelayTitle => '中繼不再喚醒 Kryfo';
+
+  @override
+  String get gettingMessagesHelperRefused =>
+      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。換一個輔助應用程式或伺服器也可能有幫助。';
 
   @override
   String albumLabel(Object count) {

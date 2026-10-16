@@ -32,6 +32,38 @@ class HaloApplication : Application() {
                     else -> result.notImplemented()
                 }
             }
+        // the helper app mode, here so a process with no screen answers too
+        MethodChannel(engine.dartExecutor.binaryMessenger, HelperPush.CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "helperApps" -> result.success(HelperPush.distributors(this))
+                    "helperChosen" -> result.success(HelperPush.distributor(this))
+                    "helperEndpoints" -> result.success(HelperPush.endpoints(this))
+                    "helperKnocked" -> result.success(HelperPush.knockedOnes(this))
+                    "helperRegister" -> {
+                        val pkg = call.argument<String>("package")
+                        val instance = call.argument<String>("instance")
+                        result.success(
+                            if (pkg == null || instance.isNullOrEmpty()) false
+                            else HelperPush.register(this, pkg, instance)
+                        )
+                    }
+                    "helperUnregisterOne" -> {
+                        val instance = call.argument<String>("instance")
+                        if (!instance.isNullOrEmpty()) HelperPush.unregister(this, instance)
+                        result.success(true)
+                    }
+                    "helperKnockAgain" -> {
+                        JobSetup.scheduleKnockLater(this, 10_000L)
+                        result.success(true)
+                    }
+                    "helperUnregister" -> {
+                        HelperPush.unregisterAll(this)
+                        result.success(true)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         // on the engine of the process, so a check-in without a screen hears it too
         NetWatch.start(this, engine)
         Tilt.start(this, engine)

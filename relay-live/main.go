@@ -25,7 +25,10 @@ func main() {
 	relay.CountEvents = append(relay.CountEvents, db.CountEvents)
 	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
 
-	applyLimits(relay, "./data")
+	l := applyLimits(relay, "./data")
+	if _, err := startKnocks(relay, l, "./data"); err != nil {
+		panic(err)
+	}
 
 	addr := "127.0.0.1:3334"
 	if v := os.Getenv("RELAY_ADDR"); v != "" {

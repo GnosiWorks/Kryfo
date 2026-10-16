@@ -7,6 +7,7 @@ require (
 	github.com/fiatjaf/eventstore v0.17.9
 	github.com/fiatjaf/khatru v0.19.1
 	github.com/nbd-wtf/go-nostr v0.52.1
+	golang.org/x/net v0.60.0
 )
 
 require (
@@ -43,7 +44,6 @@ require (
 	github.com/valyala/fasthttp v1.59.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 )
 
