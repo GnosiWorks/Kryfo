@@ -133,6 +133,7 @@ import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
 import 'widgets/shift_tap_guard.dart';
+import 'wire_pad.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -370,8 +371,14 @@ class HaloEngine {
       devGate.nostrSend(
         peerXPubHex,
         b64Cipher,
+        // a frame no signal seal covers is filled out here, inside the
+        // relay's encryption
         out: () =>
-            _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
+            _sendOnIsolate((
+              nostr: true,
+              a: peerXPubHex,
+              b: padRumor(b64Cipher),
+            )).timeout(
               const Duration(seconds: 60),
               onTimeout: () => 'error: relay timeout',
             ),
@@ -690,7 +697,7 @@ class HaloEngine {
     peerXPubHex,
     fcPk,
     b64Cipher,
-    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, b64Cipher).timeout(
+    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
       const Duration(seconds: 60),
       onTimeout: () => 'error: relay timeout',
     ),
@@ -956,7 +963,11 @@ class HaloEngine {
         peerPub,
         msg,
         out: () =>
-            _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
+            _roomFfiOnIsolate('HaloRoomSend', [
+              priv,
+              peerPub,
+              padRumor(msg),
+            ]).timeout(
               const Duration(seconds: 60),
               onTimeout: () => 'error: relay timeout',
             ),
@@ -977,7 +988,7 @@ class HaloEngine {
           priv,
           peerPub,
           fcPk,
-          msg,
+          padRumor(msg),
         ]).timeout(
           const Duration(seconds: 60),
           onTimeout: () => 'error: relay timeout',
@@ -9376,7 +9387,7 @@ Future<String?> signalDecrypt(
   final ss = await signalFor(peerId);
   if (ss == null) return null;
   void check(Uint8List p) {
-    if (keep != null && !keep(utf8.decode(p))) throw const ShelfFull();
+    if (keep != null && !keep(unpad(utf8.decode(p)))) throw const ShelfFull();
   }
 
   try {
@@ -9437,7 +9448,7 @@ Future<String?> signalDecrypt(
     });
     if (moved) await _keyMoved?.call(peerId);
     if (plain == null) return null;
-    final text = utf8.decode(plain);
+    final text = unpad(utf8.decode(plain));
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
   } on ShelfFull {
@@ -11059,6 +11070,8 @@ class AppState extends ChangeNotifier {
   // first, and past a share of one message or one sender theirs do
   final _early = <_Early>[];
   var _earlyChars = 0;
+  @visibleForTesting
+  List<String> get earlyWiresForTest => [for (final e in _early) e.wire];
   static const _kEarlyChars = 1 << 20;
   static const _kEarlyPerUid = 32;
   static const _kEarlyPerSender = 64;
@@ -19581,13 +19594,15 @@ class AppState extends ChangeNotifier {
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+      // seen by the bytes that came, kept without the filler
+      final content = unpad(m.cipher);
       // a knock on a room busy with a reset waits on its own, and the
       // inbox goes on. it is offered again until it is seen
-      if (m.peer.startsWith('roomfc:') && _roomBusy(m.cipher)) {
-        _knockLater(m.peer, m.cipher, h, reached);
+      if (m.peer.startsWith('roomfc:') && _roomBusy(content)) {
+        _knockLater(m.peer, content, h, reached);
         throw const _KnockWaits();
       }
-      await _handleRoomFrame(m.peer, m.cipher, reached: reached);
+      await _handleRoomFrame(m.peer, content, reached: reached);
       await live.markSeen(h);
       notifyListeners();
       arrived();
@@ -19596,7 +19611,7 @@ class AppState extends ChangeNotifier {
     if (m.cipher.startsWith('{')) {
       // control frame riding the transport outside signal (bundle
       // exchange). signal wire is base64, never starts with '{'.
-      await _handleBundleCtl(m.peer, m.cipher, h);
+      await _handleBundleCtl(m.peer, unpad(m.cipher), h);
       arrived();
       return;
     }
@@ -21920,6 +21935,9 @@ class AppState extends ChangeNotifier {
         rethrow;
       } on KeyHeld {
         // waits on a check of their new number: their session is fine
+        rethrow;
+      } on FrameTooLarge {
+        // too big for any route: their session is fine
         rethrow;
       } catch (e) {
         // a corrupt session (InvalidKeyException or bad state) can't encrypt.

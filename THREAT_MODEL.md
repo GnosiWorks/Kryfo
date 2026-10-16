@@ -16,8 +16,11 @@ put you in danger, read all of it.
   first that carries tor and remembers it per network type for 30 days.
 - the relays. messages travel through nostr relays, sealed twice with
   nip-44/59 and sent from a throwaway key to a mailbox address that belongs
-  to one conversation and to nobody's identity. no relay can read them. on
-  the onion route, the relays never learn your ip address or who you are.
+  to one conversation and to nobody's identity. no relay can read them.
+  messages from 0.5.2 on are padded to one of five sizes, so a relay sees
+  roughly how big a message is, not how long. how many you send and when
+  still shows. on the onion route, the relays never learn your ip address
+  or who you are.
   in relay and fast mode, the relays see your ip address, never what you say.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.

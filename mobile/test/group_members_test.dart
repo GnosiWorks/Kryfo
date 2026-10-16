@@ -35,6 +35,7 @@ import 'package:kryfo/rooms.dart'
         roomTextBody;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/wire_pad.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -751,6 +752,25 @@ void main() {
       for (final m in live.msgs)
         if (m['group_id'] == _room) m['plaintext'] as String,
     ];
+
+    test('a filled frame is kept without its filler', () async {
+      final (live, app) = await _roomWorld();
+      final f = roomFrame(
+        await wrapMessage(
+          '',
+          groupId: _room,
+          reaction: const ReactionFrame(targetUid: 'not-here', emoji: 'x'),
+          sender: SenderInfo(haloId: _m1, edPub: '', onion: '', xPub: ''),
+        ),
+        _m1,
+        number: 1,
+      )!;
+      await app.receiveRelay([
+        (peer: 'room:$_roomPub:$_m1', cipher: padRumor(f)),
+      ]);
+      // the reaction waits for its message, as it came before the filler
+      expect(app.earlyWiresForTest, [f]);
+    });
 
     test(
       'a member\'s last words land though their leave comes first',

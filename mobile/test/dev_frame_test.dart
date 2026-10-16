@@ -18,6 +18,7 @@ import 'package:kryfo/devchat/dev_frame.dart';
 import 'package:kryfo/devchat/dev_gate.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/wire_pad.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 
@@ -358,6 +359,11 @@ void main() {
       j['hd'] = everydayHandle;
       final got = frameJson(devInFrame(_dev, 'halo/1:${jsonEncode(j)}')!);
       expect(got.keys.toSet(), {'m', 'w', 'u', 'h', 'e', 'o', 'x'});
+    });
+
+    test('a frame filled out to its size reads as it did', () async {
+      final f = await from({'sender', 'msgUid'});
+      expect(devInFrame(_dev, padSeal(f)), devInFrame(_dev, f));
     });
 
     test('who it says sent it must be his pinned key', () async {
