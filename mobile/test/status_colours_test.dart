@@ -87,6 +87,35 @@ void main() {
       'final head =',
     );
     expect(_accent.hasMatch(strip), isFalse, reason: 'waiting strip');
+    final banners = {
+      'developer key moved': _between(
+        _src('lib/screens/chat_screen.dart'),
+        '// his key moved on: this chat still reads and writes',
+        "ValueKey('dev-moved-none')",
+      ),
+      'needs tor': _between(
+        _src('lib/screens/search_screen.dart'),
+        "key: const ValueKey('needs-tor'),",
+        'onTap: onAdd,',
+      ),
+      'share warning': _between(
+        _src('lib/screens/introduce_sheet.dart'),
+        '// the one warning there is.',
+        '_GoButton(',
+      ),
+    };
+    banners.forEach((what, src) {
+      expect(_accent.hasMatch(src), isFalse, reason: what);
+      expect(src, contains('color: HaloColors.warn,'), reason: what);
+      expect(src, contains('textColor: HaloColors.warnText'), reason: what);
+    });
+    final short = _between(
+      _src('lib/screens/notes_export_screen.dart'),
+      'final color = switch (grade) {',
+      'PassGrade.strong',
+    );
+    expect(_accent.hasMatch(short), isFalse, reason: 'too short hint');
+    expect(short, contains('_ when short => HaloColors.warnText'));
   });
 
   test('the chat header tells relay from tor by their own colours', () {

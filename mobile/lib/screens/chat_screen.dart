@@ -6022,7 +6022,8 @@ class _ChatScreenState extends State<ChatScreen>
                               key: const ValueKey('dev-moved'),
                               glyph: NoticeGlyph.shield,
                               text: l10n.devNewKey,
-                              color: HaloColors.amber,
+                              color: HaloColors.warn,
+                              textColor: HaloColors.warnText,
                               margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
                             )
                           : const SizedBox(

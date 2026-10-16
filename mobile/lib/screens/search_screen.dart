@@ -1234,7 +1234,8 @@ class _People extends StatelessWidget {
         child: NoticeBanner(
           glyph: NoticeGlyph.link,
           text: l10n.handleSearchNeedsTor,
-          color: HaloColors.amber,
+          color: HaloColors.warn,
+          textColor: HaloColors.warnText,
           onTap: onAdd,
           margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         ),

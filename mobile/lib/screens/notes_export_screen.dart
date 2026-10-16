@@ -653,7 +653,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     final differ =
         _p2.text.isNotEmpty && text != _p2.text && !short && text.isNotEmpty;
     final color = switch (grade) {
-      _ when short => HaloColors.amber,
+      _ when short => HaloColors.warnText,
       PassGrade.strong => HaloColors.green,
       PassGrade.none => HaloColors.text2,
       _ => HaloColors.amber,
