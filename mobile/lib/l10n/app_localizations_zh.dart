@@ -835,17 +835,29 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => '疑似诈骗';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return '自称是 $shown，这里已有人用这个名字';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return '这个名字和 $shown 一样';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed。不要给没见过面的人转钱或发验证码。';
   }
+
+  @override
+  String get scamShieldAsksForSecret => '索要验证码、PIN 码或恢复词';
+
+  @override
+  String get scamShieldAsksForMoneyFast => '催着要钱';
+
+  @override
+  String get scamShieldPromisesProfit => '承诺轻松赚钱';
+
+  @override
+  String get scamShieldClaimsSupport => '自称来自 Kryfo 或客服团队';
+
+  @override
+  String get scamShieldDismiss => '隐藏';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -853,32 +865,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return '和你的联系人 $shown 用同一张脸';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => '含有加密货币地址';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency => '既提到钱，又催得很急';
-
-  @override
-  String get scamShieldAsksYouToMove => '要你换到别的应用聊';
-
-  @override
   String get scamShieldLinksToALookalike => '链接指向仿冒的知名网站';
-
-  @override
-  String get scamShieldALongOpenerFrom => '毫无往来的人发来一大段开场白';
-
-  @override
-  String get scamShieldAsksForACode => '索要验证码、助记词或恢复文件';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return '另外：名字和你的联系人 $shown 一样';
-  }
 
   @override
   String get commonBack => '返回';
@@ -1555,9 +1542,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       '正在建立私密路线 · 首次连接比较慢，之后就快了。现在发送的内容会排队，稍后自动送达。';
-
-  @override
-  String get chatLooksSafeNothingSuspicious => '看起来安全 · 对方的第一条消息里没有可疑内容';
 
   @override
   String get chatTheNextPhotoYou => '你发的下一张照片会以受保护方式打开 · 对方无法截屏';
@@ -2263,9 +2247,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => '跳到最新';
-
-  @override
-  String get groupChatBlockedEverywhere => '已在各处屏蔽';
 
   @override
   String get groupChatYou => '你';
@@ -4367,12 +4348,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '对方的任何东西都不会再到达你这里。对方的请求和其中的消息都会被删除。';
 
   @override
-  String get requestsBlocked => '已屏蔽';
-
-  @override
-  String get requestsDeleted => '已删除';
-
-  @override
   String get requestsRequests => '请求';
 
   @override
@@ -4380,9 +4355,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get requestsMessagesFromPeopleYou => '你还没添加的人发来的消息，会先出现在这里。';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious => '看起来安全 · 对方的第一条消息里没有可疑内容';
 
   @override
   String get commonAccept => '接受';
@@ -4784,8 +4756,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenTheScamShield => '防骗盾';
 
   @override
-  String get seenRunsOnYourPhone =>
-      '在你的手机上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的第一条消息，看不到联系人发给你的任何内容。';
+  String get seenScamShieldRequestsOnly =>
+      '在你的手机上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
 
   @override
   String get seenBurnerRooms => '临时聊天室';
@@ -4925,7 +4897,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsScamShield => '防骗盾';
 
   @override
-  String get settingsChecksStrangersOnYour => '在你的手机上检查陌生人。什么都不会离开手机';
+  String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
 
   @override
   String get settingsBlockScreenshots => '禁止截屏';
@@ -5057,9 +5029,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => '从这部手机上抹掉 Kryfo';
-
-  @override
-  String get shieldCheckedOnThisPhone => '已在这部手机上检查。没有向任何地方发送任何东西。';
 
   @override
   String get toolsMoreTools => '更多工具';
@@ -6355,15 +6324,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreHiddenLockFirst => '隐藏聊天需要应用锁，所以先给 Kryfo 设一个自己的 PIN。';
-
-  @override
-  String get shieldBlock => '屏蔽';
-
-  @override
-  String get shieldDelete => '删除';
-
-  @override
-  String get shieldIgnore => '忽略';
 
   @override
   String get profileIdentity => '身份';
@@ -8738,17 +8698,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => '看起來像詐騙';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return '自稱是 $shown，這裡已有人用這個名字';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return '這個名字和 $shown 相同';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed。不要給沒見過面的人轉錢或傳驗證碼。';
   }
+
+  @override
+  String get scamShieldAsksForSecret => '要你提供驗證碼、PIN 碼或復原詞';
+
+  @override
+  String get scamShieldAsksForMoneyFast => '催著要錢';
+
+  @override
+  String get scamShieldPromisesProfit => '承諾輕鬆賺錢';
+
+  @override
+  String get scamShieldClaimsSupport => '自稱來自 Kryfo 或客服團隊';
+
+  @override
+  String get scamShieldDismiss => '隱藏';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -8756,32 +8728,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return '臉和你的聯絡人 $shown 相同';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress => '含有加密貨幣地址';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency => '同時提到錢和急迫';
-
-  @override
-  String get scamShieldAsksYouToMove => '要你改用別的應用程式';
-
-  @override
   String get scamShieldLinksToALookalike => '附上仿冒知名網站的連結';
-
-  @override
-  String get scamShieldALongOpenerFrom => '沒有往來紀錄的人傳來長篇開場白';
-
-  @override
-  String get scamShieldAsksForACode => '要你提供代碼、助記詞或復原檔案';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return '另外：名字和你的聯絡人 $shown 相同';
-  }
 
   @override
   String get commonBack => '返回';
@@ -9457,9 +9404,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get chatBuildingAPrivateRoute =>
       '正在建立私密路線 · 第一次連線比較慢，之後就快了。現在傳送的任何內容都會先排隊，之後自動送達。';
-
-  @override
-  String get chatLooksSafeNothingSuspicious => '看起來安全 · 對方的第一則訊息沒有可疑之處';
 
   @override
   String get chatTheNextPhotoYou => '你傳送的下一張照片會以保護模式開啟 · 對方無法截圖';
@@ -10166,9 +10110,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatJumpToTheNewest => '跳到最新';
-
-  @override
-  String get groupChatBlockedEverywhere => '已全面封鎖';
 
   @override
   String get groupChatYou => '你';
@@ -12270,12 +12211,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get requestsNothingMoreFromThem => '對方的任何東西都不會再送到你這裡。對方的請求和其中的訊息都會刪除。';
 
   @override
-  String get requestsBlocked => '已封鎖';
-
-  @override
-  String get requestsDeleted => '已刪除';
-
-  @override
   String get requestsRequests => '請求';
 
   @override
@@ -12283,9 +12218,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get requestsMessagesFromPeopleYou => '你還沒新增的人傳來的訊息，會先出現在這裡。';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious => '看起來安全 · 對方的第一則訊息沒有可疑之處';
 
   @override
   String get commonAccept => '接受';
@@ -12687,8 +12619,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenTheScamShield => '防詐盾';
 
   @override
-  String get seenRunsOnYourPhone =>
-      '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的第一則訊息，看不到聯絡人傳給你的任何內容。';
+  String get seenScamShieldRequestsOnly =>
+      '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
 
   @override
   String get seenBurnerRooms => '臨時聊天室';
@@ -12828,7 +12760,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsScamShield => '防詐盾';
 
   @override
-  String get settingsChecksStrangersOnYour => '在你的手機上檢查陌生人。不會有任何東西離開手機';
+  String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
 
   @override
   String get settingsBlockScreenshots => '禁止截圖';
@@ -12960,9 +12892,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsWipeKryfoFromThis => '從這支手機清除 Kryfo';
-
-  @override
-  String get shieldCheckedOnThisPhone => '在這支手機上檢查。沒有傳送任何東西到任何地方。';
 
   @override
   String get toolsMoreTools => '更多工具';
@@ -14258,15 +14187,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreHiddenLockFirst => '隱藏聊天需要應用程式鎖，所以先給 Kryfo 設一組自己的 PIN。';
-
-  @override
-  String get shieldBlock => '封鎖';
-
-  @override
-  String get shieldDelete => '刪除';
-
-  @override
-  String get shieldIgnore => '忽略';
 
   @override
   String get profileIdentity => '身分';

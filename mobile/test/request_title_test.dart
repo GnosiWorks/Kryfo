@@ -104,7 +104,10 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     expect(find.text(own), findsNothing);
     expect(find.text(l10n.requestsSomeoneNew), findsOneWidget);
-    expect(find.text(l10n.scamShieldGivesUsedName(_amber)), findsOneWidget);
+    expect(
+      find.text(l10n.scamShieldWarning(l10n.scamShieldGivesUsedName(_amber))),
+      findsOneWidget,
+    );
     expect(find.text('slow-kite-moss'), findsOneWidget);
     // the words they gave are marked, someone new says them in its line
     expect(find.byType(NameCheckMark), findsOneWidget);

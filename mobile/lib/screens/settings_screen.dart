@@ -557,7 +557,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsScamShield,
-                hint: l10n.settingsChecksStrangersOnYour,
+                hint: l10n.settingsScamShieldHint,
                 toggled: _shieldOn ?? true,
                 pending: _shieldOn == null,
                 onTap: () async {

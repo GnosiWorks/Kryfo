@@ -18,7 +18,6 @@ import 'key_verification_screen.dart';
 import 'contact_screen.dart';
 import 'wallpaper_sheet.dart';
 import 'introduce_sheet.dart';
-import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show ImageCaptionScreen, VoiceBubble;
@@ -34,6 +33,8 @@ import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
 import '../widgets/notice_banner.dart';
+import '../widgets/shield_note.dart';
+import '../scam_shield.dart' show ShieldFlag;
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
@@ -1091,10 +1092,8 @@ class _ChatScreenState extends State<ChatScreen>
   int? _voucherAvatar;
   bool _voucherVerified = false;
   bool get _vouched => _voucherNames.isNotEmpty;
-  // what the scam shield saw on this stranger, if anything and not ignored
+  // what the scam shield saw on this stranger, if anything and not dismissed
   ShieldFlag? _flag;
-  // the shield looked at their opener and found nothing
-  bool _shieldClean = false;
   bool _showScrollDown = false;
   // their messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
@@ -1507,27 +1506,16 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _loadShield() async {
     if (await session.isAccepted(widget.peerHaloId)) return;
-    final row = await session.shownShieldFor(widget.peerHaloId);
-    final f = ShieldFlag.fromRow(row);
-    final clean = ShieldFlag.cleanRow(row);
-    if (mounted && (f != _flag || clean != _shieldClean)) {
-      setState(() {
-        _flag = f;
-        _shieldClean = clean;
-      });
-    }
+    final f = ShieldFlag.fromRow(
+      await session.shownShieldFor(widget.peerHaloId),
+    );
+    if (mounted && f != _flag) setState(() => _flag = f);
   }
 
-  Future<void> _openShield() async {
-    final f = _flag;
-    if (f == null) return;
-    final c = await showShieldSheet(context, widget.peerHaloId, f);
-    if (!mounted || c == null) return;
-    if (c == ShieldChoice.ignore) {
-      setState(() => _flag = null);
-    } else {
-      Navigator.pop(context);
-    }
+  // dismissed for good: the row stays, so the check never runs on them again
+  Future<void> _dismissShield() async {
+    await session.dismissShield(widget.peerHaloId);
+    if (mounted) setState(() => _flag = null);
   }
 
   // a reply can land while the sender sits in the locked chat, so re-check
@@ -5643,24 +5631,13 @@ class _ChatScreenState extends State<ChatScreen>
               margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
             ),
             _Fold(
+              // a request with no red flag shows nothing at all
               _flag != null && !_accepted && !_blocked
-                  ? NoticeBanner(
+                  ? ShieldNote(
                       key: const ValueKey('shield-flag'),
-                      glyph: NoticeGlyph.shield,
-                      text: _flag!.headline,
-                      color: HaloColors.rose,
+                      flag: _flag!,
                       margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                      onTap: _openShield,
-                    )
-                  : _shieldClean && !_accepted && !_blocked
-                  // the calm state. same banner, softest colour, nothing to
-                  // tap
-                  ? NoticeBanner(
-                      key: const ValueKey('shield-clean'),
-                      glyph: NoticeGlyph.shield,
-                      text: l10n.chatLooksSafeNothingSuspicious,
-                      color: HaloColors.text2,
-                      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                      onDismiss: _dismissShield,
                     )
                   : const SizedBox(key: ValueKey('shield-none'), width: 0),
             ),

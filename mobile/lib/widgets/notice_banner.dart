@@ -15,6 +15,11 @@ class NoticeBanner extends StatefulWidget {
   final VoidCallback? onTap;
   final Duration delay;
   final EdgeInsets margin;
+  // the words in their own colour, the glyph and tint in [color]
+  final Color? textColor;
+  // a close button at the end, read out as [dismissLabel]
+  final VoidCallback? onDismiss;
+  final String? dismissLabel;
   const NoticeBanner({
     super.key,
     required this.glyph,
@@ -23,6 +28,9 @@ class NoticeBanner extends StatefulWidget {
     this.onTap,
     this.delay = Duration.zero,
     this.margin = EdgeInsets.zero,
+    this.textColor,
+    this.onDismiss,
+    this.dismissLabel,
   });
 
   @override
@@ -61,9 +69,15 @@ class _NoticeBannerState extends State<NoticeBanner>
       parent: _in,
       curve: const Interval(0, 0.7, curve: Curves.easeOut),
     );
+    final close = widget.onDismiss != null;
     final body = Container(
       margin: widget.margin,
-      padding: const EdgeInsetsDirectional.fromSTEB(11, 9, 12, 9),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        11,
+        close ? 0 : 9,
+        close ? 0 : 12,
+        close ? 0 : 9,
+      ),
       decoration: BoxDecoration(
         color: widget.color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(10),
@@ -76,18 +90,31 @@ class _NoticeBannerState extends State<NoticeBanner>
           ),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(
-              widget.text,
-              style: HaloType.sans(
-                size: 12.5,
-                weight: FontWeight.w500,
-                color: widget.color,
-                height: 1.35,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: close ? 9 : 0),
+              child: Text(
+                widget.text,
+                style: HaloType.sans(
+                  size: 12.5,
+                  weight: FontWeight.w500,
+                  color: widget.textColor ?? widget.color,
+                  height: 1.35,
+                ),
               ),
             ),
           ),
           if (widget.onTap != null)
             Icon(Icons.chevron_right, size: 16, color: widget.color),
+          if (close)
+            IconButton(
+              tooltip: widget.dismissLabel,
+              iconSize: 16,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+              color: HaloColors.text2,
+              icon: const Icon(Icons.close_rounded),
+              onPressed: widget.onDismiss,
+            ),
         ],
       ),
     );

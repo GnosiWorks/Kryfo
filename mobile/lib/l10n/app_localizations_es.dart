@@ -869,17 +869,31 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get scamShieldLooksLikeAScam => 'Parece una estafa';
-
-  @override
   String scamShieldGivesUsedName(Object shown) {
     return 'Dice ser $shown, un nombre que ya usa alguien aquí';
   }
 
   @override
-  String scamShieldThisNameMatches(Object shown) {
-    return 'Este nombre coincide con $shown';
+  String scamShieldWarning(Object noticed) {
+    return '$noticed. No envíes dinero ni códigos a quien no conoces en persona.';
   }
+
+  @override
+  String get scamShieldAsksForSecret =>
+      'Pide un código, un PIN o palabras de recuperación';
+
+  @override
+  String get scamShieldAsksForMoneyFast => 'Pide dinero con prisa';
+
+  @override
+  String get scamShieldPromisesProfit => 'Promete ganancias fáciles';
+
+  @override
+  String get scamShieldClaimsSupport =>
+      'Dice ser de Kryfo o de un equipo de soporte';
+
+  @override
+  String get scamShieldDismiss => 'Descartar';
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -887,37 +901,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String scamShieldSameFaceAsYour(Object shown) {
-    return 'La misma cara que tu contacto $shown';
-  }
-
-  @override
-  String get scamShieldContainsACryptoAddress =>
-      'Contiene una dirección cripto';
-
-  @override
-  String get scamShieldMentionsMoneyAndUrgency =>
-      'Habla de dinero y de urgencia a la vez';
-
-  @override
-  String get scamShieldAsksYouToMove => 'Te pide pasar a otra app';
-
-  @override
   String get scamShieldLinksToALookalike =>
       'Enlaza a una imitación de un sitio conocido';
-
-  @override
-  String get scamShieldALongOpenerFrom =>
-      'Un primer mensaje largo de alguien sin historial';
-
-  @override
-  String get scamShieldAsksForACode =>
-      'Pide un código, una frase semilla o un archivo de recuperación';
-
-  @override
-  String scamShieldAlso(Object shown) {
-    return 'Además: el nombre coincide con tu contacto $shown';
-  }
 
   @override
   String get commonBack => 'Atrás';
@@ -1629,10 +1614,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get chatBuildingAPrivateRoute =>
       'Construyendo una ruta privada · la primera conexión es la lenta, las siguientes son rápidas. Lo que envíes ahora queda en cola y se entrega solo.';
-
-  @override
-  String get chatLooksSafeNothingSuspicious =>
-      'Parece seguro · nada sospechoso en su primer mensaje';
 
   @override
   String get chatTheNextPhotoYou =>
@@ -2387,9 +2368,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupChatJumpToTheNewest => 'Ir al más reciente';
-
-  @override
-  String get groupChatBlockedEverywhere => 'Bloqueado en todas partes';
 
   @override
   String get groupChatYou => 'Tú';
@@ -4609,12 +4587,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'No te llegará nada más de esa persona. Su solicitud y sus mensajes desaparecen.';
 
   @override
-  String get requestsBlocked => 'Bloqueado';
-
-  @override
-  String get requestsDeleted => 'Eliminado';
-
-  @override
   String get requestsRequests => 'Solicitudes';
 
   @override
@@ -4623,10 +4595,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Los mensajes de personas que no has añadido aparecen primero aquí.';
-
-  @override
-  String get requestsLooksSafeNothingSuspicious =>
-      'Parece seguro · nada sospechoso en su primer mensaje';
 
   @override
   String get commonAccept => 'Aceptar';
@@ -5047,8 +5015,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get seenTheScamShield => 'El escudo antiestafas';
 
   @override
-  String get seenRunsOnYourPhone =>
-      'Funciona en tu teléfono con reglas que vienen en la app. Sin red, sin descargar listas. Solo lee el primer mensaje de un desconocido y no puede ver nada de lo que te envía un contacto.';
+  String get seenScamShieldRequestsOnly =>
+      'Funciona en tu teléfono con reglas que vienen en la app. Sin red, sin descargar listas. Solo lee solicitudes de mensaje de desconocidos, nunca lo que te envía un contacto o un grupo.';
 
   @override
   String get seenBurnerRooms => 'Salas efímeras';
@@ -5189,8 +5157,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsScamShield => 'Escudo antiestafas';
 
   @override
-  String get settingsChecksStrangersOnYour =>
-      'Revisa a los desconocidos en tu teléfono. Nada sale de él';
+  String get settingsScamShieldHint =>
+      'Se revisa solo en tu teléfono, nada sale de él';
 
   @override
   String get settingsBlockScreenshots => 'Bloquear capturas';
@@ -5331,10 +5299,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsWipeKryfoFromThis => 'Borrar Kryfo de este teléfono';
-
-  @override
-  String get shieldCheckedOnThisPhone =>
-      'Revisado en este teléfono. No se envió nada a ningún sitio.';
 
   @override
   String get toolsMoreTools => 'Más herramientas';
@@ -6691,15 +6655,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get restoreHiddenLockFirst =>
       'Los chats ocultos necesitan el bloqueo de la app, así que primero Kryfo recibe un PIN propio.';
-
-  @override
-  String get shieldBlock => 'Bloquear';
-
-  @override
-  String get shieldDelete => 'Eliminar';
-
-  @override
-  String get shieldIgnore => 'Ignorar';
 
   @override
   String get profileIdentity => 'Identidad';

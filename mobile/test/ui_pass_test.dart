@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // small things that move or sit right: the reach pill rolls its count in
 // place, the shared sheet buttons give under a finger, the pin pad reads
-// left to right in every language, the scam shield buttons fit in russian
-// at a big font, and a poll's hint folds away once voted. each one still
-// with less movement.
+// left to right in every language, and a poll's hint folds away once
+// voted. each one still with less movement.
 import 'package:flutter/gestures.dart' show kPressTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/polls.dart';
-import 'package:kryfo/screens/shield_sheet.dart';
 import 'package:kryfo/widgets/chat_parts.dart' show GrowSwap;
 import 'package:kryfo/widgets/confirm_sheet.dart';
 import 'package:kryfo/widgets/file_reach.dart';
@@ -182,47 +180,6 @@ void main() {
       );
       expect(find.bySemanticsLabel(l10n.commonDelete), findsOneWidget);
     });
-  });
-
-  group('the scam shield sheet', () {
-    for (final group in [false, true]) {
-      testWidgets('its buttons fit in russian at a big font'
-          '${group ? ' in a group' : ''}', (t) async {
-        t.view.physicalSize = const Size(720, 1600);
-        t.view.devicePixelRatio = 2;
-        addTearDown(t.view.reset);
-        quiet(t);
-        setL10nLocale(const Locale('ru'));
-        addTearDown(() => setL10nLocale(const Locale('en')));
-        await t.pumpWidget(
-          host(
-            opener(
-              (ctx) => showShieldSheet(
-                ctx,
-                'someone',
-                const ShieldFlag('Он просит денег', [
-                  'Просит перевести деньги',
-                ]),
-                group: group,
-              ),
-            ),
-            locale: const Locale('ru'),
-            scale: 1.6,
-          ),
-        );
-        await t.tap(find.text('go'));
-        await t.pumpAndSettle();
-        expect(t.takeException(), isNull);
-        for (final w in [l10n.shieldBlock, l10n.shieldIgnore]) {
-          final text = find.text(w);
-          expect(text, findsOneWidget);
-          // one line, never broken mid-word
-          expect(t.getSize(text).height, lessThan(13 * 1.6 * 2));
-        }
-        await t.tapAt(const Offset(10, 10));
-        await t.pumpAndSettle();
-      });
-    }
   });
 
   group('a poll card', () {
