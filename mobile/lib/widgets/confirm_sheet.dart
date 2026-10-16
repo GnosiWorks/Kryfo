@@ -15,19 +15,23 @@ import 'written_field.dart';
 import '../l10n/l10n.dart';
 import 'shift_tap_guard.dart';
 
-Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
-  padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-  child: SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SheetHandle(),
-          const SizedBox(height: 12),
-          ...children,
-        ],
+// the keyboard is read inside the sheet: a sheet that already rides on it
+// has it taken out there, and is not pushed up twice
+Widget _frame(List<Widget> children) => Builder(
+  builder: (ctx) => Padding(
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+    child: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
       ),
     ),
   ),
@@ -131,7 +135,7 @@ Future<String?> showChangeOrRemoveSheet(
   String? more,
 }) => showHaloSheet<String>(
   context,
-  builder: (ctx) => _frame(ctx, [
+  builder: (ctx) => _frame([
     _title(title),
     const SizedBox(height: 8),
     _line(line),
@@ -164,7 +168,7 @@ Future<bool> showConfirmSheet(
   final r = await showHaloSheet<bool>(
     context,
     builder: (ctx) {
-      final body = _frame(ctx, [
+      final body = _frame([
         _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
         if (figure != null) ...[
           const SizedBox(height: 8),
@@ -196,7 +200,7 @@ Future<String?> showConfirmOrMoreSheet(
   int? titleLines,
 }) => showHaloSheet<String>(
   context,
-  builder: (ctx) => _frame(ctx, [
+  builder: (ctx) => _frame([
     _title(title, color: HaloColors.rose, lines: titleLines),
     const SizedBox(height: 8),
     _line(line),
@@ -263,7 +267,7 @@ Future<String?> showInputSheet(
   scroll: true,
   builder: (_) => OwnedText(
     initial: initial ?? '',
-    builder: (ctx, ctrl) => _frame(ctx, [
+    builder: (ctx, ctrl) => _frame([
       _title(title),
       if (line != null) ...[const SizedBox(height: 6), _line(line)],
       const SizedBox(height: 14),
@@ -332,7 +336,7 @@ Future<T?> showChoiceSheet<T>(
   T? current,
 }) => showHaloSheet<T>(
   context,
-  builder: (ctx) => _frame(ctx, [
+  builder: (ctx) => _frame([
     _title(title),
     if (line != null) ...[const SizedBox(height: 8), _line(line)],
     const SizedBox(height: 14),
@@ -402,7 +406,7 @@ Future<void> showNoticeSheet(
   context,
   dismissible: false,
   builder: (ctx) {
-    final body = _frame(ctx, [
+    final body = _frame([
       _title(title, lines: titleLines),
       const SizedBox(height: 8),
       _line(line),
