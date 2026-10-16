@@ -1810,7 +1810,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatNoPhotosInThis => 'Nenhuma foto nesta conversa ainda';
 
   @override
-  String get chatHoldToRecord => 'Segure para gravar uma mensagem de voz';
+  String get chatHoldToRecord => 'Segure para gravar um áudio';
 
   @override
   String get chatSecurityCodeChanged => 'O código de segurança mudou';
