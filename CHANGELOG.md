@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.5.2] - 2026-10-17
+
+### Added
+- albums: pick several photos and they arrive together, as one album.
+- send any kind of file. an app installer someone sends you can be saved to your phone, never installed from Kryfo.
+- export your notes from note to self: locked with a passphrase by default, or as plain text after a warning.
+- accent colours in settings > appearance. yellow stays the default, and there are grey, purple, green, red and blue.
+- screenshot blocking per chat. turn it on in a chat and it holds on both phones, and copying, forwarding and saving each other's messages are blocked too. after the update, Kryfo offers to turn it on for all your chats.
+- a group's admin can end it for everyone.
+- "This isn't them": when the safety numbers you compare don't match, remove the contact from your phone and block its key.
+- delivery through a helper app is back. it uses UnifiedPush, which works with ntfy.
+
+### Changed
+- every message is padded inside its encryption to one of a few fixed sizes, so relays learn nothing from its size.
+- the scam shield reads only requests from strangers and says what it noticed: someone asking for a code, a PIN or recovery words, asking for money in a hurry, promising easy profit, or saying they are from Kryfo or a support team.
+- chats with someone new show a card to compare the safety number. if the numbers don't match, "This isn't them" is right there.
+- the small "Not checked" mark beside three words is gone.
+- when tor is blocked or watched where you are, setup offers bridges first.
+- plain bridge lines, an address and a port without a transport, are accepted too.
+- gif search asks once, the first time you open gifs.
+- a voice note can be up to 30 minutes long, and a long one you send keeps going if you leave the chat while it is being disguised.
+- if Kryfo locks before a voice note goes out, it isn't sent, and Kryfo tells you after you unlock. if your phone is short of space, Kryfo says so.
+- settings section titles are bigger and clearer.
+- on android 15 and newer, Kryfo draws behind the system bars as android expects.
+
+### Fixed
+- gifs you send line up on the right like your other messages, without a line under them.
+- in the light theme, tor's status reads clearly on the home screen and in the tor sheet.
+- sheets with a text field stay above the keyboard, and confirm sheets no longer move up twice.
+- notifications from a group that ended are cleared.
+
+### Security
+- stability and privacy improvements throughout. update when you can.
+
 ## [0.5.1] - 2026-10-15
 
 ### Added
