@@ -1,4 +1,4 @@
-# building
+# Building
 
 two parts: the go engine (libhalo.so), then the flutter app that bundles it.
 

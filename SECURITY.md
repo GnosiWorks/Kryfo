@@ -1,4 +1,4 @@
-# security
+# Security
 
 if you found a way to read someone's messages, learn who talks to whom,
 unmask a kryfo user, get past the app lock, or make the app or the servers

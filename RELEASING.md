@@ -1,4 +1,4 @@
-# releasing
+# Releasing
 
 a feature goes into a release finished or not at all.
 

@@ -1,4 +1,4 @@
-# threat model
+# Threat model
 
 what this protects against and what it does not. if getting this wrong could
 put you in danger, read all of it.

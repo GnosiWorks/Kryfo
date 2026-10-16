@@ -1,4 +1,4 @@
-# watch
+# Watch
 
 `kryfo-watch.sh` checks the site, the relay and the handle registry the way a
 phone reaches them (through the front proxy, bridges included), the badge

@@ -1,4 +1,4 @@
-# forward secrecy
+# Forward secrecy
 
 what a key taken from a phone can and can't open later, in plain terms.
 THREAT_MODEL.md covers the rest.

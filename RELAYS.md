@@ -1,4 +1,4 @@
-# relays
+# Relays
 
 two directories look like relays. only one runs.
 

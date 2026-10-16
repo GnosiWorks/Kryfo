@@ -1,4 +1,4 @@
-# f-droid
+# F-Droid
 
 the recipe is `fdroiddata/app.kryfo.yml`, a copy of what went to
 https://gitlab.com/fdroid/fdroiddata. it builds v0.2.10 (version codes

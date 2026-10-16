@@ -1,4 +1,4 @@
-# patched dependencies
+# Patched dependencies
 
 ## khatru: a fork, not a hand patch
 

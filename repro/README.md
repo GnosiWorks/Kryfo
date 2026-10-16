@@ -1,4 +1,4 @@
-# reproducible build
+# Reproducible build
 
 f-droid builds its own apk from the tagged source, copies our signature onto
 it, and publishes only if every byte matches. this directory runs that check

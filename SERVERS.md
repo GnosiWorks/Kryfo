@@ -1,4 +1,4 @@
-# servers
+# Servers
 
 ## the rule
 

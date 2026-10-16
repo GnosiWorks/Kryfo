@@ -1,4 +1,4 @@
-# patched dependencies
+# Patched dependencies
 
 vendor/ is rebuilt with `./vendor.sh`, never with a bare `go mod vendor`.
 go mod vendor copies go package dirs only, while go-libtor, sonic, base64x
