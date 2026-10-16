@@ -18,8 +18,10 @@ boxes means two seizures and two providers.
 | relay (`relay-live/`) | `wss://relay.kryfo.app` and its onion | relay box | it is the relay |
 | handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | no |
 | badge service (`server/badge/`) | its own onion | relay box | no |
+| gif relay (`server/gif/`) | `https://relay.kryfo.app/gif/*` | relay box | no |
 
-both of the "no" rows move.
+the handle registry and the badge service move. the gif relay runs on the relay box too; where it
+goes is not decided yet.
 
 ## moving the badge service
 
