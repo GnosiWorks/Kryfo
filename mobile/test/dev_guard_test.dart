@@ -1597,7 +1597,7 @@ void main() {
   // read off the source: the store's own first-contact opener drops a claim
   // of him before it keeps any session under it
   test('back-pair keeps no session under his words', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/arrivals.dart').readAsStringSync();
     final at = src.indexOf('openFirstContact(String cipher) async {');
     expect(at, isNonNegative);
     final body = src.substring(at, src.indexOf('\n  }\n', at));
