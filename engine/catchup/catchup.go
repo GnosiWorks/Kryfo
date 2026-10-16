@@ -21,7 +21,7 @@ type Page func(ctx context.Context, since, until nostr.Timestamp, limit int) ([]
 
 // Below is where a walk carries on under an answer to a request for limit
 // events: the limit-th newest stamp of a full one, the oldest of any other.
-// A live event sent among the stored ones can be stamped hours back, below
+// a live event sent among the stored ones can be stamped hours back, below
 // stored events the relay never got to, while more events can only raise
 // the limit-th newest. Ties at it are asked for again, until is inclusive.
 func Below(stamps []nostr.Timestamp, limit int) nostr.Timestamp {
@@ -106,7 +106,7 @@ func (m Mark) Started() bool { return m.Top > 0 }
 // done. It returns the Mark to keep for next time; a zero Mark means the
 // window is finished and the anchor may move.
 //
-// It is one downward walk, not two: a new gap paged before the old tail can
+// it is one downward walk, not two: a new gap paged before the old tail can
 // eat every window, while one descending cursor cannot starve itself.
 func Continue(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
 	limit, maxPages int, deliver func(nostr.Event) bool, m Mark) (Result, Mark) {

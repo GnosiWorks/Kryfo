@@ -368,7 +368,6 @@ func TestAnchorStaysNearNow(t *testing.T) {
 	waitFor(t, "today's wrap", 8*time.Second, func() bool { return inboxHas(tag + "|sent today") })
 }
 
-// only events that opened move the anchor
 func TestAnchorMovesOnlyOnEventsThatOpen(t *testing.T) {
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)

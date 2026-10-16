@@ -338,7 +338,6 @@ func TestCheckInRespectsRiskyAndBlocked(t *testing.T) {
 	}
 }
 
-// a decoy reads no line checks
 func TestDecoyReadsNoLineChecks(t *testing.T) {
 	resetAuto(t)
 	t.Cleanup(func() { resetAuto(t) })

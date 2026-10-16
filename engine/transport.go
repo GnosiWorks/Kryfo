@@ -39,7 +39,7 @@ func notePublished() {
 
 // a mode change makes the traffic clock meaningless: relay sends say nothing
 // about whether tor still works, and leaving them there blocks the watchdog
-// from restarting a route that has genuinely died.
+// from restarting a route that died.
 func resetTrafficClock() {
 	txMu.Lock()
 	lastSend = time.Time{}
@@ -76,7 +76,7 @@ func relaysAllDead() bool {
 	defer txMu.RUnlock()
 	if lastRelayOK.IsZero() {
 		// nothing has ever connected this session; fall back to how long
-		// tor has been up, so a genuinely fresh start is not called dead.
+		// tor has been up, so a fresh start is not called dead.
 		return !lastBoot.IsZero() && time.Since(lastBoot) > 3*time.Minute
 	}
 	return time.Since(lastRelayOK) > 3*time.Minute
@@ -117,7 +117,7 @@ func trafficStalled() bool {
 	}
 	if last.IsZero() {
 		// nothing has ever moved this session; fall back to the bootstrap
-		// clock so a genuinely fresh start is not called stalled.
+		// clock so a fresh start is not called stalled.
 		return !lastBoot.IsZero() && time.Since(lastBoot) > 3*time.Minute
 	}
 	return time.Since(last) > 3*time.Minute
