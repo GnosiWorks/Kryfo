@@ -1500,7 +1500,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 80,
+      version: 81,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1668,10 +1668,11 @@ class HaloDb implements GroupOwedStore {
         await notifTagTables(db);
         await groupResentTables(db);
         await notifRingTables(db);
+        await blockedKeysTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 80
+        // they add. 66 runs after it: it reads what they all make. 67 to 81
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -2163,6 +2164,12 @@ class HaloDb implements GroupOwedStore {
           // an accept whose word to them has not gone yet
           await upgradeTo80(db, oldV);
         }
+        if (oldV < 81) {
+          // keys blocked as not who they said. a file made before this
+          // build took 80 for itself may lack the column 80 adds
+          await blockedKeysTable(db);
+          await ackOwedColumn(db);
+        }
       },
     );
     // retired while it was opening
@@ -2183,6 +2190,12 @@ class HaloDb implements GroupOwedStore {
           await wipeFreedOnce(db);
         } catch (e) {
           dlog('freed pages: not wiped (${e.runtimeType})');
+        }
+        // a removal a death cut short of its tidy
+        try {
+          await tidyIfOwed(db);
+        } catch (e) {
+          dlog('tidy: not done (${e.runtimeType})');
         }
       }),
     );
@@ -2640,6 +2653,7 @@ class HaloDb implements GroupOwedStore {
       // nothing queued for the old chat goes after it. a take-back still
       // goes, it only withdraws
       await _dropQueuedTo(t, haloId);
+      if (rows.isNotEmpty) await oweTidy(t);
       return rows;
     });
     await _scrubMedia(files);
@@ -2793,6 +2807,277 @@ class HaloDb implements GroupOwedStore {
       return atmo;
     });
     await _dropPhotos([atmo]);
+  }
+
+  // "this isn't them": everything of [haloId] here goes in one go, what
+  // they wrote in groups and their seats there too, and [keyHex], the key
+  // the number was made from, is blocked. by the key alone: the same words
+  // on another key are someone else, though none who writes first is given
+  // them (name_tombs). a group they ran has no admin after. the files go
+  // once it is done. the uids of what of theirs went, for the shade
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) async {
+    final db = await open();
+    final (rows, wallpaper) = await db.transaction((t) async {
+      final rows = await t.query(
+        'messages',
+        columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid', 'poll'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
+      );
+      final uids = [
+        for (final r in rows)
+          if (r['msg_uid'] case final String u) u,
+      ];
+      final polls = [
+        for (final r in rows)
+          if (r['poll'] != null)
+            if (r['msg_uid'] case final String u) u,
+      ];
+      final c = await t.query(
+        'contacts',
+        columns: ['atmosphere'],
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      final atmo = c.isEmpty ? null : c.first['atmosphere'] as String?;
+      // what they left unread in a group goes from its count
+      await _unreadGo(t, [
+        for (final r in rows)
+          if (r['group_id'] != null) r,
+      ]);
+      for (var i = 0; i < uids.length; i += 400) {
+        final part = uids.sublist(i, min(i + 400, uids.length));
+        final marks = List.filled(part.length, '?').join(', ');
+        for (final (table, col) in const [
+          ('reactions', 'msg_uid'),
+          ('poll_votes', 'poll_uid'),
+          ('pins_out', 'msg_uid'),
+          ('edits_out', 'msg_uid'),
+          ('opener_again', 'msg_uid'),
+          ('frame_order', 'msg_uid'),
+          ('notif_rings', 'msg_uid'),
+          ('group_media_owed', 'msg_uid'),
+        ]) {
+          await t.delete(table, where: '$col IN ($marks)', whereArgs: part);
+        }
+      }
+      await _dropFilesComingFrom(t, haloId);
+      for (final (table, col) in const [
+        ('reactions', 'reactor'),
+        ('poll_votes', 'voter'),
+        ('media_chunks', 'sender'),
+        ('frame_order', 'sender'),
+        ('frames_out', 'peer_id'),
+        ('pins_out', 'peer_id'),
+        ('edits_out', 'peer_id'),
+        ('held_onion', 'peer_id'),
+        ('first_kept', 'peer'),
+        ('gone_in', 'peer_id'),
+        ('notif_tags', 'chat'),
+        ('notif_rings', 'chat'),
+        ('shield', 'halo_id'),
+        ('vouches', 'halo_id'),
+        ('vouches', 'voucher_id'),
+        ('block_spans', 'peer_id'),
+        ('blocked_drops', 'peer_id'),
+        ('group_members', 'halo_id'),
+        ('group_media_owed', 'member'),
+        ('group_ctl_out', 'member'),
+        ('group_resent', 'member'),
+        ('support_chats', 'halo_id'),
+        ('sessions', 'address'),
+        ('peer_identities', 'address'),
+        ('messages', 'peer_id'),
+        ('contacts', 'halo_id'),
+      ]) {
+        await t.delete(table, where: '$col = ?', whereArgs: [haloId]);
+      }
+      // what of theirs went in groups, by group and sender (goneKey). the
+      // delete marked their polls as just gone: nothing of them stays
+      final inGroups = [
+        for (final r in await t.query(
+          'gone_in',
+          columns: ['peer_id'],
+          where: 'peer_id LIKE ?',
+          whereArgs: ['group:%'],
+        ))
+          if (r['peer_id'] case final String k)
+            if (k.substring(6).split(':').skip(1).join(':') == haloId) k,
+      ];
+      for (final (table, col, keys) in [
+        ('gone_in', 'peer_id', inGroups),
+        ('polls_gone', 'uid', polls),
+      ]) {
+        for (var i = 0; i < keys.length; i += 400) {
+          final part = keys.sublist(i, min(i + 400, keys.length));
+          await t.delete(
+            table,
+            where: '$col IN (${List.filled(part.length, '?').join(', ')})',
+            whereArgs: part,
+          );
+        }
+      }
+      await t.update(
+        'groups',
+        {'admin_id': kAdminGone},
+        where: 'admin_id = ?',
+        whereArgs: [haloId],
+      );
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await t.insert('blocked_keys', {
+        'x': keyHex.trim().toLowerCase(),
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await t.insert('name_tombs', {
+        'name': haloId,
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await oweTidy(t);
+      return (rows, atmo);
+    });
+    await _scrubMedia(rows);
+    // their chat's own photo, named for them in this container's folder
+    if (wallpaper != null && wallpaper.startsWith('image:')) {
+      final f = File(wallpaper.substring(6));
+      final folder = await container.folder('wallpapers');
+      if (p.isWithin(folder.path, f.path) && await f.exists()) {
+        await shredFile(f.path);
+      }
+    }
+    return [
+      for (final r in rows)
+        if (r['msg_uid'] case final String u) u,
+    ];
+  }
+
+  // words "this isn't them" let go here: nobody who writes first gets them
+  Future<bool> tombed(String name) async {
+    final db = await open();
+    final r = await db.query(
+      'name_tombs',
+      columns: ['name'],
+      where: 'name = ?',
+      whereArgs: [name],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
+  Future<List<({String name, int at})>> tombs() async {
+    final db = await open();
+    return [
+      for (final r in await db.query('name_tombs'))
+        (name: r['name'] as String, at: (r['at'] as num).toInt()),
+    ];
+  }
+
+  // what another container blocked and let go, kept here as it goes
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    final db = await open();
+    await db.transaction((t) async {
+      for (final k in keys) {
+        await t.insert('blocked_keys', {
+          'x': k.x,
+          'at': k.at,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      for (final n in tombs) {
+        await t.insert('name_tombs', {
+          'name': n.name,
+          'at': n.at,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+  }
+
+  // an add the person made takes the words again
+  Future<void> clearTomb(String name) async {
+    final db = await open();
+    await db.delete('name_tombs', where: 'name = ?', whereArgs: [name]);
+  }
+
+  // someone let go in the other container: no seat in a group here, no
+  // row that only held their key, and no admin in a group they ran. only
+  // where the row here has [keyHex], or no key at all: the same words on
+  // another key are someone else
+  Future<void> dropSeats(String haloId, String keyHex) async {
+    final db = await open();
+    await db.transaction((t) async {
+      final row = await t.query(
+        'contacts',
+        columns: ['xpub'],
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      final x = row.isEmpty
+          ? ''
+          : ((row.first['xpub'] as String?) ?? '').trim().toLowerCase();
+      if (x.isNotEmpty && x != keyHex.trim().toLowerCase()) return;
+      for (final (table, col) in const [
+        ('group_members', 'halo_id'),
+        ('group_media_owed', 'member'),
+        ('group_ctl_out', 'member'),
+        ('group_resent', 'member'),
+      ]) {
+        await t.delete(table, where: '$col = ?', whereArgs: [haloId]);
+      }
+      await t.update(
+        'groups',
+        {'admin_id': kAdminGone},
+        where: 'admin_id = ?',
+        whereArgs: [haloId],
+      );
+      final own = await t.query(
+        'messages',
+        columns: ['id'],
+        where: _kOneToOne,
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      if (own.isEmpty) {
+        await t.delete(
+          'contacts',
+          where: 'halo_id = ? AND accepted = ?',
+          whereArgs: [haloId, 0],
+        );
+      }
+    });
+  }
+
+  // a key blocked here by "this isn't them"
+  Future<bool> keyBlocked(String keyHex) async {
+    final db = await open();
+    final r = await db.query(
+      'blocked_keys',
+      columns: ['x'],
+      where: 'x = ?',
+      whereArgs: [keyHex.trim().toLowerCase()],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
+  // the keys blocked here, the newest first
+  Future<List<({String x, int at})>> blockedKeys() async {
+    final db = await open();
+    return [
+      for (final r in await db.query('blocked_keys', orderBy: 'at DESC'))
+        (x: r['x'] as String, at: (r['at'] as num).toInt()),
+    ];
+  }
+
+  Future<void> unblockKey(String keyHex) async {
+    final db = await open();
+    await db.delete(
+      'blocked_keys',
+      where: 'x = ?',
+      whereArgs: [keyHex.trim().toLowerCase()],
+    );
   }
 
   // a member of a group or a room here
@@ -4533,7 +4818,10 @@ class HaloDb implements GroupOwedStore {
 
   // rows that came in and go before they were read take their unread mark
   // with them. the unread ones are the newest that many that came in
-  Future<void> _unreadGo(Database db, List<Map<String, Object?>> rows) async {
+  Future<void> _unreadGo(
+    DatabaseExecutor db,
+    List<Map<String, Object?>> rows,
+  ) async {
     final gone = <(String, bool), Set<int>>{};
     for (final r in rows) {
       final id = r['id'];
@@ -8067,6 +8355,23 @@ Future<void> searchForgetsOnce(DatabaseExecutor db) async {
   await RouterRows.putMeta(db, 'fts_forgets', '1');
 }
 
+// a delete or "this isn't them" owes the file a tidy: the search index
+// keeps a removed message's words in leaves it no longer reads, and only a
+// merge and a vacuum leave none of them in the file. run as the app leaves
+// the screen, or after the next start
+Future<void> oweTidy(DatabaseExecutor t) => RouterRows.oweTidy(t);
+
+Future<void> tidyIfOwed(Database db) async {
+  if (!await RouterRows.tidyOwed(db)) return;
+  try {
+    await db.execute("INSERT INTO msg_fts(msg_fts) VALUES('optimize')");
+  } catch (e) {
+    dlog('tidy: index not merged (${e.runtimeType})');
+  }
+  await db.execute('VACUUM');
+  await RouterRows.tidyDone(db);
+}
+
 // pages freed before that held old rows: one vacuum per database rewrites
 // them, off the start
 Future<void> wipeFreedOnce(DatabaseExecutor db) async {
@@ -8615,6 +8920,28 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
     dlog('block tables: $e');
   }
 }
+
+// the upgrade to 81: keys taken as not who they said ("this isn't them"),
+// blocked by the key alone, never by a name, and the words they went by,
+// which nobody who writes first is given again
+Future<void> blockedKeysTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS blocked_keys (
+      x TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS name_tombs (
+      name TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )
+  ''');
+}
+
+/// a group whose admin "this isn't them" took off this phone: it has none,
+/// so no change to it is taken from anyone. never an id's shape
+const kAdminGone = 'gone:admin';
 
 // the upgrade to 75: when a seeded span is listened on from. one seeded
 // before is listened on from now, for as long as a new block would be.
@@ -9574,36 +9901,55 @@ Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
     (await handleHaloUriAdded(raw, scanned: scanned)).$1;
 
 /// asked when a link names someone here under a name a request, an
-/// introduction or a group gave, never checked, on another key: true lets
-/// the link take the name. [chat] says the other one has a chat that goes
+/// introduction or a group gave, never checked, or a deleted chat's, on
+/// another key: true lets the link take the name. [chat] says the other one
+/// has a chat that goes, [deleted] that its chat was deleted, [tombed] that
+/// "this isn't them" let the words go
 @visibleForTesting
-Future<bool> Function(String id, {required bool chat}) askTakeName =
-    askTakeNameSheet;
+Future<bool> Function(
+  String id, {
+  required bool chat,
+  bool deleted,
+  bool tombed,
+})
+askTakeName = askTakeNameSheet;
 
 /// what a link may do about the one here its name is bound to on another
 /// key
 enum NameHold {
   // a verified, blocked or checked name stays theirs
   kept,
-  // given by a request, an introduction or a group and never checked: the
-  // link takes it if the person says so
+  // given by a request, an introduction or a group and never checked, or
+  // a deleted chat's when the person adds someone themself: the link takes
+  // it if the person says so
   ask,
-  // the same, with its chat deleted: nothing here holds it any more
+  // given by a request, an introduction or a group, with its chat deleted:
+  // nothing here holds it any more
   free,
 }
 
 /// [seated]: they are in a group or a room here. whoever took the words
-/// would take that seat as well, so the name stays
-NameHold nameHoldOf(Map<String, Object?>? row, {bool seated = false}) {
-  if (seated ||
-      !nameUnchecked(row) ||
-      (row!['blocked'] as num?)?.toInt() == 1) {
+/// would take that seat as well, so the name stays. [asked]: an add the
+/// person makes (a link, a scan, a code, a handle), never something that
+/// came to this phone by itself
+NameHold nameHoldOf(
+  Map<String, Object?>? row, {
+  bool seated = false,
+  bool asked = false,
+}) {
+  if (row == null ||
+      seated ||
+      (row['blocked'] as num?)?.toInt() == 1 ||
+      (row['verified'] as num?)?.toInt() == 1 ||
+      isDevId(row['halo_id'] as String? ?? '')) {
     return NameHold.kept;
   }
   final parked =
       (row['accepted'] as num?)?.toInt() != 1 &&
       (row['archived'] as num?)?.toInt() == 1;
-  return parked ? NameHold.free : NameHold.ask;
+  if (nameUnchecked(row)) return parked ? NameHold.free : NameHold.ask;
+  // added by hand and deleted: only the person can hand the words on
+  return parked && asked ? NameHold.ask : NameHold.kept;
 }
 
 // an add from a camera scan clears the marks. any other add asks for the
@@ -9614,10 +9960,15 @@ Future<void> _noteHowAdded(
   required bool scanned,
   required bool already,
   required bool taken,
+  bool untombed = false,
 }) async {
   try {
     final was = nameCheckOf(await session.getContact(id));
-    final now = scanned
+    // words "this isn't them" let go: their chat asks for the number,
+    // however the add was made
+    final now = untombed
+        ? kNameAsk
+        : scanned
         ? 0
         : taken
         ? kNameAsk
@@ -9640,8 +9991,12 @@ Future<void> _noteHowAdded(
 Future<(String, bool)> handleHaloUriAdded(
   String raw, {
   bool Function(String id)? hidden,
+  bool Function(String keyHex)? shutKeys,
   bool scanned = false,
+  @visibleForTesting AppState? app,
 }) async {
+  // the one app on a phone; a test hands in the one it built
+  final appState = app ?? _app;
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
@@ -9725,6 +10080,11 @@ Future<(String, bool)> handleHaloUriAdded(
       ? _bundleIdentity(parsed['bundle']!)
       : _xIdentity(parsed['xpub']!.toLowerCase());
   if (cardKey == null) return (l10n.appInvalidUri, false);
+  // a key "this isn't them" blocked here takes no link, whatever words it
+  // gives, and says so before anything a shut vault holds is asked
+  if (await session.keyBlocked(_keyHex(cardKey))) {
+    return (l10n.appKeyBlocked, false);
+  }
   // the signal store holds a shut vault's people too: a link of one of
   // theirs reads as any link that does not take, on their key or another.
   // an add would put an everyday row beside the hidden one and a fresh
@@ -9732,7 +10092,10 @@ Future<(String, bool)> handleHaloUriAdded(
   // decoy only keeps rows of its own
   if (!sessionQuiet) {
     await appState._afterClose();
-    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
+    // a key the shut vault blocked reads as such a link too: the everyday
+    // side says nothing of the vault
+    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!) ||
+        (shutKeys ?? appState.keyBlockedWhileShut)(_keyHex(cardKey))) {
       return (
         viaHandle ? l10n.handleRegistryFailed : l10n.appInvalidUri,
         false,
@@ -9748,6 +10111,7 @@ Future<(String, bool)> handleHaloUriAdded(
   // no reason to turn the link away: the person keeps the one they choose.
   // a verified one, or one they checked, stays
   var taken = false;
+  var untombed = false;
   if (bound != null && !_eqBytes(bound, cardKey)) {
     final id = parsed['id']!;
     (String, bool) refused(Map<String, Object?>? row) => (
@@ -9770,6 +10134,9 @@ Future<(String, bool)> handleHaloUriAdded(
         !await askTakeName(
           id,
           chat: (row?['accepted'] as num?)?.toInt() == 1,
+          deleted:
+              (row?['accepted'] as num?)?.toInt() != 1 &&
+              (row?['archived'] as num?)?.toInt() == 1,
         )) {
       return ('', false);
     }
@@ -9788,6 +10155,13 @@ Future<(String, bool)> handleHaloUriAdded(
       await appState.releaseName(id);
       taken = true;
     }
+  } else if (bound == null && await appState._tombed(parsed['id']!)) {
+    // words "this isn't them" let go: this add, the person's own, takes
+    // them once asked, and only once the contact is written
+    if (!await askTakeName(parsed['id']!, chat: false, tombed: true)) {
+      return ('', false);
+    }
+    taken = untombed = true;
   }
   // someone blocked stays blocked: an add would say they can be written to
   // while nothing of theirs is kept. the blocked list lets them back
@@ -9816,7 +10190,15 @@ Future<(String, bool)> handleHaloUriAdded(
       owe: asked,
     );
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
-    await _noteHowAdded(id, scanned: scanned, already: already, taken: taken);
+    if (untombed) await appState._untomb(id);
+    await appState._untombShut(id);
+    await _noteHowAdded(
+      id,
+      scanned: scanned,
+      already: already,
+      taken: taken,
+      untombed: untombed,
+    );
     // nothing reaches them until a first message does: their chat opens,
     // and says so while it is empty
     if (sessionQuiet) {
@@ -9858,7 +10240,15 @@ Future<(String, bool)> handleHaloUriAdded(
       parsed['xpub']!,
       owe: asked,
     );
-    await _noteHowAdded(id, scanned: scanned, already: wasIn, taken: taken);
+    if (untombed) await appState._untomb(id);
+    await appState._untombShut(id);
+    await _noteHowAdded(
+      id,
+      scanned: scanned,
+      already: wasIn,
+      taken: taken,
+      untombed: untombed,
+    );
     if (!sessionQuiet) await appState.subscribePeer(id, fresh: true);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
     // home and the pickers show them now, and their chat opens as a v2
@@ -10203,7 +10593,9 @@ enum LinkKin {
 Future<(LinkKin, String)> linkKinOf(
   String link, {
   bool Function(String id)? hidden,
+  @visibleForTesting AppState? app,
 }) async {
+  final appState = app ?? _app;
   final parsed = parseHaloUri(link);
   if (parsed == null) return (LinkKin.stranger, '');
   final id = parsed['id']!;
@@ -10217,7 +10609,7 @@ Future<(LinkKin, String)> linkKinOf(
         return (LinkKin.stranger, id);
       }
     }
-    return await _linkKin(parsed, id);
+    return await _linkKin(parsed, id, appState);
   } catch (e) {
     dlog('link kin: ${e.runtimeType}');
     return (LinkKin.stranger, id);
@@ -10227,6 +10619,7 @@ Future<(LinkKin, String)> linkKinOf(
 Future<(LinkKin, String)> _linkKin(
   Map<String, String> parsed,
   String id,
+  AppState appState,
 ) async {
   final cardKey = parsed['bundle'] != null
       ? _bundleIdentity(parsed['bundle']!)
@@ -10252,6 +10645,10 @@ Future<(LinkKin, String)> _linkKin(
       NameHold.free => (LinkKin.stranger, id),
     };
   }
+  // words "this isn't them" let go: the door asks before it takes them
+  if (bound == null && await appState._tombed(id)) {
+    return (LinkKin.claimed, id);
+  }
   if (row != null && row['accepted'] == 1 && row['blocked'] != 1) {
     return (LinkKin.kept, name);
   }
@@ -10265,6 +10662,11 @@ Future<(LinkKin, String)> _linkKin(
 }
 
 // shared singletons + state
+
+// the app a first contact is being opened for: the one app on a phone, and
+// in tests the one that asked
+AppState? _receiver;
+AppState get _receiving => _receiver ?? appState;
 
 HaloEngine _engine = HaloEngine();
 
@@ -10714,6 +11116,14 @@ class AppIo {
         firstFails.note('key');
         return null;
       }
+      // a key "this isn't them" blocked opens nothing, under any name
+      final kx = _keyHex(key);
+      if (await _receiving._keyBlockedHere(kx)) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        dlog('back-pair: dropped');
+        // what the debug list says names no block the screen does not show
+        throw FirstRefused(await live.keyBlocked(kx) ? 'blocked' : 'decrypt');
+      }
       // a name stays with the key first seen for it
       var at = h;
       final bound = await _boundIdentity(
@@ -10729,7 +11139,10 @@ class AppIo {
           await appState._nameFree(h, await live.getContact(h))) {
         await appState.releaseName(h);
         dlog('back-pair: a deleted name let go');
-      } else if (bound != null && !_eqBytes(bound, key)) {
+      } else if ((bound != null && !_eqBytes(bound, key)) ||
+          (bound == null && await _receiving._tombedArriving(h))) {
+        // bound to another key, or let go by "this isn't them": the words
+        // go to no one who writes first
         at = unboundIdOf(key);
         final held = await _boundIdentity(
           at,
@@ -10813,6 +11226,10 @@ class AppIo {
 
   // what this process showed for a chat leaves the shade
   Future<void> unnotify(String payload) => clearNotificationsFor(payload);
+
+  // the same for a chat whose rows went, by the tags read before
+  Future<void> unnotifyGone(String payload, Set<String> tags) =>
+      clearNotificationsFor(payload, tags: tags);
 
   // one message's notification leaves the shade
   Future<void> unnotifyMessage(String msgUid) =>
@@ -13794,6 +14211,13 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
+    // left the screen: a quiet moment for what a removal owes the file. a
+    // vault is tidied right after a removal in it, and as it opens, never
+    // as it shuts
+    if (!front) {
+      unawaited(_tidy(live));
+      if (sessionQuiet) unawaited(_tidy(_session.primary));
+    }
     if (front) {
       unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
@@ -15765,8 +16189,13 @@ class AppState extends ChangeNotifier {
       if (fromAdmin &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
         final seats = await _seats(env.rosterParticipants, db, room: isRoom);
+        final out = await _keyBlockedSeats(
+          env.rosterParticipants,
+          room: isRoom,
+        );
         await db.syncGroupMembers(env.groupId!, [
-          for (final h in roster) seats[h] ?? h,
+          for (final h in roster)
+            if (!out.contains(h)) seats[h] ?? h,
         ]);
         await _subscribeRoomMembers(env.groupId!);
         if (isRoom) await _roomLetIn(env.groupId!, roster, db);
@@ -15781,6 +16210,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -16499,6 +16929,9 @@ class AppState extends ChangeNotifier {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: owed group texts not run (${e.runtimeType})');
             }
+          } else if (u != null && await _sealedBlocked(u.wire)) {
+            // sealed before "this isn't them" blocked its key: it goes
+            dlog('unseal: a blocked key, dropped');
           } else if (u != null) {
             try {
               final env = unwrapMessage(u.wire);
@@ -16553,6 +16986,14 @@ class AppState extends ChangeNotifier {
       }
     } finally {
       _unsealing = false;
+    }
+  }
+
+  Future<bool> _sealedBlocked(String wire) async {
+    try {
+      return await _keyBlockedHere(unwrapMessage(wire).senderXPub ?? '');
+    } catch (_) {
+      return false;
     }
   }
 
@@ -16639,6 +17080,11 @@ class AppState extends ChangeNotifier {
     // the developer is his pinned card alone, never someone's say-so
     if (devCardClaim(id: h, xPub: card.xPub, fc: card.fc)) {
       dlog('intro: names the developer, dropped');
+      return;
+    }
+    // a key "this isn't them" blocked comes back on no one's card
+    if (await _keyBlockedHere(card.xPub)) {
+      dlog('intro: a blocked key, dropped');
       return;
     }
     final everyday = identical(db, live);
@@ -16730,7 +17176,26 @@ class AppState extends ChangeNotifier {
         ss: signalSession,
         row: db.getContact,
       );
-      if (held != null && !_eqBytes(held, key)) out[h] = unboundIdOf(key);
+      if ((held != null && !_eqBytes(held, key)) ||
+          (held == null && await _tombedArriving(h))) {
+        out[h] = unboundIdOf(key);
+      }
+    }
+    return out;
+  }
+
+  // the people a member list names on a key "this isn't them" blocked
+  // here: no seat and no row from it. a room seats keys, not people
+  Future<Set<String>> _keyBlockedSeats(
+    List<Map<String, String>>? people, {
+    required bool room,
+  }) async {
+    final out = <String>{};
+    if (room || people == null) return out;
+    for (final p in people) {
+      final h = p['h'];
+      final x = (p['x'] ?? '').trim().toLowerCase();
+      if (h != null && x.isNotEmpty && await _keyBlockedHere(x)) out.add(h);
     }
     return out;
   }
@@ -16795,7 +17260,11 @@ class AppState extends ChangeNotifier {
         }
         if (!await _fitsCap(groupId, members.toSet().length, db)) return;
         final seats = await _seats(gc.participants, db, room: isRoom);
-        members = [for (final h in members) seats[h] ?? h];
+        final out = await _keyBlockedSeats(gc.participants, room: isRoom);
+        members = [
+          for (final h in members)
+            if (!out.contains(h)) seats[h] ?? h,
+        ];
         // rosters can land out of order, a catch-up's most of all: one
         // older than the last taken changes nothing
         final stamp = gc.stamp;
@@ -16836,6 +17305,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -16852,9 +17322,11 @@ class AppState extends ChangeNotifier {
         final isRoom = await _roomOf(groupId, db) != null;
         final have = await db.getGroupMembers(groupId);
         final seats = await _seats(gc.participants, db, room: isRoom);
+        final out = await _keyBlockedSeats(gc.participants, room: isRoom);
         final adds = {
           for (final h in _members(gc.members!, room: isRoom))
-            if (!have.contains(seats[h] ?? h)) seats[h] ?? h,
+            if (!out.contains(h) && !have.contains(seats[h] ?? h))
+              seats[h] ?? h,
         };
         if (!await _fitsCap(groupId, have.length + adds.length, db)) return;
         for (final h in adds) {
@@ -16869,6 +17341,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                !out.contains(h) &&
                 wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(seats[h] ?? h, o, x);
@@ -17269,6 +17742,7 @@ class AppState extends ChangeNotifier {
     if (c == HaloContainer.vault) {
       // what a move cut short left in the everyday folders goes with it
       await _repairMoves();
+      // its marks of "this isn't them" stay with the list, unseen, and hold
       await _router.forget();
       await _forgetPeers(_router.ids);
     }
@@ -17345,6 +17819,8 @@ class AppState extends ChangeNotifier {
       // what is still listed the vault no longer holds: deleted inside it
       await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
     }
+    // its blocked keys and let-go words stay, on the side its chats went to
+    await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());
     await _host.clearEntry(v.container);
     if (everyday) await _router.retire();
     if (identical(_session.vault, v)) {
@@ -17771,6 +18247,9 @@ class AppState extends ChangeNotifier {
       if (decoy) {
         await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
       }
+      // seats of people the everyday side let go while it was shut, and its
+      // blocks and let-go words as its own rows hold them
+      if (!decoy) await _marksAtOpen(v);
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
@@ -18810,6 +19289,7 @@ class AppState extends ChangeNotifier {
     try {
       o = _firstOpened.take(k);
       if (o == null) {
+        _receiver = this;
         final opened = await _io.openFirstContact(cipher);
         if (opened == null) return null;
         o = _FirstOpen(opened.haloId, opened.plain, opened.env);
@@ -18868,6 +19348,11 @@ class AppState extends ChangeNotifier {
     var fresh = false;
     if (to == RouteTo.everyday || to == RouteTo.vault) {
       final db = to == RouteTo.vault ? _openVault! : live;
+      // a removal under way, or a block that came meanwhile: nothing filed
+      if (_removing.contains(h) ||
+          await _keyBlockedHere(env.senderXPub ?? '')) {
+        return (h, RouteTo.dropped);
+      }
       filed = db;
       // as the first try found it: a row it made is still its own
       fresh = opened.fresh ??= await db.getContact(h) == null;
@@ -18879,7 +19364,9 @@ class AppState extends ChangeNotifier {
       );
       // filed on its own: the request says the name it gave
       final said = env.senderHaloId;
-      if (said != null && said != h) await _noteOtherKey(db, h, said);
+      if (said != null && said != h && await _saidHeldHere(said)) {
+        await _noteOtherKey(db, h, said);
+      }
     }
     final x = env.senderXPub;
     if (!opened.heard) {
@@ -18941,6 +19428,19 @@ class AppState extends ChangeNotifier {
     if (held == null) return false;
     final given = _rowIdentity({'xpub': env.senderXPub ?? ''});
     return given == null || !_eqBytes(held, given);
+  }
+
+  // the name a first contact gave is someone's here: a row on the everyday
+  // side or in the open vault, or words they let go. what only the router
+  // knows, a shut vault's people and its marks, files the sender apart and
+  // says nothing
+  Future<bool> _saidHeldHere(String said) async {
+    for (final d in [live, ?_openVault]) {
+      if (await d.getContact(said) != null || await d.tombed(said)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // a request filed on its own id says which name it gave, once
@@ -19050,8 +19550,11 @@ class AppState extends ChangeNotifier {
       '_pending_back_pair_',
     };
     for (final addr in await _io.sessionAddresses()) {
-      // a deleted dev chat stays deleted, whatever session is left
-      if (skip.contains(addr) || isDevId(addr)) continue;
+      // a deleted dev chat stays deleted, whatever session is left, and one
+      // being taken off this phone is not brought back
+      if (skip.contains(addr) || isDevId(addr) || _removing.contains(addr)) {
+        continue;
+      }
       final p = await _io.decrypt(addr, cipher);
       if (p == null) continue;
       // and a peer let go does not come back as the developer
@@ -20422,9 +20925,9 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
-    // words a request, an introduction or a group gave, never checked, hold
-    // nothing once the chat is gone: a link or a first contact on another
-    // key takes them (NameHold.free)
+    // words a request, an introduction or a group gave hold nothing once
+    // the chat is gone (NameHold.free). any other deleted chat's words go
+    // only to an add the person makes, and asks (NameHold.ask)
     dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     await _forgetPairSeen({haloId});
@@ -20440,7 +20943,7 @@ class AppState extends ChangeNotifier {
   Future<NameHold> _nameHold(String id, Map<String, Object?>? row) async =>
       sessionQuiet || _router.keeps(id)
       ? NameHold.kept
-      : nameHoldOf(row, seated: await _seated(id));
+      : nameHoldOf(row, seated: await _seated(id), asked: true);
 
   // in a group or a room here: on the everyday side, or in the open vault
   Future<bool> _seated(String id) async {
@@ -20484,6 +20987,291 @@ class AppState extends ChangeNotifier {
     await forgetPeerFc(id);
     await live.forgetName(id);
     dlog('name: let go for the one chosen');
+  }
+
+  // ids "this isn't them" is taking off this phone right now: nothing of
+  // theirs is filed meanwhile
+  final _removing = <String>{};
+
+  // "this isn't them": the safety number they read out is not the one on
+  // screen. they go from the container that holds them, all of it, and
+  // [keyHex], the key that number was made from, is blocked there. their
+  // words go to no one who writes first; only an add the person makes takes
+  // them again. false when the key moved meanwhile, or it is the developer,
+  // who is his pinned keys alone
+  Future<bool> notThem(String haloId, String keyHex) async {
+    final key = keyHex.trim().toLowerCase();
+    if (isDevId(haloId) || key.isEmpty) return false;
+    final s = session;
+    final quiet = sessionQuiet;
+    final hidden = s.isHidden(haloId);
+    if (await s.heldKey(haloId) != key) return false;
+    final row = await s.getContact(haloId);
+    final xs = {
+      ((row?['xpub'] as String?) ?? '').trim().toLowerCase(),
+      if (!quiet && signalSession.ready)
+        (await signalSession.peerXPubHex(haloId)) ?? '',
+      key,
+    }..remove('');
+    // read while their rows still say: where the relay keeps what it held
+    // for them, and the tags their notifications went under
+    String? relayX;
+    var tags = const <String>{};
+    if (!quiet) {
+      try {
+        relayX = await _xPubFor(haloId, (await _reach(haloId))?.xpub);
+        tags = await s.notifTagsOf(haloId);
+      } catch (e) {
+        dlog('not them: not read before (${e.runtimeType})');
+      }
+    }
+    _removing.add(haloId);
+    try {
+      Future<List<String>?> run() async {
+        if (await s.heldKey(haloId) != key) return null;
+        final went = await s.removeAndBlockKey(haloId, key);
+        // the everyday store holds every session, a hidden chat's too
+        if (!quiet && signalSession.ready) {
+          final addr = SignalProtocolAddress(haloId, 1);
+          await signalSession.sessionStore.deleteSession(addr);
+          await signalSession.identityStore.removePeerIdentity(addr);
+        }
+        return went;
+      }
+
+      final uids = quiet
+          ? await run()
+          : await signalSession.serial(haloId, run);
+      if (uids == null) return false;
+      dropChatDraft(haloId);
+      if (!quiet) {
+        // what the relay held is not fetched again, and the shade lets go
+        // of their chat and of what they said in groups
+        try {
+          if (relayX != null) await _io.letHeld(relayX, 'drop');
+        } catch (e) {
+          dlog('not them: the relay not told (${e.runtimeType})');
+        }
+        await cancelWithRetry(
+          () => _io.unnotifyGone(haloId, tags),
+          'not them shade',
+        );
+        for (final u in uids) {
+          await cancelWithRetry(() => _io.unnotifyMessage(u), 'not them');
+        }
+        for (final x in xs) {
+          if (_xPubToHaloId[x] == haloId) _xPubToHaloId.remove(x);
+          _io.unlisten(x);
+        }
+        await _forgetPeers({haloId});
+        // the router lets them go and keeps the vault's block and words
+        // while it is shut, and a hidden group's card loses its seat
+        final v = _openVault;
+        if (hidden && v != null) {
+          await _serial(() async {
+            await _router.unlist([haloId]);
+            await _router.markKey(key, on: true);
+            await _router.markTomb(haloId, on: true);
+            try {
+              await _attached(v, _recard);
+            } catch (e) {
+              // the cards are read again as the vault next opens
+              dlog('not them: cards not read (${e.runtimeType})');
+            }
+          });
+        }
+      }
+      await _seatsGoElsewhere(s, haloId, key, hidden: hidden);
+      final v = s.vault;
+      if (hidden && v != null && identical(_session.vault, v)) {
+        try {
+          final rebuilt = await Session.withVault(s.primary, v);
+          if (identical(_session.vault, v)) _session = rebuilt;
+        } catch (e) {
+          dlog('not them: session not rebuilt (${e.runtimeType})');
+        }
+      }
+      // what the removal owes a vault's file is done now, off the queue: a
+      // vault is never tidied as it shuts
+      final owes = s.vault;
+      if (hidden && owes != null) unawaited(_tidy(owes));
+    } finally {
+      _removing.remove(haloId);
+    }
+    _bumpChatRev(haloId);
+    await refreshContacts();
+    await refreshGroups();
+    dlog('not them: removed, their key blocked');
+    return true;
+  }
+
+  // their seat in the other container's groups goes too: now when it is
+  // open, else as the vault next opens. the everyday side is always open
+  Future<void> _seatsGoElsewhere(
+    Session s,
+    String haloId,
+    String keyHex, {
+    required bool hidden,
+  }) async {
+    try {
+      if (hidden) {
+        await s.primary.dropSeats(haloId, keyHex);
+        return;
+      }
+      final v = s.vault;
+      if (v != null) {
+        await v.dropSeats(haloId, keyHex);
+      } else if (!sessionQuiet && _router.hasVault) {
+        await _router.queueSeatGone(haloId, keyHex);
+      }
+    } catch (e) {
+      dlog('not them: seats elsewhere not let go (${e.runtimeType})');
+    }
+  }
+
+  @visibleForTesting
+  Future<void> seatsGoneIntoForTest(HaloDb vault) => _seatsGoneInto(vault);
+
+  @visibleForTesting
+  Future<void> remarkForTest(HaloDb vault) => _marksAtOpen(vault);
+
+  // a vault opening: what the everyday side let go and took back while it
+  // was shut goes from it first, then its marks are read from its rows
+  Future<void> _marksAtOpen(HaloDb vault) async {
+    await _seatsGoneInto(vault);
+    await _tombsGoneInto(vault);
+    await _remarkFrom(vault);
+  }
+
+  Future<void> _remarkFrom(HaloDb vault) async {
+    try {
+      await _router.remark(
+        keys: [for (final k in await vault.blockedKeys()) k.x],
+        tombs: [for (final t in await vault.tombs()) t.name],
+      );
+    } catch (e) {
+      dlog('vault: marks not read (${e.runtimeType})');
+    }
+  }
+
+  // what the everyday side let go while the vault was shut, out of it now
+  Future<void> _seatsGoneInto(HaloDb vault) async {
+    try {
+      final gone = await _router.seatsGone();
+      for (final (id, key) in gone) {
+        await vault.dropSeats(id, key);
+      }
+      if (gone.isNotEmpty) await _router.clearSeatsGone();
+    } catch (e) {
+      dlog('vault: seats not let go (${e.runtimeType})');
+    }
+  }
+
+  // a tidy that failed waits before it is tried again: ten minutes, then
+  // twice as long each time, up to a day
+  final _tidyWait = <String, ({int at, int wait})>{};
+
+  @visibleForTesting
+  Future<void> tidyForTest(HaloDb d, {int? now}) => _tidy(d, now: now);
+
+  Future<void> _tidy(HaloDb d, {int? now}) async {
+    if (haloWiping) return;
+    final k = d.container.dbFile;
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    final was = _tidyWait[k];
+    if (was != null && at < was.at + was.wait) return;
+    try {
+      await tidyIfOwed(await d.open());
+      _tidyWait.remove(k);
+    } catch (e) {
+      final wait = was == null
+          ? const Duration(minutes: 10).inMilliseconds
+          : min(was.wait * 2, const Duration(days: 1).inMilliseconds);
+      _tidyWait[k] = (at: at, wait: wait);
+      dlog('tidy: not done (${e.runtimeType})');
+    }
+  }
+
+  // a key "this isn't them" blocked, in any container open here
+  Future<List<({String x, int at})>> blockedKeys() => session.blockedKeys();
+
+  Future<void> unblockKey(String keyHex) async {
+    await session.unblockKey(keyHex);
+    if (!sessionQuiet && _openVault != null) {
+      await _router.markKey(keyHex, on: false);
+    }
+    notifyListeners();
+  }
+
+  // an arrival's key blocked on the everyday side or in the vault, open or
+  // shut (its marks on the router)
+  Future<bool> _keyBlockedHere(String keyHex) async {
+    if (keyHex.trim().isEmpty) return false;
+    if (_router.keyBlocked(keyHex)) return true;
+    for (final d in [live, ?_openVault]) {
+      if (await d.keyBlocked(keyHex)) return true;
+    }
+    return false;
+  }
+
+  // words "this isn't them" let go, for an add the person makes: what the
+  // session on screen holds. a shut vault's marks are never shown to it
+  Future<bool> _tombed(String id) async => sessionQuiet
+      ? _tombedIn([session.primary, ?session.vault], id)
+      : _openVault != null
+      ? _router.tombedLive(id) || await _tombedIn([live, ?_openVault], id)
+      : _tombedIn([live], id);
+
+  // an everyday add took words the shut vault let go: its mark comes off,
+  // and the vault's own tomb as it next opens
+  Future<void> _untombShut(String id) async {
+    if (sessionQuiet || _openVault != null || !_router.tombedLive(id)) return;
+    await _router.markTomb(id, on: false);
+    await _router.queueTombGone(id);
+  }
+
+  // what the everyday side took back while the vault was shut
+  Future<void> _tombsGoneInto(HaloDb vault) async {
+    try {
+      final ids = await _router.tombsGone();
+      for (final id in ids) {
+        await vault.clearTomb(id);
+      }
+      if (ids.isNotEmpty) await _router.clearTombsGone();
+    } catch (e) {
+      dlog('vault: let-go words not taken back (${e.runtimeType})');
+    }
+  }
+
+  // the same for what arrives: it is filed on the everyday side or in its
+  // vault, open or shut, whatever is on screen
+  Future<bool> _tombedArriving(String id) async =>
+      _router.tombed(id) || await _tombedIn([live, ?_openVault], id);
+
+  static Future<bool> _tombedIn(List<HaloDb> dbs, String id) async {
+    for (final d in dbs) {
+      if (await d.tombed(id)) return true;
+    }
+    return false;
+  }
+
+  // an add the person made takes the words back wherever they were let go
+  Future<void> _untomb(String id) async {
+    if (sessionQuiet) {
+      for (final d in [session.primary, ?session.vault]) {
+        await d.clearTomb(id);
+      }
+      return;
+    }
+    for (final d in [live, ?_openVault]) {
+      await d.clearTomb(id);
+    }
+    // a shut vault's own tomb goes as it next opens, its mark now
+    if (_openVault == null) {
+      await _untombShut(id);
+    } else if (_router.tombedLive(id)) {
+      await _router.markTomb(id, on: false);
+    }
   }
 
   Future<void> archive(String haloId) async {
@@ -21823,6 +22611,12 @@ class AppState extends ChangeNotifier {
 
   /// [id] is someone a shut vault holds: nothing here may show they are
   /// known
+  // a key no screen here may name as blocked: the shut vault's, or one a
+  // vault that went blocked, as the marks on the router say
+  bool keyBlockedWhileShut(String keyHex) =>
+      !sessionQuiet &&
+      _router.keyBlockedUnseen(keyHex, vaultOpen: _openVault != null);
+
   bool hiddenWhileShut(String id) =>
       _openVault == null && _router.cardOf(id) != null;
 
@@ -24275,6 +25069,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+AppState get _app => appState;
 
 // the way out of a send stuck on tor, shared by every chat and the home card
 final torValve = TorValve(

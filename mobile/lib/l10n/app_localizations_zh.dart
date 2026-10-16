@@ -7662,6 +7662,14 @@ class AppLocalizationsZh extends AppLocalizations {
       '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。不确定链接从哪来？就保留现有的。';
 
   @override
+  String get nameTakenDeletedLine =>
+      '你删除过一个用这三个词的聊天，它用的是另一把密钥。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+
+  @override
+  String get nameTakenTombLine =>
+      '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+
+  @override
   String get nameTakenUse => '使用这个链接';
 
   @override
@@ -7684,6 +7692,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return '你已屏蔽 $id。请在设置的“已屏蔽”中取消屏蔽后再添加。';
   }
+
+  @override
+  String get notThemNumbersDiffer => '号码不一致';
+
+  @override
+  String get notThemLine => '如果号码确实不一致，可能有人在冒用对方的名字，或者夹在你们中间。';
+
+  @override
+  String get notThemButton => '这不是对方本人';
+
+  @override
+  String get notThemSheetTitle => '要删除这位联系人并屏蔽其密钥吗？';
+
+  @override
+  String get notThemSheetLine =>
+      '聊天及其中的消息和文件都会从这部手机上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
+
+  @override
+  String get notThemRemove => '删除并屏蔽';
+
+  @override
+  String get notThemDone => '已删除，并已屏蔽其密钥';
+
+  @override
+  String get groupAdminGoneLine => '这个群的管理员已从这部手机上移除。群组的变更不会再送达给你。';
+
+  @override
+  String get blockedKey => '已屏蔽的密钥';
+
+  @override
+  String get appKeyBlocked => '你已屏蔽这个密钥。请在设置的“已屏蔽”中取消屏蔽后再添加。';
 
   @override
   String get devLinkGone => '你已删除与 Marios 的聊天。要开始新的聊天，请在设置中点按“给 Marios 发消息”。';
@@ -15405,6 +15444,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。不確定連結從哪來？就保留現有的。';
 
   @override
+  String get nameTakenDeletedLine =>
+      '你刪除過一個用這三個詞的聊天，它用的是另一把金鑰。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+
+  @override
+  String get nameTakenTombLine =>
+      '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+
+  @override
   String get nameTakenUse => '使用這個連結';
 
   @override
@@ -15427,6 +15474,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String appTheyAreBlocked(Object id) {
     return '你已封鎖 $id。請在設定的「已封鎖」中解除封鎖後再新增。';
   }
+
+  @override
+  String get notThemNumbersDiffer => '號碼不一致';
+
+  @override
+  String get notThemLine => '如果號碼確實不一致，可能有人在冒用對方的名字，或者夾在你們中間。';
+
+  @override
+  String get notThemButton => '這不是對方本人';
+
+  @override
+  String get notThemSheetTitle => '要刪除這位聯絡人並封鎖其金鑰嗎？';
+
+  @override
+  String get notThemSheetLine =>
+      '聊天及其中的訊息和檔案都會從這支手機上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
+
+  @override
+  String get notThemRemove => '刪除並封鎖';
+
+  @override
+  String get notThemDone => '已刪除，並已封鎖其金鑰';
+
+  @override
+  String get groupAdminGoneLine => '這個群組的管理員已從這支手機上移除。群組的變更不會再送達給你。';
+
+  @override
+  String get blockedKey => '已封鎖的金鑰';
+
+  @override
+  String get appKeyBlocked => '你已封鎖這個金鑰。請在設定的「已封鎖」中解除封鎖後再新增。';
 
   @override
   String get devLinkGone => '你已刪除與 Marios 的聊天。要開始新的聊天，請在設定中點按「傳訊息給 Marios」。';

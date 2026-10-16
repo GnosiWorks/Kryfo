@@ -25,6 +25,7 @@ import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../voice_mask.dart' show maskWavOff;
 import '../widgets/confirm_sheet.dart';
+import '../widgets/not_them.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
@@ -971,8 +972,10 @@ class _ChatScreenState extends State<ChatScreen>
       final row = await session.getContact(widget.peerHaloId);
       final unchecked = nameUnchecked(row);
       // no key held, no number to compare: nothing to ask for yet
-      final asks =
-          nameAsks(row) && await session.heldKey(widget.peerHaloId) != null;
+      final key = nameAsks(row)
+          ? await session.heldKey(widget.peerHaloId)
+          : null;
+      final asks = key != null;
       if (!mounted) return;
       _nameFlags = nameCheckOf(row);
       final folded = (_nameFlags & kNameLater) != 0;
@@ -4999,7 +5002,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  Future<void> _openKeyVerification() async {
+  Future<void> _openKeyVerification({bool notThem = false}) async {
     await Navigator.of(context).push(
       haloRoute(
         KeyVerificationScreen(
@@ -5008,9 +5011,11 @@ class _ChatScreenState extends State<ChatScreen>
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
           initialVerified: _verified,
+          notThemOpen: notThem,
         ),
       ),
     );
+    if (!mounted) return;
     // checked again there: what waited for it goes now
     await _readKeyState();
     if (!_keyHeld) unawaited(appState.drainOutbox());
@@ -5397,6 +5402,8 @@ class _ChatScreenState extends State<ChatScreen>
                               onVerify: _openKeyVerification,
                               onLater: _compareLater,
                               onDismiss: _compareDismiss,
+                              onNotThem: () =>
+                                  _openKeyVerification(notThem: true),
                             )
                           : const SizedBox(
                               key: ValueKey('compare-none'),
@@ -8418,6 +8425,7 @@ class _CompareSlot extends StatelessWidget {
   final VoidCallback onVerify;
   final VoidCallback onLater;
   final VoidCallback onDismiss;
+  final VoidCallback onNotThem;
   const _CompareSlot({
     super.key,
     required this.folded,
@@ -8425,6 +8433,7 @@ class _CompareSlot extends StatelessWidget {
     required this.onVerify,
     required this.onLater,
     required this.onDismiss,
+    required this.onNotThem,
   });
 
   @override
@@ -8440,6 +8449,7 @@ class _CompareSlot extends StatelessWidget {
             peerName: peerName,
             onVerify: onVerify,
             onLater: onLater,
+            onNotThem: onNotThem,
           );
     // an animated size cannot take a zero time: with no movement the swap
     // is plain
@@ -8545,23 +8555,26 @@ class _CompareRow extends StatelessWidget {
 
 // at the top of a chat added by a code or a link, or taken in from a
 // request: three words prove nothing, the safety number does. it goes once
-// they are verified, and folds into a line for later
+// they are verified, and folds into a line for later. a number read out
+// that is another opens the safety number with "this isn't them" up
 class _CompareCard extends StatelessWidget {
   final String peerName;
   final VoidCallback onVerify;
   final VoidCallback onLater;
+  final VoidCallback onNotThem;
   const _CompareCard({
     super.key,
     required this.peerName,
     required this.onVerify,
     required this.onLater,
+    required this.onNotThem,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 6),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border.all(color: HaloColors.line, width: 0.5),
@@ -8620,6 +8633,8 @@ class _CompareCard extends StatelessWidget {
               ),
             ],
           ),
+          // compared already, and their number was another
+          NotThemAsk(compact: true, onTap: onNotThem),
         ],
       ),
     );

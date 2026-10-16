@@ -216,6 +216,9 @@ class _Io implements AppIo {
   Future<void> unnotifyMessage(String msgUid) async {}
 
   @override
+  Future<void> unnotifyGone(String payload, Set<String> tags) =>
+      unnotify(payload);
+  @override
   Future<void> unnotify(String payload) async {}
 }
 
@@ -226,6 +229,12 @@ class _Io implements AppIo {
 // note of every call. anything else it is asked fails the test
 class _Mem implements HaloDb {
   _Mem(this._container);
+
+  // no key blocked by "this isn't them"
+  @override
+  Future<bool> keyBlocked(String keyHex) async => false;
+  @override
+  Future<bool> tombed(String name) async => false;
 
   final HaloContainer _container;
   final calls = <String>[];

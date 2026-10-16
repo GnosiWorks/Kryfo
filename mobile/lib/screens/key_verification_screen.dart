@@ -8,6 +8,8 @@ import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/swap.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/not_them.dart';
+import '../devchat/dev_gate.dart' show isDevId;
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
@@ -43,6 +45,8 @@ class KeyVerificationScreen extends StatefulWidget {
   // what the page that opened this already knows, so it opens in the right
   // state and only a tap here animates
   final bool? initialVerified;
+  // come from the compare card's "the numbers are different"
+  final bool notThemOpen;
   const KeyVerificationScreen({
     super.key,
     required this.peerHaloId,
@@ -50,6 +54,7 @@ class KeyVerificationScreen extends StatefulWidget {
     required this.myXpub,
     required this.peerXpub,
     this.initialVerified,
+    this.notThemOpen = false,
   });
 
   @override
@@ -234,6 +239,25 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                       child: _VerifyButton(
                         verified: _verified,
                         onTap: _read1 ? _toggle : () {},
+                      ),
+                    ),
+                  // the number they read out is another: not them. a
+                  // verified number matched, and the developer is pinned
+                  if (!isDevId(widget.peerHaloId))
+                    StaggerIn(
+                      index: 7,
+                      child: EaseSize(
+                        child: _read1 && !none && !_verified
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 14),
+                                child: NotThemFold(
+                                  key: ValueKey('not-them-$_key'),
+                                  peer: widget.peerHaloId,
+                                  keyHex: _key,
+                                  open: widget.notThemOpen,
+                                ),
+                              )
+                            : const SizedBox(width: double.infinity),
                       ),
                     ),
                 ],

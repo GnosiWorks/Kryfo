@@ -359,6 +359,9 @@ class _Io implements AppIo {
   Future<void> unnotifyMessage(String msgUid) async {}
 
   @override
+  Future<void> unnotifyGone(String payload, Set<String> tags) =>
+      unnotify(payload);
+  @override
   Future<void> unnotify(String payload) async {}
 }
 

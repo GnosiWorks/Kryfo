@@ -8080,6 +8080,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'La tua chat con queste parole è arrivata da una richiesta, una presentazione o un gruppo, con un\'altra chiave, e nessuno l\'ha verificata. Le parole si possono copiare. Se questo link viene dalla persona che conosci, usalo: quella chat viene eliminata e confronti il numero di sicurezza in quella nuova. Non sei sicuro da dove arrivi il link? Tieni quello che hai.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Hai eliminato una chat con queste parole, che usava un\'altra chiave. Se questo link viene dalla persona che conosci, usalo e poi confronta con lei il numero di sicurezza.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Hai rimosso da questo telefono qualcuno con queste parole perché non era chi diceva di essere. Se questo link viene dalla persona che conosci, usalo e poi confronta con lei il numero di sicurezza.';
+
+  @override
   String get nameTakenUse => 'Usa questo link';
 
   @override
@@ -8103,6 +8111,41 @@ class AppLocalizationsIt extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Hai bloccato $id. Sbloccalo da «Bloccati» nelle Impostazioni per aggiungerlo di nuovo.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'I numeri sono diversi';
+
+  @override
+  String get notThemLine =>
+      'Se i numeri sono davvero diversi, forse qualcun altro sta usando il suo nome o si è messo tra voi.';
+
+  @override
+  String get notThemButton => 'Non è questa persona';
+
+  @override
+  String get notThemSheetTitle =>
+      'Rimuovere questo contatto e bloccare la sua chiave?';
+
+  @override
+  String get notThemSheetLine =>
+      'La chat, i suoi messaggi e i suoi file spariscono da questo telefono. Solo un link o un codice che aggiungi tu riprende le sue tre parole. Confronta il numero di sicurezza con chi aggiungi.';
+
+  @override
+  String get notThemRemove => 'Rimuovi e blocca';
+
+  @override
+  String get notThemDone => 'Rimosso, e la sua chiave è bloccata';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Il suo admin è stato rimosso da questo telefono. Le modifiche al gruppo non ti arrivano più.';
+
+  @override
+  String get blockedKey => 'Chiave bloccata';
+
+  @override
+  String get appKeyBlocked =>
+      'Hai bloccato questa chiave. Sbloccala da «Bloccati» nelle Impostazioni per aggiungerla.';
 
   @override
   String get devLinkGone =>

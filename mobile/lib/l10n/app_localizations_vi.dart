@@ -7993,6 +7993,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện của bạn dưới ba từ này đến từ một yêu cầu, một lời giới thiệu hoặc một nhóm, với một khóa khác, và chưa ai kiểm tra. Từ ngữ có thể bị sao chép. Nếu liên kết này đến từ người bạn quen, hãy dùng nó: cuộc trò chuyện kia sẽ bị xóa, và bạn so sánh số an toàn trong cuộc trò chuyện mới. Không chắc liên kết từ đâu đến? Hãy giữ người đang có.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Bạn đã xóa một cuộc trò chuyện dưới ba từ này, vốn dùng một khóa khác. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Bạn đã xóa khỏi điện thoại này một người dưới ba từ này vì đó không phải người họ nói. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
+
+  @override
   String get nameTakenUse => 'Dùng liên kết này';
 
   @override
@@ -8016,6 +8024,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Bạn đã chặn $id. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm lại.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Các số không giống nhau';
+
+  @override
+  String get notThemLine =>
+      'Nếu các số thật sự khác nhau, có thể ai đó đang dùng tên của họ hoặc đang đứng giữa hai bạn.';
+
+  @override
+  String get notThemButton => 'Đây không phải họ';
+
+  @override
+  String get notThemSheetTitle => 'Xóa liên hệ này và chặn khóa của nó?';
+
+  @override
+  String get notThemSheetLine =>
+      'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi điện thoại này. Chỉ một liên kết hoặc mã do bạn thêm mới lấy lại được ba từ của họ. Hãy so sánh số an toàn với người bạn thêm.';
+
+  @override
+  String get notThemRemove => 'Xóa và chặn';
+
+  @override
+  String get notThemDone => 'Đã xóa, và khóa đã bị chặn';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Quản trị viên của nhóm đã bị xóa khỏi điện thoại này. Các thay đổi của nhóm không còn đến với bạn.';
+
+  @override
+  String get blockedKey => 'Khóa đã chặn';
+
+  @override
+  String get appKeyBlocked =>
+      'Bạn đã chặn khóa này. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm.';
 
   @override
   String get devLinkGone =>

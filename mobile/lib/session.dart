@@ -625,7 +625,39 @@ class Session {
   Future<String?> stickerOf(String uid) async =>
       (await _ofUid(uid)).stickerOf(uid);
 
+  // "this isn't them": in the container that holds them, and nowhere else
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) =>
+      _ofPeer(haloId).removeAndBlockKey(haloId, keyHex);
+
   // ---- every chat ----
+  // a key blocked in any container open is blocked
+  Future<bool> keyBlocked(String keyHex) async {
+    for (final d in [primary, ?vault]) {
+      if (await d.keyBlocked(keyHex)) return true;
+    }
+    return false;
+  }
+
+  // once each, the newest block of a key both hold
+  Future<List<({String x, int at})>> blockedKeys() async {
+    final v = vault;
+    final newest = <String, int>{};
+    for (final k in [
+      ...await primary.blockedKeys(),
+      ...?await v?.blockedKeys(),
+    ]) {
+      if ((newest[k.x] ?? -1) < k.at) newest[k.x] = k.at;
+    }
+    return [for (final e in newest.entries) (x: e.key, at: e.value)]
+      ..sort((a, b) => b.at.compareTo(a.at));
+  }
+
+  Future<void> unblockKey(String keyHex) async {
+    for (final d in [primary, ?vault]) {
+      await d.unblockKey(keyHex);
+    }
+  }
+
   // blocked anywhere is blocked
   Future<Set<String>> blockedIds() async {
     final v = vault;

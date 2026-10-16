@@ -10,7 +10,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
+    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow, kAdminGone;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -18,6 +18,7 @@ import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/scam_shield.dart' show shieldRowOpen;
 import 'package:kryfo/router.dart';
+import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
@@ -285,6 +286,9 @@ class ArrivalIo implements AppIo {
   // what was taken out of the shade, by payload
   final unrang = <String>[];
   @override
+  Future<void> unnotifyGone(String payload, Set<String> tags) =>
+      unnotify(payload);
+  @override
   Future<void> unnotify(String payload) async => unrang.add(payload);
 }
 
@@ -550,6 +554,106 @@ class ArrivalRows implements HaloDb {
       v.remove(haloId);
     }
     shields.remove(haloId);
+  }
+
+  // keys "this isn't them" blocked here, with when
+  final blockedKeyAt = <String, int>{};
+
+  // words "this isn't them" let go here
+  final tombedNames = <String>{};
+
+  @override
+  Future<List<String>> removeAndBlockKey(String haloId, String keyHex) async {
+    _hit('removeAndBlockKey', haloId, null);
+    final uids = [
+      for (final m in msgs)
+        if (m['peer_id'] == haloId)
+          if (m['msg_uid'] case final String u) u,
+    ];
+    people.remove(haloId);
+    msgs.removeWhere((m) => m['peer_id'] == haloId);
+    for (final g in groupRows.values) {
+      if (g['admin_id'] == haloId) g['admin_id'] = kAdminGone;
+    }
+    tombedNames.add(haloId);
+    heldRows.remove(haloId);
+    for (final m in members.values) {
+      m.remove(haloId);
+    }
+    vouches.remove(haloId);
+    for (final v in vouches.values) {
+      v.remove(haloId);
+    }
+    shields.remove(haloId);
+    blockedKeyAt[keyHex.trim().toLowerCase()] =
+        DateTime.now().millisecondsSinceEpoch;
+    return uids;
+  }
+
+  @override
+  Future<bool> tombed(String name) async => tombedNames.contains(name);
+
+  @override
+  Future<List<({String name, int at})>> tombs() async => [
+    for (final n in tombedNames) (name: n, at: 1),
+  ];
+
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    for (final k in keys) {
+      blockedKeyAt.putIfAbsent(k.x, () => k.at);
+    }
+    tombedNames.addAll([for (final n in tombs) n.name]);
+  }
+
+  @override
+  Future<void> clearTomb(String name) async => tombedNames.remove(name);
+
+  @override
+  Future<void> dropSeats(String haloId, String keyHex) async {
+    _hit('dropSeats', haloId, null);
+    final x = ((people[haloId]?['xpub'] as String?) ?? '').toLowerCase();
+    if (x.isNotEmpty && x != keyHex.toLowerCase()) return;
+    for (final m in members.values) {
+      m.remove(haloId);
+    }
+    for (final g in groupRows.values) {
+      if (g['admin_id'] == haloId) g['admin_id'] = kAdminGone;
+    }
+    final p = people[haloId];
+    if (p != null &&
+        p['accepted'] != 1 &&
+        !msgs.any((m) => m['peer_id'] == haloId && m['group_id'] == null)) {
+      people.remove(haloId);
+    }
+  }
+
+  @override
+  Future<bool> keyBlocked(String keyHex) async =>
+      blockedKeyAt.containsKey(keyHex.trim().toLowerCase());
+
+  @override
+  Future<List<({String x, int at})>> blockedKeys() async => [
+    for (final e in blockedKeyAt.entries) (x: e.key, at: e.value),
+  ];
+
+  @override
+  Future<void> unblockKey(String keyHex) async =>
+      blockedKeyAt.remove(keyHex.trim().toLowerCase());
+
+  // the key the number is made from: signal's, else the row's. a decoy
+  // keeps no signal store
+  @override
+  Future<String?> heldKey(String haloId) async {
+    final s = signalSession.ready && !_container.quiet
+        ? await signalSession.peerXPubHex(haloId)
+        : null;
+    if (s != null && s.isNotEmpty) return s.toLowerCase();
+    final x = (people[haloId]?['xpub'] as String?)?.trim().toLowerCase();
+    return x == null || x.isEmpty ? null : x;
   }
 
   @override

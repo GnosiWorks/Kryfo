@@ -10085,6 +10085,14 @@
   "@nameTakenChatLine": {
     "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words has a chat here; using the link deletes that chat"
   },
+  "nameTakenDeletedLine": "You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenDeletedLine": {
+    "description": "widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words was added here by hand and their chat was deleted. only an add the person makes is asked; nothing that came by itself takes the words"
+  },
+  "nameTakenTombLine": "You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenTombLine": {
+    "description": "widgets/kryfo_link_text.dart: as nameTakenLine, for words whose holder was taken off this phone by notThemButton. only an add the person makes takes them again, after this"
+  },
   "nameTakenUse": "Use this link",
   "@nameTakenUse": {
     "description": "widgets/kryfo_link_text.dart: button, the link takes the words over"
@@ -10123,6 +10131,46 @@
         "type": "Object"
       }
     }
+  },
+  "notThemNumbersDiffer": "The numbers are different",
+  "@notThemNumbersDiffer": {
+    "description": "widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton"
+  },
+  "notThemLine": "If the numbers really differ, someone else may be using their name or sitting between you.",
+  "@notThemLine": {
+    "description": "widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means"
+  },
+  "notThemButton": "This isn't them",
+  "@notThemButton": {
+    "description": "widgets/not_them.dart: button, rose: the contact goes from this phone and the key the number was made from is blocked. asks first (notThemSheetTitle)"
+  },
+  "notThemSheetTitle": "Remove this contact and block its key?",
+  "@notThemSheetTitle": {
+    "description": "widgets/not_them.dart: sheet title after notThemButton"
+  },
+  "notThemSheetLine": "The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.",
+  "@notThemSheetLine": {
+    "description": "widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked"
+  },
+  "notThemRemove": "Remove and block",
+  "@notThemRemove": {
+    "description": "widgets/not_them.dart: the yes of that sheet"
+  },
+  "notThemDone": "Removed, and their key is blocked",
+  "@notThemDone": {
+    "description": "widgets/not_them.dart: toast once the contact is gone and the key blocked"
+  },
+  "groupAdminGoneLine": "Its admin was removed from this phone. Group changes no longer reach you.",
+  "@groupAdminGoneLine": {
+    "description": "screens/group_chat_screen.dart: a line at the top of a group whose admin was taken off this phone by notThemButton. nothing that changes the group is taken any more; Leave beside it"
+  },
+  "blockedKey": "Blocked key",
+  "@blockedKey": {
+    "description": "screens/blocked_screen.dart: a row on the Blocked page for a key blocked by notThemButton. no name is kept for it; its key number shows under it"
+  },
+  "appKeyBlocked": "You blocked this key. Unblock it under Blocked in Settings to add it.",
+  "@appKeyBlocked": {
+    "description": "main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back"
   },
   "devLinkGone": "You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.",
   "@devLinkGone": {

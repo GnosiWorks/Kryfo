@@ -8163,6 +8163,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Твой чат с этими словами появился через запрос, знакомство или группу, с другим ключом, и его никто не проверял. Слова можно скопировать. Если эта ссылка от человека, которого ты знаешь, используй её: тот чат удалится, а код безопасности ты сверишь в новом. Не уверен, откуда ссылка? Оставь того, кто есть.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Ты удалил чат с этими словами, у которого был другой ключ. Если эта ссылка от человека, которого ты знаешь, используй её, а потом сверь с ним код безопасности.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Ты удалил с этого телефона того, кто был под этими словами, потому что это был не тот человек. Если эта ссылка от человека, которого ты знаешь, используй её, а потом сверь с ним код безопасности.';
+
+  @override
   String get nameTakenUse => 'Использовать ссылку';
 
   @override
@@ -8186,6 +8194,41 @@ class AppLocalizationsRu extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return '$id в списке заблокированных. Разблокируй в настройках, в разделе «Заблокированные», чтобы добавить снова.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Коды не совпадают';
+
+  @override
+  String get notThemLine =>
+      'Если коды правда не совпадают, возможно, кто-то другой использует его имя или стоит между вами.';
+
+  @override
+  String get notThemButton => 'Это не тот человек';
+
+  @override
+  String get notThemSheetTitle =>
+      'Удалить этот контакт и заблокировать его ключ?';
+
+  @override
+  String get notThemSheetLine =>
+      'Чат, его сообщения и файлы удалятся с этого телефона. Его три слова снова получит только ссылка или код, которые ты добавишь сам. Сверь код безопасности с тем, кого добавишь.';
+
+  @override
+  String get notThemRemove => 'Удалить и заблокировать';
+
+  @override
+  String get notThemDone => 'Удалено, ключ заблокирован';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Его админ удалён с этого телефона. Изменения группы к тебе больше не приходят.';
+
+  @override
+  String get blockedKey => 'Заблокированный ключ';
+
+  @override
+  String get appKeyBlocked =>
+      'Этот ключ заблокирован. Разблокируй его в настройках, в разделе «Заблокированные», чтобы добавить.';
 
   @override
   String get devLinkGone =>

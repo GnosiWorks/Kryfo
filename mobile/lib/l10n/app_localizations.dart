@@ -12891,6 +12891,18 @@ abstract class AppLocalizations {
   /// **'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.'**
   String get nameTakenChatLine;
 
+  /// widgets/kryfo_link_text.dart: as nameTakenLine, when the one holding the words was added here by hand and their chat was deleted. only an add the person makes is asked; nothing that came by itself takes the words
+  ///
+  /// In en, this message translates to:
+  /// **'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.'**
+  String get nameTakenDeletedLine;
+
+  /// widgets/kryfo_link_text.dart: as nameTakenLine, for words whose holder was taken off this phone by notThemButton. only an add the person makes takes them again, after this
+  ///
+  /// In en, this message translates to:
+  /// **'You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.'**
+  String get nameTakenTombLine;
+
   /// widgets/kryfo_link_text.dart: button, the link takes the words over
   ///
   /// In en, this message translates to:
@@ -12926,6 +12938,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You blocked {id}. Unblock them under Blocked in Settings to add them again.'**
   String appTheyAreBlocked(Object id);
+
+  /// widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton
+  ///
+  /// In en, this message translates to:
+  /// **'The numbers are different'**
+  String get notThemNumbersDiffer;
+
+  /// widgets/not_them.dart: after notThemNumbersDiffer, above notThemButton: what a different number means
+  ///
+  /// In en, this message translates to:
+  /// **'If the numbers really differ, someone else may be using their name or sitting between you.'**
+  String get notThemLine;
+
+  /// widgets/not_them.dart: button, rose: the contact goes from this phone and the key the number was made from is blocked. asks first (notThemSheetTitle)
+  ///
+  /// In en, this message translates to:
+  /// **'This isn\'t them'**
+  String get notThemButton;
+
+  /// widgets/not_them.dart: sheet title after notThemButton
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this contact and block its key?'**
+  String get notThemSheetTitle;
+
+  /// widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked
+  ///
+  /// In en, this message translates to:
+  /// **'The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.'**
+  String get notThemSheetLine;
+
+  /// widgets/not_them.dart: the yes of that sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and block'**
+  String get notThemRemove;
+
+  /// widgets/not_them.dart: toast once the contact is gone and the key blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Removed, and their key is blocked'**
+  String get notThemDone;
+
+  /// screens/group_chat_screen.dart: a line at the top of a group whose admin was taken off this phone by notThemButton. nothing that changes the group is taken any more; Leave beside it
+  ///
+  /// In en, this message translates to:
+  /// **'Its admin was removed from this phone. Group changes no longer reach you.'**
+  String get groupAdminGoneLine;
+
+  /// screens/blocked_screen.dart: a row on the Blocked page for a key blocked by notThemButton. no name is kept for it; its key number shows under it
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked key'**
+  String get blockedKey;
+
+  /// main.dart, handleHaloUriAdded: a link, card, code or handle whose key was blocked by notThemButton. the Blocked page lets it back
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked this key. Unblock it under Blocked in Settings to add it.'**
+  String get appKeyBlocked;
 
   /// main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one
   ///

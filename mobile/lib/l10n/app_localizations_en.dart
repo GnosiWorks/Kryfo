@@ -8005,6 +8005,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'You deleted a chat under these words, which ran on a different key. If this link came from the person you know, use it, then compare the safety number with them.';
+
+  @override
+  String get nameTakenTombLine =>
+      'You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.';
+
+  @override
   String get nameTakenUse => 'Use this link';
 
   @override
@@ -8028,6 +8036,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'You blocked $id. Unblock them under Blocked in Settings to add them again.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'The numbers are different';
+
+  @override
+  String get notThemLine =>
+      'If the numbers really differ, someone else may be using their name or sitting between you.';
+
+  @override
+  String get notThemButton => 'This isn\'t them';
+
+  @override
+  String get notThemSheetTitle => 'Remove this contact and block its key?';
+
+  @override
+  String get notThemSheetLine =>
+      'The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.';
+
+  @override
+  String get notThemRemove => 'Remove and block';
+
+  @override
+  String get notThemDone => 'Removed, and their key is blocked';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Its admin was removed from this phone. Group changes no longer reach you.';
+
+  @override
+  String get blockedKey => 'Blocked key';
+
+  @override
+  String get appKeyBlocked =>
+      'You blocked this key. Unblock it under Blocked in Settings to add it.';
 
   @override
   String get devLinkGone =>

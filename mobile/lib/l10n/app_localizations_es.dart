@@ -8070,6 +8070,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu chat con estas palabras llegó por una solicitud, una presentación o un grupo, con otra clave, y nadie lo comprobó. Las palabras se pueden copiar. Si este enlace viene de la persona que conoces, úsalo: ese chat se borra y comparas el número de seguridad en el nuevo. ¿No sabes de dónde viene el enlace? Quédate con el que tienes.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Borraste un chat con estas palabras que usaba otra clave. Si este enlace viene de la persona que conoces, úsalo y luego compara el número de seguridad con ella.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Quitaste de este teléfono a alguien con estas palabras porque no era quien decía. Si este enlace viene de la persona que conoces, úsalo y luego compara el número de seguridad con ella.';
+
+  @override
   String get nameTakenUse => 'Usar este enlace';
 
   @override
@@ -8093,6 +8101,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Bloqueaste a $id. Desbloquéalo en «Bloqueados», en Ajustes, para añadirlo de nuevo.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Los números son distintos';
+
+  @override
+  String get notThemLine =>
+      'Si los números de verdad son distintos, puede que otra persona esté usando su nombre o se haya puesto en medio.';
+
+  @override
+  String get notThemButton => 'No es esa persona';
+
+  @override
+  String get notThemSheetTitle => '¿Quitar este contacto y bloquear su clave?';
+
+  @override
+  String get notThemSheetLine =>
+      'El chat, sus mensajes y sus archivos desaparecen de este teléfono. Solo un enlace o código que añadas tú vuelve a tomar sus tres palabras. Compara el número de seguridad con quien añadas.';
+
+  @override
+  String get notThemRemove => 'Quitar y bloquear';
+
+  @override
+  String get notThemDone => 'Quitado, y su clave bloqueada';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Su admin se quitó de este teléfono. Los cambios del grupo ya no te llegan.';
+
+  @override
+  String get blockedKey => 'Clave bloqueada';
+
+  @override
+  String get appKeyBlocked =>
+      'Bloqueaste esta clave. Desbloquéala en «Bloqueados», en Ajustes, para añadirla.';
 
   @override
   String get devLinkGone =>

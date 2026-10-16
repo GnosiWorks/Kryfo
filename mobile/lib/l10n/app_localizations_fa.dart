@@ -8021,6 +8021,14 @@ class AppLocalizationsFa extends AppLocalizations {
       'گفت‌وگوی شما با این واژه‌ها از یک درخواست، یک معرفی یا یک گروه آمده، با کلیدی دیگر، و کسی آن را بررسی نکرده است. واژه‌ها را می‌شود کپی کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید: آن گفت‌وگو پاک می‌شود و شماره‌ی امنیتی را در گفت‌وگوی تازه مقایسه می‌کنید. مطمئن نیستید پیوند از کجا آمده؟ همان قبلی را نگه دارید.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'گفت‌وگویی با این واژه‌ها را پاک کرده‌اید که با کلید دیگری بود. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید و بعد شماره‌ی امنیتی را با او مقایسه کنید.';
+
+  @override
+  String get nameTakenTombLine =>
+      'کسی را با این واژه‌ها از این گوشی حذف کردید، چون آن کسی نبود که ادعا می‌کرد. اگر این پیوند از کسی آمده که می‌شناسید، از آن استفاده کنید و بعد شماره‌ی امنیتی را با او مقایسه کنید.';
+
+  @override
   String get nameTakenUse => 'استفاده از این پیوند';
 
   @override
@@ -8044,6 +8052,40 @@ class AppLocalizationsFa extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return '⁨$id⁩ را مسدود کرده‌اید. برای افزودن دوباره، از «مسدودشده‌ها» در تنظیمات رفع مسدودیت کنید.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'شماره‌ها فرق دارند';
+
+  @override
+  String get notThemLine =>
+      'اگر شماره‌ها واقعاً فرق دارند، شاید کس دیگری از نام او استفاده می‌کند یا میان شما نشسته است.';
+
+  @override
+  String get notThemButton => 'این او نیست';
+
+  @override
+  String get notThemSheetTitle => 'این مخاطب حذف و کلیدش مسدود شود؟';
+
+  @override
+  String get notThemSheetLine =>
+      'گفت‌وگو، پیام‌ها و فایل‌هایش از این گوشی حذف می‌شوند. فقط پیوند یا کدی که خودتان بیفزایید سه واژه‌ی او را دوباره می‌گیرد. شماره‌ی امنیتی را با هر کسی که می‌افزایید مقایسه کنید.';
+
+  @override
+  String get notThemRemove => 'حذف و مسدود کردن';
+
+  @override
+  String get notThemDone => 'حذف شد و کلیدش مسدود است';
+
+  @override
+  String get groupAdminGoneLine =>
+      'مدیر آن از این گوشی حذف شد. تغییرات گروه دیگر به شما نمی‌رسد.';
+
+  @override
+  String get blockedKey => 'کلید مسدودشده';
+
+  @override
+  String get appKeyBlocked =>
+      'این کلید را مسدود کرده‌اید. برای افزودنش، از «مسدودشده‌ها» در تنظیمات رفع مسدودیت کنید.';
 
   @override
   String get devLinkGone =>

@@ -8153,6 +8153,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Твій чат із цими словами з’явився через запит, знайомство чи групу, з іншим ключем, і його ніхто не перевіряв. Слова можна скопіювати. Якщо це посилання від людини, яку ти знаєш, скористайся ним: той чат видалиться, а номер безпеки ти звіриш у новому. Не впевнений, звідки посилання? Залиш того, хто є.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Ти видалив чат із цими словами, який працював з іншим ключем. Якщо це посилання від людини, яку ти знаєш, скористайся ним, а потім звір із нею номер безпеки.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Ти видалив із цього телефону того, хто був під цими словами, бо це була не та людина. Якщо це посилання від людини, яку ти знаєш, скористайся ним, а потім звір із нею номер безпеки.';
+
+  @override
   String get nameTakenUse => 'Використати посилання';
 
   @override
@@ -8176,6 +8184,41 @@ class AppLocalizationsUk extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return '$id у списку заблокованих. Розблокуй у налаштуваннях, у розділі «Заблоковані», щоб додати знову.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Номери не збігаються';
+
+  @override
+  String get notThemLine =>
+      'Якщо номери справді не збігаються, можливо, хтось інший використовує її ім’я або стоїть між вами.';
+
+  @override
+  String get notThemButton => 'Це не та людина';
+
+  @override
+  String get notThemSheetTitle =>
+      'Видалити цей контакт і заблокувати його ключ?';
+
+  @override
+  String get notThemSheetLine =>
+      'Чат, його повідомлення й файли зникнуть із цього телефону. Його три слова знову отримає лише посилання чи код, які ти додаси сам. Звір номер безпеки з тим, кого додаси.';
+
+  @override
+  String get notThemRemove => 'Видалити й заблокувати';
+
+  @override
+  String get notThemDone => 'Видалено, ключ заблоковано';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Її адміна видалено з цього телефону. Зміни в групі до тебе більше не надходять.';
+
+  @override
+  String get blockedKey => 'Заблокований ключ';
+
+  @override
+  String get appKeyBlocked =>
+      'Цей ключ заблоковано. Розблокуй його в налаштуваннях, у розділі «Заблоковані», щоб додати.';
 
   @override
   String get devLinkGone =>

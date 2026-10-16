@@ -56,6 +56,8 @@ const _keys = {
   'held_onion': ['id'],
   'shield': ['halo_id'],
   'vouches': ['halo_id', 'voucher_id'],
+  'blocked_keys': ['x'],
+  'name_tombs': ['name'],
 };
 
 // one database's rows, its search words by row id and its own meta
@@ -756,6 +758,31 @@ class _Db implements HaloDb {
   Future<void> close() async {}
 
   @override
+  Future<List<({String x, int at})>> blockedKeys() async => [
+    for (final r in _t['blocked_keys'])
+      (x: r['x'] as String, at: r['at'] as int),
+  ];
+
+  @override
+  Future<List<({String name, int at})>> tombs() async => [
+    for (final r in _t['name_tombs'])
+      (name: r['name'] as String, at: r['at'] as int),
+  ];
+
+  @override
+  Future<void> takeBlocks(
+    List<({String x, int at})> keys,
+    List<({String name, int at})> tombs,
+  ) async {
+    for (final k in keys) {
+      _t.put('blocked_keys', {'x': k.x, 'at': k.at});
+    }
+    for (final n in tombs) {
+      _t.put('name_tombs', {'name': n.name, 'at': n.at});
+    }
+  }
+
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
 }
@@ -1346,6 +1373,32 @@ void main() {
       await expectLater(w.app.hideChats(people: [_v]), throwsStateError);
     });
 
+    test('R3-4 a replace keeps what "this isn\'t them" blocked in the old '
+        'vault as unseen marks, never as everyday rows', () async {
+      final w = await _World.make(docs);
+      await w.app.createVault('246810');
+      await w.app.hideChats(people: [_h]);
+      await w.app.vaultSetupDone();
+      await w.router.markKey('AB' * 32, on: true);
+      await w.router.markTomb('let-go-words', on: true);
+      expect(await w.app.createVault('135790'), isTrue);
+      await w.app.vaultSetupDone();
+      // nothing new on the everyday side: no row, nothing listed
+      expect(w.live['blocked_keys'], isEmpty);
+      expect(w.live['name_tombs'], isEmpty);
+      // the marks still hold, and no screen may name them
+      expect(w.router.keyBlocked('ab' * 32), isTrue);
+      expect(w.app.keyBlockedWhileShut('ab' * 32), isTrue);
+      // its let-go words go: with no vault, the first writer gets them
+      expect(w.router.tombed('let-go-words'), isFalse);
+      // the new vault reads its own marks as it opens: the old ones stay
+      await w.app.remarkForTest(w.vaultDb);
+      expect(w.router.keyBlocked('ab' * 32), isTrue);
+      // an unblock asked of the open vault leaves them too
+      await w.router.markKey('ab' * 32, on: false);
+      expect(w.router.keyBlocked('ab' * 32), isTrue);
+    });
+
     test('never from inside the vault', () async {
       final w = await _World.make(docs);
       await w.app.createVault('246810');
@@ -1368,7 +1421,16 @@ void main() {
       // someone the vault holds that the list does not name yet
       w.vault.put('contacts', _person('accepted-inside'));
       _say(w.vault, 'in0', 'accepted-inside', 'said in the vault');
+      // and a key and words "this isn't them" let go in it
+      w.vault.put('blocked_keys', {'x': 'ab' * 32, 'at': 5});
+      w.vault.put('name_tombs', {'name': 'let-go-words', 'at': 5});
       await w.app.removeVault();
+      expect(w.live['blocked_keys'], [
+        {'x': 'ab' * 32, 'at': 5},
+      ]);
+      expect(w.live['name_tombs'], [
+        {'name': 'let-go-words', 'at': 5},
+      ]);
       expect(w.host.entry, isNull);
       expect(w.store.metas['pub'], isNull);
       expect(w.store.kinds(), {'older-gone-one': kHiddenGone});
@@ -1447,6 +1509,9 @@ void main() {
       'hidden_chats',
       'vault_meta',
       'vault_inbox',
+      // keys blocked as not who they said: no chat's rows
+      'blocked_keys',
+      'name_tombs',
     };
     final src = [
       'lib/main.dart',

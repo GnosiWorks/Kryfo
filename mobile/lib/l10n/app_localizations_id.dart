@@ -8003,6 +8003,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolanmu dengan kata-kata ini datang dari permintaan, perkenalan, atau grup, dengan kunci lain, dan belum ada yang mengeceknya. Kata-kata bisa disalin. Kalau tautan ini dari orang yang kamu kenal, pakai saja: obrolan itu dihapus, dan kamu membandingkan nomor keamanan di obrolan yang baru. Tidak yakin dari mana tautan ini? Tetap pakai yang sudah ada.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Kamu sudah menghapus obrolan dengan kata-kata ini, yang memakai kunci lain. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Kamu sudah menghapus seseorang dengan kata-kata ini dari ponsel ini karena dia bukan orang yang dia akui. Kalau tautan ini dari orang yang kamu kenal, pakai saja, lalu bandingkan nomor keamanan dengannya.';
+
+  @override
   String get nameTakenUse => 'Pakai tautan ini';
 
   @override
@@ -8026,6 +8034,40 @@ class AppLocalizationsId extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Kamu memblokir $id. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya lagi.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Nomor-nomornya berbeda';
+
+  @override
+  String get notThemLine =>
+      'Kalau nomornya memang berbeda, mungkin ada orang lain yang memakai namanya atau berada di antara kalian.';
+
+  @override
+  String get notThemButton => 'Ini bukan dia';
+
+  @override
+  String get notThemSheetTitle => 'Hapus kontak ini dan blokir kuncinya?';
+
+  @override
+  String get notThemSheetLine =>
+      'Obrolan, pesan, dan filenya terhapus dari ponsel ini. Hanya tautan atau kode yang kamu tambahkan yang bisa memakai tiga katanya lagi. Bandingkan nomor keamanan dengan siapa pun yang kamu tambahkan.';
+
+  @override
+  String get notThemRemove => 'Hapus dan blokir';
+
+  @override
+  String get notThemDone => 'Dihapus, dan kuncinya diblokir';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Admin grup ini sudah dihapus dari ponsel ini. Perubahan grup tidak lagi sampai ke kamu.';
+
+  @override
+  String get blockedKey => 'Kunci diblokir';
+
+  @override
+  String get appKeyBlocked =>
+      'Kamu memblokir kunci ini. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya.';
 
   @override
   String get devLinkGone =>

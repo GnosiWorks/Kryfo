@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart';
+import 'package:kryfo/first_contact.dart' show firstFails;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
@@ -30,6 +31,7 @@ import 'package:kryfo/main.dart'
         askInboxMove,
         HaloEngine,
         LinkKin,
+        kAdminGone,
         askTakeName,
         kNameAsk,
         nameCheckOf,
@@ -41,6 +43,7 @@ import 'package:kryfo/main.dart'
         linkKinOf,
         makePreKeyBundleB64,
         processPeerBundle,
+        session,
         signalDecrypt,
         unboundIdOf,
         useDatabasesForTest,
@@ -51,6 +54,7 @@ import 'package:kryfo/scam_shield.dart' show ShieldFlag;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -1202,7 +1206,7 @@ void main() {
   });
 
   test('a hidden group\'s member keeps their name while the vault is '
-      'shut', () async {
+      'shut, and no line says so', () async {
     final member = await _phone();
     final memberEd = _rndHex(32);
     _idOf[memberEd] = _hidden;
@@ -1216,9 +1220,10 @@ void main() {
     expect(await hasSessionWith(_hidden), isFalse);
     final own = unboundIdOf(_keyOf(other));
     expect(live.msgs.where((m) => m['peer_id'] == own), hasLength(1));
+    // and nothing on the everyday side says something hidden goes by it
     expect(
       ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
-      l10n.scamShieldGivesUsedName(_hidden),
+      isNot(l10n.scamShieldGivesUsedName(_hidden)),
     );
     // the member's own first message is sealed for the vault
     await app.receiveOnion([
@@ -1345,10 +1350,11 @@ void main() {
       dropped.clear();
       answer = true;
       final was = askTakeName;
-      askTakeName = (id, {required chat}) async {
-        asked.add((id, chat));
-        return answer;
-      };
+      askTakeName =
+          (id, {required chat, deleted = false, tombed = false}) async {
+            asked.add((id, chat));
+            return answer;
+          };
       addTearDown(() => askTakeName = was);
     });
 
@@ -1529,12 +1535,13 @@ void main() {
     test('what changed while the question was up is read again before '
         'anything goes', () async {
       await squat();
-      askTakeName = (id, {required chat}) async {
-        asked.add((id, chat));
-        // verified meanwhile, from their chat
-        live.people[words]!['verified'] = 1;
-        return true;
-      };
+      askTakeName =
+          (id, {required chat, deleted = false, tombed = false}) async {
+            asked.add((id, chat));
+            // verified meanwhile, from their chat
+            live.people[words]!['verified'] = 1;
+            return true;
+          };
       expect(await handleHaloUriAdded(await link(alice)), (
         l10n.appLinkWordsVerified(words),
         false,
@@ -1601,4 +1608,839 @@ void main() {
       expect(nameCheckOf(live.people[fresh]), kNameAsk);
     });
   });
+
+  // the safety number they read out was another: the contact goes, all of
+  // it, and the key it ran on is blocked. the words go back to no one, so
+  // the real person comes in under them as anyone does
+  group('this isn\'t them', () {
+    var round = 0;
+    late String words;
+    late _Phone mallory;
+    late _Phone alice;
+    late String aliceEd;
+    final asked = <(String, bool, bool, bool)>[];
+
+    setUp(() async {
+      words =
+          'not-them-${String.fromCharCode(97 + round ~/ 26)}'
+          '${String.fromCharCode(97 + round++ % 26)}';
+      mallory = await _phone();
+      alice = await _phone();
+      aliceEd = _rndHex(32);
+      _idOf[aliceEd] = words;
+      unheard.clear();
+      asked.clear();
+      final was = askTakeName;
+      askTakeName =
+          (id, {required chat, deleted = false, tombed = false}) async {
+            asked.add((id, chat, deleted, tombed));
+            return true;
+          };
+      addTearDown(() => askTakeName = was);
+    });
+
+    Future<String> link(_Phone p, {String? id}) async => haloUriV3(
+      id ?? words,
+      'o-${p.xPub.substring(0, 8)}',
+      Uri.encodeQueryComponent(await makePreKeyBundleB64(p.ss)),
+      'ab' * 32,
+    );
+
+    // the fake's link, under the real one's words, added as any link is
+    Future<void> faked({bool scanned = false}) async {
+      expect(await handleHaloUriAdded(await link(mallory), scanned: scanned), (
+        '',
+        true,
+      ));
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+    }
+
+    Future<void> sessionIsWith(_Phone who, _Phone not) async {
+      final next = await signalSession.encryptTo(words, 'for the one kept');
+      expect(await _reads(not.ss, next), isNull);
+      expect(await _reads(who.ss, next), 'for the one kept');
+    }
+
+    // a first message under the words, with the real one's ed key, which
+    // anyone can copy
+    Future<void> writes(_Phone p, {GroupControl? gc, String? group}) async {
+      await processPeerBundle(_me, await makePreKeyBundleB64(), into: p.ss);
+      final plain = await wrapMessage(
+        _said,
+        msgUid: 'u${_rnd.nextInt(1 << 30)}',
+        powNonce: pow,
+        powBitsUsed: powBits,
+        groupId: group,
+        groupControl: gc,
+        sender: SenderInfo(
+          haloId: words,
+          edPub: aliceEd,
+          onion: 'o-${p.xPub.substring(0, 8)}',
+          xPub: p.xPub,
+        ),
+      );
+      await app.receiveOnion([await p.ss.encryptTo(_me, plain)]);
+      await _settle();
+    }
+
+    // a group control from amber, a contact here
+    Future<void> amberSays(GroupControl gc, {required String group}) async {
+      await processPeerBundle(_me, await makePreKeyBundleB64(), into: amber.ss);
+      final plain = await wrapMessage(
+        '',
+        msgUid: 'g${_rnd.nextInt(1 << 30)}',
+        groupId: group,
+        groupControl: gc,
+        sender: SenderInfo(
+          haloId: _amber,
+          edPub: amberEd,
+          onion: 'o-amber',
+          xPub: amber.xPub,
+        ),
+      );
+      await app.receiveOnion([await amber.ss.encryptTo(_me, plain)]);
+      await _settle();
+    }
+
+    List<Object?> textsOf(String id) => [
+      for (final m in live.msgs)
+        if (m['peer_id'] == id) m['plaintext'],
+    ];
+
+    // filed on an id of its own, with the line saying the name it gave
+    void filedOnItsOwn(_Phone p) {
+      final own = unboundIdOf(_keyOf(p));
+      expect(live.people[own], containsPair('accepted', 0));
+      expect(textsOf(own), [_said]);
+      expect(
+        ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
+        l10n.scamShieldGivesUsedName(words),
+      );
+    }
+
+    test('a fake added by a link and deleted: the real link takes the '
+        'words after one question', () async {
+      await faked();
+      await app.deleteConversation(words);
+      expect(await linkKinOf(await link(alice)), (LinkKin.claimed, words));
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      expect(asked, [(words, false, true, false)]);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(nameCheckOf(live.people[words]), kNameAsk);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('a fake added by a link and deleted: kept, nothing changes', () async {
+      await faked();
+      await app.deleteConversation(words);
+      askTakeName =
+          (id, {required chat, deleted = false, tombed = false}) async => false;
+      expect(await handleHaloUriAdded(await link(alice)), ('', false));
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+    });
+
+    test('R1 a friend added by a link and deleted keeps the words against '
+        'someone writing first with them', () async {
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      await app.deleteConversation(words);
+      await writes(mallory);
+      expect(await signalSession.peerXPubHex(words), alice.xPub);
+      expect(textsOf(words), isEmpty);
+      filedOnItsOwn(mallory);
+    });
+
+    test('R1b the same for a friend added by a scan', () async {
+      expect(await handleHaloUriAdded(await link(alice), scanned: true), (
+        '',
+        true,
+      ));
+      await app.deleteConversation(words);
+      await writes(mallory);
+      expect(await signalSession.peerXPubHex(words), alice.xPub);
+      filedOnItsOwn(mallory);
+    });
+
+    test('it takes everything of theirs and blocks the key', () async {
+      await faked();
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(live.people.containsKey(words), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      expect(await signalSession.peerXPubHex(words), isNull);
+      expect(live.blockedKeyAt.keys, [mallory.xPub]);
+      expect(live.tombedNames, {words});
+      expect(unheard, contains(mallory.xPub));
+    });
+
+    test('REV-D after it the real link adds them under their words after a '
+        'question of its own, and the chat asks for the number', () async {
+      await faked(scanned: true);
+      await app.notThem(words, mallory.xPub);
+      expect(await linkKinOf(await link(alice)), (LinkKin.claimed, words));
+      expect(await handleHaloUriAdded(await link(alice), scanned: true), (
+        '',
+        true,
+      ));
+      expect(asked, [(words, false, false, true)]);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(nameCheckOf(live.people[words]), kNameAsk);
+      expect(live.tombedNames, isEmpty);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test(
+      'R2 after it, someone writing first under the words is filed on '
+      'an id of their own, the real one too, until the person adds them',
+      () async {
+        await faked();
+        await app.notThem(words, mallory.xPub);
+        final m2 = await _phone();
+        await writes(m2);
+        expect(live.people.containsKey(words), isFalse);
+        expect(await signalSession.peerXPubHex(words), isNull);
+        filedOnItsOwn(m2);
+        await writes(alice);
+        filedOnItsOwn(alice);
+        expect(live.people.containsKey(words), isFalse);
+      },
+    );
+
+    test('after it an introduction or a group list under the words seats '
+        'them on an id of their own', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      final m2 = await _phone();
+      final own = unboundIdOf(_keyOf(m2));
+      live.group('g-after', [_me, _amber], admin: _amber);
+      await amberSays(
+        GroupControl(
+          type: 'add',
+          members: [words],
+          participants: [
+            {'h': words, 'o': 'o-m2', 'x': m2.xPub},
+          ],
+        ),
+        group: 'g-after',
+      );
+      expect(live.members['g-after'], contains(own));
+      expect(live.members['g-after'], isNot(contains(words)));
+      expect(live.people.containsKey(words), isFalse);
+      expect(live.people[own], containsPair('xpub', m2.xPub));
+    });
+
+    test('R3 a group the fake ran has no admin after: nothing anyone sends '
+        'changes it', () async {
+      await faked();
+      const gid = 'grev00000001';
+      live.group(gid, [words, _me, _amber], admin: words);
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(live.groupRows[gid]?['admin_id'], kAdminGone);
+      expect(live.members[gid], isNot(contains(words)));
+      final m2 = await _phone();
+      await writes(
+        m2,
+        group: gid,
+        gc: const GroupControl(type: 'rename', name: 'taken over'),
+      );
+      expect(live.groupRows[gid]?['name'], isNot('taken over'));
+      // and the words added back by the person still run nothing
+      expect(await handleHaloUriAdded(await link(alice)), ('', true));
+      await writes(
+        alice,
+        group: gid,
+        gc: const GroupControl(type: 'rename', name: 'taken over'),
+      );
+      expect(live.groupRows[gid]?['name'], isNot('taken over'));
+      expect(live.groupRows[gid]?['admin_id'], kAdminGone);
+    });
+
+    test('the key stays out on every way in, under any words', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      // a link or a code under their words or others, an old card
+      for (final l in [
+        await link(mallory),
+        await link(mallory, id: 'other-mask-words'),
+        buildHaloUri('old-card-words', 'o', mallory.xPub),
+      ]) {
+        expect(await handleHaloUriAdded(l), (l10n.appKeyBlocked, false));
+      }
+      // a first message under their words or new ones
+      for (final says in [words, 'fresh-mask-words']) {
+        final ed = _rndHex(32);
+        _idOf[ed] = says;
+        await app.receiveOnion([
+          await _opener(mallory, says, ed, _said, pow: pow),
+        ]);
+        await _settle();
+        expect(live.people.containsKey(says), isFalse);
+        expect(textsOf(says), isEmpty);
+      }
+      final own = unboundIdOf(_keyOf(mallory));
+      expect(live.people.containsKey(own), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      expect(await hasSessionWith(own), isFalse);
+      expect(live.people.containsKey('other-mask-words'), isFalse);
+      expect(live.people.containsKey('old-card-words'), isFalse);
+    });
+
+    test('a key that moved meanwhile lets nothing go', () async {
+      await faked();
+      expect(await app.notThem(words, 'cd' * 32), isFalse);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.tombedNames, isEmpty);
+    });
+
+    test('in the decoy only the decoy\'s row goes, its key blocked there, '
+        'and the everyday side is not touched', () async {
+      await faked();
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      decoy.person(words, xpub: mallory.xPub);
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(decoy.people.containsKey(words), isFalse);
+      expect(decoy.blockedKeyAt.keys, [mallory.xPub]);
+      expect(decoy.tombedNames, {words});
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.tombedNames, isEmpty);
+      expect(await signalSession.peerXPubHex(words), mallory.xPub);
+      expect(unheard, isEmpty);
+      expect(
+        await handleHaloUriAdded(
+          buildHaloUri('other-mask-two', 'o', mallory.xPub),
+        ),
+        (l10n.appKeyBlocked, false),
+      );
+    });
+
+    // a vault holding the fake, open, with a group of its own naming them
+    Future<(ArrivalRows, VaultRouter)> hiddenFake() async {
+      final vault = _OpenCount();
+      vault.person(words, onion: 'o-h', xpub: mallory.xPub);
+      vault.group('g-hidden', [_me, words], admin: words);
+      await processPeerBundle(words, await makePreKeyBundleB64(mallory.ss));
+      final store = ArrivalStore();
+      await store.putHidden(
+        words,
+        kHiddenPeer,
+        peerCard(RouterCard(words, 'o-h', mallory.xPub, backPaired: true)),
+        1,
+      );
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      app = AppState(io: const _Io(), router: router)..myId = _me;
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      return (vault, router);
+    }
+
+    test('a hidden chat goes from the open vault alone, its key blocked '
+        'there, and its seat on the everyday side goes', () async {
+      // an everyday group knows them by key alone
+      live.group('g-day', [_me, _amber, words], admin: _amber);
+      await live.upsertContactStub(words, 'o-h', mallory.xPub);
+      final (vault, router) = await hiddenFake();
+      expect(session.isHidden(words), isTrue);
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(vault.people.containsKey(words), isFalse);
+      expect(vault.blockedKeyAt.keys, [mallory.xPub]);
+      expect(vault.groupRows['g-hidden']?['admin_id'], kAdminGone);
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.people.containsKey(words), isFalse);
+      expect(live.members['g-day'], isNot(contains(words)));
+      expect(router.keeps(words), isFalse);
+      expect(router.keyBlocked(mallory.xPub), isTrue);
+      expect(router.tombed(words), isTrue);
+      expect(session.isHidden(words), isFalse);
+      expect(await hasSessionWith(words), isFalse);
+      // the real one's link adds them as anyone new, and takes the words
+      expect(await handleHaloUriAdded(await link(alice), app: app), ('', true));
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(vault.tombedNames, isEmpty);
+      await sessionIsWith(alice, mallory);
+    });
+
+    test('with the vault shut its block and its words still hold, and the '
+        'everyday side says nothing of it', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      // the vault shuts
+      useDatabasesForTest(live, Session(live));
+      expect(
+        await handleHaloUriAdded(
+          await link(mallory, id: 'other-mask-three'),
+          app: app,
+        ),
+        (l10n.appInvalidUri, false),
+      );
+      final ed = _rndHex(32);
+      _idOf[ed] = 'fresh-mask-two';
+      await app.receiveOnion([
+        await _opener(mallory, 'fresh-mask-two', ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey('fresh-mask-two'), isFalse);
+      expect(live.people.containsKey(unboundIdOf(_keyOf(mallory))), isFalse);
+      // the real one writing first is filed on their own id, and nothing
+      // names the vault's words to the everyday side
+      await writes(alice);
+      final own = unboundIdOf(_keyOf(alice));
+      expect(live.people[own], containsPair('accepted', 0));
+      expect(textsOf(own), [_said]);
+      expect(
+        ShieldFlag.fromRow(live.shields[own])?.lead.noticed,
+        isNot(l10n.scamShieldGivesUsedName(words)),
+      );
+      expect(router.keyBlocked(mallory.xPub), isTrue);
+    });
+
+    test('an everyday contact\'s seat in the vault\'s groups goes now with '
+        'the vault open, and as it next opens when shut', () async {
+      for (final open in [true, false]) {
+        await faked();
+        final vault = ArrivalRows(HaloContainer.vault);
+        vault.group('g-v', [_me, words], admin: _me);
+        vault.person(words, xpub: mallory.xPub, accepted: 0);
+        final store = ArrivalStore();
+        await store.putMeta('pub', 'pub-A');
+        final router = VaultRouter(store, ArrivalSeal());
+        await router.load();
+        app = AppState(io: const _Io(), router: router)..myId = _me;
+        useDatabasesForTest(
+          live,
+          open ? await Session.withVault(live, vault) : Session(live),
+        );
+        addTearDown(() => useDatabasesForTest(live, Session(live)));
+        expect(await app.notThem(words, mallory.xPub), isTrue);
+        if (open) {
+          expect(vault.members['g-v'], [_me]);
+          expect(await router.seatsGone(), isEmpty);
+        } else {
+          expect(vault.members['g-v'], [_me, words]);
+          expect(await router.seatsGone(), [(words, mallory.xPub)]);
+          await app.seatsGoneIntoForTest(vault);
+          expect(vault.members['g-v'], [_me]);
+          expect(await router.seatsGone(), isEmpty);
+        }
+        expect(vault.people.containsKey(words), isFalse);
+        // the next round, under new words
+        words = '${words}z';
+        mallory = await _phone();
+        _idOf[aliceEd] = words;
+      }
+    });
+
+    test('the router keeps the vault\'s marks across a start, and they go '
+        'once its rows were handed over', () async {
+      final store = ArrivalStore();
+      await store.putMeta('pub', 'pub-A');
+      final r = VaultRouter(store, ArrivalSeal());
+      await r.load();
+      await r.markKey('AB' * 32, on: true);
+      await r.markTomb(words, on: true);
+      await r.queueSeatGone(words, 'ab' * 32);
+      final again = VaultRouter(store, ArrivalSeal());
+      await again.load();
+      expect(again.keyBlocked('ab' * 32), isTrue);
+      expect(again.tombed(words), isTrue);
+      expect(again.keeps(words), isFalse);
+      expect(await again.seatsGone(), [(words, 'ab' * 32)]);
+      await again.markTomb(words, on: false);
+      expect(again.tombed(words), isFalse);
+      await again.retire();
+      expect(again.keyBlocked('ab' * 32), isFalse);
+      expect(await again.seatsGone(), isEmpty);
+    });
+
+    test('REV-D kept at the question: nothing is added, the words stay let '
+        'go', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      askTakeName =
+          (id, {required chat, deleted = false, tombed = false}) async => false;
+      expect(await handleHaloUriAdded(await link(alice)), ('', false));
+      expect(live.people.containsKey(words), isFalse);
+      expect(live.tombedNames, {words});
+    });
+
+    test('REV-E a link that fails to add leaves the words let go', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      final bogus = base64Encode(
+        utf8.encode(
+          jsonEncode({
+            'identityKey': base64Encode([5, for (var i = 0; i < 32; i++) 7]),
+          }),
+        ),
+      );
+      final l = haloUriV3(
+        words,
+        'o-bogus',
+        Uri.encodeQueryComponent(bogus),
+        'ab' * 32,
+      );
+      final (_, added) = await handleHaloUriAdded(l);
+      expect(added, isFalse);
+      expect(live.tombedNames, {words});
+      expect(live.people.containsKey(words), isFalse);
+      final m2 = await _phone();
+      await writes(m2);
+      expect(live.people.containsKey(words), isFalse);
+      filedOnItsOwn(m2);
+    });
+
+    test('REV-A with the decoy on screen, someone writing first under words '
+        'the everyday side let go is filed on an id of their own', () async {
+      await faked();
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      final m2 = await _phone();
+      await writes(m2);
+      expect(live.people.containsKey(words), isFalse);
+      expect(await signalSession.peerXPubHex(words), isNull);
+      filedOnItsOwn(m2);
+      expect(live.tombedNames, {words});
+    });
+
+    test('REV-A2 with the decoy on screen, a group list under the words '
+        'seats them on an id of their own', () async {
+      await faked();
+      await app.notThem(words, mallory.xPub);
+      live.group('g-after', [_me, _amber], admin: _amber);
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      final m2 = await _phone();
+      await amberSays(
+        GroupControl(
+          type: 'add',
+          members: [words],
+          participants: [
+            {'h': words, 'o': 'o-m2', 'x': m2.xPub},
+          ],
+        ),
+        group: 'g-after',
+      );
+      expect(live.members['g-after'], contains(unboundIdOf(_keyOf(m2))));
+      expect(live.members['g-after'], isNot(contains(words)));
+      expect(live.people.containsKey(words), isFalse);
+    });
+
+    test('REV-B a vault removed hands its blocks and let-go words to the '
+        'everyday side', () async {
+      final (vault, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      await live.takeBlocks(await vault.blockedKeys(), await vault.tombs());
+      await router.retire();
+      useDatabasesForTest(live, Session(live));
+      expect(live.blockedKeyAt.keys, [mallory.xPub]);
+      expect(live.tombedNames, {words});
+      final m2 = await _phone();
+      await writes(m2);
+      filedOnItsOwn(m2);
+      final ed = _rndHex(32);
+      _idOf[ed] = 'fresh-mask-four';
+      await app.receiveOnion([
+        await _opener(mallory, 'fresh-mask-four', ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey('fresh-mask-four'), isFalse);
+    });
+
+    test('REV-C a remove on the everyday side leaves a seat in the vault '
+        'held under the same words on another key', () async {
+      await faked();
+      final vault = ArrivalRows(HaloContainer.vault);
+      vault.group('g-v', [_me, words], admin: _me);
+      vault.person(words, xpub: alice.xPub, accepted: 0);
+      final store = ArrivalStore();
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      app = AppState(io: const _Io(), router: router)..myId = _me;
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      expect(vault.members['g-v'], [_me, words]);
+      expect(vault.people[words], containsPair('xpub', alice.xPub));
+    });
+
+    test(
+      'the vault\'s marks are read again from its rows as it opens',
+      () async {
+        final (vault, router) = await hiddenFake();
+        await app.notThem(words, mallory.xPub);
+        // marks gone astray: a stray one, and the vault's own missing
+        await router.markKey('cd' * 32, on: true);
+        await router.markTomb(words, on: false);
+        await app.remarkForTest(vault);
+        expect(router.keyBlocked(mallory.xPub), isTrue);
+        expect(router.keyBlocked('cd' * 32), isFalse);
+        expect(router.tombed(words), isTrue);
+      },
+    );
+
+    test('a tidy that failed waits before it is tried again', () async {
+      final bad = _BadDb();
+      await app.tidyForTest(bad, now: 0);
+      expect(bad.opens, 1);
+      await app.tidyForTest(bad, now: 60000);
+      expect(bad.opens, 1);
+      await app.tidyForTest(bad, now: 11 * 60000);
+      expect(bad.opens, 2);
+      // twice as long the next time
+      await app.tidyForTest(bad, now: 22 * 60000);
+      expect(bad.opens, 2);
+      await app.tidyForTest(bad, now: 32 * 60000);
+      expect(bad.opens, 3);
+    });
+
+    test('R3-1 with the vault shut, a link under words it let go is added '
+        'as anyone\'s, and its mark comes off', () async {
+      final (vault, router) = await hiddenFake();
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      useDatabasesForTest(live, Session(live));
+      expect(await linkKinOf(await link(alice), app: app), (
+        LinkKin.stranger,
+        words,
+      ));
+      expect(await handleHaloUriAdded(await link(alice), app: app), ('', true));
+      expect(asked, isEmpty);
+      expect(live.people[words], containsPair('accepted', 1));
+      expect(router.tombed(words), isFalse);
+      expect(await router.tombsGone(), [words]);
+      // R3-2 the vault opens again: its own tomb goes before its marks are
+      // read, so the mark does not come back
+      expect(vault.tombedNames, {words});
+      await app.remarkForTest(vault);
+      expect(vault.tombedNames, isEmpty);
+      expect(router.tombed(words), isFalse);
+      expect(await router.tombsGone(), isEmpty);
+      // and the real one, their chat deleted, still writes under the words
+      await app.deleteConversation(words);
+      await writes(alice);
+      expect(live.people[words], containsPair('xpub', alice.xPub));
+      expect(live.people.containsKey(unboundIdOf(_keyOf(alice))), isFalse);
+    });
+
+    test('R3-3 an everyday unblock with the vault shut leaves the vault\'s '
+        'block, and nothing names it', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      await live.takeBlocks([(x: mallory.xPub, at: 1)], const []);
+      useDatabasesForTest(live, Session(live));
+      expect([for (final k in await app.blockedKeys()) k.x], [mallory.xPub]);
+      await app.unblockKey(mallory.xPub);
+      expect(await app.blockedKeys(), isEmpty);
+      expect(router.keyBlocked(mallory.xPub), isTrue);
+    });
+
+    test('after a replace the old vault\'s block holds unseen: nothing listed, '
+        'no everyday row, a first message dropped, a link turned away as '
+        'any that does not take', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await router.forget();
+      expect(await app.blockedKeys(), isEmpty);
+      expect(live.blockedKeyAt, isEmpty);
+      expect(live.tombedNames, isEmpty);
+      final ed = _rndHex(32);
+      _idOf[ed] = 'fresh-mask-five';
+      await app.receiveOnion([
+        await _opener(mallory, 'fresh-mask-five', ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey('fresh-mask-five'), isFalse);
+      expect(live.people.containsKey(unboundIdOf(_keyOf(mallory))), isFalse);
+      expect(
+        await handleHaloUriAdded(
+          await link(mallory, id: 'other-mask-five'),
+          app: app,
+        ),
+        (l10n.appInvalidUri, false),
+      );
+      // a link under the words is added as anyone's, no sheet of its own
+      expect(await linkKinOf(await link(alice), app: app), (
+        LinkKin.stranger,
+        words,
+      ));
+    });
+
+    test('R3-5 a lock with a slow vault: the next vault open does not wait '
+        'on a tidy', () async {
+      final slow = _SlowDb();
+      final store = ArrivalStore();
+      await store.putMeta('pub', 'pub-A');
+      final router = VaultRouter(store, ArrivalSeal());
+      await router.load();
+      app = AppState(io: const _Io(), router: router)..myId = _me;
+      useDatabasesForTest(live, await Session.withVault(live, slow));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      app.lockingUp();
+      final sw = Stopwatch()..start();
+      try {
+        await app.settleVault(ArrivalRows(HaloContainer.vault));
+      } catch (_) {
+        // the stand-in vault has no mover: only how long it waited counts
+      }
+      expect(sw.elapsedMilliseconds, lessThan(1500));
+      expect(slow.opened, isFalse);
+    });
+
+    test('R4-1 a replaced vault\'s let-go words are never asked about in the '
+        'new vault', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await router.forget();
+      await router.start('pub-B');
+      final v2 = ArrivalRows(HaloContainer.vault);
+      useDatabasesForTest(live, await Session.withVault(live, v2));
+      await app.remarkForTest(v2);
+      expect(await linkKinOf(await link(alice), app: app), (
+        LinkKin.stranger,
+        words,
+      ));
+      expect(await handleHaloUriAdded(await link(alice), app: app), ('', true));
+      expect(asked, isEmpty);
+    });
+
+    test('R4-2 with no vault left, someone writing first under a gone '
+        'vault\'s words gets no line naming someone here', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await router.forget();
+      await router.retire();
+      await writes(alice);
+      final own = unboundIdOf(_keyOf(alice));
+      final at = live.people.containsKey(words) ? words : own;
+      expect(
+        ShieldFlag.fromRow(live.shields[at])?.lead.noticed,
+        isNot(l10n.scamShieldGivesUsedName(words)),
+      );
+    });
+
+    test('R4-3 both sides let the words go, vault shut: the add lifts the '
+        'vault\'s too', () async {
+      final (vault, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await live.takeBlocks(const [], [(name: words, at: 1)]);
+      expect(await handleHaloUriAdded(await link(alice), app: app), ('', true));
+      expect(await router.tombsGone(), [words]);
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      await app.remarkForTest(vault);
+      expect(router.tombed(words), isFalse);
+      expect(vault.tombedNames, isEmpty);
+    });
+
+    test('R4-4 a key blocked on the everyday side says so, whatever a shut '
+        'vault also blocked', () async {
+      await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await live.takeBlocks([(x: mallory.xPub, at: 1)], const []);
+      expect(
+        await handleHaloUriAdded(
+          await link(mallory, id: 'other-mask-six'),
+          app: app,
+        ),
+        (l10n.appKeyBlocked, false),
+      );
+    });
+
+    test('a key a gone vault blocked and the new vault blocks too is the '
+        'new vault\'s mark, and its unblock lets it go', () async {
+      final (_, router) = await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      await router.forget();
+      await router.start('pub-B');
+      expect(router.keyBlockedUnseen(mallory.xPub, vaultOpen: true), isTrue);
+      final v2 = ArrivalRows(HaloContainer.vault);
+      v2.blockedKeyAt[mallory.xPub] = 2;
+      await app.remarkForTest(v2);
+      expect(router.keyBlockedUnseen(mallory.xPub, vaultOpen: true), isFalse);
+      expect(router.keyBlocked(mallory.xPub), isTrue);
+      await router.markKey(mallory.xPub, on: false);
+      expect(router.keyBlocked(mallory.xPub), isFalse);
+    });
+
+    test('a removal in the open vault tidies its file right after, off the '
+        'queue', () async {
+      final (vault, _) = await hiddenFake();
+      final before = (vault as _OpenCount).opens;
+      expect(await app.notThem(words, mallory.xPub), isTrue);
+      await _settle();
+      expect(vault.opens, greaterThan(before));
+    });
+
+    test('a first message on a key only the vault blocked leaves no word of '
+        'a block in the debug list', () async {
+      await hiddenFake();
+      await app.notThem(words, mallory.xPub);
+      useDatabasesForTest(live, Session(live));
+      firstFails.clear();
+      final ed = _rndHex(32);
+      _idOf[ed] = 'fresh-mask-seven';
+      await app.receiveOnion([
+        await _opener(mallory, 'fresh-mask-seven', ed, _said, pow: pow),
+      ]);
+      await _settle();
+      expect(live.people.containsKey('fresh-mask-seven'), isFalse);
+      expect(firstFails.codes, isNot(contains('blocked')));
+      expect(firstFails.codes, isNotEmpty);
+    });
+
+    test('the developer is never let go this way', () async {
+      expect(await app.notThem('dev:marios', 'ab' * 32), isFalse);
+    });
+  });
+}
+
+// a database that never opens: its tidy fails each time it is tried
+class _BadDb extends ArrivalRows {
+  _BadDb() : super(HaloContainer.decoyVault);
+  var opens = 0;
+  @override
+  Future<Database> open() async {
+    opens++;
+    throw StateError('shut');
+  }
+}
+
+// a vault whose file is slow to open: a tidy at its close would hold up
+// everything queued behind it
+class _SlowDb extends ArrivalRows {
+  _SlowDb() : super(HaloContainer.vault);
+  var opened = false;
+  @override
+  Future<Database> open() async {
+    opened = true;
+    await Future<void>.delayed(const Duration(seconds: 3));
+    throw StateError('slow');
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
+// a vault whose file counts how often it is opened
+class _OpenCount extends ArrivalRows {
+  _OpenCount() : super(HaloContainer.vault);
+  var opens = 0;
+  @override
+  Future<Database> open() async {
+    opens++;
+    throw StateError('not here');
+  }
 }

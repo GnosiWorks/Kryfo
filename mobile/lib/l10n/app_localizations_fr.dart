@@ -8092,6 +8092,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre discussion sous ces mots vient d’une demande, d’une présentation ou d’un groupe, avec une autre clé, et personne ne l’a vérifiée. Des mots peuvent être copiés. Si ce lien vient de la personne que vous connaissez, utilisez-le : cette discussion est supprimée, et vous comparez le numéro de sécurité dans la nouvelle. Vous ne savez pas d’où vient le lien ? Gardez celui que vous avez.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Vous avez supprimé une discussion sous ces mots, qui utilisait une autre clé. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Vous avez retiré de ce téléphone quelqu’un sous ces mots, car ce n’était pas la personne annoncée. Si ce lien vient de la personne que vous connaissez, utilisez-le, puis comparez le numéro de sécurité avec elle.';
+
+  @override
   String get nameTakenUse => 'Utiliser ce lien';
 
   @override
@@ -8115,6 +8123,40 @@ class AppLocalizationsFr extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Vous avez bloqué $id. Débloquez cette personne dans « Bloqués », dans les Paramètres, pour l’ajouter à nouveau.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Les numéros sont différents';
+
+  @override
+  String get notThemLine =>
+      'Si les numéros sont vraiment différents, quelqu’un d’autre utilise peut-être son nom ou se trouve entre vous.';
+
+  @override
+  String get notThemButton => 'Ce n’est pas cette personne';
+
+  @override
+  String get notThemSheetTitle => 'Retirer ce contact et bloquer sa clé ?';
+
+  @override
+  String get notThemSheetLine =>
+      'La discussion, ses messages et ses fichiers disparaissent de ce téléphone. Seul un lien ou un code que vous ajoutez reprend ses trois mots. Comparez le numéro de sécurité avec la personne que vous ajoutez.';
+
+  @override
+  String get notThemRemove => 'Retirer et bloquer';
+
+  @override
+  String get notThemDone => 'Retiré, et sa clé est bloquée';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Son admin a été retiré de ce téléphone. Les changements du groupe ne vous parviennent plus.';
+
+  @override
+  String get blockedKey => 'Clé bloquée';
+
+  @override
+  String get appKeyBlocked =>
+      'Vous avez bloqué cette clé. Débloquez-la dans « Bloqués », dans les Paramètres, pour l’ajouter.';
 
   @override
   String get devLinkGone =>

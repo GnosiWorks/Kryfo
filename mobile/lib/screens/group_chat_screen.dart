@@ -52,7 +52,8 @@ import '../main.dart'
         newMsgUid,
         torStrictGetOnIsolate,
         torValve,
-        shredFile;
+        shredFile,
+        kAdminGone;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
@@ -370,6 +371,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }());
   }
 
+  // a group whose admin "this isn't them" took off this phone: left as
+  // the group info page leaves one
+  Future<void> _leaveAdminGone() async {
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.groupInfoLeaveGroup,
+      line: leaveLine(room: false, admin: false),
+      yes: l10n.groupInfoLeave,
+    );
+    if (!ok || !mounted) return;
+    await appState.leaveGroupAndAnnounce(widget.groupId);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   // nothing in it to lose: the room goes from this phone, and the screen
   // with it
   void _leaveWaiting() {
@@ -402,6 +417,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int? _joiningAt;
   bool get _waiting => _isRoom && _joiningAt != null;
   bool _isAdmin = false;
+  // its admin was taken off this phone ("this isn't them"): no change to
+  // the group reaches it any more
+  bool _adminGone = false;
   bool _sending = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
@@ -973,6 +991,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _roomExpiresAt = g['expires_at'] as int?;
         _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
+        _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
         _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
@@ -3734,6 +3753,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     )
                   : const SizedBox(width: double.infinity, height: 0),
             ),
+            // its admin went with "this isn't them": the group is frozen here
+            EaseSize(
+              child: _adminGone
+                  ? _AdminGoneLine(onLeave: _leaveAdminGone)
+                  : const SizedBox(width: double.infinity, height: 0),
+            ),
             // a send that has waited on tor a minute gets a way out
             ReconnectValve(
               valve: torValve,
@@ -5772,6 +5797,68 @@ class _MissingPhoto extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: HaloType.mono(size: 11, color: HaloColors.text2),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// the line in a group whose admin "this isn't them" took off this phone:
+// nothing it changes reaches here, and the way out
+class _AdminGoneLine extends StatelessWidget {
+  final VoidCallback onLeave;
+  const _AdminGoneLine({required this.onLeave});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: HaloColors.rose.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: HaloColors.rose.withValues(alpha: 0.3),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.gpp_bad_outlined, size: 15, color: HaloColors.rose),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                l10n.groupAdminGoneLine,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+          Semantics(
+            button: true,
+            child: PressScale(
+              onTap: onLeave,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                alignment: Alignment.center,
+                color: Colors.transparent,
+                child: Text(
+                  l10n.groupInfoLeave,
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: HaloColors.rose,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

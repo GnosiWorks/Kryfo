@@ -8137,6 +8137,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة. لست متأكدًا من مصدر الرابط؟ أبقِ على الموجود.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'حذفت محادثة تحت هذه الكلمات، كانت بمفتاح مختلف. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+
+  @override
+  String get nameTakenTombLine =>
+      'أزلت من هذا الهاتف شخصًا تحت هذه الكلمات لأنه لم يكن من ادّعى. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+
+  @override
   String get nameTakenUse => 'استخدم هذا الرابط';
 
   @override
@@ -8159,6 +8167,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'لقد حظرت ⁨$id⁩. ألغِ الحظر من «المحظورون» في الإعدادات لتضيفه من جديد.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'الرقمان مختلفان';
+
+  @override
+  String get notThemLine =>
+      'إن كان الرقمان مختلفين فعلًا، فربما يستخدم شخص آخر اسمه أو يقف بينكما.';
+
+  @override
+  String get notThemButton => 'هذا ليس هو';
+
+  @override
+  String get notThemSheetTitle => 'إزالة جهة الاتصال هذه وحظر مفتاحها؟';
+
+  @override
+  String get notThemSheetLine =>
+      'تُحذف المحادثة ورسائلها وملفاتها من هذا الهاتف. لا يأخذ كلماته الثلاث من جديد إلا رابط أو رمز تضيفه أنت. قارن رقم الأمان مع من تضيفه.';
+
+  @override
+  String get notThemRemove => 'إزالة وحظر';
+
+  @override
+  String get notThemDone => 'أُزيلت، وحُظر مفتاحها';
+
+  @override
+  String get groupAdminGoneLine =>
+      'أُزيل مشرفها من هذا الهاتف. لم تعد تغييرات المجموعة تصل إليك.';
+
+  @override
+  String get blockedKey => 'مفتاح محظور';
+
+  @override
+  String get appKeyBlocked =>
+      'لقد حظرت هذا المفتاح. ألغِ حظره من «المحظورون» في الإعدادات لتضيفه.';
 
   @override
   String get devLinkGone =>

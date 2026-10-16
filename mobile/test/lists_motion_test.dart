@@ -26,6 +26,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // only what these screens ask for; anything else fails on its type
 class _Db implements HaloDb {
+  // no key blocked by "this isn't them"
+  @override
+  Future<List<({String x, int at})>> blockedKeys() async => const [];
+  @override
+  Future<bool> keyBlocked(String keyHex) async => false;
+  @override
+  Future<bool> tombed(String name) async => false;
   List<Map<String, Object?>> people = [];
   List<Map<String, Object?>> requests = [];
   List<Map<String, Object?>> saved = [];

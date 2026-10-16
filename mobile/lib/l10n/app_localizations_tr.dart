@@ -8032,6 +8032,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu kelimelerle olan sohbetin bir istek, bir tanıştırma ya da bir gruptan, farklı bir anahtarla geldi ve kimse kontrol etmedi. Kelimeler kopyalanabilir. Bu bağlantı tanıdığın kişiden geldiyse kullan: o sohbet silinir, güvenlik numarasını yenisinde karşılaştırırsın. Bağlantının nereden geldiğinden emin değil misin? Mevcut olanı tut.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Bu kelimelerle, farklı bir anahtarla çalışan bir sohbeti sildin. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra güvenlik numarasını onunla karşılaştır.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Bu kelimelerle olan birini, söylediği kişi olmadığı için bu telefondan kaldırdın. Bu bağlantı tanıdığın kişiden geldiyse kullan, sonra güvenlik numarasını onunla karşılaştır.';
+
+  @override
   String get nameTakenUse => 'Bu bağlantıyı kullan';
 
   @override
@@ -8055,6 +8063,41 @@ class AppLocalizationsTr extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return '$id engellendi. Yeniden eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Numaralar farklı';
+
+  @override
+  String get notThemLine =>
+      'Numaralar gerçekten farklıysa, belki başka biri onun adını kullanıyor ya da aranıza giriyor.';
+
+  @override
+  String get notThemButton => 'Bu o değil';
+
+  @override
+  String get notThemSheetTitle =>
+      'Bu kişi kaldırılsın ve anahtarı engellensin mi?';
+
+  @override
+  String get notThemSheetLine =>
+      'Sohbet, mesajları ve dosyaları bu telefondan silinir. Üç kelimesini yeniden ancak senin eklediğin bir bağlantı ya da kod alır. Eklediğin kişiyle güvenlik numarasını karşılaştır.';
+
+  @override
+  String get notThemRemove => 'Kaldır ve engelle';
+
+  @override
+  String get notThemDone => 'Kaldırıldı, anahtarı engellendi';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Yöneticisi bu telefondan kaldırıldı. Gruptaki değişiklikler artık sana ulaşmıyor.';
+
+  @override
+  String get blockedKey => 'Engellenen anahtar';
+
+  @override
+  String get appKeyBlocked =>
+      'Bu anahtarı engelledin. Eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.';
 
   @override
   String get devLinkGone =>

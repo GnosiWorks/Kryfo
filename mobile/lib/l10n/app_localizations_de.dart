@@ -8100,6 +8100,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Chat unter diesen Wörtern kam über eine Anfrage, eine Vorstellung oder eine Gruppe, mit einem anderen Schlüssel, und niemand hat ihn geprüft. Wörter kann man kopieren. Wenn dieser Link von der Person kommt, die du kennst, nutz ihn: Der alte Chat wird gelöscht, und im neuen vergleichst du die Sicherheitsnummer. Nicht sicher, woher der Link kommt? Behalte den bisherigen.';
 
   @override
+  String get nameTakenDeletedLine =>
+      'Du hast einen Chat unter diesen Wörtern gelöscht, der mit einem anderen Schlüssel lief. Wenn dieser Link von der Person kommt, die du kennst, nutz ihn und vergleich dann die Sicherheitsnummer mit ihr.';
+
+  @override
+  String get nameTakenTombLine =>
+      'Du hast jemanden unter diesen Wörtern von diesem Handy entfernt, weil er nicht der war, der er zu sein vorgab. Wenn dieser Link von der Person kommt, die du kennst, nutz ihn und vergleich dann die Sicherheitsnummer mit ihr.';
+
+  @override
   String get nameTakenUse => 'Diesen Link nutzen';
 
   @override
@@ -8123,6 +8131,41 @@ class AppLocalizationsDe extends AppLocalizations {
   String appTheyAreBlocked(Object id) {
     return 'Du hast $id blockiert. Gib die Person unter „Blockiert“ in den Einstellungen frei, um sie wieder hinzuzufügen.';
   }
+
+  @override
+  String get notThemNumbersDiffer => 'Die Nummern sind verschieden';
+
+  @override
+  String get notThemLine =>
+      'Wenn die Nummern wirklich verschieden sind, nutzt vielleicht jemand anderes den Namen oder sitzt zwischen euch.';
+
+  @override
+  String get notThemButton => 'Das ist jemand anderes';
+
+  @override
+  String get notThemSheetTitle =>
+      'Diesen Kontakt entfernen und seinen Schlüssel blockieren?';
+
+  @override
+  String get notThemSheetLine =>
+      'Der Chat, seine Nachrichten und Dateien verschwinden von diesem Handy. Nur ein Link oder Code, den du hinzufügst, bekommt die drei Wörter wieder. Vergleich die Sicherheitsnummer mit der Person, die du hinzufügst.';
+
+  @override
+  String get notThemRemove => 'Entfernen und blockieren';
+
+  @override
+  String get notThemDone => 'Entfernt, der Schlüssel ist blockiert';
+
+  @override
+  String get groupAdminGoneLine =>
+      'Der Admin wurde von diesem Handy entfernt. Änderungen an der Gruppe kommen nicht mehr bei dir an.';
+
+  @override
+  String get blockedKey => 'Blockierter Schlüssel';
+
+  @override
+  String get appKeyBlocked =>
+      'Du hast diesen Schlüssel blockiert. Gib ihn unter „Blockiert“ in den Einstellungen frei, um ihn hinzuzufügen.';
 
   @override
   String get devLinkGone =>
