@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 
@@ -65,12 +66,7 @@ class WhyKryfoScreen extends StatelessWidget {
                 color: HaloColors.text3.withValues(alpha: 0.2),
                 height: 1,
               ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.whyKryfoTheHonestPart,
-                style: HaloType.serif(size: 16, color: HaloColors.amberText),
-              ),
-              const SizedBox(height: 12),
+              HaloSection(l10n.whyKryfoTheHonestPart, flush: true),
               Text(
                 l10n.whyKryfoKryfoIsPreAlpha,
                 style: HaloType.sans(

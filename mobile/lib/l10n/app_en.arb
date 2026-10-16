@@ -6606,16 +6606,8 @@
   "@settingsFollowBrowserNote": {
     "description": "screens/follow_section.dart"
   },
-  "settingsFollowNostrNote": "Opens your Nostr app, outside Kryfo. With none, the address is copied.",
-  "@settingsFollowNostrNote": {
-    "description": "screens/follow_section.dart"
-  },
   "settingsFollowOpen": "Open",
   "@settingsFollowOpen": {
-    "description": "screens/follow_section.dart"
-  },
-  "settingsFollowNpubCopied": "No Nostr app here. The address is copied.",
-  "@settingsFollowNpubCopied": {
     "description": "screens/follow_section.dart"
   },
   "settingsFollowOn": "Follow on {name}, outside Kryfo",

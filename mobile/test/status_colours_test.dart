@@ -58,7 +58,7 @@ void main() {
     final main = _src('lib/main.dart');
     final pill = _between(
       main,
-      'const torGreen = Color(0xFF34D399);',
+      '// relay does not go through tor, so tor being off never greys it',
       'final t = _c.value;',
     );
     expect(_accent.hasMatch(pill), isFalse, reason: 'status pill');

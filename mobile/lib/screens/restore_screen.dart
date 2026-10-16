@@ -22,6 +22,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/press_scale.dart';
 import '../widgets/secret_field.dart';
 import '../widgets/stagger_in.dart';
@@ -494,8 +495,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 18),
-              _head(l10n.restoreWhatFollows),
+              HaloSection(l10n.restoreWhatFollows, flush: true),
               _item(l10n.restoreYourNameYourCode),
               _item(l10n.restoreEveryConversationBackTo),
               _item(
@@ -507,8 +507,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
               _item(l10n.restoreAnythingSentToYou),
               _item(l10n.restoreYourSupporterBadgeIf),
               if (s.hiddenChats != null) _item(l10n.restoreHiddenFollow),
-              const SizedBox(height: 16),
-              _head(l10n.restoreWhatDoesnT),
+              HaloSection(l10n.restoreWhatDoesnT, flush: true),
               _item(l10n.restoreTheOldPhoneStops, strong: true),
               if (s.moved != true)
                 _item(l10n.restoreIfThePhoneThis, strong: true),
@@ -539,11 +538,6 @@ class _RestoreScreenState extends State<RestoreScreen> {
     );
     return r == true;
   }
-
-  Widget _head(String t) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(t, style: HaloType.mono(size: 11, color: HaloColors.text2)),
-  );
 
   Widget _item(String t, {bool strong = false}) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
@@ -841,20 +835,12 @@ class _Step extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      // a step of the form, not a section: the titles' words, a tighter gap
       Row(
         children: [
           _StepMark(n: n, done: done),
           const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              label,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text2,
-                letter: 0.1,
-              ),
-            ),
-          ),
+          Flexible(child: Text(label, style: HaloSection.style())),
         ],
       ),
       const SizedBox(height: 8),
@@ -875,8 +861,9 @@ class _StepMark extends StatelessWidget {
     // as big as the font: the number whole at any size, the tick in the
     // same box so nothing moves when it swaps
     final s = MediaQuery.textScalerOf(context);
+    // a size under the title it leads
     final style = HaloType.mono(
-      size: 10,
+      size: 12,
       color: HaloColors.amberText,
       letter: 0.2,
       weight: FontWeight.w600,
@@ -887,8 +874,8 @@ class _StepMark extends StatelessWidget {
       textScaler: s,
       maxLines: 1,
     )..layout();
-    final w = max(s.scale(18), drawn.width + 2);
-    final h = max(s.scale(14), drawn.height);
+    final w = max(s.scale(22), drawn.width + 2);
+    final h = max(s.scale(17), drawn.height);
     drawn.dispose();
     return SizedBox(
       width: w,
@@ -911,7 +898,7 @@ class _StepMark extends StatelessWidget {
             ? Icon(
                 Icons.check_rounded,
                 key: const ValueKey('done'),
-                size: s.scale(14),
+                size: s.scale(17),
                 color: HaloColors.green,
               )
             : Text('0$n', key: const ValueKey('n'), style: style),

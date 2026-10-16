@@ -80,7 +80,7 @@ class _ModesScreenState extends State<ModesScreen> {
             // a light box
             ...staggerAll([
               _BackBar(onBack: () => Navigator.pop(context)),
-              const _Head(),
+              const _PageHead(),
               const SizedBox(height: 6),
               _ModeCard(
                 name: l10n.modesOnion,
@@ -152,8 +152,8 @@ class _BackBar extends StatelessWidget {
   }
 }
 
-class _Head extends StatelessWidget {
-  const _Head();
+class _PageHead extends StatelessWidget {
+  const _PageHead();
   @override
   Widget build(BuildContext context) {
     return Padding(

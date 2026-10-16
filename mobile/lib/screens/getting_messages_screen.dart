@@ -13,6 +13,7 @@ import '../notifications.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
+import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/press_scale.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
@@ -165,14 +166,10 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 onTap: () => _pick(DeliveryMode.checkins),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 18, 22, 2),
-                child: Text(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: HaloSection(
                   l10n.gettingMessagesOnTheLockScreen,
-                  style: HaloType.mono(
-                    size: 10.5,
-                    color: HaloColors.text2,
-                    letter: 0.06,
-                  ),
+                  flush: true,
                 ),
               ),
               // one switch to a screen reader, named by its title and line

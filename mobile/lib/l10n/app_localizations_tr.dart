@@ -5288,15 +5288,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsFollowBrowserNote => 'Tarayıcında, Kryfo dışında açılır.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'Nostr uygulamanı Kryfo dışında açar. Uygulama yoksa adres kopyalanır.';
-
-  @override
   String get settingsFollowOpen => 'Aç';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'Burada Nostr uygulaması yok. Adres kopyalandı.';
 
   @override
   String settingsFollowOn(Object name) {

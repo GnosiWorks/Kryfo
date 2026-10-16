@@ -5280,15 +5280,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'در مرورگر شما، بیرون از Kryfo باز می‌شود.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'برنامه‌ی Nostr شما را بیرون از Kryfo باز می‌کند. اگر نباشد، نشانی کپی می‌شود.';
-
-  @override
   String get settingsFollowOpen => 'باز کردن';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'برنامه‌ی Nostr این‌جا نیست. نشانی کپی شد.';
 
   @override
   String settingsFollowOn(Object name) {

@@ -5364,15 +5364,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsFollowBrowserNote => 'Відкриється в браузері, поза Kryfo.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'Відкриється застосунок Nostr, поза Kryfo. Якщо його немає, адресу буде скопійовано.';
-
-  @override
   String get settingsFollowOpen => 'Відкрити';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'Застосунку Nostr немає. Адресу скопійовано.';
 
   @override
   String settingsFollowOn(Object name) {

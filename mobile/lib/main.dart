@@ -27837,7 +27837,6 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             waited: _waited,
             decoy: appState.inDecoyView,
           );
-          const torGreen = Color(0xFF34D399);
           // relay does not go through tor, so tor being off never greys it
           final relay = said.kind == 'relay';
           final dim = off && !relay;
@@ -27850,10 +27849,10 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
               : appState.sendMode == 'fast'
-              ? torGreen
+              ? HaloColors.greenText
               : ready
-              ? const Color(0xFFB79CFF)
-              : HaloColors.warn;
+              ? HaloColors.violetText
+              : HaloColors.warnText;
           final t = _c.value;
           Widget dot(Color accent) => SizedBox(
             width: 18,

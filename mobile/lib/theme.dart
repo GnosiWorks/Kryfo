@@ -281,6 +281,11 @@ class HaloColors {
   // name not checked): the yellow, never the accent, so it reads the same
   // whatever is picked and no accent passes for it
   static Color get warn => _y.accent;
+  // status words: tor ready and fast. light needs darker ink for 4.5:1
+  static Color get greenText =>
+      isLight ? const Color(0xFF096545) : const Color(0xFF34D399);
+  static Color get violetText =>
+      isLight ? const Color(0xFF5E3BCC) : const Color(0xFFB79CFF);
   static Color get warnText => _y.text;
   static Color get onWarn => _y.on;
 }

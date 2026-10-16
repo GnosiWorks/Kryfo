@@ -5358,15 +5358,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsFollowBrowserNote => 'يُفتح في متصفحك، خارج Kryfo.';
 
   @override
-  String get settingsFollowNostrNote =>
-      'يفتح تطبيق Nostr لديك، خارج Kryfo. إن لم يوجد، يُنسخ العنوان.';
-
-  @override
   String get settingsFollowOpen => 'فتح';
-
-  @override
-  String get settingsFollowNpubCopied =>
-      'لا يوجد تطبيق Nostr هنا. نُسخ العنوان.';
 
   @override
   String settingsFollowOn(Object name) {
