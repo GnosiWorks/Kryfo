@@ -337,7 +337,8 @@ func TestBridgeLineChecks(t *testing.T) {
 		{long, false},
 		{"meek_lite 192.0.2.20:80 url=https://1603026938.rsc.cdn77.org front=www.phpmyadmin.net", false},
 		{"obfs3 1.2.3.4:443 " + testFP, false},
-		{"1.2.3.4:443 " + testFP, false},
+		{"1.2.3.4:443 " + testFP, true},
+		{"1.2.3.4:443 " + testFP + " cert=" + cert, false},
 		{"", false},
 		{"obfs4", false},
 	} {

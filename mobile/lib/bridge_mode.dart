@@ -141,9 +141,17 @@ List<String> bridgeLinesFrom(String raw) {
 
 const _transports = ['obfs4', 'webtunnel', 'snowflake'];
 
-/// the transport a line names, or null for anything else
+// a vanilla line starts with the address: 1.2.3.4:443 or [2001:db8::1]:443
+final _vanillaAddr = RegExp(
+  r'^(\d{1,3}(\.\d{1,3}){3}|\[[0-9a-f.]*:[0-9a-f:.]*\]):\d{1,5}$',
+  caseSensitive: false,
+);
+
+/// the transport a line names, vanilla for a line that starts with its
+/// address, or null for anything else
 String? bridgeTransport(String line) {
   final w = line.trim().split(RegExp(r'\s+')).first.toLowerCase();
+  if (_vanillaAddr.hasMatch(w)) return 'vanilla';
   return _transports.contains(w) ? w : null;
 }
 
