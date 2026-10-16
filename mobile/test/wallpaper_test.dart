@@ -524,7 +524,7 @@ void main() {
         File('lib/lock_layer.dart').readAsStringSync(),
         contains('WallImages.clear();'),
       );
-      final main = File('lib/main.dart').readAsStringSync();
+      final main = File('lib/app/routing.dart').readAsStringSync();
       final renew = main.indexOf('void renewRootNavigator() {');
       expect(
         main.substring(renew, main.indexOf('}', renew)),
