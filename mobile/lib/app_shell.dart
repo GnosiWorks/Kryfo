@@ -35,36 +35,21 @@ MaterialApp haloAppShell({
     // being readable, which helps nobody.
     builder: (ctx, child) {
       final mq = MediaQuery.of(ctx);
-      // a phone on its side has the cutout or the button bar beside the
-      // app. the app stays between them, on its own colour, so no screen
-      // has to pad its sides
-      final sides = EdgeInsets.only(
-        left: mq.padding.left,
-        right: mq.padding.right,
-      );
       // bar icons by theme, for screens without an app bar. read again on
       // every theme switch, as the whole app rebuilds then
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: haloOverlayStyle(underNav: mq.viewPadding.bottom > 0),
-        child: ColoredBox(
-          color: HaloColors.surface,
-          child: Padding(
-            padding: sides,
-            child: MediaQuery(
-              data: mq
-                  .removePadding(removeLeft: true, removeRight: true)
-                  .copyWith(
-                    textScaler: mq.textScaler.clamp(
-                      minScaleFactor: 0.85,
-                      maxScaleFactor: 1.6,
-                    ),
-                  ),
-              // the lock sits here, above the navigator, so it covers every
-              // screen, sheet, menu and toast. nothing may go between this
-              // MediaQuery and the lock.
-              child: lock(child ?? const SizedBox.shrink()),
+        child: MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.6,
             ),
           ),
+          // the lock sits here, above the navigator, so it covers every
+          // screen, sheet, menu and toast. nothing may go between this
+          // MediaQuery and the lock.
+          child: lock(child ?? const SizedBox.shrink()),
         ),
       );
     },

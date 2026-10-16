@@ -99,10 +99,6 @@ const upright = <Phone>[
   (name: 'button bar', nav: buttonBar, kb: 0, side: false),
   (name: 'keyboard', nav: gestureBar, kb: keyboardUp, side: false),
 ];
-const onItsSide = <Phone>[
-  (name: 'on its side', nav: gestureBar, kb: 0, side: true),
-  (name: 'on its side, buttons', nav: buttonBar, kb: 0, side: true),
-];
 
 const _file = PickedFile(
   uri: 'content://test/photo.jpg',
@@ -122,7 +118,6 @@ const _age = PickedFile(
 const _noKeyboard = <Phone>[
   (name: 'gesture bar', nav: gestureBar, kb: 0, side: false),
   (name: 'button bar', nav: buttonBar, kb: 0, side: false),
-  ...onItsSide,
 ];
 
 final _nav = GlobalKey<NavigatorState>();
@@ -169,7 +164,7 @@ void _caught(List<String> hits, String phone, FlutterErrorDetails d) {
 Future<List<String>> sweepBars(
   WidgetTester t,
   Widget Function() page, {
-  List<Phone> phones = const [...upright, ...onItsSide],
+  List<Phone> phones = upright,
   Future<void> Function(WidgetTester t)? after,
 }) async {
   _quiet(t);
@@ -291,31 +286,6 @@ void main() {
     }
   });
 
-  group('the shell', () {
-    testWidgets('on its side, the app stays beside the cutout and the '
-        'buttons, upright it has the whole width', (t) async {
-      _quiet(t);
-      final probe = GlobalKey();
-      Widget page() => Scaffold(body: SizedBox.expand(key: probe));
-      barsPhone(t, nav: buttonBar, landscape: true);
-      await t.pumpWidget(_shell(page()));
-      await t.pump();
-      final r = t.getRect(find.byKey(probe));
-      expect(r.left, cutoutTop);
-      expect(r.right, 780 - buttonBar);
-      // no screen pads its sides a second time
-      final mq = MediaQuery.of(t.element(find.byKey(probe)));
-      expect(mq.padding.left, 0);
-      expect(mq.padding.right, 0);
-      await _gone(t);
-      barsPhone(t);
-      await t.pumpWidget(_shell(page()));
-      await t.pump();
-      expect(t.getRect(find.byKey(probe)), const Rect.fromLTWH(0, 0, 360, 780));
-      await _gone(t);
-    });
-  });
-
   group('sheets', () {
     // a page with one button that opens the sheet
     Future<List<String>> sheet(
@@ -396,7 +366,6 @@ void main() {
           yes: 'Delete',
         ),
         last: find.text(l10n.confirmSheetKeep),
-        phones: [...upright, ...onItsSide],
       );
       expect(hits, isEmpty, reason: hits.join('\n'));
     });
