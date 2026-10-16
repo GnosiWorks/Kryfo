@@ -45,21 +45,87 @@ class VoiceTurn {
   static Object? get playing => _who;
 }
 
-// a note longer than this is not read for its wave: it keeps the flat one
-const _waveMaxBytes = 40 * 1024 * 1024;
-
 /// a 16-bit pcm wav's loudness in [bars] steps, 0 to 1 against its own
 /// loudest, or null for anything else
 List<double>? wavPeaks(Uint8List b, int bars) {
-  if (b.length < 12 || bars < 1) return null;
+  final at = _samplesAt(b, b.length);
+  if (at == null || bars < 1) return null;
+  final d = ByteData.sublistView(b);
+  final (start, frame, frames) = at;
+  return _peaks(
+    frames,
+    bars,
+    (f) => d.getInt16(start + f * frame, Endian.little),
+  );
+}
+
+/// [wavPeaks] of a file, read a piece at a time: the same wave, never the
+/// whole note in memory
+List<double>? wavFilePeaks(String path, int bars) {
+  final RandomAccessFile f;
+  try {
+    f = File(path).openSync();
+  } catch (_) {
+    return null;
+  }
+  try {
+    final size = f.lengthSync();
+    final at = _samplesAt(f.readSync(math.min(size, _headMax)), size);
+    if (at == null || bars < 1) return null;
+    final (start, frame, frames) = at;
+    final block = Uint8List(64 * 1024);
+    final view = ByteData.sublistView(block);
+    final one = Uint8List(2);
+    final oneView = ByteData.sublistView(one);
+    var from = 0, len = 0, last = -1;
+    return _peaks(frames, bars, (i) {
+      final pos = start + i * frame;
+      final far = last >= 0 && (pos - last).abs() >= block.length;
+      last = pos;
+      if (pos >= from && pos + 2 <= from + len) {
+        return view.getInt16(pos - from, Endian.little);
+      }
+      if (far) {
+        // samples a block apart: the two bytes alone
+        f.setPositionSync(pos);
+        if (f.readIntoSync(one) < 2) {
+          throw const FileSystemException('short read');
+        }
+        wavPeaksRead += 2;
+        return oneView.getInt16(0, Endian.little);
+      }
+      from = pos;
+      f.setPositionSync(pos);
+      len = f.readIntoSync(block, 0, math.min(block.length, size - pos));
+      if (len < 2) throw const FileSystemException('short read');
+      wavPeaksRead += len;
+      return view.getInt16(pos - from, Endian.little);
+    });
+  } catch (_) {
+    return null;
+  } finally {
+    f.closeSync();
+  }
+}
+
+// how far into a file its samples are looked for
+const _headMax = 64 * 1024;
+
+/// the sample bytes [wavFilePeaks] has read, for tests
+@visibleForTesting
+int wavPeaksRead = 0;
+
+// where a 16-bit pcm wav's samples are in [b], the head of a file of
+// [size]: their start, the bytes of a frame, and how many frames. null for
+// anything else
+(int, int, int)? _samplesAt(Uint8List b, int size) {
+  if (b.length < 12) return null;
   final d = ByteData.sublistView(b);
   String tag(int at) => String.fromCharCodes(b.sublist(at, at + 4));
   if (tag(0) != 'RIFF' || tag(8) != 'WAVE') return null;
   var at = 12;
   int? bits;
   var channels = 1;
-  int? dataAt;
-  var dataLen = 0;
   while (at + 8 <= b.length) {
     final id = tag(at);
     final len = d.getUint32(at + 4, Endian.little);
@@ -70,17 +136,19 @@ List<double>? wavPeaks(Uint8List b, int bars) {
       channels = d.getUint16(body + 2, Endian.little);
       bits = d.getUint16(body + 14, Endian.little);
     } else if (id == 'data') {
-      dataAt = body;
+      if (bits != 16 || channels < 1) return null;
       // a length written before the end says nothing, or too much: the
       // rest of the file is the samples
-      dataLen = len == 0 || body + len > b.length ? b.length - body : len;
-      break;
+      final n = len == 0 || body + len > size ? size - body : len;
+      return (body, 2 * channels, n ~/ (2 * channels));
     }
     at = body + len + (len & 1);
   }
-  if (bits != 16 || dataAt == null || channels < 1) return null;
-  final frame = 2 * channels;
-  final frames = dataLen ~/ frame;
+  return null;
+}
+
+// the loudness of [frames], each read by [sample], in [bars] steps
+List<double> _peaks(int frames, int bars, int Function(int frame) sample) {
   final out = List<double>.filled(bars, 0);
   if (frames == 0) return out;
   for (var i = 0; i < bars; i++) {
@@ -91,7 +159,7 @@ List<double>? wavPeaks(Uint8List b, int bars) {
     var sum = 0.0;
     var n = 0;
     for (var f = from; f < to && f < frames; f += step) {
-      final v = d.getInt16(dataAt + f * frame, Endian.little) / 32768;
+      final v = sample(f) / 32768;
       sum += v * v;
       n++;
     }
@@ -103,15 +171,10 @@ List<double>? wavPeaks(Uint8List b, int bars) {
   return [for (final v in out) math.sqrt(v / top)];
 }
 
-List<double>? _peaksOfFile(String path) {
-  try {
-    final f = File(path);
-    if (f.lengthSync() > _waveMaxBytes) return null;
-    return wavPeaks(f.readAsBytesSync(), kVoiceBars);
-  } catch (_) {
-    return null;
-  }
-}
+List<double>? _peaksOfFile(String path) => wavFilePeaks(path, kVoiceBars);
+
+/// a take's wave, read off the main isolate
+Future<List<double>?> takePeaks(String path) => compute(_peaksOfFile, path);
 
 final Map<String, List<double>?> _waves = {};
 Future<void> _reading = Future.value();

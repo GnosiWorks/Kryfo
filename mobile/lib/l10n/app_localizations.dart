@@ -1920,7 +1920,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 8 MB max'**
+  /// **'Too long for a message · 15 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -1982,30 +1982,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use this'**
   String get cameraUseThis;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{bytes} b'**
-  String chatB(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{bytes} kb'**
-  String chatKb(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{bytes} mb'**
-  String chatMb(Object bytes);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'FILE'**
-  String get chatFile;
 
   /// screens/chat_screen.dart
   ///
@@ -2348,12 +2324,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not read that file'**
   String get chatCouldNotReadThat;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'File too big · 8 mb max'**
-  String get chatFileTooBig8;
 
   /// screens/chat_screen.dart
   ///
@@ -3932,12 +3902,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not clean that gif'**
   String get groupChatCouldNotCleanThat;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'File too big · 8 mb max'**
-  String get groupChatFileTooBig8;
 
   /// screens/group_chat_screen.dart
   ///
@@ -13683,6 +13647,36 @@ abstract class AppLocalizations {
   /// **'This note could not be disguised, so it was not sent'**
   String get voiceNotDisguised;
 
+  /// the phone is too full to record or disguise a voice note; the note waits where it is
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough free space on this phone. Free up some space and try again.'**
+  String get voiceNoRoom;
+
+  /// a voice note that was to go out disguised could not be, because the phone is too full: it is not sent as it was recorded
+  ///
+  /// In en, this message translates to:
+  /// **'There was not enough free space to disguise this note, so it was not sent'**
+  String get voiceNoRoomNotSent;
+
+  /// under a voice note sent while its disguise is still being made
+  ///
+  /// In en, this message translates to:
+  /// **'Disguising'**
+  String get voiceDisguising;
+
+  /// said after the next unlock: the app locked while a voice note was still being disguised or saved, and the note was dropped, not sent
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo locked before your voice note went out, so it was not sent'**
+  String get voiceLockedNotSent;
+
+  /// a voice note this phone could not keep in its chat, so it was dropped and never sent
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice note was not sent'**
+  String get voiceNotSent;
+
   /// settings: voice notes go out disguised in every chat that has not chosen for itself
   ///
   /// In en, this message translates to:
@@ -13694,6 +13688,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
+
+  /// widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it
+  ///
+  /// In en, this message translates to:
+  /// **'This is an app installer. Only install apps from people you trust.'**
+  String get fileInstallerLine;
+
+  /// widgets/media_bubbles.dart: screen reader name for a file that is an app installer (apk)
+  ///
+  /// In en, this message translates to:
+  /// **'App installer'**
+  String get fileAppInstaller;
+
+  /// message menu and file bubble: saves the file through the system save window
+  ///
+  /// In en, this message translates to:
+  /// **'Save to device'**
+  String get fileSaveToDevice;
+
+  /// widgets/media_bubbles.dart: screen reader hint on a file bubble, a tap opens it in another app
+  ///
+  /// In en, this message translates to:
+  /// **'Opens in another app'**
+  String get fileOpenHint;
+
+  /// file_save.dart: toast once a file was saved, when the place is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get fileSaved;
+
+  /// file_save.dart: toast once a file was saved. the placeholder is a folder like Download, or the app that holds it
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in {place}'**
+  String fileSavedIn(String place);
+
+  /// file_save.dart: toast when a file was saved but the copy could not be read back
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, but Kryfo couldn\'t check the copy'**
+  String get fileSavedUnchecked;
+
+  /// file_save.dart: toast when saving a file failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the file'**
+  String get fileNotSaved;
+
+  /// chat and group: toast when a picked file is over the limit. size and max are like 12.4 mb and 8.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. Files can be up to {max}.'**
+  String fileTooBig(String size, String max);
+
+  /// screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)
+  ///
+  /// In en, this message translates to:
+  /// **'This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.'**
+  String get fileGoesAsItIs;
+
+  /// chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)
+  ///
+  /// In en, this message translates to:
+  /// **'Send this picture as it is?'**
+  String get fileRawPictureTitle;
+
+  /// chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details
+  ///
+  /// In en, this message translates to:
+  /// **'This picture can\'t be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.'**
+  String get fileRawPictureLine;
+
+  /// widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Voice notes stop at 30 minutes. Listen to it, then send it.'**
+  String get voiceStoppedAtLimit;
 
   /// screens/getting_messages_screen.dart: the helper app card
   ///

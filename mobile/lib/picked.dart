@@ -1,6 +1,6 @@
 // the pickers leave a copy of what was chosen in the app cache. once the
 // bytes are in hand it is zeroed and removed, with the plugin's own folder.
-// the recorder's take goes the same way.
+// the recorder's take is moved where it is kept, or shredded.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -17,6 +17,8 @@ import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
 import 'open_file.dart' show nameSaysVideo;
 import 'shred.dart';
+import 'tools/tools_bridge.dart' show ToolsBridge;
+import 'voice_mask.dart' show maskWavFile;
 
 // only a path inside the app's own cache is ours to destroy. a picker that
 // hands back the real file, as the desktop ones do, gets left alone
@@ -296,16 +298,96 @@ Future<void> dropPickerCopies() async {
   await sweepFilePickerCopies(cache);
 }
 
-// a voice note as recorded, read once and then zeroed and removed: the file
-// is the voice before any disguise. null when there is no take to read.
-Future<Uint8List?> takeRecording(String path) async {
-  final Uint8List bytes;
+/// a voice note put where it is kept, at [dest]: disguised when
+/// [disguise], else as recorded. the recorder's own file at [take] is the
+/// voice before any disguise: moved to [dest] when it goes as it is, else
+/// shredded once the disguise is there. [masked] is a disguise of it made
+/// already, moved to [dest] or shredded. never read whole. false, with
+/// nothing at [dest], when there is no take or no disguise of it
+Future<bool> placeVoice(
+  String take,
+  String dest, {
+  required bool disguise,
+  String? masked,
+}) async {
   try {
-    bytes = await File(path).readAsBytes();
-  } catch (_) {
-    return null;
+    if (!disguise) {
+      if (masked != null) await shredFile(masked);
+      return await _moveFile(take, dest);
+    }
+    if (masked != null && await _moveFile(masked, dest)) return true;
+    if (!await File(take).exists()) return false;
+    // made beside the take, where the start sweeps, and moved in whole: a
+    // crash leaves nothing of it in the chat's folder
+    if (!await maskWavFile(take, sendPathOf(take))) return false;
+    return await _moveFile(sendPathOf(take), dest);
+  } catch (e) {
+    dlog('voice: not placed (${e.runtimeType})');
+    await shredFile(dest);
+    return false;
   } finally {
-    await shredFile(path);
+    if (masked != null) await shredFile(masked);
+    if (disguise) await shredFile(sendPathOf(take));
+    await shredFile(take);
   }
-  return bytes;
+}
+
+/// where [placeVoice] makes the disguise of the take at [take] before it
+/// moves it in
+@visibleForTesting
+String sendPathOf(String take) => take.endsWith('.wav')
+    ? '${take.substring(0, take.length - 4)}_s.wav'
+    : '$take.s';
+
+/// what the phone has free where notes are made, or null when it cannot
+/// say. a test stands in for it
+@visibleForTesting
+Future<int?> Function() voiceFreeBytes = () => ToolsBridge.instance.freeBytes();
+
+/// the disk a note of [ms] takes to disguise: the side file at four bytes
+/// a sample, the note, and with [withTake] the take too, with room to
+/// spare. about 250 mb for half an hour with the take
+int voiceRoomNeeded(int ms, {bool withTake = false}) {
+  final secs = (ms + 999) ~/ 1000;
+  return secs * 32000 * (withTake ? 4 : 3) + 16 * 1024 * 1024;
+}
+
+/// false only when the phone says there is not room for [voiceRoomNeeded]
+Future<bool> roomForVoice(int ms, {bool withTake = false}) async {
+  final int? free;
+  try {
+    free = await voiceFreeBytes();
+  } catch (_) {
+    return true;
+  }
+  return free == null || free >= voiceRoomNeeded(ms, withTake: withTake);
+}
+
+/// a voice note that will not go: its take and any disguise made of it
+/// shredded
+Future<void> dropTake(String take, String? masked) async {
+  if (masked != null) await shredFile(masked);
+  await shredFile(take);
+}
+
+// [from] renamed to [to], or copied there and shredded where it was.
+// false, with nothing at [to], when neither works
+Future<bool> _moveFile(String from, String to) async {
+  if (!await File(from).exists()) return false;
+  try {
+    await File(from).rename(to);
+    return true;
+  } on FileSystemException {
+    // another file system: copied over
+  }
+  try {
+    await File(from).openRead().pipe(File(to).openWrite());
+    return true;
+  } catch (e) {
+    dlog('voice: not copied (${e.runtimeType})');
+    await shredFile(to);
+    return false;
+  } finally {
+    await shredFile(from);
+  }
 }

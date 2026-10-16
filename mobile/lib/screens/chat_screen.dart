@@ -26,10 +26,10 @@ import '../widgets/chat_backdrop.dart';
 import 'introduce_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
-import '../widgets/media_bubbles.dart' show VoiceBubble;
+import '../widgets/media_bubbles.dart'
+    show VoiceBubble, VoiceMakingBubble, fileCard, fileTooBigLine;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
-import '../voice_mask.dart' show maskWavOff;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/not_them.dart';
 import '../widgets/hidden_mark.dart';
@@ -39,6 +39,17 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_kind.dart'
+    show
+        FileShape,
+        bytesSayIsoVideo,
+        fileFactsRead,
+        fileFits,
+        fileShapeNow,
+        knownInstaller,
+        readFileFactsFresh,
+        sendLaneCleans;
+import '../file_save.dart' show saveReceivedFile;
 import '../widgets/notice_banner.dart';
 import '../widgets/shield_note.dart';
 import '../scam_shield.dart' show ShieldFlag;
@@ -375,6 +386,8 @@ class _Msg with WordLinks {
   String? filePath;
   String? fileName;
   bool voiceDisguised;
+  // a voice note sent while its disguise is made: how far it is
+  ValueListenable<double?>? making;
   bool saved;
   Map<String, String> reactions;
   bool fresh = false;
@@ -432,97 +445,6 @@ class _Msg with WordLinks {
       : burnWaits
       ? burnLeft(burnSecs! * 1000)
       : null;
-}
-
-String _humanSize(int bytes) {
-  if (bytes < 1024) return l10n.chatB(whole(bytes));
-  if (bytes < 1024 * 1024) {
-    return l10n.chatKb(whole(((bytes / 1024)).round()));
-  }
-  return l10n.chatMb(decimal((bytes / (1024 * 1024)), 1));
-}
-
-IconData _fileGlyph(String name) {
-  final n = name.toLowerCase();
-  if (n.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
-  if (n.endsWith('.zip') || n.endsWith('.rar') || n.endsWith('.7z')) {
-    return Icons.folder_zip_outlined;
-  }
-  if (n.endsWith('.doc') || n.endsWith('.docx') || n.endsWith('.txt')) {
-    return Icons.description_outlined;
-  }
-  if (n.endsWith('.mp3') || n.endsWith('.wav') || n.endsWith('.m4a')) {
-    return Icons.audiotrack_outlined;
-  }
-  if (n.endsWith('.mp4') || n.endsWith('.mov') || n.endsWith('.mkv')) {
-    return Icons.movie_outlined;
-  }
-  return Icons.insert_drive_file_outlined;
-}
-
-Widget _fileCard(_Msg msg, bool isOut) {
-  final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-  final sub = isOut ? HaloColors.onAmber : HaloColors.text3;
-  final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
-  int? sz;
-  try {
-    if (msg.filePath != null) sz = File(msg.filePath!).lengthSync();
-  } catch (_) {
-    // gone or unreadable: the card shows no size
-  }
-  final ext = (msg.fileName ?? '').contains('.')
-      ? msg.fileName!.split('.').last.toUpperCase()
-      : l10n.chatFile;
-  return Container(
-    constraints: const BoxConstraints(maxWidth: 230),
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-    decoration: BoxDecoration(
-      color: isOut
-          ? HaloColors.onAmber.withValues(alpha: 0.12)
-          : HaloColors.surface3,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: isOut
-                ? HaloColors.onAmber.withValues(alpha: 0.16)
-                : HaloColors.amberSoft,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(_fileGlyph(msg.fileName ?? ''), size: 19, color: icon),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                msg.fileName ?? 'file',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(
-                  size: 13,
-                  color: fg,
-                  weight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                sz != null ? '$ext · ${_humanSize(sz)}' : ext,
-                style: HaloType.mono(size: 9, color: sub),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 // out of the bubble it was tapped in, or a tile of the shared photos. a
@@ -2244,11 +2166,18 @@ class _ChatScreenState extends State<ChatScreen>
                                   _forwardMessage(target);
                                 },
                         ),
-                      // a tap opens a file, so sharing it lives here
+                      // a tap opens a file, so sharing it lives here. an
+                      // app installer is only ever saved
                       MenuAction(
                         icon: Icons.ios_share_rounded,
                         label: l10n.commonShare,
-                        onTap: kept || !canShare
+                        onTap:
+                            kept ||
+                                !canShare ||
+                                knownInstaller(
+                                  shareOn.filePath!,
+                                  shareOn.fileName,
+                                )
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -2257,6 +2186,28 @@ class _ChatScreenState extends State<ChatScreen>
                                     shareOn.filePath!,
                                     name: shareOn.fileName,
                                   ),
+                                );
+                              },
+                      ),
+                      MenuAction(
+                        icon: Icons.download_rounded,
+                        label: l10n.fileSaveToDevice,
+                        // in an album, the one held. nothing kept to this
+                        // chat leaves it
+                        onTap:
+                            kept ||
+                                shareOn == null ||
+                                _keptHere(shareOn) ||
+                                shareOn.filePath == null ||
+                                shareOn.fileName == null ||
+                                shareOn.fileName == 'voice.wav'
+                            ? null
+                            : () {
+                                dismiss(now: true);
+                                saveReceivedFile(
+                                  context,
+                                  shareOn.filePath!,
+                                  shareOn.fileName,
                                 );
                               },
                       ),
@@ -3560,88 +3511,209 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _sendVoice(VoiceTake take) async {
     final srcPath = take.path;
-    final src = File(srcPath);
+    final making = take.making;
+    // the note is not going: its take, and a disguise of it made or still
+    // being made, shredded
+    Future<void> drop([String? masked]) async {
+      making?.cancel();
+      await dropTake(srcPath, masked ?? take.masked);
+    }
+
     // the chat went while the note was made: the raw voice goes, unsent
     if (!mounted || _requestLocked) {
       // one that will not go is swept at the next start
-      shredFile(srcPath).ignore();
+      drop().ignore();
       return;
     }
-    if (!await src.exists()) return;
-    if (!mounted) return shredFile(srcPath);
-    if (_isDev && !await _ensureDevStarted()) {
-      await shredFile(srcPath);
-      return;
+    if (!await File(srcPath).exists()) return drop();
+    if (!mounted) return drop();
+    if (_isDev && !await _ensureDevStarted()) return drop();
+    final peer = widget.peerHaloId;
+    // where the chat is as the note leaves: one hidden, brought back or
+    // deleted while it is made keeps none of it
+    final home = session.chatKey(peer);
+    final bool wasAccepted;
+    try {
+      wasAccepted = await session.isAccepted(peer);
+    } catch (e) {
+      dlog('voice: chat not read (${e.runtimeType})');
+      return drop();
     }
+    // said wherever the person is once the lock is down, and only where
+    // the chat is still there to see
+    void say(String line) =>
+        showHaloToastAnywhere(line, still: () => session.chatKey(peer) == home);
     // read after the start: an anonymous chat is disguised whatever the
     // note says
     final disguise = take.disguise || _devAnon;
-    // the recorder's own file is the voice before any disguise, so it goes
-    // once read. the copy kept with the message is below
-    final raw = await takeRecording(srcPath);
-    if (raw == null) return;
-    final bytes = disguise ? take.masked ?? await maskWavOff(raw) : raw;
-    // never sent as recorded when it was to go disguised
-    if (bytes == null) {
-      if (mounted) showHaloToast(context, l10n.voiceNotDisguised);
-      return;
-    }
-    if (!identical(bytes, raw)) raw.fillRange(0, raw.length, 0);
-    if (!mounted) return;
-    if (_requestPending) setState(() => _sentCount++);
     final msgUid = newMsgUid();
-    final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final dest = File('${mediaDir.path}/vn_$msgUid.wav');
-    await dest.writeAsBytes(bytes);
-    final filePath = dest.path;
     final replyToUid = _replyTo?.msgUid;
-    final msg = _Msg(
-      'out',
-      '',
-      DateTime.now(),
-      sending: true,
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      filePath: filePath,
-      fileName: 'voice.wav',
-      voiceDisguised: disguise,
-      burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: null,
-    );
-    setState(() {
-      _messages.add(msg);
-      _normaliseMessages();
-      _status = '';
-      _replyTo = null;
+    // sent is sent: leaving the chat does not stop it. the lock does, and
+    // nothing of it outlives the lock
+    var locked = false;
+    final unguard = lockGuard.closeOnLock(() {
+      locked = true;
+      making?.cancel();
     });
-    _scrollToEnd();
-    HapticFeedback.lightImpact();
-    await _answerSupport();
-    await session.saveMessage(
-      widget.peerHaloId,
-      'out',
-      '',
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      filePath: filePath,
-      fileName: 'voice.wav',
-      voiceDisguised: disguise,
-      burnAt: msg.burnAt,
-      burnSecs: msg.burnSecs,
-      sent: 0,
-    );
-    // the home row moves up on what you sent too
-    unawaited(appState.refreshContacts());
-    _sendChunkedMedia(
-      path: filePath,
-      msgUid: msgUid,
-      fileName: 'voice.wav',
-      voice: true,
-      voiceDisguised: disguise,
-      burnSeconds: _ghost ? _burnSeconds : null,
-      replyTo: replyToUid,
-      writtenAt: msg.when.millisecondsSinceEpoch,
-    ).then((result) => _finishMediaSend(msg, result));
+    _Msg? pending;
+    void unpend() {
+      final m = pending;
+      if (m == null || !mounted) return;
+      setState(() => _messages.remove(m));
+    }
+
+    // the lock stopped it: its bubble goes, and once the lock is down the
+    // person hears it did not go
+    Future<void> lockedOut(String? masked, {String? placed}) async {
+      unpend();
+      if (placed != null) await shredFile(placed);
+      await dropTake(srcPath, masked);
+      say(l10n.voiceLockedNotSent);
+    }
+
+    try {
+      var masked = take.masked;
+      if (making != null) {
+        // its bubble shows at once, waiting for its disguise
+        final m = pending = _Msg(
+          'out',
+          '',
+          DateTime.now(),
+          sending: true,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+          fileName: 'voice.wav',
+          voiceDisguised: true,
+          burnSecs: _ghost ? _burnSeconds : null,
+        )..making = making.progress;
+        setState(() {
+          _messages.add(m);
+          _normaliseMessages();
+          _status = '';
+          _replyTo = null;
+        });
+        _scrollToEnd();
+        masked = await making.file;
+        if (locked) return lockedOut(masked);
+      }
+      // not made yet: made now, if the disk has room for it
+      if (disguise && masked == null && !await roomForVoice(take.ms)) {
+        unpend();
+        await dropTake(srcPath, null);
+        say(l10n.voiceNoRoomNotSent);
+        return;
+      }
+      final String filePath;
+      try {
+        if (session.chatKey(peer) != home) throw StateError('moved');
+        final mediaDir = await session.mediaDirOf(peer);
+        filePath = '${mediaDir.path}/vn_$msgUid.wav';
+      } catch (e) {
+        dlog('voice: no media folder (${e.runtimeType})');
+        unpend();
+        await dropTake(srcPath, masked);
+        return;
+      }
+      // the recorder's own file is the voice before any disguise: it is the
+      // copy kept with the message, or it goes once the disguise is there
+      final placed = await placeVoice(
+        srcPath,
+        filePath,
+        disguise: disguise,
+        masked: masked,
+      );
+      // never sent as recorded when it was to go disguised
+      if (!placed) {
+        unpend();
+        if (locked) {
+          say(l10n.voiceLockedNotSent);
+        } else if (disguise) {
+          final room = await roomForVoice(take.ms);
+          say(room ? l10n.voiceNotDisguised : l10n.voiceNoRoomNotSent);
+        }
+        return;
+      }
+      if (locked) return lockedOut(null, placed: filePath);
+      if (_requestPending && mounted) setState(() => _sentCount++);
+      final msg =
+          pending ??
+          _Msg(
+            'out',
+            '',
+            DateTime.now(),
+            sending: true,
+            msgUid: msgUid,
+            replyTo: replyToUid,
+            fileName: 'voice.wav',
+            voiceDisguised: disguise,
+            burnSecs: _ghost ? _burnSeconds : null,
+            burnAt: null,
+          );
+      msg
+        ..filePath = filePath
+        ..making = null;
+      if (mounted) {
+        setState(() {
+          if (!_messages.contains(msg)) _messages.add(msg);
+          _normaliseMessages();
+          _status = '';
+          _replyTo = null;
+        });
+        _scrollToEnd();
+        HapticFeedback.lightImpact();
+      }
+      // from here a lock takes it off the screen as one still being made
+      pending = msg;
+      await _answerSupport();
+      // the bubble, the row and the wire all say when it was begun
+      final writtenAt = msg.when.millisecondsSinceEpoch;
+      var kept = false;
+      try {
+        kept = await appState.keepOwn(peer, () async {
+          // a lock while it waited for a move: nothing is written
+          if (locked) return false;
+          return session.saveInChat(
+            peer,
+            home: home,
+            msgUid: msgUid,
+            wasAccepted: wasAccepted,
+            writtenAt: writtenAt,
+            replyTo: replyToUid,
+            filePath: filePath,
+            fileName: 'voice.wav',
+            voiceDisguised: disguise,
+            burnAt: msg.burnAt,
+            burnSecs: msg.burnSecs,
+            sent: 0,
+          );
+        });
+      } catch (e) {
+        dlog('voice: row not kept (${e.runtimeType})');
+      }
+      if (!kept && locked) return lockedOut(null, placed: filePath);
+      if (!kept) {
+        if (mounted) setState(() => _messages.remove(msg));
+        await shredFile(filePath);
+        say(l10n.voiceNotSent);
+        return;
+      }
+      // the home row moves up on what you sent too
+      unawaited(appState.refreshContacts());
+      // left while it was made: the screen showing the chat now hears of it
+      if (!mounted) appState.chatChanged(peer);
+      _sendChunkedMedia(
+        path: filePath,
+        msgUid: msgUid,
+        fileName: 'voice.wav',
+        voice: true,
+        voiceDisguised: disguise,
+        burnSeconds: msg.burnSecs,
+        replyTo: replyToUid,
+        writtenAt: writtenAt,
+      ).then((result) => _finishMediaSend(msg, result));
+    } finally {
+      unguard();
+    }
   }
 
   // rough wire time: 16k slices, base64 adds a third, five in flight at
@@ -3663,16 +3735,28 @@ class _ChatScreenState extends State<ChatScreen>
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out - a dialog on a 40kb photo would just be noise.
-  Future<bool> _confirmBigSend(int bytes) async {
-    if (bytes < 512 * 1024) return true;
+  // [asItIs]: a kind the send lane does not clean, which it says. [raw]: a
+  // picture it cannot clean, which is always asked, whatever its size
+  Future<bool> _confirmBigSend(
+    int bytes, {
+    bool asItIs = false,
+    bool raw = false,
+  }) async {
+    final big = bytes >= 512 * 1024;
+    if (!big && !raw) return true;
     if (!mounted) return false;
+    final why = raw ? l10n.fileRawPictureLine : l10n.fileGoesAsItIs;
     final ok = await showConfirmSheet(
       context,
-      title: l10n.chatSendThis,
+      title: raw ? l10n.fileRawPictureTitle : l10n.chatSendThis,
       figure: appState.sendMode == 'private'
           ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
           : _humanBytes(bytes),
-      line: l10n.chatBigFilesGoOut,
+      line: !big
+          ? why
+          : asItIs || raw
+          ? '${l10n.chatBigFilesGoOut}\n\n$why'
+          : l10n.chatBigFilesGoOut,
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
       rose: false,
@@ -3687,7 +3771,8 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _pickAndSendFile() async {
     final PlatformFile? res;
     try {
-      res = await lockState.hold(() => FilePicker.pickFile());
+      // every kind of file: apps, archives, anything the phone holds
+      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
     } on LockDropped {
       // the session it was picked in is gone: nothing to say
       return;
@@ -3763,11 +3848,19 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return null;
     }
-    if (size > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
+    if (!fileFits(size)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size));
       return null;
     }
-    if (!asked && !await _confirmBigSend(size)) return null;
+    final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
+    if (!asked &&
+        !await _confirmBigSend(
+          size,
+          asItIs: !await sendLaneCleans(src, name),
+          raw: raw,
+        )) {
+      return null;
+    }
     final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -3775,8 +3868,11 @@ class _ChatScreenState extends State<ChatScreen>
     await File(src).copy(dest.path);
     // a gallery video carries where, on what and when, like a photo. it is
     // stripped in place on our own copy, and one that cannot be walked is
-    // not sent.
-    if (videoNameNeedsStrip(name)) {
+    // not sent. one renamed is told by its bytes
+    // a raw picture is not one, whatever it is called: the video cleaner
+    // would break it without cleaning it
+    if (!raw &&
+        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
@@ -4826,12 +4922,14 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final m = run == null ? row : _albumFace(run);
     // an empty control message that leaked through would be a blank bubble.
-    // a sticker this version does not have may have no text at all
+    // a sticker this version does not have may have no text at all. a voice
+    // note still being disguised has no file yet
     if (run == null &&
         m.text.isEmpty &&
         m.sticker == null &&
         m.mediaPath == null &&
         m.filePath == null &&
+        m.making == null &&
         m.preview == null) {
       return const SizedBox.shrink();
     }
@@ -7351,17 +7449,28 @@ class _Bubble extends StatelessWidget {
     );
   }
 
+  // a file is drawn by what its bytes are once they are read, so a bubble
+  // drawn by the name alone is drawn again then
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      msg.filePath == null || msg.fileName == 'voice.wav'
+      ? _build(context)
+      : ValueListenableBuilder<int>(
+          valueListenable: fileFactsRead,
+          builder: (context, _, _) => _build(context),
+        );
+
+  Widget _build(BuildContext context) {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
+    final shape = fileShapeNow(msg.filePath, msg.fileName);
     // a video with no caption sits on the chat like a photo: no bubble
     // around it, its time and tick in its corner
     final isVideo =
         msg.filePath != null &&
         msg.text.isEmpty &&
         msg.fileName != 'voice.wav' &&
-        nameSaysVideo(msg.fileName);
+        shape == FileShape.video;
     final frameless = isImage || isVideo;
     final failedShown = _sendLooksFailed(msg);
     final parked = msg.parked && !msg.sending && !msg.failed;
@@ -7619,6 +7728,16 @@ class _Bubble extends StatelessWidget {
                                           parked: parked,
                                         ),
                                       )
+                                    else if (msg.making != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: VoiceMakingBubble(
+                                          progress: msg.making!,
+                                          isOut: isOut,
+                                        ),
+                                      )
                                     else if (msg.fileName == 'voice.wav' &&
                                         msg.filePath != null)
                                       Padding(
@@ -7634,7 +7753,7 @@ class _Bubble extends StatelessWidget {
                                         ),
                                       )
                                     else if (msg.filePath != null &&
-                                        nameSaysVideo(msg.fileName))
+                                        shape == FileShape.video)
                                       VideoBubble(
                                         key: ValueKey('vid_${msg.filePath}'),
                                         path: msg.filePath!,
@@ -7678,7 +7797,12 @@ class _Bubble extends StatelessWidget {
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 2,
                                           ),
-                                          child: _fileCard(msg, isOut),
+                                          child: fileCard(
+                                            msg.filePath,
+                                            msg.fileName,
+                                            isOut,
+                                            shape: shape,
+                                          ),
                                         ),
                                       ),
                                     if (album == null && msg.mediaPath != null)

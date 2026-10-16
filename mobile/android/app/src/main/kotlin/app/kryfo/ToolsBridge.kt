@@ -408,21 +408,35 @@ class ToolsBridge(private val activity: Activity) {
         return FileProvider.getUriForFile(activity, "${activity.packageName}.open", f)
     }
 
+    // the installer check reads the file's end, so it runs off the ui
+    // thread. anything that goes wrong on the way shares nothing
     private fun shareOut(path: String?, mime: String?, result: MethodChannel.Result) {
-        val uri = path?.let { outUri(it) }
-        if (uri == null) {
-            result.success(SharePick.FAILED)
-            return
-        }
-        val send = Intent(Intent.ACTION_SEND).apply {
-            type = mime ?: "application/octet-stream"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            clipData = ClipData.newRawUri("", uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        if (!SharePick.start(activity, send) { result.success(it) }) {
-            result.success(SharePick.FAILED)
-        }
+        Thread {
+            val send = try {
+                val uri = path?.let { outUri(it) }
+                if (uri == null || Installer.refused(File(path), null, mime)) {
+                    null
+                } else {
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = mime ?: "application/octet-stream"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        clipData = ClipData.newRawUri("", uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                }
+            } catch (e: Exception) {
+                null
+            }
+            activity.runOnUiThread {
+                if (send == null) {
+                    result.success(SharePick.FAILED)
+                    return@runOnUiThread
+                }
+                if (!SharePick.start(activity, send) { result.success(it) }) {
+                    result.success(SharePick.FAILED)
+                }
+            }
+        }.start()
     }
 
     private fun saveToGallery(path: String?, name: String?, mime: String?, result: MethodChannel.Result) {

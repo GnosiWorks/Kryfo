@@ -3,6 +3,7 @@
 // recording bar follows the finger toward the start side in either
 // direction; the red dot breathes only while the mic is live and the app is
 // in front; the mask pops when switched. all of it comes to rest.
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -124,6 +125,91 @@ void main() {
     test('silence is flat, and nothing to read is flat too', () {
       expect(wavPeaks(wav(List.filled(4000, 0)), 6), List.filled(6, 0.0));
       expect(wavPeaks(wav(const []), 6), List.filled(6, 0.0));
+    });
+
+    test('read from its file a piece at a time, it is the same wave', () {
+      final dir = Directory.systemTemp.createTempSync('wave');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final notes = [
+        wav(_quietThenLoud(16000)),
+        wav(_quietThenLoud(8000), extra: true),
+        wav(_quietThenLoud(8000), lengthUnknown: true),
+        wav(_quietThenLoud(8000), channels: 2),
+        // longer than a piece read at a time
+        wav(_quietThenLoud(90000)),
+        wav(List.filled(4000, 0)),
+        wav(const []),
+        wav(_quietThenLoud(400), format: 3),
+        Uint8List.fromList(List.filled(60, 7)),
+        Uint8List(4),
+      ];
+      for (final (i, w) in notes.indexed) {
+        final f = File('${dir.path}/$i.wav')..writeAsBytesSync(w);
+        for (final bars in [1, 6, 30]) {
+          expect(wavFilePeaks(f.path, bars), wavPeaks(w, bars), reason: '$i');
+        }
+      }
+      expect(wavFilePeaks('${dir.path}/gone.wav', 6), isNull);
+    });
+
+    test('a note too long to hold in memory still has its wave', () async {
+      final dir = Directory.systemTemp.createTempSync('wave');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      // 25 minutes: quiet, then loud
+      const n = 25 * 60 * 16000;
+      final head = wav(const []);
+      final f = File('${dir.path}/long.wav').openSync(mode: FileMode.write)
+        ..writeFromSync(head);
+      final part = ByteData(2 * 16000 * 60);
+      for (var m = 0; m < 25; m++) {
+        for (var i = 0; i < 16000 * 60; i++) {
+          final v = (m < 12 ? 800 : 16000) * (i.isEven ? 1 : -1);
+          part.setInt16(2 * i, v, Endian.little);
+        }
+        f.writeFromSync(part.buffer.asUint8List());
+      }
+      f
+        ..setPositionSync(40)
+        ..writeFromSync(
+          (ByteData(
+            4,
+          )..setUint32(0, n * 2, Endian.little)).buffer.asUint8List(),
+        )
+        ..closeSync();
+      final p = (await voicePeaks('${dir.path}/long.wav'))!;
+      expect(p, hasLength(kVoiceBars));
+      expect(p.last, closeTo(1, 0.001));
+      expect(p.first, lessThan(0.4));
+    });
+
+    test('samples a block apart are read two bytes at a time', () {
+      final dir = Directory.systemTemp.createTempSync('wave');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      // one bar over 16 million frames: a sample read every 80 kb. sparse,
+      // so it takes no disk
+      const n = 400 * 40000;
+      final f = File('${dir.path}/far.wav').openSync(mode: FileMode.write)
+        ..writeFromSync(wav(const []))
+        ..truncateSync(44 + 2 * n);
+      final v = ByteData(2)..setInt16(0, 1000, Endian.little);
+      for (var i = 0; i < n; i += 40000 * 7) {
+        f
+          ..setPositionSync(44 + 2 * i)
+          ..writeFromSync(v.buffer.asUint8List());
+      }
+      f
+        ..setPositionSync(40)
+        ..writeFromSync(
+          (ByteData(
+            4,
+          )..setUint32(0, 2 * n, Endian.little)).buffer.asUint8List(),
+        )
+        ..closeSync();
+      wavPeaksRead = 0;
+      final p = wavFilePeaks('${dir.path}/far.wav', 1);
+      expect(wavPeaksRead, lessThan(128 * 1024));
+      expect(p, wavPeaks(File('${dir.path}/far.wav').readAsBytesSync(), 1));
+      expect(p!.single, 1);
     });
 
     test('anything but 16-bit pcm has no wave', () {

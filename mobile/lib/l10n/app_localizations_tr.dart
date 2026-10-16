@@ -1204,7 +1204,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 8 MB';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';
@@ -1238,24 +1238,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'Bunu kullan';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'DOSYA';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1493,9 +1475,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Bu dosya okunamadı';
-
-  @override
-  String get chatFileTooBig8 => 'Dosya çok büyük · en fazla 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'Bu video temizlenemedi';
@@ -2440,9 +2419,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Bu gif temizlenemedi';
-
-  @override
-  String get groupChatFileTooBig8 => 'Dosya çok büyük · en fazla 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Bu video temizlenemedi';
@@ -8528,11 +8504,77 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu notta ses gizlenemedi, bu yüzden gönderilmedi';
 
   @override
+  String get voiceNoRoom =>
+      'Bu telefonda yeterli boş alan yok. Biraz yer aç ve tekrar dene.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Sesi gizlemek için yeterli boş alan yoktu, bu yüzden not gönderilmedi';
+
+  @override
+  String get voiceDisguising => 'Ses gizleniyor';
+
+  @override
+  String get voiceLockedNotSent =>
+      'Sesli mesajın gitmeden önce Kryfo kilitlendi, bu yüzden gönderilmedi';
+
+  @override
+  String get voiceNotSent => 'Sesli mesajın gönderilmedi';
+
+  @override
   String get settingsDisguiseByDefault => 'Sesimi varsayılan olarak gizle';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'Her sohbet bunu kendi menüsünden değiştirebilir';
+
+  @override
+  String get fileInstallerLine =>
+      'Bu bir uygulama yükleyicisi. Uygulamaları yalnızca güvendiğin kişilerden yükle.';
+
+  @override
+  String get fileAppInstaller => 'Uygulama yükleyicisi';
+
+  @override
+  String get fileSaveToDevice => 'Cihaza kaydet';
+
+  @override
+  String get fileOpenHint => 'Başka bir uygulamada açılır';
+
+  @override
+  String get fileSaved => 'Kaydedildi';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Kaydedildi: $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get fileNotSaved => 'Dosya kaydedilemedi';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Bu dosya $size. Dosyalar en fazla $max olabilir.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.';
+
+  @override
+  String get fileRawPictureTitle => 'Bu resim olduğu gibi gönderilsin mi?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder.';
 
   @override
   String get gettingMessagesHelperBody =>

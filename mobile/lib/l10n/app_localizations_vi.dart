@@ -1192,7 +1192,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 8 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
@@ -1226,24 +1226,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'Dùng bản này';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'TỆP';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1478,9 +1460,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Không đọc được tệp đó';
-
-  @override
-  String get chatFileTooBig8 => 'Tệp quá lớn · tối đa 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'Không làm sạch được video đó';
@@ -2432,9 +2411,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Không làm sạch được gif đó';
-
-  @override
-  String get groupChatFileTooBig8 => 'Tệp quá lớn · tối đa 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
@@ -8489,11 +8465,77 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể đổi giọng cho tin này nên tin chưa được gửi';
 
   @override
+  String get voiceNoRoom =>
+      'Điện thoại không còn đủ dung lượng trống. Hãy giải phóng bớt dung lượng rồi thử lại.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Không đủ dung lượng để đổi giọng cho tin này nên tin chưa được gửi';
+
+  @override
+  String get voiceDisguising => 'Đang đổi giọng';
+
+  @override
+  String get voiceLockedNotSent =>
+      'Kryfo đã khóa trước khi tin nhắn thoại được gửi đi nên tin chưa được gửi';
+
+  @override
+  String get voiceNotSent => 'Tin nhắn thoại của bạn chưa được gửi';
+
+  @override
   String get settingsDisguiseByDefault => 'Mặc định đổi giọng của tôi';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó';
+
+  @override
+  String get fileInstallerLine =>
+      'Đây là tệp cài đặt ứng dụng. Chỉ cài ứng dụng từ những người bạn tin tưởng.';
+
+  @override
+  String get fileAppInstaller => 'Tệp cài đặt ứng dụng';
+
+  @override
+  String get fileSaveToDevice => 'Lưu vào thiết bị';
+
+  @override
+  String get fileOpenHint => 'Mở bằng ứng dụng khác';
+
+  @override
+  String get fileSaved => 'Đã lưu';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Đã lưu vào $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Đã lưu, nhưng Kryfo không kiểm tra được bản sao';
+
+  @override
+  String get fileNotSaved => 'Không lưu được tệp';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Tệp này nặng $size. Tệp chỉ được tối đa $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Gửi ảnh này nguyên trạng?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 
   @override
   String get gettingMessagesHelperBody =>

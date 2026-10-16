@@ -1211,7 +1211,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Konnte keine Kopie auf diesem Handy speichern';
 
   @override
-  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 8 MB';
+  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nie in deinen Fotos gespeichert';
@@ -1245,24 +1245,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'Verwenden';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes B';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes KB';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes MB';
-  }
-
-  @override
-  String get chatFile => 'DATEI';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1499,9 +1481,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Konnte die Datei nicht lesen';
-
-  @override
-  String get chatFileTooBig8 => 'Datei zu groß · max. 8 MB';
 
   @override
   String get chatCouldNotCleanThat => 'Konnte das Video nicht bereinigen';
@@ -2466,9 +2445,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Konnte das GIF nicht bereinigen';
-
-  @override
-  String get groupChatFileTooBig8 => 'Datei zu groß · max. 8 MB';
 
   @override
   String get groupChatCouldNotCleanThatVideo =>
@@ -8600,12 +8576,78 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Nachricht ließ sich nicht verfremden und wurde nicht gesendet';
 
   @override
+  String get voiceNoRoom =>
+      'Auf diesem Telefon ist nicht genug Speicher frei. Gib etwas Speicher frei und versuch es noch einmal.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Zum Verfremden war nicht genug Speicher frei, daher wurde die Nachricht nicht gesendet';
+
+  @override
+  String get voiceDisguising => 'Wird verfremdet';
+
+  @override
+  String get voiceLockedNotSent =>
+      'Kryfo wurde gesperrt, bevor deine Sprachnachricht gesendet werden konnte';
+
+  @override
+  String get voiceNotSent => 'Deine Sprachnachricht wurde nicht gesendet';
+
+  @override
   String get settingsDisguiseByDefault =>
       'Meine Stimme standardmäßig verfremden';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'Jeder Chat kann das in seinem Menü ändern';
+
+  @override
+  String get fileInstallerLine =>
+      'Das ist eine Installationsdatei für eine App. Installiere Apps nur von Menschen, denen du vertraust.';
+
+  @override
+  String get fileAppInstaller => 'Installationsdatei für eine App';
+
+  @override
+  String get fileSaveToDevice => 'Auf dem Gerät speichern';
+
+  @override
+  String get fileOpenHint => 'Öffnet in einer anderen App';
+
+  @override
+  String get fileSaved => 'Gespeichert';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Gespeichert in $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Gespeichert, aber Kryfo konnte die Kopie nicht prüfen';
+
+  @override
+  String get fileNotSaved => 'Konnte die Datei nicht speichern';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Diese Datei hat $size. Dateien dürfen bis zu $max groß sein.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Diese Datei geht genau so raus, wie sie ist. Kryfo bereinigt nur JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 und MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Dieses Bild so senden, wie es ist?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Dieses Bild kann nicht bereinigt werden. Angaben wie der Aufnahmeort gehen mit. Sende es als Foto, um es zu bereinigen.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Sprachnachrichten enden nach 30 Minuten. Hör sie dir an und sende sie dann.';
 
   @override
   String get gettingMessagesHelperBody =>

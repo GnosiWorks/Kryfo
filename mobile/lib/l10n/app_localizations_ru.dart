@@ -1236,7 +1236,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Слишком длинно для сообщения · максимум 8 МБ';
+      'Слишком длинно для сообщения · максимум 15 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Никогда не сохраняется в галерею';
@@ -1270,24 +1270,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'Использовать';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes Б';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes КБ';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes МБ';
-  }
-
-  @override
-  String get chatFile => 'ФАЙЛ';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1527,9 +1509,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Не удалось прочитать файл';
-
-  @override
-  String get chatFileTooBig8 => 'Файл слишком большой · максимум 8 МБ';
 
   @override
   String get chatCouldNotCleanThat => 'Не удалось очистить видео';
@@ -2499,9 +2478,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Не удалось очистить GIF';
-
-  @override
-  String get groupChatFileTooBig8 => 'Файл слишком большой · максимум 8 МБ';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Не удалось очистить видео';
@@ -8666,11 +8642,77 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось изменить голос, поэтому сообщение не отправлено';
 
   @override
+  String get voiceNoRoom =>
+      'На телефоне недостаточно свободного места. Освободи немного места и попробуй снова.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Не хватило места, чтобы изменить голос, поэтому сообщение не отправлено';
+
+  @override
+  String get voiceDisguising => 'Голос меняется';
+
+  @override
+  String get voiceLockedNotSent =>
+      'Kryfo заблокировался до отправки голосового сообщения, поэтому оно не отправлено';
+
+  @override
+  String get voiceNotSent => 'Голосовое сообщение не отправлено';
+
+  @override
   String get settingsDisguiseByDefault => 'Изменять мой голос по умолчанию';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'В каждом чате это можно изменить в его меню';
+
+  @override
+  String get fileInstallerLine =>
+      'Это установщик приложения. Устанавливай приложения только от тех, кому доверяешь.';
+
+  @override
+  String get fileAppInstaller => 'Установщик приложения';
+
+  @override
+  String get fileSaveToDevice => 'Сохранить на устройство';
+
+  @override
+  String get fileOpenHint => 'Откроется в другом приложении';
+
+  @override
+  String get fileSaved => 'Сохранено';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Сохранено в $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Сохранено, но Kryfo не смог проверить копию';
+
+  @override
+  String get fileNotSaved => 'Не удалось сохранить файл';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'Этот файл весит $size. Файлы могут быть до $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'Этот файл уйдёт как есть. Kryfo очищает только JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 и MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Отправить это изображение как есть?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Это изображение нельзя очистить. Сведения вроде места съёмки уйдут вместе с ним. Отправь его как фото, чтобы очистить.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Голосовые сообщения останавливаются на 30 минутах. Прослушай и отправь.';
 
   @override
   String get gettingMessagesHelperBody =>

@@ -19,6 +19,11 @@
     <!-- merged in by a plugin's library. kryfo never reads shared storage;
          a picked file arrives through the picker's own copy -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" tools:ignore="ScopedStorage" />
+    <!-- kryfo never installs apps. a received app is only saved where the
+         person picks; gradle checks the merged manifest for this too -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
+    <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
+    <uses-permission-sdk-m android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <application
         android:label="${appLabel}"
         android:name=".HaloApplication"

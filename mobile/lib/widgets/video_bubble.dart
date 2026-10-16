@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../file_kind.dart' show readFileFacts;
+import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
@@ -18,9 +20,10 @@ import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
 /// a tap on a file or a video: open it in whatever the phone has for it,
-/// or the share sheet when nothing does. held against the app lock: leaving
-/// for the viewer is not leaving. [kept]: the other person's, in a chat
-/// that blocks, which goes to no other app (shotsKeeps)
+/// or the share sheet when nothing does. an app installer is never opened
+/// or shared: it is saved where the person picks. held against the app
+/// lock: leaving for the viewer is not leaving. [kept]: the other person's,
+/// in a chat that blocks, which goes to no other app (shotsKeeps)
 Future<void> openReceivedFile(
   BuildContext context,
   String path,
@@ -36,10 +39,18 @@ Future<void> openReceivedFile(
     );
     return;
   }
+  if ((await readFileFacts(path, name)).installer) {
+    if (context.mounted) await saveReceivedFile(context, path, name);
+    return;
+  }
   final opened = await lockState.hold(
     () => openWithAnotherApp(path, name: name),
   );
-  if (opened || !context.mounted) return;
+  if (opened == OpenAnswer.opened || !context.mounted) return;
+  if (opened == OpenAnswer.refused) {
+    await saveReceivedFile(context, path, name);
+    return;
+  }
   showHaloToast(context, l10n.videoBubbleNothingHereOpensThat);
   await lockState.hold(() => shareFileOut(path, name: name));
 }

@@ -490,6 +490,8 @@ class Session {
     album: album,
     writtenAt: writtenAt,
   );
+  // [home], when given, is the chatKey the group had when the send began:
+  // one hidden or brought back since keeps nothing
   Future<bool> saveInGroup(
     String peerId,
     String plaintext, {
@@ -507,24 +509,61 @@ class Session {
     String? sticker,
     AlbumTag? album,
     int? writtenAt,
-  }) => _ofGroup(groupId).saveInGroup(
-    peerId,
-    plaintext,
-    groupId: groupId,
-    msgUid: msgUid,
-    burnSecs: burnSecs,
-    replyTo: replyTo,
-    mediaPath: mediaPath,
-    filePath: filePath,
-    fileName: fileName,
-    voiceDisguised: voiceDisguised,
-    sent: sent,
-    preview: preview,
-    poll: poll,
-    sticker: sticker,
-    album: album,
-    writtenAt: writtenAt,
-  );
+    String? home,
+  }) async {
+    if (home != null && chatKey(groupId) != home) return false;
+    return _ofGroup(groupId).saveInGroup(
+      peerId,
+      plaintext,
+      groupId: groupId,
+      msgUid: msgUid,
+      burnSecs: burnSecs,
+      replyTo: replyTo,
+      mediaPath: mediaPath,
+      filePath: filePath,
+      fileName: fileName,
+      voiceDisguised: voiceDisguised,
+      sent: sent,
+      preview: preview,
+      poll: poll,
+      sticker: sticker,
+      album: album,
+      writtenAt: writtenAt,
+    );
+  }
+
+  // a file of ours in a 1:1 chat, kept only while the chat is still in the
+  // container [home] (its chatKey when the send began) and still there
+  Future<bool> saveInChat(
+    String peerId, {
+    required String home,
+    required String msgUid,
+    required bool wasAccepted,
+    required int writtenAt,
+    String? replyTo,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int? burnAt,
+    int? burnSecs,
+    int sent = 0,
+  }) async {
+    if (chatKey(peerId) != home) return false;
+    return _ofPeer(peerId).saveInChat(
+      peerId,
+      msgUid: msgUid,
+      wasAccepted: wasAccepted,
+      writtenAt: writtenAt,
+      replyTo: replyTo,
+      filePath: filePath,
+      fileName: fileName,
+      voiceDisguised: voiceDisguised,
+      burnAt: burnAt,
+      burnSecs: burnSecs,
+      sent: sent,
+    );
+  }
+
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,
     String? groupId,

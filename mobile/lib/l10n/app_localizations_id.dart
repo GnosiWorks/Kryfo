@@ -1192,7 +1192,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Gagal menyimpan salinan di ponsel ini';
 
   @override
-  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 8 MB';
+  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 15 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Tidak pernah disimpan ke galerimu';
@@ -1226,24 +1226,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'Pakai ini';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => 'FILE';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1478,9 +1460,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'Gagal membaca file itu';
-
-  @override
-  String get chatFileTooBig8 => 'File terlalu besar · maks 8 mb';
 
   @override
   String get chatCouldNotCleanThat => 'Gagal membersihkan video itu';
@@ -2434,9 +2413,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'Gagal membersihkan gif itu';
-
-  @override
-  String get groupChatFileTooBig8 => 'File terlalu besar · maks 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Gagal membersihkan video itu';
@@ -8496,11 +8472,77 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan ini tidak bisa disamarkan, jadi tidak dikirim';
 
   @override
+  String get voiceNoRoom =>
+      'Ruang kosong di ponsel ini tidak cukup. Kosongkan sedikit ruang, lalu coba lagi.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'Ruang kosong tidak cukup untuk menyamarkan pesan ini, jadi tidak dikirim';
+
+  @override
+  String get voiceDisguising => 'Sedang disamarkan';
+
+  @override
+  String get voiceLockedNotSent =>
+      'Kryfo terkunci sebelum pesan suaramu terkirim, jadi pesan itu tidak dikirim';
+
+  @override
+  String get voiceNotSent => 'Pesan suaramu tidak dikirim';
+
+  @override
   String get settingsDisguiseByDefault => 'Samarkan suaraku secara bawaan';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'Setiap obrolan bisa mengubahnya di menunya';
+
+  @override
+  String get fileInstallerLine =>
+      'Ini file penginstal aplikasi. Instal aplikasi hanya dari orang yang kamu percaya.';
+
+  @override
+  String get fileAppInstaller => 'Penginstal aplikasi';
+
+  @override
+  String get fileSaveToDevice => 'Simpan ke perangkat';
+
+  @override
+  String get fileOpenHint => 'Dibuka di aplikasi lain';
+
+  @override
+  String get fileSaved => 'Tersimpan';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'Tersimpan di $place';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'Tersimpan, tapi Kryfo tidak bisa memeriksa salinannya';
+
+  @override
+  String get fileNotSaved => 'Gagal menyimpan file';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'File ini berukuran $size. Ukuran file maksimal $max.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.';
+
+  @override
+  String get fileRawPictureTitle => 'Kirim gambar ini apa adanya?';
+
+  @override
+  String get fileRawPictureLine =>
+      'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 
   @override
   String get gettingMessagesHelperBody =>

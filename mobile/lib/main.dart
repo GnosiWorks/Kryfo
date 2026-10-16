@@ -3792,6 +3792,65 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  /// a file of this phone's own in the chat with [peerId], kept in the
+  /// same go as a look that the chat is still here: one deleted, or hidden
+  /// away while it was made, keeps nothing. [wasAccepted] is what the chat
+  /// was when the send began. false then
+  Future<bool> saveInChat(
+    String peerId, {
+    required String msgUid,
+    required bool wasAccepted,
+    required int writtenAt,
+    String? replyTo,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int? burnAt,
+    int? burnSecs,
+    int sent = 0,
+  }) async {
+    final db = await open();
+    final id = await db.transaction((t) async {
+      final c = await t.query(
+        'contacts',
+        columns: ['accepted', 'archived'],
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+        limit: 1,
+      );
+      if (c.isEmpty) return null;
+      final accepted = c.first['accepted'] == 1;
+      // a deleted chat is parked: unaccepted and archived. a hidden one
+      // leaves at most a key here, unaccepted
+      if (!accepted && (wasAccepted || c.first['archived'] == 1)) return null;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      return t.insert('messages', {
+        'peer_id': peerId,
+        'direction': 'out',
+        'plaintext': '',
+        'sent_at': now,
+        'written_at': writtenAt,
+        'burn_at': burnAt,
+        'burn_secs': burnSecs,
+        'msg_uid': msgUid,
+        'reply_to': replyTo,
+        'file_path': filePath,
+        'file_name': fileName == null ? null : unmarked(fileName),
+        'voice_disguised': voiceDisguised ? 1 : 0,
+        'saved': 0,
+        'sent': sent,
+        'secure': 0,
+      });
+    });
+    if (id == null) return false;
+    try {
+      await indexSearchRow(db, id, {'plaintext': '', 'file_name': fileName});
+    } catch (e) {
+      dlog('search: not indexed now: $e');
+    }
+    return true;
+  }
+
   /// a row of this phone's own in group [groupId], kept in the same go as
   /// a look that the group is still here: one that ended, was left or was
   /// taken out of keeps nothing. false then
@@ -3811,7 +3870,7 @@ class HaloDb implements GroupOwedStore {
     String? poll,
     String? sticker,
     AlbumTag? album,
-    // when it was written, if not now: a bubble shown before it was saved
+    // when it was begun, if not now: a bubble shown before it was saved
     int? writtenAt,
   }) async {
     final db = await open();
@@ -17498,6 +17557,14 @@ class AppState extends ChangeNotifier {
         dlog('recv: slice out of range, dropped');
         return to;
       }
+      // a file, a photo or a voice note is no bigger than any kryfo sends.
+      // only a voice note's own slices get the longer cap
+      final voiceSlices =
+          env.voice && env.fileB64 != null && env.imageB64 == null;
+      if (total > (voiceSlices ? kMaxVoiceSlices : kMaxFileSlices)) {
+        dlog('recv: a file over the size any kryfo sends, dropped');
+        return to;
+      }
       // a file's slices come from one sender
       final owner = await db.mediaChunkSender(mid);
       if (owner != null && owner != senderHaloId) {
@@ -19223,19 +19290,19 @@ class AppState extends ChangeNotifier {
     final primary = _primaryOf(vault);
     final m = _host.mover(primary, vault);
     await m.attach();
-    final done = everyday ? Completer<void>() : null;
-    if (done != null) _moveDone = done;
+    // the decoy's moves wait the same way: a row of ours written meanwhile
+    // goes with its chat, and the two take the same time
+    final done = Completer<void>();
+    _moveDone = done;
     try {
-      if (everyday) {
-        for (final c in chats) {
-          _moving.add(c.id);
-          if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
-        }
-        // what is being filed for them lands first, and no unseal runs
-        // while rows move
-        while (_unsealing || _arriving.keys.any(_moving.contains)) {
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
+      for (final c in chats) {
+        _moving.add(c.id);
+        if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
+      }
+      // what is being filed for them lands first, and no unseal runs
+      // while rows move
+      while (_unsealing || _arriving.keys.any(_moving.contains)) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
       }
       await _settle(m, vault);
       return await work(m);
@@ -19267,12 +19334,42 @@ class AppState extends ChangeNotifier {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
       }
-      if (done != null) {
-        _moving.clear();
-        _moveDone = null;
-        done.complete();
-      }
+      _moving.clear();
+      _moveDone = null;
+      done.complete();
     }
+  }
+
+  // a row of ours for [chat] written after a wait, as a voice note's once
+  // its disguise is made: a move of the chat under way ends first, and one
+  // that starts waits for it, as for an arrival
+  Future<T> keepOwn<T>(String chat, Future<T> Function() work) async {
+    if (_moveDone != null) await _afterMove(chat, null);
+    _arriving[chat] = (_arriving[chat] ?? 0) + 1;
+    try {
+      return await work();
+    } finally {
+      final n = (_arriving[chat] ?? 1) - 1;
+      n > 0 ? _arriving[chat] = n : _arriving.remove(chat);
+    }
+  }
+
+  // what waits for a move to end
+  int _onMove = 0;
+  @visibleForTesting
+  int get waitingOnMoveForTest => _onMove;
+
+  // a move of [chats] under way until the call handed back ends it
+  @visibleForTesting
+  void Function() holdMoveForTest(Iterable<String> chats) {
+    final done = Completer<void>();
+    _moveDone = done;
+    _moving.addAll(chats);
+    return () {
+      _moving.clear();
+      _moveDone = null;
+      done.complete();
+    };
   }
 
   Future<void> _afterMove(String sender, String? groupId) async {
@@ -19283,7 +19380,12 @@ class AppState extends ChangeNotifier {
       if (!_moving.contains(sender) && (g == null || !_moving.contains(g))) {
         return;
       }
-      await done.future;
+      _onMove++;
+      try {
+        await done.future;
+      } finally {
+        _onMove--;
+      }
     }
   }
 
@@ -21759,6 +21861,27 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a move a crash cut short put right, as its list entry says, then the
+  // files no message names any more go, before anything here can move or
+  // write one. with a move still open the rows may be on the other side,
+  // so nothing goes. a file from the last minutes may be one another start
+  // of the app is still filing
+  @visibleForTesting
+  Future<void> tidyAtStart(DateTime bootAt) async {
+    try {
+      await repairVaultMoves();
+    } catch (e) {
+      dlog('vault: repair left for the next start (${e.runtimeType})');
+      return;
+    }
+    await _dropGroupLeftovers(live);
+    await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
+    await _sweepUnnamedWallpapers(
+      live,
+      bootAt.subtract(const Duration(minutes: 10)),
+    );
+  }
+
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
@@ -21787,26 +21910,7 @@ class AppState extends ChangeNotifier {
     // the hidden chats' list, before anything can arrive: without it an
     // arrival for one would land in the everyday container
     await _router.load();
-    // and a move a crash cut short put right, as its list entry says
-    var settled = true;
-    try {
-      await repairVaultMoves();
-    } catch (e) {
-      settled = false;
-      dlog('vault: repair left for the next start (${e.runtimeType})');
-    }
-    // files no message names any more go, before anything here can move
-    // or write one. with a move still open the rows may be on the other
-    // side. a file from the last minutes may be one another start of the
-    // app is still filing
-    if (settled) {
-      await _dropGroupLeftovers(live);
-      await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
-      await _sweepUnnamedWallpapers(
-        live,
-        bootAt.subtract(const Duration(minutes: 10)),
-      );
-    }
+    await tidyAtStart(bootAt);
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;

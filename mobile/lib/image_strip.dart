@@ -18,6 +18,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'jpeg_strip.dart';
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
@@ -72,6 +74,19 @@ const _heifBrands = {
   'avis',
 };
 
+/// the first bytes of [raf], enough to tell a picture: 256, or the whole
+/// ftyp box of an iso file up to 4 kb, since a heic can list its brand
+/// past the first 256
+Future<Uint8List> pictureHead(RandomAccessFile raf) async {
+  await raf.setPosition(0);
+  final h = await raf.read(256);
+  if (h.length < 256 || _tag(h, 4) != 'ftyp') return h;
+  final box = _u32(h, 0);
+  if (box <= h.length) return h;
+  await raf.setPosition(0);
+  return raf.read(box < 4096 ? box : 4096);
+}
+
 /// the extension a picture's bytes call for; jpg for one not known here
 String pictureExt(Uint8List b) => switch (pictureKind(b)) {
   PictureKind.png => 'png',
@@ -81,10 +96,23 @@ String pictureExt(Uint8List b) => switch (pictureKind(b)) {
   _ => 'jpg',
 };
 
-/// cleans the file at [path] in place. see the contract at the top.
-Future<bool?> stripPictureFile(String path) async {
+/// cleans the file at [path] in place. see the contract at the top. the
+/// first bytes are read before anything else, so a file that is not a
+/// picture is never read whole. [readAll] stands in for the read in tests
+Future<bool?> stripPictureFile(
+  String path, {
+  @visibleForTesting Future<Uint8List> Function(File f)? readAll,
+}) async {
   final f = File(path);
-  final src = await f.readAsBytes();
+  final raf = await f.open();
+  final Uint8List head;
+  try {
+    head = await pictureHead(raf);
+  } finally {
+    await raf.close();
+  }
+  if (pictureKind(head) == PictureKind.other) return false;
+  final src = await (readAll ?? (File f) => f.readAsBytes())(f);
   final out = stripPictureBytes(src);
   if (out == null) return null;
   if (identical(out, src)) return pictureKind(src) != PictureKind.other;

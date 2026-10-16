@@ -1156,7 +1156,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 8 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -1189,24 +1189,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cameraUseThis => '用这个';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes B';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes KB';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes MB';
-  }
-
-  @override
-  String get chatFile => '文件';
 
   @override
   String get chatYouAreOfflineThis => '你已离线 · 重新连上后会自动发出';
@@ -1433,9 +1415,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => '无法读取这个文件';
-
-  @override
-  String get chatFileTooBig8 => '文件太大 · 最大 8 MB';
 
   @override
   String get chatCouldNotCleanThat => '无法清理这个视频';
@@ -2338,9 +2317,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => '无法清理这个 GIF';
-
-  @override
-  String get groupChatFileTooBig8 => '文件太大 · 最大 8 MB';
 
   @override
   String get groupChatCouldNotCleanThatVideo => '无法清理这个视频';
@@ -8126,10 +8102,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNotDisguised => '这条语音无法变声，所以没有发出';
 
   @override
+  String get voiceNoRoom => '手机可用空间不足。请清理一些空间后再试。';
+
+  @override
+  String get voiceNoRoomNotSent => '空间不足，无法为这条语音变声，所以没有发出';
+
+  @override
+  String get voiceDisguising => '正在变声';
+
+  @override
+  String get voiceLockedNotSent => 'Kryfo 在语音消息发出前已锁定，所以没有发出';
+
+  @override
+  String get voiceNotSent => '你的语音消息没有发出';
+
+  @override
   String get settingsDisguiseByDefault => '默认给我的语音变声';
 
   @override
   String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
+
+  @override
+  String get fileInstallerLine => '这是一个应用安装包。只安装来自你信任的人的应用。';
+
+  @override
+  String get fileAppInstaller => '应用安装包';
+
+  @override
+  String get fileSaveToDevice => '保存到设备';
+
+  @override
+  String get fileOpenHint => '在其他应用中打开';
+
+  @override
+  String get fileSaved => '已保存';
+
+  @override
+  String fileSavedIn(String place) {
+    return '已保存到 $place';
+  }
+
+  @override
+  String get fileSavedUnchecked => '已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get fileNotSaved => '无法保存文件';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return '这个文件有 $size。文件最大为 $max。';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      '这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+
+  @override
+  String get fileRawPictureTitle => '按原样发送这张图片？';
+
+  @override
+  String get fileRawPictureLine => '这张图片无法清理。拍摄地点等信息会随它一起发出。以照片形式发送即可清理。';
+
+  @override
+  String get voiceStoppedAtLimit => '语音消息最长 30 分钟，已自动停止。听一遍后再发送。';
 
   @override
   String get gettingMessagesHelperBody =>
@@ -9421,7 +9456,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 8 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -9454,24 +9489,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cameraUseThis => '使用這個';
-
-  @override
-  String chatB(Object bytes) {
-    return '$bytes b';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '$bytes kb';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '$bytes mb';
-  }
-
-  @override
-  String get chatFile => '檔案';
 
   @override
   String get chatYouAreOfflineThis => '你目前離線 · 重新連線後會自動傳送';
@@ -9698,9 +9715,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatCouldNotReadThat => '無法讀取那個檔案';
-
-  @override
-  String get chatFileTooBig8 => '檔案太大 · 上限 8 mb';
 
   @override
   String get chatCouldNotCleanThat => '無法清理那段影片';
@@ -10603,9 +10617,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatCouldNotCleanThat => '無法清理那個 GIF';
-
-  @override
-  String get groupChatFileTooBig8 => '檔案太大 · 上限 8 mb';
 
   @override
   String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
@@ -16271,10 +16282,69 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get voiceNotDisguised => '這則語音無法變聲，所以沒有送出';
 
   @override
+  String get voiceNoRoom => '手機可用空間不足。請清出一些空間後再試。';
+
+  @override
+  String get voiceNoRoomNotSent => '空間不足，無法為這則語音變聲，所以沒有送出';
+
+  @override
+  String get voiceDisguising => '正在變聲';
+
+  @override
+  String get voiceLockedNotSent => 'Kryfo 在語音訊息送出前已鎖定，所以沒有送出';
+
+  @override
+  String get voiceNotSent => '你的語音訊息沒有送出';
+
+  @override
   String get settingsDisguiseByDefault => '預設給我的語音變聲';
 
   @override
   String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
+
+  @override
+  String get fileInstallerLine => '這是一個應用程式安裝檔。只安裝來自你信任的人的應用程式。';
+
+  @override
+  String get fileAppInstaller => '應用程式安裝檔';
+
+  @override
+  String get fileSaveToDevice => '儲存到裝置';
+
+  @override
+  String get fileOpenHint => '在其他應用程式中開啟';
+
+  @override
+  String get fileSaved => '已儲存';
+
+  @override
+  String fileSavedIn(String place) {
+    return '已儲存到 $place';
+  }
+
+  @override
+  String get fileSavedUnchecked => '已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get fileNotSaved => '無法儲存檔案';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return '這個檔案有 $size。檔案最大為 $max。';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      '這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+
+  @override
+  String get fileRawPictureTitle => '按原樣傳送這張圖片？';
+
+  @override
+  String get fileRawPictureLine => '這張圖片無法清理。拍攝地點等資訊會隨它一起送出。以照片形式傳送即可清理。';
+
+  @override
+  String get voiceStoppedAtLimit => '語音訊息最長 30 分鐘，已自動停止。聽一遍後再傳送。';
 
   @override
   String get gettingMessagesHelperBody =>

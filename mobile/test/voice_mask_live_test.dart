@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the disguise made while a note records: the same note as made whole, read
-// from the recorder's file as it grows, ready soon after the finger lifts.
+// from the recorder's file as it grows and written to disk as it is made,
+// ready soon after the finger lifts, holding a few frames however long.
 // a stream that fell behind finishes on release, a take that is not what
 // was read goes whole with the same draw, and one that is gone gives nothing
 import 'dart:io';
@@ -112,17 +113,22 @@ void main() {
     for (final (seed, most) in [(1, 1), (2, 37), (3, 700), (4, 5000)]) {
       final whole = maskSamples(x, _rate, MaskDraw.from(math.Random(seed)));
       final s = MaskStreamer(_rate, MaskDraw.from(math.Random(seed)));
+      final out = <double>[];
       final r = math.Random(seed);
       for (var at = 0; at < x.length;) {
         final k = math.min(x.length - at, 1 + r.nextInt(most));
         s.add(Float64List.sublistView(x, at, at + k));
+        s.drain(out.addAll);
         at += k;
       }
       expect(s.made, greaterThan(x.length - 2048), reason: 'made as it came');
-      final out = s.finish();
+      expect(out.length, s.made);
+      s.end();
+      s.drain(out.addAll);
       expect(out.length, whole.length);
       for (var i = 0; i < out.length; i++) {
-        expect(out[i], closeTo(whole[i], 1e-6), reason: 'seed $seed at $i');
+        // the same sums: the same samples, to the last bit
+        expect(out[i] * s.gain, whole[i], reason: 'seed $seed at $i');
       }
     }
   });
@@ -131,14 +137,73 @@ void main() {
     final x = _mono(_wav(0.1));
     for (final n in [0, 1, 7, 300, 1500]) {
       final part = Float64List.sublistView(x, 0, n);
-      final s = MaskStreamer(_rate, MaskDraw.from(math.Random(9)))..add(part);
-      final out = s.finish();
+      final s = MaskStreamer(_rate, MaskDraw.from(math.Random(9)))
+        ..add(part)
+        ..end();
+      final out = <double>[];
+      s.drain(out.addAll);
       final whole = maskSamples(part, _rate, MaskDraw.from(math.Random(9)));
       expect(out.length, n);
       for (var i = 0; i < n; i++) {
-        expect(out[i], closeTo(whole[i], 1e-6));
+        expect(out[i] * s.gain, whole[i]);
       }
     }
+  });
+
+  test('drained as it goes, it holds a few frames however long the note', () {
+    final x = _mono(_wav(20));
+    final s = MaskStreamer(_rate, MaskDraw.from(math.Random(6)));
+    var most = 0, made = 0;
+    // ten minutes of it, two seconds a turn as the recorder's file is read
+    for (var turn = 0; turn < 300; turn++) {
+      final at = (turn * 2 * _rate) % (x.length - 2 * _rate);
+      s.add(Float64List.sublistView(x, at, at + 2 * _rate));
+      s.drain((v) => made += v.length);
+      most = math.max(most, s.held);
+    }
+    expect(made, greaterThan(600 * _rate - 2048));
+    // a second of samples, where the whole note would be ten minutes
+    expect(most, lessThan(_rate * 8));
+    s.end();
+  });
+
+  test('a drain whose writer fails lets go of what it was handed', () {
+    final x = _mono(_wav(3));
+    final s = MaskStreamer(_rate, MaskDraw.from(math.Random(2)));
+    s.add(Float64List.sublistView(x, 0, _rate));
+    expect(
+      () => s.drain((_) => throw const FileSystemException('full')),
+      throwsA(isA<FileSystemException>()),
+    );
+    s.add(Float64List.sublistView(x, _rate, 2 * _rate));
+    var got = 0;
+    s.drain((v) => got += v.length);
+    // what the second second made, not the first again with it
+    expect(got, inInclusiveRange(_rate - 2048, _rate + 2048));
+  });
+
+  test('a disk that takes nothing more: the live disguise ends at once, '
+      'and the finish says so', () async {
+    if (!File('/dev/full').existsSync()) {
+      markTestSkipped('no /dev/full here');
+      return;
+    }
+    final r = _Recorder(dir, _wav(20));
+    // what it makes before the level lands on a full disk
+    final side = maskPathOf(r.path).replaceFirst(RegExp(r'\.wav$'), '_f.wav');
+    Link(side).createSync('/dev/full');
+    final live = (await LiveMask.start(
+      r.path,
+      seed: 3,
+      every: const Duration(milliseconds: 5),
+    ))!;
+    await _record(r, pause: const Duration(milliseconds: 5));
+    r.stop();
+    // it does not go round on the same samples while the note records on
+    await live.exited.timeout(const Duration(seconds: 10));
+    expect(await live.finish(), isNull);
+    // nothing it made is left, and the way to the full disk is gone too
+    expect(dir.listSync().map((e) => e.path), [r.path]);
   });
 
   test('read off the file as it records: the take made whole', () async {
@@ -152,9 +217,18 @@ void main() {
     var made = 0;
     live.progress.listen((m) => made = m);
     await _record(r, pause: const Duration(milliseconds: 20));
+    // made on disk as it goes, named like a take for the sweep at the next
+    // start
+    final made1 = dir.listSync().map((e) => e.path).toSet()..remove(r.path);
+    expect(made1, hasLength(1));
+    expect(made1.single, matches(RegExp(r'/vn_\d+_m_f\.wav$')));
     r.stop();
     expect(made, greaterThan(0), reason: 'it ran before the release');
-    expect(await live.finish(), maskWav(take, seed: 21));
+    final got = await live.finish();
+    expect(got, maskPathOf(r.path));
+    expect(File(got!).readAsBytesSync(), maskWav(take, seed: 21));
+    // what it made on the way is gone
+    expect(dir.listSync().map((e) => e.path).toSet(), {r.path, got});
   });
 
   test('a 2 minute note is ready soon after the finger lifts', () async {
@@ -176,6 +250,7 @@ void main() {
     final clock = Stopwatch()..start();
     final got = await live.finish();
     clock.stop();
+    expect(got, isNotNull);
     final whole = Stopwatch()..start();
     final want = maskWav(take, seed: 5);
     whole.stop();
@@ -184,7 +259,7 @@ void main() {
       'release to ready: ${clock.elapsedMilliseconds} ms, '
       'made whole: ${whole.elapsedMilliseconds} ms',
     );
-    expect(got, want);
+    expect(File(got!).readAsBytesSync(), want);
     // a bound that holds on a loaded machine; the phone numbers are measured
     // apart
     expect(clock.elapsedMilliseconds, lessThan(3000));
@@ -204,7 +279,7 @@ void main() {
     await _record(r);
     r.stop();
     expect(made, 0);
-    expect(await live.finish(), maskWav(take, seed: 8));
+    expect(_read(await live.finish()), maskWav(take, seed: 8));
   });
 
   test(
@@ -219,7 +294,8 @@ void main() {
       ))!;
       await _record(r, pause: const Duration(milliseconds: 20));
       r.stop();
-      expect(await live.finish(), maskWav(take, seed: 13));
+      expect(_read(await live.finish()), maskWav(take, seed: 13));
+      expect(dir.listSync(), hasLength(2));
     },
   );
 
@@ -233,6 +309,8 @@ void main() {
       r.stop();
       File(r.path).deleteSync();
       expect(await live.finish(), isNull);
+      // nothing it made is left
+      expect(dir.listSync(), isEmpty);
     },
   );
 
@@ -248,6 +326,8 @@ void main() {
     await live.exited.timeout(const Duration(seconds: 10));
     r.stop();
     expect(await live.finish(), isNull);
+    // nothing it made is left
+    expect(dir.listSync().map((e) => e.path), [r.path]);
   });
 
   test('finished, its isolate ends', () async {
@@ -283,6 +363,7 @@ void main() {
     await live.exited.timeout(const Duration(seconds: 10));
     r.stop();
     expect(await live.finish(), isNull);
+    expect(dir.listSync().map((e) => e.path), [r.path]);
   });
 
   test('samples changed under what was read: the take goes whole, with the '
@@ -307,13 +388,10 @@ void main() {
       changed[i] ^= 0x55;
     }
     File(r.path).writeAsBytesSync(changed);
-    expect(await live.finish(), maskWav(changed, seed: 17));
-  });
-
-  test('made off the calling isolate, the caller keeps its take', () async {
-    final w = _wav(0.5);
-    final copy = Uint8List.fromList(w);
-    await maskWavOff(w, seed: 3);
-    expect(w, copy);
+    expect(_read(await live.finish()), maskWav(changed, seed: 17));
+    expect(dir.listSync(), hasLength(2));
   });
 }
+
+Uint8List? _read(String? path) =>
+    path == null ? null : File(path).readAsBytesSync();

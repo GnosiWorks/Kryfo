@@ -532,7 +532,7 @@ void main() {
     expect(l.cameraTheRecordingWasLost, "The recording was lost");
     expect(l.cameraACopyIsIn, "A copy is in your photos");
     expect(l.cameraCouldNotSaveA, "Could not save a copy on this phone");
-    expect(l.cameraTooLongForA, "Too long for a message · 8 MB max");
+    expect(l.cameraTooLongForA, "Too long for a message · 15 MB max");
     expect(l.cameraNeverSavedToYour, "Never saved to your photos");
     expect(l.cameraNoExifNeverSaved, "No EXIF, never saved to your photos");
     expect(l.cameraRec, "Rec");
@@ -543,10 +543,6 @@ void main() {
     expect(l.cameraTakeAPhoto, "Take a photo");
     expect(l.cameraKeepACopy, "Keep a copy");
     expect(l.cameraUseThis, "Use this");
-    expect(l.chatB("<bytes>"), "<bytes> b");
-    expect(l.chatKb("<bytes>"), "<bytes> kb");
-    expect(l.chatMb("<bytes>"), "<bytes> mb");
-    expect(l.chatFile, "FILE");
     expect(
       l.chatYouAreOfflineThis,
       "You are offline · this sends itself when you reconnect",
@@ -637,7 +633,6 @@ void main() {
     );
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");
-    expect(l.chatFileTooBig8, "File too big · 8 mb max");
     expect(l.chatCouldNotCleanThat, "Could not clean that video");
     expect(
       l.chatCouldNotCleanThatPictureSend,
@@ -1108,7 +1103,6 @@ void main() {
     expect(l.groupChatCouldNotReadThat, "Could not read that file");
     expect(l.groupChatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThat, "Could not clean that gif");
-    expect(l.groupChatFileTooBig8, "File too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThatVideo, "Could not clean that video");
     expect(
       l.groupChatCouldNotCleanThatPictureSend,
@@ -3481,6 +3475,20 @@ void main() {
       l.voiceNotDisguised,
       "This note could not be disguised, so it was not sent",
     );
+    expect(
+      l.voiceNoRoom,
+      "Not enough free space on this phone. Free up some space and try again.",
+    );
+    expect(
+      l.voiceNoRoomNotSent,
+      "There was not enough free space to disguise this note, so it was not sent",
+    );
+    expect(l.voiceDisguising, "Disguising");
+    expect(
+      l.voiceLockedNotSent,
+      "Kryfo locked before your voice note went out, so it was not sent",
+    );
+    expect(l.voiceNotSent, "Your voice note was not sent");
     expect(l.settingsDisguiseByDefault, "Disguise my voice by default");
     expect(
       l.settingsDisguiseByDefaultHint,
@@ -3637,6 +3645,34 @@ void main() {
     expect(
       l.mediaSendUntilAccepted("<count>"),
       "Until they accept, <count> can go",
+    );
+    expect(
+      l.fileInstallerLine,
+      "This is an app installer. Only install apps from people you trust.",
+    );
+    expect(l.fileAppInstaller, "App installer");
+    expect(l.fileSaveToDevice, "Save to device");
+    expect(l.fileOpenHint, "Opens in another app");
+    expect(l.fileSaved, "Saved");
+    expect(l.fileSavedIn("<place>"), "Saved in <place>");
+    expect(l.fileSavedUnchecked, "Saved, but Kryfo couldn't check the copy");
+    expect(l.fileNotSaved, "Could not save the file");
+    expect(
+      l.fileTooBig("<size>", "<max>"),
+      "This file is <size>. Files can be up to <max>.",
+    );
+    expect(
+      l.fileGoesAsItIs,
+      "This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.",
+    );
+    expect(l.fileRawPictureTitle, "Send this picture as it is?");
+    expect(
+      l.fileRawPictureLine,
+      "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
+    );
+    expect(
+      l.voiceStoppedAtLimit,
+      "Voice notes stop at 30 minutes. Listen to it, then send it.",
     );
   });
 }

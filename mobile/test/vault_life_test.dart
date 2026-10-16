@@ -4,6 +4,7 @@
 // the files are real ones in a scratch folder, and a fault can be set on any
 // step that writes, to show what a crash there leaves once the next start
 // and the next open have put it right
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,7 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, useDatabasesForTest, session;
+    show AppState, HaloDb, QuietIdentity, useDatabasesForTest, session;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';
@@ -32,6 +33,15 @@ const _room = 'roomburner01';
 const _hUids = {'h0', 'h1', 'h2', 'hp'};
 const _g2Uids = {'g2m', 'g2h', 'g2p'};
 const _stayUids = {'v0', 'r0', 'g1h', 'rm0'};
+
+// the decoy's own identity, for a world that stands for the decoy
+const _quiet = QuietIdentity(
+  id: 'decoy-own-words',
+  edPub: 'ed-decoy',
+  xPub: 'x-decoy',
+  onion: 'o-decoy',
+  invite: 'kryfo://share?id=decoy-own-words',
+);
 
 class _Fault implements Exception {
   _Fault(this.what);
@@ -629,14 +639,19 @@ class _Mover implements ChatMover {
   @override
   Future<void> copyIn(ChatRef c, MoveMarks marks) async {
     w.step('copy in ${c.id}');
-    _copy(c, _l, _v, '', '_v');
+    final hold = w.hold;
+    if (hold != null) {
+      w.held.complete();
+      await hold.future;
+    }
+    _copy(c, _l, _v, w.ls, w.vs);
     _mark(marks);
   }
 
   @override
   Future<List<String>> commitIn(ChatRef c, int at) async {
     w.step('commit in ${c.id}');
-    final files = _files(_l, c, '');
+    final files = _files(_l, c, w.ls);
     _drop(_l, c);
     final card = _card(c)!;
     w.store.rows[c.id] = {
@@ -651,13 +666,13 @@ class _Mover implements ChatMover {
   @override
   Future<List<String>> vaultFiles(ChatRef c) async {
     w.read();
-    return _files(_v, c, '_v');
+    return _files(_v, c, w.vs);
   }
 
   @override
   Future<void> commitOut(ChatRef c) async {
     w.step('commit out ${c.id}');
-    _copy(c, _v, _l, '_v', '');
+    _copy(c, _v, _l, w.vs, w.ls);
     w.store.rows.remove(c.id);
   }
 
@@ -784,9 +799,11 @@ class _Db implements HaloDb {
 }
 
 class _World {
-  _World(this.docs);
+  _World(this.docs, {this.decoy = false});
 
   final Directory docs;
+  // the decoy and its own vault in place of the everyday side and its vault
+  final bool decoy;
   final live = _Tables();
   var vault = _Tables();
   late final store = _Store(this);
@@ -794,8 +811,24 @@ class _World {
   final seal = _Seal();
   late VaultRouter router;
   late AppState app;
-  late final liveDb = _Db(HaloContainer.everyday, () => live);
-  late final vaultDb = _Db(HaloContainer.vault, () => vault);
+  late final liveDb = _Db(
+    decoy ? HaloContainer.decoy : HaloContainer.everyday,
+    () => live,
+  );
+  late final vaultDb = _Db(
+    decoy ? HaloContainer.decoyVault : HaloContainer.vault,
+    () => vault,
+  );
+  // the everyday side while the decoy is on screen: never touched
+  late final everydayDb = _Db(HaloContainer.everyday, () => _Tables());
+
+  // the folder suffixes of the two sides
+  String get ls => liveDb.container.suffix;
+  String get vs => vaultDb.container.suffix;
+
+  // a move held as it copies its first chat in, and that it got there
+  Completer<void>? hold;
+  final held = Completer<void>();
 
   // the fault: the step it strikes at, and whether the app dies there
   var steps = 0;
@@ -816,15 +849,15 @@ class _World {
     if (dead) throw _Fault('after the crash');
   }
 
-  String get media => p.join(docs.path, 'media');
-  String get mediaV => p.join(docs.path, 'media_v');
+  String get media => p.join(docs.path, 'media$ls');
+  String get mediaV => p.join(docs.path, 'media$vs');
 
   // a phone with chats: V visible, H and the group G2 to hide, R a
   // request, M in G2 only, G1 visible with V and H, and a burner room
-  static Future<_World> make(Directory docs) async {
-    final w = _World(docs);
+  static Future<_World> make(Directory docs, {bool decoy = false}) async {
+    final w = _World(docs, decoy: decoy);
     final l = w.live;
-    final walls = p.join(docs.path, 'wallpapers');
+    final walls = p.join(docs.path, 'wallpapers${w.ls}');
     l.put('contacts', _person(_v));
     l.put(
       'contacts',
@@ -908,7 +941,9 @@ class _World {
     router = VaultRouter(store, seal);
     await router.load();
     app = AppState(router: router, host: host);
-    useDatabasesForTest(liveDb, Session(liveDb));
+    if (!decoy) return useDatabasesForTest(liveDb, Session(liveDb));
+    useDatabasesForTest(everydayDb, Session(liveDb));
+    await app.useDecoyForTest(liveDb, _quiet);
   }
 
   // the vault's pin typed: the session over both
@@ -1536,5 +1571,79 @@ void main() {
       reason: 'a new table: does a chat have rows in it?',
     );
     expect(chatTables.difference(tables), isEmpty);
+  });
+
+  group('a row of ours written while its chat moves', () {
+    // a voice note's row, as its save writes it, with its file
+    void note(_World w, String uid) {
+      final path = '${w.media}/vn_$uid.wav';
+      File(path)
+        ..createSync(recursive: true)
+        ..writeAsStringSync('voice');
+      w.live.put('messages', {
+        'id': w.live.nextId(),
+        'peer_id': _h,
+        'group_id': null,
+        'direction': 'out',
+        'plaintext': '',
+        'msg_uid': uid,
+        'file_path': path,
+        'file_name': 'voice.wav',
+        'sent_at': 5,
+      });
+    }
+
+    // the decoy's vault waits as the everyday one does
+    for (final decoy in [false, true]) {
+      final side = decoy ? 'the decoy' : 'everyday';
+
+      test('$side: a save under way holds a hide, and its row and file go '
+          'with the chat', () async {
+        final w = await _World.make(docs, decoy: decoy);
+        await w.app.createVault('246810');
+        final gate = Completer<void>();
+        final order = <String>[];
+        final save = w.app.keepOwn(_h, () async {
+          await gate.future;
+          note(w, 'vn1');
+          order.add('save');
+          return true;
+        });
+        final hide = w.app.hideChats(people: [_h]);
+        unawaited(hide.then((_) => order.add('hide')));
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+        expect(order, isEmpty);
+        gate.complete();
+        expect(await save, isTrue);
+        expect(await hide, 1);
+        await Future<void>.value();
+        expect(order, ['save', 'hide']);
+        expect(w.live.uids, isNot(contains('vn1')));
+        expect(w.vault.msg('vn1')!['file_path'], '${w.mediaV}/vn_vn1.wav');
+        expect(File('${w.mediaV}/vn_vn1.wav').existsSync(), isTrue);
+        expect(File('${w.media}/vn_vn1.wav').existsSync(), isFalse);
+      });
+
+      test('$side: a save begun during a hide waits for it, then finds the '
+          'chat gone', () async {
+        final w = await _World.make(docs, decoy: decoy);
+        await w.app.createVault('246810');
+        w.hold = Completer<void>();
+        final hide = w.app.hideChats(people: [_h]);
+        await w.held.future;
+        bool? here;
+        final save = w.app.keepOwn(_h, () async {
+          here = w.live.contact(_h)?['accepted'] == 1;
+          return false;
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+        expect(here, isNull);
+        w.hold!.complete();
+        expect(await hide, 1);
+        expect(await save, isFalse);
+        expect(here, isFalse);
+        expect(w.vault.contact(_h)!['accepted'], 1);
+      });
+    }
   });
 }

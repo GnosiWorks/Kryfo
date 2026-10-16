@@ -200,15 +200,44 @@ abstract class LabelCheck : DefaultTask() {
     }
 }
 
+// kryfo never installs apps, so no build may ask to: a plugin that merges
+// in the permission fails the build
+abstract class NoInstallCheck : DefaultTask() {
+    @get:InputFile
+    abstract val manifest: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+            .newDocumentBuilder().parse(manifest.get().asFile)
+        val banned = setOf(
+            "android.permission.REQUEST_INSTALL_PACKAGES",
+            "android.permission.INSTALL_PACKAGES",
+        )
+        // the permission can be asked for on every element that asks for one
+        for (tag in listOf("uses-permission", "uses-permission-sdk-23", "uses-permission-sdk-m")) {
+            val asks = doc.getElementsByTagName(tag)
+            for (i in 0 until asks.length) {
+                val p = (asks.item(i) as org.w3c.dom.Element).getAttribute("android:name")
+                if (p in banned) throw GradleException("the merged manifest asks for $p in $tag")
+            }
+        }
+    }
+}
+
 androidComponents {
     onVariants { variant ->
         val name = variant.name.replaceFirstChar { it.uppercase() }
+        val merged = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST)
         val labelCheck = tasks.register<LabelCheck>("check${name}Label") {
-            manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+            manifest.set(merged)
             appId.set(variant.applicationId)
         }
+        val noInstall = tasks.register<NoInstallCheck>("check${name}NoInstall") {
+            manifest.set(merged)
+        }
         tasks.matching { it.name == "assemble$name" || it.name == "bundle$name" }
-            .configureEach { dependsOn(labelCheck) }
+            .configureEach { dependsOn(labelCheck, noInstall) }
     }
 }
 

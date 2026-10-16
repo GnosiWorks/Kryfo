@@ -30,6 +30,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../orientation.dart';
+import '../file_kind.dart' show fileFits;
 import 'scan_screen.dart' show cameraDenied;
 
 class CaptureResult {
@@ -513,7 +514,7 @@ class _CameraScreenState extends State<CameraScreen>
     }
     final c = _clip;
     if (c == null) return;
-    if (_clipBytes > 8 * 1024 * 1024) {
+    if (!fileFits(_clipBytes)) {
       showHaloToast(context, l10n.cameraTooLongForA);
       return;
     }
@@ -820,7 +821,7 @@ class _CameraScreenState extends State<CameraScreen>
             l10n.cameraClipSMb(whole(secs), mb),
             style: HaloType.mono(size: 12, color: HaloColors.text2),
           ),
-          if (_clipBytes > 8 * 1024 * 1024) ...[
+          if (!fileFits(_clipBytes)) ...[
             const SizedBox(height: 8),
             Text(
               l10n.cameraTooLongForA,

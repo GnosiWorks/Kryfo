@@ -1,24 +1,29 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // media widgets shared with the group chat: voice, file and photo.
-// todo: chat_screen still has its own file card, fold it in here.
 
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import 'motion.dart' show kHouseCurve;
+import 'motion.dart' show kHouseCurve, motionStill;
+import 'ease_size.dart';
+import 'swap.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
+import '../file_kind.dart';
+import '../file_save.dart' show savingFiles;
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
 
-String _humanSize(int bytes) {
+/// a file's size as the bubbles write it
+String humanFileSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
   if (bytes < 1024 * 1024) {
     return l10n.mediaBubblesKb(whole(((bytes / 1024)).round()));
@@ -26,46 +31,42 @@ String _humanSize(int bytes) {
   return l10n.mediaBubblesMb(decimal((bytes / (1024 * 1024)), 1));
 }
 
-IconData _fileGlyph(String name) {
-  final n = name.toLowerCase();
-  if (n.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
-  if (n.endsWith('.zip') || n.endsWith('.rar') || n.endsWith('.7z')) {
-    return Icons.folder_zip_outlined;
-  }
-  if (n.endsWith('.doc') || n.endsWith('.docx') || n.endsWith('.txt')) {
-    return Icons.description_outlined;
-  }
-  if (n.endsWith('.mp3') || n.endsWith('.wav') || n.endsWith('.m4a')) {
-    return Icons.audiotrack_outlined;
-  }
-  if (n.endsWith('.mp4') || n.endsWith('.mov') || n.endsWith('.mkv')) {
-    return Icons.movie_outlined;
-  }
-  return Icons.insert_drive_file_outlined;
+/// the line for a file over the limit. a size that would read the same as
+/// the limit is given in whole kb, rounded up, so the two never match
+String fileTooBigLine(int bytes, [int max = kMaxFileBytes]) {
+  final size = humanFileSize(bytes);
+  final most = humanFileSize(max);
+  if (size != most) return l10n.fileTooBig(size, most);
+  return l10n.fileTooBig(
+    l10n.mediaBubblesKb(whole((bytes / 1024).ceil())),
+    l10n.mediaBubblesKb(whole(max ~/ 1024)),
+  );
 }
 
-// a picture sent through the file picker arrives as a file. if the name says
-// it is an image, show it as one with the name underneath. a name that lies
-// is caught by the decode: errorBuilder falls back to the plain card.
-const _imageExts = {
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.gif',
-  '.webp',
-  '.bmp',
-  '.heic',
-  '.heif',
+IconData fileGlyph(FileKind k) => switch (k) {
+  FileKind.installer => Icons.install_mobile_outlined,
+  FileKind.pdf => Icons.picture_as_pdf_outlined,
+  FileKind.picture => Icons.image_outlined,
+  FileKind.video => Icons.movie_outlined,
+  FileKind.audio => Icons.audiotrack_outlined,
+  FileKind.archive => Icons.folder_zip_outlined,
+  FileKind.document => Icons.description_outlined,
+  FileKind.text => Icons.notes_rounded,
+  FileKind.other => Icons.insert_drive_file_outlined,
 };
 
-bool _nameSaysImage(String? name) {
-  final n = (name ?? '').toLowerCase();
-  return _imageExts.any(n.endsWith);
-}
-
-Widget fileCard(String? filePath, String? fileName, bool isOut) {
-  if (filePath != null && _nameSaysImage(fileName)) {
-    final fallback = _plainFileCard(filePath, fileName, isOut);
+// a picture sent through the file picker arrives as a file. one whose
+// bytes or name say picture is shown as one with the name underneath; a
+// picture that cannot be decoded falls back to the plain card.
+Widget fileCard(
+  String? filePath,
+  String? fileName,
+  bool isOut, {
+  FileShape? shape,
+}) {
+  final drawn = shape ?? fileShapeNow(filePath, fileName);
+  if (filePath != null && drawn == FileShape.picture) {
+    final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 230),
       child: Image.file(
@@ -83,12 +84,12 @@ Widget fileCard(String? filePath, String? fileName, bool isOut) {
             ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
             const SizedBox(height: 4),
             Text(
-              fileName ?? 'file',
+              safeFileName(fileName),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 9,
-                color: isOut ? HaloColors.onAmber : HaloColors.text3,
+                color: isOut ? HaloColors.onAmber : HaloColors.text2,
               ),
             ),
           ],
@@ -96,72 +97,269 @@ Widget fileCard(String? filePath, String? fileName, bool isOut) {
       ),
     );
   }
-  return _plainFileCard(filePath, fileName, isOut);
+  return FileCard(path: filePath, name: fileName, isOut: isOut);
 }
 
-Widget _plainFileCard(String? filePath, String? fileName, bool isOut) {
-  final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-  final sub = isOut ? HaloColors.onAmber : HaloColors.text3;
-  final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
-  int? sz;
-  try {
-    if (filePath != null) sz = File(filePath).lengthSync();
-  } catch (_) {
-    // gone or unreadable: the card shows no size
+/// a shown name split before its last extension, which is never cut
+(String, String) splitFileName(String shown) {
+  final e = extOf(shown);
+  if (e.isEmpty) return (shown, '');
+  final at = shown.length - e.length - 1;
+  return (shown.substring(0, at), shown.substring(at));
+}
+
+final _rtlStart = RegExp(
+  '^[^A-Za-z]*[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
+);
+
+/// a file in a chat: what kind it is, its name with the real extension
+/// always in view, and its size. the kind is read from the bytes, so a
+/// renamed app installer still shows as one, with a line about it; its
+/// tap saves instead of opening
+class FileCard extends StatefulWidget {
+  final String? path;
+  final String? name;
+  final bool isOut;
+  const FileCard({
+    super.key,
+    required this.path,
+    required this.name,
+    required this.isOut,
+  });
+
+  @override
+  State<FileCard> createState() => _FileCardState();
+}
+
+class _FileCardState extends State<FileCard> {
+  FileFacts? _facts;
+  int? _size;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
   }
-  final ext = (fileName ?? '').contains('.')
-      ? fileName!.split('.').last.toUpperCase()
-      : l10n.mediaBubblesFile;
-  return Container(
-    constraints: const BoxConstraints(maxWidth: 230),
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-    decoration: BoxDecoration(
-      color: isOut
-          ? HaloColors.onAmber.withValues(alpha: 0.12)
-          : HaloColors.surface3,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: isOut
-                ? HaloColors.onAmber.withValues(alpha: 0.16)
-                : HaloColors.amberSoft,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(_fileGlyph(fileName ?? ''), size: 19, color: icon),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                fileName ?? 'file',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(
-                  size: 13,
-                  color: fg,
-                  weight: FontWeight.w500,
+
+  @override
+  void didUpdateWidget(FileCard old) {
+    super.didUpdateWidget(old);
+    if (old.path != widget.path || old.name != widget.name) _start();
+  }
+
+  void _start() {
+    final p = widget.path;
+    _facts = p == null ? null : fileFactsNow(p, widget.name);
+    _size = null;
+    if (p != null) _read(p, widget.name);
+  }
+
+  Future<void> _read(String p, String? name) async {
+    final facts = await readFileFacts(p, name);
+    int? size;
+    try {
+      size = await File(p).length();
+    } catch (_) {
+      // gone or unreadable: the card shows no size
+    }
+    if (!mounted || p != widget.path || name != widget.name) return;
+    setState(() {
+      _facts = facts;
+      _size = size;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOut = widget.isOut;
+    final facts =
+        _facts ??
+        FileFacts(kindOfName(widget.name), extOf(safeFileName(widget.name)));
+    final installer = facts.installer;
+    final fg = isOut ? HaloColors.onAmber : HaloColors.text;
+    final sub = isOut ? HaloColors.onAmber : HaloColors.text2;
+    // the name it is saved and handed on under: what is seen is what is
+    // saved
+    final shown = safeFileName(widget.name, facts: facts);
+    final (stem, ext) = splitFileName(shown);
+    final nameDir = _rtlStart.hasMatch(stem)
+        ? TextDirection.rtl
+        : TextDirection.ltr;
+    final kind = facts.ext.isEmpty
+        ? l10n.mediaBubblesFile
+        : facts.ext.toUpperCase();
+    final size = _size;
+    final meta = size == null ? kind : '$kind · ${humanFileSize(size)}';
+    final still = motionStill(context);
+    final nameStyle = HaloType.sans(
+      size: 13.5,
+      color: fg,
+      weight: FontWeight.w600,
+    );
+    return ValueListenableBuilder<Set<String>>(
+      valueListenable: savingFiles,
+      builder: (context, saving, _) {
+        final busy = widget.path != null && saving.contains(widget.path);
+        final Widget mark = busy
+            ? SizedBox(
+                key: const ValueKey('saving'),
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: isOut ? HaloColors.onAmber : HaloColors.amber,
                 ),
+              )
+            : Icon(
+                installer ? Icons.download_rounded : fileGlyph(facts.kind),
+                key: ValueKey(installer ? 'save' : facts.kind),
+                size: 20,
+                color: isOut ? HaloColors.onAmber : HaloColors.amber,
+              );
+        return Semantics(
+          container: true,
+          button: widget.path != null,
+          label: [
+            shown,
+            installer ? l10n.fileAppInstaller : kind,
+            if (size != null) humanFileSize(size),
+            if (installer) l10n.fileInstallerLine,
+          ].join(', '),
+          hint: widget.path == null
+              ? null
+              : installer
+              ? l10n.fileSaveToDevice
+              : l10n.fileOpenHint,
+          excludeSemantics: true,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 260),
+            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+            decoration: BoxDecoration(
+              color: isOut
+                  ? HaloColors.onAmber.withValues(alpha: 0.12)
+                  : HaloColors.surface3,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: EaseSize(
+              duration: const Duration(milliseconds: 220),
+              alignment: AlignmentDirectional.topStart,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isOut
+                              ? HaloColors.onAmber.withValues(alpha: 0.16)
+                              : HaloColors.amberSoft,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: still
+                              ? Duration.zero
+                              : const Duration(milliseconds: 220),
+                          switchInCurve: kHouseCurve,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (c, a) => FadeTransition(
+                            opacity: a,
+                            child: ScaleTransition(
+                              scale: Tween(begin: 0.6, end: 1.0).animate(a),
+                              child: c,
+                            ),
+                          ),
+                          child: mark,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // the extension stays in view however long the
+                            // name, so photo.jpg.apk never reads as a photo
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              textDirection: nameDir,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    stem,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textDirection: nameDir,
+                                    // as wide as what is drawn, so the
+                                    // extension sits right after the dots
+                                    textWidthBasis: TextWidthBasis.longestLine,
+                                    style: nameStyle,
+                                  ),
+                                ),
+                                if (ext.isNotEmpty)
+                                  Text(
+                                    ext,
+                                    maxLines: 1,
+                                    textDirection: TextDirection.ltr,
+                                    style: nameStyle,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            RiseSwap(
+                              child: Text(
+                                meta,
+                                key: ValueKey(meta),
+                                maxLines: 1,
+                                style: HaloType.mono(size: 10, color: sub),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (installer)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 9),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: Icon(
+                              Icons.shield_outlined,
+                              size: 14,
+                              color: sub,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              l10n.fileInstallerLine,
+                              style: HaloType.sans(
+                                size: 12,
+                                color: sub,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                sz != null ? '$ext · ${_humanSize(sz)}' : ext,
-                style: HaloType.mono(size: 9, color: sub),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        );
+      },
+    );
+  }
 }
 
 void openFullImage(
@@ -489,6 +687,79 @@ class VoiceBubbleState extends State<VoiceBubble> {
       onTap: _toggle,
       excludeSemantics: true,
       child: bubble,
+    );
+  }
+}
+
+/// a voice note sent while its disguise is still being made: a ring that
+/// fills as it goes, and the wave once the note is there. still with less
+/// movement
+class VoiceMakingBubble extends StatelessWidget {
+  final ValueListenable<double?> progress;
+  final bool isOut;
+  const VoiceMakingBubble({
+    super.key,
+    required this.progress,
+    required this.isOut,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final out = isOut;
+    final still = motionStill(context);
+    final fg = out ? HaloColors.onAmber : HaloColors.amber;
+    final rest = out
+        ? HaloColors.onAmber.withValues(alpha: 0.3)
+        : HaloColors.text3.withValues(alpha: 0.45);
+    return Semantics(
+      container: true,
+      label: '${l10n.appVoiceMessage}, ${l10n.voiceDisguising}',
+      excludeSemantics: true,
+      child: SizedBox(
+        width: 184,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 34,
+              height: 34,
+              child: ValueListenableBuilder<double?>(
+                valueListenable: progress,
+                builder: (_, p, _) => CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: fg,
+                  backgroundColor: rest,
+                  value: still ? (p ?? 0) : p,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VoiceWave(peaks: null, progress: 0, played: fg, rest: rest),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.theater_comedy_outlined, size: 11, color: fg),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          l10n.voiceDisguising,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.mono(size: 9, color: fg),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

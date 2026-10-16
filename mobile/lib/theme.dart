@@ -513,7 +513,18 @@ void showHaloToast(
   BuildContext context,
   String message, {
   bool Function()? still,
-}) {
+}) => _toastWhenOpen(context, message, still);
+
+/// [showHaloToast] for work that outlives the screen that began it: shown
+/// wherever the person is, once the lock is not up
+void showHaloToastAnywhere(String message, {bool Function()? still}) =>
+    _toastWhenOpen(null, message, still);
+
+void _toastWhenOpen(
+  BuildContext? context,
+  String message,
+  bool Function()? still,
+) {
   // nothing to say, nothing shown: a link that opened a chat says it so
   if (message.isEmpty) return;
   void show() {
@@ -537,10 +548,10 @@ void haloClearToasts() {
   haloMessengerKey.currentState?.clearSnackBars();
 }
 
-void _showHaloToast(BuildContext context, String message) {
+void _showHaloToast(BuildContext? context, String message) {
   var overlay = haloToastOverlay?.call();
   if (overlay == null) {
-    if (!context.mounted) return;
+    if (context == null || !context.mounted) return;
     try {
       overlay = Overlay.maybeOf(context, rootOverlay: true);
     } catch (_) {

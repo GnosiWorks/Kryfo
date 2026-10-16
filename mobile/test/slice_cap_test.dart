@@ -17,9 +17,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/media_resend.dart'
-    show kMaxSlices, kUnfinishedBytes, kUnfinishedFiles, sliceWeight;
+    show
+        kMaxSlices,
+        kUnfinishedBytes,
+        kUnfinishedFiles,
+        sliceWeight,
+        kMaxFileSlices,
+        kMaxVoiceSlices;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/voice_length.dart' show kVoiceMax;
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -64,6 +71,8 @@ class _World {
     int index = 0,
     int total = 100,
     String? group,
+    bool voice = false,
+    bool image = false,
   }) async => from(
     who,
     await wrapMessage(
@@ -73,8 +82,10 @@ class _World {
       chunkIndex: index,
       chunkTotal: total,
       groupId: group,
-      fileB64: base64Encode(List.filled(300, index % 256)),
-      fileName: 'x.bin',
+      fileB64: image ? null : base64Encode(List.filled(300, index % 256)),
+      imageB64: image ? base64Encode(List.filled(300, index % 256)) : null,
+      fileName: image ? null : (voice ? 'voice.wav' : 'x.bin'),
+      voice: voice,
       sender: asSender(who),
     ),
   );
@@ -111,10 +122,45 @@ void main() {
     test('keeps no more files in flight than the cap', () async {
       final w = await _World.make();
       for (var m = 0; m < 20; m++) {
-        await w.slice(_s, 'big$m', total: 100000);
+        await w.slice(_s, 'big$m', total: kMaxFileSlices);
       }
       expect(w.live.chunks.keys, ['big0', 'big1']);
     });
+
+    test('a photo is held to the file cap, voice flag or not', () async {
+      final w = await _World.make();
+      await w.slice(_s, 'pic', total: kMaxFileSlices + 1, image: true);
+      await w.slice(
+        _s,
+        'vpic',
+        total: kMaxFileSlices + 1,
+        image: true,
+        voice: true,
+      );
+      expect(w.live.chunks.keys, isEmpty);
+      await w.slice(_s, 'ok', total: kMaxFileSlices, image: true);
+      expect(w.live.chunks.keys, ['ok']);
+    });
+
+    test('a voice note longer than the mic records is not kept', () async {
+      final w = await _World.make();
+      await w.slice(_s, 'long', total: kMaxVoiceSlices + 1, voice: true);
+      await w.slice(_s, 'note', total: kMaxVoiceSlices, voice: true);
+      expect(w.live.chunks.keys, ['note']);
+      // the mic's longest take fits under the cap
+      final bytes = 44 + 16000 * 2 * kVoiceMax.inSeconds;
+      expect((bytes + 12287) ~/ 12288, lessThanOrEqualTo(kMaxVoiceSlices));
+    });
+
+    test(
+      'a file saying more slices than any kryfo sends is not kept',
+      () async {
+        final w = await _World.make();
+        await w.slice(_s, 'huge', total: kMaxFileSlices + 1);
+        await w.slice(_s, 'fits', total: kMaxFileSlices);
+        expect(w.live.chunks.keys, ['fits']);
+      },
+    );
 
     test('still sends the rest of a file in flight', () async {
       final w = await _World.make();

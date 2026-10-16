@@ -1496,7 +1496,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 8 MB max",
+  "cameraTooLongForA": "Too long for a message · 15 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },
@@ -1547,37 +1547,6 @@
   "cameraUseThis": "Use this",
   "@cameraUseThis": {
     "description": "screens/camera_screen.dart"
-  },
-  "chatB": "{bytes} b",
-  "@chatB": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatKb": "{bytes} kb",
-  "@chatKb": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatMb": "{bytes} mb",
-  "@chatMb": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "bytes": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatFile": "FILE",
-  "@chatFile": {
-    "description": "screens/chat_screen.dart"
   },
   "chatYouAreOfflineThis": "You are offline · this sends itself when you reconnect",
   "@chatYouAreOfflineThis": {
@@ -1887,10 +1856,6 @@
   },
   "chatCouldNotReadThat": "Could not read that file",
   "@chatCouldNotReadThat": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatFileTooBig8": "File too big · 8 mb max",
-  "@chatFileTooBig8": {
     "description": "screens/chat_screen.dart"
   },
   "chatCouldNotCleanThat": "Could not clean that video",
@@ -3075,10 +3040,6 @@
   },
   "groupChatCouldNotCleanThat": "Could not clean that gif",
   "@groupChatCouldNotCleanThat": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatFileTooBig8": "File too big · 8 mb max",
-  "@groupChatFileTooBig8": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatCouldNotCleanThatVideo": "Could not clean that video",
@@ -10697,6 +10658,26 @@
   "@voiceNotDisguised": {
     "description": "a voice note that was to go out disguised and could not be: it is not sent as it was recorded"
   },
+  "voiceNoRoom": "Not enough free space on this phone. Free up some space and try again.",
+  "@voiceNoRoom": {
+    "description": "the phone is too full to record or disguise a voice note; the note waits where it is"
+  },
+  "voiceNoRoomNotSent": "There was not enough free space to disguise this note, so it was not sent",
+  "@voiceNoRoomNotSent": {
+    "description": "a voice note that was to go out disguised could not be, because the phone is too full: it is not sent as it was recorded"
+  },
+  "voiceDisguising": "Disguising",
+  "@voiceDisguising": {
+    "description": "under a voice note sent while its disguise is still being made"
+  },
+  "voiceLockedNotSent": "Kryfo locked before your voice note went out, so it was not sent",
+  "@voiceLockedNotSent": {
+    "description": "said after the next unlock: the app locked while a voice note was still being disguised or saved, and the note was dropped, not sent"
+  },
+  "voiceNotSent": "Your voice note was not sent",
+  "@voiceNotSent": {
+    "description": "a voice note this phone could not keep in its chat, so it was dropped and never sent"
+  },
   "settingsDisguiseByDefault": "Disguise my voice by default",
   "@settingsDisguiseByDefault": {
     "description": "settings: voice notes go out disguised in every chat that has not chosen for itself"
@@ -10704,6 +10685,71 @@
   "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
   "@settingsDisguiseByDefaultHint": {
     "description": "settings: under the default voice disguise switch"
+  },
+  "fileInstallerLine": "This is an app installer. Only install apps from people you trust.",
+  "@fileInstallerLine": {
+    "description": "widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it"
+  },
+  "fileAppInstaller": "App installer",
+  "@fileAppInstaller": {
+    "description": "widgets/media_bubbles.dart: screen reader name for a file that is an app installer (apk)"
+  },
+  "fileSaveToDevice": "Save to device",
+  "@fileSaveToDevice": {
+    "description": "message menu and file bubble: saves the file through the system save window"
+  },
+  "fileOpenHint": "Opens in another app",
+  "@fileOpenHint": {
+    "description": "widgets/media_bubbles.dart: screen reader hint on a file bubble, a tap opens it in another app"
+  },
+  "fileSaved": "Saved",
+  "@fileSaved": {
+    "description": "file_save.dart: toast once a file was saved, when the place is not known"
+  },
+  "fileSavedIn": "Saved in {place}",
+  "@fileSavedIn": {
+    "description": "file_save.dart: toast once a file was saved. the placeholder is a folder like Download, or the app that holds it",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedUnchecked": "Saved, but Kryfo couldn't check the copy",
+  "@fileSavedUnchecked": {
+    "description": "file_save.dart: toast when a file was saved but the copy could not be read back"
+  },
+  "fileNotSaved": "Could not save the file",
+  "@fileNotSaved": {
+    "description": "file_save.dart: toast when saving a file failed"
+  },
+  "fileTooBig": "This file is {size}. Files can be up to {max}.",
+  "@fileTooBig": {
+    "description": "chat and group: toast when a picked file is over the limit. size and max are like 12.4 mb and 8.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "fileGoesAsItIs": "This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.",
+  "@fileGoesAsItIs": {
+    "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
+  },
+  "fileRawPictureTitle": "Send this picture as it is?",
+  "@fileRawPictureTitle": {
+    "description": "chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)"
+  },
+  "fileRawPictureLine": "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
+  "@fileRawPictureLine": {
+    "description": "chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details"
+  },
+  "voiceStoppedAtLimit": "Voice notes stop at 30 minutes. Listen to it, then send it.",
+  "@voiceStoppedAtLimit": {
+    "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
   },
   "gettingMessagesHelperBody": "Instant and light on battery. The helper's server sees your phone's IP address and learns when you get messages, never what they say.",
   "@gettingMessagesHelperBody": {

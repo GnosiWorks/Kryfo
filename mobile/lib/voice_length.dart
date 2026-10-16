@@ -6,6 +6,10 @@ import 'dart:typed_data';
 
 import 'l10n/numbers.dart';
 
+/// the longest note the mic records. a receiver keeps no voice file longer
+/// than this (kMaxVoiceSlices)
+const kVoiceMax = Duration(minutes: 30);
+
 /// m:ss, or h:mm:ss from an hour, rounded to the nearest second
 String voiceClock(int ms) {
   final s = (ms < 0 ? 0 : ms + 500) ~/ 1000;

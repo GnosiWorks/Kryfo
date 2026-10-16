@@ -1202,7 +1202,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'برای یک پیام زیادی طولانی است · حداکثر ۸ مگابایت';
+      'برای یک پیام زیادی طولانی است · حداکثر ۱۵ مگابایت';
 
   @override
   String get cameraNeverSavedToYour => 'هرگز در عکس‌هایتان ذخیره نمی‌شود';
@@ -1236,24 +1236,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cameraUseThis => 'استفاده از این';
-
-  @override
-  String chatB(Object bytes) {
-    return '⁨$bytes⁩ بایت';
-  }
-
-  @override
-  String chatKb(Object bytes) {
-    return '⁨$bytes⁩ کیلوبایت';
-  }
-
-  @override
-  String chatMb(Object bytes) {
-    return '⁨$bytes⁩ مگابایت';
-  }
-
-  @override
-  String get chatFile => 'فایل';
 
   @override
   String get chatYouAreOfflineThis =>
@@ -1490,9 +1472,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatCouldNotReadThat => 'آن فایل خوانده نشد';
-
-  @override
-  String get chatFileTooBig8 => 'فایل بزرگ است · حداکثر ۸ مگابایت';
 
   @override
   String get chatCouldNotCleanThat => 'تمیز کردن آن ویدیو ممکن نشد';
@@ -2441,9 +2420,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThat => 'تمیز کردن آن گیف ممکن نشد';
-
-  @override
-  String get groupChatFileTooBig8 => 'فایل بزرگ است · حداکثر ۸ مگابایت';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'تمیز کردن آن ویدیو ممکن نشد';
@@ -8517,11 +8493,77 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotDisguised => 'صدای این پیام تغییر داده نشد، پس ارسال نشد';
 
   @override
+  String get voiceNoRoom =>
+      'فضای خالی کافی روی این گوشی نیست. کمی فضا آزاد کنید و دوباره امتحان کنید.';
+
+  @override
+  String get voiceNoRoomNotSent =>
+      'فضای کافی برای تغییر صدای این پیام نبود، پس ارسال نشد';
+
+  @override
+  String get voiceDisguising => 'در حال تغییر صدا';
+
+  @override
+  String get voiceLockedNotSent =>
+      'پیش از ارسال پیام صوتی شما Kryfo قفل شد، پس ارسال نشد';
+
+  @override
+  String get voiceNotSent => 'پیام صوتی شما ارسال نشد';
+
+  @override
   String get settingsDisguiseByDefault => 'تغییر صدای من به‌طور پیش‌فرض';
 
   @override
   String get settingsDisguiseByDefaultHint =>
       'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
+
+  @override
+  String get fileInstallerLine =>
+      'این فایلِ نصبِ یک برنامه است. برنامه‌ها را فقط از کسانی نصب کنید که به آن‌ها اعتماد دارید.';
+
+  @override
+  String get fileAppInstaller => 'فایل نصب برنامه';
+
+  @override
+  String get fileSaveToDevice => 'ذخیره در دستگاه';
+
+  @override
+  String get fileOpenHint => 'در برنامه‌ی دیگری باز می‌شود';
+
+  @override
+  String get fileSaved => 'ذخیره شد';
+
+  @override
+  String fileSavedIn(String place) {
+    return 'در ⁨$place⁩ ذخیره شد';
+  }
+
+  @override
+  String get fileSavedUnchecked =>
+      'ذخیره شد، ولی Kryfo نتوانست نسخه را بررسی کند';
+
+  @override
+  String get fileNotSaved => 'فایل ذخیره نشد';
+
+  @override
+  String fileTooBig(String size, String max) {
+    return 'حجم این فایل ⁨$size⁩ است. فایل‌ها حداکثر می‌توانند ⁨$max⁩ باشند.';
+  }
+
+  @override
+  String get fileGoesAsItIs =>
+      'این فایل همان‌طور که هست فرستاده می‌شود. Kryfo فقط فایل‌های JPEG، PNG، WebP، HEIC، AVIF، GIF، MP4 و MOV را تمیز می‌کند.';
+
+  @override
+  String get fileRawPictureTitle => 'این تصویر همان‌طور که هست فرستاده شود؟';
+
+  @override
+  String get fileRawPictureLine =>
+      'این تصویر را نمی‌شود تمیز کرد. جزئیاتی مثل جای گرفتنش همراهش می‌رود. برای تمیز شدن، آن را به‌صورت عکس بفرستید.';
+
+  @override
+  String get voiceStoppedAtLimit =>
+      'پیام‌های صوتی در ۳۰ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.';
 
   @override
   String get gettingMessagesHelperBody =>

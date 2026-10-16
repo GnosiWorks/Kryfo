@@ -111,6 +111,18 @@ class ToolsBridge {
   Future<void> dropSharedText(String id) =>
       _quiet('dropSharedText', {'id': id});
 
+  // what the app's cache has free, or null when the phone does not say
+  Future<int?> freeBytes() async {
+    try {
+      final n = await _ch.invokeMethod<int>('freeBytes');
+      return n == null || n < 0 ? null : n;
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
   Future<void> _quiet(String method, Map<String, Object?> args) async {
     try {
       await _ch.invokeMethod(method, args);
