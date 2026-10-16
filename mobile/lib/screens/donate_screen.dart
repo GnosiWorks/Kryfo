@@ -898,7 +898,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         ),
       ),
       body: SafeArea(
-        // with less movement a new phase is simply there
+        // reduced motion: a new phase without animation
         child: AnimatedSwitcher(
           duration: MediaQuery.disableAnimationsOf(context)
               ? Duration.zero
@@ -1305,7 +1305,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_c.isAnimating || _c.isCompleted) return;
-    // with less movement the check is simply there
+    // reduced motion: the check without animation
     if (MediaQuery.disableAnimationsOf(context)) {
       _c.value = 1;
     } else {

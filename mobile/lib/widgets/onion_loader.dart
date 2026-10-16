@@ -29,8 +29,8 @@ class _OnionLoaderState extends State<OnionLoader>
     duration: const Duration(milliseconds: 3200),
   );
 
-  // it draws itself only while it is up. with less movement it is simply
-  // there, whole
+  // it draws itself only while it is up. with reduced motion it is drawn
+  // whole at once
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

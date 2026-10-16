@@ -748,7 +748,7 @@ class _Gone implements Exception {
   const _Gone();
 }
 
-// the plain file's warning: calm, in the warn yellow, where the fields were
+// the plain file's warning, in the warn yellow, where the fields were
 class _Warn extends StatelessWidget {
   const _Warn({super.key, required this.text});
   final String text;

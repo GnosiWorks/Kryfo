@@ -272,7 +272,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
 
 // the number, in groups of five. marked verified by a tap here, it turns
 // green group by group in reading order and its card follows; read as
-// verified on the way in, it simply is. with less movement it only fades
+// verified on the way in, it is green at once. reduced motion: it only fades
 class SafetyNumberCard extends StatefulWidget {
   final List<String> groups;
   final bool verified;

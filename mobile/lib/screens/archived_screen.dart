@@ -120,7 +120,7 @@ class _ArchivedListState extends State<ArchivedList> {
     super.dispose();
   }
 
-  // the count spelled out keeps the top of the screen calm
+  // the count spelled out keeps the top of the screen plain
   String _countWord(int n) {
     final words = [
       l10n.archivedCount0,

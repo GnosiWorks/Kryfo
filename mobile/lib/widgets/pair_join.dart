@@ -336,7 +336,7 @@ class _PairJoinState extends State<PairJoin> {
           busy: _busy,
           onTap: _join,
         ),
-        // with less movement the line is simply there
+        // reduced motion: the line without animation
         if (still)
           status
         else

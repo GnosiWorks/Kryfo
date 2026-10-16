@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a message that came in written well before the bottom of the chat goes
-// up the thread, where nobody reading the bottom sees it. a calm line above
+// up the thread, where nobody reading the bottom sees it. a plain line above
 // the composer says how many did, and a tap takes the reader to the first
 // of them. it goes once each has been on screen
 import 'dart:math' as math;

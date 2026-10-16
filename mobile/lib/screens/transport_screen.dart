@@ -251,7 +251,7 @@ class _Line extends StatelessWidget {
         value.length > 16 || MediaQuery.textScalerOf(context).scale(13) > 17;
     final start = EdgeInsetsDirectional.only(start: indent ? 15.6 : 0);
     // a value that changes state rises in; a count or a time that moves on
-    // is simply updated
+    // is updated in place
     Widget shown(AlignmentGeometry at, TextAlign align) => RiseSwap(
       alignment: at,
       child: Text(

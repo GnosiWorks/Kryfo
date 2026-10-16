@@ -56,7 +56,7 @@ Future<T?> showHaloSheet<T>(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(kSheetRadius)),
     ),
-    // with less movement it is simply there, and simply gone
+    // reduced motion: no animation in or out
     sheetAnimationStyle: MediaQuery.maybeDisableAnimationsOf(context) ?? false
         ? AnimationStyle.noAnimation
         : const AnimationStyle(

@@ -1140,7 +1140,7 @@
   },
   "scamShieldWarning": "{noticed}. Don't send money or codes to people you haven't met.",
   "@scamShieldWarning": {
-    "description": "scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. calm, no exclamation mark",
+    "description": "scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. plain, no exclamation mark",
     "placeholders": {
       "noticed": {
         "type": "Object"
@@ -4922,7 +4922,7 @@
   },
   "notesExportPlainLine": "Anyone who gets this file can read it.",
   "@notesExportPlainLine": {
-    "description": "screens/notes_export_screen.dart. the calm warning for a file without a passphrase"
+    "description": "screens/notes_export_screen.dart. the plain warning for a file without a passphrase"
   },
   "notesExportPlainYes": "Export without one",
   "@notesExportPlainYes": {
@@ -10291,7 +10291,7 @@
   },
   "gifPlay": "Play GIF",
   "@gifPlay": {
-    "description": "gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for less movement"
+    "description": "gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for reduced motion"
   },
   "gifSentInside": "Sent inside your message",
   "@gifSentInside": {
@@ -10692,7 +10692,7 @@
   },
   "fileInstallerLine": "This is an app installer. Only install apps from people you trust.",
   "@fileInstallerLine": {
-    "description": "widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it"
+    "description": "widgets/media_bubbles.dart: the plain line under a file that is an app installer (apk). Kryfo never installs it, only saves it"
   },
   "fileAppInstaller": "App installer",
   "@fileAppInstaller": {

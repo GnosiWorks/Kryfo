@@ -131,7 +131,7 @@ class _CleanScreenState extends State<CleanScreen>
         if (_still) {
           _reveal.value = 1;
         } else {
-          // felt once, as the tick lands
+          // one haptic tap when the tick shows
           _reveal.forward().then((_) {
             if (!_gone) HapticFeedback.lightImpact();
           });

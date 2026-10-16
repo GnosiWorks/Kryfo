@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a box that eases to its child's new height instead of jumping. with less
-// movement it is simply the new size: an AnimatedSize given no time trips
-// over its own layout
+// a box that eases to its child's new height instead of jumping. with
+// reduced motion it takes the new size at once: an AnimatedSize given no
+// time trips over its own layout
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

@@ -315,7 +315,7 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
         children: [
           Row(
             children: [
-              // a few breaths on each new state, then still, as the tor dot
+              // a few pulses on each new state, then still, as the tor dot
               SizedBox(
                 width: 10,
                 child: line.moving

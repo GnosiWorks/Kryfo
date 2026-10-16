@@ -62,7 +62,7 @@ Widget _sheetBody(List<Widget> children) => SafeArea(
   ),
 );
 
-// what the tor project sees when asked, said calmly
+// what the tor project sees when asked
 Widget _seesNote() => Container(
   padding: const EdgeInsetsDirectional.fromSTEB(12, 11, 12, 12),
   decoration: BoxDecoration(

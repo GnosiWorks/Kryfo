@@ -692,8 +692,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
 }
 
 /// a voice note sent while its disguise is still being made: a ring that
-/// fills as it goes, and the wave once the note is there. still with less
-/// movement
+/// fills as it goes, and the wave once the note is there. still with
+/// reduced motion
 class VoiceMakingBubble extends StatelessWidget {
   final ValueListenable<double?> progress;
   final bool isOut;

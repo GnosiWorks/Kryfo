@@ -74,7 +74,7 @@ class _BackupScreenState extends State<BackupScreen> {
   // kryfo stopped waiting for the last save: android may still read the
   // made file a while
   bool _lost = false;
-  // the last hand-over did not go: a calm line and two ways on
+  // the last hand-over did not go: a plain line and two ways on
   bool _notSaved = false;
   // both fields show what was typed, or neither
   bool _shown = false;
@@ -406,7 +406,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
             ),
             const Spacer(),
-            // not saved: said calmly, with the file still here to try again
+            // not saved: a plain line, the file kept to try again
             EaseSize(
               child: RiseSwap(
                 alignment: Alignment.topCenter,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a screen that has had its turn fades out over the one that follows. the
 // next one is built under it from the first frame and stays where it is
-// once the fade is done, so it is never made twice. with less movement it
+// once the fade is done, so it is never made twice. with reduced motion it
 // is a plain cut.
 import 'package:flutter/material.dart';
 

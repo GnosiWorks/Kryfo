@@ -383,7 +383,7 @@ class _QrScreenState extends State<QrScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
                       // one field or three: the form eases to its new height
-                      // so the buttons under it glide instead of jumping
+                      // so the buttons under it move instead of jumping
                       child: EaseSize(
                         child: AnimatedSwitcher(
                           duration: motionStill(context)

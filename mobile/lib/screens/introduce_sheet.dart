@@ -347,7 +347,7 @@ class _GoButtonState extends State<_GoButton> {
                   key: const ValueKey('sending'),
                   width: 18,
                   height: 18,
-                  // held still with less movement, as elsewhere
+                  // held still with reduced motion, as elsewhere
                   child: CircularProgressIndicator(
                     value: motionStill(context) ? 0.3 : null,
                     strokeWidth: 2,

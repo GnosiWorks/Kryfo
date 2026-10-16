@@ -440,7 +440,7 @@ class _SavedScreenState extends State<SavedScreen> {
 }
 
 // the bookmark on a card: unsaved, it empties with a small pop before the
-// card folds. simply swaps with less movement
+// card folds. reduced motion: it swaps
 class _Bookmark extends StatelessWidget {
   final bool on;
   const _Bookmark({required this.on});

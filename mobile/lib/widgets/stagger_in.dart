@@ -31,7 +31,7 @@ class _StaggerInState extends State<StaggerIn> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_t == 1 || _wait != null) return;
-    // with less movement a list is simply there
+    // reduced motion: the list without animation
     if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
       _t = 1;
       return;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a part of a card that opens and closes in place. it opens its height and
 // fades up; closing, it stays drawn and fades as it folds shut, so the card
-// never shrinks round nothing. with less movement it is simply there or gone
+// never shrinks round nothing. reduced motion: it shows or goes at once
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart' show motionStill;

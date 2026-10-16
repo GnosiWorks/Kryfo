@@ -1332,7 +1332,7 @@ class _Round extends StatelessWidget {
       child: SizedBox(
         width: size < 48 ? 48 : size,
         height: 48,
-        // pops in as the bar locks, still with less movement
+        // pops in as the bar locks, still with reduced motion
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: motionStill(context) ? 1 : 0.4, end: 1),
           duration: kHouseTime,
@@ -1374,7 +1374,7 @@ class MaskChip extends StatelessWidget {
             key: const ValueKey('busy'),
             width: 14,
             height: 14,
-            // a ring that fills as it goes; with less movement it never
+            // a ring that fills as it goes; with reduced motion it never
             // spins, even before it knows how far it is
             child: CircularProgressIndicator(
               strokeWidth: 1.6,

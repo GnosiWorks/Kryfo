@@ -1460,7 +1460,7 @@ class _ChatScreenState extends State<ChatScreen>
   Object? _devSeen;
 
   // who vouched, as we know them. only accepted contacts come back, so a
-  // voucher we deleted since simply stops being named.
+  // voucher we deleted since is no longer named.
   Future<void> _loadVouches() async {
     final vs = await session.vouchesFor(widget.peerHaloId);
     if (!mounted) return;
@@ -1563,7 +1563,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   // online, a failed send goes again on its own: half a minute apart, six
   // goes, then it is shown as failed. the reconnect retry below covers the
-  // offline case; this covers a route that was simply slow or flaky.
+  // offline case; this covers a route that was slow or flaky.
   void _autoRetryTick() {
     if (!mounted || _sealing > 0 || _cannotSend()) return;
     for (final m in _messages) {
@@ -9039,7 +9039,7 @@ class _Composer extends StatelessWidget {
                             ),
                           ),
                         );
-                  // with less movement, a crossfade and nothing that grows
+                  // with reduced motion, a crossfade and nothing that grows
                   return AnimatedSwitcher(
                     duration: Duration(milliseconds: still ? 150 : 200),
                     switchInCurve: still ? Curves.easeOut : Curves.easeOutBack,
@@ -9396,7 +9396,7 @@ class _CompareCard extends StatelessWidget {
 // a reinstall looks the same as an attack, so we prompt to verify instead
 // of alarming. ok dismisses until the key changes again.
 // the accept's word to them was tried as long as it is and never got
-// through: a calm line, and a way to send it again
+// through: a plain line, and a way to send it again
 class _AckLostLine extends StatelessWidget {
   final VoidCallback onRetry;
   const _AckLostLine({super.key, required this.onRetry});

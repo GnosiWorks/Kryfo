@@ -679,7 +679,7 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  // a breathing dot and the running time, so a long clip is no surprise
+  // a pulsing dot and the running time, so a long clip is no surprise
   Widget _recPill() {
     final t = _recSecs;
     final h = t ~/ 3600;

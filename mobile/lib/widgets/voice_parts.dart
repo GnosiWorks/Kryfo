@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pieces of a voice note: its wave, read once from the note's own
 // samples, and the bar that shows while one is recorded, with the mic's
-// level. nothing here moves while the app is away, and with less movement
+// level. nothing here moves while the app is away, and with reduced motion
 // nothing moves at all.
 import 'dart:async';
 import 'dart:io';
@@ -201,7 +201,7 @@ List<double>? voicePeaksNow(String path) => _waves[path];
 
 /// a note's wave. the played part is drawn in [played] from the start side,
 /// the rest in [rest]. bars rise out of the flat line once, when the wave
-/// is first known; a wave known from the start is simply there
+/// is first known; a wave known from the start shows at once
 class VoiceWave extends StatefulWidget {
   final List<double>? peaks;
   final double progress;
@@ -413,8 +413,8 @@ double micLevel(double dbfs) {
   return ((dbfs + 50) / 50).clamp(0.0, 1.0);
 }
 
-/// the red dot of a recording: it breathes while the mic is live and the
-/// app is in front, and is simply lit otherwise
+/// the red dot of a recording: it pulses while the mic is live and the
+/// app is in front, and stays lit otherwise
 class RecordDot extends StatefulWidget {
   final bool live;
   final Color color;

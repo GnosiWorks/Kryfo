@@ -275,7 +275,7 @@ class _Swatches extends StatelessWidget {
 
 // one atmosphere as a small round of itself: its gradient, its mood's tint
 // or its pattern, and null the default. the one in use wears an amber ring
-// a gap away and a tick that pop in on the house spring; with less movement
+// a gap away and a tick that pop in on the house spring; with reduced motion
 // they only fade
 class _Swatch extends StatelessWidget {
   final Atmo? atmo;

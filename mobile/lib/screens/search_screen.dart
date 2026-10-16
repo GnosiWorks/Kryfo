@@ -573,7 +573,7 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 /// home's door into search: a round button the field grows out of, and
-/// shrinks back into. with less movement the page only fades
+/// shrinks back into. with reduced motion the page only fades
 class SearchDoor extends StatelessWidget {
   final VoidCallback onTap;
   const SearchDoor({super.key, required this.onTap});
@@ -832,7 +832,7 @@ class _Field extends StatelessWidget {
 }
 
 // the kinds to look in. the amber pill slides from the kind that was on to
-// the one picked, on the house spring; with less movement it is simply there
+// the one picked, on the house spring. reduced motion: no animation
 class SearchFilters extends StatefulWidget {
   final SearchKind kind;
   final ValueChanged<SearchKind> onPick;
@@ -1159,7 +1159,7 @@ class _People extends StatelessWidget {
   final bool busy;
   // still asking past the wait a warm circuit takes
   final bool slow;
-  // tor cannot carry it: a calm line in place of a wait or an error
+  // tor cannot carry it: a plain line in place of a wait or an error
   final bool torDown;
   final List<PublicHandle> people;
   final PeopleError error;

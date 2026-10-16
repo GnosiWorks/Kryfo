@@ -4,7 +4,7 @@
 // key, so the room waits instead of taking messages that go nowhere. after
 // kRoomJoinWait it says the room is not answering, and offers to knock
 // again or leave. a creator who found no seat says so, and the room says it
-// is full. the waiting ring breathes on, still with less movement.
+// is full. the waiting ring pulses on, still with reduced motion.
 import 'dart:async';
 
 import 'package:flutter/material.dart';

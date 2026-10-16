@@ -63,7 +63,7 @@ class _DevAvatarState extends State<DevAvatar>
     super.didChangeDependencies();
     if (!widget.pop || !widget.tick || _popped) return;
     _popped = true;
-    // under the lock nobody sees it, and with less movement it simply is
+    // under the lock nobody sees it, and with reduced motion it shows at once
     if (devTickGuard.isLocked() || motionStill(context)) return;
     _c.value = 0;
     // after the row itself has come in

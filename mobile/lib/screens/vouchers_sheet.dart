@@ -97,7 +97,7 @@ class _VoucherRowState extends State<_VoucherRow> {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOut,
       child: AnimatedSlide(
-        // a fade alone with less movement
+        // a fade alone with reduced motion
         offset: Offset(0, motionStill(context) ? 0 : (1 - _t) * 0.1),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,

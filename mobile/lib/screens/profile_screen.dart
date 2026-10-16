@@ -88,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _glow() {
     if (_tier == SupporterTier.none || !mounted) return;
     if (MediaQuery.disableAnimationsOf(context)) return;
-    // three breaths out and back, ending where it started
+    // three pulses out and back, ending where it started
     _pulse.repeat(reverse: true, count: 6);
   }
 

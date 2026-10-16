@@ -44,13 +44,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
   // the step being moved to: it settles in while the one left fades out
   int _to = 0;
-  // steps already shown: coming back to one, it is simply there
+  // steps already shown: coming back to one, it shows without animation
   final _seen = <int>{0};
 
   void _go(int to) {
     if (to < 0 || to >= _steps) return;
     setState(() => _to = to);
-    // with less movement the step is simply there
+    // reduced motion: the step without animation
     if (MediaQuery.disableAnimationsOf(context)) {
       _ctrl.jumpToPage(to);
       return;
@@ -617,7 +617,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
     if (_shown) return;
     _shown = true;
     // the name writes itself in, the shine and the ring play twice, then
-    // rest. with less movement, or back on this step, it is simply there
+    // stop. reduced motion, or back on this step: no animation
     if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
       _reveal.value = 1;
       return;
@@ -785,7 +785,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
       scale: 0.97,
       onTap: _regenerate,
       child: AnimatedOpacity(
-        // with less movement nothing turns: the button dims while it works
+        // with reduced motion nothing turns: the button dims while it works
         opacity: _busy && still ? 0.5 : 1,
         duration: const Duration(milliseconds: 150),
         child: Container(
@@ -1065,7 +1065,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
 
 class _HaloRingPainter extends CustomPainter {
   final double sweep; // 0..1 of a full circle
-  final double glow; // 0..1 breath
+  final double glow; // 0..1 pulse
   _HaloRingPainter(this.sweep, this.glow);
   @override
   void paint(Canvas canvas, Size size) {
@@ -1514,7 +1514,7 @@ class _ShadeArtState extends State<_ShadeArt>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    // with less movement, or back on this step, it is simply there
+    // reduced motion, or back on this step: no animation
     if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
       _in.value = 1;
       return;

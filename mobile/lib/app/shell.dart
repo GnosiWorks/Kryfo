@@ -418,7 +418,7 @@ class _PressableState extends State<_Pressable> {
 
   @override
   Widget build(BuildContext context) {
-    // with less movement the press is felt, not seen
+    // with reduced motion the press is felt, not seen
     final still = MediaQuery.disableAnimationsOf(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

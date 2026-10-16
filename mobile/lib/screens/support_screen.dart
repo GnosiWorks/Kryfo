@@ -100,7 +100,7 @@ Future<bool> askMoveIntoChats(BuildContext context, String id) async {
   return true;
 }
 
-// the inbox on home, under requests. his phone only. the dot breathes
+// the inbox on home, under requests. his phone only. the dot pulses
 // while someone waits
 class SupportPin extends StatelessWidget {
   const SupportPin({super.key, required this.waiting, required this.onTap});

@@ -7966,7 +7966,7 @@ Future<void> burnIndex(DatabaseExecutor db) => db.execute(
 );
 
 // wrapped: one throw in a migration and the app never opens again. without
-// the table there is simply no developer row
+// the table there is no developer row
 Future<void> _devChatTables(Database db) async {
   try {
     await devChatTables(db);

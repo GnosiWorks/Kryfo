@@ -1419,7 +1419,7 @@ abstract class AppLocalizations {
   /// **'Says it is {shown}, a name someone here already goes by'**
   String scamShieldGivesUsedName(Object shown);
 
-  /// scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. calm, no exclamation mark
+  /// scam_shield.dart: the one line on a request the shield flagged: what it noticed (one of the scamShield lines), then what to do. plain, no exclamation mark
   ///
   /// In en, this message translates to:
   /// **'{noticed}. Don\'t send money or codes to people you haven\'t met.'**
@@ -6243,7 +6243,7 @@ abstract class AppLocalizations {
   /// **'Export without a passphrase?'**
   String get notesExportPlainTitle;
 
-  /// screens/notes_export_screen.dart. the calm warning for a file without a passphrase
+  /// screens/notes_export_screen.dart. the plain warning for a file without a passphrase
   ///
   /// In en, this message translates to:
   /// **'Anyone who gets this file can read it.'**
@@ -13173,7 +13173,7 @@ abstract class AppLocalizations {
   /// **'GIF'**
   String get gifBadge;
 
-  /// gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for less movement
+  /// gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for reduced motion
   ///
   /// In en, this message translates to:
   /// **'Play GIF'**
@@ -13695,7 +13695,7 @@ abstract class AppLocalizations {
   /// **'Each chat can change it in its menu'**
   String get settingsDisguiseByDefaultHint;
 
-  /// widgets/media_bubbles.dart: the calm line under a file that is an app installer (apk). Kryfo never installs it, only saves it
+  /// widgets/media_bubbles.dart: the plain line under a file that is an app installer (apk). Kryfo never installs it, only saves it
   ///
   /// In en, this message translates to:
   /// **'This is an app installer. Only install apps from people you trust.'**

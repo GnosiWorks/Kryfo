@@ -453,7 +453,7 @@ class _RoundCheckState extends State<_RoundCheck>
 }
 
 // a chosen row on its way out: it slides towards the start and folds away,
-// as an archived chat leaves home. with reduced motion it is simply gone
+// as an archived chat leaves home. with reduced motion it goes at once
 class _Leaving extends StatefulWidget {
   const _Leaving({
     super.key,

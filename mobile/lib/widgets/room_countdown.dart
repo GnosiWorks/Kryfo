@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // how long a burner room has left, in mono. ticks once a minute until the
-// last five minutes, then once a second. calm text until an hour is left,
+// last five minutes, then once a second. plain text until an hour is left,
 // amber under that, rose under five minutes. it sets no timer while the app
 // is away or a page covers it, and reads the clock afresh when it is back.
 import 'dart:async';

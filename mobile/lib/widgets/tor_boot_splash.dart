@@ -38,7 +38,7 @@ class _TorBootSplashState extends State<TorBootSplash>
   bool _still = false;
 
   // the hops light in turn while tor starts, the only time this screen is
-  // up. still with less movement
+  // up. still with reduced motion
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

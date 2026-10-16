@@ -12,7 +12,7 @@ class HomePin extends StatelessWidget {
   final IconData icon;
   final String title;
   final String line;
-  // beside the title: a dot that breathes while someone waits
+  // beside the title: a dot that pulses while someone waits
   final Widget? mark;
   final Widget? trailing;
   // an amber edge while it holds something new

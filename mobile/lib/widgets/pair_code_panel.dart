@@ -206,8 +206,8 @@ class _PairCodePanelState extends State<PairCodePanel> {
   Widget build(BuildContext context) {
     final still = motionStill(context);
     // the code settles in on the house spring as the card eases to its
-    // height, so the buttons under it move instead of jumping. with less
-    // movement it simply swaps
+    // height, so the buttons under it move instead of jumping. with reduced
+    // motion it swaps
     return EaseSize(
       child: AnimatedSwitcher(
         duration: still ? Duration.zero : kHouseTime,

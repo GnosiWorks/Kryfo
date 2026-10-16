@@ -101,7 +101,7 @@ class SecureLockStore implements LockStore {
 }
 
 // the engine's pin calls, behind a seam for tests. each runs on its own
-// isolate: scrypt takes a fifth of a second and the pad keeps breathing
+// isolate: scrypt takes a fifth of a second and the pad stays responsive
 abstract class PinEngine {
   Future<Map<String, dynamic>> calibrate();
   Future<String> newTable(int logN);

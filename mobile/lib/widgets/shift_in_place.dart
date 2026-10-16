@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a list row that glides to its new place instead of jumping. keyed rows keep
+// a list row that slides to its new place instead of jumping. keyed rows keep
 // their state across a reorder, so it remembers where it was drawn. positions
 // are read inside the scroll content so scrolling never counts as a move.
 import 'package:flutter/material.dart';
@@ -11,7 +11,7 @@ class ShiftInPlace extends StatefulWidget {
   final Widget child;
   final Duration duration;
   // the row's place in the list. a rebuild that keeps it costs nothing;
-  // only a change of place measures and glides.
+  // only a change of place measures and slides.
   final int index;
   const ShiftInPlace({
     super.key,

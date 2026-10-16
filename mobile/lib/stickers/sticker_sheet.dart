@@ -966,7 +966,7 @@ class StickerSheetState extends State<StickerSheet>
 
 enum _Kind { stickers, gifs, phone }
 
-// a tab's content comes up over a few frames, or at once with less movement
+// a tab's content comes up over a few frames, or at once with reduced motion
 class _FadeIn extends StatelessWidget {
   const _FadeIn({super.key, required this.child});
   final Widget child;

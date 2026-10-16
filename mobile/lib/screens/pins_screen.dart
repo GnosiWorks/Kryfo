@@ -302,7 +302,7 @@ class _PinsScreenState extends State<PinsScreen> {
 }
 
 // a header that opens to the rows under it. the rows grow in with the
-// height; with reduced motion they are simply there
+// height; with reduced motion they show at once
 class _Advanced extends StatelessWidget {
   const _Advanced({
     required this.open,

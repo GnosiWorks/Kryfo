@@ -161,7 +161,7 @@ Future<bool> keepOwnGroupFile(String path, Future<bool> Function() save) async {
   return kept;
 }
 
-// a group gone from here closes its screen. in front it simply goes; under
+// a group gone from here closes its screen. in front it goes at once; under
 // other screens only when this phone was taken out, since a leave from the
 // info screen pops both itself and one more pop would close the app.
 // [above] is what stands over it, nearest first: what it opened goes with
@@ -4514,7 +4514,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 }
 
-/// in place of the composer once the group has ended: what it is, calmly.
+/// in place of the composer once the group has ended: what it is.
 /// its colours are read again on a theme switch, const as it is
 class GroupEndedBar extends StatelessWidget {
   const GroupEndedBar({super.key});

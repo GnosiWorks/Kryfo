@@ -403,7 +403,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
 }
 
 // a new answer field grows in from nothing, once, and one taken out folds
-// back into nothing before it goes. with less movement both are at once
+// back into nothing before it goes. with reduced motion both are at once
 class _Grow extends StatefulWidget {
   final bool grown;
   final VoidCallback onGrown;
@@ -477,7 +477,7 @@ class _GrowState extends State<_Grow> with SingleTickerProviderStateMixin {
 }
 
 // a small control that pops in on the house spring and shrinks away;
-// with less movement it only fades
+// with reduced motion it only fades
 class _PopIn extends StatelessWidget {
   final bool shown;
   final Widget child;

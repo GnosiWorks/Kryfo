@@ -207,7 +207,7 @@ class _BreathingDotState extends State<_BreathingDot>
       _c.stop();
       _c.value = 0;
     } else if (!_breathed) {
-      // two breaths as the tab opens, then it rests lit
+      // two pulses as the tab opens, then it stays lit
       _breathed = true;
       _c.repeat(reverse: true, count: 4);
     }

@@ -291,6 +291,6 @@ class HaloApp extends StatelessWidget {
   }
 }
 
-// true when the phone asks for less movement. widgets check this before
+// true when the phone asks for reduced motion. widgets check this before
 // running anything decorative.
 bool reduceMotion(BuildContext c) => MediaQuery.of(c).disableAnimations;

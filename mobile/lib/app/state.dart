@@ -4608,7 +4608,7 @@ class AppState extends ChangeNotifier {
   }
 
   // the first fill of the search index for a history from before it: a
-  // batch, a breath, the next, so the app never waits on it. each container
+  // batch, a pause, the next, so the app never waits on it. each container
   // fills its own index, the vault's only while it is open
   ({int at, int to}) _liveFill = (at: 0, to: 0);
   ({int at, int to}) _vaultFill = (at: 0, to: 0);
@@ -6015,7 +6015,7 @@ class AppState extends ChangeNotifier {
   ].any((s) => s.$1 <= at && (s.$2 == null || s.$2! > at));
 
   // what came for the hidden chats while the vault was shut, oldest first:
-  // a batch, a breath, the next. each goes into the vault as if it had just
+  // a batch, a pause, the next. each goes into the vault as if it had just
   // arrived, and its row after it. if the vault closes part way, the rest
   // wait for the next time
   bool _unsealing = false;
@@ -9872,7 +9872,7 @@ class AppState extends ChangeNotifier {
         }
       });
     }
-    // poll bootstrap so the kryfo can breathe while the listener warms up.
+    // poll bootstrap so the app is not held up while the listener warms up.
     // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
     var ticks = 0;

@@ -66,8 +66,8 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
     widget.onChanged(_choice);
   }
 
-  // a new face pops in over the last on the house curve; with less
-  // movement it only fades
+  // a new face pops in over the last on the house curve; with reduced
+  // motion it only fades
   Widget _preview(String id, bool still) {
     return AnimatedSwitcher(
       duration: Duration(milliseconds: still ? 160 : 300),

@@ -59,8 +59,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // one breath in as the pad comes up, then it rests: a pad left up must
-    // not keep drawing. still with less movement
+    // one pulse as the pad comes up, then it stops: a pad left up must
+    // not keep drawing. still with reduced motion
     if (MediaQuery.disableAnimationsOf(context)) {
       _breath
         ..stop()
@@ -209,7 +209,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [
-          // a slow amber breath behind the wordmark, like the reveal. one
+          // a slow amber pulse behind the wordmark, like the reveal. one
           // gradient, painted once; only its opacity moves, on the compositor
           Positioned.fill(
             child: RepaintBoundary(

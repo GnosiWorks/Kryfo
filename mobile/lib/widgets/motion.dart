@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // shared motion: the house spring, the tor warmup graph, send pills, typing,
-// cursor and breath.
+// cursor and the status dot.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -69,7 +69,7 @@ enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
 
-// the shared screen transition: a short rise and fade. with less movement
+// the shared screen transition: a short rise and fade. with reduced motion
 // only the fade. one shape either way, so a page open when the setting
 // flips keeps its state
 Route<T> haloRoute<T>(Widget page) {
@@ -138,7 +138,7 @@ int parseRouteGen(String raw) {
 // ---- tor warmup graph ----
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
 // tor progresses, the active onion glows with expanding rings, and on
-// REACHABLE everything turns green and breathes in sequence.
+// reachable everything turns green and pulses in sequence.
 
 class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
@@ -565,7 +565,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
     if (isActive || isLit || green) {
       double breathOp = 1.0;
       if (green) {
-        // breath in sequence, phase per onion
+        // pulse in sequence, phase per onion
         final phase = (t + i * 0.075) % 1.0;
         breathOp = 0.55 + 0.45 * (math.sin(phase * 2 * math.pi) * 0.5 + 0.5);
       }
@@ -1020,7 +1020,7 @@ class _TypingDotsState extends State<TypingDots>
 class BreathDot extends StatefulWidget {
   final Color color;
   final double size;
-  // how many breaths before it rests, full. null breathes for as long as
+  // how many pulses before it stops, full. null pulses for as long as
   // it is on screen
   final int? breaths;
   const BreathDot({

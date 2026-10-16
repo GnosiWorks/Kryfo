@@ -2,8 +2,8 @@
 // a row that takes a swipe either way for an action. what the swipe will do
 // is drawn behind it: the glyph grows with the drag, its round fills once
 // the swipe has gone far enough, with a click, and its word shows under it.
-// the row always slides back; the action says what came of it. with less
-// movement the glyph is simply there and only its round changes.
+// the row always slides back; the action says what came of it. with reduced
+// motion the glyph shows at once and only its round changes.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

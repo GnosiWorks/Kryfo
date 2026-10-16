@@ -850,7 +850,7 @@ class _Step extends StatelessWidget {
 }
 
 // a step's number, or its tick once done: the tick pops in on the house
-// spring. simply swaps with less movement
+// spring. reduced motion: it swaps
 class _StepMark extends StatelessWidget {
   final String n;
   final bool done;

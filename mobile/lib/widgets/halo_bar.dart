@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the house progress bar. a known amount glides to its new value; an
+// the house progress bar. a known amount animates to its new value; an
 // unknown one is a short warm light moving along the track.
 import 'package:flutter/material.dart';
 

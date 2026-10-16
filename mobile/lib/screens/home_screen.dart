@@ -320,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // a tab coming into view slides in from the side of the bar it lies on,
-// fading up. with less movement it is simply there
+// fading up. reduced motion: no animation
 class _Arrive extends StatefulWidget {
   final bool on;
   // 1: the tab picked lies towards the end of the bar, so it comes in from
@@ -794,9 +794,9 @@ class _HomeHead extends StatelessWidget {
   }
 }
 
-// one card over the list: a breathing dot and its title, a line, and what
+// one card over the list: a pulsing dot and its title, a line, and what
 // can be done. it opens its height as it comes, sliding the list down under
-// it, and folds away when it goes. simply there with less movement
+// it, and folds away when it goes. no animation with reduced motion
 class _HomeCard extends StatelessWidget {
   final bool show;
   // the card's own key while shown, so two cards never swap for each other
@@ -1572,7 +1572,7 @@ class _EmptyState extends StatefulWidget {
 
 class _EmptyStateState extends State<_EmptyState>
     with SingleTickerProviderStateMixin {
-  // the ring breathes out twice as the page arrives, then rests: nothing
+  // the ring pulses twice as the page arrives, then stops: nothing
   // on an empty home keeps moving while it waits
   late final AnimationController _ring = AnimationController(
     vsync: this,
@@ -1769,7 +1769,7 @@ class _Item {
 }
 
 // the chat list: groups under their heading, chats under theirs. a row that
-// is new grows in, one that goes folds away, and one that moves glides to
+// is new grows in, one that goes folds away, and one that moves slides to
 // its new place (ShiftInPlace). the first build, and anything that changes
 // under the lock, just is.
 class _ContactList extends StatefulWidget {
@@ -1867,7 +1867,7 @@ class _ContactListState extends State<_ContactList> {
             child: _DevSwipeRow(d: d, onTap: () => widget.onOpenDev(d.chatId)),
           )
         : _SwipeRow(c: c!, onTap: () => widget.onTap(c.haloId));
-    // keyed, so a row that moves up on a new message glides there
+    // keyed, so a row that moves up on a new message slides there
     return ShiftInPlace(
       key: ValueKey(i.key),
       index: index,

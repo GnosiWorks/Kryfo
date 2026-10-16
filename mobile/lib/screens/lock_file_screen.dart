@@ -772,8 +772,8 @@ class _LockedView extends StatelessWidget {
 }
 
 // the padlock on a finished file: it pops in and its shackle snaps shut, or
-// springs open on a file just opened. felt once as it lands; simply there
-// with less movement
+// springs open on a file just opened. one haptic tap as it lands; no
+// animation with reduced motion
 class LockSnap extends StatelessWidget {
   final bool open;
   const LockSnap({super.key, this.open = false});

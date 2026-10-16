@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a soft amber ring breathing behind its child, shared by the empty states so
+// a soft amber ring pulsing behind its child, shared by the empty states so
 // they match
 import 'package:flutter/material.dart';
 
@@ -29,8 +29,8 @@ class _BreathingRingState extends State<BreathingRing>
   );
   bool _breathed = false;
 
-  // three breaths as it comes in, then it rests: an open empty page must not
-  // keep drawing. still with less movement
+  // three pulses as it comes in, then it stops: an open empty page must not
+  // keep drawing. still with reduced motion
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

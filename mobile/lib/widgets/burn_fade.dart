@@ -27,7 +27,7 @@ class BurnFade extends StatelessWidget {
 
 /// the flame beside a timed message's countdown. while its clock waits for
 /// the message to be read it rests low and small, and it kindles as the
-/// count starts. with less movement it only brightens
+/// count starts. with reduced motion it only brightens
 class BurnFlame extends StatelessWidget {
   final bool waiting;
   final Widget child;
@@ -102,7 +102,7 @@ Widget _stillFade(Widget child) => TweenAnimationBuilder<double>(
 );
 
 /// the row of a message leaving a chat: it waits [after] for the bubble's
-/// burn, then folds shut so the messages around it glide together
+/// burn, then folds shut so the messages around it close up
 class LeaveFold extends StatelessWidget {
   final bool leaving;
   final Duration after;

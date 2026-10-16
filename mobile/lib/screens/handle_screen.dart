@@ -513,7 +513,7 @@ class _ClaimedCardState extends State<_ClaimedCard> {
   }
 }
 
-// a registry call that is taking its time, said calmly. it opens its room
+// a registry call that is taking its time. it opens its room
 // and fades in, and folds away when the answer comes
 class _SlowLine extends StatelessWidget {
   final bool show;
@@ -583,7 +583,7 @@ class _Availability extends StatelessWidget {
         ),
       ),
     );
-    // with less movement the room is simply there
+    // reduced motion: the room without animation
     if (motionStill(context)) return line;
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),

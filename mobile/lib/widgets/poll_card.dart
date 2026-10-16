@@ -512,7 +512,7 @@ class _PickRow extends StatelessWidget {
   }
 }
 
-// after a vote: the answer, its share, and a bar that glides to it
+// after a vote: the answer, its share, and a bar that animates to it
 class _ResultRow extends StatelessWidget {
   final String text;
   final double share;
@@ -842,7 +842,7 @@ class _VotersSheet extends StatelessWidget {
 
 /// words holding a number that roll to their next value instead of
 /// swapping: up as the number grows, down as it shrinks. a plain fade with
-/// less movement
+/// reduced motion
 class RollText extends StatefulWidget {
   final String text;
   // what the words count, to tell up from down

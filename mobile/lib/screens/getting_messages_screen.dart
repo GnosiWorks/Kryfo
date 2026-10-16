@@ -262,7 +262,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
                 child: Row(
                   children: [
-                    // it breathes only while tor is on its way, and holds
+                    // it pulses only while tor is on its way, and holds
                     // still once live
                     if (!status.live && connecting)
                       BreathDot(color: HaloColors.amber, size: 6)
@@ -330,7 +330,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ),
                 ),
               ),
-              // some registration the relay keeps refusing: said calmly,
+              // some registration the relay keeps refusing: a plain line,
               // the check-ins carry those chats meanwhile
               Unfold(
                 open: mode == DeliveryMode.helper && appState.helperRefused,

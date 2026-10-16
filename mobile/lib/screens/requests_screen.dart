@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // message requests from people not in your contacts. accept, decline or
 // block on the card, or tap it to read the conversation first. an answered
-// card folds away and the ones under it glide up.
+// card folds away and the ones under it move up.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
