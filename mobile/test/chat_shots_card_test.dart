@@ -188,9 +188,14 @@ void main() {
     final src = File('lib/main.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(83));
-    final at = src.indexOf('if (oldV < 83) {');
-    expect(at, greaterThan(0));
-    expect(src.substring(at, at + 120), contains('await shotsColumns(db);'));
+    // the step that adds them runs on a file at 82 or before, and a test
+    // build's file at 81 to 84 takes it again
+    final step = RegExp(
+      r'if \(oldV < (\d+)\) \{[^}]*await shotsColumns\(db\);',
+    ).firstMatch(src);
+    expect(step, isNotNull);
+    expect(int.parse(step!.group(1)!), greaterThanOrEqualTo(83));
+    final at = step.start;
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(src)) {
       if (int.parse(m.group(1)!) < 83) expect(m.start, lessThan(at));
     }
