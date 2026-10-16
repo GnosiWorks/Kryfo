@@ -3018,16 +3018,17 @@ final _calls = <_Call>[
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
   ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
-  ('bridgesRecommended', [], (l) => l.bridgesRecommended),
-  ('torBootSplashTwoWaysAround', [], (l) => l.torBootSplashTwoWaysAround),
-  ('torBootSplashAutoLine', [], (l) => l.torBootSplashAutoLine),
-  ('torBootSplashRelayLine', ["Tor", "IP"], (l) => l.torBootSplashRelayLine),
-  ('onboardingAutoFindsAWay', [], (l) => l.onboardingAutoFindsAWay),
   (
-    'onboardingAboutASecondSkipsTor',
-    ["Tor"],
-    (l) => l.onboardingAboutASecondSkipsTor,
+    'torBootSplashStartThroughABridge',
+    [],
+    (l) => l.torBootSplashStartThroughABridge,
   ),
+  (
+    'torBootSplashNeverTriesTorPlainly',
+    ["Kryfo", "Tor"],
+    (l) => l.torBootSplashNeverTriesTorPlainly,
+  ),
+  ('onboardingAutoFindsAWay', [], (l) => l.onboardingAutoFindsAWay),
   ('supportTitle', [], (l) => l.supportTitle),
   ('supportWaiting', [], (l) => l.supportWaiting(0)),
   ('supportWaiting', [], (l) => l.supportWaiting(1)),
@@ -3166,19 +3167,9 @@ void main() {
       ((l) => l.bridgesUseThisBridge, '使用这个网桥'),
       ((l) => l.bridgesAskTorProject, '询问 Tor 项目'),
     ],
-    'fa': [
-      ((l) => l.bridgesRecommended, 'پیشنهادی'),
-      (
-        (l) => l.torBootSplashRelayLine,
-        'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.',
-      ),
-    ],
+    'fa': [((l) => l.torBootSplashStartThroughABridge, 'شروع از راه یک پل')],
     'de': [
-      ((l) => l.torBootSplashTwoWaysAround, 'Zwei Wege um die Sperre herum'),
-      (
-        (l) => l.onboardingAboutASecondSkipsTor,
-        'Etwa eine Sekunde, ganz ohne Tor.',
-      ),
+      ((l) => l.torBootSplashStartThroughABridge, 'Über eine Brücke starten'),
     ],
     'zh_Hant': [
       ((l) => l.bridgesAskTorProject, '詢問 Tor 專案'),

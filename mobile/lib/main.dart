@@ -13495,7 +13495,11 @@ class AppState extends ChangeNotifier {
   }
 
   @visibleForTesting
-  set sendModeForTest(String m) => _sendMode = _engineMode = m;
+  set sendModeForTest(String m) {
+    _sendMode = _engineMode = m;
+    // a switch left waiting by an earlier test never completes
+    _modeQueue = Future.value();
+  }
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
@@ -14947,14 +14951,9 @@ class AppState extends ChangeNotifier {
     await _bridgeWrite('bridge_mode', b.choice.id);
   }
 
-  /// the first-run answer: connect as usual, or tor is blocked here and
-  /// automatic starts without trying it
-  // relay was picked on the first-run question: the send step offers it
-  bool _firstRunRelay = false;
-  bool get firstRunRelay => _firstRunRelay;
-
-  Future<void> pickFirstRun({required bool risky, bool relay = false}) async {
-    _firstRunRelay = relay;
+  /// the first-run answer: connect as usual, or tor is blocked or watched
+  /// here and automatic starts without trying it
+  Future<void> pickFirstRun({required bool risky}) async {
     _bridge = _bridge.copyWith(skipDirect: risky);
     await _writeBridgeSetup(_bridge);
     await _bridgeDelete('bridge_fresh');

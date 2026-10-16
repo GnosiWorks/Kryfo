@@ -3803,9 +3803,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingAboutASecondWorks => '大约一秒。在 tor 被封锁的地方也能用。';
 
   @override
-  String get onboardingAboutASecondSkipsTor => '大约一秒，不经过 Tor。';
-
-  @override
   String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
 
   @override
@@ -6602,7 +6599,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingYet => '暂无';
 
   @override
-  String get torBootSplashIfTorIsBlocked => '如果你那里封锁了 Tor，Kryfo 可以改为通过网桥启动。';
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那里 Tor 被封锁或监控，Kryfo 可以改为通过网桥启动。';
 
   @override
   String get bridgesScanACode => '扫码';
@@ -6614,20 +6612,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
-  String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁';
+  String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁或监控';
 
   @override
-  String get torBootSplashRelayLine =>
-      '更快，不经过 Tor。我们的中继能看到你的 IP 地址，但永远看不到你说了什么。';
+  String get torBootSplashStartThroughABridge => '通过网桥启动';
 
   @override
-  String get torBootSplashAutoLine => '自己找到绕过封锁的方法，需要时通过网桥。';
-
-  @override
-  String get torBootSplashTwoWaysAround => '两种绕过封锁的方式';
-
-  @override
-  String get bridgesRecommended => '推荐';
+  String get torBootSplashNeverTriesTorPlainly =>
+      '在这里，Kryfo 绝不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -11706,9 +11698,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
 
   @override
-  String get onboardingAboutASecondSkipsTor => '大約一秒，不經過 Tor。';
-
-  @override
   String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
 
   @override
@@ -14504,7 +14493,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingYet => '還沒有';
 
   @override
-  String get torBootSplashIfTorIsBlocked => '如果你那裡封鎖了 Tor，Kryfo 可以改為透過橋接啟動。';
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那裡 Tor 被封鎖或監控，Kryfo 可以改為透過橋接啟動。';
 
   @override
   String get bridgesScanACode => '掃描 QR 碼';
@@ -14516,20 +14506,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
-  String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖';
+  String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖或監控';
 
   @override
-  String get torBootSplashRelayLine =>
-      '更快，不經過 Tor。我們的中繼看得到你的 IP 位址，但永遠看不到你說了什麼。';
+  String get torBootSplashStartThroughABridge => '透過橋接啟動';
 
   @override
-  String get torBootSplashAutoLine => '自己找到繞過封鎖的方法，需要時透過橋接。';
-
-  @override
-  String get torBootSplashTwoWaysAround => '兩種繞過封鎖的方式';
-
-  @override
-  String get bridgesRecommended => '推薦';
+  String get torBootSplashNeverTriesTorPlainly =>
+      '在這裡，Kryfo 絕不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';

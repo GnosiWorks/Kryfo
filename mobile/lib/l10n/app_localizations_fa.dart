@@ -3978,10 +3978,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'حدود یک ثانیه. جایی که tor مسدود است هم کار می‌کند.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'حدود یک ثانیه، و از Tor نمی‌گذرد.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
 
@@ -6899,7 +6895,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'اگر جایی که هستید Tor مسدود است، Kryfo می‌تواند به‌جایش از راه یک پل شروع کند.';
+      'اگر جایی که هستید Tor مسدود یا زیر نظر است، Kryfo می‌تواند به‌جایش از راه یک پل شروع کند.';
 
   @override
   String get bridgesScanACode => 'اسکن کد';
@@ -6911,21 +6907,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'رفتن به حالت خودکار';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود است';
+  String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود یا زیر نظر است';
 
   @override
-  String get torBootSplashRelayLine =>
-      'سریع‌تر است و از Tor نمی‌گذرد. رله‌ی ما نشانی IP شما را می‌بیند، ولی هرگز حرف‌هایتان را نه.';
+  String get torBootSplashStartThroughABridge => 'شروع از راه یک پل';
 
   @override
-  String get torBootSplashAutoLine =>
-      'خودش راهی برای دور زدن مسدودسازی پیدا می‌کند و اگر لازم باشد از یک پل کمک می‌گیرد.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'دو راه برای دور زدن مسدودسازی';
-
-  @override
-  String get bridgesRecommended => 'پیشنهادی';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'این‌جا Kryfo هرگز Tor را مستقیم امتحان نمی‌کند. خودش پلی پیدا می‌کند که کار کند، یا می‌توانید در گام بعد پل خودتان را انتخاب کنید.';
 
   @override
   String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';

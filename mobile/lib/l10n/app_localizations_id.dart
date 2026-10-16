@@ -3964,10 +3964,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Sekitar satu detik. Tetap jalan di tempat tor diblokir.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'Sekitar satu detik, dan tanpa Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Otomatis mencari sendiri jalan melewati blokir.';
 
@@ -6887,7 +6883,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Kalau Tor diblokir di tempatmu, Kryfo bisa mulai lewat jembatan.';
+      'Kalau Tor diblokir atau diawasi di tempatmu, Kryfo bisa mulai lewat jembatan.';
 
   @override
   String get bridgesScanACode => 'Pindai kode';
@@ -6899,21 +6895,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor diblokir di sini';
+  String get torBootSplashTorIsBlockedHere =>
+      'Tor diblokir atau diawasi di sini';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Lebih cepat dan tanpa Tor. Relay kami melihat alamat IP-mu, tidak pernah isi obrolanmu.';
+  String get torBootSplashStartThroughABridge => 'Mulai lewat jembatan';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Mencari sendiri jalan melewati blokir, lewat jembatan bila perlu.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Dua cara melewati blokir';
-
-  @override
-  String get bridgesRecommended => 'Disarankan';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Di sini Kryfo tidak pernah mencoba Tor secara langsung. Kryfo mencari jembatan yang berfungsi, atau kamu bisa memilih sendiri setelah ini.';
 
   @override
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';

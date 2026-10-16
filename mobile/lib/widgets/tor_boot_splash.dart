@@ -285,13 +285,12 @@ class _TorBootSplashState extends State<TorBootSplash>
       HaloGhostButton(
         label: l10n.torBootSplashTorIsBlockedHere,
         onTap: () async {
-          // automatic first and picked already, relay next. closed without
-          // an answer, the question stays
+          // bridges only, automatic picked. closed without an answer, the
+          // question stays
           final nav = Navigator.of(context);
-          final way = await showBlockedStartSheet(context);
-          if (way == null) return;
-          await appState.pickFirstRun(risky: true, relay: way == 'relay');
-          if (way == 'auto') nav.push(haloRoute(const BridgesScreen()));
+          if (await showBlockedStartSheet(context) != true) return;
+          await appState.pickFirstRun(risky: true);
+          nav.push(haloRoute(const BridgesScreen()));
         },
       ),
     ],

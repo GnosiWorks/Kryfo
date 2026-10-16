@@ -6285,12 +6285,6 @@ abstract class AppLocalizations {
   /// **'About a second. Works where tor is blocked.'**
   String get onboardingAboutASecondWorks;
 
-  /// screens/onboarding_screen.dart: on the Relay card when the person said Tor is blocked at the start
-  ///
-  /// In en, this message translates to:
-  /// **'About a second, and it skips Tor.'**
-  String get onboardingAboutASecondSkipsTor;
-
   /// screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start
   ///
   /// In en, this message translates to:
@@ -11076,7 +11070,7 @@ abstract class AppLocalizations {
   /// widgets/tor_boot_splash.dart
   ///
   /// In en, this message translates to:
-  /// **'If Tor is blocked where you are, Kryfo can start through a bridge instead.'**
+  /// **'If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.'**
   String get torBootSplashIfTorIsBlocked;
 
   /// screens/bridges_screen.dart
@@ -11100,32 +11094,20 @@ abstract class AppLocalizations {
   /// widgets/tor_boot_splash.dart
   ///
   /// In en, this message translates to:
-  /// **'Tor is blocked here'**
+  /// **'Tor is blocked or watched here'**
   String get torBootSplashTorIsBlockedHere;
 
-  /// screens/bridge_sheets.dart: under Relay, the second way to start where Tor is blocked
+  /// screens/bridge_sheets.dart: title of the sheet after Tor is blocked or watched here on a new install's first start
   ///
   /// In en, this message translates to:
-  /// **'Faster, and it skips Tor. Our relay sees your IP address, never what you say.'**
-  String get torBootSplashRelayLine;
+  /// **'Start through a bridge'**
+  String get torBootSplashStartThroughABridge;
 
-  /// screens/bridge_sheets.dart: under Automatic, the first and recommended way to start where Tor is blocked
+  /// screens/bridge_sheets.dart: under the title of the sheet after Tor is blocked or watched here; the next screen is the bridges screen
   ///
   /// In en, this message translates to:
-  /// **'Finds a way around the block by itself, through a bridge when it needs one.'**
-  String get torBootSplashAutoLine;
-
-  /// screens/bridge_sheets.dart: title of the sheet after Tor is blocked here on a new install's first start
-  ///
-  /// In en, this message translates to:
-  /// **'Two ways around the block'**
-  String get torBootSplashTwoWaysAround;
-
-  /// screens/bridge_sheets.dart, screens/onboarding_screen.dart: a small pill beside the way to start where Tor is blocked
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended'**
-  String get bridgesRecommended;
+  /// **'Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.'**
+  String get torBootSplashNeverTriesTorPlainly;
 
   /// screens/bridges_screen.dart
   ///

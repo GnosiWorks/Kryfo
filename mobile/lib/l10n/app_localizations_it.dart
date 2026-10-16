@@ -4012,9 +4012,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Circa un secondo. Funziona dove tor è bloccato.';
 
   @override
-  String get onboardingAboutASecondSkipsTor => 'Circa un secondo, e senza Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Automatico trova da solo un modo per aggirare il blocco.';
 
@@ -6958,7 +6955,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Se dove ti trovi Tor è bloccato, Kryfo può invece avviarsi tramite un bridge.';
+      'Se dove ti trovi Tor è bloccato o sorvegliato, Kryfo può invece avviarsi tramite un bridge.';
 
   @override
   String get bridgesScanACode => 'Scansiona un codice';
@@ -6970,21 +6967,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Passa ad Automatico';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Qui Tor è bloccato';
+  String get torBootSplashTorIsBlockedHere =>
+      'Qui Tor è bloccato o sorvegliato';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Più veloce e senza Tor. Il nostro relay vede il tuo indirizzo IP, mai quello che scrivi.';
+  String get torBootSplashStartThroughABridge => 'Avvia tramite un bridge';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Trova da solo un modo per aggirare il blocco, con un bridge se serve.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Due modi per aggirare il blocco';
-
-  @override
-  String get bridgesRecommended => 'Consigliato';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Qui Kryfo non prova mai Tor in chiaro. Trova da solo un bridge che funziona, oppure scegline uno tuo subito dopo.';
 
   @override
   String get bridgesTryingAnotherWay => 'Provo un\'altra strada…';

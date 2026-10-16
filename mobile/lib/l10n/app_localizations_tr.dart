@@ -3985,10 +3985,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
 
   @override
-  String get onboardingAboutASecondSkipsTor =>
-      'Yaklaşık bir saniye ve Tor’u atlar.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Otomatik, engeli aşmanın yolunu kendisi bulur.';
 
@@ -6911,7 +6907,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Bulunduğun yerde Tor engelliyse, Kryfo bunun yerine bir köprü üzerinden başlayabilir.';
+      'Bulunduğun yerde Tor engelliyse ya da izleniyorsa, Kryfo bunun yerine bir köprü üzerinden başlayabilir.';
 
   @override
   String get bridgesScanACode => 'Kod tara';
@@ -6923,21 +6919,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Otomatiğe geç';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor burada engelli';
+  String get torBootSplashTorIsBlockedHere =>
+      'Tor burada engelli ya da izleniyor';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Daha hızlı ve Tor’u atlar. Aktarıcımız IP adresini görür, ne yazdığını asla görmez.';
+  String get torBootSplashStartThroughABridge => 'Bir köprü üzerinden başla';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Engeli aşmanın yolunu kendisi bulur, gerekirse bir köprüyle.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Engeli aşmanın iki yolu';
-
-  @override
-  String get bridgesRecommended => 'Önerilen';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Kryfo burada Tor\'u asla doğrudan denemez. Çalışan bir köprüyü kendisi bulur ya da bir sonraki adımda kendi köprünü seçebilirsin.';
 
   @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';

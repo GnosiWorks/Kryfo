@@ -3392,7 +3392,7 @@ void main() {
     expect(l.bridgesRemoveBridgeN("<n>"), "Remove bridge <n>");
     expect(
       l.torBootSplashIfTorIsBlocked,
-      "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
+      "If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.",
     );
     expect(
       l.bridgesPasteTheLineThey,
@@ -3413,7 +3413,7 @@ void main() {
     );
     expect(l.bridgesWaitingForWifiSignIn, "Waiting for Wi-Fi sign-in");
     expect(l.bridgesOpenWifiSettings, "Open Wi-Fi settings");
-    expect(l.torBootSplashTorIsBlockedHere, "Tor is blocked here");
+    expect(l.torBootSplashTorIsBlockedHere, "Tor is blocked or watched here");
     expect(l.notesThisWeek, "This week");
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");
@@ -3490,23 +3490,14 @@ void main() {
     expect(l.supportMoveToInbox, "Move to inbox");
     expect(l.supportMovedToInbox, "Moved to inbox");
     expect(l.bridgesFindingAWayIn, "Finding a way in…");
-    expect(l.bridgesRecommended, "Recommended");
-    expect(l.torBootSplashTwoWaysAround, "Two ways around the block");
+    expect(l.torBootSplashStartThroughABridge, "Start through a bridge");
     expect(
-      l.torBootSplashAutoLine,
-      "Finds a way around the block by itself, through a bridge when it needs one.",
-    );
-    expect(
-      l.torBootSplashRelayLine,
-      "Faster, and it skips Tor. Our relay sees your IP address, never what you say.",
+      l.torBootSplashNeverTriesTorPlainly,
+      "Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.",
     );
     expect(
       l.onboardingAutoFindsAWay,
       "Automatic finds a way around the block by itself.",
-    );
-    expect(
-      l.onboardingAboutASecondSkipsTor,
-      "About a second, and it skips Tor.",
     );
     expect(l.pairCodeKeyNumber, "Key number");
     expect(l.pairCodeNumberDiffers, "The number is different");

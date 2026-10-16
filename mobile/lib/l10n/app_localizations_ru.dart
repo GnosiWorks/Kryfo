@@ -4072,9 +4072,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Около секунды. Работает там, где tor заблокирован.';
 
   @override
-  String get onboardingAboutASecondSkipsTor => 'Около секунды, и без Tor.';
-
-  @override
   String get onboardingAutoFindsAWay =>
       'Режим «Авто» сам находит способ обойти блокировку.';
 
@@ -7024,7 +7021,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Если там, где ты, Tor заблокирован, Kryfo может запуститься через мост.';
+      'Если там, где ты, Tor заблокирован или под наблюдением, Kryfo может запуститься через мост.';
 
   @override
   String get bridgesScanACode => 'Сканировать код';
@@ -7036,21 +7033,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
 
   @override
-  String get torBootSplashTorIsBlockedHere => 'Tor здесь заблокирован';
+  String get torBootSplashTorIsBlockedHere =>
+      'Tor здесь заблокирован или под наблюдением';
 
   @override
-  String get torBootSplashRelayLine =>
-      'Быстрее и без Tor. Наш ретранслятор видит твой IP-адрес, но никогда не видит, что ты пишешь.';
+  String get torBootSplashStartThroughABridge => 'Запуск через мост';
 
   @override
-  String get torBootSplashAutoLine =>
-      'Сам находит способ обойти блокировку, если нужно, через мост.';
-
-  @override
-  String get torBootSplashTwoWaysAround => 'Два способа обойти блокировку';
-
-  @override
-  String get bridgesRecommended => 'Рекомендуем';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'Здесь Kryfo никогда не пробует Tor напрямую. Он сам найдёт рабочий мост, или ты выберешь свой на следующем шаге.';
 
   @override
   String get bridgesTryingAnotherWay => 'Пробуем другой способ…';
