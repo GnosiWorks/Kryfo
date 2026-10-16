@@ -294,7 +294,7 @@ void main() {
     test('the status poll samples it in relay mode', () {
       final src = [
         'lib/app/state.dart',
-        'lib/main.dart',
+        'lib/app/dev_screen.dart',
       ].map((f) => File(f).readAsStringSync()).join('\n');
       final poll = src.substring(
         src.indexOf('Timer.periodic(const Duration(seconds: 1), (t) {'),
