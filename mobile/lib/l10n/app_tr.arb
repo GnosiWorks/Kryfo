@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "Sesi gizlemek için yeterli boş alan yoktu, bu yüzden not gönderilmedi",
   "voiceDisguising": "Ses gizleniyor",
   "voiceLockedNotSent": "Sesli mesajın gitmeden önce Kryfo kilitlendi, bu yüzden gönderilmedi",
+  "voiceNotSent": "Sesli mesajın gönderilmedi",
   "settingsDisguiseByDefault": "Sesimi varsayılan olarak gizle",
   "settingsDisguiseByDefaultHint": "Her sohbet bunu kendi menüsünden değiştirebilir",
   "fileInstallerLine": "Bu bir uygulama yükleyicisi. Uygulamaları yalnızca güvendiğin kişilerden yükle.",

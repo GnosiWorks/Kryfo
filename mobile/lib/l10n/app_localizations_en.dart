@@ -8244,6 +8244,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo locked before your voice note went out, so it was not sent';
 
   @override
+  String get voiceNotSent => 'Your voice note was not sent';
+
+  @override
   String get settingsDisguiseByDefault => 'Disguise my voice by default';
 
   @override

@@ -3485,6 +3485,7 @@ void main() {
       l.voiceLockedNotSent,
       "Kryfo locked before your voice note went out, so it was not sent",
     );
+    expect(l.voiceNotSent, "Your voice note was not sent");
     expect(l.settingsDisguiseByDefault, "Disguise my voice by default");
     expect(
       l.settingsDisguiseByDefaultHint,

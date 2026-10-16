@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "لم تكن هناك مساحة كافية لتمويه هذه الرسالة، لذا لم تُرسل",
   "voiceDisguising": "جارٍ التمويه",
   "voiceLockedNotSent": "قُفل Kryfo قبل أن تُرسل رسالتك الصوتية، لذا لم تُرسل",
+  "voiceNotSent": "لم تُرسل رسالتك الصوتية",
   "settingsDisguiseByDefault": "تمويه صوتي افتراضيًا",
   "settingsDisguiseByDefaultHint": "يمكن لكل محادثة تغييره من قائمتها",
   "fileInstallerLine": "هذا ملف لتثبيت تطبيق. لا تثبّت التطبيقات إلا من أشخاص تثق بهم.",

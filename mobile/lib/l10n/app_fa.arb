@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "فضای کافی برای تغییر صدای این پیام نبود، پس ارسال نشد",
   "voiceDisguising": "در حال تغییر صدا",
   "voiceLockedNotSent": "پیش از ارسال پیام صوتی شما Kryfo قفل شد، پس ارسال نشد",
+  "voiceNotSent": "پیام صوتی شما ارسال نشد",
   "settingsDisguiseByDefault": "تغییر صدای من به‌طور پیش‌فرض",
   "settingsDisguiseByDefaultHint": "هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد",
   "fileInstallerLine": "این فایلِ نصبِ یک برنامه است. برنامه‌ها را فقط از کسانی نصب کنید که به آن‌ها اعتماد دارید.",

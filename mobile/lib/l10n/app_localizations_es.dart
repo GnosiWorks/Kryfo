@@ -8316,6 +8316,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Kryfo se bloqueó antes de que saliera tu mensaje de voz, así que no se envió';
 
   @override
+  String get voiceNotSent => 'Tu mensaje de voz no se envió';
+
+  @override
   String get settingsDisguiseByDefault => 'Disfrazar mi voz por defecto';
 
   @override

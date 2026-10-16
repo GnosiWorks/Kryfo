@@ -8404,6 +8404,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo заблокировался до отправки голосового сообщения, поэтому оно не отправлено';
 
   @override
+  String get voiceNotSent => 'Голосовое сообщение не отправлено';
+
+  @override
   String get settingsDisguiseByDefault => 'Изменять мой голос по умолчанию';
 
   @override

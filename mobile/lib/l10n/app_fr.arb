@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "Il n’y avait pas assez d’espace pour déguiser cette note, elle n’a donc pas été envoyée",
   "voiceDisguising": "Déguisement en cours",
   "voiceLockedNotSent": "Kryfo s’est verrouillé avant l’envoi de votre message vocal, il n’a donc pas été envoyé",
+  "voiceNotSent": "Votre message vocal n’a pas été envoyé",
   "settingsDisguiseByDefault": "Déguiser ma voix par défaut",
   "settingsDisguiseByDefaultHint": "Chaque discussion peut le changer dans son menu",
   "fileInstallerLine": "C’est le fichier d’installation d’une appli. N’installez des applis que de personnes en qui vous avez confiance.",

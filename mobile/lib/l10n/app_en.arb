@@ -10397,6 +10397,10 @@
   "@voiceLockedNotSent": {
     "description": "said after the next unlock: the app locked while a voice note was still being disguised or saved, and the note was dropped, not sent"
   },
+  "voiceNotSent": "Your voice note was not sent",
+  "@voiceNotSent": {
+    "description": "a voice note this phone could not keep in its chat, so it was dropped and never sent"
+  },
   "settingsDisguiseByDefault": "Disguise my voice by default",
   "@settingsDisguiseByDefault": {
     "description": "settings: voice notes go out disguised in every chat that has not chosen for itself"

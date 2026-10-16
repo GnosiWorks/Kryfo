@@ -8339,7 +8339,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceLockedNotSent =>
-      'Kryfo wurde gesperrt, bevor deine Sprachnachricht rausging, daher wurde sie nicht gesendet';
+      'Kryfo wurde gesperrt, bevor deine Sprachnachricht gesendet werden konnte';
+
+  @override
+  String get voiceNotSent => 'Deine Sprachnachricht wurde nicht gesendet';
 
   @override
   String get settingsDisguiseByDefault =>

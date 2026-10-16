@@ -2463,11 +2463,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       // the bubble, the row and the wire all say when it was begun
       final writtenAt = m.when.millisecondsSinceEpoch;
+      // from here a lock takes it off the screen as one still being made
+      pending = m;
       final kept = await keepOwnGroupFile(
         dest.path,
-        () => appState.keepOwn(
-          group,
-          () => session.saveInGroup(
+        () => appState.keepOwn(group, () async {
+          // a lock while it waited for a move: nothing is written
+          if (locked) return false;
+          return session.saveInGroup(
             appState.sessionId,
             '',
             groupId: group,
@@ -2479,10 +2482,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             burnSecs: burn,
             writtenAt: writtenAt,
             home: home,
-          ),
-        ),
+          );
+        }),
       );
-      if (!kept) return _unkept(m);
+      // the file is shredded already
+      if (!kept && locked) return lockedOut(null);
+      if (!kept) {
+        say(l10n.voiceNotSent);
+        return _unkept(m);
+      }
       // left while it was made: the screen showing the group now hears of it
       if (!mounted) appState.chatChanged('group:$group');
       unawaited(

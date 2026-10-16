@@ -3506,14 +3506,17 @@ class _ChatScreenState extends State<ChatScreen>
         _scrollToEnd();
         HapticFeedback.lightImpact();
       }
+      // from here a lock takes it off the screen as one still being made
+      pending = msg;
       await _answerSupport();
       // the bubble, the row and the wire all say when it was begun
       final writtenAt = msg.when.millisecondsSinceEpoch;
       var kept = false;
       try {
-        kept = await appState.keepOwn(
-          peer,
-          () => session.saveInChat(
+        kept = await appState.keepOwn(peer, () async {
+          // a lock while it waited for a move: nothing is written
+          if (locked) return false;
+          return session.saveInChat(
             peer,
             home: home,
             msgUid: msgUid,
@@ -3526,14 +3529,17 @@ class _ChatScreenState extends State<ChatScreen>
             burnAt: msg.burnAt,
             burnSecs: msg.burnSecs,
             sent: 0,
-          ),
-        );
+          );
+        });
       } catch (e) {
         dlog('voice: row not kept (${e.runtimeType})');
       }
+      if (!kept && locked) return lockedOut(null, placed: filePath);
       if (!kept) {
         if (mounted) setState(() => _messages.remove(msg));
-        return shredFile(filePath);
+        await shredFile(filePath);
+        say(l10n.voiceNotSent);
+        return;
       }
       // the home row moves up on what you sent too
       unawaited(appState.refreshContacts());

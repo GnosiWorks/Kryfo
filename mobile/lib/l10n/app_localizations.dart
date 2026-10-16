@@ -13305,6 +13305,12 @@ abstract class AppLocalizations {
   /// **'Kryfo locked before your voice note went out, so it was not sent'**
   String get voiceLockedNotSent;
 
+  /// a voice note this phone could not keep in its chat, so it was dropped and never sent
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice note was not sent'**
+  String get voiceNotSent;
+
   /// settings: voice notes go out disguised in every chat that has not chosen for itself
   ///
   /// In en, this message translates to:

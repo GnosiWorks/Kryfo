@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "空間不足，無法為這則語音變聲，所以沒有送出",
   "voiceDisguising": "正在變聲",
   "voiceLockedNotSent": "Kryfo 在語音訊息送出前已鎖定，所以沒有送出",
+  "voiceNotSent": "你的語音訊息沒有送出",
   "settingsDisguiseByDefault": "預設給我的語音變聲",
   "settingsDisguiseByDefaultHint": "每個聊天都可以在自己的選單裡更改",
   "fileInstallerLine": "這是一個應用程式安裝檔。只安裝來自你信任的人的應用程式。",

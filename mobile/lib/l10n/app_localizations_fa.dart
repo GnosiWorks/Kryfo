@@ -8263,6 +8263,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیش از ارسال پیام صوتی شما Kryfo قفل شد، پس ارسال نشد';
 
   @override
+  String get voiceNotSent => 'پیام صوتی شما ارسال نشد';
+
+  @override
   String get settingsDisguiseByDefault => 'تغییر صدای من به‌طور پیش‌فرض';
 
   @override

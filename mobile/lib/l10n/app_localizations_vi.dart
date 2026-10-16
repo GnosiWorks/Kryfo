@@ -8238,6 +8238,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo đã khóa trước khi tin nhắn thoại được gửi đi nên tin chưa được gửi';
 
   @override
+  String get voiceNotSent => 'Tin nhắn thoại của bạn chưa được gửi';
+
+  @override
   String get settingsDisguiseByDefault => 'Mặc định đổi giọng của tôi';
 
   @override

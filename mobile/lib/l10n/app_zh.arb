@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "空间不足，无法为这条语音变声，所以没有发出",
   "voiceDisguising": "正在变声",
   "voiceLockedNotSent": "Kryfo 在语音消息发出前已锁定，所以没有发出",
+  "voiceNotSent": "你的语音消息没有发出",
   "settingsDisguiseByDefault": "默认给我的语音变声",
   "settingsDisguiseByDefaultHint": "每个聊天都可以在自己的菜单里更改",
   "fileInstallerLine": "这是一个应用安装包。只安装来自你信任的人的应用。",

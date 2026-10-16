@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "No había espacio suficiente para disfrazar esta nota, así que no se envió",
   "voiceDisguising": "Disfrazando",
   "voiceLockedNotSent": "Kryfo se bloqueó antes de que saliera tu mensaje de voz, así que no se envió",
+  "voiceNotSent": "Tu mensaje de voz no se envió",
   "settingsDisguiseByDefault": "Disfrazar mi voz por defecto",
   "settingsDisguiseByDefaultHint": "Cada chat puede cambiarlo en su menú",
   "fileInstallerLine": "Esto es el instalador de una app. Instala apps solo de personas en las que confíes.",

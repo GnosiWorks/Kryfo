@@ -32,12 +32,19 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        live,
+        session,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/picked.dart' show voiceFreeBytes;
-import 'package:kryfo/theme.dart' show haloToastOverlay;
+import 'package:kryfo/theme.dart' show haloToastOverlay, haloWhenOpen;
 import 'package:kryfo/media_progress.dart'
     show IncomingMediaBanner, mediaProgressEnd, mediaProgressStart;
-import 'package:kryfo/screens/chat_screen.dart' show grindPowForTest;
+import 'package:kryfo/screens/chat_screen.dart'
+    show ChatScreen, grindPowForTest;
 import 'package:kryfo/screens/contact_screen.dart' show ContactScreen;
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/session.dart';
@@ -90,6 +97,8 @@ class _ChatDb extends DevTestDb {
   @override
   Future<Map<String, Object?>?> getContact(String haloId) async =>
       _contact(haloId);
+  @override
+  Future<List<Map<String, Object?>>> requestsInbox() async => [];
   @override
   Future<bool> isAccepted(String haloId) async => _flag(haloId, 'accepted');
   @override
@@ -246,6 +255,21 @@ class _ChatDb extends DevTestDb {
     );
     return true;
   }
+}
+
+// a vault's database: every accepted chat in it is the vault's
+class _VaultDb extends _ChatDb {
+  _VaultDb(super.mem, super.container);
+
+  @override
+  Future<({Map<String, bool> people, Set<String> groups})> heldChats() async =>
+      (
+        people: {
+          for (final r in mem.rows('contacts'))
+            r['halo_id'] as String: r['accepted'] == 1,
+        },
+        groups: <String>{},
+      );
 }
 
 // when the chat was made: his first line is dated then
@@ -1249,6 +1273,243 @@ void main() {
       await _close(t);
     });
 
+    // the chat left once the note is handed over: sent is sent, and no
+    // player of its bubble is left starting up
+    Future<void> leave(WidgetTester t) async {
+      t.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await _beat(t);
+    }
+
+    // the save is waiting for the move to end
+    Future<void> saveWaits(WidgetTester t) => _io(
+      t,
+      () => appState.waitingOnMoveForTest == 1,
+      why: 'the save never waited for the move',
+    );
+
+    // frames run until the media folders of [cs] hold [n] files
+    Future<void> filesIn(WidgetTester t, List<HaloContainer> cs, int n) async {
+      for (var i = 0; i < 300; i++) {
+        final held = await t.runAsync(() async {
+          var k = 0;
+          for (final c in cs) {
+            k += (await c.mediaDir()).listSync().length;
+          }
+          return k;
+        });
+        if (held == n) return;
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      fail('the media folders never held $n files');
+    }
+
+    // what is said waits for [lifted], as it waits for the lock to lift
+    Completer<void> sayLater() {
+      final lifted = Completer<void>();
+      haloWhenOpen = (act) async {
+        await lifted.future;
+        await act();
+      };
+      addTearDown(() => haloWhenOpen = null);
+      return lifted;
+    }
+
+    // a move of [chat] that holds its save until the call handed back
+    void Function() moving(String chat) {
+      var on = true;
+      final end = appState.holdMoveForTest([chat]);
+      void stop() {
+        if (on) end();
+        on = false;
+      }
+
+      addTearDown(stop);
+      return stop;
+    }
+
+    testWidgets('a lock while a move holds its save: nothing kept or sent, '
+        'and said once the lock lifts', (t) async {
+      await _world(container: HaloContainer.decoy);
+      await _started(out: 1);
+      await _open(t);
+      final lifted = sayLater();
+      final end = moving(_dev);
+      await handOver(t);
+      await leave(t);
+      made.complete(disguised());
+      await filesIn(t, [HaloContainer.decoy, HaloContainer.everyday], 1);
+      await saveWaits(t);
+      // placed, and its save waits for the move
+      expect(await media(t), hasLength(1));
+      expect(mine(), isEmpty);
+      lockGuard.locking();
+      end();
+      await filesIn(t, [HaloContainer.decoy, HaloContainer.everyday], 0);
+      expect(mine(), isEmpty);
+      expect(await media(t), isEmpty);
+      expect(find.text(l10n.voiceLockedNotSent), findsNothing);
+      lifted.complete();
+      await _io(
+        t,
+        () => find.text(l10n.voiceLockedNotSent).evaluate().isNotEmpty,
+      );
+      expect(find.text(l10n.voiceLockedNotSent), findsOneWidget);
+      expect(find.text(l10n.voiceNotSent), findsNothing);
+      await t.pump(const Duration(seconds: 5));
+      await _close(t);
+    });
+
+    for (final back in [true, false]) {
+      final heard = back
+          ? 'the vault opened again hears it was not sent'
+          : 'the decoy without its vault hears nothing';
+      testWidgets(
+        'a hidden chat, locked while a move holds its save: nothing kept, '
+        'and $heard',
+        (t) async {
+          const hid = 'hidden-wreck-tone';
+          await _world(container: HaloContainer.decoy);
+          final decoy = session.primary;
+          final vaultMem = MemDb(except: {'devchat'});
+          await vaultMem.insert('contacts', {
+            'halo_id': hid,
+            'onion': 'o-$hid',
+            'xpub': 'x-$hid',
+            'nickname': 'Hanna',
+            'first_seen': 1,
+            'last_seen': 1,
+            'accepted': 1,
+          });
+          final vault = _VaultDb(vaultMem, HaloContainer.decoyVault);
+          useDatabasesForTest(live, await Session.withVault(decoy, vault));
+          expect(session.isHidden(hid), isTrue);
+          await devOpen(
+            t,
+            Builder(
+              builder: (context) => TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChatScreen(
+                      peerHaloId: hid,
+                      peerOnion: 'o-$hid',
+                      peerXPub: 'x-$hid',
+                      avatarSeed: hid,
+                      nickname: 'Hanna',
+                    ),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          );
+          await t.tap(find.text('open'));
+          await _beat(t);
+          final lifted = sayLater();
+          final end = moving(hid);
+          await handOver(t);
+          await leave(t);
+          made.complete(disguised());
+          await filesIn(t, [HaloContainer.decoyVault], 1);
+          await saveWaits(t);
+          final media = await t.runAsync(
+            () async => (await HaloContainer.decoyVault.mediaDir()).listSync(),
+          );
+          expect(media, hasLength(1));
+          // the lock shuts the vault
+          lockGuard.locking();
+          useDatabasesForTest(live, Session(decoy));
+          end();
+          await filesIn(t, [HaloContainer.decoyVault], 0);
+          await settle(t);
+          expect(vaultMem.rows('messages'), isEmpty);
+          expect(
+            _mem.rows('messages').where((r) => r['peer_id'] == hid),
+            isEmpty,
+          );
+          expect(
+            await t.runAsync(
+              () async =>
+                  (await HaloContainer.decoyVault.mediaDir()).listSync(),
+            ),
+            isEmpty,
+          );
+          if (back) {
+            useDatabasesForTest(live, await Session.withVault(decoy, vault));
+          }
+          lifted.complete();
+          if (back) {
+            await _io(
+              t,
+              () => find.text(l10n.voiceLockedNotSent).evaluate().isNotEmpty,
+            );
+          } else {
+            await settle(t);
+          }
+          expect(
+            find.text(l10n.voiceLockedNotSent),
+            back ? findsOneWidget : findsNothing,
+          );
+          expect(find.text(l10n.voiceNotSent), findsNothing);
+          await t.pump(const Duration(seconds: 5));
+          await _close(t);
+        },
+      );
+    }
+
+    testWidgets('a save refused: the person hears the note was not sent', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy);
+      await _started(out: 1);
+      await _open(t);
+      final end = moving(_dev);
+      await handOver(t);
+      await leave(t);
+      made.complete(disguised());
+      await filesIn(t, [HaloContainer.decoy, HaloContainer.everyday], 1);
+      await saveWaits(t);
+      // gone from the chats while the save waited
+      await _mem.update(
+        'contacts',
+        {'accepted': 0, 'archived': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_dev],
+      );
+      end();
+      // said once its file is shredded
+      await _io(t, () => find.text(l10n.voiceNotSent).evaluate().isNotEmpty);
+      expect(mine(), isEmpty);
+      expect(await media(t), isEmpty);
+      expect(find.text(l10n.voiceNotSent), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+      await _close(t);
+    });
+
+    testWidgets('a save refused once the chat is in another container: '
+        'nothing said there', (t) async {
+      await _world(container: HaloContainer.decoy);
+      await _started(out: 1);
+      await _open(t);
+      final end = moving(_dev);
+      await handOver(t);
+      await leave(t);
+      made.complete(disguised());
+      await filesIn(t, [HaloContainer.decoy, HaloContainer.everyday], 1);
+      await saveWaits(t);
+      final other = _ChatDb(_mem);
+      useDatabasesForTest(other, Session(other));
+      end();
+      await filesIn(t, [HaloContainer.decoy, HaloContainer.everyday], 0);
+      await settle(t);
+      expect(mine(), isEmpty);
+      expect(find.text(l10n.voiceNotSent), findsNothing);
+      await t.pump(const Duration(seconds: 5));
+      await _close(t);
+    });
+
     testWidgets('the chat left, a note with no room to disguise it says so '
         'where the person is', (t) async {
       final free = voiceFreeBytes;
@@ -1282,10 +1543,12 @@ void main() {
         whereArgs: [_dev],
       );
       made.complete(disguised());
-      await settle(t);
+      // said once its file is shredded
+      await _io(t, () => find.text(l10n.voiceNotSent).evaluate().isNotEmpty);
       expect(mine(), isEmpty);
       expect(await media(t), isEmpty);
       expect(find.text(l10n.voiceDisguising), findsNothing);
+      await t.pump(const Duration(seconds: 5));
       await _close(t);
     });
 

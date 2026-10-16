@@ -2171,6 +2171,7 @@
   "voiceNoRoomNotSent": "Ruang kosong tidak cukup untuk menyamarkan pesan ini, jadi tidak dikirim",
   "voiceDisguising": "Sedang disamarkan",
   "voiceLockedNotSent": "Kryfo terkunci sebelum pesan suaramu terkirim, jadi pesan itu tidak dikirim",
+  "voiceNotSent": "Pesan suaramu tidak dikirim",
   "settingsDisguiseByDefault": "Samarkan suaraku secara bawaan",
   "settingsDisguiseByDefaultHint": "Setiap obrolan bisa mengubahnya di menunya",
   "fileInstallerLine": "Ini file penginstal aplikasi. Instal aplikasi hanya dari orang yang kamu percaya.",

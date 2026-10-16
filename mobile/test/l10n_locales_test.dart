@@ -3052,6 +3052,7 @@ final _calls = <_Call>[
   ('voiceNoRoomNotSent', [], (l) => l.voiceNoRoomNotSent),
   ('voiceDisguising', [], (l) => l.voiceDisguising),
   ('voiceLockedNotSent', [], (l) => l.voiceLockedNotSent),
+  ('voiceNotSent', [], (l) => l.voiceNotSent),
   ('settingsDisguiseByDefault', [], (l) => l.settingsDisguiseByDefault),
   ('settingsDisguiseByDefaultHint', [], (l) => l.settingsDisguiseByDefaultHint),
   ('modesNotChanged', [], (l) => l.modesNotChanged),

@@ -8245,6 +8245,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo terkunci sebelum pesan suaramu terkirim, jadi pesan itu tidak dikirim';
 
   @override
+  String get voiceNotSent => 'Pesan suaramu tidak dikirim';
+
+  @override
   String get settingsDisguiseByDefault => 'Samarkan suaraku secara bawaan';
 
   @override

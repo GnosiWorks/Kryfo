@@ -8308,7 +8308,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceLockedNotSent =>
-      'O Kryfo foi bloqueado antes de sua mensagem de voz sair, então ela não foi enviada';
+      'O Kryfo foi bloqueado antes de seu áudio sair, então ele não foi enviado';
+
+  @override
+  String get voiceNotSent => 'Seu áudio não foi enviado';
 
   @override
   String get settingsDisguiseByDefault => 'Disfarçar minha voz por padrão';
