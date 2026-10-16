@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the accent is chrome only. a status or a warning (offline, connecting, a
-// key that changed, a route that needs a look) wears the warn yellow
-// whatever is picked, the chat header tells relay from tor by their own
-// colours, and words drawn in the accent take its text tone
+// key that changed, a route that needs a look, a scam warning, a plain
+// export) wears the warn yellow whatever is picked, the chat header tells
+// relay from tor by their own colours, and words drawn in the accent take
+// its text tone
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -48,9 +49,18 @@ void main() {
     for (final f in [
       'lib/widgets/key_held.dart',
       'lib/widgets/reconnect_valve.dart',
+      'lib/widgets/shield_note.dart',
     ]) {
       expect(_accent.hasMatch(_src(f)), isFalse, reason: f);
     }
+    expect(_src('lib/widgets/shield_note.dart'), contains('HaloColors.warn'));
+    final plain = _between(
+      _src('lib/screens/notes_export_screen.dart'),
+      'class _Warn extends StatelessWidget',
+      '\n}\n',
+    );
+    expect(_accent.hasMatch(plain), isFalse, reason: 'plain export warning');
+    expect(plain, contains('HaloColors.warn'));
     final main = _src('lib/main.dart');
     final pill = _between(
       main,

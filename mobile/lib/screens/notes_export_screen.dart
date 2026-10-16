@@ -730,7 +730,7 @@ class _Gone implements Exception {
   const _Gone();
 }
 
-// the plain file's warning: calm, in amber, where the fields were
+// the plain file's warning: calm, in the warn yellow, where the fields were
 class _Warn extends StatelessWidget {
   const _Warn({super.key, required this.text});
   final String text;
@@ -741,17 +741,17 @@ class _Warn extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 14, 12),
       decoration: BoxDecoration(
-        color: HaloColors.amber.withValues(alpha: 0.08),
+        color: HaloColors.warn.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: HaloColors.amber.withValues(alpha: 0.28),
+          color: HaloColors.warn.withValues(alpha: 0.28),
           width: 0.5,
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_open_rounded, size: 18, color: HaloColors.amber),
+          Icon(Icons.lock_open_rounded, size: 18, color: HaloColors.warn),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

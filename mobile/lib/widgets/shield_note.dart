@@ -47,7 +47,7 @@ class _ShieldNoteState extends State<ShieldNote> {
       child: NoticeBanner(
         glyph: NoticeGlyph.shield,
         text: widget.flag.line,
-        color: HaloColors.amber,
+        color: HaloColors.warn,
         textColor: HaloColors.text,
         delay: widget.delay,
         margin: widget.margin,
