@@ -99,9 +99,10 @@ put you in danger, read all of it.
   of the phone. the decoy pin and hidden chats are for a quick look, someone
   scrolling through a phone you were made to unlock. they are not built to
   survive a lab. a copy of the phone can show that Kryfo holds more than it
-  shows, and a short pin against such a copy can be guessed. android's storage and battery figures for the app are not hidden
-  either. if a forensic copy is the fear, the wipe pin is the tool, and not
-  having the data on the phone at all is better still.
+  shows, and a short pin against such a copy can be guessed. android's
+  storage and battery figures for the app are not hidden either. if a
+  forensic copy is the fear, the wipe pin is the tool, and not having the
+  data on the phone at all is better still.
 - what the everyday side keeps to reach a hidden chat while it is shut. the
   card it keeps for each one, readable with the everyday database key, holds
   the keys and addresses needed to receive, and whether the chat blocks
