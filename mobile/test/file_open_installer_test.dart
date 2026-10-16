@@ -114,7 +114,7 @@ void main() {
         ),
       );
       expect(r!.$1, OpenAnswer.refused);
-      expect(r.$2, isFalse);
+      expect(r.$2, ShareEnd.failed);
       expect(asked, isEmpty);
     });
   });
@@ -180,7 +180,7 @@ void main() {
       final out = bodyOf(sourceOf(tools), 'private fun shareOut(');
       expect(
         out.indexOf('Installer.refused('),
-        lessThan(out.indexOf('startActivity(')),
+        lessThan(out.indexOf('SharePick.start(')),
       );
       // the check reads the file, so not on the ui thread
       expect(

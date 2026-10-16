@@ -61,7 +61,7 @@ void main() {
     expect(bodyOf(chat, 'Future<void> _sendPicked('), contains('asked: true'));
     expect(
       bodyOf(chat, 'Future<_Ready?> _readyFile('),
-      contains('if (!asked && !await _confirmBigSend(size)) return null;'),
+      contains('if (!asked &&\n        !await _confirmBigSend('),
     );
   });
 

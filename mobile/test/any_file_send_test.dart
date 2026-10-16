@@ -15,11 +15,11 @@ void main() {
   const screens = {
     'lib/screens/chat_screen.dart': (
       'Future<void> _pickAndSendFile(',
-      'Future<void> _sendFileFrom(',
+      'Future<_Ready?> _readyFile(',
     ),
     'lib/screens/group_chat_screen.dart': (
       'Future<void> _pickGroupFile(',
-      'Future<void> _sendGroupFileFrom(',
+      'Future<_GReady?> _readyGroupFile(',
     ),
   };
 
@@ -40,7 +40,7 @@ void main() {
       final send = bodyOf(sourceOf(file), sig.$2);
       final over = send.indexOf('if (!fileFits(size)) {');
       expect(over, greaterThan(0), reason: file);
-      final refusal = send.substring(over, send.indexOf('return;', over));
+      final refusal = send.substring(over, send.indexOf('return', over));
       expect(
         refusal,
         contains('showHaloToast(context, fileTooBigLine(size))'),
@@ -119,7 +119,7 @@ void main() {
     expect(sheet, contains('l10n.fileRawPictureTitle'));
     final group = bodyOf(
       sourceOf('lib/screens/group_chat_screen.dart'),
-      'Future<void> _sendGroupFileFrom(',
+      'Future<_GReady?> _readyGroupFile(',
     );
     final ask = group.indexOf('line: l10n.fileRawPictureLine');
     expect(ask, greaterThan(0));
@@ -128,7 +128,7 @@ void main() {
 
   test('a big file the lane does not clean says it goes as it is', () {
     final chat = sourceOf('lib/screens/chat_screen.dart');
-    final send = bodyOf(chat, 'Future<void> _sendFileFrom(');
+    final send = bodyOf(chat, 'Future<_Ready?> _readyFile(');
     expect(send, contains('asItIs: !await sendLaneCleans(src, name)'));
     final sheet = bodyOf(chat, 'Future<bool> _confirmBigSend(');
     expect(sheet, contains('l10n.fileGoesAsItIs'));

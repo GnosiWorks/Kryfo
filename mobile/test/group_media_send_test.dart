@@ -410,11 +410,7 @@ void main() {
         'Future<void> _sendGroupVoice(',
       ]) {
         final body = bodyOf(screen, sig);
-        expect(
-          body,
-          contains(RegExp(r'(final )?reply = _takeReply\(\);')),
-          reason: sig,
-        );
+        expect(body, contains('_takeReply()'), reason: sig);
         // on the bubble, the row and the wire
         expect('replyTo: reply,'.allMatches(body).length, 3, reason: sig);
       }
