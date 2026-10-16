@@ -1554,7 +1554,7 @@ void main() {
       'name_tombs',
     };
     final src = [
-      'lib/main.dart',
+      'lib/app/database.dart',
       'lib/router.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     // a prefixed name is another set of the signal store's tables

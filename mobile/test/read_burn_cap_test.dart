@@ -644,7 +644,7 @@ void main() {
   group('the upgrade to 62', () {
     final sql = RealSqlite.open();
     final skip = sql == null ? 'no sqlite library here' : null;
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     const column = 'burn_unseen INTEGER NOT NULL DEFAULT 0';

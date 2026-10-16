@@ -554,7 +554,7 @@ void main() {
   test('a phone from 67 gets the door columns and keeps its rooms on their '
       'first door', () async {
     final db = sql!;
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final made = src.substring(
       src.indexOf('onCreate: (db, _) async {'),
       src.indexOf('onUpgrade: (db, oldV, newV) async {'),

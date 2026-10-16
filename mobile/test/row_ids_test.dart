@@ -23,7 +23,7 @@ void main() {
   });
 
   test('the message reads that page and append ask for the row id', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     for (final name in [
       'messagesFor',
       'messagesPage',

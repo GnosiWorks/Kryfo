@@ -863,7 +863,10 @@ void main() {
 
   // read off the source: the schema and the hide loop
   test('v54 seeds it on create and on upgrade, and the hide loop skips it', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = [
+      'lib/app/database.dart',
+      'lib/main.dart',
+    ].map((f) => File(f).readAsStringSync()).join('\n');
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(55));
     final create = src.indexOf('onCreate: (db, _) async {');
@@ -888,7 +891,7 @@ void main() {
 
   test('v55 makes the anonymous store on create and on upgrade, the same '
       'tables as the everyday one', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(

@@ -68,7 +68,7 @@ Future<String?> _atmo(_Rows db, String table, String col, String id) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final src = File('lib/main.dart').readAsStringSync();
+  final src = File('lib/app/database.dart').readAsStringSync();
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
   final create = src.substring(

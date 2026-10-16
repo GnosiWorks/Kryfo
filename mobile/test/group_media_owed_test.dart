@@ -381,7 +381,7 @@ void main() {
 
       // every table the app made before this version, and its triggers
       void v58(RealSqlite db) {
-        final src = File('lib/main.dart').readAsStringSync();
+        final src = File('lib/app/database.dart').readAsStringSync();
         for (final m in RegExp(
           r"'''\s*(CREATE TABLE (?:IF NOT EXISTS )?(\w+)\s*\(.*?\))\s*'''",
           dotAll: true,
@@ -489,7 +489,7 @@ void main() {
     });
 
     test('made on create and on the upgrade to 59', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/database.dart').readAsStringSync();
       final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
       expect(int.parse(version), greaterThanOrEqualTo(59));
       final create = src.indexOf('onCreate: (db, _) async {');
@@ -882,7 +882,7 @@ void main() {
         expect(left(), ['$_uid:carol', 'elsewhere:bob']);
         // and the list a control brings does the same
         final sync = bodyOf(
-          sourceOf('lib/main.dart'),
+          sourceOf('lib/app/database.dart'),
           'Future<void> syncGroupMembers(',
         );
         expect(sync, contains('await keepGroupOwedTo(groupId, members);'));

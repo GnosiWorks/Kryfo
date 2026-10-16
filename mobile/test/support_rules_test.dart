@@ -526,7 +526,7 @@ void main() {
 
   group('the table', () {
     test('made on create and on upgrade, wrapped so the app always opens', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/database.dart').readAsStringSync();
       final create = src.indexOf('onCreate: (db, _) async {');
       final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
       expect(

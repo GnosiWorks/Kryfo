@@ -421,7 +421,7 @@ class DatabaseErrorForTest implements Exception {
 }
 
 /// the app's own CREATE TABLE statement for [table], read from [file]
-String appTable(String table, {String file = 'lib/main.dart'}) {
+String appTable(String table, {String file = 'lib/app/database.dart'}) {
   final src = File(file).readAsStringSync();
   final m = RegExp('CREATE TABLE (IF NOT EXISTS )?$table \\(').firstMatch(src);
   if (m == null) throw StateError('no table $table in $file');
@@ -454,7 +454,7 @@ Future<void> appSchemaOn(SqliteMem db) async {
   final made = <String>[];
   final added = <String>[];
   for (final f in const [
-    'lib/main.dart',
+    'lib/app/database.dart',
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',

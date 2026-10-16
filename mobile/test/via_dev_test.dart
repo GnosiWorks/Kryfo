@@ -13,7 +13,7 @@ import 'real_sqlite.dart';
 const _column = 'via_dev INTEGER NOT NULL DEFAULT 0';
 
 void main() {
-  final src = File('lib/main.dart').readAsStringSync();
+  final src = File('lib/app/database.dart').readAsStringSync();
   final create = src.indexOf('onCreate: (db, _) async {');
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));

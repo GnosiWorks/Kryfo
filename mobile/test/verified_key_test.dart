@@ -127,7 +127,7 @@ void main() {
   });
 
   test('made on create and on the upgrade to 66', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(src.substring(create, upgrade), contains('verified_key TEXT,'));

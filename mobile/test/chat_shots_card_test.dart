@@ -185,7 +185,7 @@ void main() {
       for (final c in ChatShots.columns)
         'ALTER TABLE contacts ADD COLUMN $c INTEGER NOT NULL DEFAULT 0',
     ]);
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(83));
     // the step that adds them runs on a file at 82 or before, and a test

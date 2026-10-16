@@ -60,7 +60,7 @@ void main() {
 
   test('every ALTER in the app goes through it', () {
     for (final f in [
-      'lib/main.dart',
+      'lib/app/database.dart',
       'lib/router.dart',
       'lib/devchat/dev_chat.dart',
       'lib/devchat/support.dart',

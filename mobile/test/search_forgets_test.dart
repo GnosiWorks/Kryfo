@@ -22,7 +22,7 @@ const _gone = 'zephyrmarmalade';
 
 // a signal table as the app makes it, without the prefix
 String _signal(String table) {
-  final src = File('lib/main.dart').readAsStringSync();
+  final src = File('lib/app/database.dart').readAsStringSync();
   final m = RegExp(
     "'(CREATE TABLE IF NOT EXISTS \\\$\\{prefix\\}$table \\(.*\\))',",
   ).firstMatch(src)!;

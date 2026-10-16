@@ -113,7 +113,7 @@ _Table _parse(String name, String body, {bool fts = false}) {
 Map<String, _Table> _appSchema() {
   final tables = <String, _Table>{};
   for (final f in const [
-    'lib/main.dart',
+    'lib/app/database.dart',
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',

@@ -11,7 +11,7 @@ import 'package:kryfo/vault_life.dart' show chatTables;
 import 'sqlite_ffi.dart';
 
 void main() {
-  final src = File('lib/main.dart').readAsStringSync();
+  final src = File('lib/app/database.dart').readAsStringSync();
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
   final create = src.substring(

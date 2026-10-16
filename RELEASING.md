@@ -7,8 +7,8 @@ a feature goes into a release finished or not at all.
 - `flutter analyze` shows nothing but the known deprecation infos
 - `flutter test` passes
 - `cd mobile/android && ./gradlew --offline :app:lintDebug :app:lintVitalAnalyzeRelease` passes
-- every `ALTER TABLE` in mobile/lib/main.dart is inside a try/catch, and every
-  new column is in each `CREATE TABLE` (test/schema_parity_test.dart)
+- every `ALTER TABLE` in mobile/lib/app/database.dart is inside a try/catch,
+  and every new column is in each `CREATE TABLE` (test/schema_parity_test.dart)
 - no logging outside dlog: `grep -rn "print(" mobile/lib | grep -v dlog` is empty
 - the engine builds from clean: `cd engine && ulimit -n 65536 && HALO_FULL=1 ./build.sh`
 - the tor tests pass: `cd engine && ./torconf-tests.sh` (needs the network, ~30 min).

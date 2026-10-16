@@ -153,7 +153,7 @@ void main() {
     () {
       final db = _Sqlite(lib!);
       addTearDown(db.close);
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/database.dart').readAsStringSync();
       for (final t in const ['contacts', 'messages', 'held_onion', 'vouches']) {
         db.exec(_create(src, t));
       }

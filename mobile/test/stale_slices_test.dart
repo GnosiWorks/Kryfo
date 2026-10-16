@@ -53,7 +53,7 @@ void main() {
 
   test('what is asked for again follows the latest total', () {
     final body = bodyOf(
-      sourceOf('lib/main.dart'),
+      sourceOf('lib/app/database.dart'),
       'Future<void> noteMediaWant(',
     );
     expect(body, contains("'total = excluded.total, '"));

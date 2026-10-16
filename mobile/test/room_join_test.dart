@@ -596,7 +596,7 @@ void main() {
     'a phone from 62 gets the column, and keeps its rooms',
     () async {
       final db = sql!;
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/database.dart').readAsStringSync();
       final made = src.substring(
         src.indexOf('onCreate: (db, _) async {'),
         src.indexOf('onUpgrade: (db, oldV, newV) async {'),

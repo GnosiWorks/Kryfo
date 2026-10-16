@@ -10,7 +10,7 @@ void main() {
     // the router, the developer chat and the support inbox keep their own
     // tables, created the same way
     final src = [
-      'lib/main.dart',
+      'lib/app/database.dart',
       'lib/router.dart',
       'lib/devchat/dev_chat.dart',
       'lib/devchat/support.dart',

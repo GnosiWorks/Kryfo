@@ -277,7 +277,7 @@ void main() {
   test('a phone from 70 gets the group of each slice and the room keys, '
       'twice over', () async {
     final real = sql!;
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final made = src.substring(
       src.indexOf('onCreate: (db, _) async {'),
       src.indexOf('onUpgrade: (db, oldV, newV) async {'),

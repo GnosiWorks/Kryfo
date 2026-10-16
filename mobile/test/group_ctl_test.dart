@@ -1138,7 +1138,7 @@ void main() {
   });
 
   test('made on create and on the upgrades to 60 and 61', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/database.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(61));
     final create = src.indexOf('onCreate: (db, _) async {');

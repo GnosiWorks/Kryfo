@@ -155,7 +155,7 @@ void main() {
         'ALTER TABLE contacts ADD COLUMN voice_disguise INTEGER',
         'ALTER TABLE groups ADD COLUMN voice_disguise INTEGER',
       ]);
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/database.dart').readAsStringSync();
       final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
       expect(int.parse(version), greaterThanOrEqualTo(76));
       expect(
