@@ -7,7 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import '../l10n/l10n.dart';
-import '../theme.dart' show HaloType, track, slant;
+import '../theme.dart' show HaloColors, HaloType, track, slant;
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 
@@ -323,8 +323,11 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   bool get _green => widget.status == TorStatus.reachable;
   bool get _standby => _phase == 0;
+  // dark keeps its pale grey; light needs real ink
+  Color get _still =>
+      HaloColors.isLight ? HaloColors.text3 : const Color(0xFFE5E5E5);
   Color get _accent =>
-      _standby ? const Color(0xFFE5E5E5) : (_green ? kGreen : kAmber);
+      _standby ? _still : (_green ? HaloColors.greenText : HaloColors.warnText);
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +341,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
               animation: _ctl,
               builder: (ctx, _) => ColorFiltered(
                 colorFilter: _standby
-                    ? const ColorFilter.mode(Color(0xFFE5E5E5), BlendMode.srcIn)
+                    ? ColorFilter.mode(_still, BlendMode.srcIn)
                     : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
                 child: CustomPaint(
                   painter: _ZigZagWarmupPainter(
@@ -377,14 +380,14 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                 fontStyle: slant(),
                 fontSize: 22,
                 fontWeight: FontWeight.w300,
-                color: kText,
+                color: HaloColors.text,
                 letterSpacing: track(-0.3),
                 height: 1.15,
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Container(width: 56, height: 0.5, color: kLine2),
+          Container(width: 56, height: 0.5, color: HaloColors.line2),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -395,7 +398,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                 fontFamily: HaloType.sansFamily,
                 fontFamilyFallback: HaloType.sansFallback,
                 fontSize: 11.5,
-                color: kText3,
+                color: HaloColors.text3,
                 height: 1.55,
               ),
             ),
@@ -412,7 +415,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       fontFamily: HaloType.monoFamily,
                       fontFamilyFallback: HaloType.monoFallbackNow,
                       fontSize: 10.5,
-                      color: kText2,
+                      color: HaloColors.text2,
                       letterSpacing: track(0.4),
                     ),
                     children: markedSpans(
