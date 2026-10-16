@@ -8,7 +8,7 @@ won't build a way to. Signal, Threema and SimpleX are in the same position.
 
 - There is no directory. Kryfo never asks for a phone number or email, so
   nobody can look you up by one. People search only finds a handle whose
-  owner turned on "show me in search", and it is off unless you do.
+  owner turned on "Show me in search", and it is off unless you do.
 - A new contact comes through a QR code you scanned, an invite link you gave
   out, or a six digit code read out in person. Anything else waits in a
   requests inbox until you decide.
@@ -36,8 +36,8 @@ asks us for a user's messages, we have nothing to hand over.
 
 ## If something goes wrong
 
-You can block anyone, leave any group, and delete a conversation on both
-sides. Group admins can remove members.
+You can block anyone, leave any group, delete a conversation and unsend a
+message on both sides. Group admins can remove members.
 
 For anything involving a child, contact your national child protection
 service: through INHOPE in the EU, the NCMEC CyberTipline in the US.

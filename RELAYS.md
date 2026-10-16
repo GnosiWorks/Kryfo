@@ -1,6 +1,6 @@
 # relays
 
-three directories look like relays. only one runs.
+two directories look like relays. only one runs.
 
 ## `relay-live/`: production
 
