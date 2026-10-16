@@ -107,7 +107,7 @@ void main() {
 
   test('the start sweep runs it', () {
     final body = bodyOf(
-      sourceOf('lib/main.dart'),
+      sourceOf('lib/app/files.dart'),
       'Future<void> sweepCaptures(',
     );
     expect(body, contains('await sweepShareCopies(tmp)'));

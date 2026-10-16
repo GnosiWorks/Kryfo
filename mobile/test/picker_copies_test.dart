@@ -104,7 +104,10 @@ void main() {
     );
     expect(drop, contains('await sweepPickerLeftovers(cache)'));
     expect(drop, contains('await sweepFilePickerCopies(cache)'));
-    final main = sourceOf('lib/main.dart');
+    final main = [
+      'lib/main.dart',
+      'lib/app/files.dart',
+    ].map(sourceOf).join('\n');
     expect(main, contains('lockState.picksDropped = dropPickerCopies;'));
     expect(
       bodyOf(main, 'Future<void> sweepCaptures('),
@@ -126,7 +129,7 @@ void main() {
   });
 
   test('every gallery pick and the boot sweep go through it', () {
-    final main = sourceOf('lib/main.dart');
+    final main = sourceOf('lib/app/files.dart');
     expect(
       bodyOf(main, 'Future<void> sweepCaptures('),
       contains('await sweepPickerLeftovers(tmp)'),
