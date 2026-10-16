@@ -615,7 +615,7 @@ func noteCatchupDone(key string, dropped bool) {
 		Pages: pend.Pages, Events: pend.Events, ConnectMs: connectLast[key], At: time.Now()}
 	catchupMu.Unlock()
 	if dropped {
-		log.Printf("nostr: %s still catching up after %dms - dropped for this check-in (%d in a row)",
+		log.Printf("nostr: %s still catching up after %dms, dropped for this check-in (%d in a row)",
 			u, ms, drops)
 	}
 }

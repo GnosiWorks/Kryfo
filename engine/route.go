@@ -86,7 +86,7 @@ func correctStaleStart() {
 	}
 	statusMu.Unlock()
 	if stale {
-		log.Println("halo: a relay connected through tor while it said starting - it is up")
+		log.Println("halo: a relay connected through tor while it said starting, so it is up")
 		setStatus("publishing")
 	}
 }
@@ -178,7 +178,7 @@ func routeWatch() {
 			go netValveTry()
 		}
 		if why := routeNeedsRescue(time.Now()); why != "" {
-			log.Printf("halo: route rescue - %s", why)
+			log.Printf("halo: route rescue: %s", why)
 			atomic.StoreInt64(&lastTorRestart, 0)
 			go reconnectTor()
 		}

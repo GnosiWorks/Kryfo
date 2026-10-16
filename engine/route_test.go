@@ -187,7 +187,7 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 	}
 	g := routeBump()
 	if routeOK() {
-		t.Fatal("ok straight after a bounce - that is the tor that went")
+		t.Fatal("ok straight after a bounce: that is the tor that went")
 	}
 	if routeGeneration() != g {
 		t.Fatal("generation not reported")

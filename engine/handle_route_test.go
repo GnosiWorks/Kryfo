@@ -179,7 +179,7 @@ func TestClaimAfterNetworkBounce(t *testing.T) {
 	if heldDied {
 		if socksPin() != 0 {
 			t.Errorf("the socks port is pinned to %d yet a client built "+
-				"before the bounce died - the pin did not hold", socksPin())
+				"before the bounce died: the pin did not hold", socksPin())
 		} else {
 			t.Log("  (no pin this run; the cache resets are carrying it)")
 		}
@@ -195,7 +195,7 @@ func TestClaimAfterNetworkBounce(t *testing.T) {
 		t.Fatalf("rebuild after bounce: %v", err)
 	}
 	if c2 == client {
-		t.Error("reconnectOn left the stale client in the cache - every " +
+		t.Error("reconnectOn left the stale client in the cache: every " +
 			"one-shot request through it dies on a closed socks port")
 	}
 	client = c2
@@ -248,7 +248,7 @@ func TestOneShotsSurviveBounce(t *testing.T) {
 	// watchdogs can fire one reconnect of their own right after.
 	time.Sleep(5 * time.Second)
 	if socksPin() == 0 {
-		t.Skip("no pinned socks port this run - nothing to prove here")
+		t.Skip("no pinned socks port this run, nothing to prove here")
 	}
 	t.Logf("socks pinned to %d", socksPin())
 

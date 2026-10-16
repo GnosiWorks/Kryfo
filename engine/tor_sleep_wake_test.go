@@ -46,7 +46,7 @@ func mustReturn(t *testing.T, what string, limit time.Duration, f func() string)
 		p := filepath.Join(os.TempDir(), fmt.Sprintf("halo-wedge-%s.txt",
 			strings.ReplaceAll(what, " ", "_")))
 		_ = os.WriteFile(p, buf[:n], 0600)
-		t.Fatalf("%s did not return in %s - goroutines in %s (%d bytes)", what, limit, p, n)
+		t.Fatalf("%s did not return in %s: goroutines in %s (%d bytes)", what, limit, p, n)
 		return ""
 	}
 }
@@ -144,7 +144,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 			time.Sleep(250 * time.Millisecond)
 		}
 		if _, m := since(relayDialledAt); len(m) > 0 {
-			t.Fatalf("round %d: %d of 6 relays not even tried 10s after the wake - "+
+			t.Fatalf("round %d: %d of 6 relays not even tried 10s after the wake: "+
 				"their runners are asleep: %v", round, len(m), m)
 		}
 		// and through: most of them connect. a relay that is slow or down

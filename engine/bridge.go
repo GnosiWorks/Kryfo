@@ -406,7 +406,7 @@ func startListener(dataDir string) string {
 			return fmt.Sprintf("error: gen onion key: %v", err)
 		}
 		if werr := os.WriteFile(keyPath, key, 0600); werr != nil {
-			log.Printf("halo: WARN onion key save failed: %v", werr)
+			log.Printf("halo: onion key save failed: %v", werr)
 		} else {
 			log.Println("halo: generated and saved new onion key")
 		}
@@ -814,7 +814,7 @@ func reconnectNow() string {
 		return "ok"
 	}
 	if autoGateHeld() {
-		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		log.Println("halo: reconnect deferred: automatic is trying a way in")
 		return "error: automatic is connecting"
 	}
 	routeFreshNetwork()
@@ -878,11 +878,11 @@ func reconnectTorBy(force, auto bool) string {
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
 	if torIsPaused() {
-		log.Println("halo: reconnect skipped - tor is asleep on purpose")
+		log.Println("halo: reconnect skipped: tor is asleep on purpose")
 		return "error: tor is asleep"
 	}
 	if !auto && autoGateHeld() {
-		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		log.Println("halo: reconnect deferred: automatic is trying a way in")
 		return "error: automatic is connecting"
 	}
 	me, prev, done, why := reconnectClaim(force)
@@ -905,7 +905,7 @@ func reconnectTorBy(force, auto bool) string {
 	// the floor is a minute.
 	now := time.Now().Unix()
 	if prev := atomic.LoadInt64(&lastTorRestart); !force && !auto && prev != 0 && now-prev < 60 {
-		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
+		log.Printf("halo: reconnect skipped: %ds since the last (floor 60s)", now-prev)
 		return "error: too soon"
 	}
 	atomic.StoreInt64(&lastTorRestart, now)
@@ -917,7 +917,7 @@ func reconnectTorBy(force, auto bool) string {
 	mu.Unlock()
 
 	if dir == "" {
-		log.Println("halo: reconnect skipped - no saved data dir")
+		log.Println("halo: reconnect skipped: no saved data dir")
 		setStatus("off")
 		return "error: no data dir"
 	}
@@ -1578,7 +1578,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				return true
 			}
 		case <-timeout:
-			log.Printf("halo: WARN no HSDir upload confirmed in 120s - staying in publishing, still trying")
+			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
 			return false
 		}
 	}

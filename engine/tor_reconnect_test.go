@@ -174,7 +174,7 @@ func TestReconnect(t *testing.T) {
 	// all of the above must have gone over a control socket the engine owns:
 	// on the fallback path there is nothing to close when tor wedges
 	if ctrlDialCount() == 0 {
-		t.Fatal("no control connection of our own was ever dialled - " +
+		t.Fatal("no control connection of our own was ever dialled: " +
 			"every command went through bine, where a wedge cannot be closed")
 	}
 	if n := ctrlTimeoutCount(); n != 0 {

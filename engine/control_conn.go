@@ -130,7 +130,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	if isTimeout(err) {
 		atomic.AddInt64(&ctrlTimeouts, 1)
 		atomic.AddInt64(&ctrlSilent, 1)
-		log.Printf("halo: control port did not answer %s within %s - dropping the connection",
+		log.Printf("halo: control port did not answer %s within %s, dropping the connection",
 			what, ctrlDeadline)
 		ctrlDrop()
 		return fmt.Errorf("control port timeout on %s", what)

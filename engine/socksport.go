@@ -34,7 +34,7 @@ func choosePinnedSocks() int {
 	}
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		log.Printf("halo: could not pick a socks port (%v) - tor will choose", err)
+		log.Printf("halo: could not pick a socks port (%v), tor will choose", err)
 		return 0
 	}
 	p := l.Addr().(*net.TCPAddr).Port
@@ -50,7 +50,7 @@ func socksPin() int { return int(atomic.LoadInt32(&pinnedSocks)) }
 // cache resets carry it from here.
 func dropSocksPin(why string) {
 	if p := socksPin(); p != 0 {
-		log.Printf("halo: giving up the pinned socks port %d (%s) - "+
+		log.Printf("halo: giving up the pinned socks port %d (%s), "+
 			"falling back to auto, the client resets have to carry it", p, why)
 	}
 	atomic.StoreInt32(&pinnedSocks, 0)

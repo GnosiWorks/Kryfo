@@ -147,7 +147,7 @@ func loadOrCreateKey() {
 	if err := os.WriteFile(keyPath, priv, 0o600); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("generated a new signing key at %s - BACK IT UP; losing it "+
+	log.Printf("generated a new signing key at %s, back it up: losing it "+
 		"invalidates every badge you've ever issued", keyPath)
 }
 
