@@ -11,9 +11,6 @@ ficam sabendo o seu endereço IP nem quem você é. A sua agenda de contatos nun
 
 Recursos:
 
-* Sem número de telefone nem e-mail para se cadastrar
-* Criptografia de ponta a ponta (protocolo Signal)
-* Por padrão, todo o tráfego por um cliente Tor embutido
 * Funciona onde o Tor está bloqueado: o Kryfo encontra sozinho um jeito de contornar o bloqueio
 * Entrega por retransmissores Nostr, para que as mensagens cheguem a um celular que estava offline
 * Grupos com fotos, arquivos, mensagens de voz, respostas, reações, mensagens fixadas e enquetes
@@ -25,7 +22,7 @@ Recursos:
 * Apagamento de pânico que remove tudo, inclusive a mídia gravada no aparelho
 * Uma conversa com quem cria o Kryfo, anonimamente se você quiser
 * 15 idiomas
-* Sem análise de uso, sem telemetria, sem anúncios
+* Sem análise de uso nem telemetria
 
 Apoio: sem anúncios, sem investidores. O Kryfo se mantém com as doações de quem
 apoia. Apoiar é opcional e anônimo, e todos os recursos funcionam igual de

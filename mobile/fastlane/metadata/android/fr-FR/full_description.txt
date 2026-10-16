@@ -4,9 +4,6 @@ Par défaut, tout passe par Tor. Le contenu est chiffré de bout en bout avec le
 
 Fonctionnalités :
 
-* Pas de numéro de téléphone ni d’e-mail pour s’inscrire
-* Chiffrement de bout en bout (protocole Signal)
-* Par défaut, tout le trafic passe par un client Tor intégré
 * Fonctionne là où Tor est bloqué : Kryfo trouve de lui-même un moyen de contourner le blocage
 * Distribution par des relais Nostr, pour que les messages atteignent un téléphone qui était hors ligne
 * Groupes avec photos, fichiers, messages vocaux, réponses, réactions, messages épinglés et sondages
@@ -18,6 +15,6 @@ Fonctionnalités :
 * Effacement d’urgence qui supprime tout, y compris les médias sur le disque
 * Une discussion avec la personne qui crée Kryfo, anonymement si vous le souhaitez
 * 15 langues
-* Aucune statistique d’usage, aucune télémétrie, aucune pub
+* Aucune statistique d’usage ni télémétrie
 
 Financement : pas de pub, pas d’investisseurs. Kryfo vit de ce que donnent ceux qui le soutiennent. Le soutien est facultatif et anonyme, et chaque fonctionnalité marche de la même façon dans les deux cas.

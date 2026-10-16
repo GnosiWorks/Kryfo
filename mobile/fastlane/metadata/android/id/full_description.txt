@@ -12,9 +12,6 @@ diunggah.
 
 Fitur:
 
-* Tanpa nomor telepon atau email untuk mendaftar
-* Enkripsi ujung ke ujung (protokol Signal)
-* Secara bawaan, semua lalu lintas lewat klien Tor yang tertanam
 * Tetap jalan di tempat Tor diblokir: Kryfo menemukan sendiri cara menembusnya
 * Pengiriman lewat relay Nostr, jadi pesan sampai ke ponsel yang tadinya offline
 * Grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
@@ -26,7 +23,7 @@ Fitur:
 * Hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
 * Obrolan dengan orang yang membuat Kryfo, secara anonim kalau kamu mau
 * 15 bahasa
-* Tanpa analitik, tanpa telemetri, tanpa iklan
+* Tanpa analitik atau telemetri
 
 Pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para
 penyokong. Sokongan bersifat opsional dan anonim, dan setiap fitur tetap

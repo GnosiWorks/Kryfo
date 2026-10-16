@@ -11,9 +11,6 @@ chỉ IP của bạn hay bạn là ai. Không bao giờ tải danh bạ lên.
 
 Tính năng:
 
-* Đăng ký không cần số điện thoại hay email
-* Mã hóa đầu cuối (giao thức Signal)
-* Theo mặc định, mọi lưu lượng đi qua một Tor client tích hợp sẵn
 * Hoạt động cả ở nơi Tor bị chặn: Kryfo tự tìm cách vượt qua
 * Gửi qua các relay Nostr, nên tin nhắn vẫn đến được điện thoại đã ngoại tuyến
 * Nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
@@ -25,7 +22,7 @@ Tính năng:
 * Xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
 * Một cuộc trò chuyện với người làm ra Kryfo, ẩn danh nếu bạn muốn
 * 15 ngôn ngữ
-* Không phân tích, không đo lường từ xa, không quảng cáo
+* Không phân tích hay đo lường từ xa
 
 Kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người
 ủng hộ đóng góp. Việc ủng hộ là tùy chọn và ẩn danh, và mọi tính năng đều

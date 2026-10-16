@@ -10,9 +10,6 @@ or who you are. No address book upload, ever.
 
 Features:
 
-* No phone number or email to sign up
-* End to end encryption (Signal protocol)
-* All traffic through an embedded Tor client by default
 * Works where Tor is blocked: Kryfo finds a way around it by itself
 * Delivery through Nostr relays, so messages reach a phone that was offline
 * Groups with photos, files, voice messages, replies, reactions, pins and polls
@@ -24,7 +21,7 @@ Features:
 * Panic wipe that removes everything, including media on disk
 * A chat with the person who builds Kryfo, anonymous if you like
 * 15 languages
-* No analytics, no telemetry, no ads
+* No analytics or telemetry
 
 Funding: no ads, no investors. It runs on what backers give. Backing is
 optional and anonymous, and every feature works the same either way.

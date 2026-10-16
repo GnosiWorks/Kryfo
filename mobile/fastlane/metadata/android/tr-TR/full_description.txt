@@ -10,9 +10,6 @@ da kim olduğunu asla öğrenmez. Rehber asla yüklenmez.
 
 Özellikler:
 
-* Kayıt için telefon numarası ya da e-posta yok
-* Uçtan uca şifreleme (Signal protokolü)
-* Varsayılan olarak tüm trafik gömülü bir Tor istemcisinden geçer
 * Tor’un engellendiği yerde çalışır: Kryfo engeli aşmanın bir yolunu kendiliğinden bulur
 * Nostr aktarıcıları üzerinden teslim, böylece mesajlar çevrimdışı olan bir telefona da ulaşır
 * Fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
@@ -24,7 +21,7 @@ da kim olduğunu asla öğrenmez. Rehber asla yüklenmez.
 * Diskteki medya dahil her şeyi kaldıran panik silme
 * Kryfo’yu yapan kişiyle bir sohbet, istersen anonim
 * 15 dil
-* Analiz yok, telemetri yok, reklam yok
+* Analiz ve telemetri yok
 
 Finansman: reklam yok, yatırımcı yok. Bağışçıların verdikleriyle ayakta
 duruyor. Destek vermek isteğe bağlı ve anonim; her özellik iki durumda da aynı

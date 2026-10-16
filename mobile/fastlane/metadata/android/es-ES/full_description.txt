@@ -10,9 +10,6 @@ nunca llegan a saber tu dirección IP ni quién eres. Tu agenda no se sube nunca
 
 Funciones:
 
-* Sin número de teléfono ni correo para registrarte
-* Cifrado de extremo a extremo (protocolo Signal)
-* Por defecto, todo el tráfico pasa por un cliente Tor integrado
 * Funciona donde Tor está bloqueado: Kryfo encuentra por sí solo cómo sortear el bloqueo
 * Entrega a través de repetidores Nostr, para que los mensajes lleguen a un teléfono que estaba sin conexión
 * Grupos con fotos, archivos, mensajes de voz, respuestas, reacciones, fijados y encuestas
@@ -24,7 +21,7 @@ Funciones:
 * Borrado de emergencia que lo elimina todo, incluidos los archivos multimedia
 * Un chat con quien crea Kryfo, de forma anónima si quieres
 * 15 idiomas
-* Sin analíticas, sin telemetría, sin anuncios
+* Sin analíticas ni telemetría
 
 Financiación: sin anuncios ni inversores. Vive de lo que aportan quienes lo
 apoyan. Apoyarlo es opcional y anónimo, y todas las funciones son iguales lo

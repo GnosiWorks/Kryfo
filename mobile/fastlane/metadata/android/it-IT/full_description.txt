@@ -4,9 +4,6 @@ Di default tutto viaggia su Tor. I contenuti sono cifrati end-to-end con il prot
 
 Funzioni:
 
-* Nessun numero di telefono né email per registrarti
-* Cifratura end-to-end (protocollo Signal)
-* Di default tutto il traffico passa da un client Tor integrato
 * Funziona dove Tor è bloccato: Kryfo trova da solo una strada per aggirare il blocco
 * Consegna tramite relay Nostr, così i messaggi raggiungono un telefono che era offline
 * Gruppi con foto, file, messaggi vocali, risposte, reazioni, messaggi fissati e sondaggi
@@ -18,6 +15,6 @@ Funzioni:
 * Cancellazione d'emergenza che rimuove tutto, compresi i media sul disco
 * Una chat con chi crea Kryfo, in forma anonima se vuoi
 * 15 lingue
-* Niente analytics, niente telemetria, niente pubblicità
+* Niente analytics né telemetria
 
 Finanziamento: niente pubblicità, niente investitori. Va avanti con quello che danno i sostenitori. Sostenerlo è facoltativo e anonimo, e tutte le funzioni restano uguali in ogni caso.
