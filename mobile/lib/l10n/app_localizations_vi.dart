@@ -533,7 +533,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appIdentityCreated => 'Đã tạo danh tính';
 
   @override
-  String get appStartingTor30s => 'Đang khởi động tor (~30s)...';
+  String get appStartingTor30s => 'Đang khởi động Tor (~30s)...';
 
   @override
   String get appScanOrImportA => 'Hãy quét hoặc nhập một peer trước';
@@ -657,7 +657,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'Lần kết nối đầu tiên mất một hai phút trong lúc tor dựng một tuyến đường riêng tư. Sau đó tuyến này được lưu lại, nên những lần mở Kryfo sau sẽ nhanh hơn nhiều.';
+      'Lần kết nối đầu tiên mất một hai phút trong lúc Tor dựng một tuyến đường riêng tư. Sau đó tuyến này được lưu lại, nên những lần mở Kryfo sau sẽ nhanh hơn nhiều.';
 
   @override
   String get appTorNoRelayYet =>
@@ -665,7 +665,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Chế độ relay và chế độ nhanh bỏ qua tor và nhanh hơn. Chúng nằm trong cài đặt, mục tốc độ & riêng tư, và mỗi chế độ đều nói rõ cái giá phải trả.';
+      'Chế độ relay và chế độ nhanh bỏ qua Tor và nhanh hơn. Chúng nằm trong cài đặt, mục tốc độ & riêng tư, và mỗi chế độ đều nói rõ cái giá phải trả.';
 
   @override
   String get appViaRelay => 'Qua relay';
@@ -1019,7 +1019,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Bản sao lưu Kryfo được mã hóa của bạn. Hãy giữ an toàn cả tệp này VÀ cụm mật khẩu - bạn cần cả hai để khôi phục.';
+      'Bản sao lưu Kryfo được mã hóa của bạn. Hãy giữ an toàn cả tệp này và cụm mật khẩu. Bạn cần cả hai để khôi phục.';
 
   @override
   String get backupBackUpKryfo => 'Sao lưu Kryfo';
@@ -1448,7 +1448,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · $wireEstimate qua tor';
+    return '$humanBytes · $wireEstimate qua Tor';
   }
 
   @override
@@ -1489,8 +1489,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldnTFetchIt => 'Không tải được · gửi không kèm xem trước';
 
   @override
-  String get chatNoSignalSessionRe =>
-      'Không có phiên Signal - hãy ghép nối lại';
+  String get chatNoSignalSessionRe => 'Không có phiên Signal. Hãy ghép nối lại';
 
   @override
   String get chatMessageUnavailable => 'Tin nhắn không khả dụng';
@@ -1572,7 +1571,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatEveryMessageHereIs =>
-      'Mọi tin nhắn ở đây sẽ bị xóa khỏi điện thoại này. Việc này chỉ xóa bản của bạn - không động đến thiết bị của họ.';
+      'Mọi tin nhắn ở đây sẽ bị xóa khỏi điện thoại này. Việc này chỉ xóa bản của bạn. Không động đến thiết bị của họ.';
 
   @override
   String get chatClear => 'Xóa hết';
@@ -1624,7 +1623,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatAcceptToReplyThey =>
-      'Chấp nhận để trả lời - trước khi bạn làm vậy, họ chỉ gửi được thêm một tin nữa.';
+      'Chấp nhận để trả lời. Trước khi bạn làm vậy, họ chỉ gửi được thêm một tin nữa.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1633,7 +1632,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String chatIntroducedYouSayHello(Object vouchNames) {
-    return '$vouchNames đã giới thiệu hai bạn với nhau. Hãy chào đi - người kia cũng đã nhận được thẻ của bạn.';
+    return '$vouchNames đã giới thiệu hai bạn với nhau. Hãy chào đi. Người kia cũng đã nhận được thẻ của bạn.';
   }
 
   @override
@@ -1668,7 +1667,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatEncryptedDirect => 'Được mã hóa · trực tiếp';
 
   @override
-  String get chatEncryptedOverTor => 'Được mã hóa · qua tor';
+  String get chatEncryptedOverTor => 'Được mã hóa · qua Tor';
 
   @override
   String get chatSearchThisChat => 'Tìm trong cuộc trò chuyện';
@@ -2167,7 +2166,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'Ủng hộ ẩn danh. Huy hiệu tùy chọn.\n*Quyền riêng tư không bao giờ cần trả phí.*';
+      'Ủng hộ ẩn danh. Huy hiệu tùy chọn.\n*Mọi tính năng riêng tư đều miễn phí.*';
 
   @override
   String get donateAuditTitle => 'Góp phần tài trợ một đợt kiểm định bảo mật';
@@ -2211,7 +2210,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateReachingThePaymentService =>
-      'Đang kết nối tới dịch vụ thanh toán qua tor…';
+      'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
   @override
   String get donateThisCanTakeUp => 'Có thể mất tới một phút';
@@ -2230,11 +2229,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateTorWasSlowTo =>
-      'Tor kết nối tới dịch vụ thanh toán quá chậm. Bạn có thể ủng hộ qua địa chỉ bên dưới - chỉ là huy hiệu sẽ không tự mở khóa. Hãy thử lại sau để nhận huy hiệu.';
+      'Tor kết nối tới dịch vụ thanh toán quá chậm. Bạn có thể ủng hộ qua địa chỉ bên dưới, chỉ là huy hiệu sẽ không tự mở khóa. Hãy thử lại sau để nhận huy hiệu.';
 
   @override
   String get donateThePaymentServiceIsHavingTrouble =>
-      'Dịch vụ thanh toán đang gặp trục trặc. Bạn vẫn có thể ủng hộ qua địa chỉ bên dưới - chỉ là huy hiệu sẽ không tự mở khóa. Hãy thử lại sau để nhận huy hiệu.';
+      'Dịch vụ thanh toán đang gặp trục trặc. Bạn vẫn có thể ủng hộ qua địa chỉ bên dưới, chỉ là huy hiệu sẽ không tự mở khóa. Hãy thử lại sau để nhận huy hiệu.';
 
   @override
   String get commonTryAgain => 'Thử lại';
@@ -2254,7 +2253,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateThisScreenUpdatesItself =>
-      'Màn hình này tự cập nhật ngay khi thấy khoản thanh toán của bạn.\nHãy để mở - không có gì được lưu, không có gì nhận diện được bạn.';
+      'Màn hình này tự cập nhật ngay khi thấy khoản thanh toán của bạn.\nHãy để mở. Không có gì được lưu, không có gì nhận diện được bạn.';
 
   @override
   String get donateWatchingTheChainFor =>
@@ -2295,13 +2294,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'Đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
       'patron':
-          'Đã xác minh trên chuỗi - giờ bạn là nhà bảo trợ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi. Giờ bạn là nhà bảo trợ. Không ai có thể lấy đi điều đó.',
       'guardian':
-          'Đã xác minh trên chuỗi - giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi. Giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
       'other':
-          'Đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
     });
     return '$_temp0';
   }
@@ -2907,7 +2906,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      'Bất kỳ ai biết tên này đều có thể xin nhắn tin cho bạn, đó chính là mục đích của nó. Trang này chỉ chứa lời mời của bạn và dòng bạn đã viết, không có gì khác, và không lưu lại ai đã đọc nó. Bạn có thể xóa nó bất cứ lúc nào.';
+      'Bất kỳ ai biết tên này đều có thể xin nhắn tin cho bạn. Trang này chỉ chứa lời mời của bạn và dòng bạn đã viết, không có gì khác, và không lưu lại ai đã đọc nó. Bạn có thể xóa nó bất cứ lúc nào.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -2972,7 +2971,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String homeTorHasNotBeen(Object howLong) {
-    return 'Tor đã không kết nối được trong $howLong. Không gì có thể đến hoặc đi cho đến khi tor kết nối lại.';
+    return 'Tor đã không kết nối được trong $howLong. Không gì có thể đến hoặc đi cho đến khi Tor kết nối lại.';
   }
 
   @override
@@ -3071,7 +3070,7 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString đang chờ · tor vẫn đang kết nối',
+      other: '$countString đang chờ · Tor vẫn đang kết nối',
     );
     return '$_temp0';
   }
@@ -3158,7 +3157,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String homeEveryMessageWithGoes(Object c) {
-    return 'Mọi tin nhắn với $c sẽ bị xóa, và họ không còn là liên hệ nữa. Việc này chỉ xóa trên điện thoại này - bản của họ vẫn ở chỗ họ. Nếu họ nhắn lại, tin nhắn sẽ vào mục yêu cầu.';
+    return 'Mọi tin nhắn với $c sẽ bị xóa, và họ không còn là liên hệ nữa. Việc này chỉ xóa trên điện thoại này. Bản của họ vẫn ở chỗ họ. Nếu họ nhắn lại, tin nhắn sẽ vào mục yêu cầu.';
   }
 
   @override
@@ -3254,7 +3253,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get introduceANoteLikeMy =>
-      'Ghi chú, như “em họ tôi” - không bắt buộc';
+      'Ghi chú, như “em họ tôi” (không bắt buộc)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
@@ -3342,7 +3341,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lockFileCheckCapitalsAndSpaces =>
-      'Hãy kiểm tra chữ hoa và dấu cách. Không ai có thể đặt lại mật khẩu, kể cả chúng tôi.';
+      'Hãy kiểm tra chữ hoa và dấu cách. Không ai có thể đặt lại mật khẩu.';
 
   @override
   String get lockFileItMayHaveBeen =>
@@ -3476,7 +3475,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      'Bất kỳ ai có mật khẩu đều mở được tệp, trong Kryfo hoặc trên bất kỳ máy tính nào có công cụ miễn phí age. Quên mật khẩu là mất tệp vĩnh viễn. Không ai có thể đặt lại nó, kể cả chúng tôi.';
+      'Bất kỳ ai có mật khẩu đều mở được tệp, trong Kryfo hoặc trên bất kỳ máy tính nào có công cụ miễn phí age. Quên mật khẩu là mất tệp vĩnh viễn. Không ai có thể đặt lại nó.';
 
   @override
   String get lockFileLocked2 => 'Đã khóa.';
@@ -3558,7 +3557,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi tor bị chặn.';
+      'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi Tor bị chặn.';
 
   @override
   String get modesQuick => 'Nhanh';
@@ -4012,7 +4011,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Được tạo từ một khóa chỉ nằm trên điện thoại này. *Dễ nhớ, độc nhất, của riêng bạn.* Không ai khác có tên này.';
+      'Được tạo từ một khóa chỉ nằm trên điện thoại này. *Không ai khác có tên này.*';
 
   @override
   String get onboardingTryAnother => 'Thử cái khác';
@@ -4070,7 +4069,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks =>
-      'Khoảng một giây. Hoạt động cả ở nơi tor bị chặn.';
+      'Khoảng một giây. Hoạt động cả ở nơi Tor bị chặn.';
 
   @override
   String get onboardingAutoFindsAWay =>
@@ -4107,7 +4106,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'Đó là toàn bộ danh tính. Không có số điện thoại để bị lộ, không có email để bị lừa đảo, không có gì để tra cứu. Những người trò chuyện với bạn sẽ thấy ba từ này và khuôn mặt bạn đã chọn.';
+      'Đó là toàn bộ danh tính. Không có số điện thoại hay email nào để bị lộ hoặc bị tra cứu. Những người trò chuyện với bạn sẽ thấy ba từ này và khuôn mặt bạn đã chọn.';
 
   @override
   String get onboardingNobodyCanReachYou =>
@@ -4794,7 +4793,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      'Điện thoại cũ sẽ ngừng nhận ngay khi bạn gửi bất cứ thứ gì từ đây. Không phải từ từ. Tin nhắn đầu tiên bạn gửi từ thiết bị này là tin cuối cùng điện thoại cũ còn theo được, và mọi thứ đến điện thoại cũ sau đó sẽ không đọc được ở đó và cũng không chờ bạn ở đây.';
+      'Điện thoại cũ sẽ ngừng nhận ngay khi bạn gửi bất cứ thứ gì từ đây. Tin nhắn đầu tiên bạn gửi từ thiết bị này là tin cuối cùng điện thoại cũ còn theo được, và mọi thứ đến điện thoại cũ sau đó sẽ không đọc được ở đó và cũng không chờ bạn ở đây.';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -5009,11 +5008,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      'Ứng dụng nhắn tin nào cũng tự nhận là riêng tư. Đây là danh sách cụ thể, theo từng đường đi, kể cả những phần chẳng hay ho gì cho chúng tôi. Chạm vào một dòng để xem lý do.';
+      'Đây là danh sách, theo từng đường đi, kể cả những điểm yếu. Chạm vào một dòng để xem lý do.';
 
   @override
   String get seenHonestAboutTheLast =>
-      'Nói thật về mấy dòng cuối: đó là lý do có khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa, và không công cụ nào cứu được bạn khỏi người đang cầm điện thoại đã mở khóa của bạn. Mô hình mối đe dọa đầy đủ nằm trong THREAT_MODEL.md trong kho mã, viết theo LINDDUN. Mã nguồn mở, nên bạn không phải tin suông bất cứ điều gì ở đây.';
+      'Mấy dòng cuối là lý do có khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa, và không công cụ nào cứu được bạn khỏi người đang cầm điện thoại đã mở khóa của bạn. Mô hình mối đe dọa đầy đủ nằm trong THREAT_MODEL.md trong kho mã, viết theo LINDDUN. Mã nguồn mở, nên bạn có thể tự kiểm tra tất cả.';
 
   @override
   String get seenHidden => 'Ẩn';
@@ -5042,7 +5041,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      'Được mã hóa đầu cuối bằng double ratchet của Signal, rồi được niêm phong thêm lần nữa trong một lớp bọc gift wrap. Dù có cố, chúng tôi cũng không đọc được.';
+      'Được mã hóa đầu cuối bằng double ratchet của Signal, rồi được niêm phong thêm lần nữa trong một lớp bọc gift wrap. Chúng tôi không đọc được.';
 
   @override
   String get seenYourIpAddress => 'Địa chỉ IP của bạn';
@@ -5055,14 +5054,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      'Ở chế độ onion, mọi thứ đi ra qua tor và relay chỉ thấy một nút thoát, không bao giờ thấy bạn. Ở chế độ relay, kết nối đi thẳng tới relay riêng của chúng tôi: không có gì chuyển tiếp địa chỉ của bạn và không có gì được ghi lại, nhưng riêng kết nối đó thì chúng tôi thấy được. Ở chế độ nhanh, mọi relay công cộng đều biết bạn đã kết nối, nhưng không biết bạn nói chuyện với ai hay nói gì.';
+      'Ở chế độ onion, mọi thứ đi ra qua Tor và relay chỉ thấy một nút thoát, không bao giờ thấy bạn. Ở chế độ relay, kết nối đi thẳng tới relay riêng của chúng tôi: không có gì chuyển tiếp địa chỉ của bạn và không có gì được ghi lại, nhưng riêng kết nối đó thì chúng tôi thấy được. Ở chế độ nhanh, mọi relay công cộng đều biết bạn đã kết nối, nhưng không biết bạn nói chuyện với ai hay nói gì.';
 
   @override
   String get seenYourContactGraph => 'Mạng liên hệ của bạn';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo không quét danh bạ của bạn. Đó chính là mục đích. Ở đây không có số điện thoại nào để bị lộ.';
+      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ.';
 
   @override
   String get seenIntroducer => 'Người giới thiệu';
@@ -5096,7 +5095,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'Bản xem trước do người gửi tải về, qua tor, và đi bên trong tin nhắn được mã hóa. Điện thoại nhận không gửi yêu cầu nào. Trang web chỉ biết có ai đó dùng tor đã yêu cầu một trang, ngoài ra không biết gì. Không bao giờ có hình ảnh nào được tải, và liên kết từ người lạ vẫn chỉ là văn bản thường.';
+      'Bản xem trước do người gửi tải về, qua Tor, và đi bên trong tin nhắn được mã hóa. Điện thoại nhận không gửi yêu cầu nào. Trang web chỉ biết có ai đó dùng Tor đã yêu cầu một trang, ngoài ra không biết gì. Không bao giờ có hình ảnh nào được tải, và liên kết từ người lạ vẫn chỉ là văn bản thường.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Điện thoại bị thu giữ lúc mở khóa';
@@ -5110,7 +5109,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'Lớp ratchet và lớp lưu trữ là chuẩn. Lớp nối chúng lại là của chúng tôi và chưa có bên độc lập nào kiểm tra. Hãy coi đây là bản alpha, vì đúng là vậy.';
+      'Lớp ratchet và lớp lưu trữ là chuẩn. Lớp nối chúng lại là của chúng tôi và chưa có bên độc lập nào kiểm tra. Đây là bản alpha.';
 
   @override
   String get seenOnion => 'Onion';
@@ -5150,7 +5149,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsYourProtections => 'Lớp bảo vệ của bạn';
 
   @override
-  String get settingsTorRouting => 'Định tuyến tor';
+  String get settingsTorRouting => 'Định tuyến Tor';
 
   @override
   String get settingsConnecting => 'Đang kết nối';
@@ -5726,21 +5725,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · tiếng Hy Lạp nghĩa là ẩn giấu.\nMột nơi yên tĩnh để trò chuyện, được làm ra để không ai theo dõi.';
+      'Kryfo · KREE-fo · tiếng Hy Lạp nghĩa là ẩn giấu.\nMột nơi để trò chuyện, được làm ra để không ai theo dõi.';
 
   @override
-  String get whyKryfoRoutedThroughTor => 'Định tuyến qua tor';
+  String get whyKryfoRoutedThroughTor => 'Định tuyến qua Tor';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      'Theo mặc định, mọi tin nhắn đi qua tor - một chuỗi các relay. Không ai, kể cả chúng tôi hay bên vận hành mạng của bạn, có thể thấy bạn nói chuyện với ai hay bạn đang ở đâu.';
+      'Theo mặc định, mọi tin nhắn đi qua Tor, một chuỗi các relay. Không ai, kể cả chúng tôi hay bên vận hành mạng của bạn, có thể thấy bạn nói chuyện với ai hay bạn đang ở đâu.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'Được mã hóa đầu cuối';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
-      'Tin nhắn được mã hóa bằng những khóa mà chỉ bạn và người đang trò chuyện với bạn nắm giữ. Dù có cố, chúng tôi cũng không đọc được.';
+      'Tin nhắn được mã hóa bằng những khóa mà chỉ bạn và người đang trò chuyện với bạn nắm giữ. Chúng tôi không đọc được.';
 
   @override
   String get whyKryfoNoServersHoldingYour =>
@@ -5755,7 +5754,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ - Kryfo được xây dựng để không như vậy.';
+      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ. Kryfo được xây dựng để không như vậy.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Xác minh đúng là họ';
@@ -5769,7 +5768,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo đang ở giai đoạn alpha và chưa được kiểm định. Mật mã là thật nhưng chưa chuyên gia bên ngoài nào kiểm tra, nên hãy coi đây là sản phẩm đang hoàn thiện, chưa phải thứ để giao phó tính mạng của bạn.';
+      'Kryfo đang ở giai đoạn alpha và chưa được kiểm định. Mật mã là thật nhưng chưa chuyên gia bên ngoài nào kiểm tra, nên đừng dựa vào nó khi sự an toàn của bạn phụ thuộc vào đó.';
 
   @override
   String get cleanerLocation => 'Vị trí';
@@ -6327,11 +6326,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID Kryfo của bạn.';
 
   @override
-  String get linkStubFetchedOverTorBy => 'Tải qua tor · bởi thiết bị của bạn';
+  String get linkStubFetchedOverTorBy => 'Tải qua Tor · bởi thiết bị của bạn';
 
   @override
   String get linkStubFetchedOverTorByTheirDevice =>
-      'Tải qua tor · bởi thiết bị của họ';
+      'Tải qua Tor · bởi thiết bị của họ';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6410,7 +6409,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'Đang báo với mạng rằng bạn trực tuyến — mà không tiết lộ bạn ở đâu.';
+      'Đang báo với mạng rằng bạn trực tuyến, mà không tiết lộ bạn ở đâu.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6544,7 +6543,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · tải qua tor';
+    return '$domainOf · tải qua Tor';
   }
 
   @override
@@ -6554,7 +6553,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get previewStripAddPreview => 'Thêm xem trước';
 
   @override
-  String get previewStripFetchingOverTor => 'Đang tải qua tor…';
+  String get previewStripFetchingOverTor => 'Đang tải qua Tor…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -7126,7 +7125,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để tìm cầu nối, Kryfo có thể hỏi Dự án Tor, nếu bạn đồng ý. Mỗi ngày có rất nhiều người dùng cầu nối.';
+      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để tìm cầu nối, Kryfo có thể hỏi Dự án Tor, nếu bạn đồng ý.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'từ Dự án Tor';
@@ -7718,7 +7717,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'Nếu bạn quên mã PIN này, trò chuyện ẩn của bạn sẽ mất vĩnh viễn. Không ai lấy lại được, kể cả chúng tôi.';
+      'Nếu bạn quên mã PIN này, trò chuyện ẩn của bạn sẽ mất vĩnh viễn. Không ai lấy lại được.';
 
   @override
   String get flowVaultForgetOk => 'Tôi hiểu';

@@ -540,7 +540,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appIdentityCreated => 'هویت ساخته شد';
 
   @override
-  String get appStartingTor30s => 'راه‌اندازی tor (حدود ۳۰ ثانیه)...';
+  String get appStartingTor30s => 'راه‌اندازی Tor (حدود ۳۰ ثانیه)...';
 
   @override
   String get appScanOrImportA => 'اول یک همتا را اسکن یا وارد کنید';
@@ -662,15 +662,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'اولین اتصال یکی دو دقیقه طول می‌کشد تا tor مسیری خصوصی بسازد. پس از آن مسیر در حافظه می‌ماند، پس Kryfo دفعه‌های بعد خیلی سریع‌تر باز می‌شود.';
+      'اولین اتصال یکی دو دقیقه طول می‌کشد تا Tor مسیری خصوصی بسازد. پس از آن مسیر در حافظه می‌ماند، پس Kryfo دفعه‌های بعد خیلی سریع‌تر باز می‌شود.';
 
   @override
   String get appTorNoRelayYet =>
-      'اتصال tor برقرار است، اما هنوز هیچ رله‌ای پاسخ نمی‌دهد. Kryfo همچنان تلاش می‌کند و پیام‌ها همین‌جا می‌مانند تا یکی پاسخ دهد.';
+      'اتصال Tor برقرار است، اما هنوز هیچ رله‌ای پاسخ نمی‌دهد. Kryfo همچنان تلاش می‌کند و پیام‌ها همین‌جا می‌مانند تا یکی پاسخ دهد.';
 
   @override
   String get appRelayAndFastModes =>
-      'حالت‌های رله و سریع tor را دور می‌زنند و سریع‌ترند. این حالت‌ها در تنظیمات، زیر «سرعت و حریم خصوصی» هستند و هر کدام می‌گوید چه بهایی دارد.';
+      'حالت‌های رله و سریع Tor را دور می‌زنند و سریع‌ترند. این حالت‌ها در تنظیمات، زیر «سرعت و حریم خصوصی» هستند و هر کدام می‌گوید چه بهایی دارد.';
 
   @override
   String get appViaRelay => 'از راه رله';
@@ -1460,7 +1460,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '⁨$humanBytes⁩ · ⁨$wireEstimate⁩ از راه tor';
+    return '⁨$humanBytes⁩ · ⁨$wireEstimate⁩ از راه Tor';
   }
 
   @override
@@ -1503,7 +1503,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'دریافتش ممکن نشد · بدون پیش‌نمایش فرستاده می‌شود';
 
   @override
-  String get chatNoSignalSessionRe => 'نشست Signal نیست - دوباره جفت کنید';
+  String get chatNoSignalSessionRe => 'نشست Signal نیست. دوباره جفت کنید';
 
   @override
   String get chatMessageUnavailable => 'پیام در دسترس نیست';
@@ -1638,7 +1638,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatAcceptToReplyThey =>
-      'برای پاسخ دادن بپذیرید - تا وقتی نپذیرفته‌اید، او فقط یک پیام دیگر می‌تواند بفرستد.';
+      'برای پاسخ دادن بپذیرید. تا وقتی نپذیرفته‌اید، او فقط یک پیام دیگر می‌تواند بفرستد.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1682,7 +1682,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatEncryptedDirect => 'رمزگذاری‌شده · مستقیم';
 
   @override
-  String get chatEncryptedOverTor => 'رمزگذاری‌شده · از راه tor';
+  String get chatEncryptedOverTor => 'رمزگذاری‌شده · از راه Tor';
 
   @override
   String get chatSearchThisChat => 'جست‌وجو در این گفت‌وگو';
@@ -2176,7 +2176,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'ناشناس حمایت کنید. نشان اختیاری است.\n*حریم خصوصی هرگز پشت دیوار پرداخت نیست.*';
+      'ناشناس حمایت کنید. نشان اختیاری است.\n*همه‌ی امکانات حریم خصوصی رایگان است.*';
 
   @override
   String get donateAuditTitle => 'به تأمین هزینهٔ یک ممیزی امنیتی کمک کنید';
@@ -2220,7 +2220,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get donateReachingThePaymentService =>
-      'در حال رسیدن به سرویس پرداخت از راه tor…';
+      'در حال رسیدن به سرویس پرداخت از راه Tor…';
 
   @override
   String get donateThisCanTakeUp => 'ممکن است تا یک دقیقه طول بکشد';
@@ -2239,11 +2239,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get donateTorWasSlowTo =>
-      'Tor برای رسیدن به سرویس پرداخت کند بود. می‌توانید به نشانی پایین کمک مالی کنید - فقط نشانتان خودکار باز نمی‌شود. برای نشان، بعداً دوباره امتحان کنید.';
+      'Tor برای رسیدن به سرویس پرداخت کند بود. می‌توانید به نشانی پایین کمک مالی کنید، فقط نشانتان خودکار باز نمی‌شود. برای نشان، بعداً دوباره امتحان کنید.';
 
   @override
   String get donateThePaymentServiceIsHavingTrouble =>
-      'سرویس پرداخت الان به مشکل خورده. باز هم می‌توانید به نشانی پایین کمک مالی کنید - فقط نشانتان خودکار باز نمی‌شود. برای نشان، بعداً دوباره امتحان کنید.';
+      'سرویس پرداخت الان به مشکل خورده. باز هم می‌توانید به نشانی پایین کمک مالی کنید، فقط نشانتان خودکار باز نمی‌شود. برای نشان، بعداً دوباره امتحان کنید.';
 
   @override
   String get commonTryAgain => 'تلاش دوباره';
@@ -2263,7 +2263,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get donateThisScreenUpdatesItself =>
-      'به محض دیده شدن پرداختتان، این صفحه خودش به‌روز می‌شود.\nبازش نگه دارید - چیزی ذخیره نمی‌شود، چیزی شما را شناسایی نمی‌کند.';
+      'به محض دیده شدن پرداختتان، این صفحه خودش به‌روز می‌شود.\nبازش نگه دارید. چیزی ذخیره نمی‌شود، چیزی شما را شناسایی نمی‌کند.';
 
   @override
   String get donateWatchingTheChainFor =>
@@ -2304,13 +2304,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'روی زنجیره تأیید شد - حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+          'روی زنجیره تأیید شد. حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
       'patron':
-          'روی زنجیره تأیید شد - حالا شما حامی هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+          'روی زنجیره تأیید شد. حالا شما حامی هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
       'guardian':
-          'روی زنجیره تأیید شد - حالا شما نگهبان هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+          'روی زنجیره تأیید شد. حالا شما نگهبان هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
       'other':
-          'روی زنجیره تأیید شد - حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+          'روی زنجیره تأیید شد. حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
     });
     return '$_temp0';
   }
@@ -2336,7 +2336,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'پیام‌ها فوراً می‌رسند. هیچ چیز از tor بیرون نمی‌رود. بیشترین مصرف باتری.';
+      'پیام‌ها فوراً می‌رسند. هیچ چیز از Tor بیرون نمی‌رود. بیشترین مصرف باتری.';
 
   @override
   String get gettingMessagesCheckIns => 'سرکشی دوره‌ای';
@@ -2921,7 +2921,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      'هر کس آن را بداند می‌تواند بخواهد به شما پیام دهد، و هدف از داشتنش همین است. صفحه فقط دعوت شما و خطی را که نوشته‌اید نگه می‌دارد، نه چیز دیگری، و هیچ سابقه‌ای از اینکه چه کسی آن را می‌خواند نگه نمی‌دارد. هر وقت خواستید می‌توانید حذفش کنید.';
+      'هر کس آن را بداند می‌تواند بخواهد به شما پیام دهد. صفحه فقط دعوت شما و خطی را که نوشته‌اید نگه می‌دارد، نه چیز دیگری، و هیچ سابقه‌ای از اینکه چه کسی آن را می‌خواند نگه نمی‌دارد. هر وقت خواستید می‌توانید حذفش کنید.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -3087,7 +3087,7 @@ class AppLocalizationsFa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '⁨$countString⁩ در انتظار · tor هنوز در حال اتصال است',
+      other: '⁨$countString⁩ در انتظار · Tor هنوز در حال اتصال است',
     );
     return '$_temp0';
   }
@@ -3176,7 +3176,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String homeEveryMessageWithGoes(Object c) {
-    return 'همه‌ی پیام‌های شما با ⁨$c⁩ حذف می‌شود و دیگر مخاطب شما نیست. این کار فقط روی این گوشی است - نسخه‌ی او پیش خودش می‌ماند. اگر دوباره پیام دهد، به درخواست‌ها می‌رود.';
+    return 'همه‌ی پیام‌های شما با ⁨$c⁩ حذف می‌شود و دیگر مخاطب شما نیست. این کار فقط روی این گوشی است. نسخه‌ی او پیش خودش می‌ماند. اگر دوباره پیام دهد، به درخواست‌ها می‌رود.';
   }
 
   @override
@@ -3272,7 +3272,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'هنوز کس دیگری برای معرفی نیست. اول یک مخاطب دیگر اضافه کنید.';
 
   @override
-  String get introduceANoteLikeMy => 'یک یادداشت، مثل «همکارم» - اختیاری';
+  String get introduceANoteLikeMy => 'یک یادداشت، مثل «همکارم» (اختیاری)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
@@ -3362,7 +3362,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lockFileCheckCapitalsAndSpaces =>
-      'حروف بزرگ و فاصله‌ها را بررسی کنید. هیچ‌کس نمی‌تواند آن را بازنشانی کند، حتی ما.';
+      'حروف بزرگ و فاصله‌ها را بررسی کنید. هیچ‌کس نمی‌تواند آن را بازنشانی کند.';
 
   @override
   String get lockFileItMayHaveBeen =>
@@ -3497,7 +3497,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      'هر کس گذرواژه را داشته باشد می‌تواند آن را باز کند، در Kryfo یا روی هر رایانه‌ای با ابزار رایگان age. اگر فراموشش کنید، فایل برای همیشه از دست می‌رود. هیچ‌کس نمی‌تواند آن را بازنشانی کند، حتی ما.';
+      'هر کس گذرواژه را داشته باشد می‌تواند آن را باز کند، در Kryfo یا روی هر رایانه‌ای با ابزار رایگان age. اگر فراموشش کنید، فایل برای همیشه از دست می‌رود. هیچ‌کس نمی‌تواند آن را بازنشانی کند.';
 
   @override
   String get lockFileLocked2 => 'قفل شد.';
@@ -3578,7 +3578,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'یک اتصال مهروموم‌شده به رله‌ی خود Kryfo، مثل یک VPN که چیزی برای ثبت ندارد. ارسال‌ها در حدود یک ثانیه می‌رسند، و جایی که tor مسدود است هم کار می‌کند.';
+      'یک اتصال مهروموم‌شده به رله‌ی خود Kryfo، مثل یک VPN که چیزی برای ثبت ندارد. ارسال‌ها در حدود یک ثانیه می‌رسند، و جایی که Tor مسدود است هم کار می‌کند.';
 
   @override
   String get modesQuick => 'چابک';
@@ -4033,7 +4033,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'از کلیدی ساخته شده که فقط روی این گوشی زندگی می‌کند. *به‌یادماندنی، یکتا، فقط مال شما.* هیچ‌کس دیگری این را ندارد.';
+      'از کلیدی ساخته شده که فقط روی این گوشی زندگی می‌کند. *هیچ‌کس دیگری این واژه‌ها را ندارد.*';
 
   @override
   String get onboardingTryAnother => 'یکی دیگر';
@@ -4091,7 +4091,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks =>
-      'حدود یک ثانیه. جایی که tor مسدود است هم کار می‌کند.';
+      'حدود یک ثانیه. جایی که Tor مسدود است هم کار می‌کند.';
 
   @override
   String get onboardingAutoFindsAWay =>
@@ -4128,7 +4128,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'کل هویت همین است. نه شماره‌ای که لو برود، نه ایمیلی برای فیشینگ، نه چیزی برای جست‌وجو. کسانی که با آن‌ها حرف می‌زنید این واژه‌ها و چهره‌ای را که انتخاب کرده‌اید می‌بینند.';
+      'کل هویت همین است. هیچ شماره یا ایمیلی نیست که لو برود یا جست‌وجو شود. کسانی که با آن‌ها حرف می‌زنید این واژه‌ها و چهره‌ای را که انتخاب کرده‌اید می‌بینند.';
 
   @override
   String get onboardingNobodyCanReachYou =>
@@ -4810,7 +4810,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      'گوشی قبلی از همان لحظه‌ای که از این‌جا چیزی بفرستید، دیگر چیزی دریافت نمی‌کند. نه کم‌کم. اولین پیامی که از این دستگاه بفرستید آخرین پیامی است که گوشی قبلی می‌تواند دنبال کند، و هر چه بعد از آن به آن برسد، آن‌جا خوانده نمی‌شود و این‌جا هم منتظر شما نیست.';
+      'گوشی قبلی از همان لحظه‌ای که از این‌جا چیزی بفرستید، دیگر چیزی دریافت نمی‌کند. اولین پیامی که از این دستگاه بفرستید آخرین پیامی است که گوشی قبلی می‌تواند دنبال کند، و هر چه بعد از آن به آن برسد، آن‌جا خوانده نمی‌شود و این‌جا هم منتظر شما نیست.';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -5023,11 +5023,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      'هر پیام‌رسانی ادعای حریم خصوصی دارد. این فهرست دقیق است، به تفکیک مسیر، همراه با بخش‌هایی که به نفع ما نیست. برای دلیلش روی هر ردیف بزنید.';
+      'این فهرست است، به تفکیک مسیر، همراه با نقاط ضعف. برای دلیلش روی هر ردیف بزنید.';
 
   @override
   String get seenHonestAboutTheLast =>
-      'درباره‌ی ردیف‌های آخر صادق باشیم: قفل برنامه، PIN پاک‌سازی و ذخیره‌سازی رمزگذاری‌شده برای همین‌اند، و هیچ ابزاری شما را از کسی که گوشی باز شما را در دست دارد نجات نمی‌دهد. مدل کامل تهدید در THREAT_MODEL.md در مخزن است، که بر پایه‌ی LINDDUN نوشته شده. کد باز است، پس لازم نیست هیچ‌کدام از این‌ها را از سر اعتماد بپذیرید.';
+      'قفل برنامه، PIN پاک‌سازی و ذخیره‌سازی رمزگذاری‌شده برای ردیف‌های آخرند، و هیچ ابزاری شما را از کسی که گوشی باز شما را در دست دارد نجات نمی‌دهد. مدل کامل تهدید در THREAT_MODEL.md در مخزن است، که بر پایه‌ی LINDDUN نوشته شده. کد باز است، پس می‌توانید همه‌ی این‌ها را خودتان بررسی کنید.';
 
   @override
   String get seenHidden => 'پنهان';
@@ -5056,7 +5056,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      'سرتاسری رمزگذاری‌شده با الگوریتم Double Ratchet پروتکل Signal، و بعد دوباره درون یک بسته‌ی کادوپیچ مهروموم‌شده. حتی اگر تلاش کنیم، نمی‌توانیم آن را بخوانیم.';
+      'سرتاسری رمزگذاری‌شده با الگوریتم Double Ratchet پروتکل Signal، و بعد دوباره درون یک بسته‌ی کادوپیچ مهروموم‌شده. ما نمی‌توانیم آن را بخوانیم.';
 
   @override
   String get seenYourIpAddress => 'نشانی IP شما';
@@ -5069,14 +5069,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      'در حالت onion همه‌چیز از راه tor بیرون می‌رود و رله یک گره خروجی می‌بیند، هرگز شما را. در حالت رله، اتصال مستقیم به رله‌ی خود ما می‌رود: هیچ چیز نشانی شما را به جای دیگری نمی‌فرستد و هیچ چیز ثبت نمی‌شود، اما همان یک اتصال را ما می‌بینیم. در حالت سریع، هر رله‌ی عمومی می‌فهمد که شما وصل شده‌اید، هرچند نه به چه کسی و نه اینکه چه گفتید.';
+      'در حالت onion همه‌چیز از راه Tor بیرون می‌رود و رله یک گره خروجی می‌بیند، هرگز شما را. در حالت رله، اتصال مستقیم به رله‌ی خود ما می‌رود: هیچ چیز نشانی شما را به جای دیگری نمی‌فرستد و هیچ چیز ثبت نمی‌شود، اما همان یک اتصال را ما می‌بینیم. در حالت سریع، هر رله‌ی عمومی می‌فهمد که شما وصل شده‌اید، هرچند نه به چه کسی و نه اینکه چه گفتید.';
 
   @override
   String get seenYourContactGraph => 'شبکه‌ی مخاطبان شما';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo مخاطبان شما را اسکن نمی‌کند. نکته همین است. این‌جا هیچ شماره تلفنی وجود ندارد که لو برود.';
+      'Kryfo مخاطبان شما را اسکن نمی‌کند. این‌جا هیچ شماره تلفنی وجود ندارد که لو برود.';
 
   @override
   String get seenIntroducer => 'معرف';
@@ -5110,7 +5110,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'پیش‌نمایش را فرستنده، از راه tor، می‌گیرد و درون پیام رمزگذاری‌شده سفر می‌کند. گوشی گیرنده هیچ درخواستی نمی‌فرستد. وب‌سایت فقط می‌فهمد کسی با tor صفحه‌ای خواسته، نه چیز دیگری. هیچ تصویری هرگز بارگذاری نمی‌شود، و پیوند یک غریبه متن ساده می‌ماند.';
+      'پیش‌نمایش را فرستنده، از راه Tor، می‌گیرد و درون پیام رمزگذاری‌شده سفر می‌کند. گوشی گیرنده هیچ درخواستی نمی‌فرستد. وب‌سایت فقط می‌فهمد کسی با Tor صفحه‌ای خواسته، نه چیز دیگری. هیچ تصویری هرگز بارگذاری نمی‌شود، و پیوند یک غریبه متن ساده می‌ماند.';
 
   @override
   String get seenASeizedUnlockedPhone => 'گوشی توقیف‌شده با قفل باز';
@@ -5124,7 +5124,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'لایه‌های ratchet و ذخیره‌سازی استاندارد هستند. لایه‌ای که آن‌ها را به هم وصل می‌کند مال ماست و هیچ‌کس مستقلی آن را بازبینی نکرده. با آن مثل یک نسخه‌ی آلفا رفتار کنید، چون همین است.';
+      'لایه‌های ratchet و ذخیره‌سازی استاندارد هستند. لایه‌ای که آن‌ها را به هم وصل می‌کند مال ماست و هیچ‌کس مستقلی آن را بازبینی نکرده. این نرم‌افزار در مرحله‌ی آلفا است.';
 
   @override
   String get seenOnion => 'Onion';
@@ -5164,7 +5164,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsYourProtections => 'محافظت‌های شما';
 
   @override
-  String get settingsTorRouting => 'مسیریابی tor';
+  String get settingsTorRouting => 'مسیریابی Tor';
 
   @override
   String get settingsConnecting => 'در حال اتصال';
@@ -5739,21 +5739,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · کری‌فو · در یونانی یعنی پنهان.\nجایی آرام برای حرف زدن، ساخته‌شده طوری که هیچ‌کس تماشا نکند.';
+      'Kryfo · کری‌فو · در یونانی یعنی پنهان.\nجایی برای حرف زدن، ساخته‌شده طوری که هیچ‌کس تماشا نکند.';
 
   @override
-  String get whyKryfoRoutedThroughTor => 'مسیریابی از راه tor';
+  String get whyKryfoRoutedThroughTor => 'مسیریابی از راه Tor';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      'به‌طور پیش‌فرض هر پیام از راه tor سفر می‌کند - زنجیره‌ای از رله‌ها. هیچ‌کس، نه ما و نه شبکه‌ی شما، نمی‌تواند ببیند با چه کسی حرف می‌زنید یا کجا هستید.';
+      'به‌طور پیش‌فرض هر پیام از راه Tor سفر می‌کند، زنجیره‌ای از رله‌ها. هیچ‌کس، نه ما و نه شبکه‌ی شما، نمی‌تواند ببیند با چه کسی حرف می‌زنید یا کجا هستید.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'رمزگذاری سرتاسری';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
-      'پیام‌ها با کلیدهایی مهروموم می‌شوند که فقط شما و کسی که با او حرف می‌زنید دارید. حتی اگر تلاش کنیم، نمی‌توانیم آن‌ها را بخوانیم.';
+      'پیام‌ها با کلیدهایی مهروموم می‌شوند که فقط شما و کسی که با او حرف می‌زنید دارید. ما نمی‌توانیم آن‌ها را بخوانیم.';
 
   @override
   String get whyKryfoNoServersHoldingYour =>
@@ -5768,7 +5768,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'نه رسید خواندن و نه نشانه‌ی «در حال نوشتن» به کسی داده نمی‌شود، و هیچ فهرست مخاطبی بارگذاری نمی‌شود. فراداده همان چیزی است که بیشتر برنامه‌ها نشت می‌دهند - Kryfo طوری ساخته شده که ندهد.';
+      'نه رسید خواندن و نه نشانه‌ی «در حال نوشتن» به کسی داده نمی‌شود، و هیچ فهرست مخاطبی بارگذاری نمی‌شود. فراداده همان چیزی است که بیشتر برنامه‌ها نشت می‌دهند. Kryfo طوری ساخته شده که ندهد.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'مطمئن شوید واقعاً خودش است';
@@ -5782,7 +5782,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo در مرحلهٔ آلفا است و ممیزی نشده. رمزنگاری واقعی است، اما هنوز هیچ متخصص بیرونی آن را بررسی نکرده، پس با آن مثل کاری در حال پیشرفت رفتار کنید، نه چیزی که فعلاً بشود جانتان را به آن سپرد.';
+      'Kryfo در مرحلهٔ آلفا است و ممیزی نشده. رمزنگاری واقعی است، اما هنوز هیچ متخصص بیرونی آن را بررسی نکرده، پس فعلاً جایی که امنیتتان به آن بستگی دارد به آن تکیه نکنید.';
 
   @override
   String get cleanerLocation => 'مکان';
@@ -6350,11 +6350,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'با کلیدی که برای این اتاق ساخته شده می‌پیوندید. هیچ‌کس در آن شناسه‌ی Kryfo شما را نمی‌بیند.';
 
   @override
-  String get linkStubFetchedOverTorBy => 'از راه tor گرفته شد · با دستگاه شما';
+  String get linkStubFetchedOverTorBy => 'از راه Tor گرفته شد · با دستگاه شما';
 
   @override
   String get linkStubFetchedOverTorByTheirDevice =>
-      'از راه tor گرفته شد · با دستگاه او';
+      'از راه Tor گرفته شد · با دستگاه او';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6433,7 +6433,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'به شبکه می‌گوید آنلاین هستید — بی‌آنکه فاش کند کجا.';
+      'به شبکه می‌گوید آنلاین هستید، بی‌آنکه فاش کند کجا.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6567,7 +6567,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '⁨$domainOf⁩ · از راه tor گرفته شد';
+    return '⁨$domainOf⁩ · از راه Tor گرفته شد';
   }
 
   @override
@@ -6577,7 +6577,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get previewStripAddPreview => 'افزودن پیش‌نمایش';
 
   @override
-  String get previewStripFetchingOverTor => 'در حال گرفتن از راه tor…';
+  String get previewStripFetchingOverTor => 'در حال گرفتن از راه Tor…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -7148,7 +7148,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'وقتی Tor مسدود است، «خودکار» خودش راهی پیدا می‌کند. برای پیدا کردن پل، اگر موافق باشید، ممکن است Kryfo از پروژه‌ی Tor بپرسد. هر روز آدم‌های زیادی از پل استفاده می‌کنند.';
+      'وقتی Tor مسدود است، «خودکار» خودش راهی پیدا می‌کند. برای پیدا کردن پل، اگر موافق باشید، ممکن است Kryfo از پروژه‌ی Tor بپرسد.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'از پروژه‌ی Tor';
@@ -7746,7 +7746,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'اگر این PIN را فراموش کنید، گفت‌وگوهای پنهان شما برای همیشه از دست می‌روند. هیچ‌کس نمی‌تواند آن‌ها را برگرداند، حتی ما.';
+      'اگر این PIN را فراموش کنید، گفت‌وگوهای پنهان شما برای همیشه از دست می‌روند. هیچ‌کس نمی‌تواند آن‌ها را برگرداند.';
 
   @override
   String get flowVaultForgetOk => 'متوجه شدم';

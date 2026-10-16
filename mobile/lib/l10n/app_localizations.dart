@@ -858,7 +858,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Starting tor (~30s)...'**
+  /// **'Starting Tor (~30s)...'**
   String get appStartingTor30s;
 
   /// main.dart
@@ -1086,7 +1086,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.'**
+  /// **'The first connection takes a minute or two while Tor builds a private route. After that it is cached, so opening Kryfo later is much faster.'**
   String get appTheFirstConnectionTakes;
 
   /// main.dart
@@ -1098,7 +1098,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.'**
+  /// **'Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.'**
   String get appRelayAndFastModes;
 
   /// main.dart
@@ -1632,7 +1632,7 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.'**
+  /// **'Your encrypted Kryfo backup. Keep this file and your passphrase safe. You need both to restore.'**
   String get backupYourEncryptedKryfoBackup;
 
   /// screens/backup_screen.dart
@@ -2304,7 +2304,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{humanBytes} · {wireEstimate} over tor'**
+  /// **'{humanBytes} · {wireEstimate} over Tor'**
   String chatOverTor(Object humanBytes, Object wireEstimate);
 
   /// screens/chat_screen.dart
@@ -2376,7 +2376,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No signal session - re-pair'**
+  /// **'No signal session. Pair again'**
   String get chatNoSignalSessionRe;
 
   /// screens/chat_screen.dart
@@ -2514,7 +2514,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Every message here is erased from this phone. This only clears your copy - it does not touch their device.'**
+  /// **'Every message here is erased from this phone. This only clears your copy. It does not touch their device.'**
   String get chatEveryMessageHereIs;
 
   /// screens/chat_screen.dart
@@ -2610,7 +2610,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Accept to reply - they get one more message in until you do.'**
+  /// **'Accept to reply. Until you do, they can send one more message.'**
   String get chatAcceptToReplyThey;
 
   /// screens/chat_screen.dart
@@ -2622,7 +2622,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{vouchNames} introduced you. Say hello - they got your card too.'**
+  /// **'{vouchNames} introduced you. Say hello. They got your card too.'**
   String chatIntroducedYouSayHello(Object vouchNames);
 
   /// screens/chat_screen.dart
@@ -2688,7 +2688,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Encrypted · over tor'**
+  /// **'Encrypted · over Tor'**
   String get chatEncryptedOverTor;
 
   /// screens/chat_screen.dart
@@ -3504,7 +3504,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*'**
+  /// **'Back it anonymously. Badge opt-in.\n*Every privacy feature is free.*'**
   String get donateBackItAnonymouslyBadge;
 
   /// screens/donate_screen.dart. the row that links to kryfo.app/audit. never say or imply Kryfo is already audited
@@ -3576,7 +3576,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Reaching the payment service over tor…'**
+  /// **'Reaching the payment service over Tor…'**
   String get donateReachingThePaymentService;
 
   /// screens/donate_screen.dart
@@ -3606,13 +3606,13 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Tor was slow to reach the payment service. You can donate to the address below - your badge just won\'t unlock automatically. Try again later for the badge.'**
+  /// **'Tor was slow to reach the payment service. You can donate to the address below, but your badge won\'t unlock automatically. Try again later for the badge.'**
   String get donateTorWasSlowTo;
 
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The payment service is having trouble right now. You can still donate to the address below - your badge just won\'t unlock automatically. Try again later for the badge.'**
+  /// **'The payment service is having trouble right now. You can still donate to the address below, but your badge won\'t unlock automatically. Try again later for the badge.'**
   String get donateThePaymentServiceIsHavingTrouble;
 
   /// screens/donate_screen.dart, widgets/boot_failed.dart, widgets/room_join.dart
@@ -3642,7 +3642,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This screen updates itself the moment your payment is seen.\nKeep it open - nothing is stored, nothing identifies you.'**
+  /// **'This screen updates itself the moment your payment is seen.\nKeep it open. Nothing is stored and nothing identifies you.'**
   String get donateThisScreenUpdatesItself;
 
   /// screens/donate_screen.dart
@@ -3708,7 +3708,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart. tier is the supporter tier
   ///
   /// In en, this message translates to:
-  /// **'{tier, select, supporter{Verified on-chain - you\'re a supporter now. No one can take that off you.} patron{Verified on-chain - you\'re a patron now. No one can take that off you.} guardian{Verified on-chain - you\'re a guardian now. No one can take that off you.} other{Verified on-chain - you\'re a supporter now. No one can take that off you.}}'**
+  /// **'{tier, select, supporter{Verified on-chain. You\'re a supporter now. No one can take that off you.} patron{Verified on-chain. You\'re a patron now. No one can take that off you.} guardian{Verified on-chain. You\'re a guardian now. No one can take that off you.} other{Verified on-chain. You\'re a supporter now. No one can take that off you.}}'**
   String donateVerifiedOnChainYou(String tier);
 
   /// screens/donate_screen.dart
@@ -4638,7 +4638,7 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Anyone who knows it can ask to message you, which is the point of having one. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.'**
+  /// **'Anyone who knows it can ask to message you. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.'**
   String get handleAnyoneWhoKnowsIt;
 
   /// screens/handle_screen.dart
@@ -4860,7 +4860,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · tor is still connecting}}'**
+  /// **'{count, plural, other{{count} waiting · Tor is still connecting}}'**
   String homeWaitingTorIsStill(int count);
 
   /// screens/home_screen.dart
@@ -4974,7 +4974,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Every message with {c} goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.'**
+  /// **'Every message with {c} goes, and they stop being a contact. It only clears this phone. Their copy stays with them. If they message again it lands in requests.'**
   String homeEveryMessageWithGoes(Object c);
 
   /// screens/home_screen.dart
@@ -5106,7 +5106,7 @@ abstract class AppLocalizations {
   /// screens/introduce_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'A note, like \"my cousin\" - optional'**
+  /// **'A note, like \"my cousin\" (optional)'**
   String get introduceANoteLikeMy;
 
   /// screens/introduce_sheet.dart
@@ -5226,7 +5226,7 @@ abstract class AppLocalizations {
   /// screens/lock_file_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Check capitals and spaces. Nobody can reset it, us included.'**
+  /// **'Check capitals and spaces. Nobody can reset it.'**
   String get lockFileCheckCapitalsAndSpaces;
 
   /// screens/lock_file_screen.dart
@@ -5460,7 +5460,7 @@ abstract class AppLocalizations {
   /// screens/lock_file_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it, us included.'**
+  /// **'Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it.'**
   String get lockFileAnyoneWithThePassword;
 
   /// screens/lock_file_screen.dart
@@ -5604,7 +5604,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.'**
+  /// **'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.'**
   String get modesOneSealedConnectionTo;
 
   /// screens/modes_screen.dart
@@ -6372,7 +6372,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.'**
+  /// **'Generated from a key that lives only on this phone. *No one else has these words.*'**
   String get onboardingGeneratedFromAKey;
 
   /// screens/onboarding_screen.dart
@@ -6474,7 +6474,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'About a second. Works where tor is blocked.'**
+  /// **'About a second. Works where Tor is blocked.'**
   String get onboardingAboutASecondWorks;
 
   /// screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start
@@ -6540,7 +6540,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'That is the whole identity. No number to leak, no email to phish, nothing to look up. People you talk to see these words and the face you picked.'**
+  /// **'That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.'**
   String get onboardingThatIsTheWhole;
 
   /// screens/onboarding_screen.dart
@@ -7722,7 +7722,7 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The old phone stops receiving the moment you send anything from here. Not gradually. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.'**
+  /// **'The old phone stops receiving the moment you send anything from here. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.'**
   String get restoreTheOldPhoneStops;
 
   /// screens/restore_screen.dart
@@ -8064,13 +8064,13 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Every messenger claims privacy. This is the specific list, by route, including the parts that do not flatter us. Tap a row for the why.'**
+  /// **'Here is the list, by route, including the weak spots. Tap a row for the why.'**
   String get seenEveryMessengerClaimsPrivacy;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.'**
+  /// **'The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.'**
   String get seenHonestAboutTheLast;
 
   /// screens/seen_screen.dart
@@ -8124,7 +8124,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We could not read it if we tried.'**
+  /// **'End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We cannot read it.'**
   String get seenEndToEndEncrypted;
 
   /// screens/seen_screen.dart
@@ -8148,7 +8148,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'On onion everything leaves through tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.'**
+  /// **'On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.'**
   String get seenOnOnionEverythingLeaves;
 
   /// screens/seen_screen.dart
@@ -8160,7 +8160,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo does not scan your contacts. That is the point. No phone number exists here to leak.'**
+  /// **'Kryfo does not scan your contacts. No phone number exists here to leak.'**
   String get seenKryfoDoesNotScan;
 
   /// screens/seen_screen.dart
@@ -8220,7 +8220,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.'**
+  /// **'A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.'**
   String get seenAPreviewIsFetched;
 
   /// screens/seen_screen.dart
@@ -8244,7 +8244,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. Treat this as alpha, because it is.'**
+  /// **'The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. It is alpha software.'**
   String get seenTheRatchetAndStorage;
 
   /// screens/seen_screen.dart
@@ -9252,19 +9252,19 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.'**
+  /// **'Kryfo · KREE-fo · greek for hidden.\nA place to talk, built so no one is watching.'**
   String get whyKryfoKryfoKreeFoGreek;
 
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Routed through tor'**
+  /// **'Routed through Tor'**
   String get whyKryfoRoutedThroughTor;
 
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'By default every message travels through tor - a chain of relays. No one, not us and not your network, can see who you talk to or where you are.'**
+  /// **'By default every message travels through Tor, a chain of relays. No one, not us and not your network, can see who you talk to or where you are.'**
   String get whyKryfoByDefaultEveryMessage;
 
   /// screens/why_kryfo_screen.dart
@@ -9276,7 +9276,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Messages are sealed with keys only you and the person you are talking to hold. We could not read them if we tried.'**
+  /// **'Messages are sealed with keys only you and the person you are talking to hold. We cannot read them.'**
   String get whyKryfoMessagesAreSealedWith;
 
   /// screens/why_kryfo_screen.dart
@@ -9300,7 +9300,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.'**
+  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.'**
   String get whyKryfoNoReadReceiptsOr;
 
   /// screens/why_kryfo_screen.dart
@@ -9324,7 +9324,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.'**
+  /// **'Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so do not rely on it yet where your safety depends on it.'**
   String get whyKryfoKryfoIsPreAlpha;
 
   /// tools/cleaner.dart
@@ -10104,13 +10104,13 @@ abstract class AppLocalizations {
   /// widgets/link_stub.dart
   ///
   /// In en, this message translates to:
-  /// **'Fetched over tor · by your device'**
+  /// **'Fetched over Tor · by your device'**
   String get linkStubFetchedOverTorBy;
 
   /// widgets/link_stub.dart
   ///
   /// In en, this message translates to:
-  /// **'Fetched over tor · by their device'**
+  /// **'Fetched over Tor · by their device'**
   String get linkStubFetchedOverTorByTheirDevice;
 
   /// widgets/media_bubbles.dart
@@ -10476,7 +10476,7 @@ abstract class AppLocalizations {
   /// widgets/preview_strip.dart
   ///
   /// In en, this message translates to:
-  /// **'{domainOf} · fetched over tor'**
+  /// **'{domainOf} · fetched over Tor'**
   String previewStripFetchedOverTor(Object domainOf);
 
   /// widgets/preview_strip.dart
@@ -10494,7 +10494,7 @@ abstract class AppLocalizations {
   /// widgets/preview_strip.dart
   ///
   /// In en, this message translates to:
-  /// **'Fetching over tor…'**
+  /// **'Fetching over Tor…'**
   String get previewStripFetchingOverTor;
 
   /// widgets/tool_parts.dart
@@ -11478,7 +11478,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.'**
+  /// **'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree.'**
   String get bridgesAutomaticFindsAWay;
 
   /// screens/bridges_screen.dart
@@ -12492,7 +12492,7 @@ abstract class AppLocalizations {
   /// the hidden chats setup flow: the forget page, large
   ///
   /// In en, this message translates to:
-  /// **'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back, not even us.'**
+  /// **'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back.'**
   String get flowVaultForget;
 
   /// the hidden chats setup flow: the forget page, its one button

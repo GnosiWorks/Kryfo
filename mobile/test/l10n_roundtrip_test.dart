@@ -287,7 +287,7 @@ void main() {
     expect(l.appHelloFromTheOther, "Hello from the other side");
     expect(l.appIdentityRestored, "Identity restored");
     expect(l.appIdentityCreated, "Identity created");
-    expect(l.appStartingTor30s, "Starting tor (~30s)...");
+    expect(l.appStartingTor30s, "Starting Tor (~30s)...");
     expect(l.appScanOrImportA, "Scan or import a peer first");
     expect(l.appEncryptingSending30s, "Encrypting + sending (~30s)...");
     expect(l.appTapStartListeningFirst, "Tap start listening first");
@@ -333,7 +333,7 @@ void main() {
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
     expect(
       l.appTheFirstConnectionTakes,
-      "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
+      "The first connection takes a minute or two while Tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
     );
     expect(
       l.appTorNoRelayYet,
@@ -341,7 +341,7 @@ void main() {
     );
     expect(
       l.appRelayAndFastModes,
-      "Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
+      "Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
     );
     expect(l.appViaRelay, "Via relay");
     expect(l.appOffline, "Offline");
@@ -484,7 +484,7 @@ void main() {
     expect(l.backupKryfoBackup, "Kryfo backup");
     expect(
       l.backupYourEncryptedKryfoBackup,
-      "Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.",
+      "Your encrypted Kryfo backup. Keep this file and your passphrase safe. You need both to restore.",
     );
     expect(l.backupBackUpKryfo, "Back up Kryfo");
     expect(l.backupBackUp, "Back up");
@@ -625,7 +625,7 @@ void main() {
     expect(l.chatSendThis, "Send this file?");
     expect(
       l.chatOverTor("<humanBytes>", "<wireEstimate>"),
-      "<humanBytes> · <wireEstimate> over tor",
+      "<humanBytes> · <wireEstimate> over Tor",
     );
     expect(
       l.chatBigFilesGoOut,
@@ -644,7 +644,7 @@ void main() {
     expect(l.chatCouldnTReachIt, "Couldn't reach it · sending without");
     expect(l.chatNoTitleCameBack, "No title came back · sending without");
     expect(l.chatCouldnTFetchIt, "Couldn't fetch it · sending without");
-    expect(l.chatNoSignalSessionRe, "No signal session - re-pair");
+    expect(l.chatNoSignalSessionRe, "No signal session. Pair again");
     expect(l.chatMessageUnavailable, "Message unavailable");
     expect(l.chatYou2, "You");
     expect(l.chatThem, "Them");
@@ -675,7 +675,7 @@ void main() {
     expect(l.chatClearThisConversation, "Clear this conversation?");
     expect(
       l.chatEveryMessageHereIs,
-      "Every message here is erased from this phone. This only clears your copy - it does not touch their device.",
+      "Every message here is erased from this phone. This only clears your copy. It does not touch their device.",
     );
     expect(l.chatClear, "Clear");
     expect(l.chatBlockThisContact, "Block this contact?");
@@ -703,7 +703,7 @@ void main() {
     expect(l.chatPhotoProtectionOff, "Photo protection off");
     expect(
       l.chatAcceptToReplyThey,
-      "Accept to reply - they get one more message in until you do.",
+      "Accept to reply. Until you do, they can send one more message.",
     );
     expect(
       l.chatIntroducedYouAcceptTo("<introducer>"),
@@ -711,7 +711,7 @@ void main() {
     );
     expect(
       l.chatIntroducedYouSayHello("<vouchNames>"),
-      "<vouchNames> introduced you. Say hello - they got your card too.",
+      "<vouchNames> introduced you. Say hello. They got your card too.",
     );
     expect(l.chatIntroduceTo, "Introduce to...");
     expect(l.chatAcceptThemFirst, "Accept them first");
@@ -726,7 +726,7 @@ void main() {
     expect(l.chatSupporter, "Supporter");
     expect(l.chatEncryptedViaRelay, "Encrypted · via relay");
     expect(l.chatEncryptedDirect, "Encrypted · direct");
-    expect(l.chatEncryptedOverTor, "Encrypted · over tor");
+    expect(l.chatEncryptedOverTor, "Encrypted · over Tor");
     expect(l.chatSearchThisChat, "Search this chat");
     expect(l.chatContactOptions, "Contact options");
     expect(l.commonClose, "Close");
@@ -957,7 +957,7 @@ void main() {
     );
     expect(
       l.donateBackItAnonymouslyBadge,
-      "Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*",
+      "Back it anonymously. Badge opt-in.\n*Every privacy feature is free.*",
     );
     expect(l.donateAuditTitle, "Help fund a security audit");
     expect(
@@ -984,7 +984,7 @@ void main() {
     expect(l.donateBadgesStartAt20, "Badges start at \$20");
     expect(
       l.donateReachingThePaymentService,
-      "Reaching the payment service over tor…",
+      "Reaching the payment service over Tor…",
     );
     expect(l.donateThisCanTakeUp, "This can take up to a minute");
     expect(
@@ -998,11 +998,11 @@ void main() {
     );
     expect(
       l.donateTorWasSlowTo,
-      "Tor was slow to reach the payment service. You can donate to the address below - your badge just won't unlock automatically. Try again later for the badge.",
+      "Tor was slow to reach the payment service. You can donate to the address below, but your badge won't unlock automatically. Try again later for the badge.",
     );
     expect(
       l.donateThePaymentServiceIsHavingTrouble,
-      "The payment service is having trouble right now. You can still donate to the address below - your badge just won't unlock automatically. Try again later for the badge.",
+      "The payment service is having trouble right now. You can still donate to the address below, but your badge won't unlock automatically. Try again later for the badge.",
     );
     expect(l.commonTryAgain, "Try again");
     expect(l.donateBtc("<btc>"), "<btc> BTC");
@@ -1013,7 +1013,7 @@ void main() {
     expect(l.donateOpenWallet, "Open wallet");
     expect(
       l.donateThisScreenUpdatesItself,
-      "This screen updates itself the moment your payment is seen.\nKeep it open - nothing is stored, nothing identifies you.",
+      "This screen updates itself the moment your payment is seen.\nKeep it open. Nothing is stored and nothing identifies you.",
     );
     expect(l.donateWatchingTheChainFor, "Watching the chain for your payment");
     expect(l.donateThisInvoiceExpired, "This invoice expired");
@@ -1039,19 +1039,19 @@ void main() {
     );
     expect(
       l.donateVerifiedOnChainYou("supporter"),
-      "Verified on-chain - you're a supporter now. No one can take that off you.",
+      "Verified on-chain. You're a supporter now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("patron"),
-      "Verified on-chain - you're a patron now. No one can take that off you.",
+      "Verified on-chain. You're a patron now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("guardian"),
-      "Verified on-chain - you're a guardian now. No one can take that off you.",
+      "Verified on-chain. You're a guardian now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("other"),
-      "Verified on-chain - you're a supporter now. No one can take that off you.",
+      "Verified on-chain. You're a supporter now. No one can take that off you.",
     );
     expect(l.donateWearMyBadge, "Wear my badge");
     expect(l.donateJustGladToHelp, "Just glad to help");
@@ -1292,7 +1292,7 @@ void main() {
     expect(l.handleWhatAHandleDoes, "What a handle does");
     expect(
       l.handleAnyoneWhoKnowsIt,
-      "Anyone who knows it can ask to message you, which is the point of having one. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.",
+      "Anyone who knows it can ask to message you. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.",
     );
     expect(
       l.handleIsNotYoursOn("<handle>"),
@@ -1360,10 +1360,10 @@ void main() {
     expect(l.homeWaitingSendsWhenYou(1), "1 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(2), "2 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(5), "5 waiting · sends when you're back");
-    expect(l.homeWaitingTorIsStill(0), "0 waiting · tor is still connecting");
-    expect(l.homeWaitingTorIsStill(1), "1 waiting · tor is still connecting");
-    expect(l.homeWaitingTorIsStill(2), "2 waiting · tor is still connecting");
-    expect(l.homeWaitingTorIsStill(5), "5 waiting · tor is still connecting");
+    expect(l.homeWaitingTorIsStill(0), "0 waiting · Tor is still connecting");
+    expect(l.homeWaitingTorIsStill(1), "1 waiting · Tor is still connecting");
+    expect(l.homeWaitingTorIsStill(2), "2 waiting · Tor is still connecting");
+    expect(l.homeWaitingTorIsStill(5), "5 waiting · Tor is still connecting");
     expect(l.homeNoKryfosYet, "No Kryfos yet.");
     expect(
       l.homeScanTheirCodeSend,
@@ -1399,7 +1399,7 @@ void main() {
     expect(l.homeDeleteThisChat, "Delete this chat?");
     expect(
       l.homeEveryMessageWithGoes("<c>"),
-      "Every message with <c> goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.",
+      "Every message with <c> goes, and they stop being a contact. It only clears this phone. Their copy stays with them. If they message again it lands in requests.",
     );
     expect(l.homeQueued, "Queued");
     expect(l.homeBlocked, "Blocked");
@@ -1443,7 +1443,7 @@ void main() {
       l.introduceNoOneElseTo,
       "No one else to introduce yet. Add another contact first.",
     );
-    expect(l.introduceANoteLikeMy, "A note, like \"my cousin\" - optional");
+    expect(l.introduceANoteLikeMy, "A note, like \"my cousin\" (optional)");
     expect(
       l.introduceOfIntroductionsLeftThis(0, 0),
       "0 of 0 introductions left this week",
@@ -1533,7 +1533,7 @@ void main() {
     );
     expect(
       l.lockFileCheckCapitalsAndSpaces,
-      "Check capitals and spaces. Nobody can reset it, us included.",
+      "Check capitals and spaces. Nobody can reset it.",
     );
     expect(
       l.lockFileItMayHaveBeen,
@@ -1603,7 +1603,7 @@ void main() {
     expect(l.lockFileTheNameAloneCan, "The name alone can say what is inside.");
     expect(
       l.lockFileAnyoneWithThePassword,
-      "Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it, us included.",
+      "Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it.",
     );
     expect(l.lockFileLocked2, "Locked.");
     expect(l.lockFileOnlyThePasswordOpens, "Only the password opens it.");
@@ -1651,7 +1651,7 @@ void main() {
     expect(l.modesRelay, "Relay");
     expect(
       l.modesOneSealedConnectionTo,
-      "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
+      "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.",
     );
     expect(l.modesQuick, "Quick");
     expect(l.modesRelayOnly, "Relay only");
@@ -1831,7 +1831,7 @@ void main() {
     expect(l.onboardingYourKryfoId, "YOUR KRYFO ID");
     expect(
       l.onboardingGeneratedFromAKey,
-      "Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.",
+      "Generated from a key that lives only on this phone. *No one else has these words.*",
     );
     expect(l.onboardingTryAnother, "Try another");
     expect(l.onboardingUseThisName, "Use this name →");
@@ -1869,7 +1869,7 @@ void main() {
     );
     expect(
       l.onboardingAboutASecondWorks,
-      "About a second. Works where tor is blocked.",
+      "About a second. Works where Tor is blocked.",
     );
     expect(l.onboardingFast, "Fast");
     expect(
@@ -1888,7 +1888,7 @@ void main() {
     expect(l.onboardingYourNameIsThreeWords, "Your name is three words");
     expect(
       l.onboardingThatIsTheWhole,
-      "That is the whole identity. No number to leak, no email to phish, nothing to look up. People you talk to see these words and the face you picked.",
+      "That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.",
     );
     expect(
       l.onboardingNobodyCanReachYou,
@@ -2237,7 +2237,7 @@ void main() {
     expect(l.restoreWhatDoesnT, "What doesn't");
     expect(
       l.restoreTheOldPhoneStops,
-      "The old phone stops receiving the moment you send anything from here. Not gradually. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn't waiting for you here either.",
+      "The old phone stops receiving the moment you send anything from here. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn't waiting for you here either.",
     );
     expect(
       l.restoreIfThePhoneThis,
@@ -2332,11 +2332,11 @@ void main() {
     expect(l.seenWhatWeCanSee, "What we can see");
     expect(
       l.seenEveryMessengerClaimsPrivacy,
-      "Every messenger claims privacy. This is the specific list, by route, including the parts that do not flatter us. Tap a row for the why.",
+      "Here is the list, by route, including the weak spots. Tap a row for the why.",
     );
     expect(
       l.seenHonestAboutTheLast,
-      "Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
+      "The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.",
     );
     expect(l.seenHidden, "Hidden");
     expect(l.seenNever, "Never");
@@ -2351,19 +2351,19 @@ void main() {
     expect(l.seenWhatYouSay, "What you say");
     expect(
       l.seenEndToEndEncrypted,
-      "End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We could not read it if we tried.",
+      "End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We cannot read it.",
     );
     expect(l.seenYourIpAddress, "Your ip address");
     expect(l.seenOurRelay, "Our relay");
     expect(l.seenEveryRelay, "Every relay");
     expect(
       l.seenOnOnionEverythingLeaves,
-      "On onion everything leaves through tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.",
+      "On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.",
     );
     expect(l.seenYourContactGraph, "Your contact graph");
     expect(
       l.seenKryfoDoesNotScan,
-      "Kryfo does not scan your contacts. That is the point. No phone number exists here to leak.",
+      "Kryfo does not scan your contacts. No phone number exists here to leak.",
     );
     expect(l.seenIntroducer, "Introducer");
     expect(
@@ -2387,7 +2387,7 @@ void main() {
     expect(l.seenOverTor, "Over Tor");
     expect(
       l.seenAPreviewIsFetched,
-      "A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
+      "A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
     );
     expect(l.seenASeizedUnlockedPhone, "A seized unlocked phone");
     expect(
@@ -2397,7 +2397,7 @@ void main() {
     expect(l.seenTheCryptoItself, "The crypto itself");
     expect(
       l.seenTheRatchetAndStorage,
-      "The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. Treat this as alpha, because it is.",
+      "The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. It is alpha software.",
     );
     expect(l.seenOnion, "Onion");
     expect(l.seenRelay, "Relay");
@@ -2617,17 +2617,17 @@ void main() {
     expect(l.whyKryfoWhyKryfo, "Why Kryfo");
     expect(
       l.whyKryfoKryfoKreeFoGreek,
-      "Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.",
+      "Kryfo · KREE-fo · greek for hidden.\nA place to talk, built so no one is watching.",
     );
-    expect(l.whyKryfoRoutedThroughTor, "Routed through tor");
+    expect(l.whyKryfoRoutedThroughTor, "Routed through Tor");
     expect(
       l.whyKryfoByDefaultEveryMessage,
-      "By default every message travels through tor - a chain of relays. No one, not us and not your network, can see who you talk to or where you are.",
+      "By default every message travels through Tor, a chain of relays. No one, not us and not your network, can see who you talk to or where you are.",
     );
     expect(l.whyKryfoEndToEndEncrypted, "End-to-end encrypted");
     expect(
       l.whyKryfoMessagesAreSealedWith,
-      "Messages are sealed with keys only you and the person you are talking to hold. We could not read them if we tried.",
+      "Messages are sealed with keys only you and the person you are talking to hold. We cannot read them.",
     );
     expect(l.whyKryfoNoServersHoldingYour, "No servers holding your life");
     expect(
@@ -2637,7 +2637,7 @@ void main() {
     expect(l.whyKryfoNothingLeaks, "Nothing leaks");
     expect(
       l.whyKryfoNoReadReceiptsOr,
-      "No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.",
+      "No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.",
     );
     expect(l.whyKryfoVerifyItIsReally, "Verify it is really them");
     expect(
@@ -2647,7 +2647,7 @@ void main() {
     expect(l.whyKryfoTheHonestPart, "The honest part");
     expect(
       l.whyKryfoKryfoIsPreAlpha,
-      "Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.",
+      "Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so do not rely on it yet where your safety depends on it.",
     );
     expect(l.cleanerLocation, "Location");
     expect(l.cleanerAlreadyBlankedByAndroid, "already blanked by Android");
@@ -2924,10 +2924,10 @@ void main() {
       l.kryfoLinkTextYouJoinUnderA,
       "You join under a key made for this room. Nobody in it sees your Kryfo id.",
     );
-    expect(l.linkStubFetchedOverTorBy, "Fetched over tor · by your device");
+    expect(l.linkStubFetchedOverTorBy, "Fetched over Tor · by your device");
     expect(
       l.linkStubFetchedOverTorByTheirDevice,
-      "Fetched over tor · by their device",
+      "Fetched over Tor · by their device",
     );
     expect(l.placeStubLocation, "Location");
     expect(l.mediaBubblesB("<bytes>"), "<bytes> b");
@@ -3021,11 +3021,11 @@ void main() {
     expect(l.pinsUnpin, "Unpin");
     expect(
       l.previewStripFetchedOverTor("<domainOf>"),
-      "<domainOf> · fetched over tor",
+      "<domainOf> · fetched over Tor",
     );
     expect(l.previewStripDropThePreview, "Drop the preview");
     expect(l.previewStripAddPreview, "Add preview");
-    expect(l.previewStripFetchingOverTor, "Fetching over tor…");
+    expect(l.previewStripFetchingOverTor, "Fetching over Tor…");
     expect(l.toolPartsB("<bytes>"), "<bytes> B");
     expect(l.toolPartsKb("<bytes>"), "<bytes> KB");
     expect(l.toolPartsMb("<mb>"), "<mb> MB");
@@ -3390,7 +3390,7 @@ void main() {
     );
     expect(
       l.bridgesAutomaticFindsAWay,
-      "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.",
+      "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree.",
     );
     expect(
       l.bridgesThisNetworkWantsA,

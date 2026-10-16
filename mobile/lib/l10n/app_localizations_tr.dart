@@ -665,7 +665,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'İlk bağlantı, tor gizli bir rota kurarken bir iki dakika sürer. Sonra önbelleğe alınır, bu yüzden Kryfo’yu sonradan açmak çok daha hızlıdır.';
+      'İlk bağlantı, Tor gizli bir rota kurarken bir iki dakika sürer. Sonra önbelleğe alınır, bu yüzden Kryfo’yu sonradan açmak çok daha hızlıdır.';
 
   @override
   String get appTorNoRelayYet =>
@@ -673,7 +673,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Aktarıcı ve Hızlı modları tor’u atlar ve daha hızlıdır. Ayarlarda, hız ve gizlilik bölümündeler; her biri bedelini söyler.';
+      'Aktarıcı ve Hızlı modları Tor’u atlar ve daha hızlıdır. Ayarlarda, hız ve gizlilik bölümündeler; her biri bedelini söyler.';
 
   @override
   String get appViaRelay => 'Aktarıcı ile';
@@ -1034,7 +1034,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Şifreli Kryfo yedeğin. Hem bu dosyayı HEM DE parola ifadeni güvende tut - geri yüklemek için ikisi de gerekir.';
+      'Şifreli Kryfo yedeğin. Hem bu dosyayı hem de parola ifadeni güvende tut. Geri yüklemek için ikisi de gerekir.';
 
   @override
   String get backupBackUpKryfo => 'Kryfo’yu yedekle';
@@ -1463,7 +1463,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · $wireEstimate, tor üzerinden';
+    return '$humanBytes · $wireEstimate, Tor üzerinden';
   }
 
   @override
@@ -1503,7 +1503,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCouldnTFetchIt => 'Alınamadı · önizlemesiz gönderiliyor';
 
   @override
-  String get chatNoSignalSessionRe => 'Signal oturumu yok - yeniden eşleştir';
+  String get chatNoSignalSessionRe => 'Signal oturumu yok. Yeniden eşleştir';
 
   @override
   String get chatMessageUnavailable => 'Mesaj kullanılamıyor';
@@ -1586,7 +1586,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatEveryMessageHereIs =>
-      'Buradaki her mesaj bu telefondan silinir. Bu yalnızca senin kopyanı temizler - onun cihazına dokunmaz.';
+      'Buradaki her mesaj bu telefondan silinir. Bu yalnızca senin kopyanı temizler. Onun cihazına dokunmaz.';
 
   @override
   String get chatClear => 'Temizle';
@@ -1638,7 +1638,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatAcceptToReplyThey =>
-      'Yanıt vermek için kabul et - sen kabul edene kadar bir mesaj daha gönderebilir.';
+      'Yanıt vermek için kabul et. Sen kabul edene kadar bir mesaj daha gönderebilir.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1647,7 +1647,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatIntroducedYouSayHello(Object vouchNames) {
-    return '$vouchNames sizi tanıştırdı. Merhaba de - senin kartını da aldı.';
+    return '$vouchNames sizi tanıştırdı. Merhaba de. Senin kartını da aldı.';
   }
 
   @override
@@ -1682,7 +1682,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatEncryptedDirect => 'Şifreli · doğrudan';
 
   @override
-  String get chatEncryptedOverTor => 'Şifreli · tor üzerinden';
+  String get chatEncryptedOverTor => 'Şifreli · Tor üzerinden';
 
   @override
   String get chatSearchThisChat => 'Bu sohbette ara';
@@ -2176,7 +2176,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'Anonim olarak destekle. Rozet isteğe bağlı.\n*Gizlilik hiçbir zaman ücretli olmaz.*';
+      'Anonim olarak destekle. Rozet isteğe bağlı.\n*Her gizlilik özelliği ücretsiz.*';
 
   @override
   String get donateAuditTitle =>
@@ -2221,7 +2221,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get donateReachingThePaymentService =>
-      'Ödeme servisine tor üzerinden ulaşılıyor…';
+      'Ödeme servisine Tor üzerinden ulaşılıyor…';
 
   @override
   String get donateThisCanTakeUp => 'Bu bir dakikayı bulabilir';
@@ -2240,11 +2240,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get donateTorWasSlowTo =>
-      'Tor ödeme servisine ulaşmakta yavaş kaldı. Aşağıdaki adrese bağış yapabilirsin - sadece rozetin otomatik açılmaz. Rozet için daha sonra tekrar dene.';
+      'Tor ödeme servisine ulaşmakta yavaş kaldı. Aşağıdaki adrese bağış yapabilirsin. Sadece rozetin otomatik açılmaz. Rozet için daha sonra tekrar dene.';
 
   @override
   String get donateThePaymentServiceIsHavingTrouble =>
-      'Ödeme servisinde şu an sorun var. Yine de aşağıdaki adrese bağış yapabilirsin - sadece rozetin otomatik açılmaz. Rozet için daha sonra tekrar dene.';
+      'Ödeme servisinde şu an sorun var. Yine de aşağıdaki adrese bağış yapabilirsin. Sadece rozetin otomatik açılmaz. Rozet için daha sonra tekrar dene.';
 
   @override
   String get commonTryAgain => 'Tekrar dene';
@@ -2264,7 +2264,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get donateThisScreenUpdatesItself =>
-      'Ödemen görüldüğü anda bu ekran kendini günceller.\nAçık tut - hiçbir şey saklanmaz, hiçbir şey seni tanımlamaz.';
+      'Ödemen görüldüğü anda bu ekran kendini günceller.\nAçık tut. Hiçbir şey saklanmaz, hiçbir şey seni tanımlamaz.';
 
   @override
   String get donateWatchingTheChainFor => 'Ödemen için zincir izleniyor';
@@ -2304,13 +2304,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'Zincirde doğrulandı - artık bir destekçisin. Bunu kimse elinden alamaz.',
+          'Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.',
       'patron':
-          'Zincirde doğrulandı - artık bir hamisin. Bunu kimse elinden alamaz.',
+          'Zincirde doğrulandı. Artık bir hamisin. Bunu kimse elinden alamaz.',
       'guardian':
-          'Zincirde doğrulandı - artık bir koruyucusun. Bunu kimse elinden alamaz.',
+          'Zincirde doğrulandı. Artık bir koruyucusun. Bunu kimse elinden alamaz.',
       'other':
-          'Zincirde doğrulandı - artık bir destekçisin. Bunu kimse elinden alamaz.',
+          'Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.',
     });
     return '$_temp0';
   }
@@ -2336,7 +2336,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'Mesajlar anında gelir. Hiçbir şey tor’un dışına çıkmaz. En çok pili bu harcar.';
+      'Mesajlar anında gelir. Hiçbir şey Tor’un dışına çıkmaz. En çok pili bu harcar.';
 
   @override
   String get gettingMessagesCheckIns => 'Kontroller';
@@ -2919,7 +2919,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      'Onu bilen herkes sana mesaj atmak için istek gönderebilir; zaten amacı da bu. Sayfada davetin ve yazdığın satır var, başka hiçbir şey yok; kimin okuduğunun kaydını da tutmaz. İstediğin zaman silebilirsin.';
+      'Onu bilen herkes sana mesaj atmak için istek gönderebilir. Sayfada davetin ve yazdığın satır var, başka hiçbir şey yok; kimin okuduğunun kaydını da tutmaz. İstediğin zaman silebilirsin.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -3086,8 +3086,8 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString bekliyor · tor hâlâ bağlanıyor',
-      one: '$countString bekliyor · tor hâlâ bağlanıyor',
+      other: '$countString bekliyor · Tor hâlâ bağlanıyor',
+      one: '$countString bekliyor · Tor hâlâ bağlanıyor',
     );
     return '$_temp0';
   }
@@ -3176,7 +3176,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String homeEveryMessageWithGoes(Object c) {
-    return '$c ile olan her mesaj gider ve artık kişilerinde olmaz. Yalnızca bu telefonu temizler - onun kopyası onda kalır. Yeniden yazarsa istekler arasına düşer.';
+    return '$c ile olan her mesaj gider ve artık kişilerinde olmaz. Yalnızca bu telefonu temizler. Onun kopyası onda kalır. Yeniden yazarsa istekler arasına düşer.';
   }
 
   @override
@@ -3273,7 +3273,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get introduceANoteLikeMy =>
-      'Bir not, örneğin “kuzenim” - isteğe bağlı';
+      'Bir not, örneğin “kuzenim” (isteğe bağlı)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
@@ -3363,7 +3363,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lockFileCheckCapitalsAndSpaces =>
-      'Büyük harflere ve boşluklara bak. Onu kimse sıfırlayamaz, biz de dahil.';
+      'Büyük harflere ve boşluklara bak. Onu kimse sıfırlayamaz.';
 
   @override
   String get lockFileItMayHaveBeen =>
@@ -3498,7 +3498,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      'Şifreye sahip olan herkes onu açabilir; Kryfo’da ya da ücretsiz age aracının olduğu herhangi bir bilgisayarda. Şifreyi unutursan dosya sonsuza dek kaybolur. Onu kimse sıfırlayamaz, biz de dahil.';
+      'Şifreye sahip olan herkes onu açabilir; Kryfo’da ya da ücretsiz age aracının olduğu herhangi bir bilgisayarda. Şifreyi unutursan dosya sonsuza dek kaybolur. Onu kimse sıfırlayamaz.';
 
   @override
   String get lockFileLocked2 => 'Kilitlendi.';
@@ -3582,7 +3582,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'Kryfo’nun kendi aktarıcısına tek bir mühürlü bağlantı; kayıt tutacak hiçbir şeyi olmayan bir vpn gibi. Gönderilenler yaklaşık bir saniyede ulaşır ve tor’un engellendiği yerlerde de çalışır.';
+      'Kryfo’nun kendi aktarıcısına tek bir mühürlü bağlantı; kayıt tutacak hiçbir şeyi olmayan bir vpn gibi. Gönderilenler yaklaşık bir saniyede ulaşır ve Tor’un engellendiği yerlerde de çalışır.';
 
   @override
   String get modesQuick => 'Hızlı';
@@ -4040,7 +4040,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Yalnızca bu telefonda duran bir anahtardan üretildi. *Akılda kalıcı, eşsiz, yalnızca senin.* Bu başka kimsede yok.';
+      'Yalnızca bu telefonda duran bir anahtardan üretildi. *Bu kelimeler başka kimsede yok.*';
 
   @override
   String get onboardingTryAnother => 'Başka dene';
@@ -4135,7 +4135,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'Kimliğin bundan ibaret. Sızacak numara yok, oltalanacak e-posta yok, peşine düşülecek bir iz yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
+      'Kimliğin bundan ibaret. Sızacak ya da aranacak bir numara veya e-posta yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
 
   @override
   String get onboardingNobodyCanReachYou =>
@@ -4818,7 +4818,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      'Buradan bir şey gönderdiğin anda eski telefon mesaj almayı bırakır. Yavaş yavaş değil. Bu cihazdan gönderdiğin ilk mesaj, eski telefonun takip edebileceği son mesajdır; ondan sonra ona ulaşan her şey orada okunamaz ve burada da seni beklemiyor olur.';
+      'Buradan bir şey gönderdiğin anda eski telefon mesaj almayı bırakır. Bu cihazdan gönderdiğin ilk mesaj, eski telefonun takip edebileceği son mesajdır; ondan sonra ona ulaşan her şey orada okunamaz ve burada da seni beklemiyor olur.';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -5032,11 +5032,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      'Her mesajlaşma uygulaması gizlilik iddia eder. Bu, rota rota, bizi pek iyi göstermeyen kısımlar dahil net liste. Nedenini görmek için bir satıra dokun.';
+      'Bu, rota rota, zayıf noktalar dahil liste. Nedenini görmek için bir satıra dokun.';
 
   @override
   String get seenHonestAboutTheLast =>
-      'Son satırlar konusunda dürüst olalım: uygulama kilidi, silme PIN’i ve şifreli depolama bunun için var ve hiçbir araç seni, açık telefonunu elinde tutan birinden kurtarmaz. Tehdit modelinin tamamı depodaki THREAT_MODEL.md dosyasında, LINDDUN çerçevesine göre yazıldı. Kod açık, yani bunların hiçbirine sırf sözümüze güvenip inanman gerekmiyor.';
+      'Son satırlar için uygulama kilidi, silme PIN’i ve şifreli depolama var ve hiçbir araç seni, açık telefonunu elinde tutan birinden kurtarmaz. Tehdit modelinin tamamı depodaki THREAT_MODEL.md dosyasında, LINDDUN çerçevesine göre yazıldı. Kod açık, yani bunların hepsini kendin kontrol edebilirsin.';
 
   @override
   String get seenHidden => 'Gizli';
@@ -5065,7 +5065,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      'Signal double ratchet ile uçtan uca şifrelenir, sonra bir “hediye paketi” (gift wrap) içinde yeniden mühürlenir. Denesek bile okuyamayız.';
+      'Signal double ratchet ile uçtan uca şifrelenir, sonra bir “hediye paketi” (gift wrap) içinde yeniden mühürlenir. Okuyamayız.';
 
   @override
   String get seenYourIpAddress => 'IP adresin';
@@ -5078,14 +5078,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      'Onion modunda her şey tor üzerinden çıkar ve aktarıcı asla seni değil, bir çıkış düğümünü görür. Aktarıcı modunda bağlantı doğrudan kendi aktarıcımıza gider: adresini hiçbir şey iletmez ve hiçbir şey kaydedilmez, ama o tek bağlantıyı biz görürüz. Hızlı modda herkese açık her aktarıcı bağlandığını öğrenir, ama kime bağlandığını ya da ne söylediğini öğrenmez.';
+      'Onion modunda her şey Tor üzerinden çıkar ve aktarıcı asla seni değil, bir çıkış düğümünü görür. Aktarıcı modunda bağlantı doğrudan kendi aktarıcımıza gider: adresini hiçbir şey iletmez ve hiçbir şey kaydedilmez, ama o tek bağlantıyı biz görürüz. Hızlı modda herkese açık her aktarıcı bağlandığını öğrenir, ama kime bağlandığını ya da ne söylediğini öğrenmez.';
 
   @override
   String get seenYourContactGraph => 'Kişi ağın';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo rehberini taramaz. Bütün mesele bu. Burada sızacak bir telefon numarası yok.';
+      'Kryfo rehberini taramaz. Burada sızacak bir telefon numarası yok.';
 
   @override
   String get seenIntroducer => 'Tanıştıran';
@@ -5119,7 +5119,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'Önizlemeyi gönderen, tor üzerinden alır ve önizleme şifreli mesajın içinde gider. Alan telefon hiçbir istek yapmaz. Web sitesi yalnızca tor kullanan birinin bir sayfa istediğini öğrenir, başka hiçbir şey öğrenmez. Hiçbir resim asla yüklenmez ve bir yabancının bağlantısı düz metin olarak kalır.';
+      'Önizlemeyi gönderen, Tor üzerinden alır ve önizleme şifreli mesajın içinde gider. Alan telefon hiçbir istek yapmaz. Web sitesi yalnızca Tor kullanan birinin bir sayfa istediğini öğrenir, başka hiçbir şey öğrenmez. Hiçbir resim asla yüklenmez ve bir yabancının bağlantısı düz metin olarak kalır.';
 
   @override
   String get seenASeizedUnlockedPhone => 'El konulmuş, kilidi açık telefon';
@@ -5133,7 +5133,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'Ratchet ve depolama katmanları standarttır. Onları birleştiren katman bizim ve bağımsız hiç kimse onu incelemedi. Bunu alfa sürüm say, çünkü öyle.';
+      'Ratchet ve depolama katmanları standarttır. Onları birleştiren katman bizim ve bağımsız hiç kimse onu incelemedi. Bu bir alfa sürüm.';
 
   @override
   String get seenOnion => 'Onion';
@@ -5749,21 +5749,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KRİ-fo · Yunanca “gizli”.\nKonuşmak için sessiz bir yer; kimse izlemesin diye yapıldı.';
+      'Kryfo · KRİ-fo · Yunanca “gizli”.\nKonuşmak için bir yer; kimse izlemesin diye yapıldı.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'Tor üzerinden yönlendirilir';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      'Varsayılan olarak her mesaj tor üzerinden, yani bir aktarıcı zinciri boyunca gider. Kimse, ne biz ne de ağın, kiminle konuştuğunu ya da nerede olduğunu göremez.';
+      'Varsayılan olarak her mesaj Tor üzerinden, yani bir aktarıcı zinciri boyunca gider. Kimse, ne biz ne de ağın, kiminle konuştuğunu ya da nerede olduğunu göremez.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'Uçtan uca şifreli';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
-      'Mesajlar yalnızca senin ve konuştuğun kişinin elindeki anahtarlarla mühürlenir. Denesek bile okuyamayız.';
+      'Mesajlar yalnızca senin ve konuştuğun kişinin elindeki anahtarlarla mühürlenir. Onları okuyamayız.';
 
   @override
   String get whyKryfoNoServersHoldingYour => 'Hayatını tutan sunucular yok';
@@ -5777,7 +5777,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'Okundu bilgisi ya da yazıyor işareti kimseye verilmez, kişi listesi yüklenmez. Çoğu uygulamanın sızdırdığı şey meta veridir - Kryfo sızdırmayacak şekilde yapıldı.';
+      'Okundu bilgisi ya da yazıyor işareti kimseye verilmez, kişi listesi yüklenmez. Çoğu uygulamanın sızdırdığı şey meta veridir. Kryfo sızdırmayacak şekilde yapıldı.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Gerçekten o olduğunu doğrula';
@@ -5791,7 +5791,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo alfa aşamasında ve denetlenmedi. Kriptografi gerçek ama henüz dışarıdan hiçbir uzman kontrol etmedi; bu yüzden onu yapım aşamasında bir iş olarak gör, henüz hayatını emanet edeceğin bir şey olarak değil.';
+      'Kryfo alfa aşamasında ve denetlenmedi. Kriptografi gerçek ama henüz dışarıdan hiçbir uzman kontrol etmedi; bu yüzden güvenliğin ona bağlıysa henüz ona güvenme.';
 
   @override
   String get cleanerLocation => 'Konum';
@@ -6446,7 +6446,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'Ağa çevrimiçi olduğun söyleniyor — nerede olduğun açığa çıkmadan.';
+      'Ağa çevrimiçi olduğun söyleniyor, nerede olduğun açığa çıkmadan.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6580,7 +6580,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · tor üzerinden alındı';
+    return '$domainOf · Tor üzerinden alındı';
   }
 
   @override
@@ -7161,7 +7161,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Köprü bulmak için Kryfo, izin verirsen Tor Projesine sorabilir. Her gün pek çok kişi köprü kullanıyor.';
+      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Köprü bulmak için Kryfo, izin verirsen Tor Projesine sorabilir.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'Tor Projesinden';
@@ -7759,7 +7759,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'Bu PIN’i unutursan gizli sohbetlerin sonsuza dek gider. Kimse onları geri getiremez, biz bile.';
+      'Bu PIN’i unutursan gizli sohbetlerin sonsuza dek gider. Kimse onları geri getiremez.';
 
   @override
   String get flowVaultForgetOk => 'Anladım';

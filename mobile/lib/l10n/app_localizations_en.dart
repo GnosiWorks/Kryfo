@@ -540,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appIdentityCreated => 'Identity created';
 
   @override
-  String get appStartingTor30s => 'Starting tor (~30s)...';
+  String get appStartingTor30s => 'Starting Tor (~30s)...';
 
   @override
   String get appScanOrImportA => 'Scan or import a peer first';
@@ -662,7 +662,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.';
+      'The first connection takes a minute or two while Tor builds a private route. After that it is cached, so opening Kryfo later is much faster.';
 
   @override
   String get appTorNoRelayYet =>
@@ -670,7 +670,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.';
+      'Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.';
 
   @override
   String get appViaRelay => 'Via relay';
@@ -1031,7 +1031,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.';
+      'Your encrypted Kryfo backup. Keep this file and your passphrase safe. You need both to restore.';
 
   @override
   String get backupBackUpKryfo => 'Back up Kryfo';
@@ -1459,7 +1459,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · $wireEstimate over tor';
+    return '$humanBytes · $wireEstimate over Tor';
   }
 
   @override
@@ -1498,7 +1498,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
 
   @override
-  String get chatNoSignalSessionRe => 'No signal session - re-pair';
+  String get chatNoSignalSessionRe => 'No signal session. Pair again';
 
   @override
   String get chatMessageUnavailable => 'Message unavailable';
@@ -1581,7 +1581,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatEveryMessageHereIs =>
-      'Every message here is erased from this phone. This only clears your copy - it does not touch their device.';
+      'Every message here is erased from this phone. This only clears your copy. It does not touch their device.';
 
   @override
   String get chatClear => 'Clear';
@@ -1633,7 +1633,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatAcceptToReplyThey =>
-      'Accept to reply - they get one more message in until you do.';
+      'Accept to reply. Until you do, they can send one more message.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1642,7 +1642,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chatIntroducedYouSayHello(Object vouchNames) {
-    return '$vouchNames introduced you. Say hello - they got your card too.';
+    return '$vouchNames introduced you. Say hello. They got your card too.';
   }
 
   @override
@@ -1677,7 +1677,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatEncryptedDirect => 'Encrypted · direct';
 
   @override
-  String get chatEncryptedOverTor => 'Encrypted · over tor';
+  String get chatEncryptedOverTor => 'Encrypted · over Tor';
 
   @override
   String get chatSearchThisChat => 'Search this chat';
@@ -2175,7 +2175,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*';
+      'Back it anonymously. Badge opt-in.\n*Every privacy feature is free.*';
 
   @override
   String get donateAuditTitle => 'Help fund a security audit';
@@ -2217,7 +2217,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateReachingThePaymentService =>
-      'Reaching the payment service over tor…';
+      'Reaching the payment service over Tor…';
 
   @override
   String get donateThisCanTakeUp => 'This can take up to a minute';
@@ -2236,11 +2236,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateTorWasSlowTo =>
-      'Tor was slow to reach the payment service. You can donate to the address below - your badge just won\'t unlock automatically. Try again later for the badge.';
+      'Tor was slow to reach the payment service. You can donate to the address below, but your badge won\'t unlock automatically. Try again later for the badge.';
 
   @override
   String get donateThePaymentServiceIsHavingTrouble =>
-      'The payment service is having trouble right now. You can still donate to the address below - your badge just won\'t unlock automatically. Try again later for the badge.';
+      'The payment service is having trouble right now. You can still donate to the address below, but your badge won\'t unlock automatically. Try again later for the badge.';
 
   @override
   String get commonTryAgain => 'Try again';
@@ -2260,7 +2260,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateThisScreenUpdatesItself =>
-      'This screen updates itself the moment your payment is seen.\nKeep it open - nothing is stored, nothing identifies you.';
+      'This screen updates itself the moment your payment is seen.\nKeep it open. Nothing is stored and nothing identifies you.';
 
   @override
   String get donateWatchingTheChainFor => 'Watching the chain for your payment';
@@ -2300,13 +2300,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'Verified on-chain - you\'re a supporter now. No one can take that off you.',
+          'Verified on-chain. You\'re a supporter now. No one can take that off you.',
       'patron':
-          'Verified on-chain - you\'re a patron now. No one can take that off you.',
+          'Verified on-chain. You\'re a patron now. No one can take that off you.',
       'guardian':
-          'Verified on-chain - you\'re a guardian now. No one can take that off you.',
+          'Verified on-chain. You\'re a guardian now. No one can take that off you.',
       'other':
-          'Verified on-chain - you\'re a supporter now. No one can take that off you.',
+          'Verified on-chain. You\'re a supporter now. No one can take that off you.',
     });
     return '$_temp0';
   }
@@ -2911,7 +2911,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      'Anyone who knows it can ask to message you, which is the point of having one. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.';
+      'Anyone who knows it can ask to message you. The page holds your invite and the line you wrote, nothing else, and keeps no record of who reads it. You can delete it whenever you like.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -3077,7 +3077,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString waiting · tor is still connecting',
+      other: '$countString waiting · Tor is still connecting',
     );
     return '$_temp0';
   }
@@ -3166,7 +3166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homeEveryMessageWithGoes(Object c) {
-    return 'Every message with $c goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.';
+    return 'Every message with $c goes, and they stop being a contact. It only clears this phone. Their copy stays with them. If they message again it lands in requests.';
   }
 
   @override
@@ -3262,7 +3262,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No one else to introduce yet. Add another contact first.';
 
   @override
-  String get introduceANoteLikeMy => 'A note, like \"my cousin\" - optional';
+  String get introduceANoteLikeMy => 'A note, like \"my cousin\" (optional)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
@@ -3352,7 +3352,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockFileCheckCapitalsAndSpaces =>
-      'Check capitals and spaces. Nobody can reset it, us included.';
+      'Check capitals and spaces. Nobody can reset it.';
 
   @override
   String get lockFileItMayHaveBeen =>
@@ -3485,7 +3485,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      'Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it, us included.';
+      'Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it.';
 
   @override
   String get lockFileLocked2 => 'Locked.';
@@ -3568,7 +3568,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.';
+      'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.';
 
   @override
   String get modesQuick => 'Quick';
@@ -4018,7 +4018,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.';
+      'Generated from a key that lives only on this phone. *No one else has these words.*';
 
   @override
   String get onboardingTryAnother => 'Try another';
@@ -4076,7 +4076,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks =>
-      'About a second. Works where tor is blocked.';
+      'About a second. Works where Tor is blocked.';
 
   @override
   String get onboardingAutoFindsAWay =>
@@ -4113,7 +4113,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'That is the whole identity. No number to leak, no email to phish, nothing to look up. People you talk to see these words and the face you picked.';
+      'That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.';
 
   @override
   String get onboardingNobodyCanReachYou =>
@@ -4797,7 +4797,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      'The old phone stops receiving the moment you send anything from here. Not gradually. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.';
+      'The old phone stops receiving the moment you send anything from here. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -5010,11 +5010,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      'Every messenger claims privacy. This is the specific list, by route, including the parts that do not flatter us. Tap a row for the why.';
+      'Here is the list, by route, including the weak spots. Tap a row for the why.';
 
   @override
   String get seenHonestAboutTheLast =>
-      'Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.';
+      'The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.';
 
   @override
   String get seenHidden => 'Hidden';
@@ -5043,7 +5043,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      'End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We could not read it if we tried.';
+      'End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We cannot read it.';
 
   @override
   String get seenYourIpAddress => 'Your ip address';
@@ -5056,14 +5056,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      'On onion everything leaves through tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.';
+      'On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.';
 
   @override
   String get seenYourContactGraph => 'Your contact graph';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo does not scan your contacts. That is the point. No phone number exists here to leak.';
+      'Kryfo does not scan your contacts. No phone number exists here to leak.';
 
   @override
   String get seenIntroducer => 'Introducer';
@@ -5097,7 +5097,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.';
+      'A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.';
 
   @override
   String get seenASeizedUnlockedPhone => 'A seized unlocked phone';
@@ -5111,7 +5111,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. Treat this as alpha, because it is.';
+      'The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. It is alpha software.';
 
   @override
   String get seenOnion => 'Onion';
@@ -5725,21 +5725,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.';
+      'Kryfo · KREE-fo · greek for hidden.\nA place to talk, built so no one is watching.';
 
   @override
-  String get whyKryfoRoutedThroughTor => 'Routed through tor';
+  String get whyKryfoRoutedThroughTor => 'Routed through Tor';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      'By default every message travels through tor - a chain of relays. No one, not us and not your network, can see who you talk to or where you are.';
+      'By default every message travels through Tor, a chain of relays. No one, not us and not your network, can see who you talk to or where you are.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'End-to-end encrypted';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
-      'Messages are sealed with keys only you and the person you are talking to hold. We could not read them if we tried.';
+      'Messages are sealed with keys only you and the person you are talking to hold. We cannot read them.';
 
   @override
   String get whyKryfoNoServersHoldingYour => 'No servers holding your life';
@@ -5753,7 +5753,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.';
+      'No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Verify it is really them';
@@ -5767,7 +5767,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.';
+      'Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so do not rely on it yet where your safety depends on it.';
 
   @override
   String get cleanerLocation => 'Location';
@@ -6337,11 +6337,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'You join under a key made for this room. Nobody in it sees your Kryfo id.';
 
   @override
-  String get linkStubFetchedOverTorBy => 'Fetched over tor · by your device';
+  String get linkStubFetchedOverTorBy => 'Fetched over Tor · by your device';
 
   @override
   String get linkStubFetchedOverTorByTheirDevice =>
-      'Fetched over tor · by their device';
+      'Fetched over Tor · by their device';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6553,7 +6553,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · fetched over tor';
+    return '$domainOf · fetched over Tor';
   }
 
   @override
@@ -6563,7 +6563,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewStripAddPreview => 'Add preview';
 
   @override
-  String get previewStripFetchingOverTor => 'Fetching over tor…';
+  String get previewStripFetchingOverTor => 'Fetching over Tor…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -7134,7 +7134,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.';
+      'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'from the Tor Project';
@@ -7729,7 +7729,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back, not even us.';
+      'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back.';
 
   @override
   String get flowVaultForgetOk => 'I understand';

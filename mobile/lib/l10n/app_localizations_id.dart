@@ -534,7 +534,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appIdentityCreated => 'Identitas dibuat';
 
   @override
-  String get appStartingTor30s => 'Memulai tor (~30 dtk)...';
+  String get appStartingTor30s => 'Memulai Tor (~30 dtk)...';
 
   @override
   String get appScanOrImportA => 'Pindai atau impor rekan dulu';
@@ -656,7 +656,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'Koneksi pertama butuh satu atau dua menit selagi tor membangun rute privat. Setelah itu tersimpan di cache, jadi membuka Kryfo berikutnya jauh lebih cepat.';
+      'Koneksi pertama butuh satu atau dua menit selagi Tor membangun rute privat. Setelah itu tersimpan di cache, jadi membuka Kryfo berikutnya jauh lebih cepat.';
 
   @override
   String get appTorNoRelayYet =>
@@ -664,7 +664,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Mode relay dan cepat tidak memakai tor dan lebih cepat. Keduanya ada di pengaturan, di bagian kecepatan & privasi, dan masing-masing menjelaskan apa yang dikorbankan.';
+      'Mode relay dan cepat tidak memakai Tor dan lebih cepat. Keduanya ada di pengaturan, di bagian kecepatan & privasi, dan masing-masing menjelaskan apa yang dikorbankan.';
 
   @override
   String get appViaRelay => 'Lewat relay';
@@ -1020,7 +1020,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Cadangan Kryfo-mu yang terenkripsi. Simpan file ini DAN frasa sandimu dengan aman - kamu butuh keduanya untuk memulihkan.';
+      'Cadangan Kryfo-mu yang terenkripsi. Simpan file ini dan frasa sandimu dengan aman. Kamu butuh keduanya untuk memulihkan.';
 
   @override
   String get backupBackUpKryfo => 'Cadangkan Kryfo';
@@ -1448,7 +1448,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · $wireEstimate lewat tor';
+    return '$humanBytes · $wireEstimate lewat Tor';
   }
 
   @override
@@ -1489,7 +1489,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Gagal mengambilnya · dikirim tanpa pratinjau';
 
   @override
-  String get chatNoSignalSessionRe => 'Tidak ada sesi Signal - tautkan ulang';
+  String get chatNoSignalSessionRe => 'Tidak ada sesi Signal. Tautkan ulang';
 
   @override
   String get chatMessageUnavailable => 'Pesan tidak tersedia';
@@ -1571,7 +1571,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatEveryMessageHereIs =>
-      'Semua pesan di sini dihapus dari ponsel ini. Ini hanya membersihkan salinanmu - tidak menyentuh perangkatnya.';
+      'Semua pesan di sini dihapus dari ponsel ini. Ini hanya membersihkan salinanmu. Tidak menyentuh perangkatnya.';
 
   @override
   String get chatClear => 'Bersihkan';
@@ -1623,7 +1623,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatAcceptToReplyThey =>
-      'Terima untuk membalas - dia bisa mengirim satu pesan lagi sampai kamu menerimanya.';
+      'Terima untuk membalas. Dia bisa mengirim satu pesan lagi sampai kamu menerimanya.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1632,7 +1632,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String chatIntroducedYouSayHello(Object vouchNames) {
-    return '$vouchNames memperkenalkan kalian. Sapa dia - dia juga sudah menerima kartumu.';
+    return '$vouchNames memperkenalkan kalian. Sapa dia. Dia juga sudah menerima kartumu.';
   }
 
   @override
@@ -1667,7 +1667,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatEncryptedDirect => 'Terenkripsi · langsung';
 
   @override
-  String get chatEncryptedOverTor => 'Terenkripsi · lewat tor';
+  String get chatEncryptedOverTor => 'Terenkripsi · lewat Tor';
 
   @override
   String get chatSearchThisChat => 'Cari di obrolan ini';
@@ -2171,7 +2171,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'Dukung secara anonim. Lencana opsional.\n*Privasi tidak pernah berbayar.*';
+      'Dukung secara anonim. Lencana opsional.\n*Semua fitur privasi gratis.*';
 
   @override
   String get donateAuditTitle => 'Bantu danai audit keamanan';
@@ -2214,7 +2214,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateReachingThePaymentService =>
-      'Menghubungi layanan pembayaran lewat tor…';
+      'Menghubungi layanan pembayaran lewat Tor…';
 
   @override
   String get donateThisCanTakeUp => 'Ini bisa makan waktu sampai satu menit';
@@ -2233,11 +2233,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateTorWasSlowTo =>
-      'Tor lambat menjangkau layanan pembayaran. Kamu bisa berdonasi ke alamat di bawah - hanya saja lencanamu tidak akan terbuka otomatis. Coba lagi nanti untuk lencananya.';
+      'Tor lambat menjangkau layanan pembayaran. Kamu bisa berdonasi ke alamat di bawah, hanya saja lencanamu tidak akan terbuka otomatis. Coba lagi nanti untuk lencananya.';
 
   @override
   String get donateThePaymentServiceIsHavingTrouble =>
-      'Layanan pembayaran sedang bermasalah. Kamu tetap bisa berdonasi ke alamat di bawah - hanya saja lencanamu tidak akan terbuka otomatis. Coba lagi nanti untuk lencananya.';
+      'Layanan pembayaran sedang bermasalah. Kamu tetap bisa berdonasi ke alamat di bawah, hanya saja lencanamu tidak akan terbuka otomatis. Coba lagi nanti untuk lencananya.';
 
   @override
   String get commonTryAgain => 'Coba lagi';
@@ -2257,7 +2257,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateThisScreenUpdatesItself =>
-      'Layar ini langsung diperbarui begitu pembayaranmu terdeteksi.\nBiarkan terbuka - tidak ada yang disimpan, tidak ada yang mengidentifikasi dirimu.';
+      'Layar ini langsung diperbarui begitu pembayaranmu terdeteksi.\nBiarkan terbuka. Tidak ada yang disimpan, tidak ada yang mengidentifikasi dirimu.';
 
   @override
   String get donateWatchingTheChainFor =>
@@ -2298,13 +2298,13 @@ class AppLocalizationsId extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'Terverifikasi on-chain - sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
+          'Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
       'patron':
-          'Terverifikasi on-chain - sekarang kamu patron. Tidak ada yang bisa mencabutnya darimu.',
+          'Terverifikasi on-chain. Sekarang kamu patron. Tidak ada yang bisa mencabutnya darimu.',
       'guardian':
-          'Terverifikasi on-chain - sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.',
+          'Terverifikasi on-chain. Sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.',
       'other':
-          'Terverifikasi on-chain - sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
+          'Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
     });
     return '$_temp0';
   }
@@ -2910,7 +2910,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      'Siapa pun yang tahu nama ini bisa meminta untuk mengirimimu pesan, dan memang itulah gunanya. Halamannya hanya berisi undanganmu dan baris yang kamu tulis, tidak ada yang lain, dan tidak mencatat siapa yang membacanya. Kamu bisa menghapusnya kapan saja.';
+      'Siapa pun yang tahu nama ini bisa meminta untuk mengirimimu pesan. Halamannya hanya berisi undanganmu dan baris yang kamu tulis, tidak ada yang lain, dan tidak mencatat siapa yang membacanya. Kamu bisa menghapusnya kapan saja.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -2975,7 +2975,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String homeTorHasNotBeen(Object howLong) {
-    return 'Tor belum bisa terhubung selama $howLong. Tidak ada yang bisa masuk atau keluar sampai tor terhubung.';
+    return 'Tor belum bisa terhubung selama $howLong. Tidak ada yang bisa masuk atau keluar sampai Tor terhubung.';
   }
 
   @override
@@ -3074,7 +3074,7 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString menunggu · tor masih menghubungkan',
+      other: '$countString menunggu · Tor masih menghubungkan',
     );
     return '$_temp0';
   }
@@ -3161,7 +3161,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String homeEveryMessageWithGoes(Object c) {
-    return 'Semua pesan dengan $c terhapus, dan dia tidak lagi jadi kontak. Ini hanya membersihkan ponsel ini - salinannya tetap ada padanya. Kalau dia mengirim pesan lagi, pesannya masuk ke permintaan.';
+    return 'Semua pesan dengan $c terhapus, dan dia tidak lagi jadi kontak. Ini hanya membersihkan ponsel ini. Salinannya tetap ada padanya. Kalau dia mengirim pesan lagi, pesannya masuk ke permintaan.';
   }
 
   @override
@@ -3256,7 +3256,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Belum ada orang lain untuk diperkenalkan. Tambahkan kontak lain dulu.';
 
   @override
-  String get introduceANoteLikeMy => 'Catatan, misalnya “sepupuku” - opsional';
+  String get introduceANoteLikeMy => 'Catatan, misalnya “sepupuku” (opsional)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
@@ -3346,7 +3346,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lockFileCheckCapitalsAndSpaces =>
-      'Periksa huruf besar dan spasi. Tidak ada yang bisa meresetnya, termasuk kami.';
+      'Periksa huruf besar dan spasi. Tidak ada yang bisa meresetnya.';
 
   @override
   String get lockFileItMayHaveBeen =>
@@ -3480,7 +3480,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      'Siapa pun yang tahu kata sandinya bisa membukanya, di Kryfo atau di komputer mana pun dengan alat gratis age. Lupa kata sandinya, file ini hilang selamanya. Tidak ada yang bisa meresetnya, termasuk kami.';
+      'Siapa pun yang tahu kata sandinya bisa membukanya, di Kryfo atau di komputer mana pun dengan alat gratis age. Lupa kata sandinya, file ini hilang selamanya. Tidak ada yang bisa meresetnya.';
 
   @override
   String get lockFileLocked2 => 'Terkunci.';
@@ -3563,7 +3563,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'Satu koneksi tersegel ke relay milik Kryfo, seperti vpn yang tidak punya apa-apa untuk dicatat. Kiriman sampai dalam sekitar satu detik, dan tetap jalan di tempat tor diblokir.';
+      'Satu koneksi tersegel ke relay milik Kryfo, seperti vpn yang tidak punya apa-apa untuk dicatat. Kiriman sampai dalam sekitar satu detik, dan tetap jalan di tempat Tor diblokir.';
 
   @override
   String get modesQuick => 'Cepat';
@@ -4017,7 +4017,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Dibuat dari kunci yang hanya ada di ponsel ini. *Mudah diingat, unik, hanya milikmu.* Tidak ada orang lain yang memilikinya.';
+      'Dibuat dari kunci yang hanya ada di ponsel ini. *Tidak ada orang lain yang memiliki kata-kata ini.*';
 
   @override
   String get onboardingTryAnother => 'Coba yang lain';
@@ -4075,7 +4075,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingAboutASecondWorks =>
-      'Sekitar satu detik. Tetap jalan di tempat tor diblokir.';
+      'Sekitar satu detik. Tetap jalan di tempat Tor diblokir.';
 
   @override
   String get onboardingAutoFindsAWay =>
@@ -4113,7 +4113,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'Itulah seluruh identitasmu. Tidak ada nomor yang bisa bocor, tidak ada email untuk di-phishing, tidak ada yang bisa dicari. Orang yang kamu ajak bicara melihat kata-kata ini dan wajah yang kamu pilih.';
+      'Itulah seluruh identitasmu. Tidak ada nomor atau email yang bisa bocor atau dicari. Orang yang kamu ajak bicara melihat kata-kata ini dan wajah yang kamu pilih.';
 
   @override
   String get onboardingNobodyCanReachYou =>
@@ -4800,7 +4800,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      'Ponsel lama berhenti menerima begitu kamu mengirim apa pun dari sini. Tidak bertahap. Pesan pertama yang kamu kirim dari perangkat ini adalah pesan terakhir yang bisa diikuti ponsel lama, dan apa pun yang sampai ke sana setelah itu tidak bisa dibaca di sana dan juga tidak menunggumu di sini.';
+      'Ponsel lama berhenti menerima begitu kamu mengirim apa pun dari sini. Pesan pertama yang kamu kirim dari perangkat ini adalah pesan terakhir yang bisa diikuti ponsel lama, dan apa pun yang sampai ke sana setelah itu tidak bisa dibaca di sana dan juga tidak menunggumu di sini.';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -5013,11 +5013,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      'Setiap aplikasi pesan mengaku privat. Ini daftar rinciannya, per jalur, termasuk bagian yang tidak menguntungkan kami. Ketuk baris untuk tahu alasannya.';
+      'Ini daftarnya, per jalur, termasuk titik lemahnya. Ketuk baris untuk tahu alasannya.';
 
   @override
   String get seenHonestAboutTheLast =>
-      'Jujur soal baris terakhir: itulah gunanya kunci aplikasi, PIN penghapus, dan penyimpanan terenkripsi, dan tidak ada alat yang bisa menyelamatkanmu dari orang yang memegang ponselmu dalam keadaan terbuka. Model ancaman lengkapnya ada di THREAT_MODEL.md di repo, disusun berdasarkan LINDDUN. Kodenya terbuka, jadi semua ini tidak perlu dipercaya begitu saja.';
+      'Untuk baris terakhir itulah ada kunci aplikasi, PIN penghapus, dan penyimpanan terenkripsi, dan tidak ada alat yang bisa menyelamatkanmu dari orang yang memegang ponselmu dalam keadaan terbuka. Model ancaman lengkapnya ada di THREAT_MODEL.md di repo, disusun berdasarkan LINDDUN. Kodenya terbuka, jadi kamu bisa memeriksa semua ini sendiri.';
 
   @override
   String get seenHidden => 'Tak tampak';
@@ -5046,7 +5046,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      'Terenkripsi ujung ke ujung dengan double ratchet Signal, lalu disegel lagi di dalam gift wrap. Kami tidak bisa membacanya meskipun kami mencoba.';
+      'Terenkripsi ujung ke ujung dengan double ratchet Signal, lalu disegel lagi di dalam gift wrap. Kami tidak bisa membacanya.';
 
   @override
   String get seenYourIpAddress => 'Alamat IP-mu';
@@ -5059,14 +5059,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      'Di mode onion semuanya keluar lewat tor dan relay hanya melihat exit node, tidak pernah kamu. Di mode relay koneksinya langsung ke relay milik kami: tidak ada yang meneruskan alamatmu dan tidak ada yang dicatat, tapi koneksi yang satu itu bisa kami lihat. Di mode cepat setiap relay publik tahu bahwa kamu terhubung, tapi tidak tahu ke siapa atau apa yang kamu katakan.';
+      'Di mode onion semuanya keluar lewat Tor dan relay hanya melihat exit node, tidak pernah kamu. Di mode relay koneksinya langsung ke relay milik kami: tidak ada yang meneruskan alamatmu dan tidak ada yang dicatat, tapi koneksi yang satu itu bisa kami lihat. Di mode cepat setiap relay publik tahu bahwa kamu terhubung, tapi tidak tahu ke siapa atau apa yang kamu katakan.';
 
   @override
   String get seenYourContactGraph => 'Jaringan kontakmu';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo tidak memindai kontakmu. Memang itu intinya. Tidak ada nomor telepon di sini yang bisa bocor.';
+      'Kryfo tidak memindai kontakmu. Tidak ada nomor telepon di sini yang bisa bocor.';
 
   @override
   String get seenIntroducer => 'Perantara';
@@ -5100,7 +5100,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'Pratinjau diambil oleh pengirim, lewat tor, dan ikut di dalam pesan terenkripsi. Ponsel penerima tidak membuat permintaan apa pun. Situsnya hanya tahu bahwa seseorang yang memakai tor meminta sebuah halaman, tidak lebih. Tidak ada gambar yang pernah dimuat, dan tautan dari orang asing tetap berupa teks biasa.';
+      'Pratinjau diambil oleh pengirim, lewat Tor, dan ikut di dalam pesan terenkripsi. Ponsel penerima tidak membuat permintaan apa pun. Situsnya hanya tahu bahwa seseorang yang memakai Tor meminta sebuah halaman, tidak lebih. Tidak ada gambar yang pernah dimuat, dan tautan dari orang asing tetap berupa teks biasa.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Ponsel tak terkunci yang disita';
@@ -5114,7 +5114,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'Lapisan ratchet dan penyimpanan memakai standar. Lapisan yang menyatukannya buatan kami dan belum ada pihak independen yang memeriksanya. Anggap ini versi alfa, karena memang begitu.';
+      'Lapisan ratchet dan penyimpanan memakai standar. Lapisan yang menyatukannya buatan kami dan belum ada pihak independen yang memeriksanya. Ini perangkat lunak versi alfa.';
 
   @override
   String get seenOnion => 'Onion';
@@ -5730,21 +5730,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KRI-fo · bahasa Yunani untuk tersembunyi.\nTempat tenang untuk bicara, dibuat agar tidak ada yang mengawasi.';
+      'Kryfo · KRI-fo · bahasa Yunani untuk tersembunyi.\nTempat untuk bicara, dibuat agar tidak ada yang mengawasi.';
 
   @override
-  String get whyKryfoRoutedThroughTor => 'Dirutekan lewat tor';
+  String get whyKryfoRoutedThroughTor => 'Dirutekan lewat Tor';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      'Secara bawaan setiap pesan berjalan lewat tor - rangkaian relay. Tidak ada yang bisa melihat dengan siapa kamu bicara atau di mana kamu berada, baik kami maupun jaringanmu.';
+      'Secara bawaan setiap pesan berjalan lewat Tor, rangkaian relay. Tidak ada yang bisa melihat dengan siapa kamu bicara atau di mana kamu berada, baik kami maupun jaringanmu.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'Terenkripsi ujung ke ujung';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
-      'Pesan disegel dengan kunci yang hanya dipegang kamu dan lawan bicaramu. Kami tidak bisa membacanya meskipun kami mencoba.';
+      'Pesan disegel dengan kunci yang hanya dipegang kamu dan lawan bicaramu. Kami tidak bisa membacanya.';
 
   @override
   String get whyKryfoNoServersHoldingYour =>
@@ -5759,7 +5759,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi - Kryfo dibuat agar tidak membocorkannya.';
+      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi. Kryfo dibuat agar tidak membocorkannya.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Pastikan itu benar-benar dia';
@@ -5773,7 +5773,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo masih alfa dan belum diaudit. Kriptografinya sungguhan, tapi belum ada pakar luar yang memeriksanya, jadi anggap ini masih dalam pengerjaan, belum sesuatu yang bisa kamu percayakan nyawamu.';
+      'Kryfo masih alfa dan belum diaudit. Kriptografinya sungguhan, tapi belum ada pakar luar yang memeriksanya, jadi jangan dulu mengandalkannya jika keselamatanmu bergantung padanya.';
 
   @override
   String get cleanerLocation => 'Lokasi';
@@ -6337,11 +6337,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat ID Kryfo-mu.';
 
   @override
-  String get linkStubFetchedOverTorBy => 'Diambil lewat tor · oleh perangkatmu';
+  String get linkStubFetchedOverTorBy => 'Diambil lewat Tor · oleh perangkatmu';
 
   @override
   String get linkStubFetchedOverTorByTheirDevice =>
-      'Diambil lewat tor · oleh perangkatnya';
+      'Diambil lewat Tor · oleh perangkatnya';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6419,7 +6419,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'Memberi tahu jaringan bahwa kamu online — tanpa mengungkap di mana.';
+      'Memberi tahu jaringan bahwa kamu online, tanpa mengungkap di mana.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6553,7 +6553,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · diambil lewat tor';
+    return '$domainOf · diambil lewat Tor';
   }
 
   @override
@@ -6563,7 +6563,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get previewStripAddPreview => 'Tambah pratinjau';
 
   @override
-  String get previewStripFetchingOverTor => 'Mengambil lewat tor…';
+  String get previewStripFetchingOverTor => 'Mengambil lewat Tor…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -7134,7 +7134,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk menemukan jembatan, Kryfo mungkin bertanya ke Tor Project, jika kamu setuju. Banyak orang memakai jembatan setiap hari.';
+      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk menemukan jembatan, Kryfo mungkin bertanya ke Tor Project, jika kamu setuju.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'dari Tor Project';
@@ -7729,7 +7729,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'Kalau kamu lupa PIN ini, obrolan tersembunyimu hilang untuk selamanya. Tidak ada yang bisa memulihkannya, bahkan kami.';
+      'Kalau kamu lupa PIN ini, obrolan tersembunyimu hilang untuk selamanya. Tidak ada yang bisa memulihkannya.';
 
   @override
   String get flowVaultForgetOk => 'Aku mengerti';

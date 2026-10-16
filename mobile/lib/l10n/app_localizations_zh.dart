@@ -522,7 +522,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appIdentityCreated => '身份已创建';
 
   @override
-  String get appStartingTor30s => '正在启动 tor（约 30 秒）…';
+  String get appStartingTor30s => '正在启动 Tor（约 30 秒）…';
 
   @override
   String get appScanOrImportA => '请先扫描或导入一个对端';
@@ -641,7 +641,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      '首次连接需要一两分钟，tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
+      '首次连接需要一两分钟，Tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
 
   @override
   String get appTorNoRelayYet =>
@@ -649,7 +649,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      '中继模式和快速模式不走 tor，速度更快。它们在设置的“速度与隐私”里，每种模式都写明了代价。';
+      '中继模式和快速模式不走 Tor，速度更快。它们在设置的“速度与隐私”里，每种模式都写明了代价。';
 
   @override
   String get appViaRelay => '经由中继';
@@ -1404,7 +1404,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · 经 tor 需要$wireEstimate';
+    return '$humanBytes · 经 Tor 需要$wireEstimate';
   }
 
   @override
@@ -1615,7 +1615,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatEncryptedDirect => '已加密 · 直连';
 
   @override
-  String get chatEncryptedOverTor => '已加密 · 经由 tor';
+  String get chatEncryptedOverTor => '已加密 · 经由 Tor';
 
   @override
   String get chatSearchThisChat => '搜索此聊天';
@@ -2092,7 +2092,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateNoAdsNoInvestors => '没有广告，没有投资人，没有东西要卖给你。它靠支持者的捐助运转。';
 
   @override
-  String get donateBackItAnonymouslyBadge => '匿名支持它。徽章自愿领取。\n*隐私永远不设付费门槛。*';
+  String get donateBackItAnonymouslyBadge => '匿名支持它。徽章自愿领取。\n*所有隐私功能都免费。*';
 
   @override
   String get donateAuditTitle => '帮忙资助一次安全审计';
@@ -2132,7 +2132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBadgesStartAt20 => '徽章 \$20 起';
 
   @override
-  String get donateReachingThePaymentService => '正在经由 tor 连接支付服务…';
+  String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
   String get donateThisCanTakeUp => '最多可能需要 1 分钟';
@@ -2239,7 +2239,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      '消息即时到达。任何东西都不会离开 tor。最耗电。';
+      '消息即时到达。任何东西都不会离开 Tor。最耗电。';
 
   @override
   String get gettingMessagesCheckIns => '定时查收';
@@ -2797,7 +2797,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      '任何知道它的人都可以请求给你发消息，这正是用户名的意义。这个页面只保存你的邀请和你写的那句话，别无其他，也不会记录谁看过它。你随时可以删除它。';
+      '任何知道它的人都可以请求给你发消息。这个页面只保存你的邀请和你写的那句话，别无其他，也不会记录谁看过它。你随时可以删除它。';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -2960,7 +2960,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 条待发送 · tor 仍在连接',
+      other: '$countString 条待发送 · Tor 仍在连接',
     );
     return '$_temp0';
   }
@@ -3221,7 +3221,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileKryfoCouldNotRead => 'Kryfo 无法读取或写入这个文件。';
 
   @override
-  String get lockFileCheckCapitalsAndSpaces => '检查大小写和空格。没有人能重置它，包括我们。';
+  String get lockFileCheckCapitalsAndSpaces => '检查大小写和空格。没有人能重置它。';
 
   @override
   String get lockFileItMayHaveBeen => '它可能在传输途中被截断了。请让对方重新发送。没有保存任何东西。';
@@ -3347,7 +3347,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      '任何知道密码的人都能打开它，在 Kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它，包括我们。';
+      '任何知道密码的人都能打开它，在 Kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它。';
 
   @override
   String get lockFileLocked2 => '已锁定。';
@@ -3425,7 +3425,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      '一条加密连接，直通 Kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 tor 被封锁的地方也能用。';
+      '一条加密连接，直通 Kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 Tor 被封锁的地方也能用。';
 
   @override
   String get modesQuick => '快';
@@ -3852,8 +3852,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingYourKryfoId => '你的 KRYFO ID';
 
   @override
-  String get onboardingGeneratedFromAKey =>
-      '由一把只存在于这部手机上的密钥生成。*好记，独一无二，只属于你。*别人都没有这个。';
+  String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。*别人都没有这组词。*';
 
   @override
   String get onboardingTryAnother => '换一个';
@@ -3904,7 +3903,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingOurRelaySeesYour => '我们的中继能看到你的地址。其他人都看不到。';
 
   @override
-  String get onboardingAboutASecondWorks => '大约一秒。在 tor 被封锁的地方也能用。';
+  String get onboardingAboutASecondWorks => '大约一秒。在 Tor 被封锁的地方也能用。';
 
   @override
   String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
@@ -3938,7 +3937,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      '这就是全部身份。没有号码可泄露，没有邮箱可被钓鱼，没有东西可查。和你聊天的人看到的是这三个词和你选的脸。';
+      '这就是全部身份。没有号码或邮箱可以泄露或被查到。和你聊天的人看到的是这三个词和你选的脸。';
 
   @override
   String get onboardingNobodyCanReachYou => '在你允许之前，谁也联系不到你';
@@ -4583,7 +4582,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreTheOldPhoneStops =>
-      '从你在这里发出任何内容的那一刻起，旧手机就不再接收消息。不是逐渐停止。你从这台设备发出的第一条消息，是旧手机能跟上的最后一条；在那之后到达旧手机的任何内容，在那里都无法读取，在这里也不会等着你。';
+      '从你在这里发出任何内容的那一刻起，旧手机就不再接收消息。你从这台设备发出的第一条消息，是旧手机能跟上的最后一条；在那之后到达旧手机的任何内容，在那里都无法读取，在这里也不会等着你。';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -4791,12 +4790,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenWhatWeCanSee => '我们能看到什么';
 
   @override
-  String get seenEveryMessengerClaimsPrivacy =>
-      '每个通讯应用都声称注重隐私。这是一份具体的清单，按线路列出，也包括对我们不利的部分。点一行查看原因。';
+  String get seenEveryMessengerClaimsPrivacy => '这是按线路列出的清单，也包括薄弱之处。点一行查看原因。';
 
   @override
   String get seenHonestAboutTheLast =>
-      '关于最后几行，实话实说：应用锁、抹掉 PIN 和加密存储就是为此准备的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，所以这些都不需要你凭信任接受。';
+      '最后几行正是应用锁、抹掉 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
 
   @override
   String get seenHidden => '已隐藏';
@@ -4825,7 +4823,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenEndToEndEncrypted =>
-      '用 Signal 双棘轮端到端加密，然后再用 gift wrap 封装一层。我们就算想读，也读不了。';
+      '用 Signal 双棘轮端到端加密，然后再用 gift wrap 封装一层。我们读不了。';
 
   @override
   String get seenYourIpAddress => '你的 IP 地址';
@@ -4838,13 +4836,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      '在 onion 模式下，一切都经由 tor 发出，中继看到的是一个出口节点，永远看不到你。在中继模式下，连接直达我们自己的中继：没有任何东西转发你的地址，也不做任何记录，但这一条连接我们看得到。在快速模式下，每个公共中继都会知道你连接过，但不知道你联系了谁，也不知道你说了什么。';
+      '在 onion 模式下，一切都经由 Tor 发出，中继看到的是一个出口节点，永远看不到你。在中继模式下，连接直达我们自己的中继：没有任何东西转发你的地址，也不做任何记录，但这一条连接我们看得到。在快速模式下，每个公共中继都会知道你连接过，但不知道你联系了谁，也不知道你说了什么。';
 
   @override
   String get seenYourContactGraph => '你的联系人关系图';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不会扫描你的通讯录。这正是关键。这里根本没有手机号可以泄露。';
+  String get seenKryfoDoesNotScan => 'Kryfo 不会扫描你的通讯录。这里根本没有手机号可以泄露。';
 
   @override
   String get seenIntroducer => '介绍人';
@@ -4878,7 +4876,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      '预览由发送方经由 tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
+      '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
 
   @override
   String get seenASeizedUnlockedPhone => '被夺走的已解锁手机';
@@ -4892,7 +4890,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。请把它当作 alpha 版本，因为它确实是。';
+      '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。这是 alpha 版本。';
 
   @override
   String get seenOnion => 'Onion';
@@ -5492,20 +5490,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个安静的聊天之处，从设计上就没有人在看。';
+      'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个聊天的地方，从设计上就没有人在看。';
 
   @override
-  String get whyKryfoRoutedThroughTor => '经由 tor 路由';
+  String get whyKryfoRoutedThroughTor => '经由 Tor 路由';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      '默认情况下，每条消息都经由 tor——一串中继——传送。任何人，无论是我们还是你的网络，都看不到你在和谁聊天、你在哪里。';
+      '默认情况下，每条消息都经由 Tor——一串中继——传送。任何人，无论是我们还是你的网络，都看不到你在和谁聊天、你在哪里。';
 
   @override
   String get whyKryfoEndToEndEncrypted => '端到端加密';
 
   @override
-  String get whyKryfoMessagesAreSealedWith => '消息用只有你和对方持有的密钥加密。我们就算想读，也读不了。';
+  String get whyKryfoMessagesAreSealedWith => '消息用只有你和对方持有的密钥加密。我们读不了。';
 
   @override
   String get whyKryfoNoServersHoldingYour => '没有服务器保管你的生活';
@@ -5533,7 +5531,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 还处于 alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以请把它当作一个仍在开发中的作品，暂时还不能托付身家性命。';
+      'Kryfo 还处于 alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以在关系到你人身安全的场合，暂时不要依赖它。';
 
   @override
   String get cleanerLocation => '位置';
@@ -5994,7 +5992,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedKryfoCouldNotStart => 'Kryfo 无法启动';
 
   @override
-  String get bootFailedThisIsAFault => '这是这台设备上的故障，不是网络问题。与 tor 无关。';
+  String get bootFailedThisIsAFault => '这是这台设备上的故障，不是网络问题。与 Tor 无关。';
 
   @override
   String get bootFailedKeysDidNotAnswer => '手机的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
@@ -6078,10 +6076,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的 Kryfo ID。';
 
   @override
-  String get linkStubFetchedOverTorBy => '经由 tor 获取 · 由你的设备';
+  String get linkStubFetchedOverTorBy => '经由 Tor 获取 · 由你的设备';
 
   @override
-  String get linkStubFetchedOverTorByTheirDevice => '经由 tor 获取 · 由对方的设备';
+  String get linkStubFetchedOverTorByTheirDevice => '经由 Tor 获取 · 由对方的设备';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6284,7 +6282,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · 经由 tor 获取';
+    return '$domainOf · 经由 Tor 获取';
   }
 
   @override
@@ -6294,7 +6292,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get previewStripAddPreview => '添加预览';
 
   @override
-  String get previewStripFetchingOverTor => '正在经由 tor 获取…';
+  String get previewStripFetchingOverTor => '正在经由 Tor 获取…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -6837,7 +6835,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封锁时，“自动”会自己找到办法。如果你同意，Kryfo 可能会向 Tor 项目询问网桥。每天都有很多人在用网桥。';
+      'Tor 被封锁时，“自动”会自己找到办法。如果你同意，Kryfo 可能会向 Tor 项目询问网桥。';
 
   @override
   String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
@@ -7400,7 +7398,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultForgetTitle => '记住这个 PIN';
 
   @override
-  String get flowVaultForget => '如果你忘了这个 PIN，你的隐藏聊天就永远没了。谁也找不回来，我们也不行。';
+  String get flowVaultForget => '如果你忘了这个 PIN，你的隐藏聊天就永远没了。谁也找不回来。';
 
   @override
   String get flowVaultForgetOk => '我明白了';
@@ -8825,7 +8823,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appIdentityCreated => '已建立身分';
 
   @override
-  String get appStartingTor30s => '正在啟動 tor（約 30 秒）…';
+  String get appStartingTor30s => '正在啟動 Tor（約 30 秒）…';
 
   @override
   String get appScanOrImportA => '請先掃描或匯入對等端';
@@ -8944,7 +8942,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appTheFirstConnectionTakes =>
-      '第一次連線需要一、兩分鐘，讓 tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
+      '第一次連線需要一、兩分鐘，讓 Tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
 
   @override
   String get appTorNoRelayYet =>
@@ -8952,7 +8950,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appRelayAndFastModes =>
-      '中繼和快速模式會略過 tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
+      '中繼和快速模式會略過 Tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
 
   @override
   String get appViaRelay => '經由中繼';
@@ -9707,7 +9705,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
-    return '$humanBytes · 經 tor 需 $wireEstimate';
+    return '$humanBytes · 經 Tor 需 $wireEstimate';
   }
 
   @override
@@ -9917,7 +9915,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatEncryptedDirect => '已加密 · 直連';
 
   @override
-  String get chatEncryptedOverTor => '已加密 · 經由 tor';
+  String get chatEncryptedOverTor => '已加密 · 經由 Tor';
 
   @override
   String get chatSearchThisChat => '搜尋這個聊天';
@@ -10394,7 +10392,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateNoAdsNoInvestors => '沒有廣告，沒有投資人，也沒有要賣的東西。全靠支持者的捐助運作。';
 
   @override
-  String get donateBackItAnonymouslyBadge => '匿名支持。徽章自由選擇。\n*隱私永遠不設付費門檻。*';
+  String get donateBackItAnonymouslyBadge => '匿名支持。徽章自由選擇。\n*所有隱私功能都免費。*';
 
   @override
   String get donateAuditTitle => '幫忙資助一次安全稽核';
@@ -10434,7 +10432,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateBadgesStartAt20 => '徽章從 \$20 起';
 
   @override
-  String get donateReachingThePaymentService => '正在經由 tor 連線到付款服務…';
+  String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
   String get donateThisCanTakeUp => '最多可能需要一分鐘';
@@ -11101,7 +11099,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleAnyoneWhoKnowsIt =>
-      '任何知道它的人都能要求傳訊息給你，這正是擁有使用者名稱的意義。這個頁面只存放你的邀請和你寫的那一句話，沒有其他東西，也不會記錄誰讀過它。你隨時都可以刪除它。';
+      '任何知道它的人都能要求傳訊息給你。這個頁面只存放你的邀請和你寫的那一句話，沒有其他東西，也不會記錄誰讀過它。你隨時都可以刪除它。';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -11264,7 +11262,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 則等待中 · tor 仍在連線',
+      other: '$countString 則等待中 · Tor 仍在連線',
     );
     return '$_temp0';
   }
@@ -11525,7 +11523,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFileKryfoCouldNotRead => 'Kryfo 無法讀取或寫入這個檔案。';
 
   @override
-  String get lockFileCheckCapitalsAndSpaces => '請檢查大小寫和空格。沒有人能重設它，包括我們。';
+  String get lockFileCheckCapitalsAndSpaces => '請檢查大小寫和空格。沒有人能重設它。';
 
   @override
   String get lockFileItMayHaveBeen => '它可能在傳送途中被截斷了。請對方再傳一次。沒有儲存任何東西。';
@@ -11651,7 +11649,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      '任何知道密碼的人都能開啟它，無論是在 Kryfo 裡，還是在任何裝有免費工具 age 的電腦上。忘了密碼，檔案就永遠拿不回來了。沒有人能重設它，包括我們。';
+      '任何知道密碼的人都能開啟它，無論是在 Kryfo 裡，還是在任何裝有免費工具 age 的電腦上。忘了密碼，檔案就永遠拿不回來了。沒有人能重設它。';
 
   @override
   String get lockFileLocked2 => '已鎖定。';
@@ -11729,7 +11727,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesOneSealedConnectionTo =>
-      '一條密封連線，直通 Kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 tor 被封鎖的地方也能用。';
+      '一條密封連線，直通 Kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 Tor 被封鎖的地方也能用。';
 
   @override
   String get modesQuick => '較快';
@@ -12156,8 +12154,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingYourKryfoId => '你的 KRYFO ID';
 
   @override
-  String get onboardingGeneratedFromAKey =>
-      '由只存在這支手機上的金鑰產生。*好記、獨一無二、只屬於你。*沒有其他人有這組詞。';
+  String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。*沒有其他人有這組詞。*';
 
   @override
   String get onboardingTryAnother => '換一個';
@@ -12208,7 +12205,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingOurRelaySeesYour => '我們的中繼看得到你的位址。其他人都看不到。';
 
   @override
-  String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
+  String get onboardingAboutASecondWorks => '大約一秒。在 Tor 被封鎖的地方也能用。';
 
   @override
   String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
@@ -12242,7 +12239,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingThatIsTheWhole =>
-      '這就是你的全部身分。沒有號碼會外洩，沒有電子郵件能被拿來釣魚，也沒有任何東西可以查。和你聊天的人會看到這些詞和你選的臉。';
+      '這就是你的全部身分。沒有號碼或電子郵件會外洩或被查到。和你聊天的人會看到這些詞和你選的臉。';
 
   @override
   String get onboardingNobodyCanReachYou => '除非你讓對方進來，否則沒有人能聯絡到你';
@@ -12886,7 +12883,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreTheOldPhoneStops =>
-      '你一從這裡傳送任何東西，舊手機就會停止接收。不是慢慢停止。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
+      '你一從這裡傳送任何東西，舊手機就會停止接收。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
 
   @override
   String get restoreIfThePhoneThis =>
@@ -13095,11 +13092,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenEveryMessengerClaimsPrivacy =>
-      '每個通訊軟體都說自己重視隱私。這是按照傳送路線列出的具體清單，包括對我們不利的部分。點一列就能看到原因。';
+      '這是按照傳送路線列出的清單，包括薄弱之處。點一列就能看到原因。';
 
   @override
   String get seenHonestAboutTheLast =>
-      '老實說最後幾列：應用程式鎖、清除 PIN 和加密儲存正是為此而設；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，所以這些都不必靠信任。';
+      '最後幾列正是應用程式鎖、清除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
 
   @override
   String get seenHidden => '隱藏';
@@ -13128,7 +13125,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenEndToEndEncrypted =>
-      '使用 Signal 雙棘輪演算法端對端加密，再以 gift wrap 包裝密封一次。就算我們想讀，也讀不到。';
+      '使用 Signal 雙棘輪演算法端對端加密，再以 gift wrap 包裝密封一次。我們讀不到。';
 
   @override
   String get seenYourIpAddress => '你的 IP 位址';
@@ -13141,13 +13138,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenOnOnionEverythingLeaves =>
-      '在 Onion 模式下，一切都經由 tor 送出，中繼看到的是出口節點，永遠不會是你。在中繼模式下，連線會直接連到我們自己的中繼：沒有任何東西會轉送你的位址，也不會留下任何紀錄，但這條連線我們看得到。在快速模式下，每個公共中繼都會知道你連線了，但不知道你和誰聯絡，也不知道你說了什麼。';
+      '在 Onion 模式下，一切都經由 Tor 送出，中繼看到的是出口節點，永遠不會是你。在中繼模式下，連線會直接連到我們自己的中繼：沒有任何東西會轉送你的位址，也不會留下任何紀錄，但這條連線我們看得到。在快速模式下，每個公共中繼都會知道你連線了，但不知道你和誰聯絡，也不知道你說了什麼。';
 
   @override
   String get seenYourContactGraph => '你的聯絡人關係圖';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不會掃描你的通訊錄。這正是重點。這裡根本沒有手機號碼可以外洩。';
+  String get seenKryfoDoesNotScan => 'Kryfo 不會掃描你的通訊錄。這裡根本沒有手機號碼可以外洩。';
 
   @override
   String get seenIntroducer => '介紹人';
@@ -13181,7 +13178,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenAPreviewIsFetched =>
-      '預覽由傳送者經由 tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
+      '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
 
   @override
   String get seenASeizedUnlockedPhone => '被扣押的已解鎖手機';
@@ -13195,7 +13192,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenTheRatchetAndStorage =>
-      '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。請把它當作 alpha 版本，因為它確實是。';
+      '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。這是 alpha 版本。';
 
   @override
   String get seenOnion => 'Onion';
@@ -13795,20 +13792,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個安靜的聊天空間，打造成沒有任何人在監看。';
+      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個聊天空間，打造成沒有任何人在監看。';
 
   @override
-  String get whyKryfoRoutedThroughTor => '經由 tor 路由';
+  String get whyKryfoRoutedThroughTor => '經由 Tor 路由';
 
   @override
   String get whyKryfoByDefaultEveryMessage =>
-      '預設情況下，每則訊息都經由 tor（一連串的中繼）傳送。沒有人，不論是我們還是你的網路，能看到你在跟誰聊天，或你在哪裡。';
+      '預設情況下，每則訊息都經由 Tor（一連串的中繼）傳送。沒有人，不論是我們還是你的網路，能看到你在跟誰聊天，或你在哪裡。';
 
   @override
   String get whyKryfoEndToEndEncrypted => '端對端加密';
 
   @override
-  String get whyKryfoMessagesAreSealedWith => '訊息用只有你和對方持有的金鑰密封。就算我們想讀，也讀不到。';
+  String get whyKryfoMessagesAreSealedWith => '訊息用只有你和對方持有的金鑰密封。我們讀不到。';
 
   @override
   String get whyKryfoNoServersHoldingYour => '沒有伺服器掌握你的生活';
@@ -13836,7 +13833,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 還在 alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以請把它當作開發中的作品，暫時還不能把性命託付給它。';
+      'Kryfo 還在 alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以在攸關你人身安全的情況下，暫時不要依賴它。';
 
   @override
   String get cleanerLocation => '位置';
@@ -14381,10 +14378,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 Kryfo ID。';
 
   @override
-  String get linkStubFetchedOverTorBy => '經由 tor 擷取 · 由你的裝置';
+  String get linkStubFetchedOverTorBy => '經由 Tor 擷取 · 由你的裝置';
 
   @override
-  String get linkStubFetchedOverTorByTheirDevice => '經由 tor 擷取 · 由對方的裝置';
+  String get linkStubFetchedOverTorByTheirDevice => '經由 Tor 擷取 · 由對方的裝置';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -14587,7 +14584,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {
-    return '$domainOf · 經由 tor 擷取';
+    return '$domainOf · 經由 Tor 擷取';
   }
 
   @override
@@ -14597,7 +14594,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get previewStripAddPreview => '加上預覽';
 
   @override
-  String get previewStripFetchingOverTor => '正在經由 tor 擷取…';
+  String get previewStripFetchingOverTor => '正在經由 Tor 擷取…';
 
   @override
   String toolPartsB(Object bytes) {
@@ -15140,7 +15137,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封鎖時，「自動」會自己找到辦法。如果你同意，Kryfo 可能會向 Tor 專案詢問橋接。每天都有很多人在用橋接。';
+      'Tor 被封鎖時，「自動」會自己找到辦法。如果你同意，Kryfo 可能會向 Tor 專案詢問橋接。';
 
   @override
   String get bridgesFromTheTorProjectLower => '來自 Tor 專案';
@@ -15703,7 +15700,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultForgetTitle => '記住這組 PIN';
 
   @override
-  String get flowVaultForget => '如果你忘了這組 PIN，你的隱藏聊天就永遠沒了。誰也找不回來，我們也不行。';
+  String get flowVaultForget => '如果你忘了這組 PIN，你的隱藏聊天就永遠沒了。誰也找不回來。';
 
   @override
   String get flowVaultForgetOk => '我明白了';
