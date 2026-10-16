@@ -16,6 +16,7 @@ import android.content.ClipboardManager
 import android.os.PersistableBundle
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import java.io.ByteArrayOutputStream
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
@@ -29,6 +30,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -298,6 +301,7 @@ class MainActivity : FlutterFragmentActivity() {
             secureNow = true
         }
         super.onCreate(savedInstanceState)
+        underBars()
         windowSeen = WindowWatch(this).also {
             it.gone = { tellAway() }
             addContentView(it, ViewGroup.LayoutParams(0, 0))
@@ -317,6 +321,16 @@ class MainActivity : FlutterFragmentActivity() {
                 ContextCompat.registerReceiver(applicationContext, it, filter, ContextCompat.RECEIVER_EXPORTED)
             }
         }
+    }
+
+    // drawn under transparent bars, as android 15 and later do by
+    // themselves. after super, which tints the status bar. android 9 and
+    // older keep the app above a navigation bar that shows the window behind
+    private fun underBars() {
+        if (Build.VERSION.SDK_INT >= 35) return
+        val clear = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+        val nav = if (Build.VERSION.SDK_INT >= 29) clear else SystemBarStyle.dark(Color.TRANSPARENT)
+        enableEdgeToEdge(clear, nav)
     }
 
     private fun setSecureWindow(on: Boolean) {
