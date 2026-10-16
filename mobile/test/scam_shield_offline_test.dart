@@ -48,7 +48,7 @@ void main() {
 
   test('the check on arrival calls nothing that sends', () {
     final run = _body(
-      File('lib/main.dart').readAsStringSync(),
+      File('lib/app/state.dart').readAsStringSync(),
       'Future<void> _runShield(',
     );
     final calls = {

@@ -167,7 +167,7 @@ void main() {
     expect((kMaxFileBytes + 12287) ~/ 12288, 1280);
     expect(kMaxFileSlices, greaterThanOrEqualTo(1280));
     expect(kMaxFileSlices, lessThan(1400));
-    final recv = sourceOf('lib/main.dart');
+    final recv = sourceOf('lib/app/state.dart');
     final at = recv.indexOf(
       'if (total > (voiceSlices ? kMaxVoiceSlices : kMaxFileSlices)) {',
     );

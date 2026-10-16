@@ -365,7 +365,7 @@ void main() {
         return '';
       }
 
-      final main = File('lib/main.dart').readAsStringSync();
+      final main = File('lib/app/state.dart').readAsStringSync();
       for (final head in [
         'void lockingUp()',
         'Future<void> _sessionFor(PinResult r, {String? vaultKey}) async',

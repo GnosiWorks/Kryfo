@@ -292,7 +292,10 @@ void main() {
     });
 
     test('the status poll samples it in relay mode', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = [
+        'lib/app/state.dart',
+        'lib/main.dart',
+      ].map((f) => File(f).readAsStringSync()).join('\n');
       final poll = src.substring(
         src.indexOf('Timer.periodic(const Duration(seconds: 1), (t) {'),
       );
@@ -617,7 +620,7 @@ void main() {
     });
 
     test('the boot sets the list before the invite address listens', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/state.dart').readAsStringSync();
       final boot = src.substring(src.indexOf("dlog('transport: booting in"));
       final init = boot.indexOf('engine.nostrInit(relaysFor(_sendMode));');
       expect(init, greaterThan(0));

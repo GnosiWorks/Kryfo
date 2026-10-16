@@ -264,7 +264,7 @@ void main() {
     await busy(50);
     await db.clearGroupConversation('g1', noteGone: false);
     expect(await goneRows(), isEmpty);
-    final main = sourceOf('lib/main.dart');
+    final main = sourceOf('lib/app/state.dart');
     for (final f in [
       'Future<void> leaveGroupAndAnnounce(',
       'Future<void> _dropGroup(',

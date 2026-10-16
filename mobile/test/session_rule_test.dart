@@ -167,7 +167,11 @@ void main() {
   test('only main.dart and backup.dart reach under the session', () {
     final bad = <String>[];
     for (final f in _libFiles()) {
-      if (f.path == 'lib/main.dart' || f.path == 'lib/backup.dart') continue;
+      if (f.path == 'lib/main.dart' ||
+          f.path == 'lib/app/state.dart' ||
+          f.path == 'lib/backup.dart') {
+        continue;
+      }
       if (_under.hasMatch(_code(f.readAsStringSync()))) bad.add(f.path);
     }
     expect(bad, isEmpty);

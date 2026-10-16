@@ -379,7 +379,7 @@ void main() {
     });
 
     test('a quiet session queues nothing', () {
-      final src = sourceOf('lib/main.dart');
+      final src = sourceOf('lib/app/state.dart');
       for (final fn in [
         'Future<String> createGroupAndAnnounce(',
         'Future<void> addMembersToGroup(',

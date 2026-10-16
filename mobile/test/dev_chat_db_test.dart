@@ -865,7 +865,7 @@ void main() {
   test('v54 seeds it on create and on upgrade, and the hide loop skips it', () {
     final src = [
       'lib/app/database.dart',
-      'lib/main.dart',
+      'lib/app/state.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(55));

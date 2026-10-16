@@ -1104,7 +1104,7 @@ void main() {
     });
 
     test('the boot and a mode switch ask for it', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/state.dart').readAsStringSync();
       final boot = src.substring(src.indexOf('await _subscribeRooms();'));
       expect(
         boot.indexOf('await subscribeDevLane();'),

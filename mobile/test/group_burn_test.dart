@@ -9,7 +9,7 @@ import 'source_body.dart';
 
 void main() {
   final screen = sourceOf('lib/screens/group_chat_screen.dart');
-  final app = sourceOf('lib/main.dart');
+  final app = sourceOf('lib/app/state.dart');
 
   test('every row the group chat saves for a send keeps the timer', () {
     final saves = callsOf(screen, 'session.saveInGroup(');

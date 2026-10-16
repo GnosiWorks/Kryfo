@@ -190,7 +190,7 @@ void main() {
       expect(p?['v'], fc.startsWith('error') ? '2' : '3');
     }
     // and it is what the decoy hands out
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/state.dart').readAsStringSync();
     expect(src, contains('invite: quietInviteUri(id, onion, bundle, fc)'));
   });
 

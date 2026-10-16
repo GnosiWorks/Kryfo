@@ -221,7 +221,7 @@ void main() {
   });
 
   test('the app starts notifications with the tap that reads tags', () {
-    final src = File('lib/main.dart').readAsStringSync();
+    final src = File('lib/app/state.dart').readAsStringSync();
     expect(src, contains('onTap: openChatForNotif,'));
     expect(src, contains('tagsOf: (chat) => session.notifTagsOf(chat),'));
     expect(src, isNot(contains('initNotifications(onTap: openChatForHalo')));

@@ -117,7 +117,7 @@ void main() {
   );
 
   test('every way a group goes, and a hide, empties an open composer', () {
-    final main = sourceOf('lib/main.dart');
+    final main = sourceOf('lib/app/state.dart');
     for (final f in [
       'Future<void> leaveGroupAndAnnounce(',
       'Future<void> _dropGroup(',

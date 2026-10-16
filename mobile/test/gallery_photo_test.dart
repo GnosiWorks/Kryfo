@@ -145,7 +145,7 @@ void main() {
 
   test('the group sender is told which rows are photos', () {
     final body = bodyOf(
-      sourceOf('lib/main.dart'),
+      sourceOf('lib/app/state.dart'),
       'Future<String> sendMediaToGroup(',
     );
     expect(body, contains('photo: fileName == null && !voice,'));

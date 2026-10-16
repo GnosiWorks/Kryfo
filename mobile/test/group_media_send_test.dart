@@ -381,7 +381,7 @@ void main() {
 
   // the group's own code around the sender
   group('the group chat', () {
-    final app = sourceOf('lib/main.dart');
+    final app = sourceOf('lib/app/state.dart');
     final screen = sourceOf('lib/screens/group_chat_screen.dart');
 
     test('sends through it, never to itself', () {

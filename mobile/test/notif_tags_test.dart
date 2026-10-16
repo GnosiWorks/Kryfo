@@ -21,7 +21,7 @@ String _body(String src, String head) {
 void main() {
   final src = [
     'lib/app/database.dart',
-    'lib/main.dart',
+    'lib/app/state.dart',
   ].map((f) => File(f).readAsStringSync()).join('\n');
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));

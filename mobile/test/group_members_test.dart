@@ -1136,7 +1136,7 @@ void main() {
     );
 
     test('a new mode lands its relays before any runner starts again', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/state.dart').readAsStringSync();
       final mode = src.substring(src.indexOf('Future<void> setSendMode('));
       final init = mode.indexOf('engine.nostrInit(relaysFor(m));');
       expect(init, isNonNegative);

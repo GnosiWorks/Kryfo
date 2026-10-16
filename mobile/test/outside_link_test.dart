@@ -236,7 +236,7 @@ void main() {
   });
 
   test('every link from outside goes through the question', () {
-    final app = File('lib/main.dart').readAsStringSync();
+    final app = File('lib/app/state.dart').readAsStringSync();
     final stream = RegExp(
       r'uriLinkStream\.listen\(\(uri\) async \{([\s\S]*?)\n    \}\);',
     ).firstMatch(app)?.group(1);

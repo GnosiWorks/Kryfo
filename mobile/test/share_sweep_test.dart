@@ -134,7 +134,7 @@ void main() {
 
   test('a lock and an unlock unlink a handed copy; a switch of pin and a '
       'wipe shred it', () {
-    final main = sourceOf('lib/main.dart');
+    final main = sourceOf('lib/app/state.dart');
     final lock = bodyOf(main, 'void lockingUp(');
     expect(lock, contains('unawaited(dropOpenCopies());'));
     expect(

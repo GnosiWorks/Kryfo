@@ -196,7 +196,7 @@ void main() {
     });
 
     test('start sweeps them before anything else runs', () {
-      final src = File('lib/main.dart').readAsStringSync();
+      final src = File('lib/app/state.dart').readAsStringSync();
       final boot = src.substring(src.indexOf('Future<void> _boot() async'));
       final tidy = boot.indexOf('tidyAtStart(');
       expect(tidy, greaterThan(0));
