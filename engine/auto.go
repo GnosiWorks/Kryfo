@@ -97,7 +97,8 @@ var (
 	autoMem = autoMemory{V: 1}
 )
 
-func fresh(day, today int64) bool { return day <= today && today-day < memDays }
+// today-day would wrap for a day far enough back
+func fresh(day, today int64) bool { return day <= today && day > today-memDays }
 
 func memSnapshot() autoMemory {
 	memMu.Lock()

@@ -414,13 +414,13 @@ func bridgeCacheIn(s string) {
 	}
 	today := dayOf(time.Now())
 	week := int64(moatSettingsFor / (24 * time.Hour))
-	if b := w.Builtin; b != nil && b.Base == builtinBase && b.Day <= today && today-b.Day < 4*week {
+	if b := w.Builtin; b != nil && b.Base == builtinBase && b.Day <= today && b.Day > today-4*week {
 		kept, _ := acceptRefreshed(b.Lines)
 		builtinMu.Lock()
 		builtinFresh, builtinFreshAt = kept, dayStart(b.Day)
 		builtinMu.Unlock()
 	}
-	if m := w.Moat; m != nil && m.Day <= today && today-m.Day < week {
+	if m := w.Moat; m != nil && m.Day <= today && m.Day > today-week {
 		byType := map[string][]string{}
 		var order []string
 		for _, ln := range m.Lines {
