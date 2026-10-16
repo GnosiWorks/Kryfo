@@ -307,7 +307,7 @@ void main() {
     });
 
     test('the start sweeps run it', () {
-      final main = File('lib/main.dart').readAsStringSync();
+      final main = File('lib/app/boot.dart').readAsStringSync();
       final at = main.indexOf('Future<void> _sweepPlaintextLeftovers()');
       expect(at, isNonNegative);
       expect(

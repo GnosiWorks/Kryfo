@@ -168,6 +168,7 @@ void main() {
     final bad = <String>[];
     for (final f in _libFiles()) {
       if (f.path == 'lib/main.dart' ||
+          f.path == 'lib/app/boot.dart' ||
           f.path == 'lib/app/state.dart' ||
           f.path == 'lib/backup.dart') {
         continue;
