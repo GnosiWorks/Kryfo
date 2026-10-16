@@ -538,7 +538,7 @@ void main() {
       await app.receiveRelay([(peer: 'x-$_bob', cipher: 'need-1')]);
       await settle();
       debugPrint = was;
-      expect(said, contains('NEED f1: not answered'));
+      expect(said, contains('need f1: not answered'));
       expect(io.sent, isEmpty);
       expect(_sent(mem)['f1'], kNotSent);
     });

@@ -573,7 +573,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     );
   } catch (e) {
     dlog(
-      'UNWRAP-FAIL $e raw=${wrapped.substring(0, wrapped.length < 80 ? wrapped.length : 80)}',
+      'unwrap-fail $e raw=${wrapped.substring(0, wrapped.length < 80 ? wrapped.length : 80)}',
     );
     return UnwrappedMessage(unmarked(wrapped), powText: wrapped);
   }

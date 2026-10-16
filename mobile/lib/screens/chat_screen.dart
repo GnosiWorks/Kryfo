@@ -7902,7 +7902,7 @@ class _Bubble extends StatelessWidget {
                                                                 ),
                                                             errorBuilder: (_, e, _) {
                                                               dlog(
-                                                                'Image failed: '
+                                                                'image failed: '
                                                                 '${msg.mediaPath} / $e',
                                                               );
                                                               return Container(

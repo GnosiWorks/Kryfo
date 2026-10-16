@@ -215,7 +215,7 @@ Future<String> _sendChunkedMediaInner({
     done = chunkDone.putIfAbsent(msgUid, () => <int>{});
   }
   if (done.isNotEmpty && total > 1 && only == null) {
-    dlog('MEDIA resume $msgUid: ${done.length}/$total already landed');
+    dlog('media resume $msgUid: ${done.length}/$total already landed');
     if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
   }
   var xpub = peerXPub == null || peerXPub.isEmpty ? null : peerXPub;
@@ -343,11 +343,11 @@ Future<String> _sendChunkedMediaInner({
                 engine.sendFirstContact(xpub!, fc, cipher).then(
                   (f) {
                     if (f != 'ok') {
-                      dlog('MEDIA first-contact copy did not go: $f');
+                      dlog('media first-contact copy did not go: $f');
                     }
                   },
                   onError: (Object e) =>
-                      dlog('MEDIA first-contact copy did not go: $e'),
+                      dlog('media first-contact copy did not go: $e'),
                 ),
               );
             }
@@ -355,7 +355,7 @@ Future<String> _sendChunkedMediaInner({
           }
           lastErr = tor;
           onionDead = true;
-          dlog('MEDIA onion gave up for this send: $tor');
+          dlog('media onion gave up for this send: $tor');
         }
         xpub ??= await signalSession.peerXPubHex(peerId);
         // their first-contact address is the one relay route that reaches
@@ -377,7 +377,7 @@ Future<String> _sendChunkedMediaInner({
             if (!backPaired && !pairWay!) {
               // stored where nobody reads yet. the drainer brings the whole
               // file again once a route that reaches them is up.
-              dlog('MEDIA chunk $i/$total parked at the pair address');
+              dlog('media chunk $i/$total parked at the pair address');
               parked = true;
               return;
             }
@@ -394,7 +394,7 @@ Future<String> _sendChunkedMediaInner({
         final pass = (attempts[i] ?? 0) + 1;
         attempts[i] = pass;
         dlog(
-          'MEDIA chunk $i/$total failed after ${ms}ms, pass $pass: $lastErr',
+          'media chunk $i/$total failed after ${ms}ms, pass $pass: $lastErr',
         );
         if (pass >= chunkPasses) {
           // this one is not going through. keep what landed so the next
@@ -411,7 +411,7 @@ Future<String> _sendChunkedMediaInner({
         chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
       }
       // the line to read before touching the pool size or the chunk size
-      dlog('MEDIA chunk $i/$total via $route in ${ms}ms');
+      dlog('media chunk $i/$total via $route in ${ms}ms');
       if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
     }
   }

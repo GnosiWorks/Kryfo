@@ -187,8 +187,8 @@ Future<void> resendGroupOwed(
     if (last) groupOwedTick.value++;
     if (r == 'error: quiet') return;
     if (r != 'ok') {
-      dlog('GRP MEDIA $uid: still owed ($r)');
-      if (last) dlog('GRP MEDIA $uid: no more tries for some members');
+      dlog('grp media $uid: still owed ($r)');
+      if (last) dlog('grp media $uid: no more tries for some members');
     }
   }
 }
@@ -336,7 +336,7 @@ Future<String> _send({
     final ok = await Future.wait([
       for (final m in to)
         deliver(m, wrapped).catchError((Object e) {
-          dlog('GRP MEDIA chunk $i: ${e.runtimeType}');
+          dlog('grp media chunk $i: ${e.runtimeType}');
           return false;
         }),
     ]);
@@ -358,14 +358,14 @@ Future<String> _send({
     try {
       return await wrap(await mediaSlice(path, i), i, total);
     } catch (e) {
-      dlog('GRP MEDIA chunk $i/$total unreadable: ${e.runtimeType}');
+      dlog('grp media chunk $i/$total unreadable: ${e.runtimeType}');
       return null;
     }
   }
 
   final before = landed();
   if (before > 0 && showProgress) {
-    dlog('GRP MEDIA resume $msgUid: $before/$total already out');
+    dlog('grp media resume $msgUid: $before/$total already out');
     mediaProgressUpdate(msgUid, before / total);
   }
   for (var i = 0; i < total; i++) {
@@ -387,10 +387,10 @@ Future<String> _send({
       }
       left = await push(i, wrapped, left);
       if (left.isEmpty || anyHas(i)) break;
-      dlog('GRP MEDIA chunk $i/$total try ${tryN + 1} failed');
+      dlog('grp media chunk $i/$total try ${tryN + 1} failed');
     }
     if (!anyHas(i)) {
-      dlog('GRP MEDIA chunk $i/$total gave up');
+      dlog('grp media chunk $i/$total gave up');
       // the owed keep what they took on the way
       if (owed != null) await onShort?.call(shortNow(), total);
       return 'error: chunk $i undeliverable';
@@ -429,7 +429,7 @@ Future<String> _send({
   }
   final short = shortNow();
   if (short.isNotEmpty) {
-    dlog('GRP MEDIA $msgUid: ${short.length} member(s) owed the file');
+    dlog('grp media $msgUid: ${short.length} member(s) owed the file');
   }
   await onShort?.call(short, total);
   // the row reads sent now, and what the short still lack is on disk

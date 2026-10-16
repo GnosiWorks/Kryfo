@@ -79,7 +79,7 @@ class _TorBootSplashState extends State<TorBootSplash>
   @override
   void initState() {
     super.initState();
-    dlog('LAUNCH splash');
+    dlog('launch splash');
   }
 
   Widget _rise(double from, double to, Widget child) {

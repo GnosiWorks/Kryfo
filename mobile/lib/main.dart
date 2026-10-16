@@ -159,7 +159,7 @@ part 'app/signal.dart';
 part 'app/state.dart';
 
 void main() async {
-  dlog('LAUNCH main');
+  dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
@@ -223,7 +223,7 @@ void main() async {
     }),
   );
   if (PlatformDispatcher.instance.implicitView == null) {
-    dlog('LAUNCH headless');
+    dlog('launch headless');
     // no window: the service or the job brought the process back, and
     // runApp would throw without a view. only an engine with something to
     // serve boots here: samsung relaunches a recently used app's process
@@ -233,24 +233,24 @@ void main() async {
       if (await _hasLocalData()) {
         await appState.boot();
       } else {
-        dlog('LAUNCH headless with nothing here - waiting for a window');
+        dlog('launch headless with nothing here, waiting for a window');
       }
     }());
     Timer.periodic(const Duration(milliseconds: 400), (t) {
       if (PlatformDispatcher.instance.implicitView == null) return;
       t.cancel();
-      dlog('LAUNCH window arrived');
+      dlog('launch window arrived');
       WidgetsBinding.instance.addObserver(lockBack);
       runApp(const HaloApp());
       WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
     });
     return;
   }
-  WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
+  WidgetsBinding.instance.addPostFrameCallback((_) => dlog('launch frame'));
   // before runApp, so it is asked about back before the app's navigator
   WidgetsBinding.instance.addObserver(lockBack);
   runApp(const HaloApp());
-  dlog('LAUNCH runApp returned');
+  dlog('launch runApp returned');
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.
   WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());

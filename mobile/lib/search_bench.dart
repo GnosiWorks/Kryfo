@@ -23,7 +23,7 @@ Future<void> maybeRunSearchBench() async {
   try {
     await _bench(path);
   } catch (e) {
-    dlog('SEARCHBENCH failed: $e');
+    dlog('searchbench failed: $e');
   } finally {
     await deleteDatabase(path);
   }
@@ -144,7 +144,7 @@ Future<void> _bench(String path) async {
     await idx.commit(noResult: true);
   }
   fill.stop();
-  dlog('SEARCHBENCH filled $total rows in ${fill.elapsedMilliseconds} ms');
+  dlog('searchbench filled $total rows in ${fill.elapsedMilliseconds} ms');
   final cases = <(String, String?, SearchKind)>[
     ('one word', 'pizza', SearchKind.all),
     ('two words', 'meeting tomorrow', SearchKind.all),
@@ -177,10 +177,10 @@ Future<void> _bench(String path) async {
     times.sort();
     if (times.last > worst) worst = times.last;
     dlog(
-      'SEARCHBENCH $name: median ${times[2]} ms, worst ${times.last} ms, '
+      'searchbench $name: median ${times[2]} ms, worst ${times.last} ms, '
       '$n rows',
     );
   }
-  dlog('SEARCHBENCH worst of all: $worst ms');
+  dlog('searchbench worst of all: $worst ms');
   await db.close();
 }

@@ -577,7 +577,7 @@ class AppState extends ChangeNotifier {
       // an ask sealed for no one uses none of the asks
       if (await keyHeld(peer)) continue;
       if (everydayHeld) return;
-      dlog('NEED $mid: asking for ${missing.length} of $total');
+      dlog('need $mid: asking for ${missing.length} of $total');
       // stamped before it goes, with the time it was decided on: a send
       // takes seconds, and the tick its backoff ends on would miss it
       await d.markMediaAsked(mid, now);
@@ -589,7 +589,7 @@ class AppState extends ChangeNotifier {
         );
         await _sendOneEnvelope(peer, wrapped);
       } catch (e) {
-        dlog('NEED $mid: ask failed: $e');
+        dlog('need $mid: ask failed: $e');
       }
     }
   }
@@ -622,7 +622,7 @@ class AppState extends ChangeNotifier {
           rounds: _needRounds[need.mediaId] ?? 0,
         );
     if (!ok) {
-      dlog('NEED ${need.mediaId}: not answered');
+      dlog('need ${need.mediaId}: not answered');
       return;
     }
     final filePath = row['file_path'] as String?;
@@ -638,7 +638,7 @@ class AppState extends ChangeNotifier {
     if (_needAnsweredAt.length > 200) {
       _needAnsweredAt.removeWhere((_, t) => now - t > 86400000);
     }
-    dlog('NEED ${need.mediaId}: resending ${only.length} of $total');
+    dlog('need ${need.mediaId}: resending ${only.length} of $total');
     unawaited(
       _drainMedia(
         row,
@@ -813,7 +813,7 @@ class AppState extends ChangeNotifier {
     // once the pass is done
     if (going.isEmpty) return;
     final all = Future.wait(going)
-        .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
+        .then((_) {}, onError: (Object e) => dlog('outbox: ${e.runtimeType}'))
         .whenComplete(() {
           if (chats.isEmpty) return;
           for (final p in chats) {
@@ -1465,7 +1465,7 @@ class AppState extends ChangeNotifier {
       }
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) {
-        dlog('OUTBOX: redelivered $uid');
+        dlog('outbox: redelivered $uid');
         await d.markSent(uid);
         await _lightBurn(r, uid, d);
         // an open chat reloads and drops the waiting line
@@ -1473,7 +1473,7 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      dlog('OUTBOX: $uid still stuck ($e)');
+      dlog('outbox: $uid still stuck ($e)');
     }
   }
 
@@ -1617,14 +1617,14 @@ class AppState extends ChangeNotifier {
       res = 'error: $e';
     }
     if (res == 'ok') {
-      dlog('OUTBOX: group media redelivered $uid');
+      dlog('outbox: group media redelivered $uid');
       await on.markSent(uid);
       await _lightBurn(r, uid, on);
       // an open group re-reads the row, as the 1:1 drainer has it
       _bumpChatRev('group:$groupId');
       notifyListeners();
     } else if (res != 'busy') {
-      dlog('OUTBOX: group media $uid still stuck ($res)');
+      dlog('outbox: group media $uid still stuck ($res)');
       // a bubble a busy retry left spinning settles into failed
       _bumpChatRev('group:$groupId');
     }
@@ -1658,7 +1658,7 @@ class AppState extends ChangeNotifier {
           hold: () => everydayHeld,
         );
       } catch (e) {
-        dlog('GRP MEDIA owed: ${e.runtimeType}');
+        dlog('grp media owed: ${e.runtimeType}');
       }
     }
   }
@@ -1764,7 +1764,7 @@ class AppState extends ChangeNotifier {
         now: DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
-      dlog('GRP $uid: owed not kept (${e.runtimeType})');
+      dlog('grp $uid: owed not kept (${e.runtimeType})');
     }
     groupOwedTick.value++;
   }
@@ -1779,7 +1779,7 @@ class AppState extends ChangeNotifier {
         ctl += await d.groupCtlDueNow(member);
         due += await d.groupOwedDueNow(member);
       } catch (e) {
-        dlog('GRP MEDIA owed: ${e.runtimeType}');
+        dlog('grp media owed: ${e.runtimeType}');
       }
     }
     if (ctl > 0) await _drainGroupCtl();
@@ -1965,7 +1965,7 @@ class AppState extends ChangeNotifier {
       try {
         if (await d.groupOwedDueNow(member) > 0) unawaited(_drainGroupOwed());
       } catch (e) {
-        dlog('GRP owed: ${e.runtimeType}');
+        dlog('grp owed: ${e.runtimeType}');
       }
     }
     return true;
@@ -2117,7 +2117,7 @@ class AppState extends ChangeNotifier {
       blockedHere: () => d.isBlocked(peer),
     );
     if (only != null) {
-      dlog('NEED $uid: resend ended $res');
+      dlog('need $uid: resend ended $res');
       // a hold stopped it: the rest goes once the decoy is left
       if (res == 'parked' && everydayHeld) {
         _resendsOwed[uid] = () =>
@@ -2126,7 +2126,7 @@ class AppState extends ChangeNotifier {
       return;
     }
     if (res == 'ok') {
-      dlog('OUTBOX: media redelivered $uid');
+      dlog('outbox: media redelivered $uid');
       await d.markSent(uid);
       await _lightBurn(r, uid, d);
       _bumpChatRev(peer);
@@ -2137,7 +2137,7 @@ class AppState extends ChangeNotifier {
       _bumpChatRev(peer);
       notifyListeners();
     } else if (res != 'busy') {
-      dlog('OUTBOX: media $uid still stuck ($res)');
+      dlog('outbox: media $uid still stuck ($res)');
       // an open chat re-reads the row, so a bubble left spinning by a
       // busy tap-to-retry settles into failed or waiting
       _bumpChatRev(peer);
@@ -2573,7 +2573,7 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(minutes: 10), (_) {
       final m = engine.memStats();
       dlog(
-        'MEM rss=${ProcessInfo.currentRss ~/ 1048576}mb '
+        'mem rss=${ProcessInfo.currentRss ~/ 1048576}mb '
         'go heap=${((m['heapAlloc'] as num?) ?? 0) ~/ 1048576}mb '
         'sys=${((m['sys'] as num?) ?? 0) ~/ 1048576}mb '
         'goroutines=${m['goroutines']} inbox=${m['inbox']} subs=${m['subs']} '
@@ -4896,7 +4896,7 @@ class AppState extends ChangeNotifier {
       if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
     }
     dlog(
-      'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
+      'incoming len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     // nothing from someone blocked is kept or answered, a receipt or a proof
     // neither. their address is listened on while the block holds, so what
@@ -9603,7 +9603,7 @@ class AppState extends ChangeNotifier {
   // front of someone.
   Future<void> bootWhenWanted() async {
     dlog(
-      'LAUNCH lifecycle at boot request: '
+      'launch lifecycle at boot request: '
       '${WidgetsBinding.instance.lifecycleState}',
     );
     if (await bootsNow(_hasLocalData)) {
@@ -9612,12 +9612,12 @@ class AppState extends ChangeNotifier {
     }
     // no await from the last state read to here: a resume cannot slip between
     if (_seen != null) return;
-    dlog('LAUNCH nothing here and not in front - boot waits');
+    dlog('launch nothing here and not in front: boot waits');
     _seen = AppLifecycleListener(
       onResume: () {
         _seen?.dispose();
         _seen = null;
-        dlog('LAUNCH in front now - booting');
+        dlog('launch in front now, booting');
         unawaited(boot());
       },
     );
@@ -9627,7 +9627,7 @@ class AppState extends ChangeNotifier {
     try {
       await _boot();
     } catch (e, st) {
-      dlog('BOOT failed: $e\n$st');
+      dlog('boot failed: $e\n$st');
       bootError = e.toString();
       bootStuck = e is KeyStoreStuck;
       _booting = false;
@@ -9736,7 +9736,7 @@ class AppState extends ChangeNotifier {
   String bootPhase = l10n.appSettingUpYourKeys;
 
   Future<void> _boot() async {
-    dlog('LAUNCH boot');
+    dlog('launch boot');
     final bsw = Stopwatch()..start();
     final bootAt = DateTime.now();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
@@ -9747,11 +9747,11 @@ class AppState extends ChangeNotifier {
     // key derivation + the first go ffi hop block the ui thread long enough
     // to trip the anr watchdog on weak phones.
     await Future.delayed(const Duration(milliseconds: 16));
-    dlog('LAUNCH boot after yield');
+    dlog('launch boot after yield');
     unawaited(_openContainers());
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await live.loadIdentity();
-    dlog('LAUNCH identity loaded');
+    dlog('launch identity loaded');
     // a decoy left open by the run before: held until a pin says otherwise.
     // read once the store has answered for the database key
     await readDecoyMark();
@@ -9767,7 +9767,7 @@ class AppState extends ChangeNotifier {
       await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
-    dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
+    dlog('boot identity +${bsw.elapsedMilliseconds}ms');
     bootPhase = l10n.appOpeningYourChats;
     notifyListeners();
     _appLinks = AppLinks();
@@ -9792,9 +9792,9 @@ class AppState extends ChangeNotifier {
     );
 
     await refreshContacts();
-    dlog('BOOT contacts +${bsw.elapsedMilliseconds}ms');
+    dlog('boot contacts +${bsw.elapsedMilliseconds}ms');
     await refreshGroups();
-    dlog('BOOT groups +${bsw.elapsedMilliseconds}ms');
+    dlog('boot groups +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions keep warming up in the background.
     onboardingComplete =
@@ -9808,7 +9808,7 @@ class AppState extends ChangeNotifier {
     }
     await markReady();
     bootPhase = l10n.appStartingTor;
-    dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
+    dlog('boot ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
     // moved away: home can show what was here, and that is all. no tor,
     // no relays, no outbox. see movedAway.
@@ -9824,7 +9824,7 @@ class AppState extends ChangeNotifier {
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
     _signalBoot = _bootSignal().whenComplete(() {
-      dlog('BOOT signal (deferred) done');
+      dlog('boot signal (deferred) done');
       if (!_signalReady.isCompleted) _signalReady.complete();
       // a row kept as it came needs signal to open
       if (signalSession.ready) unawaited(letHeldIn(live));
@@ -9890,7 +9890,7 @@ class AppState extends ChangeNotifier {
           !_torHeld &&
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
         torKickedAt = DateTime.now();
-        dlog('TOR_WATCHDOG: tor off, restarting listener');
+        dlog('tor watchdog: tor off, restarting listener');
         _startListenerOnIsolate(docsDir.path).then((addr) {
           if (addr.isNotEmpty && !addr.startsWith('error')) {
             myOnion = addr;
@@ -13604,7 +13604,7 @@ class AppState extends ChangeNotifier {
       sticker: sticker,
       writtenAt: written,
     );
-    dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
+    dlog('grpsend group=$groupId members=$members me=$myId admin=$amAdmin');
     final d = _ownerOf(groupId);
     final to = await _othersIn(d, groupId, members);
     final missed = await _fanOut(d, groupId, to, wrapped);
@@ -13736,7 +13736,7 @@ class AppState extends ChangeNotifier {
             now: DateTime.now().millisecondsSinceEpoch,
           );
         } catch (e) {
-          dlog('GRP MEDIA $msgUid: owed not kept (${e.runtimeType})');
+          dlog('grp media $msgUid: owed not kept (${e.runtimeType})');
         }
         groupOwedTick.value++;
       },
