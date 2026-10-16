@@ -16,6 +16,8 @@ import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/widgets/photo_viewer.dart';
 import 'package:kryfo/widgets/video_viewer.dart';
 
+import 'bars_check.dart';
+
 final _png = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAEElEQVR4nGP4Oo8bjhhwcgCFmhNpSPXr6AAAAABJRU5ErkJggg==',
 );
@@ -391,6 +393,38 @@ void main() {
       expect(asked(), before);
       await t.tap(find.bySemanticsLabel(l10n.commonClose).first);
       await t.pumpAndSettle();
+    });
+
+    // close, play and the timeline stay off the cutout and the bars
+    testWidgets('its controls clear the bars', (t) async {
+      for (final nav in [gestureBar, buttonBar]) {
+        barsPhone(t, nav: nav);
+        quiet(t);
+        player(t);
+        await t.pumpWidget(
+          host(
+            Builder(
+              builder: (ctx) => GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => openVideo(ctx, path: '/nowhere/clip.mp4'),
+                child: const SizedBox(width: 100, height: 60),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.byType(GestureDetector).first);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        await t.pump(const Duration(milliseconds: 600));
+        // paused, every control is up
+        await t.tap(find.bySemanticsLabel(l10n.videoViewerPause));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        expect(find.bySemanticsLabel(l10n.commonClose), findsWidgets);
+        expectClearOfBars(t, reason: 'nav $nav');
+        await t.tap(find.bySemanticsLabel(l10n.commonClose).first);
+        await t.pumpAndSettle();
+      }
     });
   });
 }

@@ -11,6 +11,7 @@ import 'package:kryfo/screens/lock_setup_screen.dart';
 import 'package:kryfo/widgets/pin_pad.dart';
 import 'package:kryfo/widgets/tor_boot_splash.dart';
 
+import 'bars_check.dart';
 import 'pin_flow_fakes.dart';
 
 Widget framed(Widget home, {bool still = false, bool rtl = false}) =>
@@ -143,5 +144,28 @@ void main() {
     await t.pump(const Duration(milliseconds: 100));
     expect(t.hasRunningAnimations, isTrue, reason: 'while tor is on its way');
     await t.pumpWidget(const SizedBox());
+  });
+
+  // a cutout, a gesture or a button bar: the pad, its dots and the boot
+  // splash stay clear of them. the keyboard of a screen under the lock goes
+  // down as it comes up, and the pad stays where it is
+  testWidgets('the lock, the pin setup and the splash clear the bars', (
+    t,
+  ) async {
+    for (final (nav, kb) in [(gestureBar, 0.0), (buttonBar, 0.0)]) {
+      barsPhone(t, nav: nav, keyboard: kb);
+      final lock = await makeLock(appOnly);
+      await t.pumpWidget(framed(LockScreen(lock: lock.state)));
+      await t.pump(const Duration(seconds: 2));
+      expect(find.byType(PinDots), findsOneWidget);
+      expectClearOfBars(t, reason: 'lock, nav $nav keyboard $kb');
+      await t.pumpWidget(framed(const LockSetupScreen()));
+      await t.pump(const Duration(seconds: 2));
+      expectClearOfBars(t, reason: 'setup, nav $nav keyboard $kb');
+      await t.pumpWidget(framed(const TorBootSplash(), still: true));
+      await t.pump();
+      expectClearOfBars(t, reason: 'splash, nav $nav keyboard $kb');
+      await t.pumpWidget(const SizedBox());
+    }
   });
 }

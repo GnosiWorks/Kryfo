@@ -17,9 +17,10 @@ import '../widgets/shift_tap_guard.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
+  // the sheet rides on the keyboard and scrolls when the room above it is
+  // short, so create stays above the keyboard
   return showHaloSheet<String>(
     context,
-    scroll: true,
     builder: (_) => const _RoomCreateSheet(),
   );
 }
@@ -63,172 +64,165 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final insets = MediaQuery.of(context).viewInsets.bottom;
-    // the keyboard moves the insets every frame: the sheet rides on it
-    return Padding(
-      padding: EdgeInsets.only(bottom: insets),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 18),
-              Text(
-                l10n.roomCreateBurnerRoom,
-                style: HaloType.serif(
-                  size: 22,
-                  italic: true,
-                  color: HaloColors.text,
-                ),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: 18),
+            Text(
+              l10n.roomCreateBurnerRoom,
+              style: HaloType.serif(
+                size: 22,
+                italic: true,
+                color: HaloColors.text,
               ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.roomCreateARoomThatEnds,
-                style: HaloType.sans(
-                  size: 12,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.roomCreateARoomThatEnds,
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.text2,
+                height: 1.5,
               ),
-              const SizedBox(height: 16),
-              ShiftTapGuard(
+            ),
+            const SizedBox(height: 16),
+            ShiftTapGuard(
+              controller: _nameCtrl,
+              child: TextField(
                 controller: _nameCtrl,
-                child: TextField(
-                  controller: _nameCtrl,
-                  autofocus: true,
-                  maxLength: 32,
-                  style: HaloType.sans(size: 16, color: HaloColors.text),
-                  cursorColor: HaloColors.violet,
-                  decoration: InputDecoration(
-                    hintText: l10n.roomCreateRoomName,
-                    hintStyle: HaloType.serif(
-                      size: 16,
-                      italic: true,
-                      color: HaloColors.text2,
-                    ),
-                    counterText: '',
-                    filled: true,
-                    fillColor: HaloColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
+                autofocus: true,
+                maxLength: 32,
+                style: HaloType.sans(size: 16, color: HaloColors.text),
+                cursorColor: HaloColors.violet,
+                decoration: InputDecoration(
+                  hintText: l10n.roomCreateRoomName,
+                  hintStyle: HaloType.serif(
+                    size: 16,
+                    italic: true,
+                    color: HaloColors.text2,
+                  ),
+                  counterText: '',
+                  filled: true,
+                  fillColor: HaloColors.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.roomCreateEndsAfter,
-                style: HaloType.mono(
-                  size: 10,
-                  color: HaloColors.text2,
-                  letter: 0.14,
-                ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.roomCreateEndsAfter,
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text2,
+                letter: 0.14,
               ),
-              const SizedBox(height: 8),
-              Row(
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                for (final d in roomExpiryOptions) ...[
+                  _Chip(
+                    label: expiryLabel(d),
+                    on: _expiry == d,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _expiry = d);
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+            const SizedBox(height: 14),
+            // one switch to a screen reader, named by its title and line
+            MergeSemantics(
+              child: Row(
                 children: [
-                  for (final d in roomExpiryOptions) ...[
-                    _Chip(
-                      label: expiryLabel(d),
-                      on: _expiry == d,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _expiry = d);
-                      },
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.roomCreateMemberCap,
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                        Text(
+                          _capOn
+                              ? l10n.roomCreateNoOnePastThe(_cap)
+                              : l10n.roomCreateOffUpTo(
+                                  AppState.kGroupMemberCap,
+                                ),
+                          style: HaloType.mono(
+                            size: 9.5,
+                            color: HaloColors.text2,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                  ],
+                  ),
+                  HaloSwitch(
+                    value: _capOn,
+                    onChanged: (v) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _capOn = v);
+                    },
+                  ),
                 ],
               ),
-              const SizedBox(height: 14),
-              // one switch to a screen reader, named by its title and line
-              MergeSemantics(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            EaseSize(
+              duration: const Duration(milliseconds: 220),
+              child: _capOn
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(
                         children: [
-                          Text(
-                            l10n.roomCreateMemberCap,
-                            style: HaloType.sans(
-                              size: 13,
-                              color: HaloColors.text,
+                          for (final n in roomCapOptions) ...[
+                            _Chip(
+                              label: '$n',
+                              on: _cap == n,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _cap = n);
+                              },
                             ),
-                          ),
-                          Text(
-                            _capOn
-                                ? l10n.roomCreateNoOnePastThe(_cap)
-                                : l10n.roomCreateOffUpTo(
-                                    AppState.kGroupMemberCap,
-                                  ),
-                            style: HaloType.mono(
-                              size: 9.5,
-                              color: HaloColors.text2,
-                            ),
-                          ),
+                            const SizedBox(width: 8),
+                          ],
                         ],
                       ),
-                    ),
-                    HaloSwitch(
-                      value: _capOn,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _capOn = v);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              EaseSize(
-                duration: const Duration(milliseconds: 220),
-                child: _capOn
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          children: [
-                            for (final n in roomCapOptions) ...[
-                              _Chip(
-                                label: '$n',
-                                on: _cap == n,
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => _cap = n);
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                          ],
-                        ),
-                      )
-                    : const SizedBox(width: double.infinity, height: 0),
-              ),
-              const SizedBox(height: 14),
-              NoticeBanner(
-                glyph: NoticeGlyph.clock,
-                text: l10n.roomCreateThisRoomAndEverything(
-                  expiryWords(_expiry),
-                ),
-                color: HaloColors.violet,
-              ),
-              const SizedBox(height: 14),
-              _GoButton(
-                label: _creating
-                    ? l10n.roomCreateCreating
-                    : l10n.roomCreateCreateRoom,
-                enabled: !_creating,
-                onTap: _create,
-              ),
-            ],
-          ),
+                    )
+                  : const SizedBox(width: double.infinity, height: 0),
+            ),
+            const SizedBox(height: 14),
+            NoticeBanner(
+              glyph: NoticeGlyph.clock,
+              text: l10n.roomCreateThisRoomAndEverything(expiryWords(_expiry)),
+              color: HaloColors.violet,
+            ),
+            const SizedBox(height: 14),
+            _GoButton(
+              label: _creating
+                  ? l10n.roomCreateCreating
+                  : l10n.roomCreateCreateRoom,
+              enabled: !_creating,
+              onTap: _create,
+            ),
+          ],
         ),
       ),
     );

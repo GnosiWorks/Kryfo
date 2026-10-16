@@ -389,14 +389,13 @@ class HaloType {
   );
 }
 
-// transparent bars over the app on every version, with icons by theme.
+// bar icons by theme. the bars stay transparent from MainActivity: a colour
+// here makes the engine call window setters android 15 deprecates.
 // [underNav] false: the app stops above the navigation bar (android 9 and
 // older are not edge to edge), which is then dark whatever the theme
 SystemUiOverlayStyle haloOverlayStyle({bool underNav = true}) {
   final pale = HaloColors.isLight;
   return SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    systemNavigationBarColor: Colors.transparent,
     statusBarIconBrightness: pale ? Brightness.dark : Brightness.light,
     statusBarBrightness: pale ? Brightness.light : Brightness.dark,
     systemNavigationBarIconBrightness: pale && underNav
@@ -407,8 +406,6 @@ SystemUiOverlayStyle haloOverlayStyle({bool underNav = true}) {
 
 /// light icons, for screens that are black in both themes
 const haloOverlayOnDark = SystemUiOverlayStyle(
-  statusBarColor: Colors.transparent,
-  systemNavigationBarColor: Colors.transparent,
   statusBarIconBrightness: Brightness.light,
   statusBarBrightness: Brightness.dark,
   systemNavigationBarIconBrightness: Brightness.light,
