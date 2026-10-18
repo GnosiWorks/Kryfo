@@ -232,13 +232,7 @@ class SignalSession {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
       final before = await marksOf(peer);
-      await SessionBuilder(
-        sessionStore,
-        preKeyStore,
-        signedPreKeyStore,
-        identityStore,
-        SignalProtocolAddress(peer, 1),
-      ).processPreKeyBundle(card);
+      await _build(peer, card);
       dlog('signal: started afresh after a restore');
       if (before.movedTo(await marksOf(peer))) keyMoved?.call();
       // the card may name another key than the one checked above
@@ -246,6 +240,20 @@ class SignalSession {
     }
     return _seal(peer, plain);
   });
+
+  /// a session with [peer] built from [card], in their lane
+  Future<void> processBundle(String peer, PreKeyBundle card) =>
+      serial(peer, () => _build(peer, card));
+
+  // the one place libsignal_protocol_dart builds a session from a card;
+  // test/signal_ls/classic_rule_test.dart keeps it the only one
+  Future<void> _build(String peer, PreKeyBundle card) => SessionBuilder(
+    sessionStore,
+    preKeyStore,
+    signedPreKeyStore,
+    identityStore,
+    SignalProtocolAddress(peer, 1),
+  ).processPreKeyBundle(card);
 
   /// what a prekey open may change of [peer] before it is known to be
   /// theirs: the key held, and their contact's marks

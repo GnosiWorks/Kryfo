@@ -63,16 +63,7 @@ Future<void> processPeerBundle(
 }) async {
   final ss = into ?? await signalFor(haloId);
   if (ss == null) throw StateError('no signal store for this chat');
-  final preKeyBundle = preKeyBundleOf(bundleB64);
-  final addr = SignalProtocolAddress(haloId, 1);
-  final builder = SessionBuilder(
-    ss.sessionStore,
-    ss.preKeyStore,
-    ss.signedPreKeyStore,
-    ss.identityStore,
-    addr,
-  );
-  await ss.serial(haloId, () => builder.processPreKeyBundle(preKeyBundle));
+  await ss.processBundle(haloId, preKeyBundleOf(bundleB64));
 }
 
 // best-effort wipe of key or plaintext bytes from ram. dart strings are
