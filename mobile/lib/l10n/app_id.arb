@@ -689,6 +689,8 @@
   "donateCardMarios": "Sampai fiscal host kami siap, pembayaran kartu langsung masuk ke Marios.",
   "donateCardSeesName": "Perusahaan pembayaran melihat namamu. Kripto adalah pilihan yang privat.",
   "donateCardPay": "Bayar dengan kartu",
+  "donateNoBitcoinCard": "Tidak punya bitcoin? Bayar dengan kartu",
+  "donateCardNoBadge": "Donasi dengan kartu tidak membuka lencana.",
   "donateAddressCheckItAgainst": "Alamat {coinName} · cocokkan dengan dompetmu",
   "donateAddressCopiedClearsIn": "Alamat disalin · dihapus dalam 60 dtk",
   "donateCopyAddress": "Salin alamat",

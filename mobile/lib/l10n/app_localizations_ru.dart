@@ -2307,6 +2307,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateCardPay => 'Оплатить картой';
 
   @override
+  String get donateNoBitcoinCard => 'Нет Bitcoin? Оплати картой';
+
+  @override
+  String get donateCardNoBadge => 'Пожертвования картой не дают значок.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Адрес $coinName · сверь его с кошельком';
   }

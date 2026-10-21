@@ -2239,6 +2239,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateCardPay => 'Thanh toán bằng thẻ';
 
   @override
+  String get donateNoBitcoinCard => 'Không có bitcoin? Thanh toán bằng thẻ';
+
+  @override
+  String get donateCardNoBadge => 'Ủng hộ bằng thẻ không mở khóa huy hiệu.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Địa chỉ $coinName · hãy đối chiếu với ví của bạn';
   }

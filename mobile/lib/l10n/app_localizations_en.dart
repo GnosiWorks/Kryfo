@@ -2248,6 +2248,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateCardPay => 'Pay by card';
 
   @override
+  String get donateNoBitcoinCard => 'No bitcoin? Pay by card';
+
+  @override
+  String get donateCardNoBadge => 'Card donations don\'t unlock a badge.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName address · check it against your wallet';
   }

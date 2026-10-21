@@ -2250,6 +2250,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateCardPay => 'Kartla öde';
 
   @override
+  String get donateNoBitcoinCard => 'Bitcoin yok mu? Kartla öde';
+
+  @override
+  String get donateCardNoBadge => 'Kartla bağışlar rozet açmaz.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName adresi · cüzdanındakiyle karşılaştır';
   }

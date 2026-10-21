@@ -689,6 +689,8 @@
   "donateCardMarios": "I pagamenti con carta vanno direttamente a Marios finché il nostro host fiscale non sarà pronto.",
   "donateCardSeesName": "La società di pagamento vede il tuo nome. Le criptovalute sono l’opzione privata.",
   "donateCardPay": "Paga con carta",
+  "donateNoBitcoinCard": "Niente bitcoin? Paga con carta",
+  "donateCardNoBadge": "Le donazioni con carta non sbloccano il badge.",
   "donateAddressCheckItAgainst": "Indirizzo {coinName} · confrontalo con il tuo wallet",
   "donateAddressCopiedClearsIn": "Indirizzo copiato · rimosso tra 60 s",
   "donateCopyAddress": "Copia indirizzo",

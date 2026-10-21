@@ -689,6 +689,8 @@
   "donateCardMarios": "تا وقتی میزبان مالی ما راه بیفتد، پرداخت‌های کارتی مستقیم به Marios می‌رسد.",
   "donateCardSeesName": "شرکت پرداخت نام شما را می‌بیند. گزینه‌ی خصوصی، رمزارز است.",
   "donateCardPay": "پرداخت با کارت",
+  "donateNoBitcoinCard": "Bitcoin ندارید؟ با کارت پرداخت کنید",
+  "donateCardNoBadge": "کمک مالی با کارت نشان باز نمی‌کند.",
   "donateAddressCheckItAgainst": "نشانی ⁨{coinName}⁩ · آن را با کیف پولتان تطبیق دهید",
   "donateAddressCopiedClearsIn": "نشانی کپی شد · ۶۰ ثانیه‌ی دیگر از بریده‌دان حذف می‌شود",
   "donateCopyAddress": "کپی نشانی",

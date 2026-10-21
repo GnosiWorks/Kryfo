@@ -2312,6 +2312,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateCardPay => 'ادفع بالبطاقة';
 
   @override
+  String get donateNoBitcoinCard => 'ليس لديك Bitcoin؟ ادفع بالبطاقة';
+
+  @override
+  String get donateCardNoBadge => 'التبرع بالبطاقة لا يفتح شارة.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'عنوان ⁨$coinName⁩ · طابقه مع محفظتك';
   }

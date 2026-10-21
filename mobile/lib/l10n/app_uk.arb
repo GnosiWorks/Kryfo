@@ -689,6 +689,8 @@
   "donateCardMarios": "Поки в нас немає фіскального спонсора, платежі карткою йдуть напряму на рахунок Marios.",
   "donateCardSeesName": "Платіжна компанія бачить твоє ім’я. Якщо потрібна приватність, обирай криптовалюту.",
   "donateCardPay": "Оплатити карткою",
+  "donateNoBitcoinCard": "Немає Bitcoin? Оплати карткою",
+  "donateCardNoBadge": "Пожертви карткою не відкривають значок.",
   "donateAddressCheckItAgainst": "Адреса {coinName} · звір її з гаманцем",
   "donateAddressCopiedClearsIn": "Адресу скопійовано · зникне з буфера через 60 с",
   "donateCopyAddress": "Копіювати адресу",

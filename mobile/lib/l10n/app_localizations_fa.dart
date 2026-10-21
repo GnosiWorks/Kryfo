@@ -2250,6 +2250,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get donateCardPay => 'پرداخت با کارت';
 
   @override
+  String get donateNoBitcoinCard => 'Bitcoin ندارید؟ با کارت پرداخت کنید';
+
+  @override
+  String get donateCardNoBadge => 'کمک مالی با کارت نشان باز نمی‌کند.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'نشانی ⁨$coinName⁩ · آن را با کیف پولتان تطبیق دهید';
   }

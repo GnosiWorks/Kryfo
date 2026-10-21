@@ -3621,6 +3621,18 @@ abstract class AppLocalizations {
   /// **'Pay by card'**
   String get donateCardPay;
 
+  /// screens/donate_screen.dart. the card button right under the badge tiers, opens the same card page as donateCardPay
+  ///
+  /// In en, this message translates to:
+  /// **'No bitcoin? Pay by card'**
+  String get donateNoBitcoinCard;
+
+  /// screens/donate_screen.dart. under donateNoBitcoinCard: badges come only from bitcoin
+  ///
+  /// In en, this message translates to:
+  /// **'Card donations don\'t unlock a badge.'**
+  String get donateCardNoBadge;
+
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:

@@ -2821,6 +2821,14 @@
   "@donateCardPay": {
     "description": "screens/donate_screen.dart. the button that opens the card payment page in the browser"
   },
+  "donateNoBitcoinCard": "No bitcoin? Pay by card",
+  "@donateNoBitcoinCard": {
+    "description": "screens/donate_screen.dart. the card button right under the badge tiers, opens the same card page as donateCardPay"
+  },
+  "donateCardNoBadge": "Card donations don't unlock a badge.",
+  "@donateCardNoBadge": {
+    "description": "screens/donate_screen.dart. under donateNoBitcoinCard: badges come only from bitcoin"
+  },
   "donateAddressCheckItAgainst": "{coinName} address · check it against your wallet",
   "@donateAddressCheckItAgainst": {
     "description": "screens/donate_screen.dart",

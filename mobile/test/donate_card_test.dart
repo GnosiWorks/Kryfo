@@ -102,14 +102,20 @@ void main() {
     await _beats(t);
     await _toCard(t);
     expect(
-      find.text(
-        'Card payments go to Marios directly until our fiscal host is set up.',
+      find.descendant(
+        of: find.byKey(const ValueKey('donate-card')),
+        matching: find.text(
+          'Card payments go to Marios directly until our fiscal host is set '
+          'up.',
+        ),
       ),
       findsOneWidget,
     );
     expect(find.text(l10n.donateCopyAddress), findsNothing);
     for (final s in [l10n.donateCardOneTime, l10n.donateCardMarios]) {
-      expect(t.widget<Text>(find.text(s)).style?.color, HaloColors.text);
+      for (final w in t.widgetList<Text>(find.text(s))) {
+        expect(w.style?.color, HaloColors.text, reason: s);
+      }
     }
     expect(
       t.widget<Text>(find.text(l10n.donateCardSeesName)).style?.color,
@@ -159,6 +165,59 @@ void main() {
     await t.pump(const Duration(seconds: 4));
   });
 
+  Finder tiersRow() => find.byKey(const ValueKey('donate-card-tiers'));
+
+  testWidgets('right under the badge tiers, with the fiscal host and the '
+      'badge lines', (t) async {
+    _phone(t);
+    await t.pumpWidget(_framed());
+    await _beats(t);
+    expect(tiersRow(), findsOneWidget);
+    double top(Finder f) => t.getTopLeft(f).dy;
+    final tier = top(find.text(l10n.donateTierGuardian));
+    final row = top(tiersRow());
+    expect(tier, lessThan(row));
+    expect(row, lessThan(top(find.text(l10n.donateBitcoin))));
+    // straight after the tiers, nothing between them
+    expect(
+      row - t.getBottomLeft(find.text(l10n.donateTierGuardian)).dy,
+      lessThan(80),
+    );
+    for (final s in [
+      l10n.donateNoBitcoinCard,
+      l10n.donateCardMarios,
+      l10n.donateCardNoBadge,
+    ]) {
+      expect(
+        find.descendant(of: tiersRow(), matching: find.text(s)),
+        findsOneWidget,
+      );
+    }
+    expect(l10n.donateNoBitcoinCard, 'No bitcoin? Pay by card');
+    expect(
+      t.widget<Text>(find.text(l10n.donateNoBitcoinCard)).style?.color,
+      HaloColors.text,
+    );
+    // and card is still one of the choices with the coins
+    expect(find.text(l10n.donateCard), findsOneWidget);
+  });
+
+  for (final still in [false, true]) {
+    testWidgets('the row opens the same card page after the same yes'
+        '${still ? ', reduced motion' : ''}', (t) async {
+      _phone(t);
+      await t.pumpWidget(_framed(still: still));
+      await _beats(t);
+      await t.tap(find.text(l10n.donateNoBitcoinCard));
+      await _beats(t);
+      expect(find.text(l10n.settingsFollowBrowserNote), findsOneWidget);
+      expect(opened, isEmpty);
+      await t.tap(find.text(l10n.settingsFollowOpen));
+      await _beats(t);
+      expect(opened.map((u) => u.toString()), [_url]);
+    });
+  }
+
   test('every language names Marios and no amount', () {
     for (final locale in AppLocalizations.supportedLocales) {
       final l = lookupAppLocalizations(locale);
@@ -166,6 +225,8 @@ void main() {
       expect(l.donateCardMarios, contains('Marios'), reason: tag);
       for (final s in [
         l.donateCard,
+        l.donateNoBitcoinCard,
+        l.donateCardNoBadge,
         l.donateCardOneTime,
         l.donateCardMarios,
         l.donateCardSeesName,

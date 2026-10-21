@@ -689,6 +689,8 @@
   "donateCardMarios": "Cho đến khi bên bảo trợ tài chính của chúng tôi sẵn sàng, các khoản thanh toán bằng thẻ sẽ chuyển thẳng cho Marios.",
   "donateCardSeesName": "Công ty thanh toán có thấy tên bạn. Tiền mã hóa là lựa chọn riêng tư.",
   "donateCardPay": "Thanh toán bằng thẻ",
+  "donateNoBitcoinCard": "Không có bitcoin? Thanh toán bằng thẻ",
+  "donateCardNoBadge": "Ủng hộ bằng thẻ không mở khóa huy hiệu.",
   "donateAddressCheckItAgainst": "Địa chỉ {coinName} · hãy đối chiếu với ví của bạn",
   "donateAddressCopiedClearsIn": "Đã sao chép địa chỉ · tự xóa sau 60s",
   "donateCopyAddress": "Sao chép địa chỉ",

@@ -2155,6 +2155,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateCardPay => '用银行卡支付';
 
   @override
+  String get donateNoBitcoinCard => '没有 Bitcoin？用银行卡支付';
+
+  @override
+  String get donateCardNoBadge => '银行卡捐款不会解锁徽章。';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName 地址 · 请和你的钱包核对';
   }
@@ -10571,6 +10577,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateCardPay => '用信用卡付款';
+
+  @override
+  String get donateNoBitcoinCard => '沒有 Bitcoin？用信用卡付款';
+
+  @override
+  String get donateCardNoBadge => '信用卡捐款不會解鎖徽章。';
 
   @override
   String donateAddressCheckItAgainst(Object coinName) {

@@ -689,6 +689,8 @@
   "donateCardMarios": "在我們的財務託管方設立好之前，信用卡付款會直接轉給 Marios。",
   "donateCardSeesName": "支付公司看得到你的姓名。加密貨幣才是私密的選擇。",
   "donateCardPay": "用信用卡付款",
+  "donateNoBitcoinCard": "沒有 Bitcoin？用信用卡付款",
+  "donateCardNoBadge": "信用卡捐款不會解鎖徽章。",
   "donateAddressCheckItAgainst": "{coinName} 地址 · 請和你的錢包核對",
   "donateAddressCopiedClearsIn": "已複製地址 · 60 秒後清空",
   "donateCopyAddress": "複製地址",

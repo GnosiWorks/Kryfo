@@ -689,6 +689,8 @@
   "donateCardMarios": "Mali sponsorumuz hazır olana kadar kart ödemeleri doğrudan Marios’a gider.",
   "donateCardSeesName": "Ödeme şirketi adını görür. Gizli seçenek kriptodur.",
   "donateCardPay": "Kartla öde",
+  "donateNoBitcoinCard": "Bitcoin yok mu? Kartla öde",
+  "donateCardNoBadge": "Kartla bağışlar rozet açmaz.",
   "donateAddressCheckItAgainst": "{coinName} adresi · cüzdanındakiyle karşılaştır",
   "donateAddressCopiedClearsIn": "Adres kopyalandı · 60 sn içinde silinir",
   "donateCopyAddress": "Adresi kopyala",

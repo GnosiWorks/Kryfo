@@ -2274,6 +2274,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateCardPay => 'Mit Karte zahlen';
 
   @override
+  String get donateNoBitcoinCard => 'Kein Bitcoin? Mit Karte zahlen';
+
+  @override
+  String get donateCardNoBadge => 'Kartenspenden bringen kein Abzeichen.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName-Adresse · gleiche sie mit deiner Wallet ab';
   }

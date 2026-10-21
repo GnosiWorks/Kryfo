@@ -2244,6 +2244,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateCardPay => 'Bayar dengan kartu';
 
   @override
+  String get donateNoBitcoinCard => 'Tidak punya bitcoin? Bayar dengan kartu';
+
+  @override
+  String get donateCardNoBadge => 'Donasi dengan kartu tidak membuka lencana.';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Alamat $coinName · cocokkan dengan dompetmu';
   }

@@ -167,7 +167,12 @@ class _DonateScreenState extends State<DonateScreen> {
               const SizedBox(height: 18),
               _auditRow(),
               const SizedBox(height: 22),
-              if (kBadgeTiersShown) ...[_tiers(), const SizedBox(height: 22)],
+              if (kBadgeTiersShown) ...[
+                _tiers(),
+                const SizedBox(height: 10),
+                _cardUnderTiers(),
+                const SizedBox(height: 22),
+              ],
               _cryptoPane(),
               const SizedBox(height: 26),
             ],
@@ -321,6 +326,91 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // card right where the amounts are, so nobody has to find it at the end
+  // of the coins. the same page and the same browser step as the card choice
+  Widget _cardUnderTiers() {
+    return Container(
+      key: const ValueKey('donate-card-tiers'),
+      decoration: BoxDecoration(
+        color: HaloColors.surface,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: HaloColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            link: true,
+            child: PressScale(
+              label: l10n.donateNoBitcoinCard,
+              scale: 0.98,
+              onTap: _openCard,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 52),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: HaloColors.amberSoft,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.credit_card_rounded,
+                        size: 17,
+                        color: HaloColors.amber,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.donateNoBitcoinCard,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: HaloColors.text,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.open_in_new, size: 16, color: HaloColors.amber),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(56, 0, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.donateCardMarios,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.donateCardNoBadge,
+                  style: HaloType.mono(
+                    size: 10.5,
+                    color: HaloColors.text2,
+                  ).copyWith(height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
