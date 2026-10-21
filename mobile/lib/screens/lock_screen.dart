@@ -226,7 +226,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
           );
-    // under reduced motion the line is simply there
+    // reduced motion: no animation
     if (still) return shown;
     return AnimatedSize(
       duration: const Duration(milliseconds: 220),

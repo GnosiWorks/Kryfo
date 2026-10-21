@@ -11,7 +11,7 @@ import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/widgets/motion.dart';
 import 'package:kryfo/widgets/video_viewer.dart';
 
-// the style each text is really drawn with
+// the style each text is drawn with, its defaults merged in
 List<TextStyle> drawn(WidgetTester t) => [
   for (final e in find.byType(Text).evaluate())
     DefaultTextStyle.of(e).style.merge((e.widget as Text).style),

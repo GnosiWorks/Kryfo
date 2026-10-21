@@ -58,8 +58,8 @@ class TransportScreen extends StatelessWidget {
           final bs = appState.bridgeStatus;
           final decoy = appState.inDecoyView;
 
-          // laid out whole: a lazy list rebuilt the staying alive block at
-          // another height on each bounce, so the end never came to rest
+          // laid out whole: a lazy list builds the staying alive block at
+          // another height on each bounce, and the end never rests
           return CustomScrollView(
             slivers: [
               SliverPadding(
@@ -197,8 +197,7 @@ class TransportScreen extends StatelessWidget {
                       ),
 
                       HaloSection(l10n.transportContacts, flush: true),
-                      // zero contacts means zero relay subscriptions, so nothing
-                      // can arrive
+                      // no contacts, no relay subscriptions: nothing arrives
                       _Line(
                         l10n.transportKnown,
                         '$contacts',

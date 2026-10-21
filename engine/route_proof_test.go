@@ -210,7 +210,7 @@ func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
 	if n := failedCount(); n != 3 {
 		t.Fatalf("our relay's failures: %d counted, want 3", n)
 	}
-	// a bounce starts a new route: once it carries, what answered before speaks no more
+	// a bounce starts a new route: once it carries, answers from before it no longer count
 	routeBump()
 	routeNoteOK()
 	routeNoteFail("wss://down1.example")

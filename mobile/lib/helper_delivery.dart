@@ -142,7 +142,7 @@ class HelperDelivery {
     return r == 'yes';
   }
 
-  /// what our relay last really said: yes, no, or null when it never answered
+  /// our relay's last answer: yes, no, or null when it never answered
   Future<String?> relayAnswer() async {
     final prefs = await SharedPreferences.getInstance();
     final kept = prefs.getString(kHelperRelayKey) ?? '';

@@ -59,7 +59,7 @@ var (
 // a relay connect worked. the route carries traffic, whatever came before.
 func routeNoteOK() { routeNoteOKAt(-1) }
 
-// a connect of route generation gen (below zero: now) worked; one from before a bounce counts not
+// a connect of route generation gen (below zero: now) worked. one from before a bounce does not count
 func routeNoteOKAt(gen int64) bool {
 	routeMu.Lock()
 	if gen >= 0 && gen != routeGen {

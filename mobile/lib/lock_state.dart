@@ -1498,7 +1498,7 @@ class LockState extends ChangeNotifier {
     }
     if (moved()) return;
     if (s == null) {
-      // no finger on the phone now: it sleeps until one is back, as before
+      // no finger on the phone now: it sleeps until one is back
       if (!await _fingerThere() || moved()) return;
       await _refused();
       return;
@@ -1701,13 +1701,13 @@ class LockState extends ChangeNotifier {
     lock();
   }
 
+  // the App lock page asks again as it opens: a phone that said no before
+  // it had a screen shows the switch without leaving the app first
+  Future<void> recheckFinger() => _probeBioAgain();
+
   // called on resume. the picker coming back keeps its hold. a hold that
   // ran out while the app was away (a picker left open past its deadline)
   // locks here; a hold that left ended has locked already.
-  // App lock asks again as it opens: a phone that said no before it had a
-  // screen shows the switch without leaving the app first
-  Future<void> recheckFinger() => _probeBioAgain();
-
   void returned() {
     unawaited(_probeBioAgain());
     if (!_leftWhileHeld) return;

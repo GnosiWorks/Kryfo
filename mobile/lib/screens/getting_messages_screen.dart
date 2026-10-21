@@ -132,7 +132,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     // why the helper app cannot be picked yet, or null when it can
     final onOnion = appState.sendMode == 'private';
     final offered = mode == DeliveryMode.helper || appState.helperOffered;
-    // on onion, not offered yet: checking until the relay really said no
+    // on onion, not offered yet: checking until the relay itself says no
     final checking = !offered && onOnion && !appState.helperRelaySaidNo;
     final String? helperWait = offered
         ? null

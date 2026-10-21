@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a clip played in place before it goes, on the camera's review and the
-// send screen. android's own player draws into a texture (VideoPlayers.kt),
-// as in the viewer. a tap on the picture plays or pauses, and the timeline
-// runs left to right in every language, as a tape does.
+// send screen. android's player draws into a texture (VideoPlayers.kt), and
+// the timeline runs left to right in every language
 import 'dart:async';
 
 import 'package:flutter/material.dart';

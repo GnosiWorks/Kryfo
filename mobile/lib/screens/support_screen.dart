@@ -867,8 +867,7 @@ class _Tile extends StatelessWidget {
                                       color: HaloColors.text,
                                     ),
                                   )
-                                // three words read left to right in any
-                                // language
+                                // the words read left to right in any language
                                 : Text(
                                     c.haloId,
                                     textDirection: TextDirection.ltr,

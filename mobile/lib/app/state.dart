@@ -2889,7 +2889,7 @@ class AppState extends ChangeNotifier {
     hidden: () => _router.listenFor.keys.toList(),
   );
   bool _relayKnocks = false;
-  // the relay really answered no: only then the card says it does not offer this
+  // only a no from the relay itself makes the card say it does not offer this
   bool _relaySaidNo = false;
   bool get helperRelaySaidNo => _relaySaidNo;
   String? _helperName;
