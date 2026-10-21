@@ -1064,8 +1064,6 @@ var (
 	cachedNostrClientMu sync.Mutex
 )
 
-// called from shutdown and from every bounce. the cached client pins the
-// socks address it was built on, and a bounce can move it.
 // the cached clients go, so new streams take the socks names now; kept sockets and door streams stay
 func nostrDropClients() {
 	cachedNostrClientMu.Lock()
@@ -1076,6 +1074,8 @@ func nostrDropClients() {
 	torOnlyMu.Unlock()
 }
 
+// called from shutdown and from every bounce. the cached client pins the
+// socks address it was built on, and a bounce can move it.
 func nostrResetClient() {
 	cachedNostrClientMu.Lock()
 	cachedNostrClients = map[string]*http.Client{}
