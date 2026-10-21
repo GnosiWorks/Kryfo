@@ -267,6 +267,43 @@ func fillPage(t *testing.T, db *store, to string) map[string]bool {
 	return page
 }
 
+// readers stopped in the middle of their pages hold no store connection,
+// so more of them than the store has connections leave it free: a
+// publisher is answered and a new reader gets its page
+func TestStoppedPagesHoldNoStoreConnection(t *testing.T) {
+	defer func(n int) { storeConns = n }(storeConns)
+	storeConns = 4
+	db, _ := testStore(t)
+	url, _ := slowRelay(t, db, func(r *khatru.Relay) { r.WriteWait = time.Minute })
+	for i := 0; i < storeConns+4; i++ {
+		to := addr()
+		for j := 0; j < 10; j++ {
+			ev := bigWrap(t, to, nostr.Now()-3600-nostr.Timestamp(j))
+			if err := db.SaveEvent(context.Background(), &ev); err != nil {
+				t.Fatal(err)
+			}
+		}
+		startPage(t, dialSlow(t, url), to)
+	}
+	if st := db.Stats(); st.InUse != 0 || st.OpenConnections > storeConns {
+		t.Fatalf("stopped pages hold %d store connections, %d open", st.InUse, st.OpenConnections)
+	}
+	if d := publishTimed(t, connect(t, url), wrap(t, addr(), nil)); d >= 2*time.Second {
+		t.Fatalf("an ok took %v", d)
+	}
+	to := addr()
+	for i := 0; i < 3; i++ {
+		ev := wrap(t, to, nil)
+		if err := db.SaveEvent(context.Background(), &ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, why := ask(t, connect(t, url), nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 100})
+	if why != "" || len(got) != 3 {
+		t.Fatalf("a new reader got %d of 3 wraps, closed %q", len(got), why)
+	}
+}
+
 // starts a page of stored wraps to a raw client and reads its first wrap,
 // so the page is streaming and its read of the store is open
 func startPage(t *testing.T, c *websocket.Conn, to string) string {

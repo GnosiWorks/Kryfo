@@ -60,9 +60,8 @@ const (
 	walPages = 8 << 12
 	// a client gets this long to take each frame, then it is closed
 	writeWait = 10 * time.Second
-	// and this long for a page of stored wraps. the store's read stays open
-	// while a page is written, which keeps the wal from being emptied. the
-	// app gives up on a page after 90 s
+	// and this long for a page of stored wraps, which waits in memory until
+	// it is written. the app gives up on a page after 90 s
 	pageWait = 2 * time.Minute
 	// live wraps waiting for one connection, counted as what they hold in
 	// memory. a phone on a slow circuit gets about 160 media slices of
