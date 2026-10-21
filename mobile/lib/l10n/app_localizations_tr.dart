@@ -2232,6 +2232,24 @@ class AppLocalizationsTr extends AppLocalizations {
       'Buradaki bağışlar bağımsız bir denetime gider. Raporun tamamı herkese açık olacak.';
 
   @override
+  String get donateCard => 'Kart';
+
+  @override
+  String get donateCardOneTime =>
+      'Tarayıcında tek seferlik bir bağış. Tutarı sen seçersin.';
+
+  @override
+  String get donateCardMarios =>
+      'Mali sponsorumuz hazır olana kadar kart ödemeleri doğrudan Marios’a gider.';
+
+  @override
+  String get donateCardSeesName =>
+      'Ödeme şirketi adını görür. Gizli seçenek kriptodur.';
+
+  @override
+  String get donateCardPay => 'Kartla öde';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName adresi · cüzdanındakiyle karşılaştır';
   }

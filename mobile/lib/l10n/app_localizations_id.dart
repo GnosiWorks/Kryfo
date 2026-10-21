@@ -2226,6 +2226,24 @@ class AppLocalizationsId extends AppLocalizations {
       'Donasi di sini dihitung untuk audit independen. Laporan lengkapnya akan dibuka untuk publik.';
 
   @override
+  String get donateCard => 'Kartu';
+
+  @override
+  String get donateCardOneTime =>
+      'Donasi sekali saja lewat browser-mu. Jumlahnya kamu yang pilih.';
+
+  @override
+  String get donateCardMarios =>
+      'Sampai fiscal host kami siap, pembayaran kartu langsung masuk ke Marios.';
+
+  @override
+  String get donateCardSeesName =>
+      'Perusahaan pembayaran melihat namamu. Kripto adalah pilihan yang privat.';
+
+  @override
+  String get donateCardPay => 'Bayar dengan kartu';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Alamat $coinName · cocokkan dengan dompetmu';
   }

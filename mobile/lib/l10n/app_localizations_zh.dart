@@ -2140,6 +2140,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateAuditLine => '在这里的捐款会用于一次独立审计。完整报告将会公开。';
 
   @override
+  String get donateCard => '银行卡';
+
+  @override
+  String get donateCardOneTime => '在浏览器中进行的一次性捐款，金额由你决定。';
+
+  @override
+  String get donateCardMarios => '在我们的财务托管方设立好之前，银行卡付款会直接转给 Marios。';
+
+  @override
+  String get donateCardSeesName => '支付公司能看到你的姓名。加密货币才是私密的选择。';
+
+  @override
+  String get donateCardPay => '用银行卡支付';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName 地址 · 请和你的钱包核对';
   }
@@ -10541,6 +10556,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateAuditLine => '在這裡的捐款會用於一次獨立稽核。完整報告將會公開。';
+
+  @override
+  String get donateCard => '信用卡';
+
+  @override
+  String get donateCardOneTime => '在瀏覽器中進行的一次性捐款，金額由你決定。';
+
+  @override
+  String get donateCardMarios => '在我們的財務託管方設立好之前，信用卡付款會直接轉給 Marios。';
+
+  @override
+  String get donateCardSeesName => '支付公司看得到你的姓名。加密貨幣才是私密的選擇。';
+
+  @override
+  String get donateCardPay => '用信用卡付款';
 
   @override
   String donateAddressCheckItAgainst(Object coinName) {

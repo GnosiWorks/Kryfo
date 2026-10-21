@@ -2294,6 +2294,24 @@ class AppLocalizationsAr extends AppLocalizations {
       'التبرعات هنا تُحسب ضمن تمويل تدقيق مستقل. سيُنشر التقرير الكامل للجميع.';
 
   @override
+  String get donateCard => 'بطاقة';
+
+  @override
+  String get donateCardOneTime =>
+      'تبرع لمرة واحدة من متصفحك. أنت تختار المبلغ.';
+
+  @override
+  String get donateCardMarios =>
+      'إلى أن يجهز مضيفنا المالي، تذهب مدفوعات البطاقات مباشرةً إلى Marios.';
+
+  @override
+  String get donateCardSeesName =>
+      'شركة الدفع ترى اسمك. العملات المشفرة هي الخيار الخاص.';
+
+  @override
+  String get donateCardPay => 'ادفع بالبطاقة';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'عنوان ⁨$coinName⁩ · طابقه مع محفظتك';
   }

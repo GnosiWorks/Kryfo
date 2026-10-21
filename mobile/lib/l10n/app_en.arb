@@ -2801,6 +2801,26 @@
   "@donateAuditLine": {
     "description": "screens/donate_screen.dart. one line under donateAuditTitle. never say or imply Kryfo is already audited"
   },
+  "donateCard": "Card",
+  "@donateCard": {
+    "description": "screens/donate_screen.dart. the card choice beside the coins"
+  },
+  "donateCardOneTime": "A one-time donation in your browser. You choose the amount.",
+  "@donateCardOneTime": {
+    "description": "screens/donate_screen.dart. under the card choice. the amount is picked on the payment page, never name one"
+  },
+  "donateCardMarios": "Card payments go to Marios directly until our fiscal host is set up.",
+  "@donateCardMarios": {
+    "description": "screens/donate_screen.dart. under the card choice. Marios is a name and stays as it is"
+  },
+  "donateCardSeesName": "The payment company sees your name. Crypto is the private way.",
+  "@donateCardSeesName": {
+    "description": "screens/donate_screen.dart. under the card choice, the honest line"
+  },
+  "donateCardPay": "Pay by card",
+  "@donateCardPay": {
+    "description": "screens/donate_screen.dart. the button that opens the card payment page in the browser"
+  },
   "donateAddressCheckItAgainst": "{coinName} address · check it against your wallet",
   "@donateAddressCheckItAgainst": {
     "description": "screens/donate_screen.dart",

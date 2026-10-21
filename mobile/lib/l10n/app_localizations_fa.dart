@@ -2232,6 +2232,24 @@ class AppLocalizationsFa extends AppLocalizations {
       'کمک‌های مالی اینجا صرف یک ممیزی مستقل می‌شود. گزارش کامل آن عمومی خواهد شد.';
 
   @override
+  String get donateCard => 'کارت';
+
+  @override
+  String get donateCardOneTime =>
+      'یک کمک مالی یک‌باره در مرورگر شما. مبلغ را خودتان انتخاب می‌کنید.';
+
+  @override
+  String get donateCardMarios =>
+      'تا وقتی میزبان مالی ما راه بیفتد، پرداخت‌های کارتی مستقیم به Marios می‌رسد.';
+
+  @override
+  String get donateCardSeesName =>
+      'شرکت پرداخت نام شما را می‌بیند. گزینه‌ی خصوصی، رمزارز است.';
+
+  @override
+  String get donateCardPay => 'پرداخت با کارت';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'نشانی ⁨$coinName⁩ · آن را با کیف پولتان تطبیق دهید';
   }

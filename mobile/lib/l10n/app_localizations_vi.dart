@@ -2221,6 +2221,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Các khoản ủng hộ tại đây dành cho một đợt kiểm định độc lập. Toàn bộ báo cáo sẽ được công khai.';
 
   @override
+  String get donateCard => 'Thẻ';
+
+  @override
+  String get donateCardOneTime =>
+      'Một khoản ủng hộ một lần trong trình duyệt của bạn. Bạn tự chọn số tiền.';
+
+  @override
+  String get donateCardMarios =>
+      'Cho đến khi bên bảo trợ tài chính của chúng tôi sẵn sàng, các khoản thanh toán bằng thẻ sẽ chuyển thẳng cho Marios.';
+
+  @override
+  String get donateCardSeesName =>
+      'Công ty thanh toán có thấy tên bạn. Tiền mã hóa là lựa chọn riêng tư.';
+
+  @override
+  String get donateCardPay => 'Thanh toán bằng thẻ';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Địa chỉ $coinName · hãy đối chiếu với ví của bạn';
   }

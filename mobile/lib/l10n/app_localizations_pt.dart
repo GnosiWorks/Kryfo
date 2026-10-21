@@ -2251,6 +2251,24 @@ class AppLocalizationsPt extends AppLocalizations {
       'As doações feitas aqui vão para uma auditoria independente. O relatório completo será público.';
 
   @override
+  String get donateCard => 'Cartão';
+
+  @override
+  String get donateCardOneTime =>
+      'Uma doação única pelo seu navegador. Você escolhe o valor.';
+
+  @override
+  String get donateCardMarios =>
+      'Os pagamentos com cartão vão direto para o Marios até nosso anfitrião fiscal estar pronto.';
+
+  @override
+  String get donateCardSeesName =>
+      'A empresa de pagamentos vê o seu nome. Cripto é a opção privada.';
+
+  @override
+  String get donateCardPay => 'Pagar com cartão';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Endereço $coinName · confira com a sua carteira';
   }

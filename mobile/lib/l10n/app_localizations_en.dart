@@ -2230,6 +2230,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Donations here count toward an independent audit. The full report will be public.';
 
   @override
+  String get donateCard => 'Card';
+
+  @override
+  String get donateCardOneTime =>
+      'A one-time donation in your browser. You choose the amount.';
+
+  @override
+  String get donateCardMarios =>
+      'Card payments go to Marios directly until our fiscal host is set up.';
+
+  @override
+  String get donateCardSeesName =>
+      'The payment company sees your name. Crypto is the private way.';
+
+  @override
+  String get donateCardPay => 'Pay by card';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return '$coinName address · check it against your wallet';
   }

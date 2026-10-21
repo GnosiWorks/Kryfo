@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the backing screen: tiers, custom amount, crypto addresses. only bitcoin
-// can earn a badge, through the signed receipt the invoice screen checks
-// against our pinned key. the other coins end at the address.
+// the backing screen: tiers, custom amount, crypto addresses and a card
+// page. only bitcoin can earn a badge, through the signed receipt the
+// invoice screen checks against our pinned key. the other coins end at the
+// address, the card at its page in the browser.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../supporter.dart';
 import '../badge_client.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/copied_mark.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
@@ -27,6 +29,10 @@ import '../l10n/numbers.dart';
 // the page about the audit backers help pay for. sent as is: no query, no tag
 const kAuditUrl = 'https://kryfo.app/audit';
 
+// the card page: the amount is picked there. sent as is, like the audit link
+const kCardUrl =
+    'https://checkout.revolut.com/pay/6153a006-b91f-42fa-b433-aa903b890840';
+
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
   @override
@@ -36,8 +42,19 @@ class DonateScreen extends StatefulWidget {
 class _Coin {
   final String key, name, sym, note;
   final Color tint;
-  const _Coin(this.key, this.name, this.sym, this.note, this.tint);
+  final IconData? icon;
+  const _Coin(this.key, this.name, this.sym, this.note, this.tint, {this.icon});
 }
+
+// one more way to give, after the coins: no address, a page in the browser
+_Coin get _card => _Coin(
+  'card',
+  l10n.donateCard,
+  '',
+  '',
+  HaloColors.text,
+  icon: Icons.credit_card_rounded,
+);
 
 // only bitcoin unlocks a badge: we verify it with our own node. the others
 // would need a third-party api that sees the payer's ip.
@@ -151,7 +168,6 @@ class _DonateScreenState extends State<DonateScreen> {
               _auditRow(),
               const SizedBox(height: 22),
               if (kBadgeTiersShown) ...[_tiers(), const SizedBox(height: 22)],
-              // todo: card payments, once a processor is behind them
               _cryptoPane(),
               const SizedBox(height: 26),
             ],
@@ -193,7 +209,11 @@ class _DonateScreenState extends State<DonateScreen> {
           TextSpan(
             children: markedSpans(
               l10n.donateKeepKryfo,
-              HaloType.serif(size: 25, italic: true, color: HaloColors.amberText),
+              HaloType.serif(
+                size: 25,
+                italic: true,
+                color: HaloColors.amberText,
+              ),
             ),
           ),
           textAlign: TextAlign.center,
@@ -440,6 +460,8 @@ class _DonateScreenState extends State<DonateScreen> {
             _coinCard(_coins[3]),
           ],
         ),
+        const SizedBox(height: 8),
+        Row(children: [_coinCard(_card)]),
         const SizedBox(height: 10),
         // coins have addresses of different lengths: the box eases to its
         // new height instead of the page jumping
@@ -460,7 +482,10 @@ class _DonateScreenState extends State<DonateScreen> {
                 ?top,
               ],
             ),
-            child: KeyedSubtree(key: ValueKey(_coin), child: _addressBox()),
+            child: KeyedSubtree(
+              key: ValueKey(_coin),
+              child: _coin == 'card' ? _cardBox() : _addressBox(),
+            ),
           ),
         ),
       ],
@@ -500,10 +525,12 @@ class _DonateScreenState extends State<DonateScreen> {
                   color: c.tint.withValues(alpha: 0.16),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  c.sym,
-                  style: TextStyle(color: c.tint, fontSize: 12),
-                ),
+                child: c.icon != null
+                    ? Icon(c.icon, size: 15, color: c.tint)
+                    : Text(
+                        c.sym,
+                        style: TextStyle(color: c.tint, fontSize: 12),
+                      ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -549,6 +576,103 @@ class _DonateScreenState extends State<DonateScreen> {
           tierKey: key,
           fallbackAddress: _addrs['btc'] ?? '',
         ),
+      ),
+    );
+  }
+
+  // the card page leaves Kryfo, so it is said first, as other outside links
+  // do. no browser: the link goes on the clipboard
+  Future<void> _openCard() async {
+    HapticFeedback.selectionClick();
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.donateCardPay,
+      line: l10n.settingsFollowBrowserNote,
+      yes: l10n.settingsFollowOpen,
+      keep: l10n.commonCancel,
+      rose: false,
+    );
+    if (!ok || !mounted) return;
+    if (await openOutside(Uri.parse(kCardUrl))) return;
+    await Clipboard.setData(const ClipboardData(text: kCardUrl));
+    if (mounted) showHaloToast(context, l10n.settingsLinkCopied);
+  }
+
+  Widget _cardBox() {
+    Widget line(String text, {Color? color}) => Text(
+      text,
+      style: HaloType.sans(
+        size: 13,
+        color: color ?? HaloColors.text,
+        height: 1.45,
+      ),
+    );
+    return Container(
+      key: const ValueKey('donate-card'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: HaloColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          line(l10n.donateCardOneTime),
+          const SizedBox(height: 8),
+          line(l10n.donateCardMarios),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              color: HaloColors.ink,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: HaloColors.line),
+            ),
+            child: Text(
+              l10n.donateCardSeesName,
+              style: HaloType.mono(
+                size: 11,
+                color: HaloColors.text2,
+              ).copyWith(height: 1.45),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            link: true,
+            child: PressScale(
+              label: l10n.donateCardPay,
+              onTap: _openCard,
+              child: Container(
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.donateCardPay,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.onAmber,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.open_in_new,
+                      size: 16,
+                      color: HaloColors.onAmber,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

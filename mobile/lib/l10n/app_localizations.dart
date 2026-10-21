@@ -3591,6 +3591,36 @@ abstract class AppLocalizations {
   /// **'Donations here count toward an independent audit. The full report will be public.'**
   String get donateAuditLine;
 
+  /// screens/donate_screen.dart. the card choice beside the coins
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get donateCard;
+
+  /// screens/donate_screen.dart. under the card choice. the amount is picked on the payment page, never name one
+  ///
+  /// In en, this message translates to:
+  /// **'A one-time donation in your browser. You choose the amount.'**
+  String get donateCardOneTime;
+
+  /// screens/donate_screen.dart. under the card choice. Marios is a name and stays as it is
+  ///
+  /// In en, this message translates to:
+  /// **'Card payments go to Marios directly until our fiscal host is set up.'**
+  String get donateCardMarios;
+
+  /// screens/donate_screen.dart. under the card choice, the honest line
+  ///
+  /// In en, this message translates to:
+  /// **'The payment company sees your name. Crypto is the private way.'**
+  String get donateCardSeesName;
+
+  /// screens/donate_screen.dart. the button that opens the card payment page in the browser
+  ///
+  /// In en, this message translates to:
+  /// **'Pay by card'**
+  String get donateCardPay;
+
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:

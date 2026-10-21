@@ -2289,6 +2289,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Пожертвования здесь идут на независимый аудит. Полный отчёт будет опубликован.';
 
   @override
+  String get donateCard => 'Карта';
+
+  @override
+  String get donateCardOneTime =>
+      'Разовое пожертвование через браузер. Сумма на твой выбор.';
+
+  @override
+  String get donateCardMarios =>
+      'Пока у нас нет фискального спонсора, платежи картой идут напрямую на счёт Marios.';
+
+  @override
+  String get donateCardSeesName =>
+      'Платёжная компания видит твоё имя. Если нужна приватность, выбирай криптовалюту.';
+
+  @override
+  String get donateCardPay => 'Оплатить картой';
+
+  @override
   String donateAddressCheckItAgainst(Object coinName) {
     return 'Адрес $coinName · сверь его с кошельком';
   }
