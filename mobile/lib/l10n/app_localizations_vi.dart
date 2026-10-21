@@ -778,6 +778,26 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không mở được. Hãy tìm mục tự khởi động trong cài đặt điện thoại';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei và Honor đóng các ứng dụng do chúng tự quản lý. Ở màn hình tiếp theo, hãy tìm Kryfo, tắt Quản lý tự động, rồi để bật Tự khởi chạy, Khởi chạy phụ và Chạy trong nền.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo và Realme dừng các ứng dụng chạy nền. Ở màn hình tiếp theo, hãy tìm Kryfo và cho phép Tự khởi chạy. Trong phần Pin, hãy cho phép cả hoạt động nền của nó.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo dừng các ứng dụng chạy nền. Ở màn hình tiếp theo, hãy tìm Kryfo và cho phép nó khởi động trong nền. Trong phần Pin, hãy cho phép cả mức dùng điện cao khi chạy nền.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung cho ngủ các ứng dụng mà nó cho là không dùng đến. Ở màn hình tiếp theo, hãy mở Giới hạn sử dụng nền và thêm Kryfo vào Ứng dụng không bao giờ ngủ.';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus dừng các ứng dụng chạy nền. Ở màn hình tiếp theo, hãy tìm Kryfo và cho phép Tự khởi chạy. Trong phần Pin, hãy chọn Không tối ưu hóa.';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Tin nhắn mới từ các liên hệ của bạn, được mã hóa';
 

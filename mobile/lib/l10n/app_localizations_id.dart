@@ -779,6 +779,26 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak bisa dibuka. Cari mulai otomatis di pengaturan ponsel';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei dan Honor menutup aplikasi yang mereka kelola sendiri. Di layar berikutnya, cari Kryfo, matikan Kelola otomatis, lalu biarkan Luncurkan otomatis, Peluncuran sekunder, dan Jalankan di latar belakang tetap menyala.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo dan Realme menghentikan aplikasi di latar belakang. Di layar berikutnya, cari Kryfo dan izinkan Luncurkan otomatis. Di Baterai, izinkan juga aktivitas latar belakangnya.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo menghentikan aplikasi di latar belakang. Di layar berikutnya, cari Kryfo dan izinkan ia mulai di latar belakang. Di Baterai, izinkan juga penggunaan daya tinggi di latar belakang.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung menidurkan aplikasi yang dianggapnya tidak dipakai. Di layar berikutnya, buka Batas penggunaan latar belakang lalu tambahkan Kryfo ke Aplikasi yang tidak pernah tidur.';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus menghentikan aplikasi di latar belakang. Di layar berikutnya, cari Kryfo dan izinkan Luncurkan otomatis. Di Baterai, atur ke Jangan optimalkan.';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Pesan terenkripsi baru dari kontakmu';
 

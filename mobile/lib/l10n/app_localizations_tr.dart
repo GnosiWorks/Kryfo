@@ -787,6 +787,26 @@ class AppLocalizationsTr extends AppLocalizations {
       'Açılamadı. Telefon ayarlarında otomatik başlatmayı ara';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei ve Honor kendi yönettikleri uygulamaları kapatır. Sonraki ekranda Kryfo’yu bul, “Otomatik olarak yönet” seçeneğini kapat; otomatik başlatma, ikincil başlatma ve arka planda çalışma açık kalsın.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo ve Realme arka plandaki uygulamaları durdurur. Sonraki ekranda Kryfo’yu bul ve otomatik başlatmaya izin ver. Pil bölümünde arka plan etkinliğine de izin ver.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo arka plandaki uygulamaları durdurur. Sonraki ekranda Kryfo’yu bul ve arka planda başlamasına izin ver. Pil bölümünde arka planda yüksek güç kullanımına da izin ver.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung kullanılmadığını düşündüğü uygulamaları uyku moduna alır. Sonraki ekranda “Arka plan kullanım sınırları”nı aç ve Kryfo’yu “Asla uyumayan uygulamalar”a ekle.';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus arka plandaki uygulamaları durdurur. Sonraki ekranda Kryfo’yu bul ve otomatik başlatmaya izin ver. Pil bölümünde “Optimize etme” seçeneğini seç.';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Kişilerinden yeni şifreli mesajlar';
 

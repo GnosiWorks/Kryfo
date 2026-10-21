@@ -789,6 +789,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ließ sich nicht öffnen. Such in den Handy-Einstellungen nach Autostart';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei und Honor schließen Apps, die sie selbst verwalten. Such auf dem nächsten Bildschirm Kryfo, schalte „Automatisch verwalten“ aus und lass automatischen Start, sekundären Start und Ausführung im Hintergrund an.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo und Realme stoppen Apps im Hintergrund. Such auf dem nächsten Bildschirm Kryfo und erlaube den automatischen Start. Erlaube unter Akku auch die Aktivität im Hintergrund.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo stoppt Apps im Hintergrund. Such auf dem nächsten Bildschirm Kryfo und erlaube den Start im Hintergrund. Erlaube unter Akku auch hohen Stromverbrauch im Hintergrund.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung schickt Apps, die es für ungenutzt hält, in den Standby. Öffne auf dem nächsten Bildschirm „Einschränkungen der Hintergrundnutzung“ und füge Kryfo zu „Nie im Standby befindliche Apps“ hinzu.';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus stoppt Apps im Hintergrund. Such auf dem nächsten Bildschirm Kryfo und erlaube den automatischen Start. Stell es unter Akku auf „Nicht optimieren“.';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Neue verschlüsselte Nachrichten von deinen Kontakten';
 

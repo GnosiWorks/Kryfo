@@ -761,6 +761,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get miuiAutostartCouldnTOpenIt => '打不开。请在手机设置里找“自启动”';
 
   @override
+  String get batteryGuideHuawei =>
+      '华为和荣耀会关闭由系统自动管理的应用。在下一个页面找到 Kryfo，关闭“自动管理”，并保持“允许自启动”“允许关联启动”和“允许后台活动”开启。';
+
+  @override
+  String get batteryGuideOppo =>
+      'OPPO 和 realme 会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，也允许它在后台运行。';
+
+  @override
+  String get batteryGuideVivo =>
+      'vivo 会停止后台应用。在下一个页面找到 Kryfo，允许它后台启动。再到“电池”里，也允许它后台高耗电。';
+
+  @override
+  String get batteryGuideSamsung =>
+      '三星会让它认为不常用的应用进入休眠。在下一个页面打开“后台使用限制”，把 Kryfo 加入“从不休眠的应用”。';
+
+  @override
+  String get batteryGuideOnePlus =>
+      '一加会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，把它设为“不优化”。';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom => '来自联系人的新加密消息';
 
   @override
@@ -9075,6 +9095,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get miuiAutostartCouldnTOpenIt => '無法開啟。請在手機設定中尋找「自動啟動」';
+
+  @override
+  String get batteryGuideHuawei =>
+      '華為和榮耀會關閉由系統自動管理的應用程式。請在下一個畫面找到 Kryfo，關閉「自動管理」，並保持「允許自動啟動」「允許關聯啟動」和「允許背景活動」開啟。';
+
+  @override
+  String get batteryGuideOppo =>
+      'OPPO 和 realme 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，也允許它在背景執行。';
+
+  @override
+  String get batteryGuideVivo =>
+      'vivo 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許它在背景啟動。再到「電池」裡，也允許它在背景高耗電。';
+
+  @override
+  String get batteryGuideSamsung =>
+      '三星會讓它認為不常用的應用程式進入休眠。請在下一個畫面開啟「背景使用限制」，把 Kryfo 加入「永不休眠的應用程式」。';
+
+  @override
+  String get batteryGuideOnePlus =>
+      '一加會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，把它設為「不最佳化」。';
 
   @override
   String get notificationsNewEncryptedMessagesFrom => '來自聯絡人的加密新訊息';

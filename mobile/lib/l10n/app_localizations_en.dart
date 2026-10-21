@@ -784,6 +784,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t open it. Look for autostart in phone settings';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei and Honor close apps they manage themselves. On the next screen, find Kryfo, turn off Manage automatically, and leave Auto-launch, Secondary launch and Run in background on.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo and Realme stop apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, allow background activity for it too.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo stops apps in the background. On the next screen, find Kryfo and allow it to start in the background. Under Battery, allow high background power use for it too.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung puts apps it thinks are unused to sleep. On the next screen, open Background usage limits and add Kryfo to Never sleeping apps.';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don\'t optimize.';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'New encrypted messages from your contacts';
 

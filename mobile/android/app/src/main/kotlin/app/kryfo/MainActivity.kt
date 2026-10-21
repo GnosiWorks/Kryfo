@@ -387,6 +387,9 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    "phoneMaker" -> result.success(
+                        mapOf("manufacturer" to Build.MANUFACTURER, "brand" to Build.BRAND)
+                    )
                     "photoPickerReady" -> result.success(PhotoPicker.ready(this))
                     "installSource" -> result.success(installSource())
                     "askNotifications" -> {
@@ -1043,17 +1046,28 @@ class MainActivity : FlutterFragmentActivity() {
     // true when some settings page opened. the miui page first, the app's
     // own details page when that is missing, false when both fail
     private fun openAutostartSettings(): Boolean {
-        val miui = Intent().apply {
-            setClassName(
-                "com.miui.securitycenter",
-                "com.miui.permcenter.autostart.AutoStartManagementActivity"
-            )
-        }
-        try {
-            startActivity(miui)
-            return true
-        } catch (e: Exception) {
-            // fall through to the generic page
+        // each maker's own page, newest first; only the phone's own maker
+        // has any of them. the list is dontkillmyapp.com's
+        val pages = listOf(
+            "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+            "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+            "com.hihonor.systemmanager" to "com.hihonor.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+            "com.huawei.systemmanager" to "com.huawei.systemmanager.optimize.process.ProtectActivity",
+            "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+            "com.coloros.safecenter" to "com.coloros.safecenter.startupapp.StartupAppListActivity",
+            "com.oppo.safe" to "com.oppo.safe.permission.startup.StartupAppListActivity",
+            "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+            "com.iqoo.secure" to "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager",
+            "com.oneplus.security" to "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity",
+            "com.samsung.android.lool" to "com.samsung.android.sm.battery.ui.BatteryActivity",
+        )
+        for ((pkg, cls) in pages) {
+            try {
+                startActivity(Intent().apply { setClassName(pkg, cls) })
+                return true
+            } catch (e: Exception) {
+                // not this phone's, or not exported: the next
+            }
         }
         return try {
             val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

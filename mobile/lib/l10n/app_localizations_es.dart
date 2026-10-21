@@ -790,6 +790,26 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo abrir. Busca inicio automático en los ajustes del teléfono';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei y Honor cierran las apps que gestionan ellos mismos. En la siguiente pantalla, busca Kryfo, desactiva «Gestionar automáticamente» y deja activados el inicio automático, el inicio secundario y la ejecución en segundo plano.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo y Realme detienen las apps en segundo plano. En la siguiente pantalla, busca Kryfo y permite el inicio automático. En Batería, permite también su actividad en segundo plano.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo detiene las apps en segundo plano. En la siguiente pantalla, busca Kryfo y permite que se inicie en segundo plano. En Batería, permite también un consumo alto en segundo plano.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung pone en suspensión las apps que cree que no usas. En la siguiente pantalla, abre «Límites de uso en segundo plano» y añade Kryfo a «Aplicaciones que nunca se suspenden».';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus detiene las apps en segundo plano. En la siguiente pantalla, busca Kryfo y permite el inicio automático. En Batería, elige «No optimizar».';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Nuevos mensajes cifrados de tus contactos';
 

@@ -990,6 +990,26 @@
   "@miuiAutostartCouldnTOpenIt": {
     "description": "miui_autostart.dart"
   },
+  "batteryGuideHuawei": "Huawei and Honor close apps they manage themselves. On the next screen, find Kryfo, turn off Manage automatically, and leave Auto-launch, Secondary launch and Run in background on.",
+  "@batteryGuideHuawei": {
+    "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
+  "batteryGuideOppo": "Oppo and Realme stop apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, allow background activity for it too.",
+  "@batteryGuideOppo": {
+    "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
+  "batteryGuideVivo": "Vivo stops apps in the background. On the next screen, find Kryfo and allow it to start in the background. Under Battery, allow high background power use for it too.",
+  "@batteryGuideVivo": {
+    "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
+  "batteryGuideSamsung": "Samsung puts apps it thinks are unused to sleep. On the next screen, open Background usage limits and add Kryfo to Never sleeping apps.",
+  "@batteryGuideSamsung": {
+    "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
+  "batteryGuideOnePlus": "OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don't optimize.",
+  "@batteryGuideOnePlus": {
+    "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
   "notificationsNewEncryptedMessagesFrom": "New encrypted messages from your contacts",
   "@notificationsNewEncryptedMessagesFrom": {
     "description": "notifications.dart"

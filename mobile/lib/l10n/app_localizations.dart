@@ -1287,6 +1287,36 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open it. Look for autostart in phone settings'**
   String get miuiAutostartCouldnTOpenIt;
 
+  /// battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei and Honor close apps they manage themselves. On the next screen, find Kryfo, turn off Manage automatically, and leave Auto-launch, Secondary launch and Run in background on.'**
+  String get batteryGuideHuawei;
+
+  /// battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own
+  ///
+  /// In en, this message translates to:
+  /// **'Oppo and Realme stop apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, allow background activity for it too.'**
+  String get batteryGuideOppo;
+
+  /// battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own
+  ///
+  /// In en, this message translates to:
+  /// **'Vivo stops apps in the background. On the next screen, find Kryfo and allow it to start in the background. Under Battery, allow high background power use for it too.'**
+  String get batteryGuideVivo;
+
+  /// battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung puts apps it thinks are unused to sleep. On the next screen, open Background usage limits and add Kryfo to Never sleeping apps.'**
+  String get batteryGuideSamsung;
+
+  /// battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own
+  ///
+  /// In en, this message translates to:
+  /// **'OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don\'t optimize.'**
+  String get batteryGuideOnePlus;
+
   /// notifications.dart
   ///
   /// In en, this message translates to:

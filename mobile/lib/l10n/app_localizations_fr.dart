@@ -790,6 +790,26 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de l’ouvrir. Cherchez démarrage automatique dans les paramètres du téléphone';
 
   @override
+  String get batteryGuideHuawei =>
+      'Huawei et Honor ferment les applis qu’ils gèrent eux-mêmes. Sur l’écran suivant, trouvez Kryfo, désactivez « Gérer automatiquement » et laissez activés le lancement automatique, le lancement secondaire et l’exécution en arrière-plan.';
+
+  @override
+  String get batteryGuideOppo =>
+      'Oppo et Realme arrêtent les applis en arrière-plan. Sur l’écran suivant, trouvez Kryfo et autorisez le lancement automatique. Dans Batterie, autorisez aussi son activité en arrière-plan.';
+
+  @override
+  String get batteryGuideVivo =>
+      'Vivo arrête les applis en arrière-plan. Sur l’écran suivant, trouvez Kryfo et autorisez son démarrage en arrière-plan. Dans Batterie, autorisez aussi une forte consommation en arrière-plan.';
+
+  @override
+  String get batteryGuideSamsung =>
+      'Samsung met en veille les applis qu’il juge inutilisées. Sur l’écran suivant, ouvrez « Limites d’utilisation en arrière-plan » et ajoutez Kryfo aux « Applis jamais mises en veille ».';
+
+  @override
+  String get batteryGuideOnePlus =>
+      'OnePlus arrête les applis en arrière-plan. Sur l’écran suivant, trouvez Kryfo et autorisez le lancement automatique. Dans Batterie, choisissez « Ne pas optimiser ».';
+
+  @override
   String get notificationsNewEncryptedMessagesFrom =>
       'Nouveaux messages chiffrés de vos contacts';
 
