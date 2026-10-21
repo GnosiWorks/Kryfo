@@ -22,6 +22,7 @@ import '../widgets/motion.dart' show houseSpring;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/text_ground.dart';
 import 'sticker_pack.dart';
 import 'sticker_recents.dart';
 import 'sticker_view.dart';
@@ -502,16 +503,18 @@ class StickerSheetState extends State<StickerSheet>
     _shown = s;
     final from = _cellRect(s.key) ?? Rect.zero;
     _previewEntry = OverlayEntry(
-      builder: (_) => _StickerPreview(
-        key: _previewKey,
-        shown: s,
-        from: from,
-        held: held,
-        onSend: () => _pick(_shown!.ref),
-        onRemove: () => _removeRecent(_shown!.ref),
-        onClose: () => _previewKey.currentState?.close(),
-        rectOf: () => _cellRect(_shown!.key),
-        onGone: _previewGone,
+      builder: (_) => TextGround(
+        child: _StickerPreview(
+          key: _previewKey,
+          shown: s,
+          from: from,
+          held: held,
+          onSend: () => _pick(_shown!.ref),
+          onRemove: () => _removeRecent(_shown!.ref),
+          onClose: () => _previewKey.currentState?.close(),
+          rectOf: () => _cellRect(_shown!.key),
+          onGone: _previewGone,
+        ),
       ),
     );
     Overlay.of(context, rootOverlay: true).insert(_previewEntry!);

@@ -17,6 +17,7 @@ import '../theme.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
+import 'text_ground.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
 import 'video_frame.dart';
@@ -51,12 +52,14 @@ Future<void> openVideo(
         opaque: false,
         transitionDuration: Duration(milliseconds: still ? 0 : 280),
         reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-        pageBuilder: (_, anim, _) => _VideoViewer(
-          path: path,
-          fileName: fileName,
-          route: anim,
-          kept: kept,
-          room: room,
+        pageBuilder: (_, anim, _) => TextGround(
+          child: _VideoViewer(
+            path: path,
+            fileName: fileName,
+            route: anim,
+            kept: kept,
+            room: room,
+          ),
         ),
       ),
     );

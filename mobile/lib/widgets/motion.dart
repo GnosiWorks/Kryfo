@@ -10,6 +10,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart' show HaloColors, HaloType, track, slant;
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
+import 'text_ground.dart';
 
 const kInk = Color(0xFF0D0B09);
 const kSurface = Color(0xFF161310);
@@ -76,7 +77,8 @@ Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 280),
-    pageBuilder: (_, _, _) => page,
+    // a page with no scaffold of its own still gets plain text
+    pageBuilder: (_, _, _) => TextGround(child: page),
     transitionsBuilder: (context, anim, _, child) {
       final curved = CurvedAnimation(
         parent: anim,

@@ -14,6 +14,7 @@ import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, motionStill;
+import 'text_ground.dart';
 
 /// the tag a photo and the viewer share, so the photo flies between them.
 /// [id] tells the chat's copy from the shared photos' copy
@@ -76,8 +77,14 @@ Future<void> openPhotoImage(
         opaque: false,
         transitionDuration: Duration(milliseconds: still ? 0 : 280),
         reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-        pageBuilder: (_, anim, _) =>
-            PhotoViewer(image: image, tag: tag, radius: radius, route: anim),
+        pageBuilder: (_, anim, _) => TextGround(
+          child: PhotoViewer(
+            image: image,
+            tag: tag,
+            radius: radius,
+            route: anim,
+          ),
+        ),
       ),
     );
   } finally {

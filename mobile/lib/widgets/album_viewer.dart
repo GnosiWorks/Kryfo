@@ -21,6 +21,7 @@ import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, kHouseCurve, kText2, motionStill;
 import 'photo_viewer.dart' show PhotoTileFade;
+import 'text_ground.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
 import '../lock_guard.dart' show lockGuard;
@@ -88,8 +89,14 @@ Future<void> openAlbum(
         // no flight with no movement asked for: the page fades in and out
         transitionsBuilder: (_, anim, _, child) =>
             still ? FadeTransition(opacity: anim, child: child) : child,
-        pageBuilder: (_, anim, _) =>
-            AlbumViewer(items: items, start: at, route: anim, flight: !still),
+        pageBuilder: (_, anim, _) => TextGround(
+          child: AlbumViewer(
+            items: items,
+            start: at,
+            route: anim,
+            flight: !still,
+          ),
+        ),
       ),
     );
   } finally {
