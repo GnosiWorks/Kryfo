@@ -2350,11 +2350,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Связываемся с платёжным сервисом через Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Это может занять до минуты';
+  String get donateThisCanTakeUp => 'Это может занять минуту-другую';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited с · это может занять до минуты';
+    return '$waited с · это может занять минуту-другую';
   }
 
   @override

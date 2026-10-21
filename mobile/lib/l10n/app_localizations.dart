@@ -3696,13 +3696,13 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This can take up to a minute'**
+  /// **'This can take a minute or two'**
   String get donateThisCanTakeUp;
 
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{waited}s · this can take up to a minute'**
+  /// **'{waited}s · this can take a minute or two'**
   String donateSThisCanTake(Object waited);
 
   /// screens/donate_screen.dart

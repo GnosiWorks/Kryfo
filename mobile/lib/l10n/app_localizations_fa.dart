@@ -2293,11 +2293,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'در حال رسیدن به سرویس پرداخت از راه Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'ممکن است تا یک دقیقه طول بکشد';
+  String get donateThisCanTakeUp => 'ممکن است یکی دو دقیقه طول بکشد';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '⁨$waited⁩ ثانیه · ممکن است تا یک دقیقه طول بکشد';
+    return '⁨$waited⁩ ثانیه · ممکن است یکی دو دقیقه طول بکشد';
   }
 
   @override

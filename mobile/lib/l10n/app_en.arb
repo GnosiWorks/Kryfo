@@ -2874,11 +2874,11 @@
   "@donateReachingThePaymentService": {
     "description": "screens/donate_screen.dart"
   },
-  "donateThisCanTakeUp": "This can take up to a minute",
+  "donateThisCanTakeUp": "This can take a minute or two",
   "@donateThisCanTakeUp": {
     "description": "screens/donate_screen.dart"
   },
-  "donateSThisCanTake": "{waited}s · this can take up to a minute",
+  "donateSThisCanTake": "{waited}s · this can take a minute or two",
   "@donateSThisCanTake": {
     "description": "screens/donate_screen.dart",
     "placeholders": {

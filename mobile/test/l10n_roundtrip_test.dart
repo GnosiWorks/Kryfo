@@ -999,10 +999,10 @@ void main() {
       l.donateReachingThePaymentService,
       "Reaching the payment service over Tor…",
     );
-    expect(l.donateThisCanTakeUp, "This can take up to a minute");
+    expect(l.donateThisCanTakeUp, "This can take a minute or two");
     expect(
       l.donateSThisCanTake("<waited>"),
-      "<waited>s · this can take up to a minute",
+      "<waited>s · this can take a minute or two",
     );
     expect(l.donateUseTheAddressInstead, "Use the address instead");
     expect(

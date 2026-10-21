@@ -2293,11 +2293,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 
   @override
-  String get donateThisCanTakeUp => 'Bu bir dakikayı bulabilir';
+  String get donateThisCanTakeUp => 'Bu bir iki dakika sürebilir';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited sn · bu bir dakikayı bulabilir';
+    return '$waited sn · bu bir iki dakika sürebilir';
   }
 
   @override

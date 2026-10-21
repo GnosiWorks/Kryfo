@@ -51,7 +51,7 @@ void main() {
 
   test('a decoy makes no invoice and fetches no receipt', () async {
     open(HaloContainer.decoy);
-    expect(await createInvoice('supporter'), isNull);
+    expect((await createInvoice('supporter')).invoice, isNull);
     expect((await fetchReceipt('inv1')).state, ReceiptState.error);
     // one remembered in it is left as it was
     await saveOpenInvoice('inv1', SupporterTier.supporter, HaloContainer.decoy);
@@ -63,8 +63,9 @@ void main() {
 
   test('the everyday app asks', () async {
     open(HaloContainer.everyday);
-    expect(await createInvoice('supporter'), isNull);
+    expect((await createInvoice('supporter')).invoice, isNull);
     expect((await fetchReceipt('inv1')).state, ReceiptState.error);
-    expect(spy.asked, hasLength(2));
+    // the invoice ask that does not get through is made once more
+    expect(spy.asked, hasLength(3));
   });
 }

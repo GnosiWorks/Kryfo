@@ -183,7 +183,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'badge_open_invoice': 'inv0|patron',
     });
-    expect(await createInvoice('supporter'), isNull);
+    expect((await createInvoice('supporter')).invoice, isNull);
     expect(await settleOpenInvoice(), isNull);
     expect(engine.asked.where((u) => u.startsWith(kBadgeOnion)), isEmpty);
     expect(await loadSupporterTier(), SupporterTier.none);

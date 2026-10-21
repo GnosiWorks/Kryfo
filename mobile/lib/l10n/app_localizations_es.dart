@@ -2317,11 +2317,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Contactando con el servicio de pago por Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Puede tardar hasta un minuto';
+  String get donateThisCanTakeUp => 'Puede tardar uno o dos minutos';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '${waited}s · puede tardar hasta un minuto';
+    return '${waited}s · puede tardar uno o dos minutos';
   }
 
   @override

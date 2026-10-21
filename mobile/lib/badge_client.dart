@@ -24,13 +24,26 @@ class BadgeInvoice {
   final String address; // bitcoin address to pay
   final String btc; // exact amount, as a string to avoid float drift
   final String uri; // bitcoin:...?amount=... for the qr
+  final int secondsLeft; // until the service stops taking it
   const BadgeInvoice({
     required this.id,
     required this.tier,
     required this.address,
     required this.btc,
     required this.uri,
+    required this.secondsLeft,
   });
+}
+
+// why no invoice came: tor did not get through in time, or the service
+// answered and said no
+enum InvoiceFailure { slow, service }
+
+class InvoiceAsk {
+  final BadgeInvoice? invoice;
+  final InvoiceFailure? failure;
+  const InvoiceAsk.made(BadgeInvoice this.invoice) : failure = null;
+  const InvoiceAsk.failed(InvoiceFailure this.failure) : invoice = null;
 }
 
 enum ReceiptState { pending, paid, expired, error }
@@ -44,28 +57,69 @@ class BadgeReceipt {
   const BadgeReceipt(this.state, {this.id, this.tier, this.payload, this.sig});
 }
 
-/// null when tor or the service is unreachable: the caller shows the
-/// manual address instead. a quiet session asks nothing and reads as that
-Future<BadgeInvoice?> createInvoice(String tier) async {
-  if (!kBadgeTiersShown || sessionQuiet) return null;
+/// an invoice, or why there is none: the caller shows the manual address
+/// then. a first ask that does not get through is made once more, quietly:
+/// a cold onion circuit often finishes building just after the first ask
+/// gave up. a quiet session asks nothing and reads as the service saying no
+Future<InvoiceAsk> createInvoice(String tier) async {
+  if (!kBadgeTiersShown || sessionQuiet) {
+    return const InvoiceAsk.failed(InvoiceFailure.service);
+  }
+  final took = Stopwatch()..start();
+  final first = await _askInvoice(tier);
+  // past a minute the person has waited enough: the address is there
+  if (!first.again || took.elapsed > const Duration(minutes: 1)) {
+    return first.ask;
+  }
+  return (await _askInvoice(tier)).ask;
+}
+
+Future<({InvoiceAsk ask, bool again})> _askInvoice(String tier) async {
   final raw = await engine.torPost(
     '$kBadgeOnion/invoice',
     jsonEncode({'tier': tier}),
   );
-  if (raw.startsWith('error:')) return null;
+  if (raw.startsWith('error:')) {
+    final status = RegExp(r'^error: status (\d+)').firstMatch(raw);
+    if (status == null) {
+      return (ask: const InvoiceAsk.failed(InvoiceFailure.slow), again: true);
+    }
+    // the service answered: a hiccup behind it is worth one more ask, a no
+    // or a busy one is not
+    final code = int.parse(status.group(1)!);
+    return (
+      ask: const InvoiceAsk.failed(InvoiceFailure.service),
+      again: code >= 500,
+    );
+  }
   try {
     final j = jsonDecode(raw) as Map<String, dynamic>;
     final addr = j['address'] as String? ?? '';
-    if (addr.isEmpty) return null;
-    return BadgeInvoice(
-      id: j['id'] as String? ?? '',
-      tier: j['tier'] as String? ?? tier,
-      address: addr,
-      btc: '${j['btc'] ?? ''}',
-      uri: j['uri'] as String? ?? 'bitcoin:$addr',
+    if (addr.isEmpty) {
+      return (
+        ask: const InvoiceAsk.failed(InvoiceFailure.service),
+        again: false,
+      );
+    }
+    final left = j['expiresIn'];
+    return (
+      ask: InvoiceAsk.made(
+        BadgeInvoice(
+          id: j['id'] as String? ?? '',
+          tier: j['tier'] as String? ?? tier,
+          address: addr,
+          btc: '${j['btc'] ?? ''}',
+          uri: j['uri'] as String? ?? 'bitcoin:$addr',
+          // an old service says nothing and kept invoices a quarter hour
+          secondsLeft: left is num
+              ? left.toInt().clamp(60, 3 * 60 * 60)
+              : 15 * 60,
+        ),
+      ),
+      again: false,
     );
   } catch (_) {
-    return null;
+    return (ask: const InvoiceAsk.failed(InvoiceFailure.service), again: false);
   }
 }
 

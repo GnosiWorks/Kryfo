@@ -2355,11 +2355,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'قد يستغرق هذا حتى دقيقة';
+  String get donateThisCanTakeUp => 'قد يستغرق هذا دقيقة أو دقيقتين';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '⁨$waited⁩ ث · قد يستغرق هذا حتى دقيقة';
+    return '⁨$waited⁩ ث · قد يستغرق هذا دقيقة أو دقيقتين';
   }
 
   @override

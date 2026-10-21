@@ -2345,11 +2345,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Звертаємося до платіжного сервісу через Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Це може тривати до хвилини';
+  String get donateThisCanTakeUp => 'Це може тривати хвилину-дві';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited с · це може тривати до хвилини';
+    return '$waited с · це може тривати хвилину-дві';
   }
 
   @override

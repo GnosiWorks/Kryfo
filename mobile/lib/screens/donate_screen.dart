@@ -957,7 +957,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   BadgeInvoice? _inv;
   Timer? _poll;
   Timer? _tick;
-  int _secsLeft = 15 * 60;
+  int _secsLeft = 0;
   int _lateChecks = 0;
   late final AnimationController _pulse;
   // the wait for the invoice, in seconds, so the screen can show it is
@@ -967,6 +967,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   Timer? _waitTick;
   int _ask = 0;
   bool _gaveUp = false;
+  // why the last ask brought no invoice
+  InvoiceFailure? _failure;
   // the receipt ask on its way: a tap and a poll share it
   Future<void>? _asking;
   // the person asked: the button says it is looking
@@ -1015,26 +1017,31 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       _phase = _Phase.loading;
       _waited = 0;
       _gaveUp = false;
+      _failure = null;
     });
     _waitTick?.cancel();
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && _phase == _Phase.loading) setState(() => _waited++);
     });
-    final inv = await createInvoice(widget.tierKey);
+    final got = await createInvoice(widget.tierKey);
     if (!mounted || ask != _ask) return;
     _waitTick?.cancel();
+    final inv = got.invoice;
     if (inv == null) {
       // tor or the service is unreachable: the static address still takes a
       // donation, with no badge
-      setState(() => _phase = _Phase.unreachable);
+      setState(() {
+        _failure = got.failure;
+        _phase = _Phase.unreachable;
+      });
       return;
     }
     setState(() {
       _inv = inv;
+      _secsLeft = inv.secondsLeft;
       _phase = _Phase.invoice;
     });
     await saveOpenInvoice(inv.id, widget.tier, session.container);
-    _secsLeft = 15 * 60;
     _tick?.cancel();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -1294,7 +1301,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              _gaveUp
+              _gaveUp || _failure == InvoiceFailure.slow
                   ? l10n.donateTorWasSlowTo
                   : l10n.donateThePaymentServiceIsHavingTrouble,
               style: HaloType.sans(

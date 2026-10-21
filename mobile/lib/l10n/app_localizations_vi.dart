@@ -2282,11 +2282,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Có thể mất tới một phút';
+  String get donateThisCanTakeUp => 'Có thể mất một đến hai phút';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '${waited}s · có thể mất tới một phút';
+    return '${waited}s · có thể mất một đến hai phút';
   }
 
   @override

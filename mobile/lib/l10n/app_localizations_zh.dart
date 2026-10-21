@@ -2195,11 +2195,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
-  String get donateThisCanTakeUp => '最多可能需要 1 分钟';
+  String get donateThisCanTakeUp => '可能需要一两分钟';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited 秒 · 最多可能需要 1 分钟';
+    return '$waited 秒 · 可能需要一两分钟';
   }
 
   @override
@@ -10619,11 +10619,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
-  String get donateThisCanTakeUp => '最多可能需要一分鐘';
+  String get donateThisCanTakeUp => '可能需要一兩分鐘';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited 秒 · 最多可能需要一分鐘';
+    return '$waited 秒 · 可能需要一兩分鐘';
   }
 
   @override

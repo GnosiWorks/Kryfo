@@ -2311,11 +2311,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Acessando o serviço de pagamento pelo Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Isso pode levar até um minuto';
+  String get donateThisCanTakeUp => 'Isso pode levar um ou dois minutos';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '${waited}s · isso pode levar até um minuto';
+    return '${waited}s · isso pode levar um ou dois minutos';
   }
 
   @override

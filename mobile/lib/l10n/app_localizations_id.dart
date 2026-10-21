@@ -2286,11 +2286,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Menghubungi layanan pembayaran lewat Tor…';
 
   @override
-  String get donateThisCanTakeUp => 'Ini bisa makan waktu sampai satu menit';
+  String get donateThisCanTakeUp => 'Ini bisa makan waktu satu atau dua menit';
 
   @override
   String donateSThisCanTake(Object waited) {
-    return '$waited dtk · ini bisa makan waktu sampai satu menit';
+    return '$waited dtk · ini bisa makan waktu satu atau dua menit';
   }
 
   @override
