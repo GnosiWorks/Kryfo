@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the two photo tools are one: pick a photo or a video, see everything it
-// gives away, then one button removes all of it. the tools tab has no
-// separate cleaner, and a video gets cleaned too.
+// the one photo tool: what a photo or video gives away, then one button that
+// removes all of it
 import 'dart:io';
 
 import 'package:flutter/material.dart';

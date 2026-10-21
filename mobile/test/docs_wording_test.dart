@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the readme and the privacy page say about features that changed.
-// push is optional now: the readme says what the knock carries and what
-// the helper's server learns, and no longer that there is no push at all.
+// what the readme and the privacy page say about optional push
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

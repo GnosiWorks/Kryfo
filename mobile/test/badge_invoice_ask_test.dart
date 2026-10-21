@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the invoice ask: a first one that tor does not get through in time is made
-// once more, the screen says tor was slow when it was, and the countdown
-// follows how long the service keeps the invoice. a screen left behind
-// makes no second ask, and picking bitcoin or an amount starts the circuit
-// with no invoice
+// the invoice ask: one more try when tor is slow, the countdown from the
+// service's expiry, and the circuit started before any ask
 import 'dart:async';
 
 import 'package:flutter/material.dart';

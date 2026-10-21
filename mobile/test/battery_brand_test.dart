@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the makers that close apps beyond android's battery exemption get a guide
-// to their own switch: xiaomi, huawei and honor, oppo and realme, vivo,
-// samsung and oneplus. any other phone only gets the exemption. every
-// language says each guide, and in its own words.
+// the battery guides for makers that close apps beyond android's exemption,
+// in every language
 import 'dart:convert';
 import 'dart:io';
 

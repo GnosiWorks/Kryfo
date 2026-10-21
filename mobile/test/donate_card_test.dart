@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// card on support: one more choice after the coins, the line about where
-// the money goes, and a page that opens in the browser only after a yes,
-// with the url as it is
+// card donations on the support screen
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

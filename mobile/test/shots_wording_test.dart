@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// screenshot blocking is android's secure flag on both phones. it stops
-// screenshots and screen recording in Kryfo, not apps that read the
-// screen or a phone or app changed to get around it. the lines that explain
-// it say so, in every language, no line promises that the other person
-// cannot capture a chat at all, and none of them talks about cameras.
+// the screenshot blocking lines say what android's secure flag cannot stop,
+// in every language, and never promise more
 import 'dart:convert';
 import 'dart:io';
 

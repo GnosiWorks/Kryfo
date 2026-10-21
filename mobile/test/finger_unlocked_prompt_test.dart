@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pad stays up a beat after the pin, while the lock fades. a finger that
-// becomes ready in that beat never brings up the prompt over the app the pin
-// already opened: not after a late answer from android, not after the reseal
+// a finger that turns ready while the pad fades after the pin brings up no
+// prompt over the app
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

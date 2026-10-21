@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the transport page held at its end comes to rest: a lazy list rebuilt
-// the staying alive block at another height on each bounce. the connection
-// page, with "more" open, is held to the same.
+// the transport page and the connection page with more open rest at the end
 import 'dart:io';
 
 import 'package:flutter/material.dart';

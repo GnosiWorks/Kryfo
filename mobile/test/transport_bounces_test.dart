@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the transport screen reads the engine's latest bounces: how many of each
-// kind this process made, the most first, and the latest with their time,
-// each reason in the person's language
+// the transport screen's list of tor bounces and their reasons
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/dates.dart' show hourMinute;

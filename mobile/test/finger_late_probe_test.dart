@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// after an update or a boot the service starts the app before any screen,
-// and android says there is no finger until there is one. the finger then
-// shows once the screen is there: on the lock screen, with its prompt, and
-// as the switch on App lock, without leaving the app first
+// a finger android names only once the screen is up, as after an update or
+// a boot, still shows on the lock screen and on App lock
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide LockState;

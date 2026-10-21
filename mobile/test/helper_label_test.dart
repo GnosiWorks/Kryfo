@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the sixteen registrations stay sixteen (one per slot, so the relay cannot
-// tie addresses together and the helper's server cannot count contacts),
-// but each carries a tidy name for the helper app's list. the name says
-// the slot and nothing else: not the generation, not who it serves.
+// the helper app's name for each of the sixteen registrations says its slot
+// and nothing about who it serves
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/helper_push.dart';

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a phone whose keystore will not keep a fingerprint key for Kryfo: the
-// switch never stays stuck, the pin never loops with the finger, and the
-// screen says why in plain words. the same on either side of a decoy
+// a phone whose keystore will not keep a fingerprint key for Kryfo, on either
+// side of a decoy
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide LockState;

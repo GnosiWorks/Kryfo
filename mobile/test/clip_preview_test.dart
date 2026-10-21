@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a clip plays in place before it goes: on its own once open, a tap to
-// pause and play, a timeline that seeks, its shape and turn as the player
-// says, and quiet under reduced motion and the lock
+// the clip preview on the camera's review and the send screen
 import 'dart:async';
 
 import 'package:flutter/material.dart';
