@@ -22,8 +22,13 @@ found a security problem? SECURITY.md says how to tell me privately.
 - tor bridges: snowflake, webtunnel and obfs4. automatic mode tries one when
   tor is blocked, PRIVACY.md says what they connect to
 - a check-ins mode that is easier on the battery
+- optional push through a unifiedpush helper app such as ntfy, off by
+  default. our relay sends it an empty knock when something waits for you:
+  no sender, no count, no content, and Kryfo still fetches over tor. the
+  helper's server learns your ip, that you use Kryfo, and when knocks come.
+  PRIVACY.md has the whole of it
 - 15 languages, including persian and arabic
-- no contact upload, no analytics, no push service
+- no contact upload, no analytics, and no google push
 
 ## build
 
