@@ -23,14 +23,42 @@ PhoneBrand brandOf(String manufacturer, String brand) {
   return PhoneBrand.other;
 }
 
+/// what a maker's guide says: a title, a line, and for xiaomi the steps it
+/// takes and what happens if the phone stops Kryfo anyway
+class BrandGuide {
+  final String title;
+  final String line;
+  final List<String> steps;
+  final String? after;
+  const BrandGuide({
+    required this.title,
+    required this.line,
+    this.steps = const [],
+    this.after,
+  });
+}
+
 /// what to switch on, in the phone's own words, or null where the battery
 /// exemption alone is enough
-String? brandGuide(PhoneBrand b) => switch (b) {
-  PhoneBrand.xiaomi => l10n.miuiAutostartXiaomiTurnsOffBackground,
-  PhoneBrand.huawei => l10n.batteryGuideHuawei,
-  PhoneBrand.oppo => l10n.batteryGuideOppo,
-  PhoneBrand.vivo => l10n.batteryGuideVivo,
-  PhoneBrand.samsung => l10n.batteryGuideSamsung,
-  PhoneBrand.oneplus => l10n.batteryGuideOnePlus,
-  PhoneBrand.other => null,
-};
+BrandGuide? brandGuide(PhoneBrand b) {
+  BrandGuide one(String line) =>
+      BrandGuide(title: l10n.miuiAutostartLetKryfoRunIn, line: line);
+  return switch (b) {
+    PhoneBrand.xiaomi => BrandGuide(
+      title: l10n.batteryGuideXiaomiTitle,
+      line: l10n.batteryGuideXiaomi,
+      steps: [
+        l10n.batteryGuideXiaomiStep1,
+        l10n.batteryGuideXiaomiStep2,
+        l10n.batteryGuideXiaomiStep3,
+      ],
+      after: l10n.batteryGuideXiaomiAfter,
+    ),
+    PhoneBrand.huawei => one(l10n.batteryGuideHuawei),
+    PhoneBrand.oppo => one(l10n.batteryGuideOppo),
+    PhoneBrand.vivo => one(l10n.batteryGuideVivo),
+    PhoneBrand.samsung => one(l10n.batteryGuideSamsung),
+    PhoneBrand.oneplus => one(l10n.batteryGuideOnePlus),
+    PhoneBrand.other => null,
+  };
+}

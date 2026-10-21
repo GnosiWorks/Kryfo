@@ -793,10 +793,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get commonSkip => 'Пропустити';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi за замовчуванням вимикає фонові застосунки. Без автозапуску Kryfo не може доставляти повідомлення, коли застосунок закритий. На наступному екрані знайди Kryfo у списку й увімкни перемикач.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Відкрити налаштування';
 
   @override
@@ -822,6 +818,28 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus зупиняє застосунки у фоні. На наступному екрані знайди Kryfo й дозволь автозапуск. У розділі «Батарея» вибери для нього «Не оптимізувати».';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Нехай Kryfo працює';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi зупиняє застосунки у фоні, навіть з увімкненим автозапуском. Щоб повідомлення надходили:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Автозапуск: увімкни його для Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Контроль активності: вибери для Kryfo «Без обмежень».';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Нещодавні застосунки: утримуй Kryfo й натисни на замок, щоб «Очистити все» й очищення телефона його не закривали.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Якщо телефон усе одно зупинить Kryfo, нічого не надійде, доки ти знову його не відкриєш.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

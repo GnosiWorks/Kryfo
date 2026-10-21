@@ -13,6 +13,7 @@ import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'written_field.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 import 'shift_tap_guard.dart';
 
 // the keyboard is read inside the sheet: a sheet that already rides on it
@@ -49,6 +50,32 @@ Widget _title(String t, {Color? color, int? lines}) => Text(
 Widget _line(String t) => Text(
   t,
   style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+);
+
+// one numbered step: the number in its own column so wrapped lines stay
+// under the text, read as one line by a screen reader
+Widget _step(int n, String t) => MergeSemantics(
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(
+        width: 22,
+        child: Text(
+          '${whole(n)}.',
+          style: HaloType.mono(
+            size: 12.5,
+            color: HaloColors.amberText,
+          ).copyWith(height: 1.5),
+        ),
+      ),
+      Expanded(
+        child: Text(
+          t,
+          style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
+        ),
+      ),
+    ],
+  ),
 );
 
 Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
@@ -180,6 +207,8 @@ Future<bool> showConfirmSheet(
   String? figure,
   // a smaller line under [line], for the fine print
   String? detail,
+  // a numbered list under [line], for steps to follow
+  List<String> steps = const [],
   bool rose = true,
   LockGuard? shutOnLock,
   int? titleLines,
@@ -198,8 +227,12 @@ Future<bool> showConfirmSheet(
         ],
         const SizedBox(height: 8),
         _line(line),
+        for (var i = 0; i < steps.length; i++) ...[
+          SizedBox(height: i == 0 ? 10 : 8),
+          _step(i + 1, steps[i]),
+        ],
         if (detail != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: steps.isEmpty ? 6 : 12),
           Text(
             detail,
             style: HaloType.sans(

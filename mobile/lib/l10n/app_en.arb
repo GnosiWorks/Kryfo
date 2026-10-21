@@ -978,10 +978,6 @@
   "@commonSkip": {
     "description": "miui_autostart.dart"
   },
-  "miuiAutostartXiaomiTurnsOffBackground": "Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.",
-  "@miuiAutostartXiaomiTurnsOffBackground": {
-    "description": "miui_autostart.dart"
-  },
   "miuiAutostartOpenSettings": "Open settings",
   "@miuiAutostartOpenSettings": {
     "description": "miui_autostart.dart"
@@ -1009,6 +1005,30 @@
   "batteryGuideOnePlus": "OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don't optimize.",
   "@batteryGuideOnePlus": {
     "description": "battery_brand.dart: the battery guide on this maker's phones, above the button that opens its settings page. the setting names are the phone's own"
+  },
+  "batteryGuideXiaomiTitle": "Keep Kryfo running",
+  "@batteryGuideXiaomiTitle": {
+    "description": "battery_brand.dart: the title of the battery guide on xiaomi, redmi and poco phones"
+  },
+  "batteryGuideXiaomi": "Xiaomi stops apps in the background, even with autostart on. To keep messages coming:",
+  "@batteryGuideXiaomi": {
+    "description": "battery_brand.dart: the line under the title of the xiaomi battery guide, above its three numbered steps"
+  },
+  "batteryGuideXiaomiStep1": "Autostart: turn it on for Kryfo.",
+  "@batteryGuideXiaomiStep1": {
+    "description": "battery_brand.dart: xiaomi battery guide, step 1 of a numbered list (the number is drawn by the app). Autostart is the phone's own setting name"
+  },
+  "batteryGuideXiaomiStep2": "Battery saver: set Kryfo to No restrictions.",
+  "@batteryGuideXiaomiStep2": {
+    "description": "battery_brand.dart: xiaomi battery guide, step 2 of a numbered list. Battery saver and No restrictions are the phone's own setting names"
+  },
+  "batteryGuideXiaomiStep3": "Recent apps: press and hold Kryfo and tap the lock, so Clear all and the phone's cleanup leave it running.",
+  "@batteryGuideXiaomiStep3": {
+    "description": "battery_brand.dart: xiaomi battery guide, step 3 of a numbered list. the lock on an app's card in recent apps keeps it from being closed; Clear all is the phone's own button"
+  },
+  "batteryGuideXiaomiAfter": "If your phone stops Kryfo anyway, nothing arrives until you open it again.",
+  "@batteryGuideXiaomiAfter": {
+    "description": "battery_brand.dart: xiaomi battery guide, the line under the steps"
   },
   "notificationsNewEncryptedMessagesFrom": "New encrypted messages from your contacts",
   "@notificationsNewEncryptedMessagesFrom": {

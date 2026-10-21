@@ -773,10 +773,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get commonSkip => 'رد شدن';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'شیائومی به‌طور پیش‌فرض برنامه‌های پس‌زمینه را خاموش می‌کند. بدون «شروع خودکار»، Kryfo وقتی برنامه بسته است نمی‌تواند پیام‌ها را برساند. در صفحه‌ی بعد، Kryfo را در فهرست پیدا کنید و کلیدش را روشن کنید.';
-
-  @override
   String get miuiAutostartOpenSettings => 'باز کردن تنظیمات';
 
   @override
@@ -802,6 +798,29 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'وان‌پلاس برنامه‌ها را در پس‌زمینه متوقف می‌کند. در صفحه‌ی بعد، Kryfo را پیدا کنید و «اجرای خودکار» را مجاز کنید. در بخش باتری، «بهینه نکن» را برایش انتخاب کنید.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Kryfo را در حال اجرا نگه دارید';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'شیائومی برنامه‌ها را در پس‌زمینه متوقف می‌کند، حتی وقتی «شروع خودکار» روشن است. برای اینکه پیام‌ها همچنان برسند:';
+
+  @override
+  String get batteryGuideXiaomiStep1 =>
+      'شروع خودکار: آن را برای Kryfo روشن کنید.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'صرفه‌جویی باتری: Kryfo را روی «بدون محدودیت» بگذارید.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'برنامه‌های اخیر: Kryfo را لمس کنید و نگه دارید و روی قفل بزنید، تا «پاک کردن همه» و پاک‌سازی گوشی آن را نبندند.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'اگر گوشی باز هم Kryfo را متوقف کند، تا وقتی دوباره بازش نکنید چیزی نمی‌رسد.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

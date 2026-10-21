@@ -801,10 +801,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSkip => 'تخطي';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'توقف شاومي تطبيقات الخلفية افتراضيًا. ودون التشغيل التلقائي، لا يستطيع Kryfo إيصال الرسائل حين يكون التطبيق مغلقًا. في الشاشة التالية، ابحث عن Kryfo في القائمة وفعّل المفتاح.';
-
-  @override
   String get miuiAutostartOpenSettings => 'فتح الإعدادات';
 
   @override
@@ -830,6 +826,28 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'توقف ون بلس التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالتشغيل التلقائي. ومن إعدادات البطارية، اختر له «عدم التحسين».';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'أبقِ Kryfo قيد التشغيل';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'توقف شاومي التطبيقات في الخلفية، حتى مع تفعيل التشغيل التلقائي. لتستمر الرسائل في الوصول:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'التشغيل التلقائي: فعّله لـ Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'توفير البطارية: اضبط Kryfo على «بلا قيود».';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'التطبيقات الأخيرة: اضغط مطولًا على Kryfo ثم انقر على القفل، حتى لا يغلقه «مسح الكل» ولا تنظيف الهاتف.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'إذا أوقف الهاتف Kryfo رغم ذلك، فلن يصل شيء حتى تفتحه من جديد.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

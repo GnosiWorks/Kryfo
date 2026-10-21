@@ -50,13 +50,42 @@ void main() {
         if (b != PhoneBrand.other) b: brandGuide(b),
     };
     expect(guides.values, everyElement(isNotNull));
-    expect(guides.values.toSet(), hasLength(guides.length));
+    expect({for (final g in guides.values) g!.line}, hasLength(guides.length));
     expect(brandGuide(PhoneBrand.other), isNull);
-    expect(
-      brandGuide(PhoneBrand.xiaomi),
-      l10n.miuiAutostartXiaomiTurnsOffBackground,
-    );
-    expect(brandGuide(PhoneBrand.huawei), contains('Manage automatically'));
+    final huawei = brandGuide(PhoneBrand.huawei)!;
+    expect(huawei.line, contains('Manage automatically'));
+    expect(huawei.title, l10n.miuiAutostartLetKryfoRunIn);
+    expect(huawei.steps, isEmpty);
+    expect(huawei.after, isNull);
+  });
+
+  test('xiaomi, redmi and poco phones get the xiaomi guide and its steps', () {
+    for (final (m, b) in [
+      ('Xiaomi', 'Xiaomi'),
+      ('Xiaomi', 'Redmi'),
+      ('Xiaomi', 'POCO'),
+      ('Redmi', 'Redmi'),
+      ('POCO', 'POCO'),
+    ]) {
+      final g = brandGuide(brandOf(m, b))!;
+      expect(g.title, 'Keep Kryfo running', reason: '$m $b');
+      expect(
+        g.line,
+        'Xiaomi stops apps in the background, even with autostart on. '
+        'To keep messages coming:',
+      );
+      expect(g.steps, [
+        'Autostart: turn it on for Kryfo.',
+        'Battery saver: set Kryfo to No restrictions.',
+        'Recent apps: press and hold Kryfo and tap the lock, so Clear all '
+            "and the phone's cleanup leave it running.",
+      ]);
+      expect(
+        g.after,
+        'If your phone stops Kryfo anyway, nothing arrives until you open it '
+        'again.',
+      );
+    }
   });
 
   test('every language has the guides, none left in english', () {
@@ -66,6 +95,12 @@ void main() {
       'batteryGuideVivo',
       'batteryGuideSamsung',
       'batteryGuideOnePlus',
+      'batteryGuideXiaomiTitle',
+      'batteryGuideXiaomi',
+      'batteryGuideXiaomiStep1',
+      'batteryGuideXiaomiStep2',
+      'batteryGuideXiaomiStep3',
+      'batteryGuideXiaomiAfter',
     ];
     final en =
         jsonDecode(File('lib/l10n/app_en.arb').readAsStringSync()) as Map;
@@ -80,7 +115,10 @@ void main() {
       for (final k in keys) {
         final s = m[k] as String?;
         expect(s, isNotNull, reason: '${f.path} $k');
-        expect(s, contains('Kryfo'), reason: '${f.path} $k');
+        // a line that names Kryfo in english names it in every language
+        if ((en[k] as String).contains('Kryfo')) {
+          expect(s, contains('Kryfo'), reason: '${f.path} $k');
+        }
         if (!f.path.endsWith('app_en.arb')) {
           expect(s, isNot(en[k]), reason: '${f.path} $k');
         }
@@ -125,6 +163,71 @@ void main() {
     expect(asked, contains('openAutostartSettings'));
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('miui_autostart_prompt_seen'), isTrue);
+  });
+
+  testWidgets('a xiaomi phone sees the steps as a numbered list, and the '
+      'button asks for the page closest to them', (t) async {
+    SharedPreferences.setMockInitialValues({'battery_opt_prompt_seen': true});
+    final asked = <MethodCall>[];
+    const ch = MethodChannel('halo/platform');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(ch, (c) async {
+      asked.add(c);
+      return switch (c.method) {
+        'phoneMaker' => {'manufacturer': 'Xiaomi', 'brand': 'Redmi'},
+        'openAutostartSettings' => true,
+        _ => null,
+      };
+    });
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(ch, null),
+    );
+    await t.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => maybeShowBackgroundPrompt(ctx),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('go'));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.batteryGuideXiaomiTitle), findsOneWidget);
+    expect(find.text(l10n.batteryGuideXiaomi), findsOneWidget);
+    expect(find.text(l10n.batteryGuideXiaomiAfter), findsOneWidget);
+    final steps = [
+      l10n.batteryGuideXiaomiStep1,
+      l10n.batteryGuideXiaomiStep2,
+      l10n.batteryGuideXiaomiStep3,
+    ];
+    double? lastY;
+    for (var i = 0; i < steps.length; i++) {
+      final number = find.text('${i + 1}.');
+      expect(number, findsOneWidget);
+      // the number sits before its step, on the same first line
+      final n = t.getTopLeft(number);
+      final s = t.getTopLeft(find.text(steps[i]));
+      expect(n.dx, lessThan(s.dx));
+      expect((n.dy - s.dy).abs(), lessThan(4));
+      if (lastY != null) expect(s.dy, greaterThan(lastY));
+      lastY = s.dy;
+    }
+    // under the line, above the last word
+    expect(
+      t.getTopLeft(find.text(steps.first)).dy,
+      greaterThan(t.getTopLeft(find.text(l10n.batteryGuideXiaomi)).dy),
+    );
+    expect(
+      t.getTopLeft(find.text(l10n.batteryGuideXiaomiAfter)).dy,
+      greaterThan(lastY!),
+    );
+    await t.tap(find.text(l10n.miuiAutostartOpenSettings));
+    await t.pumpAndSettle();
+    final open = asked.singleWhere((c) => c.method == 'openAutostartSettings');
+    expect(open.arguments, {'brand': 'xiaomi'});
   });
 
   testWidgets('a phone of no strict maker is not shown a guide', (t) async {

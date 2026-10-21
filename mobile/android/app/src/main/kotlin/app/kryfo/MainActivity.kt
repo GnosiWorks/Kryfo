@@ -483,7 +483,7 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(openWifiSettings())
                     }
                     "openAutostartSettings" -> {
-                        result.success(openAutostartSettings())
+                        result.success(openAutostartSettings(call.argument<String>("brand")))
                     }
                     "setSecure" -> {
                         val on = call.argument<Boolean>("on") ?: false
@@ -1043,9 +1043,12 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    // true when some settings page opened. the miui page first, the app's
-    // own details page when that is missing, false when both fail
-    private fun openAutostartSettings(): Boolean {
+    // true when some settings page opened: the maker's page, else the app's
+    // own details page, false when both fail
+    private fun openAutostartSettings(brand: String?): Boolean {
+        // on xiaomi the app's details page is apps > manage apps > Kryfo, with
+        // autostart and battery saver on it: both of the guide's first steps
+        if (brand == "xiaomi" && openAppDetails()) return true
         // each maker's own page, newest first; only the phone's own maker
         // has any of them. the list is dontkillmyapp.com's
         val pages = listOf(
@@ -1069,15 +1072,18 @@ class MainActivity : FlutterFragmentActivity() {
                 // not this phone's, or not exported: the next
             }
         }
-        return try {
-            val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        return openAppDetails()
+    }
+
+    private fun openAppDetails(): Boolean = try {
+        startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.parse("package:$packageName")
             }
-            startActivity(fallback)
-            true
-        } catch (e: Exception) {
-            false
-        }
+        )
+        true
+    } catch (e: Exception) {
+        false
     }
 }
 

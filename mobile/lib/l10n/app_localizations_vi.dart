@@ -767,10 +767,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonSkip => 'Bỏ qua';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi mặc định tắt các ứng dụng chạy nền. Không có tự khởi động, Kryfo không thể chuyển tin nhắn khi ứng dụng đang đóng. Ở màn hình tiếp theo, hãy tìm Kryfo trong danh sách và bật công tắc lên.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Mở cài đặt';
 
   @override
@@ -796,6 +792,28 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus dừng các ứng dụng chạy nền. Ở màn hình tiếp theo, hãy tìm Kryfo và cho phép Tự khởi chạy. Trong phần Pin, hãy chọn Không tối ưu hóa.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Giữ Kryfo luôn chạy';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi dừng các ứng dụng chạy nền, kể cả khi đã bật tự khởi chạy. Để tin nhắn vẫn đến:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Tự khởi chạy: bật cho Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Trình tiết kiệm pin: đặt Kryfo thành “Không hạn chế”.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Ứng dụng gần đây: nhấn giữ Kryfo rồi chạm vào ổ khóa, để “Xóa tất cả” và tính năng dọn dẹp của điện thoại không tắt nó.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Nếu điện thoại vẫn dừng Kryfo, bạn sẽ không nhận được gì cho đến khi mở lại ứng dụng.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

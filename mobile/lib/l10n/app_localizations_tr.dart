@@ -776,10 +776,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get commonSkip => 'Atla';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi arka plandaki uygulamaları varsayılan olarak kapatır. Otomatik başlatma olmadan Kryfo, uygulama kapalıyken mesajları iletemez. Sonraki ekranda listede Kryfo’yu bul ve yanındaki düğmeyi aç.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Ayarları aç';
 
   @override
@@ -805,6 +801,28 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus arka plandaki uygulamaları durdurur. Sonraki ekranda Kryfo’yu bul ve otomatik başlatmaya izin ver. Pil bölümünde “Optimize etme” seçeneğini seç.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Kryfo çalışmaya devam etsin';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi, otomatik başlatma açık olsa bile arka plandaki uygulamaları durdurur. Mesajların gelmeye devam etmesi için:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Otomatik başlatma: Kryfo için aç.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Pil tasarrufu: Kryfo’yu “Kısıtlama yok” olarak ayarla.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Son uygulamalar: Kryfo’ya basılı tut ve kilide dokun, böylece “Tümünü temizle” ve telefonun temizliği onu açık bırakır.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Telefonun Kryfo’yu yine de durdurursa, onu yeniden açana kadar hiçbir şey gelmez.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

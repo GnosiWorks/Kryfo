@@ -778,10 +778,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonSkip => 'Überspringen';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi schaltet Hintergrund-Apps standardmäßig ab. Ohne Autostart kann Kryfo keine Nachrichten zustellen, wenn die App geschlossen ist. Such auf dem nächsten Bildschirm Kryfo in der Liste und leg den Schalter um.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Einstellungen öffnen';
 
   @override
@@ -807,6 +803,28 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus stoppt Apps im Hintergrund. Such auf dem nächsten Bildschirm Kryfo und erlaube den automatischen Start. Stell es unter Akku auf „Nicht optimieren“.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Lass Kryfo weiterlaufen';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi stoppt Apps im Hintergrund, auch mit eingeschaltetem Autostart. Damit weiter Nachrichten ankommen:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Autostart: Schalte ihn für Kryfo ein.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Energiesparen: Stell Kryfo auf „Keine Einschränkungen“.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Letzte Apps: Halte Kryfo gedrückt und tippe auf das Schloss, damit „Alle löschen“ und die Bereinigung des Handys es weiterlaufen lassen.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Wenn dein Handy Kryfo trotzdem beendet, kommt nichts an, bis du es wieder öffnest.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

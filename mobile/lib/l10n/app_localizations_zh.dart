@@ -751,10 +751,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonSkip => '跳过';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      '小米默认会关闭后台应用。没有自启动，应用关闭时 Kryfo 就无法投递消息。在下一个页面，从列表里找到 Kryfo，打开它的开关。';
-
-  @override
   String get miuiAutostartOpenSettings => '打开设置';
 
   @override
@@ -779,6 +775,25 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       '一加会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，把它设为“不优化”。';
+
+  @override
+  String get batteryGuideXiaomiTitle => '让 Kryfo 保持运行';
+
+  @override
+  String get batteryGuideXiaomi => '即使开了自启动，小米也会停止后台应用。要持续收到消息：';
+
+  @override
+  String get batteryGuideXiaomiStep1 => '自启动：为 Kryfo 打开。';
+
+  @override
+  String get batteryGuideXiaomiStep2 => '省电策略：把 Kryfo 设为“无限制”。';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      '最近任务：长按 Kryfo，点一下锁，这样“全部清除”和手机的自动清理都不会关掉它。';
+
+  @override
+  String get batteryGuideXiaomiAfter => '如果手机还是停止了 Kryfo，在你重新打开它之前，什么都收不到。';
 
   @override
   String get notificationsNewEncryptedMessagesFrom => '来自联系人的新加密消息';
@@ -9085,10 +9100,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonSkip => '略過';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      '小米預設會關閉背景應用程式。沒有開啟自動啟動，Kryfo 在應用程式關閉時就無法傳遞訊息。請在下一個畫面的清單中找到 Kryfo，然後打開開關。';
-
-  @override
   String get miuiAutostartOpenSettings => '開啟設定';
 
   @override
@@ -9113,6 +9124,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get batteryGuideOnePlus =>
       '一加會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，把它設為「不最佳化」。';
+
+  @override
+  String get batteryGuideXiaomiTitle => '讓 Kryfo 保持執行';
+
+  @override
+  String get batteryGuideXiaomi => '即使開了自動啟動，小米也會停止背景應用程式。要持續收到訊息：';
+
+  @override
+  String get batteryGuideXiaomiStep1 => '自動啟動：為 Kryfo 打開。';
+
+  @override
+  String get batteryGuideXiaomiStep2 => '省電策略：把 Kryfo 設為「無限制」。';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      '最近使用的應用程式：長按 Kryfo，點一下鎖頭，這樣「全部清除」和手機的自動清理都不會關掉它。';
+
+  @override
+  String get batteryGuideXiaomiAfter => '如果手機還是停止了 Kryfo，在你重新開啟它之前，什麼都收不到。';
 
   @override
   String get notificationsNewEncryptedMessagesFrom => '來自聯絡人的加密新訊息';

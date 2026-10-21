@@ -779,10 +779,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonSkip => 'Omitir';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi apaga las apps en segundo plano de forma predeterminada. Sin inicio automático, Kryfo no puede entregar mensajes cuando la app está cerrada. En la siguiente pantalla, busca Kryfo en la lista y activa el interruptor.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Abrir ajustes';
 
   @override
@@ -808,6 +804,29 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus detiene las apps en segundo plano. En la siguiente pantalla, busca Kryfo y permite el inicio automático. En Batería, elige «No optimizar».';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Mantén Kryfo en marcha';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi detiene las apps en segundo plano, incluso con el inicio automático activado. Para que sigan llegando los mensajes:';
+
+  @override
+  String get batteryGuideXiaomiStep1 =>
+      'Inicio automático: actívalo para Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Ahorro de batería: pon Kryfo en «Sin restricciones».';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Apps recientes: mantén pulsado Kryfo y toca el candado, para que «Borrar todo» y la limpieza del teléfono lo dejen funcionando.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Si aun así el teléfono detiene Kryfo, no llegará nada hasta que vuelvas a abrirlo.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

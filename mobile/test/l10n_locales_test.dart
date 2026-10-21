@@ -335,11 +335,12 @@ final _calls = <_Call>[
   ),
   ('commonAllow', [], (l) => l.commonAllow),
   ('commonSkip', [], (l) => l.commonSkip),
-  (
-    'miuiAutostartXiaomiTurnsOffBackground',
-    [],
-    (l) => l.miuiAutostartXiaomiTurnsOffBackground,
-  ),
+  ('batteryGuideXiaomiTitle', [], (l) => l.batteryGuideXiaomiTitle),
+  ('batteryGuideXiaomi', [], (l) => l.batteryGuideXiaomi),
+  ('batteryGuideXiaomiStep1', [], (l) => l.batteryGuideXiaomiStep1),
+  ('batteryGuideXiaomiStep2', [], (l) => l.batteryGuideXiaomiStep2),
+  ('batteryGuideXiaomiStep3', [], (l) => l.batteryGuideXiaomiStep3),
+  ('batteryGuideXiaomiAfter', [], (l) => l.batteryGuideXiaomiAfter),
   ('miuiAutostartOpenSettings', [], (l) => l.miuiAutostartOpenSettings),
   ('miuiAutostartCouldnTOpenIt', [], (l) => l.miuiAutostartCouldnTOpenIt),
   (

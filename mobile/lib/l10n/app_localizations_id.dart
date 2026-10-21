@@ -768,10 +768,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get commonSkip => 'Lewati';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi mematikan aplikasi latar belakang secara bawaan. Tanpa mulai otomatis, Kryfo tidak bisa mengantarkan pesan saat aplikasinya ditutup. Di layar berikutnya, cari Kryfo di daftar lalu nyalakan tombolnya.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Buka pengaturan';
 
   @override
@@ -797,6 +793,28 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus menghentikan aplikasi di latar belakang. Di layar berikutnya, cari Kryfo dan izinkan Luncurkan otomatis. Di Baterai, atur ke Jangan optimalkan.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Biarkan Kryfo tetap berjalan';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi menghentikan aplikasi di latar belakang, bahkan saat mulai otomatis menyala. Agar pesan tetap masuk:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Mulai otomatis: nyalakan untuk Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Penghemat baterai: atur Kryfo ke Tidak ada batasan.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Aplikasi terbaru: tekan lama Kryfo lalu ketuk gemboknya, supaya Hapus semua dan pembersihan ponsel tetap membiarkannya berjalan.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Kalau ponselmu tetap menghentikan Kryfo, tidak ada yang masuk sampai kamu membukanya lagi.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

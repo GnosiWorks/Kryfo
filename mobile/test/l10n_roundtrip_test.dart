@@ -382,9 +382,23 @@ void main() {
     );
     expect(l.commonAllow, "Allow");
     expect(l.commonSkip, "Skip");
+    expect(l.batteryGuideXiaomiTitle, "Keep Kryfo running");
     expect(
-      l.miuiAutostartXiaomiTurnsOffBackground,
-      "Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.",
+      l.batteryGuideXiaomi,
+      "Xiaomi stops apps in the background, even with autostart on. To keep messages coming:",
+    );
+    expect(l.batteryGuideXiaomiStep1, "Autostart: turn it on for Kryfo.");
+    expect(
+      l.batteryGuideXiaomiStep2,
+      "Battery saver: set Kryfo to No restrictions.",
+    );
+    expect(
+      l.batteryGuideXiaomiStep3,
+      "Recent apps: press and hold Kryfo and tap the lock, so Clear all and the phone's cleanup leave it running.",
+    );
+    expect(
+      l.batteryGuideXiaomiAfter,
+      "If your phone stops Kryfo anyway, nothing arrives until you open it again.",
     );
     expect(l.miuiAutostartOpenSettings, "Open settings");
     expect(

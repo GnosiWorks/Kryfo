@@ -778,10 +778,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get commonSkip => 'Salta';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi spegne le app in background per impostazione predefinita. Senza l\'avvio automatico, Kryfo non può consegnare messaggi quando l\'app è chiusa. Nella prossima schermata trova Kryfo nell\'elenco e attiva l\'interruttore.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Apri impostazioni';
 
   @override
@@ -807,6 +803,28 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus ferma le app in background. Nella prossima schermata trova Kryfo e consenti l\'avvio automatico. In Batteria, scegli «Non ottimizzare».';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Tieni attivo Kryfo';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi ferma le app in background, anche con l\'avvio automatico attivo. Per continuare a ricevere i messaggi:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Avvio automatico: attivalo per Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Risparmio batteria: imposta Kryfo su «Nessuna restrizione».';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'App recenti: tieni premuto Kryfo e tocca il lucchetto, così «Cancella tutto» e la pulizia del telefono lo lasciano attivo.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Se il telefono ferma Kryfo comunque, non arriva nulla finché non lo riapri.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

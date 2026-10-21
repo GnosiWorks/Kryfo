@@ -779,10 +779,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonSkip => 'Passer';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Par défaut, Xiaomi coupe les applis en arrière-plan. Sans démarrage automatique, Kryfo ne peut pas distribuer les messages quand l’appli est fermée. Sur l’écran suivant, trouvez Kryfo dans la liste et activez l’interrupteur.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Ouvrir les paramètres';
 
   @override
@@ -808,6 +804,29 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus arrête les applis en arrière-plan. Sur l’écran suivant, trouvez Kryfo et autorisez le lancement automatique. Dans Batterie, choisissez « Ne pas optimiser ».';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Gardez Kryfo actif';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi arrête les applis en arrière-plan, même avec le démarrage automatique activé. Pour continuer à recevoir les messages :';
+
+  @override
+  String get batteryGuideXiaomiStep1 =>
+      'Démarrage automatique : activez-le pour Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Économiseur de batterie : réglez Kryfo sur « Aucune restriction ».';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Applis récentes : appuyez longuement sur Kryfo puis sur le cadenas, pour que « Tout effacer » et le nettoyage du téléphone le laissent tourner.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'Si votre téléphone arrête Kryfo malgré tout, rien n’arrive tant que vous ne l’ouvrez pas de nouveau.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>

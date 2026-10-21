@@ -1272,12 +1272,6 @@ abstract class AppLocalizations {
   /// miui_autostart.dart
   ///
   /// In en, this message translates to:
-  /// **'Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.'**
-  String get miuiAutostartXiaomiTurnsOffBackground;
-
-  /// miui_autostart.dart
-  ///
-  /// In en, this message translates to:
   /// **'Open settings'**
   String get miuiAutostartOpenSettings;
 
@@ -1316,6 +1310,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don\'t optimize.'**
   String get batteryGuideOnePlus;
+
+  /// battery_brand.dart: the title of the battery guide on xiaomi, redmi and poco phones
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo running'**
+  String get batteryGuideXiaomiTitle;
+
+  /// battery_brand.dart: the line under the title of the xiaomi battery guide, above its three numbered steps
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi stops apps in the background, even with autostart on. To keep messages coming:'**
+  String get batteryGuideXiaomi;
+
+  /// battery_brand.dart: xiaomi battery guide, step 1 of a numbered list (the number is drawn by the app). Autostart is the phone's own setting name
+  ///
+  /// In en, this message translates to:
+  /// **'Autostart: turn it on for Kryfo.'**
+  String get batteryGuideXiaomiStep1;
+
+  /// battery_brand.dart: xiaomi battery guide, step 2 of a numbered list. Battery saver and No restrictions are the phone's own setting names
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver: set Kryfo to No restrictions.'**
+  String get batteryGuideXiaomiStep2;
+
+  /// battery_brand.dart: xiaomi battery guide, step 3 of a numbered list. the lock on an app's card in recent apps keeps it from being closed; Clear all is the phone's own button
+  ///
+  /// In en, this message translates to:
+  /// **'Recent apps: press and hold Kryfo and tap the lock, so Clear all and the phone\'s cleanup leave it running.'**
+  String get batteryGuideXiaomiStep3;
+
+  /// battery_brand.dart: xiaomi battery guide, the line under the steps
+  ///
+  /// In en, this message translates to:
+  /// **'If your phone stops Kryfo anyway, nothing arrives until you open it again.'**
+  String get batteryGuideXiaomiAfter;
 
   /// notifications.dart
   ///

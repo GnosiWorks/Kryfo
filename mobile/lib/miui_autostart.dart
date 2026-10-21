@@ -27,10 +27,14 @@ Future<PhoneBrand> phoneBrand() async {
 }
 
 // true when a settings page opened. false means neither the maker's page
-// nor the app details page could be launched, and the caller says so
-Future<bool> openAutostartSettings() async {
+// nor the app details page could be launched, and the caller says so.
+// [brand] lets the phone start from the page closest to the guide's steps
+Future<bool> openAutostartSettings([PhoneBrand? brand]) async {
   try {
-    return await _channel.invokeMethod<bool>('openAutostartSettings') ?? false;
+    return await _channel.invokeMethod<bool>('openAutostartSettings', {
+          'brand': brand?.name,
+        }) ??
+        false;
   } catch (_) {
     return false;
   }
@@ -41,9 +45,10 @@ Future<bool> openAutostartSettings() async {
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   // these makers need both: their own switch so the system may bring kryfo
   // back, and the battery exemption so it may stay awake once it is back
-  final guide = brandGuide(await phoneBrand());
+  final brand = await phoneBrand();
+  final guide = brandGuide(brand);
   if (guide != null && context.mounted) {
-    await _maybeAskBrand(context, guide);
+    await _maybeAskBrand(context, brand, guide);
   }
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_battPrefKey) ?? false) return;
@@ -58,9 +63,10 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
 
 // for the settings row: ignores the seen flags and checks the grant again
 Future<void> forceShowBackgroundPrompt(BuildContext context) async {
-  final guide = brandGuide(await phoneBrand());
+  final brand = await phoneBrand();
+  final guide = brandGuide(brand);
   if (guide != null) {
-    if (context.mounted) await _askBrand(context, guide);
+    if (context.mounted) await _askBrand(context, brand, guide);
     if (!context.mounted) return;
   }
   if (await Permission.ignoreBatteryOptimizations.isGranted) {
@@ -84,25 +90,35 @@ Future<void> _askBattery(BuildContext context) async {
   if (ok) await Permission.ignoreBatteryOptimizations.request();
 }
 
-Future<void> _maybeAskBrand(BuildContext context, String guide) async {
+Future<void> _maybeAskBrand(
+  BuildContext context,
+  PhoneBrand brand,
+  BrandGuide guide,
+) async {
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_prefKey) ?? false) return;
   if (!context.mounted) return;
-  await _askBrand(context, guide);
+  await _askBrand(context, brand, guide);
   await prefs.setBool(_prefKey, true);
 }
 
-Future<void> _askBrand(BuildContext context, String guide) async {
+Future<void> _askBrand(
+  BuildContext context,
+  PhoneBrand brand,
+  BrandGuide guide,
+) async {
   final ok = await showConfirmSheet(
     context,
-    title: l10n.miuiAutostartLetKryfoRunIn,
-    line: guide,
+    title: guide.title,
+    line: guide.line,
+    steps: guide.steps,
+    detail: guide.after,
     yes: l10n.miuiAutostartOpenSettings,
     keep: l10n.commonSkip,
     rose: false,
   );
   if (!ok) return;
-  final opened = await openAutostartSettings();
+  final opened = await openAutostartSettings(brand);
   if (!opened && context.mounted) {
     showHaloToast(context, l10n.miuiAutostartCouldnTOpenIt);
   }

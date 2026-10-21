@@ -773,10 +773,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSkip => 'Skip';
 
   @override
-  String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.';
-
-  @override
   String get miuiAutostartOpenSettings => 'Open settings';
 
   @override
@@ -802,6 +798,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get batteryGuideOnePlus =>
       'OnePlus stops apps in the background. On the next screen, find Kryfo and allow Auto launch. Under Battery, set it to Don\'t optimize.';
+
+  @override
+  String get batteryGuideXiaomiTitle => 'Keep Kryfo running';
+
+  @override
+  String get batteryGuideXiaomi =>
+      'Xiaomi stops apps in the background, even with autostart on. To keep messages coming:';
+
+  @override
+  String get batteryGuideXiaomiStep1 => 'Autostart: turn it on for Kryfo.';
+
+  @override
+  String get batteryGuideXiaomiStep2 =>
+      'Battery saver: set Kryfo to No restrictions.';
+
+  @override
+  String get batteryGuideXiaomiStep3 =>
+      'Recent apps: press and hold Kryfo and tap the lock, so Clear all and the phone\'s cleanup leave it running.';
+
+  @override
+  String get batteryGuideXiaomiAfter =>
+      'If your phone stops Kryfo anyway, nothing arrives until you open it again.';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
