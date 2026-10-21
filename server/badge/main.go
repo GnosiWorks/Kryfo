@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
@@ -151,7 +152,7 @@ func loadOrCreateKey() {
 		"invalidates every badge you've ever issued", keyPath)
 }
 
-// POST /invoice {"tier":"supporter"} -> {id, checkoutLink, btc address, amount}
+// POST /invoice {"tier":"supporter"} -> {id, tier, usd, address, btc, uri, expiresIn}
 func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "post only", 405)
@@ -258,22 +259,25 @@ var (
 // the address and amount of a new invoice, read again until addrWait is
 // over. a payment method that waits to be switched on is switched on once
 func waitForAddress(id string) (addr, amount string) {
-	end := time.Now().Add(addrWait)
+	// every call inside the wait ends with it, a slow btcpay included
+	ctx, cancel := context.WithTimeout(context.Background(), addrWait)
+	defer cancel()
 	activated := false
 	for {
-		pm, err := paymentDetails(id)
+		pm, err := paymentDetails(ctx, id)
 		if err == nil && pm.Destination != "" {
 			return pm.Destination, pm.amount()
 		}
 		if err == nil && !pm.Activated && methodID.MatchString(pm.PaymentMethodID) && !activated {
 			activated = true
-			if _, err := btcpay("POST", "/api/v1/stores/"+storeID+"/invoices/"+id+
+			if _, err := btcpayCtx(ctx, "POST", "/api/v1/stores/"+storeID+"/invoices/"+id+
 				"/payment-methods/"+pm.PaymentMethodID+"/activate", nil); err != nil {
 				log.Printf("invoice create: activate failed: %v", err)
 			}
 			continue
 		}
-		if !time.Now().Add(addrStep).Before(end) {
+		dl, _ := ctx.Deadline()
+		if !time.Now().Add(addrStep).Before(dl) {
 			return "", ""
 		}
 		time.Sleep(addrStep)
@@ -389,8 +393,8 @@ func (pm paymentMethod) amount() string {
 }
 
 // the invoice's on-chain payment method, the first one btcpay lists
-func paymentDetails(invoiceID string) (paymentMethod, error) {
-	resp, err := btcpay("GET",
+func paymentDetails(ctx context.Context, invoiceID string) (paymentMethod, error) {
+	resp, err := btcpayCtx(ctx, "GET",
 		"/api/v1/stores/"+storeID+"/invoices/"+invoiceID+"/payment-methods", nil)
 	if err != nil {
 		return paymentMethod{}, err
@@ -406,11 +410,16 @@ func paymentDetails(invoiceID string) (paymentMethod, error) {
 }
 
 func btcpay(method, path string, body []byte) ([]byte, error) {
+	return btcpayCtx(context.Background(), method, path, body)
+}
+
+// a call to btcpay that ends with ctx at the latest
+func btcpayCtx(ctx context.Context, method, path string, body []byte) ([]byte, error) {
 	var rdr io.Reader
 	if body != nil {
 		rdr = bytes.NewReader(body)
 	}
-	req, err := http.NewRequest(method, btcpayURL+path, rdr)
+	req, err := http.NewRequestWithContext(ctx, method, btcpayURL+path, rdr)
 	if err != nil {
 		return nil, err
 	}
@@ -421,6 +430,8 @@ func btcpay(method, path string, body []byte) ([]byte, error) {
 		defer func() { <-upstream }()
 	case <-time.After(5 * time.Second):
 		return nil, fmt.Errorf("btcpay busy")
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 	cl := &http.Client{Timeout: 20 * time.Second}
 	resp, err := cl.Do(req)

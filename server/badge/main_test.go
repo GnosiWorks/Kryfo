@@ -326,3 +326,78 @@ func TestInvoiceCheckoutOptions(t *testing.T) {
 		t.Fatalf("expiresIn %v, want about an hour", m["expiresIn"])
 	}
 }
+
+// a btcpay that answers every call with h
+func serveRaw(t *testing.T, h http.HandlerFunc) {
+	t.Helper()
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	btcpayURL, apiKey, storeID = srv.URL, "k", "s"
+	invoices = newBucket(30)
+	receipts = newRate(5, 60)
+}
+
+// an id from btcpay that is not one never goes into a url
+func TestInvoiceRefusesABadIDFromBTCPay(t *testing.T) {
+	var paths []string
+	var mu sync.Mutex
+	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		paths = append(paths, r.Method+" "+r.URL.Path)
+		mu.Unlock()
+		fmt.Fprint(w, `{"id":"../../x","expirationTime":0}`)
+	})
+	if code, _ := invoice(t, "supporter"); code != 502 {
+		t.Fatalf("code %d, want 502", code)
+	}
+	if len(paths) != 1 {
+		t.Fatalf("calls after a bad id: %v", paths)
+	}
+}
+
+// a payment method id from btcpay that is not one is never switched on
+func TestInvoiceRefusesABadMethodFromBTCPay(t *testing.T) {
+	quickWait(t, 200*time.Millisecond)
+	var paths []string
+	var mu sync.Mutex
+	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		paths = append(paths, r.Method+" "+r.URL.Path)
+		mu.Unlock()
+		if r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/invoices") {
+			fmt.Fprint(w, `{"id":"INV00001"}`)
+			return
+		}
+		fmt.Fprint(w, `[{"paymentMethodId":"../../users/me","activated":false,"destination":null}]`)
+	})
+	if code, _ := invoice(t, "supporter"); code != 502 {
+		t.Fatalf("code %d, want 502", code)
+	}
+	for _, p := range paths {
+		if strings.Contains(p, "activate") || strings.Contains(p, "users") {
+			t.Fatalf("used the bad method id: %s", p)
+		}
+	}
+}
+
+// a btcpay that is slow on every read does not stretch the wait
+func TestAddressWaitHoldsWithSlowReads(t *testing.T) {
+	quickWait(t, 500*time.Millisecond)
+	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			fmt.Fprint(w, `{"id":"INV00001"}`)
+			return
+		}
+		select {
+		case <-time.After(3 * time.Second):
+		case <-r.Context().Done():
+			return
+		}
+		fmt.Fprint(w, `[{"paymentMethodId":"BTC-CHAIN","activated":true,"destination":"","due":"0.1"}]`)
+	})
+	t0 := time.Now()
+	code, _ := invoice(t, "supporter")
+	if took := time.Since(t0); code != 502 || took > 1500*time.Millisecond {
+		t.Fatalf("code %d after %v, the wait is 500ms", code, took)
+	}
+}
