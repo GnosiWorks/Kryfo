@@ -116,7 +116,7 @@ Future<bool?> stripPictureFile(
   final out = stripPictureBytes(src);
   if (out == null) return null;
   if (identical(out, src)) return pictureKind(src) != PictureKind.other;
-  await f.writeAsBytes(out, flush: true);
+  await _writeOver(f, out, src.length);
   return true;
 }
 
@@ -154,9 +154,33 @@ Future<bool?> cleanSavedPhoto(String path) => Isolate.run(() async {
   final out = photoToSend(src);
   if (out == null) return null;
   if (_same(out, src)) return false;
-  await f.writeAsBytes(out, flush: true);
+  await _writeOver(f, out, src.length);
   return true;
 });
+
+// the clean bytes go over the old ones where they sit, and the cut tail is
+// zeroed before the file is shortened: a removed clip is not left in the
+// blocks a truncate would free
+Future<void> _writeOver(File f, Uint8List out, int was) async {
+  // append keeps the blocks; a write mode would truncate first
+  final raf = await f.open(mode: FileMode.append);
+  try {
+    await raf.setPosition(0);
+    await raf.writeFrom(out);
+    final zeros = Uint8List(64 * 1024);
+    var left = was - out.length;
+    while (left > 0) {
+      final n = left < zeros.length ? left : zeros.length;
+      await raf.writeFrom(zeros, 0, n);
+      left -= n;
+    }
+    await raf.flush();
+    if (was > out.length) await raf.truncate(out.length);
+    await raf.flush();
+  } finally {
+    await raf.close();
+  }
+}
 
 bool _same(Uint8List a, Uint8List b) {
   if (identical(a, b)) return true;
@@ -427,19 +451,73 @@ Uint8List? _heif(Uint8List src) {
       }
     }
   }
-  // top level boxes the format does not name: samsung's sefd is one, the
-  // same vendor block it hangs behind a jpeg
-  final foreign = top.where((x) => !_heifKnown.contains(x.type)).toList();
-  if (strip.isEmpty && foreign.isEmpty) return src;
-
   final iloc = inner.where((x) => x.type == 'iloc').toList();
-  if (iloc.isEmpty) {
-    if (strip.isNotEmpty) return null;
-    return _dropForeign(Uint8List.fromList(src), top, foreign);
-  }
   final idat = inner.where((x) => x.type == 'idat').toList();
+  if (iloc.isEmpty && strip.isNotEmpty) return null;
+  // where every item is read from, taken before anything changes. a table
+  // that cannot be read only matters when there is something to do
+  final places = iloc.isEmpty ? <_Place>[] : _ilocPlaces(src, iloc.first);
+
+  // where the still ends: the meta box and every byte a kept item is read
+  // from. a clip hung after it (an mpvd box, or a whole mp4 appended) goes
+  var dataEnd = iloc.isEmpty || places == null ? src.length : meta.end;
+  for (final x in places ?? const <_Place>[]) {
+    if (x.method != 0 || strip.contains(x.id)) continue;
+    final to = x.len == 0 ? src.length : x.at + x.len;
+    if (to > dataEnd) dataEnd = to;
+  }
+  final sequence = _brands(src, top.first).any(_heifSequences.contains);
+  // top level boxes the format does not name are foreign too: samsung's
+  // sefd is one, the same vendor block it hangs behind a jpeg
+  final foreign = <_Box>[];
+  var appended = false;
+  for (final b in top) {
+    final after = b.start >= dataEnd;
+    if (after && b.type == 'ftyp') appended = true;
+    final media = b.type == 'moov' || b.type == 'mdat';
+    if (!_heifKnown.contains(b.type) ||
+        (after && (appended || (media && !sequence)))) {
+      foreign.add(b);
+    }
+  }
+  if (strip.isEmpty && foreign.isEmpty) return src;
+  if (places == null) return null;
+
   final out = Uint8List.fromList(src);
-  final x = iloc.first;
+  final located = <int>{};
+  for (final x in places) {
+    if (!strip.contains(x.id)) {
+      // a picture item kept inside a box about to be emptied would be
+      // emptied with it
+      if (x.method == 0 && foreign.isNotEmpty) {
+        final to = x.len == 0 ? src.length : x.at + x.len;
+        if (foreign.any((f) => x.at < f.end && to > f.start)) return null;
+      }
+      continue;
+    }
+    int at;
+    if (x.method == 0) {
+      at = x.at;
+    } else if (x.method == 1) {
+      if (idat.isEmpty) return null;
+      at = idat.first.body + x.at;
+    } else {
+      return null; // built from other items; not something to guess at
+    }
+    // a zero length means "to the end of the file", which for metadata
+    // beside a picture is not a thing to take on trust
+    if (x.len == 0 || at < 0 || at + x.len > out.length) return null;
+    out.fillRange(at, at + x.len, 0);
+    located.add(x.id);
+  }
+  // named in iinf and never located: cannot say it is clean
+  if (located.length != strip.length) return null;
+  return _dropForeign(out, top, foreign);
+}
+
+// every extent the iloc box [x] lists, or null when it cannot be read
+List<_Place>? _ilocPlaces(Uint8List src, _Box x) {
+  final places = <_Place>[];
   var p = x.body;
   if (p + 8 > x.end) return null;
   final v = src[p];
@@ -472,7 +550,6 @@ Uint8List? _heif(Uint8List src) {
     return r;
   }
 
-  final located = <int>{};
   for (var n = 0; n < count; n++) {
     final idLen = v < 2 ? 2 : 4;
     if (p + idLen > x.end) return null;
@@ -496,38 +573,33 @@ Uint8List? _heif(Uint8List src) {
       final off = read(offSize);
       final len = read(lenSize);
       if (off == null || len == null) return null;
-      if (!strip.contains(id)) {
-        // a picture item kept inside a box about to be emptied would be
-        // emptied with it
-        if (method == 0 && foreign.isNotEmpty) {
-          final from = base + off;
-          final to = len == 0 ? src.length : from + len;
-          if (foreign.any((f) => from < f.end && to > f.start)) return null;
-        }
-        continue;
-      }
-      int at;
-      if (method == 0) {
-        at = base + off;
-      } else if (method == 1) {
-        if (idat.isEmpty) return null;
-        at = idat.first.body + base + off;
-      } else {
-        return null; // built from other items; not something to guess at
-      }
-      // a zero length means "to the end of the file", which for metadata
-      // beside a picture is not a thing to take on trust
-      if (len == 0 || at < 0 || at + len > out.length) return null;
-      out.fillRange(at, at + len, 0);
-      located.add(id);
+      places.add(_Place(id, method, base + off, len));
     }
   }
-  // named in iinf and never located: cannot say it is clean
-  if (located.length != strip.length) return null;
-  return _dropForeign(out, top, foreign);
+  return places;
 }
 
-const _heifKnown = {'ftyp', 'meta', 'mdat', 'free', 'skip', 'moov', 'mpvd'};
+class _Place {
+  final int id;
+  final int method; // 0 the file, 1 idat, 2 another item
+  final int at; // base plus extent offset
+  final int len;
+  const _Place(this.id, this.method, this.at, this.len);
+}
+
+// major brand and compatible brands of the ftyp box at [f]
+Iterable<String> _brands(Uint8List b, _Box f) sync* {
+  if (f.type != 'ftyp') return;
+  for (var i = f.body; i + 4 <= f.end; i += 4) {
+    if (i == f.body + 4) continue; // minor version
+    yield _tag(b, i);
+  }
+}
+
+// brands of an image sequence, whose moov is the animation and stays
+const _heifSequences = {'msf1', 'hevc', 'hevx', 'hevm', 'hevs', 'avis'};
+
+const _heifKnown = {'ftyp', 'meta', 'mdat', 'free', 'skip', 'moov'};
 
 // at the tail they are cut off, which moves nothing. anywhere else they are
 // renamed to 'free' and zeroed in place, as mp4_strip does, so every offset
