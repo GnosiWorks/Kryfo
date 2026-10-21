@@ -709,6 +709,48 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a swipe to reply while reading back keeps the place as the '
+      'quote and the keyboard come up', (t) async {
+    lockState.openForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    thread(t).jumpTo(1500);
+    await settle(t);
+    final before = thread(t).pixels;
+    final reading = shown();
+    expect(reading, isNotEmpty);
+    // the lowest thread row in view, so it stays in view over the keyboard
+    final target = reading.where((i) => i < _rows - 20).last;
+    await t.drag(
+      find.text('note $target', findRichText: true),
+      const Offset(140, 0),
+    );
+    await t.pump();
+    // the keyboard follows the composer's focus, over a few frames
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<EditableText>(),
+      isNotNull,
+    );
+    for (final h in [120.0, 360.0, 600.0, 900.0]) {
+      t.view.viewInsets = FakeViewPadding(bottom: h);
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    addTearDown(t.view.resetViewInsets);
+    await settle(t);
+    expect(find.byType(EditableText), findsWidgets);
+    expect(thread(t).pixels, closeTo(before, 1));
+    expect(button(t), isTrue);
+    // the bubble and its quote over the composer
+    expect(
+      find.text('note $target', findRichText: true).hitTestable(),
+      findsNWidgets(2),
+    );
+    t.view.resetViewInsets();
+    await settle(t);
+    await devClose(t);
+  });
+
   testWidgets('a new message in the middle of a fling leaves the rows where '
       'they were going', (t) async {
     await devOpen(t, chat());

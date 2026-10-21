@@ -4618,20 +4618,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  @override
-  void didChangeMetrics() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollReady) return;
-      if (MediaQuery.of(context).viewInsets.bottom > 0) {
-        // reversed list: bottom (newest) is offset 0.
-        _scrollCtrl.animateTo(
-          0,
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
+  // the keyboard needs no scroll: the reversed list keeps its bottom edge,
+  // so a reader keeps their place
 
   // the lock lifted with this chat on top: it is the one being read again,
   // so its messages are not counted unread and a tap on one of its
