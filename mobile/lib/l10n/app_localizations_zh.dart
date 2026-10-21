@@ -5487,6 +5487,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportControlPort => '控制端口';
 
   @override
+  String get transportReconnects => '重新连接';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -13911,6 +13914,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get transportControlPort => '控制埠';
+
+  @override
+  String get transportReconnects => '重新連線';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {

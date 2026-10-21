@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "上次 Tor 重连",
   "transportCatchUpByRelay": "按中继补收",
   "transportControlPort": "控制端口",
+  "transportReconnects": "重新连接",
   "transportDialsTimeouts": "{dials, plural, other{{dials} 次连接}} · {timeouts, plural, other{{timeouts} 次超时}}",
   "transportJobRuns": "任务运行",
   "transportLast": "{jobRuns} · 上次 {ago}",

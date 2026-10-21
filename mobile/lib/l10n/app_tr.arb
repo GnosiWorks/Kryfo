@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Son Tor yeniden bağlanması",
   "transportCatchUpByRelay": "Aktarıcı bazında telafi",
   "transportControlPort": "Kontrol portu",
+  "transportReconnects": "Yeniden bağlanmalar",
   "transportDialsTimeouts": "{dials, plural, one{{dials} deneme} other{{dials} deneme}} · {timeouts, plural, one{{timeouts} zaman aşımı} other{{timeouts} zaman aşımı}}",
   "transportJobRuns": "Görev turları",
   "transportLast": "{jobRuns} · son {ago}",

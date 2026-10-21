@@ -5771,6 +5771,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get transportControlPort => 'Porta de controle';
 
   @override
+  String get transportReconnects => 'Reconexões';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

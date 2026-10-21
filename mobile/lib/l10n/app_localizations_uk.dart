@@ -5829,6 +5829,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportControlPort => 'Порт керування';
 
   @override
+  String get transportReconnects => 'Перепідключення';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

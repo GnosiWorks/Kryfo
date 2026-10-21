@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Última reconexión de Tor",
   "transportCatchUpByRelay": "Puesta al día por repetidor",
   "transportControlPort": "Puerto de control",
+  "transportReconnects": "Reconexiones",
   "transportDialsTimeouts": "{dials, plural, one{{dials} intento} other{{dials} intentos}} · {timeouts, plural, one{{timeouts} sin respuesta} other{{timeouts} sin respuesta}}",
   "transportJobRuns": "Ejecuciones",
   "transportLast": "{jobRuns} · última {ago}",

@@ -5728,6 +5728,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportControlPort => 'Cổng điều khiển';
 
   @override
+  String get transportReconnects => 'Kết nối lại';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

@@ -5728,6 +5728,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportControlPort => 'Control port';
 
   @override
+  String get transportReconnects => 'Reconnects';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

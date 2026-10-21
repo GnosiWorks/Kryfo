@@ -5751,6 +5751,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportControlPort => 'Kontrol portu';
 
   @override
+  String get transportReconnects => 'Yeniden bağlanmalar';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

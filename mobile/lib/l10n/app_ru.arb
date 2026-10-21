@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Последнее переподключение Tor",
   "transportCatchUpByRelay": "Догрузка через ретранслятор",
   "transportControlPort": "Порт управления",
+  "transportReconnects": "Переподключения",
   "transportDialsTimeouts": "{dials, plural, one{{dials} попытка} few{{dials} попытки} many{{dials} попыток} other{{dials} попытки}} · {timeouts, plural, one{{timeouts} тайм-аут} few{{timeouts} тайм-аута} many{{timeouts} тайм-аутов} other{{timeouts} тайм-аута}}",
   "transportJobRuns": "Запуски задачи",
   "transportLast": "{jobRuns} · последний {ago}",

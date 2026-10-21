@@ -5845,6 +5845,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportControlPort => 'Порт управления';
 
   @override
+  String get transportReconnects => 'Переподключения';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

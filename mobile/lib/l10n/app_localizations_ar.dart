@@ -5822,6 +5822,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportControlPort => 'منفذ التحكم';
 
   @override
+  String get transportReconnects => 'مرات إعادة الاتصال';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "آخرین اتصال دوباره‌ی Tor",
   "transportCatchUpByRelay": "همگام‌سازی هر رله",
   "transportControlPort": "درگاه کنترل",
+  "transportReconnects": "اتصال‌های دوباره",
   "transportDialsTimeouts": "{dials, plural, one{⁨{dials}⁩ تلاش اتصال} other{⁨{dials}⁩ تلاش اتصال}} · {timeouts, plural, one{⁨{timeouts}⁩ اتمام مهلت} other{⁨{timeouts}⁩ اتمام مهلت}}",
   "transportJobRuns": "اجراهای کار",
   "transportLast": "⁨{jobRuns}⁩ · آخرین ⁨{ago}⁩",

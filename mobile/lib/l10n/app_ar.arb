@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "آخر إعادة اتصال لـ Tor",
   "transportCatchUpByRelay": "اللحاق عبر مُرحِّل",
   "transportControlPort": "منفذ التحكم",
+  "transportReconnects": "مرات إعادة الاتصال",
   "transportDialsTimeouts": "{dials, plural, zero{⁨{dials}⁩ محاولة} one{محاولة واحدة} two{محاولتان} few{⁨{dials}⁩ محاولات} many{⁨{dials}⁩ محاولة} other{⁨{dials}⁩ محاولة}} · {timeouts, plural, zero{⁨{timeouts}⁩ مهلة} one{مهلة واحدة} two{مهلتان} few{⁨{timeouts}⁩ مهلات} many{⁨{timeouts}⁩ مهلة} other{⁨{timeouts}⁩ مهلة}}",
   "transportJobRuns": "تشغيلات المهمة",
   "transportLast": "⁨{jobRuns}⁩ · آخرها ⁨{ago}⁩",

@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Lần cuối Tor kết nối lại",
   "transportCatchUpByRelay": "Bắt kịp theo relay",
   "transportControlPort": "Cổng điều khiển",
+  "transportReconnects": "Kết nối lại",
   "transportDialsTimeouts": "{dials, plural, other{{dials} lần kết nối}} · {timeouts, plural, other{{timeouts} lần quá giờ}}",
   "transportJobRuns": "Lượt chạy tác vụ",
   "transportLast": "{jobRuns} · lần cuối {ago}",

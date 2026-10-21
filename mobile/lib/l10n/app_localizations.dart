@@ -9318,6 +9318,12 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Reconnects'**
+  String get transportReconnects;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'{dials, plural, one{{dials} dial} other{{dials} dials}} · {timeouts, plural, one{{timeouts} timeout} other{{timeouts} timeouts}}'**
   String transportDialsTimeouts(int dials, int timeouts);
 

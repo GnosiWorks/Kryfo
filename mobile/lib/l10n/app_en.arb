@@ -7194,6 +7194,10 @@
   "@transportControlPort": {
     "description": "screens/transport_screen.dart"
   },
+  "transportReconnects": "Reconnects",
+  "@transportReconnects": {
+    "description": "screens/transport_screen.dart"
+  },
   "transportDialsTimeouts": "{dials, plural, one{{dials} dial} other{{dials} dials}} · {timeouts, plural, one{{timeouts} timeout} other{{timeouts} timeouts}}",
   "@transportDialsTimeouts": {
     "description": "screens/transport_screen.dart",

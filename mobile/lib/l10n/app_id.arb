@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Sambung ulang Tor terakhir",
   "transportCatchUpByRelay": "Susulan lewat relay",
   "transportControlPort": "Port kontrol",
+  "transportReconnects": "Sambung ulang",
   "transportDialsTimeouts": "{dials, plural, other{{dials} sambung}} · {timeouts, plural, other{{timeouts} habis waktu}}",
   "transportJobRuns": "Tugas berjalan",
   "transportLast": "{jobRuns} · terakhir {ago}",

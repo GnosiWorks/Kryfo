@@ -258,6 +258,36 @@ String _relayLabel(String url) {
 
 String _code(String c) => c.isEmpty ? '-' : c;
 
+/// the engine's latest bounces, newest first: when (unix seconds) and why
+@visibleForTesting
+List<({int at, String why})> bounceNotes(Map<String, dynamic> tx) {
+  final raw = tx['bounces'];
+  if (raw is! List) return const [];
+  return [
+    for (final b in raw)
+      if (b is Map && b['at'] is int && b['why'] is String)
+        (at: b['at'] as int, why: b['why'] as String),
+  ];
+}
+
+/// "4 · network change 3 · new circuits 1", the most first, or null for none
+@visibleForTesting
+String? bounceTotals(Map<String, dynamic> tx) {
+  final raw = tx['bounce_counts'];
+  if (raw is! Map) return null;
+  final kinds = [
+    for (final e in raw.entries)
+      if (e.key is String && e.value is int && (e.value as int) > 0)
+        (why: e.key as String, n: e.value as int),
+  ]..sort((a, b) => b.n != a.n ? b.n - a.n : a.why.compareTo(b.why));
+  if (kinds.isEmpty) return null;
+  final all = kinds.fold<int>(0, (s, k) => s + k.n);
+  return [
+    whole(all),
+    for (final k in kinds) '${k.why} ${whole(k.n)}',
+  ].join(' · ');
+}
+
 class _Line extends StatelessWidget {
   const _Line(this.label, this.value, this.tint, {this.indent = false});
   final String label;
@@ -569,6 +599,21 @@ class _AliveState extends State<_Alive> {
               ? HaloColors.rose
               : HaloColors.text2,
         ),
+        // every bounce and every set of new circuits this process made,
+        // by why, then the latest few. a release build logs nothing, so
+        // how often tor drops is read here
+        _Line(
+          l10n.transportReconnects,
+          bounceTotals(ctrl) ?? l10n.transportNone,
+          HaloColors.text,
+        ),
+        for (final b in bounceNotes(ctrl).take(5))
+          _Line(
+            hourMinute(DateTime.fromMillisecondsSinceEpoch(b.at * 1000)),
+            b.why,
+            HaloColors.text2,
+            indent: true,
+          ),
         _Line(
           l10n.transportJobRuns,
           appState.jobRuns == 0

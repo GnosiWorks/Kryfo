@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Letzte Tor-Neuverbindung",
   "transportCatchUpByRelay": "Nachholen pro Relais",
   "transportControlPort": "Steuerport",
+  "transportReconnects": "Neuverbindungen",
   "transportDialsTimeouts": "{dials, plural, one{{dials} Versuch} other{{dials} Versuche}} · {timeouts, plural, one{{timeouts} Timeout} other{{timeouts} Timeouts}}",
   "transportJobRuns": "Job-Läufe",
   "transportLast": "{jobRuns} · zuletzt {ago}",

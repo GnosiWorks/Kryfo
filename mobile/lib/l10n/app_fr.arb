@@ -1638,6 +1638,7 @@
   "transportLastTorReconnect": "Dernière reconnexion Tor",
   "transportCatchUpByRelay": "Rattrapage par relais",
   "transportControlPort": "Port de contrôle",
+  "transportReconnects": "Reconnexions",
   "transportDialsTimeouts": "{dials, plural, one{{dials} tentative} other{{dials} tentatives}} · {timeouts, plural, one{{timeouts} délai dépassé} other{{timeouts} délais dépassés}}",
   "transportJobRuns": "Tâches lancées",
   "transportLast": "{jobRuns} · la dernière {ago}",

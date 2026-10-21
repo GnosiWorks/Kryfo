@@ -5742,6 +5742,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportControlPort => 'درگاه کنترل';
 
   @override
+  String get transportReconnects => 'اتصال‌های دوباره';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
