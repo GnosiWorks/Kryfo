@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "بلا EXIF، ولا يُحفظ أبدًا في صورك",
   "cameraRec": "تسجيل",
   "cameraSwitchCamera": "تبديل الكاميرا",
-  "cameraClipSMb": "مقطع · ⁨{secs}⁩ ث · ⁨{mb}⁩ م.ب",
   "cameraStopRecording": "إيقاف التسجيل",
   "cameraStartRecording": "بدء التسجيل",
   "cameraTakeAPhoto": "التقاط صورة",

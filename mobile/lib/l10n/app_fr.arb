@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "Pas d’EXIF, jamais enregistré dans vos photos",
   "cameraRec": "Enr",
   "cameraSwitchCamera": "Changer de caméra",
-  "cameraClipSMb": "Vidéo · {secs} s · {mb} Mo",
   "cameraStopRecording": "Arrêter la vidéo",
   "cameraStartRecording": "Démarrer la vidéo",
   "cameraTakeAPhoto": "Prendre une photo",

@@ -9,11 +9,12 @@ import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/l10n/numbers.dart' show decimal, twoDigits, whole;
+import 'package:kryfo/l10n/numbers.dart' show twoDigits, whole;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/orientation.dart' show appOrientations;
 import 'package:kryfo/screens/camera_screen.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/clip_preview.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
 import 'package:kryfo/widgets/press_scale.dart';
 
@@ -331,16 +332,14 @@ void main() {
       await t.pump();
     }
     await settle(t);
-    // the clock stopped with it: the clip is as long as the time said, and
-    // stays so
-    final len = find.text(
-      l10n.cameraClipSMb(whole(3), decimal(4096 / (1024 * 1024), 1)),
-    );
+    // the clock stopped with it, and the clip waits in its preview
+    final size = find.text(l10n.videoBubbleKb(whole(4)));
     expect(find.byType(BreathDot), findsNothing);
-    expect(len, findsOneWidget);
+    expect(find.byType(ClipPreview), findsOneWidget);
+    expect(size, findsOneWidget);
     await t.pump(const Duration(seconds: 5));
     expect(find.byType(BreathDot), findsNothing);
-    expect(len, findsOneWidget);
+    expect(size, findsOneWidget);
 
     await t.tap(find.text(l10n.cameraRetake));
     for (var i = 0; i < 10; i++) {
@@ -354,6 +353,69 @@ void main() {
     expect(shown(t), '00:00');
     await t.pump(const Duration(seconds: 1));
     expect(shown(t), '00:01');
+    await t.pumpWidget(const SizedBox());
+    await settle(t);
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+  });
+
+  testWidgets('a stopped clip plays in its preview, the private copy and '
+      'not the plugin\'s', (t) async {
+    phone(t);
+    plugin(t);
+    final dir = Directory.systemTemp.createTempSync('cam');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    clipAt = (File(
+      '${dir.path}/plugin.mp4',
+    )..writeAsBytesSync(List.filled(4096, 1))).path;
+    addTearDown(() => clipAt = null);
+    final m = t.binding.defaultBinaryMessenger;
+    const paths = MethodChannel('plugins.flutter.io/path_provider');
+    m.setMockMethodCallHandler(paths, (_) async => dir.path);
+    addTearDown(() => m.setMockMethodCallHandler(paths, null));
+    const video = MethodChannel('kryfo/video');
+    final played = <MethodCall>[];
+    m.setMockMethodCallHandler(video, (c) async {
+      played.add(c);
+      if (c.method == 'open') return {'id': 3, 'w': 480, 'h': 640, 'ms': 3000};
+      if (c.method == 'state') return {'ms': 500, 'playing': true};
+      return null;
+    });
+    addTearDown(() => m.setMockMethodCallHandler(video, null));
+
+    await t.pumpWidget(framed());
+    await settle(t);
+    await t.tap(find.text(l10n.cameraVideo));
+    await settle(t);
+    await record(t);
+    await t.pump(const Duration(seconds: 2));
+    await t.tap(find.bySemanticsLabel(l10n.cameraStopRecording));
+    for (var i = 0; i < 100 && played.isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump();
+    }
+    await settle(t);
+    final open = played.firstWhere((c) => c.method == 'open');
+    final at = (open.arguments as Map)['path'] as String;
+    expect(at, contains('/captures/clip_'));
+    expect(at, isNot(clipAt));
+    expect(played.map((c) => c.method), contains('play'));
+    expect(find.text('0:03'), findsOneWidget);
+    expect(find.text(l10n.cameraUseThis), findsOneWidget);
+    // retake lets the player go
+    await t.tap(find.text(l10n.cameraRetake));
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump();
+    }
+    await settle(t);
+    expect(played.map((c) => c.method), contains('close'));
+    expect(find.byType(ClipPreview), findsNothing);
     await t.pumpWidget(const SizedBox());
     await settle(t);
     await t.runAsync(

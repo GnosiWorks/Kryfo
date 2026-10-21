@@ -478,11 +478,6 @@ final _calls = <_Call>[
   ('cameraNoExifNeverSaved', [], (l) => l.cameraNoExifNeverSaved),
   ('cameraRec', [], (l) => l.cameraRec),
   ('cameraSwitchCamera', [], (l) => l.cameraSwitchCamera),
-  (
-    'cameraClipSMb',
-    ["⟨secs⟩", "⟨mb⟩"],
-    (l) => l.cameraClipSMb("⟨secs⟩", "⟨mb⟩"),
-  ),
   ('cameraStopRecording', [], (l) => l.cameraStopRecording),
   ('cameraStartRecording', [], (l) => l.cameraStartRecording),
   ('cameraTakeAPhoto', [], (l) => l.cameraTakeAPhoto),

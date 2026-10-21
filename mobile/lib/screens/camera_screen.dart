@@ -20,6 +20,7 @@ import 'package:permission_handler/permission_handler.dart'
     show openAppSettings;
 
 import '../theme.dart';
+import '../widgets/clip_preview.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show BreathDot, motionStill;
@@ -806,32 +807,40 @@ class _CameraScreenState extends State<CameraScreen>
         cacheWidth: screenPx(context),
       );
     }
-    final mb = decimal(_clipBytes / (1024 * 1024), 1);
-    final secs = _recSecs;
-    return Center(
-      key: const ValueKey('clip'),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    // the clip plays where it was framed, with its size over a corner and
+    // the cap's warning beside it when it is past it
+    final fits = fileFits(_clipBytes);
+    return ClipPreview(
+      key: ValueKey(_clip),
+      path: _clip!,
+      autoplay: true,
+      radius: 0,
+      badge: Wrap(
+        spacing: 6,
+        runSpacing: 6,
         children: [
-          _upright(
-            Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.cameraClipSMb(whole(secs), mb),
-            style: HaloType.mono(size: 12, color: HaloColors.text2),
-          ),
-          if (!fileFits(_clipBytes)) ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.cameraTooLongForA,
-              style: HaloType.mono(size: 11, color: HaloColors.rose),
-            ),
-          ],
+          _pill(_size(_clipBytes), HaloColors.text),
+          if (!fits) _pill(l10n.cameraTooLongForA, HaloColors.rose),
         ],
       ),
     );
   }
+
+  String _size(int b) => b >= 1024 * 1024
+      ? l10n.videoBubbleMb(decimal(b / (1024 * 1024), 1))
+      : l10n.videoBubbleKb(whole((b / 1024).ceil()));
+
+  Widget _pill(String text, Color color) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: HaloColors.ink.withValues(alpha: 0.6),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(
+      text,
+      style: HaloType.mono(size: 11, color: color, weight: FontWeight.w600),
+    ),
+  );
 
   Widget _shutterBar() {
     return Column(

@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "EXIF yok, fotoğraflarına asla kaydedilmez",
   "cameraRec": "Kayıt",
   "cameraSwitchCamera": "Kamerayı değiştir",
-  "cameraClipSMb": "Klip · {secs} sn · {mb} MB",
   "cameraStopRecording": "Kaydı durdur",
   "cameraStartRecording": "Kaydı başlat",
   "cameraTakeAPhoto": "Fotoğraf çek",

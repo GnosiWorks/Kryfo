@@ -1299,11 +1299,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cameraSwitchCamera => 'Змінити камеру';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Кліп · $secs с · $mb МБ';
-  }
-
-  @override
   String get cameraStopRecording => 'Зупинити запис';
 
   @override

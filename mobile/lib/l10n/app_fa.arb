@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "بدون EXIF، هرگز در عکس‌هایتان ذخیره نمی‌شود",
   "cameraRec": "ضبط",
   "cameraSwitchCamera": "تعویض دوربین",
-  "cameraClipSMb": "کلیپ · ⁨{secs}⁩ ثانیه · ⁨{mb}⁩ مگابایت",
   "cameraStopRecording": "توقف ضبط",
   "cameraStartRecording": "شروع ضبط",
   "cameraTakeAPhoto": "گرفتن عکس",

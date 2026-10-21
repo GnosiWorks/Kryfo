@@ -1258,11 +1258,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraSwitchCamera => 'Ganti kamera';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Klip · $secs dtk · $mb MB';
-  }
-
-  @override
   String get cameraStopRecording => 'Berhenti merekam';
 
   @override

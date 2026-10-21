@@ -1279,11 +1279,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cameraSwitchCamera => 'Changer de caméra';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Vidéo · $secs s · $mb Mo';
-  }
-
-  @override
   String get cameraStopRecording => 'Arrêter la vidéo';
 
   @override

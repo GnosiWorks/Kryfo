@@ -1258,11 +1258,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraSwitchCamera => 'Đổi máy ảnh';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Đoạn quay · ${secs}s · $mb MB';
-  }
-
-  @override
   String get cameraStopRecording => 'Dừng quay';
 
   @override

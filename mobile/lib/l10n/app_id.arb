@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "Tanpa EXIF, tidak pernah disimpan ke galerimu",
   "cameraRec": "Rekam",
   "cameraSwitchCamera": "Ganti kamera",
-  "cameraClipSMb": "Klip · {secs} dtk · {mb} MB",
   "cameraStopRecording": "Berhenti merekam",
   "cameraStartRecording": "Mulai merekam",
   "cameraTakeAPhoto": "Ambil foto",

@@ -1270,11 +1270,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraSwitchCamera => 'Kamerayı değiştir';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Klip · $secs sn · $mb MB';
-  }
-
-  @override
   String get cameraStopRecording => 'Kaydı durdur';
 
   @override

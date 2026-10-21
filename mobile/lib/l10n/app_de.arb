@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "Kein EXIF, nie in deinen Fotos gespeichert",
   "cameraRec": "Aufn.",
   "cameraSwitchCamera": "Kamera wechseln",
-  "cameraClipSMb": "Clip · {secs}s · {mb} MB",
   "cameraStopRecording": "Aufnahme stoppen",
   "cameraStartRecording": "Aufnahme starten",
   "cameraTakeAPhoto": "Foto aufnehmen",

@@ -1269,11 +1269,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cameraSwitchCamera => 'تعویض دوربین';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'کلیپ · ⁨$secs⁩ ثانیه · ⁨$mb⁩ مگابایت';
-  }
-
-  @override
   String get cameraStopRecording => 'توقف ضبط';
 
   @override

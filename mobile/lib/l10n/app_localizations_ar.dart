@@ -1308,11 +1308,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraSwitchCamera => 'تبديل الكاميرا';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'مقطع · ⁨$secs⁩ ث · ⁨$mb⁩ م.ب';
-  }
-
-  @override
   String get cameraStopRecording => 'إيقاف التسجيل';
 
   @override

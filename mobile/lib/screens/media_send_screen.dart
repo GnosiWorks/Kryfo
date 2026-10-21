@@ -18,6 +18,7 @@ import 'package:image_picker/image_picker.dart' show XFile;
 
 import '../picked.dart' show MediaSendResult, PickedMedia;
 import '../theme.dart';
+import '../widgets/clip_preview.dart';
 import '../widgets/decode_px.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/press_scale.dart';
@@ -467,7 +468,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
   );
 }
 
-// the item large: a photo whole, a video by its first frame
+// the item large: a photo whole, a video playing in place
 class _Large extends StatelessWidget {
   final PickedMedia media;
   const _Large({required this.media});
@@ -475,21 +476,20 @@ class _Large extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photo = media.photo;
+    if (photo == null) return ClipPreview(path: media.video!.path);
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: photo != null
-            ? Semantics(
-                image: true,
-                label: l10n.appPhoto,
-                child: Image.memory(
-                  photo,
-                  fit: BoxFit.contain,
-                  gaplessPlayback: true,
-                  cacheWidth: screenPx(context),
-                ),
-              )
-            : _VideoStill(path: media.video!.path, big: true),
+        child: Semantics(
+          image: true,
+          label: l10n.appPhoto,
+          child: Image.memory(
+            photo,
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+            cacheWidth: screenPx(context),
+          ),
+        ),
       ),
     );
   }
@@ -497,8 +497,7 @@ class _Large extends StatelessWidget {
 
 class _VideoStill extends StatefulWidget {
   final String path;
-  final bool big;
-  const _VideoStill({required this.path, this.big = false});
+  const _VideoStill({required this.path});
   @override
   State<_VideoStill> createState() => _VideoStillState();
 }
@@ -520,7 +519,7 @@ class _VideoStillState extends State<_VideoStill> {
   Widget build(BuildContext context) {
     final i = _info;
     final jpeg = i?.jpeg;
-    final mark = widget.big ? 56.0 : 22.0;
+    const mark = 22.0;
     final face = jpeg == null
         ? ColoredBox(color: HaloColors.surface3)
         : Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true);
@@ -528,7 +527,7 @@ class _VideoStillState extends State<_VideoStill> {
       image: true,
       label: l10n.videoBubbleVideo,
       child: AspectRatio(
-        aspectRatio: widget.big ? (i?.aspect ?? 16 / 9).clamp(0.5, 2.4) : 1,
+        aspectRatio: 1,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -548,25 +547,6 @@ class _VideoStillState extends State<_VideoStill> {
                 ),
               ),
             ),
-            if (widget.big && i != null && i.length > Duration.zero)
-              PositionedDirectional(
-                start: 10,
-                top: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    videoLength(i.length),
-                    style: HaloType.mono(size: 10, color: Colors.white),
-                  ),
-                ),
-              ),
           ],
         ),
       ),

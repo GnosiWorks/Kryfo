@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "Không có EXIF, không bao giờ lưu vào thư viện ảnh",
   "cameraRec": "Quay",
   "cameraSwitchCamera": "Đổi máy ảnh",
-  "cameraClipSMb": "Đoạn quay · {secs}s · {mb} MB",
   "cameraStopRecording": "Dừng quay",
   "cameraStartRecording": "Bắt đầu quay",
   "cameraTakeAPhoto": "Chụp ảnh",

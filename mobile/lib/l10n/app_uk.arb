@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "Без EXIF, ніколи не зберігається у твоїх фото",
   "cameraRec": "Запис",
   "cameraSwitchCamera": "Змінити камеру",
-  "cameraClipSMb": "Кліп · {secs} с · {mb} МБ",
   "cameraStopRecording": "Зупинити запис",
   "cameraStartRecording": "Почати запис",
   "cameraTakeAPhoto": "Зробити фото",

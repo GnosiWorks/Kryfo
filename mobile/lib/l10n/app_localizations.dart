@@ -2028,12 +2028,6 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Clip · {secs}s · {mb} MB'**
-  String cameraClipSMb(Object secs, Object mb);
-
-  /// screens/camera_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Stop recording'**
   String get cameraStopRecording;
 

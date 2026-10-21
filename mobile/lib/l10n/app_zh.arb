@@ -423,7 +423,6 @@
   "cameraNoExifNeverSaved": "没有 EXIF，也不会保存到你的相册",
   "cameraRec": "录制",
   "cameraSwitchCamera": "切换相机",
-  "cameraClipSMb": "片段 · {secs} 秒 · {mb} MB",
   "cameraStopRecording": "停止录制",
   "cameraStartRecording": "开始录制",
   "cameraTakeAPhoto": "拍照",

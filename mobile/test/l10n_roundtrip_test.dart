@@ -551,7 +551,6 @@ void main() {
     expect(l.cameraNoExifNeverSaved, "No EXIF, never saved to your photos");
     expect(l.cameraRec, "Rec");
     expect(l.cameraSwitchCamera, "Switch camera");
-    expect(l.cameraClipSMb("<secs>", "<mb>"), "Clip · <secs>s · <mb> MB");
     expect(l.cameraStopRecording, "Stop recording");
     expect(l.cameraStartRecording, "Start recording");
     expect(l.cameraTakeAPhoto, "Take a photo");

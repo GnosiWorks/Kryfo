@@ -1568,18 +1568,6 @@
   "@cameraSwitchCamera": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraClipSMb": "Clip · {secs}s · {mb} MB",
-  "@cameraClipSMb": {
-    "description": "screens/camera_screen.dart",
-    "placeholders": {
-      "secs": {
-        "type": "Object"
-      },
-      "mb": {
-        "type": "Object"
-      }
-    }
-  },
   "cameraStopRecording": "Stop recording",
   "@cameraStopRecording": {
     "description": "screens/camera_screen.dart"

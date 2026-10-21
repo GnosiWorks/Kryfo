@@ -1215,11 +1215,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraSwitchCamera => '切换相机';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return '片段 · $secs 秒 · $mb MB';
-  }
-
-  @override
   String get cameraStopRecording => '停止录制';
 
   @override
@@ -9622,11 +9617,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cameraSwitchCamera => '切換相機';
-
-  @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return '片段 · $secs 秒 · $mb MB';
-  }
 
   @override
   String get cameraStopRecording => '停止錄影';

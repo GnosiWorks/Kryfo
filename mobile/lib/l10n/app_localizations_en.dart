@@ -1268,11 +1268,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraSwitchCamera => 'Switch camera';
 
   @override
-  String cameraClipSMb(Object secs, Object mb) {
-    return 'Clip · ${secs}s · $mb MB';
-  }
-
-  @override
   String get cameraStopRecording => 'Stop recording';
 
   @override
