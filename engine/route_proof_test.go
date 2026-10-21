@@ -183,12 +183,18 @@ func TestNewCircuitsKeepTheRoute(t *testing.T) {
 	}
 }
 
-// a relay that never answered on this route is down for its own reasons:
-// its failures do not count against tor. our relay's always do
+// a relay that never answered on a route that carries is down for its own
+// reasons: its failures do not count against tor. our relay's always do, and
+// while nothing has answered on the route every relay's does
 func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
 	useStandIns(t, modePrivate, nil)
 	setRelays([]string{"ws://ours.onion", "wss://relay.kryfo.app", "wss://down1.example", "wss://down2.example"})
 	resetRoute(t, "publishing", 100)
+	routeNoteFail("wss://down1.example")
+	if n := failedCount(); n != 1 {
+		t.Fatalf("nothing answered yet and a failure counted %d, want 1", n)
+	}
+	routeNoteOK()
 	routeNoteFail("wss://down1.example")
 	routeNoteFail("wss://down2.example")
 	if n := failedCount(); n != 0 {
@@ -204,8 +210,9 @@ func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
 	if n := failedCount(); n != 3 {
 		t.Fatalf("our relay's failures: %d counted, want 3", n)
 	}
-	// a bounce starts a new route: what answered before speaks no more
+	// a bounce starts a new route: once it carries, what answered before speaks no more
 	routeBump()
+	routeNoteOK()
 	routeNoteFail("wss://down1.example")
 	if n := failedCount(); n != 0 {
 		t.Fatalf("an answer from before the bounce still counted: %d", n)

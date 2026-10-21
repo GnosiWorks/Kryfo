@@ -145,7 +145,8 @@ func routeNoteFail(u string) {
 	own := isOwnRelay(u)
 	routeMu.Lock()
 	defer routeMu.Unlock()
-	if g, ok := answeredIn[u]; !own && (!ok || g != routeGen) {
+	// while nothing has answered on this route, every failure counts: a dead tor is always rescued
+	if g, ok := answeredIn[u]; !own && okGen == routeGen && (!ok || g != routeGen) {
 		return
 	}
 	if len(failedSinceOK) == 0 {
