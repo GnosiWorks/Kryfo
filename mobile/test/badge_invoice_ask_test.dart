@@ -2,7 +2,7 @@
 // the invoice ask: a first one that tor does not get through in time is made
 // once more, the screen says tor was slow when it was, and the countdown
 // follows how long the service keeps the invoice. a screen left behind
-// makes no second ask
+// makes no second ask, and picking bitcoin starts the circuit with no invoice
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,8 +10,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/badge_client.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/session.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -221,6 +224,55 @@ void main() {
       expect(s.asked, 1);
       expect(find.text(l10n.donateTorWasSlowTo), findsOneWidget);
       await t.pumpWidget(const SizedBox());
+    }, skip: !kBadgeTiersShown);
+  });
+
+  group('picking bitcoin', () {
+    tearDown(() {
+      final e = HaloDb();
+      useDatabasesForTest(e, Session(e));
+    });
+
+    Future<void> tapBitcoin(WidgetTester t) async {
+      final chip = find.text(l10n.donateBitcoin).first;
+      await t.ensureVisible(chip);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(chip);
+      await t.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('starts the circuit once and makes no invoice', (t) async {
+      final s = _Service([_made]);
+      await _openSupport(t, s);
+      expect(s.gets, isEmpty);
+      await tapBitcoin(t);
+      await t.tap(find.text(l10n.donateMonero).first);
+      await t.pump(const Duration(milliseconds: 300));
+      await tapBitcoin(t);
+      expect(s.gets, ['$kBadgeOnion/pubkey']);
+      expect(s.asked, 0);
+      await t.pumpWidget(const SizedBox());
+    }, skip: !kBadgeTiersShown);
+
+    testWidgets('a decoy or a route without the onion asks nothing', (t) async {
+      final s = _Service([_made]);
+      final d = HaloDb(HaloContainer.decoy);
+      useDatabasesForTest(HaloDb(), Session(d));
+      await _openSupport(t, s);
+      await tapBitcoin(t);
+      await t.pumpWidget(const SizedBox());
+      useDatabasesForTest(HaloDb(), Session(HaloDb()));
+      for (final mode in ['balanced', 'fast']) {
+        await _openSupport(t, s);
+        appState.sendModeForTest = mode;
+        await t.pumpWidget(const SizedBox());
+        await t.pumpWidget(_framed(const DonateScreen()));
+        await t.pump(const Duration(seconds: 1));
+        await tapBitcoin(t);
+        await t.pumpWidget(const SizedBox());
+      }
+      expect(s.gets, isEmpty);
+      expect(s.asked, 0);
     }, skip: !kBadgeTiersShown);
   });
 }

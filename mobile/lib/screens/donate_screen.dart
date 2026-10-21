@@ -122,6 +122,17 @@ class _DonateScreenState extends State<DonateScreen> {
 
   final _customCtl = TextEditingController();
   String _coin = 'btc';
+  // the circuit to the payment service is started once a visit
+  bool _warmed = false;
+
+  // bitcoin picked: tor starts reaching the service now, so "pay with
+  // bitcoin" finds the circuit built. it asks for no invoice
+  void _warmBitcoin() {
+    if (_warmed || !_onOnion || !kBadgeTiersShown) return;
+    _warmed = true;
+    unawaited(warmBadgeService());
+  }
+
   // bumped on each copy, so the button shows a tick for a moment
   int _copies = 0;
 
@@ -605,6 +616,7 @@ class _DonateScreenState extends State<DonateScreen> {
         onTap: () {
           HapticFeedback.selectionClick();
           setState(() => _coin = c.key);
+          if (c.key == 'btc') _warmBitcoin();
         },
         child: AnimatedContainer(
           duration: still ? Duration.zero : const Duration(milliseconds: 200),

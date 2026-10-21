@@ -126,6 +126,17 @@ Future<({InvoiceAsk ask, bool again})> _askInvoice(String tier) async {
   }
 }
 
+/// builds the tor circuit to the service before an invoice is asked for:
+/// its public key, answer ignored. nothing is made on the server
+Future<void> warmBadgeService() async {
+  if (!kBadgeTiersShown || sessionQuiet) return;
+  try {
+    await engine.torGetJson('$kBadgeOnion/pubkey');
+  } catch (_) {
+    // a warm-up that fails changes nothing: the invoice ask dials again
+  }
+}
+
 /// paid only when the signature verifies against the pinned key; an
 /// unsigned or badly signed "paid" is an error
 Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
