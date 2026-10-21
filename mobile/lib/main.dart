@@ -46,6 +46,7 @@ import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
 import 'drafts.dart'

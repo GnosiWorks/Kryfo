@@ -7971,6 +7971,7 @@ class AppState extends ChangeNotifier {
       _netWatchOn = null;
       noteOnline(true);
     }
+    if (torUsable) _usableAt = at;
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;
@@ -7984,6 +7985,32 @@ class AppState extends ChangeNotifier {
   // torReadyNow() in the engine. outside onion nothing waits on a bootstrap.
   // it does not ask for a network: linkUp does
   bool get torReady => _sendMode != 'private' || torUsable;
+
+  // when the status poll last saw the route carry, for the pill's grace
+  DateTime? _usableAt;
+  DateTime? get usableAt => _usableAt;
+  @visibleForTesting
+  set usableAtForTest(DateTime? at) => _usableAt = at;
+
+  /// what the home pill shows as ready: the route, held through a blip
+  /// shorter than kPillGrace so the pill does not flicker. nothing that
+  /// sends goes by this
+  bool get pillReady => pillHoldsReady(
+    usable: torUsable,
+    usableAt: _usableAt,
+    status: _torStatus,
+    online: _online,
+    now: DateTime.now(),
+  );
+
+  /// when a pill held ready has to look again, null when it is not held
+  DateTime? get pillGraceEnd => pillGraceEnds(
+    usable: torUsable,
+    usableAt: _usableAt,
+    status: _torStatus,
+    online: _online,
+    now: DateTime.now(),
+  );
 
   // tor can carry traffic. "reachable" is the end of publishing, not the
   // start of being usable. tor's word is not enough on its own: it can say

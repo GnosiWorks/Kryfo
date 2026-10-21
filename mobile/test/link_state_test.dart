@@ -359,6 +359,8 @@ void main() {
     });
   });
 
+  // the pill holds it through a blip shorter than its grace
+  // (pill_grace_test), and nothing else differs
   test('settings and the pill read the same predicate', () {
     final settings = File(
       'lib/screens/settings_screen.dart',
@@ -366,7 +368,13 @@ void main() {
     expect(settings, contains('appState.torUsable'));
     final main = File('lib/app/gates.dart').readAsStringSync();
     final pill = main.substring(main.indexOf('class TorHaloState'));
-    expect(pill, contains('final ready = appState.torUsable;'));
+    expect(pill, contains('final ready = appState.pillReady;'));
+    final state = File('lib/app/state.dart').readAsStringSync();
+    final held = state.substring(state.indexOf('bool get pillReady'));
+    expect(
+      held.substring(0, held.indexOf(');')),
+      contains('usable: torUsable,'),
+    );
   });
 
   // the services channel the preview setting reads through

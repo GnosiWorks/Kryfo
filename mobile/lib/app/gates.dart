@@ -234,10 +234,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
   // wakes the pill when a bare connecting has stood long enough
   Timer? _patience;
+  // wakes it when a ready held through a blip runs out
+  Timer? _grace;
 
   // pulses only while tor is still coming up. once it is usable the chip
-  // says so and rests, even when the onion is never confirmed reachable
-  bool get _isConnecting => appState.torStatus == TorStatus.starting;
+  // says so and rests, even when the onion is never confirmed reachable,
+  // and a bounce inside the pill's grace does not start it
+  bool get _isConnecting =>
+      appState.torStatus == TorStatus.starting && !appState.pillReady;
 
   @override
   void initState() {
@@ -288,8 +292,29 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
     });
   }
 
+  void _armGrace() {
+    final end = appState.pillGraceEnd;
+    if (end == null) {
+      _grace?.cancel();
+      _grace = null;
+      return;
+    }
+    if (_grace?.isActive ?? false) return;
+    final left = end.difference(DateTime.now());
+    _grace = Timer(
+      left.isNegative ? Duration.zero : left + const Duration(milliseconds: 50),
+      () {
+        _grace = null;
+        if (!mounted) return;
+        setState(() {});
+        _sync();
+      },
+    );
+  }
+
   void _sync() {
     _armPatience();
+    _armGrace();
     if (!_isConnecting) {
       _pulsed = false;
       if (_c.isAnimating) _c.stop();
@@ -320,6 +345,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   void dispose() {
     appState.removeListener(_sync);
     _patience?.cancel();
+    _grace?.cancel();
     _c.dispose();
     super.dispose();
   }
@@ -437,9 +463,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
         builder: (context, _) {
           final s = appState.torStatus;
           final off = s == TorStatus.off;
-          // ready is the test the outbox and the offline card use, so the
-          // pill never says ready over a route nothing gets through
-          final ready = appState.torUsable;
+          // the route as the outbox and the offline card see it, held
+          // through a blip shorter than kPillGrace (pill_grace.dart)
+          final ready = appState.pillReady;
           final secured = ready && s == TorStatus.reachable;
           final connecting = _isConnecting;
           final still = motionStill(context);
