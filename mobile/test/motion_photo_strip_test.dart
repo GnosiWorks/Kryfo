@@ -123,4 +123,21 @@ void main() {
       });
     });
   }
+
+  test('a still with its exif in an mdat at the end keeps its length', () {
+    // ftyp, meta, mdat with the picture and xmp, then an mdat with the exif
+    final src = File('test/fixtures/heic_exif_at_end.heic').readAsBytesSync();
+    expect(_top(src).map((x) => x.$1).toList(), [
+      'ftyp',
+      'meta',
+      'mdat',
+      'mdat',
+    ]);
+    expect(readMeta(MemorySource(src)).status, MetaStatus.found);
+    final out = stripPictureBytes(src)!;
+    expect(out.length, src.length);
+    expect(_text(out).contains('GPSSECRET'), false);
+    expect(out.sublist(432, 432 + 358), src.sublist(432, 432 + 358));
+    expect(readMeta(MemorySource(out)).status, MetaStatus.nothing);
+  });
 }

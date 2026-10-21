@@ -158,9 +158,8 @@ Future<bool?> cleanSavedPhoto(String path) => Isolate.run(() async {
   return true;
 });
 
-// the clean bytes go over the old ones where they sit, and the cut tail is
-// zeroed before the file is shortened: a removed clip is not left in the
-// blocks a truncate would free
+// the clean bytes go over the old ones and the cut tail is zeroed before the
+// file is shortened. best effort: f2fs and wear levelling can keep old blocks
 Future<void> _writeOver(File f, Uint8List out, int was) async {
   // append keeps the blocks; a write mode would truncate first
   final raf = await f.open(mode: FileMode.append);
@@ -458,11 +457,11 @@ Uint8List? _heif(Uint8List src) {
   // that cannot be read only matters when there is something to do
   final places = iloc.isEmpty ? <_Place>[] : _ilocPlaces(src, iloc.first);
 
-  // where the still ends: the meta box and every byte a kept item is read
+  // where the still ends: the meta box and every byte an item is read
   // from. a clip hung after it (an mpvd box, or a whole mp4 appended) goes
   var dataEnd = iloc.isEmpty || places == null ? src.length : meta.end;
   for (final x in places ?? const <_Place>[]) {
-    if (x.method != 0 || strip.contains(x.id)) continue;
+    if (x.method != 0) continue;
     final to = x.len == 0 ? src.length : x.at + x.len;
     if (to > dataEnd) dataEnd = to;
   }
