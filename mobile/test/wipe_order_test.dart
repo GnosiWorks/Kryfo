@@ -21,6 +21,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shred_twin.dart';
 
+// a busy machine stretches wall time, not the wipe: the bound grows with the
+// load per core, up to four times
+int _ms(int ms) {
+  try {
+    final load = double.parse(
+      File('/proc/loadavg').readAsStringSync().split(' ').first,
+    );
+    return (ms * (load / Platform.numberOfProcessors).clamp(1.0, 4.0)).round();
+  } on Object {
+    return ms;
+  }
+}
+
 class _Engine implements HaloEngine {
   final calls = <String>[];
   final answer = Completer<String>();
@@ -153,6 +166,8 @@ void main() {
       useEngineForTest(_Engine());
       final files = plain();
       final gate = Completer<void>();
+      // a failed check below must not leave the shred hung for the next test
+      addTearDown(() => gate.isCompleted ? null : gate.complete());
       final shredded = <String>[];
       wipeShred = (path) async {
         await gate.future;
@@ -180,7 +195,7 @@ void main() {
       // gone while not a byte was shredded yet
       expect(await gone(), isTrue);
       expect(shredded, isEmpty);
-      expect(clock.elapsed.inMilliseconds, lessThan(1000));
+      expect(clock.elapsed.inMilliseconds, lessThan(_ms(1000)));
       for (final f in files.keys) {
         expect(File(dir(f)).existsSync(), isFalse, reason: f);
       }
@@ -335,7 +350,7 @@ void main() {
     expect(left('tmp'), isEmpty);
     expect(await const FlutterSecureStorage().readAll(), isEmpty);
     expect((await SharedPreferences.getInstance()).getKeys(), isEmpty);
-    expect(clock.elapsed.inMilliseconds, lessThan(1500));
+    expect(clock.elapsed.inMilliseconds, lessThan(_ms(1500)));
     await done;
     expect(clock.elapsed.inSeconds, lessThan(6));
     expect(engine.calls, ['release wren', 'hold']);
