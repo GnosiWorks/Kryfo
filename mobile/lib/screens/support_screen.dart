@@ -804,8 +804,8 @@ class _SwipeRow extends StatelessWidget {
   }
 }
 
-// one chat: the face its three words make, the words left to right, the
-// last line, when, and what is unread
+// one chat: the face its three words make, the name he gave them or the
+// words left to right, the last line, when, and what is unread
 class _Tile extends StatelessWidget {
   const _Tile({
     required this.c,
@@ -822,6 +822,8 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unread = c.unread > 0;
+    final name = c.nickname;
+    final weight = unread ? FontWeight.w600 : FontWeight.w500;
     final face = KryfoAvatar(seed: c.haloId, size: 44);
     return Material(
       type: MaterialType.transparency,
@@ -854,22 +856,31 @@ class _Tile extends StatelessWidget {
                         Expanded(
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
-                            // three words read left to right in any
-                            // language
-                            child: Text(
-                              c.haloId,
-                              textDirection: TextDirection.ltr,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.mono(
-                                size: 12.5,
-                                weight: unread
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                color: HaloColors.text,
-                                letter: 0.02,
-                              ),
-                            ),
+                            child: name != null
+                                ? Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.sans(
+                                      size: 14,
+                                      weight: weight,
+                                      color: HaloColors.text,
+                                    ),
+                                  )
+                                // three words read left to right in any
+                                // language
+                                : Text(
+                                    c.haloId,
+                                    textDirection: TextDirection.ltr,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.mono(
+                                      size: 12.5,
+                                      weight: weight,
+                                      color: HaloColors.text,
+                                      letter: 0.02,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -877,7 +888,9 @@ class _Tile extends StatelessWidget {
                           _when(DateTime.fromMillisecondsSinceEpoch(c.at)),
                           style: HaloType.mono(
                             size: 10.5,
-                            color: unread ? HaloColors.amberText : HaloColors.text2,
+                            color: unread
+                                ? HaloColors.amberText
+                                : HaloColors.text2,
                             weight: unread ? FontWeight.w600 : FontWeight.w400,
                           ),
                         ),

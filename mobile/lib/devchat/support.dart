@@ -59,6 +59,7 @@ class SupportChat {
     this.answered = false,
     this.unread = 0,
     this.last,
+    this.nickname,
   });
 
   final String haloId;
@@ -69,6 +70,8 @@ class SupportChat {
   final int unread;
   // the chat's last message, as the messages table keeps it
   final Map<String, Object?>? last;
+  // the name he gave them, shown in place of their words
+  final String? nickname;
 
   SupportSection get section => done
       ? SupportSection.done
@@ -289,7 +292,7 @@ class SupportChats {
       final id = r['halo_id'] as String;
       final c = await db.query(
         'contacts',
-        columns: ['accepted', 'blocked', 'archived', 'unread'],
+        columns: ['accepted', 'blocked', 'archived', 'unread', 'nickname'],
         where: 'halo_id = ?',
         whereArgs: [id],
         limit: 1,
@@ -322,12 +325,18 @@ class SupportChats {
           answered: answered,
           unread: (p['unread'] as num?)?.toInt() ?? 0,
           last: last.isEmpty ? null : last.first,
+          nickname: _named(p['nickname']),
         ),
       );
     }
     out.sort((a, b) => b.at.compareTo(a.at));
     return out;
   }
+}
+
+String? _named(Object? n) {
+  final t = n is String ? n.trim() : '';
+  return t.isEmpty ? null : t;
 }
 
 // the requests inbox: the rows of [requests] that are not support chats

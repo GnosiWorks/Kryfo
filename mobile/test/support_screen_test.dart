@@ -9,7 +9,7 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show HaloEngine, appState, session, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
@@ -63,6 +63,9 @@ class _Db extends DevTestDb {
   Future<void> dropHeld(String peerId) async {}
   @override
   Future<void> clearUnread(String peerId) => _set(peerId, {'unread': 0});
+  @override
+  Future<void> setNickname(String haloId, String? name) =>
+      _set(haloId, {'nickname': name});
 
   // an accept that fails, as a full disk would
   var acceptFails = false;
@@ -404,6 +407,48 @@ void main() {
       expect(find.text(l10n.appYou('try the update')), findsOneWidget);
       // he is not told how anyone wrote
       expect(find.text(l10n.devAnonymous), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('a name he gives shows on its row at once, no open needed', (
+      t,
+    ) async {
+      await _world();
+      await devOpen(t, const SupportScreen());
+      expect(find.text(_s), findsOneWidget);
+      // the contact page's rename, while the inbox is on screen
+      await session.setNickname(_s, 'Anna from the forum');
+      await appState.refreshContacts();
+      await _settle(t);
+      expect(find.text('Anna from the forum'), findsOneWidget);
+      expect(find.text(_s), findsNothing);
+      // the same face, the same place, and the chat it opens
+      final row = find
+          .ancestor(
+            of: find.text('Anna from the forum'),
+            matching: find.byType(InkWell),
+          )
+          .first;
+      expect(
+        t
+            .widget<KryfoAvatar>(
+              find.descendant(of: row, matching: find.byType(KryfoAvatar)),
+            )
+            .seed,
+        _s,
+      );
+      // a name taken off gives the words back
+      await session.setNickname(_s, null);
+      await appState.refreshContacts();
+      await _settle(t);
+      expect(find.text(_s), findsOneWidget);
+      expect(find.text('Anna from the forum'), findsNothing);
+      await session.setNickname(_s, 'Anna');
+      await appState.refreshContacts();
+      await _settle(t);
+      await t.tap(find.text('Anna'));
+      await _settle(t);
+      expect(find.text('support chat $_s'), findsOneWidget);
       await devClose(t);
     });
 
