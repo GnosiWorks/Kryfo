@@ -2,7 +2,6 @@ package app.kryfo
 
 import android.Manifest
 import android.app.ActivityManager
-import android.app.ApplicationExitInfo
 import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
@@ -978,21 +977,7 @@ class MainActivity : FlutterFragmentActivity() {
             val list = am.getHistoricalProcessExitReasons(packageName, 0, 1)
             if (list.isEmpty()) return null
             val e = list[0]
-            val word = when (e.reason) {
-                ApplicationExitInfo.REASON_SIGNALED -> "killed by the system"
-                ApplicationExitInfo.REASON_LOW_MEMORY -> "low memory"
-                ApplicationExitInfo.REASON_CRASH,
-                ApplicationExitInfo.REASON_CRASH_NATIVE -> "crashed"
-                ApplicationExitInfo.REASON_ANR -> "not responding"
-                ApplicationExitInfo.REASON_USER_REQUESTED -> "stopped by you"
-                ApplicationExitInfo.REASON_USER_STOPPED -> "stopped by you"
-                ApplicationExitInfo.REASON_PACKAGE_UPDATED -> "updated"
-                ApplicationExitInfo.REASON_OTHER -> "stopped by the system"
-                ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE -> "used too much"
-                ApplicationExitInfo.REASON_PERMISSION_CHANGE -> "permission changed"
-                ApplicationExitInfo.REASON_EXIT_SELF -> "closed itself"
-                else -> "stopped"
-            }
+            val word = ExitWord.of(e.reason, e.description)
             mapOf(
                 "at" to e.timestamp,
                 "reason" to e.reason,
