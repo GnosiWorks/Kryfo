@@ -224,6 +224,23 @@ void main() {
       expect(engine.checks, 2);
     });
 
+    test('only an answer from the relay is a no', () async {
+      expect(await helper.relayAnswer(), isNull);
+      engine.check = 'error: tor not started';
+      await helper.relayKnocks(ask: true);
+      expect(await helper.relayAnswer(), isNull);
+      engine.check = 'no';
+      await helper.relayKnocks(ask: true);
+      expect(await helper.relayAnswer(), 'no');
+      now += kRelayAskEveryMs;
+      engine.check = 'error: tor not started';
+      await helper.relayKnocks(ask: true);
+      expect(await helper.relayAnswer(), 'no');
+      engine.check = 'yes';
+      await helper.relayKnocks(ask: true);
+      expect(await helper.relayAnswer(), 'yes');
+    });
+
     test('an old relay keeps it hidden', () async {
       engine.check = 'no';
       expect(await helper.relayKnocks(ask: true), isFalse);

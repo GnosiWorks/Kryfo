@@ -8711,11 +8711,27 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Одразу й ощадливо для батареї. Сервер помічника бачить IP-адресу телефона й знає, коли приходять повідомлення, але не їхній зміст.';
+      'Одразу й легко. Його сервер бачить вашу IP-адресу і коли приходять повідомлення, але не їхній зміст.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Перейти на Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Налаштувати';
 
   @override
   String get gettingMessagesHelperNote =>
       'До справжніх пробуджень домішуються фальшиві, тож серверу помічника важче зрозуміти, коли приходять справжні повідомлення. Власний сервер помічника повідомляє нашому ретранслятору свою адресу. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Доступно на маршруті Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Перевіряємо…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Наш ретранслятор поки цього не пропонує';
 
   @override
   String get helperSheetNeedTitle => 'Потрібен застосунок-помічник';

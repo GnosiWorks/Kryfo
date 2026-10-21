@@ -10755,13 +10755,33 @@
   "@voiceStoppedAtLimit": {
     "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
   },
-  "gettingMessagesHelperBody": "Instant and light on battery. The helper's server sees your phone's IP address and learns when you get messages, never what they say.",
+  "gettingMessagesHelperBody": "Instant and light. Its server sees your IP and when messages come, never what they say.",
   "@gettingMessagesHelperBody": {
     "description": "screens/getting_messages_screen.dart: the helper app card"
+  },
+  "gettingMessagesHelperUseOnion": "Switch to Onion",
+  "@gettingMessagesHelperUseOnion": {
+    "description": "screens/getting_messages_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion"
+  },
+  "gettingMessagesHelperSetUp": "Set up",
+  "@gettingMessagesHelperSetUp": {
+    "description": "screens/getting_messages_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app"
   },
   "gettingMessagesHelperNote": "Fake wake-ups are mixed in, which makes it harder for the helper's server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
   "@gettingMessagesHelperNote": {
     "description": "screens/getting_messages_screen.dart: under the status line in helper app mode"
+  },
+  "gettingMessagesHelperOnionOnly": "Available on the Onion route",
+  "@gettingMessagesHelperOnionOnly": {
+    "description": "screens/getting_messages_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion"
+  },
+  "gettingMessagesHelperChecking": "Checking…",
+  "@gettingMessagesHelperChecking": {
+    "description": "screens/getting_messages_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner"
+  },
+  "gettingMessagesHelperRelayNotYet": "Our relay does not offer this yet",
+  "@gettingMessagesHelperRelayNotYet": {
+    "description": "screens/getting_messages_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps"
   },
   "helperSheetNeedTitle": "You need a helper app",
   "@helperSheetNeedTitle": {

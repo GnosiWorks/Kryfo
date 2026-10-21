@@ -8547,11 +8547,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Instant and light on battery. The helper\'s server sees your phone\'s IP address and learns when you get messages, never what they say.';
+      'Instant and light. Its server sees your IP and when messages come, never what they say.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Switch to Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Set up';
 
   @override
   String get gettingMessagesHelperNote =>
       'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Available on the Onion route';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Checking…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Our relay does not offer this yet';
 
   @override
   String get helperSheetNeedTitle => 'You need a helper app';

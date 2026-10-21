@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/main.dart' show appState;
 import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -108,10 +109,25 @@ void main() {
       t,
     ) async {
       phone(t);
+      // the relay has answered, so the helper card has no check running
+      appState.relaySaidNoForTest = true;
+      addTearDown(() => appState.relaySaidNoForTest = false);
       await t.pumpWidget(framed(const GettingMessagesScreen()));
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.byType(BreathDot), findsNothing);
+      expect(t.hasRunningAnimations, isFalse);
+      await t.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('reduced motion: the page rests while the relay is asked', (
+      t,
+    ) async {
+      phone(t);
+      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(milliseconds: 500));
+      expect(find.text(l10n.gettingMessagesHelperChecking), findsOneWidget);
       expect(t.hasRunningAnimations, isFalse);
       await t.pumpWidget(const SizedBox());
     });

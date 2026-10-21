@@ -8542,11 +8542,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Đến ngay và nhẹ pin. Máy chủ của ứng dụng trợ giúp thấy địa chỉ IP của điện thoại và biết khi nào bạn có tin nhắn, không bao giờ biết nội dung.';
+      'Đến ngay và nhẹ. Máy chủ của nó thấy IP của bạn và lúc tin nhắn đến, không bao giờ biết nội dung.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Chuyển sang Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Thiết lập';
 
   @override
   String get gettingMessagesHelperNote =>
       'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Có trên tuyến Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Đang kiểm tra…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Relay của chúng tôi chưa hỗ trợ việc này';
 
   @override
   String get helperSheetNeedTitle => 'Bạn cần một ứng dụng trợ giúp';

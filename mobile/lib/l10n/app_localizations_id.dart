@@ -8550,11 +8550,27 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Seketika dan hemat baterai. Server aplikasi pembantu melihat alamat IP ponselmu dan tahu kapan pesan masuk, tidak pernah isinya.';
+      'Seketika dan ringan. Servernya melihat IP-mu dan kapan pesan datang, tidak pernah isinya.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Beralih ke Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Siapkan';
 
   @override
   String get gettingMessagesHelperNote =>
       'Ada juga panggilan bangun palsu, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Tersedia di rute Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Mengecek…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Relay kami belum menyediakan ini';
 
   @override
   String get helperSheetNeedTitle => 'Kamu perlu aplikasi pembantu';

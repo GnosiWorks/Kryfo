@@ -8720,11 +8720,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Сразу и бережно к батарее. Сервер помощника видит IP-адрес телефона и узнаёт, когда приходят сообщения, но не их содержание.';
+      'Сразу и легко. Его сервер видит ваш IP и когда приходят сообщения, но не их содержание.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Перейти на Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Настроить';
 
   @override
   String get gettingMessagesHelperNote =>
       'К настоящим пробуждениям подмешиваются ложные, поэтому серверу помощника сложнее понять, когда приходят настоящие сообщения. Собственный сервер помощника сообщает нашему ретранслятору свой адрес. Скрытые чаты, комнаты сверх первых нескольких и время от времени обычный контакт, примерно один месяц из пяти, ждут проверки, которую Kryfo всё равно делает каждые 15 минут.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Доступно на маршруте Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Проверяем…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Наш ретранслятор пока этого не предлагает';
 
   @override
   String get helperSheetNeedTitle => 'Нужно приложение-помощник';

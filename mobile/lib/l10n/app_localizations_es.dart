@@ -8624,11 +8624,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Al instante y ligero para la batería. El servidor de la app auxiliar ve la dirección IP de tu teléfono y sabe cuándo te llegan mensajes, nunca lo que dicen.';
+      'Al instante y ligero. Su servidor ve tu IP y cuándo llegan mensajes, nunca lo que dicen.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Cambiar a Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Configurar';
 
   @override
   String get gettingMessagesHelperNote =>
       'Se mezclan activaciones falsas, lo que le pone más difícil al servidor de la app auxiliar saber cuándo llegan los mensajes reales. Un servidor auxiliar propio le da su dirección a nuestro repetidor. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Disponible en la ruta Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Comprobando…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Nuestro repetidor aún no lo ofrece';
 
   @override
   String get helperSheetNeedTitle => 'Necesitas una app auxiliar';

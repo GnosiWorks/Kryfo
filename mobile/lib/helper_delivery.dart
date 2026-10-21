@@ -142,6 +142,15 @@ class HelperDelivery {
     return r == 'yes';
   }
 
+  /// what our relay last really said: yes, no, or null when it never answered
+  Future<String?> relayAnswer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final kept = prefs.getString(kHelperRelayKey) ?? '';
+    if (kept.startsWith('yes@')) return 'yes';
+    if (kept.startsWith('no@')) return 'no';
+    return null;
+  }
+
   Future<SlotBook> _book() async {
     final prefs = await SharedPreferences.getInstance();
     return SlotBook.read(prefs.getString(kHelperSlotsKey));

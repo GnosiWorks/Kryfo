@@ -8688,11 +8688,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'فوري وخفيف على البطارية. يرى خادم التطبيق المساعد عنوان IP لهاتفك ويعرف متى تصلك الرسائل، ولا يعرف أبدًا ما فيها.';
+      'فوري وخفيف. يرى خادمه عنوان IP الخاص بك ومتى تصل الرسائل، ولا يرى أبدًا ما فيها.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'التبديل إلى Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'إعداد';
 
   @override
   String get gettingMessagesHelperNote =>
       'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على خادم التطبيق المساعد معرفة متى تصل الرسائل الحقيقية. خادم مساعد خاص بك يُعلم مُرحِّلنا بعنوانه. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'متاح على مسار Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'جارٍ التحقق…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet => 'لا يقدّم مُرحِّلنا هذا بعد';
 
   @override
   String get helperSheetNeedTitle => 'تحتاج إلى تطبيق مساعد';

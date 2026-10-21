@@ -8630,11 +8630,27 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Immediato e leggero sulla batteria. Il server dell\'app di supporto vede l\'indirizzo IP del telefono e sa quando ricevi messaggi, mai cosa dicono.';
+      'Immediato e leggero. Il suo server vede il tuo IP e quando arrivano i messaggi, mai cosa dicono.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Passa a Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Configura';
 
   @override
   String get gettingMessagesHelperNote =>
       'Vengono mescolati falsi risvegli, così per il server dell\'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Disponibile sul percorso Onion';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Controllo…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Il nostro relay non lo offre ancora';
 
   @override
   String get helperSheetNeedTitle => 'Ti serve un\'app di supporto';

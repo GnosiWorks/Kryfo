@@ -8571,11 +8571,27 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'فوری و کم‌مصرف. سرور برنامه‌ی کمکی نشانی IP گوشی‌تان را می‌بیند و می‌فهمد کِی پیام می‌گیرید، هرگز نمی‌فهمد چه نوشته شده.';
+      'فوری و سبک. سرورش IP شما و زمان رسیدن پیام‌ها را می‌بیند، هرگز محتوایشان را نه.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'رفتن به Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'راه‌اندازی';
 
   @override
   String get gettingMessagesHelperNote =>
       'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای سرور برنامه‌ی کمکی سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. سرور کمکی شخصی‌تان نشانی‌اش را به رله‌ی ما می‌گوید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'در مسیر Onion در دسترس است';
+
+  @override
+  String get gettingMessagesHelperChecking => 'در حال بررسی…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'رله‌ی ما هنوز این را ارائه نمی‌دهد';
 
   @override
   String get helperSheetNeedTitle => 'به یک برنامه‌ی کمکی نیاز دارید';

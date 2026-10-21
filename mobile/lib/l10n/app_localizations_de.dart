@@ -8655,11 +8655,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Sofort und schont den Akku. Der Server der Hilfs-App sieht die IP-Adresse deines Handys und erfährt, wann du Nachrichten bekommst, aber nie, was darin steht.';
+      'Sofort und sparsam. Sein Server sieht deine IP und wann Nachrichten kommen, nie, was darin steht.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Zu Onion wechseln';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Einrichten';
 
   @override
   String get gettingMessagesHelperNote =>
       'Dazwischen kommen falsche Weckrufe. So kann der Server der Hilfs-App schwerer erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Verfügbar auf der Onion-Route';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Prüfe…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Unser Relais bietet das noch nicht an';
 
   @override
   String get helperSheetNeedTitle => 'Du brauchst eine Hilfs-App';

@@ -8582,11 +8582,27 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Anında ve pili yormaz. Yardımcının sunucusu telefonunun IP adresini görür ve mesaj aldığın anı öğrenir, içeriğini asla.';
+      'Anında ve hafif. Sunucusu IP adresini ve mesajların ne zaman geldiğini görür, içeriğini asla.';
+
+  @override
+  String get gettingMessagesHelperUseOnion => 'Onion\'a geç';
+
+  @override
+  String get gettingMessagesHelperSetUp => 'Kur';
 
   @override
   String get gettingMessagesHelperNote =>
       'Araya sahte uyandırmalar karışır; bu, yardımcının sunucusunun gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Kendi yardımcı sunucun, adresini aktarıcımıza bildirir. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => 'Onion rotasında kullanılabilir';
+
+  @override
+  String get gettingMessagesHelperChecking => 'Kontrol ediliyor…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet =>
+      'Aktarıcımız bunu henüz sunmuyor';
 
   @override
   String get helperSheetNeedTitle => 'Bir yardımcı uygulama gerekiyor';

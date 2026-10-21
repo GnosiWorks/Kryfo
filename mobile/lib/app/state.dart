@@ -2887,6 +2887,9 @@ class AppState extends ChangeNotifier {
     hidden: () => _router.listenFor.keys.toList(),
   );
   bool _relayKnocks = false;
+  // the relay really answered no: only then the card says it does not offer this
+  bool _relaySaidNo = false;
+  bool get helperRelaySaidNo => _relaySaidNo;
   String? _helperName;
   // 'due:<why>:<package>' while the home screen owes the word that the
   // helper app is gone (why 'gone') or the relay stopped knocking ('relay'),
@@ -2923,6 +2926,8 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   set relayKnocksForTest(bool v) => _relayKnocks = v;
   @visibleForTesting
+  set relaySaidNoForTest(bool v) => _relaySaidNo = v;
+  @visibleForTesting
   Future<void> lookAtHelperForTest() => _lookAtHelper();
   @visibleForTesting
   Future<int> helperRoundForTest() => _helperRound();
@@ -2930,6 +2935,7 @@ class AppState extends ChangeNotifier {
   Future<void> _loadHelper() async {
     try {
       _relayKnocks = await helper.relayKnocks();
+      _relaySaidNo = await helper.relayAnswer() == 'no';
       _helperRefused = await helper.refusedLasting();
       final prefs = await SharedPreferences.getInstance();
       _helperGone = prefs.getString(kHelperGoneKey) ?? '';
@@ -2946,15 +2952,17 @@ class AppState extends ChangeNotifier {
   Future<void> refreshHelperOffer() async {
     if (_sendMode != 'private' || !torReady) return;
     final was = _relayKnocks;
+    final wasNo = _relaySaidNo;
     try {
       _relayKnocks = await helper.relayKnocks(ask: true);
+      _relaySaidNo = await helper.relayAnswer() == 'no';
     } catch (e) {
       dlog('helper: relay not asked (${e.runtimeType})');
     }
     if (was && !_relayKnocks && _deliveryMode == DeliveryMode.helper) {
       await _helperFallBack('relay', '-');
     }
-    if (was != _relayKnocks) notifyListeners();
+    if (was != _relayKnocks || wasNo != _relaySaidNo) notifyListeners();
   }
 
   // the helper app's name for the status line, and whether it is still on

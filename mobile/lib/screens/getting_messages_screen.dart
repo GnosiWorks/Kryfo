@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 
 import '../delivery_mode.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, reduceMotion, session;
 import '../miui_autostart.dart';
 import '../notifications.dart';
+import '../ready_edge.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import 'helper_sheet.dart';
+import '../widgets/card_action.dart';
 import '../widgets/motion.dart';
 import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/press_scale.dart';
@@ -22,6 +24,10 @@ import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../dlog.dart';
+
+// the route switch, a stand-in in tests: the real one moves the engine
+@visibleForTesting
+Future<void> Function(String mode)? setRouteForTest;
 
 class GettingMessagesScreen extends StatefulWidget {
   const GettingMessagesScreen({super.key});
@@ -37,6 +43,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   // what they say when they do are the same question. null until read, so
   // the switch never opens on a default and slides
   bool? _hidePreview;
+  late final ReadyEdge _torUp;
 
   @override
   void initState() {
@@ -50,8 +57,15 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
           dlog('getting messages: preview setting (${e.runtimeType})');
         });
     appState.addListener(_changed);
-    // the helper app is offered once our relay says it can knock
+    // the helper app is offered once our relay says it can knock. tor is
+    // often still coming up as the page opens, so it is asked again each
+    // time tor on the onion route turns ready
     unawaited(appState.refreshHelperOffer());
+    _torUp = ReadyEdge(
+      appState,
+      () => appState.sendMode == 'private' && appState.torReady,
+      () => unawaited(appState.refreshHelperOffer()),
+    );
     // "4 min ago" has to become "5 min ago" on its own, while it is seen
     _timers.every(const Duration(seconds: 20), _changed);
   }
@@ -65,6 +79,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   @override
   void dispose() {
     _timers.dispose();
+    _torUp.dispose();
     appState.removeListener(_changed);
     super.dispose();
   }
@@ -94,9 +109,38 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     }
   }
 
+  // the helper app goes over tor or not at all, so its card offers the
+  // onion route first. the same switch as speed and privacy, which asks
+  // nothing before onion
+  Future<void> _toOnion() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    var saved = true;
+    try {
+      await (setRouteForTest ?? appState.setSendMode)('private');
+    } catch (_) {
+      saved = false;
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!saved) showHaloToast(context, l10n.modesNotChanged);
+  }
+
   @override
   Widget build(BuildContext context) {
     final mode = appState.deliveryMode;
+    // why the helper app cannot be picked yet, or null when it can
+    final onOnion = appState.sendMode == 'private';
+    final offered = mode == DeliveryMode.helper || appState.helperOffered;
+    // on onion, not offered yet: checking until the relay really said no
+    final checking = !offered && onOnion && !appState.helperRelaySaidNo;
+    final String? helperWait = offered
+        ? null
+        : !onOnion
+        ? l10n.gettingMessagesHelperOnionOnly
+        : checking
+        ? l10n.gettingMessagesHelperChecking
+        : l10n.gettingMessagesHelperRelayNotYet;
     // the app's one meaning of connected, the same the home screen shows
     final connecting = appState.linkComing;
     final status = deliveryStatus(
@@ -177,15 +221,26 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 on: mode == DeliveryMode.checkins,
                 onTap: () => _pick(DeliveryMode.checkins),
               ),
-              // only once our relay can knock: grows in when it says so
-              Unfold(
-                open: appState.helperOffered,
-                child: _ModeCard(
-                  title: l10n.deliveryModeThroughAHelperApp,
-                  body: l10n.gettingMessagesHelperBody,
-                  on: mode == DeliveryMode.helper,
-                  onTap: () => _pick(DeliveryMode.helper),
-                ),
+              // always there, greyed until onion and our relay allow it
+              _ModeCard(
+                title: l10n.deliveryModeThroughAHelperApp,
+                body: l10n.gettingMessagesHelperBody,
+                on: mode == DeliveryMode.helper,
+                wait: helperWait,
+                checking: checking,
+                // a pill says what the tap does: move the route, or set up
+                action: mode == DeliveryMode.helper
+                    ? null
+                    : helperWait == null
+                    ? l10n.gettingMessagesHelperSetUp
+                    : onOnion
+                    ? null
+                    : l10n.gettingMessagesHelperUseOnion,
+                onTap: helperWait == null
+                    ? () => _pick(DeliveryMode.helper)
+                    : onOnion
+                    ? null
+                    : _toOnion,
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -373,12 +428,20 @@ class _ModeCard extends StatelessWidget {
   final String? tag;
   final String body;
   final bool on;
-  final VoidCallback onTap;
+  // why it cannot be picked yet: the card greys and says so
+  final String? wait;
+  // the wait line is a check still running: a small spinner before it
+  final bool checking;
+  final String? action;
+  final VoidCallback? onTap;
   const _ModeCard({
     required this.title,
     this.tag,
     required this.body,
     required this.on,
+    this.wait,
+    this.checking = false,
+    this.action,
     required this.onTap,
   });
 
@@ -390,7 +453,7 @@ class _ModeCard extends StatelessWidget {
         selected: on,
         button: true,
         child: PressScale(
-          label: '$title. $body',
+          label: wait == null ? '$title. $body' : '$title. $body. $wait',
           onTap: onTap,
           scale: 0.98,
           child: ExcludeSemantics(
@@ -411,46 +474,116 @@ class _ModeCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
+                  AnimatedOpacity(
+                    opacity: wait == null ? 1 : 0.45,
+                    duration: const Duration(milliseconds: 200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: HaloType.sans(
+                                  size: 15.5,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.text,
+                                ),
+                              ),
+                            ),
+                            if (tag != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: HaloColors.amber.withValues(
+                                    alpha: 0.14,
+                                  ),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  tag!,
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    letter: 0.06,
+                                    color: HaloColors.amberText,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          body,
                           style: HaloType.sans(
-                            size: 15.5,
-                            weight: FontWeight.w600,
-                            color: HaloColors.text,
+                            size: 13,
+                            height: 1.5,
+                            color: HaloColors.warm,
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Unfold(
+                    open: wait != null || action != null,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      // the pill drops under the line when both do not fit.
+                      // full width, or a wrap shrinks and the pill sits left
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          alignment: wait == null
+                              ? WrapAlignment.end
+                              : WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 10,
+                          runSpacing: 8,
+                          children: [
+                            if (wait != null)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (checking) ...[
+                                    SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        key: const ValueKey('helperChecking'),
+                                        strokeWidth: 1.4,
+                                        color: HaloColors.amberText,
+                                        value: reduceMotion(context)
+                                            ? 0.7
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Flexible(
+                                    child: Text(
+                                      wait!,
+                                      style: HaloType.mono(
+                                        size: 11.5,
+                                        color: HaloColors.amberText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (action != null)
+                              CardAction(
+                                label: action!,
+                                onTap: onTap,
+                                fill: HaloColors.amber,
+                                ink: HaloColors.onAmber,
+                                swap: true,
+                              ),
+                          ],
                         ),
                       ),
-                      if (tag != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.amber.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            tag!,
-                            style: HaloType.mono(
-                              size: 10,
-                              letter: 0.06,
-                              color: HaloColors.amberText,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    body,
-                    style: HaloType.sans(
-                      size: 13,
-                      height: 1.5,
-                      color: HaloColors.warm,
                     ),
                   ),
                 ],

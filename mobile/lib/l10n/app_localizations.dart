@@ -13776,14 +13776,44 @@ abstract class AppLocalizations {
   /// screens/getting_messages_screen.dart: the helper app card
   ///
   /// In en, this message translates to:
-  /// **'Instant and light on battery. The helper\'s server sees your phone\'s IP address and learns when you get messages, never what they say.'**
+  /// **'Instant and light. Its server sees your IP and when messages come, never what they say.'**
   String get gettingMessagesHelperBody;
+
+  /// screens/getting_messages_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Onion'**
+  String get gettingMessagesHelperUseOnion;
+
+  /// screens/getting_messages_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get gettingMessagesHelperSetUp;
 
   /// screens/getting_messages_screen.dart: under the status line in helper app mode
   ///
   /// In en, this message translates to:
   /// **'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get gettingMessagesHelperNote;
+
+  /// screens/getting_messages_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion
+  ///
+  /// In en, this message translates to:
+  /// **'Available on the Onion route'**
+  String get gettingMessagesHelperOnionOnly;
+
+  /// screens/getting_messages_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get gettingMessagesHelperChecking;
+
+  /// screens/getting_messages_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps
+  ///
+  /// In en, this message translates to:
+  /// **'Our relay does not offer this yet'**
+  String get gettingMessagesHelperRelayNotYet;
 
   /// screens/helper_sheet.dart: no helper app on the phone
   ///

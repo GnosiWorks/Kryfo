@@ -3678,5 +3678,17 @@ void main() {
       l.voiceStoppedAtLimit,
       "Voice notes stop at 30 minutes. Listen to it, then send it.",
     );
+    expect(
+      l.gettingMessagesHelperBody,
+      "Instant and light. Its server sees your IP and when messages come, never what they say.",
+    );
+    expect(l.gettingMessagesHelperOnionOnly, "Available on the Onion route");
+    expect(
+      l.gettingMessagesHelperRelayNotYet,
+      "Our relay does not offer this yet",
+    );
+    expect(l.gettingMessagesHelperUseOnion, "Switch to Onion");
+    expect(l.gettingMessagesHelperSetUp, "Set up");
+    expect(l.gettingMessagesHelperChecking, "Checking…");
   });
 }

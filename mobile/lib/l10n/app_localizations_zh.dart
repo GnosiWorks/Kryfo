@@ -8169,11 +8169,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      '即时送达，省电。辅助应用的服务器能看到你手机的 IP 地址，并知道你何时收到消息，但从不知道内容。';
+      '即时且省电。它的服务器能看到你的 IP 和消息到达的时间，但从不知道内容。';
+
+  @override
+  String get gettingMessagesHelperUseOnion => '切换到 Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => '设置';
 
   @override
   String get gettingMessagesHelperNote =>
       '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => '在 Onion 线路上可用';
+
+  @override
+  String get gettingMessagesHelperChecking => '正在检查…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet => '我们的中继暂不支持';
 
   @override
   String get helperSheetNeedTitle => '你需要一个辅助应用';
@@ -16351,11 +16366,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperBody =>
-      '即時送達，省電。輔助應用程式的伺服器能看到你手機的 IP 位址，並知道你何時收到訊息，但從不知道內容。';
+      '即時且省電。它的伺服器能看到你的 IP 和訊息送達的時間，但從不知道內容。';
+
+  @override
+  String get gettingMessagesHelperUseOnion => '改用 Onion';
+
+  @override
+  String get gettingMessagesHelperSetUp => '設定';
 
   @override
   String get gettingMessagesHelperNote =>
       '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+
+  @override
+  String get gettingMessagesHelperOnionOnly => '在 Onion 路線上可用';
+
+  @override
+  String get gettingMessagesHelperChecking => '檢查中…';
+
+  @override
+  String get gettingMessagesHelperRelayNotYet => '我們的中繼暫不支援';
 
   @override
   String get helperSheetNeedTitle => '你需要一個輔助應用程式';
