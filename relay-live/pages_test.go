@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -154,7 +155,9 @@ func TestReadsShareOneBudget(t *testing.T) {
 // a page larger than the budget still goes, alone
 func TestPageLargerThanTheBudgetGoesAlone(t *testing.T) {
 	b := newPageBudget(10)
-	if !b.take(context.Background(), 100) {
+	alone, cancelAlone := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelAlone()
+	if !b.take(alone, 100) {
 		t.Fatal("a page larger than the budget waited with nothing held")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -320,5 +323,85 @@ func TestSavesDoNotWaitForReads(t *testing.T) {
 	url, _ := slowRelay(t, db, nil)
 	if d := publishTimed(t, connect(t, url), wrap(t, addr(), nil)); d >= 2*time.Second {
 		t.Fatalf("an ok took %v while the reads were taken", d)
+	}
+}
+
+// slow sockets fill the page budget: an honest page gets through once the
+// oldest pages had their time, and their sockets are closed
+func TestSlowPagesAreCutForAnHonestOne(t *testing.T) {
+	defer func(d time.Duration) { pageCutAfter = d }(pageCutAfter)
+	pageCutAfter = 3 * time.Second
+	db, _ := testStore(t)
+	url, l := slowRelay(t, db, nil)
+	big := addr()
+	fillWraps(t, db, big, 100, 90<<10)
+	var slow []*websocket.Conn
+	for i := 0; i < 14; i++ {
+		c := dialSlow(t, url)
+		slow = append(slow, c)
+		sendReq(t, c, "a"+strconv.Itoa(i), pageFilter(big))
+		go func() {
+			for {
+				if _, err := readNext(c, 30*time.Second); err != nil {
+					return
+				}
+				time.Sleep(9 * time.Second)
+			}
+		}()
+	}
+	waitFor(t, "the slow pages passing the budget", 10*time.Second, func() bool { return l.pages.inUse() > l.pages.max })
+	small := addr()
+	ev := wrap(t, small, nil)
+	if err := db.SaveEvent(context.Background(), &ev); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	h := dialSlow(t, url)
+	sendReq(t, h, "honest", nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {small}}, Limit: 20})
+	for {
+		env, err := readNext(h, 20*time.Second)
+		if err != nil {
+			t.Fatalf("the honest page: %v after %v", err, time.Since(start))
+		}
+		if _, ok := env.(*nostr.EOSEEnvelope); ok {
+			break
+		}
+	}
+	if d := time.Since(start); d > pageCutAfter+10*time.Second {
+		t.Fatalf("the honest page took %v", d)
+	}
+	if n := openConns(l); n > len(slow) {
+		t.Fatalf("%d connections open, no slow one was closed", n)
+	}
+}
+
+// a page that has not had its time is not cut: past the budget the next
+// read waits
+func TestYoungPagesAreNotCut(t *testing.T) {
+	defer func(d time.Duration) { pageCutAfter = d }(pageCutAfter)
+	pageCutAfter = time.Minute
+	db, _ := testStore(t)
+	url, l := slowRelay(t, db, func(r *khatru.Relay) { r.WriteWait = time.Minute })
+	const wraps, size = 40, 60 << 10
+	one := wraps * pageSize(&nostr.Event{Content: strings.Repeat("s", size), Tags: nostr.Tags{{"p", addr()}}})
+	l.pages.max = one
+	for i := 0; i < 3; i++ {
+		to := addr()
+		fillWraps(t, db, to, wraps, size)
+		c := dialSlow(t, url)
+		if i < 2 {
+			startPage(t, c, to)
+		} else {
+			sendReq(t, c, "page", pageFilter(to))
+		}
+	}
+	waitFor(t, "a page waiting", 5*time.Second, func() bool {
+		l.pages.mu.Lock()
+		defer l.pages.mu.Unlock()
+		return len(l.pages.waiting) == 1
+	})
+	time.Sleep(2 * time.Second)
+	if n := openConns(l); n != 3 {
+		t.Fatalf("%d of 3 connections open: a young page was cut", n)
 	}
 }

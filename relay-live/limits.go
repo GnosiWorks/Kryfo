@@ -126,6 +126,9 @@ type limits struct {
 	knock *knocker
 	// pages of stored wraps in memory, and reads of them (pages.go)
 	pages, reads *pageBudget
+	// the pages in memory now, for cutting the oldest. under inMemMu
+	inMem   map[*pageInMemory]struct{}
+	inMemMu sync.Mutex
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -148,6 +151,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		dataDir:  dataDir,
 		pages:    newPageBudget(maxPagesBytes),
 		reads:    newPageBudget(maxReadsBytes),
+		inMem:    map[*pageInMemory]struct{}{},
 	}
 	relay.MaxMessageSize = maxMessage
 	relay.WriteWait = writeWait

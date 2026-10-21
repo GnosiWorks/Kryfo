@@ -30,6 +30,8 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   stamped up to two days back, so a catch-up judged by its stamp would step
   over stored wraps it never got. held events count toward the bounds like
   queued ones.
+- `websocket.go`: `Close` ends a connection for the relay's own bounds
+  (pages.go closes the oldest pages' sockets when the page budget is full).
 - `responding.go`: a page of stored events gets `Relay.PageWait` in all,
   then the connection is closed with no eose. each write has its own
   deadline, so a reader taking a frame just inside it could keep the page,

@@ -9,10 +9,20 @@ package main
 // back as its events go out. a read starts while the pages are under
 // their budget, so they pass it by at most what the reads bring: pages in
 // memory stay under the two budgets together.
+//
+// pages drain only as fast as their sockets read, so slow sockets could
+// keep the page budget full for a page's whole deadline while every other
+// read waits. a read that finds it passed closes the connections of the
+// oldest pages, those that had pageCutAfter at least, until what they hold
+// brings the pages back under it, as a live queue past its bound closes its
+// listener. they reconnect and read again; a page just read is never cut.
 
 import (
 	"context"
+	"sort"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/fiatjaf/khatru"
 	"github.com/nbd-wtf/go-nostr"
@@ -58,6 +68,87 @@ func pageReserve(f nostr.Filter) int64 {
 	return int64(n) * maxEventHeld
 }
 
+// how long a page has in memory before it may be cut for room
+var pageCutAfter = 15 * time.Second
+
+// a page read and waiting for its socket
+type pageInMemory struct {
+	ws   *khatru.WebSocket
+	at   time.Time
+	held atomic.Int64
+	// its connection was closed for room. under inMemMu
+	cut bool
+}
+
+func (l *limits) pageIn(p *pageInMemory) {
+	l.inMemMu.Lock()
+	l.inMem[p] = struct{}{}
+	l.inMemMu.Unlock()
+}
+
+func (l *limits) pageOut(p *pageInMemory) {
+	l.inMemMu.Lock()
+	delete(l.inMem, p)
+	l.inMemMu.Unlock()
+}
+
+// closes the connections of the oldest pages until what they hold brings
+// the pages under their budget, counting pages already cut and not yet
+// gone. pages younger than pageCutAfter are left
+func (l *limits) cutOldest(now time.Time) {
+	over := l.pages.inUse() - l.pages.max
+	if over <= 0 {
+		return
+	}
+	l.inMemMu.Lock()
+	var old []*pageInMemory
+	for p := range l.inMem {
+		if p.cut {
+			over -= p.held.Load()
+		} else if now.Sub(p.at) >= pageCutAfter {
+			old = append(old, p)
+		}
+	}
+	sort.Slice(old, func(i, j int) bool { return old[i].at.Before(old[j].at) })
+	var cut []*khatru.WebSocket
+	for _, p := range old {
+		if over <= 0 {
+			break
+		}
+		p.cut = true
+		over -= p.held.Load()
+		cut = append(cut, p.ws)
+	}
+	l.inMemMu.Unlock()
+	for _, ws := range cut {
+		ws.Close()
+	}
+}
+
+// waits for the page budget, cutting the oldest pages once a second while
+// it is passed
+func (l *limits) waitForRoom(ctx context.Context) bool {
+	if l.pages.tryTake(0) {
+		return true
+	}
+	done := make(chan struct{})
+	go func() {
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+		for {
+			l.cutOldest(time.Now())
+			select {
+			case <-done:
+				return
+			case <-t.C:
+			}
+		}
+	}()
+	ok := l.pages.take(ctx, 0)
+	close(done)
+	return ok
+}
+
 // a byte budget taken in turn: a big page is not passed over by small ones
 type pageBudget struct {
 	mu      sync.Mutex
@@ -76,6 +167,17 @@ func newPageBudget(max int64) *pageBudget { return &pageBudget{max: max} }
 // with mu held. what is larger than the whole budget goes when nothing
 // else is held, and a take of 0 waits while the budget is passed
 func (b *pageBudget) fits(n int64) bool { return b.held+n <= b.max || b.held == 0 }
+
+// n bytes if they are there now and nobody waits
+func (b *pageBudget) tryTake(n int64) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if len(b.waiting) == 0 && b.fits(n) {
+		b.held += n
+		return true
+	}
+	return false
+}
 
 // waits for n bytes, false when ctx ended first
 func (b *pageBudget) take(ctx context.Context, n int64) bool {
@@ -176,7 +278,7 @@ func (l *limits) paged(q queryFunc) queryFunc {
 			<-slot
 			return nil, ctx.Err()
 		}
-		if !l.pages.take(ctx, 0) {
+		if !l.waitForRoom(ctx) {
 			l.reads.give(reserved)
 			<-slot
 			return nil, ctx.Err()
@@ -195,9 +297,13 @@ func (l *limits) paged(q queryFunc) queryFunc {
 		}
 		l.pages.force(held)
 		l.reads.give(reserved)
+		mem := &pageInMemory{ws: ws, at: time.Now()}
+		mem.held.Store(held)
+		l.pageIn(mem)
 		out := make(chan *nostr.Event)
 		go func() {
 			defer func() {
+				l.pageOut(mem)
 				l.pages.give(held)
 				<-slot
 				close(out)
@@ -208,6 +314,7 @@ func (l *limits) paged(q queryFunc) queryFunc {
 				case out <- ev:
 					n := pageSize(ev)
 					held -= n
+					mem.held.Add(-n)
 					l.pages.give(n)
 				case <-ctx.Done():
 					return
