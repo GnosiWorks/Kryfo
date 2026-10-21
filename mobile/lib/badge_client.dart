@@ -60,15 +60,18 @@ class BadgeReceipt {
 /// an invoice, or why there is none: the caller shows the manual address
 /// then. a first ask that does not get through is made once more, quietly:
 /// a cold onion circuit often finishes building just after the first ask
-/// gave up. a quiet session asks nothing and reads as the service saying no
-Future<InvoiceAsk> createInvoice(String tier) async {
+/// gave up. a quiet session asks nothing and reads as the service saying no.
+/// [wanted] false: the person walked away, and no second ask is made
+Future<InvoiceAsk> createInvoice(String tier, {bool Function()? wanted}) async {
   if (!kBadgeTiersShown || sessionQuiet) {
     return const InvoiceAsk.failed(InvoiceFailure.service);
   }
   final took = Stopwatch()..start();
   final first = await _askInvoice(tier);
   // past a minute the person has waited enough: the address is there
-  if (!first.again || took.elapsed > const Duration(minutes: 1)) {
+  if (!first.again ||
+      took.elapsed > const Duration(minutes: 1) ||
+      wanted?.call() == false) {
     return first.ask;
   }
   return (await _askInvoice(tier)).ask;

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the invoice ask: a first one that tor does not get through in time is made
 // once more, the screen says tor was slow when it was, and the countdown
-// follows how long the service keeps the invoice
+// follows how long the service keeps the invoice. a screen left behind
+// makes no second ask
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,7 +24,11 @@ const _made =
 class _Service implements HaloEngine {
   final List<String> answers;
   int asked = 0;
-  _Service(this.answers);
+  // the first ask waits for this, when set
+  final Completer<String>? hold;
+  // every get, in order
+  final gets = <String>[];
+  _Service(this.answers, {this.hold});
 
   @override
   Future<String> torPost(String url, String body) async {
@@ -29,11 +36,15 @@ class _Service implements HaloEngine {
     expect(body, '{"tier":"supporter"}');
     final a = answers[asked < answers.length ? asked : answers.length - 1];
     asked++;
+    if (asked == 1 && hold != null) return hold!.future;
     return a;
   }
 
   @override
-  Future<String> torGetJson(String url) async => '{"status":"pending"}';
+  Future<String> torGetJson(String url) async {
+    gets.add(url);
+    return url.endsWith('/pubkey') ? '{"pubkey":"x"}' : '{"status":"pending"}';
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
@@ -54,7 +65,7 @@ Widget _framed(Widget home) => MaterialApp(
   home: home,
 );
 
-Future<void> _payWithBitcoin(WidgetTester t, _Service s) async {
+Future<void> _openSupport(WidgetTester t, _Service s) async {
   t.view.physicalSize = const Size(2000, 3200);
   t.view.devicePixelRatio = 2;
   addTearDown(t.view.reset);
@@ -65,6 +76,10 @@ Future<void> _payWithBitcoin(WidgetTester t, _Service s) async {
   useEngineForTest(s);
   await t.pumpWidget(_framed(const DonateScreen()));
   await t.pump(const Duration(seconds: 1));
+}
+
+Future<void> _payWithBitcoin(WidgetTester t, _Service s) async {
+  await _openSupport(t, s);
   await t.ensureVisible(find.text(l10n.donatePayWithBitcoin));
   await t.pump(const Duration(milliseconds: 100));
   await t.tap(find.text(l10n.donatePayWithBitcoin));
@@ -172,5 +187,40 @@ void main() {
       },
       skip: !kBadgeTiersShown,
     );
+  });
+
+  group('walking away', () {
+    testWidgets('leaving during the first ask makes no second one', (t) async {
+      final hold = Completer<String>();
+      final s = _Service([_made], hold: hold);
+      await _payWithBitcoin(t, s);
+      await t.pump(const Duration(seconds: 1));
+      expect(s.asked, 1);
+      Navigator.of(
+        t.element(find.text(l10n.donateReachingThePaymentService)),
+      ).pop();
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.text(l10n.donateReachingThePaymentService), findsNothing);
+      hold.complete('error: post: context deadline exceeded');
+      await t.pump(const Duration(seconds: 1));
+      expect(s.asked, 1);
+      await t.pumpWidget(const SizedBox());
+    }, skip: !kBadgeTiersShown);
+
+    testWidgets('"use the address instead" makes no second ask', (t) async {
+      final hold = Completer<String>();
+      final s = _Service([_made], hold: hold);
+      await _payWithBitcoin(t, s);
+      await t.pump(const Duration(seconds: 21));
+      await t.tap(find.text(l10n.donateUseTheAddressInstead));
+      await t.pump(const Duration(seconds: 1));
+      hold.complete('error: post: context deadline exceeded');
+      await t.pump(const Duration(seconds: 1));
+      expect(s.asked, 1);
+      expect(find.text(l10n.donateTorWasSlowTo), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    }, skip: !kBadgeTiersShown);
   });
 }

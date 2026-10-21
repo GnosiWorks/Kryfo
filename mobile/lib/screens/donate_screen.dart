@@ -1023,7 +1023,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && _phase == _Phase.loading) setState(() => _waited++);
     });
-    final got = await createInvoice(widget.tierKey);
+    final got = await createInvoice(
+      widget.tierKey,
+      wanted: () => mounted && ask == _ask,
+    );
     if (!mounted || ask != _ask) return;
     _waitTick?.cancel();
     final inv = got.invoice;
