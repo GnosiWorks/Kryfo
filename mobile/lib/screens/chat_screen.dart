@@ -7466,9 +7466,11 @@ class _Bubble extends StatelessWidget {
   Widget _build(BuildContext context) {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
-    // a photo with a caption is one card: flatter corners, the picture's
-    // top ones the same so the edges meet
-    final corner = isImage && msg.text.isNotEmpty ? kCaptionCorner : 14.0;
+    // a photo or an album with a caption is one card: flatter corners, the
+    // picture's top ones the same so the edges meet
+    final corner = (isImage || album != null) && msg.text.isNotEmpty
+        ? kCaptionCorner
+        : 14.0;
     final shape = fileShapeNow(msg.filePath, msg.fileName);
     // a video with no caption sits on the chat like a photo: no bubble
     // around it, its time and tick in its corner
@@ -7733,6 +7735,7 @@ class _Bubble extends StatelessWidget {
                                           failedShown: failedShown,
                                           parked: parked,
                                         ),
+                                        corner: corner,
                                       )
                                     else if (msg.making != null)
                                       Padding(
@@ -8303,6 +8306,7 @@ class _Bubble extends StatelessWidget {
     BuildContext context,
     AlbumRun<_Msg> run, {
     required Widget stamp,
+    required double corner,
   }) {
     final shown = run.drawn;
     final w = (MediaQuery.sizeOf(context).width * 0.72).clamp(200.0, 340.0);
@@ -8311,6 +8315,7 @@ class _Bubble extends StatelessWidget {
       tiles: [for (final x in shown) x == null ? null : _tileOf(x)],
       width: w,
       captioned: msg.text.isNotEmpty,
+      radius: corner,
       stamp: stamp,
       onOpen: (i) {
         onAct?.call();
@@ -8572,12 +8577,13 @@ class _ViaDevTag extends StatelessWidget {
   }
 }
 
-// above the composer while writing a reply: a snippet of the target and an
-// X to cancel
-// the corners of a photo sent with a caption, flatter than a text bubble's
+// the corners of a photo or an album sent with a caption, flatter than a
+// text bubble's
 @visibleForTesting
 const kCaptionCorner = 10.0;
 
+// above the composer while writing a reply: a snippet of the target and an
+// X to cancel
 class _ReplyQuoteBar extends StatelessWidget {
   final _Msg target;
   final VoidCallback onCancel;

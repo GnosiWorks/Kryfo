@@ -60,9 +60,11 @@ class AlbumGrid extends StatelessWidget {
     this.onLongPress,
     this.stamp,
     this.stampAtStart = false,
+    this.radius = 14,
   });
 
-  static const radius = 14.0;
+  // the bubble's own corners, so the grid's edges meet them
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +74,13 @@ class AlbumGrid extends StatelessWidget {
     // is a dead end
     final any = tiles.any((t) => t?.path != null);
     final h = albumHeight(n, width);
-    const r = Radius.circular(radius);
+    final r = Radius.circular(radius);
     return Semantics(
       container: true,
       label: l10n.albumLabel(whole(n)),
       child: ClipRRect(
         borderRadius: captioned
-            ? const BorderRadius.vertical(top: r)
+            ? BorderRadius.vertical(top: r)
             : BorderRadius.circular(radius),
         child: SizedBox(
           width: width,

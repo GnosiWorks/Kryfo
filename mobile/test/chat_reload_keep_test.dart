@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/album.dart' show AlbumTag;
+import 'package:kryfo/widgets/album_grid.dart' show AlbumGrid;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
@@ -495,9 +496,58 @@ void main() {
         'sent': 1,
       });
     }
-    await devOpen(t, chat());
+    // two albums with a caption: one led by a photo, one by a video
+    final clip = File('${docs.path}/lead.mp4')..writeAsBytesSync([0, 0, 0, 1]);
+    for (final (id, lead, text) in [
+      ('a1b2c3d4e5f60718', 'photo', 'album caption'),
+      ('b1b2c3d4e5f60718', 'video', 'video album caption'),
+    ]) {
+      for (var i = 0; i < 2; i++) {
+        final video = lead == 'video' && i == 0;
+        await mem.insert('messages', {
+          'peer_id': _peer,
+          'direction': 'in',
+          'plaintext': i == 0 ? text : '',
+          'sent_at': at - 600000 + (lead == 'video' ? 60000 : 0) + i,
+          'msg_uid': '$id-$i',
+          'media_path': video
+              ? null
+              : (File(
+                  '${docs.path}/$id-$i.png',
+                )..writeAsBytesSync(base64Decode(_dot))).path,
+          'file_path': video ? clip.path : null,
+          'file_name': video ? 'lead.mp4' : null,
+          'sent': 1,
+          ...AlbumTag(id, 2, i).toRow(),
+        });
+      }
+    }
+    // tall enough to build all four
+    await devOpen(t, chat(), size: const Size(1000, 6000));
     await settle(t);
     expect(kCaptionCorner, lessThan(14));
+    // the album's grid takes the card's corners
+    final grids = t.widgetList<AlbumGrid>(find.byType(AlbumGrid)).toList();
+    expect(grids, hasLength(2));
+    for (final g in grids) {
+      expect(g.captioned, isTrue);
+      expect(g.radius, kCaptionCorner);
+    }
+    for (final text in ['album caption', 'video album caption']) {
+      final card = t
+          .widgetList<Container>(
+            find.ancestor(
+              of: find.text(text, findRichText: true),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .firstWhere((b) => b.borderRadius is BorderRadiusDirectional);
+      final r = card.borderRadius! as BorderRadiusDirectional;
+      expect(r.topStart, const Radius.circular(kCaptionCorner), reason: text);
+      expect(r.topEnd, const Radius.circular(kCaptionCorner), reason: text);
+    }
     for (final (text, out) in [
       ('their caption', false),
       ('my caption', true),
