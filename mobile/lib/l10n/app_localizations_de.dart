@@ -5801,6 +5801,42 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportReconnects => 'Neuverbindungen';
 
   @override
+  String get transportWhyNetwork => 'Netzwechsel';
+
+  @override
+  String get transportWhyHand => 'Von Hand';
+
+  @override
+  String get transportWhyRelays => 'Kein Relais antwortete';
+
+  @override
+  String get transportWhyStall => 'Start hing fest';
+
+  @override
+  String get transportWhyTorOff => 'Tor war aus';
+
+  @override
+  String get transportWhyDialer => '3 Minuten kein Relais';
+
+  @override
+  String get transportWhyOnion => 'Zurück auf Onion';
+
+  @override
+  String get transportWhyBridges => 'Brücken geändert';
+
+  @override
+  String get transportWhyAuto => 'Automatisch';
+
+  @override
+  String get transportWhyOffline => 'Kein Netz';
+
+  @override
+  String get transportWhyCircuits => 'Neue Kanäle';
+
+  @override
+  String get transportWhyOther => 'Anderes';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

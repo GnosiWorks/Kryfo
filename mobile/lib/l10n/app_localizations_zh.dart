@@ -5490,6 +5490,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportReconnects => '重新连接';
 
   @override
+  String get transportWhyNetwork => '网络变化';
+
+  @override
+  String get transportWhyHand => '手动';
+
+  @override
+  String get transportWhyRelays => '没有中继回应';
+
+  @override
+  String get transportWhyStall => '启动卡住';
+
+  @override
+  String get transportWhyTorOff => 'Tor 已关';
+
+  @override
+  String get transportWhyDialer => '3 分钟没有中继';
+
+  @override
+  String get transportWhyOnion => '回到 Onion';
+
+  @override
+  String get transportWhyBridges => '网桥变更';
+
+  @override
+  String get transportWhyAuto => '自动';
+
+  @override
+  String get transportWhyOffline => '没有网络';
+
+  @override
+  String get transportWhyCircuits => '新线路';
+
+  @override
+  String get transportWhyOther => '其他';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -13917,6 +13953,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get transportReconnects => '重新連線';
+
+  @override
+  String get transportWhyNetwork => '網路變更';
+
+  @override
+  String get transportWhyHand => '手動';
+
+  @override
+  String get transportWhyRelays => '沒有中繼回應';
+
+  @override
+  String get transportWhyStall => '啟動卡住';
+
+  @override
+  String get transportWhyTorOff => 'Tor 已關閉';
+
+  @override
+  String get transportWhyDialer => '3 分鐘沒有中繼';
+
+  @override
+  String get transportWhyOnion => '回到 Onion';
+
+  @override
+  String get transportWhyBridges => '橋接變更';
+
+  @override
+  String get transportWhyAuto => '自動';
+
+  @override
+  String get transportWhyOffline => '沒有網路';
+
+  @override
+  String get transportWhyCircuits => '新線路';
+
+  @override
+  String get transportWhyOther => '其他';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {

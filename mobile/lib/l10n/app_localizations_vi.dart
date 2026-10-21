@@ -5731,6 +5731,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportReconnects => 'Kết nối lại';
 
   @override
+  String get transportWhyNetwork => 'Đổi mạng';
+
+  @override
+  String get transportWhyHand => 'Thủ công';
+
+  @override
+  String get transportWhyRelays => 'Không relay nào trả lời';
+
+  @override
+  String get transportWhyStall => 'Khởi động bị kẹt';
+
+  @override
+  String get transportWhyTorOff => 'Tor đã tắt';
+
+  @override
+  String get transportWhyDialer => 'Không có relay trong 3 phút';
+
+  @override
+  String get transportWhyOnion => 'Quay lại Onion';
+
+  @override
+  String get transportWhyBridges => 'Đổi cầu nối';
+
+  @override
+  String get transportWhyAuto => 'Tự động';
+
+  @override
+  String get transportWhyOffline => 'Không có mạng';
+
+  @override
+  String get transportWhyCircuits => 'Mạch mới';
+
+  @override
+  String get transportWhyOther => 'Khác';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

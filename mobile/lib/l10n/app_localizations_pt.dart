@@ -5774,6 +5774,42 @@ class AppLocalizationsPt extends AppLocalizations {
   String get transportReconnects => 'Reconexões';
 
   @override
+  String get transportWhyNetwork => 'Mudança de rede';
+
+  @override
+  String get transportWhyHand => 'Manual';
+
+  @override
+  String get transportWhyRelays => 'Nenhum retransmissor respondeu';
+
+  @override
+  String get transportWhyStall => 'Arranque travado';
+
+  @override
+  String get transportWhyTorOff => 'O Tor estava desligado';
+
+  @override
+  String get transportWhyDialer => 'Nenhum retransmissor em 3 minutos';
+
+  @override
+  String get transportWhyOnion => 'De volta ao Onion';
+
+  @override
+  String get transportWhyBridges => 'Pontes alteradas';
+
+  @override
+  String get transportWhyAuto => 'Automático';
+
+  @override
+  String get transportWhyOffline => 'Sem rede';
+
+  @override
+  String get transportWhyCircuits => 'Circuitos novos';
+
+  @override
+  String get transportWhyOther => 'Outro';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

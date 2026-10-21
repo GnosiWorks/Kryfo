@@ -5848,6 +5848,42 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportReconnects => 'Переподключения';
 
   @override
+  String get transportWhyNetwork => 'Смена сети';
+
+  @override
+  String get transportWhyHand => 'Вручную';
+
+  @override
+  String get transportWhyRelays => 'Ни один ретранслятор не ответил';
+
+  @override
+  String get transportWhyStall => 'Запуск застрял';
+
+  @override
+  String get transportWhyTorOff => 'Tor был выключен';
+
+  @override
+  String get transportWhyDialer => '3 минуты без ретрансляторов';
+
+  @override
+  String get transportWhyOnion => 'Снова на Onion';
+
+  @override
+  String get transportWhyBridges => 'Смена мостов';
+
+  @override
+  String get transportWhyAuto => 'Авто';
+
+  @override
+  String get transportWhyOffline => 'Нет сети';
+
+  @override
+  String get transportWhyCircuits => 'Новые цепочки';
+
+  @override
+  String get transportWhyOther => 'Другое';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

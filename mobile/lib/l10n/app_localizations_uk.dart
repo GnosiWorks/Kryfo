@@ -5832,6 +5832,42 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportReconnects => 'Перепідключення';
 
   @override
+  String get transportWhyNetwork => 'Зміна мережі';
+
+  @override
+  String get transportWhyHand => 'Вручну';
+
+  @override
+  String get transportWhyRelays => 'Жоден ретранслятор не відповів';
+
+  @override
+  String get transportWhyStall => 'Запуск застряг';
+
+  @override
+  String get transportWhyTorOff => 'Tor був вимкнений';
+
+  @override
+  String get transportWhyDialer => '3 хвилини без ретрансляторів';
+
+  @override
+  String get transportWhyOnion => 'Знову на Onion';
+
+  @override
+  String get transportWhyBridges => 'Зміна мостів';
+
+  @override
+  String get transportWhyAuto => 'Авто';
+
+  @override
+  String get transportWhyOffline => 'Немає мережі';
+
+  @override
+  String get transportWhyCircuits => 'Нові ланцюжки';
+
+  @override
+  String get transportWhyOther => 'Інше';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

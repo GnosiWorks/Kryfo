@@ -5754,6 +5754,42 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportReconnects => 'Yeniden bağlanmalar';
 
   @override
+  String get transportWhyNetwork => 'Ağ değişti';
+
+  @override
+  String get transportWhyHand => 'Elle';
+
+  @override
+  String get transportWhyRelays => 'Hiçbir aktarıcı yanıt vermedi';
+
+  @override
+  String get transportWhyStall => 'Başlatma takıldı';
+
+  @override
+  String get transportWhyTorOff => 'Tor kapalıydı';
+
+  @override
+  String get transportWhyDialer => '3 dakikadır aktarıcı yok';
+
+  @override
+  String get transportWhyOnion => 'Yeniden Onion';
+
+  @override
+  String get transportWhyBridges => 'Köprü değişti';
+
+  @override
+  String get transportWhyAuto => 'Otomatik';
+
+  @override
+  String get transportWhyOffline => 'Ağ yok';
+
+  @override
+  String get transportWhyCircuits => 'Yeni devreler';
+
+  @override
+  String get transportWhyOther => 'Diğer';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

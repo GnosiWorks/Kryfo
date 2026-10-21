@@ -5825,6 +5825,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportReconnects => 'مرات إعادة الاتصال';
 
   @override
+  String get transportWhyNetwork => 'تغيّرت الشبكة';
+
+  @override
+  String get transportWhyHand => 'يدويًا';
+
+  @override
+  String get transportWhyRelays => 'لم يردّ أي مُرحِّل';
+
+  @override
+  String get transportWhyStall => 'تعثّر البدء';
+
+  @override
+  String get transportWhyTorOff => 'كان Tor متوقفًا';
+
+  @override
+  String get transportWhyDialer => 'لا مُرحِّل منذ 3 دقائق';
+
+  @override
+  String get transportWhyOnion => 'العودة إلى Onion';
+
+  @override
+  String get transportWhyBridges => 'تغيّرت الجسور';
+
+  @override
+  String get transportWhyAuto => 'تلقائي';
+
+  @override
+  String get transportWhyOffline => 'لا توجد شبكة';
+
+  @override
+  String get transportWhyCircuits => 'دوائر جديدة';
+
+  @override
+  String get transportWhyOther => 'أخرى';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

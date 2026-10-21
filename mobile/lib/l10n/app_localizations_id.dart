@@ -5737,6 +5737,42 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportReconnects => 'Sambung ulang';
 
   @override
+  String get transportWhyNetwork => 'Jaringan berganti';
+
+  @override
+  String get transportWhyHand => 'Manual';
+
+  @override
+  String get transportWhyRelays => 'Tidak ada relay yang menjawab';
+
+  @override
+  String get transportWhyStall => 'Awal macet';
+
+  @override
+  String get transportWhyTorOff => 'Tor mati';
+
+  @override
+  String get transportWhyDialer => 'Tidak ada relay selama 3 menit';
+
+  @override
+  String get transportWhyOnion => 'Kembali ke Onion';
+
+  @override
+  String get transportWhyBridges => 'Jembatan diganti';
+
+  @override
+  String get transportWhyAuto => 'Otomatis';
+
+  @override
+  String get transportWhyOffline => 'Tidak ada jaringan';
+
+  @override
+  String get transportWhyCircuits => 'Sirkuit baru';
+
+  @override
+  String get transportWhyOther => 'Lainnya';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

@@ -7198,6 +7198,54 @@
   "@transportReconnects": {
     "description": "screens/transport_screen.dart"
   },
+  "transportWhyNetwork": "Network change",
+  "@transportWhyNetwork": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyHand": "By hand",
+  "@transportWhyHand": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyRelays": "No relay answered",
+  "@transportWhyRelays": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyStall": "Start stalled",
+  "@transportWhyStall": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyTorOff": "Tor was off",
+  "@transportWhyTorOff": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyDialer": "No relay for 3 minutes",
+  "@transportWhyDialer": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyOnion": "Back on onion",
+  "@transportWhyOnion": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyBridges": "Bridge change",
+  "@transportWhyBridges": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyAuto": "Automatic",
+  "@transportWhyAuto": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyOffline": "No network",
+  "@transportWhyOffline": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyCircuits": "New circuits",
+  "@transportWhyCircuits": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
+  "transportWhyOther": "Other",
+  "@transportWhyOther": {
+    "description": "screens/transport_screen.dart, why tor reconnected"
+  },
   "transportDialsTimeouts": "{dials, plural, one{{dials} dial} other{{dials} dials}} · {timeouts, plural, one{{timeouts} timeout} other{{timeouts} timeouts}}",
   "@transportDialsTimeouts": {
     "description": "screens/transport_screen.dart",

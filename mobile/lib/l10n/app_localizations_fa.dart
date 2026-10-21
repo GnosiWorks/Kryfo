@@ -5745,6 +5745,42 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportReconnects => 'اتصال‌های دوباره';
 
   @override
+  String get transportWhyNetwork => 'تغییر شبکه';
+
+  @override
+  String get transportWhyHand => 'دستی';
+
+  @override
+  String get transportWhyRelays => 'هیچ رله‌ای پاسخ نداد';
+
+  @override
+  String get transportWhyStall => 'شروع گیر کرد';
+
+  @override
+  String get transportWhyTorOff => 'Tor خاموش بود';
+
+  @override
+  String get transportWhyDialer => '۳ دقیقه بدون رله';
+
+  @override
+  String get transportWhyOnion => 'بازگشت به Onion';
+
+  @override
+  String get transportWhyBridges => 'تغییر پل‌ها';
+
+  @override
+  String get transportWhyAuto => 'خودکار';
+
+  @override
+  String get transportWhyOffline => 'بدون شبکه';
+
+  @override
+  String get transportWhyCircuits => 'مدارهای تازه';
+
+  @override
+  String get transportWhyOther => 'دیگر';
+
+  @override
   String transportDialsTimeouts(int dials, int timeouts) {
     final intl.NumberFormat dialsNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

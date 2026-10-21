@@ -9321,6 +9321,78 @@ abstract class AppLocalizations {
   /// **'Reconnects'**
   String get transportReconnects;
 
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Network change'**
+  String get transportWhyNetwork;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'By hand'**
+  String get transportWhyHand;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'No relay answered'**
+  String get transportWhyRelays;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Start stalled'**
+  String get transportWhyStall;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Tor was off'**
+  String get transportWhyTorOff;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'No relay for 3 minutes'**
+  String get transportWhyDialer;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Back on onion'**
+  String get transportWhyOnion;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge change'**
+  String get transportWhyBridges;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get transportWhyAuto;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'No network'**
+  String get transportWhyOffline;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'New circuits'**
+  String get transportWhyCircuits;
+
+  /// screens/transport_screen.dart, why tor reconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get transportWhyOther;
+
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:

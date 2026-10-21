@@ -1,29 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// why tor was bounced or given new circuits lately, for the transport
-// screen. a release build logs nothing, and "tor drops" is only readable
-// from the phone with this. in memory only, a kind and a time: no address,
-// no network name, gone with the process
+// why tor was bounced lately, for the transport screen: a kind and a time, in memory only
 
 import (
 	"sync"
 	"time"
 )
 
-// what made a reconnect, as the transport screen shows it
+// what made a reconnect. codes: the app words them in the person's language
 const (
-	whyNetwork  = "network change"
-	whyByHand   = "by hand"
-	whyRelays   = "no relay answered"
-	whyStall    = "bootstrap stalled"
-	whyTorOff   = "tor was off"
-	whyDialer   = "no relay in 3 minutes"
-	whyMode     = "back on onion"
-	whyBridges  = "bridge change"
-	whyAuto     = "automatic"
-	whyNoNet    = "no network"
-	whyCircuits = "new circuits"
+	whyNetwork  = "network"
+	whyByHand   = "hand"
+	whyRelays   = "relays"
+	whyStall    = "stall"
+	whyTorOff   = "tor_off"
+	whyDialer   = "dialer"
+	whyMode     = "onion"
+	whyBridges  = "bridges"
+	whyAuto     = "auto"
+	whyNoNet    = "offline"
+	whyCircuits = "circuits"
 	whyOther    = "other"
 )
 

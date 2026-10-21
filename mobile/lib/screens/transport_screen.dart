@@ -270,7 +270,32 @@ List<({int at, String why})> bounceNotes(Map<String, dynamic> tx) {
   ];
 }
 
-/// "4 · network change 3 · new circuits 1", the most first, or null for none
+/// the engine's code for why tor reconnected, in the person's language
+@visibleForTesting
+String bounceWhy(String code) => switch (code) {
+  'network' => l10n.transportWhyNetwork,
+  'hand' => l10n.transportWhyHand,
+  'relays' => l10n.transportWhyRelays,
+  'stall' => l10n.transportWhyStall,
+  'tor_off' => l10n.transportWhyTorOff,
+  'dialer' => l10n.transportWhyDialer,
+  'onion' => l10n.transportWhyOnion,
+  'bridges' => l10n.transportWhyBridges,
+  'auto' => l10n.transportWhyAuto,
+  'offline' => l10n.transportWhyOffline,
+  'circuits' => l10n.transportWhyCircuits,
+  _ => l10n.transportWhyOther,
+};
+
+/// a time today, with the day when it was another day
+@visibleForTesting
+String bounceWhen(DateTime at, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = at.year == n.year && at.month == n.month && at.day == n.day;
+  return today ? hourMinute(at) : dayMonthTime(at);
+}
+
+/// "4 · Network change 3 · New circuits 1", the most first, or null for none
 @visibleForTesting
 String? bounceTotals(Map<String, dynamic> tx) {
   final raw = tx['bounce_counts'];
@@ -284,7 +309,7 @@ String? bounceTotals(Map<String, dynamic> tx) {
   final all = kinds.fold<int>(0, (s, k) => s + k.n);
   return [
     whole(all),
-    for (final k in kinds) '${k.why} ${whole(k.n)}',
+    for (final k in kinds) '${bounceWhy(k.why)} ${whole(k.n)}',
   ].join(' · ');
 }
 
@@ -609,8 +634,8 @@ class _AliveState extends State<_Alive> {
         ),
         for (final b in bounceNotes(ctrl).take(5))
           _Line(
-            hourMinute(DateTime.fromMillisecondsSinceEpoch(b.at * 1000)),
-            b.why,
+            bounceWhen(DateTime.fromMillisecondsSinceEpoch(b.at * 1000)),
+            bounceWhy(b.why),
             HaloColors.text2,
             indent: true,
           ),
