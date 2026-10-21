@@ -120,6 +120,9 @@ void main() {
       phone(t);
       await t.pumpWidget(framed(const DonateScreen()));
       await t.pump(const Duration(seconds: 1));
+      // the coins sit below the first screen since card joined the tiers
+      await t.ensureVisible(find.text(l10n.donateMonero));
+      await t.pump(const Duration(milliseconds: 300));
       final before = t.getSize(find.byType(AnimatedSize)).height;
       await t.tap(find.text(l10n.donateMonero));
       await t.pump(const Duration(milliseconds: 20));
