@@ -1657,7 +1657,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'Das nächste Foto, das du sendest, öffnet sich geschützt · die andere Person kann keinen Screenshot davon machen';
+      'Das nächste Foto, das du sendest, öffnet sich geschützt · Kryfo sperrt Screenshots davon';
 
   @override
   String get chatPhotoProtectionOff => 'Fotoschutz aus';
@@ -8461,11 +8461,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Chats auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen';
+      'Blockiert Screenshots und Bildschirmaufnahmen auf beiden Handys und das Kopieren, Weiterleiten oder Speichern der Nachrichten des anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8526,7 +8526,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen';
+      'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
 
   @override
   String get roomShotsAlwaysOn =>

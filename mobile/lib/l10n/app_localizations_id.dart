@@ -1636,7 +1636,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'Foto berikutnya yang kamu kirim dibuka dalam mode terlindung · dia tidak bisa mengambil tangkapan layarnya';
+      'Foto berikutnya yang kamu kirim dibuka dalam mode terlindung · Kryfo memblokir tangkapan layarnya';
 
   @override
   String get chatPhotoProtectionOff => 'Perlindungan foto mati';
@@ -8361,11 +8361,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
+      'Kryfo memblokir tangkapan layar dan rekaman layar obrolan ini di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Memblokir tangkapan layar dan rekaman layar di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain';
+      'Memblokir tangkapan layar dan rekaman layar di kedua ponsel, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8424,7 +8424,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain';
+      'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
   String get roomShotsAlwaysOn =>

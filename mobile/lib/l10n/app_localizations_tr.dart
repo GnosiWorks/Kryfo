@@ -1651,7 +1651,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'Göndereceğin sonraki fotoğraf korumalı açılır · ekran görüntüsünü alamaz';
+      'Göndereceğin sonraki fotoğraf korumalı açılır · Kryfo ekran görüntüsünü engeller';
 
   @override
   String get chatPhotoProtectionOff => 'Fotoğraf koruması kapalı';
@@ -8392,11 +8392,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+      'Kryfo bu sohbetin ekran görüntüsünü ve ekran kaydını iki telefonda da engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+      'İki telefonda da ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8456,7 +8456,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de';
+      'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
   String get roomShotsAlwaysOn =>

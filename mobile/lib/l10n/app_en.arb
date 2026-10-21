@@ -2067,7 +2067,7 @@
   "@chatBuildingAPrivateRoute": {
     "description": "screens/chat_screen.dart"
   },
-  "chatTheNextPhotoYou": "The next photo you send opens protected · they cannot screenshot it",
+  "chatTheNextPhotoYou": "The next photo you send opens protected · Kryfo blocks screenshots of it",
   "@chatTheNextPhotoYou": {
     "description": "screens/chat_screen.dart"
   },
@@ -10532,11 +10532,11 @@
   "@chatShotsWhenTheyUpdate": {
     "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
   },
-  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
+  "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@chatShotsBothPhones": {
     "description": "screens/contact_screen.dart: under the switch while it is on"
   },
-  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
+  "chatShotsBlocksBoth": "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@chatShotsBlocksBoth": {
     "description": "screens/contact_screen.dart: under the switch while it is off, what it does"
   },
@@ -10600,7 +10600,7 @@
       }
     }
   },
-  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
+  "roomShotsBlocked": "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@roomShotsBlocked": {
     "description": "screens/group_chat_screen.dart: the line a room shows on its first open"
   },

@@ -1636,7 +1636,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'Ảnh tiếp theo bạn gửi sẽ mở ở chế độ bảo vệ · họ không thể chụp màn hình ảnh đó';
+      'Ảnh tiếp theo bạn gửi sẽ mở ở chế độ bảo vệ · Kryfo chặn chụp màn hình ảnh này';
 
   @override
   String get chatPhotoProtectionOff => 'Đã tắt bảo vệ ảnh';
@@ -8352,11 +8352,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo chặn chụp màn hình và quay màn hình cuộc trò chuyện này trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau';
+      'Kryfo chặn chụp màn hình và quay màn hình cuộc trò chuyện này trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Chặn chụp màn hình và quay màn hình trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau';
+      'Chặn chụp màn hình và quay màn hình trên cả hai điện thoại, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8415,7 +8415,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác';
+      'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
   String get roomShotsAlwaysOn =>

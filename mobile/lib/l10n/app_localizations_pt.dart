@@ -1657,7 +1657,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'A próxima foto que você enviar abre protegida · a pessoa não consegue fazer captura de tela dela';
+      'A próxima foto que você enviar abre protegida · o Kryfo bloqueia capturas de tela dela';
 
   @override
   String get chatPhotoProtectionOff => 'Proteção de foto desativada';
@@ -8430,11 +8430,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
+      'O Kryfo bloqueia capturas e gravação de tela desta conversa nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro. Não impede apps com permissão para ler a tela nem um celular ou app modificado para contornar isso.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloqueia capturas e gravação de tela nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro';
+      'Bloqueia capturas e gravação de tela nos dois celulares, e também copiar, encaminhar ou salvar as mensagens do outro. Não impede apps com permissão para ler a tela nem um celular ou app modificado para contornar isso.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8495,7 +8495,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela, e também copiar, encaminhar ou salvar as mensagens dos outros';
+      'O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela, e também copiar, encaminhar ou salvar as mensagens dos outros. Não impede apps com permissão para ler a tela nem um celular ou app modificado para contornar isso.';
 
   @override
   String get roomShotsAlwaysOn =>

@@ -698,7 +698,7 @@ void main() {
     );
     expect(
       l.chatTheNextPhotoYou,
-      "The next photo you send opens protected · they cannot screenshot it",
+      "The next photo you send opens protected · Kryfo blocks screenshots of it",
     );
     expect(l.chatPhotoProtectionOff, "Photo protection off");
     expect(
@@ -3405,11 +3405,11 @@ void main() {
     expect(l.chatShotsWhenTheyUpdate, "Available when they update");
     expect(
       l.chatShotsBothPhones,
-      "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages",
+      "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
     );
     expect(
       l.chatShotsBlocksBoth,
-      "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages",
+      "Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
     );
     expect(l.chatShotsBlockedHere, "Kryfo blocks screenshots in this chat");
     expect(
@@ -3449,7 +3449,7 @@ void main() {
     );
     expect(
       l.roomShotsBlocked,
-      "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages",
+      "Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
     );
     expect(l.roomShotsAlwaysOn, "Always on in a room, on every phone in it");
     expect(l.homeShotsPerChat, "Screenshot blocking is now per chat.");

@@ -1660,7 +1660,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'La prossima foto che invii si apre protetta · non se ne può fare uno screenshot';
+      'La prossima foto che invii si apre protetta · Kryfo ne blocca gli screenshot';
 
   @override
   String get chatPhotoProtectionOff => 'Protezione foto disattivata';
@@ -8438,11 +8438,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blocca screenshot e registrazione dello schermo di questa chat su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa chat su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blocca screenshot e registrazione dello schermo su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro';
+      'Blocca screenshot e registrazione dello schermo su entrambi i telefoni, e anche copiare, inoltrare o salvare i messaggi dell\'altro. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8503,7 +8503,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono, e anche copiare, inoltrare o salvare i messaggi degli altri';
+      'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono, e anche copiare, inoltrare o salvare i messaggi degli altri. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
 
   @override
   String get roomShotsAlwaysOn =>

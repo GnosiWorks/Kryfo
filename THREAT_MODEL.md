@@ -45,7 +45,11 @@ put you in danger, read all of it.
 - a compromised device. malware or someone holding your unlocked phone sees
   what you see.
 - the person you talk to. they can screenshot, copy, forward, or tell people
-  they talk to you.
+  they talk to you. a chat's screenshot blocking (android's FLAG_SECURE, on
+  both phones) stops screenshots and screen recording inside Kryfo and turns
+  off copying, forwarding and saving. it cannot stop apps allowed to read
+  the screen for accessibility, a rooted or modified phone, or a copy of
+  Kryfo patched to ignore it.
 - global traffic analysis. tor raises the cost of correlation. an adversary
   watching large parts of the network can still try timing attacks. there is
   no cover traffic.

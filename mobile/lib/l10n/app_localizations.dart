@@ -2628,7 +2628,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The next photo you send opens protected · they cannot screenshot it'**
+  /// **'The next photo you send opens protected · Kryfo blocks screenshots of it'**
   String get chatTheNextPhotoYou;
 
   /// screens/chat_screen.dart
@@ -13494,13 +13494,13 @@ abstract class AppLocalizations {
   /// screens/contact_screen.dart: under the switch while it is on
   ///
   /// In en, this message translates to:
-  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages'**
+  /// **'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get chatShotsBothPhones;
 
   /// screens/contact_screen.dart: under the switch while it is off, what it does
   ///
   /// In en, this message translates to:
-  /// **'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages'**
+  /// **'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get chatShotsBlocksBoth;
 
   /// screens/chat_screen.dart: screen reader label of the small mark in the chat header
@@ -13572,7 +13572,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart: the line a room shows on its first open
   ///
   /// In en, this message translates to:
-  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages'**
+  /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get roomShotsBlocked;
 
   /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off

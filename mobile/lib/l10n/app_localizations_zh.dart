@@ -1586,7 +1586,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '正在建立私密路线 · 首次连接比较慢，之后就快了。现在发送的内容会排队，稍后自动送达。';
 
   @override
-  String get chatTheNextPhotoYou => '你发的下一张照片会以受保护方式打开 · 对方无法截屏';
+  String get chatTheNextPhotoYou => '你发的下一张照片会以受保护方式打开 · Kryfo 会阻止对它截屏';
 
   @override
   String get chatPhotoProtectionOff => '照片保护已关闭';
@@ -8001,10 +8001,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
 
   @override
-  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息';
+  String get chatShotsBothPhones =>
+      'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
-  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息';
+  String get chatShotsBlocksBoth =>
+      '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截屏';
@@ -8055,7 +8057,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息';
+  String get roomShotsBlocked =>
+      'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
@@ -9916,7 +9919,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '正在建立私密路線 · 第一次連線比較慢，之後就快了。現在傳送的任何內容都會先排隊，之後自動送達。';
 
   @override
-  String get chatTheNextPhotoYou => '你傳送的下一張照片會以保護模式開啟 · 對方無法截圖';
+  String get chatTheNextPhotoYou => '你傳送的下一張照片會以保護模式開啟 · Kryfo 會阻止對它截圖';
 
   @override
   String get chatPhotoProtectionOff => '照片保護已關閉';
@@ -16213,10 +16216,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
 
   @override
-  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息';
+  String get chatShotsBothPhones =>
+      'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
-  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息';
+  String get chatShotsBlocksBoth =>
+      '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截圖';
@@ -16267,7 +16272,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息';
+  String get roomShotsBlocked =>
+      'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';

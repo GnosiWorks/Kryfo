@@ -1646,7 +1646,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'The next photo you send opens protected · they cannot screenshot it';
+      'The next photo you send opens protected · Kryfo blocks screenshots of it';
 
   @override
   String get chatPhotoProtectionOff => 'Photo protection off';
@@ -8360,11 +8360,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages';
+      'Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages';
+      'Blocks screenshots and screen recording on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo blocks screenshots in this chat';
@@ -8423,7 +8423,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages';
+      'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
   String get roomShotsAlwaysOn => 'Always on in a room, on every phone in it';

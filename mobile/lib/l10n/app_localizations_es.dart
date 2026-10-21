@@ -1661,7 +1661,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'La próxima foto que envíes se abre protegida · no podrá hacerle captura de pantalla';
+      'La próxima foto que envíes se abre protegida · Kryfo bloquea sus capturas de pantalla';
 
   @override
   String get chatPhotoProtectionOff => 'Protección de fotos desactivada';
@@ -8435,11 +8435,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
+      'Kryfo bloquea las capturas y la grabación de pantalla de este chat en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro';
+      'Bloquea las capturas y la grabación de pantalla en los dos teléfonos, y copiar, reenviar o guardar los mensajes del otro. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo bloquea las capturas en este chat';
@@ -8498,7 +8498,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos, y copiar, reenviar o guardar los mensajes de los demás';
+      'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos, y copiar, reenviar o guardar los mensajes de los demás. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
 
   @override
   String get roomShotsAlwaysOn =>

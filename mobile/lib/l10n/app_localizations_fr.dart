@@ -1660,7 +1660,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatTheNextPhotoYou =>
-      'La prochaine photo que vous envoyez s’ouvre protégée · la personne ne pourra pas en faire de capture d’écran';
+      'La prochaine photo que vous envoyez s’ouvre protégée · Kryfo en bloque les captures d’écran';
 
   @override
   String get chatPhotoProtectionOff => 'Protection photo désactivée';
@@ -8452,11 +8452,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatShotsBothPhones =>
-      'Kryfo bloque les captures et l’enregistrement d’écran de cette discussion sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre';
+      'Kryfo bloque les captures et l’enregistrement d’écran de cette discussion sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre. Il ne peut rien contre les applis autorisées à lire l’écran, ni contre un téléphone ou une appli modifiés pour le contourner.';
 
   @override
   String get chatShotsBlocksBoth =>
-      'Bloque les captures et l’enregistrement d’écran sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre';
+      'Bloque les captures et l’enregistrement d’écran sur les deux téléphones, ainsi que la copie, le transfert et l’enregistrement des messages de l’autre. Il ne peut rien contre les applis autorisées à lire l’écran, ni contre un téléphone ou une appli modifiés pour le contourner.';
 
   @override
   String get chatShotsBlockedHere =>
@@ -8517,7 +8517,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get roomShotsBlocked =>
-      'Kryfo bloque les captures et l’enregistrement d’écran de ce salon sur chaque téléphone, ainsi que la copie, le transfert et l’enregistrement des messages des autres';
+      'Kryfo bloque les captures et l’enregistrement d’écran de ce salon sur chaque téléphone, ainsi que la copie, le transfert et l’enregistrement des messages des autres. Il ne peut rien contre les applis autorisées à lire l’écran, ni contre un téléphone ou une appli modifiés pour le contourner.';
 
   @override
   String get roomShotsAlwaysOn =>
