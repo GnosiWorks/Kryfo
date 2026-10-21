@@ -123,8 +123,8 @@ type limits struct {
 	written atomic.Int64
 	// the helper app mode's registrations, nil when off
 	knock *knocker
-	// pages of stored wraps in memory (pages.go)
-	pages *pageBudget
+	// pages of stored wraps in memory, and reads of them (pages.go)
+	pages, reads *pageBudget
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -146,6 +146,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		stored:   newBucket(float64(storedPerMin)/60, float64(storedPerMin)*4),
 		dataDir:  dataDir,
 		pages:    newPageBudget(maxPagesBytes),
+		reads:    newPageBudget(maxReadsBytes),
 	}
 	relay.MaxMessageSize = maxMessage
 	relay.WriteWait = writeWait
@@ -160,7 +161,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 	relay.RejectFilter = append(relay.RejectFilter, l.filter)
 	relay.RejectCountFilter = append(relay.RejectCountFilter, l.filter)
 	for i, q := range relay.QueryEvents {
-		relay.QueryEvents[i] = l.paged(noDeletionLookups(q))
+		relay.QueryEvents[i] = noDeletionLookups(l.paged(q))
 	}
 	if dataDir != "" {
 		go l.watchDisk(dataDir)

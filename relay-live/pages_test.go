@@ -30,12 +30,6 @@ func pageFilter(to string) nostr.Filter {
 	return nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 100}
 }
 
-func waiters(l *limits) int {
-	l.pages.mu.Lock()
-	defer l.pages.mu.Unlock()
-	return len(l.pages.waiting)
-}
-
 func waitFor(t *testing.T, what string, within time.Duration, ok func() bool) {
 	t.Helper()
 	end := time.Now().Add(within)
@@ -75,14 +69,33 @@ func TestOnePageAtATimePerConnection(t *testing.T) {
 	}
 }
 
-// pages of all sockets together stay under one budget. a page past it
-// waits before its query, and goes once another page is let go
+// pages of all sockets together stay under one budget, passed by at most
+// what the reads under way bring. a page past it waits before its query,
+// and goes once another page is let go
 func TestPagesShareOneBudget(t *testing.T) {
 	db, _ := testStore(t)
 	url, l := slowRelay(t, db, func(r *khatru.Relay) { r.WriteWait = time.Minute })
 	const wraps, size = 40, 60 << 10
 	one := wraps * pageSize(&nostr.Event{Content: strings.Repeat("s", size), Tags: nostr.Tags{{"p", addr()}}})
-	l.pages.max = pageReserve(pageFilter(addr())) + 2*one + one/4
+	l.pages.max = 2*one + one/4
+	l.reads.max = 2 * pageReserve(pageFilter(addr()))
+	waiting := func(pages, reads int) func() bool {
+		return func() bool {
+			l.pages.mu.Lock()
+			p := len(l.pages.waiting)
+			l.pages.mu.Unlock()
+			l.reads.mu.Lock()
+			r := len(l.reads.waiting)
+			l.reads.mu.Unlock()
+			return p == pages && r == reads
+		}
+	}
+	bound := func() {
+		t.Helper()
+		if held := l.pages.inUse(); held > l.pages.max+l.reads.max {
+			t.Fatalf("%d MB of pages held, the bound is %d MB", held>>20, (l.pages.max+l.reads.max)>>20)
+		}
+	}
 
 	var cs []*websocket.Conn
 	for i := 0; i < 6; i++ {
@@ -96,18 +109,46 @@ func TestPagesShareOneBudget(t *testing.T) {
 			sendReq(t, c, "page", pageFilter(to))
 		}
 	}
-	waitFor(t, "three pages waiting", 5*time.Second, func() bool { return waiters(l) == 3 })
-	if held := l.pages.inUse(); held > l.pages.max {
-		t.Fatalf("%d bytes of pages held, the budget is %d", held, l.pages.max)
-	}
+	// three pages read, two waiting for room, one for a read
+	waitFor(t, "two pages waiting for room and one for a read", 5*time.Second, waiting(2, 1))
+	bound()
 	if n := db.Stats().InUse; n != 0 {
 		t.Fatalf("%d store connections held by waiting pages", n)
 	}
 	cs[0].Close()
-	waitFor(t, "a waiting page going", 5*time.Second, func() bool { return waiters(l) == 2 })
-	if held := l.pages.inUse(); held > l.pages.max {
-		t.Fatalf("%d bytes of pages held, the budget is %d", held, l.pages.max)
+	waitFor(t, "the waiting pages going", 5*time.Second, waiting(1, 0))
+	bound()
+}
+
+// reads under way are counted at what their pages could hold: past the
+// read budget a page waits before its query
+type heldQuery struct {
+	backend
+	in      atomic.Int32
+	release chan struct{}
+}
+
+func (h *heldQuery) QueryEvents(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
+	h.in.Add(1)
+	<-h.release
+	return h.backend.QueryEvents(ctx, f)
+}
+
+func TestReadsShareOneBudget(t *testing.T) {
+	db := &heldQuery{backend: memStore(t), release: make(chan struct{})}
+	url, l := slowRelay(t, db, nil)
+	l.reads.max = 2 * pageReserve(pageFilter(addr()))
+	for i := 0; i < 3; i++ {
+		sendReq(t, dialSlow(t, url), "page", pageFilter(addr()))
 	}
+	waitFor(t, "two reads under way and one waiting", 5*time.Second, func() bool {
+		l.reads.mu.Lock()
+		defer l.reads.mu.Unlock()
+		return db.in.Load() == 2 && len(l.reads.waiting) == 1
+	})
+	close(db.release)
+	waitFor(t, "the third read", 5*time.Second, func() bool { return db.in.Load() == 3 })
+	waitFor(t, "the reads giving their budget back", 5*time.Second, func() bool { return l.reads.inUse() == 0 })
 }
 
 // a page larger than the budget still goes, alone
