@@ -112,10 +112,6 @@ void main() {
           )
           .first,
     );
-    // ignore: avoid_print
-    print(
-      'DBG ${tile(l10n.donateCard)} ${tile(l10n.donateBitcoin)} ${t.getSize(find.text(l10n.donateBitcoin))} ${t.getSize(find.text(l10n.donateBadgeUnlocks))} ${t.getSize(find.text(l10n.donateCard))} ${find.text(' ').evaluate().length}',
-    );
     expect(tile(l10n.donateCard).height, tile(l10n.donateBitcoin).height);
     expect(tile(l10n.donateCard).height, tile(l10n.donateMonero).height);
     expect(tile(l10n.donateCard).width, tile(l10n.donateMonero).width);
