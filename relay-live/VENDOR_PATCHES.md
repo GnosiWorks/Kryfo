@@ -12,7 +12,9 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   the sender gets its ok, with no deadline, so one slow listener held up
   every sender to its address. the listeners are read under
   `clientsMutex`, which upstream skips, as a reader so publishers do not
-  wait for each other.
+  wait for each other. a listener that goes is cleared from the list's
+  array: upstream only shortens the list, and the slot past its end keeps
+  the closed connection and its buffers until a new listener takes it.
 - `websocket.go`: every write gets `Relay.WriteWait` (upstream's field, set
   to 10s and never used), and a write that fails closes the connection.
   each connection has a queue for new events, written by a goroutine that

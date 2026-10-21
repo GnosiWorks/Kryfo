@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -265,6 +266,36 @@ func fillPage(t *testing.T, db *store, to string) map[string]bool {
 		page[ev.ID] = true
 	}
 	return page
+}
+
+// once their clients are gone the relay holds none of their connections:
+// no goroutine, no entry and no slot of the listener list keeps one
+func TestClosedConnectionsAreLetGo(t *testing.T) {
+	const n = 20
+	var gone atomic.Int32
+	url, l := slowRelay(t, memStore(t), func(r *khatru.Relay) {
+		r.OnConnect = append(r.OnConnect, func(ctx context.Context) {
+			runtime.AddCleanup(khatru.GetConnection(ctx), func(struct{}) { gone.Add(1) }, struct{}{})
+		})
+	})
+	var cs []*websocket.Conn
+	for i := 0; i < n; i++ {
+		c := dialSlow(t, url)
+		listen(t, c, addr())
+		cs = append(cs, c)
+	}
+	for _, c := range cs {
+		c.Close()
+	}
+	waitConns(t, l, 0, 5*time.Second)
+	end := time.Now().Add(5 * time.Second)
+	for gone.Load() < n {
+		if time.Now().After(end) {
+			t.Fatalf("%d of %d closed connections still held", n-int(gone.Load()), n)
+		}
+		runtime.GC()
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 // readers stopped in the middle of their pages hold no store connection,
