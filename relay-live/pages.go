@@ -19,8 +19,9 @@ import (
 )
 
 // bytes of pages read and waiting for their sockets, and of pages being
-// read counted at their most. a read for 100 events counts 16 MB, so the
-// read budget lets 23 such reads run at once
+// read counted at their most. a read for 100 events counts 12 MB, so the
+// read budget lets 31 such reads run at once, about as many as the store has
+// connections for
 var (
 	maxPagesBytes = int64(envInt("RELAY_MAX_PAGES_MB", 128)) << 20
 	maxReadsBytes = int64(envInt("RELAY_MAX_READS_MB", 384)) << 20

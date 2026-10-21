@@ -25,8 +25,9 @@ import (
 
 const (
 	wrapKind = 1059
-	// nip-44 caps a wrap's content at 87472 bytes
-	maxMessage = 128 << 10
+	// nip-44 caps a wrap's content at 87472 bytes, and the rest of the
+	// event is under a kilobyte
+	maxMessage = 96 << 10
 	// a media send is a burst of slices, then quiet
 	eventsPerSec, eventBurst = 10, 500
 	// one live subscription per socket, catch-up pages one after another

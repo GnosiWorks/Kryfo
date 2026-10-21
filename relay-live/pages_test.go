@@ -280,7 +280,7 @@ func TestMessageSizeBound(t *testing.T) {
 	if err := publish(t, connect(t, url), ok); err != nil {
 		t.Fatalf("the largest wrap the app sends was refused: %v", err)
 	}
-	big := wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", 140<<10) })
+	big := wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", 100<<10) })
 	b, err := nostr.EventEnvelope{Event: big}.MarshalJSON()
 	if err != nil {
 		t.Fatal(err)
