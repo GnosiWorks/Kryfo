@@ -46,7 +46,7 @@ func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
 	if !routeOK() {
 		t.Fatal("the route reads down after relays answered through it")
 	}
-	// they are still benched as before: they did not take it
+	// they are still benched: they did not take it
 	relayHealthMu.Lock()
 	n := relayFails[a.url()]
 	relayHealthMu.Unlock()
