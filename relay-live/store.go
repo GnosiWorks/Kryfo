@@ -27,14 +27,20 @@ const (
 	checkpointEvery = 30 * time.Second
 )
 
-// store connections open at once, kept open between uses. saves wait for
-// each other anyway, and a read holds one only while its query runs. a
-// catch-up scans every wrap in its window, so more than the cpus can run
-// at once only helps while the disk is read
+// store connections for reads, kept open between uses. a read holds one
+// only while its query runs. a catch-up scans every wrap in its window, so
+// more than the cpus can run at once only helps while the disk is read
 var storeConns = envInt("RELAY_STORE_CONNS", 32)
+
+// saves, deletes and the sweep have connections of their own, so a storm
+// of reads does not hold up an ok, and a burst of saves waiting on the
+// write lock does not hold up reads. sqlite takes one writer at a time
+var storeWriters = envInt("RELAY_STORE_WRITERS", 2)
 
 type store struct {
 	*sqlite3.SQLite3Backend
+	// the same file, for writes
+	w *sqlite3.SQLite3Backend
 	// a connection of its own with no busy wait, for checkpoints
 	ckpt *sql.DB
 }
@@ -48,20 +54,41 @@ func openStore(path string) (*store, error) {
 	if strings.Contains(path, "?") {
 		sep = "&"
 	}
-	db := &sqlite3.SQLite3Backend{DatabaseURL: path + sep +
-		"_journal_mode=WAL&_sync=FULL&_busy_timeout=" + strconv.Itoa(busyTimeout)}
+	url := path + sep + "_journal_mode=WAL&_sync=FULL&_busy_timeout=" + strconv.Itoa(busyTimeout)
+	db := &sqlite3.SQLite3Backend{DatabaseURL: url}
 	if err := db.Init(); err != nil {
 		return nil, err
 	}
 	db.DB.SetMaxOpenConns(storeConns)
 	db.DB.SetMaxIdleConns(storeConns)
+	w := &sqlite3.SQLite3Backend{DatabaseURL: url}
+	if err := w.Init(); err != nil {
+		db.Close()
+		return nil, err
+	}
+	w.DB.SetMaxOpenConns(storeWriters)
+	w.DB.SetMaxIdleConns(storeWriters)
 	ckpt, err := sql.Open("sqlite3", path+sep+"_sync=FULL&_busy_timeout=0")
 	if err != nil {
+		w.Close()
 		db.Close()
 		return nil, err
 	}
 	ckpt.SetMaxOpenConns(1)
-	return &store{db, ckpt}, nil
+	return &store{db, w, ckpt}, nil
+}
+
+func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
+	return s.w.SaveEvent(ctx, ev)
+}
+
+func (s *store) DeleteEvent(ctx context.Context, ev *nostr.Event) error {
+	return s.w.DeleteEvent(ctx, ev)
+}
+
+// writes go to the write connections: the sweep deletes through this
+func (s *store) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return s.w.ExecContext(ctx, query, args...)
 }
 
 // a page is read to its end before the first event goes out, which gives
@@ -93,6 +120,7 @@ func (s *store) QueryEvents(ctx context.Context, f nostr.Filter) (chan *nostr.Ev
 
 func (s *store) Close() {
 	s.ckpt.Close()
+	s.w.Close()
 	s.SQLite3Backend.Close()
 }
 

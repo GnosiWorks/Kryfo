@@ -178,11 +178,18 @@ var (
 // khatru looks up a kind 5's targets before any reject hook runs. this relay
 // keeps wraps until they expire, so those lookups never reach the store and
 // the event then meets l.event like any other. khatru's expiry checks have
-// no connection and pass.
+// no connection and pass. before it saves an event khatru also asks for a
+// kind 5 naming it. the store never holds one, so that is answered here
+// without a store connection or a page.
 func noDeletionLookups(q queryFunc) queryFunc {
 	return func(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
 		if khatru.IsInternalCall(ctx) && khatru.GetConnection(ctx) != nil {
 			return nil, errNoDeletion
+		}
+		if len(f.Kinds) == 1 && f.Kinds[0] == 5 {
+			ch := make(chan *nostr.Event)
+			close(ch)
+			return ch, nil
 		}
 		return q(ctx, f)
 	}

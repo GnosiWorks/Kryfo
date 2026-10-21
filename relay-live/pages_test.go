@@ -170,3 +170,32 @@ func TestMessageSizeBound(t *testing.T) {
 		t.Fatal("a message past the bound was answered")
 	}
 }
+
+// a save goes through while every read connection is taken
+func TestSavesDoNotWaitForReads(t *testing.T) {
+	defer func(n int) { storeConns = n }(storeConns)
+	storeConns = 1
+	db, _ := testStore(t)
+	conn, err := db.SQLite3Backend.DB.Conn(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	ev := wrap(t, addr(), nil)
+	if err := db.SaveEvent(ctx, &ev); err != nil {
+		t.Fatalf("a save waited for the read connections: %v", err)
+	}
+	if n := sweep(ctx, db, 0); n != 0 {
+		t.Fatalf("the sweep dropped %d fresh wraps", n)
+	}
+	if ctx.Err() != nil {
+		t.Fatal("the sweep waited for the read connections")
+	}
+	// and through the relay, whose lookups before a save need no store read
+	url, _ := slowRelay(t, db, nil)
+	if d := publishTimed(t, connect(t, url), wrap(t, addr(), nil)); d >= 2*time.Second {
+		t.Fatalf("an ok took %v while the reads were taken", d)
+	}
+}
