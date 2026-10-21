@@ -677,10 +677,12 @@ class _DonateScreenState extends State<DonateScreen> {
   // do. no browser: the link goes on the clipboard
   Future<void> _openCard() async {
     HapticFeedback.selectionClick();
+    // both card paths pass here, so this is where the name is said
     final ok = await showConfirmSheet(
       context,
       title: l10n.donateCardPay,
-      line: l10n.settingsFollowBrowserNote,
+      line: l10n.donateCardSeesName,
+      detail: l10n.settingsFollowBrowserNote,
       yes: l10n.settingsFollowOpen,
       keep: l10n.commonCancel,
       rose: false,

@@ -135,6 +135,8 @@ void main() {
     await t.tap(find.text(l10n.donateCardPay));
     await _beats(t);
     expect(find.text(l10n.settingsFollowBrowserNote), findsOneWidget);
+    // the box and the sheet both say it
+    expect(find.text(l10n.donateCardSeesName), findsNWidgets(2));
     expect(opened, isEmpty);
     // cancel opens nothing
     await t.tap(find.text(l10n.commonCancel));
@@ -211,6 +213,8 @@ void main() {
       await t.tap(find.text(l10n.donateNoBitcoinCard));
       await _beats(t);
       expect(find.text(l10n.settingsFollowBrowserNote), findsOneWidget);
+      // the quick path says who sees the name too, on the sheet
+      expect(find.text(l10n.donateCardSeesName), findsOneWidget);
       expect(opened, isEmpty);
       await t.tap(find.text(l10n.settingsFollowOpen));
       await _beats(t);
