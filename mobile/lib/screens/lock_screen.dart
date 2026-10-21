@@ -76,7 +76,11 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     super.initState();
     _watchHold();
     _lock.addListener(_onLock);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fingerWhenInFront());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // a phone that said no before the app had a screen is asked again
+      if (!_lock.bioSupported) unawaited(_lock.recheckFinger());
+      _fingerWhenInFront();
+    });
   }
 
   // the prompt only while the app is in front: the pad goes up as the app

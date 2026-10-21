@@ -14,6 +14,7 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:local_auth/local_auth.dart';
 
 import 'container.dart';
@@ -793,16 +794,36 @@ class LockState extends ChangeNotifier {
       _probeWanted = true;
       return;
     }
+    if (_bioSupported) return;
+    // one already running: asked again once it is done
+    if (_reprobing) {
+      _probeWanted = true;
+      return;
+    }
     _probeWanted = false;
-    if (_reprobing || _bioSupported) return;
     _reprobing = true;
     try {
       await _probeBio();
+      // the screen can be in front a beat before android answers for it:
+      // asked twice more while it stays in front
+      for (final wait in const [Duration(seconds: 1), Duration(seconds: 2)]) {
+        if (_bioSupported || !_inFront()) break;
+        await Future<void>.delayed(wait);
+        if (!_inFront()) break;
+        await _probeBio();
+      }
     } finally {
       _reprobing = false;
     }
-    if (_bioSupported) notifyListeners();
+    if (_bioSupported) {
+      notifyListeners();
+    } else if (_probeWanted && _inFront()) {
+      unawaited(_probeBioAgain());
+    }
   }
+
+  bool _inFront() =>
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
   // a table from before vaults gets its wraps and more entries, in one
   // write. until that write lands the old table opens the same pins, and a

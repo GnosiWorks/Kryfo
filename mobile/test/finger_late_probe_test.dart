@@ -18,15 +18,19 @@ import 'pin_flow_fakes.dart';
 
 // local_auth as android answers it: nothing before the app has a screen
 var _screen = false;
+// answers still "none" after the screen came, as android does for a beat
+var _lag = 0;
 void _finger() {
   _screen = false;
+  _lag = 0;
   TestWidgetsFlutterBinding.ensureInitialized();
   const ch = MethodChannel('plugins.flutter.io/local_auth');
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   m.setMockMethodCallHandler(
     ch,
     (c) async => switch (c.method) {
-      'getAvailableBiometrics' => _screen ? ['fingerprint'] : <String>[],
+      'getAvailableBiometrics' =>
+        _screen && _lag-- <= 0 ? ['fingerprint'] : <String>[],
       'isDeviceSupported' => true,
       _ => null,
     },
@@ -61,6 +65,14 @@ Future<(LockState, _HeldBio, MemStore)> _withFinger({bool held = false}) async {
     revealAfter: Duration.zero,
   );
   return (s, bio, made.store);
+}
+
+// the asks run on the test's clock: a few seconds of it
+Future<void> _settle(WidgetTester t) async {
+  for (var i = 0; i < 5; i++) {
+    await t.pump(const Duration(seconds: 1));
+  }
+  await t.pumpAndSettle();
 }
 
 void main() {
@@ -116,17 +128,38 @@ void main() {
     bio.answer = 'cancel';
     expect(s.locked, isTrue);
     await t.pumpWidget(app(LockScreen(lock: s), still: true));
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(find.text(l10n.lockUseFingerprint), findsNothing);
     expect(bio.calls.where((c) => c == 'unlock'), isEmpty);
     _screen = true;
     s.returned();
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(find.text(l10n.lockUseFingerprint), findsOneWidget);
     expect(bio.calls.where((c) => c == 'unlock'), hasLength(1));
     // a cancelled prompt is not asked for again by itself
     s.returned();
-    await t.pumpAndSettle();
+    await _settle(t);
+    expect(bio.calls.where((c) => c == 'unlock'), hasLength(1));
+  });
+
+  testWidgets('a phone that names its finger only a beat after the screen '
+      'came is asked again while the app is in front', (t) async {
+    phone(t);
+    _finger();
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final (s, bio, _) = await _withFinger();
+    await s.load();
+    bio.answer = 'cancel';
+    await t.pumpWidget(app(LockScreen(lock: s), still: true));
+    await _settle(t);
+    _screen = true;
+    _lag = 1;
+    s.returned();
+    await t.pump();
+    expect(find.text(l10n.lockUseFingerprint), findsNothing);
+    await _settle(t);
+    expect(s.bioSupported, isTrue);
+    expect(find.text(l10n.lockUseFingerprint), findsOneWidget);
     expect(bio.calls.where((c) => c == 'unlock'), hasLength(1));
   });
 }
