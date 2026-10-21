@@ -25,8 +25,8 @@ import (
 
 const (
 	wrapKind = 1059
-	// nip-44 caps a wrap's content near 90 kB
-	maxMessage = 256 << 10
+	// nip-44 caps a wrap's content at 87472 bytes
+	maxMessage = 128 << 10
 	// a media send is a burst of slices, then quiet
 	eventsPerSec, eventBurst = 10, 500
 	// one live subscription per socket, catch-up pages one after another
@@ -60,8 +60,9 @@ const (
 	walPages = 8 << 12
 	// a client gets this long to take each frame, then it is closed
 	writeWait = 10 * time.Second
-	// and this long for a page of stored wraps, which waits in memory until
-	// it is written. the app gives up on a page after 90 s
+	// and this long for a page of stored wraps in all, which waits in memory
+	// until it is written. the app gives up on a page after 20 s without an
+	// event
 	pageWait = 2 * time.Minute
 	// live wraps waiting for one connection, counted as what they hold in
 	// memory. a phone on a slow circuit gets about 160 media slices of
@@ -104,8 +105,11 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 }
 
 // a connection's events, reqs, the knocks its wraps may set off and the
-// new knock registrations it may make
-type budget struct{ events, reqs, knocks, regs *bucket }
+// new knock registrations it may make, and its one page in memory
+type budget struct {
+	events, reqs, knocks, regs *bucket
+	page                       chan struct{}
+}
 
 type limits struct {
 	mu       sync.Mutex
@@ -119,6 +123,8 @@ type limits struct {
 	written atomic.Int64
 	// the helper app mode's registrations, nil when off
 	knock *knocker
+	// pages of stored wraps in memory (pages.go)
+	pages *pageBudget
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -139,6 +145,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		maxConns: maxConns,
 		stored:   newBucket(float64(storedPerMin)/60, float64(storedPerMin)*4),
 		dataDir:  dataDir,
+		pages:    newPageBudget(maxPagesBytes),
 	}
 	relay.MaxMessageSize = maxMessage
 	relay.WriteWait = writeWait
@@ -153,7 +160,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 	relay.RejectFilter = append(relay.RejectFilter, l.filter)
 	relay.RejectCountFilter = append(relay.RejectCountFilter, l.filter)
 	for i, q := range relay.QueryEvents {
-		relay.QueryEvents[i] = noDeletionLookups(q)
+		relay.QueryEvents[i] = l.paged(noDeletionLookups(q))
 	}
 	if dataDir != "" {
 		go l.watchDisk(dataDir)
@@ -163,7 +170,10 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 
 type queryFunc = func(context.Context, nostr.Filter) (chan *nostr.Event, error)
 
-var errNoDeletion = errors.New("this relay deletes nothing on request")
+var (
+	errNoDeletion = errors.New("this relay deletes nothing on request")
+	errNotOpen    = errors.New("this connection is not open")
+)
 
 // khatru looks up a kind 5's targets before any reject hook runs. this relay
 // keeps wraps until they expire, so those lookups never reach the store and
@@ -190,7 +200,13 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst), newBucket(regsPerSec, regBurst)}
+	l.conns[ws] = &budget{
+		events: newBucket(eventsPerSec, eventBurst),
+		reqs:   newBucket(reqsPerSec, reqBurst),
+		knocks: newBucket(knocksPerSec, knockBurst),
+		regs:   newBucket(regsPerSec, regBurst),
+		page:   make(chan struct{}, 1),
+	}
 	l.mu.Unlock()
 }
 
