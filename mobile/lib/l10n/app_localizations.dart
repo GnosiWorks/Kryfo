@@ -12321,6 +12321,24 @@ abstract class AppLocalizations {
   /// **'Type your PIN once to use your fingerprint again.'**
   String get lockFingerAfterPin;
 
+  /// lock screen, under the fingerprint button after too many wrong fingers locked the sensor; on some phones only the phone's own screen lock frees it
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries with your fingerprint. Use your PIN, or unlock your phone once with its own screen lock to use the fingerprint again.'**
+  String get lockFingerLockedOut;
+
+  /// lock screen, where the fingerprint button was: the phone would not keep a fingerprint key for Kryfo, so the app turned fingerprint unlock off
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone would not keep fingerprint unlock for Kryfo, so it is off. Your PIN still works.'**
+  String get lockFingerRefused;
+
+  /// toast: turning on Unlock with fingerprint failed because the phone would not make the fingerprint key; the switch stays off
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone would not turn on fingerprint unlock for Kryfo. Your PIN still works.'**
+  String get pinsFingerRefused;
+
   /// App lock: a section that opens to the wipe PIN and the decoy PIN
   ///
   /// In en, this message translates to:

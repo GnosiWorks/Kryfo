@@ -7705,6 +7705,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Digita il PIN una volta per usare di nuovo l\'impronta.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Troppi tentativi con l\'impronta. Usa il PIN, oppure sblocca una volta il telefono con il suo blocco schermo per usare di nuovo l\'impronta.';
+
+  @override
+  String get lockFingerRefused =>
+      'Il telefono non ha mantenuto lo sblocco con l\'impronta per Kryfo, quindi è disattivato. Il PIN funziona ancora.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Il telefono non ha permesso di attivare lo sblocco con l\'impronta per Kryfo. Il PIN funziona ancora.';
+
+  @override
   String get pinsAdvanced => 'Protezione avanzata';
 
   @override

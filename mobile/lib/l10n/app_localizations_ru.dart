@@ -7786,6 +7786,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Введи PIN-код один раз, чтобы снова входить по отпечатку.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Слишком много попыток с отпечатком. Введи PIN-код или один раз разблокируй телефон его собственной блокировкой экрана, чтобы снова входить по отпечатку.';
+
+  @override
+  String get lockFingerRefused =>
+      'Телефон не сохранил вход по отпечатку для Kryfo, поэтому он выключен. PIN-код по-прежнему работает.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Телефон не дал включить вход по отпечатку для Kryfo. PIN-код по-прежнему работает.';
+
+  @override
   String get pinsAdvanced => 'Дополнительная защита';
 
   @override

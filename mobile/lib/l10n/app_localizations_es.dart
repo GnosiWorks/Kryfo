@@ -7702,6 +7702,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Escribe tu PIN una vez para volver a usar tu huella.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Demasiados intentos con la huella. Usa tu PIN, o desbloquea el teléfono una vez con su propio bloqueo de pantalla para volver a usar la huella.';
+
+  @override
+  String get lockFingerRefused =>
+      'Tu teléfono no quiso mantener el desbloqueo con huella para Kryfo, así que está desactivado. Tu PIN sigue funcionando.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Tu teléfono no permitió activar el desbloqueo con huella para Kryfo. Tu PIN sigue funcionando.';
+
+  @override
   String get pinsAdvanced => 'Protección avanzada';
 
   @override

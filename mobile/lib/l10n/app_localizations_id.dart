@@ -7630,6 +7630,18 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketik PIN sekali untuk memakai sidik jari lagi.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Terlalu banyak percobaan dengan sidik jari. Pakai PIN, atau buka kunci ponselmu sekali dengan kunci layarnya sendiri agar sidik jari bisa dipakai lagi.';
+
+  @override
+  String get lockFingerRefused =>
+      'Ponselmu tidak mau menyimpan buka kunci dengan sidik jari untuk Kryfo, jadi fitur ini mati. PIN tetap berfungsi.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Ponselmu tidak mau menyalakan buka kunci dengan sidik jari untuk Kryfo. PIN tetap berfungsi.';
+
+  @override
   String get pinsAdvanced => 'Perlindungan lanjutan';
 
   @override

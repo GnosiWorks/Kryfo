@@ -45,17 +45,22 @@ class _PinsScreenState extends State<PinsScreen> {
   bool get _decoyOn => _lock.inDecoy ? _lock.decoyPinOn : _host.hasDecoy;
 
   // the fingerprint switch moves as it is tapped, and goes back if the
-  // phone would not take it
+  // phone would not take it, with a line that says so
   bool? _fingerTo;
   Future<void> _flipFinger() async {
     if (_fingerTo != null) return;
     HapticFeedback.selectionClick();
     final to = !_lock.biometric;
     setState(() => _fingerTo = to);
+    var taken = true;
     try {
-      await _lock.setBiometric(to);
+      taken = await _lock.setBiometric(to);
     } finally {
       if (mounted) setState(() => _fingerTo = null);
+    }
+    if (to && !taken && mounted && _lock.fingerOffered && !_lock.biometric) {
+      HapticFeedback.heavyImpact();
+      showHaloToast(context, l10n.pinsFingerRefused);
     }
   }
 

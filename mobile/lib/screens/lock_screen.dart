@@ -195,6 +195,40 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     );
   }
 
+  // why a finger does nothing: the sensor is locked, or the phone would not
+  // keep a key for Kryfo and the finger is off
+  Widget _fingerNoteLine() {
+    final still = MediaQuery.of(context).disableAnimations;
+    final note = _lock.fingerNote;
+    final line = switch (note) {
+      FingerNote.lockedOut when _fingerOn => l10n.lockFingerLockedOut,
+      FingerNote.refused when !_fingerOn => l10n.lockFingerRefused,
+      _ => null,
+    };
+    final shown = line == null
+        ? const SizedBox(key: ValueKey('no note'), width: double.infinity)
+        : Padding(
+            key: ValueKey(note),
+            padding: EdgeInsets.fromLTRB(40, _fingerOn ? 10 : 0, 40, 0),
+            child: Text(
+              line,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+            ),
+          );
+    // under reduced motion the line is simply there
+    if (still) return shown;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: shown,
+      ),
+    );
+  }
+
   void _back() {
     if (_pin.isEmpty || _busy) return;
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
@@ -279,6 +313,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                           : const Duration(milliseconds: 200),
                       child: _fingerReady ? _fingerButton() : _fingerAsleep(),
                     ),
+                  _fingerNoteLine(),
                   const Spacer(flex: 2),
                   PinPad(
                     onDigit: _onDigit,

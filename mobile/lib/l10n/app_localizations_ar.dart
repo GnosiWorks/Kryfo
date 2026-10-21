@@ -7764,6 +7764,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
 
   @override
+  String get lockFingerLockedOut =>
+      'محاولات كثيرة جدًا بالبصمة. استخدم رمز PIN، أو افتح قفل هاتفك مرة واحدة بقفل الشاشة الخاص به لتعود البصمة.';
+
+  @override
+  String get lockFingerRefused =>
+      'لم يحتفظ هاتفك بفتح القفل بالبصمة لـ Kryfo، لذا أُوقف. رمز PIN لا يزال يعمل.';
+
+  @override
+  String get pinsFingerRefused =>
+      'لم يسمح هاتفك بتشغيل فتح القفل بالبصمة لـ Kryfo. رمز PIN لا يزال يعمل.';
+
+  @override
   String get pinsAdvanced => 'حماية متقدمة';
 
   @override

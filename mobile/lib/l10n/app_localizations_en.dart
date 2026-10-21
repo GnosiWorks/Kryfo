@@ -7631,6 +7631,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Type your PIN once to use your fingerprint again.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Too many tries with your fingerprint. Use your PIN, or unlock your phone once with its own screen lock to use the fingerprint again.';
+
+  @override
+  String get lockFingerRefused =>
+      'Your phone would not keep fingerprint unlock for Kryfo, so it is off. Your PIN still works.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Your phone would not turn on fingerprint unlock for Kryfo. Your PIN still works.';
+
+  @override
   String get pinsAdvanced => 'Advanced protection';
 
   @override

@@ -7721,6 +7721,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Zu viele Versuche mit dem Fingerabdruck. Gib deine PIN ein oder entsperre dein Handy einmal mit seiner eigenen Displaysperre, dann geht der Fingerabdruck wieder.';
+
+  @override
+  String get lockFingerRefused =>
+      'Dein Handy wollte das Entsperren per Fingerabdruck für Kryfo nicht behalten, deshalb ist es aus. Deine PIN funktioniert weiterhin.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Dein Handy hat das Entsperren per Fingerabdruck für Kryfo nicht eingeschaltet. Deine PIN funktioniert weiterhin.';
+
+  @override
   String get pinsAdvanced => 'Erweiterter Schutz';
 
   @override

@@ -165,7 +165,8 @@ class PlatformLockClock implements LockClock {
 }
 
 // what a finger gave back: "ok" with the container the seal opened, or
-// "cancel", "lockout", "invalidated", "none", "error"
+// "cancel", "lockout", "invalidated", "none", "error", or "refused" (the
+// finger was taken but the phone would not open the seal with it)
 class BioOpened {
   const BioOpened(this.result, [this.opens]);
   final String result;
@@ -179,7 +180,8 @@ abstract class LockBio {
   Future<bool> ready();
   // "ok", "invalidated", "none", "error"
   Future<String> state();
-  // a new key with [opens] sealed to it: the seal, or null
+  // a new key with [opens] sealed to it: the seal, or null when the phone
+  // would not make one that opens
   Future<String?> seal(String opens);
   Future<void> disable();
   Future<BioOpened> unlock(String title, String cancel, String seal);
@@ -529,6 +531,10 @@ class LockCounters {
 // wrong pin, so it can never open the everyday app
 bool decoyReady = false;
 
+// a line the lock screen shows about the fingerprint: too many wrong fingers
+// locked the sensor, or the phone would not keep a key for it and it is off
+enum FingerNote { lockedOut, refused }
+
 class LockState extends ChangeNotifier {
   LockState({
     LockStore? store,
@@ -536,6 +542,7 @@ class LockState extends ChangeNotifier {
     LockClock? clock,
     LockBio? bio,
     this.revealAfter = const Duration(milliseconds: 450),
+    this.sealWait = const Duration(seconds: 30),
   }) : _store = store ?? SecureLockStore(),
        _engine = engine ?? FfiPinEngine(),
        _clock = clock ?? PlatformLockClock(),
@@ -563,6 +570,12 @@ class LockState extends ChangeNotifier {
   bool get bioStale => _bioStale;
   // every outcome is shown this long after the tap at the earliest
   final Duration revealAfter;
+  // the longest a new fingerprint key may take before the phone counts as
+  // having refused it: a keystore that never answers leaves no switch busy
+  final Duration sealWait;
+
+  FingerNote? _fingerNote;
+  FingerNote? get fingerNote => _fingerNote;
 
   static const _kEnabled = 'halo.lock.enabled';
   static const _kTable = 'halo.lock.table';
@@ -1389,14 +1402,16 @@ class LockState extends ChangeNotifier {
     if (!_fingerMine) return false;
     if (v) {
       final gen = ++_sealGen;
-      final s = await _bio.seal(_fingerOpens);
+      final s = await _sealOrNull(_fingerOpens);
       // a newer turn on or off came in meanwhile: it has the last word
       if (gen != _sealGen) return false;
+      // the phone would not make a key: the screen says so
       if (s == null) return false;
       await _store.write(_kSeal, s);
       await _store.write(_kBio, 'true');
       _biometric = true;
       _bioStale = false;
+      _fingerNote = null;
     } else {
       await _fingerOff();
     }
@@ -1424,20 +1439,67 @@ class LockState extends ChangeNotifier {
   // a newer one was asked for is never written
   int _sealGen = 0;
 
-  // a new key and seal once the pin was typed after a finger was added
+  // a seal, or null for a phone that refused or never answered
+  Future<String?> _sealOrNull(String opens) async {
+    try {
+      return await _bio.seal(opens).timeout(sealWait, onTimeout: () => null);
+    } catch (e) {
+      dlog('lock: finger not sealed (${e.runtimeType})');
+      return null;
+    }
+  }
+
+  // a new key and seal once the pin was typed after a finger was added. a
+  // phone that still has a finger but will not make a key turns the finger
+  // off and says so, rather than asking for the pin at every start
   Future<void> _reseal() async {
     final gen = ++_sealGen;
     final target = _fingerOpens;
+    bool moved() => gen != _sealGen || target != _fingerOpens || !_biometric;
+    var s = await _sealOrNull(target);
+    if (s == null && !moved()) {
+      // once more, for a keystore busy right after the unlock
+      await Future<void>.delayed(const Duration(seconds: 2));
+      if (!moved()) s = await _sealOrNull(target);
+    }
+    if (moved()) return;
+    if (s == null) {
+      // no finger on the phone now: it sleeps until one is back, as before
+      if (!await _fingerThere() || moved()) return;
+      await _refused();
+      return;
+    }
     try {
-      final s = await _bio.seal(target);
-      if (s == null) return;
-      if (gen != _sealGen || target != _fingerOpens || !_biometric) return;
       await _store.write(_kSeal, s);
       _bioStale = false;
       notifyListeners();
     } catch (e) {
       dlog('lock: finger not sealed (${e.runtimeType})');
     }
+  }
+
+  // whether the phone has a finger to unlock with right now
+  Future<bool> _fingerThere() async {
+    const most = Duration(seconds: 3);
+    try {
+      final auth = LocalAuthentication();
+      return await auth.canCheckBiometrics.timeout(most) &&
+          (await auth.getAvailableBiometrics().timeout(most)).isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // the phone will not use a finger for Kryfo: off, with a line that says so
+  Future<void> _refused() async {
+    dlog('lock: finger refused by the phone');
+    try {
+      await _fingerOff();
+    } catch (e) {
+      dlog('lock: finger not turned off (${e.runtimeType})');
+    }
+    _fingerNote = FingerNote.refused;
+    notifyListeners();
   }
 
   // a finger opens what its seal holds: the everyday app, or while a decoy
@@ -1452,6 +1514,10 @@ class LockState extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+    if (_fingerNote == FingerNote.lockedOut) {
+      _fingerNote = null;
+      notifyListeners();
+    }
     final r = await _bio.unlock(
       l10n.lockStateUnlockKryfo,
       l10n.commonCancel,
@@ -1460,6 +1526,20 @@ class LockState extends ChangeNotifier {
     if (r.result == 'invalidated' || r.result == 'none') {
       // a finger was added since, or the key is gone: the pin first
       _bioStale = true;
+      notifyListeners();
+      return false;
+    }
+    if (r.result == 'refused') {
+      // the finger was taken and the seal still did not open: the same
+      // would happen after the pin, so no loop of pin and finger
+      await _refused();
+      return false;
+    }
+    if (r.result == 'lockout') {
+      // the sensor is locked until the phone's own screen lock is used
+      // (on some phones for good): the pin is the way in, and the screen
+      // says why the finger does nothing
+      _fingerNote = FingerNote.lockedOut;
       notifyListeners();
       return false;
     }
@@ -1598,6 +1678,8 @@ class LockState extends ChangeNotifier {
     if (!_enabled || holding || _paused) return;
     if (!_locked) {
       _locked = true;
+      // each lock tries the finger afresh
+      if (_fingerNote == FingerNote.lockedOut) _fingerNote = null;
       notifyListeners();
     }
   }

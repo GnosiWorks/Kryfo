@@ -7619,6 +7619,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lockFingerAfterPin => 'Nhập mã PIN một lần để dùng lại vân tay.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Thử vân tay quá nhiều lần. Hãy dùng mã PIN, hoặc mở khóa điện thoại một lần bằng khóa màn hình của máy để dùng lại vân tay.';
+
+  @override
+  String get lockFingerRefused =>
+      'Điện thoại không giữ được mở khóa bằng vân tay cho Kryfo nên tính năng này đã tắt. Mã PIN vẫn dùng được.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Điện thoại không cho bật mở khóa bằng vân tay cho Kryfo. Mã PIN vẫn dùng được.';
+
+  @override
   String get pinsAdvanced => 'Bảo vệ nâng cao';
 
   @override

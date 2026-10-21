@@ -7692,6 +7692,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Digite seu PIN uma vez para usar a digital de novo.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Tentativas demais com a digital. Use seu PIN, ou desbloqueie o celular uma vez com o bloqueio de tela dele para usar a digital de novo.';
+
+  @override
+  String get lockFingerRefused =>
+      'Seu celular não manteve o desbloqueio com a digital para o Kryfo, então ele está desligado. Seu PIN continua funcionando.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Seu celular não deixou ligar o desbloqueio com a digital para o Kryfo. Seu PIN continua funcionando.';
+
+  @override
   String get pinsAdvanced => 'Proteção avançada';
 
   @override

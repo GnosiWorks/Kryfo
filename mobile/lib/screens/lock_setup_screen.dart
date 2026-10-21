@@ -144,8 +144,9 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     HapticFeedback.mediumImpact();
     if (mounted && _lock.fingerOffered && !_lock.biometric) {
       // the key takes a moment to make: the button says so, and the sheet
-      // closes once the finger is on
+      // closes once the finger is on, or the phone refused it
       var sealing = false;
+      var refused = false;
       await showHaloSheet<bool>(
         context,
         builder: (ctx) => StatefulBuilder(
@@ -177,8 +178,8 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                         ? null
                         : () async {
                             setSheet(() => sealing = true);
-                            await _lock.setBiometric(true);
-                            if (ctx.mounted) Navigator.pop(ctx, true);
+                            refused = !await _lock.setBiometric(true);
+                            if (ctx.mounted) Navigator.pop(ctx, !refused);
                           },
                   ),
                   const SizedBox(height: 8),
@@ -193,6 +194,10 @@ class _LockSetupScreenState extends State<LockSetupScreen>
           ),
         ),
       );
+      if (refused && mounted && !_lock.biometric) {
+        HapticFeedback.heavyImpact();
+        showHaloToast(context, l10n.pinsFingerRefused);
+      }
     }
     if (mounted) Navigator.of(context).pop();
   }

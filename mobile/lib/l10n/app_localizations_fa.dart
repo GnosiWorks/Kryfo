@@ -7647,6 +7647,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید.';
 
   @override
+  String get lockFingerLockedOut =>
+      'تلاش‌های زیادی با اثر انگشت انجام شد. از PIN خود استفاده کنید، یا یک بار قفل گوشی را با قفل صفحهٔ خود گوشی باز کنید تا اثر انگشت دوباره کار کند.';
+
+  @override
+  String get lockFingerRefused =>
+      'گوشی شما باز کردن قفل با اثر انگشت را برای Kryfo نگه نداشت، پس خاموش شد. PIN شما همچنان کار می‌کند.';
+
+  @override
+  String get pinsFingerRefused =>
+      'گوشی شما اجازه نداد باز کردن قفل با اثر انگشت برای Kryfo روشن شود. PIN شما همچنان کار می‌کند.';
+
+  @override
   String get pinsAdvanced => 'حفاظت پیشرفته';
 
   @override

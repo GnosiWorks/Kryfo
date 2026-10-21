@@ -7661,6 +7661,18 @@ class AppLocalizationsTr extends AppLocalizations {
       'Parmak izini yeniden kullanmak için PIN\'ini bir kez gir.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Parmak iziyle çok fazla deneme yapıldı. PIN’ini kullan ya da parmak izini yeniden kullanmak için telefonunun kilidini bir kez kendi ekran kilidiyle aç.';
+
+  @override
+  String get lockFingerRefused =>
+      'Telefonun Kryfo için parmak iziyle kilit açmayı kapattı. PIN’in hâlâ çalışıyor.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Telefonun, Kryfo için parmak iziyle kilit açmaya izin vermedi. PIN’in hâlâ çalışıyor.';
+
+  @override
   String get pinsAdvanced => 'Gelişmiş koruma';
 
   @override

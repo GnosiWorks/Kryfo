@@ -239,6 +239,7 @@ Future<Lock> makeLock(
   LockBio? bio,
   Map<String, String> stored = const {},
   Duration revealAfter = Duration.zero,
+  Duration sealWait = const Duration(seconds: 30),
 }) async {
   final store = MemStore()..m.addAll(stored);
   if (pins != null) {
@@ -268,6 +269,7 @@ Future<Lock> makeLock(
     clock: StillClock(),
     bio: bio ?? NoBio(),
     revealAfter: revealAfter,
+    sealWait: sealWait,
   );
   await s.load();
   if (inDecoy) s.inDecoy = true;

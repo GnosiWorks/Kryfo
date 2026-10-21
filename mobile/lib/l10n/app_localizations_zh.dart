@@ -7313,6 +7313,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
 
   @override
+  String get lockFingerLockedOut => '指纹尝试次数过多。请使用 PIN 码，或先用手机自己的锁屏解锁一次，指纹即可恢复。';
+
+  @override
+  String get lockFingerRefused => '手机未能为 Kryfo 保留指纹解锁，因此已关闭。PIN 码仍然可用。';
+
+  @override
+  String get pinsFingerRefused => '手机未允许为 Kryfo 开启指纹解锁。PIN 码仍然可用。';
+
+  @override
   String get pinsAdvanced => '高级保护';
 
   @override
@@ -15700,6 +15709,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
+
+  @override
+  String get lockFingerLockedOut =>
+      '指紋嘗試次數過多。請使用 PIN 碼，或先用手機本身的螢幕鎖定解鎖一次，指紋即可恢復。';
+
+  @override
+  String get lockFingerRefused => '手機未能為 Kryfo 保留指紋解鎖，因此已關閉。PIN 碼仍然可用。';
+
+  @override
+  String get pinsFingerRefused => '手機未允許為 Kryfo 開啟指紋解鎖。PIN 碼仍然可用。';
 
   @override
   String get pinsAdvanced => '進階保護';

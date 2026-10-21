@@ -7714,6 +7714,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez votre code PIN une fois pour réutiliser votre empreinte.';
 
   @override
+  String get lockFingerLockedOut =>
+      'Trop d’essais avec votre empreinte. Utilisez votre code PIN, ou déverrouillez une fois votre téléphone avec son propre verrouillage d’écran pour réutiliser l’empreinte.';
+
+  @override
+  String get lockFingerRefused =>
+      'Votre téléphone n’a pas conservé le déverrouillage par empreinte pour Kryfo, il est donc désactivé. Votre code PIN fonctionne toujours.';
+
+  @override
+  String get pinsFingerRefused =>
+      'Votre téléphone n’a pas accepté d’activer le déverrouillage par empreinte pour Kryfo. Votre code PIN fonctionne toujours.';
+
+  @override
   String get pinsAdvanced => 'Protection avancée';
 
   @override
