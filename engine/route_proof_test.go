@@ -396,3 +396,31 @@ func TestModeSwitchStartsANewRoute(t *testing.T) {
 		t.Fatal("an answer from before the switch proved the onion route")
 	}
 }
+
+// probes at most once in their gap too: a spell soon after one waits for the
+// live sockets' own probes instead of kicking every runner again
+func TestProbesHaveAGap(t *testing.T) {
+	resetRoute(t, "publishing", 100)
+	routeNoteOK()
+	t0 := time.Unix(1_700_000_000, 0)
+	spell := func(at time.Time) string {
+		routeNoteOK()
+		failAll(at, "wss://a", "wss://b")
+		return routeNeedsRescue(at.Add(61 * time.Second))
+	}
+	if why := spell(t0); !strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("first spell: %q", why)
+	}
+	t1 := t0.Add(2 * time.Minute)
+	if why := spell(t1); !strings.HasPrefix(why, probeWhy) {
+		t.Fatalf("second spell: %q, want a probe", why)
+	}
+	t2 := t1.Add(2 * time.Minute)
+	if why := spell(t2); why != "" {
+		t.Fatalf("a spell inside the probe gap: %q, want nothing", why)
+	}
+	t3 := t1.Add(61*time.Second + probeGap)
+	if why := spell(t3); !strings.HasPrefix(why, probeWhy) {
+		t.Fatalf("a spell past the probe gap: %q, want a probe", why)
+	}
+}

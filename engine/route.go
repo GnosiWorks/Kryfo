@@ -41,6 +41,9 @@ var (
 	// the last new-circuits step and how long until another may come
 	circuitsAt   time.Time
 	circuitsNext time.Duration
+	// the last probe step and how long until another may come
+	probeAt   time.Time
+	probeNext time.Duration
 	// this spell's first step (new circuits or a probe) and how long it gets before a bounce
 	spellStepAt   time.Time
 	spellStepHold time.Duration
@@ -217,6 +220,8 @@ var rescueJitter = func(d time.Duration) time.Duration {
 var (
 	circuitsFor = time.Minute
 	circuitsGap = 10 * time.Minute
+	// the least time between two probe steps
+	probeGap = 5 * time.Minute
 )
 
 // what the steps before a bounce say they are
@@ -315,11 +320,17 @@ func routeNeedsRescue(now time.Time) string {
 		// no bounce yet in this spell: new circuits first, or a probe when they came lately
 		if rescues == 0 {
 			if spellStepAt.Before(firstFailAt) {
+				circuits := circuitsAt.IsZero() || now.Sub(circuitsAt) >= circuitsNext
+				// a probe lately: the live sockets' own probes answer meanwhile
+				if !circuits && !probeAt.IsZero() && now.Sub(probeAt) < probeNext {
+					return ""
+				}
 				spellStepAt, spellStepHold = now, rescueJitter(circuitsFor)
-				if circuitsAt.IsZero() || now.Sub(circuitsAt) >= circuitsNext {
+				if circuits {
 					circuitsAt, circuitsNext = now, rescueJitter(circuitsGap)
 					return circuitsWhy + "every relay has failed for " + failing
 				}
+				probeAt, probeNext = now, rescueJitter(probeGap)
 				return probeWhy + "every relay has failed for " + failing
 			}
 			if now.Sub(spellStepAt) < spellStepHold {
@@ -416,6 +427,7 @@ func routeFreshNetwork() {
 	circuitsAt = time.Time{}
 	circuitsNext = 0
 	spellStepAt = time.Time{}
+	probeAt, probeNext = time.Time{}, 0
 	stallPct = -1
 	offSince = time.Time{}
 	routeMu.Unlock()

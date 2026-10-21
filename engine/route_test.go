@@ -20,6 +20,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	routeGen, okGen = 0, -1
 	rescues, lastRescue, rescueWait, circuitsAt = 0, time.Time{}, 0, time.Time{}
 	circuitsNext, spellStepAt, deadWait = 0, time.Time{}, 0
+	probeAt, probeNext = time.Time{}, 0
 	answeredIn = map[string]int64{}
 	stallPct, stallSince = -1, time.Time{}
 	routeMu.Unlock()
