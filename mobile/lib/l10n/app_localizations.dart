@@ -3609,7 +3609,7 @@ abstract class AppLocalizations {
   /// **'Card payments go to Marios directly until our fiscal host is set up.'**
   String get donateCardMarios;
 
-  /// screens/donate_screen.dart. under the card choice, the honest line
+  /// screens/donate_screen.dart. under the card choice: who sees the name on a card payment
   ///
   /// In en, this message translates to:
   /// **'The payment company sees your name. Crypto is the private way.'**

@@ -2815,7 +2815,7 @@
   },
   "donateCardSeesName": "The payment company sees your name. Crypto is the private way.",
   "@donateCardSeesName": {
-    "description": "screens/donate_screen.dart. under the card choice, the honest line"
+    "description": "screens/donate_screen.dart. under the card choice: who sees the name on a card payment"
   },
   "donateCardPay": "Pay by card",
   "@donateCardPay": {
