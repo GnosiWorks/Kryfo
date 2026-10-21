@@ -12,7 +12,7 @@ void main() {
     expect(r, isNot(contains('no push service')));
     expect(r, contains('optional push'));
     expect(r, contains('off by\n  default'));
-    expect(r, contains('no sender, no count, no content'));
+    expect(r, contains('an empty knock'));
     expect(r, contains('privacy.md'));
   });
 
