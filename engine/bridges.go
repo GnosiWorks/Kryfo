@@ -945,7 +945,7 @@ func bridgeLineChecks() string {
 func HaloRestartTor() *C.char {
 	// asked for by hand, so no guard applies, and the new config must not
 	// wait behind a reconnect that is still handing tor the old one
-	go reconnectNow()
+	go reconnectNowFor(whyBridges)
 	return C.CString("ok")
 }
 

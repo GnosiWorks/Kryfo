@@ -86,7 +86,7 @@ func (f *fakeControl) handle(c net.Conn) {
 			f.polls.Add(1)
 			fmt.Fprintf(c, "250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=%d TAG=x SUMMARY=\"x\"\r\n250 OK\r\n", f.pct.Load())
 		default:
-			if strings.HasPrefix(cmd, "SETCONF") || strings.HasPrefix(cmd, "RESETCONF") {
+			if strings.HasPrefix(cmd, "SETCONF") || strings.HasPrefix(cmd, "RESETCONF") || strings.HasPrefix(cmd, "SIGNAL") {
 				f.mu.Lock()
 				f.cmds = append(f.cmds, cmd)
 				f.mu.Unlock()
@@ -207,7 +207,7 @@ func TestLandingIsNotHeldByTheFlightsBackoff(t *testing.T) {
 	now := time.Now()
 	failAll(now.Add(-time.Hour), "wss://a", "wss://b", "wss://c")
 	routeMu.Lock()
-	rescues, lastRescue = 5, now.Add(-2*time.Minute)
+	rescues, lastRescue, rescueWait = 5, now.Add(-2*time.Minute), rescueGap(5)
 	routeMu.Unlock()
 	if why := routeNeedsRescue(now); why != "" {
 		t.Fatalf("the flight's back-off did not hold in the air: %s", why)

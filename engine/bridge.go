@@ -459,7 +459,7 @@ func networkOnAtStart(t *tor.Tor) {
 	if why := networkHold(); why != "" {
 		log.Printf("halo: tor stays off the network (%s)", why)
 		if mode, _, _ := bridgeMode(); why != errNoMode && mode != bmAuto {
-			go reconnectNow()
+			go reconnectNowFor(whyBridges)
 		}
 		return
 	}
@@ -760,12 +760,15 @@ func lastReconnectOutcome() string {
 //export HaloLastReconnect
 func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 
-// the bounce itself. "ok", or a line starting with "error:".
-func reconnectTor() string { return reconnectTorAs(false) }
+// the bounce itself. "ok", or a line starting with "error:"
+func reconnectTor() string { return reconnectTorFor(whyOther) }
+
+// the same, with why it is wanted for the transport screen
+func reconnectTorFor(why string) string { return reconnectTorAs(false, why) }
 
 // automatic's own bounce: past the gate and the floor, and it replaces a
 // reconnect still running
-func reconnectAuto() string { return reconnectTorBy(true, true) }
+func reconnectAuto() string { return reconnectTorBy(true, true, whyAuto) }
 
 // how long a reconnect may run before the next one takes over. every control
 // command in one carries a deadline, so a healthy one is done well inside it
@@ -797,7 +800,10 @@ var reconnectStepHook func(owner int64, step string)
 // asked for by hand: no floor, no back-off, and a reconnect still running is
 // replaced at once. the result says whether tor took it; an error naming
 // the control port means tor is not answering and only a new process helps
-func reconnectNow() string {
+func reconnectNow() string { return reconnectNowFor(whyByHand) }
+
+// the same for a change the app asked for, named for the transport screen
+func reconnectNowFor(why string) string {
 	if torIsPaused() {
 		return "error: tor is asleep"
 	}
@@ -820,7 +826,7 @@ func reconnectNow() string {
 	routeFreshNetwork()
 	atomic.StoreInt64(&lastTorRestart, 0)
 	routeBump()
-	return reconnectTorAs(true)
+	return reconnectTorAs(true, why)
 }
 
 // takes the running slot, or says why not. force, or a running one stuck
@@ -867,13 +873,13 @@ func reconnectRelease(me int64, done chan struct{}) {
 	close(done)
 }
 
-func reconnectTorAs(force bool) string { return reconnectTorBy(force, false) }
+func reconnectTorAs(force bool, why string) string { return reconnectTorBy(force, false, why) }
 
 // the one gate for every bounce. while automatic tries a way in, it alone
 // bounces tor: a rescue, the network bounce, the relay watchdog, a mode
 // switch or a manual restart would cut its attempt short. the gate has a
 // lifetime cap, see autoGateHeld.
-func reconnectTorBy(force, auto bool) string {
+func reconnectTorBy(force, auto bool, why string) string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
@@ -909,6 +915,7 @@ func reconnectTorBy(force, auto bool) string {
 		return "error: too soon"
 	}
 	atomic.StoreInt64(&lastTorRestart, now)
+	noteBounce(why)
 
 	mu.Lock()
 	t := torNode

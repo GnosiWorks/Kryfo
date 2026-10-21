@@ -726,7 +726,7 @@ func captiveWay(gen int64) {
 // vars for the tests
 var (
 	captiveBounce = func() { _ = reconnectAuto() }
-	holdBounce    = func() { _ = reconnectNow() }
+	holdBounce    = func() { _ = reconnectNowFor(whyAuto) }
 )
 
 // one pass and what it began with
@@ -1306,7 +1306,7 @@ func applyBridgeMode(mode, raw string) string {
 		autoSt.blocked, autoSt.limited, autoSt.errCode, autoSt.askConsent = false, false, "", false
 	})
 	if (changed || prevMode != mode) && torStarted() && !torIsPaused() {
-		go reconnectNow()
+		go reconnectNowFor(whyBridges)
 	}
 	return "ok"
 }
@@ -1623,7 +1623,7 @@ func bridgeRetry() {
 	autoRetryNow.Store(true)
 	autoKick()
 	if mode, _, _ := bridgeMode(); mode != bmAuto && torStarted() && !torIsPaused() {
-		go reconnectNow()
+		go reconnectNowFor(whyBridges)
 	}
 }
 

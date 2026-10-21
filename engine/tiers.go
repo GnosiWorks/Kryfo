@@ -91,7 +91,7 @@ func setTransportMode(m string) string {
 			// the cooldown guards against a looping watchdog, not against
 			// someone deliberately choosing a route.
 			atomic.StoreInt64(&lastTorRestart, 0)
-			go reconnectTor()
+			go reconnectTorFor(whyMode)
 		}
 	}
 	return m

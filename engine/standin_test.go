@@ -77,6 +77,9 @@ type relayStandIn struct {
 	asked    int
 	// the most stored events one req brings, as a relay may cap a filter
 	capAt int
+	// an OK false with this reason for every publish, as a relay that
+	// turns a wrap away answers
+	refuse string
 	// a probe (limit 0) gets no answer, as over a dead circuit
 	probesQuiet bool
 }
@@ -213,9 +216,12 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if s.keep {
 				s.events = append(s.events, e.Event)
 			}
-			s.accepted++
+			refuse := s.refuse
+			if refuse == "" {
+				s.accepted++
+			}
 			s.mu.Unlock()
-			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: true}.MarshalJSON()
+			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: refuse == "", Reason: refuse}.MarshalJSON()
 			if conn.Write(ctx, ws.MessageText, b) != nil {
 				return
 			}

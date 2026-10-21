@@ -186,6 +186,10 @@ type transportView struct {
 	CtrlSilent int64 `json:"ctrl_silent"`
 	// how the check after the last network change ended
 	NetCheck string `json:"net_check"`
+	// the latest bounces and new circuits, newest first, and how many of
+	// each kind this process made
+	Bounces      []bounceNote   `json:"bounces"`
+	BounceCounts map[string]int `json:"bounce_counts"`
 }
 
 func transportSnapshot() transportView {
@@ -202,6 +206,7 @@ func transportSnapshot() transportView {
 	v.CtrlTimeouts = ctrlTimeoutCount()
 	v.CtrlSilent = ctrlSilentCount()
 	v.NetCheck = lastNetCheck()
+	v.Bounces, v.BounceCounts = bounceSnapshot()
 
 	mu.Lock()
 	v.OnionAddr = myAddr

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -17,14 +18,22 @@ func resetRoute(t *testing.T, status string, pct int) {
 	failedSinceOK = map[string]bool{}
 	firstFailAt = time.Time{}
 	routeGen, okGen = 0, -1
-	rescues, lastRescue = 0, time.Time{}
+	rescues, lastRescue, rescueWait, circuitsAt = 0, time.Time{}, 0, time.Time{}
 	stallPct, stallSince = -1, time.Time{}
 	routeMu.Unlock()
+	keepRescueJitter(t)
 	setTestStatus(status, pct)
 	atomic.StoreInt32(&torPaused, 0)
 	atomic.StoreInt32(&reconnectRunning, 0)
 	atomic.StoreInt32(&torRestarting, 0)
 	atomic.StoreInt32(&bounceOff, 0)
+}
+
+// the gaps exact, as the tests count them
+func keepRescueJitter(t *testing.T) {
+	old := rescueJitter
+	rescueJitter = func(d time.Duration) time.Duration { return d }
+	t.Cleanup(func() { rescueJitter = old })
 }
 
 func setTestStatus(status string, pct int) {
@@ -46,8 +55,9 @@ func failAll(at time.Time, relays ...string) {
 }
 
 // the flight-mode case: tor says publishing, every relay fails. nothing for
-// the first minute, a rebuild at the minute, and then not again until the gap
-// has passed, and that gap doubles while nothing comes back.
+// the first minute, new circuits at the minute, a rebuild once they brought
+// nothing for circuitsFor, and then not again until the gap has passed, and
+// that gap doubles while nothing comes back.
 func TestDeadRouteRebuiltAfterMinute(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	routeNoteOK() // it worked once, as it had before the network went
@@ -57,22 +67,31 @@ func TestDeadRouteRebuiltAfterMinute(t *testing.T) {
 	if why := routeNeedsRescue(t0.Add(59 * time.Second)); why != "" {
 		t.Fatalf("rescued at 59s: %s", why)
 	}
-	if why := routeNeedsRescue(t0.Add(61 * time.Second)); why == "" {
-		t.Fatal("no rescue at 61s with every relay failing")
+	why := routeNeedsRescue(t0.Add(61 * time.Second))
+	if !strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("at 61s with every relay failing: %q, want new circuits first", why)
 	}
-	if why := routeNeedsRescue(t0.Add(90 * time.Second)); why != "" {
-		t.Fatalf("rescued again 29s after the last: %s", why)
+	if why := routeNeedsRescue(t0.Add(61*time.Second + circuitsFor - time.Second)); why != "" {
+		t.Fatalf("bounced before the new circuits had their time: %s", why)
 	}
-	// the first gap after one rescue is two minutes
-	if why := routeNeedsRescue(t0.Add(61*time.Second + 2*time.Minute)); why == "" {
-		t.Fatal("no second rescue after the two minute gap")
+	first := t0.Add(61*time.Second + circuitsFor)
+	if why := routeNeedsRescue(first); why == "" || strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("no rebuild once new circuits brought nothing: %q", why)
+	}
+	// the first gap after one rebuild is two minutes
+	if why := routeNeedsRescue(first.Add(2*time.Minute - time.Second)); why != "" {
+		t.Fatalf("rebuilt again before the two minute gap: %s", why)
+	}
+	second := first.Add(2 * time.Minute)
+	if why := routeNeedsRescue(second); why == "" || strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("no second rebuild after the two minute gap: %q", why)
 	}
 	// and the one after that is four
-	if why := routeNeedsRescue(t0.Add(61*time.Second + 2*time.Minute + 3*time.Minute)); why != "" {
-		t.Fatalf("third rescue came before the four minute gap: %s", why)
+	if why := routeNeedsRescue(second.Add(3 * time.Minute)); why != "" {
+		t.Fatalf("third rebuild came before the four minute gap: %s", why)
 	}
-	if why := routeNeedsRescue(t0.Add(61*time.Second + 2*time.Minute + 4*time.Minute)); why == "" {
-		t.Fatal("no third rescue after the four minute gap")
+	if why := routeNeedsRescue(second.Add(4 * time.Minute)); why == "" {
+		t.Fatal("no third rebuild after the four minute gap")
 	}
 }
 
