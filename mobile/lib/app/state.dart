@@ -10222,6 +10222,11 @@ class AppState extends ChangeNotifier {
       // network that flaps keeps its count, or a failing row never stops
       final gone = _offlineAt;
       _offlineAt = null;
+      // past a handover the pill has said offline: what it held before
+      // is not held again, the new route shows as connecting
+      if (gone != null && at.difference(gone) >= kPillHandover) {
+        _usableAt = null;
+      }
       if (gone == null || at.difference(gone) >= _offlineSpell) {
         _outboxTries.clear();
         _outboxNextAt.clear();

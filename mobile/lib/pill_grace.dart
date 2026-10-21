@@ -7,6 +7,10 @@ import 'widgets/motion.dart' show TorStatus;
 /// how long the pill keeps saying ready once the route stopped carrying
 const kPillGrace = Duration(seconds: 20);
 
+/// offline for longer than a network handover takes: the grace is over,
+/// so the pill goes from offline to connecting, never back to ready first
+const kPillHandover = Duration(seconds: 5);
+
 /// whether the pill says ready now
 bool pillHoldsReady({
   required bool usable,

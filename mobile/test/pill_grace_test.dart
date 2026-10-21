@@ -105,6 +105,20 @@ void main() {
       expect(a.pillGraceEnd, isNotNull);
     });
 
+    test('a handover keeps the grace, a spell offline ends it', () {
+      final a = AppState()..sendModeForTest = 'private';
+      a.noteOnline(true);
+      a.takeTorStatus('publishing|100|1|1|3');
+      a.takeTorStatus('starting|0|0|0|4');
+      final now = DateTime.now();
+      a.noteOnline(false, now: now);
+      a.noteOnline(true, now: now.add(const Duration(seconds: 2)));
+      expect(a.pillReady, isTrue);
+      a.noteOnline(false, now: now);
+      a.noteOnline(true, now: now.add(kPillHandover));
+      expect(a.pillReady, isFalse);
+    });
+
     test('a start that never carried is not held', () {
       final a = AppState()..sendModeForTest = 'private';
       a.takeTorStatus('starting|40|0|0|0');
