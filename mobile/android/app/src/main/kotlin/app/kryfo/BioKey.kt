@@ -8,9 +8,11 @@ import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import android.util.Log
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
+import java.security.PublicKey
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.crypto.Cipher
@@ -30,16 +32,20 @@ object BioKey {
     // delete never lands between another seal's delete and its new key
     val work: ExecutorService = Executors.newSingleThreadExecutor()
 
-    private fun store(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    // the keystore. unit tests stand in plain keys
+    interface Keys {
+        fun make(alias: String)
+        fun public(alias: String): PublicKey?
+        fun private(alias: String): PrivateKey?
+        fun delete(alias: String)
+    }
 
-    // a new key, and [opens] sealed to it. the seal, or null. the key takes
-    // a moment to make, so never on the main thread
-    fun seal(opens: String): String? {
-        if (!ready()) return null
-        return try {
-            delete()
+    object Store : Keys {
+        private fun store(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+
+        override fun make(alias: String) {
             // sealing uses the public half outside the keystore
-            val b = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_DECRYPT)
+            val b = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_DECRYPT)
                 .setKeySize(2048)
                 .setDigests(KeyProperties.DIGEST_SHA256)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
@@ -48,13 +54,50 @@ object BioKey {
             if (Build.VERSION.SDK_INT >= 30) {
                 b.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
             }
+            // the mgf1 digest the opener asks for, named on the key: some
+            // keystores take none that the key does not name
+            if (Build.VERSION.SDK_INT >= 35) {
+                try {
+                    b.setMgf1Digests(KeyProperties.DIGEST_SHA1)
+                } catch (_: Exception) {
+                }
+            }
             KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
                 .apply { initialize(b.build()) }
                 .generateKeyPair()
-            val pub = store().getCertificate(ALIAS)?.publicKey
-                ?: throw IllegalStateException("no public key")
+        }
+
+        override fun public(alias: String): PublicKey? = store().getCertificate(alias)?.publicKey
+
+        override fun private(alias: String): PrivateKey? = store().getKey(alias, null) as? PrivateKey
+
+        override fun delete(alias: String) = store().deleteEntry(alias)
+    }
+
+    @Volatile
+    var keys: Keys = Store
+
+    // a cipher the prompt can unlock: the keystore starts the decrypt here
+    private fun opener(key: PrivateKey): Cipher =
+        Cipher.getInstance(BioSeal.TRANSFORM).apply {
+            init(Cipher.DECRYPT_MODE, key, BioSeal.OAEP)
+        }
+
+    // a new key, and [opens] sealed to it. the seal, or null when the phone
+    // would not make a key that opens it. the key takes a moment to make,
+    // so never on the main thread
+    fun seal(opens: String): String? {
+        if (!ready()) return null
+        return try {
+            delete()
+            keys.make(ALIAS)
+            val pub = keys.public(ALIAS) ?: throw IllegalStateException("no public key")
+            // a key the keystore will not start a decrypt with never opens
+            // its seal: refused now, while the switch can still say so
+            opener(keys.private(ALIAS) ?: throw IllegalStateException("no private key"))
             BioSeal.seal(BioSeal.plain(pub), opens)
         } catch (e: Exception) {
+            told("not made", e)
             delete()
             null
         }
@@ -63,33 +106,58 @@ object BioKey {
     fun delete() {
         for (a in listOf(ALIAS, OLD_ALIAS)) {
             try {
-                store().deleteEntry(a)
+                keys.delete(a)
             } catch (_: Exception) {
             }
         }
     }
 
     // a cipher ready for the prompt, or why there is none: "none" (never
-    // made, or gone), "invalidated" (a finger was added since), "error"
+    // made, or gone), "invalidated" (a finger was added since, or the key
+    // will not start any more), "error"
     fun cipher(): Pair<Cipher?, String> {
         if (!ready()) return null to "none"
-        return try {
-            val key = store().getKey(ALIAS, null) as? PrivateKey ?: return null to "none"
-            val c = Cipher.getInstance(BioSeal.TRANSFORM)
-            c.init(Cipher.DECRYPT_MODE, key, BioSeal.OAEP)
-            c to "ok"
-        } catch (e: KeyPermanentlyInvalidatedException) {
-            delete()
-            null to "invalidated"
-        } catch (e: Exception) {
-            null to "error"
+        var last: Exception? = null
+        repeat(2) {
+            try {
+                val key = keys.private(ALIAS) ?: return null to "none"
+                return opener(key) to "ok"
+            } catch (e: KeyPermanentlyInvalidatedException) {
+                delete()
+                return null to "invalidated"
+            } catch (e: Exception) {
+                last = e
+            }
+        }
+        // a key that will not start twice opens nothing again: it goes, and
+        // the pin makes a new one
+        told("not started", last)
+        delete()
+        return null to "invalidated"
+    }
+
+    // the class and the keystore's code only, for a person's own logcat
+    private fun told(what: String, e: Throwable?) {
+        try {
+            var code = ""
+            var c = e
+            var depth = 0
+            while (c != null && depth++ < 8) {
+                if (Build.VERSION.SDK_INT >= 33 && c is android.security.KeyStoreException) {
+                    code = " ${c.numericErrorCode}"
+                }
+                c = c.cause
+            }
+            val name = e?.javaClass?.simpleName?.let { " $it" } ?: ""
+            Log.i("kryfo", "finger key $what$name$code")
+        } catch (_: Throwable) {
         }
     }
 
     fun state(): String = cipher().second
 
     // the prompt, then the seal opened: "ok" with what it opens, or
-    // "cancel", "lockout", "invalidated", "none", "error"
+    // "cancel", "lockout", "invalidated", "none", "refused", "error"
     fun unlock(
         activity: Activity,
         title: String,
@@ -133,10 +201,10 @@ object BioKey {
                     // takes a moment, so not on the main thread
                     val cipher = r.cryptoObject?.cipher
                     Thread {
-                        val opens = if (cipher == null) null else BioSeal.open(cipher, sealed)
-                        exec.execute {
-                            if (opens == null) once("none", null) else once("ok", opens)
-                        }
+                        val (s, opens) =
+                            if (cipher == null) "refused" to null else BioSeal.open(cipher, sealed)
+                        if (s == "refused") told("refused", null)
+                        exec.execute { once(s, opens) }
                     }.start()
                 }
 

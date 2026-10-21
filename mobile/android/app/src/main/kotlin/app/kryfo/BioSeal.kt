@@ -5,6 +5,7 @@ import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.MGF1ParameterSpec
 import java.security.spec.X509EncodedKeySpec
+import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
@@ -48,12 +49,15 @@ object BioSeal {
         return b.copyOfRange(1, b.size)
     }
 
-    // a cipher the finger has unlocked opens it. null when it was sealed to
-    // another key
-    fun open(c: Cipher, sealed: ByteArray): String? = try {
-        String(c.doFinal(sealed), Charsets.UTF_8)
+    // a cipher the finger has unlocked opens it: "ok" with what it holds,
+    // "none" when it was sealed to another key, "refused" when the keystore
+    // would not finish what the finger began
+    fun open(c: Cipher, sealed: ByteArray): Pair<String, String?> = try {
+        "ok" to String(c.doFinal(sealed), Charsets.UTF_8)
+    } catch (e: BadPaddingException) {
+        "none" to null
     } catch (e: Exception) {
-        null
+        "refused" to null
     }
 
     // why the prompt closed. too many wrong fingers lock the sensor for a

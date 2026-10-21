@@ -32,7 +32,7 @@ class BioSealTest {
             val seal = BioSeal.seal(BioSeal.plain(keys.public), opens)
             val sealed = BioSeal.parse(seal)
             assertNotNull(sealed)
-            assertEquals(opens, BioSeal.open(opener(keys), sealed!!))
+            assertEquals("ok" to opens, BioSeal.open(opener(keys), sealed!!))
         }
     }
 
@@ -51,7 +51,7 @@ class BioSealTest {
     fun aSealForAnotherKeyOpensNothing() {
         val other = pair()
         val sealed = BioSeal.parse(BioSeal.seal(other.public, decoy))!!
-        assertNull(BioSeal.open(opener(keys), sealed))
+        assertEquals("none" to null, BioSeal.open(opener(keys), sealed))
     }
 
     @Test
@@ -64,7 +64,17 @@ class BioSealTest {
         assertNull(BioSeal.parse("02" + good.substring(2)))
         // cut short: parsed, but opens nothing
         val short = BioSeal.parse(good.substring(0, good.length - 2))!!
-        assertNull(BioSeal.open(opener(keys), short))
+        assertEquals("none" to null, BioSeal.open(opener(keys), short))
+    }
+
+    // a finger the keystore would not finish with is not a seal for another
+    // key: the app says so rather than asking for the pin again and again
+    @Test
+    fun aKeystoreThatWillNotFinishIsToldApart() {
+        val sealed = BioSeal.parse(BioSeal.seal(keys.public, everyday))!!
+        // a cipher never started, as when the prompt's key went away
+        val unstarted = Cipher.getInstance(BioSeal.TRANSFORM)
+        assertEquals("refused" to null, BioSeal.open(unstarted, sealed))
     }
 
     @Test
