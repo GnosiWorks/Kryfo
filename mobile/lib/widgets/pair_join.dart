@@ -296,6 +296,7 @@ class _PairJoinState extends State<PairJoin> {
         TextField(
           textDirection: TextDirection.ltr,
           controller: _ctrl,
+          enableIMEPersonalizedLearning: false,
           keyboardType: TextInputType.number,
           maxLength: 7,
           textAlign: TextAlign.center,

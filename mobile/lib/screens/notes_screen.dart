@@ -643,6 +643,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     textDirection: dir,
                     inputFormatters: const [UnmarkedInput()],
                     controller: _input,
+                    enableIMEPersonalizedLearning: false,
                     maxLines: 5,
                     minLines: 1,
                     style: HaloType.sans(size: 14, color: HaloColors.text),

@@ -799,6 +799,7 @@ class _Field extends StatelessWidget {
                   textDirection: dir,
                   inputFormatters: const [UnmarkedInput()],
                   controller: ctrl,
+                  enableIMEPersonalizedLearning: false,
                   focusNode: focus,
                   textInputAction: TextInputAction.search,
                   style: HaloType.sans(size: 15, color: HaloColors.text),

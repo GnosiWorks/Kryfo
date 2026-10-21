@@ -698,6 +698,7 @@ class _FieldState extends State<_Field> {
                   child: TextField(
                     textDirection: ltr ? TextDirection.ltr : dir,
                     controller: widget.ctrl,
+                    enableIMEPersonalizedLearning: false,
                     onChanged: widget.onChanged,
                     maxLength: widget.max,
                     minLines: widget.lines,

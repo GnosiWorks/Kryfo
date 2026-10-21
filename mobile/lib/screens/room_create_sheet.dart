@@ -95,6 +95,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               controller: _nameCtrl,
               child: TextField(
                 controller: _nameCtrl,
+                enableIMEPersonalizedLearning: false,
                 autofocus: true,
                 maxLength: 32,
                 style: HaloType.sans(size: 16, color: HaloColors.text),

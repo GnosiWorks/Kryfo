@@ -61,6 +61,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
                 child: TextField(
                   textDirection: TextDirection.ltr,
                   controller: ctrl,
+                  enableIMEPersonalizedLearning: false,
                   maxLines: 4,
                   style: HaloType.mono(size: 11, color: HaloColors.text),
                   decoration: InputDecoration(
@@ -418,6 +419,7 @@ class _DevScreenState extends State<DevScreen> {
                 controller: _msgCtrl,
                 child: TextField(
                   controller: _msgCtrl,
+                  enableIMEPersonalizedLearning: false,
                   style: HaloType.sans(color: HaloColors.text),
                   decoration: InputDecoration(
                     labelText: l10n.appMessageWillBeEncrypted,

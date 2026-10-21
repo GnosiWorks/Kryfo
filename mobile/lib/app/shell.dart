@@ -270,6 +270,7 @@ class _AddSheetState extends State<_AddSheet>
                   child: TextField(
                     textDirection: TextDirection.ltr,
                     controller: widget.ctrl,
+                    enableIMEPersonalizedLearning: false,
                     focusNode: _focus,
                     minLines: 1,
                     maxLines: 3,

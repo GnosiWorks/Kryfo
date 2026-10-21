@@ -164,6 +164,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 controller: _nameCtrl,
                 child: TextField(
                   controller: _nameCtrl,
+                  enableIMEPersonalizedLearning: false,
                   onChanged: (_) => setState(() {}),
                   style: HaloType.sans(size: 16, color: HaloColors.text),
                   cursorColor: HaloColors.amber,

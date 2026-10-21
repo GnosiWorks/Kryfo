@@ -388,6 +388,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
                 textDirection: dir,
                 inputFormatters: const [UnmarkedInput()],
                 controller: _caption,
+                enableIMEPersonalizedLearning: false,
                 style: HaloType.sans(size: 14),
                 minLines: 1,
                 maxLines: 4,

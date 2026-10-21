@@ -207,6 +207,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                 controller: _noteCtrl,
                 child: TextField(
                   controller: _noteCtrl,
+                  enableIMEPersonalizedLearning: false,
                   maxLength: _noteMax,
                   onChanged: (_) => setState(() {}),
                   textCapitalization: TextCapitalization.none,

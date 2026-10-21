@@ -601,6 +601,7 @@ class _Way3Card extends StatelessWidget {
                     child: TextField(
                       textDirection: TextDirection.ltr,
                       controller: ctrl,
+                      enableIMEPersonalizedLearning: false,
                       maxLength: 20,
                       autocorrect: false,
                       enableSuggestions: false,

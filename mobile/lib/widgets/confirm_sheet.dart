@@ -350,6 +350,7 @@ Future<String?> showInputSheet(
             controller: ctrl,
             child: TextField(
               controller: ctrl,
+              enableIMEPersonalizedLearning: false,
               textDirection: dir,
               inputFormatters: const [UnmarkedInput()],
               autofocus: true,

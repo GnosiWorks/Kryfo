@@ -237,6 +237,7 @@ Future<bool> showNoteSheet(
               controller: ctrl,
               child: TextField(
                 controller: ctrl,
+                enableIMEPersonalizedLearning: false,
                 autofocus: true,
                 minLines: 1,
                 maxLines: 4,
@@ -7204,6 +7205,7 @@ class _SearchHeadState extends State<SearchHead> {
                                 textDirection: dir,
                                 inputFormatters: const [UnmarkedInput()],
                                 controller: widget.controller,
+                                enableIMEPersonalizedLearning: false,
                                 focusNode: _focus,
                                 onChanged: widget.onChanged,
                                 cursorColor: HaloColors.amber,
@@ -8934,6 +8936,7 @@ class _Composer extends StatelessWidget {
                     controller: controller,
                     child: TextField(
                       controller: controller,
+                      enableIMEPersonalizedLearning: false,
                       focusNode: focusNode,
                       textDirection: dir,
                       inputFormatters: const [UnmarkedInput()],

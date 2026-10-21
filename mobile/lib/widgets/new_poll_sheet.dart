@@ -191,6 +191,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                     textDirection: dir,
                     inputFormatters: const [UnmarkedInput()],
                     controller: _question,
+                    enableIMEPersonalizedLearning: false,
                     autofocus: true,
                     minLines: 1,
                     maxLines: 4,
@@ -250,6 +251,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                                   textDirection: dir,
                                   inputFormatters: const [UnmarkedInput()],
                                   controller: f.ctrl,
+                                  enableIMEPersonalizedLearning: false,
                                   focusNode: f.focus,
                                   maxLength: kPollMaxOption,
                                   textCapitalization:

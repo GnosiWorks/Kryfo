@@ -83,6 +83,7 @@ Future<String?> showRenameSheet(
                   controller: ctrl,
                   child: TextField(
                     controller: ctrl,
+                    enableIMEPersonalizedLearning: false,
                     autofocus: true,
                     textCapitalization: TextCapitalization.none,
                     onSubmitted: (s) => Navigator.pop(ctx, s),

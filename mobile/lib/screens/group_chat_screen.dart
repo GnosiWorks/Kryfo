@@ -263,6 +263,7 @@ Future<String?> showGroupEditSheet(BuildContext context, String text) =>
                 controller: ctrl,
                 child: TextField(
                   controller: ctrl,
+                  enableIMEPersonalizedLearning: false,
                   autofocus: true,
                   // a long message scrolls in the field, so save stays in view
                   minLines: 1,
@@ -5127,6 +5128,7 @@ class _Composer extends StatelessWidget {
                               textDirection: dir,
                               inputFormatters: const [UnmarkedInput()],
                               controller: controller,
+                              enableIMEPersonalizedLearning: false,
                               style: HaloType.sans(
                                 size: 14,
                                 color: HaloColors.text,
