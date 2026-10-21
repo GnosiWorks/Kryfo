@@ -751,7 +751,11 @@ class _DonateScreenState extends State<DonateScreen> {
               label: l10n.donateCardPay,
               onTap: _openCard,
               child: Container(
-                height: 46,
+                constraints: const BoxConstraints(minHeight: 46),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: HaloColors.amber,
@@ -760,13 +764,17 @@ class _DonateScreenState extends State<DonateScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ExcludeSemantics(
-                      child: Text(
-                        l10n.donateCardPay,
-                        style: HaloType.sans(
-                          size: 14,
-                          weight: FontWeight.w600,
-                          color: HaloColors.onAmber,
+                    // large text wraps instead of running off the button
+                    Flexible(
+                      child: ExcludeSemantics(
+                        child: Text(
+                          l10n.donateCardPay,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 14,
+                            weight: FontWeight.w600,
+                            color: HaloColors.onAmber,
+                          ),
                         ),
                       ),
                     ),
@@ -1742,7 +1750,7 @@ class _CopyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: HaloColors.amber,
@@ -1750,6 +1758,7 @@ class _CopyButton extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           CopiedMark(
             copies: copies,
@@ -1757,9 +1766,13 @@ class _CopyButton extends StatelessWidget {
             done: HaloColors.onAmber,
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: HaloType.mono(size: 12, color: HaloColors.onAmber),
+          // large text wraps under itself instead of running off the button
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: HaloType.mono(size: 12, color: HaloColors.onAmber),
+            ),
           ),
         ],
       ),

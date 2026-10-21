@@ -16,13 +16,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _url =
     'https://checkout.revolut.com/pay/6153a006-b91f-42fa-b433-aa903b890840';
 
-Widget _framed({bool still = false}) => MaterialApp(
-  locale: const Locale('en'),
+Widget _framed({
+  bool still = false,
+  Locale locale = const Locale('en'),
+  double scale = 1,
+}) => MaterialApp(
+  locale: locale,
   theme: buildHaloTheme(),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (ctx, child) => MediaQuery(
-    data: MediaQuery.of(ctx).copyWith(disableAnimations: still),
+    data: MediaQuery.of(
+      ctx,
+    ).copyWith(disableAnimations: still, textScaler: TextScaler.linear(scale)),
     child: child!,
   ),
   home: const DonateScreen(),
@@ -256,6 +262,38 @@ void main() {
     expect(pay.label, l10n.donateCardPay);
     sem.dispose();
   });
+
+  for (final locale in AppLocalizations.supportedLocales) {
+    testWidgets(
+      'at 360 dp and large text it fits in ${locale.toLanguageTag()}: '
+      'the copy button, the card row and the card box',
+      (t) async {
+        _phone(t);
+        setL10nLocale(locale);
+        addTearDown(() => setL10nLocale(const Locale('en')));
+        await t.pumpWidget(_framed(locale: locale, scale: 1.5));
+        await _beats(t);
+        expect(t.takeException(), isNull);
+        // the copy label stays inside its button
+        final copy = find.text(l10n.donateCopyAddress);
+        await t.ensureVisible(copy);
+        await _beats(t, 2);
+        final button = find
+            .ancestor(of: copy, matching: find.byType(Container))
+            .first;
+        final box = t.getRect(button);
+        final label = t.getRect(copy);
+        expect(box.left, lessThanOrEqualTo(label.left));
+        expect(box.right, greaterThanOrEqualTo(label.right));
+        expect(box.bottom, greaterThanOrEqualTo(label.bottom));
+        final card = find.text(l10n.donateCard);
+        await t.ensureVisible(card);
+        await t.tap(card);
+        await _beats(t);
+        expect(t.takeException(), isNull);
+      },
+    );
+  }
 
   test('every language names Marios and no amount', () {
     for (final locale in AppLocalizations.supportedLocales) {
