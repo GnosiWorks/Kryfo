@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.5.3] - 2026-10-21
+
+### Added
+- a video you record plays in the preview before you send it.
+- card donations in support, right under the badges: "No bitcoin? Pay by card". card payments go to Marios directly until our fiscal host is set up. card donations don't unlock a badge.
+- the connection page shows when and why tor reconnected.
+- a short guide for phones that stop apps in the background, with the right steps for xiaomi, huawei, honor, oppo, realme, vivo, samsung and oneplus.
+
+### Changed
+- tor rides out short drops more quietly: it tries new circuits before it restarts, and a relay that turns a message away no longer counts as tor being down. the tor status holds through a short drop.
+- automatic bridges were tested in heavily censored countries.
+- swipe to reply keeps your place in the chat.
+- bitcoin donations: an invoice stays open for an hour, and the first try no longer fails on a slow connection.
+- backups: the save window opens in your download folder, Kryfo says where the backup went, and says so when there is no room.
+- videos play upright and at their own shape.
+- the photo tool shows what a photo reveals and removes it in one step.
+- "Through a helper app" is always shown in getting messages, with a line on why it waits.
+- photos with a caption have slightly less rounded corners.
+- the texts about screenshot blocking say plainly what it can't stop.
+
+### Fixed
+- on some phones the fingerprint could not be turned back on after an update.
+- yellow lines under the time in the video and photo viewers.
+- the connection page no longer bounces when you scroll to the end.
+- "Copy address" and "Pay by card" fit at large text sizes.
+- when the phone stops Kryfo in the background, the connection page says so instead of "stopped by you".
+
+### Security
+- stability and privacy improvements throughout. update when you can.
+
 ## [0.5.2] - 2026-10-17
 
 ### Added
