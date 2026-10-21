@@ -109,6 +109,13 @@ func laneName(lane string) string {
 	return n
 }
 
+// every lane takes a new socks name, so its next streams take new circuits
+func freshLaneNames() {
+	laneMu.Lock()
+	laneNames = map[string]string{}
+	laneMu.Unlock()
+}
+
 // a lane that is done with takes its socks name with it: a room that is
 // gone, a first-contact address that was replaced
 func dropLane(lane string) {

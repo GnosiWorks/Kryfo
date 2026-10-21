@@ -348,26 +348,14 @@ func rescueKind(why string) string {
 	return whyRelays
 }
 
-// the cheap rescue. tor makes new circuits for every new stream, the
-// sockets still up are probed after their kick delay and the runners that
-// wait dial again now. the route stays the same generation, so an answer
-// on a socket that lived through it proves the route. a var for the tests
+// new socks names give new streams new circuits; no NEWNYM, which would drop the vanguards and onion descriptors
 var rescueCircuits = func() {
-	mu.Lock()
-	t := torNode
-	mu.Unlock()
-	if t == nil || t.Control == nil || torIsPaused() {
+	if torIsPaused() {
 		return
 	}
 	noteBounce(whyCircuits)
-	if err := ctrlDo(t, "SIGNAL NEWNYM", func(c *control.Conn) error {
-		return c.Signal("NEWNYM")
-	}); err != nil {
-		log.Printf("halo: tor would not make new circuits: %v", err)
-	}
-	// the cached clients' idle connections ride the old circuits
-	go nostrResetClient()
-	relayClearBenches()
+	freshLaneNames()
+	nostrDropClients()
 	kickRelays()
 }
 

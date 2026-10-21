@@ -4,7 +4,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
-	"strings"
+	"net/http"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -15,7 +15,6 @@ func failedCount() int {
 	defer routeMu.Unlock()
 	return len(failedSinceOK)
 }
-
 // relays that turn a wrap away answered through tor: the route carried the
 // question and the answer, so it is not marked down, nor rebuilt for it
 func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
@@ -53,7 +52,6 @@ func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
 		t.Fatal("a refusing relay was not counted at all")
 	}
 }
-
 // a relay that says it has the event already holds it: no bench
 func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 	socks := newSocksStandIn(t)
@@ -73,7 +71,6 @@ func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 		t.Fatalf("a relay that holds the event was counted as failing %d times", n)
 	}
 }
-
 // a sign of life from a connection made before the latest bounce says
 // nothing about the tor after it
 func TestOldConnectionProvesNothing(t *testing.T) {
@@ -90,7 +87,6 @@ func TestOldConnectionProvesNothing(t *testing.T) {
 		t.Fatal("a connection on the route now did not prove it")
 	}
 }
-
 // relays fail while a live socket on our relay still answers its probes:
 // tor carries, the failures are those relays' own, and nothing is rebuilt
 func TestLiveSocketAnswerClearsFailures(t *testing.T) {
@@ -119,9 +115,9 @@ func TestLiveSocketAnswerClearsFailures(t *testing.T) {
 		t.Fatalf("the live socket was replaced: %d connections", n)
 	}
 }
-
-// the cheap rescue asks tor for new circuits and touches nothing else: no
-// network bounce, the route generation kept, every runner kicked
+// the cheap rescue renames every lane so new streams take new circuits. it
+// sends tor nothing (NEWNYM would drop the vanguards and onion descriptors),
+// keeps the route and the kept sockets, and kicks every runner
 func TestNewCircuitsKeepTheRoute(t *testing.T) {
 	fc := newFakeControl(t, 100)
 	fakeTor(t, fc.port())
@@ -131,14 +127,39 @@ func TestNewCircuitsKeepTheRoute(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	gen := routeGeneration()
 	kick := kickChan()
+	name := laneName(laneEveryday)
+	cachedNostrClientMu.Lock()
+	cachedNostrClients[laneEveryday] = &http.Client{}
+	cachedNostrClientMu.Unlock()
+	key := pubKey{lane: laneEveryday, url: "wss://kept.example", addr: "kept"}
+	sock := &pubSock{}
+	pubMu.Lock()
+	pubSocks[key] = sock
+	pubMu.Unlock()
+	t.Cleanup(func() {
+		pubMu.Lock()
+		delete(pubSocks, key)
+		pubMu.Unlock()
+	})
 	before, _ := bounceSnapshot()
 	rescueCircuits()
-	sent := strings.Join(fc.sent(), "\n")
-	if !strings.Contains(sent, "SIGNAL NEWNYM") {
-		t.Fatalf("no NEWNYM, sent %q", sent)
+	if sent := fc.sent(); len(sent) != 0 {
+		t.Fatalf("new circuits sent tor %q", sent)
 	}
-	if strings.Contains(sent, "DISABLENETWORK") {
-		t.Fatalf("new circuits bounced the network: %q", sent)
+	if laneName(laneEveryday) == name {
+		t.Fatal("the lane kept its socks name, its next stream rides the old circuit")
+	}
+	cachedNostrClientMu.Lock()
+	c := cachedNostrClients[laneEveryday]
+	cachedNostrClientMu.Unlock()
+	if c != nil {
+		t.Fatal("a client with the old socks name was kept")
+	}
+	pubMu.Lock()
+	still := pubSocks[key] == sock
+	pubMu.Unlock()
+	if !still {
+		t.Fatal("a kept publish socket was cut")
 	}
 	if routeGeneration() != gen {
 		t.Fatal("new circuits started a new route")
@@ -153,7 +174,6 @@ func TestNewCircuitsKeepTheRoute(t *testing.T) {
 		t.Fatalf("not on the transport screen: %+v", after)
 	}
 }
-
 // what the transport screen reads: the newest first, a dozen at most
 func TestBounceNotesKeepTheLatest(t *testing.T) {
 	bounceMu.Lock()
@@ -184,7 +204,6 @@ func TestBounceNotesKeepTheLatest(t *testing.T) {
 		t.Fatalf("transport state: %d bounces, counts %v", len(v.Bounces), v.BounceCounts)
 	}
 }
-
 // the gap between rescues is spread a tenth either way, so phones that lost
 // a relay together do not bounce tor together
 func TestRescueGapIsSpread(t *testing.T) {
@@ -200,7 +219,6 @@ func TestRescueGapIsSpread(t *testing.T) {
 		t.Fatalf("only %d different gaps in 50", len(seen))
 	}
 }
-
 // every bounce names why, and the reasons the watch gives map to them
 func TestRescueKinds(t *testing.T) {
 	for why, want := range map[string]string{
@@ -213,7 +231,6 @@ func TestRescueKinds(t *testing.T) {
 		}
 	}
 }
-
 // relays that answer the upgrade with an http status are up behind a route
 // that works: busy, or down behind their front. not tor's failure
 func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
@@ -239,7 +256,6 @@ func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
 		t.Fatalf("a rescue for relays that answered: %s", why)
 	}
 }
-
 // a bounce that goes ahead is noted with the reason it was asked for
 func TestBounceKeepsItsReason(t *testing.T) {
 	fc := newFakeControl(t, 100)
