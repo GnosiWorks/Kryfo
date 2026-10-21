@@ -46,12 +46,13 @@ class _Coin {
   const _Coin(this.key, this.name, this.sym, this.note, this.tint, {this.icon});
 }
 
-// one more way to give, after the coins: no address, a page in the browser
+// one more way to give, after the coins: no address, a page in the browser.
+// added by hand like the coins after bitcoin, and no badge
 _Coin get _card => _Coin(
   'card',
   l10n.donateCard,
   '',
-  '',
+  kBadgeTiersShown ? l10n.donateManualNoBadge : '',
   HaloColors.text,
   icon: Icons.credit_card_rounded,
 );
@@ -554,7 +555,17 @@ class _DonateScreenState extends State<DonateScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        Row(children: [_coinCard(_card)]),
+        // a coin tile's width, centred under them, so it wraps and stands
+        // as tall as they do
+        Row(
+          children: [
+            const Spacer(),
+            const SizedBox(width: 4),
+            _coinCard(_card, flex: 2),
+            const SizedBox(width: 4),
+            const Spacer(),
+          ],
+        ),
         const SizedBox(height: 10),
         // coins have addresses of different lengths: the box eases to its
         // new height instead of the page jumping
@@ -585,10 +596,11 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 
-  Widget _coinCard(_Coin c) {
+  Widget _coinCard(_Coin c, {int flex = 1}) {
     final sel = _coin == c.key;
     final still = MediaQuery.disableAnimationsOf(context);
     return Expanded(
+      flex: flex,
       child: PressScale(
         onTap: () {
           HapticFeedback.selectionClick();

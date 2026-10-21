@@ -96,6 +96,27 @@ void main() {
     expect(find.text(l10n.donateCopyAddress), findsOneWidget);
   });
 
+  testWidgets('the card tile is as tall as the coin tiles', (t) async {
+    _phone(t);
+    await t.pumpWidget(_framed());
+    await _beats(t);
+    Size tile(String name) => t.getSize(
+      find
+          .ancestor(
+            of: find.text(name),
+            matching: find.byType(AnimatedContainer),
+          )
+          .first,
+    );
+    // ignore: avoid_print
+    print(
+      'DBG ${tile(l10n.donateCard)} ${tile(l10n.donateBitcoin)} ${t.getSize(find.text(l10n.donateBitcoin))} ${t.getSize(find.text(l10n.donateBadgeUnlocks))} ${t.getSize(find.text(l10n.donateCard))} ${find.text(' ').evaluate().length}',
+    );
+    expect(tile(l10n.donateCard).height, tile(l10n.donateBitcoin).height);
+    expect(tile(l10n.donateCard).height, tile(l10n.donateMonero).height);
+    expect(tile(l10n.donateCard).width, tile(l10n.donateMonero).width);
+  });
+
   testWidgets('chosen, it says where the money goes, in no grey', (t) async {
     _phone(t);
     await t.pumpWidget(_framed());

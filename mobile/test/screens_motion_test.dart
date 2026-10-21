@@ -166,6 +166,8 @@ void main() {
       await t.pumpWidget(framed(const DonateScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
       if (kBadgeTiersShown) await t.tap(find.text(l10n.donateTierGuardian));
+      await t.ensureVisible(find.text(l10n.donateSolana));
+      await t.pump();
       await t.tap(find.text(l10n.donateSolana));
       await t.pump();
       expect(t.hasRunningAnimations, isFalse);
