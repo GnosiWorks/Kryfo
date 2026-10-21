@@ -411,4 +411,17 @@ class SaveDocTest {
         assertNull(SaveDoc.placeOf("some.provider", "x", " "))
         assertNull(SaveDoc.placeOf(null, null, null))
     }
+
+    // the dialog starts in the phone's own Download folder, the one a saved
+    // file is then said to be in
+    @Test
+    fun theDialogStartsInDownload() {
+        assertNull(SaveDoc.startIn(25))
+        val uri = SaveDoc.startIn(34)!!
+        val ext = "com.android.externalstorage.documents"
+        assertEquals("content://$ext/document/primary%3ADownload", uri)
+        val id = java.net.URLDecoder.decode(uri.substringAfterLast('/'), "UTF-8")
+        assertEquals("primary:Download", id)
+        assertEquals("Download", SaveDoc.placeOf(ext, "$id/kryfo-backup-1.kryfo", null))
+    }
 }

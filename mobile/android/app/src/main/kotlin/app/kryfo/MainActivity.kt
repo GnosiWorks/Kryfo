@@ -807,6 +807,12 @@ class MainActivity : FlutterFragmentActivity() {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_TITLE, name)
+            // the phone's own Download folder. a file made from the dialog's
+            // Downloads view can list there as 0 B ever after on some phones,
+            // which reads as a backup that never saved
+            SaveDoc.startIn()?.let {
+                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
+            }
         }
         val p = SaveDoc.begin(path) { result.success(it) }
         if (p == null) {
