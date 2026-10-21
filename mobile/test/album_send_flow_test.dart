@@ -36,10 +36,10 @@ void main() {
       expect(body, contains('PickedMedia.video('), reason: fn);
       expect(body, contains('_sendPicked(sent)'), reason: fn);
       expect(body, isNot(contains(direct)), reason: fn);
-      // its copy goes however the preview ends
+      // its copy goes however the preview ends, its frame with it
       final finale = body.indexOf('} finally {');
       expect(finale, greaterThan(0), reason: fn);
-      expect(body.substring(finale), contains('shredFile(path)'));
+      expect(body.substring(finale), contains('shredCapture(path)'));
     }
   });
 
