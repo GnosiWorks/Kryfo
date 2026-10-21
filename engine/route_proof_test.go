@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -236,5 +237,27 @@ func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
 	}
 	if why := routeNeedsRescue(time.Now().Add(5 * time.Minute)); why != "" {
 		t.Fatalf("a rescue for relays that answered: %s", why)
+	}
+}
+
+// a bounce that goes ahead is noted with the reason it was asked for
+func TestBounceKeepsItsReason(t *testing.T) {
+	fc := newFakeControl(t, 100)
+	fakeTor(t, fc.port())
+	// no onion: the publish watch would log two minutes on, in another test
+	mu.Lock()
+	myAddr = ""
+	mu.Unlock()
+	resetRoute(t, "publishing", 100)
+	oldSettle := bounceSettle
+	bounceSettle = time.Millisecond
+	defer func() { bounceSettle = oldSettle }()
+	atomic.StoreInt64(&lastTorRestart, 0)
+	if r := reconnectTorFor(whyRelays); r != "ok" {
+		t.Fatalf("reconnect: %s", r)
+	}
+	notes, _ := bounceSnapshot()
+	if len(notes) == 0 || notes[0].Why != whyRelays {
+		t.Fatalf("noted as %+v, want %q", notes, whyRelays)
 	}
 }

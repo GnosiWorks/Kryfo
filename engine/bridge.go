@@ -891,9 +891,9 @@ func reconnectTorBy(force, auto bool, why string) string {
 		log.Println("halo: reconnect deferred: automatic is trying a way in")
 		return "error: automatic is connecting"
 	}
-	me, prev, done, why := reconnectClaim(force)
-	if why != "" {
-		return why
+	me, prev, done, refused := reconnectClaim(force)
+	if refused != "" {
+		return refused
 	}
 	defer reconnectRelease(me, done)
 	if prev != nil {
