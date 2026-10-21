@@ -819,7 +819,7 @@ class MainActivity : FlutterFragmentActivity() {
             putExtra(Intent.EXTRA_TITLE, name)
             // a backup starts in the phone's own Download folder. a file made
             // from the dialog's Downloads view can list there as 0 B ever
-            // after on some phones, which reads as a backup that never saved
+            // after, which reads as a backup that never saved
             SaveDoc.startIn(backup)?.let {
                 putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
             }

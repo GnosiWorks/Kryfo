@@ -7678,7 +7678,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lockFingerRefused =>
-      'Telefonun Kryfo için parmak iziyle kilit açmayı kapattı. PIN’in hâlâ çalışıyor.';
+      'Telefonun Kryfo için parmak iziyle kilit açmayı tutmadı, bu yüzden kapalı. PIN’in hâlâ çalışıyor.';
 
   @override
   String get pinsFingerRefused =>
