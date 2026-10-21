@@ -162,4 +162,44 @@ void main() {
     expect(find.text(l10n.lockUseFingerprint), findsOneWidget);
     expect(bio.calls.where((c) => c == 'unlock'), hasLength(1));
   });
+
+  // whatever else moves the lock while it is up, the prompt came once
+  testWidgets('a prompt cancelled once is not asked for again by other '
+      'changes to the lock', (t) async {
+    phone(t);
+    _finger();
+    _screen = true;
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final (s, bio, _) = await _withFinger();
+    await s.load();
+    bio.answer = 'cancel';
+    await t.pumpWidget(app(LockScreen(lock: s), still: true));
+    await _settle(t);
+    expect(bio.calls.where((c) => c == 'unlock'), hasLength(1));
+    for (var i = 0; i < 5; i++) {
+      // a lockout answer, then a new try, each notify the lock
+      bio.answer = 'lockout';
+      await s.tryBiometric();
+      bio.answer = 'cancel';
+      await _settle(t);
+    }
+    // the five asked for here, none of its own
+    expect(bio.calls.where((c) => c == 'unlock'), hasLength(6));
+  });
+
+  testWidgets('the lock screen asks again itself once it is up', (t) async {
+    phone(t);
+    _finger();
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final (s, bio, _) = await _withFinger();
+    await s.load();
+    expect(s.bioSupported, isFalse);
+    bio.answer = 'cancel';
+    // android answers now, and nothing else asks
+    _screen = true;
+    await t.pumpWidget(app(LockScreen(lock: s), still: true));
+    await _settle(t);
+    expect(s.bioSupported, isTrue);
+    expect(find.text(l10n.lockUseFingerprint), findsOneWidget);
+  });
 }

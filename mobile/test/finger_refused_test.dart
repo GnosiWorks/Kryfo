@@ -59,6 +59,15 @@ class _RefusingBio extends SealBio {
   }
 }
 
+// a drop that never comes back, as a keystore stuck behind a seal
+class _StuckDropBio extends SealBio {
+  @override
+  Future<void> disable() {
+    calls.add('disable');
+    return Completer<void>().future;
+  }
+}
+
 Future<void> _card(WidgetTester t, Lock lock) async {
   await t.pumpWidget(
     app(
@@ -103,6 +112,34 @@ void main() {
     expect(find.text(l10n.pinsFingerRefused), findsNothing);
   });
 
+  testWidgets('a pin whose fingerprint the phone will not take says so '
+      'from the setup sheet', (t) async {
+    phone(t);
+    _finger();
+    final bio = _RefusingBio()..failures = 99;
+    final lock = await makeLock(appOnly, bio: bio);
+    expect(lock.state.fingerOffered, isTrue);
+    await _card(t, lock);
+    // a changed pin offers the finger, as a new one does
+    await t.tap(find.text(l10n.pinsChangePin));
+    await t.pumpAndSettle();
+    for (final pin in [appPin, '8642', '8642']) {
+      await typePin(t, pin);
+      await enter(t);
+      await t.pump(const Duration(milliseconds: 300));
+      await t.pumpAndSettle();
+    }
+    expect(find.text(l10n.lockSetupUnlockWithFingerprint), findsOneWidget);
+    await t.tap(find.text(l10n.lockSetupUseFingerprint));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.pinsFingerRefused), findsOneWidget);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+    expect(lock.state.enabled, isTrue);
+    expect(lock.state.biometric, isFalse);
+    expect(find.text(l10n.lockSetupUnlockWithFingerprint), findsNothing);
+  });
+
   test('a keystore that never answers leaves no switch busy', () async {
     _finger();
     final bio = _RefusingBio()..hang = true;
@@ -119,6 +156,40 @@ void main() {
     );
     expect(lock.state.biometric, isFalse);
   });
+
+  test(
+    'a keystore that never answers the drop leaves the switch off',
+    () async {
+      _finger();
+      final bio = _StuckDropBio();
+      final lock = await makeLock(
+        appOnly,
+        bio: bio,
+        dropWait: const Duration(milliseconds: 50),
+      );
+      final s = lock.state;
+      expect(await s.setBiometric(true), isTrue);
+      expect(
+        await s
+            .setBiometric(false)
+            .timeout(const Duration(seconds: 5), onTimeout: () => false),
+        isTrue,
+      );
+      expect(s.biometric, isFalse);
+      expect(lock.store.m['halo.lock.biometric'], 'false');
+      // a refused finger says so even while the drop hangs
+      expect(await s.setBiometric(true), isTrue);
+      s.lock();
+      bio.answer = 'refused';
+      final tried = s.tryBiometric();
+      await Future<void>.delayed(Duration.zero);
+      expect(s.fingerNote, FingerNote.refused);
+      expect(
+        await tried.timeout(const Duration(seconds: 5), onTimeout: () => true),
+        isFalse,
+      );
+    },
+  );
 
   test('after the pin, a phone that still has a finger but will not make a '
       'key turns the finger off and says so, instead of asking again at '
@@ -279,8 +350,9 @@ void main() {
     decoy.state.onOutcome = (r, {vaultKey}) async =>
         decoy.state.inDecoy = r == PinResult.decoy;
     await decoy.state.setBiometric(true);
-    decoy.state.inDecoy = false;
+    // the lock comes down inside the decoy
     decoy.state.lock();
+    expect(decoy.state.inDecoy, isTrue);
     decoyBio.answer = 'refused';
     await decoy.state.tryBiometric();
 

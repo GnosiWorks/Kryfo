@@ -113,7 +113,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
 
   void _onLock() {
     if (!mounted) return;
-    if (!_fingerAsked && _fingerReady) _fingerWhenInFront();
+    if (!_fingerAsked && _fingerReady && _lock.locked) _fingerWhenInFront();
     setState(() {});
   }
 
