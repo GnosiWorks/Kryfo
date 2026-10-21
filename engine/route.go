@@ -70,6 +70,8 @@ func routeNoteOKAt(gen int64) bool {
 	okGen = routeGen
 	rescues = 0
 	deadWait = 0
+	// a route that carried again starts the gaps from the first
+	rescueWait = rescueJitter(rescueGap(0))
 	routeMu.Unlock()
 	correctStaleStart()
 	return true
