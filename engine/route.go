@@ -32,13 +32,20 @@ var (
 	// reads the tor that is about to go as the tor that came back.
 	routeGen int64
 	okGen    int64 = -1
-	// rescues in a row with no relay answer in between, when the last was,
-	// and how long the next waits after it
+	// rescues in a row with no relay answer between, the last, and the wait after it
 	rescues    int
 	lastRescue time.Time
 	rescueWait time.Duration
-	// when the dead spell now got its new circuits, the step before a bounce
-	circuitsAt time.Time
+	// this dead spell's window before a rescue, jittered
+	deadWait time.Duration
+	// the last new-circuits step and how long until another may come
+	circuitsAt   time.Time
+	circuitsNext time.Duration
+	// this spell's first step (new circuits or a probe) and how long it gets before a bounce
+	spellStepAt   time.Time
+	spellStepHold time.Duration
+	// the route generation each relay last answered in
+	answeredIn = map[string]int64{}
 	// the bootstrap percentage when it last moved, and when that was
 	stallPct   = -1
 	stallSince time.Time
@@ -49,9 +56,7 @@ var (
 // a relay connect worked. the route carries traffic, whatever came before.
 func routeNoteOK() { routeNoteOKAt(-1) }
 
-// the same, from a connection made while the route was generation gen. one
-// made before the latest bounce proves nothing about the tor after it. gen
-// below zero is whatever the route is now. whether it counted
+// a connect of route generation gen (below zero: now) worked; one from before a bounce counts not
 func routeNoteOKAt(gen int64) bool {
 	routeMu.Lock()
 	if gen >= 0 && gen != routeGen {
@@ -64,24 +69,35 @@ func routeNoteOKAt(gen int64) bool {
 	firstFailAt = time.Time{}
 	okGen = routeGen
 	rescues = 0
+	deadWait = 0
 	routeMu.Unlock()
 	correctStaleStart()
 	return true
 }
 
-// a sign of life through tor on a connection made in route generation gen:
-// an event, the end of the stored ones, a probe answered, a publish taken
-// or refused. a relay that answers is a route that carries, so failures
-// on other relays are theirs, not tor's
-func routeAliveOn(gen int64) {
+// relay u answered through tor on a connection of route generation gen: the route carries
+func routeAliveOn(gen int64, u string) {
 	if !modeNeedsTor() || atomic.LoadInt32(&bounceOff) == 1 {
 		return
 	}
 	if routeNoteOKAt(gen) {
+		routeAnswered(u, gen)
 		txMu.Lock()
 		lastRelayOK = time.Now()
 		txMu.Unlock()
 	}
+}
+
+// relay u answered in route generation gen (below zero: now)
+func routeAnswered(u string, gen int64) {
+	routeMu.Lock()
+	if gen < 0 {
+		gen = routeGen
+	}
+	if gen == routeGen {
+		answeredIn[u] = gen
+	}
+	routeMu.Unlock()
 }
 
 // set from the start of a bounce until tor is back on the network. a connect
@@ -122,14 +138,19 @@ func correctStaleStart() {
 	}
 }
 
-// a relay connect failed while tor said it was ready.
+// a relay failed while tor said ready. only our relay, or one that answered on this route, speaks for tor
 func routeNoteFail(u string) {
+	own := isOwnRelay(u)
 	routeMu.Lock()
+	defer routeMu.Unlock()
+	if g, ok := answeredIn[u]; !own && (!ok || g != routeGen) {
+		return
+	}
 	if len(failedSinceOK) == 0 {
 		firstFailAt = time.Now()
+		deadWait = rescueJitter(deadFor)
 	}
 	failedSinceOK[u] = true
-	routeMu.Unlock()
 }
 
 // the route is about to be torn down on purpose. returns the new generation.
@@ -137,6 +158,7 @@ func routeBump() int64 {
 	routeMu.Lock()
 	routeGen++
 	g := routeGen
+	deadWait = 0
 	for k := range failedSinceOK {
 		delete(failedSinceOK, k)
 	}
@@ -183,21 +205,22 @@ func rescueGap(n int) time.Duration {
 	return d
 }
 
-// a tenth either way, so phones that lost a relay together do not bounce
-// tor together. a var for the tests
+// a tenth either way, so phones that lost a relay together do not act together. a var for the tests
 var rescueJitter = func(d time.Duration) time.Duration {
 	return d*9/10 + time.Duration(mrand.Int64N(int64(d/5)+1))
 }
 
-// the first step for a dead spell, before any bounce: tor builds new
-// circuits and every live socket is asked for a sign of life. a dead
-// circuit is the usual cause, and this keeps tor's connections, its guards
-// and every socket that still works. the bounce follows when nothing
-// answered for this long
-var circuitsFor = time.Minute
+// how long a dead spell's new circuits get before the bounce, and the least time between two such steps
+var (
+	circuitsFor = time.Minute
+	circuitsGap = 10 * time.Minute
+)
 
-// what a rescue that only asks for new circuits says it is
-const circuitsWhy = "new circuits: "
+// what the steps before a bounce say they are
+const (
+	circuitsWhy = "new circuits: "
+	probeWhy    = "probe: "
+)
 
 // how long a bootstrap may sit at one percentage before it is bounced. it is
 // judged by the percentage not moving, never by how long bootstrapping takes:
@@ -230,6 +253,10 @@ func routeWatch() {
 		case strings.HasPrefix(why, circuitsWhy):
 			log.Printf("halo: route rescue: %s", why)
 			go rescueCircuits()
+		case strings.HasPrefix(why, probeWhy):
+			// every live socket asks its probe, waiting runners dial now
+			log.Printf("halo: route rescue: %s", why)
+			kickRelays()
 		default:
 			log.Printf("halo: route rescue: %s", why)
 			atomic.StoreInt64(&lastTorRestart, 0)
@@ -274,18 +301,25 @@ func routeNeedsRescue(now time.Time) string {
 	gapOver := lastRescue.IsZero() || now.Sub(lastRescue) >= rescueWait
 	switch {
 	case st == "bootstrapped" || st == "publishing" || st == "reachable":
-		if len(failedSinceOK) < 2 || now.Sub(firstFailAt) < deadFor {
+		dead := deadWait
+		if dead == 0 {
+			dead = deadFor
+		}
+		if len(failedSinceOK) < 2 || now.Sub(firstFailAt) < dead {
 			return ""
 		}
 		failing := now.Sub(firstFailAt).Round(time.Second).String()
-		// no bounce yet in this spell: new circuits first, and the bounce
-		// only once they brought nothing
+		// no bounce yet in this spell: new circuits first, or a probe when they came lately
 		if rescues == 0 {
-			if circuitsAt.Before(firstFailAt) {
-				circuitsAt = now
-				return circuitsWhy + "every relay has failed for " + failing
+			if spellStepAt.Before(firstFailAt) {
+				spellStepAt, spellStepHold = now, rescueJitter(circuitsFor)
+				if circuitsAt.IsZero() || now.Sub(circuitsAt) >= circuitsNext {
+					circuitsAt, circuitsNext = now, rescueJitter(circuitsGap)
+					return circuitsWhy + "every relay has failed for " + failing
+				}
+				return probeWhy + "every relay has failed for " + failing
 			}
-			if now.Sub(circuitsAt) < circuitsFor {
+			if now.Sub(spellStepAt) < spellStepHold {
 				return ""
 			}
 		}
@@ -377,6 +411,8 @@ func routeFreshNetwork() {
 	lastRescue = time.Time{}
 	rescueWait = 0
 	circuitsAt = time.Time{}
+	circuitsNext = 0
+	spellStepAt = time.Time{}
 	stallPct = -1
 	offSince = time.Time{}
 	routeMu.Unlock()

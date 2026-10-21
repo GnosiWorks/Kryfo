@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -78,11 +79,11 @@ func TestOldConnectionProvesNothing(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	old := routeBump()
 	routeBump()
-	routeAliveOn(old)
+	routeAliveOn(old, "wss://a.example")
 	if routeOK() {
 		t.Fatal("a connection from before the bounce proved the new route")
 	}
-	routeAliveOn(routeGeneration())
+	routeAliveOn(routeGeneration(), "wss://a.example")
 	if !routeOK() {
 		t.Fatal("a connection on the route now did not prove it")
 	}
@@ -172,6 +173,86 @@ func TestNewCircuitsKeepTheRoute(t *testing.T) {
 	after, _ := bounceSnapshot()
 	if len(after) != len(before)+1 && len(after) != bounceKeep || after[0].Why != whyCircuits {
 		t.Fatalf("not on the transport screen: %+v", after)
+	}
+}
+// a relay that never answered on this route is down for its own reasons:
+// its failures do not count against tor. our relay's always do
+func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	setRelays([]string{"ws://ours.onion", "wss://relay.kryfo.app", "wss://down1.example", "wss://down2.example"})
+	resetRoute(t, "publishing", 100)
+	routeNoteFail("wss://down1.example")
+	routeNoteFail("wss://down2.example")
+	if n := failedCount(); n != 0 {
+		t.Fatalf("%d relays that never answered counted against the route", n)
+	}
+	routeAnswered("wss://down1.example", -1)
+	routeNoteFail("wss://down1.example")
+	if n := failedCount(); n != 1 {
+		t.Fatalf("a relay that answered on this route and then failed: %d counted", n)
+	}
+	routeNoteFail("ws://ours.onion")
+	routeNoteFail("wss://relay.kryfo.app")
+	if n := failedCount(); n != 3 {
+		t.Fatalf("our relay's failures: %d counted, want 3", n)
+	}
+	// a bounce starts a new route: what answered before speaks no more
+	routeBump()
+	routeNoteFail("wss://down1.example")
+	if n := failedCount(); n != 0 {
+		t.Fatalf("an answer from before the bounce still counted: %d", n)
+	}
+}
+// the first rescue and the new circuits are spread too, not only the gaps
+func TestFirstRescueIsSpread(t *testing.T) {
+	useStandIns(t, modePrivate, nil)
+	setRelays([]string{"ws://ours.onion", "wss://relay.kryfo.app"})
+	resetRoute(t, "publishing", 100)
+	routeNoteOK()
+	rescueJitter = func(d time.Duration) time.Duration { return d + 7*time.Second }
+	routeNoteFail("ws://ours.onion")
+	routeNoteFail("wss://relay.kryfo.app")
+	routeMu.Lock()
+	t0 := firstFailAt
+	routeMu.Unlock()
+	if why := routeNeedsRescue(t0.Add(deadFor + time.Second)); why != "" {
+		t.Fatalf("rescued inside the spread window: %s", why)
+	}
+	at := t0.Add(deadFor + 7*time.Second)
+	if why := routeNeedsRescue(at); !strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("no new circuits after the spread window: %q", why)
+	}
+	if why := routeNeedsRescue(at.Add(circuitsFor + time.Second)); why != "" {
+		t.Fatalf("bounced inside the spread hold: %s", why)
+	}
+	if why := routeNeedsRescue(at.Add(circuitsFor + 7*time.Second)); why == "" {
+		t.Fatal("no bounce after the spread hold")
+	}
+}
+// new circuits at most once in their gap: a dead spell soon after gets a probe, then the bounce
+func TestNewCircuitsHaveAGap(t *testing.T) {
+	resetRoute(t, "publishing", 100)
+	routeNoteOK()
+	t0 := time.Unix(1_700_000_000, 0)
+	failAll(t0, "wss://a", "wss://b")
+	if why := routeNeedsRescue(t0.Add(61 * time.Second)); !strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("first spell: %q", why)
+	}
+	routeNoteOK()
+	t1 := t0.Add(3 * time.Minute)
+	failAll(t1, "wss://a", "wss://b")
+	if why := routeNeedsRescue(t1.Add(61 * time.Second)); !strings.HasPrefix(why, probeWhy) {
+		t.Fatalf("a spell soon after new circuits: %q, want a probe", why)
+	}
+	why := routeNeedsRescue(t1.Add(61*time.Second + circuitsFor))
+	if why == "" || strings.HasPrefix(why, circuitsWhy) || strings.HasPrefix(why, probeWhy) {
+		t.Fatalf("nothing answered the probe: %q, want the bounce", why)
+	}
+	routeNoteOK()
+	t2 := t0.Add(61*time.Second + circuitsGap)
+	failAll(t2, "wss://a", "wss://b")
+	if why := routeNeedsRescue(t2.Add(61 * time.Second)); !strings.HasPrefix(why, circuitsWhy) {
+		t.Fatalf("a spell past the gap: %q, want new circuits", why)
 	}
 }
 // what the transport screen reads: the newest first, a dozen at most

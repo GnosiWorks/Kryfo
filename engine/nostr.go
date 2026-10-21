@@ -510,6 +510,19 @@ func ownRelays(urls []string) []string {
 	return own
 }
 
+// u is one of our relay's entries in the list now set
+func isOwnRelay(u string) bool {
+	nostrMu.Lock()
+	urls := nostrRelays
+	nostrMu.Unlock()
+	for _, o := range ownRelays(urls) {
+		if o == u {
+			return true
+		}
+	}
+	return false
+}
+
 func relayHostIs(u, host string) bool {
 	p, err := url.Parse(u)
 	return err == nil && strings.EqualFold(p.Host, host)
@@ -901,9 +914,7 @@ func relayCold(u string) bool {
 	return ok && time.Now().Before(till)
 }
 
-// the relay's own answer, as against a socket or a circuit that failed: an
-// "OK false" with its reason to a publish, or an http status in place of the
-// websocket upgrade
+// the relay's own answer (an OK false, or an http status at the upgrade), not a socket or circuit failure
 func relayAnswered(err error) bool {
 	if err == nil {
 		return false
@@ -926,7 +937,7 @@ func relayRefused(u string, began time.Time, err error) {
 // an attempt on u that began at began has failed
 func relayFailed(u string, began time.Time) { relayFailedAs(u, began, true) }
 
-// route: the failure says something about the route, not only about u
+// route: the failure may speak for the route, not only for u
 func relayFailedAs(u string, began time.Time, route bool) {
 	// only tor's warmup can make a connect failure meaningless
 	if modeNeedsTor() && !torReadyNow() {
@@ -1238,7 +1249,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 				if !routeGone(routeC) {
 					if relayAnswered(err) {
 						// tor carried the question and the answer
-						routeAliveOn(gen)
+						routeAliveOn(gen, u)
 						relayRefused(u, began, err)
 					} else {
 						relayFailed(u, began)
@@ -1247,7 +1258,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 				result <- false
 				return
 			}
-			routeAliveOn(gen)
+			routeAliveOn(gen, u)
 			relayOK(u)
 			noteSend()
 			log.Printf("nostr: published to %s ok", u)
@@ -1480,7 +1491,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				lastAlive = time.Now().Round(0)
 				relayUp(u)
 				if connGen >= 0 {
-					routeAliveOn(connGen)
+					routeAliveOn(connGen, u)
 				}
 			}
 			if own {
@@ -1582,7 +1593,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
 					if relayAnswered(err) {
 						// turned away at the door, through a route that works
-						routeAliveOn(dialGen)
+						routeAliveOn(dialGen, u)
 						relayRefused(u, dialAt, err)
 					} else {
 						relayFailed(u, dialAt)
@@ -1606,6 +1617,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
 				connGen = routeGeneration()
+				routeAnswered(u, connGen)
 				// the anchor is what was saved, by this runner or another. it
 				// is only saved once a catch-up has run to its end, so a
 				// connection that dropped half way asks for the same window
