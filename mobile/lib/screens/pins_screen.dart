@@ -3,6 +3,8 @@
 // session the page works on the decoy's own pins and shows what a fresh
 // install would. hidden chats read "Set up" everywhere but inside them, so
 // the page never says whether there are any.
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
@@ -39,6 +41,13 @@ class _PinsScreenState extends State<PinsScreen> {
   bool _open = false;
 
   LockState get _lock => widget.lock ?? lockState;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_lock.recheckFinger());
+  }
+
   PinsHost get _host => widget.host;
 
   // the decoy row, as this session should show it

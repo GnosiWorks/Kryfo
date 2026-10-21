@@ -754,6 +754,9 @@ class LockState extends ChangeNotifier {
     _locked = _enabled;
     _loaded = true;
     notifyListeners();
+    // the screen came while this ran, in a process the service started:
+    // its ask waited for the load, and is made now
+    if (_probeWanted) unawaited(_probeBioAgain());
   }
 
   // whether this phone can unlock with a finger. android answers only
@@ -784,8 +787,14 @@ class LockState extends ChangeNotifier {
   }
 
   bool _reprobing = false;
+  bool _probeWanted = false;
   Future<void> _probeBioAgain() async {
-    if (_reprobing || !_loaded || _bioSupported) return;
+    if (!_loaded) {
+      _probeWanted = true;
+      return;
+    }
+    _probeWanted = false;
+    if (_reprobing || _bioSupported) return;
     _reprobing = true;
     try {
       await _probeBio();
@@ -1667,6 +1676,10 @@ class LockState extends ChangeNotifier {
   // called on resume. the picker coming back keeps its hold. a hold that
   // ran out while the app was away (a picker left open past its deadline)
   // locks here; a hold that left ended has locked already.
+  // App lock asks again as it opens: a phone that said no before it had a
+  // screen shows the switch without leaving the app first
+  Future<void> recheckFinger() => _probeBioAgain();
+
   void returned() {
     unawaited(_probeBioAgain());
     if (!_leftWhileHeld) return;

@@ -82,8 +82,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   // the prompt only while the app is in front: the pad goes up as the app
   // leaves, and a prompt asked for then is gone on the way back
   AppLifecycleListener? _toFront;
+  // the prompt comes up by itself once per lock, also when the phone only
+  // says it has a finger after the pad is up
+  bool _fingerAsked = false;
   void _fingerWhenInFront() {
-    if (!mounted || !_fingerReady) return;
+    if (!mounted || !_fingerReady || _fingerAsked) return;
+    _fingerAsked = true;
     if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
       _lock.tryBiometric();
       return;
@@ -104,7 +108,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   bool get _fingerReady => _fingerOn && !_lock.bioStale;
 
   void _onLock() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    if (!_fingerAsked && _fingerReady) _fingerWhenInFront();
+    setState(() {});
   }
 
   @override
