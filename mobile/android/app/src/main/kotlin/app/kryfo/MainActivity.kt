@@ -587,7 +587,12 @@ class MainActivity : FlutterFragmentActivity() {
                         if (path == null) {
                             result.success(mapOf("state" to SaveDoc.FAILED))
                         } else {
-                            saveDocument(path, name, result)
+                            saveDocument(
+                                path,
+                                name,
+                                call.argument<Boolean>("backup") == true,
+                                result,
+                            )
                         }
                     }
                     "saveDocumentState" -> result.success(SaveDoc.state())
@@ -802,15 +807,20 @@ class MainActivity : FlutterFragmentActivity() {
     // whatever the person chose. the file never goes through memory or the
     // channel: a backup can be a year of photos. the waiting call lives in
     // SaveDoc, so a screen rebuilt meanwhile still answers it
-    private fun saveDocument(path: String, name: String, result: MethodChannel.Result) {
+    private fun saveDocument(
+        path: String,
+        name: String,
+        backup: Boolean,
+        result: MethodChannel.Result,
+    ) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_TITLE, name)
-            // the phone's own Download folder. a file made from the dialog's
-            // Downloads view can list there as 0 B ever after on some phones,
-            // which reads as a backup that never saved
-            SaveDoc.startIn()?.let {
+            // a backup starts in the phone's own Download folder. a file made
+            // from the dialog's Downloads view can list there as 0 B ever
+            // after on some phones, which reads as a backup that never saved
+            SaveDoc.startIn(backup)?.let {
                 putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
             }
         }

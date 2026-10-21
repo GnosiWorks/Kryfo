@@ -412,12 +412,14 @@ class SaveDocTest {
         assertNull(SaveDoc.placeOf(null, null, null))
     }
 
-    // the dialog starts in the phone's own Download folder, the one a saved
-    // file is then said to be in
+    // a backup's dialog starts in the phone's own Download folder, the one
+    // the file is then said to be in. any other save opens where the person
+    // saved last
     @Test
-    fun theDialogStartsInDownload() {
-        assertNull(SaveDoc.startIn(25))
-        val uri = SaveDoc.startIn(34)!!
+    fun aBackupStartsInDownloadAndAFileDoesNot() {
+        assertNull(SaveDoc.startIn(backup = false, sdk = 34))
+        assertNull(SaveDoc.startIn(backup = true, sdk = 25))
+        val uri = SaveDoc.startIn(backup = true, sdk = 34)!!
         val ext = "com.android.externalstorage.documents"
         assertEquals("content://$ext/document/primary%3ADownload", uri)
         val id = java.net.URLDecoder.decode(uri.substringAfterLast('/'), "UTF-8")

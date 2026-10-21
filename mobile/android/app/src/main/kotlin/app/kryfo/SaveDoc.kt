@@ -249,10 +249,11 @@ object SaveDoc {
         }
     }
 
-    // the folder the save dialog opens in: Download on the phone's own
-    // storage, as the files app shows it. android 8 and later
-    fun startIn(sdk: Int = android.os.Build.VERSION.SDK_INT): String? =
-        if (sdk < 26) null
+    // the folder a backup's save dialog opens in: Download on the phone's
+    // own storage, as the files app shows it. android 8 and later. any
+    // other save opens where the person saved last
+    fun startIn(backup: Boolean, sdk: Int = android.os.Build.VERSION.SDK_INT): String? =
+        if (!backup || sdk < 26) null
         else "content://com.android.externalstorage.documents/document/primary%3ADownload"
 
     // where it went, as the person would find it: the folder for a phone or

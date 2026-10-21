@@ -218,7 +218,7 @@ class _BackupScreenState extends State<BackupScreen> {
         await lockState.hold(() async {
           // kept outside, so a save that went through is known even when
           // the lock drops what comes back
-          answer = await saveDocumentOut(made.path, made.name);
+          answer = await saveDocumentOut(made.path, made.name, backup: true);
           _lost = answer.lost;
           return answer;
         });
@@ -1070,7 +1070,13 @@ Future<void> shredMade(String path, {required bool lost}) async {
 // android hands the answer back before kryfo is in front again, so one
 // still missing a few seconds after, with no copy running, is lost and
 // counts as not saved: never a screen left waiting
-Future<SaveAnswer> saveDocumentOut(String path, String name) async {
+/// [backup]: the dialog starts in the phone's Download folder. any other
+/// save starts where the person saved last
+Future<SaveAnswer> saveDocumentOut(
+  String path,
+  String name, {
+  bool backup = false,
+}) async {
   const lostOne = (state: SaveState.failed, where: null, lost: true);
   // a copy given up on before stops first. one that cannot be asked about
   // is left to android, which refuses a second dialog while a copy runs
@@ -1083,7 +1089,11 @@ Future<SaveAnswer> saveDocumentOut(String path, String name) async {
   var still = Duration.zero;
   var asking = false;
   final asked = _platform
-      .invokeMethod<Object?>('saveDocument', {'path': path, 'name': name})
+      .invokeMethod<Object?>('saveDocument', {
+        'path': path,
+        'name': name,
+        'backup': backup,
+      })
       .then(_saveAnswer)
       .catchError((Object e) {
         dlog('backup: no save dialog (${e.runtimeType})');

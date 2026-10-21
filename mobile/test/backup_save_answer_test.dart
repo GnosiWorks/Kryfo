@@ -44,6 +44,8 @@ void main() {
   late List<String> asked;
   // each save dialog, answered when the test says
   late List<Completer<Object?>> dialogs;
+  // what each save dialog was asked with
+  late List<Map<Object?, Object?>> saveArgs;
   late Object? Function() stage;
   // how the share sheet ends
   late String shares;
@@ -52,6 +54,7 @@ void main() {
   setUp(() {
     asked = [];
     dialogs = [];
+    saveArgs = [];
     stage = () => idle;
     shares = 'picked';
     tmp = Directory.systemTemp.createTempSync('backup_answer');
@@ -66,6 +69,7 @@ void main() {
       asked.add(call.method);
       switch (call.method) {
         case 'saveDocument':
+          saveArgs.add(call.arguments as Map<Object?, Object?>);
           final d = Completer<Object?>();
           dialogs.add(d);
           return d.future;
@@ -291,6 +295,23 @@ void main() {
     await until(t, () => made().isEmpty);
     expect(made(), isEmpty);
     await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  // a backup starts in the phone's Download folder, where its 0 B listing
+  // cannot happen. a received file or a notes export opens where the
+  // person saved last
+  testWidgets('only a backup asks the dialog to start in Download', (t) async {
+    await open(t);
+    expect(saveArgs.single['backup'], isTrue);
+    dialogs.single.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+
+    final other = saveDocumentOut('/x/received.pdf', 'received.pdf');
+    await until(t, () => dialogs.length == 2);
+    expect(saveArgs.last['backup'], isFalse);
+    dialogs.last.complete({'state': 'cancelled'});
+    expect((await other).state, SaveState.cancelled);
   });
 
   test('a received file with no room where it was to go says so', () {
