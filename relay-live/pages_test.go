@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -146,6 +147,87 @@ func TestPageBudgetTakesTurns(t *testing.T) {
 	b.give(6)
 	if n := <-got; n != 8 {
 		t.Fatalf("a page of %d went first", n)
+	}
+}
+
+// a wrap saved while a page is being read reaches the reader: in the page
+// or live, after the eose
+type pausedQuery struct {
+	backend
+	paused          atomic.Bool
+	reading, resume chan struct{}
+}
+
+func (p *pausedQuery) QueryEvents(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
+	ch, err := p.backend.QueryEvents(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	var page []*nostr.Event
+	for ev := range ch {
+		page = append(page, ev)
+	}
+	if f.Limit > 0 && p.paused.CompareAndSwap(false, true) {
+		close(p.reading)
+		<-p.resume
+	}
+	out := make(chan *nostr.Event, len(page))
+	for _, ev := range page {
+		out <- ev
+	}
+	close(out)
+	return out, nil
+}
+
+func TestWrapSavedDuringAPageReadIsNotMissed(t *testing.T) {
+	db := &pausedQuery{backend: memStore(t), reading: make(chan struct{}), resume: make(chan struct{})}
+	url, _ := slowRelay(t, db, nil)
+	to := addr()
+	c := dialSlow(t, url)
+	sendReq(t, c, "page", pageFilter(to))
+	<-db.reading
+	ev := wrap(t, to, nil)
+	if err := publish(t, connect(t, url), ev); err != nil {
+		t.Fatal(err)
+	}
+	close(db.resume)
+	for {
+		env, err := readNext(c, 5*time.Second)
+		if err != nil {
+			t.Fatalf("the wrap saved during the read never came: %v", err)
+		}
+		if e, ok := env.(*nostr.EventEnvelope); ok && e.Event.ID == ev.ID {
+			return
+		}
+	}
+}
+
+// a request refused for one filter keeps no listener for any of them
+func TestRefusedRequestKeepsNoListener(t *testing.T) {
+	var relay *khatru.Relay
+	url, _ := slowRelay(t, memStore(t), func(r *khatru.Relay) { relay = r })
+	c := dialSlow(t, url)
+	b, err := nostr.ReqEnvelope{SubscriptionID: "both", Filters: nostr.Filters{
+		pageFilter(addr()),
+		{Kinds: []int{1}},
+	}}.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := c.WriteMessage(websocket.TextMessage, b); err != nil {
+		t.Fatal(err)
+	}
+	for {
+		env, err := readNext(c, 5*time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := env.(*nostr.ClosedEnvelope); ok {
+			break
+		}
+	}
+	if n := len(relay.GetListeningFilters()); n != 0 {
+		t.Fatalf("%d listeners left by a refused request", n)
 	}
 }
 
