@@ -1,0 +1,5 @@
+Novo: prévia do vídeo que você grava antes de enviar, doações com cartão e um guia para celulares que param apps em segundo plano.
+
+Mais estável: o Tor passa por quedas curtas com mais discrição, e as pontes automáticas foram testadas em países com forte censura. Deslizar para responder mantém seu lugar na conversa, e os backups dizem onde foram salvos.
+
+Corrigido: em alguns celulares, a digital não podia ser reativada depois de uma atualização.

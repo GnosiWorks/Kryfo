@@ -1,0 +1,5 @@
+Novedades: vista previa del vídeo que grabas antes de enviarlo, donaciones con tarjeta y una guía para móviles que detienen apps en segundo plano.
+
+Más estable: Tor supera los cortes breves con más discreción, y los puentes automáticos se probaron en países con fuerte censura. Deslizar para responder mantiene tu sitio en el chat, y las copias de seguridad dicen dónde se guardaron.
+
+Corregido: en algunos móviles la huella no se podía volver a activar tras una actualización.

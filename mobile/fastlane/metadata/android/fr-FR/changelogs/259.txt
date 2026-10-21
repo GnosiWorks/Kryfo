@@ -1,0 +1,5 @@
+Nouveau : aperçu des vidéos filmées avant l’envoi, dons par carte et un guide pour les téléphones qui arrêtent les applis en arrière-plan.
+
+Plus stable : Tor passe les courtes coupures plus discrètement, et les ponts automatiques ont été testés dans des pays à forte censure. Glisser pour répondre garde votre place, et les sauvegardes disent où elles sont enregistrées.
+
+Corrigé : sur certains téléphones, l’empreinte ne se réactivait plus après une mise à jour.

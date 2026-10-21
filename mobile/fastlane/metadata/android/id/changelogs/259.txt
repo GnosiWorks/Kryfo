@@ -1,0 +1,5 @@
+Baru: pratinjau video yang kamu rekam sebelum dikirim, donasi dengan kartu, dan panduan untuk ponsel yang menghentikan aplikasi di latar belakang.
+
+Lebih stabil: Tor melewati putus koneksi singkat dengan lebih tenang, dan jembatan otomatis sudah diuji di negara dengan sensor ketat. Geser untuk membalas menjaga posisimu di obrolan, dan cadangan memberi tahu di mana ia disimpan.
+
+Diperbaiki: di beberapa ponsel, sidik jari tidak bisa diaktifkan lagi setelah pembaruan.

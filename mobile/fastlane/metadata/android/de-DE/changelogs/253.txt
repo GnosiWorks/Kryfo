@@ -1,0 +1,5 @@
+Neu: Vorschau für aufgenommene Videos vor dem Senden, Spenden per Karte und eine Anleitung für Handys, die Apps im Hintergrund beenden.
+
+Stabiler: Tor übersteht kurze Aussetzer ruhiger, und automatische Brücken wurden in Ländern mit starker Zensur getestet. Beim Wischen zum Antworten bleibst du an deiner Stelle im Chat, und Backups zeigen, wo sie gespeichert wurden.
+
+Behoben: Auf einigen Handys ließ sich der Fingerabdruck nach einem Update nicht wieder einschalten.

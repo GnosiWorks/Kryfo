@@ -1,0 +1,5 @@
+Novità: anteprima dei video che registri prima di inviarli, donazioni con carta e una guida per i telefoni che fermano le app in background.
+
+Più stabile: Tor supera le brevi interruzioni con più discrezione, e i bridge automatici sono stati testati in paesi con forte censura. Scorrere per rispondere mantiene il tuo punto nella chat, e i backup dicono dove sono stati salvati.
+
+Corretto: su alcuni telefoni l'impronta non si poteva riattivare dopo un aggiornamento.

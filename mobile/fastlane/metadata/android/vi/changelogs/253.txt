@@ -1,0 +1,5 @@
+Mới: xem trước video bạn quay trước khi gửi, ủng hộ bằng thẻ, và hướng dẫn cho các điện thoại hay dừng ứng dụng chạy nền.
+
+Ổn định hơn: Tor vượt qua những lần rớt mạng ngắn êm hơn, và cầu nối tự động đã được thử nghiệm ở các quốc gia kiểm duyệt gắt gao. Vuốt để trả lời giữ nguyên vị trí của bạn trong cuộc trò chuyện, và bản sao lưu cho biết đã được lưu ở đâu.
+
+Đã sửa: trên một số điện thoại, không bật lại được vân tay sau khi cập nhật.

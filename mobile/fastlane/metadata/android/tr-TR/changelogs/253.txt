@@ -1,0 +1,5 @@
+Yeni: kaydettiğin videoyu göndermeden önce izleme, kartla bağış ve uygulamaları arka planda durduran telefonlar için bir rehber.
+
+Daha kararlı: Tor kısa kesintileri daha sessizce atlatır ve otomatik köprüler sansürün yoğun olduğu ülkelerde test edildi. Yanıtlamak için kaydırınca sohbetteki yerin korunur, yedekler de nereye kaydedildiğini söyler.
+
+Düzeltildi: bazı telefonlarda parmak izi bir güncellemeden sonra yeniden açılamıyordu.

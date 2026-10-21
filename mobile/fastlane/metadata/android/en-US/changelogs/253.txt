@@ -1,0 +1,5 @@
+New: a video you record plays before you send it, card donations, and a guide for phones that stop apps in the background.
+
+Steadier: Tor rides out short drops more quietly, and automatic bridges were tested in heavily censored countries. Swipe to reply keeps your place, and backups say where they went.
+
+Fixed: the fingerprint could not be turned back on after an update on some phones.
