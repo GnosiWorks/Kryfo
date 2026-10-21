@@ -5420,7 +5420,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsVersion => 'Versione';
 
   @override
-  String get settings030Alpha => '0.5.2 · alpha';
+  String get settings030Alpha => '0.5.3 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Segnala un problema';

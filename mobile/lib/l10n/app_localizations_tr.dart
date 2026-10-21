@@ -5386,7 +5386,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsVersion => 'Sürüm';
 
   @override
-  String get settings030Alpha => '0.5.2 · alfa';
+  String get settings030Alpha => '0.5.3 · alfa';
 
   @override
   String get settingsReportAnIssue => 'Sorun bildir';

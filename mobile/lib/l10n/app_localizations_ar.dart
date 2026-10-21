@@ -5455,7 +5455,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsVersion => 'الإصدار';
 
   @override
-  String get settings030Alpha => '0.5.2 · ألفا';
+  String get settings030Alpha => '0.5.3 · ألفا';
 
   @override
   String get settingsReportAnIssue => 'الإبلاغ عن مشكلة';

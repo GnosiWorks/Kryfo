@@ -3,7 +3,7 @@ description: "Kryfo: private messages over Tor. No phone number."
 publish_to: 'none'
 
 # name+code. split apks get code*10 plus 1, 2 or 3 by abi (build.gradle.kts)
-version: 0.5.2+24
+version: 0.5.3+25
 
 environment:
   sdk: ^3.11.5
