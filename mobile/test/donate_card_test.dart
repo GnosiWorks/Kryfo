@@ -173,7 +173,7 @@ void main() {
       ]) {
         expect(s.trim(), isNotEmpty, reason: tag);
         expect(s, isNot(contains(RegExp(r'[0-9€$]'))), reason: '$tag: $s');
-        expect(s, isNot(contains('—')), reason: '$tag: $s');
+        expect(s, isNot(contains('\u2014')), reason: '$tag: $s');
       }
       if (locale.languageCode != 'en') {
         expect(
