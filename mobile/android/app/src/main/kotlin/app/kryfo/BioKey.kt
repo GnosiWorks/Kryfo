@@ -37,6 +37,8 @@ object BioKey {
         fun make(alias: String)
         fun public(alias: String): PublicKey?
         fun private(alias: String): PrivateKey?
+        // when the key was made, which tells one key from the next
+        fun madeAt(alias: String): Long?
         fun delete(alias: String)
     }
 
@@ -70,6 +72,8 @@ object BioKey {
         override fun public(alias: String): PublicKey? = store().getCertificate(alias)?.publicKey
 
         override fun private(alias: String): PrivateKey? = store().getKey(alias, null) as? PrivateKey
+
+        override fun madeAt(alias: String): Long? = store().getCreationDate(alias)?.time
 
         override fun delete(alias: String) = store().deleteEntry(alias)
     }
@@ -117,13 +121,18 @@ object BioKey {
     // will not start any more), "error"
     fun cipher(): Pair<Cipher?, String> {
         if (!ready()) return null to "none"
+        val made = try {
+            keys.madeAt(ALIAS)
+        } catch (_: Exception) {
+            null
+        }
         var last: Exception? = null
         repeat(2) {
             try {
                 val key = keys.private(ALIAS) ?: return null to "none"
                 return opener(key) to "ok"
             } catch (e: KeyPermanentlyInvalidatedException) {
-                delete()
+                dropLater(made)
                 return null to "invalidated"
             } catch (e: Exception) {
                 last = e
@@ -132,8 +141,21 @@ object BioKey {
         // a key that will not start twice opens nothing again: it goes, and
         // the pin makes a new one
         told("not started", last)
-        delete()
+        dropLater(made)
         return null to "invalidated"
+    }
+
+    // the key that failed goes, in order with the seals, and only if it is
+    // still that key: a seal that ran meanwhile made one that stays
+    private fun dropLater(made: Long?) {
+        work.execute {
+            val now = try {
+                keys.madeAt(ALIAS)
+            } catch (_: Exception) {
+                null
+            }
+            if (now == made) delete()
+        }
     }
 
     // the class and the keystore's code only, for a person's own logcat

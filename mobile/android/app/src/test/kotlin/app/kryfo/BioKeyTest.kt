@@ -27,6 +27,8 @@ class BioKeyTest {
 
     private class Plain : BioKey.Keys {
         val made = mutableMapOf<String, KeyPair>()
+        val at = mutableMapOf<String, Long>()
+        private var clock = 0L
         var refuseMake = false
         var refuseStart = false
         var invalidated = false
@@ -39,6 +41,7 @@ class BioKeyTest {
             if (refuseMake) throw ProviderException("keystore refused")
             made[alias] =
                 KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
+            at[alias] = ++clock
         }
 
         override fun public(alias: String): PublicKey? = made[alias]?.public
@@ -51,12 +54,18 @@ class BioKeyTest {
             return if (refuseStart) wrongKind else p
         }
 
+        override fun madeAt(alias: String): Long? = at[alias]
+
         override fun delete(alias: String) {
             made.remove(alias)
+            at.remove(alias)
         }
     }
 
     private val keys = Plain().also { BioKey.keys = it }
+
+    // the key work queued so far has run
+    private fun settled() = BioKey.work.submit {}.get()
 
     @After
     fun back() {
@@ -95,6 +104,7 @@ class BioKeyTest {
         assertNotNull(BioKey.seal(everyday))
         keys.refuseStart = true
         assertEquals(null to "invalidated", BioKey.cipher())
+        settled()
         assertTrue(keys.made.isEmpty())
         assertEquals("none", BioKey.state())
     }
@@ -104,7 +114,29 @@ class BioKeyTest {
         assertNotNull(BioKey.seal(everyday))
         keys.invalidated = true
         assertEquals(null to "invalidated", BioKey.cipher())
+        settled()
         assertTrue(keys.made.isEmpty())
+    }
+
+    // the drop runs in order with the seals, and only on the key that
+    // failed: a seal that ran in between made a new one, and that one stays
+    @Test
+    fun aDropNeverTakesANewerKey() {
+        assertNotNull(BioKey.seal(everyday))
+        val gate = java.util.concurrent.CountDownLatch(1)
+        BioKey.work.execute { gate.await() }
+        // a seal asked for first, still waiting its turn
+        val sealed = BioKey.work.submit<String?> {
+            keys.refuseStart = false
+            BioKey.seal(everyday)
+        }
+        keys.refuseStart = true
+        assertEquals(null to "invalidated", BioKey.cipher())
+        gate.countDown()
+        assertNotNull(sealed.get())
+        settled()
+        assertEquals(1, keys.made.size)
+        assertEquals("ok", BioKey.state())
     }
 
     @Test
