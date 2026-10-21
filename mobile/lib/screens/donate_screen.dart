@@ -125,8 +125,8 @@ class _DonateScreenState extends State<DonateScreen> {
   // the circuit to the payment service is started once a visit
   bool _warmed = false;
 
-  // bitcoin picked: tor starts reaching the service now, so "pay with
-  // bitcoin" finds the circuit built. it asks for no invoice
+  // bitcoin or an amount picked: tor starts reaching the service now, so
+  // "pay with bitcoin" finds the circuit built. it asks for no invoice
   void _warmBitcoin() {
     if (_warmed || !_onOnion || !kBadgeTiersShown) return;
     _warmed = true;
@@ -467,6 +467,8 @@ class _DonateScreenState extends State<DonateScreen> {
         onTap: () {
           HapticFeedback.selectionClick();
           _pickTier(amt);
+          // an amount picked for bitcoin: the same head start
+          if (_coin == 'btc') _warmBitcoin();
         },
         child: AnimatedScale(
           scale: sel && !still ? 1.05 : 1.0,

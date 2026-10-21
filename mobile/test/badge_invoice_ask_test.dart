@@ -2,7 +2,8 @@
 // the invoice ask: a first one that tor does not get through in time is made
 // once more, the screen says tor was slow when it was, and the countdown
 // follows how long the service keeps the invoice. a screen left behind
-// makes no second ask, and picking bitcoin starts the circuit with no invoice
+// makes no second ask, and picking bitcoin or an amount starts the circuit
+// with no invoice
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -254,12 +255,36 @@ void main() {
       await t.pumpWidget(const SizedBox());
     }, skip: !kBadgeTiersShown);
 
+    testWidgets(
+      'an amount picked starts it too, once, with no invoice',
+      (t) async {
+        final s = _Service([_made]);
+        await _openSupport(t, s);
+        for (final tier in [l10n.donateTierPatron, l10n.donateTierGuardian]) {
+          final card = find.text(tier).first;
+          await t.ensureVisible(card);
+          await t.pump(const Duration(milliseconds: 100));
+          await t.tap(card);
+          await t.pump(const Duration(milliseconds: 300));
+        }
+        expect(s.gets, ['$kBadgeOnion/pubkey']);
+        // and bitcoin after it adds nothing: once a visit
+        await tapBitcoin(t);
+        expect(s.gets, ['$kBadgeOnion/pubkey']);
+        expect(s.asked, 0);
+        await t.pumpWidget(const SizedBox());
+      },
+      skip: !kBadgeTiersShown,
+    );
+
     testWidgets('a decoy or a route without the onion asks nothing', (t) async {
       final s = _Service([_made]);
       final d = HaloDb(HaloContainer.decoy);
       useDatabasesForTest(HaloDb(), Session(d));
       await _openSupport(t, s);
       await tapBitcoin(t);
+      await t.tap(find.text(l10n.donateTierPatron).first);
+      await t.pump(const Duration(milliseconds: 300));
       await t.pumpWidget(const SizedBox());
       useDatabasesForTest(HaloDb(), Session(HaloDb()));
       for (final mode in ['balanced', 'fast']) {
@@ -269,6 +294,8 @@ void main() {
         await t.pumpWidget(_framed(const DonateScreen()));
         await t.pump(const Duration(seconds: 1));
         await tapBitcoin(t);
+        await t.tap(find.text(l10n.donateTierPatron).first);
+        await t.pump(const Duration(milliseconds: 300));
         await t.pumpWidget(const SizedBox());
       }
       expect(s.gets, isEmpty);
