@@ -2415,6 +2415,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _switchSendMode(String m) async {
+    // what carried on the old route is not held for the new one
+    _usableAt = null;
     // the helper app mode registers over tor or not at all: off the
     // private route the phone checks in instead, and the relay forgets
     if (m != 'private' && _deliveryMode == DeliveryMode.helper) {
@@ -7971,7 +7973,8 @@ class AppState extends ChangeNotifier {
       _netWatchOn = null;
       noteOnline(true);
     }
-    if (torUsable) _usableAt = at;
+    // outside onion the route always reads usable, so only onion is held
+    if (_sendMode == 'private' && torUsable) _usableAt = at;
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;

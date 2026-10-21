@@ -19,6 +19,10 @@ class _Engine implements HaloEngine {
   @override
   Map<String, dynamic> transportState() => {};
   @override
+  String setTransportMode(String mode) => mode;
+  @override
+  String nostrInit(String relaysCSV) => 'ok';
+  @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
@@ -117,6 +121,28 @@ void main() {
       a.noteOnline(false, now: now);
       a.noteOnline(true, now: now.add(kPillHandover));
       expect(a.pillReady, isFalse);
+    });
+
+    // outside onion the engine reads the route as carrying while tor only
+    // serves the services lane: nothing of it is held for onion
+    test('relay mode, then onion: tor never carried on onion yet', () {
+      final a = AppState()..sendModeForTest = 'balanced';
+      a.noteOnline(true);
+      a.takeTorStatus('publishing|100|1|1|3');
+      a.sendModeForTest = 'private';
+      a.takeTorStatus('starting|0|0|0|5');
+      expect(a.torUsable, isFalse);
+      expect(a.linkUp, isFalse);
+      expect(a.pillReady, isFalse);
+    });
+
+    test('a mode switch lets go of what the old route carried', () async {
+      final a = AppState()..sendModeForTest = 'private';
+      a.noteOnline(true);
+      a.takeTorStatus('publishing|100|1|1|3');
+      expect(a.usableAt, isNotNull);
+      await a.setSendMode('balanced');
+      expect(a.usableAt, isNull);
     });
 
     test('a start that never carried is not held', () {
