@@ -329,10 +329,9 @@ func TestSavesDoNotWaitForReads(t *testing.T) {
 // slow sockets fill the page budget: an honest page gets through once the
 // oldest pages had their time, and their sockets are closed
 func TestSlowPagesAreCutForAnHonestOne(t *testing.T) {
-	defer func(d time.Duration) { pageCutAfter = d }(pageCutAfter)
-	pageCutAfter = 3 * time.Second
 	db, _ := testStore(t)
 	url, l := slowRelay(t, db, nil)
+	l.cutAfter = 3 * time.Second
 	big := addr()
 	fillWraps(t, db, big, 100, 90<<10)
 	var slow []*websocket.Conn
@@ -367,7 +366,7 @@ func TestSlowPagesAreCutForAnHonestOne(t *testing.T) {
 			break
 		}
 	}
-	if d := time.Since(start); d > pageCutAfter+10*time.Second {
+	if d := time.Since(start); d > l.cutAfter+10*time.Second {
 		t.Fatalf("the honest page took %v", d)
 	}
 	if n := openConns(l); n > len(slow) {
@@ -378,10 +377,9 @@ func TestSlowPagesAreCutForAnHonestOne(t *testing.T) {
 // a page that has not had its time is not cut: past the budget the next
 // read waits
 func TestYoungPagesAreNotCut(t *testing.T) {
-	defer func(d time.Duration) { pageCutAfter = d }(pageCutAfter)
-	pageCutAfter = time.Minute
 	db, _ := testStore(t)
 	url, l := slowRelay(t, db, func(r *khatru.Relay) { r.WriteWait = time.Minute })
+	l.cutAfter = time.Minute
 	const wraps, size = 40, 60 << 10
 	one := wraps * pageSize(&nostr.Event{Content: strings.Repeat("s", size), Tags: nostr.Tags{{"p", addr()}}})
 	l.pages.max = one

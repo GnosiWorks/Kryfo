@@ -69,7 +69,7 @@ func pageReserve(f nostr.Filter) int64 {
 }
 
 // how long a page has in memory before it may be cut for room
-var pageCutAfter = 15 * time.Second
+const pageCutAfter = 15 * time.Second
 
 // a page read and waiting for its socket
 type pageInMemory struct {
@@ -94,7 +94,7 @@ func (l *limits) pageOut(p *pageInMemory) {
 
 // closes the connections of the oldest pages until what they hold brings
 // the pages under their budget, counting pages already cut and not yet
-// gone. pages younger than pageCutAfter are left
+// gone. pages younger than cutAfter are left
 func (l *limits) cutOldest(now time.Time) {
 	over := l.pages.inUse() - l.pages.max
 	if over <= 0 {
@@ -105,7 +105,7 @@ func (l *limits) cutOldest(now time.Time) {
 	for p := range l.inMem {
 		if p.cut {
 			over -= p.held.Load()
-		} else if now.Sub(p.at) >= pageCutAfter {
+		} else if now.Sub(p.at) >= l.cutAfter {
 			old = append(old, p)
 		}
 	}
