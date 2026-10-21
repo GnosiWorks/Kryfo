@@ -21,6 +21,7 @@ import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, kHouseCurve, kText2, motionStill;
 import 'photo_viewer.dart' show PhotoTileFade;
+import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
 import '../lock_guard.dart' show lockGuard;
 
@@ -493,6 +494,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
   bool _done = false;
   bool _controls = true;
   double _aspect = 16 / 9;
+  int _turns = 0;
   Duration _length = Duration.zero;
   Duration _pos = Duration.zero;
   double? _scrub;
@@ -580,11 +582,11 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
       setState(() => _failed = true);
       return;
     }
-    final w = (m['w'] as num?)?.toInt() ?? 0;
-    final h = (m['h'] as num?)?.toInt() ?? 0;
+    final shape = VideoShape.from(m, _aspect);
     setState(() {
       _id = (m!['id'] as num).toInt();
-      if (w > 0 && h > 0) _aspect = w / h;
+      _aspect = shape.aspect;
+      _turns = shape.turns;
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
@@ -705,22 +707,19 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                     textAlign: TextAlign.center,
                     style: HaloType.sans(size: 14, color: Colors.white),
                   )
-                : AspectRatio(
-                    aspectRatio: _aspect,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (jpeg != null)
-                          Image.memory(
+                : VideoFrame(
+                    aspect: _aspect,
+                    turns: _turns,
+                    under: jpeg != null
+                        ? Image.memory(
                             jpeg,
                             fit: BoxFit.cover,
                             gaplessPlayback: true,
                           )
-                        else
-                          const ColoredBox(color: Colors.black),
-                        if (id != null && _started) Texture(textureId: id),
-                      ],
-                    ),
+                        : const ColoredBox(color: Colors.black),
+                    texture: id != null && _started
+                        ? Texture(textureId: id)
+                        : null,
                   ),
           ),
           if (!_failed)

@@ -19,6 +19,7 @@ import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
+import 'video_frame.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
 import '../dlog.dart';
 
@@ -108,6 +109,7 @@ class _VideoViewerState extends State<_VideoViewer>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   int? _id;
   double _aspect = 16 / 9;
+  int _turns = 0;
   Duration _length = Duration.zero;
   Duration _pos = Duration.zero;
   bool _playing = false;
@@ -184,11 +186,11 @@ class _VideoViewerState extends State<_VideoViewer>
       setState(() => _failed = true);
       return;
     }
-    final w = (m['w'] as num?)?.toInt() ?? 0;
-    final h = (m['h'] as num?)?.toInt() ?? 0;
+    final shape = VideoShape.from(m, _aspect);
     setState(() {
       _id = (m!['id'] as num).toInt();
-      if (w > 0 && h > 0) _aspect = w / h;
+      _aspect = shape.aspect;
+      _turns = shape.turns;
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
@@ -387,18 +389,13 @@ class _VideoViewerState extends State<_VideoViewer>
       tag: videoHeroTag(widget.path),
       flightShuttleBuilder: (c, a, dir, from, to) =>
           videoFlight(c, a, dir, from, to, widget.path),
-      child: AspectRatio(
-        aspectRatio: _aspect,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (jpeg != null)
-              Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
-            else
-              const ColoredBox(color: Colors.black),
-            if (id != null && _started) Texture(textureId: id),
-          ],
-        ),
+      child: VideoFrame(
+        aspect: _aspect,
+        turns: _turns,
+        under: jpeg != null
+            ? Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
+            : const ColoredBox(color: Colors.black),
+        texture: id != null && _started ? Texture(textureId: id) : null,
       ),
     );
   }

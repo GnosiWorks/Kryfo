@@ -2,6 +2,7 @@
 package app.kryfo
 
 import android.media.AudioAttributes
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.os.Build
 import io.flutter.plugin.common.MethodCall
@@ -97,21 +98,41 @@ class VideoPlayers(private val textures: TextureRegistry) {
                     .build()
             )
             mp.setDataSource(path)
+            // a phone held upright records a wide picture and a turn in the
+            // track header. the newer texture path draws frames as decoded,
+            // unturned, so the turn and the decoded size go to dart
+            val shape = shapeOf(path)
+            val turns = if (producer.handlesCropAndRotation()) 0 else shape.turns
             mp.setOnPreparedListener {
                 p.prepared = true
-                val w = it.videoWidth
-                val h = it.videoHeight
+                var w = shape.w
+                var h = shape.h
+                if (w <= 0 || h <= 0) {
+                    // the player gives the size as shown, already turned
+                    w = if (shape.turns % 2 == 1) it.videoHeight else it.videoWidth
+                    h = if (shape.turns % 2 == 1) it.videoWidth else it.videoHeight
+                }
                 if (w > 0 && h > 0) producer.setSize(w, h)
                 mp.setSurface(producer.surface)
                 if (!p.answered) {
                     p.answered = true
+                    // w and h as shown on screen
+                    val odd = shape.turns % 2 == 1
                     result.success(
-                        mapOf("id" to producer.id(), "w" to w, "h" to h, "ms" to it.duration)
+                        mapOf(
+                            "id" to producer.id(),
+                            "w" to if (odd) h else w,
+                            "h" to if (odd) w else h,
+                            "turns" to turns,
+                            "ms" to it.duration,
+                        )
                     )
                 }
             }
             mp.setOnVideoSizeChangedListener { _, w, h ->
-                if (w > 0 && h > 0) producer.setSize(w, h)
+                // given as shown; the texture takes the decoded size
+                val odd = shape.turns % 2 == 1
+                if (w > 0 && h > 0) producer.setSize(if (odd) h else w, if (odd) w else h)
             }
             mp.setOnCompletionListener { p.completed = true }
             mp.setOnErrorListener { _, _, _ ->
@@ -131,6 +152,27 @@ class VideoPlayers(private val textures: TextureRegistry) {
                 p.answered = true
                 result.success(null)
             }
+        }
+    }
+
+    private class Shape(val w: Int, val h: Int, val turns: Int)
+
+    // the decoded size and the quarter turns the track header asks for
+    private fun shapeOf(path: String): Shape {
+        val r = MediaMetadataRetriever()
+        return try {
+            r.setDataSource(path)
+            val w = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                ?.toIntOrNull() ?: 0
+            val h = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                ?.toIntOrNull() ?: 0
+            val deg = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+                ?.toIntOrNull() ?: 0
+            Shape(w, h, Math.floorMod(deg / 90, 4))
+        } catch (_: Exception) {
+            Shape(0, 0, 0)
+        } finally {
+            try { r.release() } catch (_: Exception) {}
         }
     }
 
