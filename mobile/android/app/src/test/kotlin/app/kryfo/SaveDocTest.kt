@@ -106,6 +106,33 @@ class SaveDocTest {
         assertEquals(SaveDoc.UNCHECKED, state)
     }
 
+    // a place with no room says so, so the screen can say why, and the
+    // half written there goes
+    @Test
+    fun aPlaceWithNoRoomIsFull() {
+        fun full(e: IOException) = object : OutputStream() {
+            var n = 0
+            override fun write(b: Int) {
+                if (++n > 1000) throw e
+            }
+        }
+        val plain = IOException("write failed: ENOSPC (No space left on device)")
+        assertEquals(SaveDoc.FULL, SaveDoc.copy(src, { full(plain) }, { null }, { null }))
+        val wrapped = IOException("copy", IOException("No space left on device"))
+        assertEquals(SaveDoc.FULL, SaveDoc.copy(src, { full(wrapped) }, { null }, { null }))
+        var dropped = false
+        val state = SaveDoc.copyInto(
+            src,
+            before = 0L,
+            open = { full(plain) },
+            sizeThere = { null },
+            readBack = { null },
+            drop = { dropped = true },
+        )
+        assertEquals(SaveDoc.FULL, state)
+        assertTrue(dropped)
+    }
+
     @Test
     fun aWriteThatThrowsIsNotSaved() {
         val broken = object : OutputStream() {

@@ -17,6 +17,8 @@ object SaveDoc {
     const val UNCHECKED = "unchecked"
     const val CANCELLED = "cancelled"
     const val FAILED = "failed"
+    // the place picked had no room for it
+    const val FULL = "full"
 
     const val IDLE = "idle"
     const val PICKING = "picking"
@@ -190,7 +192,7 @@ object SaveDoc {
                 else -> UNCHECKED
             }
         } catch (e: Throwable) {
-            FAILED
+            if (noSpace(e)) FULL else FAILED
         }
         return if (gone()) FAILED else state
     }
@@ -215,6 +217,18 @@ object SaveDoc {
         val kept = state == SAVED || state == UNCHECKED
         if (!kept && mayDrop(before, opened)) drop()
         return state
+    }
+
+    // a write the place refused for want of room, however deep it was wrapped
+    fun noSpace(e: Throwable): Boolean {
+        var c: Throwable? = e
+        var depth = 0
+        while (c != null && depth++ < 8) {
+            val m = c.message ?: ""
+            if (m.contains("ENOSPC") || m.contains("No space left", ignoreCase = true)) return true
+            c = c.cause
+        }
+        return false
     }
 
     private fun digestOf(
