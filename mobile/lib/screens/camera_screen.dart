@@ -809,7 +809,6 @@ class _CameraScreenState extends State<CameraScreen>
     }
     // the clip plays where it was framed, with its size over a corner and
     // the cap's warning beside it when it is past it
-    final fits = fileFits(_clipBytes);
     return ClipPreview(
       key: ValueKey(_clip),
       path: _clip!,
@@ -820,7 +819,8 @@ class _CameraScreenState extends State<CameraScreen>
         runSpacing: 6,
         children: [
           _pill(_size(_clipBytes), HaloColors.text),
-          if (!fits) _pill(l10n.cameraTooLongForA, HaloColors.rose),
+          if (!fileFits(_clipBytes))
+            _pill(l10n.cameraTooLongForA, HaloColors.rose),
         ],
       ),
     );
