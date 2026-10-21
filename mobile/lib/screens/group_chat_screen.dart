@@ -2851,7 +2851,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ]);
       if (sent != null) await _sendPicked(sent);
     } finally {
-      await shredFile(path);
+      await shredCapture(path);
     }
   }
 

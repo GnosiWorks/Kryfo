@@ -3813,7 +3813,7 @@ class _ChatScreenState extends State<ChatScreen>
       ]);
       if (sent != null) await _sendPicked(sent);
     } finally {
-      await shredFile(path);
+      await shredCapture(path);
     }
   }
 

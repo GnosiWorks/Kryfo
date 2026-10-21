@@ -112,6 +112,15 @@ final Map<String, Future<VideoInfo?>> _asking = {};
 
 VideoInfo? videoInfoNow(String path) => _infos[path];
 
+// asked for, then shredded before the answer: the answer is not kept
+final Set<String> _gone = {};
+
+/// the frame of a file that is going, out of memory now
+void forgetVideoInfo(String path) {
+  _infos.remove(path);
+  if (_asking.containsKey(path)) _gone.add(path);
+}
+
 Future<VideoInfo?> videoInfoFor(String path) {
   if (_infos.containsKey(path)) return Future.value(_infos[path]);
   return _asking[path] ??= () async {
@@ -132,8 +141,10 @@ Future<VideoInfo?> videoInfoFor(String path) {
     } catch (e) {
       dlog('video info: ${e.runtimeType}');
     }
-    if (_infos.length >= 40) _infos.remove(_infos.keys.first);
-    _infos[path] = out;
+    if (!_gone.remove(path)) {
+      if (_infos.length >= 40) _infos.remove(_infos.keys.first);
+      _infos[path] = out;
+    }
     _asking.remove(path);
     return out;
   }();

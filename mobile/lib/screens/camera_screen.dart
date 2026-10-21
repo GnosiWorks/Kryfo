@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../jpeg_strip.dart';
+import '../open_file.dart' show forgetVideoInfo;
 import '../main.dart' show shredFile, exportToPictures;
 import '../picked.dart' show shrinkPhoto;
 import 'package:permission_handler/permission_handler.dart'
@@ -38,6 +39,12 @@ class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
   final String? videoPath; // an mp4 in app-private storage, caller shreds
   const CaptureResult({this.photo, this.videoPath});
+}
+
+/// a clip done with: its frame out of memory, the file shredded
+Future<void> shredCapture(String path) {
+  forgetVideoInfo(path);
+  return shredFile(path);
 }
 
 // where a recording waits between stop and send. app-private, swept at
@@ -291,7 +298,7 @@ class _CameraScreenState extends State<CameraScreen>
     _cam?.dispose();
     // a clip that was never used is shredded on the way out
     final c = _clip;
-    if (c != null) shredFile(c);
+    if (c != null) shredCapture(c);
     super.dispose();
   }
 
@@ -478,11 +485,18 @@ class _CameraScreenState extends State<CameraScreen>
   Future<void> _retake() async {
     HapticFeedback.selectionClick();
     final c = _clip;
+    final fade = motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 260);
     setState(() {
       _shot = null;
       _clip = null;
     });
-    if (c != null) await shredFile(c);
+    if (c == null) return;
+    // the preview still reads the clip while it fades out: it goes after
+    await Future<void>.delayed(fade);
+    await WidgetsBinding.instance.endOfFrame;
+    await shredCapture(c);
   }
 
   Future<void> _keepCopy() async {

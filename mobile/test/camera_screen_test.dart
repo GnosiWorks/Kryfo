@@ -2,6 +2,7 @@
 // the in-app camera over the plugin's channel: permissions, recording,
 // flips, tabs and orientation
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show twoDigits, whole;
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/open_file.dart' show videoInfoNow;
 import 'package:kryfo/orientation.dart' show appOrientations;
 import 'package:kryfo/screens/camera_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -376,13 +378,35 @@ void main() {
     addTearDown(() => m.setMockMethodCallHandler(paths, null));
     const video = MethodChannel('kryfo/video');
     final played = <MethodCall>[];
+    // whether the clip was still on the disk when the player let it go
+    bool? thereAtClose;
     m.setMockMethodCallHandler(video, (c) async {
       played.add(c);
+      if (c.method == 'close') {
+        final open = played.firstWhere((x) => x.method == 'open');
+        thereAtClose = File(
+          (open.arguments as Map)['path'] as String,
+        ).existsSync();
+      }
       if (c.method == 'open') return {'id': 3, 'w': 480, 'h': 640, 'ms': 3000};
       if (c.method == 'state') return {'ms': 500, 'playing': true};
       return null;
     });
     addTearDown(() => m.setMockMethodCallHandler(video, null));
+    // the phone reads a frame of the clip
+    const platform = MethodChannel('halo/platform');
+    m.setMockMethodCallHandler(platform, (c) async {
+      if (c.method != 'videoInfo') return null;
+      return {
+        'jpeg': base64Decode(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        ),
+        'ms': 3000,
+        'w': 480,
+        'h': 640,
+      };
+    });
+    addTearDown(() => m.setMockMethodCallHandler(platform, null));
 
     await t.pumpWidget(framed());
     await settle(t);
@@ -404,6 +428,7 @@ void main() {
     expect(at, isNot(clipAt));
     expect(played.map((c) => c.method), contains('play'));
     expect(find.text('0:03'), findsOneWidget);
+    expect(videoInfoNow(at), isNotNull);
     expect(find.text(l10n.cameraUseThis), findsOneWidget);
     // retake lets the player go
     await t.tap(find.text(l10n.cameraRetake));
@@ -414,8 +439,19 @@ void main() {
       await t.pump();
     }
     await settle(t);
+    for (var i = 0; i < 50 && File(at).existsSync(); i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
     expect(played.map((c) => c.method), contains('close'));
     expect(find.byType(ClipPreview), findsNothing);
+    // gone from the disk, and its frame from memory, once the preview has
+    // let go of it
+    expect(thereAtClose, isTrue);
+    expect(File(at).existsSync(), isFalse);
+    expect(videoInfoNow(at), isNull);
     await t.pumpWidget(const SizedBox());
     await settle(t);
     await t.runAsync(
