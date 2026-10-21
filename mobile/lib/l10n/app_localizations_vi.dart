@@ -2233,7 +2233,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateCardSeesName =>
-      'Công ty thanh toán có thấy tên bạn. Tiền mã hóa là lựa chọn riêng tư.';
+      'Công ty thanh toán sẽ thấy tên bạn. Tiền mã hóa là lựa chọn riêng tư.';
 
   @override
   String get donateCardPay => 'Thanh toán bằng thẻ';

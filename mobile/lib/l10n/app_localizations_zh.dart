@@ -10564,25 +10564,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateAuditLine => '在這裡的捐款會用於一次獨立稽核。完整報告將會公開。';
 
   @override
-  String get donateCard => '信用卡';
+  String get donateCard => '信用卡／金融卡';
 
   @override
   String get donateCardOneTime => '在瀏覽器中進行的一次性捐款，金額由你決定。';
 
   @override
-  String get donateCardMarios => '在我們的財務託管方設立好之前，信用卡付款會直接轉給 Marios。';
+  String get donateCardMarios => '在我們的財務託管方設立好之前，刷卡付款會直接轉給 Marios。';
 
   @override
   String get donateCardSeesName => '支付公司看得到你的姓名。加密貨幣才是私密的選擇。';
 
   @override
-  String get donateCardPay => '用信用卡付款';
+  String get donateCardPay => '刷卡付款';
 
   @override
-  String get donateNoBitcoinCard => '沒有 Bitcoin？用信用卡付款';
+  String get donateNoBitcoinCard => '沒有 Bitcoin？刷卡付款';
 
   @override
-  String get donateCardNoBadge => '信用卡捐款不會解鎖徽章。';
+  String get donateCardNoBadge => '刷卡捐款不會解鎖徽章。';
 
   @override
   String donateAddressCheckItAgainst(Object coinName) {
