@@ -5415,12 +5415,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get toolsMoreTools => 'Mais ferramentas';
 
   @override
-  String get toolsCleanAPhotoOr => 'Limpar uma foto ou vídeo';
-
-  @override
-  String get toolsOrShareOneTo => 'Ou compartilhe uma com o Kryfo pela galeria';
-
-  @override
   String get toolsMakeAPrivateQr => 'Criar um código QR privado';
 
   @override
@@ -5463,7 +5457,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get toolsPickAPhotoAnd =>
-      'Escolha uma foto e veja o que ela entrega. Depois guarde uma cópia limpa.';
+      'Escolha uma foto ou vídeo para ver o que ele revela e depois remova tudo com um toque. Você também pode compartilhar um com o Kryfo pela galeria.';
 
   @override
   String get toolsPickAPhoto => 'Escolher uma foto';

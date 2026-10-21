@@ -5488,12 +5488,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get toolsMoreTools => 'Ещё инструменты';
 
   @override
-  String get toolsCleanAPhotoOr => 'Очистить фото или видео';
-
-  @override
-  String get toolsOrShareOneTo => 'Или поделись им с Kryfo из галереи';
-
-  @override
   String get toolsMakeAPrivateQr => 'Сделать приватный QR-код';
 
   @override
@@ -5535,7 +5529,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get toolsPickAPhotoAnd =>
-      'Выбери фото и посмотри, что оно выдаёт. Потом сохрани чистую копию.';
+      'Выбери фото или видео, чтобы увидеть, что оно выдаёт, а потом убери всё одним нажатием. Можно и поделиться им с Kryfo из галереи.';
 
   @override
   String get toolsPickAPhoto => 'Выбрать фото';

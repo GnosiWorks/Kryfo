@@ -5374,12 +5374,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get toolsMoreTools => 'Thêm công cụ';
 
   @override
-  String get toolsCleanAPhotoOr => 'Làm sạch ảnh hoặc video';
-
-  @override
-  String get toolsOrShareOneTo => 'Hoặc chia sẻ vào Kryfo từ thư viện ảnh';
-
-  @override
   String get toolsMakeAPrivateQr => 'Tạo mã QR riêng tư';
 
   @override
@@ -5422,7 +5416,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get toolsPickAPhotoAnd =>
-      'Chọn một ảnh và xem nó tiết lộ những gì. Sau đó giữ lại một bản sạch.';
+      'Chọn một ảnh hoặc video để xem nó để lộ những gì, rồi xóa hết chỉ với một chạm. Bạn cũng có thể chia sẻ từ thư viện sang Kryfo.';
 
   @override
   String get toolsPickAPhoto => 'Chọn ảnh';

@@ -5147,12 +5147,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolsMoreTools => '更多工具';
 
   @override
-  String get toolsCleanAPhotoOr => '清理照片或视频';
-
-  @override
-  String get toolsOrShareOneTo => '或者从相册分享到 Kryfo';
-
-  @override
   String get toolsMakeAPrivateQr => '生成私密 QR 码';
 
   @override
@@ -5190,7 +5184,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolsPlacePhoneTime => '地点 · 手机 · 时间';
 
   @override
-  String get toolsPickAPhotoAnd => '选一张照片，看看它会泄露什么。然后留一份干净的副本。';
+  String get toolsPickAPhotoAnd =>
+      '选一张照片或一段视频，看看它会泄露什么，然后一键全部去除。也可以从相册分享到 Kryfo。';
 
   @override
   String get toolsPickAPhoto => '选一张照片';
@@ -13484,12 +13479,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get toolsMoreTools => '更多工具';
 
   @override
-  String get toolsCleanAPhotoOr => '清理照片或影片';
-
-  @override
-  String get toolsOrShareOneTo => '或從相簿分享到 Kryfo';
-
-  @override
   String get toolsMakeAPrivateQr => '製作私密 QR 碼';
 
   @override
@@ -13527,7 +13516,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get toolsPlacePhoneTime => '地點 · 手機 · 時間';
 
   @override
-  String get toolsPickAPhotoAnd => '選一張照片，看看它洩漏了什麼。然後保留一份乾淨的副本。';
+  String get toolsPickAPhotoAnd =>
+      '選一張照片或一段影片，看看它會洩露什麼，然後一鍵全部移除。也可以從相簿分享到 Kryfo。';
 
   @override
   String get toolsPickAPhoto => '選擇照片';

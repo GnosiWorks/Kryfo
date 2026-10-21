@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'profile_screen.dart';
 import 'tools_screen.dart';
-import 'clean_screen.dart';
 import 'photo_knows_screen.dart';
 import 'qr_screen.dart';
 import 'lock_file_screen.dart';
@@ -175,14 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
     showTorBlockedSheet(ctx, asked: true);
   }
 
+  // a photo or video shared in goes to the one photo tool: what it gives
+  // away first, then one button that removes all of it
   Future<void> _takeShared() async {
     final f = await ToolsBridge.instance.takeShared();
-    if (f != null) _clean(f);
-  }
-
-  Future<void> _pickToClean() async {
-    final f = await ToolsBridge.instance.pick('media');
-    if (f != null) _clean(f);
+    if (f != null) _openTool(PhotoKnowsScreen(file: f));
   }
 
   Future<void> _pickToRead(String kind) async {
@@ -194,8 +190,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final f = await ToolsBridge.instance.pick('any');
     if (f != null) _openTool(screen(f));
   }
-
-  void _clean(PickedFile f) => _openTool(CleanScreen(file: f));
 
   // the lock is a route on this same navigator. opening a tool under it, or
   // clearing the stack to make room for one, would take the lock away, so a
@@ -253,7 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return ToolsScreen(
           onPickPhoto: () => _pickToRead('image'),
           onPickVideo: () => _pickToRead('video'),
-          onClean: _pickToClean,
           onQr: () => _openTool(const QrScreen()),
           onLock: () => _pickFor((f) => LockFileScreen(file: f)),
           onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),

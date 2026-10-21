@@ -19,10 +19,6 @@ final _picture = [
   svgCircle(9, 10, 1.8),
   'M20.5 15.5l-5-5-9 9',
 ];
-const _sparkle = [
-  'M12 3l1.8 4.6L18.5 9l-4.7 1.5L12 15l-1.8-4.5L5.5 9l4.7-1.4z',
-  'M18.5 15.5l.8 2 2 .7-2 .8-.8 2-.7-2-2-.8 2-.7z',
-];
 final _qr = [
   svgRect(4, 4, 6, 6, 1.2),
   svgRect(14, 4, 6, 6, 1.2),
@@ -39,8 +35,8 @@ const _chevron = ['M9 5l7 7-7 7'];
 
 class ToolsScreen extends StatelessWidget {
   final VoidCallback? onPickPhoto;
+  // a video is read and cleaned the same way: one tool for both
   final VoidCallback? onPickVideo;
-  final VoidCallback? onClean;
   final VoidCallback? onQr;
   final VoidCallback? onLock;
   final VoidCallback? onOpenLocked;
@@ -48,7 +44,6 @@ class ToolsScreen extends StatelessWidget {
     super.key,
     this.onPickPhoto,
     this.onPickVideo,
-    this.onClean,
     this.onQr,
     this.onLock,
     this.onOpenLocked,
@@ -78,14 +73,6 @@ class ToolsScreen extends StatelessWidget {
                     letter: 0.14,
                   ),
                 ),
-              ),
-              _ToolRow(
-                icon: _sparkle,
-                tint: HaloColors.green,
-                tile: HaloColors.green.withValues(alpha: 0.24),
-                title: l10n.toolsCleanAPhotoOr,
-                sub: l10n.toolsOrShareOneTo,
-                onTap: onClean,
               ),
               _ToolRow(
                 icon: _qr,

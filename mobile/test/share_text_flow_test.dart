@@ -3,7 +3,7 @@
 // then the chat's composer, never a send. a draft there stays with the
 // words under it, an open chat takes them in place, the pin comes first,
 // hidden chats show only with their vault open and a decoy only its own.
-// a photo still goes to the cleaner. android is a stand-in on its channel
+// a photo still goes to the photo tool. android is a stand-in on its channel
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -24,7 +24,7 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
-import 'package:kryfo/screens/clean_screen.dart';
+import 'package:kryfo/screens/photo_knows_screen.dart';
 import 'package:kryfo/screens/share_sheet.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart' show buildHaloTheme;
@@ -520,7 +520,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('a photo still goes to the cleaner, and words after it to '
+  testWidgets('a photo still goes to the photo tool, and words after it to '
       'the picker', (t) async {
     await home(t);
     android.image = {
@@ -531,7 +531,7 @@ void main() {
     };
     await android.say(t, 'shared');
     await settle(t);
-    expect(find.byType(CleanScreen), findsOneWidget);
+    expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     expect(find.text(l10n.shareChooseChat), findsNothing);
     expect(android.seen, isEmpty);
     await android.share(t, 's12', words: 'and a link');
@@ -539,12 +539,14 @@ void main() {
     expect(find.text(l10n.shareChooseChat), findsOneWidget);
     await t.tapAt(const Offset(20, 20));
     await settle(t);
-    expect(find.byType(CleanScreen), findsOneWidget);
+    expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     expect(android.dropped, ['s12']);
     await devClose(t);
   });
 
-  testWidgets('words land over a cleaner left open, which stays', (t) async {
+  testWidgets('words land over the photo tool left open, which stays', (
+    t,
+  ) async {
     await home(t);
     android.image = {
       'uri': 'content://media/external/images/1',
@@ -554,7 +556,7 @@ void main() {
     };
     await android.say(t, 'shared');
     await settle(t);
-    expect(find.byType(CleanScreen), findsOneWidget);
+    expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     await android.share(t, 's13', words: 'over the cleaner');
     await settle(t);
     await pick(t, _cedar);
@@ -562,7 +564,7 @@ void main() {
     await t.enterText(find.byType(TextField).last, '');
     await leave(t);
     expect(find.byType(ChatScreen), findsNothing);
-    expect(find.byType(CleanScreen), findsOneWidget);
+    expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     await devClose(t);
   });
 

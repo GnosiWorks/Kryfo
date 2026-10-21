@@ -8724,18 +8724,6 @@ abstract class AppLocalizations {
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Clean a photo or video'**
-  String get toolsCleanAPhotoOr;
-
-  /// screens/tools_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Or share one to Kryfo from your gallery'**
-  String get toolsOrShareOneTo;
-
-  /// screens/tools_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Make a private QR code'**
   String get toolsMakeAPrivateQr;
 
@@ -8808,7 +8796,7 @@ abstract class AppLocalizations {
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pick a photo and see what it gives away. Then keep a clean copy.'**
+  /// **'Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.'**
   String get toolsPickAPhotoAnd;
 
   /// screens/tools_screen.dart

@@ -5397,12 +5397,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get toolsMoreTools => 'Diğer araçlar';
 
   @override
-  String get toolsCleanAPhotoOr => 'Fotoğraf ya da video temizle';
-
-  @override
-  String get toolsOrShareOneTo => 'Ya da galerinden Kryfo’ya paylaş';
-
-  @override
   String get toolsMakeAPrivateQr => 'Gizli bir QR kodu oluştur';
 
   @override
@@ -5444,7 +5438,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get toolsPickAPhotoAnd =>
-      'Bir fotoğraf seç ve neleri ele verdiğini gör. Sonra temiz bir kopyasını sakla.';
+      'Bir fotoğraf ya da video seç, neleri ele verdiğini gör, sonra hepsini tek dokunuşla kaldır. Galerinden Kryfo’ya paylaşarak da açabilirsin.';
 
   @override
   String get toolsPickAPhoto => 'Fotoğraf seç';

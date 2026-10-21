@@ -6719,14 +6719,6 @@
   "@toolsMoreTools": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsCleanAPhotoOr": "Clean a photo or video",
-  "@toolsCleanAPhotoOr": {
-    "description": "screens/tools_screen.dart"
-  },
-  "toolsOrShareOneTo": "Or share one to Kryfo from your gallery",
-  "@toolsOrShareOneTo": {
-    "description": "screens/tools_screen.dart"
-  },
   "toolsMakeAPrivateQr": "Make a private QR code",
   "@toolsMakeAPrivateQr": {
     "description": "screens/tools_screen.dart"
@@ -6775,7 +6767,7 @@
   "@toolsPlacePhoneTime": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsPickAPhotoAnd": "Pick a photo and see what it gives away. Then keep a clean copy.",
+  "toolsPickAPhotoAnd": "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",
   "@toolsPickAPhotoAnd": {
     "description": "screens/tools_screen.dart"
   },

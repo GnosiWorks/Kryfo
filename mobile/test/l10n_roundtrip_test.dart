@@ -2485,8 +2485,6 @@ void main() {
     expect(l.settingsDangerZone, "Danger zone");
     expect(l.settingsWipeKryfoFromThis, "Wipe Kryfo from this phone");
     expect(l.toolsMoreTools, "More tools");
-    expect(l.toolsCleanAPhotoOr, "Clean a photo or video");
-    expect(l.toolsOrShareOneTo, "Or share one to Kryfo from your gallery");
     expect(l.toolsMakeAPrivateQr, "Make a private QR code");
     expect(
       l.toolsLinksWiFiContacts,
@@ -2510,7 +2508,7 @@ void main() {
     expect(l.toolsPlacePhoneTime, "Place · phone · time");
     expect(
       l.toolsPickAPhotoAnd,
-      "Pick a photo and see what it gives away. Then keep a clean copy.",
+      "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",
     );
     expect(l.toolsPickAPhoto, "Pick a photo");
     expect(l.toolsVideo, "Video");

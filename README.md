@@ -17,8 +17,8 @@ found a security problem? SECURITY.md says how to tell me privately.
 - an identity made of three words, no phone number. optional public handle
 - app lock with a pin, a wipe pin and a decoy pin
 - encrypted backups and moving to a new phone
-- tools that work offline: see what a photo gives away, clean photos and
-  videos, qr codes, file encryption with age
+- tools that work offline: see what a photo or video gives away and remove
+  all of it in one tap, qr codes, file encryption with age
 - tor bridges: snowflake, webtunnel and obfs4. automatic mode tries one when
   tor is blocked, PRIVACY.md says what they connect to
 - a check-ins mode that is easier on the battery

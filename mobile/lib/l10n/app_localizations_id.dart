@@ -5380,12 +5380,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get toolsMoreTools => 'Alat lainnya';
 
   @override
-  String get toolsCleanAPhotoOr => 'Bersihkan foto atau video';
-
-  @override
-  String get toolsOrShareOneTo => 'Atau bagikan ke Kryfo dari galerimu';
-
-  @override
   String get toolsMakeAPrivateQr => 'Buat kode QR privat';
 
   @override
@@ -5428,7 +5422,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get toolsPickAPhotoAnd =>
-      'Pilih foto dan lihat apa yang dibocorkannya. Lalu simpan salinan bersihnya.';
+      'Pilih foto atau video untuk melihat apa yang dibocorkannya, lalu hapus semuanya dengan satu ketukan. Kamu juga bisa membagikannya ke Kryfo dari galeri.';
 
   @override
   String get toolsPickAPhoto => 'Pilih foto';

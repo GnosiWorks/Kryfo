@@ -79,7 +79,6 @@ void main() {
           ToolsScreen(
             onPickPhoto: () => picks++,
             onPickVideo: () => picks++,
-            onClean: () => picks++,
             onQr: () => picks++,
             onLock: () => picks++,
             onOpenLocked: () => picks++,
@@ -93,7 +92,6 @@ void main() {
       for (final label in [
         'Pick a photo',
         'Video',
-        'Clean a photo or video',
         'Make a private QR code',
         'Lock a file',
         'Open a locked file',

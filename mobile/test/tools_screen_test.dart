@@ -23,7 +23,6 @@ void main() {
     final ys = [
       for (final s in [
         'What does this photo know?',
-        'Clean a photo or video',
         'Make a private QR code',
         'Lock a file',
         'Open a locked file',
@@ -207,13 +206,13 @@ void main() {
     final h = t.ensureSemantics();
     var taps = 0;
     await t.pumpWidget(
-      host(ToolsScreen(onClean: () => taps++, onPickVideo: () => taps++)),
+      host(ToolsScreen(onQr: () => taps++, onPickVideo: () => taps++)),
     );
     // the rows have faded in once their stagger has played
     await t.pump(const Duration(milliseconds: 500));
     await t.pump(const Duration(milliseconds: 500));
     for (final label in [
-      RegExp('^Clean a photo or video'),
+      RegExp('^Make a private QR code'),
       RegExp(r'^Video$'),
     ]) {
       final node = t.getSemantics(find.bySemanticsLabel(label));
