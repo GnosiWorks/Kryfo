@@ -8,19 +8,34 @@ import 'dart:io';
 
 final _where = <String, String>{};
 
+// why the last read of the extents came back empty
+String _miss = '';
+
+/// the disk's answer for [path], a stand-in in the twin's own test
+String? Function(String path) readExtents = extentsOf;
+
 /// the physical extents of [path], once its bytes are on the disk. null
 /// where the file system cannot say
 String? extentsOf(String path) {
   final s = Process.runSync('sync', [path]);
-  if (s.exitCode != 0) return null;
+  if (s.exitCode != 0) {
+    _miss = 'sync ${s.exitCode}: ${s.stderr}'.trim();
+    return null;
+  }
   final r = Process.runSync('filefrag', ['-v', path]);
-  if (r.exitCode != 0) return null;
+  if (r.exitCode != 0) {
+    _miss = 'filefrag ${r.exitCode}: ${r.stderr}'.trim();
+    return null;
+  }
   final rows = [
     for (final l in (r.stdout as String).split('\n'))
       if (RegExp(r'^\s*\d+:').hasMatch(l))
         l.trim().split(RegExp(r'\s+')).take(5).join(' '),
   ];
-  if (rows.isEmpty || rows.any((l) => l.contains('unknown'))) return null;
+  if (rows.isEmpty || rows.any((l) => l.contains('unknown'))) {
+    _miss = 'no extents';
+    return null;
+  }
   return rows.join('\n');
 }
 
@@ -34,11 +49,24 @@ File twinOf(String path, Directory into) {
   return twin;
 }
 
-/// the blocks hold something, all of it zeros, and they are the blocks the
-/// file had: overwritten where they were, not freed for new ones
-bool zeroed(File twin) {
+/// what the blocks under [twin] show instead of a shred, or null when they
+/// hold something, all of it zeros, in the blocks the file had: overwritten
+/// where they were, not freed for new ones. a read of the extents that
+/// fails is asked again: a tool that cannot say has not seen a move
+String? unshredded(File twin) {
   final b = twin.readAsBytesSync();
-  if (b.isEmpty || b.any((x) => x != 0)) return false;
+  if (b.isEmpty) return 'no bytes';
+  final left = b.where((x) => x != 0).length;
+  if (left > 0) return '$left of ${b.length} bytes not zero';
   final before = _where[twin.path];
-  return before == null || extentsOf(twin.path) == before;
+  if (before == null) return null;
+  for (var i = 0; i < 3; i++) {
+    if (i > 0) sleep(const Duration(milliseconds: 200));
+    final now = readExtents(twin.path);
+    if (now == before) return null;
+    if (now != null) return 'moved from [$before] to [$now]';
+  }
+  return 'extents unreadable ($_miss)';
 }
+
+bool zeroed(File twin) => unshredded(twin) == null;

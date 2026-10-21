@@ -203,9 +203,11 @@ void main() {
       await done;
       await wipeShredding;
       expect(exited, 0);
-      for (final MapEntry(key: f, value: twin) in files.entries) {
-        expect(zeroed(twin), isTrue, reason: f);
-      }
+      // every one that missed its shred, and how
+      expect({
+        for (final MapEntry(key: f, value: twin) in files.entries)
+          f: ?unshredded(twin),
+      }, isEmpty);
       expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
     });
 
@@ -220,7 +222,7 @@ void main() {
       expect(exited, 0);
       for (final MapEntry(key: f, value: twin) in files.entries) {
         expect(File(dir(f)).existsSync(), isFalse, reason: f);
-        expect(zeroed(twin), isTrue, reason: f);
+        expect(unshredded(twin), isNull, reason: f);
       }
     });
 
@@ -257,7 +259,7 @@ void main() {
       await wipeShredding;
       expect(copy.existsSync(), isFalse);
       expect(twin.readAsBytesSync(), List.filled(30000, 7));
-      expect(zeroed(keyTwin), isTrue);
+      expect(unshredded(keyTwin), isNull);
     });
 
     test('a start sweep leaves what a wipe running now is moving', () async {
@@ -317,7 +319,7 @@ void main() {
       final twin = twinOf(f.path, twins);
       await sweepWipeLeftovers();
       expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
-      expect(zeroed(twin), isTrue);
+      expect(unshredded(twin), isNull);
       expect(Directory(dir('docs')).existsSync(), isTrue);
     });
 
