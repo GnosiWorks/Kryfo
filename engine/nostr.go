@@ -923,14 +923,13 @@ func relayAnswered(err error) bool {
 	return strings.HasPrefix(e, "msg: ") || strings.Contains(e, "expected handshake response status code")
 }
 
-// the relay answered no. it is benched as for a failure, but the route
-// that brought the answer works and is not marked down. one that says it
-// has the event already holds it
+// the relay says it holds the event already
+func relayHasIt(err error) bool {
+	return err != nil && strings.HasPrefix(err.Error(), "msg: duplicate:")
+}
+
+// the relay answered no: benched as for a failure, the route not marked down
 func relayRefused(u string, began time.Time, err error) {
-	if strings.HasPrefix(err.Error(), "msg: duplicate:") {
-		relayOK(u)
-		return
-	}
 	relayFailedAs(u, began, false)
 }
 
@@ -1244,7 +1243,12 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 			pctx, pcancel := onRoute(bg, routeC)
 			defer pcancel()
 			gen := routeGeneration()
-			if err := publishTo(pctx, lane, u, client, ev); err != nil {
+			err = publishTo(pctx, lane, u, client, ev)
+			// the relay has this event already: a copy sent before landed
+			if relayHasIt(err) {
+				err = nil
+			}
+			if err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
 				if !routeGone(routeC) {
 					if relayAnswered(err) {

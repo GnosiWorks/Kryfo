@@ -16,6 +16,7 @@ func failedCount() int {
 	defer routeMu.Unlock()
 	return len(failedSinceOK)
 }
+
 // relays that turn a wrap away answered through tor: the route carried the
 // question and the answer, so it is not marked down, nor rebuilt for it
 func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
@@ -53,7 +54,8 @@ func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
 		t.Fatal("a refusing relay was not counted at all")
 	}
 }
-// a relay that says it has the event already holds it: no bench
+
+// a relay that says it has the event already holds it: sent, no bench
 func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 	socks := newSocksStandIn(t)
 	a := newRelayStandIn(t, 0)
@@ -64,7 +66,9 @@ func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 	me, _ := myXid()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	nostrPublishMulti(ctx, laneEveryday, wrapTo(t, me, newXid(t).pub, "hi"))
+	if got := nostrPublishMulti(ctx, laneEveryday, wrapTo(t, me, newXid(t).pub, "hi")); got != 1 {
+		t.Fatalf("a relay that holds the event counted %d, want it as sent", got)
+	}
 	relayHealthMu.Lock()
 	n := relayFails[a.url()]
 	relayHealthMu.Unlock()
@@ -72,6 +76,7 @@ func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 		t.Fatalf("a relay that holds the event was counted as failing %d times", n)
 	}
 }
+
 // a sign of life from a connection made before the latest bounce says
 // nothing about the tor after it
 func TestOldConnectionProvesNothing(t *testing.T) {
@@ -88,6 +93,7 @@ func TestOldConnectionProvesNothing(t *testing.T) {
 		t.Fatal("a connection on the route now did not prove it")
 	}
 }
+
 // relays fail while a live socket on our relay still answers its probes:
 // tor carries, the failures are those relays' own, and nothing is rebuilt
 func TestLiveSocketAnswerClearsFailures(t *testing.T) {
@@ -116,6 +122,7 @@ func TestLiveSocketAnswerClearsFailures(t *testing.T) {
 		t.Fatalf("the live socket was replaced: %d connections", n)
 	}
 }
+
 // the cheap rescue renames every lane so new streams take new circuits. it
 // sends tor nothing (NEWNYM would drop the vanguards and onion descriptors),
 // keeps the route and the kept sockets, and kicks every runner
@@ -175,6 +182,7 @@ func TestNewCircuitsKeepTheRoute(t *testing.T) {
 		t.Fatalf("not on the transport screen: %+v", after)
 	}
 }
+
 // a relay that never answered on this route is down for its own reasons:
 // its failures do not count against tor. our relay's always do
 func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
@@ -203,6 +211,7 @@ func TestOnlyRelaysThatAnsweredSpeakForTor(t *testing.T) {
 		t.Fatalf("an answer from before the bounce still counted: %d", n)
 	}
 }
+
 // the first rescue and the new circuits are spread too, not only the gaps
 func TestFirstRescueIsSpread(t *testing.T) {
 	useStandIns(t, modePrivate, nil)
@@ -229,6 +238,7 @@ func TestFirstRescueIsSpread(t *testing.T) {
 		t.Fatal("no bounce after the spread hold")
 	}
 }
+
 // new circuits at most once in their gap: a dead spell soon after gets a probe, then the bounce
 func TestNewCircuitsHaveAGap(t *testing.T) {
 	resetRoute(t, "publishing", 100)
@@ -255,6 +265,7 @@ func TestNewCircuitsHaveAGap(t *testing.T) {
 		t.Fatalf("a spell past the gap: %q, want new circuits", why)
 	}
 }
+
 // what the transport screen reads: the newest first, a dozen at most
 func TestBounceNotesKeepTheLatest(t *testing.T) {
 	bounceMu.Lock()
@@ -285,6 +296,7 @@ func TestBounceNotesKeepTheLatest(t *testing.T) {
 		t.Fatalf("transport state: %d bounces, counts %v", len(v.Bounces), v.BounceCounts)
 	}
 }
+
 // the gap between rescues is spread a tenth either way, so phones that lost
 // a relay together do not bounce tor together
 func TestRescueGapIsSpread(t *testing.T) {
@@ -300,6 +312,7 @@ func TestRescueGapIsSpread(t *testing.T) {
 		t.Fatalf("only %d different gaps in 50", len(seen))
 	}
 }
+
 // every bounce names why, and the reasons the watch gives map to them
 func TestRescueKinds(t *testing.T) {
 	for why, want := range map[string]string{
@@ -312,6 +325,7 @@ func TestRescueKinds(t *testing.T) {
 		}
 	}
 }
+
 // relays that answer the upgrade with an http status are up behind a route
 // that works: busy, or down behind their front. not tor's failure
 func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
@@ -337,6 +351,7 @@ func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
 		t.Fatalf("a rescue for relays that answered: %s", why)
 	}
 }
+
 // a bounce that goes ahead is noted with the reason it was asked for
 func TestBounceKeepsItsReason(t *testing.T) {
 	fc := newFakeControl(t, 100)
@@ -356,5 +371,21 @@ func TestBounceKeepsItsReason(t *testing.T) {
 	notes, _ := bounceSnapshot()
 	if len(notes) == 0 || notes[0].Why != whyRelays {
 		t.Fatalf("noted as %+v, want %q", notes, whyRelays)
+	}
+}
+
+// a mode switch starts a new route: an answer that came the old way proves
+// nothing about the new one
+func TestModeSwitchStartsANewRoute(t *testing.T) {
+	useStandIns(t, modeFast, nil)
+	resetRoute(t, "publishing", 100)
+	gen := routeGeneration()
+	switchMode(modePrivate)
+	if routeGeneration() == gen {
+		t.Fatal("the switch kept the route generation")
+	}
+	routeAliveOn(gen, "wss://direct.example")
+	if routeOK() {
+		t.Fatal("an answer from before the switch proved the onion route")
 	}
 }
