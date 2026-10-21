@@ -250,7 +250,7 @@ void main() {
     expect(await s.tryBiometric(), isTrue);
   });
 
-  test('with every finger removed it sleeps as before, and is not turned '
+  test('with every finger removed it sleeps, and is not turned '
       'off', () async {
     _finger();
     final bio = _RefusingBio();

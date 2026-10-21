@@ -107,9 +107,7 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    testWidgets('with reduced motion the checking spinner stands still', (
-      t,
-    ) async {
+    testWidgets('reduced motion: the checking spinner stands still', (t) async {
       phone(t);
       appState.sendModeForTest = 'private';
       await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));

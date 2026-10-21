@@ -94,9 +94,8 @@ void main() {
     expect(s.fingerUnlock, isTrue);
   });
 
-  testWidgets('App lock asks again as it opens, so the switch is there', (
-    t,
-  ) async {
+  testWidgets('the App lock page asks again as it opens, so the switch is '
+      'there', (t) async {
     phone(t);
     _finger();
     final (s, _, _) = await _withFinger();
