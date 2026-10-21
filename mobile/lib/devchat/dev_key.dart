@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 
 import '../dlog.dart';
 import '../main.dart' show parseHaloUri;
+import 'dev_lane.dart' show devCardChecks;
 
 enum DevKeyStatus {
   // new chats start with it
@@ -97,18 +98,27 @@ List<DevKey> get devKeys {
   if (t != null) return t;
   const card = String.fromEnvironment('KRYFO_DEV_CARD');
   if (card.isEmpty) return kDevKeys;
-  return _cardKeys ??= _fromCard(card);
+  return _cardKeys ??= devKeysOfCard(card);
 }
 
 List<DevKey>? _cardKeys;
 List<DevKey>? _forTest;
 
-// a card that does not read trusts nobody: a test build must never fall
-// back to the real keys
-List<DevKey> _fromCard(String card) {
+// a card that does not read, or that its own key did not sign, trusts
+// nobody: a test build never falls back to the real keys, and never shows
+// a chat whose every send would stop at the key check
+@visibleForTesting
+List<DevKey> devKeysOfCard(String card) {
   final k = DevKey.fromLink(card, keyId: 't1');
-  if (k == null) dlog('dev key: the test card does not read');
-  return k == null ? const [] : [k];
+  if (k == null) {
+    dlog('dev key: the test card does not read');
+    return const [];
+  }
+  if (!devCardChecks(k)) {
+    dlog('dev key: the test card does not check out');
+    return const [];
+  }
+  return [k];
 }
 
 @visibleForTesting

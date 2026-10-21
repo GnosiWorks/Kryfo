@@ -307,6 +307,31 @@ void main() {
         p['fc'],
       );
     });
+
+    test('a test card trusts its key only when that key signed it', () {
+      final good = devKeysOfCard(card.link);
+      expect(good.map((k) => (k.keyId, k.xPub, k.bundle)), [
+        ('t1', _hex(card.xPub), k.bundle),
+      ]);
+      // a made-up card: it reads, but its signature is not its key's.
+      // trusted, it would show a chat whose every send stops at the check
+      final p = parseHaloUri(card.link)!;
+      final j = jsonDecode(utf8.decode(base64Decode(p['bundle']!))) as Map;
+      final sig = _b64(j['signedPreKeySignature']);
+      sig[10] ^= 0x01;
+      j['signedPreKeySignature'] = base64Encode(sig);
+      final made = haloUriV3(
+        'test-card-only',
+        'o',
+        base64Encode(utf8.encode(jsonEncode(j))),
+        p['fc']!,
+      );
+      expect(DevKey.fromLink(made, keyId: 't1'), isNotNull);
+      expect(devKeysOfCard(made), isEmpty);
+      expect(devKeysOfCard('kryfo://share?id=a&v=3'), isEmpty);
+      // never the real keys in its place
+      expect(devKeysOfCard(made), isNot(contains(kDevKeys.first)));
+    });
   });
 
   group('the helpers', () {
