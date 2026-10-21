@@ -369,13 +369,16 @@ class _DonateScreenState extends State<DonateScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // the button's label says it once
                     Expanded(
-                      child: Text(
-                        l10n.donateNoBitcoinCard,
-                        style: HaloType.sans(
-                          size: 14,
-                          weight: FontWeight.w600,
-                          color: HaloColors.text,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          l10n.donateNoBitcoinCard,
+                          style: HaloType.sans(
+                            size: 14,
+                            weight: FontWeight.w600,
+                            color: HaloColors.text,
+                          ),
                         ),
                       ),
                     ),
@@ -743,12 +746,14 @@ class _DonateScreenState extends State<DonateScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      l10n.donateCardPay,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
+                    ExcludeSemantics(
+                      child: Text(
+                        l10n.donateCardPay,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: HaloColors.onAmber,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

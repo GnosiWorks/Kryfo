@@ -218,6 +218,20 @@ void main() {
     });
   }
 
+  testWidgets('a screen reader hears each card button once', (t) async {
+    final sem = t.ensureSemantics();
+    _phone(t);
+    await t.pumpWidget(_framed());
+    await _beats(t);
+    expect(find.bySemanticsLabel(l10n.donateNoBitcoinCard), findsOneWidget);
+    final row = t.getSemantics(find.bySemanticsLabel(l10n.donateNoBitcoinCard));
+    expect(row.label, l10n.donateNoBitcoinCard);
+    await _toCard(t);
+    final pay = t.getSemantics(find.bySemanticsLabel(l10n.donateCardPay));
+    expect(pay.label, l10n.donateCardPay);
+    sem.dispose();
+  });
+
   test('every language names Marios and no amount', () {
     for (final locale in AppLocalizations.supportedLocales) {
       final l = lookupAppLocalizations(locale);
