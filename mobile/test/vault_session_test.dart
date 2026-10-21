@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
@@ -1329,6 +1330,17 @@ class _CountingEngine extends MemEngine {
   }
 }
 
+// android's shade, empty: what a session switch clears there goes without
+// a throw, so its work after the reveal ends inside the test that made it
+class _Shade extends AndroidFlutterLocalNotificationsPlugin {
+  @override
+  Future<void> cancel({required int id, String? tag}) async {}
+  @override
+  Future<void> cancelAll() async {}
+  @override
+  Future<List<ActiveNotification>> getActiveNotifications() async => [];
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory docs;
@@ -1346,6 +1358,7 @@ void main() {
         );
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
+    FlutterLocalNotificationsPlatform.instance = _Shade();
     lockState.inVault = false;
     lockState.inDecoy = false;
     decoyReady = true;
@@ -2061,6 +2074,9 @@ void main() {
       expect(w.homeIds, {_d1, _dg});
       expect(w.live.touched, isEmpty);
       expect(w.spy.calls, isEmpty);
+      // the lists read again once the decoy is shown, still in the decoy
+      await _settle();
+      expect(w.live.touched, isEmpty);
     });
 
     test('its setup offers the decoy\'s own chats', () async {
