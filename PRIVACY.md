@@ -56,6 +56,8 @@ what our relay learns: for each of your mailbox addresses that is registered, a 
 
 hidden chats are never registered, though their mailboxes are still read. each ordinary contact's mailbox also goes unregistered now and then, about one month in five at a time of its own, and nothing is ever sent to forget an address that stops being registered: its registration just runs out. that only blurs the first month or so. a relay that watches can tell a hidden chat's mailbox, read and never registered, within two or three months.
 
+the helper app on your phone shows the sixteen as its own list. Kryfo asks it to name them "Kryfo 1/16" to "Kryfo 16/16", which says nothing about who they are for; ntfy ignores the names and shows its own topics instead.
+
 what the helper's server learns: your phone's ip address, as it does for every app that uses it, that it holds sixteen endpoints for Kryfo, and when each one is knocked. the knocks come from our relay's address, so it can tell you use Kryfo. our relay also sends fake knocks at random times, which makes it harder to tell when real messages arrive. it never learns what a message says, who sent it, or how many came.
 
 if you run your own helper server, its name is part of every endpoint, so our relay learns that all of your endpoints belong to one person. on a public server that many people use, the name says nothing.

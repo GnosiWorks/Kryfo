@@ -261,6 +261,14 @@ String slotInstance(int slot, [int gen = 0]) => 'kryfo-$slot.$gen';
   return (s, int.parse(m.group(2)!));
 }
 
+/// what the helper app may show for a registration: the slot, never the
+/// generation or anything about who it serves, so all sixteen read alike
+/// and a renewed slot keeps its name
+String slotLabel(String instance) {
+  final sg = instanceSlot(instance);
+  return sg == null ? 'Kryfo' : 'Kryfo ${sg.$1 + 1}/$kHelperSlots';
+}
+
 /// slot -> endpoint, for the registrations of the book's generations
 Map<int, String> slotEndpoints(SlotBook book, Map<String, String> byInstance) {
   final out = <int, String>{};

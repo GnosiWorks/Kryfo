@@ -43,9 +43,10 @@ class HaloApplication : Application() {
                     "helperRegister" -> {
                         val pkg = call.argument<String>("package")
                         val instance = call.argument<String>("instance")
+                        val label = call.argument<String>("label")
                         result.success(
                             if (pkg == null || instance.isNullOrEmpty()) false
-                            else HelperPush.register(this, pkg, instance)
+                            else HelperPush.register(this, pkg, instance, label)
                         )
                     }
                     "helperUnregisterOne" -> {

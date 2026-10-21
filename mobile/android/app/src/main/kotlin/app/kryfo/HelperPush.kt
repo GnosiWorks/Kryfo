@@ -70,7 +70,7 @@ object HelperPush {
 
     // instance is kryfo's own name for one address. the token is what the
     // distributor knows it by, and what comes back on every broadcast.
-    fun register(c: Context, pkg: String, instance: String): Boolean {
+    fun register(c: Context, pkg: String, instance: String, label: String? = null): Boolean {
         if (!installed(c, pkg)) return false
         val p = prefs(c)
         val key = TOKEN_PREFIX + instance
@@ -83,6 +83,9 @@ object HelperPush {
             putExtra("token", token)
             // the older form names the app, the newer one proves it
             putExtra("application", c.packageName)
+            // the spec's words for the helper app's list, "Kryfo 3/16"; a
+            // helper that ignores it, as ntfy does, shows its own topic
+            if (!label.isNullOrEmpty()) putExtra("message", label)
             putExtra(
                 "pi",
                 PendingIntent.getBroadcast(

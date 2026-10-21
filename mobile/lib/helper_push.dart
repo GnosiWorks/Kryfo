@@ -6,6 +6,7 @@
 import 'package:flutter/services.dart';
 
 import 'dlog.dart';
+import 'helper_slots.dart' show slotLabel;
 
 class HelperApp {
   final String package;
@@ -77,6 +78,7 @@ class HelperPush {
       final done = await _call<bool>('helperRegister', {
         'package': package,
         'instance': i,
+        'label': slotLabel(i),
       });
       if (done == true) ok++;
     }
