@@ -142,6 +142,10 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
       if (mounted && _playing) _pause();
     });
     _poll ??= Timer.periodic(const Duration(milliseconds: 200), (_) => _read());
+    // the app went behind while the player was asked: it does not play on
+    // from a hidden screen
+    final life = WidgetsBinding.instance.lifecycleState;
+    if (life != null && life != AppLifecycleState.resumed) unawaited(_pause());
   }
 
   // asks the player where it is only while it plays

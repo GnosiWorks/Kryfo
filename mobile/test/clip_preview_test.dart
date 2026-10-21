@@ -2,6 +2,8 @@
 // a clip plays in place before it goes: on its own once open, a tap to
 // pause and play, a timeline that seeks, its shape and turn as the player
 // says, and quiet under reduced motion and the lock
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +18,8 @@ const _video = MethodChannel('kryfo/video');
 late List<MethodCall> calls;
 late bool playing;
 late bool done;
+// a play that waits here until let through
+Completer<void>? playGate;
 Map<String, Object> answer = {};
 
 void player(WidgetTester t, {Map<String, Object>? open}) {
@@ -30,6 +34,7 @@ void player(WidgetTester t, {Map<String, Object>? open}) {
       case 'open':
         return answer;
       case 'play':
+        await playGate?.future;
         playing = true;
         return null;
       case 'pause':
@@ -58,6 +63,12 @@ Widget host({bool still = false, bool autoplay = true}) => MaterialApp(
   ),
 );
 
+// a tap on the picture away from the play mark in its middle
+Future<void> tapPicture(WidgetTester t) => t.tapAt(
+  t.getTopLeft(find.bySemanticsLabel(l10n.videoBubbleVideo)) +
+      const Offset(24, 24),
+);
+
 Future<void> beats(WidgetTester t, [int n = 4]) async {
   for (var i = 0; i < n; i++) {
     await t.pump(const Duration(milliseconds: 100));
@@ -84,7 +95,7 @@ void main() {
     expect(find.text('0:01'), findsOneWidget);
     expect(find.text('0:04'), findsOneWidget);
 
-    await t.tap(find.bySemanticsLabel(l10n.videoBubbleVideo));
+    await tapPicture(t);
     await beats(t);
     expect(playing, isFalse);
     expect(asked().last, 'pause');
@@ -102,7 +113,7 @@ void main() {
     await beats(t);
     expect(asked(), ['open']);
     expect(find.bySemanticsLabel(l10n.videoViewerPlay), findsWidgets);
-    await t.tap(find.bySemanticsLabel(l10n.videoBubbleVideo));
+    await tapPicture(t);
     await beats(t);
     expect(playing, isTrue);
     await t.pumpWidget(const SizedBox());
@@ -165,9 +176,49 @@ void main() {
     await beats(t);
     expect(playing, isFalse);
     calls.clear();
-    await t.tap(find.bySemanticsLabel(l10n.videoBubbleVideo));
+    await tapPicture(t);
     await beats(t);
     expect(asked(), isNot(contains('play')));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  void away(WidgetTester t) {
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    addTearDown(() {
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    });
+  }
+
+  testWidgets('going behind the app pauses it', (t) async {
+    player(t);
+    await t.pumpWidget(host());
+    await beats(t);
+    expect(playing, isTrue);
+    away(t);
+    await beats(t);
+    expect(playing, isFalse);
+    expect(asked().last, 'pause');
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a play still being asked when the app goes behind is paused '
+      'once it answers', (t) async {
+    player(t);
+    playGate = Completer<void>();
+    addTearDown(() => playGate = null);
+    await t.pumpWidget(host());
+    await beats(t);
+    expect(asked(), contains('play'));
+    expect(playing, isFalse);
+    away(t);
+    playGate!.complete();
+    await beats(t);
+    expect(playing, isFalse);
+    expect(asked().last, 'pause');
     await t.pumpWidget(const SizedBox());
   });
 
