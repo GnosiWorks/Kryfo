@@ -1126,11 +1126,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupNotSaved => 'Yedek kaydedilmedi. Dosya hâlâ burada.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'Kaydetmek için seçtiğin yerde yeterli alan yoktu. Dosya hâlâ burada, başka bir yer seç ya da yer aç.';
+
+  @override
   String get backupShareInstead => 'Bunun yerine paylaş';
 
   @override
   String get backupSavedUnchecked =>
       'Yedek kaydedildi ama Kryfo kopyayı kontrol edemedi';
+
+  @override
+  String get backupHandedOver =>
+      'Yedek seçtiğin uygulamaya verildi · ulaştığını kontrol et';
 
   @override
   String get backupMoveReachedTitle => 'Dosya yeni telefonuna ulaştı mı?';
@@ -1156,6 +1164,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupNotMade => 'Yedek oluşturulamadı. Tekrar dene.';
+
+  @override
+  String get backupNoSpace =>
+      'Bu telefonda yedeği oluşturmaya yetecek boş alan yok. Biraz yer aç ve tekrar dene.';
 
   @override
   String get backupHiddenNotIn => 'Gizli sohbetler bu dosyada yok.';
@@ -8642,6 +8654,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Dosya kaydedilemedi';
+
+  @override
+  String get fileNotSavedNoSpace => 'Kaydedilmedi: orada yeterli alan yok';
 
   @override
   String fileTooBig(String size, String max) {

@@ -1123,11 +1123,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get backupNotSaved => 'نسخه‌ی پشتیبان ذخیره نشد. فایل هنوز اینجاست.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'جایی که برای ذخیره انتخاب کردید فضای کافی نداشت. فایل هنوز اینجاست، جای دیگری انتخاب کنید یا فضا آزاد کنید.';
+
+  @override
   String get backupShareInstead => 'هم‌رسانی به‌جای آن';
 
   @override
   String get backupSavedUnchecked =>
       'نسخه‌ی پشتیبان ذخیره شد، ولی Kryfo نتوانست آن را بررسی کند';
+
+  @override
+  String get backupHandedOver =>
+      'نسخه‌ی پشتیبان به برنامه‌ای که انتخاب کردید داده شد · بررسی کنید که رسیده باشد';
 
   @override
   String get backupMoveReachedTitle => 'فایل به گوشی جدیدتان رسید؟';
@@ -1153,6 +1161,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get backupNotMade => 'نسخه‌ی پشتیبان ساخته نشد. دوباره امتحان کنید.';
+
+  @override
+  String get backupNoSpace =>
+      'فضای خالی این گوشی برای ساختن نسخه‌ی پشتیبان کافی نیست. کمی فضا آزاد کنید و دوباره امتحان کنید.';
 
   @override
   String get backupHiddenNotIn => 'گفت‌وگوهای پنهان در آن نیستند.';
@@ -8631,6 +8643,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'فایل ذخیره نشد';
+
+  @override
+  String get fileNotSavedNoSpace => 'ذخیره نشد: آنجا فضای کافی نیست';
 
   @override
   String fileTooBig(String size, String max) {

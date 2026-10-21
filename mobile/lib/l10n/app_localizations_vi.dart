@@ -1111,11 +1111,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backupNotSaved => 'Bản sao lưu chưa được lưu. Tệp vẫn còn đây.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'Nơi bạn chọn để lưu không đủ dung lượng. Tệp vẫn còn đây, hãy chọn nơi khác hoặc giải phóng dung lượng.';
+
+  @override
   String get backupShareInstead => 'Chia sẻ thay vào đó';
 
   @override
   String get backupSavedUnchecked =>
       'Đã lưu bản sao lưu, nhưng Kryfo không kiểm tra được bản sao';
+
+  @override
+  String get backupHandedOver =>
+      'Đã chuyển bản sao lưu cho ứng dụng bạn chọn · hãy kiểm tra xem nó đã đến chưa';
 
   @override
   String get backupMoveReachedTitle =>
@@ -1142,6 +1150,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get backupNotMade => 'Không tạo được bản sao lưu. Hãy thử lại.';
+
+  @override
+  String get backupNoSpace =>
+      'Điện thoại không đủ dung lượng trống để tạo bản sao lưu. Hãy giải phóng bớt dung lượng rồi thử lại.';
 
   @override
   String get backupHiddenNotIn => 'Trò chuyện ẩn không có trong tệp này.';
@@ -8602,6 +8614,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Không lưu được tệp';
+
+  @override
+  String get fileNotSavedNoSpace => 'Chưa lưu: nơi đó không đủ dung lượng';
 
   @override
   String fileTooBig(String size, String max) {

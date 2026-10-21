@@ -1129,11 +1129,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Backup wurde nicht gespeichert. Die Datei ist noch da.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'Wo du speichern wolltest, war nicht genug Platz. Die Datei ist noch da: Wähl einen anderen Ort oder mach Platz frei.';
+
+  @override
   String get backupShareInstead => 'Stattdessen teilen';
 
   @override
   String get backupSavedUnchecked =>
       'Backup gespeichert, aber Kryfo konnte die Kopie nicht prüfen';
+
+  @override
+  String get backupHandedOver =>
+      'Backup an die gewählte App übergeben · prüf, ob es angekommen ist';
 
   @override
   String get backupMoveReachedTitle =>
@@ -1161,6 +1169,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backupNotMade =>
       'Das Backup konnte nicht erstellt werden. Versuch es noch mal.';
+
+  @override
+  String get backupNoSpace =>
+      'Auf diesem Handy ist nicht genug Platz frei für das Backup. Mach etwas Platz frei und versuch es noch mal.';
 
   @override
   String get backupHiddenNotIn => 'Versteckte Chats sind nicht darin.';
@@ -8714,6 +8726,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Konnte die Datei nicht speichern';
+
+  @override
+  String get fileNotSavedNoSpace =>
+      'Nicht gespeichert: Dort ist nicht genug Platz';
 
   @override
   String fileTooBig(String size, String max) {

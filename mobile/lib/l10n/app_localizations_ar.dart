@@ -1162,11 +1162,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupNotSaved => 'لم تُحفظ النسخة الاحتياطية. الملف ما زال هنا.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'لم تكن هناك مساحة كافية في المكان الذي اخترته للحفظ. الملف ما زال هنا، فاختر مكانًا آخر أو أفرغ بعض المساحة.';
+
+  @override
   String get backupShareInstead => 'المشاركة بدلًا من ذلك';
 
   @override
   String get backupSavedUnchecked =>
       'حُفظت النسخة الاحتياطية، لكن Kryfo لم يتمكن من التحقق منها';
+
+  @override
+  String get backupHandedOver =>
+      'سُلّمت النسخة الاحتياطية إلى التطبيق الذي اخترته · تحقّق من وصولها';
 
   @override
   String get backupMoveReachedTitle => 'هل وصل الملف إلى هاتفك الجديد؟';
@@ -1191,6 +1199,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupNotMade => 'تعذّر إنشاء النسخة الاحتياطية. حاول مجددًا.';
+
+  @override
+  String get backupNoSpace =>
+      'لا توجد مساحة فارغة كافية على هذا الهاتف لإنشاء النسخة الاحتياطية. أفرغ بعض المساحة وحاول مجددًا.';
 
   @override
   String get backupHiddenNotIn => 'المحادثات المخفية ليست فيه.';
@@ -8748,6 +8760,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'تعذّر حفظ الملف';
+
+  @override
+  String get fileNotSavedNoSpace => 'لم يُحفظ: لا توجد مساحة كافية هناك';
 
   @override
   String fileTooBig(String size, String max) {

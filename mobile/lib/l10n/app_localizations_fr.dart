@@ -1131,11 +1131,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'La sauvegarde n’a pas été enregistrée. Le fichier est toujours là.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'L’emplacement choisi n’avait pas assez d’espace. Le fichier est toujours là : choisissez un autre endroit ou libérez de l’espace.';
+
+  @override
   String get backupShareInstead => 'Partager plutôt';
 
   @override
   String get backupSavedUnchecked =>
       'Sauvegarde enregistrée, mais Kryfo n’a pas pu vérifier la copie';
+
+  @override
+  String get backupHandedOver =>
+      'Sauvegarde transmise à l’app choisie · vérifiez qu’elle est bien arrivée';
 
   @override
   String get backupMoveReachedTitle =>
@@ -1162,6 +1170,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupNotMade => 'La sauvegarde n’a pas pu être faite. Réessayez.';
+
+  @override
+  String get backupNoSpace =>
+      'Il n’y a pas assez d’espace libre sur ce téléphone pour faire la sauvegarde. Libérez de l’espace et réessayez.';
 
   @override
   String get backupHiddenNotIn => 'Les discussions masquées n’y sont pas.';
@@ -8707,6 +8719,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Impossible d’enregistrer le fichier';
+
+  @override
+  String get fileNotSavedNoSpace =>
+      'Non enregistré : il n’y a pas assez d’espace à cet endroit';
 
   @override
   String fileTooBig(String size, String max) {

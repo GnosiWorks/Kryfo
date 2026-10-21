@@ -1112,11 +1112,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupNotSaved => 'Cadangan tidak tersimpan. File-nya masih ada.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'Tempat yang kamu pilih tidak punya cukup ruang. File-nya masih ada, jadi pilih tempat lain atau kosongkan ruang.';
+
+  @override
   String get backupShareInstead => 'Bagikan saja';
 
   @override
   String get backupSavedUnchecked =>
       'Cadangan tersimpan, tapi Kryfo tidak bisa memeriksa salinannya';
+
+  @override
+  String get backupHandedOver =>
+      'Cadangan sudah diserahkan ke aplikasi yang kamu pilih · pastikan sudah sampai';
 
   @override
   String get backupMoveReachedTitle =>
@@ -1143,6 +1151,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get backupNotMade => 'Cadangan tidak bisa dibuat. Coba lagi.';
+
+  @override
+  String get backupNoSpace =>
+      'Ruang kosong di ponsel ini tidak cukup untuk membuat cadangan. Kosongkan sedikit ruang lalu coba lagi.';
 
   @override
   String get backupHiddenNotIn => 'Obrolan tersembunyi tidak ada di dalamnya.';
@@ -8610,6 +8622,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Gagal menyimpan file';
+
+  @override
+  String get fileNotSavedNoSpace =>
+      'Tidak tersimpan: ruang di sana tidak cukup';
 
   @override
   String fileTooBig(String size, String max) {

@@ -9,7 +9,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart' show BackupError;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/file_save.dart' show saveAnswerLine;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
@@ -249,6 +251,94 @@ void main() {
     await until(t, () => made().isEmpty);
     expect(made(), isEmpty);
     await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  // only the app picked knows whether it kept the file: the toast says
+  // where it went and asks to check, never "saved"
+  testWidgets('a backup shared to an app says it was handed over', (t) async {
+    await open(t);
+    dialogs.single.complete({'state': 'cancelled'});
+    await until(t, () => screen.evaluate().isEmpty);
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.backupHandedOver), findsOneWidget);
+    expect(find.text(l10n.backupBackupSavedKeepThe), findsNothing);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('a place with no room says so, and the file stays for '
+      'another place', (t) async {
+    await open(t);
+    dialogs.single.complete({'state': 'full'});
+    await beats(t);
+    await t.pump(const Duration(seconds: 1));
+    expect(screen, findsOneWidget);
+    expect(find.text(l10n.backupNotSavedNoSpace), findsOneWidget);
+    expect(notSaved, findsNothing);
+    expect(tryAgain, findsOneWidget);
+    expect(shareInstead, findsOneWidget);
+    expect(asked, isNot(contains('shareFile')));
+    expect(made(), hasLength(1));
+    expect(
+      textOf(find.text(l10n.backupNotSavedNoSpace)).style!.color,
+      HaloColors.text,
+    );
+
+    await press(t, tryAgain);
+    await until(t, () => dialogs.length == 2);
+    dialogs.last.complete({'state': 'saved'});
+    await until(t, () => screen.evaluate().isEmpty);
+    expect(find.text(l10n.backupBackupSavedKeepThe), findsOneWidget);
+    await until(t, () => made().isEmpty);
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  test('a received file with no room where it was to go says so', () {
+    expect(
+      saveAnswerLine((state: SaveState.full, where: null, lost: false)),
+      l10n.fileNotSavedNoSpace,
+    );
+    expect(
+      saveAnswerLine((state: SaveState.failed, where: null, lost: false)),
+      l10n.fileNotSaved,
+    );
+  });
+
+  test('a full phone is said as such, not as a backup that failed', () {
+    expect(
+      backupFailLine(
+        const FileSystemException(
+          'write failed',
+          '/data/x',
+          OSError('No space left on device', 28),
+        ),
+      ),
+      l10n.backupNoSpace,
+    );
+    // the copy job hands its error back as words
+    expect(
+      backupFailLine(
+        BackupError(
+          'FileSystemException: write failed, path = /x '
+          '(OS Error: No space left on device, errno = 28)',
+        ),
+      ),
+      l10n.backupNoSpace,
+    );
+    expect(
+      backupFailLine(BackupError('identity not loaded')),
+      l10n.backupNotMade,
+    );
+    expect(
+      backupFailLine(
+        const FileSystemException(
+          'open',
+          '/x',
+          OSError('Permission denied', 13),
+        ),
+      ),
+      l10n.backupNotMade,
+    );
   });
 
   testWidgets('a backed-out dialog and no share sheet is not saved', (t) async {

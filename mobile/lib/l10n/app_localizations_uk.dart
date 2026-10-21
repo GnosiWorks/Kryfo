@@ -1150,11 +1150,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get backupNotSaved => 'Резервну копію не збережено. Файл усе ще тут.';
 
   @override
+  String get backupNotSavedNoSpace =>
+      'У вибраному місці забракло вільного місця. Файл усе ще тут: обери інше місце або звільни пам’ять.';
+
+  @override
   String get backupShareInstead => 'Поділитися натомість';
 
   @override
   String get backupSavedUnchecked =>
       'Резервну копію збережено, але Kryfo не зміг її перевірити';
+
+  @override
+  String get backupHandedOver =>
+      'Резервну копію передано вибраному застосунку · перевір, що вона дійшла';
 
   @override
   String get backupMoveReachedTitle => 'Файл дійшов до нового телефона?';
@@ -1181,6 +1189,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get backupNotMade =>
       'Не вдалося створити резервну копію. Спробуй ще раз.';
+
+  @override
+  String get backupNoSpace =>
+      'На телефоні замало вільного місця для резервної копії. Звільни місце і спробуй ще раз.';
 
   @override
   String get backupHiddenNotIn => 'Прихованих чатів у ньому немає.';
@@ -8771,6 +8783,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileNotSaved => 'Не вдалося зберегти файл';
+
+  @override
+  String get fileNotSavedNoSpace => 'Не збережено: там замало місця';
 
   @override
   String fileTooBig(String size, String max) {

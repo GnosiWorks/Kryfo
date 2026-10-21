@@ -29,6 +29,7 @@ String? saveAnswerLine(SaveAnswer a) => switch (a.state) {
   SaveState.unchecked => l10n.fileSavedUnchecked,
   SaveState.cancelled => null,
   SaveState.failed => l10n.fileNotSaved,
+  SaveState.full => l10n.fileNotSavedNoSpace,
 };
 
 Future<void> saveReceivedFile(

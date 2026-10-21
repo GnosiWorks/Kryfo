@@ -1080,10 +1080,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupNotSaved => '备份没有保存。文件还在。';
 
   @override
+  String get backupNotSavedNoSpace => '你选择的位置空间不足。文件还在，请换个位置，或释放一些空间。';
+
+  @override
   String get backupShareInstead => '改为分享';
 
   @override
   String get backupSavedUnchecked => '备份已保存，但 Kryfo 无法检查这份副本';
+
+  @override
+  String get backupHandedOver => '备份已交给你选择的应用 · 请确认它已收到';
 
   @override
   String get backupMoveReachedTitle => '文件已经到新手机上了吗？';
@@ -1108,6 +1114,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupNotMade => '备份没能完成。请再试一次。';
+
+  @override
+  String get backupNoSpace => '手机可用空间不足，无法完成备份。请释放一些空间后再试一次。';
 
   @override
   String get backupHiddenNotIn => '隐藏聊天不在其中。';
@@ -8231,6 +8240,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileNotSaved => '无法保存文件';
 
   @override
+  String get fileNotSavedNoSpace => '未保存：那里空间不足';
+
+  @override
   String fileTooBig(String size, String max) {
     return '这个文件有 $size。文件最大为 $max。';
   }
@@ -9477,10 +9489,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupNotSaved => '備份沒有儲存。檔案還在。';
 
   @override
+  String get backupNotSavedNoSpace => '你選擇的位置空間不足。檔案還在，請換個位置，或釋放一些空間。';
+
+  @override
   String get backupShareInstead => '改為分享';
 
   @override
   String get backupSavedUnchecked => '備份已儲存，但 Kryfo 無法檢查這份副本';
+
+  @override
+  String get backupHandedOver => '備份已交給你選擇的應用程式 · 請確認它已收到';
 
   @override
   String get backupMoveReachedTitle => '檔案已經到新手機上了嗎？';
@@ -9505,6 +9523,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupNotMade => '備份沒能完成。請再試一次。';
+
+  @override
+  String get backupNoSpace => '手機可用空間不足，無法完成備份。請釋放一些空間後再試一次。';
 
   @override
   String get backupHiddenNotIn => '隱藏聊天不在其中。';
@@ -16508,6 +16529,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileNotSaved => '無法儲存檔案';
+
+  @override
+  String get fileNotSavedNoSpace => '未儲存：那裡空間不足';
 
   @override
   String fileTooBig(String size, String max) {

@@ -1779,6 +1779,12 @@ abstract class AppLocalizations {
   /// **'The backup wasn\'t saved. The file is still here.'**
   String get backupNotSaved;
 
+  /// backup screen, above Try again: the place picked in the save dialog had no room for the file; the made file is kept
+  ///
+  /// In en, this message translates to:
+  /// **'There wasn\'t enough space where you chose to save it. The file is still here, so pick another place or free up space.'**
+  String get backupNotSavedNoSpace;
+
   /// screens/backup_screen.dart. second button under the not-saved line: opens the share sheet with the made file
   ///
   /// In en, this message translates to:
@@ -1790,6 +1796,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup saved, but Kryfo couldn\'t check the copy'**
   String get backupSavedUnchecked;
+
+  /// toast after the backup went to an app picked in the share sheet; Kryfo cannot tell whether that app kept it
+  ///
+  /// In en, this message translates to:
+  /// **'Backup handed to the app you picked · check that it arrived'**
+  String get backupHandedOver;
 
   /// screens/backup_screen.dart. sheet title after a move file went out by the share sheet, or was saved without a check: this phone is only retired once the person says yes
   ///
@@ -1838,6 +1850,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The backup could not be made. Try again.'**
   String get backupNotMade;
+
+  /// backup screen, under the fields: the backup file could not be written because the phone is out of storage
+  ///
+  /// In en, this message translates to:
+  /// **'There isn\'t enough free space on this phone to make the backup. Free up some space and try again.'**
+  String get backupNoSpace;
 
   /// screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any
   ///
@@ -13886,6 +13904,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the file'**
   String get fileNotSaved;
+
+  /// toast: a received file was not saved because the place picked in the save dialog had no room
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved: there isn\'t enough space there'**
+  String get fileNotSavedNoSpace;
 
   /// chat and group: toast when a picked file is over the limit. size and max are like 12.4 mb and 8.0 mb
   ///

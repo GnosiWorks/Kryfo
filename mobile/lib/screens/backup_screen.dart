@@ -3,6 +3,7 @@
 // to the share sheet when that is refused.
 
 import 'dart:async';
+import 'dart:io' show FileSystemException;
 import 'dart:isolate';
 
 import '../bidi_safe.dart' show unmarked;
@@ -76,6 +77,8 @@ class _BackupScreenState extends State<BackupScreen> {
   bool _lost = false;
   // the last hand-over did not go: a plain line and two ways on
   bool _notSaved = false;
+  // it did not go for want of room where it was to be saved
+  bool _noRoom = false;
   // both fields show what was typed, or neither
   bool _shown = false;
   // the two ways on, brought into view when they come
@@ -276,7 +279,10 @@ class _BackupScreenState extends State<BackupScreen> {
               ? l10n.backupBackupSavedKeepThe
               : l10n.backupSavedIn(where),
         );
-      } else if (!shared) {
+      } else if (shared) {
+        // the app picked has it now: only it knows whether it kept it
+        showHaloToast(context, l10n.backupHandedOver);
+      } else {
         showHaloToast(context, l10n.backupSavedUnchecked);
       }
       if (mounted) Navigator.of(context).pop();
@@ -294,6 +300,7 @@ class _BackupScreenState extends State<BackupScreen> {
     setState(() {
       _busy = false;
       _notSaved = true;
+      _noRoom = answer.state == SaveState.full;
     });
     // on a short screen the buttons sit below the fold: once they have
     // eased in, the page shows them
@@ -416,12 +423,14 @@ class _BackupScreenState extends State<BackupScreen> {
                         width: double.infinity,
                       )
                     : Padding(
-                        key: const ValueKey(true),
+                        key: ValueKey(_noRoom),
                         padding: const EdgeInsets.only(bottom: 12),
                         child: SizedBox(
                           width: double.infinity,
                           child: Text(
-                            l10n.backupNotSaved,
+                            _noRoom
+                                ? l10n.backupNotSavedNoSpace
+                                : l10n.backupNotSaved,
                             textAlign: TextAlign.center,
                             style: HaloType.sans(
                               size: 13,
@@ -756,7 +765,17 @@ String backupFailLine(Object e) {
   if (e is BackupError && e.message == l10n.backupHiddenGone) {
     return e.message;
   }
+  if (outOfSpace(e)) return l10n.backupNoSpace;
   return l10n.backupNotMade;
+}
+
+/// a write the phone refused for want of room, from dart or from the copy
+/// job's own words
+bool outOfSpace(Object e) {
+  if (e is FileSystemException && e.osError?.errorCode == 28) return true;
+  final s = e.toString();
+  return s.contains('ENOSPC') ||
+      s.toLowerCase().contains('no space left on device');
 }
 
 // a backup the lock took the screen from before the file was handed over
@@ -896,7 +915,8 @@ class _MoveDoneSheet extends StatelessWidget {
   }
 }
 
-enum SaveState { saved, unchecked, cancelled, failed }
+// full: the place picked had no room for it
+enum SaveState { saved, unchecked, cancelled, failed, full }
 
 // lost: kryfo stopped waiting for android's answer. a copy android was
 // still running may read the made file a little longer
@@ -913,6 +933,7 @@ SaveAnswer _saveAnswer(Object? r) {
         'saved' => SaveState.saved,
         'unchecked' => SaveState.unchecked,
         'cancelled' => SaveState.cancelled,
+        'full' => SaveState.full,
         _ => SaveState.failed,
       },
       where: where is String ? where : null,

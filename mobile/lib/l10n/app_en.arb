@@ -1398,6 +1398,10 @@
   "@backupNotSaved": {
     "description": "screens/backup_screen.dart. above the buttons when the save dialog was answered but the file did not land, or no answer came back: the made file is kept for another try"
   },
+  "backupNotSavedNoSpace": "There wasn't enough space where you chose to save it. The file is still here, so pick another place or free up space.",
+  "@backupNotSavedNoSpace": {
+    "description": "backup screen, above Try again: the place picked in the save dialog had no room for the file; the made file is kept"
+  },
   "backupShareInstead": "Share instead",
   "@backupShareInstead": {
     "description": "screens/backup_screen.dart. second button under the not-saved line: opens the share sheet with the made file"
@@ -1405,6 +1409,10 @@
   "backupSavedUnchecked": "Backup saved, but Kryfo couldn't check the copy",
   "@backupSavedUnchecked": {
     "description": "screens/backup_screen.dart. toast when the backup was written to the picked place but that place would not let Kryfo read it back to compare"
+  },
+  "backupHandedOver": "Backup handed to the app you picked · check that it arrived",
+  "@backupHandedOver": {
+    "description": "toast after the backup went to an app picked in the share sheet; Kryfo cannot tell whether that app kept it"
   },
   "backupMoveReachedTitle": "Did the file reach your new phone?",
   "@backupMoveReachedTitle": {
@@ -1437,6 +1445,10 @@
   "backupNotMade": "The backup could not be made. Try again.",
   "@backupNotMade": {
     "description": "screens/backup_screen.dart"
+  },
+  "backupNoSpace": "There isn't enough free space on this phone to make the backup. Free up some space and try again.",
+  "@backupNoSpace": {
+    "description": "backup screen, under the fields: the backup file could not be written because the phone is out of storage"
   },
   "backupHiddenNotIn": "Hidden chats are not in it.",
   "@backupHiddenNotIn": {
@@ -10822,6 +10834,10 @@
   "fileNotSaved": "Could not save the file",
   "@fileNotSaved": {
     "description": "file_save.dart: toast when saving a file failed"
+  },
+  "fileNotSavedNoSpace": "Not saved: there isn't enough space there",
+  "@fileNotSavedNoSpace": {
+    "description": "toast: a received file was not saved because the place picked in the save dialog had no room"
   },
   "fileTooBig": "This file is {size}. Files can be up to {max}.",
   "@fileTooBig": {
