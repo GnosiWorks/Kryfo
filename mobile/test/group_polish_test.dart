@@ -861,6 +861,64 @@ void main() {
       await _close(t);
     });
 
+    // the group over a list, as the app opens it, with its menu up
+    Future<void> menuOver(WidgetTester t, {bool still = false}) async {
+      _use(t, _Db(rows: [_in(1, _anna, 'hello there')]));
+      final group = MaterialPageRoute<void>(
+        builder: (_) => const GroupChatScreen(groupId: _group),
+      );
+      await t.pumpWidget(
+        app(
+          Builder(
+            builder: (c) => TextButton(
+              onPressed: () => Navigator.push(c, group),
+              child: const Text('list'),
+            ),
+          ),
+          still: still,
+        ),
+      );
+      await t.tap(find.text('list'));
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.longPress(find.text('hello there'));
+      await t.pump(const Duration(milliseconds: 500));
+    }
+
+    for (final still in [false, true]) {
+      testWidgets('system back folds the menu first, then leaves the group'
+          '${still ? ', reduced motion' : ''}', (t) async {
+        await menuOver(t, still: still);
+        final bar = find.byKey(const ValueKey('group-menu-reactions'));
+        expect(bar, findsOneWidget);
+        await t.binding.handlePopRoute();
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 300));
+        expect(bar, findsNothing);
+        expect(find.byType(GroupChatScreen), findsOneWidget);
+        await t.binding.handlePopRoute();
+        await t.pump();
+        await t.pump(const Duration(seconds: 1));
+        expect(find.byType(GroupChatScreen), findsNothing);
+        expect(bar, findsNothing);
+        await _close(t);
+      });
+    }
+
+    testWidgets('the menu goes with its group when it is popped by code', (
+      t,
+    ) async {
+      await menuOver(t);
+      final bar = find.byKey(const ValueKey('group-menu-reactions'));
+      expect(bar, findsOneWidget);
+      Navigator.of(t.element(find.byType(GroupChatScreen))).pop();
+      await t.pump();
+      expect(bar, findsNothing);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text('list'), findsOneWidget);
+      await _close(t);
+    });
+
     testWidgets('a long message keeps its menu on the screen', (t) async {
       // tall with room only above it, taller than the screen, and scrolled
       // so its top is gone

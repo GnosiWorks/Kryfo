@@ -287,6 +287,73 @@ void main() {
     });
   }
 
+  // the chat over a list, as the app opens it
+  Widget under() => Builder(
+    builder: (c) => TextButton(
+      onPressed: () =>
+          Navigator.push(c, MaterialPageRoute<void>(builder: (_) => chat())),
+      child: const Text('list'),
+    ),
+  );
+
+  Future<void> openOver(WidgetTester t, {bool still = false}) async {
+    await devOpen(t, under(), still: still);
+    await t.tap(find.text('list'));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(ChatScreen), findsOneWidget);
+  }
+
+  for (final still in [false, true]) {
+    testWidgets('system back folds the menu first, then leaves the chat'
+        '${still ? ', reduced motion' : ''}', (t) async {
+      await openOver(t, still: still);
+      await openMenu(t, 'are you there');
+      await t.binding.handlePopRoute();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.byType(MenuBackdrop), findsNothing);
+      expect(find.byType(ChatScreen), findsOneWidget);
+      await t.binding.handlePopRoute();
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatScreen), findsNothing);
+      expect(find.byType(MenuBackdrop), findsNothing);
+      await devClose(t);
+    });
+  }
+
+  testWidgets('the menu goes with its chat when it is popped by code', (
+    t,
+  ) async {
+    await openOver(t);
+    await openMenu(t, 'are you there');
+    Navigator.of(t.element(find.byType(ChatScreen))).pop();
+    await t.pump();
+    // the overlay takes it off in the next frame
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.byType(MenuBackdrop), findsNothing);
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text('list'), findsOneWidget);
+    expect(find.byType(MenuBackdrop), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a page opened over the chat takes the menu away', (t) async {
+    await openOver(t);
+    await openMenu(t, 'are you there');
+    Navigator.of(
+      t.element(find.byType(ChatScreen)),
+    ).push(MaterialPageRoute<void>(builder: (_) => const Text('over')));
+    await t.pump();
+    // the overlay takes it off in the next frame
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.byType(MenuBackdrop), findsNothing);
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text('over'), findsOneWidget);
+    await devClose(t);
+  });
+
   testWidgets('the face in the header says where it leads', (t) async {
     final sem = t.ensureSemantics();
     await devOpen(t, chat());

@@ -124,6 +124,7 @@ import '../read_burn.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/held_menu.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/chat_parts.dart';
 import '../widgets/shots_line.dart';
@@ -644,7 +645,7 @@ int _lastBurnSeconds = 300;
 bool _lastGhost = false;
 
 class _ChatScreenState extends State<ChatScreen>
-    with WidgetsBindingObserver, BackOnTop<ChatScreen> {
+    with WidgetsBindingObserver, BackOnTop<ChatScreen>, HeldMenu<ChatScreen> {
   final _msgCtrl = TextEditingController();
   // a reply raises the keyboard at once, like a tap on the field
   final _composerFocus = FocusNode();
@@ -1928,8 +1929,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
     if (!mounted) return;
     await keyboardDown(context);
-    // the lock went up while the uid was written: no menu
+    // the lock went up, or the chat started to go, while the uid was
+    // written: no menu
     if (!mounted || !bubbleContext.mounted || lockGuard.isLocked()) return;
+    if (ModalRoute.isCurrentOf(context) == false) return;
     final box = bubbleContext.findRenderObject() as RenderBox?;
     if (box == null) return;
     final offset = box.localToGlobal(Offset.zero);
@@ -1992,15 +1995,17 @@ class _ChatScreenState extends State<ChatScreen>
     var closing = false;
     // what the picked action does to the row, held until the copy is back
     VoidCallback? landed;
+    late final void Function({bool now}) shut;
     void remove() {
       if (removed) return;
       removed = true;
       entry.remove();
+      menuRemoved(shut);
       // the copy has landed on the row: the row shows again at once
-      if (mounted) setState(() => _liftedUid = null);
+      if (menuMayTouch) setState(() => _liftedUid = null);
       final run = landed;
       landed = null;
-      if (mounted) run?.call();
+      if (menuMayTouch) run?.call();
     }
 
     // [then] runs once the copy is back on the row, so a change that moves
@@ -2010,9 +2015,10 @@ class _ChatScreenState extends State<ChatScreen>
       if (gone && !now) return;
       if (!gone) landed = then;
       gone = true;
+      menuFolding(shut);
       unguard?.call();
       unguard = null;
-      if (now || !mounted) {
+      if (now || !menuMayTouch) {
         remove();
         return;
       }
@@ -2261,6 +2267,8 @@ class _ChatScreenState extends State<ChatScreen>
       },
     );
     Overlay.of(context).insert(entry);
+    shut = dismiss;
+    menuOpened(shut);
     // the lock closes it at once, with what it shows
     unguard = lockGuard.closeOnLock(() => dismiss(now: true));
   }
@@ -5911,7 +5919,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => menuBack(child: _page(context));
+
+  Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
     _albums = _indexAlbums(_messages);
     // a message that just started counting down gets its burn on time

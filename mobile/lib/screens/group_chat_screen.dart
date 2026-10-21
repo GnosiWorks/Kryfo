@@ -110,6 +110,7 @@ import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/held_menu.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
@@ -324,7 +325,10 @@ class GroupChatScreen extends StatefulWidget {
 }
 
 class _GroupChatScreenState extends State<GroupChatScreen>
-    with WidgetsBindingObserver, BackOnTop<GroupChatScreen> {
+    with
+        WidgetsBindingObserver,
+        BackOnTop<GroupChatScreen>,
+        HeldMenu<GroupChatScreen> {
   final _msgCtrl = TextEditingController();
   // the people @ can offer, refreshed with the roster
   List<MentionCandidate> _mentionable = const [];
@@ -449,8 +453,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, StickerLanding> _landings = {};
   final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
-  // takes the open message menu away, if there is one
-  VoidCallback? _menuClose;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -3266,7 +3268,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (target.msgUid == null ||
         !mounted ||
         !bubbleCtx.mounted ||
-        lockGuard.isLocked()) {
+        lockGuard.isLocked() ||
+        ModalRoute.isCurrentOf(context) == false) {
       return;
     }
     final renderBox = bubbleCtx.findRenderObject() as RenderBox?;
@@ -3333,23 +3336,25 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     var gone = false;
     // on its way out: the dim and the menu fade, the lifted copy settles
     final closing = ValueNotifier(false);
+    late final void Function({bool now}) shut;
     void close() {
       if (gone) return;
       gone = true;
       unguard?.call();
       entry.remove();
-      if (identical(_menuClose, close)) _menuClose = null;
+      menuRemoved(shut);
     }
 
     void finish() {
       close();
-      if (mounted) setState(() => _liftedUid = null);
+      if (menuMayTouch) setState(() => _liftedUid = null);
     }
 
     void dismiss() {
       if (gone || closing.value) return;
       if (still) return finish();
       closing.value = true;
+      menuFolding(shut);
       // the row comes back once the copy above it has settled on it
       Future.delayed(const Duration(milliseconds: 170), finish);
     }
@@ -3470,7 +3475,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       },
     );
     overlay.insert(entry);
-    _menuClose = close;
+    shut = ({bool now = false}) => now ? finish() : dismiss();
+    menuOpened(shut);
     // the lock closes it at once, with what it shows
     unguard = lockGuard.closeOnLock(finish);
   }
@@ -4200,7 +4206,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
     );
-    _menuClose?.call();
     _searchCtrl.dispose();
     _scrollCtrl.removeListener(_onGroupScroll);
     _scrollCtrl.removeListener(_updateSticky);
@@ -4220,7 +4225,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => menuBack(child: _page(context));
+
+  Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
     _albums = _indexAlbums(_messages);
     // a message that just started counting down gets its burn on time
