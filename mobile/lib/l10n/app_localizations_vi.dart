@@ -5635,6 +5635,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportLastStop => 'Lần dừng cuối';
 
   @override
+  String get transportStopKilled => 'Bị hệ thống buộc dừng';
+
+  @override
+  String get transportStopLowMemory => 'Thiếu bộ nhớ';
+
+  @override
+  String get transportStopCrashed => 'Bị lỗi';
+
+  @override
+  String get transportStopNotResponding => 'Không phản hồi';
+
+  @override
+  String get transportStopByYou => 'Bạn đã dừng';
+
+  @override
+  String get transportStopByPhone => 'Điện thoại đã dừng';
+
+  @override
+  String get transportStopBySecurityApp => 'Ứng dụng bảo mật đã dừng';
+
+  @override
+  String get transportStopUpdated => 'Đã cập nhật';
+
+  @override
+  String get transportStopBySystem => 'Hệ thống đã dừng';
+
+  @override
+  String get transportStopTooMuch => 'Dùng quá nhiều';
+
+  @override
+  String get transportStopPermission => 'Quyền đã thay đổi';
+
+  @override
+  String get transportStopClosedItself => 'Tự đóng';
+
+  @override
+  String get transportStopOther => 'Đã dừng';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · bộ máy $mb2';
   }

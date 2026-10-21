@@ -5751,6 +5751,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportLastStop => 'Последняя остановка';
 
   @override
+  String get transportStopKilled => 'Принудительно завершён системой';
+
+  @override
+  String get transportStopLowMemory => 'Мало памяти';
+
+  @override
+  String get transportStopCrashed => 'Сбой';
+
+  @override
+  String get transportStopNotResponding => 'Не отвечал';
+
+  @override
+  String get transportStopByYou => 'Остановлен вами';
+
+  @override
+  String get transportStopByPhone => 'Остановлен телефоном';
+
+  @override
+  String get transportStopBySecurityApp =>
+      'Остановлен приложением безопасности';
+
+  @override
+  String get transportStopUpdated => 'Обновлён';
+
+  @override
+  String get transportStopBySystem => 'Остановлен системой';
+
+  @override
+  String get transportStopTooMuch => 'Слишком много ресурсов';
+
+  @override
+  String get transportStopPermission => 'Разрешение изменено';
+
+  @override
+  String get transportStopClosedItself => 'Закрылся сам';
+
+  @override
+  String get transportStopOther => 'Остановлен';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · движок $mb2';
   }

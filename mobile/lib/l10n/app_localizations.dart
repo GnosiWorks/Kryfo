@@ -9144,6 +9144,84 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Killed by the system'**
+  String get transportStopKilled;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Low memory'**
+  String get transportStopLowMemory;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Crashed'**
+  String get transportStopCrashed;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Not responding'**
+  String get transportStopNotResponding;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped by you'**
+  String get transportStopByYou;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped by the phone'**
+  String get transportStopByPhone;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped by the security app'**
+  String get transportStopBySecurityApp;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get transportStopUpdated;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped by the system'**
+  String get transportStopBySystem;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Used too much'**
+  String get transportStopTooMuch;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Permission changed'**
+  String get transportStopPermission;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Closed itself'**
+  String get transportStopClosedItself;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get transportStopOther;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'{mb} · engine {mb2}'**
   String transportEngine(Object mb, Object mb2);
 

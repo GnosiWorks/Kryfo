@@ -5736,6 +5736,45 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportLastStop => 'Остання зупинка';
 
   @override
+  String get transportStopKilled => 'Примусово завершено системою';
+
+  @override
+  String get transportStopLowMemory => 'Мало пам’яті';
+
+  @override
+  String get transportStopCrashed => 'Збій';
+
+  @override
+  String get transportStopNotResponding => 'Не відповідав';
+
+  @override
+  String get transportStopByYou => 'Зупинено вами';
+
+  @override
+  String get transportStopByPhone => 'Зупинено телефоном';
+
+  @override
+  String get transportStopBySecurityApp => 'Зупинено застосунком безпеки';
+
+  @override
+  String get transportStopUpdated => 'Оновлено';
+
+  @override
+  String get transportStopBySystem => 'Зупинено системою';
+
+  @override
+  String get transportStopTooMuch => 'Забагато ресурсів';
+
+  @override
+  String get transportStopPermission => 'Дозвіл змінено';
+
+  @override
+  String get transportStopClosedItself => 'Закрився сам';
+
+  @override
+  String get transportStopOther => 'Зупинено';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · рушій $mb2';
   }

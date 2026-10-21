@@ -5400,6 +5400,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportLastStop => '上次停止';
 
   @override
+  String get transportStopKilled => '被系统强制结束';
+
+  @override
+  String get transportStopLowMemory => '内存不足';
+
+  @override
+  String get transportStopCrashed => '崩溃';
+
+  @override
+  String get transportStopNotResponding => '无响应';
+
+  @override
+  String get transportStopByYou => '由你停止';
+
+  @override
+  String get transportStopByPhone => '由手机停止';
+
+  @override
+  String get transportStopBySecurityApp => '由安全应用停止';
+
+  @override
+  String get transportStopUpdated => '已更新';
+
+  @override
+  String get transportStopBySystem => '由系统停止';
+
+  @override
+  String get transportStopTooMuch => '占用过多';
+
+  @override
+  String get transportStopPermission => '权限已更改';
+
+  @override
+  String get transportStopClosedItself => '自行关闭';
+
+  @override
+  String get transportStopOther => '已停止';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · 引擎 $mb2';
   }
@@ -13748,6 +13787,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get transportLastStop => '上次停止';
+
+  @override
+  String get transportStopKilled => '被系統強制結束';
+
+  @override
+  String get transportStopLowMemory => '記憶體不足';
+
+  @override
+  String get transportStopCrashed => '當機';
+
+  @override
+  String get transportStopNotResponding => '沒有回應';
+
+  @override
+  String get transportStopByYou => '由你停止';
+
+  @override
+  String get transportStopByPhone => '由手機停止';
+
+  @override
+  String get transportStopBySecurityApp => '由安全性應用程式停止';
+
+  @override
+  String get transportStopUpdated => '已更新';
+
+  @override
+  String get transportStopBySystem => '由系統停止';
+
+  @override
+  String get transportStopTooMuch => '占用過多';
+
+  @override
+  String get transportStopPermission => '權限已變更';
+
+  @override
+  String get transportStopClosedItself => '自行關閉';
+
+  @override
+  String get transportStopOther => '已停止';
 
   @override
   String transportEngine(Object mb, Object mb2) {

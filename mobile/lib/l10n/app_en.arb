@@ -7078,6 +7078,58 @@
   "@transportLastStop": {
     "description": "screens/transport_screen.dart"
   },
+  "transportStopKilled": "Killed by the system",
+  "@transportStopKilled": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopLowMemory": "Low memory",
+  "@transportStopLowMemory": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopCrashed": "Crashed",
+  "@transportStopCrashed": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopNotResponding": "Not responding",
+  "@transportStopNotResponding": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopByYou": "Stopped by you",
+  "@transportStopByYou": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopByPhone": "Stopped by the phone",
+  "@transportStopByPhone": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopBySecurityApp": "Stopped by the security app",
+  "@transportStopBySecurityApp": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopUpdated": "Updated",
+  "@transportStopUpdated": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopBySystem": "Stopped by the system",
+  "@transportStopBySystem": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopTooMuch": "Used too much",
+  "@transportStopTooMuch": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopPermission": "Permission changed",
+  "@transportStopPermission": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopClosedItself": "Closed itself",
+  "@transportStopClosedItself": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStopOther": "Stopped",
+  "@transportStopOther": {
+    "description": "screens/transport_screen.dart"
+  },
   "transportEngine": "{mb} · engine {mb2}",
   "@transportEngine": {
     "description": "screens/transport_screen.dart",

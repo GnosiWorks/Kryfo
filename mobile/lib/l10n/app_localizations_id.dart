@@ -5641,6 +5641,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportLastStop => 'Berhenti terakhir';
 
   @override
+  String get transportStopKilled => 'Dihentikan paksa oleh sistem';
+
+  @override
+  String get transportStopLowMemory => 'Memori rendah';
+
+  @override
+  String get transportStopCrashed => 'Mogok';
+
+  @override
+  String get transportStopNotResponding => 'Tidak merespons';
+
+  @override
+  String get transportStopByYou => 'Dihentikan olehmu';
+
+  @override
+  String get transportStopByPhone => 'Dihentikan oleh ponsel';
+
+  @override
+  String get transportStopBySecurityApp => 'Dihentikan oleh aplikasi keamanan';
+
+  @override
+  String get transportStopUpdated => 'Diperbarui';
+
+  @override
+  String get transportStopBySystem => 'Dihentikan oleh sistem';
+
+  @override
+  String get transportStopTooMuch => 'Memakai terlalu banyak';
+
+  @override
+  String get transportStopPermission => 'Izin berubah';
+
+  @override
+  String get transportStopClosedItself => 'Tertutup sendiri';
+
+  @override
+  String get transportStopOther => 'Berhenti';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · mesin $mb2';
   }

@@ -5693,6 +5693,45 @@ class AppLocalizationsIt extends AppLocalizations {
   String get transportLastStop => 'Ultimo arresto';
 
   @override
+  String get transportStopKilled => 'Chiuso a forza dal sistema';
+
+  @override
+  String get transportStopLowMemory => 'Memoria scarsa';
+
+  @override
+  String get transportStopCrashed => 'Arrestato in modo anomalo';
+
+  @override
+  String get transportStopNotResponding => 'Non rispondeva';
+
+  @override
+  String get transportStopByYou => 'Fermato da te';
+
+  @override
+  String get transportStopByPhone => 'Fermato dal telefono';
+
+  @override
+  String get transportStopBySecurityApp => 'Fermato dall’app di sicurezza';
+
+  @override
+  String get transportStopUpdated => 'Aggiornato';
+
+  @override
+  String get transportStopBySystem => 'Fermato dal sistema';
+
+  @override
+  String get transportStopTooMuch => 'Ha usato troppo';
+
+  @override
+  String get transportStopPermission => 'Autorizzazione cambiata';
+
+  @override
+  String get transportStopClosedItself => 'Si è chiuso da solo';
+
+  @override
+  String get transportStopOther => 'Fermato';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · motore $mb2';
   }

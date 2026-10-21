@@ -5729,6 +5729,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportLastStop => 'آخر توقف';
 
   @override
+  String get transportStopKilled => 'أوقفه النظام قسرًا';
+
+  @override
+  String get transportStopLowMemory => 'الذاكرة منخفضة';
+
+  @override
+  String get transportStopCrashed => 'تعطّل';
+
+  @override
+  String get transportStopNotResponding => 'لم يستجب';
+
+  @override
+  String get transportStopByYou => 'أوقفته أنت';
+
+  @override
+  String get transportStopByPhone => 'أوقفه الهاتف';
+
+  @override
+  String get transportStopBySecurityApp => 'أوقفه تطبيق الأمان';
+
+  @override
+  String get transportStopUpdated => 'تم التحديث';
+
+  @override
+  String get transportStopBySystem => 'أوقفه النظام';
+
+  @override
+  String get transportStopTooMuch => 'استهلك أكثر من اللازم';
+
+  @override
+  String get transportStopPermission => 'تغيّر إذن';
+
+  @override
+  String get transportStopClosedItself => 'أُغلق من تلقاء نفسه';
+
+  @override
+  String get transportStopOther => 'توقّف';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '⁨$mb⁩ · المحرّك ⁨$mb2⁩';
   }

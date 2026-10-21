@@ -977,11 +977,11 @@ class MainActivity : FlutterFragmentActivity() {
             val list = am.getHistoricalProcessExitReasons(packageName, 0, 1)
             if (list.isEmpty()) return null
             val e = list[0]
-            val word = ExitWord.of(e.reason, e.description)
+            val code = ExitWord.of(e.reason, e.description)
             mapOf(
                 "at" to e.timestamp,
                 "reason" to e.reason,
-                "word" to word,
+                "code" to code,
                 "pssKb" to e.pss,
             )
         } catch (e: Exception) {

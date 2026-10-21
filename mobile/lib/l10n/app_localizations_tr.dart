@@ -5658,6 +5658,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportLastStop => 'Son duruş';
 
   @override
+  String get transportStopKilled => 'Sistem zorla kapattı';
+
+  @override
+  String get transportStopLowMemory => 'Bellek az';
+
+  @override
+  String get transportStopCrashed => 'Çöktü';
+
+  @override
+  String get transportStopNotResponding => 'Yanıt vermedi';
+
+  @override
+  String get transportStopByYou => 'Sen durdurdun';
+
+  @override
+  String get transportStopByPhone => 'Telefon durdurdu';
+
+  @override
+  String get transportStopBySecurityApp => 'Güvenlik uygulaması durdurdu';
+
+  @override
+  String get transportStopUpdated => 'Güncellendi';
+
+  @override
+  String get transportStopBySystem => 'Sistem durdurdu';
+
+  @override
+  String get transportStopTooMuch => 'Çok fazla kaynak kullandı';
+
+  @override
+  String get transportStopPermission => 'İzin değişti';
+
+  @override
+  String get transportStopClosedItself => 'Kendiliğinden kapandı';
+
+  @override
+  String get transportStopOther => 'Durduruldu';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · motor $mb2';
   }

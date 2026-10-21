@@ -7,32 +7,38 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ExitWordTest {
-    private fun word(d: String?) = ExitWord.of(REASON_USER_REQUESTED, d)
+    private fun code(d: String?) = ExitWord.of(REASON_USER_REQUESTED, d)
 
     @Test
-    fun thePhonesOwnForceStopsAreNotThePersons() {
-        // as xiaomi's cleaner and its load guard write them
+    fun theLoadGuardAndOtherSystemProcessesAreThePhone() {
+        // as xiaomi's load guard writes it
         assertEquals(
-            "stopped by the phone",
-            word("stop app.kryfo due to from process:com.miui.securitycenter")
+            "by_phone",
+            code("stop app.kryfo due to UserDefined:The system loading is too high and ANR is occurring.")
         )
+        assertEquals("by_phone", code("stop app.kryfo due to from process:com.miui.powerkeeper"))
+    }
+
+    @Test
+    fun xiaomisSecurityAppIsNamedAsItself() {
+        // manage apps, clear all and its cleanup all come from it
         assertEquals(
-            "stopped by the phone",
-            word("stop app.kryfo due to UserDefined:The system loading is too high and ANR is occurring.")
+            "by_security_app",
+            code("stop app.kryfo due to from process:com.miui.securitycenter")
         )
     }
 
     @Test
     fun thePersonsOwnStaysTheirs() {
-        assertEquals("stopped by you", word("stop app.kryfo due to from process:com.android.settings"))
-        assertEquals("stopped by you", word("stop app.kryfo due to from process:14850"))
-        assertEquals("stopped by you", word("stop app.kryfo due to clear data"))
-        assertEquals("stopped by you", word(null))
+        assertEquals("by_you", code("stop app.kryfo due to from process:com.android.settings"))
+        assertEquals("by_you", code("stop app.kryfo due to from process:14850"))
+        assertEquals("by_you", code("stop app.kryfo due to clear data"))
+        assertEquals("by_you", code(null))
     }
 
     @Test
-    fun otherReasonsReadAsBefore() {
-        assertEquals("low memory", ExitWord.of(REASON_LOW_MEMORY, "from process:com.miui.securitycenter"))
+    fun otherReasonsKeepTheirOwnCode() {
+        assertEquals("low_memory", ExitWord.of(REASON_LOW_MEMORY, "from process:com.miui.securitycenter"))
         assertEquals("stopped", ExitWord.of(-1, null))
     }
 }

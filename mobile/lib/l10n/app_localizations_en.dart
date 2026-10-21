@@ -5635,6 +5635,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportLastStop => 'Last stop';
 
   @override
+  String get transportStopKilled => 'Killed by the system';
+
+  @override
+  String get transportStopLowMemory => 'Low memory';
+
+  @override
+  String get transportStopCrashed => 'Crashed';
+
+  @override
+  String get transportStopNotResponding => 'Not responding';
+
+  @override
+  String get transportStopByYou => 'Stopped by you';
+
+  @override
+  String get transportStopByPhone => 'Stopped by the phone';
+
+  @override
+  String get transportStopBySecurityApp => 'Stopped by the security app';
+
+  @override
+  String get transportStopUpdated => 'Updated';
+
+  @override
+  String get transportStopBySystem => 'Stopped by the system';
+
+  @override
+  String get transportStopTooMuch => 'Used too much';
+
+  @override
+  String get transportStopPermission => 'Permission changed';
+
+  @override
+  String get transportStopClosedItself => 'Closed itself';
+
+  @override
+  String get transportStopOther => 'Stopped';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · engine $mb2';
   }

@@ -503,7 +503,7 @@ class _AliveState extends State<_Alive> {
               ? const SizedBox(width: double.infinity)
               : _Line(
                   l10n.transportLastStop,
-                  '${exit['word']} · ${exitAt == null ? '' : _ago(exitAt)}',
+                  '${lastStopWord(exit['code'] as String?)} · ${exitAt == null ? '' : _ago(exitAt)}',
                   (exit['reason'] as int?) == 2
                       ? HaloColors.rose
                       : HaloColors.text2,
@@ -637,3 +637,21 @@ class _AliveState extends State<_Alive> {
     );
   }
 }
+
+// the platform's code for why the process last stopped, in words
+@visibleForTesting
+String lastStopWord(String? code) => switch (code) {
+  'killed' => l10n.transportStopKilled,
+  'low_memory' => l10n.transportStopLowMemory,
+  'crashed' => l10n.transportStopCrashed,
+  'not_responding' => l10n.transportStopNotResponding,
+  'by_you' => l10n.transportStopByYou,
+  'by_phone' => l10n.transportStopByPhone,
+  'by_security_app' => l10n.transportStopBySecurityApp,
+  'updated' => l10n.transportStopUpdated,
+  'by_system' => l10n.transportStopBySystem,
+  'too_much' => l10n.transportStopTooMuch,
+  'permission' => l10n.transportStopPermission,
+  'closed_itself' => l10n.transportStopClosedItself,
+  _ => l10n.transportStopOther,
+};

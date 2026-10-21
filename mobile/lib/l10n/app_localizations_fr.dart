@@ -5700,6 +5700,45 @@ class AppLocalizationsFr extends AppLocalizations {
   String get transportLastStop => 'Dernier arrêt';
 
   @override
+  String get transportStopKilled => 'Arrêté de force par le système';
+
+  @override
+  String get transportStopLowMemory => 'Mémoire faible';
+
+  @override
+  String get transportStopCrashed => 'Plantage';
+
+  @override
+  String get transportStopNotResponding => 'Ne répondait pas';
+
+  @override
+  String get transportStopByYou => 'Arrêté par vous';
+
+  @override
+  String get transportStopByPhone => 'Arrêté par le téléphone';
+
+  @override
+  String get transportStopBySecurityApp => 'Arrêté par l’app de sécurité';
+
+  @override
+  String get transportStopUpdated => 'Mis à jour';
+
+  @override
+  String get transportStopBySystem => 'Arrêté par le système';
+
+  @override
+  String get transportStopTooMuch => 'Trop de ressources utilisées';
+
+  @override
+  String get transportStopPermission => 'Autorisation modifiée';
+
+  @override
+  String get transportStopClosedItself => 'Fermé de lui-même';
+
+  @override
+  String get transportStopOther => 'Arrêté';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · moteur $mb2';
   }

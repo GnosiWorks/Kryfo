@@ -5705,6 +5705,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportLastStop => 'Letzter Stopp';
 
   @override
+  String get transportStopKilled => 'Vom System abgebrochen';
+
+  @override
+  String get transportStopLowMemory => 'Wenig Speicher';
+
+  @override
+  String get transportStopCrashed => 'Abgestürzt';
+
+  @override
+  String get transportStopNotResponding => 'Reagierte nicht';
+
+  @override
+  String get transportStopByYou => 'Von dir beendet';
+
+  @override
+  String get transportStopByPhone => 'Vom Telefon beendet';
+
+  @override
+  String get transportStopBySecurityApp => 'Von der Sicherheits-App beendet';
+
+  @override
+  String get transportStopUpdated => 'Aktualisiert';
+
+  @override
+  String get transportStopBySystem => 'Vom System beendet';
+
+  @override
+  String get transportStopTooMuch => 'Zu viel verbraucht';
+
+  @override
+  String get transportStopPermission => 'Berechtigung geändert';
+
+  @override
+  String get transportStopClosedItself => 'Selbst beendet';
+
+  @override
+  String get transportStopOther => 'Beendet';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '$mb · Engine $mb2';
   }

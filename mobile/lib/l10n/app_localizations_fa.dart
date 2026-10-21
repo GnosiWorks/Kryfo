@@ -5649,6 +5649,45 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportLastStop => 'آخرین توقف';
 
   @override
+  String get transportStopKilled => 'سیستم به‌اجبار بستش';
+
+  @override
+  String get transportStopLowMemory => 'حافظه کم';
+
+  @override
+  String get transportStopCrashed => 'از کار افتاد';
+
+  @override
+  String get transportStopNotResponding => 'پاسخ نمی‌داد';
+
+  @override
+  String get transportStopByYou => 'شما متوقفش کردید';
+
+  @override
+  String get transportStopByPhone => 'گوشی متوقفش کرد';
+
+  @override
+  String get transportStopBySecurityApp => 'برنامهٔ امنیتی متوقفش کرد';
+
+  @override
+  String get transportStopUpdated => 'به‌روز شد';
+
+  @override
+  String get transportStopBySystem => 'سیستم متوقفش کرد';
+
+  @override
+  String get transportStopTooMuch => 'بیش از حد مصرف کرد';
+
+  @override
+  String get transportStopPermission => 'مجوز تغییر کرد';
+
+  @override
+  String get transportStopClosedItself => 'خودش بسته شد';
+
+  @override
+  String get transportStopOther => 'متوقف شد';
+
+  @override
   String transportEngine(Object mb, Object mb2) {
     return '⁨$mb⁩ · موتور ⁨$mb2⁩';
   }
