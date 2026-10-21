@@ -29,6 +29,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/notifications.dart' show showMessageNotification;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/chat_parts.dart'
     show JumpDownButton, UnreadDivider;
@@ -473,6 +474,68 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(l10n.appPhoto)), findsOneWidget);
     await devClose(t);
     sem.dispose();
+  });
+
+  testWidgets('a photo with a caption has flatter corners, the picture\'s '
+      'meeting the card\'s', (t) async {
+    final png = File('${docs.path}/captioned.png')
+      ..writeAsBytesSync(base64Decode(_dot));
+    final at = DateTime.now().millisecondsSinceEpoch + 3 * 3600000;
+    for (final (uid, dir, text) in [
+      ('cap-in', 'in', 'their caption'),
+      ('cap-out', 'out', 'my caption'),
+    ]) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': dir,
+        'plaintext': text,
+        'sent_at': at + (dir == 'out' ? 60000 : 0),
+        'msg_uid': uid,
+        'media_path': png.path,
+        'sent': 1,
+      });
+    }
+    await devOpen(t, chat());
+    await settle(t);
+    expect(kCaptionCorner, lessThan(14));
+    for (final (text, out) in [
+      ('their caption', false),
+      ('my caption', true),
+    ]) {
+      final card = t
+          .widgetList<Container>(
+            find.ancestor(
+              of: find.text(text, findRichText: true),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .firstWhere((b) => b.color == HaloColors.surface2);
+      final r = card.borderRadius! as BorderRadiusDirectional;
+      const c = Radius.circular(kCaptionCorner);
+      expect(r.topStart, c, reason: text);
+      expect(r.topEnd, c, reason: text);
+      // the tail of the last in a run stays where it was
+      expect(out ? r.bottomStart : r.bottomEnd, c, reason: text);
+      expect(
+        (out ? r.bottomEnd : r.bottomStart).x,
+        anyOf(4, kCaptionCorner),
+        reason: text,
+      );
+    }
+    // the picture's top corners are the card's
+    final clips = t
+        .widgetList<ClipRRect>(find.byType(ClipRRect))
+        .map((c) => c.borderRadius)
+        .whereType<BorderRadius>()
+        .where((b) => b.bottomLeft == Radius.zero && b.topLeft.x > 0);
+    expect(clips, isNotEmpty);
+    for (final b in clips) {
+      expect(b.topLeft, const Radius.circular(kCaptionCorner));
+      expect(b.topRight, const Radius.circular(kCaptionCorner));
+    }
+    await devClose(t);
   });
 
   testWidgets('a forward to the chat it is in lands in its own composer, '

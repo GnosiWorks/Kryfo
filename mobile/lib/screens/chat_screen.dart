@@ -7466,6 +7466,9 @@ class _Bubble extends StatelessWidget {
   Widget _build(BuildContext context) {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
+    // a photo with a caption is one card: flatter corners, the picture's
+    // top ones the same so the edges meet
+    final corner = isImage && msg.text.isNotEmpty ? kCaptionCorner : 14.0;
     final shape = fileShapeNow(msg.filePath, msg.fileName);
     // a video with no caption sits on the chat like a photo: no bubble
     // around it, its time and tick in its corner
@@ -7597,13 +7600,13 @@ class _Bubble extends StatelessWidget {
                                     : atmoBubbleIn(context),
                                 gradient: null,
                                 borderRadius: BorderRadiusDirectional.only(
-                                  topStart: const Radius.circular(14),
-                                  topEnd: const Radius.circular(14),
+                                  topStart: Radius.circular(corner),
+                                  topEnd: Radius.circular(corner),
                                   bottomStart: Radius.circular(
-                                    isOut ? 14 : (lastInGroup ? 4 : 14),
+                                    isOut ? corner : (lastInGroup ? 4 : corner),
                                   ),
                                   bottomEnd: Radius.circular(
-                                    isOut ? (lastInGroup ? 4 : 14) : 14,
+                                    isOut ? (lastInGroup ? 4 : corner) : corner,
                                   ),
                                 ),
                                 border: searchRing(isCurrentMatch),
@@ -7822,7 +7825,7 @@ class _Bubble extends StatelessWidget {
                                               msg.mediaPath!,
                                               'chat',
                                             ),
-                                            radius: 14,
+                                            radius: corner,
                                           );
                                         },
                                         // said as a photo from the start,
@@ -7832,8 +7835,10 @@ class _Bubble extends StatelessWidget {
                                           label: l10n.appPhoto,
                                           child: ClipRRect(
                                             borderRadius: msg.text.isNotEmpty
-                                                ? const BorderRadius.vertical(
-                                                    top: Radius.circular(14),
+                                                ? BorderRadius.vertical(
+                                                    top: Radius.circular(
+                                                      corner,
+                                                    ),
                                                   )
                                                 : BorderRadius.circular(14),
                                             child: Stack(
@@ -8192,21 +8197,23 @@ class _Bubble extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadiusDirectional.only(
-                                                topStart: const Radius.circular(
-                                                  14,
+                                                topStart: Radius.circular(
+                                                  corner,
                                                 ),
-                                                topEnd: const Radius.circular(
-                                                  14,
-                                                ),
+                                                topEnd: Radius.circular(corner),
                                                 bottomStart: Radius.circular(
                                                   isOut
-                                                      ? 14
-                                                      : (lastInGroup ? 4 : 14),
+                                                      ? corner
+                                                      : (lastInGroup
+                                                            ? 4
+                                                            : corner),
                                                 ),
                                                 bottomEnd: Radius.circular(
                                                   isOut
-                                                      ? (lastInGroup ? 4 : 14)
-                                                      : 14,
+                                                      ? (lastInGroup
+                                                            ? 4
+                                                            : corner)
+                                                      : corner,
                                                 ),
                                               ),
                                           border: Border.all(
@@ -8567,6 +8574,10 @@ class _ViaDevTag extends StatelessWidget {
 
 // above the composer while writing a reply: a snippet of the target and an
 // X to cancel
+// the corners of a photo sent with a caption, flatter than a text bubble's
+@visibleForTesting
+const kCaptionCorner = 10.0;
+
 class _ReplyQuoteBar extends StatelessWidget {
   final _Msg target;
   final VoidCallback onCancel;
