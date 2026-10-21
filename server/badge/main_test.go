@@ -19,19 +19,41 @@ import (
 type fakeBTCPay struct {
 	status, amount, currency, tier string
 	made                           int
+	// the first reads of a new invoice that find no address yet
+	emptyReads, reads int
+	// the payment method waits to be switched on, as on a lazy store
+	lazy, activated bool
+	// what the last invoice was made with
+	created map[string]any
+	mu      sync.Mutex
 }
 
 func (f *fakeBTCPay) serve(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
 		if r.Header.Get("Authorization") != "token k" {
 			t.Errorf("no api key on %s", r.URL.Path)
 		}
 		switch {
 		case r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/invoices"):
 			f.made++
-			fmt.Fprintf(w, `{"id":"INV%05d","checkoutLink":"https://pay.example/i/x"}`, f.made)
+			f.created = nil
+			_ = json.NewDecoder(r.Body).Decode(&f.created)
+			fmt.Fprintf(w, `{"id":"INV%05d","checkoutLink":"https://pay.example/i/x","expirationTime":%d}`,
+				f.made, time.Now().Add(time.Hour).Unix())
+		case r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/payment-methods/BTC-CHAIN/activate"):
+			f.activated = true
 		case strings.HasSuffix(r.URL.Path, "/payment-methods"):
-			fmt.Fprint(w, `[{"destination":"bc1qexample","due":"0.00021"}]`)
+			f.reads++
+			switch {
+			case f.lazy && !f.activated:
+				fmt.Fprint(w, `[{"paymentMethodId":"BTC-CHAIN","activated":false,"destination":null,"due":"0.00021"}]`)
+			case f.reads <= f.emptyReads:
+				fmt.Fprint(w, `[{"paymentMethodId":"BTC-CHAIN","activated":true,"destination":"","due":"0.00021"}]`)
+			default:
+				fmt.Fprint(w, `[{"paymentMethodId":"BTC-CHAIN","activated":true,"destination":"bc1qexample","due":"0.00021"}]`)
+			}
 		default:
 			fmt.Fprintf(w, `{"id":"INV00001","status":%q,"amount":%q,"currency":%q,"metadata":{"tier":%q}}`,
 				f.status, f.amount, f.currency, f.tier)
@@ -217,5 +239,90 @@ func TestUpstreamCallsAreCapped(t *testing.T) {
 	wg.Wait()
 	if most > cap(upstream) {
 		t.Fatalf("%d calls to btcpay at once, cap is %d", most, cap(upstream))
+	}
+}
+
+func invoice(t *testing.T, tier string) (int, map[string]any) {
+	t.Helper()
+	w := httptest.NewRecorder()
+	handleInvoice(w, httptest.NewRequest("POST", "/invoice", strings.NewReader(`{"tier":"`+tier+`"}`)))
+	var m map[string]any
+	_ = json.Unmarshal(w.Body.Bytes(), &m)
+	return w.Code, m
+}
+
+func quickWait(t *testing.T, wait time.Duration) {
+	t.Helper()
+	oldWait, oldStep := addrWait, addrStep
+	addrWait, addrStep = wait, 20*time.Millisecond
+	t.Cleanup(func() { addrWait, addrStep = oldWait, oldStep })
+}
+
+// btcpay can answer a new invoice's payment methods before the address is
+// in them: read again instead of failing the donor
+func TestInvoiceWaitsForTheAddress(t *testing.T) {
+	quickWait(t, 2*time.Second)
+	f := &fakeBTCPay{emptyReads: 3}
+	setup(t, f)
+	code, m := invoice(t, "supporter")
+	if code != 200 || m["address"] != "bc1qexample" || m["btc"] != "0.00021" {
+		t.Fatalf("code=%d body=%v; the address came on the fourth read", code, m)
+	}
+	if f.made != 1 || f.reads != 4 {
+		t.Fatalf("made %d invoices and read %d times, want 1 and 4", f.made, f.reads)
+	}
+}
+
+// a store that makes addresses only when asked gets asked
+func TestInvoiceSwitchesOnALazyPaymentMethod(t *testing.T) {
+	quickWait(t, 2*time.Second)
+	f := &fakeBTCPay{lazy: true}
+	setup(t, f)
+	code, m := invoice(t, "patron")
+	if code != 200 || m["address"] != "bc1qexample" || !f.activated {
+		t.Fatalf("code=%d body=%v activated=%v", code, m, f.activated)
+	}
+}
+
+// an address that never comes is given up on in time, with one invoice
+func TestInvoiceWithoutAddressGivesUp(t *testing.T) {
+	quickWait(t, 300*time.Millisecond)
+	f := &fakeBTCPay{emptyReads: 1 << 30}
+	setup(t, f)
+	t0 := time.Now()
+	code, _ := invoice(t, "supporter")
+	if took := time.Since(t0); took > 2*time.Second {
+		t.Fatalf("took %v, the wait is 300ms", took)
+	}
+	if code != 502 || f.made != 1 || f.reads < 2 {
+		t.Fatalf("code=%d made=%d reads=%d", code, f.made, f.reads)
+	}
+}
+
+// the wait stays under what the app gives the answer's first byte
+func TestAddressWaitFitsTheApp(t *testing.T) {
+	if addrWait > 8*time.Second || addrStep <= 0 || addrStep > addrWait {
+		t.Fatalf("addrWait %v, addrStep %v", addrWait, addrStep)
+	}
+}
+
+// an hour to pay, a little under the amount still counts, the address is
+// made with the invoice, and the app learns how long it has
+func TestInvoiceCheckoutOptions(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	code, m := invoice(t, "guardian")
+	if code != 200 {
+		t.Fatalf("code=%d", code)
+	}
+	c, _ := f.created["checkout"].(map[string]any)
+	if c["expirationMinutes"] != 60.0 || c["paymentTolerance"] != 1.5 || c["lazyPaymentMethods"] != false {
+		t.Fatalf("checkout: %v", c)
+	}
+	if md, _ := f.created["metadata"].(map[string]any); len(md) != 1 || md["tier"] != "guardian" {
+		t.Fatalf("metadata holds more than the tier: %v", md)
+	}
+	if left, _ := m["expiresIn"].(float64); left < 3590 || left > 3600 {
+		t.Fatalf("expiresIn %v, want about an hour", m["expiresIn"])
 	}
 }

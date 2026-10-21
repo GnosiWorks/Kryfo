@@ -184,6 +184,11 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 			"paymentMethods": []string{"BTC"},
 			// donors are anonymous: never ask for anything.
 			"requiresRefundEmail": false,
+			// the address is made now, whatever the store's setting says
+			"lazyPaymentMethods": false,
+			"expirationMinutes":  invoiceMinutes,
+			// a wallet that rounds or takes its fee from the amount still pays
+			"paymentTolerance": paymentTolerance,
 		},
 	})
 	resp, err := btcpay("POST", "/api/v1/stores/"+storeID+"/invoices", body)
@@ -194,36 +199,94 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var inv struct {
-		ID string `json:"id"`
+		ID         string `json:"id"`
+		Expiration int64  `json:"expirationTime"`
 	}
 	_ = json.Unmarshal(resp, &inv)
+	if !invoiceID.MatchString(inv.ID) {
+		log.Printf("invoice create: no usable id in the answer")
+		http.Error(w, "upstream", 502)
+		return
+	}
 
 	// pull the on-chain address + exact btc amount so the app can render its
 	// own QR instead of sending the donor to a web checkout.
-	addr, btcAmt := paymentDetails(inv.ID)
-	if inv.ID == "" || addr == "" {
+	addr, btcAmt := waitForAddress(inv.ID)
+	if addr == "" {
 		// an invoice with nowhere to pay is not one. the app shows the
-		// plain address instead
+		// plain address instead. it cannot be archived with this key
+		// (that needs canmodifyinvoices): with no address it takes no money
+		// and expires by itself
+		log.Printf("invoice create: no address after %v", addrWait)
 		http.Error(w, "upstream", 502)
 		return
+	}
+
+	left := int64(invoiceMinutes * 60)
+	if inv.Expiration > 0 {
+		left = inv.Expiration - time.Now().Unix()
 	}
 
 	// btcpay's checkout link is not passed on: the app draws its own qr, and
 	// the link names wherever btcpay is hosted
 	writeJSON(w, map[string]any{
-		"id":      inv.ID,
-		"tier":    req.Tier,
-		"usd":     amount,
-		"address": addr,
-		"btc":     btcAmt,
-		"uri":     "bitcoin:" + addr + "?amount=" + btcAmt,
+		"id":        inv.ID,
+		"tier":      req.Tier,
+		"usd":       amount,
+		"address":   addr,
+		"btc":       btcAmt,
+		"uri":       "bitcoin:" + addr + "?amount=" + btcAmt,
+		"expiresIn": left,
 	})
+}
+
+// how long an invoice stays open, and how far under the amount still
+// counts as paid, in percent
+const (
+	invoiceMinutes   = 60
+	paymentTolerance = 1.5
+)
+
+// an invoice whose address is not there yet is read again for this long.
+// the app gives up on the answer's first byte 10 s after it asked, and a
+// round trip over tor takes one or two of those
+var (
+	addrWait = 6 * time.Second
+	addrStep = 500 * time.Millisecond
+)
+
+// the address and amount of a new invoice, read again until addrWait is
+// over. a payment method that waits to be switched on is switched on once
+func waitForAddress(id string) (addr, amount string) {
+	end := time.Now().Add(addrWait)
+	activated := false
+	for {
+		pm, err := paymentDetails(id)
+		if err == nil && pm.Destination != "" {
+			return pm.Destination, pm.amount()
+		}
+		if err == nil && !pm.Activated && methodID.MatchString(pm.PaymentMethodID) && !activated {
+			activated = true
+			if _, err := btcpay("POST", "/api/v1/stores/"+storeID+"/invoices/"+id+
+				"/payment-methods/"+pm.PaymentMethodID+"/activate", nil); err != nil {
+				log.Printf("invoice create: activate failed: %v", err)
+			}
+			continue
+		}
+		if !time.Now().Add(addrStep).Before(end) {
+			return "", ""
+		}
+		time.Sleep(addrStep)
+	}
 }
 
 // what a btcpay invoice id looks like. the id goes into a url on btcpay's
 // api under our key, so it is matched against what it can be and not
 // against a list of what it must not contain.
 var invoiceID = regexp.MustCompile(`^[A-Za-z0-9]{8,64}$`)
+
+// a payment method id as btcpay names one ("BTC-CHAIN"), before it goes into a url
+var methodID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,32}$`)
 
 // paid means the money cannot be taken back. "Processing" is a transaction
 // no block holds yet, and a payer could replace it and keep the badge.
@@ -310,25 +373,36 @@ func handleReceipt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func paymentDetails(invoiceID string) (addr, amount string) {
+type paymentMethod struct {
+	PaymentMethodID string `json:"paymentMethodId"`
+	Activated       bool   `json:"activated"`
+	Destination     string `json:"destination"`
+	Due             string `json:"due"`
+	Amount          string `json:"amount"`
+}
+
+func (pm paymentMethod) amount() string {
+	if pm.Due != "" {
+		return pm.Due
+	}
+	return pm.Amount
+}
+
+// the invoice's on-chain payment method, the first one btcpay lists
+func paymentDetails(invoiceID string) (paymentMethod, error) {
 	resp, err := btcpay("GET",
 		"/api/v1/stores/"+storeID+"/invoices/"+invoiceID+"/payment-methods", nil)
 	if err != nil {
-		return "", ""
+		return paymentMethod{}, err
 	}
-	var pms []struct {
-		Destination string `json:"destination"`
-		Due         string `json:"due"`
-		Amount      string `json:"amount"`
+	var pms []paymentMethod
+	if err := json.Unmarshal(resp, &pms); err != nil {
+		return paymentMethod{}, err
 	}
-	if err := json.Unmarshal(resp, &pms); err != nil || len(pms) == 0 {
-		return "", ""
+	if len(pms) == 0 {
+		return paymentMethod{}, fmt.Errorf("no payment method")
 	}
-	amt := pms[0].Due
-	if amt == "" {
-		amt = pms[0].Amount
-	}
-	return pms[0].Destination, amt
+	return pms[0], nil
 }
 
 func btcpay(method, path string, body []byte) ([]byte, error) {
