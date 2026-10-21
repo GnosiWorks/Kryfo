@@ -33,6 +33,9 @@ const (
 	// one live subscription per socket, catch-up pages one after another
 	reqsPerSec, reqBurst = 2, 100
 	maxIDs, maxAddrs     = 20, 10
+	// ids asked for with their address: the app asks for wraps it was told
+	// of by id, a hundred at a time
+	maxAddrIDs = 100
 	// knocks the wraps of one connection may set off: a phone writes to
 	// one address at a time
 	knocksPerSec, knockBurst = 1, 20
@@ -358,14 +361,21 @@ func (l *limits) filter(ctx context.Context, f nostr.Filter) (bool, string) {
 	return false, ""
 }
 
-// by id alone (the liveness probe of older builds), or wraps to named
-// addresses
+// by id alone (the liveness probe of older builds), wraps to named
+// addresses, or wraps to named addresses by id
 func filterOK(f nostr.Filter) bool {
 	if f.Search != "" || len(f.Authors) > 0 {
 		return false
 	}
 	if len(f.IDs) > 0 {
-		if len(f.IDs) > maxIDs || len(f.Kinds) > 0 || len(f.Tags) > 0 {
+		most := maxIDs
+		if len(f.Kinds) > 0 || len(f.Tags) > 0 {
+			if !addrsOK(f) {
+				return false
+			}
+			most = maxAddrIDs
+		}
+		if len(f.IDs) > most {
 			return false
 		}
 		for _, id := range f.IDs {
@@ -375,6 +385,11 @@ func filterOK(f nostr.Filter) bool {
 		}
 		return true
 	}
+	return addrsOK(f)
+}
+
+// wraps to at most maxAddrs named addresses, and nothing else
+func addrsOK(f nostr.Filter) bool {
 	if len(f.Kinds) != 1 || f.Kinds[0] != wrapKind || len(f.Tags) != 1 {
 		return false
 	}

@@ -405,3 +405,51 @@ func TestYoungPagesAreNotCut(t *testing.T) {
 		t.Fatalf("%d of 3 connections open: a young page was cut", n)
 	}
 }
+
+// the app asks for wraps it was told of by id, with their kind and
+// address, a hundred at a time (engine relayIDsOnce). that shape is taken,
+// anything broader is not
+func TestWrapsByIDWithTheirAddress(t *testing.T) {
+	to := addr()
+	ids := make([]string, 0, maxAddrIDs)
+	for len(ids) < maxAddrIDs {
+		ids = append(ids, wrap(t, to, nil).ID)
+	}
+	ok := nostr.Filter{IDs: ids, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: len(ids)}
+	if !filterOK(ok) {
+		t.Fatal("the app's ask by id is refused")
+	}
+	for name, f := range map[string]nostr.Filter{
+		"too many ids":  {IDs: append(ids, ids[0]), Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}},
+		"no address":    {IDs: ids, Kinds: []int{wrapKind}},
+		"no kind":       {IDs: ids, Tags: nostr.TagMap{"p": {to}}},
+		"another kind":  {IDs: ids, Kinds: []int{1}, Tags: nostr.TagMap{"p": {to}}},
+		"another tag":   {IDs: ids, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"e": {to}}},
+		"two tags":      {IDs: ids, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}, "e": {to}}},
+		"ids alone, 21": {IDs: ids[:maxIDs+1]},
+		"an author":     {IDs: ids, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Authors: []string{to}},
+		"a bad id":      {IDs: []string{"x"}, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}},
+		"a bad address": {IDs: ids, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {"x"}}},
+	} {
+		if filterOK(f) {
+			t.Fatalf("%s: taken", name)
+		}
+	}
+
+	// through the relay: the asked ones that are there come, then the eose
+	db, _ := testStore(t)
+	url, _ := slowRelay(t, db, nil)
+	var stored []string
+	for i := 0; i < 3; i++ {
+		ev := wrap(t, to, nil)
+		if err := db.SaveEvent(context.Background(), &ev); err != nil {
+			t.Fatal(err)
+		}
+		stored = append(stored, ev.ID)
+	}
+	asked := append(append([]string{}, stored...), ids[:maxAddrIDs-3]...)
+	got, why := ask(t, connect(t, url), nostr.Filter{IDs: asked, Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: len(asked)})
+	if why != "" || len(got) != 3 {
+		t.Fatalf("%d of 3 wraps by id, closed %q", len(got), why)
+	}
+}
