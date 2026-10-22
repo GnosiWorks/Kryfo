@@ -9051,7 +9051,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bir yansı aynı dosyaları sunmalı. Kryfo her birini uygulamaya gömülü hash ile karşılaştırır.';
 
   @override
-  String get translateHostBad => 'https adresi kullan';
+  String get translateHostBad => 'https ya da .onion adresi kullan';
 
   @override
   String get translateHostReset => 'Varsayılanı kullan';

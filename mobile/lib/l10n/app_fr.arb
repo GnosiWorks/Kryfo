@@ -2382,7 +2382,7 @@
   "translateHost": "Télécharger depuis",
   "translateHostDefault": "Par défaut",
   "translateHostHint": "Un miroir doit fournir les mêmes fichiers. Kryfo vérifie chacun avec le hash intégré à l’app.",
-  "translateHostBad": "Utilisez une adresse https",
+  "translateHostBad": "Utilisez une adresse https ou .onion",
   "translateHostReset": "Revenir au réglage par défaut",
   "translatePrivacyTitle": "Ce qui reste privé",
   "translatePrivacyNote": "La traduction se fait sur ce téléphone. Aucun message n’est envoyé nulle part pour être traduit. Télécharger un pack indique à l’hébergeur de quel pack il s’agit. Il passe par Tor, l’hébergeur ne sait donc pas qui l’a demandé.",

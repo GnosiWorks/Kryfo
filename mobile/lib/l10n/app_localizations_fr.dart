@@ -9122,7 +9122,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un miroir doit fournir les mêmes fichiers. Kryfo vérifie chacun avec le hash intégré à l’app.';
 
   @override
-  String get translateHostBad => 'Utilisez une adresse https';
+  String get translateHostBad => 'Utilisez une adresse https ou .onion';
 
   @override
   String get translateHostReset => 'Revenir au réglage par défaut';

@@ -9021,7 +9021,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Mirror harus menyajikan file yang sama. Kryfo memeriksa setiap file dengan hash yang tertanam di aplikasi.';
 
   @override
-  String get translateHostBad => 'Gunakan alamat https';
+  String get translateHostBad => 'Gunakan alamat https atau .onion';
 
   @override
   String get translateHostReset => 'Pakai bawaan';

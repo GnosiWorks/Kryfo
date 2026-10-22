@@ -9018,7 +9018,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.';
 
   @override
-  String get translateHostBad => 'Use an https address';
+  String get translateHostBad => 'Use an https or .onion address';
 
   @override
   String get translateHostReset => 'Use the default';

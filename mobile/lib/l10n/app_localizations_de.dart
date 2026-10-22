@@ -9126,7 +9126,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ein Spiegel muss dieselben Dateien liefern. Kryfo prüft jede gegen den Hash, der in der App steckt.';
 
   @override
-  String get translateHostBad => 'Nutze eine https-Adresse';
+  String get translateHostBad => 'Nutze eine https- oder .onion-Adresse';
 
   @override
   String get translateHostReset => 'Standard verwenden';

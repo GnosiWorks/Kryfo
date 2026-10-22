@@ -142,7 +142,8 @@ void main() {
     expect(find.text(l10n.translatePackTitle(l10n.translateLangZh)), findsOne);
     final download = l10n.translateDownload(packSize(zhGz));
     expect(find.text(download), findsOneWidget);
-    expect(packSize(zhGz), l10n.transportMb('75'));
+    // padded to its size class: 96 MiB
+    expect(packSize(zhGz), l10n.transportMb('101'));
     expect(f.backend.started, isEmpty);
 
     await t.tap(find.text(download));

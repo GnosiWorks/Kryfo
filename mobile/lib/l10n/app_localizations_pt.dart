@@ -9095,7 +9095,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Um espelho precisa servir os mesmos arquivos. O Kryfo confere cada um com o hash embutido no app.';
 
   @override
-  String get translateHostBad => 'Use um endereço https';
+  String get translateHostBad => 'Use um endereço https ou .onion';
 
   @override
   String get translateHostReset => 'Usar o padrão';

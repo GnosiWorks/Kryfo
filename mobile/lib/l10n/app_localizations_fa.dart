@@ -9041,7 +9041,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'آینه باید همان فایل‌ها را ارائه کند. Kryfo هر فایل را با هشِ تعبیه‌شده در برنامه می‌سنجد.';
 
   @override
-  String get translateHostBad => 'از نشانی https استفاده کنید';
+  String get translateHostBad => 'از نشانی https یا ‎.onion استفاده کنید';
 
   @override
   String get translateHostReset => 'استفاده از پیش‌فرض';

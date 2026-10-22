@@ -7,7 +7,7 @@ import 'dart:convert';
 
 class LangBundle {
   final String lang;
-  // bytes on the wire, and once unpacked
+  // bytes on the wire, padding included, and once unpacked
   final int gz;
   final int disk;
   // its directions, "zh-en", and the folder each one unpacks into
@@ -90,14 +90,15 @@ class TranslateCatalog {
   }
 }
 
-// the pinned manifest's numbers: chinese both ways, base-memory models
+// the pinned manifest's numbers: chinese both ways, base-memory models,
+// from our mirror, the download padded to its size class
 const builtInCatalog = TranslateCatalog(
   base:
-      'https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/',
+      'http://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion/models/',
   langs: [
     LangBundle(
       lang: 'zh',
-      gz: 75033319,
+      gz: 100663296,
       disk: 104470603,
       pairs: ['zh-en', 'en-zh'],
       dirs: ['zhen-base-memory', 'enzh-base-memory'],

@@ -14571,10 +14571,10 @@ abstract class AppLocalizations {
   /// **'A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.'**
   String get translateHostHint;
 
-  /// under the address field when it is not an https address
+  /// under the address field when it is neither an https nor an onion address
   ///
   /// In en, this message translates to:
-  /// **'Use an https address'**
+  /// **'Use an https or .onion address'**
   String get translateHostBad;
 
   /// back to the host built into the app

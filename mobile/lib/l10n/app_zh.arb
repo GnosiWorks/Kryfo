@@ -2382,7 +2382,7 @@
   "translateHost": "下载来源",
   "translateHostDefault": "默认",
   "translateHostHint": "镜像必须提供相同的文件。Kryfo 会用内置在应用里的哈希校验每个文件。",
-  "translateHostBad": "请使用 https 地址",
+  "translateHostBad": "请使用 https 或 .onion 地址",
   "translateHostReset": "使用默认",
   "translatePrivacyTitle": "哪些内容保持私密",
   "translatePrivacyNote": "翻译在这部手机上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。",

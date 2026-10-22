@@ -26,10 +26,13 @@ func TestTranslateCatalog(t *testing.T) {
 	if err := json.Unmarshal([]byte(translateCatalog()), &c); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(c.Base, "https://") || len(c.Langs) != 1 || c.Langs[0].Lang != "zh" {
+	// our mirror, over its onion
+	if !strings.HasPrefix(c.Base, "http://") || !strings.HasSuffix(c.Base, ".onion/models/") ||
+		len(c.Langs) != 1 || c.Langs[0].Lang != "zh" {
 		t.Fatalf("%+v", c)
 	}
-	if b := c.Langs[0]; len(b.Pairs) != 2 || b.Gz <= 0 || b.Disk <= b.Gz {
+	// the size on the wire is the padded one
+	if b := c.Langs[0]; len(b.Pairs) != 2 || b.Gz != 96<<20 || b.Disk <= b.Gz {
 		t.Fatalf("%+v", b)
 	}
 }

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a desk tool for the translation prototype: list the pinned models, fetch
-// a language's bundle into a directory (directly, for development; the app
-// fetches over tor through the engine), and print a pair's bergamot config.
+// a desk tool for offline translation: list the pinned models, fetch a
+// language's bundle into a directory (directly from the source, for
+// development; the app fetches from the mirror over tor through the
+// engine), fill a directory with what the mirror serves, and print a
+// pair's bergamot config.
 //
 //	ktmodels list
 //	ktmodels fetch <lang> <dir>
+//	ktmodels mirror <dir>
 //	ktmodels config <from> <to> <dir>
 package main
 
@@ -32,7 +35,7 @@ func run(args []string) error {
 		return err
 	}
 	if len(args) == 0 {
-		return fmt.Errorf("usage: ktmodels list | fetch <lang> <dir> | config <from> <to> <dir>")
+		return fmt.Errorf("usage: ktmodels list | fetch <lang> <dir> | mirror <dir> | config <from> <to> <dir>")
 	}
 	switch {
 	case args[0] == "list":
@@ -50,7 +53,7 @@ func run(args []string) error {
 		for _, p := range pairs {
 			dir := filepath.Join(args[2], p.Dir())
 			t0 := time.Now()
-			err := translate.FetchPair(context.Background(), get, m, p, dir, func(d, n int64) {
+			err := translate.FetchPair(context.Background(), get, m.FromSource(), p, dir, func(d, n int64) {
 				fmt.Fprintf(os.Stderr, "\r%s %5.1f%%", p.Dir(), 100*float64(d)/float64(n))
 			})
 			fmt.Fprintln(os.Stderr)
@@ -60,6 +63,11 @@ func run(args []string) error {
 			fmt.Printf("%s in %s (%.1fs)\n", p.Dir(), dir, time.Since(t0).Seconds())
 		}
 		return nil
+	case args[0] == "mirror" && len(args) == 2:
+		get := translate.HTTPGetter(&http.Client{Timeout: 60 * time.Second})
+		return translate.FillMirror(context.Background(), get, m, args[1], func(s string) {
+			fmt.Fprintln(os.Stderr, "fetching", s)
+		})
 	case args[0] == "config" && len(args) == 4:
 		p, ok := m.Pair(args[1], args[2])
 		if !ok {

@@ -24,7 +24,7 @@ type fixture struct {
 	m     *Manifest
 	p     Pair
 	raw   map[string][]byte // by name
-	gz    map[string][]byte // by path
+	gz    map[string][]byte // by path and by mirror name
 	mu    sync.Mutex
 	reqs  []*http.Request
 	serve func(w http.ResponseWriter, r *http.Request, body []byte)
@@ -46,8 +46,9 @@ func newFixture(t *testing.T) *fixture {
 		zw.Write(raw)
 		zw.Close()
 		p := "zh-en/run/exported/" + name + ".gz"
-		fx.raw[name], fx.gz[p] = raw, b.Bytes()
 		s1, s2 := sha256.Sum256(raw), sha256.Sum256(b.Bytes())
+		fx.raw[name], fx.gz[p] = raw, b.Bytes()
+		fx.gz[hexSum(s2[:])+".gz"] = b.Bytes()
 		return File{Kind: kind, Name: name, Path: p, Size: int64(n), SHA256: hexSum(s1[:]),
 			GzSize: int64(b.Len()), GzSHA256: hexSum(s2[:])}
 	}
@@ -72,7 +73,7 @@ func newFixture(t *testing.T) *fixture {
 	}))
 	t.Cleanup(srv.Close)
 	fx.srv = srv
-	fx.m = &Manifest{Version: 1, Base: srv.URL + "/m/", Pairs: []Pair{fx.p}}
+	fx.m = &Manifest{Version: 1, Source: "https://source.invalid/", Base: srv.URL + "/m/", Pairs: []Pair{fx.p}}
 	if err := fx.m.check(); err != nil {
 		t.Fatal(err)
 	}

@@ -2382,7 +2382,7 @@
   "translateHost": "Unduh dari",
   "translateHostDefault": "Bawaan",
   "translateHostHint": "Mirror harus menyajikan file yang sama. Kryfo memeriksa setiap file dengan hash yang tertanam di aplikasi.",
-  "translateHostBad": "Gunakan alamat https",
+  "translateHostBad": "Gunakan alamat https atau .onion",
   "translateHostReset": "Pakai bawaan",
   "translatePrivacyTitle": "Yang tetap privat",
   "translatePrivacyNote": "Terjemahan terjadi di ponsel ini. Tidak ada pesan yang dikirim ke mana pun untuk diterjemahkan. Mengunduh paket memberi tahu server paket mana itu. Unduhannya lewat Tor, jadi server tidak tahu siapa yang meminta.",

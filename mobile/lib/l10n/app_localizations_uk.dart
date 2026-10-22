@@ -9181,7 +9181,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Дзеркало має віддавати ті самі файли. Kryfo звіряє кожен із хешем, вбудованим у застосунок.';
 
   @override
-  String get translateHostBad => 'Потрібна адреса https';
+  String get translateHostBad => 'Потрібна адреса https або .onion';
 
   @override
   String get translateHostReset => 'Повернути типове';

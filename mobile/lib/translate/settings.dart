@@ -65,13 +65,16 @@ class TranslateSettings {
   }
 }
 
-// a mirror has to be https, a host and a path, nothing else: what the
-// engine's manifest takes. '' is the default host
+// a mirror has to be https, or http to an onion, a host and a path,
+// nothing else: what the engine's manifest takes. '' is the default host
+final _onion = RegExp(r'^[a-z2-7]{56}\.onion$');
+
 bool hostOk(String s) {
   if (s.isEmpty) return true;
   final u = Uri.tryParse(s);
   return u != null &&
-      u.scheme == 'https' &&
+      (u.scheme == 'https' ||
+          (u.scheme == 'http' && _onion.hasMatch(u.host))) &&
       u.host.isNotEmpty &&
       u.userInfo.isEmpty &&
       !u.hasQuery &&

@@ -2382,7 +2382,7 @@
   "translateHost": "İndirme kaynağı",
   "translateHostDefault": "Varsayılan",
   "translateHostHint": "Bir yansı aynı dosyaları sunmalı. Kryfo her birini uygulamaya gömülü hash ile karşılaştırır.",
-  "translateHostBad": "https adresi kullan",
+  "translateHostBad": "https ya da .onion adresi kullan",
   "translateHostReset": "Varsayılanı kullan",
   "translatePrivacyTitle": "Gizli kalanlar",
   "translatePrivacyNote": "Çeviri bu telefonda yapılır. Hiçbir mesaj çevrilmek için bir yere gönderilmez. Bir paketi indirmek sunucuya hangi paket olduğunu söyler. İndirme Tor üzerinden yapılır, bu yüzden sunucu kimin istediğini bilmez.",

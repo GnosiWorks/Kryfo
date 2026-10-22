@@ -9014,7 +9014,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Máy chủ gương phải cung cấp đúng các tệp đó. Kryfo kiểm tra từng tệp với mã băm có sẵn trong ứng dụng.';
 
   @override
-  String get translateHostBad => 'Hãy dùng địa chỉ https';
+  String get translateHostBad => 'Hãy dùng địa chỉ https hoặc .onion';
 
   @override
   String get translateHostReset => 'Dùng mặc định';

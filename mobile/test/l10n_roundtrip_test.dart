@@ -3776,7 +3776,7 @@ void main() {
       l.translateHostHint,
       "A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.",
     );
-    expect(l.translateHostBad, "Use an https address");
+    expect(l.translateHostBad, "Use an https or .onion address");
     expect(l.translateHostReset, "Use the default");
     expect(l.translatePrivacyTitle, "What stays private");
     expect(

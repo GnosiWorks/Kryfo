@@ -2382,7 +2382,7 @@
   "translateHost": "Tải từ",
   "translateHostDefault": "Mặc định",
   "translateHostHint": "Máy chủ gương phải cung cấp đúng các tệp đó. Kryfo kiểm tra từng tệp với mã băm có sẵn trong ứng dụng.",
-  "translateHostBad": "Hãy dùng địa chỉ https",
+  "translateHostBad": "Hãy dùng địa chỉ https hoặc .onion",
   "translateHostReset": "Dùng mặc định",
   "translatePrivacyTitle": "Những gì được giữ riêng tư",
   "translatePrivacyNote": "Việc dịch diễn ra trên điện thoại này. Không tin nhắn nào được gửi đi đâu để dịch. Tải một gói sẽ cho máy chủ biết đó là gói nào. Gói được tải qua Tor nên máy chủ không biết ai đã yêu cầu.",

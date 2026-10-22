@@ -2382,7 +2382,7 @@
   "translateHost": "下載來源",
   "translateHostDefault": "預設",
   "translateHostHint": "鏡像必須提供相同的檔案。Kryfo 會用內建在應用程式裡的雜湊值檢查每個檔案。",
-  "translateHostBad": "請使用 https 位址",
+  "translateHostBad": "請使用 https 或 .onion 位址",
   "translateHostReset": "使用預設",
   "translatePrivacyTitle": "哪些內容保持私密",
   "translatePrivacyNote": "翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。",

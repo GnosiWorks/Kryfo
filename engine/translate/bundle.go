@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,12 +21,12 @@ func (m *Manifest) WithBase(base string) (*Manifest, error) {
 	if !strings.HasSuffix(base, "/") {
 		base += "/"
 	}
-	c := *m
-	c.Base = base
-	u, err := url.Parse(base)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+	if !baseOK(base) {
 		return nil, fmt.Errorf("%w: base %q", ErrManifest, base)
 	}
+	c := *m
+	c.Base = base
+	c.bySource = false
 	return &c, nil
 }
 
@@ -61,13 +60,18 @@ func (m *Manifest) BundleBytes(lang string) (gz, disk int64) {
 var ErrNoBundle = errors.New("no models for this language")
 
 // FetchBundle puts both directions of lang under dir, each pair in its own
-// directory (Pair.Dir), with one progress over the whole bundle.
+// directory (Pair.Dir), then fetches padding up to the bundle's size class
+// (WireBytes), with one progress over all of it.
 func FetchBundle(ctx context.Context, get Getter, m *Manifest, lang, dir string, prog Progress) error {
 	pairs := m.Bundle(lang)
 	if len(pairs) == 0 {
 		return ErrNoBundle
 	}
-	total, _ := m.BundleBytes(lang)
+	gz, _ := m.BundleBytes(lang)
+	total := gz
+	if !m.bySource {
+		total = PadTo(gz)
+	}
 	var done int64
 	for _, p := range pairs {
 		base := done
@@ -80,6 +84,13 @@ func FetchBundle(ctx context.Context, get Getter, m *Manifest, lang, dir string,
 			return err
 		}
 		done += p.GzBytes()
+	}
+	if total > gz {
+		fetchPad(ctx, get, m.Base+PadName, total-gz, func(n int64) {
+			if prog != nil {
+				prog(gz+n, total)
+			}
+		})
 	}
 	return nil
 }

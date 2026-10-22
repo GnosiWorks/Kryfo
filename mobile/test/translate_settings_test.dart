@@ -36,11 +36,16 @@ void main() {
     expect(back.host, s.host);
   });
 
-  test('a mirror has to be https and nothing more', () {
+  test('a mirror has to be https or an onion, and nothing more', () {
     expect(hostOk(''), isTrue);
     expect(hostOk('https://mirror.example/models/'), isTrue);
+    final onion = '${'a' * 56}.onion';
+    expect(hostOk('http://$onion/models/'), isTrue);
     for (final bad in [
       'http://mirror.example/',
+      'http://${'a' * 55}.onion/',
+      'http://$onion.example/',
+      'http://${'1' * 56}.onion/',
       'mirror.example',
       'https://user:pw@mirror.example/',
       'https://mirror.example/?a=b',
@@ -68,6 +73,8 @@ void main() {
     await appSchemaOn(db);
     final store = DbTranslateStore(() async => db);
     expect((await store.load()).autoDefault, isFalse);
+    // downloads wait for wi-fi until the person allows mobile data
+    expect((await store.load()).wifiOnly, isTrue);
     await store.save(const TranslateSettings(autoDefault: true, mine: ['de']));
     expect((await store.load()).autoDefault, isTrue);
     expect((await store.load()).mine, ['de']);

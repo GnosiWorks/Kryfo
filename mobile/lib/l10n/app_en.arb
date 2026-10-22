@@ -11383,9 +11383,9 @@
   "@translateHostHint": {
     "description": "under that row and in its sheet"
   },
-  "translateHostBad": "Use an https address",
+  "translateHostBad": "Use an https or .onion address",
   "@translateHostBad": {
-    "description": "under the address field when it is not an https address"
+    "description": "under the address field when it is neither an https nor an onion address"
   },
   "translateHostReset": "Use the default",
   "@translateHostReset": {

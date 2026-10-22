@@ -9102,7 +9102,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Un mirror deve fornire gli stessi file. Kryfo controlla ciascuno con l\'hash incluso nell\'app.';
 
   @override
-  String get translateHostBad => 'Usa un indirizzo https';
+  String get translateHostBad => 'Usa un indirizzo https o .onion';
 
   @override
   String get translateHostReset => 'Usa quello predefinito';

@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "base": "https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/",
+  "base": "http://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion/models/",
+  "source": "https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/models/",
   "pairs": [
     {
       "from": "zh",

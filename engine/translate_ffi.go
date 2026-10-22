@@ -74,7 +74,7 @@ type bundleInfo struct {
 }
 
 // what can be downloaded: the manifest's host, and each language's bundle
-// with its size on the wire and on disk
+// with its size on the wire, padding included, and on disk
 //
 //export HaloTranslateCatalog
 func HaloTranslateCatalog() *C.char { return C.CString(translateCatalog()) }
@@ -89,8 +89,8 @@ func translateCatalog() string {
 		Langs []bundleInfo `json:"langs"`
 	}{Base: m.Base}
 	for _, l := range m.Langs() {
-		gz, disk := m.BundleBytes(l)
-		b := bundleInfo{Lang: l, Gz: gz, Disk: disk}
+		_, disk := m.BundleBytes(l)
+		b := bundleInfo{Lang: l, Gz: m.WireBytes(l), Disk: disk}
 		for _, p := range m.Bundle(l) {
 			b.Pairs = append(b.Pairs, p.From+"-"+p.To)
 			b.Dirs = append(b.Dirs, p.Dir())

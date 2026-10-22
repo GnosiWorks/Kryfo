@@ -9191,7 +9191,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Зеркало должно отдавать те же файлы. Kryfo сверяет каждый с хешем, встроенным в приложение.';
 
   @override
-  String get translateHostBad => 'Нужен адрес https';
+  String get translateHostBad => 'Нужен адрес https или .onion';
 
   @override
   String get translateHostReset => 'Вернуть по умолчанию';

@@ -32,7 +32,8 @@ const (
 const maxFile = 256 << 20
 
 // File is one file of a pair. Path is where the gzip of it lives under the
-// manifest's base; Name is what it is called on disk once unpacked.
+// manifest's source; the mirror names it by its hash (MirrorName). Name is
+// what it is called on disk once unpacked.
 type File struct {
 	Kind     string `json:"kind"`
 	Name     string `json:"name"`
@@ -51,10 +52,16 @@ type Pair struct {
 	Files []File `json:"files"`
 }
 
+// Base is the mirror the app fetches from, every file named by its hash.
+// Source is where the files were first published, which the mirror is
+// filled from (cmd/ktmodels mirror); the app never asks it.
 type Manifest struct {
 	Version int    `json:"version"`
 	Base    string `json:"base"`
+	Source  string `json:"source"`
 	Pairs   []Pair `json:"pairs"`
+
+	bySource bool
 }
 
 var ErrManifest = errors.New("bad manifest")
@@ -64,6 +71,24 @@ var pinnedJSON []byte
 
 // Pinned is the manifest built into the app.
 func Pinned() (*Manifest, error) { return Parse(pinnedJSON) }
+
+var onionRe = regexp.MustCompile(`^[a-z2-7]{56}\.onion$`)
+
+// a host files may come from: https, or plain http to an onion, which tor
+// already encrypts end to end and authenticates by its name
+func baseOK(base string) bool {
+	u, err := url.Parse(base)
+	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" {
+		return false
+	}
+	switch u.Scheme {
+	case "https":
+		return true
+	case "http":
+		return onionRe.MatchString(u.Host)
+	}
+	return false
+}
 
 var (
 	langRe = regexp.MustCompile(`^[a-z]{2,3}(_[a-z]{4})?$`)
@@ -93,9 +118,11 @@ func (m *Manifest) check() error {
 	if m.Version != 1 {
 		return fmt.Errorf("version %d", m.Version)
 	}
-	u, err := url.Parse(m.Base)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.RawQuery != "" || u.Fragment != "" || !strings.HasSuffix(u.Path, "/") {
+	if !baseOK(m.Base) || !strings.HasSuffix(m.Base, "/") {
 		return fmt.Errorf("base %q", m.Base)
+	}
+	if u, err := url.Parse(m.Source); err != nil || u.Scheme != "https" || !baseOK(m.Source) || !strings.HasSuffix(u.Path, "/") {
+		return fmt.Errorf("source %q", m.Source)
 	}
 	if len(m.Pairs) == 0 {
 		return errors.New("no pairs")
@@ -196,8 +223,25 @@ func (m *Manifest) Bundle(lang string) []Pair {
 	return out
 }
 
-// URL is where a file's gzip lives.
-func (m *Manifest) URL(f File) string { return m.Base + f.Path }
+// MirrorName is what the mirror calls a file's gzip: its hash, so the
+// path says nothing about the language beyond the bytes it names.
+func MirrorName(f File) string { return f.GzSHA256 + ".gz" }
+
+// URL is where a file's gzip is fetched from.
+func (m *Manifest) URL(f File) string {
+	if m.bySource {
+		return m.Source + f.Path
+	}
+	return m.Base + MirrorName(f)
+}
+
+// FromSource is the manifest fetching from where the files were published,
+// by their own paths, for filling a mirror. no padding is fetched.
+func (m *Manifest) FromSource() *Manifest {
+	c := *m
+	c.bySource = true
+	return &c
+}
 
 // GzBytes is what fetching the pair costs on the wire.
 func (p Pair) GzBytes() int64 {

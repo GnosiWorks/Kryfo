@@ -9156,7 +9156,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'يجب أن تقدّم المرآة الملفات نفسها. يتحقق Kryfo من كل ملف مقابل البصمة المضمّنة في التطبيق.';
 
   @override
-  String get translateHostBad => 'استخدم عنوان https';
+  String get translateHostBad => 'استخدم عنوان https أو ‎.onion';
 
   @override
   String get translateHostReset => 'استخدام الافتراضي';

@@ -121,7 +121,13 @@ void main() {
       }
     }
     final zh = _cat.bundle('zh')!;
-    expect(zh.gz, gz);
+    // the engine's size classes (engine/translate/pad.go)
+    const classes = [48 << 20, 96 << 20];
+    final wire = classes.firstWhere(
+      (c) => gz <= c,
+      orElse: () => (gz + classes.last - 1) ~/ classes.last * classes.last,
+    );
+    expect(zh.gz, wire);
     expect(zh.disk, disk);
     expect(zh.pairs, pairs);
     expect(zh.dirs, dirs);

@@ -2382,7 +2382,7 @@
   "translateHost": "Laden von",
   "translateHostDefault": "Standard",
   "translateHostHint": "Ein Spiegel muss dieselben Dateien liefern. Kryfo prüft jede gegen den Hash, der in der App steckt.",
-  "translateHostBad": "Nutze eine https-Adresse",
+  "translateHostBad": "Nutze eine https- oder .onion-Adresse",
   "translateHostReset": "Standard verwenden",
   "translatePrivacyTitle": "Was privat bleibt",
   "translatePrivacyNote": "Übersetzt wird auf diesem Handy. Keine Nachricht wird zum Übersetzen irgendwohin geschickt. Wer ein Paket lädt, verrät dem Server, welches Paket es ist. Es kommt über Tor, also erfährt der Server nicht, wer gefragt hat.",
