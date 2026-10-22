@@ -55,7 +55,17 @@ List<int> tkhd(int version) {
 
 Uint8List clip(int version) {
   final t = box('tkhd', tkhd(version));
-  final trak = box('trak', t);
+  // a video track: the cleaner drops any track it cannot name
+  final hdlr = box('hdlr', [
+    0,
+    0,
+    0,
+    0,
+    ...u32(0),
+    ...'vide'.codeUnits,
+    ...List.filled(13, 0),
+  ]);
+  final trak = box('trak', [...t, ...box('mdia', hdlr)]);
   final moov = box('moov', trak);
   return Uint8List.fromList([
     ...box('ftyp', 'isom'.codeUnits + [0, 0, 2, 0]),

@@ -1,10 +1,14 @@
 // the mp4 stripper renames boxes to 'free' and zeroes them in place, so the
-// length and chunk offsets hold. the walker only reads box headers, so a
-// synthetic file is enough.
+// length and chunk offsets hold. tracks other than picture, sound and
+// subtitles go whole, with their samples, and so does every mdat byte no
+// kept track uses.
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/meta/byte_source.dart';
+import 'package:kryfo/meta/meta_reader.dart';
+import 'package:kryfo/meta/mp4_tracks.dart';
 import 'package:kryfo/mp4_strip.dart';
 
 Uint8List box(String type, List<int> payload) {
@@ -16,6 +20,8 @@ Uint8List box(String type, List<int> payload) {
   return b.toBytes();
 }
 
+List<int> u32(int v) => [v >> 24, (v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+
 // version + flags, then creation and modification stamps
 List<int> full(int version, List<int> stamps, [List<int> rest = const []]) => [
   version,
@@ -26,27 +32,138 @@ List<int> full(int version, List<int> stamps, [List<int> rest = const []]) => [
   ...rest,
 ];
 
-Uint8List sample() {
-  final b = BytesBuilder();
-  b.add(box('ftyp', 'isom'.codeUnits + [0, 0, 2, 0] + 'isom'.codeUnits));
-  final mvhd = box(
-    'mvhd',
-    full(0, [1, 2, 3, 4, 5, 6, 7, 8], List.filled(88, 9)),
+List<int> fullBox(String type, List<int> body) =>
+    box(type, [0, 0, 0, 0, ...body]);
+
+// a track with one chunk per entry of [chunks]: (offset, sample sizes).
+// [fixed] gives every sample one size, as quicktime sound does
+List<int> trak(
+  int id,
+  String handler,
+  String format,
+  List<(int, List<int>)> chunks, {
+  int fixed = 0,
+  List<int> tref = const [],
+}) {
+  final sizes = [for (final c in chunks) ...c.$2];
+  final tkhd = box(
+    'tkhd',
+    full(0, List.filled(8, 0), [...u32(id), ...List.filled(72, 0)]),
   );
-  final xyz = box('©xyz', [0, 11, 0x15, 0xc7] + '+48.13+011.5/'.codeUnits);
-  final udta = box('udta', xyz);
-  final tkhd = box('tkhd', full(1, List.filled(16, 0xab), List.filled(76, 1)));
+  final stsz = fixed > 0
+      ? fullBox('stsz', [...u32(fixed), ...u32(sizes.length)])
+      : fullBox('stsz', [
+          ...u32(0),
+          ...u32(sizes.length),
+          for (final s in sizes) ...u32(s),
+        ]);
+  final stsc = fullBox('stsc', [
+    ...u32(chunks.length),
+    for (var k = 0; k < chunks.length; k++) ...[
+      ...u32(k + 1),
+      ...u32(chunks[k].$2.length),
+      ...u32(1),
+    ],
+  ]);
+  final stco = fullBox('stco', [
+    ...u32(chunks.length),
+    for (final c in chunks) ...u32(c.$1),
+  ]);
+  final stbl = box('stbl', [
+    ...fullBox('stsd', [...u32(1), ...box(format, List.filled(8, 0))]),
+    ...stsz,
+    ...stsc,
+    ...stco,
+  ]);
+  final hdlr = fullBox('hdlr', [
+    ...u32(0),
+    ...handler.codeUnits,
+    ...List.filled(13, 0),
+  ]);
   final mdhd = box(
     'mdhd',
     full(0, [0, 0, 0, 0, 0, 0, 0, 0], List.filled(12, 2)),
   );
-  final mdia = box('mdia', mdhd);
-  final trak = box('trak', Uint8List.fromList(tkhd + mdia));
-  final meta = box('meta', full(0, [], 'ilst-goes-here'.codeUnits));
-  final uuid = box('uuid', List.filled(16, 0x77) + 'xmp'.codeUnits);
-  b.add(box('moov', Uint8List.fromList(mvhd + udta + trak + meta + uuid)));
-  b.add(box('mdat', 'the actual picture bytes'.codeUnits));
-  return b.toBytes();
+  return box('trak', [
+    ...tkhd,
+    if (tref.isNotEmpty)
+      ...box('tref', box('tmcd', [for (final i in tref) ...u32(i)])),
+    ...box('mdia', [...mdhd, ...hdlr, ...box('minf', stbl)]),
+  ]);
+}
+
+const picture = 'the actual picture bytes';
+const gps = 'GPS5 forty-eight north eleven east';
+const tc = 'TIME';
+const sound = 'sound!';
+const stray = 'old bytes nothing points at';
+
+class Clip {
+  final Uint8List bytes;
+  final int pictureAt;
+  final int gpsAt;
+  final int strayAt;
+  Clip(this.bytes, this.pictureAt, this.gpsAt, this.strayAt);
+}
+
+// mdat: picture, gps, timecode, sound, then bytes no track names
+Clip sample({bool gpsTrack = true, bool fixedSound = false}) {
+  List<int> build(int at) {
+    final p = at, g = p + picture.length, t = g + gps.length;
+    final s = t + tc.length;
+    final mvhd = box(
+      'mvhd',
+      full(0, [1, 2, 3, 4, 5, 6, 7, 8], List.filled(88, 9)),
+    );
+    final xyz = box('©xyz', [0, 11, 0x15, 0xc7] + '+48.13+011.5/'.codeUnits);
+    final moov = box('moov', [
+      ...mvhd,
+      ...box('udta', xyz),
+      ...trak(
+        1,
+        'vide',
+        'avc1',
+        [
+          (p, [10, picture.length - 10]),
+        ],
+        tref: [3],
+      ),
+      if (gpsTrack)
+        ...trak(2, 'meta', 'gpmd', [
+          (g, [gps.length]),
+        ]),
+      ...trak(3, 'tmcd', 'tmcd', [
+        (t, [tc.length]),
+      ]),
+      ...trak(4, 'soun', fixedSound ? 'sowt' : 'mp4a', [
+        (s, fixedSound ? [1, 1] : [sound.length]),
+      ], fixed: fixedSound ? 1 : 0),
+      ...box('meta', [
+        0,
+        0,
+        0,
+        0,
+        ...fullBox('hdlr', [
+          ...u32(0),
+          ...'mdir'.codeUnits,
+          ...List.filled(12, 0),
+        ]),
+        ...box('ilst', []),
+      ]),
+      ...box('uuid', List.filled(16, 0x77) + 'xmp'.codeUnits),
+    ]);
+    return [
+      ...box('ftyp', 'isom'.codeUnits + [0, 0, 2, 0] + 'isom'.codeUnits),
+      ...moov,
+      ...box('mdat', (picture + gps + tc + sound + stray).codeUnits),
+    ];
+  }
+
+  final probe = build(0);
+  final mdatBody = (picture + gps + tc + sound + stray).length;
+  final at = probe.length - mdatBody;
+  final b = Uint8List.fromList(build(at));
+  return Clip(b, at, at + picture.length, at + mdatBody - stray.length);
 }
 
 Future<File> write(Uint8List bytes) async {
@@ -56,29 +173,157 @@ Future<File> write(Uint8List bytes) async {
   return f;
 }
 
+String text(Uint8List b) => String.fromCharCodes(b);
+
 void main() {
   test('counts what the sample carries', () async {
-    final f = await write(sample());
-    // udta, meta, uuid, and non-zero stamps in mvhd and tkhd; mdhd is zero
-    expect(await mp4MetadataCount(f.path), 5);
+    final f = await write(sample().bytes);
+    // udta, meta, uuid, non-zero stamps in mvhd, the gps and timecode
+    // tracks, and two stretches of mdat no kept track uses: their samples
+    // and the old bytes at the end
+    expect(await mp4MetadataCount(f.path), 8);
   });
 
-  test('strips in place and keeps mdat', () async {
+  test('strips in place and keeps the picture and sound', () async {
     final src = sample();
-    final f = await write(src);
+    final f = await write(src.bytes);
     expect(await stripMp4Metadata(f.path), true);
     final out = await f.readAsBytes();
-    expect(out.length, src.length);
+    expect(out.length, src.bytes.length);
     expect(await mp4MetadataCount(f.path), 0);
-    final s = String.fromCharCodes(out);
+    final s = text(out);
     expect(s.contains('+48.13'), false);
     expect(s.contains('ilst'), false);
     expect(s.contains('xmp'), false);
-    expect(s.contains('the actual picture bytes'), true);
     expect(s.contains('udta'), false);
     expect(s.contains('uuid'), false);
-    // the renamed boxes read as free where they stood
-    expect('free'.allMatches(s).length, 3);
+    // the picture and sound samples, byte for byte where they stood
+    expect(
+      text(out.sublist(src.pictureAt, src.pictureAt + picture.length)),
+      picture,
+    );
+    expect(s.contains(sound), true);
+  });
+
+  test('a gps track goes with its samples', () async {
+    final src = sample();
+    expect(text(src.bytes).contains(gps), true);
+    final f = await write(src.bytes);
+    expect(await stripMp4Metadata(f.path), true);
+    final out = await f.readAsBytes();
+    expect(
+      out.sublist(src.gpsAt, src.gpsAt + gps.length).every((b) => b == 0),
+      true,
+    );
+    expect(text(out).contains('gpmd'), false);
+    expect(text(out).contains('GPS5'), false);
+    final lay = readMp4Layout(MemorySource(out));
+    expect(lay.tracks.map((t) => t.handler), ['vide', 'soun']);
+  });
+
+  test('timecode goes and the reference to it with it', () async {
+    final f = await write(sample().bytes);
+    await stripMp4Metadata(f.path);
+    final out = await f.readAsBytes();
+    expect(text(out).contains(tc), false);
+    expect(text(out).contains('tref'), true);
+    expect(text(out).contains('tmcd'), false);
+  });
+
+  test('mdat bytes no kept track uses are zeroed', () async {
+    final src = sample(gpsTrack: false);
+    final f = await write(src.bytes);
+    expect(await stripMp4Metadata(f.path), true);
+    final out = await f.readAsBytes();
+    expect(
+      out.sublist(src.strayAt, src.strayAt + stray.length).every((b) => b == 0),
+      true,
+    );
+  });
+
+  test('quicktime sound counted in frames keeps its whole chunk', () async {
+    // two samples of size 1 stand for a chunk the full sound fills
+    final src = sample(fixedSound: true);
+    final f = await write(src.bytes);
+    expect(await stripMp4Metadata(f.path), true);
+    final out = text(await f.readAsBytes());
+    expect(out.contains(sound + stray), true);
+  });
+
+  test('the reader finds the gps track and calls the copy clean', () async {
+    final src = sample();
+    final before = readMeta(MemorySource(src.bytes));
+    expect(before.why, null);
+    expect(before.extraTracks, 2);
+    expect(before.leftoverBytes, greaterThan(0));
+    final f = await write(src.bytes);
+    await stripMp4Metadata(f.path);
+    final after = readMeta(MemorySource(await f.readAsBytes()));
+    expect(after.status, MetaStatus.nothing);
+  });
+
+  test('a track fragment of a dropped track goes too', () async {
+    // a fragmented file: moov holds no samples, each moof names its track
+    List<int> traf(int id, int dataAt, int len) => box('traf', [
+      // default-base-is-moof
+      ...box('tfhd', [0, 2, 0, 0, ...u32(id)]),
+      ...box('trun', [0, 0, 2, 1, ...u32(1), ...u32(dataAt), ...u32(len)]),
+    ]);
+    List<int> emptyTrak(int id, String h, String f) => trak(id, h, f, const []);
+    List<int> build(int moofAt) {
+      final mvex = box('mvex', [
+        ...fullBox('trex', [
+          ...u32(1),
+          ...u32(1),
+          ...u32(0),
+          ...u32(0),
+          ...u32(0),
+        ]),
+        ...fullBox('trex', [
+          ...u32(2),
+          ...u32(1),
+          ...u32(0),
+          ...u32(0),
+          ...u32(0),
+        ]),
+      ]);
+      final moov = box('moov', [
+        ...box('mvhd', full(0, List.filled(8, 0), List.filled(88, 0))),
+        ...emptyTrak(1, 'vide', 'avc1'),
+        ...emptyTrak(2, 'meta', 'gpmd'),
+        ...mvex,
+      ]);
+      final head = [
+        ...box('ftyp', 'iso6'.codeUnits + [0, 0, 2, 0] + 'iso6'.codeUnits),
+        ...moov,
+      ];
+      // data offsets count from the start of the moof
+      List<int> moof(int dataStart) => box('moof', [
+        ...fullBox('mfhd', u32(1)),
+        ...traf(1, dataStart, picture.length),
+        ...traf(2, dataStart + picture.length, gps.length),
+      ]);
+      final probe = moof(0);
+      final dataStart = probe.length + 8;
+      return [
+        ...head,
+        ...moof(dataStart),
+        ...box('mdat', (picture + gps).codeUnits),
+      ];
+    }
+
+    final b = Uint8List.fromList(build(0));
+    final before = readMeta(MemorySource(b));
+    expect(before.extraTracks, 1);
+    final f = await write(b);
+    expect(await stripMp4Metadata(f.path), true);
+    final out = await f.readAsBytes();
+    expect(text(out).contains(picture), true);
+    expect(text(out).contains(gps), false);
+    expect(text(out).contains('gpmd'), false);
+    expect(await mp4MetadataCount(f.path), 0);
+    final lay = readMp4Layout(MemorySource(out));
+    expect(lay.tracks.map((t) => t.handler), ['vide']);
   });
 
   test('a non-mp4 file comes back null', () async {
@@ -88,13 +333,24 @@ void main() {
   });
 
   test('a box past the end is null', () async {
-    final src = sample();
+    final src = sample().bytes;
     final f = await write(src.sublist(0, src.length - 10));
     expect(await stripMp4Metadata(f.path), null);
   });
 
+  test('a sample table past the file is null', () async {
+    final src = sample().bytes;
+    // the last chunk offset points far past the end
+    final b = Uint8List.fromList(src);
+    final i = text(b).lastIndexOf('stco') + 12;
+    b.setRange(i, i + 4, u32(0x7ffffff0));
+    final f = await write(b);
+    expect(await stripMp4Metadata(f.path), null);
+    expect(await mp4MetadataCount(f.path), null);
+  });
+
   test('stray bytes after the last box fail', () async {
-    final f = await write(Uint8List.fromList(sample() + [1, 2, 3]));
+    final f = await write(Uint8List.fromList(sample().bytes + [1, 2, 3]));
     expect(await mp4MetadataCount(f.path), null);
   });
 }
