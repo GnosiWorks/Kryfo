@@ -64,10 +64,14 @@ func TestCensorNeverInRelease(t *testing.T) {
 	if !strings.Contains(string(gradle), "censor-scan.sh") {
 		t.Error("gradle does not scan the engine it packs")
 	}
-	// level 2 is a test engine like level 1, so the scan finds it too
+	// levels 2 and 3 are test engines like level 1, so the scan finds them too
 	two, _ := os.ReadFile("censor_two.go")
 	if !strings.Contains(string(two), "//go:build torblocked && torblocked2") {
 		t.Error("censor_two.go builds without censor_on.go")
+	}
+	three, _ := os.ReadFile("censor_three.go")
+	if !strings.Contains(string(three), "//go:build torblocked && torblocked3") {
+		t.Error("censor_three.go builds without censor_on.go")
 	}
 }
 
@@ -77,8 +81,9 @@ func TestBuildShCensorGuard(t *testing.T) {
 		{"1", "", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
 		{"2", "", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
 		{"2", "0", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
-		{"3", "1", "HALO_TOR_BLOCKED is 1 or 2"},
-		{"yes", "1", "HALO_TOR_BLOCKED is 1 or 2"},
+		{"3", "", "HALO_TOR_BLOCKED needs HALO_TEST_ID=1"},
+		{"4", "1", "HALO_TOR_BLOCKED is 1, 2 or 3"},
+		{"yes", "1", "HALO_TOR_BLOCKED is 1, 2 or 3"},
 	} {
 		out, err := runBuildSh(t, c.level, c.testID)
 		if err == nil || !strings.Contains(out, c.want) || strings.Contains(out, "censor level") {
@@ -95,6 +100,7 @@ func TestBuildShCensorLevels(t *testing.T) {
 		"0": "",
 		"1": "censor level 1: -tags torblocked\n",
 		"2": "censor level 2: -tags torblocked,torblocked2\n",
+		"3": "censor level 3: -tags torblocked,torblocked3\n",
 	} {
 		out, err := runBuildSh(t, level, "1")
 		if err == nil || !strings.Contains(out, "android ndk not found") {
