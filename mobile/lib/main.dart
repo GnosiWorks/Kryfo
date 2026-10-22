@@ -158,6 +158,7 @@ part 'app/sending.dart';
 part 'app/shell.dart';
 part 'app/signal.dart';
 part 'app/state.dart';
+part 'app/state_arrivals.dart';
 
 void main() async {
   dlog('launch main');

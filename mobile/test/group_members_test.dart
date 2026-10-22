@@ -15,7 +15,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         unboundIdOf,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateArrivals;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart'
