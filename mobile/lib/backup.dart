@@ -31,7 +31,8 @@ import 'main.dart'
         sessionQuiet,
         engine,
         shredFile,
-        shredTree;
+        shredTree,
+        AppStateSession;
 import 'router.dart' show scrubHidden;
 import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;

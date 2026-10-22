@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import '../backup.dart' show sealRestoredHidden;
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, session, AppStateVault;
+import '../main.dart' show appState, session, AppStateVault, AppStateSession;
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';

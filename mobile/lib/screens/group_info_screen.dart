@@ -10,7 +10,8 @@ import '../main.dart'
         GroupFull,
         AppStateMessages,
         AppStatePrefs,
-        AppStateGroups;
+        AppStateGroups,
+        AppStateSession;
 import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';

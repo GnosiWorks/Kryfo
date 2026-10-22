@@ -21,7 +21,8 @@ import 'package:kryfo/main.dart'
         AppStateGroupLanes,
         AppStateRoute,
         AppStateVault,
-        AppStateGroups;
+        AppStateGroups,
+        AppStateSession;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart'

@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import '../store.dart';
 import '../theme.dart';
 import 'avatar_picker_screen.dart';
-import '../main.dart' show appState, session, showAddContact, AppStateProfile;
+import '../main.dart'
+    show appState, session, showAddContact, AppStateProfile, AppStateSession;
 import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';

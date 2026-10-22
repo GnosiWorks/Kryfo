@@ -14,7 +14,8 @@ import '../main.dart'
         session,
         AppStateRoute,
         AppStateDelivery,
-        AppStateBridges;
+        AppStateBridges,
+        AppStateSession;
 import '../miui_autostart.dart';
 import '../notifications.dart';
 import '../ready_edge.dart';

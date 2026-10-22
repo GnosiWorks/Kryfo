@@ -18,7 +18,8 @@ import '../main.dart'
         AppStateOutbox,
         AppStateMessages,
         AppStateScreen,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateSession;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';

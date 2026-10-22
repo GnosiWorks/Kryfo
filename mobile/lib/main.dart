@@ -171,6 +171,7 @@ part 'app/state_profile.dart';
 part 'app/state_route.dart';
 part 'app/state_screen.dart';
 part 'app/state_search.dart';
+part 'app/state_session.dart';
 part 'app/state_vault.dart';
 
 void main() async {

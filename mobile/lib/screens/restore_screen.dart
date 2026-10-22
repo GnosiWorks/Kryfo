@@ -16,7 +16,13 @@ import 'package:flutter/services.dart';
 
 import '../backup.dart';
 import '../main.dart'
-    show appState, navRevision, rootNavKey, shredFile, AppStateProfile;
+    show
+        appState,
+        navRevision,
+        rootNavKey,
+        shredFile,
+        AppStateProfile,
+        AppStateSession;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';

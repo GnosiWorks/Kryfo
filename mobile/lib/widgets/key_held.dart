@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../dlog.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState, session, AppStateOutbox;
+import '../main.dart' show appState, session, AppStateOutbox, AppStateSession;
 import '../screens/key_verification_screen.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';

@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState, AppStateProfile;
+import '../main.dart' show appState, AppStateProfile, AppStateSession;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';

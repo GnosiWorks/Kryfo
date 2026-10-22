@@ -30,7 +30,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateOutbox,
         AppStateRoute,
-        AppStateVault;
+        AppStateVault,
+        AppStateSession;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
