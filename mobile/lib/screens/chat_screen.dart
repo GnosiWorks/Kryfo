@@ -114,7 +114,8 @@ import '../main.dart'
         AppStateContacts,
         AppStateSession,
         AppStateDevchat,
-        AppStatePairing;
+        AppStatePairing,
+        AppStateRefresh;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';

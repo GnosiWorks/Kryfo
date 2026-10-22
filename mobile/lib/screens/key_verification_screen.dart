@@ -11,7 +11,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/not_them.dart';
 import '../devchat/dev_gate.dart' show isDevId;
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
-import '../main.dart' show session, appState, AppStateOutbox;
+import '../main.dart' show session, appState, AppStateOutbox, AppStateRefresh;
 import '../l10n/l10n.dart';
 
 // safety number for a contact: 60 digits from both X25519 public keys,

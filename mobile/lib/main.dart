@@ -173,6 +173,7 @@ part 'app/state_pairing.dart';
 part 'app/state_prefs.dart';
 part 'app/state_profile.dart';
 part 'app/state_receive.dart';
+part 'app/state_refresh.dart';
 part 'app/state_route.dart';
 part 'app/state_screen.dart';
 part 'app/state_search.dart';

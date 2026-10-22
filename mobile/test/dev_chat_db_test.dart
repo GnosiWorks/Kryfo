@@ -13,7 +13,12 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/dev_lane.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, useDatabasesForTest, AppStateDevchat;
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateDevchat,
+        AppStateRefresh;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'package:shared_preferences/shared_preferences.dart';

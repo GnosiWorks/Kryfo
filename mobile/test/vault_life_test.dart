@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         AppStateVault,
         AppStateContacts,
         AppStateSession,
-        AppStateHeal;
+        AppStateHeal,
+        AppStateRefresh;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';

@@ -12,7 +12,12 @@ import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
 import '../main.dart'
-    show appState, handleHaloUriAdded, AppStateProfile, AppStateSession;
+    show
+        appState,
+        handleHaloUriAdded,
+        AppStateProfile,
+        AppStateSession,
+        AppStateRefresh;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import '../theme.dart';
 import '../widgets/copied_mark.dart';

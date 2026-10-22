@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         kNameAsk,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';

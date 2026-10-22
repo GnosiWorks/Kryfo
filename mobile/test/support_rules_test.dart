@@ -27,7 +27,8 @@ import 'package:kryfo/main.dart'
         AppStateProfile,
         AppStateContacts,
         AppStateDevchat,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

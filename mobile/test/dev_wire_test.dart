@@ -32,7 +32,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateProfile,
         AppStateDevchat,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart' show Shelved;

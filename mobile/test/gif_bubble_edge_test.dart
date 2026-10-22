@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';

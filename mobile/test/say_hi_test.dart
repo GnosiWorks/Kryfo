@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         rootNavKey,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';

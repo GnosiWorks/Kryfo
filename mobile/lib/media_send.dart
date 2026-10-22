@@ -27,7 +27,8 @@ import 'main.dart'
         AppStateOutbox,
         AppStateRoute,
         AppStateProfile,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateRefresh;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';

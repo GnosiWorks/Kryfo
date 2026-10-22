@@ -24,7 +24,8 @@ import '../main.dart'
         releaseChat,
         session,
         AppStateContacts,
-        AppStateDevchat;
+        AppStateDevchat,
+        AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
