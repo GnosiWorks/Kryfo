@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/cretz/bine/process"
+	"github.com/halo/engine/torexe"
 	"golang.org/x/sys/windows"
 )
 
@@ -32,25 +33,25 @@ func (libtorCreator) New(ctx context.Context, args ...string) (process.Process, 
 	if err != nil {
 		return nil, err
 	}
-	path := torExePath(filepath.Dir(exe))
-	if err := torExeCheck(path, torExeSHA256, torExeDev == "1"); err != nil {
+	path := torexe.Path(filepath.Dir(exe))
+	if err := torexe.Check(path, torExeSHA256, torExeDev == "1"); err != nil {
 		return nil, err
 	}
-	if d := torArgValue(args, "--DataDirectory"); d != "" {
-		stopLeftoverTor(torPidPath(d), path)
+	if d := torexe.ArgValue(args, "--DataDirectory"); d != "" {
+		stopLeftoverTor(torexe.PidPath(d), path)
 	}
 	run := process.CmdCreatorFunc(func(ctx context.Context, args ...string) (*exec.Cmd, error) {
 		cmd := exec.CommandContext(ctx, path, args...)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
 		return cmd, nil
 	})
-	return run.New(ctx, torExeArgs(os.Getpid(), args)...)
+	return run.New(ctx, torexe.Args(os.Getpid(), args)...)
 }
 
 // a crashed run's tor.exe holds the data dir lock until it sees its owner
 // gone, so the next start would fail
 func stopLeftoverTor(pidPath, exePath string) {
-	pid := readTorPid(pidPath)
+	pid := torexe.ReadPid(pidPath)
 	if pid == 0 || pid == os.Getpid() {
 		return
 	}
@@ -65,7 +66,7 @@ func stopLeftoverTor(pidPath, exePath string) {
 	if windows.QueryFullProcessImageName(h, 0, &buf[0], &n) != nil {
 		return
 	}
-	if !sameExe(windows.UTF16ToString(buf[:n]), exePath) {
+	if !torexe.SameExe(windows.UTF16ToString(buf[:n]), exePath) {
 		os.Remove(pidPath)
 		return
 	}

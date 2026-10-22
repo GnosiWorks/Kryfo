@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//go:build !android
-
-package main
+package torexe
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,18 +11,18 @@ import (
 	"testing"
 )
 
-func TestTorExePath(t *testing.T) {
-	got := torExePath(filepath.Join("app", "kryfo"))
+func TestPath(t *testing.T) {
+	got := Path(filepath.Join("app", "kryfo"))
 	if want := filepath.Join("app", "kryfo", "tor", "tor.exe"); got != want {
 		t.Fatalf("got %q, want %q", got, want)
 	}
 }
 
-func TestTorExeArgsOwner(t *testing.T) {
+func TestArgsOwner(t *testing.T) {
 	in := []string{"--DataDirectory", "d", "--SocksPort", "auto"}
-	got := torExeArgs(4242, in)
+	got := Args(4242, in)
 	want := []string{"--DataDirectory", "d", "--SocksPort", "auto",
-		"--PidFile", torPidPath("d"), "--__OwningControllerProcess", "4242"}
+		"--PidFile", PidPath("d"), "--__OwningControllerProcess", "4242"}
 	if strings.Join(got, " ") != strings.Join(want, " ") {
 		t.Fatalf("got %v", got)
 	}
@@ -33,13 +30,13 @@ func TestTorExeArgsOwner(t *testing.T) {
 	if len(in) != 4 {
 		t.Fatalf("input changed: %v", in)
 	}
-	got = torExeArgs(7, []string{"--SocksPort", "auto"})
+	got = Args(7, []string{"--SocksPort", "auto"})
 	if strings.Contains(strings.Join(got, " "), "--PidFile") {
 		t.Fatalf("pid file without a data dir: %v", got)
 	}
 }
 
-func TestTorExeCheck(t *testing.T) {
+func TestCheck(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "tor.exe")
 	body := []byte("not really tor")
@@ -49,35 +46,35 @@ func TestTorExeCheck(t *testing.T) {
 	sum := sha256.Sum256(body)
 	pin := hex.EncodeToString(sum[:])
 
-	if err := torExeCheck(path, pin, false); err != nil {
+	if err := Check(path, pin, false); err != nil {
 		t.Fatalf("matching file refused: %v", err)
 	}
-	if err := torExeCheck(path, strings.ToUpper(pin), false); err != nil {
+	if err := Check(path, strings.ToUpper(pin), false); err != nil {
 		t.Fatalf("upper-case pin refused: %v", err)
 	}
-	if err := torExeCheck(path, "", true); err != nil {
+	if err := Check(path, "", true); err != nil {
 		t.Fatalf("dev build refused: %v", err)
 	}
-	if err := torExeCheck(path, "", false); !errors.Is(err, errNoTorPin) {
+	if err := Check(path, "", false); err == nil || err.Error() != NoPin {
 		t.Fatalf("release without a pin: %v", err)
 	}
 
 	other := sha256.Sum256([]byte("another tor"))
-	if err := torExeCheck(path, hex.EncodeToString(other[:]), false); err == nil {
+	if err := Check(path, hex.EncodeToString(other[:]), false); err == nil {
 		t.Fatal("swapped tor.exe taken")
 	}
-	if err := torExeCheck(path, hex.EncodeToString(other[:]), true); err == nil {
+	if err := Check(path, hex.EncodeToString(other[:]), true); err == nil {
 		t.Fatal("swapped tor.exe taken in a dev build")
 	}
-	if err := torExeCheck(filepath.Join(dir, "missing.exe"), pin, false); err == nil {
+	if err := Check(filepath.Join(dir, "missing.exe"), pin, false); err == nil {
 		t.Fatal("missing tor.exe taken")
 	}
 }
 
-func TestReadTorPid(t *testing.T) {
+func TestReadPid(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "tor.pid")
-	if readTorPid(p) != 0 {
+	if ReadPid(p) != 0 {
 		t.Fatal("pid from a missing file")
 	}
 	for in, want := range map[string]int{
@@ -87,7 +84,7 @@ func TestReadTorPid(t *testing.T) {
 		if err := os.WriteFile(p, []byte(in), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		if got := readTorPid(p); got != want {
+		if got := ReadPid(p); got != want {
 			t.Fatalf("%q: got %d, want %d", in, got, want)
 		}
 	}
@@ -95,10 +92,10 @@ func TestReadTorPid(t *testing.T) {
 
 func TestSameExe(t *testing.T) {
 	a := filepath.Join("C:", "Users", "a", "Kryfo", "tor", "tor.exe")
-	if !sameExe(a, a) || !sameExe(strings.ToUpper(a), a) {
+	if !SameExe(a, a) || !SameExe(strings.ToUpper(a), a) {
 		t.Fatal("own tor.exe not recognised")
 	}
-	if sameExe("", a) || sameExe(filepath.Join("C:", "Windows", "notepad.exe"), a) {
+	if SameExe("", a) || SameExe(filepath.Join("C:", "Windows", "notepad.exe"), a) {
 		t.Fatal("another program taken for tor.exe")
 	}
 }
@@ -108,7 +105,7 @@ func TestBuildWindowsNeedsPin(t *testing.T) {
 	if _, err := exec.LookPath("bash"); err != nil {
 		t.Skip("no bash")
 	}
-	cmd := exec.Command("bash", "build-windows.sh")
+	cmd := exec.Command("bash", "../build-windows.sh")
 	cmd.Env = append(os.Environ(), "TOR_EXE=", "HALO_DEV=", "CC=/nonexistent/cc",
 		"HALO_WINDOWS_OUT="+t.TempDir())
 	out, err := cmd.CombinedOutput()
