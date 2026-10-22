@@ -7,7 +7,6 @@ mixin _GroupRows {
   // what these rows take from the rest of HaloDb
   HaloContainer get container;
   Future<Database> open();
-  Future<void> keepGroupOwedTo(String groupId, List<String> members);
   Future<String?> notifTagOf(String chat);
   Future<void> _dropPhotos(Iterable<Object?> atmospheres);
   Future<void> clearGroupConversation(String groupId, {bool noteGone = true});
@@ -16,6 +15,7 @@ mixin _GroupRows {
     String groupId, {
     Iterable<String> keys = const [],
   });
+  Future<void> keepGroupOwedTo(String groupId, List<String> members);
   Future<Set<String>> roomKeysOf(String groupId);
 
   // ---- groups ----
