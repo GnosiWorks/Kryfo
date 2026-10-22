@@ -34,7 +34,7 @@ void main() {
     );
     expect(
       _offer('Are you coming tomorrow?', app: 'zh_Hant'),
-      const Offer('en', 'zh'),
+      const Offer('en', 'zh', 'en', true),
     );
   });
 

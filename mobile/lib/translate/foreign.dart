@@ -47,6 +47,13 @@ String? targetFor(
   return null;
 }
 
+// a tag for chinese in traditional characters
+bool isHant(String tag) {
+  final t = tag.toLowerCase().replaceAll('-', '_');
+  return t.startsWith('zh_') &&
+      (t.contains('hant') || t == 'zh_tw' || t == 'zh_hk' || t == 'zh_mo');
+}
+
 // a message there is something to offer for: its language and the one it
 // would go into
 class Offer {
@@ -55,13 +62,19 @@ class Offer {
   // the guess as it was, for the label: traditional chinese says so, though
   // the same model reads it
   final String seen;
-  const Offer(this.from, this.to, [String? seen]) : seen = seen ?? from;
+  // into chinese for a reader of traditional characters
+  final bool hant;
+  const Offer(this.from, this.to, [String? seen, this.hant = false])
+    : seen = seen ?? from;
 
   @override
   bool operator ==(Object other) =>
-      other is Offer && other.from == from && other.to == to;
+      other is Offer &&
+      other.from == from &&
+      other.to == to &&
+      other.hant == hant;
   @override
-  int get hashCode => Object.hash(from, to);
+  int get hashCode => Object.hash(from, to, hant);
 }
 
 Offer? offerFor(
@@ -79,5 +92,7 @@ Offer? offerFor(
     chosen: chosen,
     mine: mine,
   );
-  return to == null ? null : Offer(baseLang(g.lang), to, g.lang);
+  if (to == null) return null;
+  final want = chosen.isEmpty ? appLang : chosen;
+  return Offer(baseLang(g.lang), to, g.lang, to == 'zh' && isHant(want));
 }

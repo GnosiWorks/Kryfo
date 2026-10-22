@@ -12,6 +12,7 @@ import 'detect.dart';
 import 'downloads.dart';
 import 'engine_bridge.dart';
 import 'foreign.dart';
+import 'hant.dart';
 import 'settings.dart';
 import 'translator.dart';
 
@@ -27,6 +28,8 @@ class TranslationHub extends ChangeNotifier {
   final LangGuess Function(String text) guess;
   // whose settings these are: an identity switch reads them again
   final String Function() scope;
+  // simplified into traditional chinese, read when first wanted
+  final Future<HantConverter> Function() loadHant;
   late final TranslateCatalog catalog;
 
   TranslationHub({
@@ -38,9 +41,11 @@ class TranslationHub extends ChangeNotifier {
     String Function()? appLang,
     String Function()? scope,
     LangGuess Function(String text)? guess,
+    Future<HantConverter> Function()? loadHant,
   }) : appLang = appLang ?? (() => currentLanguage),
        scope = scope ?? (() => ''),
-       guess = guess ?? detectLanguage {
+       guess = guess ?? detectLanguage,
+       loadHant = loadHant ?? HantConverter.load {
     this.catalog = catalog ?? engine?.catalog() ?? builtInCatalog;
     downloads.addListener(notifyListeners);
   }
@@ -123,12 +128,16 @@ class TranslationHub extends ChangeNotifier {
     for (final (f, t) in route) {
       out = await translator.translate(out, from: f, to: t);
     }
+    if (o.hant) out = (await (_hant ??= loadHant())).convert(out);
     return out;
   }
 
-  // the app went to the background: the models out of memory, opened
-  // again when next wanted
+  Future<HantConverter>? _hant;
+
+  // the app went to the background: the models and the tables out of
+  // memory, opened again when next wanted
   Future<void> away() async {
+    _hant = null;
     try {
       await translator.close();
     } catch (_) {}

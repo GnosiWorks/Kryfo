@@ -2,10 +2,14 @@
 // stand-ins for translation: a translator that looks words up, and a pack
 // store that downloads when told to. nothing here reaches the network or
 // the engine
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/detect.dart';
 import 'package:kryfo/translate/downloads.dart';
 import 'package:kryfo/translate/engine_bridge.dart';
+import 'package:kryfo/translate/hant.dart';
 import 'package:kryfo/translate/hub.dart';
 import 'package:kryfo/translate/settings.dart';
 import 'package:kryfo/translate/translator.dart';
@@ -125,6 +129,7 @@ Fakes fakeHub({
   Map<String, String> words = const {},
   bool wifi = true,
   LangGuess Function(String text)? guess,
+  Future<HantConverter> Function()? loadHant,
 }) {
   final backend = FakeBackend();
   if (installed) backend.finish('zh');
@@ -152,7 +157,17 @@ Fakes fakeHub({
     catalog: builtInCatalog,
     appLang: () => app,
     guess: guess,
+    loadHant: loadHant ?? _hantFromDisk,
   );
   f = Fakes._(translator, backend, store, hub, wifi);
   return f;
+}
+
+// the shipped tables, read from the checkout as the asset bundle would
+Future<HantConverter> _hantFromDisk() async {
+  String read(String a) => utf8.decode(gzip.decode(File(a).readAsBytesSync()));
+  return HantConverter.parse(
+    read(HantConverter.charsAsset),
+    read(HantConverter.phrasesAsset),
+  );
 }
