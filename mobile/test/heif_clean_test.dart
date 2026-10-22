@@ -266,4 +266,99 @@ void main() {
     expect(_bytes(out, 1), _pic.bytes);
     expect(_read(out).status, MetaStatus.nothing);
   });
+
+  group('item tables', () {
+    // items read from mdat (method 0), from idat (1) or from another
+    // item (2), listed in an iloc of [version]
+    Uint8List raw(
+      List<(int, String, int, List<int>)> items, {
+      int version = 1,
+    }) {
+      final idat = [
+        for (final (_, _, m, b) in items)
+          if (m == 1) ...b,
+      ];
+      final mdat = [
+        for (final (_, _, m, b) in items)
+          if (m != 1) ...b,
+      ];
+      List<int> build(int mdatAt) {
+        var inIdat = 0, inMdat = mdatAt;
+        final entries = <int>[];
+        for (final (id, _, m, b) in items) {
+          entries.addAll(version < 2 ? be16(id) : be32(id));
+          entries.addAll([0, m, 0, 0, ...be16(1)]);
+          entries.addAll(be32(m == 1 ? inIdat : inMdat));
+          entries.addAll(be32(b.length));
+          if (m == 1) {
+            inIdat += b.length;
+          } else {
+            inMdat += b.length;
+          }
+        }
+        return [
+          ...box('ftyp', [
+            ...t('heic'),
+            ...be32(0),
+            ...t('mif1'),
+            ...t('heic'),
+          ]),
+          ...full('meta', 0, [
+            ...full('hdlr', 0, [
+              ...be32(0),
+              ...t('pict'),
+              ...List.filled(13, 0),
+            ]),
+            ...full('pitm', 0, be16(1)),
+            ...full('iinf', 0, [
+              ...be16(items.length),
+              for (final (id, type, _, _) in items) ...infe(id, type),
+            ]),
+            ...full('iloc', version, [
+              0x44,
+              0x00,
+              ...(version < 2 ? be16(items.length) : be32(items.length)),
+              ...entries,
+            ]),
+            ...box('idat', idat),
+          ]),
+          ...box('mdat', mdat),
+        ];
+      }
+
+      final probe = build(0);
+      return Uint8List.fromList(build(probe.length - mdat.length));
+    }
+
+    test('an exif item in idat is zeroed, a picture in idat kept', () {
+      final src = raw([
+        (1, 'hvc1', 1, [1, 2, 3, 4]),
+        (2, 'Exif', 1, [...be32(0), ...t('MM GPS 37.98N')]),
+      ]);
+      expect(_read(src).status, MetaStatus.found);
+      final out = cleanHeif(src)!;
+      expect(_has(out, 'GPS'), false);
+      expect(_bytes(out, 1), [1, 2, 3, 4]);
+      expect(_read(out).status, MetaStatus.nothing);
+    });
+
+    test('an iloc of version 2 is copied as it is', () {
+      final src = raw([
+        (1, 'hvc1', 0, [1, 2, 3, 4]),
+        (2, 'Exif', 0, [...be32(0), ...t('MM GPS 37.98N')]),
+      ], version: 2);
+      final out = cleanHeif(src)!;
+      expect(_meta(out).ilocVersion, 2);
+      expect(_bytes(out, 1), [1, 2, 3, 4]);
+      expect(_has(out, 'GPS'), false);
+      expect(_read(out).status, MetaStatus.nothing);
+    });
+
+    test('a picture read from another item is not guessed at', () {
+      final src = raw([
+        (1, 'hvc1', 2, [0, 0, 0, 0]),
+      ]);
+      expect(cleanHeif(src), null);
+    });
+  });
 }

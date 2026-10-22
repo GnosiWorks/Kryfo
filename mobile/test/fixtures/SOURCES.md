@@ -3,7 +3,9 @@
 ## gopro_hero5_cut.mp4
 
 The first second of `samples/hero5.mp4` from GoPro's GPMF parser,
-https://github.com/gopro/gpmf-parser, used under the MIT licence that
+https://github.com/gopro/gpmf-parser (the file as added in commit
+2f54a2c11039d1fe4f7514e0f9288beb61ba3e06, sha256
+04e45b2f41dff195b525fa18b7ed5517e5fc2d651127d1b57d1d931de306f915), used under the MIT licence that
 project offers (it is dual licensed, Apache 2.0 or MIT). The video, sound,
 timecode and GPMF tracks are kept as they were; the sample tables were cut to
 the chunks before the first second's end and the file was shortened there.

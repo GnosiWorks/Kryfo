@@ -46,13 +46,18 @@ List<int> trak(
   List<(int, List<int>)> chunks, {
   int fixed = 0,
   List<int> tref = const [],
+  bool wide = false,
+  bool compact = false,
+  bool edit = false,
 }) {
   final sizes = [for (final c in chunks) ...c.$2];
   final tkhd = box(
     'tkhd',
     full(0, List.filled(8, 0), [...u32(id), ...List.filled(72, 0)]),
   );
-  final stsz = fixed > 0
+  final stsz = compact
+      ? fullBox('stz2', [0, 0, 0, 8, ...u32(sizes.length), ...sizes])
+      : fixed > 0
       ? fullBox('stsz', [...u32(fixed), ...u32(sizes.length)])
       : fullBox('stsz', [
           ...u32(0),
@@ -67,10 +72,15 @@ List<int> trak(
       ...u32(1),
     ],
   ]);
-  final stco = fullBox('stco', [
-    ...u32(chunks.length),
-    for (final c in chunks) ...u32(c.$1),
-  ]);
+  final stco = wide
+      ? fullBox('co64', [
+          ...u32(chunks.length),
+          for (final c in chunks) ...[...u32(0), ...u32(c.$1)],
+        ])
+      : fullBox('stco', [
+          ...u32(chunks.length),
+          for (final c in chunks) ...u32(c.$1),
+        ]);
   final stbl = box('stbl', [
     ...fullBox('stsd', [...u32(1), ...box(format, List.filled(8, 0))]),
     ...stsz,
@@ -90,6 +100,11 @@ List<int> trak(
     ...tkhd,
     if (tref.isNotEmpty)
       ...box('tref', box('tmcd', [for (final i in tref) ...u32(i)])),
+    if (edit)
+      ...box(
+        'edts',
+        fullBox('elst', [...u32(1), ...u32(900), ...u32(0), 0, 1, 0, 0]),
+      ),
     ...box('mdia', [...mdhd, ...hdlr, ...box('minf', stbl)]),
   ]);
 }
@@ -461,4 +476,90 @@ void main() {
       expect(await mp4MetadataCount(f.path), null);
     },
   );
+
+  group('table shapes', () {
+    // a video track and a gps track, their samples in [mdats] of bytes;
+    // [bigHead] writes each mdat with a 64-bit size
+    Future<Uint8List> run({
+      bool wide = false,
+      bool compact = false,
+      bool edit = false,
+      bool bigHead = false,
+      bool split = false,
+    }) async {
+      List<int> mdat(List<int> body) => bigHead
+          ? [
+              ...u32(1),
+              ...'mdat'.codeUnits,
+              ...u32(0),
+              ...u32(16 + body.length),
+              ...body,
+            ]
+          : box('mdat', body);
+      final first = split
+          ? [...picture.codeUnits]
+          : [...picture.codeUnits, ...gps.codeUnits];
+      final second = split ? [...gps.codeUnits, ...stray.codeUnits] : <int>[];
+      final head = bigHead ? 16 : 8;
+      List<int> build(int at) {
+        final g = split ? at + picture.length + head : at + picture.length;
+        return [
+          ...box('ftyp', 'isom'.codeUnits + [0, 0, 2, 0] + 'isom'.codeUnits),
+          ...box('moov', [
+            ...box('mvhd', full(0, List.filled(8, 0), List.filled(88, 0))),
+            ...trak(
+              1,
+              'vide',
+              'avc1',
+              [
+                (at, [10, picture.length - 10]),
+              ],
+              wide: wide,
+              compact: compact,
+              edit: edit,
+            ),
+            ...trak(
+              2,
+              'meta',
+              'gpmd',
+              [
+                (g, [gps.length]),
+              ],
+              wide: wide,
+              compact: compact,
+            ),
+          ]),
+          ...mdat(first),
+          if (split) ...mdat(second),
+        ];
+      }
+
+      final probe = build(0);
+      final tail = (split ? head + second.length : 0) + first.length;
+      final b = Uint8List.fromList(build(probe.length - tail));
+      expect(readMeta(MemorySource(b)).extraTracks, 1);
+      final f = await write(b);
+      expect(await stripMp4Metadata(f.path), true);
+      expect(await mp4MetadataCount(f.path), 0);
+      final out = await f.readAsBytes();
+      expect(out.length, b.length);
+      expect(text(out).contains(picture), true);
+      expect(text(out).contains(gps), false);
+      return out;
+    }
+
+    test('64-bit chunk offsets', () => run(wide: true));
+    test('compact sample sizes', () => run(compact: true));
+    test('a 64-bit mdat size', () => run(bigHead: true));
+    test('samples in two mdats, old bytes in the second', () async {
+      final out = await run(split: true);
+      expect(text(out).contains(stray), false);
+    });
+    test('an edit list stays as it was', () async {
+      final out = await run(edit: true);
+      final at = text(out).indexOf('elst');
+      // past the type, version and flags, the entry count
+      expect(out.sublist(at + 12, at + 16), u32(900));
+    });
+  });
 }
