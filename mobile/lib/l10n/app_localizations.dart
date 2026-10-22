@@ -14553,36 +14553,6 @@ abstract class AppLocalizations {
   /// **'Download packs on Wi-Fi only'**
   String get translateWifiOnly;
 
-  /// where packs are downloaded from: the default host or a mirror the person set
-  ///
-  /// In en, this message translates to:
-  /// **'Download from'**
-  String get translateHost;
-
-  /// the host built into the app
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get translateHostDefault;
-
-  /// under that row and in its sheet
-  ///
-  /// In en, this message translates to:
-  /// **'A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.'**
-  String get translateHostHint;
-
-  /// under the address field when it is neither an https nor an onion address
-  ///
-  /// In en, this message translates to:
-  /// **'Use an https or .onion address'**
-  String get translateHostBad;
-
-  /// back to the host built into the app
-  ///
-  /// In en, this message translates to:
-  /// **'Use the default'**
-  String get translateHostReset;
-
   /// translation page: the section on what a download says to whom
   ///
   /// In en, this message translates to:

@@ -52,7 +52,7 @@ func TestFillMirrorServesTheApp(t *testing.T) {
 
 	box := httptest.NewTLSServer(http.StripPrefix("/models/", http.FileServer(http.Dir(dir))))
 	t.Cleanup(box.Close)
-	app, err := m.WithBase(box.URL + "/models/")
+	app, err := m.withBase(box.URL + "/models/")
 	if err != nil {
 		t.Fatal(err)
 	}

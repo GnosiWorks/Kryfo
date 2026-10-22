@@ -68,13 +68,11 @@ class FakeBackend implements ModelBackend {
   final Set<String> have = {};
   int disk = 0;
   final List<String> started = [];
-  final List<String> hosts = [];
   int cancels = 0;
 
   @override
-  Future<String> start(String lang, String host) async {
+  Future<String> start(String lang) async {
     started.add(lang);
-    hosts.add(host);
     if (startAnswer == 'ok') status = const FetchStatus('running');
     return startAnswer;
   }
@@ -141,7 +139,6 @@ Fakes fakeHub({
     backend: backend,
     onWifi: () async => f.wifi,
     wifiOnly: () => hub.settings.wifiOnly,
-    host: () => hub.settings.host,
     poll: const Duration(milliseconds: 100),
   );
   final translator = FakeTranslator(

@@ -79,14 +79,13 @@ void main() {
     expect(find.text(l10n.translateNotDownloaded(packSize(zh.gz))), findsOne);
   });
 
-  testWidgets('the defaults: no auto, wi-fi only, the default host', (t) async {
+  testWidgets('the defaults: no auto, wi-fi only', (t) async {
     tall(t);
     final f = fakeHub(settings: const TranslateSettings());
     await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
     await t.pumpAndSettle();
     expect(row(t, l10n.translateAutoDefault).toggled, isFalse);
     expect(row(t, l10n.translateWifiOnly).toggled, isTrue);
-    expect(row(t, l10n.translateHost).value, l10n.translateHostDefault);
     expect(row(t, l10n.translateInto).value, l10n.translateAppLanguage);
     expect(row(t, l10n.translateMyLanguages).value, languageNameHere('en'));
 
@@ -123,37 +122,18 @@ void main() {
     expect(row(t, l10n.translateInto).value, langName('zh'));
   });
 
-  testWidgets('a mirror has to be https', (t) async {
+  testWidgets('packs come from our mirror only: nothing to set', (t) async {
     tall(t);
     final f = fakeHub();
     await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
     await t.pumpAndSettle();
-    await t.tap(find.text(l10n.translateHost));
-    await t.pumpAndSettle();
-    await t.enterText(
-      find.byKey(const ValueKey('translate-host')),
-      'http://mirror.example/',
-    );
-    await t.pump();
-    expect(find.text(l10n.translateHostBad), findsOneWidget);
-    await t.tap(find.text(l10n.commonSave));
-    await t.pumpAndSettle();
-    expect(find.text(l10n.translateHostBad), findsOneWidget);
-    await t.enterText(
-      find.byKey(const ValueKey('translate-host')),
-      'https://mirror.example/models/',
-    );
-    await t.pump();
-    await t.tap(find.text(l10n.commonSave));
-    await t.pumpAndSettle();
-    expect(f.store.settings.host, 'https://mirror.example/models/');
-    expect(row(t, l10n.translateHost).value, 'mirror.example');
-    // the download asks the mirror
+    expect(find.byIcon(Icons.dns_outlined), findsNothing);
+    expect(find.byType(TextField), findsNothing);
     await t.tap(find.text(l10n.translateWifiOnly));
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.translateDownload(packSize(zh.gz))));
     await settle(t);
-    expect(f.backend.hosts, ['https://mirror.example/models/']);
+    expect(f.backend.started, ['zh']);
     f.backend.finish('zh');
     await settle(t);
   });

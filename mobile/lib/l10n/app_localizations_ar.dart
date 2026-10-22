@@ -9146,22 +9146,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateWifiOnly => 'تنزيل الحزم عبر Wi-Fi فقط';
 
   @override
-  String get translateHost => 'التنزيل من';
-
-  @override
-  String get translateHostDefault => 'الافتراضي';
-
-  @override
-  String get translateHostHint =>
-      'يجب أن تقدّم المرآة الملفات نفسها. يتحقق Kryfo من كل ملف مقابل البصمة المضمّنة في التطبيق.';
-
-  @override
-  String get translateHostBad => 'استخدم عنوان https أو ‎.onion';
-
-  @override
-  String get translateHostReset => 'استخدام الافتراضي';
-
-  @override
   String get translatePrivacyTitle => 'ما يبقى خاصًا';
 
   @override

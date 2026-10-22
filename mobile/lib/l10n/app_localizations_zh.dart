@@ -8607,21 +8607,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateWifiOnly => '仅在 Wi-Fi 下下载语言包';
 
   @override
-  String get translateHost => '下载来源';
-
-  @override
-  String get translateHostDefault => '默认';
-
-  @override
-  String get translateHostHint => '镜像必须提供相同的文件。Kryfo 会用内置在应用里的哈希校验每个文件。';
-
-  @override
-  String get translateHostBad => '请使用 https 或 .onion 地址';
-
-  @override
-  String get translateHostReset => '使用默认';
-
-  @override
   String get translatePrivacyTitle => '哪些内容保持私密';
 
   @override
@@ -17118,21 +17103,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateWifiOnly => '僅在 Wi-Fi 下下載語言包';
-
-  @override
-  String get translateHost => '下載來源';
-
-  @override
-  String get translateHostDefault => '預設';
-
-  @override
-  String get translateHostHint => '鏡像必須提供相同的檔案。Kryfo 會用內建在應用程式裡的雜湊值檢查每個檔案。';
-
-  @override
-  String get translateHostBad => '請使用 https 或 .onion 位址';
-
-  @override
-  String get translateHostReset => '使用預設';
 
   @override
   String get translatePrivacyTitle => '哪些內容保持私密';

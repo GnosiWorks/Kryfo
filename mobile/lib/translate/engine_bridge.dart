@@ -79,7 +79,7 @@ class FetchStatus {
 abstract class TranslateEngine {
   TranslateCatalog? catalog();
   // "ok", or "error: ..."
-  Future<String> fetch(String lang, String dir, String base);
+  Future<String> fetch(String lang, String dir);
   FetchStatus progress(String lang);
   void cancel(String lang);
   Future<bool> installed(String lang, String dir);
@@ -121,8 +121,8 @@ class FfiTranslateEngine implements TranslateEngine {
   }
 
   @override
-  Future<String> fetch(String lang, String dir, String base) async =>
-      _ask('HaloTranslateFetch', [lang, dir, base]) ??
+  Future<String> fetch(String lang, String dir) async =>
+      _ask('HaloTranslateFetch', [lang, dir]) ??
       'error: engine has no downloads';
 
   @override

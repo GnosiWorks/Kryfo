@@ -9116,22 +9116,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get translateWifiOnly => 'Pakete nur über WLAN laden';
 
   @override
-  String get translateHost => 'Laden von';
-
-  @override
-  String get translateHostDefault => 'Standard';
-
-  @override
-  String get translateHostHint =>
-      'Ein Spiegel muss dieselben Dateien liefern. Kryfo prüft jede gegen den Hash, der in der App steckt.';
-
-  @override
-  String get translateHostBad => 'Nutze eine https- oder .onion-Adresse';
-
-  @override
-  String get translateHostReset => 'Standard verwenden';
-
-  @override
   String get translatePrivacyTitle => 'Was privat bleibt';
 
   @override

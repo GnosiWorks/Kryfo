@@ -23,7 +23,7 @@ class LangBundle {
 }
 
 class TranslateCatalog {
-  // where the files come from unless the person set a mirror
+  // where the files come from: the pinned mirror, nothing else
   final String base;
   final List<LangBundle> langs;
   const TranslateCatalog({required this.base, required this.langs});

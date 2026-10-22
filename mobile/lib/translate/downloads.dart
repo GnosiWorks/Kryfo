@@ -89,7 +89,8 @@ class DlState {
 // stand-in in tests
 abstract class ModelBackend {
   // "ok", or "error: ..."
-  Future<String> start(String lang, String host);
+  // always from the pinned mirror: there is no other host to name
+  Future<String> start(String lang);
   FetchStatus progress(String lang);
   void cancel(String lang);
   Future<bool> installed(String lang);
@@ -106,9 +107,9 @@ class EngineModelBackend implements ModelBackend {
   // the storage folder may not be there to ask (a test, a broken plugin):
   // that reads as nothing on the phone and a download that cannot start
   @override
-  Future<String> start(String lang, String host) async {
+  Future<String> start(String lang) async {
     try {
-      return await engine.fetch(lang, await dir(), host);
+      return await engine.fetch(lang, await dir());
     } catch (e) {
       return 'error: storage: ${e.runtimeType}';
     }
@@ -161,7 +162,6 @@ class ModelDownloads extends ChangeNotifier {
   // whether the phone is on wi-fi now
   final Future<bool> Function() onWifi;
   final bool Function() wifiOnly;
-  final String Function() host;
   // a quiet session (the decoy): the phone's packs do not show in it, and a
   // download there fetches nothing and stops as a cut one would
   final bool Function() quiet;
@@ -170,7 +170,6 @@ class ModelDownloads extends ChangeNotifier {
     required this.backend,
     required this.onWifi,
     required this.wifiOnly,
-    required this.host,
     this.quiet = _loud,
     this.poll = const Duration(milliseconds: 500),
   });
@@ -239,7 +238,7 @@ class ModelDownloads extends ChangeNotifier {
       return;
     }
     _set(lang, was.copyWith(phase: DlPhase.starting));
-    final out = await backend.start(lang, host());
+    final out = await backend.start(lang);
     if (out != 'ok') {
       _set(
         lang,

@@ -9085,22 +9085,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get translateWifiOnly => 'Baixar pacotes só no Wi-Fi';
 
   @override
-  String get translateHost => 'Baixar de';
-
-  @override
-  String get translateHostDefault => 'Padrão';
-
-  @override
-  String get translateHostHint =>
-      'Um espelho precisa servir os mesmos arquivos. O Kryfo confere cada um com o hash embutido no app.';
-
-  @override
-  String get translateHostBad => 'Use um endereço https ou .onion';
-
-  @override
-  String get translateHostReset => 'Usar o padrão';
-
-  @override
   String get translatePrivacyTitle => 'O que fica privado';
 
   @override

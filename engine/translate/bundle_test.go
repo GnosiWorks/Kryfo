@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -107,7 +108,7 @@ func newBundleFix(t *testing.T) *bundleFix {
 
 func (bf *bundleFix) local(t *testing.T) *Manifest {
 	t.Helper()
-	m, err := bf.m.WithBase(bf.srv.URL + "/m")
+	m, err := bf.m.withBase(bf.srv.URL + "/m")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,32 +167,6 @@ func TestFetchBundleUnknownLanguage(t *testing.T) {
 	}
 	if bf.hits.Load() != 0 {
 		t.Fatal("asked the server for a language it has nothing for")
-	}
-}
-
-func TestWithBase(t *testing.T) {
-	m, _ := Pinned()
-	if got, _ := m.WithBase(""); got != m {
-		t.Fatal("empty base changed the manifest")
-	}
-	c, err := m.WithBase("https://mirror.example/models")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if c.Base != "https://mirror.example/models/" || m.Base == c.Base {
-		t.Fatalf("base %q, pinned %q", c.Base, m.Base)
-	}
-	// the pins go with it
-	p, _ := c.Pair("zh", "en")
-	q, _ := m.Pair("zh", "en")
-	if p.Files[0].SHA256 != q.Files[0].SHA256 {
-		t.Fatal("pins changed")
-	}
-	for _, bad := range []string{"http://mirror.example/", "mirror.example/", "https://u:p@mirror.example/",
-		"https://mirror.example/?a=b", "https:///x/", "file:///tmp/"} {
-		if _, err := m.WithBase(bad); err == nil {
-			t.Errorf("%q taken", bad)
-		}
 	}
 }
 
@@ -359,18 +334,20 @@ func TestFetchFromSource(t *testing.T) {
 }
 
 func TestMirrorBases(t *testing.T) {
-	m := newBundleFix(t).m
 	onion := "http://" + strings.Repeat("a", 56) + ".onion/models/"
-	if _, err := m.WithBase(onion); err != nil {
-		t.Fatalf("onion over http refused: %v", err)
+	if !baseOK(onion) {
+		t.Fatal("onion over http refused")
 	}
 	for _, bad := range []string{
 		"http://" + strings.Repeat("a", 55) + ".onion/",
 		"http://" + strings.Repeat("a", 56) + ".onion.example/",
 		"http://" + strings.Repeat("1", 56) + ".onion/",
 		"ftp://" + strings.Repeat("a", 56) + ".onion/",
+		"http://mirror.example/",
+		"https://u:p@mirror.example/",
+		"https://mirror.example/?a=b",
 	} {
-		if _, err := m.WithBase(bad); err == nil {
+		if baseOK(bad) {
 			t.Errorf("%q taken", bad)
 		}
 	}
@@ -384,4 +361,18 @@ func TestMirrorBases(t *testing.T) {
 	if !strings.HasPrefix(p.Source, "https://") {
 		t.Fatalf("source %q", p.Source)
 	}
+}
+
+// the manifest with its files fetched from a local test server
+func (m *Manifest) withBase(base string) (*Manifest, error) {
+	if !strings.HasSuffix(base, "/") {
+		base += "/"
+	}
+	if !baseOK(base) {
+		return nil, fmt.Errorf("%w: base %q", ErrManifest, base)
+	}
+	c := *m
+	c.Base = base
+	c.bySource = false
+	return &c, nil
 }

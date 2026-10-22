@@ -222,7 +222,7 @@ void main() {
   test('an engine without the calls: no catalog, no download', () async {
     final e = FfiTranslateEngine();
     expect(e.catalog(), isNull);
-    expect(await e.fetch('zh', '/nowhere', ''), startsWith('error: engine'));
+    expect(await e.fetch('zh', '/nowhere'), startsWith('error: engine'));
     expect(e.progress('zh').state, 'idle');
     expect(await e.installed('zh', '/nowhere'), isFalse);
     expect(e.config('zh', 'en', '/nowhere'), isNull);

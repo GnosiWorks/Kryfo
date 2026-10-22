@@ -11371,26 +11371,6 @@
   "@translateWifiOnly": {
     "description": "pack downloads wait for wi-fi"
   },
-  "translateHost": "Download from",
-  "@translateHost": {
-    "description": "where packs are downloaded from: the default host or a mirror the person set"
-  },
-  "translateHostDefault": "Default",
-  "@translateHostDefault": {
-    "description": "the host built into the app"
-  },
-  "translateHostHint": "A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.",
-  "@translateHostHint": {
-    "description": "under that row and in its sheet"
-  },
-  "translateHostBad": "Use an https or .onion address",
-  "@translateHostBad": {
-    "description": "under the address field when it is neither an https nor an onion address"
-  },
-  "translateHostReset": "Use the default",
-  "@translateHostReset": {
-    "description": "back to the host built into the app"
-  },
   "translatePrivacyTitle": "What stays private",
   "@translatePrivacyTitle": {
     "description": "translation page: the section on what a download says to whom"

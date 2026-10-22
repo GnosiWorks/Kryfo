@@ -18,7 +18,6 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/halo_sheet.dart';
-import '../widgets/owned_text.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 
@@ -135,20 +134,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     pending: !_read,
                     onTap: () => _save(s.copyWith(wifiOnly: !s.wifiOnly)),
                   ),
-                  HaloRow(
-                    icon: Icons.dns_outlined,
-                    label: l10n.translateHost,
-                    hint: l10n.translateHostHint,
-                    value: s.host.isEmpty
-                        ? l10n.translateHostDefault
-                        : Uri.tryParse(s.host)?.host ?? s.host,
-                    onTap: !_read
-                        ? null
-                        : () async {
-                            final h = await _pickHost(context, s.host);
-                            if (h != null) await _save(s.copyWith(host: h));
-                          },
-                  ),
                 ],
               ),
               HaloSection(l10n.translatePrivacyTitle),
@@ -245,83 +230,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
               onTap: () => Navigator.pop(ctx, t),
             ),
         ],
-      ),
-    );
-  }
-
-  Future<String?> _pickHost(BuildContext context, String now) {
-    return showHaloSheet<String>(
-      context,
-      builder: (ctx) => OwnedText(
-        initial: now,
-        builder: (ctx, ctrl) => StatefulBuilder(
-          builder: (ctx, set) {
-            final ok = hostOk(ctrl.text.trim());
-            return _SheetFrame(
-              title: l10n.translateHost,
-              line: l10n.translateHostHint,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: HaloColors.line, width: 0.5),
-                  ),
-                  child: TextField(
-                    key: const ValueKey('translate-host'),
-                    controller: ctrl,
-                    keyboardType: TextInputType.url,
-                    autocorrect: false,
-                    enableIMEPersonalizedLearning: false,
-                    onChanged: (_) => set(() {}),
-                    style: HaloType.mono(size: 13, color: HaloColors.text),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: hub.catalog.base,
-                      hintMaxLines: 1,
-                      hintStyle: HaloType.mono(
-                        size: 12,
-                        color: HaloColors.text3,
-                      ),
-                    ),
-                  ),
-                ),
-                if (!ok) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.translateHostBad,
-                    style: HaloType.sans(size: 12, color: HaloColors.rose),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: HaloGhostButton(
-                        quiet: true,
-                        label: l10n.translateHostReset,
-                        onTap: () => Navigator.pop(ctx, ''),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: HaloPrimaryButton(
-                        label: l10n.commonSave,
-                        onTap: ok
-                            ? () => Navigator.pop(ctx, ctrl.text.trim())
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
       ),
     );
   }

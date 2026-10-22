@@ -9008,22 +9008,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translateWifiOnly => 'Download packs on Wi-Fi only';
 
   @override
-  String get translateHost => 'Download from';
-
-  @override
-  String get translateHostDefault => 'Default';
-
-  @override
-  String get translateHostHint =>
-      'A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.';
-
-  @override
-  String get translateHostBad => 'Use an https or .onion address';
-
-  @override
-  String get translateHostReset => 'Use the default';
-
-  @override
   String get translatePrivacyTitle => 'What stays private';
 
   @override

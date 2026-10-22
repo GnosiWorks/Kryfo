@@ -9004,22 +9004,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translateWifiOnly => 'Chỉ tải gói qua Wi-Fi';
 
   @override
-  String get translateHost => 'Tải từ';
-
-  @override
-  String get translateHostDefault => 'Mặc định';
-
-  @override
-  String get translateHostHint =>
-      'Máy chủ gương phải cung cấp đúng các tệp đó. Kryfo kiểm tra từng tệp với mã băm có sẵn trong ứng dụng.';
-
-  @override
-  String get translateHostBad => 'Hãy dùng địa chỉ https hoặc .onion';
-
-  @override
-  String get translateHostReset => 'Dùng mặc định';
-
-  @override
   String get translatePrivacyTitle => 'Những gì được giữ riêng tư';
 
   @override

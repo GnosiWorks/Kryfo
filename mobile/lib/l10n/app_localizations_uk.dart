@@ -9171,22 +9171,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateWifiOnly => 'Завантажувати пакети лише через Wi-Fi';
 
   @override
-  String get translateHost => 'Звідки завантажувати';
-
-  @override
-  String get translateHostDefault => 'Типово';
-
-  @override
-  String get translateHostHint =>
-      'Дзеркало має віддавати ті самі файли. Kryfo звіряє кожен із хешем, вбудованим у застосунок.';
-
-  @override
-  String get translateHostBad => 'Потрібна адреса https або .onion';
-
-  @override
-  String get translateHostReset => 'Повернути типове';
-
-  @override
   String get translatePrivacyTitle => 'Що лишається приватним';
 
   @override

@@ -47,7 +47,6 @@ TranslationHub _live() {
     backend: EngineModelBackend(engine, modelsDir, () => catalog),
     onWifi: _onWifi,
     wifiOnly: () => hub.settings.wifiOnly,
-    host: () => hub.settings.host,
     quiet: () => sessionQuiet,
   );
   String? dir;

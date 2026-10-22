@@ -9092,22 +9092,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get translateWifiOnly => 'Scarica i pacchetti solo con Wi-Fi';
 
   @override
-  String get translateHost => 'Scarica da';
-
-  @override
-  String get translateHostDefault => 'Predefinito';
-
-  @override
-  String get translateHostHint =>
-      'Un mirror deve fornire gli stessi file. Kryfo controlla ciascuno con l\'hash incluso nell\'app.';
-
-  @override
-  String get translateHostBad => 'Usa un indirizzo https o .onion';
-
-  @override
-  String get translateHostReset => 'Usa quello predefinito';
-
-  @override
   String get translatePrivacyTitle => 'Cosa resta privato';
 
   @override

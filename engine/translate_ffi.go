@@ -100,24 +100,23 @@ func translateCatalog() string {
 	return jsonStr(out)
 }
 
-// start fetching lang's bundle into dir, from base or the manifest's own
-// host when base is "". "ok" when it runs (or already ran), "error: ..."
-// when it could not start. progress is polled with HaloTranslateProgress.
+// start fetching lang's bundle into dir from the pinned mirror, the only
+// host there is. "ok" when it runs (or already ran), "error: ..." when it
+// could not start. progress is polled with HaloTranslateProgress.
 //
 //export HaloTranslateFetch
-func HaloTranslateFetch(cLang, cDir, cBase *C.char) *C.char {
-	return C.CString(translateFetch(goStr(cLang), goStr(cDir), goStr(cBase)))
+func HaloTranslateFetch(cLang, cDir *C.char) *C.char {
+	return C.CString(translateFetch(goStr(cLang), goStr(cDir)))
 }
 
-func translateFetch(lang, dir, base string) string {
+// the manifest downloads use; tests stand a local host in
+var translateManifest = translate.Pinned
+
+func translateFetch(lang, dir string) string {
 	if dir == "" {
 		return "error: no dir"
 	}
-	pinned, err := translate.Pinned()
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-	m, err := pinned.WithBase(base)
+	m, err := translateManifest()
 	if err != nil {
 		return fmt.Sprintf("error: %v", err)
 	}

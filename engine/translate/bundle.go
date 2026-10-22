@@ -4,31 +4,10 @@ package translate
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
-
-// WithBase is the manifest with its files fetched from base instead: a
-// mirror the person set. the pins stay, so a mirror can only serve the
-// same bytes. "" keeps the manifest's own.
-func (m *Manifest) WithBase(base string) (*Manifest, error) {
-	if base == "" {
-		return m, nil
-	}
-	if !strings.HasSuffix(base, "/") {
-		base += "/"
-	}
-	if !baseOK(base) {
-		return nil, fmt.Errorf("%w: base %q", ErrManifest, base)
-	}
-	c := *m
-	c.Base = base
-	c.bySource = false
-	return &c, nil
-}
 
 // Langs is every language there is a bundle for, english aside.
 func (m *Manifest) Langs() []string {

@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -42,7 +43,7 @@ func TestTranslateFetchNeedsTor(t *testing.T) {
 	old := translateDial
 	translateDial = func(string) (dialFn, error) { return nil, fmt.Errorf("not started") }
 	t.Cleanup(func() { translateDial = old })
-	if out := translateFetch("zh", t.TempDir(), ""); !strings.HasPrefix(out, "error: tor") {
+	if out := translateFetch("zh", t.TempDir()); !strings.HasPrefix(out, "error: tor") {
 		t.Fatalf("got %q", out)
 	}
 	if st := translateJobs.Status("zh"); st.State != translate.StateIdle {
@@ -50,11 +51,51 @@ func TestTranslateFetchNeedsTor(t *testing.T) {
 	}
 }
 
-func TestTranslateFetchRefusesPlainHost(t *testing.T) {
-	if out := translateFetch("zh", t.TempDir(), "http://mirror.example/"); !strings.HasPrefix(out, "error:") {
+// packs come from the pinned onion mirror and nowhere else: the only
+// address a download dials is the mirror's
+func TestTranslateFetchOnlyThePinnedMirror(t *testing.T) {
+	pinned, err := translate.Pinned()
+	if err != nil {
+		t.Fatal(err)
+	}
+	u, err := url.Parse(pinned.Base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var mu sync.Mutex
+	var addrs []string
+	old := translateDial
+	translateDial = func(string) (dialFn, error) {
+		return func(_ context.Context, _, addr string) (net.Conn, error) {
+			mu.Lock()
+			addrs = append(addrs, addr)
+			mu.Unlock()
+			return nil, fmt.Errorf("refused")
+		}, nil
+	}
+	t.Cleanup(func() { translateDial = old })
+	if out := translateFetch("zh", t.TempDir()); out != "ok" {
 		t.Fatalf("got %q", out)
 	}
-	if out := translateFetch("fr", t.TempDir(), ""); !strings.HasPrefix(out, "error: no models") {
+	deadline := time.Now().Add(10 * time.Second)
+	for translateJobs.Status("zh").State == translate.StateRunning {
+		if time.Now().After(deadline) {
+			t.Fatal("still running")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	translateJobs.Forget("zh")
+	mu.Lock()
+	defer mu.Unlock()
+	if len(addrs) == 0 {
+		t.Fatal("nothing dialled")
+	}
+	for _, a := range addrs {
+		if a != u.Host+":80" {
+			t.Fatalf("dialled %q, not the mirror %q", a, u.Host)
+		}
+	}
+	if out := translateFetch("fr", t.TempDir()); !strings.HasPrefix(out, "error: no models") {
 		t.Fatalf("got %q", out)
 	}
 }
@@ -89,11 +130,19 @@ func TestTranslateFetchOwnCircuit(t *testing.T) {
 			return d.DialContext(ctx, network, addr)
 		}, nil
 	}
-	t.Cleanup(func() { translateDial, translateTLS = oldDial, oldTLS })
+	oldManifest := translateManifest
+	translateManifest = func() (*translate.Manifest, error) {
+		m, err := translate.Pinned()
+		if err == nil {
+			m.Base = "https://example.com/m/"
+		}
+		return m, err
+	}
+	t.Cleanup(func() { translateDial, translateTLS, translateManifest = oldDial, oldTLS, oldManifest })
 
 	run := func() translate.Status {
 		dir := t.TempDir()
-		if out := translateFetch("zh", dir, "https://example.com/m/"); out != "ok" {
+		if out := translateFetch("zh", dir); out != "ok" {
 			t.Fatalf("got %q", out)
 		}
 		deadline := time.Now().Add(10 * time.Second)

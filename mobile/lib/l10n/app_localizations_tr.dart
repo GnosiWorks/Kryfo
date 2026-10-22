@@ -9041,22 +9041,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translateWifiOnly => 'Paketleri yalnızca Wi-Fi ile indir';
 
   @override
-  String get translateHost => 'İndirme kaynağı';
-
-  @override
-  String get translateHostDefault => 'Varsayılan';
-
-  @override
-  String get translateHostHint =>
-      'Bir yansı aynı dosyaları sunmalı. Kryfo her birini uygulamaya gömülü hash ile karşılaştırır.';
-
-  @override
-  String get translateHostBad => 'https ya da .onion adresi kullan';
-
-  @override
-  String get translateHostReset => 'Varsayılanı kullan';
-
-  @override
   String get translatePrivacyTitle => 'Gizli kalanlar';
 
   @override

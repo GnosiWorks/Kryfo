@@ -9011,22 +9011,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get translateWifiOnly => 'Unduh paket hanya lewat Wi-Fi';
 
   @override
-  String get translateHost => 'Unduh dari';
-
-  @override
-  String get translateHostDefault => 'Bawaan';
-
-  @override
-  String get translateHostHint =>
-      'Mirror harus menyajikan file yang sama. Kryfo memeriksa setiap file dengan hash yang tertanam di aplikasi.';
-
-  @override
-  String get translateHostBad => 'Gunakan alamat https atau .onion';
-
-  @override
-  String get translateHostReset => 'Pakai bawaan';
-
-  @override
   String get translatePrivacyTitle => 'Yang tetap privat';
 
   @override

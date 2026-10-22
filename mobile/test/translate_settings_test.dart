@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // translation's settings and each chat's switch: kept in the identity's
 // database, read back the same, off unless set, and a chat's row goes with
-// its contact. a mirror has to be https
+// its contact. there is no download host to set
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -10,11 +10,10 @@ import 'package:kryfo/translate/settings.dart';
 import 'sqlite_ffi.dart';
 
 void main() {
-  test('defaults: no auto, wi-fi only, the manifest host', () {
+  test('defaults: no auto, wi-fi only', () {
     const s = TranslateSettings();
     expect(s.autoDefault, isFalse);
     expect(s.wifiOnly, isTrue);
-    expect(s.host, '');
     expect(s.target, '');
     expect(TranslateSettings.fromJson(null).wifiOnly, isTrue);
     expect(TranslateSettings.fromJson('not json').autoDefault, isFalse);
@@ -26,34 +25,20 @@ void main() {
       target: 'en',
       autoDefault: true,
       wifiOnly: false,
-      host: 'https://mirror.example/m/',
     );
     final back = TranslateSettings.fromJson(jsonEncode(s.toJson()));
     expect(back.mine, s.mine);
     expect(back.target, 'en');
     expect(back.autoDefault, isTrue);
     expect(back.wifiOnly, isFalse);
-    expect(back.host, s.host);
   });
 
-  test('a mirror has to be https or an onion, and nothing more', () {
-    expect(hostOk(''), isTrue);
-    expect(hostOk('https://mirror.example/models/'), isTrue);
-    final onion = '${'a' * 56}.onion';
-    expect(hostOk('http://$onion/models/'), isTrue);
-    for (final bad in [
-      'http://mirror.example/',
-      'http://${'a' * 55}.onion/',
-      'http://$onion.example/',
-      'http://${'1' * 56}.onion/',
-      'mirror.example',
-      'https://user:pw@mirror.example/',
-      'https://mirror.example/?a=b',
-      'https://mirror.example/#x',
-      'ftp://mirror.example/',
-    ]) {
-      expect(hostOk(bad), isFalse, reason: bad);
-    }
+  test('a host kept by an older build is not read, nor written back', () {
+    final s = TranslateSettings.fromJson(
+      '{"wifi":false,"host":"https://mirror.example/m/"}',
+    );
+    expect(s.wifiOnly, isFalse);
+    expect(s.toJson().containsKey('host'), isFalse);
   });
 
   test('the memory store: a chat unset is null, set is kept', () async {

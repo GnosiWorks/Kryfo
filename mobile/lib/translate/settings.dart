@@ -15,15 +15,12 @@ class TranslateSettings {
   final bool autoDefault;
   // model downloads wait for wi-fi
   final bool wifiOnly;
-  // a mirror for the models, '' for the manifest's own host
-  final String host;
 
   const TranslateSettings({
     this.mine = const [],
     this.target = '',
     this.autoDefault = false,
     this.wifiOnly = true,
-    this.host = '',
   });
 
   TranslateSettings copyWith({
@@ -31,13 +28,11 @@ class TranslateSettings {
     String? target,
     bool? autoDefault,
     bool? wifiOnly,
-    String? host,
   }) => TranslateSettings(
     mine: mine ?? this.mine,
     target: target ?? this.target,
     autoDefault: autoDefault ?? this.autoDefault,
     wifiOnly: wifiOnly ?? this.wifiOnly,
-    host: host ?? this.host,
   );
 
   Map<String, Object?> toJson() => {
@@ -45,7 +40,6 @@ class TranslateSettings {
     'target': target,
     'auto': autoDefault,
     'wifi': wifiOnly,
-    'host': host,
   };
 
   static TranslateSettings fromJson(String? s) {
@@ -57,28 +51,11 @@ class TranslateSettings {
         target: j['target'] as String? ?? '',
         autoDefault: j['auto'] as bool? ?? false,
         wifiOnly: j['wifi'] as bool? ?? true,
-        host: j['host'] as String? ?? '',
       );
     } catch (_) {
       return const TranslateSettings();
     }
   }
-}
-
-// a mirror has to be https, or http to an onion, a host and a path,
-// nothing else: what the engine's manifest takes. '' is the default host
-final _onion = RegExp(r'^[a-z2-7]{56}\.onion$');
-
-bool hostOk(String s) {
-  if (s.isEmpty) return true;
-  final u = Uri.tryParse(s);
-  return u != null &&
-      (u.scheme == 'https' ||
-          (u.scheme == 'http' && _onion.hasMatch(u.host))) &&
-      u.host.isNotEmpty &&
-      u.userInfo.isEmpty &&
-      !u.hasQuery &&
-      !u.hasFragment;
 }
 
 abstract class TranslateStore {

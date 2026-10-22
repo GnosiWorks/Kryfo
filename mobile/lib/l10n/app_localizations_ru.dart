@@ -9181,22 +9181,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translateWifiOnly => 'Скачивать пакеты только по Wi-Fi';
 
   @override
-  String get translateHost => 'Откуда скачивать';
-
-  @override
-  String get translateHostDefault => 'По умолчанию';
-
-  @override
-  String get translateHostHint =>
-      'Зеркало должно отдавать те же файлы. Kryfo сверяет каждый с хешем, встроенным в приложение.';
-
-  @override
-  String get translateHostBad => 'Нужен адрес https или .onion';
-
-  @override
-  String get translateHostReset => 'Вернуть по умолчанию';
-
-  @override
   String get translatePrivacyTitle => 'Что остаётся в тайне';
 
   @override

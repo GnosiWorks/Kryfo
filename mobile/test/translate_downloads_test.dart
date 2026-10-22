@@ -20,20 +20,17 @@ void main() {
   late ModelDownloads dl;
   var wifi = true;
   var wifiOnly = false;
-  var host = '';
   var quiet = false;
 
   setUp(() {
     be = FakeBackend();
     wifi = true;
     wifiOnly = false;
-    host = '';
     quiet = false;
     dl = ModelDownloads(
       backend: be,
       onWifi: () async => wifi,
       wifiOnly: () => wifiOnly,
-      host: () => host,
       quiet: () => quiet,
       poll: const Duration(milliseconds: 5),
     );
@@ -153,12 +150,6 @@ void main() {
     be.status = const FetchStatus('failed', kind: 'hash');
     await until(() => dl.of('zh').phase == DlPhase.failed);
     expect(dl.of('zh').fail, DlFail.badFile);
-  });
-
-  test('the host set in settings is the one asked', () async {
-    host = 'https://mirror.example/models/';
-    await dl.start('zh');
-    expect(be.hosts, ['https://mirror.example/models/']);
   });
 
   test('a part download left from before reads as paused', () async {
