@@ -115,7 +115,13 @@ Future<CleanResult> cleanFileHere(
   if (before.status == MetaStatus.unreadable) {
     return fail(CleanFailure.unreadable);
   }
-  if (before.embeddedVideo || before.secondImage) {
+  // a jpeg ends at its end marker once clean, so a motion clip, the extra
+  // pictures and a samsung trailer go with what is after it. an hdr layer
+  // waits: the picture would no longer look the same on an hdr screen, and
+  // the result line says it does
+  final cuts = before.kind == MetaKind.jpeg && !before.hdrLayer;
+  if (!cuts &&
+      (before.embeddedVideo || before.secondImage || before.hdrLayer)) {
     return fail(CleanFailure.motion);
   }
   final size = File(inPath).lengthSync();

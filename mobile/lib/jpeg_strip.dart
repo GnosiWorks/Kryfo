@@ -4,16 +4,52 @@
 // segments before the image data; dropping them leaves the pixels untouched.
 import 'dart:typed_data';
 
-// segments kept: the picture and what decoding needs, plus app0 (jfif) and
-// the colour profile. app1 (exif, xmp), app3 to app15 and com go. app2 stays
-// only as a colour profile: the same marker carries the multi-picture index
-// phones use to hang a second image off the first.
+// segments kept: the picture and what decoding needs, plus a bare jfif
+// header, the colour profile and adobe's colour transform. app1 (exif, xmp),
+// app3 to app13, app15, com, a jfif thumbnail and a jfxx segment go. app2
+// stays only as a colour profile: the same marker carries the multi-picture
+// index phones use to hang a second image off the first. app0 and app14 are
+// written fresh by [_rebuilt], so only the fields named there pass.
 bool _keeps(int marker, Uint8List src, int start, int end) {
-  if (marker == 0xE0) return true; // jfif
   if (marker == 0xE2) return _isIcc(src, start, end);
-  if (marker >= 0xE1 && marker <= 0xEF) return false; // exif, xmp, maker
+  if (marker >= 0xE0 && marker <= 0xEF) return false; // exif, xmp, maker
   if (marker == 0xFE) return false; // comment
   return true;
+}
+
+const _jfif = [74, 70, 73, 70, 0]; // JFIF\0
+const _adobe = [65, 100, 111, 98, 101]; // Adobe
+
+bool _starts(Uint8List src, int at, int end, List<int> p) {
+  if (at + p.length > end) return false;
+  for (var k = 0; k < p.length; k++) {
+    if (src[at + k] != p[k]) return false;
+  }
+  return true;
+}
+
+// app0 and app14 rebuilt from the one or two fields decoding needs: the
+// jfif version and pixel density without its thumbnail, and the colour
+// transform that tells a cmyk or ycck file apart. null for anything else
+Uint8List? _rebuilt(int marker, Uint8List src, int start, int end) {
+  final p = start + 4;
+  if (marker == 0xE0 && _starts(src, p, end, _jfif) && p + 12 <= end) {
+    return Uint8List.fromList([
+      0xFF, 0xE0, 0x00, 0x10, ..._jfif, //
+      src[p + 5], src[p + 6], // version
+      src[p + 7], // density units
+      src[p + 8], src[p + 9], src[p + 10], src[p + 11], // density
+      0, 0, // no thumbnail
+    ]);
+  }
+  if (marker == 0xEE && _starts(src, p, end, _adobe) && p + 12 <= end) {
+    return Uint8List.fromList([
+      0xFF, 0xEE, 0x00, 0x0E, ..._adobe, //
+      0x00, 0x64, 0x00, 0x00, 0x00, 0x00, // version 100, no flags
+      src[p + 11], // colour transform
+    ]);
+  }
+  return null;
 }
 
 const _icc = [73, 67, 67, 95, 80, 82, 79, 70, 73, 76, 69, 0]; // ICC_PROFILE\0
@@ -133,9 +169,32 @@ Uint8List? stripJpegMetadata(Uint8List src) {
     return false;
   });
   if (!seen) return null;
-  if (turn >= 2 && turn <= 8) out.add(_orientationOnly(turn));
-  final ok = _walk(src, out, (marker, a, b) => _keeps(marker, src, a, b));
-  return ok ? out.toBytes() : null;
+  final orient = turn >= 2 && turn <= 8 ? _orientationOnly(turn) : null;
+  var app0 = false, app14 = false, placed = orient == null;
+  final ok = _walk(src, out, (marker, a, b) {
+    // a jfif header comes first, right after the start marker; the
+    // orientation follows it, or leads when there is none
+    if (!placed && marker != 0xE0) {
+      out.add(orient!);
+      placed = true;
+    }
+    if (_keeps(marker, src, a, b)) return true;
+    final again = _rebuilt(marker, src, a, b);
+    if (again != null) {
+      // one of each, the first one
+      final seen = marker == 0xE0 ? app0 : app14;
+      if (!seen) out.add(again);
+      if (marker == 0xE0) app0 = true;
+      if (marker == 0xEE) app14 = true;
+    }
+    if (marker == 0xE0 && !placed) {
+      out.add(orient!);
+      placed = true;
+    }
+    return false;
+  });
+  // no table or frame header before the scan: not a picture to vouch for
+  return ok && placed ? out.toBytes() : null;
 }
 
 // the orientation tag (0x0112) out of an app1 exif segment, 1 when there is
