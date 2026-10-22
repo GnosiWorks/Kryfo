@@ -14,12 +14,14 @@ use libsignal_protocol::SignalProtocolError;
 
 mod ops;
 mod record;
+mod sig;
 mod wire;
 
 pub use ops::*;
+pub use sig::{build_info, sign, verify_ctx};
 
 /// bump on any change to a call's fields
-pub const ABI_VERSION: u32 = 1;
+pub const ABI_VERSION: u32 = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]
@@ -183,7 +185,12 @@ export! {
     ks_decrypt_signal => ops::decrypt_signal,
     ks_session_info => ops::session_info,
     ks_session_promote => ops::session_promote,
+    ks_sign => sig::sign,
+    ks_verify_ctx => sig::verify_ctx,
+    ks_build_info => sig::build_info,
 }
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_sig;

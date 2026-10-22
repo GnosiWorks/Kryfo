@@ -18,6 +18,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* what ks_abi_version returns for this header */
+#define KS_ABI_VERSION 2
+
 #define KS_OK 0
 #define KS_ERR_ARGS 1      /* framing, a missing field, a wrong width */
 #define KS_ERR_KEY 2       /* a key or prekey record that does not read */
@@ -57,7 +60,9 @@ KS_CALL(ks_signed_prekey_generate);
 KS_CALL(ks_kyber_prekey_generate);
 /* kind, record -> id, pub, signature (empty for a one-time key) */
 KS_CALL(ks_prekey_public);
-/* pub, message, signature -> () or KS_ERR_SIGNATURE */
+/* pub, message, signature -> () or KS_ERR_SIGNATURE. message is a prekey's
+ * public key (33 bytes 0x05 first, or 1569 bytes 0x08 first), else
+ * KS_ERR_ARGS */
 KS_CALL(ks_verify);
 /* reg, device, prekey id?, prekey?, signed id, signed, signature,
  * kyber id, kyber, kyber signature, identity pub -> bundle.
@@ -82,6 +87,18 @@ KS_CALL(ks_decrypt_signal);
 KS_CALL(ks_session_info);
 /* held, newer -> held with newer's current state in front */
 KS_CALL(ks_session_promote);
+/* identity, context, message -> signature (64), xeddsa over
+ * "kryfo-sig-v1" 0x00 context 0x00 message. context is one of invite,
+ * hello, device-list, link-proof, move, face-claim, else KS_ERR_ARGS;
+ * an invite, hello or device-list body opens with KIN4, KHL1 or KDL2 */
+KS_CALL(ks_sign);
+/* pub, context, message, signature -> () or KS_ERR_SIGNATURE. pub is
+ * exactly 33 canonical bytes, else KS_ERR_KEY; the signature is 64 bytes
+ * with s below the group order */
+KS_CALL(ks_verify_ctx);
+/* () -> the libsignal-protocol and spqr sources it was built from, as
+ * Cargo.lock names them */
+KS_CALL(ks_build_info);
 
 #undef KS_CALL
 

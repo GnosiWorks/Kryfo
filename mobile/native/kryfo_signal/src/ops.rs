@@ -30,7 +30,7 @@ fn block_on<F: Future>(f: F) -> F::Output {
     }
 }
 
-fn rng() -> rand::rand_core::UnwrapErr<OsRng> {
+pub(crate) fn rng() -> rand::rand_core::UnwrapErr<OsRng> {
     OsRng.unwrap_err()
 }
 
@@ -334,14 +334,21 @@ pub fn prekey_public(input: &[u8]) -> R<Vec<u8>> {
     Ok(w.done())
 }
 
-/// an identity's signature over [message]
+/// an identity's signature over a prekey's public key, the one thing
+/// libsignal signs with it this way: a 33 byte curve key or a 1569 byte
+/// kyber key. anything else is for sig.rs, under a context
 pub fn verify(input: &[u8]) -> R<Vec<u8>> {
     let mut r = Reader::new(input);
-    let id = identity(r.need()?)?;
+    let id = crate::sig::strict_public(r.need()?)?;
     let msg = r.need()?;
     let sig = r.need()?;
     r.end()?;
-    if !id.public_key().verify_signature(msg, sig) {
+    let prekey = matches!(msg, [0x05, ..] if msg.len() == 33)
+        || matches!(msg, [0x08, ..] if msg.len() == 1569);
+    if !prekey {
+        return Err(Error::Args);
+    }
+    if !id.verify_signature(msg, sig) {
         return Err(Error::Signature);
     }
     Ok(Vec::new())
