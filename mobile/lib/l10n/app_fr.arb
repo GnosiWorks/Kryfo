@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Via les ponts intégrés",
   "bridgesUsingSnowflake": "Via Snowflake",
   "bridgesUsingTorProject": "Via des ponts du Projet Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo réessaie de lui-même de temps en temps.",
-  "bridgesTheTorProjectCanSuggest": "Le Projet Tor peut proposer un pont qui marche ici.",
   "bridgesBridgeRemoved": "Pont retiré",
   "bridgesUndo": "Annuler",
   "bridgesRemoveBridgeN": "Retirer le pont {n}",

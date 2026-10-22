@@ -8986,14 +8986,6 @@
   "@bridgesUsingTorProject": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo tries again by itself now and then.",
-  "@bridgesKryfoTriesAgainOnItsOwn": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTheTorProjectCanSuggest": "The Tor Project can suggest a bridge that works here.",
-  "@bridgesTheTorProjectCanSuggest": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesBridgeRemoved": "Bridge removed",
   "@bridgesBridgeRemoved": {
     "description": "screens/bridges_screen.dart"

@@ -7098,14 +7098,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesUsingTorProject => 'از راه پل‌های پروژه‌ی Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo هر از گاهی خودش دوباره تلاش می‌کند.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'پروژه‌ی Tor می‌تواند پلی پیشنهاد کند که این‌جا کار کند.';
-
-  @override
   String get bridgesBridgeRemoved => 'پل حذف شد';
 
   @override

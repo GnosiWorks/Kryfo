@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "از راه پل‌های داخلی",
   "bridgesUsingSnowflake": "از راه Snowflake",
   "bridgesUsingTorProject": "از راه پل‌های پروژه‌ی Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo هر از گاهی خودش دوباره تلاش می‌کند.",
-  "bridgesTheTorProjectCanSuggest": "پروژه‌ی Tor می‌تواند پلی پیشنهاد کند که این‌جا کار کند.",
   "bridgesBridgeRemoved": "پل حذف شد",
   "bridgesUndo": "واگرد",
   "bridgesRemoveBridgeN": "حذف پل ⁨{n}⁩",

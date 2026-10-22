@@ -7166,14 +7166,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bridgesUsingTorProject => 'Via des ponts du Projet Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo réessaie de lui-même de temps en temps.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Le Projet Tor peut proposer un pont qui marche ici.';
-
-  @override
   String get bridgesBridgeRemoved => 'Pont retiré';
 
   @override

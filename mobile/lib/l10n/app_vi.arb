@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Đang dùng cầu nối có sẵn",
   "bridgesUsingSnowflake": "Đang dùng Snowflake",
   "bridgesUsingTorProject": "Đang dùng cầu nối từ Dự án Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Thỉnh thoảng Kryfo sẽ tự thử lại.",
-  "bridgesTheTorProjectCanSuggest": "Dự án Tor có thể gợi ý một cầu nối dùng được ở đây.",
   "bridgesBridgeRemoved": "Đã gỡ cầu nối",
   "bridgesUndo": "Hoàn tác",
   "bridgesRemoveBridgeN": "Gỡ cầu nối {n}",

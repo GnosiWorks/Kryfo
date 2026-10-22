@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "正在使用内置网桥",
   "bridgesUsingSnowflake": "正在使用 Snowflake",
   "bridgesUsingTorProject": "正在使用 Tor 项目的网桥",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo 会时不时自己重试。",
-  "bridgesTheTorProjectCanSuggest": "Tor 项目可以推荐一个在这里能用的网桥。",
   "bridgesBridgeRemoved": "网桥已移除",
   "bridgesUndo": "撤销",
   "bridgesRemoveBridgeN": "移除网桥 {n}",

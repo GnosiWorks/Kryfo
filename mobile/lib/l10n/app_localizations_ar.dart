@@ -7205,14 +7205,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesUsingTorProject => 'عبر جسور من مشروع Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'يستطيع مشروع Tor أن يقترح جسرًا يعمل هنا.';
-
-  @override
   String get bridgesBridgeRemoved => 'أُزيل الجسر';
 
   @override

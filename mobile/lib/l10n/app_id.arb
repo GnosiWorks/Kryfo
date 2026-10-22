@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Memakai jembatan bawaan",
   "bridgesUsingSnowflake": "Memakai Snowflake",
   "bridgesUsingTorProject": "Memakai jembatan dari Tor Project",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo mencoba lagi sendiri sesekali.",
-  "bridgesTheTorProjectCanSuggest": "Tor Project bisa menyarankan jembatan yang berfungsi di sini.",
   "bridgesBridgeRemoved": "Jembatan dihapus",
   "bridgesUndo": "Urungkan",
   "bridgesRemoveBridgeN": "Hapus jembatan {n}",

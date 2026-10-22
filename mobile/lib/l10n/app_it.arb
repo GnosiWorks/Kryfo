@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Tramite bridge integrati",
   "bridgesUsingSnowflake": "Tramite Snowflake",
   "bridgesUsingTorProject": "Tramite bridge del Progetto Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo riprova da solo ogni tanto.",
-  "bridgesTheTorProjectCanSuggest": "Il Progetto Tor può suggerire un bridge che funziona qui.",
   "bridgesBridgeRemoved": "Bridge rimosso",
   "bridgesUndo": "Annulla",
   "bridgesRemoveBridgeN": "Rimuovi bridge {n}",

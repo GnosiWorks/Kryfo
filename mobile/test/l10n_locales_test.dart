@@ -2938,16 +2938,6 @@ final _calls = <_Call>[
   ('bridgesUsingBuiltIn', [], (l) => l.bridgesUsingBuiltIn),
   ('bridgesUsingSnowflake', [], (l) => l.bridgesUsingSnowflake),
   ('bridgesUsingTorProject', [], (l) => l.bridgesUsingTorProject),
-  (
-    'bridgesKryfoTriesAgainOnItsOwn',
-    [],
-    (l) => l.bridgesKryfoTriesAgainOnItsOwn,
-  ),
-  (
-    'bridgesTheTorProjectCanSuggest',
-    [],
-    (l) => l.bridgesTheTorProjectCanSuggest,
-  ),
   ('bridgesBridgeRemoved', [], (l) => l.bridgesBridgeRemoved),
   ('bridgesUndo', [], (l) => l.bridgesUndo),
   ('bridgesRemoveBridgeN', ["⟨n⟩"], (l) => l.bridgesRemoveBridgeN("⟨n⟩")),

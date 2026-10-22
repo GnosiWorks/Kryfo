@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Через вбудовані мости",
   "bridgesUsingSnowflake": "Через Snowflake",
   "bridgesUsingTorProject": "Через мости від проєкту Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo час від часу сам пробує знову.",
-  "bridgesTheTorProjectCanSuggest": "Проєкт Tor може підказати міст, який тут працює.",
   "bridgesBridgeRemoved": "Міст прибрано",
   "bridgesUndo": "Скасувати",
   "bridgesRemoveBridgeN": "Прибрати міст {n}",

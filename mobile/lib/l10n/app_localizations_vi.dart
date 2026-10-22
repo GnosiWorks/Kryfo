@@ -7076,14 +7076,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesUsingTorProject => 'Đang dùng cầu nối từ Dự án Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Thỉnh thoảng Kryfo sẽ tự thử lại.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Dự án Tor có thể gợi ý một cầu nối dùng được ở đây.';
-
-  @override
   String get bridgesBridgeRemoved => 'Đã gỡ cầu nối';
 
   @override

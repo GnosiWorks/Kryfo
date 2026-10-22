@@ -6790,12 +6790,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesUsingTorProject => '正在使用 Tor 项目的网桥';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 会时不时自己重试。';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest => 'Tor 项目可以推荐一个在这里能用的网桥。';
-
-  @override
   String get bridgesBridgeRemoved => '网桥已移除';
 
   @override
@@ -15259,12 +15253,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesUsingTorProject => '正在使用 Tor 專案的橋接';
-
-  @override
-  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 會不時自己重試。';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest => 'Tor 專案可以推薦一個在這裡可用的橋接。';
 
   @override
   String get bridgesBridgeRemoved => '已移除橋接';

@@ -3375,14 +3375,6 @@ void main() {
     expect(l.bridgesUsingBuiltIn, "Using built-in bridges");
     expect(l.bridgesUsingSnowflake, "Using Snowflake");
     expect(l.bridgesUsingTorProject, "Using bridges from the Tor Project");
-    expect(
-      l.bridgesKryfoTriesAgainOnItsOwn,
-      "Kryfo tries again by itself now and then.",
-    );
-    expect(
-      l.bridgesTheTorProjectCanSuggest,
-      "The Tor Project can suggest a bridge that works here.",
-    );
     expect(l.bridgesBridgeRemoved, "Bridge removed");
     expect(l.bridgesUndo, "Undo");
     expect(l.bridgesRemoveBridgeN("<n>"), "Remove bridge <n>");

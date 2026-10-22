@@ -11436,18 +11436,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo tries again by itself now and then.'**
-  String get bridgesKryfoTriesAgainOnItsOwn;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project can suggest a bridge that works here.'**
-  String get bridgesTheTorProjectCanSuggest;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Bridge removed'**
   String get bridgesBridgeRemoved;
 

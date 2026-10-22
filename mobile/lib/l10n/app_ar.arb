@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "عبر الجسور المدمجة",
   "bridgesUsingSnowflake": "عبر Snowflake",
   "bridgesUsingTorProject": "عبر جسور من مشروع Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر.",
-  "bridgesTheTorProjectCanSuggest": "يستطيع مشروع Tor أن يقترح جسرًا يعمل هنا.",
   "bridgesBridgeRemoved": "أُزيل الجسر",
   "bridgesUndo": "تراجع",
   "bridgesRemoveBridgeN": "إزالة الجسر ⁨{n}⁩",

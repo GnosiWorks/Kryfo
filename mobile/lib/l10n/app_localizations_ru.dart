@@ -7225,14 +7225,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesUsingTorProject => 'Через мосты от проекта Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo время от времени сам пробует снова.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Проект Tor может подсказать мост, который здесь работает.';
-
-  @override
   String get bridgesBridgeRemoved => 'Мост удалён';
 
   @override

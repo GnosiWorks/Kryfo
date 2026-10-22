@@ -7084,14 +7084,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesUsingTorProject => 'Memakai jembatan dari Tor Project';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo mencoba lagi sendiri sesekali.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Tor Project bisa menyarankan jembatan yang berfungsi di sini.';
-
-  @override
   String get bridgesBridgeRemoved => 'Jembatan dihapus';
 
   @override
