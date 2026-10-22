@@ -217,6 +217,19 @@ List<RemovedLine> removedLines(MetaReport r) {
     r.comment,
     r.savedTime,
     r.stamps && r.created == null,
+    // named one by one in the found list later; counted until then
+    r.timecode,
+    r.handlerNames,
+    r.editHistory,
+    r.syntheticLabel,
+    r.syntheticPrompt.isNotEmpty,
+    r.smallCopies > 0,
+    r.depthMap || r.portraitMatte || r.beforeBlur,
+    r.hdrLayer,
+    r.extraPictures > 0,
+    r.sphere,
+    r.networkCountry != null,
+    r.liveId != null,
   ]) {
     if (b) other++;
   }

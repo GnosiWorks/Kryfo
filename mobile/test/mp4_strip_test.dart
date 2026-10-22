@@ -254,7 +254,8 @@ void main() {
     final src = sample();
     final before = readMeta(MemorySource(src.bytes));
     expect(before.why, null);
-    expect(before.extraTracks, 2);
+    expect(before.extraTracks, 1);
+    expect(before.timecode, true);
     expect(before.leftoverBytes, greaterThan(0));
     final f = await write(src.bytes);
     await stripMp4Metadata(f.path);

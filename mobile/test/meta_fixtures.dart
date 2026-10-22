@@ -329,7 +329,12 @@ Uint8List heif({
 
   List<int> build(int at) => [
     ...ftyp,
-    ...full('meta', 0, [...iinf, ...iloc(at)]),
+    ...full('meta', 0, [
+      ...full('hdlr', 0, [...be32(0), ...t('pict'), ...List.filled(13, 0)]),
+      ...full('pitm', 0, be16(1)),
+      ...iinf,
+      ...iloc(at),
+    ]),
     ...box('mdat', [...t(pic), ...exif, ...x]),
     ...after,
   ];
@@ -348,6 +353,7 @@ Uint8List mp4({
   int created = 0,
   bool uuid = false,
   bool gpsTrack = false,
+  String handlerName = '',
 }) {
   final mvhd = full('mvhd', 0, [
     ...be32(created),
@@ -398,7 +404,10 @@ Uint8List mp4({
     ...box('ftyp', [...t('isom'), ...be32(512), ...t('isom'), ...t('mp42')]),
     ...box('moov', [
       ...mvhd,
-      ...box('trak', [...tkhd, ...videoMdia(at, frames.length)]),
+      ...box('trak', [
+        ...tkhd,
+        ...videoMdia(at, frames.length, name: handlerName),
+      ]),
       if (gpsTrack)
         ...box('trak', [
           ...tkhd,
@@ -462,3 +471,182 @@ List<int> videoMdia(
     ]),
   ]),
 ]);
+
+/// a samsung trailer: named blocks, then the directory and 'SEFT'
+List<int> sefTrailer(List<(String, List<int>)> blocks) {
+  final data = <int>[];
+  final at = <int>[];
+  final lens = <int>[];
+  for (final (name, body) in blocks) {
+    at.add(data.length);
+    final b = [
+      ...le16(0),
+      ...le16(0x0a01),
+      ...le32(name.length),
+      ...t(name),
+      ...body,
+    ];
+    lens.add(b.length);
+    data.addAll(b);
+  }
+  final head = data.length;
+  final dir = [
+    ...t('SEFH'),
+    ...le32(101),
+    ...le32(blocks.length),
+    for (var k = 0; k < blocks.length; k++) ...[
+      ...le16(0),
+      ...le16(0x0a01),
+      ...le32(head - at[k]),
+      ...le32(lens[k]),
+    ],
+  ];
+  return [...data, ...dir, ...le32(dir.length), ...t('SEFT')];
+}
+
+/// a content credentials store as jpeg, png and heif carry it: a jumbf box
+/// with a c2pa label and a claim naming the app that made it
+List<int> jumbf({String generator = 'Truepic_Lens/1.0', String extra = ''}) => [
+  ...box('jumb', [
+    ...box('jumd', [
+      ...t('c2pa'),
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      ...t('c2pa'),
+      0,
+    ]),
+    ...t('claim_generator'),
+    0x60 + generator.length,
+    ...t(generator),
+    ...t(extra),
+  ]),
+];
+
+/// jpeg app11 segments carrying [store], split as cameras split it
+List<int> app11(List<int> store, {int piece = 40}) {
+  final out = <int>[];
+  var seq = 1;
+  for (var i = 0; i < store.length; i += piece) {
+    final end = i + piece < store.length ? i + piece : store.length;
+    out.addAll(
+      seg(0xEB, [...t('JP'), 0, 1, ...be32(seq++), ...store.sublist(i, end)]),
+    );
+  }
+  return out;
+}
+
+/// a jpeg with any segments after the start marker
+Uint8List jpegWith(List<int> segments, {List<int> trailer = const []}) =>
+    Uint8List.fromList([
+      0xFF,
+      0xD8,
+      ...segments,
+      ...seg(0xDB, [1, 2, 3]),
+      ...seg(0xDA, [0, 1]),
+      5,
+      6,
+      0xFF,
+      0xD9,
+      ...trailer,
+    ]);
+
+class HeifPart {
+  final int id;
+  final String type;
+  final List<int> bytes;
+  final String? aux;
+  final String mime;
+  const HeifPart(this.id, this.type, this.bytes, {this.aux, this.mime = ''});
+}
+
+/// a heif of [parts], their references and auxiliary types, primary
+/// [primary]. items sit in mdat one after another; [after] follows it
+Uint8List heifOf(
+  List<HeifPart> parts, {
+  List<(String, int, List<int>)> refs = const [],
+  int primary = 1,
+  List<int> after = const [],
+  List<int> mdatTail = const [],
+  String brand = 'heic',
+}) {
+  final ftyp = box('ftyp', [
+    ...t(brand),
+    ...be32(0),
+    ...t('mif1'),
+    ...t(brand),
+  ]);
+  final auxed = [
+    for (final p in parts)
+      if (p.aux != null) p,
+  ];
+  final ipco = box('ipco', [
+    for (final p in auxed) ...full('auxC', 0, [...t(p.aux!), 0]),
+  ]);
+  final ipma = full('ipma', 0, [
+    ...be32(auxed.length),
+    for (var k = 0; k < auxed.length; k++) ...[
+      ...be16(auxed[k].id),
+      1,
+      0x80 | (k + 1),
+    ],
+  ]);
+  final iref = full('iref', 0, [
+    for (final (type, from, to) in refs)
+      ...box(type, [
+        ...be16(from),
+        ...be16(to.length),
+        for (final x in to) ...be16(x),
+      ]),
+  ]);
+  List<int> build(int at) {
+    var o = at;
+    final items = <List<int>>[];
+    for (final p in parts) {
+      items.add([
+        ...be16(p.id),
+        ...be16(0),
+        ...be16(0),
+        ...be16(1),
+        ...be32(o),
+        ...be32(p.bytes.length),
+      ]);
+      o += p.bytes.length;
+    }
+    return [
+      ...ftyp,
+      ...full('meta', 0, [
+        ...full('hdlr', 0, [...be32(0), ...t('pict'), ...List.filled(13, 0)]),
+        ...full('pitm', 0, be16(primary)),
+        ...full('iinf', 0, [
+          ...be16(parts.length),
+          for (final p in parts) ...infe(p.id, p.type, mime: p.mime),
+        ]),
+        if (refs.isNotEmpty) ...iref,
+        ...box('iprp', [...ipco, ...ipma]),
+        ...full('iloc', 1, [
+          0x44,
+          0x00,
+          ...be16(items.length),
+          for (final i in items) ...i,
+        ]),
+      ]),
+      ...box('mdat', [for (final p in parts) ...p.bytes, ...mdatTail]),
+      ...after,
+    ];
+  }
+
+  final probe = build(0);
+  final body =
+      parts.fold<int>(0, (n, p) => n + p.bytes.length) + mdatTail.length;
+  return Uint8List.fromList(build(probe.length - after.length - body));
+}
