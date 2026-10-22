@@ -243,4 +243,27 @@ void main() {
       expect(cleanHeif(src), null);
     },
   );
+
+  test('a tone map primary leaves its base as the picture', () {
+    final src = heifOf(
+      [
+        _pic,
+        const HeifPart(2, 'av01', [5, 6]),
+        const HeifPart(3, 'tmap', [0, 1, 2]),
+      ],
+      refs: [
+        ('dimg', 3, [1, 2]),
+      ],
+      primary: 3,
+      brand: 'avif',
+      brands: ['tmap'],
+    );
+    expect(_read(src).hdrLayer, true);
+    final out = cleanHeif(src)!;
+    final m = _meta(out);
+    expect(m.primary, 1);
+    expect(m.items.keys, [1]);
+    expect(_bytes(out, 1), _pic.bytes);
+    expect(_read(out).status, MetaStatus.nothing);
+  });
 }

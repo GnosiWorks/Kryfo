@@ -338,9 +338,20 @@ const kHeifCodings = {
 
 /// the items the picture is drawn from: the primary, the tiles or layers it
 /// is built from, and its alpha plane. everything else is beside it
+/// the item a reader shows: the primary, or when the primary is a tone
+/// map (an hdr picture made of a base and a gain map), its base
+int? heifShownItem(HeifMeta m) {
+  final primary = m.primary;
+  if (primary == null || m.items[primary]?.type != 'tmap') return primary;
+  for (final r in m.refsOf('dimg')) {
+    if (r.from == primary && r.to.isNotEmpty) return r.to.first;
+  }
+  return null;
+}
+
 Set<int> heifPictureItems(ByteSource s, HeifMeta m) {
   final keep = <int>{};
-  final primary = m.primary;
+  final primary = heifShownItem(m);
   if (primary == null || !m.items.containsKey(primary)) return keep;
   void add(int id) {
     if (!keep.add(id)) return;

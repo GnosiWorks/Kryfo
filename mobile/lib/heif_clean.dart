@@ -261,8 +261,16 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
             ...List.filled(k.bodySize - 24, 0),
           ]),
         );
-      case 'pitm' || 'dinf':
+      case 'dinf':
         body.addAll(s.read(k.start, k.size));
+      case 'pitm':
+        // a tone map primary goes with its gain map: its base is shown
+        final shown = heifShownItem(m);
+        final v = s.read(k.body, 1)[0];
+        if (shown == null || (v == 0 && shown > 0xFFFF)) return null;
+        body.addAll(
+          _box('pitm', [v, 0, 0, 0, ...(v == 0 ? _be16(shown) : _be32(shown))]),
+        );
       case 'iinf':
         final v = s.read(k.body, 1)[0];
         final items = [
