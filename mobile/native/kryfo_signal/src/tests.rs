@@ -848,3 +848,14 @@ fn parsers_take_garbage() {
         );
     }
 }
+
+// one byte read past a 16-byte box. mtecheck.sh runs it under heap tagging,
+// where it has to trap, or the check proves nothing
+#[cfg(feature = "mtecheck")]
+#[test]
+fn mte_canary() {
+    let p = Box::into_raw(Box::new([7u8; 16])) as *mut u8;
+    let past = unsafe { std::ptr::read_volatile(p.add(16)) };
+    drop(unsafe { Box::from_raw(p as *mut [u8; 16]) });
+    std::hint::black_box(past);
+}
