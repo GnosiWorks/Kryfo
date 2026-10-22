@@ -5,8 +5,9 @@
 // first bytes, not the name:
 //   jpeg   the app segments go (jpeg_strip.dart)
 //   png    only the chunks a picture is drawn from are kept, whole, so no
-//          crc has to be redone
-//   webp   EXIF and 'XMP ' go, their VP8X flags are cleared
+//          crc has to be redone; an orientation goes back in alone
+//   webp   only the chunks a picture is drawn from are kept; an orientation
+//          goes back in alone and the VP8X flags say what is left
 //   gif    comments go, and every application block but the loop ones
 //   heif   heic and avif: exif and xmp items are zeroed where they sit so
 //          iloc offsets hold; unknown top level boxes are cut or emptied
@@ -21,6 +22,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'jpeg_strip.dart';
+import 'meta/tiff.dart';
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
 
@@ -231,16 +233,26 @@ const _pngKeep = {
 Uint8List? _png(Uint8List src) {
   final out = BytesBuilder(copy: false);
   out.add(src.sublist(0, 8));
+  final turn = _pngTurn(src);
+  if (turn == null) return null;
   var i = 8;
   var dropped = false;
+  var turned = turn == 1;
   while (true) {
     if (i + 12 > src.length) return null; // no IEND before the file ran out
     final len = _u32(src, i);
     final end = i + 12 + len;
     if (len > 0x7fffffff || end > src.length) return null;
     final type = _tag(src, i + 4);
-    if (_pngKeep.contains(type)) {
+    // the orientation goes before the picture data, where readers look
+    if (!turned && (type == 'IDAT' || type == 'fdAT' || type == 'IEND')) {
+      out.add(_pngChunk('eXIf', orientationTiff(turn)));
+      turned = true;
+    }
+    if (_pngKeep.contains(type) ||
+        (type == 'eXIf' && !turned && _isTurnOnly(src, i + 8, len, turn))) {
       out.add(src.sublist(i, end));
+      if (type == 'eXIf') turned = true;
     } else {
       dropped = true;
     }
@@ -254,12 +266,83 @@ Uint8List? _png(Uint8List src) {
   return dropped ? out.toBytes() : src;
 }
 
+// the turn an eXIf chunk asks for, 1 when there is none. null when the
+// chunks cannot be walked
+int? _pngTurn(Uint8List src) {
+  var i = 8;
+  while (i + 12 <= src.length) {
+    final len = _u32(src, i);
+    final end = i + 12 + len;
+    if (len > 0x7fffffff || end > src.length) return null;
+    final type = _tag(src, i + 4);
+    if (type == 'eXIf') {
+      return readTiff(
+            Uint8List.sublistView(src, i + 8, i + 8 + len),
+          )?.orientation ??
+          1;
+    }
+    if (type == 'IEND') return 1;
+    i = end;
+  }
+  return null;
+}
+
+// true when [len] bytes at [at] are the orientation block this file wrote
+bool _isTurnOnly(Uint8List src, int at, int len, int turn) {
+  if (turn < 2 || turn > 8) return false;
+  final want = orientationTiff(turn);
+  if (len != want.length || at + len > src.length) return false;
+  for (var k = 0; k < len; k++) {
+    if (src[at + k] != want[k]) return false;
+  }
+  return true;
+}
+
+List<int> _pngChunk(String type, List<int> data) {
+  final typed = [...latin1.encode(type), ...data];
+  final crc = _crc32(typed);
+  return [..._be32(data.length), ...typed, ..._be32(crc)];
+}
+
+List<int> _be32(int v) => [
+  (v >> 24) & 255,
+  (v >> 16) & 255,
+  (v >> 8) & 255,
+  v & 255,
+];
+
+final Uint32List _crcTable = () {
+  final t = Uint32List(256);
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) {
+      c = (c & 1) != 0 ? 0xEDB88320 ^ (c >> 1) : c >> 1;
+    }
+    t[n] = c;
+  }
+  return t;
+}();
+
+int _crc32(List<int> data) {
+  var c = 0xFFFFFFFF;
+  for (final b in data) {
+    c = _crcTable[(c ^ b) & 0xFF] ^ (c >> 8);
+  }
+  return c ^ 0xFFFFFFFF;
+}
+
 // ---- webp ----
+
+// the webp chunks a picture is drawn from, still or animated
+const _webpKeep = {'VP8 ', 'VP8L', 'VP8X', 'ALPH', 'ANIM', 'ANMF', 'ICCP'};
 
 Uint8List? _webp(Uint8List src) {
   final chunks = <Uint8List>[];
   var i = 12;
   var dropped = false;
+  var turn = 1;
+  var exifKept = false;
+  if (src.length < 12) return null;
   final riffEnd = 8 + _u32le(src, 4);
   if (riffEnd > src.length) return null;
   while (i < riffEnd) {
@@ -269,26 +352,55 @@ Uint8List? _webp(Uint8List src) {
     final end = i + 8 + len + (len & 1); // chunks are padded to even
     if (end > riffEnd + 1 || i + 8 + len > src.length) return null;
     final stop = end > src.length ? src.length : end;
-    if (type == 'EXIF' || type == 'XMP ') {
+    if (type == 'EXIF' && turn == 1) {
+      var tiff = Uint8List.sublistView(src, i + 8, i + 8 + len);
+      // some writers put jpeg's "Exif\0\0" in front
+      if (len > 6 && tiff[0] == 0x45 && tiff[1] == 0x78 && tiff[4] == 0) {
+        tiff = Uint8List.sublistView(tiff, 6);
+      }
+      turn = readTiff(tiff)?.orientation ?? 1;
+    }
+    if (type == 'EXIF' && _isTurnOnly(src, i + 8, len, turn)) {
+      // written here before: it stays where it is
+      exifKept = true;
+      chunks.add(Uint8List.fromList(src.sublist(i, stop)));
+    } else if (!_webpKeep.contains(type)) {
       dropped = true;
     } else {
-      final c = Uint8List.fromList(src.sublist(i, stop));
-      // VP8X says up front which extras follow. bit 3 exif, bit 2 xmp
-      if (type == 'VP8X' && len >= 1 && (c[8] & 0x0C) != 0) {
-        c[8] &= ~0x0C & 0xFF;
-        dropped = true;
-      }
-      chunks.add(c);
+      chunks.add(Uint8List.fromList(src.sublist(i, stop)));
     }
     i = end;
   }
   // bytes after the riff are not the picture
   if (riffEnd + (riffEnd & 1) < src.length) dropped = true;
+  // VP8X says up front which extras follow: bit 3 exif, bit 2 xmp. only
+  // the exif one may stay, for an orientation written back alone
+  final keepTurn = turn >= 2 && turn <= 8;
+  for (final c in chunks) {
+    if (_tag(c, 0) != 'VP8X' || c.length < 9) continue;
+    final want = (c[8] & ~0x0C & 0xFF) | (keepTurn ? 0x08 : 0);
+    if (want != c[8]) {
+      c[8] = want;
+      dropped = true;
+    }
+  }
   if (!dropped) return src;
   final body = BytesBuilder(copy: false);
   for (final c in chunks) {
     body.add(c);
     if (c.length & 1 == 1) body.add([0]);
+  }
+  if (keepTurn && !exifKept && chunks.any((c) => _tag(c, 0) == 'VP8X')) {
+    final t = orientationTiff(turn);
+    body.add([
+      ...latin1.encode('EXIF'),
+      t.length & 255,
+      (t.length >> 8) & 255,
+      0,
+      0,
+      ...t,
+      if (t.length.isOdd) 0,
+    ]);
   }
   final b = body.toBytes();
   final size = 4 + b.length;

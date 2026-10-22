@@ -240,6 +240,11 @@ bool _isOrientationOnly(Uint8List src, int start, int end) {
   return true;
 }
 
+/// a big-endian tiff with one ifd holding one entry: the orientation, as
+/// png eXIf and webp EXIF carry it
+Uint8List orientationTiff(int turn) =>
+    Uint8List.sublistView(_orientationOnly(turn), 10);
+
 // app1, "Exif", a big-endian tiff with one ifd holding one entry
 Uint8List _orientationOnly(int turn) => Uint8List.fromList([
   0xFF, 0xE1, 0x00, 0x22, // 34 bytes follow the marker, the length included

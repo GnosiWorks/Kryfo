@@ -179,6 +179,98 @@ void main() {
     });
   });
 
+  group('orientation', () {
+    // big-endian tiff, one entry: orientation [turn], then a make tag
+    List<int> tiff(int turn) => [
+      0x4D, 0x4D, 0, 0x2A, 0, 0, 0, 8, 0, 2, //
+      0x01, 0x0F, 0, 2, 0, 0, 0, 4, ...t('ACME'),
+      0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, turn, 0, 0,
+      0, 0, 0, 0,
+    ];
+    const alone = [
+      0x4D, 0x4D, 0, 0x2A, 0, 0, 0, 8, 0, 1, //
+      0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 6, 0, 0,
+      0, 0, 0, 0,
+    ];
+
+    test('png keeps a turn as an eXIf of its own, before the pixels', () {
+      final src = Uint8List.fromList([
+        ...pngSig,
+        ...pngChunk('IHDR', List.filled(13, 1)),
+        ...pngChunk('IDAT', t('pixels')),
+        ...pngChunk('eXIf', tiff(6)),
+        ...pngChunk('IEND', []),
+      ]);
+      final out = stripPictureBytes(src)!;
+      expect(has(out, 'ACME'), false);
+      final at = latin1.decode(out).indexOf('eXIf');
+      expect(at, lessThan(latin1.decode(out).indexOf('IDAT')));
+      expect(out.sublist(at + 4, at + 4 + alone.length), alone);
+      // the crc of type and data, as png wants it
+      expect(out.sublist(at + 4 + alone.length, at + 8 + alone.length), [
+        0xD6,
+        0x67,
+        0x4B,
+        0x69,
+      ]);
+      expect(identical(stripPictureBytes(out), out), true);
+    });
+
+    test('png upright gets no eXIf', () {
+      final src = Uint8List.fromList([
+        ...pngSig,
+        ...pngChunk('IHDR', List.filled(13, 1)),
+        ...pngChunk('eXIf', tiff(1)),
+        ...pngChunk('IDAT', t('pixels')),
+        ...pngChunk('IEND', []),
+      ]);
+      expect(has(stripPictureBytes(src)!, 'eXIf'), false);
+    });
+
+    test('webp keeps a turn as an EXIF of its own and its flag', () {
+      final src = webp([
+        riffChunk('VP8X', [0x0C, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        riffChunk('VP8 ', t('pixels!')),
+        riffChunk('EXIF', tiff(6)),
+        riffChunk('XMP ', t('<xmp>Redmi</xmp>')),
+      ]);
+      final out = stripPictureBytes(src)!;
+      expect(has(out, 'ACME'), false);
+      expect(has(out, 'Redmi'), false);
+      expect(out[20] & 0x0C, 0x08);
+      final at = latin1.decode(out).indexOf('EXIF');
+      expect(out.sublist(at + 8, at + 8 + alone.length), alone);
+      final size = out[4] | (out[5] << 8) | (out[6] << 16) | (out[7] << 24);
+      expect(8 + size, out.length);
+      expect(identical(stripPictureBytes(out), out), true);
+    });
+  });
+
+  group('webp keep list', () {
+    test('credentials and unknown chunks go', () {
+      final src = webp([
+        riffChunk('VP8X', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        riffChunk('VP8L', t('pixels')),
+        riffChunk('C2PA', t('jumb c2pa Truepic')),
+        riffChunk('ZZZZ', t('who knows')),
+      ]);
+      final out = stripPictureBytes(src)!;
+      expect(has(out, 'Truepic'), false);
+      expect(has(out, 'who knows'), false);
+      expect(has(out, 'pixels'), true);
+    });
+
+    test('an animation keeps its frames', () {
+      final src = webp([
+        riffChunk('VP8X', [0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        riffChunk('ANIM', [0, 0, 0, 0, 0, 0]),
+        riffChunk('ANMF', t('frame one!')),
+        riffChunk('ANMF', t('frame two!')),
+      ]);
+      expect(identical(stripPictureBytes(src), src), true);
+    });
+  });
+
   group('heif', () {
     for (final v in [0, 1]) {
       test('zeroes exif and xmp in place, iloc v$v', () {
