@@ -2339,5 +2339,17 @@
   "groupInfoDeleteThisGroup": "Excluir este grupo?",
   "groupInfoDeleteGroupLine": "O grupo encerrado sai da sua lista de conversas.",
   "groupEndedOldNotice": "Encerrei este grupo, então ninguém pode mais enviar mensagens nele. Atualize o Kryfo para vê-lo como encerrado.",
-  "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização."
+  "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização.",
+  "settingsLicences": "Licenças",
+  "settingsLicencesValue": "Do que o Kryfo é feito",
+  "licencesKryfoLine": "O Kryfo é software livre sob a Licença Pública Geral GNU, versão 3 ou posterior. Qualquer pessoa pode ler, alterar e compartilhar o código.",
+  "licencesSourceCode": "Código-fonte",
+  "licencesSignalTitle": "Protocolo Signal",
+  "licencesSignalLine": "O Kryfo inclui a libsignal {version}, feita pelo Signal, sob a Licença Pública Geral Affero GNU, versão 3. O código-fonte está em github.com/signalapp/libsignal e junto de cada versão do Kryfo.",
+  "licencesAgplText": "GNU AGPL 3.0, texto completo",
+  "licencesSignalSource": "Código-fonte da libsignal",
+  "licencesParts": "Componentes de código aberto",
+  "licencesInSignal": "Na biblioteca do Signal",
+  "licencesInApp": "No app",
+  "licencesPartCount": "{count, plural, one{{count} componente} other{{count} componentes}}"
 }

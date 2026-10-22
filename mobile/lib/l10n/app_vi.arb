@@ -2339,5 +2339,17 @@
   "groupInfoDeleteThisGroup": "Xóa nhóm này?",
   "groupInfoDeleteGroupLine": "Nhóm đã kết thúc sẽ biến mất khỏi danh sách trò chuyện.",
   "groupEndedOldNotice": "Mình đã kết thúc nhóm này, nên không ai gửi tin nhắn trong nhóm được nữa. Hãy cập nhật Kryfo để thấy nhóm đã kết thúc.",
-  "groupInfoEndGroupDetail": "Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật."
+  "groupInfoEndGroupDetail": "Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.",
+  "settingsLicences": "Giấy phép",
+  "settingsLicencesValue": "Kryfo được xây dựng từ đâu",
+  "licencesKryfoLine": "Kryfo là phần mềm tự do theo Giấy phép Công cộng GNU, phiên bản 3 trở lên. Mọi người đều có thể đọc, sửa và chia sẻ mã nguồn của nó.",
+  "licencesSourceCode": "Mã nguồn",
+  "licencesSignalTitle": "Giao thức Signal",
+  "licencesSignalLine": "Kryfo có libsignal {version} do Signal làm, theo Giấy phép Công cộng GNU Affero, phiên bản 3. Mã nguồn của nó có tại github.com/signalapp/libsignal và bên cạnh mỗi bản phát hành Kryfo.",
+  "licencesAgplText": "GNU AGPL 3.0, toàn văn",
+  "licencesSignalSource": "Mã nguồn libsignal",
+  "licencesParts": "Thành phần mã nguồn mở",
+  "licencesInSignal": "Trong thư viện Signal",
+  "licencesInApp": "Trong ứng dụng",
+  "licencesPartCount": "{count, plural, other{{count} thành phần}}"
 }

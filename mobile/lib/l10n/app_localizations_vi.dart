@@ -8854,4 +8854,54 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.';
+
+  @override
+  String get settingsLicences => 'Giấy phép';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo được xây dựng từ đâu';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo là phần mềm tự do theo Giấy phép Công cộng GNU, phiên bản 3 trở lên. Mọi người đều có thể đọc, sửa và chia sẻ mã nguồn của nó.';
+
+  @override
+  String get licencesSourceCode => 'Mã nguồn';
+
+  @override
+  String get licencesSignalTitle => 'Giao thức Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo có libsignal $version do Signal làm, theo Giấy phép Công cộng GNU Affero, phiên bản 3. Mã nguồn của nó có tại github.com/signalapp/libsignal và bên cạnh mỗi bản phát hành Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, toàn văn';
+
+  @override
+  String get licencesSignalSource => 'Mã nguồn libsignal';
+
+  @override
+  String get licencesParts => 'Thành phần mã nguồn mở';
+
+  @override
+  String get licencesInSignal => 'Trong thư viện Signal';
+
+  @override
+  String get licencesInApp => 'Trong ứng dụng';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString thành phần',
+    );
+    return '$_temp0';
+  }
 }

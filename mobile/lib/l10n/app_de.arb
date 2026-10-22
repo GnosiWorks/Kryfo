@@ -2339,5 +2339,17 @@
   "groupInfoDeleteThisGroup": "Diese Gruppe löschen?",
   "groupInfoDeleteGroupLine": "Die beendete Gruppe verschwindet aus deiner Chatliste.",
   "groupEndedOldNotice": "Ich habe diese Gruppe beendet, niemand kann mehr darin schreiben. Aktualisiere Kryfo, um sie als beendet zu sehen.",
-  "groupInfoEndGroupDetail": "Kryfo entfernt sie vom Handy jedes Mitglieds, das das Update hat."
+  "groupInfoEndGroupDetail": "Kryfo entfernt sie vom Handy jedes Mitglieds, das das Update hat.",
+  "settingsLicences": "Lizenzen",
+  "settingsLicencesValue": "Woraus Kryfo besteht",
+  "licencesKryfoLine": "Kryfo ist freie Software unter der GNU General Public License, Version 3 oder später. Alle können den Code lesen, ändern und weitergeben.",
+  "licencesSourceCode": "Quellcode",
+  "licencesSignalTitle": "Signal-Protokoll",
+  "licencesSignalLine": "Kryfo enthält libsignal {version} von Signal, unter der GNU Affero General Public License, Version 3. Der Quellcode liegt auf github.com/signalapp/libsignal und neben jeder Kryfo-Version.",
+  "licencesAgplText": "GNU AGPL 3.0, voller Text",
+  "licencesSignalSource": "Quellcode von libsignal",
+  "licencesParts": "Open-Source-Bestandteile",
+  "licencesInSignal": "In der Signal-Bibliothek",
+  "licencesInApp": "In der App",
+  "licencesPartCount": "{count, plural, one{{count} Bestandteil} other{{count} Bestandteile}}"
 }

@@ -8999,4 +8999,59 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
+
+  @override
+  String get settingsLicences => 'التراخيص';
+
+  @override
+  String get settingsLicencesValue => 'مما صُنع Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo برنامج حر بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. يمكن لأي شخص قراءة شيفرته وتعديلها ومشاركتها.';
+
+  @override
+  String get licencesSourceCode => 'الشيفرة المصدرية';
+
+  @override
+  String get licencesSignalTitle => 'بروتوكول Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'يتضمن Kryfo مكتبة libsignal ⁨$version⁩ من صنع Signal، بموجب رخصة جنو أفيرو العمومية العامة، الإصدار 3. شيفرتها المصدرية على github.com/signalapp/libsignal وبجانب كل إصدار من Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'النص الكامل لرخصة GNU AGPL 3.0';
+
+  @override
+  String get licencesSignalSource => 'الشيفرة المصدرية لمكتبة libsignal';
+
+  @override
+  String get licencesParts => 'مكوّنات مفتوحة المصدر';
+
+  @override
+  String get licencesInSignal => 'في مكتبة Signal';
+
+  @override
+  String get licencesInApp => 'في التطبيق';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ مكوّن',
+      many: '⁨$countString⁩ مكوّنًا',
+      few: '⁨$countString⁩ مكوّنات',
+      two: 'مكوّنان',
+      one: 'مكوّن واحد',
+      zero: 'لا مكوّنات',
+    );
+    return '$_temp0';
+  }
 }

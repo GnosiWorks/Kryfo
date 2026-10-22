@@ -8939,4 +8939,55 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo lo quita del teléfono de cada miembro que tenga la actualización.';
+
+  @override
+  String get settingsLicences => 'Licencias';
+
+  @override
+  String get settingsLicencesValue => 'De qué está hecho Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo es software libre bajo la Licencia Pública General de GNU, versión 3 o posterior. Cualquiera puede leer, cambiar y compartir su código.';
+
+  @override
+  String get licencesSourceCode => 'Código fuente';
+
+  @override
+  String get licencesSignalTitle => 'Protocolo Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo incluye libsignal $version, creado por Signal, bajo la Licencia Pública General Affero de GNU, versión 3. Su código fuente está en github.com/signalapp/libsignal y junto a cada versión de Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, texto completo';
+
+  @override
+  String get licencesSignalSource => 'Código fuente de libsignal';
+
+  @override
+  String get licencesParts => 'Componentes de código abierto';
+
+  @override
+  String get licencesInSignal => 'En la biblioteca de Signal';
+
+  @override
+  String get licencesInApp => 'En la app';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString componentes',
+      one: '$countString componente',
+    );
+    return '$_temp0';
+  }
 }

@@ -8863,4 +8863,54 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
+
+  @override
+  String get settingsLicences => 'Lisensi';
+
+  @override
+  String get settingsLicencesValue => 'Bahan pembuat Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo adalah perangkat lunak bebas di bawah GNU General Public License, versi 3 atau yang lebih baru. Siapa pun boleh membaca, mengubah, dan membagikan kodenya.';
+
+  @override
+  String get licencesSourceCode => 'Kode sumber';
+
+  @override
+  String get licencesSignalTitle => 'Protokol Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo memuat libsignal $version buatan Signal, di bawah GNU Affero General Public License, versi 3. Kode sumbernya ada di github.com/signalapp/libsignal dan di samping setiap rilis Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, teks lengkap';
+
+  @override
+  String get licencesSignalSource => 'Kode sumber libsignal';
+
+  @override
+  String get licencesParts => 'Komponen sumber terbuka';
+
+  @override
+  String get licencesInSignal => 'Di pustaka Signal';
+
+  @override
+  String get licencesInApp => 'Di aplikasi';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString komponen',
+    );
+    return '$_temp0';
+  }
 }

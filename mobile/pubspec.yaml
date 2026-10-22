@@ -68,6 +68,8 @@ flutter:
     - assets/geo/places.bin.gz
     - assets/stickers/fokia.kst
     - assets/stickers/fokiaremix.kst
+    # written by native/kryfo_signal/acknowledgments.sh
+    - assets/licences/rust.json
 
   fonts:
     - family: Fraunces

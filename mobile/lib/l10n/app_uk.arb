@@ -2339,5 +2339,17 @@
   "groupInfoDeleteThisGroup": "Видалити цю групу?",
   "groupInfoDeleteGroupLine": "Завершена група зникне зі списку чатів.",
   "groupEndedOldNotice": "Я завершив(-ла) цю групу, тож писати в ній більше не можна. Онови Kryfo, щоб бачити її завершеною.",
-  "groupInfoEndGroupDetail": "Kryfo видаляє її з телефона кожного учасника, у якого є оновлення."
+  "groupInfoEndGroupDetail": "Kryfo видаляє її з телефона кожного учасника, у якого є оновлення.",
+  "settingsLicences": "Ліцензії",
+  "settingsLicencesValue": "З чого зроблено Kryfo",
+  "licencesKryfoLine": "Kryfo є вільною програмою за ліцензією GNU General Public License версії 3 або новішої. Будь-хто може читати, змінювати й поширювати її код.",
+  "licencesSourceCode": "Вихідний код",
+  "licencesSignalTitle": "Протокол Signal",
+  "licencesSignalLine": "Kryfo містить libsignal {version} від Signal за ліцензією GNU Affero General Public License версії 3. Її вихідний код є на github.com/signalapp/libsignal і поруч із кожним випуском Kryfo.",
+  "licencesAgplText": "GNU AGPL 3.0, повний текст",
+  "licencesSignalSource": "Вихідний код libsignal",
+  "licencesParts": "Складники з відкритим кодом",
+  "licencesInSignal": "У бібліотеці Signal",
+  "licencesInApp": "У застосунку",
+  "licencesPartCount": "{count, plural, one{{count} складник} few{{count} складники} many{{count} складників} other{{count} складника}}"
 }

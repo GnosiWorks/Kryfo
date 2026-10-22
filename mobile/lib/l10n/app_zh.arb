@@ -2339,5 +2339,17 @@
   "groupInfoDeleteThisGroup": "删除这个群组？",
   "groupInfoDeleteGroupLine": "这个已结束的群组会从你的聊天列表中移除。",
   "groupEndedOldNotice": "我结束了这个群组，之后谁都不能再在里面发消息。更新 Kryfo 就能看到它已结束。",
-  "groupInfoEndGroupDetail": "Kryfo 会从每位已更新的成员手机上移除它。"
+  "groupInfoEndGroupDetail": "Kryfo 会从每位已更新的成员手机上移除它。",
+  "settingsLicences": "许可证",
+  "settingsLicencesValue": "Kryfo 由什么构成",
+  "licencesKryfoLine": "Kryfo 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。任何人都可以阅读、修改和分享它的代码。",
+  "licencesSourceCode": "源代码",
+  "licencesSignalTitle": "Signal 协议",
+  "licencesSignalLine": "Kryfo 包含 Signal 开发的 libsignal {version}，采用 GNU Affero 通用公共许可证第 3 版。它的源代码位于 github.com/signalapp/libsignal，每个 Kryfo 版本旁也附有一份。",
+  "licencesAgplText": "GNU AGPL 3.0 全文",
+  "licencesSignalSource": "libsignal 源代码",
+  "licencesParts": "开源组件",
+  "licencesInSignal": "Signal 库中",
+  "licencesInApp": "应用中",
+  "licencesPartCount": "{count, plural, other{{count} 个组件}}"
 }
