@@ -100,8 +100,22 @@ class ChatTranslation extends ChangeNotifier {
 
   bool shown(String key) => of(key).phase == MsgPhase.shown;
 
+  // a message that burned or was taken back: its translation and its guess
+  // go now, not when the chat closes
+  void forget(String key, String text) {
+    _byAuto.remove(key);
+    _keptOriginal.remove(key);
+    _autoTried.remove(key);
+    _guesses.remove(text);
+    _burnt.add(key);
+    if (_msgs.remove(key) != null && !_gone) notifyListeners();
+  }
+
+  // ones forgotten: a translation still under way for one is not kept
+  final Set<String> _burnt = {};
+
   void _set(String key, MsgTranslation m) {
-    if (_gone) return;
+    if (_gone || _burnt.contains(key)) return;
     _msgs[key] = m;
     notifyListeners();
   }
@@ -167,6 +181,7 @@ class ChatTranslation extends ChangeNotifier {
     _gone = true;
     _guesses.clear();
     _msgs.clear();
+    _burnt.clear();
     hub.removeListener(_hubChanged);
     super.dispose();
   }

@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/translate/hub.dart';
+import 'package:kryfo/translate/translate_bubble.dart';
 import 'package:kryfo/widgets/menu_backdrop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,12 +28,23 @@ const _peer = 'calm-grey-heron';
 const _zh = '你好，我们明天见吧';
 const _en = 'Hello, see you tomorrow';
 const _ours = 'see you at the station then';
+const _zhSoon = '三点在车站等我';
+const _enSoon = 'Wait for me at the station at three';
 
 Finder rich(String s) => find.textContaining(s, findRichText: true);
+
+// a burn takes the row out of the database too
+class _Db extends SayHiDb {
+  _Db(super.mem, [super.container]);
+  @override
+  Future<void> deleteMessage(String msgUid) async =>
+      mem.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
+}
 
 void main() {
   late Directory docs;
   late Fakes f;
+  late MemDb m;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({
@@ -48,7 +60,7 @@ void main() {
     mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
     mockChannel('com.llfbandit.record/messages', (_) async => null);
     useLibrary();
-    final m = MemDb();
+    m = MemDb();
     await devChatTables(m, now: 1);
     await m.insert('contacts', {
       'halo_id': _peer,
@@ -74,10 +86,10 @@ void main() {
       'sent_at': 2,
       'delivered': 1,
     });
-    final db = SayHiDb(m, HaloContainer.everyday);
+    final db = _Db(m, HaloContainer.everyday);
     useDatabasesForTest(db, Session(db));
     await appState.refreshContacts();
-    f = fakeHub(installed: true, words: {_zh: _en});
+    f = fakeHub(installed: true, words: {_zh: _en, _zhSoon: _enSoon});
     TranslationHub.instance = f.hub;
   });
 
@@ -174,6 +186,42 @@ void main() {
     await settle(t);
     expect(find.text(_en), findsOneWidget);
     expect(t.takeException(), isNull);
+    await devClose(t);
+  });
+
+  testWidgets('a timed message takes its translation with it', (t) async {
+    await m.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': _zhSoon,
+      'msg_uid': 'u-soon',
+      'sent_at': 3,
+      'burn_secs': 5,
+      'burn_at': DateTime.now().millisecondsSinceEpoch + 5000,
+    });
+    await open(t);
+    expect(rich(_zhSoon), findsOneWidget);
+    final soon = find.byWidgetPredicate(
+      (w) => w is TranslatedBody && w.text == _zhSoon,
+    );
+    await t.tap(
+      find.descendant(of: soon, matching: rich(l10n.translateAction)),
+    );
+    await settle(t, 10);
+    expect(rich(_enSoon), findsOneWidget);
+    final chat = t.widget<TranslatedBody>(soon).chat!;
+    expect(chat.of('u-soon').text, _enSoon);
+
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 5200)),
+    );
+    for (var i = 0; i < 6; i++) {
+      await t.pump(const Duration(milliseconds: 500));
+    }
+    expect(rich(_enSoon), findsNothing);
+    expect(chat.of('u-soon').text, isNull);
+    // the other message keeps its own
+    expect(find.text(_zh), findsOneWidget);
     await devClose(t);
   });
 }

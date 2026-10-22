@@ -852,6 +852,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!o.removing) {
         o.removing = true;
         o.burnedAway = o.burnAt != null && o.burnAt! <= now;
+        _forgetTranslation(o);
         Future.delayed(kLeaveGone, () {
           if (mounted) setState(() => _messages.remove(o));
         });
@@ -1405,6 +1406,7 @@ class _ChatScreenState extends State<ChatScreen>
         m.removing = true;
         m.burnedAway = true;
         if (m.msgUid != null) _earlier.drop(m.msgUid!);
+        _forgetTranslation(m);
       }
       if (back) {
         // it burned while the chat was out of view: gone, as it would be
@@ -1433,6 +1435,10 @@ class _ChatScreenState extends State<ChatScreen>
       setState(() {});
     }
   }
+
+  // its translation goes with it, not when the chat closes
+  void _forgetTranslation(_Msg m) =>
+      _translation?.forget(m.msgUid ?? '${m.came}', m.text);
 
   Future<void> _forgetBurnt(_Msg m) async {
     if (m.msgUid != null) await session.deleteMessage(m.msgUid!);

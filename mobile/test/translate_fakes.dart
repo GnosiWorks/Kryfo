@@ -20,6 +20,7 @@ class FakeTranslator implements Translator {
   // the next translation fails in the library
   bool breakNext = false;
   final List<String> asked = [];
+  int closes = 0;
   FakeTranslator({
     this.words = const {},
     this.lib = true,
@@ -53,7 +54,7 @@ class FakeTranslator implements Translator {
   }
 
   @override
-  Future<void> close() async {}
+  Future<void> close() async => closes++;
 }
 
 // a pack download the test moves along by hand

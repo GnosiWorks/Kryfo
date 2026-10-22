@@ -3,10 +3,11 @@
 // in the app's own storage, downloads by the engine over tor, bergamot when
 // the build has it.
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../main.dart' show session, sessionQuiet;
+import '../main.dart' show appState, session, sessionQuiet;
 import 'bergamot_ffi.dart';
 import 'catalog.dart';
 import 'downloads.dart';
@@ -68,5 +69,8 @@ TranslationHub _live() {
     downloads: downloads,
     scope: () => session.container.id,
   );
+  // a hidden chat's switch is not kept once its vault shuts
+  hub.followSessions(appState, () => appState.sessionRev);
+  WidgetsBinding.instance.addObserver(TranslateAway(hub));
   return hub;
 }

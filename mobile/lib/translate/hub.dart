@@ -4,7 +4,7 @@
 // builds the phone's; a test sets its own in [TranslationHub.instance].
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../l10n/app_locale.dart' show currentLanguage;
 import 'catalog.dart';
@@ -126,6 +126,36 @@ class TranslationHub extends ChangeNotifier {
     return out;
   }
 
+  // the app went to the background: the models out of memory, opened
+  // again when next wanted
+  Future<void> away() async {
+    try {
+      await translator.close();
+    } catch (_) {}
+  }
+
+  // the screens changed session, a vault shut say: what was read of its
+  // chats goes, and is read again from the session that is open
+  void forgetChats() {
+    if (_chatAuto.isEmpty) return;
+    _chatAuto.clear();
+    notifyListeners();
+  }
+
+  // forgetChats each time [rev] moves on [state]; the returned call stops it
+  VoidCallback followSessions(Listenable state, int Function() rev) {
+    var last = rev();
+    void heard() {
+      final now = rev();
+      if (now == last) return;
+      last = now;
+      forgetChats();
+    }
+
+    state.addListener(heard);
+    return () => state.removeListener(heard);
+  }
+
   // what each chat was last read or set to, so an open chat hears a
   // change made on the person's page
   final Map<String, bool> _chatAuto = {};
@@ -152,5 +182,19 @@ class TranslationHub extends ChangeNotifier {
   void dispose() {
     downloads.removeListener(notifyListeners);
     super.dispose();
+  }
+}
+
+// the models closed while the app is in the background
+class TranslateAway with WidgetsBindingObserver {
+  final TranslationHub hub;
+  TranslateAway(this.hub);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      unawaited(hub.away());
+    }
   }
 }
