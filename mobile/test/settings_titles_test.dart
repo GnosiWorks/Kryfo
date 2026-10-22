@@ -21,6 +21,7 @@ import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
+import 'package:kryfo/screens/translation_screen.dart';
 import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/screens/wallpaper_sheet.dart';
 import 'package:kryfo/screens/why_kryfo_screen.dart';
@@ -32,6 +33,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart' show DevTestDb, devApp, devMem, devWorld;
 import 'narrow_settings.dart' show loadAppFonts;
+import 'translate_fakes.dart' show fakeHub;
 
 // the pages and sheets settings opens, and the ones they open in turn
 const _settingsFiles = {
@@ -55,6 +57,7 @@ const _settingsFiles = {
   'helper_sheet',
   'follow_section',
   'dev_about_sheet',
+  'translation_screen',
 };
 
 // opened from there, but not settings: a chat, the home and the camera
@@ -147,6 +150,7 @@ final _pages = [
       l10n.settingsAppearance,
       l10n.settingsBackup,
       l10n.settingsVoice,
+      l10n.translateSettingsTitle,
       l10n.settingsAbout,
       l10n.settingsFollowTitle,
       l10n.settingsDangerZone,
@@ -218,6 +222,16 @@ final _pages = [
     'why kryfo',
     () => const WhyKryfoScreen(),
     () => [l10n.whyKryfoTheHonestPart],
+  ),
+  _Page(
+    'translation',
+    () => TranslationScreen(hub: fakeHub().hub),
+    () => [
+      l10n.translatePacksSection,
+      l10n.translateLanguagesSection,
+      l10n.translateBehaviourSection,
+      l10n.translatePrivacyTitle,
+    ],
   ),
 ];
 

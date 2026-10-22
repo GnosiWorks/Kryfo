@@ -8863,4 +8863,181 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
+
+  @override
+  String get translateAction => 'Terjemahkan';
+
+  @override
+  String get translateShowOriginal => 'Lihat aslinya';
+
+  @override
+  String get translateWorking => 'Menerjemahkan…';
+
+  @override
+  String get translateFailed => 'Tidak bisa diterjemahkan';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Diterjemahkan dari $language';
+  }
+
+  @override
+  String get translateLangZh => 'Tionghoa';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Terjemahan di ponsel ini: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Pesan diterjemahkan di ponsel ini dan tidak pernah keluar darinya. Untuk itu perlu paket bahasa $language, sekitar $size, diunduh sekali lewat Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Versi Kryfo ini belum bisa menerjemahkan. Kamu bisa mengunduh paketnya sekarang, dan versi berikutnya akan memakainya.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Unduh · sekitar $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Tetap unduh sekarang';
+
+  @override
+  String get translateResume => 'Lanjutkan unduhan';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done dari $total';
+  }
+
+  @override
+  String get translateFinishing => 'Memeriksa file…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Di ponsel ini · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Hanya Wi-Fi” aktif, dan ponsel ini tidak tersambung ke Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor belum tersambung. Paket hanya diunduh lewat Tor, jadi coba lagi setelah tersambung.';
+
+  @override
+  String get translateFailNetwork =>
+      'Unduhan berhenti. Coba lagi dan unduhan lanjut dari titik terakhir.';
+
+  @override
+  String get translateFailBadFile =>
+      'Ada file yang tidak cocok dengan yang diharapkan Kryfo, jadi file itu dibuang. Coba lagi.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Versi Kryfo ini belum bisa mengunduh paket bahasa.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Dijeda · $size sejauh ini';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Terjemahan';
+
+  @override
+  String get translateSettingsRow => 'Terjemahkan pesan';
+
+  @override
+  String get translateSettingsHint => 'Di ponsel ini, tidak pernah di server';
+
+  @override
+  String get translatePacksSection => 'Paket bahasa';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language dan Inggris';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Belum diunduh · sekitar $size';
+  }
+
+  @override
+  String get translateDownloading => 'Mengunduh lewat Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Hapus paket $language?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Pesan berbahasa $language tidak bisa diterjemahkan sampai paketnya diunduh lagi.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Bahasa';
+
+  @override
+  String get translateMyLanguages => 'Bahasa yang kubaca';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Pesan dalam bahasa ini tidak ditawarkan untuk diterjemahkan. Bahasa aplikasi selalu termasuk.';
+
+  @override
+  String get translateInto => 'Terjemahkan ke';
+
+  @override
+  String get translateAppLanguage => 'Bahasa aplikasi';
+
+  @override
+  String get translateBehaviourSection => 'Unduhan dan obrolan';
+
+  @override
+  String get translateAutoDefault => 'Terjemahkan obrolan otomatis';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Untuk obrolan yang belum kamu atur sendiri. Setiap obrolan bisa menyalakan atau mematikannya.';
+
+  @override
+  String get translateWifiOnly => 'Unduh paket hanya lewat Wi-Fi';
+
+  @override
+  String get translateHost => 'Unduh dari';
+
+  @override
+  String get translateHostDefault => 'Bawaan';
+
+  @override
+  String get translateHostHint =>
+      'Mirror harus menyajikan file yang sama. Kryfo memeriksa setiap file dengan hash yang tertanam di aplikasi.';
+
+  @override
+  String get translateHostBad => 'Gunakan alamat https';
+
+  @override
+  String get translateHostReset => 'Pakai bawaan';
+
+  @override
+  String get translatePrivacyTitle => 'Yang tetap privat';
+
+  @override
+  String get translatePrivacyNote =>
+      'Terjemahan terjadi di ponsel ini. Tidak ada pesan yang dikirim ke mana pun untuk diterjemahkan. Mengunduh paket memberi tahu server paket mana itu. Unduhannya lewat Tor, jadi server tidak tahu siapa yang meminta.';
+
+  @override
+  String get translateAutoInChat => 'Terjemahkan otomatis';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Pesan dalam bahasa lain tampil terjemahannya. Aslinya tinggal satu ketukan.';
 }

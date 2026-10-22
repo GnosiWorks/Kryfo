@@ -8937,4 +8937,181 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'O Kryfo remove o grupo do celular de cada membro que tem a atualização.';
+
+  @override
+  String get translateAction => 'Traduzir';
+
+  @override
+  String get translateShowOriginal => 'Ver original';
+
+  @override
+  String get translateWorking => 'Traduzindo…';
+
+  @override
+  String get translateFailed => 'Não foi possível traduzir';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Traduzido · $language';
+  }
+
+  @override
+  String get translateLangZh => 'Chinês';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Tradução neste celular: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'As mensagens são traduzidas neste celular e nunca saem dele. Para isso é preciso o pacote de idioma $language, cerca de $size, baixado uma vez pelo Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Esta versão do Kryfo ainda não traduz. Você pode baixar o pacote agora, e uma versão futura vai usá-lo.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Baixar · cerca de $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Baixar agora mesmo assim';
+
+  @override
+  String get translateResume => 'Continuar download';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done de $total';
+  }
+
+  @override
+  String get translateFinishing => 'Verificando os arquivos…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Neste celular · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Só no Wi-Fi” está ativado e este celular não está no Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'O Tor ainda não está conectado. Os pacotes só são baixados pelo Tor, então tente de novo quando ele conectar.';
+
+  @override
+  String get translateFailNetwork =>
+      'O download parou. Tente de novo e ele continua de onde parou.';
+
+  @override
+  String get translateFailBadFile =>
+      'Um arquivo não batia com o que o Kryfo espera e foi descartado. Tente de novo.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Esta versão do Kryfo ainda não baixa pacotes de idioma.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Pausado · $size até agora';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Tradução';
+
+  @override
+  String get translateSettingsRow => 'Traduzir mensagens';
+
+  @override
+  String get translateSettingsHint => 'Neste celular, nunca em um servidor';
+
+  @override
+  String get translatePacksSection => 'Pacotes de idioma';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language e inglês';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Não baixado · cerca de $size';
+  }
+
+  @override
+  String get translateDownloading => 'Baixando pelo Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Apagar o pacote $language?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Mensagens em $language não poderão ser traduzidas até você baixar de novo.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Idiomas';
+
+  @override
+  String get translateMyLanguages => 'Idiomas que eu leio';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Mensagens nesses idiomas não são oferecidas para tradução. O idioma do app sempre é um deles.';
+
+  @override
+  String get translateInto => 'Traduzir para';
+
+  @override
+  String get translateAppLanguage => 'O idioma do app';
+
+  @override
+  String get translateBehaviourSection => 'Downloads e conversas';
+
+  @override
+  String get translateAutoDefault => 'Traduzir conversas automaticamente';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Para conversas que você não configurou. Cada conversa pode ligar ou desligar.';
+
+  @override
+  String get translateWifiOnly => 'Baixar pacotes só no Wi-Fi';
+
+  @override
+  String get translateHost => 'Baixar de';
+
+  @override
+  String get translateHostDefault => 'Padrão';
+
+  @override
+  String get translateHostHint =>
+      'Um espelho precisa servir os mesmos arquivos. O Kryfo confere cada um com o hash embutido no app.';
+
+  @override
+  String get translateHostBad => 'Use um endereço https';
+
+  @override
+  String get translateHostReset => 'Usar o padrão';
+
+  @override
+  String get translatePrivacyTitle => 'O que fica privado';
+
+  @override
+  String get translatePrivacyNote =>
+      'A tradução acontece neste celular. Nenhuma mensagem é enviada a lugar algum para ser traduzida. Baixar um pacote informa ao servidor qual pacote é. Ele vem pelo Tor, então o servidor não sabe quem pediu.';
+
+  @override
+  String get translateAutoInChat => 'Traduzir automaticamente';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Mensagens em outros idiomas aparecem traduzidas. O original fica a um toque.';
 }

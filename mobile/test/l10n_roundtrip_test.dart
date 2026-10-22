@@ -3701,5 +3701,95 @@ void main() {
     expect(l.gettingMessagesHelperUseOnion, "Switch to Onion");
     expect(l.gettingMessagesHelperSetUp, "Set up");
     expect(l.gettingMessagesHelperChecking, "Checking…");
+    expect(l.translateAction, "Translate");
+    expect(l.translateShowOriginal, "Show original");
+    expect(l.translateWorking, "Translating…");
+    expect(l.translateFailed, "Couldn't translate");
+    expect(l.translateFrom("<language>"), "Translated from <language>");
+    expect(l.translateLangZh, "Chinese");
+    expect(
+      l.translatePackTitle("<language>"),
+      "Translate <language> on this phone",
+    );
+    expect(
+      l.translatePackLine("<language>", "<size>"),
+      "Messages are translated on this phone and never leave it. That needs the <language> language pack, about <size>, downloaded once over Tor.",
+    );
+    expect(
+      l.translatePackNoLib,
+      "This version of Kryfo can't translate yet. You can download the pack now, and a later version will use it.",
+    );
+    expect(l.translateDownload("<size>"), "Download · about <size>");
+    expect(l.translateDownloadAnyway, "Download now anyway");
+    expect(l.translateResume, "Resume download");
+    expect(l.translateProgress("<done>", "<total>"), "<done> of <total>");
+    expect(l.translateFinishing, "Checking the files…");
+    expect(l.translateInstalled("<size>"), "On this phone · <size>");
+    expect(
+      l.translateNeedsWifi,
+      "Wi-Fi only is on, and this phone isn't on Wi-Fi.",
+    );
+    expect(
+      l.translateFailNoTor,
+      "Tor isn't connected yet. Packs download over Tor only, so try again once it is.",
+    );
+    expect(
+      l.translateFailNetwork,
+      "The download stopped. Try again and it picks up where it left off.",
+    );
+    expect(
+      l.translateFailBadFile,
+      "A file didn't match what Kryfo expects, so it was thrown away. Try again.",
+    );
+    expect(
+      l.translateFailNoEngine,
+      "This version of Kryfo can't download language packs yet.",
+    );
+    expect(l.translatePaused("<size>"), "Paused · <size> so far");
+    expect(l.translateSettingsTitle, "Translation");
+    expect(l.translateSettingsRow, "Translate messages");
+    expect(l.translateSettingsHint, "On this phone, never on a server");
+    expect(l.translatePacksSection, "Language packs");
+    expect(l.translatePackPair("<language>"), "<language> and English");
+    expect(l.translateNotDownloaded("<size>"), "Not downloaded · about <size>");
+    expect(l.translateDownloading, "Downloading over Tor");
+    expect(l.translateDeleteTitle("<language>"), "Delete the <language> pack?");
+    expect(
+      l.translateDeleteLine("<language>"),
+      "Messages in <language> can't be translated until it's downloaded again.",
+    );
+    expect(l.translateLanguagesSection, "Languages");
+    expect(l.translateMyLanguages, "Languages I read");
+    expect(
+      l.translateMyLanguagesHint,
+      "Messages in these aren't offered for translation. The app's language is always one of them.",
+    );
+    expect(l.translateInto, "Translate into");
+    expect(l.translateAppLanguage, "The app's language");
+    expect(l.translateBehaviourSection, "Downloads and chats");
+    expect(l.translateAutoDefault, "Translate chats automatically");
+    expect(
+      l.translateAutoDefaultHint,
+      "For chats you haven't set yourself. Each chat can turn it on or off.",
+    );
+    expect(l.translateWifiOnly, "Download packs on Wi-Fi only");
+    expect(l.translateHost, "Download from");
+    expect(l.translateHostDefault, "Default");
+    expect(
+      l.translateHostHint,
+      "A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.",
+    );
+    expect(l.translateHostBad, "Use an https address");
+    expect(l.translateHostReset, "Use the default");
+    expect(l.translatePrivacyTitle, "What stays private");
+    expect(
+      l.translatePrivacyNote,
+      "Translation happens on this phone. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn't learn who asked.",
+    );
+    expect(l.translateAutoInChat, "Translate automatically");
+    expect(
+      l.translateAutoInChatHint,
+      "Messages in other languages show translated. The original is one tap away.",
+    );
   });
 }

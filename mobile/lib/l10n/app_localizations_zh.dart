@@ -8466,6 +8466,173 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 会从每位已更新的成员手机上移除它。';
+
+  @override
+  String get translateAction => '翻译';
+
+  @override
+  String get translateShowOriginal => '显示原文';
+
+  @override
+  String get translateWorking => '正在翻译…';
+
+  @override
+  String get translateFailed => '无法翻译';
+
+  @override
+  String translateFrom(Object language) {
+    return '译自$language';
+  }
+
+  @override
+  String get translateLangZh => '中文';
+
+  @override
+  String translatePackTitle(Object language) {
+    return '在这部手机上翻译$language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return '消息在这部手机上翻译，从不离开手机。这需要$language语言包，约 $size，通过 Tor 下载一次。';
+  }
+
+  @override
+  String get translatePackNoLib => '这个版本的 Kryfo 还不能翻译。你现在就可以下载语言包，之后的版本会用到它。';
+
+  @override
+  String translateDownload(Object size) {
+    return '下载 · 约 $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => '仍然立即下载';
+
+  @override
+  String get translateResume => '继续下载';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => '正在检查文件…';
+
+  @override
+  String translateInstalled(Object size) {
+    return '已在这部手机上 · $size';
+  }
+
+  @override
+  String get translateNeedsWifi => '“仅限 Wi-Fi”已开启，而这部手机没有连接 Wi-Fi。';
+
+  @override
+  String get translateFailNoTor => 'Tor 还没有连接。语言包只通过 Tor 下载，请在连接后重试。';
+
+  @override
+  String get translateFailNetwork => '下载已中断。重试后会从中断处继续。';
+
+  @override
+  String get translateFailBadFile => '有一个文件与 Kryfo 预期的不符，已被丢弃。请重试。';
+
+  @override
+  String get translateFailNoEngine => '这个版本的 Kryfo 还不能下载语言包。';
+
+  @override
+  String translatePaused(Object size) {
+    return '已暂停 · 已下载 $size';
+  }
+
+  @override
+  String get translateSettingsTitle => '翻译';
+
+  @override
+  String get translateSettingsRow => '翻译消息';
+
+  @override
+  String get translateSettingsHint => '在这部手机上，从不经过服务器';
+
+  @override
+  String get translatePacksSection => '语言包';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language和英语';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return '未下载 · 约 $size';
+  }
+
+  @override
+  String get translateDownloading => '正在通过 Tor 下载';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return '删除$language语言包？';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return '在重新下载之前，$language消息将无法翻译。';
+  }
+
+  @override
+  String get translateLanguagesSection => '语言';
+
+  @override
+  String get translateMyLanguages => '我能读的语言';
+
+  @override
+  String get translateMyLanguagesHint => '这些语言的消息不会提示翻译。应用的语言始终包括在内。';
+
+  @override
+  String get translateInto => '翻译成';
+
+  @override
+  String get translateAppLanguage => '应用的语言';
+
+  @override
+  String get translateBehaviourSection => '下载与聊天';
+
+  @override
+  String get translateAutoDefault => '自动翻译聊天';
+
+  @override
+  String get translateAutoDefaultHint => '适用于你没有单独设置的聊天。每个聊天都可以开启或关闭。';
+
+  @override
+  String get translateWifiOnly => '仅在 Wi-Fi 下下载语言包';
+
+  @override
+  String get translateHost => '下载来源';
+
+  @override
+  String get translateHostDefault => '默认';
+
+  @override
+  String get translateHostHint => '镜像必须提供相同的文件。Kryfo 会用内置在应用里的哈希校验每个文件。';
+
+  @override
+  String get translateHostBad => '请使用 https 地址';
+
+  @override
+  String get translateHostReset => '使用默认';
+
+  @override
+  String get translatePrivacyTitle => '哪些内容保持私密';
+
+  @override
+  String get translatePrivacyNote =>
+      '翻译在这部手机上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
+
+  @override
+  String get translateAutoInChat => '自动翻译';
+
+  @override
+  String get translateAutoInChatHint => '其他语言的消息会显示译文。点一下即可查看原文。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -16812,4 +16979,171 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 會從每位已更新的成員手機上移除它。';
+
+  @override
+  String get translateAction => '翻譯';
+
+  @override
+  String get translateShowOriginal => '顯示原文';
+
+  @override
+  String get translateWorking => '正在翻譯…';
+
+  @override
+  String get translateFailed => '無法翻譯';
+
+  @override
+  String translateFrom(Object language) {
+    return '譯自$language';
+  }
+
+  @override
+  String get translateLangZh => '中文';
+
+  @override
+  String translatePackTitle(Object language) {
+    return '在這支手機上翻譯$language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return '訊息在這支手機上翻譯，從不離開手機。這需要$language語言包，約 $size，透過 Tor 下載一次。';
+  }
+
+  @override
+  String get translatePackNoLib => '這個版本的 Kryfo 還不能翻譯。你現在就可以下載語言包，之後的版本會用到它。';
+
+  @override
+  String translateDownload(Object size) {
+    return '下載 · 約 $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => '仍然立即下載';
+
+  @override
+  String get translateResume => '繼續下載';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => '正在檢查檔案…';
+
+  @override
+  String translateInstalled(Object size) {
+    return '已在這支手機上 · $size';
+  }
+
+  @override
+  String get translateNeedsWifi => '「僅限 Wi-Fi」已開啟，而這支手機沒有連上 Wi-Fi。';
+
+  @override
+  String get translateFailNoTor => 'Tor 還沒有連線。語言包只透過 Tor 下載，請在連線後再試一次。';
+
+  @override
+  String get translateFailNetwork => '下載已中斷。再試一次會從中斷處繼續。';
+
+  @override
+  String get translateFailBadFile => '有一個檔案與 Kryfo 預期的不符，已被丟棄。請再試一次。';
+
+  @override
+  String get translateFailNoEngine => '這個版本的 Kryfo 還不能下載語言包。';
+
+  @override
+  String translatePaused(Object size) {
+    return '已暫停 · 已下載 $size';
+  }
+
+  @override
+  String get translateSettingsTitle => '翻譯';
+
+  @override
+  String get translateSettingsRow => '翻譯訊息';
+
+  @override
+  String get translateSettingsHint => '在這支手機上，從不經過伺服器';
+
+  @override
+  String get translatePacksSection => '語言包';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language和英文';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return '未下載 · 約 $size';
+  }
+
+  @override
+  String get translateDownloading => '正在透過 Tor 下載';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return '刪除$language語言包？';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return '在重新下載之前，$language訊息將無法翻譯。';
+  }
+
+  @override
+  String get translateLanguagesSection => '語言';
+
+  @override
+  String get translateMyLanguages => '我能讀的語言';
+
+  @override
+  String get translateMyLanguagesHint => '這些語言的訊息不會提示翻譯。應用程式的語言一律包含在內。';
+
+  @override
+  String get translateInto => '翻譯成';
+
+  @override
+  String get translateAppLanguage => '應用程式的語言';
+
+  @override
+  String get translateBehaviourSection => '下載與聊天';
+
+  @override
+  String get translateAutoDefault => '自動翻譯聊天';
+
+  @override
+  String get translateAutoDefaultHint => '適用於你沒有個別設定的聊天。每個聊天都可以開啟或關閉。';
+
+  @override
+  String get translateWifiOnly => '僅在 Wi-Fi 下下載語言包';
+
+  @override
+  String get translateHost => '下載來源';
+
+  @override
+  String get translateHostDefault => '預設';
+
+  @override
+  String get translateHostHint => '鏡像必須提供相同的檔案。Kryfo 會用內建在應用程式裡的雜湊值檢查每個檔案。';
+
+  @override
+  String get translateHostBad => '請使用 https 位址';
+
+  @override
+  String get translateHostReset => '使用預設';
+
+  @override
+  String get translatePrivacyTitle => '哪些內容保持私密';
+
+  @override
+  String get translatePrivacyNote =>
+      '翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
+
+  @override
+  String get translateAutoInChat => '自動翻譯';
+
+  @override
+  String get translateAutoInChatHint => '其他語言的訊息會顯示譯文。點一下即可查看原文。';
 }

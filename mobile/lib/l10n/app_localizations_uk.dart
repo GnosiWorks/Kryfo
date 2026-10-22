@@ -9023,4 +9023,181 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo видаляє її з телефона кожного учасника, у якого є оновлення.';
+
+  @override
+  String get translateAction => 'Перекласти';
+
+  @override
+  String get translateShowOriginal => 'Показати оригінал';
+
+  @override
+  String get translateWorking => 'Переклад…';
+
+  @override
+  String get translateFailed => 'Не вдалося перекласти';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Переклад · $language';
+  }
+
+  @override
+  String get translateLangZh => 'Китайська';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Переклад на цьому телефоні: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Повідомлення перекладаються на цьому телефоні й нікуди з нього не йдуть. Для цього потрібен мовний пакет «$language», близько $size, який один раз завантажується через Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Ця версія Kryfo ще не вміє перекладати. Пакет можна завантажити вже зараз, його використає одна з наступних версій.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Завантажити · близько $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Усе одно завантажити зараз';
+
+  @override
+  String get translateResume => 'Продовжити завантаження';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done з $total';
+  }
+
+  @override
+  String get translateFinishing => 'Перевірка файлів…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'На цьому телефоні · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      'Увімкнено «Лише через Wi-Fi», а телефон не підключений до Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor ще не підключений. Пакети завантажуються лише через Tor, тож спробуйте знову, коли він підключиться.';
+
+  @override
+  String get translateFailNetwork =>
+      'Завантаження перервалося. Спробуйте знову, і воно продовжиться з того ж місця.';
+
+  @override
+  String get translateFailBadFile =>
+      'Файл не збігся з тим, що очікує Kryfo, і його видалено. Спробуйте знову.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Ця версія Kryfo ще не вміє завантажувати мовні пакети.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Пауза · завантажено $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Переклад';
+
+  @override
+  String get translateSettingsRow => 'Переклад повідомлень';
+
+  @override
+  String get translateSettingsHint => 'На цьому телефоні, ніколи на сервері';
+
+  @override
+  String get translatePacksSection => 'Мовні пакети';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language та англійська';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Не завантажено · близько $size';
+  }
+
+  @override
+  String get translateDownloading => 'Завантажується через Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Видалити пакет «$language»?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Повідомлення мовою «$language» не можна буде перекласти, доки пакет не завантажено знову.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Мови';
+
+  @override
+  String get translateMyLanguages => 'Мови, які я читаю';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Повідомлення цими мовами не пропонується перекладати. Мова застосунку завжди серед них.';
+
+  @override
+  String get translateInto => 'Перекладати на';
+
+  @override
+  String get translateAppLanguage => 'Мова застосунку';
+
+  @override
+  String get translateBehaviourSection => 'Завантаження та чати';
+
+  @override
+  String get translateAutoDefault => 'Перекладати чати автоматично';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Для чатів, де ви не налаштували це самі. У кожному чаті можна ввімкнути чи вимкнути.';
+
+  @override
+  String get translateWifiOnly => 'Завантажувати пакети лише через Wi-Fi';
+
+  @override
+  String get translateHost => 'Звідки завантажувати';
+
+  @override
+  String get translateHostDefault => 'Типово';
+
+  @override
+  String get translateHostHint =>
+      'Дзеркало має віддавати ті самі файли. Kryfo звіряє кожен із хешем, вбудованим у застосунок.';
+
+  @override
+  String get translateHostBad => 'Потрібна адреса https';
+
+  @override
+  String get translateHostReset => 'Повернути типове';
+
+  @override
+  String get translatePrivacyTitle => 'Що лишається приватним';
+
+  @override
+  String get translatePrivacyNote =>
+      'Переклад відбувається на цьому телефоні. Повідомлення нікуди не надсилаються для перекладу. Під час завантаження пакета сервер дізнається, який це пакет. Завантаження йде через Tor, тож сервер не знає, хто його запросив.';
+
+  @override
+  String get translateAutoInChat => 'Перекладати автоматично';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Повідомлення іншими мовами показуються в перекладі. Оригінал за один дотик.';
 }

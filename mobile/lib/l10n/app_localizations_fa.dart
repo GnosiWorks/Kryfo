@@ -8883,4 +8883,181 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند.';
+
+  @override
+  String get translateAction => 'ترجمه';
+
+  @override
+  String get translateShowOriginal => 'نمایش متن اصلی';
+
+  @override
+  String get translateWorking => 'در حال ترجمه…';
+
+  @override
+  String get translateFailed => 'ترجمه نشد';
+
+  @override
+  String translateFrom(Object language) {
+    return 'ترجمه از $language';
+  }
+
+  @override
+  String get translateLangZh => 'چینی';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'ترجمه روی این گوشی: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'پیام‌ها روی همین گوشی ترجمه می‌شوند و هرگز از آن بیرون نمی‌روند. برای این کار بستهٔ زبان $language لازم است، حدود $size، که یک بار از راه Tor دانلود می‌شود.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'این نسخهٔ Kryfo هنوز نمی‌تواند ترجمه کند. می‌توانید بسته را همین حالا دانلود کنید تا نسخه‌ای بعدی از آن استفاده کند.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'دانلود · حدود $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'با این حال همین حالا دانلود شود';
+
+  @override
+  String get translateResume => 'ادامهٔ دانلود';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done از $total';
+  }
+
+  @override
+  String get translateFinishing => 'در حال بررسی فایل‌ها…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'روی این گوشی · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '«فقط با Wi-Fi» روشن است و این گوشی به Wi-Fi وصل نیست.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor هنوز وصل نشده است. بسته‌ها فقط از راه Tor دانلود می‌شوند، پس از وصل شدن دوباره امتحان کنید.';
+
+  @override
+  String get translateFailNetwork =>
+      'دانلود متوقف شد. دوباره امتحان کنید تا از همان جا ادامه پیدا کند.';
+
+  @override
+  String get translateFailBadFile =>
+      'یکی از فایل‌ها با آنچه Kryfo انتظار دارد جور نبود و دور ریخته شد. دوباره امتحان کنید.';
+
+  @override
+  String get translateFailNoEngine =>
+      'این نسخهٔ Kryfo هنوز نمی‌تواند بستهٔ زبان دانلود کند.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'متوقف · تا اینجا $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'ترجمه';
+
+  @override
+  String get translateSettingsRow => 'ترجمهٔ پیام‌ها';
+
+  @override
+  String get translateSettingsHint => 'روی این گوشی، هرگز روی سرور';
+
+  @override
+  String get translatePacksSection => 'بسته‌های زبان';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language و انگلیسی';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'دانلود نشده · حدود $size';
+  }
+
+  @override
+  String get translateDownloading => 'در حال دانلود از راه Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'بستهٔ $language حذف شود؟';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'پیام‌های $language تا دانلود دوبارهٔ بسته ترجمه نمی‌شوند.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'زبان‌ها';
+
+  @override
+  String get translateMyLanguages => 'زبان‌هایی که می‌خوانم';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'برای پیام‌هایی به این زبان‌ها ترجمه پیشنهاد نمی‌شود. زبان برنامه همیشه یکی از آن‌هاست.';
+
+  @override
+  String get translateInto => 'ترجمه به';
+
+  @override
+  String get translateAppLanguage => 'زبان برنامه';
+
+  @override
+  String get translateBehaviourSection => 'دانلودها و گفت‌وگوها';
+
+  @override
+  String get translateAutoDefault => 'ترجمهٔ خودکار گفت‌وگوها';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'برای گفت‌وگوهایی که خودتان تنظیم نکرده‌اید. هر گفت‌وگو می‌تواند آن را روشن یا خاموش کند.';
+
+  @override
+  String get translateWifiOnly => 'دانلود بسته‌ها فقط با Wi-Fi';
+
+  @override
+  String get translateHost => 'دانلود از';
+
+  @override
+  String get translateHostDefault => 'پیش‌فرض';
+
+  @override
+  String get translateHostHint =>
+      'آینه باید همان فایل‌ها را ارائه کند. Kryfo هر فایل را با هشِ تعبیه‌شده در برنامه می‌سنجد.';
+
+  @override
+  String get translateHostBad => 'از نشانی https استفاده کنید';
+
+  @override
+  String get translateHostReset => 'استفاده از پیش‌فرض';
+
+  @override
+  String get translatePrivacyTitle => 'آنچه خصوصی می‌ماند';
+
+  @override
+  String get translatePrivacyNote =>
+      'ترجمه روی همین گوشی انجام می‌شود. هیچ پیامی برای ترجمه به جایی فرستاده نمی‌شود. دانلود یک بسته به میزبان می‌گوید کدام بسته است. دانلود از راه Tor انجام می‌شود، پس میزبان نمی‌فهمد چه کسی آن را خواسته است.';
+
+  @override
+  String get translateAutoInChat => 'ترجمهٔ خودکار';
+
+  @override
+  String get translateAutoInChatHint =>
+      'پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است.';
 }

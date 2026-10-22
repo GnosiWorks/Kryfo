@@ -19,6 +19,7 @@ import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 class Session {
   Session(this.primary) : vault = null, _people = const {}, _groups = const {};
@@ -114,6 +115,11 @@ class Session {
   Future<Directory> folderOf(String chatId, String name) =>
       _ofChat(chatId).container.folder(name);
   Future<Directory> mediaDirOf(String chatId) => folderOf(chatId, 'media');
+
+  // a feature's own small table (translate/settings.dart): its settings in
+  // the primary, a chat's row beside the chat
+  Future<Database> settingsDb() => primary.open();
+  Future<Database> chatDb(String chatId) => _ofChat(chatId).open();
 
   HaloDb _ofPeer(String haloId) {
     final v = vault;

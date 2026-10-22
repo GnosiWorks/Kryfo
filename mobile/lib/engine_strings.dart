@@ -64,6 +64,19 @@ void zeroNative(Pointer<Utf8> p) {
   p.cast<Uint8>().asTypedList(n).fillRange(0, n, 0);
 }
 
+/// a string another native library made (the translation library), copied
+/// into dart, zeroed and handed back to that library's own free. what it
+/// holds is a message's words
+String nativeTakeSecret(Pointer<Utf8> p, void Function(Pointer<Utf8>) free) {
+  if (p == nullptr) return '';
+  try {
+    return p.toDartString();
+  } finally {
+    zeroNative(p);
+    free(p);
+  }
+}
+
 /// frees a native string made here that held a key, a pin, a passphrase or
 /// plaintext for the engine, its bytes zeroed first
 void freeSecret(Pointer<Utf8> p) {

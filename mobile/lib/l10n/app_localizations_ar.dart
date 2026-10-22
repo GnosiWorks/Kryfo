@@ -8999,4 +8999,181 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
+
+  @override
+  String get translateAction => 'ترجمة';
+
+  @override
+  String get translateShowOriginal => 'عرض الأصل';
+
+  @override
+  String get translateWorking => 'جارٍ الترجمة…';
+
+  @override
+  String get translateFailed => 'تعذّرت الترجمة';
+
+  @override
+  String translateFrom(Object language) {
+    return 'تُرجمت من $language';
+  }
+
+  @override
+  String get translateLangZh => 'الصينية';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'الترجمة على هذا الهاتف: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'تُترجم الرسائل على هذا الهاتف ولا تغادره أبدًا. يتطلب ذلك حزمة اللغة $language، بحجم $size تقريبًا، تُنزَّل مرة واحدة عبر Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'لا يستطيع هذا الإصدار من Kryfo الترجمة بعد. يمكنك تنزيل الحزمة الآن وسيستخدمها إصدار لاحق.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'تنزيل · نحو $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'نزّلها الآن على أي حال';
+
+  @override
+  String get translateResume => 'متابعة التنزيل';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done من $total';
+  }
+
+  @override
+  String get translateFinishing => 'جارٍ فحص الملفات…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'على هذا الهاتف · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      'خيار «عبر Wi-Fi فقط» مفعّل، وهذا الهاتف غير متصل بشبكة Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'لم يتصل Tor بعد. تُنزَّل الحزم عبر Tor فقط، فحاول مجددًا بعد اتصاله.';
+
+  @override
+  String get translateFailNetwork =>
+      'توقف التنزيل. حاول مجددًا وسيكمل من حيث توقف.';
+
+  @override
+  String get translateFailBadFile =>
+      'لم يطابق أحد الملفات ما يتوقعه Kryfo فتم التخلص منه. حاول مجددًا.';
+
+  @override
+  String get translateFailNoEngine =>
+      'لا يستطيع هذا الإصدار من Kryfo تنزيل حزم اللغة بعد.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'متوقف مؤقتًا · $size حتى الآن';
+  }
+
+  @override
+  String get translateSettingsTitle => 'الترجمة';
+
+  @override
+  String get translateSettingsRow => 'ترجمة الرسائل';
+
+  @override
+  String get translateSettingsHint => 'على هذا الهاتف، لا على خادم أبدًا';
+
+  @override
+  String get translatePacksSection => 'حزم اللغة';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language والإنجليزية';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'غير مُنزَّلة · نحو $size';
+  }
+
+  @override
+  String get translateDownloading => 'جارٍ التنزيل عبر Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'حذف حزمة $language؟';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'لن تُترجم الرسائل باللغة $language حتى تُنزَّل الحزمة من جديد.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'اللغات';
+
+  @override
+  String get translateMyLanguages => 'لغات أقرؤها';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'لا تُعرض ترجمة الرسائل المكتوبة بهذه اللغات. لغة التطبيق دائمًا من بينها.';
+
+  @override
+  String get translateInto => 'الترجمة إلى';
+
+  @override
+  String get translateAppLanguage => 'لغة التطبيق';
+
+  @override
+  String get translateBehaviourSection => 'التنزيلات والمحادثات';
+
+  @override
+  String get translateAutoDefault => 'ترجمة المحادثات تلقائيًا';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'للمحادثات التي لم تضبطها بنفسك. يمكن لكل محادثة تشغيلها أو إيقافها.';
+
+  @override
+  String get translateWifiOnly => 'تنزيل الحزم عبر Wi-Fi فقط';
+
+  @override
+  String get translateHost => 'التنزيل من';
+
+  @override
+  String get translateHostDefault => 'الافتراضي';
+
+  @override
+  String get translateHostHint =>
+      'يجب أن تقدّم المرآة الملفات نفسها. يتحقق Kryfo من كل ملف مقابل البصمة المضمّنة في التطبيق.';
+
+  @override
+  String get translateHostBad => 'استخدم عنوان https';
+
+  @override
+  String get translateHostReset => 'استخدام الافتراضي';
+
+  @override
+  String get translatePrivacyTitle => 'ما يبقى خاصًا';
+
+  @override
+  String get translatePrivacyNote =>
+      'تتم الترجمة على هذا الهاتف. لا تُرسل أي رسالة إلى أي مكان لترجمتها. تنزيل حزمة يُخبر الخادم أي حزمة هي. يتم التنزيل عبر Tor، فلا يعرف الخادم من طلبها.';
+
+  @override
+  String get translateAutoInChat => 'ترجمة تلقائية';
+
+  @override
+  String get translateAutoInChatHint =>
+      'تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة.';
 }

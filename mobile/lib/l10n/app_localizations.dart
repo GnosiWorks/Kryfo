@@ -14318,6 +14318,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo removes it from every member\'s phone that has the update.'**
   String get groupInfoEndGroupDetail;
+
+  /// translate/translate_bubble.dart and the message menu: under a message in another language
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get translateAction;
+
+  /// under a translated message, and in its menu: back to the words as they were sent
+  ///
+  /// In en, this message translates to:
+  /// **'Show original'**
+  String get translateShowOriginal;
+
+  /// under a message while it is translated on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get translateWorking;
+
+  /// under a message the translation library failed on; Try again follows it
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t translate'**
+  String get translateFailed;
+
+  /// the small label under a translated message: the language it was written in
+  ///
+  /// In en, this message translates to:
+  /// **'Translated from {language}'**
+  String translateFrom(Object language);
+
+  /// the chinese language pack, and a message in chinese, by name
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese'**
+  String get translateLangZh;
+
+  /// translate/pack_sheet.dart: the sheet a translate tap opens when the language pack is not on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Translate {language} on this phone'**
+  String translatePackTitle(Object language);
+
+  /// under that title: what the pack is, its size, and how it comes
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are translated on this phone and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.'**
+  String translatePackLine(Object language, Object size);
+
+  /// in that sheet when this build has no translation library yet
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Kryfo can\'t translate yet. You can download the pack now, and a later version will use it.'**
+  String get translatePackNoLib;
+
+  /// the button that starts a language pack download, with its size
+  ///
+  /// In en, this message translates to:
+  /// **'Download · about {size}'**
+  String translateDownload(Object size);
+
+  /// when wi-fi only is on and the phone is not on wi-fi: go now
+  ///
+  /// In en, this message translates to:
+  /// **'Download now anyway'**
+  String get translateDownloadAnyway;
+
+  /// a download that was stopped part way
+  ///
+  /// In en, this message translates to:
+  /// **'Resume download'**
+  String get translateResume;
+
+  /// under the download bar: how much of the pack is here
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String translateProgress(Object done, Object total);
+
+  /// the download is in; its files are unpacked and checked
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the files…'**
+  String get translateFinishing;
+
+  /// a pack that is on the phone, with what it takes there
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone · {size}'**
+  String translateInstalled(Object size);
+
+  /// a download asked for while wi-fi only is on and the phone is on mobile data
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi only is on, and this phone isn\'t on Wi-Fi.'**
+  String get translateNeedsWifi;
+
+  /// a download that could not start because tor is not up; it never goes another way
+  ///
+  /// In en, this message translates to:
+  /// **'Tor isn\'t connected yet. Packs download over Tor only, so try again once it is.'**
+  String get translateFailNoTor;
+
+  /// a download cut by the host or the circuit; the next try resumes
+  ///
+  /// In en, this message translates to:
+  /// **'The download stopped. Try again and it picks up where it left off.'**
+  String get translateFailNetwork;
+
+  /// a downloaded file did not match the hash built into the app
+  ///
+  /// In en, this message translates to:
+  /// **'A file didn\'t match what Kryfo expects, so it was thrown away. Try again.'**
+  String get translateFailBadFile;
+
+  /// this build's engine has no model downloads
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Kryfo can\'t download language packs yet.'**
+  String get translateFailNoEngine;
+
+  /// a download stopped part way, with what it has so far
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {size} so far'**
+  String translatePaused(Object size);
+
+  /// screens/translation_screen.dart: its title, and the section on the settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get translateSettingsTitle;
+
+  /// settings: the row that opens the translation page
+  ///
+  /// In en, this message translates to:
+  /// **'Translate messages'**
+  String get translateSettingsRow;
+
+  /// under that row
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone, never on a server'**
+  String get translateSettingsHint;
+
+  /// translation page: the section of language packs
+  ///
+  /// In en, this message translates to:
+  /// **'Language packs'**
+  String get translatePacksSection;
+
+  /// a pack on the translation page: both directions with english
+  ///
+  /// In en, this message translates to:
+  /// **'{language} and English'**
+  String translatePackPair(Object language);
+
+  /// a pack not on the phone, with its download size
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded · about {size}'**
+  String translateNotDownloaded(Object size);
+
+  /// a pack being downloaded, on the translation page
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading over Tor'**
+  String get translateDownloading;
+
+  /// the sheet that asks before a pack is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the {language} pack?'**
+  String translateDeleteTitle(Object language);
+
+  /// under that title
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in {language} can\'t be translated until it\'s downloaded again.'**
+  String translateDeleteLine(Object language);
+
+  /// translation page: the section of the person's languages
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get translateLanguagesSection;
+
+  /// the languages the person reads, whose messages are not offered for translation
+  ///
+  /// In en, this message translates to:
+  /// **'Languages I read'**
+  String get translateMyLanguages;
+
+  /// under that row and in its sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in these aren\'t offered for translation. The app\'s language is always one of them.'**
+  String get translateMyLanguagesHint;
+
+  /// the language messages are translated into
+  ///
+  /// In en, this message translates to:
+  /// **'Translate into'**
+  String get translateInto;
+
+  /// the choice that follows the app's own language
+  ///
+  /// In en, this message translates to:
+  /// **'The app\'s language'**
+  String get translateAppLanguage;
+
+  /// translation page: the section of downloads and automatic translation
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads and chats'**
+  String get translateBehaviourSection;
+
+  /// the default for chats nobody set: translate on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Translate chats automatically'**
+  String get translateAutoDefault;
+
+  /// under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'For chats you haven\'t set yourself. Each chat can turn it on or off.'**
+  String get translateAutoDefaultHint;
+
+  /// pack downloads wait for wi-fi
+  ///
+  /// In en, this message translates to:
+  /// **'Download packs on Wi-Fi only'**
+  String get translateWifiOnly;
+
+  /// where packs are downloaded from: the default host or a mirror the person set
+  ///
+  /// In en, this message translates to:
+  /// **'Download from'**
+  String get translateHost;
+
+  /// the host built into the app
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get translateHostDefault;
+
+  /// under that row and in its sheet
+  ///
+  /// In en, this message translates to:
+  /// **'A mirror has to serve the same files. Kryfo checks each one against the hash built into the app.'**
+  String get translateHostHint;
+
+  /// under the address field when it is not an https address
+  ///
+  /// In en, this message translates to:
+  /// **'Use an https address'**
+  String get translateHostBad;
+
+  /// back to the host built into the app
+  ///
+  /// In en, this message translates to:
+  /// **'Use the default'**
+  String get translateHostReset;
+
+  /// translation page: the section on what a download says to whom
+  ///
+  /// In en, this message translates to:
+  /// **'What stays private'**
+  String get translatePrivacyTitle;
+
+  /// under that title
+  ///
+  /// In en, this message translates to:
+  /// **'Translation happens on this phone. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn\'t learn who asked.'**
+  String get translatePrivacyNote;
+
+  /// contact page: this chat translates messages in other languages on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Translate automatically'**
+  String get translateAutoInChat;
+
+  /// under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in other languages show translated. The original is one tap away.'**
+  String get translateAutoInChatHint;
 }
 
 class _AppLocalizationsDelegate
