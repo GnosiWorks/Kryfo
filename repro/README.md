@@ -8,9 +8,11 @@ before a release.
 
     ./release.sh
 
-the release build. it clones the commit clean, builds the engine and the
-three apks in the pinned container at f-droid's build path, signs them
-outside the container with apksigner, and leaves them in `out/`. the keystore
+the release build. it clones the commit clean, builds the engine, the
+shim and the three apks in the pinned container at f-droid's build path,
+signs them outside the container with apksigner, and leaves them in `out/`
+with `libsignal-<tag>-source.tar.gz`, the AGPL crates' source for the
+release page. the keystore
 never goes into the container. `--unsigned` stops before signing.
 
 a step that fails on the network (a fetch error, a mirror answering 404) is
@@ -22,12 +24,14 @@ failure stops at once. the logs are in `out/`.
 the same build with the container's network cut. first, with the network,
 the fetch step runs the apk build once in a throwaway clone and keeps what
 it downloaded in `cache/` (about 2 GB, gitignored, replaced for a new
-commit): the pub packages, flutter's own tool packages included, and
-gradle's dependency cache plus its distribution. then the release build
+commit): the pub packages, flutter's own tool packages included,
+gradle's dependency cache plus its distribution, and the shim's vendored
+crates (135 MB). then the release build
 gets a copy of both at the paths a normal build uses and runs with
 `--network none`, pub `--offline`, `flutter build --no-pub` and gradle
-offline. `--fetch` only fills the cache. go needs nothing, engine/vendor
-has every module. the image itself still needs the network the first time.
+offline, and the shim's crates copied into the clone with `KS_OFFLINE=1`.
+`--fetch` only fills the cache. go needs nothing, engine/vendor has every
+module. the image itself still needs the network the first time.
 
 the cache holds downloads only, no build output, so it can't change a byte.
 checked on c53cdbae: the offline build (container network none) and the
@@ -47,6 +51,7 @@ builds the ref twice in the container and compares:
   `lib/*/libapp.so` has to be the same, since f-droid builds on its own
   machine. prints SAME.
 
+`NO SHIM` means an apk lacks `lib/<abi>/libkryfo_signal.so`.
 `CONTAINER DIFFERS` means the entries matched and the zip around them didn't.
 `DIFFERS` lists each entry with both hashes. `--no-cross` skips the second
 build, `--cache` mounts your pub cache. neither for a release.
@@ -61,6 +66,11 @@ build, `--cache` mounts your pub cache. neither for a release.
 | go | 1.26.9 | engine/go.mod and the recipe |
 | flutter | 3.41.7, commit cc0734ac | the f-droid srclib |
 | android ndk | 28.2.13676358 | ndkVersion in build.gradle.kts |
+| rust | 1.97.0, rustc 2d8144b7, minimal, three android targets | mobile/native/kryfo_signal/rust-toolchain.toml |
+| rust channel manifest | sha256 3804d266... | holds the sha256 of every component rustup fetches |
+| rustup-init | 1.29.1, by sha256 | installs the toolchain, adds no byte to it |
+| protoc, gcc | debian's | protoc 3.21 and 36.2 give the same shim; gcc only links build scripts |
+| shim crates | Cargo.lock, vendored into the crate's target/vendor | libsignal 387da3e2 (v0.99.4), spqr fd320484 (v1.5.3) |
 | platforms | android-34, 35, 36 | flutter and plugins |
 | build-tools | 35.0.0, 36.0.0 | agp 8.11 and a plugin |
 | cmake | 3.22.1 | jni and flutter_zxing |
@@ -76,6 +86,13 @@ build, `--cache` mounts your pub cache. neither for a release.
   `-w -s`, `--build-id=none` and `SOURCE_DATE_EPOCH`.
 - go's cache doesn't track the c headers in engine/vendor, so the container
   always builds with `HALO_FULL=1`.
+- the shim (libkryfo_signal.so) is built by build-android.sh with
+  `--remap-path-prefix` for the crate and the cargo home, `--build-id=none`,
+  16 kb pages on the 64-bit abis, and the committed release profile (fat
+  lto, one codegen unit, strip). panic messages keep their source paths, so
+  every build, here, on a dev box and on f-droid's, compiles from the same
+  `target/vendor` layout. its sha256 per abi is printed by verify.sh and
+  written into the stamp beside each library in jniLibs.
 - the container gets 65536 open files. cgo building tor and openssl runs out
   at docker's default 1024.
 

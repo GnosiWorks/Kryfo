@@ -17,14 +17,16 @@
 #   ./release.sh              build the current commit and sign it
 #   ./release.sh --ref v0.2.8
 #   ./release.sh --unsigned   stop after the container, sign it yourself
-#   ./release.sh --fetch      only fill cache/ with the commit's pub and
-#                             gradle dependencies (needs the network)
+#   ./release.sh --fetch      only fill cache/ with the commit's pub,
+#                             gradle and shim crate dependencies (needs the
+#                             network)
 #   ./release.sh --offline    fetch if cache/ is not for this commit, then
 #                             build with the container's network cut
 set -e
 cd "$(dirname "$0")"
 
-IMAGE=kryfo-repro
+# KRYFO_REPRO_IMAGE names the image apart, for a box building two trees at once
+IMAGE=${KRYFO_REPRO_IMAGE:-kryfo-repro}
 REF=HEAD
 SIGN=1
 MODE=
@@ -34,7 +36,7 @@ while [ $# -gt 0 ]; do
     --unsigned) SIGN=; shift ;;
     --fetch) MODE=fetch; shift ;;
     --offline) MODE=offline; shift ;;
-    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -126,10 +128,12 @@ clone_to() {
 # container gets by default
 RUN=(docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)")
 
+SHIM_TARGET=mobile/native/kryfo_signal/target
+
 fetch_step() {
   clone_to "$WORK/fetch" || return 1
-  rm -rf cache/pub cache/gradle cache/commit "$WORK/fetch-out"
-  mkdir -p cache/pub cache/gradle "$WORK/fetch-out"
+  rm -rf cache/pub cache/gradle cache/cargo cache/commit "$WORK/fetch-out"
+  mkdir -p cache/pub cache/gradle cache/cargo "$WORK/fetch-out"
   "${RUN[@]}" -e HALO_STEP=fetch \
     -v "$WORK/fetch:/home/vagrant/build/app.kryfo" \
     -v "$PWD/cache/pub:/home/vagrant/.pub-cache" \
@@ -142,11 +146,18 @@ fetch_step() {
   # output. done here, once the container and its daemons are gone.
   find cache/gradle -mindepth 1 -maxdepth 1 ! -name caches ! -name wrapper -exec rm -rf {} + &&
     find cache/gradle/caches -mindepth 1 -maxdepth 1 ! -name modules-2 -exec rm -rf {} + &&
-    du -sh cache/pub cache/gradle
+    cp -a "$WORK/fetch/$SHIM_TARGET/vendor" "$WORK/fetch/$SHIM_TARGET/vendor.toml" \
+      "$WORK/fetch/$SHIM_TARGET/vendor.lock" cache/cargo/ &&
+    du -sh cache/pub cache/gradle cache/cargo
 }
 
 build_step() {
   clone_to "$WORK/src" || return 1
+  # the shim's crates where build-android.sh looks for them
+  if [ "$MODE" = offline ]; then
+    mkdir -p "$WORK/src/$SHIM_TARGET"
+    cp -a cache/cargo/. "$WORK/src/$SHIM_TARGET/"
+  fi
   rm -rf "$WORK/out"
   mkdir -p "$WORK/out"
   "${RUN[@]}" "$@" \
@@ -159,7 +170,7 @@ echo "== image"
 with_retry image docker build -q -t "$IMAGE" .
 
 if [ -n "$MODE" ] && [ "$(cat cache/commit 2>/dev/null)" != "$COMMIT" ]; then
-  echo "== fetching pub and gradle dependencies into repro/cache"
+  echo "== fetching pub, gradle and shim crate dependencies into repro/cache"
   with_retry fetch fetch_step
   rm -rf "$WORK/fetch" "$WORK/fetch-out"
   echo "$COMMIT" > cache/commit
@@ -202,6 +213,7 @@ cp "$WORK/out/"app-*.apk out/
 # without an engine is refused too, so this cannot pass by finding nothing
 for f in out/app-*.apk; do
   unzip -l "$f" | grep -q 'lib/[^/]*/libhalo\.so' || { echo "$f has no engine" >&2; exit 1; }
+  unzip -l "$f" | grep -q 'lib/[^/]*/libkryfo_signal\.so' || { echo "$f has no signal shim" >&2; exit 1; }
   scan=$(mktemp -d)
   unzip -q -o "$f" 'lib/*/libhalo.so' -d "$scan"
   if ! ../engine/censor-scan.sh "$scan"/lib/*/libhalo.so; then
@@ -212,9 +224,14 @@ for f in out/app-*.apk; do
   rm -rf "$scan"
 done
 
+# the source of the agpl crates the shim links goes on the release page
+# beside the apks (agpl section 6), from the vendor dir this build used
+rm -f out/libsignal-*-source.tar.gz
+./agpl-source.sh "$WORK/src/$SHIM_TARGET/vendor" out
+
 if [ -z "$SIGN" ]; then
   echo
-  ( cd out && sha256sum app-*.apk )
+  ( cd out && sha256sum app-*.apk libsignal-*-source.tar.gz )
   echo
   echo "unsigned. sign each with:"
   echo "  apksigner sign --ks <keystore> --v1-signing-enabled false app-<abi>-release.apk"
@@ -256,8 +273,9 @@ done
 
 echo
 echo "== out/"
-( cd out && sha256sum app-*.apk )
+( cd out && sha256sum app-*.apk libsignal-*-source.tar.gz )
 echo
-echo "these are the release. attach them to the github release."
+echo "these are the release. attach them and the libsignal source tarball to"
+echo "the github release."
 echo "to have someone else confirm them, or to check them later:"
 echo "  ./verify.sh --ref $REF out/app-arm64-v8a-release.apk ..."
