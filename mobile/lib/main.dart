@@ -166,6 +166,7 @@ part 'app/state_outbox.dart';
 part 'app/state_prefs.dart';
 part 'app/state_profile.dart';
 part 'app/state_route.dart';
+part 'app/state_screen.dart';
 
 void main() async {
   dlog('launch main');

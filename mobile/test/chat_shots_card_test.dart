@@ -12,7 +12,13 @@ import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, shotsColumns, useDatabasesForTest, AppStateRoute;
+    show
+        AppState,
+        HaloDb,
+        shotsColumns,
+        useDatabasesForTest,
+        AppStateRoute,
+        AppStateScreen;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';

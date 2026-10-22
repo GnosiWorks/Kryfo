@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
 import '../theme.dart';
 import 'halo_hero.dart';

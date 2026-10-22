@@ -369,27 +369,6 @@ class AppState extends ChangeNotifier {
 
   // the lock turned on or off: the window follows at once
   bool? _lockWasOn;
-  void _lockMoved() {
-    if (_lockWasOn == lockState.lockOn) return;
-    _lockWasOn = lockState.lockOn;
-    unawaited(_applyScreenSecure());
-    notifyListeners();
-  }
-
-  Future<void> loadScreenSecure() async {
-    if (_lockWasOn == null) {
-      _lockWasOn = lockState.lockOn;
-      lockState.addListener(_lockMoved);
-    }
-    try {
-      _shotsCardWaits = (await secureStore.read(key: kOldShotsKey)) == 'true';
-      if (_shotsCardWaits) await _readShotsCard();
-    } catch (e) {
-      dlog('shots card: not read (${e.runtimeType})');
-    }
-    await _applyScreenSecure();
-    notifyListeners();
-  }
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
@@ -397,152 +376,11 @@ class AppState extends ChangeNotifier {
   // with the hidden chats open
   bool _shotsCardWaits = false;
   bool _shotsCardCan = false;
-  bool get shotsCardDue =>
-      _shotsCardWaits && !sessionQuiet && !lockState.inVault;
-  // a chat whose phone knows the block, for the card's yes
-  bool get shotsCardCan => _shotsCardCan;
-  // the whole window stays covered until the card is answered
-  bool get shotsCardCovers => _shotsCardWaits;
-
-  Future<void> _readShotsCard() async {
-    final can = (await live.shotsCanTurnOn()).isNotEmpty;
-    if (can == _shotsCardCan) return;
-    _shotsCardCan = can;
-    notifyListeners();
-  }
-
-  /// the card's answer: [on] blocks in every everyday chat that can, and
-  /// with none that can yet the card stays. how many chats it turned on
-  Future<int> answerShotsCard({required bool on}) async {
-    if (sessionQuiet) return 0;
-    final peers = on ? await live.shotsCanTurnOn() : const <String>[];
-    if (on && peers.isEmpty) {
-      await _readShotsCard();
-      return 0;
-    }
-    for (final peer in peers) {
-      await _turnShots(peer, true, live);
-    }
-    _shotsCardWaits = false;
-    await secureStore.delete(key: kOldShotsKey);
-    await _applyScreenSecure();
-    notifyListeners();
-    return peers.length;
-  }
-
-  /// the chat's switch: both phones block, or neither does. only once their
-  /// phone knows the block; in a decoy it stays on this phone
-  Future<void> setChatShots(String peer, bool on) async {
-    final db = session.peerDb(peer);
-    final s = await db.shotsOf(peer);
-    if (!s.peerCan || s.blocked || s.on == on) return;
-    await _turnShots(peer, on, db);
-  }
-
-  Future<void> _turnShots(String peer, bool on, HaloDb db) async {
-    final was = (await db.shotsOf(peer)).blocking;
-    final at = await db.turnShots(peer, on: on);
-    if (at == null) return;
-    // blocking from now: what the shade still shows of the chat goes
-    if (!was && (await db.shotsOf(peer)).blocking) {
-      unawaited(_io.unnotify(peer));
-    }
-    // queued first: a route that is down carries it later
-    await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
-    _bumpChatRev(peer);
-    notifyListeners();
-    try {
-      await refreshContacts();
-    } catch (e) {
-      dlog('shots: list not read again (${e.runtimeType})');
-    }
-    if (await blockedAnywhere(peer)) return;
-    await _frameNow(peer, shotsUid(peer), kFrameShots, '$at');
-  }
 
   // the newest word each phone heard or sent about a chat, in memory: what
   // goes to a chat whose rows are shut away in the vault, so its envelope
   // says what an open one would
   final Map<String, ShotsWord> _shotsWords = {};
-
-  void _shotsHeard(String peer, ShotsWord w) {
-    final was = _shotsWords[peer];
-    if (was == null || shotsWins(w, on: was.on, at: was.at)) {
-      _shotsWords[peer] = w;
-    }
-  }
-
-  // what a 1:1 envelope says of the chat's block, and of their phone
-  Future<void> _takeShots(String peer, UnwrappedMessage env, HaloDb db) async {
-    if (env.groupId != null || isDevId(peer)) return;
-    try {
-      final was = (await db.shotsOf(peer)).blocking;
-      final changed = await db.takeShots(
-        peer,
-        env.shots,
-        counts: _dataFrame(env) && env.msgUid != null,
-        written: env.writtenAt,
-      );
-      if (!changed) return;
-      _bumpChatRev(peer);
-      notifyListeners();
-      // blocking from now: what the shade still shows of the chat goes,
-      // once, and never what rang since
-      if (!was && (await db.shotsOf(peer)).blocking) {
-        unawaited(_io.unnotify(peer));
-      }
-      await refreshContacts();
-      if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
-    } catch (e) {
-      dlog('shots: not taken (${e.runtimeType})');
-    }
-  }
-
-  /// [wrapped] as it goes to [peer]: with the chat's block on it, from the
-  /// container that holds the chat
-  Future<String> shotsOnWire(String peer, String wrapped) async {
-    if (isDevId(peer)) return wrapped;
-    final body = shotsBodyOf(wrapped);
-    if (body == null) return wrapped;
-    ShotsWord? word;
-    try {
-      final s = await _ownerOf(peer).shotsOf(peer);
-      if (s.known) word = s.word;
-    } catch (e) {
-      dlog('shots: not read for the wire (${e.runtimeType})');
-    }
-    // no row here: a chat shut away in the vault says what its card kept
-    // at the close, or a newer word since, as an open one would
-    if (word == null) {
-      word = _router.cardOf(peer)?.shots ?? const ShotsWord(on: false, at: 0);
-      final heard = _shotsWords[peer];
-      if (heard != null && shotsWins(heard, on: word.on, at: word.at)) {
-        word = heard;
-      }
-    }
-    _shotsHeard(peer, word);
-    return shotsPut(body, word);
-  }
-
-  // the chat blocks screenshots on this phone, as its rows say. one that
-  // will not read rings as it did before the block
-  Future<bool> _shotsBlock(HaloDb db, String peer) async {
-    try {
-      return (await db.shotsOf(peer)).blocking;
-    } catch (e) {
-      dlog('shots: not read for the shade (${e.runtimeType})');
-      return false;
-    }
-  }
-
-  /// the chat blocks screenshots on this phone, as the list knows it: read
-  /// at once, before a screen opens on it
-  bool shotsBlocksChat(String peer) =>
-      contacts.any((c) => c.haloId == peer && c.shotsBlocking);
-
-  /// a room, which always blocks, as the list knows it
-  bool shotsBlocksGroup(String groupId) =>
-      groups.any((g) => g.groupId == groupId && g.expiresAt != null);
 
   // ---- how tor gets out ----
 
@@ -1164,33 +1002,11 @@ class AppState extends ChangeNotifier {
   // the way out. a count, one per screen holding it: a room closing over
   // another room lets go of its own hold only
   int _secureHolds = 0;
-  bool get secureForced => _secureHolds > 0;
-  // an app lock keeps screenshots and the recents picture off, whatever the
-  // switch says: the settings then never say one thing while the app does
-  // another. a lock turned off in the decoy is off here too, as anywhere
-  bool get screenSecureByLock => lockState.lockOn;
-
-  Future<void> forceSecure(bool on) async {
-    _secureHolds = on ? _secureHolds + 1 : max(0, _secureHolds - 1);
-    await _applyScreenSecure();
-  }
 
   // what android was last told. the call runs on android's main thread,
   // which dart shares, so an unchanged value is not sent: a room closing
   // in a session switch would otherwise hold the decoy's reveal alone
   bool? _secureSent;
-
-  Future<void> _applyScreenSecure() async {
-    final on = secureForced || screenSecureByLock || _shotsCardWaits;
-    if (on == _secureSent) return;
-    _secureSent = on;
-    try {
-      await _platformChannel.invokeMethod('setSecure', {'on': on});
-    } catch (e) {
-      _secureSent = null;
-      dlog('setSecure: $e');
-    }
-  }
 
   // the first fill of the search index for a history from before it: a
   // batch, a pause, the next, so the app never waits on it. each container

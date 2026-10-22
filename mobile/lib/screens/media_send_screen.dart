@@ -12,7 +12,7 @@ import '../album.dart' show kPickMax;
 import '../bidi_safe.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 

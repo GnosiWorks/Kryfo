@@ -11,7 +11,13 @@ import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart'
-    show appState, session, sessionQuiet, AppStateOutbox, AppStateMessages;
+    show
+        appState,
+        session,
+        sessionQuiet,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateScreen;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
