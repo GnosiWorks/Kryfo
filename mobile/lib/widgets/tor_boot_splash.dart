@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../dlog.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateBridges;
 import '../screens/bridge_sheets.dart' show showBlockedStartSheet;
 import '../screens/bridges_screen.dart';
 import '../reopen.dart';

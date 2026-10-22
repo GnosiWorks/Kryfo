@@ -17,7 +17,8 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/quiet_wait.dart';

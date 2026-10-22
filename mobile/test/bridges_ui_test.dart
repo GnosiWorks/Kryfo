@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         appState,
         bridgeWriteTap,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/widgets/motion.dart'

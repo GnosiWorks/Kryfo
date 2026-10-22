@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';

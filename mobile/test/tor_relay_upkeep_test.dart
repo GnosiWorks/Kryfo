@@ -21,7 +21,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateDelivery;
+        AppStateDelivery,
+        AppStateBridges;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';

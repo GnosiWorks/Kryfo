@@ -12,7 +12,8 @@ import '../main.dart'
         AppStatePrefs,
         AppStateProfile,
         AppStateDelivery,
-        AppStateScreen;
+        AppStateScreen,
+        AppStateBridges;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';

@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         appState,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateBridges;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/rooms.dart' show roomDefaultCap;

@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
