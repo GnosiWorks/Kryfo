@@ -1,11 +1,14 @@
 # Building
 
-two parts: the go engine (libhalo.so), then the flutter app that bundles it.
+three parts: the go engine (libhalo.so), the libsignal shim
+(libkryfo_signal.so), then the flutter app that bundles both.
 
 ## toolchain
 
 - flutter 3.41.7
 - go 1.26.9
+- rust 1.97.0 with the three android targets (mobile/native/kryfo_signal/rust-toolchain.toml;
+  rustup installs it on first use), protoc and a host cc
 - android ndk r28c (28.2.13676358)
 - jdk 17
 
@@ -25,6 +28,25 @@ vendor/ is rebuilt with `./vendor.sh` in engine/, never a bare
 (engine/VENDOR_PATCHES.md) and go mod vendor drops the patches. after
 touching them, build with `HALO_FULL=1 ./build.sh`, go's cache doesn't see
 them.
+
+## libsignal shim
+
+    mobile/native/kryfo_signal/build-android.sh
+
+builds arm64-v8a, armeabi-v7a and x86_64 into the app's jniLibs, with a
+stamp beside each. the first run vendors the crates into the crate's
+target/vendor (network), every compile after that is offline
+(`--frozen`). it refuses another ndk or rust, a Cargo.lock that moved
+libsignal or spqr, and any C in the android graph, and checks each library:
+the 18 exports, libc and libdl only, 16 kb pages, no build path inside.
+gradle refuses a library whose stamp does not match this checkout's crate:
+build it in every tree, never copy it from another.
+
+`build-host.sh --test` builds the host library and runs the rust tests,
+then `KRYFO_SIGNAL_LIB=<it> flutter test test/signal_ls`. `mtecheck.sh`
+runs the rust tests for arm64 under qemu with heap tagging and for 32-bit
+arm (docker). after a Cargo.lock change, `acknowledgments.sh` (cargo-about
+0.8.2) writes the licences screen's crate list.
 
 ## app
 
