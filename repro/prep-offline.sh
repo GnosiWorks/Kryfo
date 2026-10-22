@@ -6,9 +6,9 @@ cd "$(dirname "$0")"
 mkdir -p dl
 
 GO_TGZ=dl/go1.26.9.linux-amd64.tar.gz
-NDK_ZIP=dl/android-ndk-r28b-linux.zip
-NDK_TGZ=dl/android-ndk-r28b.tgz
-NDK_SHA1_GOOGLE=f574d3165405bd59ffc5edaadac02689075a729f
+NDK_ZIP=dl/android-ndk-r28c-linux.zip
+NDK_TGZ=dl/android-ndk-r28c.tgz
+NDK_SHA1_GOOGLE=a7b54a5de87fecd125a17d54f73c446199e72a64
 
 fetch() {
   until wget -c -q --show-progress "$1" -O "$2"; do
@@ -37,8 +37,8 @@ fi
 # 2. ndk (the big one, ~700mb)
 if [ ! -f "$NDK_TGZ" ]; then
   if [ ! -f "$NDK_ZIP.ok" ]; then
-    echo "ndk r28b (~700mb, resumes if it dies)..."
-    fetch "https://dl.google.com/android/repository/android-ndk-r28b-linux.zip" "$NDK_ZIP"
+    echo "ndk r28c (~700mb, resumes if it dies)..."
+    fetch "https://dl.google.com/android/repository/android-ndk-r28c-linux.zip" "$NDK_ZIP"
     GOT=$(sha1sum "$NDK_ZIP" | cut -d' ' -f1)
     if [ "$GOT" != "$NDK_SHA1_GOOGLE" ]; then
       echo "ndk sha1 mismatch (got $GOT): partial or tampered, deleting"
@@ -50,7 +50,7 @@ if [ ! -f "$NDK_TGZ" ]; then
   echo "repacking ndk zip -> tgz (a few min, local only)..."
   rm -rf dl/ndk-tmp && mkdir dl/ndk-tmp
   unzip -q "$NDK_ZIP" -d dl/ndk-tmp
-  tar -C dl/ndk-tmp -czf "$NDK_TGZ" android-ndk-r28b
+  tar -C dl/ndk-tmp -czf "$NDK_TGZ" android-ndk-r28c
   rm -rf dl/ndk-tmp
 fi
 
