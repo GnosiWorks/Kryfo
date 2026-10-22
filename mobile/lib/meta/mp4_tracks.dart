@@ -134,6 +134,11 @@ Mp4Layout readMp4Layout(ByteSource s, {List<int>? count}) {
 Mp4Layout readMp4LayoutOf(ByteSource s, List<IsoBox> top, List<int> c) {
   final moov = firstOf(top, 'moov');
   if (moov == null) return Mp4Layout(top, null, const [], const [], false);
+  // a player reads one movie; a second one is read by no one here, so the
+  // file is not one to vouch for
+  if (top.where((b) => b.type == 'moov').length > 1) {
+    throw const IsoError('two movie boxes');
+  }
   final kids = isoBoxes(s, moov.body, moov.end, c);
   final tracks = <Mp4Track>[];
   for (final t in kids.where((b) => b.type == 'trak')) {

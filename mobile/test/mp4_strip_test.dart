@@ -442,4 +442,23 @@ void main() {
       expect(text(out).contains(picture), true);
     });
   });
+
+  test(
+    'a second movie box is refused, by the cleaner and the reader',
+    () async {
+      // only the first moov is played; the second can carry a place
+      final second = box(
+        'moov',
+        box(
+          'udta',
+          box('©xyz', [0, 11, 0x15, 0xc7] + '+48.13+011.5/'.codeUnits),
+        ),
+      );
+      final b = Uint8List.fromList([...fx.mp4(), ...second]);
+      expect(readMeta(MemorySource(b)).status, MetaStatus.unreadable);
+      final f = await write(b);
+      expect(await stripMp4Metadata(f.path), null);
+      expect(await mp4MetadataCount(f.path), null);
+    },
+  );
 }
