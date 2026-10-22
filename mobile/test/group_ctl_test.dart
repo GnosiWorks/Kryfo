@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateOutbox,
         AppStateGroupLanes,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateGroups;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 import 'package:kryfo/polls.dart' show PollSpec;

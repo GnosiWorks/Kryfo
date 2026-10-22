@@ -4,7 +4,13 @@
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart'
-    show appState, session, GroupFull, AppStateMessages, AppStatePrefs;
+    show
+        appState,
+        session,
+        GroupFull,
+        AppStateMessages,
+        AppStatePrefs,
+        AppStateGroups;
 import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';

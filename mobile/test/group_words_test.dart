@@ -6,7 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show AppState, GroupFull, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, GroupFull, useDatabasesForTest, AppStateGroups;
 import 'package:kryfo/mentions.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/screens/group_info_screen.dart'

@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         sayRoomJoined,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateGroupLanes;
+        AppStateGroupLanes,
+        AppStateGroups;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/router.dart';

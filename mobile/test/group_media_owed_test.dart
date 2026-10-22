@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateOutbox,
         AppStateGroupLanes,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateGroups;
 import 'package:kryfo/media_send.dart' show mediaCancelled, mediaInflight;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart' show PollVote;

@@ -16,7 +16,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateGroups;
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

@@ -2,7 +2,7 @@
 // pick a name and members, then create and announce the group
 
 import 'package:flutter/material.dart';
-import '../main.dart' show appState, GroupFull;
+import '../main.dart' show appState, GroupFull, AppStateGroups;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/pick_row.dart';
