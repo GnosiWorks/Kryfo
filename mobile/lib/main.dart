@@ -147,6 +147,7 @@ import 'wire_pad.dart';
 part 'app/arrivals.dart';
 part 'app/boot.dart';
 part 'app/database.dart';
+part 'app/database_contacts.dart';
 part 'app/dev_screen.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
