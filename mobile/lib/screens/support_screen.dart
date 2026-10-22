@@ -23,7 +23,8 @@ import '../main.dart'
         currentChatPeer,
         releaseChat,
         session,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateDevchat;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';

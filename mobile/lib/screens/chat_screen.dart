@@ -112,7 +112,8 @@ import '../main.dart'
         AppStateScreen,
         AppStateVault,
         AppStateContacts,
-        AppStateSession;
+        AppStateSession,
+        AppStateDevchat;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';

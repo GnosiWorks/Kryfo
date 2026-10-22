@@ -16,7 +16,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateDevchat;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';

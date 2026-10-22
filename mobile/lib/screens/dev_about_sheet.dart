@@ -14,7 +14,7 @@ import '../devchat/dev_key.dart';
 import '../devchat/dev_start.dart' show forgetDevChoices;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState, session, sessionQuiet;
+import '../main.dart' show appState, session, sessionQuiet, AppStateDevchat;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
