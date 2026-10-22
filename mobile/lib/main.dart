@@ -154,6 +154,7 @@ part 'app/database_deletes.dart';
 part 'app/database_first_contact.dart';
 part 'app/database_groups.dart';
 part 'app/database_messages.dart';
+part 'app/database_outbox.dart';
 part 'app/database_rooms.dart';
 part 'app/dev_screen.dart';
 part 'app/engine.dart';
