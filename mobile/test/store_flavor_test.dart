@@ -56,6 +56,12 @@ void main() {
     }
   });
 
+  test('release kotlin keeps the module name it had before flavors', () {
+    final keep = gradle.substring(gradle.indexOf('tasks.withType<org.'));
+    expect(keep, contains('name == "compileFossReleaseKotlin"'));
+    expect(keep, contains('compilerOptions.moduleName.set("app_release")'));
+  });
+
   test('the old store define stops the build', () {
     expect(gradle, contains('.startsWith("KRYFO_STORE=")'));
     expect(gradle, contains('throw GradleException("KRYFO_STORE is gone.'));

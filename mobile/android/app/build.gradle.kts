@@ -138,6 +138,15 @@ android {
 flutter {
     source = "../.."
 }
+
+// kotlin puts the module name into internal names, and the flavors turned
+// app_release into app_fossRelease. r8's code is the same either way but
+// its map id in classes.dex is not, so release builds keep the old name
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    if (name == "compileFossReleaseKotlin" || name == "compilePlayReleaseKotlin") {
+        compilerOptions.moduleName.set("app_release")
+    }
+}
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // the camera shrink reads the orientation tag. the platform class is
