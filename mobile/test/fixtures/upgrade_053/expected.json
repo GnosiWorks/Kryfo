@@ -1,0 +1,40 @@
+{
+  "version": 85,
+  "me": {
+    "id": "quiet-maple-harbor",
+    "ed_priv": "e0fc273e173de97c903dff569d604b346f43a99a4b64aca23ed234765a9d2c7e",
+    "x_priv": "d8dac87ed8e1439fc8b260ba57d9f988059e5e327dba8e57c33d1cc178d6ba55",
+    "x_pub": "144e4d8869ddaa19e02ffd07c67727d7b219601ffec7c2c051e7e5b356c70373"
+  },
+  "alice": {
+    "id": "amber-otter-lake",
+    "ed_priv": "48fffaa3e9fc8ba6e7aad8eb7b433df0544b9eacdda0a8440a92b564cc633776",
+    "x_priv": "38574f8b11ea1a69012fc5f9f3e4c3d7bcc37b962300c440d440f719c0c1e06c",
+    "x_pub": "afc8c12376f2ada8e95f0ac13e6022fa10f57b8609c15c0519d2ba3394398d0a"
+  },
+  "peers": {
+    "bob_": {
+      "x_priv": "c0c9a3457949829e97407024b29d549a74917b0608adc74489dd7fde81c5a27d",
+      "x_pub": "64ca6d183f2fee8a75cf7a471ae32f1504def339d77870dcd7326cca48559609"
+    },
+    "stranger_": {
+      "x_priv": "78c7c03b2ca4142d97ffec7488c7e8c7288897bd5ab30f20d042129cb352895b",
+      "x_pub": "b6114a175db4cd7482834aaaf626f3c6b0b08b75b77c876034e2301cec016710"
+    },
+    "dave_": {
+      "x_priv": "5822015f2e57db1c70829c2a2b9d4d8caabdbacc40923d9cc6bbef56671d194d",
+      "x_pub": "fed56136bc1a6c9e7c41a70f469d921c9d125b63775032f1847bf076a676db60"
+    }
+  },
+  "safety": {
+    "amber-otter-lake": "16220 25850 66074 22039 85046 90789 81192 84381 34938 92371 22726 31568",
+    "brisk-cedar-moon": "01664 65743 81281 72259 99636 23475 77694 16486 43330 95165 92197 12601",
+    "dusty-heron-vale": "11406 69378 10622 23749 77245 17529 53179 62861 66846 73218 43330 11316"
+  },
+  "in_flight": {
+    "bob_to_me": "AjMKIQWUeEo4a11KyoHIjrXRO/sjh3T11mvXF04bf+nW5XxVGBAAGAAiIHYVLn+KY3y7ZlW/hJ5imWiobpslf1cXJl0EAavN8KtVZfVwS9lzqYw=",
+    "me_to_bob": "AjMKIQVOQJZTuCHqB5vLbrDbD+EtNgMqOpXexjpumWfAurMGdhABGAAiIEZhBdvmtr/iDOFEFXAqj0g0LT971GBGgnsEvumpjai7XRWlP4eMdVI=",
+    "me_to_dave": "AzMIv4Q9EiEFWu0Cw+Di6y3yOXnbcElPhK3shHlLFe32DCkkZbX6aGAaIQUUTk2Iad2qGeAv/QfGdyfXshlgH/7HwsBR5+WzVscDcyJSMwohBc9zP6EuY+Dwfc0Y9MoVKgTDR4xr3xgVkD86Tsy0fyxREAAYACIgJWn79MdQ4LiCJmH00oLGiQkiS0FUnYFov+tyobSIXxcYBMnb6t+rnyijHDAB",
+    "stranger_to_me": "AzMIv4Q9EiEFyhcFdjb+tGWQLF0+XGeGmIxQ5ZdDcggqg4E43DzADSEaIQW2EUoXXbTNdIKDSqr2JvPGsLCLdbd8h2A04jAc7AFnECJSMwohBesu9pkhpkzWfGmDSs7InHb9ygSaKObVLyq/D7O/0fIlEAAYACIgOYSit3qsQ/fO2Uq6IiRAaC5VY0QtfodPsVkrTzAlWjmQg/K1d6x68iidXzAB"
+  }
+}
