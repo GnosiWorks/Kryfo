@@ -14492,6 +14492,10 @@ class AppState extends ChangeNotifier {
     if (shared != null) await ToolsBridge.instance.dropSharedText(shared.id);
     notifyListeners();
   }
+
+  // the area extensions call this; a protected member is open only to subclasses
+  @override
+  void notifyListeners() => super.notifyListeners();
 }
 
 final appState = AppState();
