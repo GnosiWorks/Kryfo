@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'source_body.dart';
+
 void main() {
   test('no query asks for a bare rowid', () {
     final bare = <String>[];
@@ -23,7 +25,7 @@ void main() {
   });
 
   test('the message reads that page and append ask for the row id', () {
-    final src = File('lib/app/database.dart').readAsStringSync();
+    final src = sourceOf('lib/app/database.dart');
     for (final name in [
       'messagesFor',
       'messagesPage',
