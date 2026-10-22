@@ -13,7 +13,7 @@ import '../dlog.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../jpeg_strip.dart';
+import '../image_strip.dart' show photoToSendOffUi;
 import '../open_file.dart' show forgetVideoInfo;
 import '../main.dart' show shredFile, exportToPictures;
 import '../picked.dart' show shrinkPhoto;
@@ -349,14 +349,11 @@ class _CameraScreenState extends State<CameraScreen>
       // after it is the belt to that brace. same size and quality as a
       // gallery pick.
       final small = await shrinkPhoto(raw);
-      final stripped = stripJpegMetadata(small);
-      final clean = stripped;
+      final clean = await photoToSendOffUi(small);
       if (!mounted) return;
       // a file the stripper could not walk, or one that still reads as
-      // tagged, is refused rather than passed on
-      setState(
-        () => _shot = clean == null || jpegHasExif(clean) ? null : clean,
-      );
+      // anything, is refused rather than passed on
+      setState(() => _shot = clean);
       if (_shot == null) {
         showHaloToast(context, l10n.cameraCouldNotStripThat);
       }

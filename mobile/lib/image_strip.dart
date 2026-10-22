@@ -23,6 +23,8 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'heif_clean.dart';
 import 'jpeg_strip.dart';
+import 'meta/byte_source.dart';
+import 'meta/meta_reader.dart';
 import 'meta/tiff.dart';
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
@@ -137,7 +139,18 @@ Future<bool?> stripPictureFileOffUi(String path) =>
 Uint8List? photoToSend(Uint8List src) {
   final out = stripPictureBytes(src);
   if (out == null || jpegHasExif(out)) return null;
+  // read again as the photo tool reads it: a picture that still holds
+  // anything does not go
+  if (pictureKind(out) != PictureKind.other && !_readsClean(out)) return null;
   return out;
+}
+
+bool _readsClean(Uint8List b) {
+  try {
+    return readMetaStrict(MemorySource(b)).status == MetaStatus.nothing;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// the same, off the ui thread

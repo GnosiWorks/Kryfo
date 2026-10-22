@@ -94,13 +94,20 @@ void main() {
       ).replaceAll(RegExp(r'\s+'), ' ');
       expect(
         send,
-        contains(
-          'if (!raw && (videoNameNeedsStrip(name) || '
-          'await bytesSayIsoVideo(dest.path))) {',
-        ),
+        contains('await cleanMediaFile(dest.path, name: name, raw: raw);'),
         reason: file,
       );
     });
+    final one = sourceOf(
+      'lib/clean_media.dart',
+    ).replaceAll(RegExp(r'\s+'), ' ');
+    expect(
+      one,
+      contains(
+        'if (!raw && (videoNameNeedsStrip(name) || '
+        'await bytesSayIsoVideo(path))) {',
+      ),
+    );
   });
 
   test('a picture the lane cannot clean is always asked about', () {
