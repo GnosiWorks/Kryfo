@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import java.io.FileInputStream
+import java.security.MessageDigest
 import java.util.Base64
 import java.util.Properties
 
@@ -186,7 +187,7 @@ fun checkSignalShim() {
                 if (parts.size == 2) parts[0] to parts[1] else null
             }.toMap()
         } else emptyMap()
-        val sha = java.security.MessageDigest.getInstance("SHA-256")
+        val sha = MessageDigest.getInstance("SHA-256")
             .digest(so.readBytes()).joinToString("") { "%02x".format(it) }
         when {
             fields.isEmpty() -> throw GradleException("$abi/libkryfo_signal.so has no stamp.\n$rebuild")
