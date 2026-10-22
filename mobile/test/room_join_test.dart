@@ -26,7 +26,8 @@ import 'package:kryfo/main.dart'
         AppStateGroupLanes,
         AppStateGroups,
         AppStateReceive,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateRooms;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/router.dart';

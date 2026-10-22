@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         AppStateVault,
         AppStateGroups,
         AppStateSession,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateRooms;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart'

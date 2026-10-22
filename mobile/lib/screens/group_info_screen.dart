@@ -11,7 +11,8 @@ import '../main.dart'
         AppStateMessages,
         AppStatePrefs,
         AppStateGroups,
-        AppStateSession;
+        AppStateSession,
+        AppStateRooms;
 import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';

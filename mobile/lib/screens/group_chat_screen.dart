@@ -80,7 +80,8 @@ import '../main.dart'
         AppStateVault,
         AppStateGroups,
         AppStateSession,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateRooms;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
