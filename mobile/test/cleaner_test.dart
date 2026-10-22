@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/tools/cleaner.dart';
 
@@ -120,15 +121,21 @@ void main() {
     expect(out.sublist(out.length - 2), [0xFF, 0xD9]);
   });
 
-  test('a jpeg with an hdr layer waits for its own wording', () async {
-    final x = '<x:xmpmeta><rdf:Description hdrgm:Version="1.0"/></x:xmpmeta>';
-    final src = put('h.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
-    final r = await cleanFileHere(src, '${tmp.path}/out', 'h.jpg');
-    expect(r.failure, CleanFailure.motion);
-    expect(r.path, null);
-    final out = Directory('${tmp.path}/out');
-    expect(!out.existsSync() || out.listSync().isEmpty, true);
-  });
+  test(
+    'a jpeg with an hdr layer keeps its picture and names the layer',
+    () async {
+      final x = '<x:xmpmeta><rdf:Description hdrgm:Version="1.0"/></x:xmpmeta>';
+      final src = put('h.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
+      final r = await cleanFileHere(src, '${tmp.path}/out', 'h.jpg');
+      expect(r.before.hdrLayer, true);
+      expect(r.failure, null);
+      expect(readFile(r.path!).status, MetaStatus.nothing);
+      expect(
+        removedLines(r.before).map((l) => l.label),
+        contains(l10n.cleanerHdrLayer),
+      );
+    },
+  );
 
   test('removes a vendor box too', () async {
     final src = put(

@@ -2014,6 +2014,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Aynı resim, aynı kalite';
 
   @override
+  String get cleanSamePicture => 'Aynı resim';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, kaldırıldı';
   }
@@ -5958,6 +5961,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'İçerik kimlik bilgileri';
+
+  @override
+  String get cleanerHdrLayer => 'HDR katmanı';
 
   @override
   String get cleanerDataAfterThePicture => 'Resimden sonraki veri';

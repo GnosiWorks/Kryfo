@@ -1930,6 +1930,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanSamePictureSameQuality => '同样的图片，同样的画质';
 
   @override
+  String get cleanSamePicture => '同样的图片';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label，已移除';
   }
@@ -5689,6 +5692,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => '内容凭证';
+
+  @override
+  String get cleanerHdrLayer => 'HDR 图层';
 
   @override
   String get cleanerDataAfterThePicture => '图片之后的数据';
@@ -10393,6 +10399,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanSamePictureSameQuality => '同樣的圖片，同樣的畫質';
 
   @override
+  String get cleanSamePicture => '同樣的圖片';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label，已移除';
   }
@@ -14154,6 +14163,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cleanerContentCredentials => '內容憑證';
+
+  @override
+  String get cleanerHdrLayer => 'HDR 圖層';
 
   @override
   String get cleanerDataAfterThePicture => '圖片之後的資料';

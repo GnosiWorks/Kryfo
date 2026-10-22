@@ -2027,6 +2027,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Même image, même qualité';
 
   @override
+  String get cleanSamePicture => 'Même image';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, retiré';
   }
@@ -6002,6 +6005,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Identifiants de contenu';
+
+  @override
+  String get cleanerHdrLayer => 'Calque HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'Données après l’image';

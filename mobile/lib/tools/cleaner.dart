@@ -116,12 +116,9 @@ Future<CleanResult> cleanFileHere(
     return fail(CleanFailure.unreadable);
   }
   // a jpeg ends at its end marker once clean, and a heif keeps only its
-  // picture's items, so a motion clip, the extra pictures and a samsung
-  // trailer go. an hdr layer waits: the picture would no longer look the
-  // same on an hdr screen, and the result line says it does
-  final cuts =
-      (before.kind == MetaKind.jpeg || before.kind == MetaKind.heif) &&
-      !before.hdrLayer;
+  // picture's items, so a motion clip, the extra pictures, an hdr layer and
+  // a samsung trailer go. the result line then says "same picture" alone
+  final cuts = before.kind == MetaKind.jpeg || before.kind == MetaKind.heif;
   if (!cuts &&
       (before.embeddedVideo || before.secondImage || before.hdrLayer)) {
     return fail(CleanFailure.motion);
@@ -209,6 +206,7 @@ List<RemovedLine> removedLines(MetaReport r) {
   }
   if (r.thumbnailBytes > 0) out.add(RemovedLine(l10n.cleanerHiddenThumbnail));
   if (r.credentials) out.add(RemovedLine(l10n.cleanerContentCredentials));
+  if (r.hdrLayer) out.add(RemovedLine(l10n.cleanerHdrLayer));
   if (r.trailingBytes > 0) {
     out.add(RemovedLine(l10n.cleanerDataAfterThePicture));
   }
@@ -233,7 +231,6 @@ List<RemovedLine> removedLines(MetaReport r) {
     r.syntheticPrompt.isNotEmpty,
     r.smallCopies > 0,
     r.depthMap || r.portraitMatte || r.beforeBlur,
-    r.hdrLayer,
     r.extraPictures > 0,
     r.sphere,
     r.networkCountry != null,
