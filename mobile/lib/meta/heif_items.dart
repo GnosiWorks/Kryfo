@@ -310,6 +310,17 @@ const kAlphaUrns = {
 
 const _derived = {'grid', 'iovl', 'iden'};
 
+/// item properties a decoder reads: size, colour, layout, codec setup,
+/// auxiliary type, hdr and layer data. descriptive ones (udes, crtt, mdft,
+/// altt) and vendor ones are not among them
+const kHeifPropKeep = {
+  'ispe', 'pixi', 'colr', 'irot', 'imir', 'clap', 'pasp', 'rloc', 'lsel', //
+  'hvcC', 'lhvC', 'av1C', 'avcC', 'vvcC', 'evcC', 'j2kH', 'jpgC', 'uncC',
+  'cmpC', 'icef', 'cpal', 'cpat', 'splz', 'sbpm', 'snuc', 'cloc', 'oinf',
+  'tols', 'iscl', 'a1op', 'a1lx', 'auxC', 'clli', 'mdcv', 'cclv', 'amve',
+  'cmin', 'cmex', 'reve', 'fdel', 'mskC',
+};
+
 /// item types a picture is coded or built in
 const kHeifCodings = {
   'hvc1',

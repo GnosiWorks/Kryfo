@@ -983,6 +983,12 @@ void _heif(ByteSource s, MetaReport r) {
       }
     }
   }
+  // a description, a date or a vendor block hung on an item as a property
+  for (final p in m.props) {
+    if (!kHeifPropKeep.contains(p.type) && nonZero(s, p.body, p.bodySize)) {
+      r.extra.add(l10n.metaReaderBox(_printable(p.type)));
+    }
+  }
   final idat = m.idat;
   if (idat != null) {
     for (final (a, b) in Ranges.gaps(usedIdat.merged, 0, idat.bodySize)) {

@@ -199,4 +199,48 @@ void main() {
     expect(_read(out).status, MetaStatus.nothing);
     expect(_bytes(out, 1), _pic.bytes);
   });
+
+  test('a description and dates on the picture go, its size stays', () {
+    final ispe = full('ispe', 0, [...be32(64), ...be32(48)]);
+    final src = heifOf([
+      HeifPart(
+        1,
+        'hvc1',
+        const [1, 2, 3, 4],
+        props: [
+          (ispe, false),
+          (
+            full('udes', 0, [...t('en'), 0, ...t('Our street'), 0, 0, 0]),
+            false,
+          ),
+          (full('crtt', 0, be32(0x5f5e1000)), false),
+          (full('mdft', 0, be32(0x5f5e1000)), false),
+        ],
+      ),
+    ]);
+    expect(_read(src).status, MetaStatus.found);
+    final out = cleanHeif(src)!;
+    expect(_has(out, 'Our street'), false);
+    final m = _meta(out);
+    expect(m.props.map((p) => p.type), ['ispe']);
+    expect(m.assoc[1]!.single.index, 1);
+    expect(_read(out).status, MetaStatus.nothing);
+  });
+
+  test(
+    'an unknown property marked essential is not dropped, it is refused',
+    () {
+      final src = heifOf([
+        HeifPart(
+          1,
+          'hvc1',
+          const [1, 2, 3, 4],
+          props: [
+            (full('zzzz', 0, [1, 2, 3]), true),
+          ],
+        ),
+      ]);
+      expect(cleanHeif(src), null);
+    },
+  );
 }

@@ -566,7 +566,22 @@ class HeifPart {
   final List<int> bytes;
   final String? aux;
   final String mime;
-  const HeifPart(this.id, this.type, this.bytes, {this.aux, this.mime = ''});
+
+  /// more property boxes on the item, and whether each is essential
+  final List<(List<int>, bool)> props;
+  const HeifPart(
+    this.id,
+    this.type,
+    this.bytes, {
+    this.aux,
+    this.mime = '',
+    this.props = const [],
+  });
+
+  List<(List<int>, bool)> get all => [
+    if (aux != null) (full('auxC', 0, [...t(aux!), 0]), true),
+    ...props,
+  ];
 }
 
 /// a heif of [parts], their references and auxiliary types, primary
@@ -587,19 +602,21 @@ Uint8List heifOf(
     ...t(brand),
     for (final b in brands) ...t(b),
   ]);
-  final auxed = [
+  final withProps = [
     for (final p in parts)
-      if (p.aux != null) p,
+      if (p.all.isNotEmpty) p,
   ];
   final ipco = box('ipco', [
-    for (final p in auxed) ...full('auxC', 0, [...t(p.aux!), 0]),
+    for (final p in withProps)
+      for (final (b, _) in p.all) ...b,
   ]);
+  var index = 0;
   final ipma = full('ipma', 0, [
-    ...be32(auxed.length),
-    for (var k = 0; k < auxed.length; k++) ...[
-      ...be16(auxed[k].id),
-      1,
-      0x80 | (k + 1),
+    ...be32(withProps.length),
+    for (final p in withProps) ...[
+      ...be16(p.id),
+      p.all.length,
+      for (final (_, essential) in p.all) (essential ? 0x80 : 0) | ++index,
     ],
   ]);
   final iref = full('iref', 0, [

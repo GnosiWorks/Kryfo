@@ -227,8 +227,25 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
     for (final id in keep)
       for (final a in m.assoc[id] ?? const <HeifAssoc>[]) a.index,
   };
-  final order = usedProps.where((i) => i >= 1 && i <= m.props.length).toList()
-    ..sort();
+  // only the kinds a decoder reads: a description, a date or a vendor
+  // property goes. one marked essential that is not known is not guessed at
+  for (final id in keep) {
+    for (final a in m.assoc[id] ?? const <HeifAssoc>[]) {
+      if (a.index < 1 || a.index > m.props.length) continue;
+      final kind = m.props[a.index - 1].type;
+      if (a.essential && !kHeifPropKeep.contains(kind)) return null;
+    }
+  }
+  final order =
+      usedProps
+          .where(
+            (i) =>
+                i >= 1 &&
+                i <= m.props.length &&
+                kHeifPropKeep.contains(m.props[i - 1].type),
+          )
+          .toList()
+        ..sort();
   final renumber = {for (var k = 0; k < order.length; k++) order[k]: k + 1};
 
   for (final k in m.kids) {
@@ -303,13 +320,16 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
         final entries = <int>[];
         var n = 0;
         for (final id in keep.toList()..sort()) {
-          final list = m.assoc[id];
-          if (list == null || list.isEmpty) continue;
+          final list = [
+            for (final a in m.assoc[id] ?? const <HeifAssoc>[])
+              if (renumber.containsKey(a.index)) a,
+          ];
+          if (list.isEmpty) continue;
           n++;
           entries.addAll(m.ipmaVersion < 1 ? _be16(id) : _be32(id));
           entries.add(list.length);
           for (final a in list) {
-            final i = renumber[a.index] ?? 0;
+            final i = renumber[a.index]!;
             if (big) {
               entries.addAll(_be16((a.essential ? 0x8000 : 0) | i));
             } else {
