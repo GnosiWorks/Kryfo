@@ -243,16 +243,24 @@ void _samples(ByteSource s, Mp4Track t, List<IsoBox> stbl) {
     final first = be32(sc, 8 + r * 12);
     final per = be32(sc, 12 + r * 12);
     final last = r + 1 < runs ? be32(sc, 8 + (r + 1) * 12) - 1 : chunks;
-    if (first < 1 || last > chunks || per > sizes.count) {
+    // runs go forward and each chunk holds a sample: so every chunk and
+    // every sample is visited once, whatever the counts say
+    if (first < 1 || last < first || last > chunks || per < 1) {
       throw const IsoError('sample to chunk table out of range');
     }
     for (var k = first; k <= last; k++) {
       if (sample >= sizes.count) break;
       final at = chunkAt(k - 1);
       t.chunks.add(at);
+      final take = per < sizes.count - sample ? per : sizes.count - sample;
       var len = 0;
-      for (var n = 0; n < per && sample < sizes.count; n++) {
-        len += sizes.at(sample++);
+      if (sizes.table == null) {
+        len = take * sizes.fixed;
+        sample += take;
+      } else {
+        for (var n = 0; n < take; n++) {
+          len += sizes.at(sample++);
+        }
       }
       t.samples.add(at, at + len);
     }
@@ -313,6 +321,8 @@ class _Sizes {
 
 _Sizes _sizes(ByteSource s, IsoBox b) {
   if (b.bodySize < 12) throw const IsoError('short sample sizes');
+  // a table past this is no phone's: refused before it is read
+  if (b.bodySize > 64 << 20) throw const IsoError('sample sizes too large');
   final head = s.read(b.body, 12);
   final count = be32(head, 8);
   if (b.type == 'stsz') {
