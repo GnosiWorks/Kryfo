@@ -115,11 +115,13 @@ Future<CleanResult> cleanFileHere(
   if (before.status == MetaStatus.unreadable) {
     return fail(CleanFailure.unreadable);
   }
-  // a jpeg ends at its end marker once clean, so a motion clip, the extra
-  // pictures and a samsung trailer go with what is after it. an hdr layer
-  // waits: the picture would no longer look the same on an hdr screen, and
-  // the result line says it does
-  final cuts = before.kind == MetaKind.jpeg && !before.hdrLayer;
+  // a jpeg ends at its end marker once clean, and a heif keeps only its
+  // picture's items, so a motion clip, the extra pictures and a samsung
+  // trailer go. an hdr layer waits: the picture would no longer look the
+  // same on an hdr screen, and the result line says it does
+  final cuts =
+      (before.kind == MetaKind.jpeg || before.kind == MetaKind.heif) &&
+      !before.hdrLayer;
   if (!cuts &&
       (before.embeddedVideo || before.secondImage || before.hdrLayer)) {
     return fail(CleanFailure.motion);

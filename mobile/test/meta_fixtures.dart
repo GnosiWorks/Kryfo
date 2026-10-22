@@ -578,12 +578,14 @@ Uint8List heifOf(
   List<int> after = const [],
   List<int> mdatTail = const [],
   String brand = 'heic',
+  List<String> brands = const [],
 }) {
   final ftyp = box('ftyp', [
     ...t(brand),
     ...be32(0),
     ...t('mif1'),
     ...t(brand),
+    for (final b in brands) ...t(b),
   ]);
   final auxed = [
     for (final p in parts)

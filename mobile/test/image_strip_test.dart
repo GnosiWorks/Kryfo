@@ -104,7 +104,12 @@ Uint8List heif({int ilocVersion = 1, bool dropIlocForExif = false}) {
   // laid out once to learn where mdat lands, then for real
   List<int> build(int picAt, int exifAt, int xmpAt) => [
     ...ftyp,
-    ...full('meta', 0, [...iinf, ...ilocWith(picAt, exifAt, xmpAt)]),
+    ...full('meta', 0, [
+      ...full('hdlr', 0, [...be32(0), ...t('pict'), ...List.filled(13, 0)]),
+      ...full('pitm', 0, be16(1)),
+      ...iinf,
+      ...ilocWith(picAt, exifAt, xmpAt),
+    ]),
     ...box('mdat', [...t(pic), ...t(exif), ...t(xmp)]),
   ];
   final probe = build(0, 0, 0);
@@ -317,8 +322,20 @@ void main() {
       final src = Uint8List.fromList(whole)..setRange(at, at + 4, t('sefd'));
       expect(stripPictureBytes(src), null);
     });
-    test('an unplaced exif item is null', () {
-      expect(stripPictureBytes(heif(dropIlocForExif: true)), null);
+    test('an unplaced exif item goes from the table, its bytes too', () {
+      final out = stripPictureBytes(heif(dropIlocForExif: true))!;
+      expect(has(out, 'GPS'), false);
+      expect(has(out, 'Exif'), false);
+      expect(has(out, 'PICTUREPICTUREPICTURE'), true);
+    });
+    test('the meta box keeps its size and the picture its bytes', () {
+      final src = heif();
+      final out = stripPictureBytes(src)!;
+      final at = latin1.decode(src).indexOf('PICTUREPICTUREPICTURE');
+      expect(out.sublist(at, at + 21), src.sublist(at, at + 21));
+      final m = latin1.decode(src).indexOf('meta') - 4;
+      expect(out.sublist(m, m + 8), src.sublist(m, m + 8));
+      expect(has(out, 'free'), true);
     });
     test('a box past the file end is null', () {
       final src = heif();

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -63,16 +64,19 @@ void main() {
     expect(readFile(rm.path!).status, MetaStatus.nothing);
   });
 
-  test('refuses a motion photo and leaves nothing', () async {
+  test('a motion photo heic keeps its still and loses the clip', () async {
     final src = put(
       'm.heic',
       heif(tiff: cameraTiff(), after: box('mpvd', t('ftypmp42'))),
     );
     final r = await cleanFileHere(src, '${tmp.path}/out', 'm.heic');
-    expect(r.failure, CleanFailure.motion);
-    expect(r.path, null);
-    final out = Directory('${tmp.path}/out');
-    expect(!out.existsSync() || out.listSync().isEmpty, true);
+    expect(r.before.embeddedVideo, true);
+    expect(r.failure, null);
+    expect(readFile(r.path!).status, MetaStatus.nothing);
+    expect(
+      latin1.decode(File(r.path!).readAsBytesSync()).contains('mpvd'),
+      false,
+    );
   });
 
   test('a motion photo jpeg keeps its still and loses the clip', () async {
@@ -121,6 +125,9 @@ void main() {
     final src = put('h.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
     final r = await cleanFileHere(src, '${tmp.path}/out', 'h.jpg');
     expect(r.failure, CleanFailure.motion);
+    expect(r.path, null);
+    final out = Directory('${tmp.path}/out');
+    expect(!out.existsSync() || out.listSync().isEmpty, true);
   });
 
   test('removes a vendor box too', () async {
