@@ -15,8 +15,8 @@ mixin _GroupRows {
     Iterable<String> keys = const [],
   });
   Future<void> keepGroupOwedTo(String groupId, List<String> members);
-  Future<Set<String>> roomKeysOf(String groupId);
   Future<String?> notifTagOf(String chat);
+  Future<Set<String>> roomKeysOf(String groupId);
 
   // ---- groups ----
 
