@@ -151,6 +151,7 @@ part 'app/database_blocks.dart';
 part 'app/database_chat_settings.dart';
 part 'app/database_contacts.dart';
 part 'app/database_deletes.dart';
+part 'app/database_first_contact.dart';
 part 'app/database_groups.dart';
 part 'app/database_messages.dart';
 part 'app/database_rooms.dart';
