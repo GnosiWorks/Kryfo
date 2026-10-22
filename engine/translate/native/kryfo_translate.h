@@ -16,8 +16,8 @@ typedef struct kt_model kt_model;
 // engine writes it). null on failure, with *err set to a message.
 kt_model *kt_open(const char *config_yaml, char **err);
 
-// translates n texts in one batch. out[i] is set for each text; null on a
-// whole failure, with *err set. returns 0 on success.
+// translates n texts in one batch and sets out[i] for each. returns 0, or
+// -1 with *err set and nothing in out.
 int kt_translate(kt_model *m, const char **texts, int n, char **out, char **err);
 
 void kt_free(char *s);

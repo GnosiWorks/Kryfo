@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // translation's calls into the engine (engine/translate_ffi.go). an engine
-// from before them, or none at all in a test, reads as not there: the
-// guess falls back to dart and a download says it cannot start.
+// without them, or none in a test, reads as not there: a download says it
+// cannot start
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
