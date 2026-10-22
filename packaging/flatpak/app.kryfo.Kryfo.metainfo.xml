@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.kryfo.Kryfo</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Kryfo</name>
+  <summary>Private messages over Tor</summary>
+  <developer id="app.kryfo">
+    <name>Kryfo</name>
+  </developer>
+  <description>
+    <p>
+      A private messenger. No phone number, no email, no account, and no
+      address book upload, ever.
+    </p>
+    <p>
+      Content is end to end encrypted with the Signal protocol. By default
+      everything travels over Tor, and messages wait on relays, sealed so no
+      relay can read them, while the other side is offline.
+    </p>
+    <p>
+      The desktop version is an early test build. Some features of the
+      Android app are missing on the desktop.
+    </p>
+  </description>
+  <launchable type="desktop-id">app.kryfo.Kryfo.desktop</launchable>
+  <provides>
+    <binary>kryfo</binary>
+  </provides>
+  <url type="homepage">https://kryfo.app</url>
+  <url type="vcs-browser">https://github.com/GnosiWorks/Kryfo</url>
+  <url type="bugtracker">https://github.com/GnosiWorks/Kryfo/issues</url>
+  <categories>
+    <category>Network</category>
+    <category>InstantMessaging</category>
+    <category>Chat</category>
+  </categories>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+  </content_rating>
+</component>

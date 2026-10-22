@@ -1,0 +1,16 @@
+# the tor expert bundle the windows installer ships tor.exe from.
+# stage-tor.sh checks the download against TOR_BUNDLE_SHA256 and tor.exe in
+# it against TOR_EXE_SHA256. kryfo.iss carries the same TOR_EXE_SHA256, and
+# halo.dll gets it from TOR_EXE= in engine/build-windows.sh.
+#
+# placeholders: torproject.org was blocked where this was written. the
+# version is the newest stable seen on a mirror's download page, not checked
+# against dist.torproject.org. fill both sums from that release's
+# sha256sums-signed-build.txt after checking its signature, and from
+# sha256sum of the tor/tor.exe it contains. zeros match no file, so a build
+# with them stops at stage-tor.sh and at the installer's own check.
+TOR_BUNDLE_VERSION=15.0.21
+TOR_VERSION=0.4.9.11
+TOR_BUNDLE_URL=https://dist.torproject.org/torbrowser/15.0.21/tor-expert-bundle-windows-x86_64-15.0.21.tar.gz
+TOR_BUNDLE_SHA256=0000000000000000000000000000000000000000000000000000000000000000
+TOR_EXE_SHA256=0000000000000000000000000000000000000000000000000000000000000000
