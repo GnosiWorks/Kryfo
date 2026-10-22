@@ -38,8 +38,8 @@ see BUILDING.md. short version:
 
 ## verify
 
-release apks are reproducible. `repro/verify.sh` builds a tagged commit in
-the same container f-droid uses and compares it with the published apk, see
+release apks are reproducible. `repro/verify.sh` builds a tagged commit the
+same way f-droid builds it and compares it with the published apk, see
 repro/README.md.
 
 the release signing certificate (sha-256):
