@@ -29,7 +29,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateProfile,
         AppStateContacts,
-        AppStateReceive;
+        AppStateReceive,
+        AppStatePairing;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

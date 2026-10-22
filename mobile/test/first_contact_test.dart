@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         readFcCounter,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateProfile;
+        AppStateProfile,
+        AppStatePairing;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/wipe.dart' show wipeForget;
 import 'package:kryfo/router.dart';

@@ -31,7 +31,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateProfile,
         AppStateSession,
-        AppStateReceive;
+        AppStateReceive,
+        AppStatePairing;
 import 'package:kryfo/media_send.dart' show sendChunkedMediaTo;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

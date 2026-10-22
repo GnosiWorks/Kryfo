@@ -168,6 +168,7 @@ part 'app/state_groups.dart';
 part 'app/state_heal.dart';
 part 'app/state_messages.dart';
 part 'app/state_outbox.dart';
+part 'app/state_pairing.dart';
 part 'app/state_prefs.dart';
 part 'app/state_profile.dart';
 part 'app/state_receive.dart';

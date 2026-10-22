@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateOutbox,
         AppStateProfile,
-        AppStateReceive;
+        AppStateReceive,
+        AppStatePairing;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
