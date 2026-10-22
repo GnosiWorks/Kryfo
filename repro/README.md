@@ -93,6 +93,9 @@ build, `--cache` mounts your pub cache. neither for a release.
   every build, here, on a dev box and on f-droid's, compiles from the same
   `target/vendor` layout. its sha256 per abi is printed by verify.sh and
   written into the stamp beside each library in jniLibs.
+- the container's gradle runs with a 2560m heap and a 1g kotlin daemon
+  (build-repro.sh writes them into its gradle user home), not the project's
+  4G, so a build leaves room on an 8 GB machine. the bytes are the same.
 - the container gets 65536 open files. cgo building tor and openssl runs out
   at docker's default 1024.
 

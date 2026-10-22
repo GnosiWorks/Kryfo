@@ -25,6 +25,17 @@ rustc -vV | head -1
 protoc --version
 echo
 
+# gradle in the container gets a smaller heap than the project's 4G: with
+# its metaspace and the kotlin daemon that came to ~5.4G resident, too much
+# beside other work on an 8G box. gradle reads the user home's
+# gradle.properties over the project's, so f-droid and dev builds keep
+# theirs. the heap changes no byte of the apks; raise it here if r8 runs out
+mkdir -p "$GRADLE_USER_HOME"
+cat > "$GRADLE_USER_HOME/gradle.properties" <<EOF
+org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=1G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true
+kotlin.daemon.jvmargs=-Xmx1g
+EOF
+
 # HALO_STEP=fetch fills the pub and gradle caches mounted by release.sh
 # --fetch, so the release build can then run with no network. gradle
 # resolves some artifacts only when the task that needs them runs (lint,
