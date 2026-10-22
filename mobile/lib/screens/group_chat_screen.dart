@@ -73,7 +73,8 @@ import '../main.dart'
         themeRevision,
         AppStateOutbox,
         AppStateMessages,
-        AppStateRoute;
+        AppStateRoute,
+        AppStatePrefs;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';

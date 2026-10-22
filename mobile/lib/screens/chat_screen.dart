@@ -106,7 +106,8 @@ import '../main.dart'
         TorHalo,
         AppStateOutbox,
         AppStateMessages,
-        AppStateRoute;
+        AppStateRoute,
+        AppStatePrefs;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';

@@ -162,6 +162,7 @@ part 'app/state_arrivals.dart';
 part 'app/state_group_lanes.dart';
 part 'app/state_messages.dart';
 part 'app/state_outbox.dart';
+part 'app/state_prefs.dart';
 part 'app/state_route.dart';
 
 void main() async {
