@@ -347,6 +347,7 @@ Uint8List mp4({
   bool keys = false,
   int created = 0,
   bool uuid = false,
+  bool gpsTrack = false,
 }) {
   final mvhd = full('mvhd', 0, [
     ...be32(created),
@@ -391,15 +392,73 @@ Uint8List mp4({
       ...item(2, 'iPhone 15'),
     ]),
   ]);
-  return Uint8List.fromList([
+  const frames = 'framesframesframes';
+  final gps = gpmdGps(3);
+  List<int> build(int at) => [
     ...box('ftyp', [...t('isom'), ...be32(512), ...t('isom'), ...t('mp42')]),
     ...box('moov', [
       ...mvhd,
-      ...box('trak', tkhd),
+      ...box('trak', [...tkhd, ...videoMdia(at, frames.length)]),
+      if (gpsTrack)
+        ...box('trak', [
+          ...tkhd,
+          ...videoMdia(
+            at + frames.length,
+            gps.length,
+            handler: 'meta',
+            format: 'gpmd',
+            name: 'GoPro MET',
+          ),
+        ]),
       if (place || maker) ...udta,
       if (keys) ...meta,
     ]),
     if (uuid) ...box('uuid', List.filled(32, 9)),
-    ...box('mdat', t('framesframesframes')),
-  ]);
+    ...box('mdat', [...t(frames), if (gpsTrack) ...gps]),
+  ];
+  final probe = build(0);
+  final mdatBody = frames.length + (gpsTrack ? gps.length : 0);
+  return Uint8List.fromList(build(probe.length - mdatBody));
 }
+
+/// a gopro metadata sample: a stream holding [points] GPS5 points
+List<int> gpmdGps(int points) {
+  final values = List.filled(points * 20, 7);
+  final gps5 = [...t('GPS5'), 0x6c, 20, ...be16(points), ...values];
+  final strm = [...t('STRM'), 0, 1, ...be16(gps5.length), ...gps5];
+  return [...t('DEVC'), 0, 1, ...be16(strm.length), ...strm];
+}
+
+/// a video track's media box holding one sample of [len] bytes at [at]
+List<int> videoMdia(
+  int at,
+  int len, {
+  String handler = 'vide',
+  String format = 'avc1',
+  String name = '',
+}) => box('mdia', [
+  ...full('mdhd', 0, List.filled(20, 0)),
+  ...full('hdlr', 0, [
+    ...be32(0),
+    ...t(handler),
+    ...List.filled(12, 0),
+    ...t(name),
+    0,
+  ]),
+  ...box('minf', [
+    ...full('vmhd', 0, List.filled(8, 0)),
+    ...box('dinf', [
+      ...full('dref', 0, [
+        ...be32(1),
+        ...box('url ', [0, 0, 0, 1]),
+      ]),
+    ]),
+    ...box('stbl', [
+      ...full('stsd', 0, [...be32(1), ...box(format, List.filled(8, 0))]),
+      ...full('stts', 0, [...be32(1), ...be32(1), ...be32(1)]),
+      ...full('stsc', 0, [...be32(1), ...be32(1), ...be32(1), ...be32(1)]),
+      ...full('stsz', 0, [...be32(len), ...be32(1)]),
+      ...full('stco', 0, [...be32(1), ...be32(at)]),
+    ]),
+  ]),
+]);

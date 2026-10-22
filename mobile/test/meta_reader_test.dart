@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -178,6 +179,21 @@ void main() {
     test('a uuid box counts as found', () {
       expect(read(mp4(uuid: true)).status, MetaStatus.found);
       expect(read(mp4()).status, MetaStatus.nothing);
+    });
+
+    test('a gps track is found with its points', () {
+      final r = read(mp4(gpsTrack: true));
+      expect(r.status, MetaStatus.found);
+      expect(r.extraTracks, 1);
+      expect(r.gpsPoints, 3);
+      expect(r.leftoverBytes, gpmdGps(3).length);
+    });
+
+    test('a sample table past the file is unreadable', () {
+      final b = mp4(gpsTrack: true);
+      final i = latin1.decode(b).lastIndexOf('stco') + 12;
+      b.setRange(i, i + 4, be32(0x7ffffff0));
+      expect(read(b).status, MetaStatus.unreadable);
     });
   });
 

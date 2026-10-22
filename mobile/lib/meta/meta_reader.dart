@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'byte_source.dart';
+import 'iso.dart';
+import 'mp4_tracks.dart';
 import 'tiff.dart';
 import '../l10n/l10n.dart';
 
@@ -55,6 +57,16 @@ class MetaReport {
   final List<String> videoTags = [];
   final List<String> extra = [];
 
+  /// video tracks besides picture, sound and subtitles
+  int extraTracks = 0;
+
+  /// points of a gps track, counted in its samples
+  int gpsPoints = 0;
+  bool motionSensors = false;
+
+  /// non-zero mdat bytes no kept track uses
+  int leftoverBytes = 0;
+
   bool get anything =>
       gps != null ||
       gpsBlank ||
@@ -81,7 +93,11 @@ class MetaReport {
       trailingBytes > 0 ||
       textKeys.isNotEmpty ||
       videoTags.isNotEmpty ||
-      extra.isNotEmpty;
+      extra.isNotEmpty ||
+      extraTracks > 0 ||
+      gpsPoints > 0 ||
+      motionSensors ||
+      leftoverBytes > 0;
 }
 
 class _Unreadable implements Exception {
@@ -120,6 +136,9 @@ MetaReport _read(ByteSource src, bool strict) {
     }
     r.status = r.anything ? MetaStatus.found : MetaStatus.nothing;
   } on _Unreadable catch (e) {
+    r.status = MetaStatus.unreadable;
+    r.why = e.why;
+  } on IsoError catch (e) {
     r.status = MetaStatus.unreadable;
     r.why = e.why;
   } on RangeError {
@@ -809,6 +828,27 @@ void _mp4(ByteSource s, MetaReport r) {
   }
 
   walk(0, s.length, 0);
+  _mp4Tracks(s, r);
+}
+
+// a track that is not picture, sound or subtitles is data: gps, motion
+// sensors, timecode. its samples, and any mdat byte no kept track uses, are
+// what the cleaner zeroes
+void _mp4Tracks(ByteSource s, MetaReport r) {
+  final lay = readMp4Layout(s);
+  if (lay.moov == null) return;
+  for (final t in lay.tracks.where((t) => !t.kept)) {
+    r.extraTracks++;
+    final d = timedData(s, t);
+    r.gpsPoints += d.gpsPoints;
+    if (d.motion) r.motionSensors = true;
+  }
+  final kept = lay.keptSamples.merged;
+  for (final m in lay.mdats) {
+    for (final (a, b) in Ranges.gaps(kept, m.body, m.end)) {
+      if (nonZero(s, a, b - a)) r.leftoverBytes += b - a;
+    }
+  }
 }
 
 final _iso6709 = RegExp(

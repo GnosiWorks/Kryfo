@@ -183,7 +183,7 @@ class RemovedLine {
 
 List<RemovedLine> removedLines(MetaReport r) {
   final out = <RemovedLine>[];
-  if (r.gps != null) {
+  if (r.gps != null || r.gpsPoints > 0) {
     out.add(RemovedLine(l10n.cleanerLocation));
   } else if (r.gpsBlank) {
     out.add(
@@ -205,7 +205,8 @@ List<RemovedLine> removedLines(MetaReport r) {
     out.add(RemovedLine(l10n.cleanerDataAfterThePicture));
   }
   var other = r.otherExifTags + r.textKeys.length + r.videoTags.length;
-  other += r.extra.length;
+  other += r.extra.length + r.extraTracks;
+  if (r.leftoverBytes > 0 && r.extraTracks == 0) other++;
   for (final b in [
     r.software != null,
     r.lens != null,
