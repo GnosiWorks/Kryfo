@@ -13,7 +13,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, QuietIdentity, useDatabasesForTest, session;
+    show
+        AppState,
+        HaloDb,
+        QuietIdentity,
+        useDatabasesForTest,
+        session,
+        AppStateProfile;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';

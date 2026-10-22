@@ -29,7 +29,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateProfile;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart' show Shelved;

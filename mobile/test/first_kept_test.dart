@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         readFcCounter,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateProfile;
 import 'package:kryfo/media_send.dart' show sendChunkedMediaTo;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

@@ -21,7 +21,8 @@ import 'package:kryfo/main.dart'
         unboundIdOf,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateProfile;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

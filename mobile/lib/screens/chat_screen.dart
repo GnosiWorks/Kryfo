@@ -107,7 +107,8 @@ import '../main.dart'
         AppStateOutbox,
         AppStateMessages,
         AppStateRoute,
-        AppStatePrefs;
+        AppStatePrefs,
+        AppStateProfile;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';

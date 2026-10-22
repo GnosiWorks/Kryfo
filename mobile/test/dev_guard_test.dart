@@ -26,7 +26,8 @@ import 'package:kryfo/main.dart'
         openDevChatLater,
         signalDecrypt,
         useDatabasesForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateProfile;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

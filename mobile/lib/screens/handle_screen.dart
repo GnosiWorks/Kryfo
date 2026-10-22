@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../handle_repoint.dart' show handleRefusalLine;
-import '../main.dart' show appState, engine, sessionQuiet;
+import '../main.dart' show appState, engine, sessionQuiet, AppStateProfile;
 import '../quiet_wait.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';

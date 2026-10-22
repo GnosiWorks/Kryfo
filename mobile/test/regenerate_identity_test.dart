@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         makePreKeyBundleB64,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateProfile;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;

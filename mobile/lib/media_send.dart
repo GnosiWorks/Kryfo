@@ -20,7 +20,13 @@ import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
 import 'image_strip.dart' show cleanSavedPhoto;
 import 'main.dart'
-    show appState, engine, signalEncrypt, AppStateOutbox, AppStateRoute;
+    show
+        appState,
+        engine,
+        signalEncrypt,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateProfile;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';

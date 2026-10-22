@@ -4,7 +4,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart'
-    show appState, session, sessionQuiet, AppStateRoute, AppStatePrefs;
+    show
+        appState,
+        session,
+        sessionQuiet,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';

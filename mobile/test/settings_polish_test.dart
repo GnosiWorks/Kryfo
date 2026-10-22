@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateProfile;
 import 'package:kryfo/notifications.dart'
     show loadHideNotifContent, setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
