@@ -1416,7 +1416,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Воно зникне без сліду. Цю дію не можна скасувати.';
+      'Воно зникне з обох телефонів, якщо його ще не зберегли. Цю дію не можна скасувати.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2638,7 +2638,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Воно зникне без сліду. Цю дію не можна скасувати.';
+      'Воно зникне з телефонів усіх учасників, якщо його ще не зберегли. Цю дію не можна скасувати.';
 
   @override
   String get groupChatUnsend => 'Відкликати';

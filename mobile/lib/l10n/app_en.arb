@@ -1731,7 +1731,7 @@
   "@chatUnsendMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatItDisappearsWithNo": "It disappears with no trace. This can't be undone.",
+  "chatItDisappearsWithNo": "It's removed from both phones, unless it was already saved. This can't be undone.",
   "@chatItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
@@ -3220,7 +3220,7 @@
   "@groupChatUnsendMessage": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatItDisappearsWithNo": "It disappears with no trace. This can't be undone.",
+  "groupChatItDisappearsWithNo": "It's removed from everyone's phones, unless it was already saved. This can't be undone.",
   "@groupChatItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
   },

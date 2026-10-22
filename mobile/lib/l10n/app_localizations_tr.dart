@@ -1386,7 +1386,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'İz bırakmadan kaybolur. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse iki telefondan da silinir. Bu geri alınamaz.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2585,7 +2585,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'İz bırakmadan kaybolur. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse herkesin telefonundan silinir. Bu geri alınamaz.';
 
   @override
   String get groupChatUnsend => 'Geri çek';

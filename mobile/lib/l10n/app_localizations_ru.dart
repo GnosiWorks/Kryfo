@@ -1420,7 +1420,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Оно исчезнет без следа. Это нельзя отменить.';
+      'Оно удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2646,7 +2646,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Оно исчезнет без следа. Это нельзя отменить.';
+      'Оно удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
   String get groupChatUnsend => 'Отозвать';

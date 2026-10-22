@@ -1373,7 +1373,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Pesan ini hilang tanpa jejak. Ini tidak bisa dibatalkan.';
+      'Pesan ini dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2579,7 +2579,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Pesan ini hilang tanpa jejak. Ini tidak bisa dibatalkan.';
+      'Pesan ini dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
   String get groupChatUnsend => 'Tarik pesan';

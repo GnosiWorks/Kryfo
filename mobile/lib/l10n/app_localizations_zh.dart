@@ -1327,7 +1327,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatUnsendMessage => '撤回消息';
 
   @override
-  String get chatItDisappearsWithNo => '它会消失，不留任何痕迹。此操作无法撤销。';
+  String get chatItDisappearsWithNo => '它会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2469,7 +2469,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatUnsendMessage => '撤回消息';
 
   @override
-  String get groupChatItDisappearsWithNo => '它会消失，不留任何痕迹。此操作无法撤销。';
+  String get groupChatItDisappearsWithNo => '它会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String get groupChatUnsend => '撤回';
@@ -9791,7 +9791,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatUnsendMessage => '收回訊息';
 
   @override
-  String get chatItDisappearsWithNo => '訊息會消失，不留任何痕跡。這個動作無法復原。';
+  String get chatItDisappearsWithNo => '訊息會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -10933,7 +10933,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatUnsendMessage => '收回訊息';
 
   @override
-  String get groupChatItDisappearsWithNo => '訊息會消失，不留任何痕跡。這個動作無法復原。';
+  String get groupChatItDisappearsWithNo => '訊息會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get groupChatUnsend => '收回';

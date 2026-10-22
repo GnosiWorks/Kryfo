@@ -1393,7 +1393,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Sie verschwindet spurlos. Das lässt sich nicht rückgängig machen.';
+      'Sie wird von beiden Handys entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2612,7 +2612,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Sie verschwindet spurlos. Das lässt sich nicht rückgängig machen.';
+      'Sie wird von den Handys aller entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
   String get groupChatUnsend => 'Zurückholen';
