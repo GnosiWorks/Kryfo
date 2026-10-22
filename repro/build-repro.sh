@@ -35,6 +35,9 @@ cat > "$GRADLE_USER_HOME/gradle.properties" <<EOF
 org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=1G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true
 kotlin.daemon.jvmargs=-Xmx1g
 EOF
+# the daemons' own malloc: two arenas rather than one per thread, for
+# less memory beyond the heap with r8's few hundred threads
+export MALLOC_ARENA_MAX=2
 
 # HALO_STEP=fetch fills the pub and gradle caches mounted by release.sh
 # --fetch, so the release build can then run with no network. gradle
