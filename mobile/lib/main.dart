@@ -156,6 +156,7 @@ part 'app/database_group_owed.dart';
 part 'app/database_groups.dart';
 part 'app/database_media.dart';
 part 'app/database_messages.dart';
+part 'app/database_notifications.dart';
 part 'app/database_outbox.dart';
 part 'app/database_polls.dart';
 part 'app/database_rooms.dart';
