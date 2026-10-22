@@ -188,4 +188,15 @@ void main() {
     final whole = heifOf([_pic]);
     expect(cleanHeif(whole.sublist(0, whole.length - 3)), null);
   });
+
+  test('a second meta box is found and goes', () {
+    final src = heifOf([
+      _pic,
+    ], after: full('meta', 0, [...box('free', t('GPS 37.98N 23.72E'))]));
+    expect(_read(src).status, MetaStatus.found);
+    final out = cleanHeif(src)!;
+    expect(_has(out, 'GPS'), false);
+    expect(_read(out).status, MetaStatus.nothing);
+    expect(_bytes(out, 1), _pic.bytes);
+  });
 }

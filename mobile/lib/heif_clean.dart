@@ -94,7 +94,9 @@ Uint8List? _clean(Uint8List src) {
     if (b == top.first) continue;
     if (!_top.contains(b.type) ||
         (after && (appended || (media && !sequence))) ||
-        (b.type == 'moov' && !sequence)) {
+        (b.type == 'moov' && !sequence) ||
+        // the picture is read from the first meta; any other is beside it
+        (b.type == 'meta' && b.start != meta.start)) {
       foreign.add(b);
     }
   }

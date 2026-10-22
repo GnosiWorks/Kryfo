@@ -1037,8 +1037,11 @@ void _heif(ByteSource s, MetaReport r) {
   Mp4Layout? anim;
   for (final b in top) {
     switch (b.type) {
-      case 'ftyp' || 'meta' || 'mdat':
+      case 'ftyp' || 'mdat':
         break;
+      case 'meta':
+        // the picture is read from the first one; another is beside it
+        if (b.start != meta.start) r.extra.add(l10n.metaReaderBox('meta'));
       case 'free' || 'skip':
         if (nonZero(s, b.body, b.bodySize)) r.leftoverBytes += b.bodySize;
       case 'moov':
