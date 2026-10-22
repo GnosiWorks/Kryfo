@@ -802,6 +802,7 @@ dependencies = [
  "libsignal-protocol",
  "prost",
  "rand 0.9.5",
+ "spqr",
 ]
 
 [[package]]

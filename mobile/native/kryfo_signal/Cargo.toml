@@ -19,6 +19,10 @@ async-trait = "0.1.92"
 prost = "0.14.4"
 rand = "0.9.4"
 
+[dev-dependencies]
+# the pq ratchet libsignal already pulls in, for the pinning test to read
+spqr = { git = "https://github.com/signalapp/SparsePostQuantumRatchet.git", tag = "v1.5.3" }
+
 [profile.release]
 opt-level = "s"
 lto = "fat"
