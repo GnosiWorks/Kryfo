@@ -85,6 +85,22 @@ void main() {
     expect(ok!.length, lessThan(jpeg(tiff: cameraTiff()).length));
   });
 
+  test('a clean that throws half way is a refusal, never an escape', () async {
+    // gone before the clean reads it, as a file pulled away mid send
+    final gone = '${tmp.path}/gone.jpg';
+    final r = await cleanMediaFileHere(gone, name: 'gone.jpg');
+    expect(r.how, MediaClean.refused);
+    final v = await cleanMediaFile('${tmp.path}/gone.mp4', name: 'gone.mp4');
+    expect(v.how, MediaClean.refused);
+    expect(v.video, true);
+    // a directory where a file should be
+    final d = Directory('${tmp.path}/dir.jpg')..createSync();
+    expect(
+      (await cleanMediaFileHere(d.path, name: 'dir.jpg')).how,
+      MediaClean.refused,
+    );
+  });
+
   group('a save', () {
     test('hands out a clean copy and leaves the file as it was', () async {
       final bytes = jpeg(tiff: cameraTiff());

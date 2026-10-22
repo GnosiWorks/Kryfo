@@ -31,13 +31,31 @@ Future<MediaCleaned> cleanMediaFile(
   String path, {
   String name = '',
   bool raw = false,
-}) => Isolate.run(() => cleanMediaFileHere(path, name: name, raw: raw));
+}) async {
+  try {
+    return await Isolate.run(
+      () => cleanMediaFileHere(path, name: name, raw: raw),
+    );
+  } catch (_) {
+    return MediaCleaned(MediaClean.refused, video: videoNameNeedsStrip(name));
+  }
+}
 
+/// never throws: a disk that fills while zeroing, or anything else that
+/// stops the clean half way, is a refusal, and the caller shreds the copy
 Future<MediaCleaned> cleanMediaFileHere(
   String path, {
   String name = '',
   bool raw = false,
 }) async {
+  try {
+    return await _clean(path, name, raw);
+  } catch (_) {
+    return MediaCleaned(MediaClean.refused, video: videoNameNeedsStrip(name));
+  }
+}
+
+Future<MediaCleaned> _clean(String path, String name, bool raw) async {
   if (!raw && (videoNameNeedsStrip(name) || await bytesSayIsoVideo(path))) {
     final ok = stripMp4Sync(path) == true && mp4MetadataCountSync(path) == 0;
     return MediaCleaned(
@@ -80,20 +98,23 @@ Future<({String? path, String? copy})> cleanedForSave(
   try {
     await dir.create(recursive: true);
     await File(path).copy(copy);
-  } on FileSystemException {
-    await shredTree(dir.path);
+    final done = await cleanMediaFile(copy, name: name ?? '');
+    switch (done.how) {
+      case MediaClean.clean:
+        return (path: copy, copy: dir.path);
+      case MediaClean.notMedia:
+        await shredTree(dir.path);
+        return (path: path, copy: null);
+      case MediaClean.refused:
+        await shredTree(dir.path);
+        return (path: null, copy: null);
+    }
+  } catch (_) {
+    // whatever stopped it, the copy does not stay behind
+    try {
+      await shredTree(dir.path);
+    } catch (_) {}
     return (path: null, copy: null);
-  }
-  final done = await cleanMediaFile(copy, name: name ?? '');
-  switch (done.how) {
-    case MediaClean.clean:
-      return (path: copy, copy: dir.path);
-    case MediaClean.notMedia:
-      await shredTree(dir.path);
-      return (path: path, copy: null);
-    case MediaClean.refused:
-      await shredTree(dir.path);
-      return (path: null, copy: null);
   }
 }
 
