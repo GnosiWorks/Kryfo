@@ -46,12 +46,16 @@ class BergamotTranslator implements Translator {
     required this.config,
     required this.installed,
     this.lib = kTranslateLib,
+    this.probe = libraryOpens,
   });
 
-  bool? _hasLib;
-  bool get hasLib => _hasLib ??= _probe(lib);
+  // whether the library opens here; a test hands in its own
+  final bool Function(String lib) probe;
 
-  static bool _probe(String name) {
+  bool? _hasLib;
+  bool get hasLib => _hasLib ??= probe(lib);
+
+  static bool libraryOpens(String name) {
     try {
       DynamicLibrary.open(name).lookup('kt_open');
       return true;
@@ -70,15 +74,21 @@ class BergamotTranslator implements Translator {
     return null;
   }
 
-  Future<SendPort>? _port;
+  Future<_Worker>? _port;
 
-  Future<SendPort> _worker() => _port ??= () async {
-    final hello = ReceivePort();
-    await Isolate.spawn(_run, (hello.sendPort, lib));
-    final port = await hello.first as SendPort;
-    hello.close();
-    return port;
-  }();
+  // a worker that dies takes its waiting translations with it, and the
+  // next one starts a new worker
+  Future<_Worker> _worker() {
+    final now = _port;
+    if (now != null) return now;
+    late final Future<_Worker> made;
+    // after made is set, even when the spawn fails at once
+    void gone() => scheduleMicrotask(() {
+      if (identical(_port, made)) _port = null;
+    });
+    made = _Worker.spawn(lib, gone);
+    return _port = made;
+  }
 
   @override
   Future<String> translate(
@@ -90,20 +100,80 @@ class BergamotTranslator implements Translator {
     if (block != null) throw TranslateUnavailable(block);
     final cfg = config(from, to);
     if (cfg == null) throw const TranslateUnavailable(TranslateBlock.noLib);
-    final port = await _worker();
-    final reply = ReceivePort();
-    port.send((reply.sendPort, '$from-$to', cfg, text));
-    final out = await reply.first;
-    reply.close();
+    final out = await (await _worker()).ask('$from-$to', cfg, text);
     if (out is String) return out;
-    throw StateError('translate: $out');
+    throw StateError('translate: ${out is Map ? out['err'] : 'no answer'}');
   }
 
   @override
   Future<void> close() async {
     final port = _port;
     _port = null;
-    if (port != null) (await port).send(null);
+    if (port == null) return;
+    try {
+      (await port).port.send(null);
+    } catch (_) {}
+  }
+}
+
+class _Worker {
+  final SendPort port;
+  final Set<Completer<Object?>> _waiting = {};
+  bool _dead = false;
+  _Worker._(this.port);
+
+  static Future<_Worker> spawn(String lib, void Function() gone) async {
+    final hello = RawReceivePort();
+    final exit = RawReceivePort();
+    final ready = Completer<_Worker>();
+    _Worker? w;
+    void die() {
+      hello.close();
+      exit.close();
+      gone();
+      w?._die();
+      if (!ready.isCompleted) {
+        ready.completeError(StateError('translate: worker gone'));
+      }
+    }
+
+    hello.handler = (Object? p) {
+      hello.close();
+      if (ready.isCompleted || p is! SendPort) return;
+      ready.complete(w = _Worker._(p));
+    };
+    exit.handler = (Object? _) => die();
+    try {
+      await Isolate.spawn(_run, (hello.sendPort, lib), onExit: exit.sendPort);
+    } catch (_) {
+      die();
+    }
+    return ready.future;
+  }
+
+  void _die() {
+    _dead = true;
+    final left = [..._waiting];
+    _waiting.clear();
+    for (final c in left) {
+      c.complete(const {'err': 'worker gone'});
+    }
+  }
+
+  Future<Object?> ask(String key, String cfg, String text) async {
+    final done = Completer<Object?>();
+    if (_dead) return const {'err': 'worker gone'};
+    final reply = RawReceivePort((Object? m) {
+      if (!done.isCompleted) done.complete(m);
+    });
+    _waiting.add(done);
+    try {
+      port.send((reply.sendPort, key, cfg, text));
+      return await done.future;
+    } finally {
+      _waiting.remove(done);
+      reply.close();
+    }
   }
 }
 
@@ -161,6 +231,9 @@ void _run((SendPort, String) args) {
         calloc.free(ins);
         calloc.free(outs);
       }
+    } catch (e) {
+      // the one asking hears of it; the open models stay
+      reply.send({'err': '${e.runtimeType}'});
     } finally {
       calloc.free(err);
     }
