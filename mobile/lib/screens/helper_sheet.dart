@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../helper_push.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateDelivery;
 import '../open_outside.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';

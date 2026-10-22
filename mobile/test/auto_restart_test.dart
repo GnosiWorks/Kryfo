@@ -24,7 +24,8 @@ import 'package:kryfo/main.dart'
         torValve,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/session.dart' show Session;
 import 'package:kryfo/tor_valve.dart' show restartHolds;
 import 'package:shared_preferences/shared_preferences.dart';

@@ -15,7 +15,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/media_resend.dart' show kNeedQuietMs;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

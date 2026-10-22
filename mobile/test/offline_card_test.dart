@@ -16,7 +16,8 @@ import 'package:kryfo/main.dart'
         torValve,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/screens/home_screen.dart' show OfflineCard;
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';

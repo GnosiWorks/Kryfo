@@ -10,7 +10,8 @@ import '../main.dart'
         sessionQuiet,
         AppStateRoute,
         AppStatePrefs,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateDelivery;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
