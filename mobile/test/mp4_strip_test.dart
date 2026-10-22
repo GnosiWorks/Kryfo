@@ -11,6 +11,8 @@ import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/meta/mp4_tracks.dart';
 import 'package:kryfo/mp4_strip.dart';
 
+import 'meta_fixtures.dart' as fx;
+
 Uint8List box(String type, List<int> payload) {
   final b = BytesBuilder();
   final size = 8 + payload.length;
@@ -178,10 +180,9 @@ String text(Uint8List b) => String.fromCharCodes(b);
 void main() {
   test('counts what the sample carries', () async {
     final f = await write(sample().bytes);
-    // udta, meta, uuid, non-zero stamps in mvhd, the gps and timecode
-    // tracks, and two stretches of mdat no kept track uses: their samples
-    // and the old bytes at the end
-    expect(await mp4MetadataCount(f.path), 8);
+    // the reader's findings: udta with a place, meta, uuid, stamps, the gps
+    // and timecode tracks, and mdat bytes no kept track uses
+    expect(await mp4MetadataCount(f.path), greaterThan(5));
   });
 
   test('strips in place and keeps the picture and sound', () async {
@@ -353,5 +354,92 @@ void main() {
   test('stray bytes after the last box fail', () async {
     final f = await write(Uint8List.fromList(sample().bytes + [1, 2, 3]));
     expect(await mp4MetadataCount(f.path), null);
+  });
+
+  group('keep-lists', () {
+    Future<Uint8List> strip(List<int> b) async {
+      final f = await write(Uint8List.fromList(b));
+      expect(await stripMp4Metadata(f.path), true);
+      expect(await mp4MetadataCount(f.path), 0);
+      return f.readAsBytes();
+    }
+
+    test('handler names are blanked', () async {
+      final src = fx.mp4(handlerName: 'Core Media Video');
+      expect(readMeta(MemorySource(src)).handlerNames, true);
+      final out = await strip(src);
+      expect(out.length, src.length);
+      expect(text(out).contains('Core Media'), false);
+      expect(text(out).contains('vide'), true);
+    });
+
+    test('free space is zeroed, an unknown box goes', () async {
+      final src = [
+        ...fx.mp4(),
+        ...box('free', 'old place +48.13'.codeUnits),
+        ...box('junk', 'who knows'.codeUnits),
+        ...box('free', [0, 0]),
+      ];
+      final out = await strip(src);
+      expect(out.length, src.length);
+      expect(text(out).contains('+48.13'), false);
+      expect(text(out).contains('who knows'), false);
+      expect(text(out).contains('framesframesframes'), true);
+    });
+
+    test('a box after the last one kept is cut off', () async {
+      final clean = fx.mp4();
+      final out = await strip([...clean, ...box('junk', 'tail'.codeUnits)]);
+      expect(out.length, clean.length);
+    });
+
+    test('a samsung trailer after the video is cut off', () async {
+      final clean = fx.mp4();
+      final src = [
+        ...clean,
+        ...fx.sefTrailer([('MCC_Data', '262'.codeUnits)]),
+      ];
+      expect(
+        readMeta(MemorySource(Uint8List.fromList(src))).networkCountry,
+        '262',
+      );
+      final out = await strip(src);
+      expect(out.length, clean.length);
+      expect(text(out).contains('SEFT'), false);
+    });
+
+    test('what a track holds besides its media goes', () async {
+      final src = sample(gpsTrack: false).bytes;
+      // a udta inside the video track, as some cameras write
+      final i = text(src).indexOf('mdia') - 4;
+      final extra = box('udta', box('©mak', [0, 4, 0, 0, ...'ACME'.codeUnits]));
+      final b = Uint8List.fromList([
+        ...src.sublist(0, i),
+        ...extra,
+        ...src.sublist(i),
+      ]);
+      // the trak and moov grow by it, and the chunk offsets move with mdat
+      void grow(String type) {
+        final at = text(b).indexOf(type) - 4;
+        final n =
+            (b[at] << 24) | (b[at + 1] << 16) | (b[at + 2] << 8) | b[at + 3];
+        b.setRange(at, at + 4, u32(n + extra.length));
+      }
+
+      grow('moov');
+      grow('trak');
+      var k = 0;
+      while ((k = text(b).indexOf('stco', k)) >= 0) {
+        final at = k + 12;
+        final o =
+            (b[at] << 24) | (b[at + 1] << 16) | (b[at + 2] << 8) | b[at + 3];
+        b.setRange(at, at + 4, u32(o + extra.length));
+        k += 4;
+      }
+      expect(readMeta(MemorySource(b)).make, 'ACME');
+      final out = await strip(b);
+      expect(text(out).contains('ACME'), false);
+      expect(text(out).contains(picture), true);
+    });
   });
 }

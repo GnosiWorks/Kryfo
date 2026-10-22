@@ -1210,6 +1210,9 @@ void _moovFindings(ByteSource s, Mp4Layout lay, MetaReport r, List<int> c) {
         if (d.motion) r.motionSensors = true;
       default:
         if (t.hdlrs.any((h) => _handlerNamed(s, h))) r.handlerNames = true;
+        for (final (a, b) in compressorNames(s, t, c)) {
+          if (nonZero(s, a, b - a)) r.handlerNames = true;
+        }
         _trakExtras(s, t.trak, r, c);
     }
   }

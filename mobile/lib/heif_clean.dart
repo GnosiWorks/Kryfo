@@ -14,6 +14,7 @@ import 'meta/byte_source.dart';
 import 'meta/heif_items.dart';
 import 'meta/iso.dart';
 import 'meta/mp4_tracks.dart';
+import 'mp4_clean.dart';
 
 /// the cleaned bytes, [src] itself when there was nothing to do, or null
 /// when the file cannot be read through or rebuilt
@@ -97,13 +98,12 @@ Uint8List? _clean(Uint8List src) {
       foreign.add(b);
     }
   }
-  // an animation's frames are its tracks' samples. every track's stay here;
-  // which tracks an animation keeps is the video cleaner's call
+  // an animation's frames are its kept tracks' samples, cleaned as a
+  // video's are
+  Mp4Layout? anim;
   if (sequence && top.any((b) => b.type == 'moov' && !foreign.contains(b))) {
-    final lay = readMp4LayoutOf(s, top, c);
-    for (final t in lay.tracks) {
-      used.addAll(t.samples);
-    }
+    anim = readMp4LayoutOf(s, top, c);
+    used.addAll(anim.keptSamples);
   }
   // a kept picture byte inside a box about to go
   for (final (a, b) in used.merged) {
@@ -116,11 +116,7 @@ Uint8List? _clean(Uint8List src) {
   final out = Uint8List.fromList(src);
   out.setRange(meta.body, meta.end, rebuilt);
   _brandsKept(out, top.first, m, keep);
-  if (sequence) {
-    for (final b in top.where((b) => b.type == 'moov')) {
-      if (!foreign.contains(b)) _neuterMovie(out, s, b, c);
-    }
-  }
+  if (anim != null) cleanMoov(s, _MemoryPatch(out), anim);
   // every mdat byte no kept item uses
   final kept = used.merged;
   for (final b in top.where((b) => b.type == 'mdat')) {
@@ -175,26 +171,18 @@ void _brandsKept(Uint8List out, IsoBox ftyp, HeifMeta m, Set<int> keep) {
   }
 }
 
-// the animation's own metadata: udta, meta and uuid boxes go as 'free' and
-// zeroed, the creation and change stamps are zeroed. the tracks stay
-const _movieNeuter = {'udta', 'meta', 'uuid'};
-const _movieInto = {'moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'dinf'};
-const _movieStamped = {'mvhd', 'tkhd', 'mdhd'};
+class _MemoryPatch implements Mp4Patch {
+  final Uint8List out;
+  _MemoryPatch(this.out);
 
-void _neuterMovie(Uint8List out, ByteSource s, IsoBox box, List<int> c) {
-  for (final b in isoBoxes(s, box.body, box.end, c)) {
-    if (_movieNeuter.contains(b.type)) {
-      out.setRange(b.start + 4, b.start + 8, _free);
-      out.fillRange(b.body, b.end, 0);
-    } else if (_movieStamped.contains(b.type)) {
-      if (b.bodySize < 4) throw const IsoError('short header box');
-      final w = out[b.body] == 1 ? 8 : 4;
-      if (b.bodySize < 4 + 2 * w) throw const IsoError('short header box');
-      out.fillRange(b.body + 4, b.body + 4 + 2 * w, 0);
-    } else if (_movieInto.contains(b.type)) {
-      _neuterMovie(out, s, b, c);
-    }
+  @override
+  void neuter(IsoBox b) {
+    out.setRange(b.start + 4, b.start + 8, _free);
+    out.fillRange(b.body, b.end, 0);
   }
+
+  @override
+  void zero(int from, int to) => out.fillRange(from, to, 0);
 }
 
 bool _same(Uint8List a, Uint8List b) {

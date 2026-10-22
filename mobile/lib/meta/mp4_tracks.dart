@@ -426,6 +426,17 @@ void _fragments(
   }
 }
 
+/// where the compressor name of each picture sample entry sits: 32 bytes
+/// that often name the camera or the encoder
+List<(int, int)> compressorNames(ByteSource s, Mp4Track t, List<int> c) {
+  final d = t.stsd;
+  if (d == null || t.role != TrackRole.picture || d.bodySize < 8) return [];
+  return [
+    for (final e in isoBoxes(s, d.body + 8, d.end, c))
+      if (e.size >= 82 + 4) (e.start + 50, e.start + 82),
+  ];
+}
+
 class TimedData {
   int gpsPoints = 0;
   bool motion = false;

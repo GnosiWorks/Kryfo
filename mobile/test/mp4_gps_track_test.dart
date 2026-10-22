@@ -6,10 +6,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/meta/byte_source.dart';
 import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/meta/mp4_tracks.dart';
 import 'package:kryfo/mp4_strip.dart';
+import 'package:kryfo/tools/cleaner.dart';
 
 final _src = File('test/fixtures/gopro_hero5_cut.mp4').readAsBytesSync();
 
@@ -36,6 +38,8 @@ void main() {
     final out = f.readAsBytesSync();
     expect(out.length, _src.length);
     final r = readMeta(MemorySource(out));
+    expect(r.status, MetaStatus.nothing);
+    expect(r.handlerNames, false);
     expect(r.gpsPoints, 0);
     expect(r.extraTracks, 0);
     expect(r.timecode, false);
@@ -65,6 +69,20 @@ void main() {
     }
     expect(_has(out, 'GPS5'), false);
     expect(_has(_src, 'GPS5'), true);
+    // the handler and compressor names named the camera
+    expect(_has(_src, 'GoPro AVC encoder'), true);
+    expect(_has(out, 'GoPro'), false);
+  });
+
+  test('the photo tool cleans it and names the location', () async {
+    final dir = await Directory.systemTemp.createTemp('gpstool');
+    final inPath = '${dir.path}/GOPR0001.MP4';
+    File(inPath).writeAsBytesSync(_src);
+    final res = await cleanFileHere(inPath, '${dir.path}/out', 'GOPR0001.MP4');
+    expect(res.failure, null);
+    expect(readFile(res.path!).status, MetaStatus.nothing);
+    final lines = removedLines(res.before).map((l) => l.label).toList();
+    expect(lines.first, l10n.cleanerLocation);
   });
 }
 
