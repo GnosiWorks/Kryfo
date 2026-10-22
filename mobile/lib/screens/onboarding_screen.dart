@@ -12,6 +12,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
+import 'bridges_screen.dart' show relayTakenBeforeOnboarding;
 import 'my_kryfo_screen.dart';
 import '../main.dart' show appState, AppState;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
@@ -1168,7 +1169,9 @@ class _TransportScreen extends StatefulWidget {
 class _TransportScreenState extends State<_TransportScreen> {
   // said tor is blocked or watched at the start
   final bool _blocked = appState.bridge.skipDirect;
-  String _pick = 'private';
+  // relay taken where nothing got through: picked here, onion one tap away
+  final bool _relayTaken = relayTakenBeforeOnboarding;
+  late String _pick = _relayTaken ? 'balanced' : 'private';
   bool _busy = false;
 
   Future<void> _go() async {
@@ -1197,7 +1200,8 @@ class _TransportScreenState extends State<_TransportScreen> {
   @override
   Widget build(BuildContext context) {
     // tor blocked or watched: onion through a bridge only. relay and fast
-    // are plain connections a watcher sees, and stay in settings
+    // are plain connections a watcher sees, and stay in settings. relay
+    // taken where nothing got through stays the pick
     if (_blocked) {
       return _StepPage(
         footer: [_Cta(label: l10n.onboardingContinue, onTap: _go)],
@@ -1211,7 +1215,21 @@ class _TransportScreenState extends State<_TransportScreen> {
               title: l10n.onboardingOnion,
               cost: l10n.onboardingSlowerAMessageTakes,
               gain: l10n.onboardingAutoFindsAWay,
+              on: _relayTaken && _pick == 'private',
+              onTap: _relayTaken
+                  ? () => setState(() => _pick = 'private')
+                  : null,
             ),
+            if (_relayTaken) ...[
+              const SizedBox(height: 10),
+              _ModeCard(
+                title: l10n.onboardingRelay,
+                cost: l10n.onboardingOurRelaySeesYour,
+                gain: l10n.onboardingAboutASecondWorks,
+                on: _pick == 'balanced',
+                onTap: () => setState(() => _pick = 'balanced'),
+              ),
+            ],
           ]),
         ],
       );
@@ -1957,8 +1975,11 @@ class _Card extends StatelessWidget {
                   ? Text(
                       twoDigits(num!),
                       textScaler: TextScaler.noScaling,
-                      style: HaloType.mono(size: 11, color: HaloColors.amberText)
-                          .copyWith(
+                      style:
+                          HaloType.mono(
+                            size: 11,
+                            color: HaloColors.amberText,
+                          ).copyWith(
                             letterSpacing: track(0.5),
                             fontWeight: FontWeight.w600,
                           ),

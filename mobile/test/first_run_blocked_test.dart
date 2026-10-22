@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a new install that says tor is blocked or watched: bridges only, no relay
-// or fast on the way in, while relay stays in settings. closing the sheet
-// leaves the question
+// or fast on the way in, while relay stays in settings and in the offer when
+// nothing got through. closing the sheet leaves the question
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -56,6 +56,7 @@ void main() {
   });
 
   tearDown(() {
+    relayTakenBeforeOnboarding = false;
     appState.bridgeSetupForTest = const BridgeSetup();
     setL10nLocale(const Locale('en'));
   });
@@ -233,6 +234,58 @@ void main() {
       FlutterError.onError = was;
     }
     expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+  });
+
+  testWidgets('relay taken where nothing got through stays the pick', (
+    t,
+  ) async {
+    await openSheet(t);
+    await t.tap(find.text(l10n.commonContinue));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(BridgesScreen), findsOneWidget);
+    appState.setBridgeStatusForTest(
+      const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+    );
+    // the line rises in before its buttons take a tap
+    await t.pump();
+    await t.pump(const Duration(seconds: 2));
+    await t.tap(find.text(l10n.homeUseOurRelay));
+    for (
+      var i = 0;
+      i < 50 && find.text(l10n.homeSwitchedToRelay).evaluate().isEmpty;
+      i++
+    ) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    expect(appState.sendMode, 'balanced');
+    await done(t);
+    // the send step offers onion and keeps relay picked
+    await t.pumpWidget(
+      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
+    );
+    await t.pump(const Duration(seconds: 6));
+    final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+    pages.jumpToPage(3);
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.onboardingFast), findsNothing);
+    expect(checked(t, l10n.onboardingRelay), isTrue);
+    expect(checked(t, l10n.onboardingOnion), isFalse);
+    await t.tap(find.text(l10n.onboardingContinue));
+    await t.pump();
+    for (var i = 0; i < 20 && pages.page != 4; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump(const Duration(milliseconds: 300));
+    }
+    expect(pages.page, 4);
+    expect(appState.sendMode, 'balanced');
+    await done(t);
   });
 
   group('the send step', () {
