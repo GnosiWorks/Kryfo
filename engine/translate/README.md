@@ -40,8 +40,11 @@ the app side is mobile/lib/translate/ and screens/translation_screen.dart.
 the language guess runs in dart, so a message's words never go to the
 engine for it. translations are kept in memory only, per open chat, and
 never stored. a reader of traditional chinese gets the models' simplified
-output converted with opencc's s2t tables (apache 2.0,
-mobile/assets/opencc, remade by its fetch.sh).
+output converted with opencc's tables (apache 2.0, mobile/assets/opencc,
+remade by its fetch.sh): s2tw, taiwan's forms, for zh_Hant and zh_TW, as
+the app's own traditional strings use, and s2hk for zh_HK and zh_MO. a
+chat's auto-translate switch goes when the chat is deleted, and starts
+over when a chat moves into or out of the hidden chats.
 
 ## the models
 

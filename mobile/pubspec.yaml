@@ -70,6 +70,8 @@ flutter:
     - assets/stickers/fokiaremix.kst
     - assets/opencc/STCharacters.txt.gz
     - assets/opencc/STPhrases.txt.gz
+    - assets/opencc/TWVariants.txt.gz
+    - assets/opencc/HKVariants.txt.gz
 
   fonts:
     - family: Fraunces

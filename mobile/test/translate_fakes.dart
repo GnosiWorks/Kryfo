@@ -166,5 +166,7 @@ Future<HantConverter> _hantFromDisk() async {
   return HantConverter.parse(
     read(HantConverter.charsAsset),
     read(HantConverter.phrasesAsset),
+    tw: read(HantConverter.twAsset),
+    hk: read(HantConverter.hkAsset),
   );
 }

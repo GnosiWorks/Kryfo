@@ -128,7 +128,9 @@ class TranslationHub extends ChangeNotifier {
     for (final (f, t) in route) {
       out = await translator.translate(out, from: f, to: t);
     }
-    if (o.hant) out = (await (_hant ??= loadHant())).convert(out);
+    if (o.hant != HantForm.none) {
+      out = (await (_hant ??= loadHant())).convert(out, o.hant);
+    }
     return out;
   }
 

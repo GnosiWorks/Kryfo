@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/detect.dart';
 import 'package:kryfo/translate/foreign.dart';
+import 'package:kryfo/translate/hant.dart' show HantForm;
 
 const _cat = builtInCatalog;
 
@@ -34,7 +35,7 @@ void main() {
     );
     expect(
       _offer('Are you coming tomorrow?', app: 'zh_Hant'),
-      const Offer('en', 'zh', 'en', true),
+      const Offer('en', 'zh', 'en', HantForm.tw),
     );
   });
 

@@ -34,6 +34,16 @@ void main() {
     expect(c.convert('干净'), '乾淨');
     expect(c.convert('我们明天见吧'), '我們明天見吧');
     expect(c.convert('Hello, 世界'), 'Hello, 世界');
+    // taiwan's forms, as the app's own traditional strings use
+    expect(c.convert('为什么'), '為什麼');
+    expect(c.convert('里面'), '裡面');
+    expect(c.convert('面条'), '麵條');
+    // hong kong's
+    expect(c.convert('为什么', HantForm.hk), '為什麼');
+    expect(c.convert('里面', HantForm.hk), '裏面');
+    expect(c.convert('台湾', HantForm.hk), '台灣');
+    // opencc's standard forms, before either
+    expect(c.convert('为什么', HantForm.none), '爲什麼');
     // the tables are opencc's own, unchanged
     final chars = _gz('assets/opencc/STCharacters.txt.gz');
     expect(chars.split('\n').where((l) => l.contains('\t')).length, 3980);
@@ -48,10 +58,11 @@ void main() {
       chosen: chosen,
       mine: readLangs(app, const []),
     );
-    expect(offer('zh_Hant')!.hant, isTrue);
-    expect(offer('zh')!.hant, isFalse);
-    expect(offer('de', chosen: 'zh_hant')!.hant, isTrue);
-    expect(offer('zh_Hant', chosen: 'zh')!.hant, isFalse);
+    expect(offer('zh_Hant')!.hant, HantForm.tw);
+    expect(offer('zh')!.hant, HantForm.none);
+    expect(offer('de', chosen: 'zh_hant')!.hant, HantForm.tw);
+    expect(offer('de', chosen: 'zh_HK')!.hant, HantForm.hk);
+    expect(offer('zh_Hant', chosen: 'zh')!.hant, HantForm.none);
     // the same direction in another script is another translation
     expect(offer('zh_Hant') == offer('zh'), isFalse);
   });
@@ -60,12 +71,13 @@ void main() {
     final f = fakeHub(
       installed: true,
       app: 'zh_Hant',
-      words: {'Hair is long': '头发很长'},
+      words: {'Hair is long': '头发很长', 'Why is it in there': '为什么在里面'},
     );
     await f.hub.ready();
     final o = f.hub.offer('Hair is long')!;
     expect(o.to, 'zh');
     expect(await f.hub.translate('Hair is long', o), '頭髮很長');
+    expect(await f.hub.translate('Why is it in there', o), '為什麼在裡面');
 
     final s = fakeHub(
       installed: true,

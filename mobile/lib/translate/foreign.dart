@@ -4,6 +4,7 @@
 // the ones they listed; a guess that is unsure or mixed is left alone.
 import 'catalog.dart';
 import 'detect.dart';
+import 'hant.dart' show HantForm;
 
 // below this share of its letters, a message is mixed enough that the
 // person can likely read it as it is
@@ -47,11 +48,14 @@ String? targetFor(
   return null;
 }
 
-// a tag for chinese in traditional characters
-bool isHant(String tag) {
+// the traditional forms a tag asks for: hong kong's and macau's for
+// those, taiwan's for the rest, none for simplified
+HantForm hantForm(String tag) {
   final t = tag.toLowerCase().replaceAll('-', '_');
-  return t.startsWith('zh_') &&
-      (t.contains('hant') || t == 'zh_tw' || t == 'zh_hk' || t == 'zh_mo');
+  if (!t.startsWith('zh_')) return HantForm.none;
+  if (t.endsWith('_hk') || t.endsWith('_mo')) return HantForm.hk;
+  if (t.contains('hant') || t.endsWith('_tw')) return HantForm.tw;
+  return HantForm.none;
 }
 
 // a message there is something to offer for: its language and the one it
@@ -62,9 +66,9 @@ class Offer {
   // the guess as it was, for the label: traditional chinese says so, though
   // the same model reads it
   final String seen;
-  // into chinese for a reader of traditional characters
-  final bool hant;
-  const Offer(this.from, this.to, [String? seen, this.hant = false])
+  // into chinese for a reader of traditional characters, and whose forms
+  final HantForm hant;
+  const Offer(this.from, this.to, [String? seen, this.hant = HantForm.none])
     : seen = seen ?? from;
 
   @override
@@ -94,5 +98,10 @@ Offer? offerFor(
   );
   if (to == null) return null;
   final want = chosen.isEmpty ? appLang : chosen;
-  return Offer(baseLang(g.lang), to, g.lang, to == 'zh' && isHant(want));
+  return Offer(
+    baseLang(g.lang),
+    to,
+    g.lang,
+    to == 'zh' ? hantForm(want) : HantForm.none,
+  );
 }
