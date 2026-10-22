@@ -408,3 +408,43 @@ func TestOnlineIsNotValidated(t *testing.T) {
 		t.Fatalf("network %+v", n)
 	}
 }
+
+// a network change with direct as the way: the pass that puts a way back
+// starts at once, not when the loop next looks around
+func TestNetworkChangeStartsThePassAtOnce(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	quietBounce(t)
+	oldTick := autoTick
+	autoTick = time.Hour
+	defer func() { autoTick = oldTick }()
+	t.Cleanup(func() { autoDirectOK.Store(false) })
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	gen := autoGenN
+	autoMu.Unlock()
+	calls := make(chan string, 4)
+	autoRunPass = func(g, epoch int64, why string) string {
+		calls <- why
+		autoDirectOK.Store(true)
+		return seenOK
+	}
+	done := make(chan struct{})
+	go func() { autoLoop(gen); close(done) }()
+	defer func() { stopLoop(); autoKick(); <-done }()
+	if why := <-calls; why != "start" {
+		t.Fatalf("first pass %s", why)
+	}
+	// the loop sleeps its hour; the change has to wake it
+	time.Sleep(50 * time.Millisecond)
+	f.sleep(autoPassFloor)
+	networkChanged()
+	select {
+	case why := <-calls:
+		if why != "network" {
+			t.Fatalf("second pass %s", why)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("no pass after the network change until the loop's next look")
+	}
+}

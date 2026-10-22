@@ -732,6 +732,9 @@ func networkChanged() {
 	// what proved the old network proves nothing about this one
 	routeBump()
 	netEpoch.Add(1)
+	// automatic holds tor off a new network until a pass proves a way:
+	// that pass starts now, not at the loop's next look
+	autoKick()
 	netMu.Lock()
 	netChangedAt = time.Now()
 	if netWorker {
