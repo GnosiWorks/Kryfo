@@ -14,7 +14,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateRoute;
 import 'package:kryfo/media_resend.dart' show kNeedQuietMs;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

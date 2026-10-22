@@ -16,7 +16,13 @@ import 'package:kryfo/gifs/gif_picture.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';

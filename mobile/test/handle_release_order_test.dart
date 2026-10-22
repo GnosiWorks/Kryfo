@@ -9,7 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_repoint.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, engine, useEngineForTest;
+    show AppState, HaloEngine, engine, useEngineForTest, AppStateRoute;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/wipe.dart' show haloWiping;
 import 'package:shared_preferences/shared_preferences.dart';

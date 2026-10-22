@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the app's gif source: the engine's gif lane, the route people search
 // takes. a quiet session shows the tab and gets nothing from it
-import '../main.dart' show appState, engine, session, sessionQuiet;
+import '../main.dart'
+    show appState, engine, session, sessionQuiet, AppStateRoute;
 import '../stickers/sticker_sheet.dart' show GifTabs;
 import 'gif_panel.dart' show gifRouteOf;
 import 'gif_source.dart';

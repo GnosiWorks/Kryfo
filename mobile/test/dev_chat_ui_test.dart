@@ -9,7 +9,7 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/screens/home_screen.dart';

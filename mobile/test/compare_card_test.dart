@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         kNameSays,
         session,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/session.dart';

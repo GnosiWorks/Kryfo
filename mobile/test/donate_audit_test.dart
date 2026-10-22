@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/badge_client.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/theme.dart';

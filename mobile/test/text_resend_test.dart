@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
-        AppStateMessages;
+        AppStateMessages,
+        AppStateRoute;
 import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/screens/chat_screen.dart';

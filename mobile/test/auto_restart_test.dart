@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         restartQuietly,
         torValve,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/session.dart' show Session;
 import 'package:kryfo/tor_valve.dart' show restartHolds;
 import 'package:shared_preferences/shared_preferences.dart';

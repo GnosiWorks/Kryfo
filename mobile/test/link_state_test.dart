@@ -15,7 +15,7 @@ import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show percent;
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/main.dart' show TorHalo, appState;
+import 'package:kryfo/main.dart' show TorHalo, appState, AppStateRoute;
 import 'package:kryfo/media_send.dart' show mediaInflight;
 import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/widgets/motion.dart' show TorStatus;

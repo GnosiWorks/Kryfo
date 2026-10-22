@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         appState,
         handleHaloUriAdded,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';

@@ -12,7 +12,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';

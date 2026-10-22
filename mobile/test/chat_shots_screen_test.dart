@@ -16,7 +16,7 @@ import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show appState, useDatabasesForTest, useEngineForTest;
+    show appState, useDatabasesForTest, useEngineForTest, AppStateRoute;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';

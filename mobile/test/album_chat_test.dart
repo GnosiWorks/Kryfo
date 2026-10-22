@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateMessages;
+        AppStateMessages,
+        AppStateRoute;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';

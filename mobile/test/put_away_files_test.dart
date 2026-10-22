@@ -15,7 +15,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateRoute;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

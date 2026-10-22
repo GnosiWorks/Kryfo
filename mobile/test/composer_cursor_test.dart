@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';

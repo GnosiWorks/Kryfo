@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         openDevChatLater,
         signalDecrypt,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateRoute;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

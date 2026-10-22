@@ -11,7 +11,12 @@ import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';

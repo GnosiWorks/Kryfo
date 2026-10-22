@@ -8,7 +8,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, TorHalo, appState, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        TorHalo,
+        appState,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/pill_grace.dart';
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';

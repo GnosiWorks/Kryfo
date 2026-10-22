@@ -9,7 +9,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';

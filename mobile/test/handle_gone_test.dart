@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_repoint.dart' show kHandleClaimedKey;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, registryWait, useEngineForTest;
+    show HaloEngine, appState, registryWait, useEngineForTest, AppStateRoute;
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';

@@ -10,7 +10,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/blocked_screen.dart';

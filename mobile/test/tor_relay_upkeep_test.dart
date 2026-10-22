@@ -14,7 +14,13 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';

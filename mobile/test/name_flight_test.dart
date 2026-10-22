@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         appState,
         notifTargetFor,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/chat_door.dart';
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/contact_screen.dart';

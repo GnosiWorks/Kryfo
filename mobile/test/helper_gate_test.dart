@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/helper_push.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/screens/helper_sheet.dart';

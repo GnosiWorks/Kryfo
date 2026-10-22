@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/screens/home_screen.dart' show ContactPreview;
 import 'package:kryfo/screens/introduce_sheet.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';

@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         themeRevision,
         TorHalo,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
