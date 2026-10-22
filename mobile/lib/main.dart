@@ -153,6 +153,7 @@ part 'app/database_contacts.dart';
 part 'app/database_deletes.dart';
 part 'app/database_first_contact.dart';
 part 'app/database_groups.dart';
+part 'app/database_media.dart';
 part 'app/database_messages.dart';
 part 'app/database_outbox.dart';
 part 'app/database_polls.dart';
