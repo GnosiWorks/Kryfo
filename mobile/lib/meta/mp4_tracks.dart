@@ -416,11 +416,16 @@ void _fragments(
             (tf & 0x400 != 0 ? 4 : 0) +
             (tf & 0x800 != 0 ? 4 : 0);
         if (r + n * per > p.length) throw const IsoError('short run');
+        // more samples than the file has bytes is a count to refuse, not
+        // to walk
+        if (n > s.length) throw const IsoError('too many samples');
         var len = 0;
-        for (var k = 0; k < n; k++) {
-          var e = r + k * per;
-          if (tf & 0x100 != 0) e += 4;
-          len += tf & 0x200 != 0 ? be32(p, e) : defSize;
+        if (tf & 0x200 == 0) {
+          len = n * defSize;
+        } else {
+          for (var k = 0; k < n; k++) {
+            len += be32(p, r + k * per + (tf & 0x100 != 0 ? 4 : 0));
+          }
         }
         track.samples.add(at, at + len);
         track.sampleCount += n;
