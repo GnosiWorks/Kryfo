@@ -121,8 +121,7 @@ void main() {
       expect(find.text('2 parts'), findsNWidgets(2));
 
       await t.ensureVisible(find.text('In the Signal library'));
-      await t.ensureVisible(find.text('In the Signal library'));
-    await t.tap(find.text('In the Signal library'));
+      await t.tap(find.text('In the Signal library'));
       await t.pumpAndSettle();
       expect(find.text('libsignal-protocol'), findsOneWidget);
       expect(find.text('0.1.0 · AGPL-3.0-only'), findsOneWidget);
@@ -136,8 +135,7 @@ void main() {
       await t.pumpAndSettle();
 
       await t.ensureVisible(find.text('In the app'));
-      await t.ensureVisible(find.text('In the app'));
-    await t.tap(find.text('In the app'));
+      await t.tap(find.text('In the app'));
       await t.pumpAndSettle();
       await t.tap(find.text('flutter'));
       await t.pumpAndSettle();
@@ -149,8 +147,7 @@ void main() {
       await t.pumpAndSettle();
 
       await t.ensureVisible(find.text('GNU AGPL 3.0, full text'));
-      await t.ensureVisible(find.text('GNU AGPL 3.0, full text'));
-    await t.tap(find.text('GNU AGPL 3.0, full text'));
+      await t.tap(find.text('GNU AGPL 3.0, full text'));
       await t.pumpAndSettle();
       expect(find.text('Version 3, 19 November 2007'), findsOneWidget);
     });
