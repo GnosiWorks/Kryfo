@@ -19,7 +19,13 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, session, sessionQuiet, useDatabasesForTest;
+    show
+        AppState,
+        HaloDb,
+        session,
+        sessionQuiet,
+        useDatabasesForTest,
+        AppStateVault;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';

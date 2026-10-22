@@ -16,7 +16,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, live, session, useDatabasesForTest;
+    show HaloDb, appState, live, session, useDatabasesForTest, AppStateVault;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/session.dart';

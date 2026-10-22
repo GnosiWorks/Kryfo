@@ -24,7 +24,8 @@ import 'package:kryfo/main.dart'
         QuietIdentity,
         heldWire,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateVault;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/relay_poll.dart';
 import 'package:kryfo/router.dart';

@@ -19,7 +19,8 @@ import 'package:kryfo/main.dart'
         QuietIdentity,
         useDatabasesForTest,
         session,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateVault;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';

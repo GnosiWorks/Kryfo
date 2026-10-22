@@ -76,7 +76,8 @@ import '../main.dart'
         AppStateRoute,
         AppStatePrefs,
         AppStateProfile,
-        AppStateScreen;
+        AppStateScreen,
+        AppStateVault;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';

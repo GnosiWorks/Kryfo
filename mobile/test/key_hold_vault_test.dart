@@ -32,7 +32,8 @@ import 'package:kryfo/main.dart'
         signalDecrypt,
         useDatabasesForTest,
         AppStateOutbox,
-        AppStateGroupLanes;
+        AppStateGroupLanes,
+        AppStateVault;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';

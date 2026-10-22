@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateOutbox,
         AppStateGroupLanes,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateVault;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

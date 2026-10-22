@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, QuietIdentity, tidyWallpapers;
+    show AppState, HaloDb, QuietIdentity, tidyWallpapers, AppStateVault;
 import 'package:kryfo/vault_life.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
