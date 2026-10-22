@@ -6,8 +6,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/chat_translation.dart';
 import 'package:kryfo/translate/hub.dart';
+import 'package:kryfo/session.dart';
 import 'package:kryfo/translate/settings.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
+import 'dev_chat_fakes.dart';
+import 'mem_db.dart';
 import 'sqlite_ffi.dart';
 import 'translate_fakes.dart';
 
@@ -15,6 +19,23 @@ const _zh = '你好，我们明天见吧';
 const _en = 'Hello, see you tomorrow';
 
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 5));
+
+// a phone's database whose delete keeps the contact row, as the app's does
+class _KeepRowDb extends DevTestDb {
+  final SqliteMem sql;
+  _KeepRowDb(this.sql) : super(MemDb());
+  @override
+  Future<Database> open() async => sql;
+  @override
+  Future<void> deleteConversation(String haloId) async {
+    await sql.update(
+      'contacts',
+      {'accepted': 0, 'archived': 1},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+}
 
 class _Rev extends ChangeNotifier {
   int rev = 0;
@@ -127,4 +148,46 @@ void main() {
     },
     skip: skip,
   );
+
+  test(
+    'a deleted chat takes its switch with it, the contact row kept',
+    () async {
+      final db = SqliteMem.open()!;
+      await appSchemaOn(db);
+      for (final id in ['calm-grey-heron', 'quick-red-fox']) {
+        await db.insert('contacts', {
+          'halo_id': id,
+          'onion': '',
+          'xpub': 'ab',
+          'first_seen': 1,
+          'last_seen': 1,
+        });
+      }
+      final store = DbTranslateStore(() async => db);
+      await store.setChatAuto('calm-grey-heron', true);
+      await store.setChatAuto('quick-red-fox', true);
+      final f = fakeHub(installed: true);
+      TranslationHub.instance = f.hub;
+      addTearDown(() => TranslationHub.instance = null);
+      await f.hub.chatAuto('calm-grey-heron');
+
+      await Session(_KeepRowDb(db)).deleteConversation('calm-grey-heron');
+      expect(
+        await db.query('contacts', where: "halo_id = 'calm-grey-heron'"),
+        hasLength(1),
+      );
+      expect(await store.chatAuto('calm-grey-heron'), isNull);
+      expect(await store.chatAuto('quick-red-fox'), isTrue);
+      expect(f.hub.chatAutoNow('calm-grey-heron'), isNull);
+      await db.close();
+    },
+    skip: skip,
+  );
+
+  test('a deleted chat that never set one is fine', () async {
+    final db = SqliteMem.open()!;
+    await appSchemaOn(db);
+    await Session(_KeepRowDb(db)).deleteConversation('calm-grey-heron');
+    await db.close();
+  }, skip: skip);
 }

@@ -135,16 +135,33 @@ class DbTranslateStore implements TranslateStore {
   Future<void> save(TranslateSettings s) async =>
       _put(await _ready(await db()), 'all', jsonEncode(s.toJson()));
 
+  static String chatKey(String chatId) => 'chat:$chatId';
+
   @override
   Future<bool?> chatAuto(String chatId) async {
-    final v = await _get(await _ready(await chatDb(chatId)), 'chat:$chatId');
+    final v = await _get(await _ready(await chatDb(chatId)), chatKey(chatId));
     return v == null ? null : v == '1';
   }
 
   @override
   Future<void> setChatAuto(String chatId, bool? on) async => _put(
     await _ready(await chatDb(chatId)),
-    'chat:$chatId',
+    chatKey(chatId),
     on == null ? null : (on ? '1' : '0'),
   );
+}
+
+// a chat deleted with its contact row kept: its switch goes. no table yet
+// means nothing was ever set
+Future<void> forgetChatTranslate(
+  Future<Database> Function() db,
+  String chatId,
+) async {
+  try {
+    await (await db()).delete(
+      'translate_prefs',
+      where: 'k = ?',
+      whereArgs: [DbTranslateStore.chatKey(chatId)],
+    );
+  } catch (_) {}
 }

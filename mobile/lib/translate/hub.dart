@@ -151,6 +151,11 @@ class TranslationHub extends ChangeNotifier {
     notifyListeners();
   }
 
+  // one chat deleted: what was read of it goes
+  void forgetChat(String chatId) {
+    if (_chatAuto.remove(chatId) != null) notifyListeners();
+  }
+
   // forgetChats each time [rev] moves on [state]; the returned call stops it
   VoidCallback followSessions(Listenable state, int Function() rev) {
     var last = rev();
