@@ -26,7 +26,8 @@ import 'package:kryfo/main.dart'
         groupOwedTables,
         makePreKeyBundleB64,
         useDatabasesForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateGroupLanes;
 import 'package:kryfo/media_send.dart' show mediaCancelled, mediaInflight;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart' show PollVote;

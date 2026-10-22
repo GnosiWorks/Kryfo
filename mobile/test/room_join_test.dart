@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         roomJoiningColumn,
         sayRoomJoined,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateGroupLanes;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/router.dart';

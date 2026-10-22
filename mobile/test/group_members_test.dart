@@ -17,7 +17,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateArrivals,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateGroupLanes;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart'

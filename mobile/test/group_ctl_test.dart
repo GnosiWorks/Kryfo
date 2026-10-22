@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         groupUnsendRow,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateGroupLanes;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 import 'package:kryfo/polls.dart' show PollSpec;

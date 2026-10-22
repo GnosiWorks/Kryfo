@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         searchTables,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateGroupLanes;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';
