@@ -1622,8 +1622,7 @@ void main() {
       );
       await t.pump(const Duration(seconds: 1));
       final row = find.text(l10n.contactMute);
-      // to the middle, clear of the head the page scrolls under
-      await Scrollable.ensureVisible(t.element(row), alignment: 0.5);
+      await t.ensureVisible(row);
       await t.pump(const Duration(milliseconds: 300));
       HaloSwitch muteSwitch() => t.widget<HaloSwitch>(
         find.descendant(
