@@ -11,7 +11,6 @@ import 'package:ffi/ffi.dart';
 
 import '../engine_strings.dart';
 import 'catalog.dart';
-import 'detect.dart';
 
 typedef _S0 = Pointer<Utf8> Function();
 typedef _S1 = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -78,8 +77,6 @@ class FetchStatus {
 }
 
 abstract class TranslateEngine {
-  // the engine's guess, or null when it cannot be asked
-  LangGuess? detect(String text);
   TranslateCatalog? catalog();
   // "ok", or "error: ..."
   Future<String> fetch(String lang, String dir, String base);
@@ -115,18 +112,6 @@ class FfiTranslateEngine implements TranslateEngine {
     final out = _call(lib, symbol, args);
     if (out == null) _missing.add(symbol);
     return out;
-  }
-
-  @override
-  LangGuess? detect(String text) {
-    final s = _ask('HaloTranslateDetect', [text]);
-    if (s == null) return null;
-    try {
-      final j = jsonDecode(s) as Map<String, dynamic>;
-      return LangGuess(j['lang'] as String, (j['share'] as num).toDouble());
-    } catch (_) {
-      return null;
-    }
   }
 
   @override

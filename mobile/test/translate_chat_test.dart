@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/bergamot_ffi.dart';
 import 'package:kryfo/translate/chat_translation.dart';
+import 'package:kryfo/translate/detect.dart';
 import 'package:kryfo/translate/engine_bridge.dart';
 import 'package:kryfo/translate/settings.dart';
 import 'package:kryfo/translate/translator.dart';
@@ -35,6 +36,27 @@ void main() {
       c.dispose();
     },
   );
+
+  test('a guess is kept by its chat and goes when the chat closes', () async {
+    var asked = 0;
+    final f = fakeHub(
+      installed: true,
+      guess: (t) {
+        asked++;
+        return detectLanguage(t);
+      },
+    );
+    final a = ChatTranslation(f.hub, 'heron');
+    expect(a.offer(_zh)?.from, 'zh');
+    expect(a.offer(_zh)?.from, 'zh');
+    expect(asked, 1);
+    a.dispose();
+    // nothing of the first chat's words is kept for the next
+    final b = ChatTranslation(f.hub, 'wren');
+    expect(b.offer(_zh)?.from, 'zh');
+    expect(asked, 2);
+    b.dispose();
+  });
 
   test('no pack: what is missing, and nothing downloads by itself', () async {
     final f = fakeHub(words: {_zh: _en});
@@ -197,16 +219,12 @@ void main() {
     await t.close();
   });
 
-  test(
-    'an engine without the calls: no guess, no catalog, no download',
-    () async {
-      final e = FfiTranslateEngine();
-      expect(e.detect('你好'), isNull);
-      expect(e.catalog(), isNull);
-      expect(await e.fetch('zh', '/nowhere', ''), startsWith('error: engine'));
-      expect(e.progress('zh').state, 'idle');
-      expect(await e.installed('zh', '/nowhere'), isFalse);
-      expect(e.config('zh', 'en', '/nowhere'), isNull);
-    },
-  );
+  test('an engine without the calls: no catalog, no download', () async {
+    final e = FfiTranslateEngine();
+    expect(e.catalog(), isNull);
+    expect(await e.fetch('zh', '/nowhere', ''), startsWith('error: engine'));
+    expect(e.progress('zh').state, 'idle');
+    expect(await e.installed('zh', '/nowhere'), isFalse);
+    expect(e.config('zh', 'en', '/nowhere'), isNull);
+  });
 }

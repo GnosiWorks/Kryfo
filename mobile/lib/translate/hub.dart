@@ -23,6 +23,8 @@ class TranslationHub extends ChangeNotifier {
   final Translator translator;
   final ModelDownloads downloads;
   final String Function() appLang;
+  // a message's language, made on the phone in dart
+  final LangGuess Function(String text) guess;
   // whose settings these are: an identity switch reads them again
   final String Function() scope;
   late final TranslateCatalog catalog;
@@ -35,8 +37,10 @@ class TranslationHub extends ChangeNotifier {
     TranslateCatalog? catalog,
     String Function()? appLang,
     String Function()? scope,
+    LangGuess Function(String text)? guess,
   }) : appLang = appLang ?? (() => currentLanguage),
-       scope = scope ?? (() => '') {
+       scope = scope ?? (() => ''),
+       guess = guess ?? detectLanguage {
     this.catalog = catalog ?? engine?.catalog() ?? builtInCatalog;
     downloads.addListener(notifyListeners);
   }
@@ -71,27 +75,19 @@ class TranslationHub extends ChangeNotifier {
     // a new default reaches the chats nobody set
     if (s.autoDefault != _settings.autoDefault) _chatAuto.clear();
     _settings = s;
-    _guesses.clear();
     notifyListeners();
     await store.save(s);
   }
 
   Set<String> get mine => readLangs(appLang(), _settings.mine);
 
-  // the guess for a text, the engine's when it can be asked. kept, since a
-  // bubble asks again on every build
-  final Map<String, LangGuess> _guesses = {};
-  LangGuess guess(String text) {
-    final hit = _guesses[text];
-    if (hit != null) return hit;
-    if (_guesses.length > 500) _guesses.clear();
-    return _guesses[text] = engine?.detect(text) ?? detectLanguage(text);
-  }
-
   // what a message would be translated into, or null when it is in a
   // language the person reads, or one there is no model for
-  Offer? offer(String text) => offerFor(
-    guess(text),
+  Offer? offer(String text) => offerOf(guess(text));
+
+  // the same for a guess a chat made before
+  Offer? offerOf(LangGuess g) => offerFor(
+    g,
     catalog,
     appLang: appLang(),
     chosen: _settings.target,

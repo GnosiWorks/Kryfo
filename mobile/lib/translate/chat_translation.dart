@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'catalog.dart';
+import 'detect.dart';
 import 'foreign.dart';
 import 'hub.dart';
 import 'translator.dart';
@@ -87,8 +88,15 @@ class ChatTranslation extends ChangeNotifier {
   MsgTranslation of(String key) =>
       _msgs[key] ?? const MsgTranslation(MsgPhase.idle);
 
+  // each text's guess, asked again on every build: kept here, so it goes
+  // when the chat closes
+  final Map<String, LangGuess> _guesses = {};
+
   // whether a message from them is offered a translation at all
-  Offer? offer(String text) => text.trim().isEmpty ? null : hub.offer(text);
+  Offer? offer(String text) {
+    if (text.trim().isEmpty) return null;
+    return hub.offerOf(_guesses[text] ??= hub.guess(text));
+  }
 
   bool shown(String key) => of(key).phase == MsgPhase.shown;
 
@@ -157,6 +165,8 @@ class ChatTranslation extends ChangeNotifier {
   @override
   void dispose() {
     _gone = true;
+    _guesses.clear();
+    _msgs.clear();
     hub.removeListener(_hubChanged);
     super.dispose();
   }

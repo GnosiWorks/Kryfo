@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// offline translation's side of the engine: the language guess, the pinned
-// models, and their download. the download goes over tor and nothing else,
-// whatever the send mode, each one under a socks name of its own so two
-// languages fetched on different days do not share a circuit. the models
-// themselves run in a separate library (translate/native), not here.
+// offline translation's side of the engine: the pinned models and their
+// download. the download goes over tor and nothing else, whatever the send
+// mode, each one under a socks name of its own so two languages fetched on
+// different days do not share a circuit. the models run in a separate
+// library (translate/native), not here.
 
 import "C"
 
@@ -63,19 +63,6 @@ func jsonStr(v any) string {
 		return fmt.Sprintf("error: %v", err)
 	}
 	return string(b)
-}
-
-// the script-based guess for one message: {"lang":"zh","share":0.9}, with
-// lang "" when there is no guess
-//
-//export HaloTranslateDetect
-func HaloTranslateDetect(cText *C.char) *C.char {
-	return C.CString(translateDetect(goStr(cText)))
-}
-
-func translateDetect(s string) string {
-	g := translate.Detect(s)
-	return jsonStr(map[string]any{"lang": g.Lang, "share": g.Share})
 }
 
 type bundleInfo struct {

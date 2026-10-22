@@ -3,6 +3,7 @@
 // store that downloads when told to. nothing here reaches the network or
 // the engine
 import 'package:kryfo/translate/catalog.dart';
+import 'package:kryfo/translate/detect.dart';
 import 'package:kryfo/translate/downloads.dart';
 import 'package:kryfo/translate/engine_bridge.dart';
 import 'package:kryfo/translate/hub.dart';
@@ -122,6 +123,7 @@ Fakes fakeHub({
   TranslateSettings settings = const TranslateSettings(wifiOnly: false),
   Map<String, String> words = const {},
   bool wifi = true,
+  LangGuess Function(String text)? guess,
 }) {
   final backend = FakeBackend();
   if (installed) backend.finish('zh');
@@ -148,6 +150,7 @@ Fakes fakeHub({
     downloads: downloads,
     catalog: builtInCatalog,
     appLang: () => app,
+    guess: guess,
   );
   f = Fakes._(translator, backend, store, hub, wifi);
   return f;

@@ -18,23 +18,6 @@ import (
 	"github.com/halo/engine/translate"
 )
 
-func TestTranslateDetectJSON(t *testing.T) {
-	var g struct {
-		Lang  string  `json:"lang"`
-		Share float64 `json:"share"`
-	}
-	if err := json.Unmarshal([]byte(translateDetect("你好，我们明天见")), &g); err != nil {
-		t.Fatal(err)
-	}
-	if g.Lang != "zh" || g.Share <= 0.5 {
-		t.Fatalf("%+v", g)
-	}
-	json.Unmarshal([]byte(translateDetect("ok")), &g)
-	if g.Lang != "" {
-		t.Fatalf("guessed %q for ok", g.Lang)
-	}
-}
-
 func TestTranslateCatalog(t *testing.T) {
 	var c struct {
 		Base  string       `json:"base"`

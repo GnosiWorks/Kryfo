@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the dart guess says what the engine's says (engine/translate/detect_test.go
-// has the same cases), and nothing rather than a wrong guess
+// the language guess, and no guess rather than a wrong one
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/detect.dart';
 
 void main() {
-  test('the engine cases', () {
+  test('scripts, mixes, links and short words', () {
     const cases = {
       '你好，我们明天见吧': 'zh',
       '这个问题我还没想好怎么说': 'zh',

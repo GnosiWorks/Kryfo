@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the engine's language guess (engine/translate/detect.go) in dart, for when
-// the engine is not there to ask: a test, or an engine from before it. it
-// goes by script, then by a few common characters or words, and says
-// nothing rather than guess wrong.
+// a message's language for the translation models, by script and then a
+// few common characters or words. no guess rather than a wrong one. kept in
+// dart so a message's words do not go to the engine for it
 
 class LangGuess {
   // '' when there is no guess
@@ -128,7 +127,8 @@ final _englishWords =
         .toSet();
 
 // common characters written one way in simplified and another in
-// traditional chinese, as pairs, the engine's list
+// traditional chinese, as pairs. only ones neither script also uses for
+// something else, so a hit says which script it is
 const _scriptPairs = '''个個 们們 这這 说說 时時 国國 会會 来來 对對 为為 发發 过過 还還 没沒
 	开開 关關 问問 题題 现現 实實 学學 习習 东東 车車 长長 门門 见見 话話 语語
 	吗嗎 让讓 给給 谁誰 应應 该該 经經 进進 动動 种種 头頭 样樣 当當 从從 两兩
