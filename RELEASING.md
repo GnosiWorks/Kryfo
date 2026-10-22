@@ -98,6 +98,8 @@ metadata/app.kryfo.yml. one `Builds:` block per abi (version codes N*10+1,
 agree with the release:
 
 - `ndk: r28c`, the one repro/Dockerfile pins
+- the build line has `--flavor foss` and `output:` is
+  `build/app/outputs/flutter-apk/app-<abi>-foss-release.apk`
 - `binary:` points at the release asset `app-<abi>-release.apk`
 - the signature is a pure insertion, release.sh passes `--alignment-preserved`
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints

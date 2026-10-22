@@ -34,7 +34,7 @@ found a security problem? SECURITY.md says how to tell me privately.
 see BUILDING.md. short version:
 
     cd engine && ./build.sh
-    cd ../mobile && flutter build apk --release --split-per-abi
+    cd ../mobile && flutter build apk --release --split-per-abi --flavor foss
 
 ## verify
 

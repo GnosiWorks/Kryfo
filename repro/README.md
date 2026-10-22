@@ -11,7 +11,9 @@ before a release.
 the release build. it clones the commit clean, builds the engine and the
 three apks in the pinned container at f-droid's build path, signs them
 outside the container with apksigner, and leaves them in `out/`. the keystore
-never goes into the container. `--unsigned` stops before signing.
+never goes into the container. `--unsigned` stops before signing. it builds
+the foss flavor, the one f-droid builds, and names the apks
+`app-<abi>-release.apk` as before.
 
 a step that fails on the network (a fetch error, a mirror answering 404) is
 run again twice, after 60s and then 120s, from a fresh clone. any other
