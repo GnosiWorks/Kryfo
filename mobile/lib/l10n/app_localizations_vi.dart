@@ -8887,7 +8887,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translatePackNoLib =>
-      'Phiên bản Kryfo này chưa dịch được. Bạn có thể tải gói ngay bây giờ, một phiên bản sau sẽ dùng nó.';
+      'Tính năng dịch không chạy được trên điện thoại này.';
 
   @override
   String translateDownload(Object size) {
@@ -8931,7 +8931,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translateFailNoEngine =>
-      'Phiên bản Kryfo này chưa tải được gói ngôn ngữ.';
+      'Không thể tải gói ngôn ngữ trên điện thoại này.';
 
   @override
   String translatePaused(Object size) {

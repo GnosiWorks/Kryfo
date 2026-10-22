@@ -8498,7 +8498,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get translatePackNoLib => '这个版本的 Kryfo 还不能翻译。你现在就可以下载语言包，之后的版本会用到它。';
+  String get translatePackNoLib => '翻译在这部手机上无法使用。';
 
   @override
   String translateDownload(Object size) {
@@ -8537,7 +8537,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateFailBadFile => '有一个文件与 Kryfo 预期的不符，已被丢弃。请重试。';
 
   @override
-  String get translateFailNoEngine => '这个版本的 Kryfo 还不能下载语言包。';
+  String get translateFailNoEngine => '这部手机无法下载语言包。';
 
   @override
   String translatePaused(Object size) {
@@ -17011,7 +17011,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get translatePackNoLib => '這個版本的 Kryfo 還不能翻譯。你現在就可以下載語言包，之後的版本會用到它。';
+  String get translatePackNoLib => '翻譯在這支手機上無法使用。';
 
   @override
   String translateDownload(Object size) {
@@ -17050,7 +17050,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translateFailBadFile => '有一個檔案與 Kryfo 預期的不符，已被丟棄。請再試一次。';
 
   @override
-  String get translateFailNoEngine => '這個版本的 Kryfo 還不能下載語言包。';
+  String get translateFailNoEngine => '這支手機無法下載語言包。';
 
   @override
   String translatePaused(Object size) {

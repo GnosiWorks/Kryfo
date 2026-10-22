@@ -11204,9 +11204,9 @@
       }
     }
   },
-  "translatePackNoLib": "This version of Kryfo can't translate yet. You can download the pack now, and a later version will use it.",
+  "translatePackNoLib": "Translation doesn't work on this phone.",
   "@translatePackNoLib": {
-    "description": "in that sheet when this build has no translation library yet"
+    "description": "in that sheet when the translation library does not load on this phone"
   },
   "translateDownload": "Download · about {size}",
   "@translateDownload": {
@@ -11266,9 +11266,9 @@
   "@translateFailBadFile": {
     "description": "a downloaded file did not match the hash built into the app"
   },
-  "translateFailNoEngine": "This version of Kryfo can't download language packs yet.",
+  "translateFailNoEngine": "Language packs can't be downloaded on this phone.",
   "@translateFailNoEngine": {
-    "description": "this build's engine has no model downloads"
+    "description": "the engine on this phone cannot download language packs"
   },
   "translatePaused": "Paused · {size} so far",
   "@translatePaused": {

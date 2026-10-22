@@ -3715,10 +3715,7 @@ void main() {
       l.translatePackLine("<language>", "<size>"),
       "Messages are translated on this phone and never leave it. That needs the <language> language pack, about <size>, downloaded once over Tor.",
     );
-    expect(
-      l.translatePackNoLib,
-      "This version of Kryfo can't translate yet. You can download the pack now, and a later version will use it.",
-    );
+    expect(l.translatePackNoLib, "Translation doesn't work on this phone.");
     expect(l.translateDownload("<size>"), "Download · about <size>");
     expect(l.translateDownloadAnyway, "Download now anyway");
     expect(l.translateResume, "Resume download");
@@ -3743,7 +3740,7 @@ void main() {
     );
     expect(
       l.translateFailNoEngine,
-      "This version of Kryfo can't download language packs yet.",
+      "Language packs can't be downloaded on this phone.",
     );
     expect(l.translatePaused("<size>"), "Paused · <size> so far");
     expect(l.translateSettingsTitle, "Translation");

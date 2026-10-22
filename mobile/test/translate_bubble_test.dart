@@ -230,13 +230,17 @@ void main() {
     );
   });
 
-  testWidgets('no library: the sheet says so, and offers the pack', (t) async {
+  testWidgets('no library: the sheet says so, and offers no pack', (t) async {
     final f = fakeHub(lib: false);
     await open(t, f, (c) => bubble(c, _zh));
     await t.tap(rich(l10n.translateAction));
     await t.pumpAndSettle();
     expect(find.text(l10n.translatePackNoLib), findsOneWidget);
-    expect(find.text(l10n.translateDownload(packSize(zhGz))), findsOneWidget);
+    expect(find.text(l10n.translateDownload(packSize(zhGz))), findsNothing);
+    expect(f.backend.started, isEmpty);
+    await t.tap(find.text(l10n.commonDone));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.translatePackNoLib), findsNothing);
   });
 
   testWidgets('a chat set to translate does it without a tap', (t) async {

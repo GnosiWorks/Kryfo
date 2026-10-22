@@ -8969,8 +8969,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get translatePackNoLib =>
-      'Esta versão do Kryfo ainda não traduz. Você pode baixar o pacote agora, e uma versão futura vai usá-lo.';
+  String get translatePackNoLib => 'A tradução não funciona neste celular.';
 
   @override
   String translateDownload(Object size) {
@@ -9014,7 +9013,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get translateFailNoEngine =>
-      'Esta versão do Kryfo ainda não baixa pacotes de idioma.';
+      'Não é possível baixar pacotes de idioma neste celular.';
 
   @override
   String translatePaused(Object size) {

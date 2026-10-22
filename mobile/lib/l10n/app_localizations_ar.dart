@@ -9031,8 +9031,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get translatePackNoLib =>
-      'لا يستطيع هذا الإصدار من Kryfo الترجمة بعد. يمكنك تنزيل الحزمة الآن وسيستخدمها إصدار لاحق.';
+  String get translatePackNoLib => 'الترجمة لا تعمل على هذا الهاتف.';
 
   @override
   String translateDownload(Object size) {
@@ -9075,8 +9074,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يطابق أحد الملفات ما يتوقعه Kryfo فتم التخلص منه. حاول مجددًا.';
 
   @override
-  String get translateFailNoEngine =>
-      'لا يستطيع هذا الإصدار من Kryfo تنزيل حزم اللغة بعد.';
+  String get translateFailNoEngine => 'لا يمكن تنزيل حزم اللغة على هذا الهاتف.';
 
   @override
   String translatePaused(Object size) {

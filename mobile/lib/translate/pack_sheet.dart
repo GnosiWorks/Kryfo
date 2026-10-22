@@ -163,7 +163,8 @@ class PackControls extends StatelessWidget {
   }
 }
 
-// the sheet a "translate" tap opens when a pack or the library is missing
+// the sheet a "translate" tap opens when a pack or the library is missing.
+// without the library a pack would be no use, so none is offered
 Future<void> showPackSheet(
   BuildContext context, {
   required TranslationHub hub,
@@ -171,6 +172,7 @@ Future<void> showPackSheet(
   required List<LangBundle> missing,
   required TranslateBlock why,
 }) {
+  final noLib = why == TranslateBlock.noLib;
   return showHaloSheet<void>(
     context,
     builder: (ctx) => SafeArea(
@@ -187,7 +189,7 @@ Future<void> showPackSheet(
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
-            for (final b in missing) ...[
+            for (final b in noLib ? const <LangBundle>[] : missing) ...[
               Text(
                 l10n.translatePackLine(langName(b.lang), packSize(b.gz)),
                 style: HaloType.sans(
@@ -204,14 +206,18 @@ Future<void> showPackSheet(
               ),
               const SizedBox(height: 12),
             ],
-            if (why == TranslateBlock.noLib) ...[
+            if (noLib) ...[
               Text(
                 l10n.translatePackNoLib,
-                style: HaloType.mono(size: 11, color: HaloColors.text3),
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
               ),
               const SizedBox(height: 4),
             ],
-            if (missing.isEmpty) ...[
+            if (noLib || missing.isEmpty) ...[
               const SizedBox(height: 12),
               HaloPrimaryButton(
                 label: l10n.commonDone,

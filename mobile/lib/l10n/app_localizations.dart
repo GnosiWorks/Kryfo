@@ -14367,10 +14367,10 @@ abstract class AppLocalizations {
   /// **'Messages are translated on this phone and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.'**
   String translatePackLine(Object language, Object size);
 
-  /// in that sheet when this build has no translation library yet
+  /// in that sheet when the translation library does not load on this phone
   ///
   /// In en, this message translates to:
-  /// **'This version of Kryfo can\'t translate yet. You can download the pack now, and a later version will use it.'**
+  /// **'Translation doesn\'t work on this phone.'**
   String get translatePackNoLib;
 
   /// the button that starts a language pack download, with its size
@@ -14433,10 +14433,10 @@ abstract class AppLocalizations {
   /// **'A file didn\'t match what Kryfo expects, so it was thrown away. Try again.'**
   String get translateFailBadFile;
 
-  /// this build's engine has no model downloads
+  /// the engine on this phone cannot download language packs
   ///
   /// In en, this message translates to:
-  /// **'This version of Kryfo can\'t download language packs yet.'**
+  /// **'Language packs can\'t be downloaded on this phone.'**
   String get translateFailNoEngine;
 
   /// a download stopped part way, with what it has so far
