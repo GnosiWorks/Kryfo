@@ -19,7 +19,7 @@ import 'album.dart' show AlbumTag;
 import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
 import 'image_strip.dart' show cleanSavedPhoto;
-import 'main.dart' show appState, engine, signalEncrypt;
+import 'main.dart' show appState, engine, signalEncrypt, AppStateOutbox;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';

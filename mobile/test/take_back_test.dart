@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         kFrameReaction,
         kFrameUnsend,
         queueGap,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

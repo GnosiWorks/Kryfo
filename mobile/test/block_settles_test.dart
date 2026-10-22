@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         kFrameReceipt,
         kFrameUnsend,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox;
 import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';

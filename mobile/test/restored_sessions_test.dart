@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         utcDayOf,
         signalDecrypt,
         signalEncrypt,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

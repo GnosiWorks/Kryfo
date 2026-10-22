@@ -159,6 +159,7 @@ part 'app/shell.dart';
 part 'app/signal.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
+part 'app/state_outbox.dart';
 
 void main() async {
   dlog('launch main');

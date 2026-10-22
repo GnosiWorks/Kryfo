@@ -27,7 +27,8 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         signalEncrypt,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart' show Shelved;

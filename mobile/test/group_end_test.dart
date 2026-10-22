@@ -21,7 +21,8 @@ import 'package:kryfo/main.dart'
         groupEndColumns,
         searchTables,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';
