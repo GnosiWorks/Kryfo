@@ -149,6 +149,7 @@ part 'app/boot.dart';
 part 'app/database.dart';
 part 'app/database_blocks.dart';
 part 'app/database_contacts.dart';
+part 'app/database_messages.dart';
 part 'app/dev_screen.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
