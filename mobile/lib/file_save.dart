@@ -48,12 +48,21 @@ Future<void> saveReceivedFile(
   try {
     final facts = await readFileFacts(path, name);
     final shown = safeFileName(name, facts: facts);
-    final out = await cleanedForSave(path, name, await getTemporaryDirectory());
-    copy = out.copy;
-    final from = out.path;
-    if (from != null) {
+    String? from = path;
+    // an app installer is never media, whatever it is called
+    if (!facts.installer && await sendLaneCleans(path, name ?? '')) {
+      final out = await cleanedForSave(
+        path,
+        name,
+        await getTemporaryDirectory(),
+      );
+      copy = out.copy;
+      from = out.path;
+    }
+    final out = from;
+    if (out != null) {
       await lockState.hold(() async {
-        answer = await saveDocumentOut(from, shown);
+        answer = await saveDocumentOut(out, shown);
         return answer;
       });
     }
