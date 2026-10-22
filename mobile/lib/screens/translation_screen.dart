@@ -276,6 +276,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     controller: ctrl,
                     keyboardType: TextInputType.url,
                     autocorrect: false,
+                    enableIMEPersonalizedLearning: false,
                     onChanged: (_) => set(() {}),
                     style: HaloType.mono(size: 13, color: HaloColors.text),
                     decoration: InputDecoration(
