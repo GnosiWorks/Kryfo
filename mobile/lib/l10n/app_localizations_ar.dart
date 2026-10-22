@@ -8999,4 +8999,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'لا شيء حتى تشغيل Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
 }

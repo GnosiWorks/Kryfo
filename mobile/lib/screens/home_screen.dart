@@ -1277,6 +1277,14 @@ class _AutoStrip extends StatelessWidget {
           title: line.head,
           line: line.detail ?? '',
           actions: [
+            // nothing got through: relay mode first, the other way after it
+            if (line.offerRelay)
+              CardAction(
+                label: l10n.homeUseOurRelay,
+                onTap: () => switchToRelay(context),
+                fill: kCyan,
+                ink: HaloColors.amberInk,
+              ),
             if (a != null)
               CardAction(
                 label: bridgeActionLabel(a),
@@ -1288,8 +1296,10 @@ class _AutoStrip extends StatelessWidget {
                   }
                   await showTorBlockedSheet(context);
                 },
-                fill: HaloColors.amber,
-                ink: HaloColors.onAmber,
+                fill: line.offerRelay ? null : HaloColors.amber,
+                ink: line.offerRelay
+                    ? HaloColors.amberText
+                    : HaloColors.onAmber,
               ),
             CardAction(
               label: l10n.bridgesDetails,

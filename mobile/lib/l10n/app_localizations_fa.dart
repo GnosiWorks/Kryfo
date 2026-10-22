@@ -8883,4 +8883,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.';
 }

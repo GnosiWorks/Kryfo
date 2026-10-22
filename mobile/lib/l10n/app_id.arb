@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "Hapus grup ini?",
   "groupInfoDeleteGroupLine": "Grup yang sudah berakhir hilang dari daftar obrolanmu.",
   "groupEndedOldNotice": "Aku mengakhiri grup ini, jadi tidak ada yang bisa mengirim pesan di sini lagi. Perbarui Kryfo untuk melihatnya sudah berakhir.",
-  "groupInfoEndGroupDetail": "Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya."
+  "groupInfoEndGroupDetail": "Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.",
+  "bridgesNoneUntilOnion": "Tidak ada sampai Onion aktif",
+  "bridgesRelayWorksWhereTor": "Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja."
 }

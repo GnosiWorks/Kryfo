@@ -8863,4 +8863,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Tidak ada sampai Onion aktif';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.';
 }

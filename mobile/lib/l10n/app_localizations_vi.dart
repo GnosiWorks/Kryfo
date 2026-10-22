@@ -8854,4 +8854,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.';
 }

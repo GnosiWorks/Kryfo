@@ -367,6 +367,8 @@ class BridgeLine {
   // how long this way has been tried, in ms, when tor gives no percent:
   // the view counts on from it, so nothing else rebuilds each second
   final int? clockMs;
+  // relay mode, one tap away, ahead of [action]
+  final bool offerRelay;
 
   const BridgeLine({
     required this.head,
@@ -377,6 +379,7 @@ class BridgeLine {
     this.progress,
     this.action,
     this.clockMs,
+    this.offerRelay = false,
   });
 }
 
@@ -454,16 +457,16 @@ BridgeLine bridgeStatusLine(
         action: BridgeAction.openWifi,
       );
     case 'exhausted':
-      // the words go with the button under them
+      // relay mode goes first: it gets through where no bridge did. asking
+      // the tor project or trying again stays the second way
       final ask = consent != 'yes';
       return BridgeLine(
         head: l10n.bridgesNothingGotThrough,
-        detail: ask
-            ? l10n.bridgesTheTorProjectCanSuggest
-            : l10n.bridgesKryfoTriesAgainOnItsOwn,
+        detail: l10n.bridgesRelayWorksWhereTor,
         detailKind: ask ? 'exhausted-ask' : 'exhausted',
         tone: BridgeTone.rose,
         action: ask ? BridgeAction.getBridge : BridgeAction.tryAgain,
+        offerRelay: true,
       );
   }
   // a picked bridge tor cannot use, its listeners down or its lines
@@ -568,6 +571,8 @@ String bridgeChoiceName(BridgeChoice c) => switch (c) {
 /// the method in use, in the words "more" uses. transport names are kept
 /// left to right in a right-to-left language
 String bridgeMethodWords(BridgeStatus s, {BridgeChoice? choice}) {
+  // relay and fast use no bridge, whatever tor keeps for later
+  if (s.phase == 'not_tor_mode') return l10n.bridgesNoneUntilOnion;
   if (s.method.isEmpty) return l10n.bridgesNothingYet;
   if (s.method == 'direct') return l10n.bridgesTorNoBridge;
   // built-in bridges go to the engine as a picked set: named by the pick

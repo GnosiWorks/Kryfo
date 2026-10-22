@@ -9033,4 +9033,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo стирает её с телефона каждого участника, у которого есть обновление.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Ничего, пока не включён Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент.';
 }

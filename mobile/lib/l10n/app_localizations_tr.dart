@@ -8894,4 +8894,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.';
 }

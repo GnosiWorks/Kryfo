@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "Excluir este grupo?",
   "groupInfoDeleteGroupLine": "O grupo encerrado sai da sua lista de conversas.",
   "groupEndedOldNotice": "Encerrei este grupo, então ninguém pode mais enviar mensagens nele. Atualize o Kryfo para vê-lo como encerrado.",
-  "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização."
+  "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização.",
+  "bridgesNoneUntilOnion": "Nada até ativar o Onion",
+  "bridgesRelayWorksWhereTor": "O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser."
 }

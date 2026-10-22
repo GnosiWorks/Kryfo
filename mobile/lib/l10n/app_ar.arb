@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "حذف هذه المجموعة؟",
   "groupInfoDeleteGroupLine": "تختفي المجموعة المنتهية من قائمة محادثاتك.",
   "groupEndedOldNotice": "أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.",
-  "groupInfoEndGroupDetail": "يزيلها Kryfo من هاتف كل عضو لديه التحديث."
+  "groupInfoEndGroupDetail": "يزيلها Kryfo من هاتف كل عضو لديه التحديث.",
+  "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
+  "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت."
 }

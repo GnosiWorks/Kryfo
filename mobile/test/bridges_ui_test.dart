@@ -76,6 +76,17 @@ class _Engine implements HaloEngine {
     return '{"ok":true,"settings":[],"country":"ir","guessed":true}';
   }
 
+  // the route as the relay button moves it
+  final modes = <String>[];
+  @override
+  String setTransportMode(String mode) {
+    modes.add(mode);
+    return mode;
+  }
+
+  @override
+  String nostrInit(String relaysCSV) => 'ok';
+
   @override
   String autoMemory() => memories.isEmpty ? '{}' : memories.last;
   @override
@@ -351,15 +362,50 @@ void main() {
       expect(l.detail, isNull);
     });
 
-    test('nothing got through: one way out', () {
+    test('nothing got through: relay mode first, one calm line', () {
       const s = BridgeStatus(mode: 'auto', phase: 'exhausted');
       expect(line(s).head, l10n.bridgesNothingGotThrough);
       expect(line(s).tone, BridgeTone.rose);
-      // the words go with the button
+      expect(line(s).offerRelay, isTrue);
+      expect(line(s).detail, l10n.bridgesRelayWorksWhereTor);
+      // the other way stays, after relay
       expect(line(s).action, BridgeAction.getBridge);
-      expect(line(s).detail, l10n.bridgesTheTorProjectCanSuggest);
       expect(line(s, c: 'yes').action, BridgeAction.tryAgain);
-      expect(line(s, c: 'yes').detail, l10n.bridgesKryfoTriesAgainOnItsOwn);
+      expect(line(s, c: 'yes').offerRelay, isTrue);
+      expect(line(s, c: 'yes').detail, l10n.bridgesRelayWorksWhereTor);
+      // a decoy is offered nothing
+      expect(line(s, decoy: true).offerRelay, isFalse);
+      // still trying: no relay yet
+      expect(line(_another).offerRelay, isFalse);
+    });
+
+    test('relay or fast mode: no bridge is in use', () {
+      const s = BridgeStatus(
+        mode: 'auto',
+        phase: 'not_tor_mode',
+        method: 'snowflake',
+        source: 'builtin',
+      );
+      expect(bridgeMethodWords(s), l10n.bridgesNoneUntilOnion);
+      expect(
+        bridgeMethodWords(
+          const BridgeStatus(mode: 'snowflake', phase: 'not_tor_mode'),
+          choice: BridgeChoice.snowflake,
+        ),
+        l10n.bridgesNoneUntilOnion,
+      );
+      // on onion the way in use is named
+      expect(
+        bridgeMethodWords(
+          const BridgeStatus(
+            mode: 'auto',
+            phase: 'connected',
+            method: 'snowflake',
+            source: 'builtin',
+          ),
+        ),
+        isNot(l10n.bridgesNoneUntilOnion),
+      );
     });
 
     test('a wi-fi that wants a sign-in says so, in amber', () {
@@ -517,6 +563,45 @@ void main() {
       await t.tap(find.text(l10n.bridgesGetABridge));
       await _in(t);
       expect(find.text(l10n.bridgesWhenYouAskFor), findsOneWidget);
+      await _done(t);
+    });
+
+    testWidgets('nothing got through: relay mode in one tap', (t) async {
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
+      // relay first, the tor project's way under it
+      final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+      final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+      expect(relay.top, lessThan(ask.top));
+      await t.tap(find.text(l10n.homeUseOurRelay));
+      // the switch waits on the store, off the fake clock
+      for (
+        var i = 0;
+        i < 50 && find.text(l10n.homeSwitchedToRelay).evaluate().isEmpty;
+        i++
+      ) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      await t.pump();
+      expect(_eng.modes, ['balanced']);
+      expect(appState.sendMode, 'balanced');
+      expect(find.text(l10n.homeSwitchedToRelay), findsOneWidget);
+      await _done(t);
+    });
+
+    testWidgets('a decoy is never offered relay mode', (t) async {
+      lockState.inDecoy = true;
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      expect(find.text(l10n.homeUseOurRelay), findsNothing);
       await _done(t);
     });
   });
@@ -1261,6 +1346,27 @@ void main() {
         expect(find.text(l10n.bridgesNotNeededRightNow), findsOneWidget);
         expect(find.text(l10n.bridgesConnected), findsNothing);
         expect(find.text(l10n.bridgesConnecting), findsNothing);
+        await _done(t);
+      }
+    });
+
+    // what tor keeps for onion is not in use in relay or fast mode
+    testWidgets('relay or fast mode: more says no bridge is in use', (t) async {
+      for (final mode in ['balanced', 'fast']) {
+        appState.sendModeForTest = mode;
+        await _open(
+          t,
+          status: const BridgeStatus(
+            mode: 'auto',
+            phase: 'not_tor_mode',
+            method: 'snowflake',
+            source: 'builtin',
+          ),
+        );
+        await t.tap(find.text(l10n.bridgesMore));
+        await _in(t);
+        expect(find.text(l10n.bridgesNoneUntilOnion), findsOneWidget);
+        expect(find.textContaining('snowflake'), findsNothing);
         await _done(t);
       }
     });

@@ -3154,6 +3154,8 @@ final _calls = <_Call>[
   ('fileRawPictureTitle', [], (l) => l.fileRawPictureTitle),
   ('fileRawPictureLine', [], (l) => l.fileRawPictureLine),
   ('voiceStoppedAtLimit', [], (l) => l.voiceStoppedAtLimit),
+  ('bridgesNoneUntilOnion', [], (l) => l.bridgesNoneUntilOnion),
+  ('bridgesRelayWorksWhereTor', [], (l) => l.bridgesRelayWorksWhereTor),
 ];
 
 void main() {

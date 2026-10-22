@@ -8937,4 +8937,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'O Kryfo remove o grupo do celular de cada membro que tem a atualização.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Nada até ativar o Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser.';
 }

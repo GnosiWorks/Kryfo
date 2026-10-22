@@ -8466,6 +8466,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 会从每位已更新的成员手机上移除它。';
+
+  @override
+  String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
+
+  @override
+  String get bridgesRelayWorksWhereTor => '中继模式在 Tor 被封锁的地方也能用，随时可以切换回来。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -16812,4 +16818,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 會從每位已更新的成員手機上移除它。';
+
+  @override
+  String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
+
+  @override
+  String get bridgesRelayWorksWhereTor => '中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。';
 }

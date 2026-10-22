@@ -8967,4 +8967,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo entfernt sie vom Handy jedes Mitglieds, das das Update hat.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Nichts, bis Onion an ist';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln.';
 }

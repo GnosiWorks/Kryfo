@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "Удалить эту группу?",
   "groupInfoDeleteGroupLine": "Завершённая группа исчезнет из списка чатов.",
   "groupEndedOldNotice": "Я завершил(а) эту группу, так что писать в ней больше нельзя. Обнови Kryfo, чтобы видеть её завершённой.",
-  "groupInfoEndGroupDetail": "Kryfo стирает её с телефона каждого участника, у которого есть обновление."
+  "groupInfoEndGroupDetail": "Kryfo стирает её с телефона каждого участника, у которого есть обновление.",
+  "bridgesNoneUntilOnion": "Ничего, пока не включён Onion",
+  "bridgesRelayWorksWhereTor": "Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент."
 }

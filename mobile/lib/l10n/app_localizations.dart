@@ -14318,6 +14318,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo removes it from every member\'s phone that has the update.'**
   String get groupInfoEndGroupDetail;
+
+  /// screens/bridges_screen.dart: the "In use" value while relay or fast mode is on, where no bridge is used
+  ///
+  /// In en, this message translates to:
+  /// **'None until onion is on'**
+  String get bridgesNoneUntilOnion;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode works where Tor is blocked, and you can switch back any time.'**
+  String get bridgesRelayWorksWhereTor;
 }
 
 class _AppLocalizationsDelegate

@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "¿Eliminar este grupo?",
   "groupInfoDeleteGroupLine": "El grupo terminado desaparece de tu lista de chats.",
   "groupEndedOldNotice": "Terminé este grupo, así que ya nadie puede enviar nada en él. Actualiza Kryfo para verlo como terminado.",
-  "groupInfoEndGroupDetail": "Kryfo lo quita del teléfono de cada miembro que tenga la actualización."
+  "groupInfoEndGroupDetail": "Kryfo lo quita del teléfono de cada miembro que tenga la actualización.",
+  "bridgesNoneUntilOnion": "Nada hasta activar Onion",
+  "bridgesRelayWorksWhereTor": "El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras."
 }

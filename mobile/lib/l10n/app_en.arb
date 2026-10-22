@@ -11153,5 +11153,13 @@
   "groupInfoEndGroupDetail": "Kryfo removes it from every member's phone that has the update.",
   "@groupInfoEndGroupDetail": {
     "description": "screens/group_info_screen.dart: a smaller line under that, saying where the removal reaches"
+  },
+  "bridgesNoneUntilOnion": "None until onion is on",
+  "@bridgesNoneUntilOnion": {
+    "description": "screens/bridges_screen.dart: the \"In use\" value while relay or fast mode is on, where no bridge is used"
+  },
+  "bridgesRelayWorksWhereTor": "Relay mode works where Tor is blocked, and you can switch back any time.",
+  "@bridgesRelayWorksWhereTor": {
+    "description": "bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode"
   }
 }

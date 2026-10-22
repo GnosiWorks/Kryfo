@@ -3701,5 +3701,10 @@ void main() {
     expect(l.gettingMessagesHelperUseOnion, "Switch to Onion");
     expect(l.gettingMessagesHelperSetUp, "Set up");
     expect(l.gettingMessagesHelperChecking, "Checking…");
+    expect(l.bridgesNoneUntilOnion, "None until onion is on");
+    expect(
+      l.bridgesRelayWorksWhereTor,
+      "Relay mode works where Tor is blocked, and you can switch back any time.",
+    );
   });
 }

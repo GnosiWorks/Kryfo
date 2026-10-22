@@ -94,6 +94,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
               BridgeStatusView(
                 line: line,
                 onAction: decoy ? null : (a) => _act(a),
+                onRelay: decoy ? null : () => switchToRelay(context),
               ),
               const SizedBox(height: 18),
               if (!decoy)
@@ -213,6 +214,18 @@ class _BridgesScreenState extends State<BridgesScreen> {
   }
 }
 
+/// relay mode in one tap, where tor found no way in
+Future<void> switchToRelay(BuildContext context) async {
+  HapticFeedback.mediumImpact();
+  try {
+    await appState.setSendMode('balanced');
+  } catch (_) {
+    if (context.mounted) showHaloToast(context, l10n.modesNotChanged);
+    return;
+  }
+  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToRelay);
+}
+
 /// android's wi-fi page, where a network's sign-in page is offered. no
 /// browser to a probe address of our own
 Future<bool> openWifiSettings() async {
@@ -243,9 +256,16 @@ String bridgeActionLabel(BridgeAction a) => switch (a) {
 /// and the one thing to do when stuck. a new state rises in; a percent or
 /// a count changes in place
 class BridgeStatusView extends StatefulWidget {
-  const BridgeStatusView({super.key, required this.line, this.onAction});
+  const BridgeStatusView({
+    super.key,
+    required this.line,
+    this.onAction,
+    this.onRelay,
+  });
   final BridgeLine line;
   final void Function(BridgeAction a)? onAction;
+  // relay mode, where the line offers it
+  final VoidCallback? onRelay;
 
   @override
   State<BridgeStatusView> createState() => _BridgeStatusViewState();
@@ -295,6 +315,7 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final tint = bridgeToneColor(line.tone);
     final still = motionStill(context);
     final action = widget.onAction == null ? null : line.action;
+    final relay = line.offerRelay ? widget.onRelay : null;
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
     final detail = [?line.detail, ?clock].join(bridgeSep);
@@ -396,13 +417,32 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
                 : const SizedBox(width: double.infinity),
           ),
           EaseSize(
-            child: action == null
+            child: action == null && relay == null
                 ? const SizedBox(width: double.infinity)
                 : Padding(
                     padding: const EdgeInsets.only(top: 14),
-                    child: HaloPrimaryButton(
-                      label: bridgeActionLabel(action),
-                      onTap: () => widget.onAction!(action),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (relay != null)
+                          HaloPrimaryButton(
+                            label: l10n.homeUseOurRelay,
+                            onTap: relay,
+                          ),
+                        if (relay != null && action != null)
+                          const SizedBox(height: 8),
+                        if (action != null)
+                          relay == null
+                              ? HaloPrimaryButton(
+                                  label: bridgeActionLabel(action),
+                                  onTap: () => widget.onAction!(action),
+                                )
+                              : HaloGhostButton(
+                                  label: bridgeActionLabel(action),
+                                  onTap: () => widget.onAction!(action),
+                                  quiet: true,
+                                ),
+                      ],
                     ),
                   ),
           ),

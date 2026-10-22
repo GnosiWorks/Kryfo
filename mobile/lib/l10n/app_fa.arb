@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "این گروه حذف شود؟",
   "groupInfoDeleteGroupLine": "گروهِ پایان‌یافته از فهرست گفت‌وگوهای شما حذف می‌شود.",
   "groupEndedOldNotice": "این گروه را پایان دادم، پس دیگر هیچ‌کس نمی‌تواند در آن پیام بفرستد. Kryfo را به‌روز کنید تا آن را پایان‌یافته ببینید.",
-  "groupInfoEndGroupDetail": "Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند."
+  "groupInfoEndGroupDetail": "Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند.",
+  "bridgesNoneUntilOnion": "هیچ، تا Onion روشن شود",
+  "bridgesRelayWorksWhereTor": "حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی."
 }

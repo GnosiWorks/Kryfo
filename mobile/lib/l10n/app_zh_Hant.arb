@@ -2339,5 +2339,7 @@
   "groupInfoDeleteThisGroup": "要刪除這個群組嗎？",
   "groupInfoDeleteGroupLine": "這個已結束的群組會從你的聊天列表中移除。",
   "groupEndedOldNotice": "我結束了這個群組，之後誰都不能再在裡面傳訊息。更新 Kryfo 就能看到它已結束。",
-  "groupInfoEndGroupDetail": "Kryfo 會從每位已更新的成員手機上移除它。"
+  "groupInfoEndGroupDetail": "Kryfo 會從每位已更新的成員手機上移除它。",
+  "bridgesNoneUntilOnion": "開啟 Onion 前不使用",
+  "bridgesRelayWorksWhereTor": "中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。"
 }
