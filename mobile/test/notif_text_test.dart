@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show AppState, useDatabasesForTest, AppStateMessages;
+    show AppState, useDatabasesForTest, AppStateMessages, AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

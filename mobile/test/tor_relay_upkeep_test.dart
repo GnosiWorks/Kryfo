@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateDelivery,
         AppStateBridges,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateReceive;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';

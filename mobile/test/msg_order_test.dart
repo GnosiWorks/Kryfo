@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, useDatabasesForTest, AppStateRoute;
+    show AppState, HaloDb, useDatabasesForTest, AppStateRoute, AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

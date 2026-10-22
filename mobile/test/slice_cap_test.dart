@@ -9,7 +9,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, useDatabasesForTest, AppStateMessages;
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateMessages,
+        AppStateReceive;
 import 'package:kryfo/media_resend.dart'
     show
         kMaxSlices,

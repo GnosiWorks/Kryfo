@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateRoute,
         AppStateProfile,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

@@ -30,7 +30,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateProfile,
-        AppStateSession;
+        AppStateSession,
+        AppStateReceive;
 import 'package:kryfo/media_send.dart' show sendChunkedMediaTo;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         HaloDb,
         useDatabasesForTest,
         AppStateMessages,
-        AppStateVault;
+        AppStateVault,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

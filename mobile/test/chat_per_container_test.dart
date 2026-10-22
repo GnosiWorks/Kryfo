@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show AppState, claimChat, releaseChat, useDatabasesForTest;
+    show AppState, claimChat, releaseChat, useDatabasesForTest, AppStateReceive;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

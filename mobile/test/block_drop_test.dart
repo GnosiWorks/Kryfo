@@ -14,7 +14,8 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateContacts;
+        AppStateContacts,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/router.dart';

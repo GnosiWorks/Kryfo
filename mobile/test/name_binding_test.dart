@@ -42,7 +42,8 @@ import 'package:kryfo/main.dart'
         AppStateVault,
         AppStateContacts,
         AppStateSession,
-        AppStateDevchat;
+        AppStateDevchat,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/scam_shield.dart' show ShieldFlag;

@@ -23,7 +23,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateDelivery;
+        AppStateDelivery,
+        AppStateReceive;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
