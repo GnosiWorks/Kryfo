@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- google play build only, laid over main by build.gradle.kts -->
+    <!-- the play flavor only, laid over main -->
     <application>
         <service android:name=".HaloListenerService">
             <property

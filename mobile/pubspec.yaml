@@ -58,6 +58,9 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 
 flutter:
+  # a build that names no flavor is the foss one, what f-droid and github ship
+  default-flavor: foss
+
   # lib/l10n/*.arb -> lib/l10n/app_localizations*.dart (see l10n.yaml)
   generate: true
 
