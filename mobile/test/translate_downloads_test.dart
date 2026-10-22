@@ -21,17 +21,20 @@ void main() {
   var wifi = true;
   var wifiOnly = false;
   var host = '';
+  var quiet = false;
 
   setUp(() {
     be = FakeBackend();
     wifi = true;
     wifiOnly = false;
     host = '';
+    quiet = false;
     dl = ModelDownloads(
       backend: be,
       onWifi: () async => wifi,
       wifiOnly: () => wifiOnly,
       host: () => host,
+      quiet: () => quiet,
       poll: const Duration(milliseconds: 5),
     );
   });
@@ -49,6 +52,25 @@ void main() {
     await dl.refresh('zh');
     expect(dl.of('zh').phase, DlPhase.installed);
     expect(dl.of('zh').onDisk, greaterThan(0));
+    expect(dl.installed('zh'), isTrue);
+  });
+
+  test('the decoy sees none of the phone\'s packs and fetches none', () async {
+    be.finish('zh');
+    await dl.refresh('zh');
+    expect(dl.installed('zh'), isTrue);
+    quiet = true;
+    await dl.refresh('zh');
+    expect(dl.of('zh').phase, DlPhase.absent);
+    final going = dl.start('zh');
+    expect(dl.of('zh').phase, DlPhase.starting);
+    await going;
+    expect(dl.of('zh').phase, DlPhase.failed);
+    expect(dl.of('zh').fail, DlFail.network);
+    expect(be.started, isEmpty);
+    expect(await dl.remove('zh'), isTrue);
+    expect(be.have, contains('zh'));
+    quiet = false;
     expect(dl.installed('zh'), isTrue);
   });
 

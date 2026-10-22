@@ -162,21 +162,31 @@ class ModelDownloads extends ChangeNotifier {
   final Future<bool> Function() onWifi;
   final bool Function() wifiOnly;
   final String Function() host;
+  // a quiet session (the decoy): the phone's packs do not show in it, and a
+  // download there fetches nothing and stops as a cut one would
+  final bool Function() quiet;
   final Duration poll;
   ModelDownloads({
     required this.backend,
     required this.onWifi,
     required this.wifiOnly,
     required this.host,
+    this.quiet = _loud,
     this.poll = const Duration(milliseconds: 500),
   });
 
+  static bool _loud() => false;
+
   final Map<String, DlState> _st = {};
+  final Map<String, DlState> _quiet = {};
   final Map<String, Timer> _timers = {};
   bool _gone = false;
 
-  DlState of(String lang) => _st[lang] ?? const DlState(DlPhase.unknown);
+  DlState of(String lang) =>
+      (quiet() ? _quiet[lang] : _st[lang]) ?? const DlState(DlPhase.unknown);
   bool installed(String lang) => of(lang).phase == DlPhase.installed;
+
+  DlState _real(String lang) => _st[lang] ?? const DlState(DlPhase.unknown);
 
   void _set(String lang, DlState s) {
     if (_gone || _st[lang] == s) return;
@@ -184,13 +194,23 @@ class ModelDownloads extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setQuiet(String lang, DlState s) {
+    if (_gone || _quiet[lang] == s) return;
+    _quiet[lang] = s;
+    notifyListeners();
+  }
+
   // looks at what is on the phone, unless a download is going
   Future<DlState> refresh(String lang) async {
-    if (of(lang).busy) return of(lang);
+    if (quiet()) {
+      if (_quiet[lang] == null) _setQuiet(lang, const DlState(DlPhase.absent));
+      return of(lang);
+    }
+    if (_real(lang).busy) return _real(lang);
     final ok = await backend.installed(lang);
     final disk = await backend.onDisk(lang);
-    if (of(lang).busy) return of(lang);
-    final was = of(lang);
+    if (_real(lang).busy) return _real(lang);
+    final was = _real(lang);
     _set(
       lang,
       ok
@@ -206,13 +226,14 @@ class ModelDownloads extends ChangeNotifier {
             )
           : const DlState(DlPhase.absent),
     );
-    return of(lang);
+    return _real(lang);
   }
 
   // [anyNetwork]: the person said to go now, wi-fi or not
   Future<void> start(String lang, {bool anyNetwork = false}) async {
-    if (of(lang).busy || installed(lang)) return;
-    final was = of(lang);
+    if (quiet()) return _startQuiet(lang, anyNetwork);
+    if (_real(lang).busy || _real(lang).phase == DlPhase.installed) return;
+    final was = _real(lang);
     if (wifiOnly() && !anyNetwork && !await onWifi()) {
       _set(lang, was.copyWith(phase: DlPhase.wifiNeeded));
       return;
@@ -222,13 +243,26 @@ class ModelDownloads extends ChangeNotifier {
     if (out != 'ok') {
       _set(
         lang,
-        of(lang).copyWith(phase: DlPhase.failed, fail: _startFail(out)),
+        _real(lang).copyWith(phase: DlPhase.failed, fail: _startFail(out)),
       );
       return;
     }
     _timers[lang]?.cancel();
     _timers[lang] = Timer.periodic(poll, (_) => _tick(lang));
     _tick(lang);
+  }
+
+  Future<void> _startQuiet(String lang, bool anyNetwork) async {
+    final was = _quiet[lang] ?? const DlState(DlPhase.absent);
+    if (was.busy) return;
+    if (wifiOnly() && !anyNetwork && !await onWifi()) {
+      _setQuiet(lang, was.copyWith(phase: DlPhase.wifiNeeded));
+      return;
+    }
+    _setQuiet(lang, was.copyWith(phase: DlPhase.starting));
+    await Future<void>.delayed(poll * 4);
+    if (_quiet[lang]?.phase != DlPhase.starting) return;
+    _setQuiet(lang, was.copyWith(phase: DlPhase.failed, fail: DlFail.network));
   }
 
   static DlFail _startFail(String out) {
@@ -239,7 +273,7 @@ class ModelDownloads extends ChangeNotifier {
 
   void _tick(String lang) {
     final s = backend.progress(lang);
-    final now = of(lang);
+    final now = _real(lang);
     switch (s.state) {
       case 'running':
         _set(
@@ -277,17 +311,28 @@ class ModelDownloads extends ChangeNotifier {
 
   Future<void> _measure(String lang) async {
     final disk = await backend.onDisk(lang);
-    _set(lang, of(lang).copyWith(onDisk: disk, fail: of(lang).fail));
+    _set(lang, _real(lang).copyWith(onDisk: disk, fail: _real(lang).fail));
   }
 
   void cancel(String lang) {
-    if (!of(lang).busy) return;
+    if (quiet()) {
+      final q = _quiet[lang];
+      if (q != null && q.busy) {
+        _setQuiet(lang, q.copyWith(phase: DlPhase.absent));
+      }
+      return;
+    }
+    if (!_real(lang).busy) return;
     backend.cancel(lang);
     // the poll sees it stop; a start not answered yet is let run out
   }
 
   Future<bool> remove(String lang) async {
-    if (of(lang).busy) return false;
+    if (quiet()) {
+      _setQuiet(lang, const DlState(DlPhase.absent));
+      return true;
+    }
+    if (_real(lang).busy) return false;
     final out = await backend.remove(lang);
     if (out != 'ok') return false;
     _set(lang, const DlState(DlPhase.absent));

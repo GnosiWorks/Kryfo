@@ -6,7 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../main.dart' show session;
+import '../main.dart' show session, sessionQuiet;
 import 'bergamot_ffi.dart';
 import 'catalog.dart';
 import 'downloads.dart';
@@ -47,6 +47,7 @@ TranslationHub _live() {
     onWifi: _onWifi,
     wifiOnly: () => hub.settings.wifiOnly,
     host: () => hub.settings.host,
+    quiet: () => sessionQuiet,
   );
   String? dir;
   modelsDir().then((d) => dir = d, onError: (Object _) => null);
