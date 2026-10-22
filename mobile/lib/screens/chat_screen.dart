@@ -2182,7 +2182,7 @@ class _ChatScreenState extends State<ChatScreen>
                       if (canTranslate)
                         MenuAction(
                           icon: Icons.translate_rounded,
-                          label: translation.shown(trKey)
+                          label: translation.shown(trKey, target.text)
                               ? l10n.translateShowOriginal
                               : l10n.translateAction,
                           onTap: () => dismiss(

@@ -64,7 +64,7 @@ class TranslatedBody extends StatelessWidget {
     return ListenableBuilder(
       listenable: chat,
       builder: (context, _) {
-        final m = chat.of(msgKey);
+        final m = chat.of(msgKey, text);
         final o = m.offer ?? chat.offer(text);
         if (o == null) return original;
         if (chat.auto == true && m.phase == MsgPhase.idle) {
