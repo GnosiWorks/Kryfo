@@ -30,7 +30,8 @@ import 'package:kryfo/main.dart'
         AppStateProfile,
         AppStateContacts,
         AppStateReceive,
-        AppStatePairing;
+        AppStatePairing,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

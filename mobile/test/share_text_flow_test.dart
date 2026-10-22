@@ -24,7 +24,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/photo_knows_screen.dart';
 import 'package:kryfo/screens/share_sheet.dart';

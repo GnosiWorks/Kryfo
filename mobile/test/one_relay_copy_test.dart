@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateProfile,
         AppStateReceive,
-        AppStatePairing;
+        AppStatePairing,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

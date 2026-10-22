@@ -26,7 +26,8 @@ import 'package:kryfo/main.dart'
         sessionQuiet,
         useDatabasesForTest,
         AppStateVault,
-        AppStateSession;
+        AppStateSession,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';

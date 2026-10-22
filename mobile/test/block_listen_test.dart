@@ -17,7 +17,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateRoute,
         AppStateContacts,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';

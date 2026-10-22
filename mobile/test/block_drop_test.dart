@@ -15,7 +15,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateContacts,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/router.dart';

@@ -19,7 +19,8 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;

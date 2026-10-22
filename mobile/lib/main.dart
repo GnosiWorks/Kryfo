@@ -167,6 +167,7 @@ part 'app/state_devchat.dart';
 part 'app/state_group_lanes.dart';
 part 'app/state_groups.dart';
 part 'app/state_heal.dart';
+part 'app/state_identity.dart';
 part 'app/state_messages.dart';
 part 'app/state_outbox.dart';
 part 'app/state_pairing.dart';
