@@ -73,13 +73,13 @@ Future<String> _engineCall(String symbol, List<String> args) => Isolate.run(() {
       : DynamicLibrary.process();
   final a = [for (final s in args) s.toNativeUtf8()];
   try {
-    return engineTake(switch (a.length) {
-      0 => lib.lookupFunction<_S0, _S0>(symbol)(),
-      1 => lib.lookupFunction<_S1, _S1>(symbol)(a[0]),
-      2 => lib.lookupFunction<_S2, _S2>(symbol)(a[0], a[1]),
-      3 => lib.lookupFunction<_S3, _S3>(symbol)(a[0], a[1], a[2]),
+    return switch (a.length) {
+      0 => engineTake(lib.lookupFunction<_S0, _S0>(symbol)()),
+      1 => engineTake(lib.lookupFunction<_S1, _S1>(symbol)(a[0])),
+      2 => engineTake(lib.lookupFunction<_S2, _S2>(symbol)(a[0], a[1])),
+      3 => engineTake(lib.lookupFunction<_S3, _S3>(symbol)(a[0], a[1], a[2])),
       _ => throw ArgumentError('$symbol: ${a.length} arguments'),
-    });
+    };
   } finally {
     for (final x in a) {
       malloc.free(x);
