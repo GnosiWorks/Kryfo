@@ -27,6 +27,7 @@ import 'package:kryfo/screens/wallpaper_sheet.dart';
 import 'package:kryfo/screens/why_kryfo_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/translate/hub.dart';
 import 'package:kryfo/wallpaper.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -155,6 +156,8 @@ final _pages = [
       l10n.settingsFollowTitle,
       l10n.settingsDangerZone,
     ],
+    // translation's section shows only with a hub
+    setUp: () => TranslationHub.instance = fakeHub().hub,
   ),
   _Page(
     'appearance',
@@ -338,6 +341,7 @@ void main() {
     addTearDown(() => HaloColors.setLight(false));
     addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
+    addTearDown(() => TranslationHub.instance = null);
   }
 
   group('source', () {

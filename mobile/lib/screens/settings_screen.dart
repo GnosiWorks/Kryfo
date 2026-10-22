@@ -18,7 +18,7 @@ import 'bridges_screen.dart';
 import '../bridge_mode.dart' show BridgeChoice, bridgeChoiceName;
 import 'seen_screen.dart';
 import 'translation_screen.dart';
-import '../translate/hub_live.dart' show translationHub;
+import '../translate/hub_live.dart' show translationHubIfOn;
 import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
@@ -678,19 +678,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          HaloSection(l10n.translateSettingsTitle),
-          HaloGroup(
-            children: [
-              HaloRow(
-                icon: Icons.translate_rounded,
-                label: l10n.translateSettingsRow,
-                hint: l10n.translateSettingsHint,
-                onTap: () => Navigator.of(context).push(
-                  haloRoute(TranslationScreen(hub: translationHub())),
+          if (translationHubIfOn() case final hub?) ...[
+            HaloSection(l10n.translateSettingsTitle),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.translate_rounded,
+                  label: l10n.translateSettingsRow,
+                  hint: l10n.translateSettingsHint,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(TranslationScreen(hub: hub))),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsAbout),
           HaloGroup(
             children: [

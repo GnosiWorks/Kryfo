@@ -169,7 +169,7 @@ import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../translate/chat_translation.dart';
-import '../translate/hub_live.dart' show translationHub;
+import '../translate/hub_live.dart' show translationHubIfOn;
 import '../translate/translate_bubble.dart';
 
 // the chats open in the stack, by id: shared words land in the one on top
@@ -1087,10 +1087,10 @@ class _ChatScreenState extends State<ChatScreen>
   // this chat in the session that opened it, for what is kept between visits
   late final String _memo;
   // their messages in other languages, translated on the phone
-  late final _translation = ChatTranslation(
-    translationHub(),
-    widget.peerHaloId,
-  );
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.peerHaloId),
+    null => null,
+  };
   // its row in this session's database, for when the chat was made
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
@@ -1948,11 +1948,13 @@ class _ChatScreenState extends State<ChatScreen>
     const pickerH = 54.0;
     // theirs in a language the person does not read
     final trKey = target.msgUid ?? '${target.came}';
+    final translation = _translation;
     final canTranslate =
+        translation != null &&
         !welcome &&
         target.direction == 'in' &&
         target.sticker == null &&
-        _translation.offer(target.text) != null;
+        translation.offer(target.text) != null;
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
@@ -2174,13 +2176,13 @@ class _ChatScreenState extends State<ChatScreen>
                       if (canTranslate)
                         MenuAction(
                           icon: Icons.translate_rounded,
-                          label: _translation.shown(trKey)
+                          label: translation.shown(trKey)
                               ? l10n.translateShowOriginal
                               : l10n.translateAction,
                           onTap: () => dismiss(
                             then: () => askTranslate(
                               context,
-                              _translation,
+                              translation,
                               trKey,
                               target.text,
                             ),
@@ -5228,7 +5230,7 @@ class _ChatScreenState extends State<ChatScreen>
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
-    _translation.dispose();
+    _translation?.dispose();
     _lastReadPerPeer[_memo] = _messages.fold(
       0,
       (a, m) => m.rowid > a ? m.rowid : a,

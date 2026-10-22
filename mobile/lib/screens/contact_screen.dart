@@ -13,7 +13,7 @@ import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, sessionQuiet;
 import '../theme.dart';
 import '../translate/auto_translate_row.dart';
-import '../translate/hub_live.dart' show translationHub;
+import '../translate/hub_live.dart' show translationHubIfOn;
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
@@ -451,7 +451,10 @@ class _ContactScreenState extends State<ContactScreen> {
                     const SizedBox(height: 4),
                     Text(
                       widget.haloId,
-                      style: HaloType.mono(size: 12.5, color: HaloColors.amberText),
+                      style: HaloType.mono(
+                        size: 12.5,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 10),
@@ -572,7 +575,8 @@ class _ContactScreenState extends State<ContactScreen> {
                 toggled: pinned,
                 onTap: () => _setPinned(!pinned),
               ),
-              AutoTranslateRow(chatId: widget.haloId, hub: translationHub()),
+              if (translationHubIfOn() case final hub?)
+                AutoTranslateRow(chatId: widget.haloId, hub: hub),
               // both phones or neither, once theirs knows how
               if (accepted && !blocked)
                 HaloRow(
