@@ -7,8 +7,8 @@ mixin _ContactRows {
   // what these rows take from the rest of HaloDb
   HaloContainer get container;
   Future<Database> open();
-  Future<void> _scrubMedia(List<Map<String, Object?>> rows);
   Future<void> _dropPhotos(Iterable<Object?> atmospheres);
+  Future<void> _scrubMedia(List<Map<String, Object?>> rows);
   Future<void> _dropFilesComingFrom(DatabaseExecutor t, String peerId);
 
   Future<Map<String, String>?> loadIdentity() async {

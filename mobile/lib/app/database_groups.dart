@@ -8,14 +8,14 @@ mixin _GroupRows {
   HaloContainer get container;
   Future<Database> open();
   Future<void> _dropPhotos(Iterable<Object?> atmospheres);
+  Future<void> keepGroupOwedTo(String groupId, List<String> members);
+  Future<String?> notifTagOf(String chat);
   Future<void> clearGroupConversation(String groupId, {bool noteGone = true});
   Future<void> _dropGroupFiles(
     DatabaseExecutor t,
     String groupId, {
     Iterable<String> keys = const [],
   });
-  Future<void> keepGroupOwedTo(String groupId, List<String> members);
-  Future<String?> notifTagOf(String chat);
   Future<Set<String>> roomKeysOf(String groupId);
 
   // ---- groups ----
