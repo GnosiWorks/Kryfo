@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the phone's keyboard learns nothing typed into Kryfo: every text field in
-// lib/ turns personalised learning off, and a field that hides what is typed
-// takes no autocorrect or suggestions either. the fields are checked in their
-// source, like the other rule tests
+// every text field in lib/ turns the keyboard's personalised learning off,
+// and a field that hides what is typed takes no suggestions either
 import 'dart:io';
 
 import 'package:flutter/material.dart';

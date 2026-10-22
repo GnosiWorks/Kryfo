@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a heic or avif motion photo leaves as its still alone. the fixtures follow
-// android's motion photo format: a real hevc or av1 still, an xmp item with
-// the motion photo directory, and a real mp4 clip with sound and a place in
-// an mpvd box at the end
+// android's motion photo format, with a real clip in an mpvd box at the end
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
