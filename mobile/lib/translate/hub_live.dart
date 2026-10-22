@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, sessionQuiet;
 import 'bergamot_ffi.dart';
 import 'catalog.dart';
@@ -70,6 +71,8 @@ TranslationHub _live() {
   );
   // a hidden chat's switch is not kept once its vault shuts
   hub.followSessions(appState, () => appState.sessionRev);
+  // nothing translated or guessed is kept behind the lock
+  hub.followLock(lockState, () => lockState.locked);
   WidgetsBinding.instance.addObserver(TranslateAway(hub));
   return hub;
 }

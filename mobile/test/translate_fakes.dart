@@ -128,6 +128,7 @@ Fakes fakeHub({
   bool wifi = true,
   LangGuess Function(String text)? guess,
   Future<HantConverter> Function()? loadHant,
+  bool quiet = false,
 }) {
   final backend = FakeBackend();
   if (installed) backend.finish('zh');
@@ -140,6 +141,7 @@ Fakes fakeHub({
     onWifi: () async => f.wifi,
     wifiOnly: () => hub.settings.wifiOnly,
     poll: const Duration(milliseconds: 100),
+    quiet: () => quiet,
   );
   final translator = FakeTranslator(
     words: words,

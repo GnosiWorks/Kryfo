@@ -38,8 +38,8 @@ screen shows translation and no part of it runs, though the opencc tables
 
 the app side is mobile/lib/translate/ and screens/translation_screen.dart.
 the language guess runs in dart, so a message's words never go to the
-engine for it. translations are kept in memory only, per open chat, and
-never stored. a reader of traditional chinese gets the models' simplified
+engine for it. translations are kept in memory only, per open chat, never
+stored, and wiped with the language guesses when the app locks. a reader of traditional chinese gets the models' simplified
 output converted with opencc's tables (apache 2.0, mobile/assets/opencc,
 remade by its fetch.sh): s2tw, taiwan's forms, for zh_Hant and zh_TW, as
 the app's own traditional strings use, and s2hk for zh_HK and zh_MO. a

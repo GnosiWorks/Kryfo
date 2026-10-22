@@ -158,6 +158,41 @@ class TranslationHub extends ChangeNotifier {
     if (_chatAuto.remove(chatId) != null) notifyListeners();
   }
 
+  // the app locked: every open chat drops what it translated and guessed,
+  // and nothing is translated or guessed until it opens again
+  bool _locked = false;
+  bool get locked => _locked;
+  int _wipes = 0;
+  int get wipes => _wipes;
+
+  void lockedOut() {
+    _locked = true;
+    _wipes++;
+    notifyListeners();
+  }
+
+  void unlocked() {
+    if (!_locked) return;
+    _locked = false;
+    notifyListeners();
+  }
+
+  // lockedOut and unlocked as [isLocked] turns on [lock]; the returned call
+  // stops it
+  VoidCallback followLock(Listenable lock, bool Function() isLocked) {
+    var was = isLocked();
+    if (was) lockedOut();
+    void heard() {
+      final now = isLocked();
+      if (now == was) return;
+      was = now;
+      now ? lockedOut() : unlocked();
+    }
+
+    lock.addListener(heard);
+    return () => lock.removeListener(heard);
+  }
+
   // forgetChats each time [rev] moves on [state]; the returned call stops it
   VoidCallback followSessions(Listenable state, int Function() rev) {
     var last = rev();

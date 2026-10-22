@@ -35,9 +35,23 @@ class PackNeed {
 class ChatTranslation extends ChangeNotifier {
   final TranslationHub hub;
   final String chatId;
-  ChatTranslation(this.hub, this.chatId) {
+  ChatTranslation(this.hub, this.chatId) : _seenWipes = hub.wipes {
     hub.addListener(_hubChanged);
     unawaited(_load());
+  }
+
+  // the hub's lock count this chat last wiped for
+  int _seenWipes;
+
+  // the app locked: nothing of what was translated or guessed stays
+  void _wipe() {
+    _msgs.clear();
+    _source.clear();
+    _guesses.clear();
+    _byAuto.clear();
+    _keptOriginal.clear();
+    _autoTried.clear();
+    _burnt.clear();
   }
 
   bool? _auto;
@@ -64,6 +78,10 @@ class ChatTranslation extends ChangeNotifier {
   // auto may look again
   void _hubChanged() {
     if (_gone) return;
+    if (hub.wipes != _seenWipes) {
+      _seenWipes = hub.wipes;
+      _wipe();
+    }
     final now = hub.chatAutoNow(chatId);
     if (now == null && _auto != null) {
       unawaited(_load());
@@ -116,7 +134,7 @@ class ChatTranslation extends ChangeNotifier {
 
   // whether a message from them is offered a translation at all
   Offer? offer(String text) {
-    if (text.trim().isEmpty) return null;
+    if (text.trim().isEmpty || hub.locked) return null;
     return hub.offerOf(_guesses[text] ??= hub.guess(text));
   }
 
@@ -150,6 +168,7 @@ class ChatTranslation extends ChangeNotifier {
   // the bubble's action and the menu's: translate, or back to the original.
   // what it needs first when a pack or the library is not there
   Future<PackNeed?> toggle(String key, String text) async {
+    if (hub.locked) return null;
     _byAuto.remove(key);
     final now = of(key, text);
     if (now.phase == MsgPhase.shown) {
@@ -176,7 +195,7 @@ class ChatTranslation extends ChangeNotifier {
   // a bubble on screen in a chat that translates on its own. a pack that is
   // not there is never fetched for it, and nothing is said
   void autoFor(String key, String text) {
-    if (_auto != true || _keptOriginal.contains(key)) return;
+    if (_auto != true || hub.locked || _keptOriginal.contains(key)) return;
     if (of(key, text).phase != MsgPhase.idle || !_autoTried.add(key)) return;
     final o = offer(text);
     if (o == null || hub.missing(o).isNotEmpty) return;
@@ -188,18 +207,25 @@ class ChatTranslation extends ChangeNotifier {
   }
 
   Future<PackNeed?> _run(String key, String text, Offer o) async {
+    // a lock while it runs: what it made is not kept
+    final w = hub.wipes;
+    bool still() => hub.wipes == w && !hub.locked;
     final block = await hub.blockFor(o);
+    if (!still()) return null;
     if (block != null) return PackNeed(o, hub.missing(o), block);
     _set(key, text, MsgTranslation(MsgPhase.working, offer: o));
     try {
       final out = await hub.translate(text, o);
-      _set(key, text, MsgTranslation(MsgPhase.shown, text: out, offer: o));
+      if (still()) {
+        _set(key, text, MsgTranslation(MsgPhase.shown, text: out, offer: o));
+      }
       return null;
     } on TranslateUnavailable catch (e) {
+      if (!still()) return null;
       _set(key, text, const MsgTranslation(MsgPhase.idle));
       return PackNeed(o, hub.missing(o), e.why);
     } catch (_) {
-      _set(key, text, MsgTranslation(MsgPhase.failed, offer: o));
+      if (still()) _set(key, text, MsgTranslation(MsgPhase.failed, offer: o));
       return null;
     }
   }
