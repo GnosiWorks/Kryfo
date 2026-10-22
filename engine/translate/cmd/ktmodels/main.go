@@ -53,7 +53,7 @@ func run(args []string) error {
 		for _, p := range pairs {
 			dir := filepath.Join(args[2], p.Dir())
 			t0 := time.Now()
-			err := translate.FetchPair(context.Background(), get, m.FromSource(), p, dir, func(d, n int64) {
+			err := translate.FetchPair(context.Background(), get, m, p, dir, func(d, n int64) {
 				fmt.Fprintf(os.Stderr, "\r%s %5.1f%%", p.Dir(), 100*float64(d)/float64(n))
 			})
 			fmt.Fprintln(os.Stderr)

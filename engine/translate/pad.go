@@ -2,21 +2,16 @@
 package translate
 
 import (
-	"context"
+	"crypto/sha256"
+	"encoding/binary"
 	"io"
 )
 
 // a download's volume is padded up to a size class, so the bytes the guard
 // counts name a class of languages, not one. small models fill the first
 // class, base models the second; past that, whole steps of the second.
+// every class is a whole number of Chunks.
 var PadClasses = []int64{48 << 20, 96 << 20}
-
-// PadName is the mirror's padding file, PadSize bytes of noise: the most
-// padding one bundle can need is under the largest class
-const (
-	PadName = "pad"
-	PadSize = 96 << 20
-)
 
 // PadTo is what a bundle of gz bytes costs on the wire once padded.
 func PadTo(gz int64) int64 {
@@ -34,31 +29,23 @@ func PadTo(gz int64) int64 {
 
 // WireBytes is what fetching lang's bundle from the mirror costs.
 func (m *Manifest) WireBytes(lang string) int64 {
-	gz, _ := m.BundleBytes(lang)
+	_, gz := m.bundleFiles(lang)
 	return PadTo(gz)
 }
 
-// fetchPad asks for n bytes of the padding file in chunks the size of the
-// real ones and throws them away. it is not checked and cannot fail a
-// download: the files are in place, and a mirror that cuts it short only
-// shows the size it would have hidden.
-func fetchPad(ctx context.Context, get Getter, url string, n int64, on func(int64)) {
-	var done, off int64
-	for done < n && ctx.Err() == nil {
-		k := min(Chunk, n-done, PadSize-off)
-		body, _, err := get(ctx, url, off, k)
-		if err != nil {
-			return
+// writeNoise writes n bytes of the bundle's padding: sha256 in counter
+// mode over its id, so anyone filling a mirror makes the same file. the app
+// never reads it, it only has to be there and not shrink on the way
+func writeNoise(w io.Writer, id string, n int64) error {
+	var ctr [8]byte
+	for i := uint64(0); n > 0; i++ {
+		binary.BigEndian.PutUint64(ctr[:], i)
+		h := sha256.Sum256(append([]byte(id), ctr[:]...))
+		k := min(int64(len(h)), n)
+		if _, err := w.Write(h[:k]); err != nil {
+			return err
 		}
-		w, _ := io.Copy(io.Discard, io.LimitReader(body, k))
-		body.Close()
-		if w == 0 {
-			return
-		}
-		done += w
-		off = (off + w) % PadSize
-		if on != nil {
-			on(done)
-		}
+		n -= k
 	}
+	return nil
 }

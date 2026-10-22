@@ -97,7 +97,7 @@ func FetchPair(ctx context.Context, get Getter, m *Manifest, p Pair, dir string,
 				prog(base+n, total)
 			}
 		}
-		if err := FetchFile(ctx, get, m.URL(f), f, dir, on); err != nil {
+		if err := FetchFile(ctx, get, m.SourceURL(f), f, dir, on); err != nil {
 			return fmt.Errorf("%s: %w", f.Name, err)
 		}
 		done += f.GzSize
@@ -202,9 +202,17 @@ func unpack(part, final string, f File) error {
 		return err
 	}
 	defer in.Close()
+	err = unpackFrom(in, final, f)
+	// a gzip that hashed right but unpacks wrong would do so again
+	if errors.Is(err, ErrHash) || errors.Is(err, ErrSize) {
+		os.Remove(part)
+	}
+	return err
+}
+
+func unpackFrom(in io.Reader, final string, f File) error {
 	zr, err := gzip.NewReader(in)
 	if err != nil {
-		os.Remove(part)
 		return fmt.Errorf("%w: %v", ErrHash, err)
 	}
 	zr.Multistream(false)
@@ -232,10 +240,6 @@ func unpack(part, final string, f File) error {
 	}
 	if err != nil {
 		os.Remove(tmp.Name())
-		// a gzip that hashed right but unpacks wrong would do so again
-		if errors.Is(err, ErrHash) || errors.Is(err, ErrSize) {
-			os.Remove(part)
-		}
 		return err
 	}
 	return nil
@@ -254,9 +258,17 @@ func checkFile(p string, size int64, sum string) error {
 	if st.Size() != size {
 		return fmt.Errorf("%w: %d, want %d", ErrSize, st.Size(), size)
 	}
+	return checkReader(fh, size, sum)
+}
+
+func checkReader(r io.Reader, size int64, sum string) error {
 	h := sha256.New()
-	if _, err := io.Copy(h, fh); err != nil {
+	n, err := io.Copy(h, io.LimitReader(r, size+1))
+	if err != nil {
 		return err
+	}
+	if n != size {
+		return fmt.Errorf("%w: %d, want %d", ErrSize, n, size)
 	}
 	if hexSum(h.Sum(nil)) != sum {
 		return ErrHash

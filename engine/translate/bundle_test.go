@@ -8,74 +8,91 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io"
+	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
 
-// both directions of zh, served by a local server that can be made to stall
+// two languages of different sizes in one small class, published under
+// /src/ and filled into a mirror under /m/ by FillMirror
 type bundleFix struct {
-	m     *Manifest
-	gz    map[string][]byte
-	hits  atomic.Int64
-	stall chan struct{}
-	srv   *httptest.Server
-	// padding bytes served, its requests, and whether the mirror has it
-	pad     atomic.Int64
-	padReqs atomic.Int64
-	noPad   bool
+	m      *Manifest
+	gz     map[string][]byte // by published path
+	mirror string
+	srv    *httptest.Server
+	hits   atomic.Int64
+	stall  chan struct{}
+
+	mu sync.Mutex
+	// what the mirror was asked, path and range, in order
+	asked []string
+	// a request at this offset fails once
+	failAt map[int64]bool
+	// the mirror answers with the whole file
+	whole bool
 }
 
-// PadSize bytes of zeros, without holding them
-type zeros struct{}
+const testClass = 4 << 20
 
-func (zeros) ReadAt(p []byte, off int64) (int, error) {
-	clear(p)
-	return len(p), nil
-}
-
-type counted struct {
-	http.ResponseWriter
-	n *atomic.Int64
-}
-
-func (c counted) Write(b []byte) (int, error) {
-	n, err := c.ResponseWriter.Write(b)
-	c.n.Add(int64(n))
-	return n, err
+// small classes for the tests: whole chunks, as the real ones are
+func smallClasses(t *testing.T) {
+	old := PadClasses
+	PadClasses = []int64{testClass, 2 * testClass}
+	t.Cleanup(func() { PadClasses = old })
 }
 
 func newBundleFix(t *testing.T) *bundleFix {
 	t.Helper()
-	bf := &bundleFix{gz: map[string][]byte{}}
-	mk := func(dir, kind, name string, n int, seed byte) File {
-		raw := bytes.Repeat([]byte{seed, seed + 1, seed + 7}, n/3+1)[:n]
+	smallClasses(t)
+	bf := &bundleFix{gz: map[string][]byte{}, failAt: map[int64]bool{}}
+	rng := rand.New(rand.NewPCG(3, 4))
+	mk := func(dir, kind, name string, n int, noisy bool) File {
+		raw := make([]byte, n)
+		for i := range raw {
+			if noisy {
+				raw[i] = byte(rng.IntN(256))
+			} else {
+				raw[i] = byte(i % 7)
+			}
+		}
 		var b bytes.Buffer
 		zw := gzip.NewWriter(&b)
 		zw.Write(raw)
 		zw.Close()
 		p := dir + "/" + name + ".gz"
+		bf.gz[p] = b.Bytes()
 		s1, s2 := sha256.Sum256(raw), sha256.Sum256(b.Bytes())
-		// at its published path and at its name on the mirror
-		bf.gz[p], bf.gz[hexSum(s2[:])+".gz"] = b.Bytes(), b.Bytes()
 		return File{Kind: kind, Name: name, Path: p, Size: int64(n), SHA256: hexSum(s1[:]),
 			GzSize: int64(b.Len()), GzSHA256: hexSum(s2[:])}
 	}
-	zhen := Pair{From: "zh", To: "en", Arch: "tiny", Files: []File{
-		mk("zh-en", KindModel, "model.zhen.bin", 5000, 1),
-		mk("zh-en", KindVocab, "vocab.zhen.spm", 300, 2),
-	}}
-	enzh := Pair{From: "en", To: "zh", Arch: "tiny", Files: []File{
-		mk("en-zh", KindModel, "model.enzh.bin", 4000, 3),
-		mk("en-zh", KindSrcVocab, "srcvocab.enzh.spm", 200, 4),
-		mk("en-zh", KindTrgVocab, "trgvocab.enzh.spm", 200, 5),
-	}}
+	pairs := []Pair{
+		{From: "zh", To: "en", Arch: "tiny", Files: []File{
+			mk("zh-en", KindModel, "model.zhen.bin", 5000, false),
+			mk("zh-en", KindVocab, "vocab.zhen.spm", 300, false),
+		}},
+		{From: "en", To: "zh", Arch: "tiny", Files: []File{
+			mk("en-zh", KindModel, "model.enzh.bin", 4000, false),
+			mk("en-zh", KindSrcVocab, "srcvocab.enzh.spm", 200, false),
+			mk("en-zh", KindTrgVocab, "trgvocab.enzh.spm", 200, false),
+		}},
+		// german spans whole chunks and ends inside one
+		{From: "de", To: "en", Arch: "tiny", Files: []File{
+			mk("de-en", KindModel, "model.deen.bin", Chunk*3/2, true),
+			mk("de-en", KindVocab, "vocab.deen.spm", 700, true),
+		}},
+		{From: "en", To: "de", Arch: "tiny", Files: []File{
+			mk("en-de", KindModel, "model.ende.bin", Chunk/2, true),
+			mk("en-de", KindVocab, "vocab.ende.spm", 900, true),
+		}},
+	}
+	bf.mirror = t.TempDir()
 	bf.srv = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bf.hits.Add(1)
 		if bf.stall != nil {
@@ -85,34 +102,67 @@ func newBundleFix(t *testing.T) *bundleFix {
 				return
 			}
 		}
-		if r.URL.Path == "/m/"+PadName && !bf.noPad {
-			bf.padReqs.Add(1)
-			pad := io.NewSectionReader(zeros{}, 0, PadSize)
-			http.ServeContent(counted{w, &bf.pad}, r, "", time.Time{}, pad)
+		if p, ok := strings.CutPrefix(r.URL.Path, "/src/"); ok {
+			body, ok := bf.gz[p]
+			if !ok {
+				http.NotFound(w, r)
+				return
+			}
+			http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(body))
 			return
 		}
-		body, ok := bf.gz[strings.TrimPrefix(r.URL.Path, "/m/")]
+		name, ok := strings.CutPrefix(r.URL.Path, "/m/")
 		if !ok {
 			http.NotFound(w, r)
 			return
 		}
-		http.ServeContent(w, r, "", time.Time{}, bytes.NewReader(body))
+		rg := r.Header.Get("Range")
+		bf.mu.Lock()
+		bf.asked = append(bf.asked, name+" "+rg)
+		var off int64
+		fmt.Sscanf(rg, "bytes=%d-", &off)
+		fail := bf.failAt[off]
+		delete(bf.failAt, off)
+		whole := bf.whole
+		bf.mu.Unlock()
+		if fail {
+			http.Error(w, "cut", http.StatusBadGateway)
+			return
+		}
+		fh, err := os.Open(filepath.Join(bf.mirror, filepath.Base(name)))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		defer fh.Close()
+		if whole {
+			r.Header.Del("Range")
+		}
+		http.ServeContent(w, r, "", time.Time{}, fh)
 	}))
 	t.Cleanup(bf.srv.Close)
-	bf.m = &Manifest{Version: 1, Source: "https://source.invalid/", Base: "https://models.invalid/m/", Pairs: []Pair{zhen, enzh}}
+	bf.m = &Manifest{Version: 1, Source: bf.srv.URL + "/src/", Base: bf.srv.URL + "/m/", Pairs: pairs}
 	if err := bf.m.check(); err != nil {
 		t.Fatal(err)
 	}
+	if err := FillMirror(context.Background(), HTTPGetter(bf.srv.Client()), bf.m, bf.mirror, nil); err != nil {
+		t.Fatal(err)
+	}
+	bf.hits.Store(0)
 	return bf
 }
 
-func (bf *bundleFix) local(t *testing.T) *Manifest {
-	t.Helper()
-	m, err := bf.m.withBase(bf.srv.URL + "/m")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return m
+func (bf *bundleFix) local(t *testing.T) *Manifest { return bf.m }
+
+func (bf *bundleFix) get() Getter { return HTTPGetter(bf.srv.Client()) }
+
+// what the mirror was asked since the last call
+func (bf *bundleFix) take() []string {
+	bf.mu.Lock()
+	defer bf.mu.Unlock()
+	out := bf.asked
+	bf.asked = nil
+	return out
 }
 
 func TestFetchBundleBothWays(t *testing.T) {
@@ -120,7 +170,7 @@ func TestFetchBundleBothWays(t *testing.T) {
 	dir := t.TempDir()
 	m := bf.local(t)
 	var last, total int64
-	err := FetchBundle(context.Background(), HTTPGetter(bf.srv.Client()), m, "zh", dir, func(d, n int64) {
+	err := FetchBundle(context.Background(), bf.get(), m, "zh", dir, func(d, n int64) {
 		if d < last {
 			t.Errorf("progress went back from %d to %d", last, d)
 		}
@@ -130,15 +180,8 @@ func TestFetchBundleBothWays(t *testing.T) {
 		t.Fatal(err)
 	}
 	gz, disk := m.BundleBytes("zh")
-	wire := PadTo(gz)
-	if last != wire || total != wire {
+	if wire := PadTo(gz); last != wire || total != wire || wire != testClass {
 		t.Fatalf("progress %d of %d, want %d", last, total, wire)
-	}
-	if got := bf.pad.Load(); got != wire-gz {
-		t.Fatalf("padding %d bytes, want %d", got, wire-gz)
-	}
-	if n := bf.padReqs.Load(); n != (wire-gz+Chunk-1)/Chunk {
-		t.Fatalf("padding in %d requests", n)
 	}
 	if !BundleInstalled(m, "zh", dir) {
 		t.Fatal("not installed")
@@ -151,6 +194,10 @@ func TestFetchBundleBothWays(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	left, _ := filepath.Glob(filepath.Join(dir, "*", ".bundle*"))
+	if len(left) != 0 {
+		t.Fatalf("left %v", left)
+	}
 	if err := RemoveBundle(m, "zh", dir); err != nil {
 		t.Fatal(err)
 	}
@@ -159,9 +206,129 @@ func TestFetchBundleBothWays(t *testing.T) {
 	}
 }
 
+// the language cannot be told from the requests: every one is a whole
+// chunk, in order, of a name as long as any other, and two bundles of
+// different sizes in one class ask the same things
+func TestBundleRequestsLookAlike(t *testing.T) {
+	bf := newBundleFix(t)
+	m := bf.local(t)
+	zgz, _ := m.BundleBytes("zh")
+	dgz, _ := m.BundleBytes("de")
+	if zgz == dgz || PadTo(zgz) != PadTo(dgz) {
+		t.Fatalf("fixture: %d and %d should differ within one class", zgz, dgz)
+	}
+	pattern := func(lang string) []string {
+		bf.take()
+		if err := FetchBundle(context.Background(), bf.get(), m, lang, t.TempDir(), nil); err != nil {
+			t.Fatal(err)
+		}
+		var out []string
+		for _, a := range bf.take() {
+			name, rg, _ := strings.Cut(a, " ")
+			if name != m.BundleName(lang) {
+				t.Fatalf("%s asked %q", lang, name)
+			}
+			out = append(out, fmt.Sprintf("%d %s", len(name), rg))
+		}
+		return out
+	}
+	zh, de := pattern("zh"), pattern("de")
+	want := []string{}
+	for k := int64(0); k < testClass/Chunk; k++ {
+		want = append(want, fmt.Sprintf("%d bytes=%d-%d", 68, k*Chunk, (k+1)*Chunk-1))
+	}
+	if strings.Join(zh, ",") != strings.Join(want, ",") {
+		t.Fatalf("zh asked %v, want %v", zh, want)
+	}
+	if strings.Join(de, ",") != strings.Join(zh, ",") {
+		t.Fatalf("de asked %v, zh %v", de, zh)
+	}
+}
+
+// a cut keeps what came, padding counted: the tries together ask for each
+// chunk once, and the files are not used before the last one is in
+func TestBundleCutAndResume(t *testing.T) {
+	for _, c := range []struct {
+		lang string
+		at   int64
+	}{
+		{"de", 1 * Chunk}, // inside the files
+		{"zh", 3 * Chunk}, // inside the padding
+	} {
+		t.Run(c.lang, func(t *testing.T) {
+			bf := newBundleFix(t)
+			m := bf.local(t)
+			dir := t.TempDir()
+			bf.failAt[c.at] = true
+			if err := FetchBundle(context.Background(), bf.get(), m, c.lang, dir, nil); err == nil {
+				t.Fatal("a cut download finished")
+			}
+			if BundleInstalled(m, c.lang, dir) {
+				t.Fatal("installed before all of it came")
+			}
+			first := bf.take()
+			if err := FetchBundle(context.Background(), bf.get(), m, c.lang, dir, nil); err != nil {
+				t.Fatal(err)
+			}
+			second := bf.take()
+			if !BundleInstalled(m, c.lang, dir) {
+				t.Fatal("not installed")
+			}
+			// the failed request was asked twice, everything else once
+			if n := len(first) + len(second); n != int(testClass/Chunk)+1 {
+				t.Fatalf("asked %d times: %v then %v", n, first, second)
+			}
+			if !strings.HasSuffix(second[0], fmt.Sprintf("bytes=%d-%d", c.at, c.at+Chunk-1)) {
+				t.Fatalf("resumed at %q", second[0])
+			}
+		})
+	}
+}
+
+// a mirror that sends the whole file is not used: it would look unlike
+// every other download
+func TestBundleRangeIgnored(t *testing.T) {
+	bf := newBundleFix(t)
+	bf.whole = true
+	dir := t.TempDir()
+	err := FetchBundle(context.Background(), bf.get(), bf.local(t), "zh", dir, nil)
+	if !errors.Is(err, ErrStatus) {
+		t.Fatalf("got %v", err)
+	}
+	if BundleInstalled(bf.local(t), "zh", dir) {
+		t.Fatal("installed")
+	}
+}
+
+// a mirror with other bytes inside a file: nothing is unpacked, and the
+// part goes, since a resume would only repeat it
+func TestBundleWrongBytes(t *testing.T) {
+	bf := newBundleFix(t)
+	m := bf.local(t)
+	p := filepath.Join(bf.mirror, m.BundleName("zh"))
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b[100] ^= 0xff
+	if err := os.WriteFile(p, b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	err = FetchBundle(context.Background(), bf.get(), m, "zh", dir, nil)
+	if !errors.Is(err, ErrHash) {
+		t.Fatalf("got %v", err)
+	}
+	left, _ := filepath.Glob(filepath.Join(dir, "*", "*"))
+	left2, _ := filepath.Glob(filepath.Join(dir, "*", ".bundle*"))
+	if len(left)+len(left2) != 0 {
+		t.Fatalf("left %v %v", left, left2)
+	}
+}
+
 func TestFetchBundleUnknownLanguage(t *testing.T) {
 	bf := newBundleFix(t)
-	err := FetchBundle(context.Background(), HTTPGetter(bf.srv.Client()), bf.local(t), "fr", t.TempDir(), nil)
+	err := FetchBundle(context.Background(), bf.get(), bf.local(t), "fr", t.TempDir(), nil)
 	if !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("got %v", err)
 	}
@@ -180,6 +347,9 @@ func TestPinnedLangsAndSizes(t *testing.T) {
 	if gz < 60<<20 || gz > 90<<20 || disk <= gz {
 		t.Fatalf("zh bundle %d on the wire, %d on disk", gz, disk)
 	}
+	if id := m.BundleID("zh"); !hashRe.MatchString(id) || id == m.BundleID("de") {
+		t.Fatalf("bundle id %q", id)
+	}
 }
 
 func waitState(t *testing.T, j *Jobs, key, want string) Status {
@@ -191,9 +361,9 @@ func waitState(t *testing.T, j *Jobs, key, want string) Status {
 			return st
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("state %+v, want %s", st, want)
+			t.Fatalf("%s: %+v, want %s", key, st, want)
 		}
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(2 * time.Millisecond)
 	}
 }
 
@@ -204,7 +374,7 @@ func TestJobsRunCancelResume(t *testing.T) {
 	m := bf.local(t)
 	var j Jobs
 	run := func(ctx context.Context, prog Progress) error {
-		return FetchBundle(ctx, HTTPGetter(bf.srv.Client()), m, "zh", dir, prog)
+		return FetchBundle(ctx, bf.get(), m, "zh", dir, prog)
 	}
 	if st := j.Status("zh"); st.State != StateIdle {
 		t.Fatalf("fresh %+v", st)
@@ -251,28 +421,6 @@ func TestJobsSortFailures(t *testing.T) {
 	}
 }
 
-func TestJobsBadHashLeavesNothing(t *testing.T) {
-	bf := newBundleFix(t)
-	m := bf.local(t)
-	// one byte of the model's gzip changed on the server
-	k := MirrorName(m.Pairs[0].Files[0])
-	bad := append([]byte(nil), bf.gz[k]...)
-	bad[len(bad)/2] ^= 0xff
-	bf.gz[k] = bad
-	dir := t.TempDir()
-	var j Jobs
-	j.Start("zh", func(ctx context.Context, prog Progress) error {
-		return FetchBundle(ctx, HTTPGetter(bf.srv.Client()), m, "zh", dir, prog)
-	})
-	if st := waitState(t, &j, "zh", StateFailed); st.Kind != "hash" {
-		t.Fatalf("%+v", st)
-	}
-	left, _ := filepath.Glob(filepath.Join(dir, "*", "*"))
-	if len(left) != 0 {
-		t.Fatalf("left %v", left)
-	}
-}
-
 func TestPadClasses(t *testing.T) {
 	for _, c := range []struct{ gz, want int64 }{
 		{0, 0},
@@ -284,11 +432,8 @@ func TestPadClasses(t *testing.T) {
 		{96<<20 + 1, 192 << 20},
 		{300 << 20, 384 << 20},
 	} {
-		if got := PadTo(c.gz); got != c.want {
+		if got := PadTo(c.gz); got != c.want || got%Chunk != 0 {
 			t.Errorf("PadTo(%d) = %d, want %d", c.gz, got, c.want)
-		}
-		if got := PadTo(c.gz) - c.gz; c.gz > 0 && (got < 0 || got >= PadSize) {
-			t.Errorf("PadTo(%d) pads %d, more than the pad file", c.gz, got)
 		}
 	}
 	m, _ := Pinned()
@@ -297,39 +442,23 @@ func TestPadClasses(t *testing.T) {
 	}
 }
 
-// the files are what count: a mirror without padding still installs them
-func TestFetchBundleWithoutPad(t *testing.T) {
+// the desk tool fetches each file from where it was published
+func TestFetchPairFromSource(t *testing.T) {
 	bf := newBundleFix(t)
-	bf.noPad = true
-	dir := t.TempDir()
 	m := bf.local(t)
-	if err := FetchBundle(context.Background(), HTTPGetter(bf.srv.Client()), m, "zh", dir, nil); err != nil {
-		t.Fatal(err)
-	}
-	if !BundleInstalled(m, "zh", dir) {
-		t.Fatal("not installed")
-	}
-}
-
-// filling a mirror reads the published paths and fetches no padding
-func TestFetchFromSource(t *testing.T) {
-	bf := newBundleFix(t)
-	local := bf.local(t)
-	src := local.FromSource()
-	src.Source = local.Base
-	f := src.Pairs[0].Files[0]
-	if got := src.URL(f); got != local.Base+f.Path {
+	f := m.Pairs[0].Files[0]
+	if got := m.SourceURL(f); got != m.Source+f.Path {
 		t.Fatalf("source url %q", got)
 	}
-	if got := local.URL(f); got != local.Base+f.GzSHA256+".gz" {
-		t.Fatalf("mirror url %q", got)
-	}
 	dir := t.TempDir()
-	if err := FetchBundle(context.Background(), HTTPGetter(bf.srv.Client()), src, "zh", dir, nil); err != nil {
+	if err := FetchPair(context.Background(), bf.get(), m, m.Pairs[0], dir, nil); err != nil {
 		t.Fatal(err)
 	}
-	if !BundleInstalled(src, "zh", dir) || bf.padReqs.Load() != 0 {
-		t.Fatalf("installed %v, pad requests %d", BundleInstalled(src, "zh", dir), bf.padReqs.Load())
+	if !Installed(m.Pairs[0], dir) {
+		t.Fatal("not installed")
+	}
+	if a := bf.take(); len(a) != 0 {
+		t.Fatalf("asked the mirror %v", a)
 	}
 }
 
@@ -361,18 +490,4 @@ func TestMirrorBases(t *testing.T) {
 	if !strings.HasPrefix(p.Source, "https://") {
 		t.Fatalf("source %q", p.Source)
 	}
-}
-
-// the manifest with its files fetched from a local test server
-func (m *Manifest) withBase(base string) (*Manifest, error) {
-	if !strings.HasSuffix(base, "/") {
-		base += "/"
-	}
-	if !baseOK(base) {
-		return nil, fmt.Errorf("%w: base %q", ErrManifest, base)
-	}
-	c := *m
-	c.Base = base
-	c.bySource = false
-	return &c, nil
 }

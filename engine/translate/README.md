@@ -3,22 +3,28 @@
 messages translated on the phone with bergamot, the engine behind
 firefox's offline translations. chinese and english first. it is off:
 `kOfflineTranslation` in mobile/lib/translate/hub_live.dart is false until
-the native library below is built and has run on phones, and with it off
-no screen shows translation and nothing of it is built.
+the native library below is built and has run on phones. with it off no
+screen shows translation and no part of it runs, though the opencc tables
+(424 KB) ship in the apk and the go exports are in libhalo.
 
 ## what is here
 
 - `models.json`: the pinned manifest. each file of a pair with its size and
   sha256, gzipped and unpacked, where it was published (`source`) and our
-  mirror (`base`). a mirror, a cdn or an exit can stop a
-  download but cannot get a different file loaded, which matters because
-  the files are parsed by c++. `Parse` refuses unknown fields, non-https
-  bases, paths that leave the base, and odd names, hashes or sizes.
-- `fetch.go`, `bundle.go`, `jobs.go`: the download. every request is a
-  1 MiB range with no user agent, cookies or compression. a cut leaves a
-  part file the next start resumes from. a wrong hash throws the file away.
-  a language's bundle is both directions, so the host cannot tell which
-  way the person translates. `pad.go` pads it to a size class.
+  mirror (`base`), the only host the app fetches from; there is no
+  setting for another. the mirror can stop a download but cannot get a
+  different file loaded, which matters because the files are parsed by
+  c++. `Parse` refuses unknown fields, a base that is not https or an
+  onion, paths that leave the source, and odd names, hashes or sizes.
+- `bundle.go`, `pad.go`, `jobs.go`: the download. a language's bundle is
+  both directions, so the host cannot tell which way the person
+  translates, and it is one file on the mirror padded to a size class.
+  every request is one whole 1 MiB range of it, in order, with no user
+  agent, cookies or compression. the files are checked and unpacked only
+  once the last byte is in. a cut keeps what came, padding counted, and
+  the next start goes on from there. a wrong hash throws the part away.
+- `fetch.go`: one file from where it was published, for the desk tool and
+  for filling the mirror.
 - `mirror.go`: what the mirror serves, made from the source and the pins.
 - `../translate_ffi.go`: the exports. the download dials through tor only
   (the update check's dialer), under a fresh socks name per download, with
@@ -54,32 +60,38 @@ pcre2 BSD. all of them can ship in a GPL-3.0-or-later app.
 
 ## what a download says, and to whom
 
-- the mirror sees which files are fetched, by their hashes, over its
-  onion: no exit, and nothing that ties it to a person.
-- the guard sees the bundle's size class: 48 MiB for small models, 96 MiB
-  for base ones, whole steps of 96 MiB past that. the padding is fetched
-  from the mirror's `pad` file after the real files and thrown away. it
-  costs chinese about 24.4 MiB (75.0 MB of files in a 96 MiB class). a
-  download that is cut and resumed sends the padding again in full.
-- a download starts only from a tap that shows the size first, never
-  because a message arrived, so its timing does not point at a message.
-- the decoy sees none of the phone's packs and fetches nothing.
+- the mirror sees which language is fetched, over its onion: no exit, and
+  nothing that ties it to a person.
+- the guard sees a download of one size class: 48 MiB for small models,
+  96 MiB for base ones, whole steps of 96 MiB past that, as that many
+  requests of 1 MiB each in a row. every language of a class looks the
+  same. the padding costs chinese about 24.4 MiB (75.0 MB of files in a
+  96 MiB class). the guard does see how many languages are fetched, one
+  download each.
+- a download starts only from a tap that shows the size first, never by
+  itself. that tap often comes soon after a message in that language
+  arrived, and the mirror is on the box that delivered the message, so
+  the box can see a pack fetched soon after a message came in.
+- the decoy sees none of the phone's packs and fetches nothing. android's
+  storage page shows the app's size, packs included, whichever session is
+  open.
 
 ## the mirror
 
 the box serves, under `/models/` on the relay onion (plain http on the
 onion, which tor encrypts and authenticates), these files and nothing else:
 
-- every file in models.json as `<gzSha256>.gz`, the published gzip
-  unchanged;
-- `pad`, 96 MiB of noise, with range requests;
+- one file per language, named by `BundleID` (a hash of the pins) plus
+  `.bin`: the published gzips back to back in manifest order, then noise
+  up to the size class (sha256 in counter mode over the id, so every fill
+  makes the same bytes);
 - `SHA256SUMS`, the list of the above, for `sha256sum -c`.
 
-`ktmodels mirror <dir>` makes all three from models.json: it fetches each
-file from the source, checks it against its pins packed and unpacked,
-names it by its hash, and writes the noise and the list. the hash list is
-models.json itself, so the app trusts no list the box sends. the box needs
-range requests, no compression, no redirects, and no logs of paths.
+`ktmodels mirror <dir>` makes both from models.json: it fetches each file
+from the source, checks it against its pins packed and unpacked, and
+writes the bundles and the list. the app checks each part against
+models.json, never against a list the box sends. the box needs range
+requests, no compression, no redirects, and no logs of paths.
 
 ## before it is turned on
 

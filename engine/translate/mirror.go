@@ -2,8 +2,9 @@
 package translate
 
 import (
+	"bufio"
 	"context"
-	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
@@ -16,75 +17,121 @@ import (
 // so the box can check its files with sha256sum -c
 const SumsName = "SHA256SUMS"
 
-// FillMirror puts what the mirror serves into dir: every pinned file's
-// gzip, fetched from the manifest's source and checked against its pins
-// both packed and unpacked, named by its hash; the padding file; and the
-// list of hashes. what is already there and checks out is kept.
+// FillMirror puts what the mirror serves into dir: for each language one
+// file, BundleName, holding its gzips back to back as published, each
+// fetched from the manifest's source and checked against its pins packed
+// and unpacked, then noise up to the size class; and the list of hashes.
+// a bundle already there whose parts check out is kept.
 func FillMirror(ctx context.Context, get Getter, m *Manifest, dir string, say func(string)) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	src := m.FromSource()
 	var sums []string
-	for _, p := range m.Pairs {
-		for _, f := range p.Files {
-			name := MirrorName(f)
-			sums = append(sums, f.GzSHA256+"  "+name)
-			final := filepath.Join(dir, name)
-			if checkFile(final, f.GzSize, f.GzSHA256) == nil {
-				continue
-			}
+	for _, lang := range m.Langs() {
+		name := m.BundleName(lang)
+		final := filepath.Join(dir, name)
+		if !bundleOK(m, lang, final) {
 			if say != nil {
-				say(fmt.Sprintf("%s-%s %s", p.From, p.To, f.Name))
+				say(lang)
 			}
-			part := final + ".part"
-			if err := fetchPart(ctx, get, src.URL(f), f, part, nil); err != nil {
-				return fmt.Errorf("%s: %w", f.Name, err)
-			}
-			if err := checkFile(part, f.GzSize, f.GzSHA256); err != nil {
-				os.Remove(part)
-				return fmt.Errorf("%s: %w", f.Name, err)
-			}
-			// what it unpacks to is checked too, then thrown away
-			tmp := filepath.Join(dir, ".check-"+f.Name)
-			err := unpack(part, tmp, f)
-			os.Remove(tmp)
-			if err != nil {
-				return fmt.Errorf("%s: %w", f.Name, err)
-			}
-			if err := os.Rename(part, final); err != nil {
-				return err
+			if err := fillBundle(ctx, get, m, lang, final); err != nil {
+				return fmt.Errorf("%s: %w", lang, err)
 			}
 		}
-	}
-	if err := writePad(filepath.Join(dir, PadName)); err != nil {
-		return err
+		sum, err := fileSum(final)
+		if err != nil {
+			return err
+		}
+		sums = append(sums, sum+"  "+name)
 	}
 	sort.Strings(sums)
 	return os.WriteFile(filepath.Join(dir, SumsName), []byte(strings.Join(sums, "\n")+"\n"), 0o644)
 }
 
-// noise, so nothing on the way could shrink it
-func writePad(p string) error {
-	if st, err := os.Stat(p); err == nil && st.Size() == PadSize {
-		return nil
-	}
-	fh, err := os.CreateTemp(filepath.Dir(p), ".pad-*")
+func fillBundle(ctx context.Context, get Getter, m *Manifest, lang, final string) error {
+	files, gz := m.bundleFiles(lang)
+	tmpDir, err := os.MkdirTemp(filepath.Dir(final), ".fill-")
 	if err != nil {
 		return err
 	}
-	_, err = io.CopyN(fh, rand.Reader, PadSize)
-	if cerr := fh.Close(); err == nil {
-		err = cerr
-	}
-	if err == nil {
-		err = os.Chmod(fh.Name(), 0o644)
-	}
-	if err == nil {
-		err = os.Rename(fh.Name(), p)
-	}
+	defer os.RemoveAll(tmpDir)
+	out, err := os.Create(filepath.Join(tmpDir, "bundle"))
 	if err != nil {
-		os.Remove(fh.Name())
+		return err
 	}
-	return err
+	defer out.Close()
+	w := bufio.NewWriterSize(out, 1<<20)
+	for i, b := range files {
+		part := filepath.Join(tmpDir, fmt.Sprintf("%d.gz", i))
+		if err := fetchPart(ctx, get, m.SourceURL(b.f), b.f, part, nil); err != nil {
+			return fmt.Errorf("%s: %w", b.f.Name, err)
+		}
+		if err := checkFile(part, b.f.GzSize, b.f.GzSHA256); err != nil {
+			return fmt.Errorf("%s: %w", b.f.Name, err)
+		}
+		// what it unpacks to is checked too, then thrown away
+		if err := unpack(part, filepath.Join(tmpDir, "check"), b.f); err != nil {
+			return fmt.Errorf("%s: %w", b.f.Name, err)
+		}
+		os.Remove(filepath.Join(tmpDir, "check"))
+		in, err := os.Open(part)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(w, in)
+		in.Close()
+		if err != nil {
+			return err
+		}
+		os.Remove(part)
+	}
+	if err := writeNoise(w, m.BundleID(lang), PadTo(gz)-gz); err != nil {
+		return err
+	}
+	if err := w.Flush(); err != nil {
+		return err
+	}
+	if err := out.Sync(); err != nil {
+		return err
+	}
+	if err := out.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(out.Name(), 0o644); err != nil {
+		return err
+	}
+	return os.Rename(out.Name(), final)
+}
+
+// a bundle on disk of the class's size whose parts match their pins
+func bundleOK(m *Manifest, lang, p string) bool {
+	fh, err := os.Open(p)
+	if err != nil {
+		return false
+	}
+	defer fh.Close()
+	st, err := fh.Stat()
+	files, gz := m.bundleFiles(lang)
+	if err != nil || st.Size() != PadTo(gz) {
+		return false
+	}
+	for _, b := range files {
+		if checkReader(io.NewSectionReader(fh, b.off, b.f.GzSize), b.f.GzSize, b.f.GzSHA256) != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func fileSum(p string) (string, error) {
+	fh, err := os.Open(p)
+	if err != nil {
+		return "", err
+	}
+	defer fh.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, fh); err != nil {
+		return "", err
+	}
+	return hexSum(h.Sum(nil)), nil
 }

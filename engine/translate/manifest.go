@@ -32,8 +32,8 @@ const (
 const maxFile = 256 << 20
 
 // File is one file of a pair. Path is where the gzip of it lives under the
-// manifest's source; the mirror names it by its hash (MirrorName). Name is
-// what it is called on disk once unpacked.
+// manifest's source; on the mirror it is part of its language's bundle.
+// Name is what it is called on disk once unpacked.
 type File struct {
 	Kind     string `json:"kind"`
 	Name     string `json:"name"`
@@ -52,7 +52,7 @@ type Pair struct {
 	Files []File `json:"files"`
 }
 
-// Base is the mirror the app fetches from, every file named by its hash.
+// Base is the mirror the app fetches from: one file per language.
 // Source is where the files were first published, which the mirror is
 // filled from (cmd/ktmodels mirror); the app never asks it.
 type Manifest struct {
@@ -60,8 +60,6 @@ type Manifest struct {
 	Base    string `json:"base"`
 	Source  string `json:"source"`
 	Pairs   []Pair `json:"pairs"`
-
-	bySource bool
 }
 
 var ErrManifest = errors.New("bad manifest")
@@ -223,25 +221,9 @@ func (m *Manifest) Bundle(lang string) []Pair {
 	return out
 }
 
-// MirrorName is what the mirror calls a file's gzip: its hash, so the
-// path says nothing about the language beyond the bytes it names.
-func MirrorName(f File) string { return f.GzSHA256 + ".gz" }
-
-// URL is where a file's gzip is fetched from.
-func (m *Manifest) URL(f File) string {
-	if m.bySource {
-		return m.Source + f.Path
-	}
-	return m.Base + MirrorName(f)
-}
-
-// FromSource is the manifest fetching from where the files were published,
-// by their own paths, for filling a mirror. no padding is fetched.
-func (m *Manifest) FromSource() *Manifest {
-	c := *m
-	c.bySource = true
-	return &c
-}
+// SourceURL is where a file's gzip was published. the app never asks it:
+// it fetches the mirror's bundle (BundleName).
+func (m *Manifest) SourceURL(f File) string { return m.Source + f.Path }
 
 // GzBytes is what fetching the pair costs on the wire.
 func (p Pair) GzBytes() int64 {
