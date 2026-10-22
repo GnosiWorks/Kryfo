@@ -26,7 +26,8 @@ import 'package:kryfo/main.dart'
         AppStateGroupLanes,
         AppStateRoute,
         AppStateGroups,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateBoot;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';

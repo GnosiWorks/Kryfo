@@ -159,6 +159,7 @@ part 'app/shell.dart';
 part 'app/signal.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
+part 'app/state_boot.dart';
 part 'app/state_bridges.dart';
 part 'app/state_contacts.dart';
 part 'app/state_delivery.dart';
