@@ -6,8 +6,6 @@
 // an introduction or a group gave someone here, never checked, go on to the
 // door, which asks which one keeps them. the door the link
 // would go through is a stand-in that counts its calls
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +16,8 @@ import 'package:kryfo/main.dart' show LinkKin, rootNavKey;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
+
+import 'source_body.dart';
 
 const _invite =
     'kryfo://share?id=tourist-admit-sun&onion=abcdefghijklmnop.onion'
@@ -236,7 +236,7 @@ void main() {
   });
 
   test('every link from outside goes through the question', () {
-    final app = File('lib/app/state.dart').readAsStringSync();
+    final app = sourceOf('lib/app/state.dart');
     final stream = RegExp(
       r'uriLinkStream\.listen\(\(uri\) async \{([\s\S]*?)\n    \}\);',
     ).firstMatch(app)?.group(1);

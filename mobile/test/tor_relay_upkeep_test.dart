@@ -4,7 +4,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +25,7 @@ import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 class _Engine implements HaloEngine {
   _Engine(this.log);
@@ -279,7 +279,7 @@ void main() {
       final src = [
         'lib/app/state.dart',
         'lib/app/dev_screen.dart',
-      ].map((f) => File(f).readAsStringSync()).join('\n');
+      ].map(sourceOf).join('\n');
       final poll = src.substring(
         src.indexOf('Timer.periodic(const Duration(seconds: 1), (t) {'),
       );
@@ -604,7 +604,7 @@ void main() {
     });
 
     test('the boot sets the list before the invite address listens', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf("dlog('transport: booting in"));
       final init = boot.indexOf('engine.nostrInit(relaysFor(_sendMode));');
       expect(init, greaterThan(0));

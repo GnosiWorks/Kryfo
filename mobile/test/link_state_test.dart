@@ -22,6 +22,7 @@ import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show app, phone;
+import 'source_body.dart';
 
 void _set(String mode, TorStatus s, {bool route = true}) {
   appState.sendModeForTest = mode;
@@ -369,7 +370,7 @@ void main() {
     final main = File('lib/app/gates.dart').readAsStringSync();
     final pill = main.substring(main.indexOf('class TorHaloState'));
     expect(pill, contains('final ready = appState.pillReady;'));
-    final state = File('lib/app/state.dart').readAsStringSync();
+    final state = sourceOf('lib/app/state.dart');
     final held = state.substring(state.indexOf('bool get pillReady'));
     expect(
       held.substring(0, held.indexOf(');')),

@@ -28,6 +28,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
 
 import 'mem_db.dart';
 import 'pin_flow_fakes.dart' show app, phone;
+import 'source_body.dart';
 
 const _w = 'thumb-behave-boring';
 
@@ -190,7 +191,7 @@ void main() {
       expect(p?['v'], fc.startsWith('error') ? '2' : '3');
     }
     // and it is what the decoy hands out
-    final src = File('lib/app/state.dart').readAsStringSync();
+    final src = sourceOf('lib/app/state.dart');
     expect(src, contains('invite: quietInviteUri(id, onion, bundle, fc)'));
   });
 

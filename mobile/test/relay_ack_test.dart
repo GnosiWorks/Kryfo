@@ -33,6 +33,7 @@ import 'package:kryfo/wipe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 const _v = 'plain-friend-here';
 const _s = 'some-stranger-here';
@@ -346,7 +347,7 @@ void main() {
   });
 
   test('every hold goes to the container the cap named', () {
-    final app = File('lib/app/state.dart').readAsStringSync();
+    final app = sourceOf('lib/app/state.dart');
     final holds = RegExp(r'await _hold\(').allMatches(app).toList();
     expect(holds, hasLength(greaterThanOrEqualTo(5)));
     for (final h in holds) {
@@ -370,7 +371,7 @@ void main() {
   });
 
   test('the poll timer confirms after the batch, with what failed', () {
-    final app = File('lib/app/state.dart').readAsStringSync();
+    final app = sourceOf('lib/app/state.dart');
     final at = app.indexOf('final batch = engine.nostrPoll();');
     expect(at, greaterThan(0));
     final loop = app.substring(at, app.indexOf('} finally {', at));
@@ -610,7 +611,7 @@ void main() {
 
     test('the sweep runs once signal is up at a start, and as the vault '
         'opens', () {
-      final app = File('lib/app/state.dart').readAsStringSync();
+      final app = sourceOf('lib/app/state.dart');
       final boot = app.indexOf('_signalBoot = _bootSignal().whenComplete(');
       expect(boot, greaterThan(0));
       expect(

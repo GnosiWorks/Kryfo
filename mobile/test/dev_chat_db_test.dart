@@ -19,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show DatabaseExecutor;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 DevKey _key(String id, int n, {DevKeyStatus status = DevKeyStatus.current}) =>
     DevKey(
@@ -858,7 +859,7 @@ void main() {
     final src = [
       'lib/app/database.dart',
       'lib/app/state.dart',
-    ].map((f) => File(f).readAsStringSync()).join('\n');
+    ].map(sourceOf).join('\n');
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(55));
     final create = src.indexOf('onCreate: (db, _) async {');

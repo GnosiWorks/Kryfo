@@ -32,6 +32,7 @@ import 'package:kryfo/wire_pad.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 const _a = 'admin-of-group'; // made the group
 const _v = 'plain-member-one'; // a member, not the admin
@@ -1129,7 +1130,7 @@ void main() {
     );
 
     test('a new mode lands its relays before any runner starts again', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final mode = src.substring(src.indexOf('Future<void> setSendMode('));
       final init = mode.indexOf('engine.nostrInit(relaysFor(m));');
       expect(init, isNonNegative);

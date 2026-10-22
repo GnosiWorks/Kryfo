@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 class _Rows extends HaloDb {
   _Rows(this.mem);
@@ -196,7 +197,7 @@ void main() {
     });
 
     test('start sweeps them before anything else runs', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf('Future<void> _boot() async'));
       final tidy = boot.indexOf('tidyAtStart(');
       expect(tidy, greaterThan(0));
