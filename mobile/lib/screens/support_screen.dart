@@ -17,7 +17,13 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart' show whole;
 import '../lock_guard.dart' show lockGuard;
 import '../main.dart'
-    show appState, claimChat, currentChatPeer, releaseChat, session;
+    show
+        appState,
+        claimChat,
+        currentChatPeer,
+        releaseChat,
+        session,
+        AppStateContacts;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';

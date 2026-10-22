@@ -29,7 +29,8 @@ import 'package:kryfo/main.dart'
         AppStateOutbox,
         AppStateGroupLanes,
         AppStateRoute,
-        AppStateVault;
+        AppStateVault,
+        AppStateContacts;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

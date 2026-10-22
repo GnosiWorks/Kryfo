@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateOutbox,
         AppStateMessages,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateContacts;
 import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';

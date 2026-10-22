@@ -24,7 +24,8 @@ import 'package:kryfo/main.dart'
         sessionQuiet,
         useDatabasesForTest,
         AppStateOutbox,
-        AppStateRoute;
+        AppStateRoute,
+        AppStateContacts;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../dlog.dart';
 import '../lock_guard.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../theme.dart';
 import 'confirm_sheet.dart';
 import 'ease_size.dart';

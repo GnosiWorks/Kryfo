@@ -27,7 +27,8 @@ import 'package:kryfo/main.dart'
         signalDecrypt,
         useDatabasesForTest,
         AppStateRoute,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateContacts;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';

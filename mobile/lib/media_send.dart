@@ -26,7 +26,8 @@ import 'main.dart'
         signalEncrypt,
         AppStateOutbox,
         AppStateRoute,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateContacts;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';

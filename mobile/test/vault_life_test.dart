@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         session,
         AppStateProfile,
-        AppStateVault;
+        AppStateVault,
+        AppStateContacts;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';

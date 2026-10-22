@@ -25,7 +25,8 @@ import 'package:kryfo/main.dart'
         heldWire,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateVault;
+        AppStateVault,
+        AppStateContacts;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/relay_poll.dart';
 import 'package:kryfo/router.dart';
