@@ -104,7 +104,8 @@ import '../main.dart'
         torStrictGetOnIsolate,
         torValve,
         TorHalo,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateMessages;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';

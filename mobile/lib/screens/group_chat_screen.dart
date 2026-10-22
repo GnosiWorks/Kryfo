@@ -71,7 +71,8 @@ import '../main.dart'
         shredFile,
         kAdminGone,
         themeRevision,
-        AppStateOutbox;
+        AppStateOutbox,
+        AppStateMessages;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';

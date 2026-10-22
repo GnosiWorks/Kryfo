@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, useDatabasesForTest;
+    show AppIo, AppState, HaloDb, useDatabasesForTest, AppStateMessages;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
