@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.3] - 2026-10-21
+## [0.5.3] - 2026-10-22
 
 ### Added
 - a video you record plays in the preview before you send it.
@@ -19,6 +19,7 @@
 - "Through a helper app" is always shown in getting messages, with a line on why it waits.
 - photos with a caption have slightly less rounded corners.
 - the texts about screenshot blocking say plainly what it can't stop.
+- unsending a message says it leaves both phones, unless it was already saved.
 
 ### Fixed
 - on some phones the fingerprint could not be turned back on after an update.
