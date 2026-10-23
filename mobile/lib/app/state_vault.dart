@@ -320,6 +320,7 @@ extension AppStateVault on AppState {
 
   Future<void> _destroy(HaloContainer c) async {
     if (_session.vault != null) throw StateError('the vault is open');
+    forgetDrafts(c);
     await _host.clearEntry(c);
     await _dropMade();
     if (c == HaloContainer.vault) {
@@ -460,7 +461,17 @@ extension AppStateVault on AppState {
     // goes with its chat, and the two take the same time
     final done = Completer<void>();
     _moveDone = done;
+    void Function()? letDrafts;
     try {
+      // what waits for the vault goes out with the chat's rows
+      if (out) {
+        for (final c in chats) {
+          await writeDraftNow(vault, c.id, group: c.group);
+        }
+      }
+      // until the session is rebuilt it still names the old side: a draft
+      // typed meanwhile would land there
+      letDrafts = holdDraftsOf([for (final c in chats) c.id]);
       for (final c in chats) {
         _moving.add(c.id);
         if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
@@ -500,6 +511,7 @@ extension AppStateVault on AppState {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
       }
+      letDrafts?.call();
       _moving.clear();
       _moveDone = null;
       done.complete();
@@ -559,12 +571,15 @@ extension AppStateVault on AppState {
     List<ChatRef> chats,
   ) async {
     final everyday = AppState._everyday(vault);
-    final from = _primaryOf(vault).container;
+    final primary = _primaryOf(vault);
+    final from = primary.container;
     var marks = await m.marks();
     final went = <ChatRef>[];
     for (final c in chats) {
       // the developer chat is never hidden
       if (isDevChat(c.id) || !await m.hideable(c)) continue;
+      // its unsent words go, before its rows are copied over
+      await dropDraft(primary, c.id, group: c.group);
       marks = marks.hiding(c);
       await m.copyIn(c, marks);
       if (everyday) {
@@ -588,8 +603,8 @@ extension AppStateVault on AppState {
       await m.putMarks(marks);
       // its unsent words are not kept outside the vault, nor written back
       // by a screen of it still open
-      c.group ? dropGroupDraft(c.id) : dropChatDraft(c.id);
-      dropDraft(from.chatKey(c.id), group: c.group);
+      await (c.group ? dropGroupDraft(c.id) : dropChatDraft(c.id));
+      await dropDraft(vault, c.id, group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       went.add(c);
     }
@@ -617,6 +632,8 @@ extension AppStateVault on AppState {
       if (everyday) await _router.load();
       marks = marks.done(c);
       await m.dropVault(c, marks);
+      // its draft went out with its rows: the vault's copy in memory goes
+      forgetDraft(vault.container, c.id, group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       n++;
     }

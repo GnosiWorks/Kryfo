@@ -149,6 +149,7 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../container.dart' show HaloContainer;
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
@@ -227,13 +228,27 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// whether [id]'s group is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
+bool groupOnScreen(String id) => (_openGroups[id] ?? const []).any(
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyGroupComposer(HaloContainer c, String id) {
+  for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
+
 /// a group's unsent words go with it, from an open composer too: its screen
 /// closing would write them back
-void dropGroupDraft(String id) {
+Future<void> dropGroupDraft(String id) {
   for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerGroup.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: true);
 }
 
 /// pops [nav] back to [groupId]'s open screen. false when it is not open
@@ -469,6 +484,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, StickerLanding> _landings = {};
   final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
+  // a kept quote of someone blocked: out of sight, never sent, kept in the
+  // draft, and shown again once they are not blocked
+  String? _hiddenQuote;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -525,6 +545,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // ghost mode, kept as the 1:1 chats keep it. when on, new messages carry
   // a burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // this group's voice notes go out disguised
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
@@ -590,18 +612,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
-    // restore a draft left behind last time this group was open.
-    _msgCtrl.text = draftPerGroup[_memo] ?? '';
-    // save it live on every keystroke so it survives leaving regardless of
-    // when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerGroup.remove(_memo);
-      } else {
-        draftPerGroup[_memo] = t;
-      }
-    });
+    // the draft left behind last time this group was open
+    final rows = session.draftsOf(widget.groupId);
+    final kept = heldDraft(rows.container, widget.groupId, group: true);
+    _msgCtrl.text = kept?.text ?? '';
+    _draftReply = kept?.replyTo;
+    // after a stopped process it is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the group and the app
+    _msgCtrl.addListener(_keepDraft);
     _scrollCtrl.addListener(_updateSticky);
     _scrollCtrl.addListener(_onGroupScroll);
     Future.delayed(const Duration(milliseconds: 1200), () {
@@ -614,6 +633,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         setState(() {
           _ghost = p.$1;
           _burnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
@@ -1129,6 +1149,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
+      unawaited(_restoreReply());
       unawaited(_refreshPinCount());
     } finally {
       // a throw mid-load must not leave _loading stuck true, or every later
@@ -1767,7 +1788,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     for (final x in members) {
                       _touched(x);
                     }
+                    _hiddenQuote = null;
                     setState(() => _replyTo = answer);
+                    _keepDraft();
                   },
                   // the lifted copy in the overlay is the one that animates;
                   // the row underneath just steps aside
@@ -1957,7 +1980,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     setState(() => _sending = true);
     _msgCtrl.clear();
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     final burnSeconds = _ghost ? _burnSeconds : null;
     final url = firstUrl(text);
     final preview = url != null && _pendingPreview?['url'] == url
@@ -2178,7 +2201,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // same row, reply, burn timer, ticks and retry
   Future<void> _sendSticker(Sticker s, StickerWire w, StickerPick pick) async {
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     final burnSeconds = _ghost ? _burnSeconds : null;
     final optimistic = _GMsg(
       sender: appState.sessionId,
@@ -2197,6 +2220,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     var ok = false;
     try {
@@ -2637,8 +2662,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // the message being answered goes with the next file, and its bar with it
   String? _takeReply() {
-    final r = _replyTo?.msgUid;
+    final r = _takeQuote();
     if (_replyTo != null && mounted) setState(() => _replyTo = null);
+    // the quote is answered: the kept draft lets it go too
+    if (r != null) _keepDraft();
     return r;
   }
 
@@ -3211,6 +3238,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         _ghost = true;
                       });
                       appState.saveGhostPref(true, opt.$1);
+                      // the draft takes the group's new clock
+                      _keepDraft(clock: true);
                       Navigator.pop(c);
                     },
                     child: Padding(
@@ -3444,7 +3473,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         },
                         onReply: () {
                           dismiss();
+                          _hiddenQuote = null;
                           setState(() => _replyTo = anchor);
+                          _keepDraft();
                         },
                       ),
                     ),
@@ -4098,6 +4129,126 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _catchUp();
   }
 
+  // where this group's draft is kept, while the session still holds the
+  // group where it did when it opened: one left behind by a lock or a hide
+  // writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.groupId);
+    return rows.container.chatKey(widget.groupId) == _memo ? rows : null;
+  }
+
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
+    final rows = _draftRows;
+    if (rows == null) return;
+    typedDraft(
+      rows,
+      widget.groupId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply ?? _hiddenQuote,
+        at: DateTime.now().millisecondsSinceEpoch,
+        // a timed group's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
+      ),
+      group: true,
+      clock: clock,
+      timedKnown: _ghostKnown,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final d = await readDraft(rows, widget.groupId, group: true);
+    if (!mounted || d == null || _msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    _msgCtrl.value = TextEditingValue(
+      text: d.text,
+      selection: TextSelection.collapsed(offset: d.text.length),
+    );
+    unawaited(_restoreReply());
+  }
+
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the group, or from someone blocked, is let go; until then
+  // the draft keeps its uid
+  Future<void> _restoreReply() async {
+    final uid = _draftReply ?? _hiddenQuote;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      _hiddenQuote = null;
+      return;
+    }
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        _draftReply = null;
+        _hiddenQuote = null;
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.groupMessageIn(widget.groupId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
+    _draftReply = null;
+    final from = row?['peer_id'] as String?;
+    if (row == null || from == null) {
+      _hiddenQuote = null;
+      return;
+    }
+    // someone blocked: kept, out of sight, tried again on every load
+    if (_blocked.contains(from)) {
+      _hiddenQuote = uid;
+      return;
+    }
+    _hiddenQuote = null;
+    if (_replyTo != null) return;
+    final m = _GMsg(
+      sender: from,
+      senderName: _nameOf(from),
+      direction: row['direction'] as String,
+      text: row['plaintext'] as String? ?? '',
+      when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
+  }
+
+  bool _quoteLookup = false;
+
+  // what a send answers: the quote up, or a kept one still being looked
+  // up, which the send then takes so the lookup does not put it back
+  String? _takeQuote() {
+    final uid = _replyTo?.msgUid ?? _draftReply;
+    _draftReply = null;
+    // never one the person cannot see; a send lets it go
+    _hiddenQuote = null;
+    return uid;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    _hiddenQuote = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
+  }
+
   // a screen pushed over this one closed: this is the one being read again
   @override
   void backOnTop() {
@@ -4199,12 +4350,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       land();
     }
     _leaveRoomScreen();
-    // persist the draft one more time on the way out.
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerGroup.remove(_memo);
-    } else {
-      draftPerGroup[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.groupId, group: true));
     }
     _lastRowPerGroup[_memo] = _messages.fold(
       0,
@@ -4462,7 +4613,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               child: _replyTo != null
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
+                      onCancel: () {
+                        setState(() => _replyTo = null);
+                        _keepDraft();
+                      },
                     )
                   : const SizedBox.shrink(),
             ),
@@ -4508,6 +4662,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         onToggleGhost: () {
                           setState(() => _ghost = !_ghost);
                           appState.saveGhostPref(_ghost, _burnSeconds);
+                          _keepDraft(clock: true);
                         },
                         onLongPressGhost: _showBurnPicker,
                         onSend: _send,

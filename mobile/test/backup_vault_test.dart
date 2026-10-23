@@ -746,6 +746,23 @@ void main() {
       expect(_names(back).where((n) => hiddenPart(n) != null), isEmpty);
     });
 
+    test('carries no hidden chat\'s draft, were one ever left on the '
+        'everyday side', () async {
+      await _phone(docs);
+      final file = p.join(docs, 'halo.db');
+      final t = await _read(file);
+      t['drafts'] = [
+        for (final chat in [_v, _h, 'group:$_g2'])
+          {'chat': chat, 'body': 'words for $chat', 'updated_at': 1},
+      ];
+      await File(file).writeAsString(jsonEncode(t));
+      final d = await draftBackup(stage, side: side);
+      final carried = await _read(d.sources['halo.db']!);
+      expect([for (final r in carried['drafts']!) r['chat']], [_v]);
+      // the phone's own keeps them as they are
+      expect((await _read(file))['drafts']!.length, 3);
+    });
+
     test('carries the supporter badge and the face picked', () async {
       await _phone(docs, hidden: false);
       SharedPreferences.setMockInitialValues({

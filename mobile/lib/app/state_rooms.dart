@@ -787,7 +787,7 @@ extension AppStateRooms on AppState {
     }
     // what it put in the shade goes with it, while its tag is still here
     await _io.unnotify('group:$groupId');
-    dropGroupDraft(groupId);
+    await dropGroupDraft(groupId);
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
     // the line in the list is only for a room of the session on screen: an
@@ -867,13 +867,23 @@ extension AppStateRooms on AppState {
   @visibleForTesting
   Future<int> sweepBurns({bool stray = false}) async {
     void unring(String uid) => unawaited(_io.unnotifyMessage(uid));
-    var gone = await live.purgeExpired(gone: unring, blocked: _realBlocked);
+    var gone = await live.purgeExpired(
+      gone: unring,
+      blocked: _realBlocked,
+      draftOnScreen: draftTypedIn,
+      draftGone: emptyComposerOf,
+    );
     if (stray) await live.purgeStrayVotes();
     // the open vault's too. shut, its timers wait for the next open
     final v = _openVault;
     if (v != null) {
       try {
-        gone += await v.purgeExpired(gone: unring, blocked: _realBlocked);
+        gone += await v.purgeExpired(
+          gone: unring,
+          blocked: _realBlocked,
+          draftOnScreen: draftTypedIn,
+          draftGone: emptyComposerOf,
+        );
         if (stray) await v.purgeStrayVotes();
       } catch (e) {
         if (identical(_openVault, v)) rethrow;
@@ -884,7 +894,12 @@ extension AppStateRooms on AppState {
     final d = session.primary;
     if (!identical(d, live)) {
       try {
-        gone += await d.purgeExpired(gone: unring, ifOpen: true);
+        gone += await d.purgeExpired(
+          gone: unring,
+          ifOpen: true,
+          draftOnScreen: draftTypedIn,
+          draftGone: emptyComposerOf,
+        );
       } catch (e) {
         if (identical(session.primary, d) && d.isOpen) rethrow;
       }
@@ -982,3 +997,15 @@ extension AppStateRooms on AppState {
     return rooms.length;
   }
 }
+
+/// a composer on the page in front, in an app in front and unlocked: being
+/// typed in, so the sweep leaves its timed draft until it is left
+bool draftTypedIn(String id, bool group) =>
+    WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+    !lockGuard.isLocked() &&
+    (group ? groupOnScreen(id) : chatOnScreen(id));
+
+/// a timed draft gone empties a composer of it left open, as its timed
+/// messages leave an open chat
+void emptyComposerOf(HaloContainer c, String id, bool group) =>
+    group ? emptyGroupComposer(c, id) : emptyChatComposer(c, id);

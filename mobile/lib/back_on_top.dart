@@ -99,3 +99,12 @@ class RouteStack extends NavigatorObserver {
 
 // on the app's navigator
 final routeStack = RouteStack();
+
+/// [r] is the page in front: on top, or under only sheets and dialogs, as
+/// a chat's own timer picker or menu. another page over it is not
+bool pageInFront(Route<dynamic>? r) {
+  if (r == null || !r.isActive) return false;
+  if (r.isCurrent) return true;
+  final over = routeStack.above(r);
+  return over.isNotEmpty && !over.any((x) => x is PageRoute);
+}

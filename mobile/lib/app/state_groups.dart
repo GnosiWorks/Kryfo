@@ -113,7 +113,7 @@ extension AppStateGroups on AppState {
     required int at,
   }) async {
     if (groupEndOf(await db.getGroup(groupId)) != null) return false;
-    dropGroupDraft(groupId);
+    await dropGroupDraft(groupId);
     // the wipe takes its tag: read first, for the shade
     final tags = {?await db.notifTagOf('group:$groupId')};
     if (!await db.endGroup(groupId, by: by, at: at)) return false;
@@ -1150,7 +1150,7 @@ extension AppStateGroups on AppState {
         ? const <String>[]
         : await d.getGroupMembers(groupId);
     await _io.unnotify('group:$groupId');
-    dropGroupDraft(groupId);
+    await dropGroupDraft(groupId);
     await session.clearGroupConversation(groupId, noteGone: false);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
@@ -1170,7 +1170,7 @@ extension AppStateGroups on AppState {
   // what it left in the shade
   Future<void> _dropGroup(String groupId, HaloDb db) async {
     await _io.unnotify('group:$groupId');
-    dropGroupDraft(groupId);
+    await dropGroupDraft(groupId);
     await db.clearGroupConversation(groupId, noteGone: false);
     await db.deleteGroup(groupId);
   }

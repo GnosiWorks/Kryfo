@@ -5,6 +5,7 @@ import '../lock_state.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../container.dart' show HaloContainer;
 import '../drafts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -200,12 +201,26 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
+/// whether [id]'s chat is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
+bool chatOnScreen(String id) => (_openChats[id] ?? const []).any(
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyChatComposer(HaloContainer c, String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
+
 /// a deleted chat's unsent words go with it, from an open composer too
-void dropChatDraft(String id) {
+Future<void> dropChatDraft(String id) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerPeer.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: false);
 }
 
 /// the note on a contact. [save] runs before the sheet goes; true when it
@@ -672,6 +687,8 @@ class _ChatScreenState extends State<ChatScreen>
   String? _firstUnreadKey;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // marks the next message so the other phone blocks screenshots of it. off
   // by default, since then neither side can screenshot the chat.
   bool _secureNext = false;
@@ -905,6 +922,8 @@ class _ChatScreenState extends State<ChatScreen>
   // the message being replied to. cleared after send or by the X in the
   // quote bar.
   _Msg? _replyTo;
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
 
   // search in chat. _matches are indices into _messages, _matchPos the
   // current hit, _matchKeys let a hit be scrolled into view.
@@ -1224,6 +1243,7 @@ class _ChatScreenState extends State<ChatScreen>
           _burnSeconds = p.$2;
           _lastGhost = p.$1;
           _lastBurnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
@@ -1247,17 +1267,17 @@ class _ChatScreenState extends State<ChatScreen>
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterRow = _lastReadPerPeer[_memo];
-    _msgCtrl.text = composerWith(draftPerPeer[_memo] ?? '', widget.initialText);
-    // save the draft live on every keystroke so it survives leaving the chat
-    // regardless of when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerPeer.remove(_memo);
-      } else {
-        draftPerPeer[_memo] = t;
-      }
-    });
+    final rows = session.draftsOf(widget.peerHaloId);
+    final kept = heldDraft(rows.container, widget.peerHaloId, group: false);
+    _msgCtrl.text = composerWith(kept?.text ?? '', widget.initialText);
+    _draftReply = kept?.replyTo;
+    // after a stopped process the draft is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the chat and the app
+    _msgCtrl.addListener(_keepDraft);
+    // words handed in by a share or a forward are a draft from the start;
+    // after a stop, once the row they join is read
+    if (kept != null && _handedIn) _keepDraft();
     session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
@@ -2933,6 +2953,7 @@ class _ChatScreenState extends State<ChatScreen>
         ).millisecondsSinceEpoch;
       }
     });
+    unawaited(_restoreReply());
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
@@ -3340,6 +3361,8 @@ class _ChatScreenState extends State<ChatScreen>
       _lastGhost = true;
       appState.saveGhostPref(true, picked);
     });
+    // the draft takes the chat's new clock
+    _keepDraft(clock: true);
   }
 
   // a one-shot amber ring on a bubble when a reaction lands on it
@@ -3624,7 +3647,7 @@ class _ChatScreenState extends State<ChatScreen>
     // note says
     final disguise = take.disguise || _devAnon;
     final msgUid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     // sent is sent: leaving the chat does not stop it. the lock does, and
     // nothing of it outlives the lock
     var locked = false;
@@ -3669,6 +3692,8 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         masked = await making.file;
         if (locked) return lockedOut(masked);
@@ -3736,6 +3761,8 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         HapticFeedback.lightImpact();
       }
@@ -4015,7 +4042,7 @@ class _ChatScreenState extends State<ChatScreen>
     // a file goes protected only when asked for in the preview
     final wantSecure = shown?.secure ?? secure ?? (!isFile && _secureNext);
     // a few photos at once: the first one answers
-    final replyToUid = shown == null ? _replyTo?.msgUid : shown.replyTo;
+    final replyToUid = shown == null ? _takeQuote() : shown.replyTo;
     final msg =
         shown ??
         _Msg(
@@ -4041,6 +4068,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       if (shown == null) _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    if (shown == null) _keepDraft();
     if (shown == null) _scrollToEnd();
     HapticFeedback.lightImpact();
     await _answerSupport();
@@ -4091,7 +4120,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return;
     final alone = _requestPending;
     final plan = albumPlan(r.items, r.caption, alone: alone);
-    final reply = _replyTo?.msgUid;
+    final reply = _takeQuote();
     final now = DateTime.now().millisecondsSinceEpoch;
     final waiting = [
       for (final (k, go) in plan.indexed)
@@ -4114,6 +4143,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     final ready = <(_Msg, _Ready)>[];
     for (final (k, go) in plan.indexed) {
@@ -4520,7 +4551,7 @@ class _ChatScreenState extends State<ChatScreen>
     _sendTurn = turn.future;
     var handed = false;
     try {
-      final replyToUid = _replyTo?.msgUid;
+      final replyToUid = _takeQuote();
       // a pending preview only belongs to a message that still holds its link
       final url = typed ? firstUrl(text) : null;
       final preview = url != null && _pendingPreview?['url'] == url
@@ -4550,6 +4581,8 @@ class _ChatScreenState extends State<ChatScreen>
         if (typed) _pendingPreview = null;
       });
       if (typed) _msgCtrl.clear();
+      // the quote is answered: the kept draft lets it go too
+      _keepDraft();
       _scrollToEnd();
       // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
@@ -4712,8 +4745,19 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void backOnTop() {
     // a copy of this chat opened over it may have changed the draft
-    final draft = draftPerPeer[_memo] ?? '';
-    if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+    final rows = _draftRows;
+    if (rows != null) {
+      final d = heldDraft(rows.container, widget.peerHaloId, group: false);
+      if (d == null && _msgCtrl.text.trim().isNotEmpty) {
+        // sent from a copy over it, or its timer ran out while a page was
+        // on top: gone here too, its row with it
+        _timedDraftGone();
+        unawaited(dropDraft(rows, widget.peerHaloId, group: false));
+      } else {
+        final draft = d?.text ?? '';
+        if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+      }
+    }
     if (lockGuard.isLocked()) {
       _underLock = true;
       return;
@@ -5227,6 +5271,7 @@ class _ChatScreenState extends State<ChatScreen>
       _replyTo = m;
       _replyFlash = m;
     });
+    _keepDraft();
     _composerFocus.requestFocus();
     Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted && identical(_replyFlash, m)) {
@@ -5257,11 +5302,12 @@ class _ChatScreenState extends State<ChatScreen>
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
     );
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerPeer.remove(_memo);
-    } else {
-      draftPerPeer[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.peerHaloId, group: false));
     }
     _msgCtrl.dispose();
     _composerFocus.dispose();
@@ -5850,6 +5896,111 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  // where this chat's draft is kept, while the session still holds the
+  // chat where it did when the chat opened: a chat left behind by a lock
+  // or a hide writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.peerHaloId);
+    return rows.container.chatKey(widget.peerHaloId) == _memo ? rows : null;
+  }
+
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
+    final rows = _draftRows;
+    if (rows == null) return;
+    typedDraft(
+      rows,
+      widget.peerHaloId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply,
+        at: DateTime.now().millisecondsSinceEpoch,
+        // a timed chat's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
+      ),
+      group: false,
+      clock: clock,
+      timedKnown: _ghostKnown,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final d = await readDraft(rows, widget.peerHaloId, group: false);
+    if (!mounted) return;
+    if (d == null) {
+      if (_handedIn && _msgCtrl.text == before) _keepDraft();
+      return;
+    }
+    if (_msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    _takeDraft(composerWith(d.text, widget.initialText));
+    unawaited(_restoreReply());
+  }
+
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the chat is let go; until then the draft keeps its uid
+  Future<void> _restoreReply() async {
+    final uid = _draftReply;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      return;
+    }
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        _draftReply = null;
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.messageIn(widget.peerHaloId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || _draftReply != uid) return;
+    _draftReply = null;
+    if (row == null || _replyTo != null) return;
+    final m = _Msg(
+      row['direction'] as String,
+      row['plaintext'] as String? ?? '',
+      DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
+  }
+
+  bool _quoteLookup = false;
+
+  bool get _handedIn => (widget.initialText ?? '').trim().isNotEmpty;
+
+  // what a send answers: the quote up, or a kept one still being looked
+  // up, which the send then takes so the lookup does not put it back
+  String? _takeQuote() {
+    final uid = _replyTo?.msgUid ?? _draftReply;
+    _draftReply = null;
+    return uid;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
+  }
+
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
@@ -6381,10 +6532,14 @@ class _ChatScreenState extends State<ChatScreen>
                 axisAlignment: -1,
                 child: FadeTransition(opacity: anim, child: child),
               ),
-              child: _replyTo != null
+              // the quote is part of the composer the blocked bar replaces
+              child: _replyTo != null && !_blocked
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
+                      onCancel: () {
+                        setState(() => _replyTo = null);
+                        _keepDraft();
+                      },
                     )
                   : const SizedBox.shrink(),
             ),
@@ -6491,11 +6646,14 @@ class _ChatScreenState extends State<ChatScreen>
                                     : l10n.chatPhotoProtectionOff,
                               );
                             },
-                            onToggleGhost: () => setState(() {
-                              _ghost = !_ghost;
-                              _lastGhost = _ghost;
-                              appState.saveGhostPref(_ghost, _burnSeconds);
-                            }),
+                            onToggleGhost: () {
+                              setState(() {
+                                _ghost = !_ghost;
+                                _lastGhost = _ghost;
+                                appState.saveGhostPref(_ghost, _burnSeconds);
+                              });
+                              _keepDraft(clock: true);
+                            },
                             onPickBurn: _pickBurnDuration,
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,
