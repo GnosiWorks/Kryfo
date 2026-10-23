@@ -34,7 +34,7 @@ type voiceRig struct {
 	names []string
 }
 
-func newVoiceRig(t *testing.T, redirectHosts string, h http.Handler) *voiceRig {
+func newVoiceRig(t *testing.T, h http.Handler) *voiceRig {
 	r := &voiceRig{data: bytes.Repeat([]byte("kryfo voice "), 200000)}
 	if h == nil {
 		h = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -45,8 +45,8 @@ func newVoiceRig(t *testing.T, redirectHosts string, h http.Handler) *voiceRig {
 	r.srv = httptest.NewTLSServer(h)
 	sum := sha256.Sum256(r.data)
 	man, err := voice.Parse([]byte(fmt.Sprintf(
-		`{"base":%q,"redirect_hosts":[%s],"models":[{"id":"base","file":"m.bin","size":%d,"sha256":%q}]}`,
-		r.srv.URL+"/v/", redirectHosts, len(r.data), hex.EncodeToString(sum[:]))))
+		`{"base":%q,"source":"https://source.example/m/","models":[{"id":"base","file":"m.bin","size":%d,"sha256":%q}]}`,
+		r.srv.URL+"/v/", len(r.data), hex.EncodeToString(sum[:]))))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,21 +95,21 @@ func TestVoiceModelsListsPins(t *testing.T) {
 	if err := json.Unmarshal([]byte(voiceModels()), &out); err != nil {
 		t.Fatal(err)
 	}
-	if len(out.Models) != 2 || out.Models[0].ID != "base" || out.Models[0].Size != 59707625 {
+	if len(out.Models) != 1 || out.Models[0].ID != "base" || out.Models[0].Size != 59707625 {
 		t.Fatalf("models %+v", out.Models)
 	}
-	if !strings.HasPrefix(out.Base, "https://") {
-		t.Fatalf("base %q", out.Base)
+	if !regexp.MustCompile(`^http://[a-z2-7]{56}\.onion/voice/$`).MatchString(out.Base) {
+		t.Fatalf("base %q is not our mirror", out.Base)
 	}
 }
 
 func TestVoiceFetchOverItsOwnCircuit(t *testing.T) {
-	r := newVoiceRig(t, "", nil)
+	r := newVoiceRig(t, nil)
 	dir := t.TempDir()
 	if got := voiceCheck("base", dir); got != "no" {
 		t.Fatalf("check before %q", got)
 	}
-	if got := voiceFetch("base", dir, ""); got != "ok" {
+	if got := voiceFetch("base", dir); got != "ok" {
 		t.Fatal(got)
 	}
 	st := waitVoice(t, "base")
@@ -130,7 +130,7 @@ func TestVoiceFetchOverItsOwnCircuit(t *testing.T) {
 	}
 	// a second download dials under a name of its own
 	voiceRemove("base", dir)
-	voiceFetch("base", dir, "")
+	voiceFetch("base", dir)
 	waitVoice(t, "base")
 	if len(r.names) != 2 || r.names[0] == r.names[1] {
 		t.Fatalf("socks names %q", r.names)
@@ -149,10 +149,10 @@ func TestVoiceFetchOverItsOwnCircuit(t *testing.T) {
 }
 
 func TestVoiceFetchNeedsTor(t *testing.T) {
-	r := newVoiceRig(t, "", nil)
+	r := newVoiceRig(t, nil)
 	voiceDial = func(string) (dialFn, error) { return nil, fmt.Errorf("not started") }
 	dir := t.TempDir()
-	if got := voiceFetch("base", dir, ""); !strings.HasPrefix(got, "error: tor") {
+	if got := voiceFetch("base", dir); !strings.HasPrefix(got, "error: tor") {
 		t.Fatalf("got %q", got)
 	}
 	if r.hits.Load() != 0 {
@@ -164,15 +164,15 @@ func TestVoiceFetchNeedsTor(t *testing.T) {
 }
 
 func TestVoiceFetchRefuses(t *testing.T) {
-	r := newVoiceRig(t, "", nil)
-	for _, c := range []struct{ id, dir, base string }{
-		{"base", "/sdcard/Download", ""},
-		{"base", "/storage/emulated/0/kryfo", ""},
-		{"base", "relative", ""},
-		{"large", t.TempDir(), ""},
-		{"base", t.TempDir(), "http://kryfo.app/voice/"},
+	r := newVoiceRig(t, nil)
+	for _, c := range []struct{ id, dir string }{
+		{"base", "/sdcard/Download"},
+		{"base", "/storage/emulated/0/kryfo"},
+		{"base", "relative"},
+		{"small", t.TempDir()},
+		{"large", t.TempDir()},
 	} {
-		if got := voiceFetch(c.id, c.dir, c.base); !strings.HasPrefix(got, "error: ") {
+		if got := voiceFetch(c.id, c.dir); !strings.HasPrefix(got, "error: ") {
 			t.Errorf("%+v: %q", c, got)
 		}
 	}
@@ -184,52 +184,63 @@ func TestVoiceFetchRefuses(t *testing.T) {
 	}
 }
 
-func TestVoiceRedirectOnlyWherePinned(t *testing.T) {
-	target := newVoiceRig(t, "", nil)
+// the mirror serves the files itself: a redirect is not followed, to any
+// host, so the download never leaves the pinned one
+func TestVoiceNoRedirect(t *testing.T) {
+	target := newVoiceRig(t, nil)
 	hop := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		http.Redirect(w, req, target.srv.URL+"/v/m.bin", http.StatusFound)
+		http.Redirect(w, req, target.srv.URL+req.URL.Path, http.StatusFound)
 	})
-	// a host the pins do not name: the redirect is not followed
-	newVoiceRig(t, "", hop)
+	newVoiceRig(t, hop)
 	// the rig above replaced the pins; the target's own tls is trusted too
-	pool := voiceTLS.RootCAs
-	pool.AddCert(target.srv.Certificate())
+	voiceTLS.RootCAs.AddCert(target.srv.Certificate())
 	dir := t.TempDir()
-	voiceFetch("base", dir, "")
+	voiceFetch("base", dir)
 	if st := waitVoice(t, "base"); st.State != voice.StateFailed {
-		t.Fatalf("followed a redirect nobody pinned: %+v", st)
+		t.Fatalf("followed a redirect: %+v", st)
 	}
 	if target.hits.Load() != 0 {
 		t.Fatal("reached the redirect's target")
 	}
 }
 
-func TestVoiceRedirectPinnedHost(t *testing.T) {
-	target := newVoiceRig(t, "", nil)
-	hop := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		http.Redirect(w, req, target.srv.URL+"/v/m.bin", http.StatusFound)
-	})
-	newVoiceRig(t, `"127.0.0.1"`, hop)
-	voiceTLS.RootCAs.AddCert(target.srv.Certificate())
+// the request names the model by its hash and nothing else
+func TestVoiceAsksForTheHash(t *testing.T) {
+	var paths []string
+	var mu sync.Mutex
+	var r *voiceRig
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		mu.Lock()
+		paths = append(paths, req.URL.Path)
+		mu.Unlock()
+		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
+	}))
 	dir := t.TempDir()
-	voiceFetch("base", dir, "")
+	voiceFetch("base", dir)
 	if st := waitVoice(t, "base"); st.State != voice.StateDone {
 		t.Fatalf("status %+v", st)
 	}
-	if voiceCheck("base", dir) != "yes" {
-		t.Fatal("model from the redirect fails its check")
+	sum := sha256.Sum256(r.data)
+	want := "/v/" + hex.EncodeToString(sum[:])
+	for _, p := range paths {
+		if p != want {
+			t.Fatalf("asked for %q, want %q", p, want)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, "m.bin")); err != nil {
+		t.Fatal("the model is not under its own name on the phone")
 	}
 }
 
 func TestVoiceRemove(t *testing.T) {
 	gate := make(chan struct{})
 	var r *voiceRig
-	r = newVoiceRig(t, "", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		<-gate
 		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
 	}))
 	dir := t.TempDir()
-	voiceFetch("base", dir, "")
+	voiceFetch("base", dir)
 	for !voiceJobs.Running("base") {
 		time.Sleep(time.Millisecond)
 	}
@@ -258,7 +269,7 @@ func TestVoiceRemove(t *testing.T) {
 func TestVoiceCancelKeepsPart(t *testing.T) {
 	var r *voiceRig
 	started := make(chan struct{}, 1)
-	r = newVoiceRig(t, "", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// the first chunk, then a host that stalls until the client goes
 		if req.Header.Get("Range") != "bytes=0-1048575" {
 			select {
@@ -271,7 +282,7 @@ func TestVoiceCancelKeepsPart(t *testing.T) {
 		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
 	}))
 	dir := t.TempDir()
-	voiceFetch("base", dir, "")
+	voiceFetch("base", dir)
 	<-started
 	voiceJobs.Cancel("base")
 	if st := voiceJobs.Status("base"); st.State != voice.StateCancelled || st.Done != voice.Chunk {
@@ -286,11 +297,11 @@ func TestVoiceCancelKeepsPart(t *testing.T) {
 // the decoy downloads nothing: not while one is open, not before the app
 // has said, and a decoy opening stops a download the real session started
 func TestVoiceFetchRefusedInDecoy(t *testing.T) {
-	r := newVoiceRig(t, "", nil)
+	r := newVoiceRig(t, nil)
 	for _, st := range []int32{decoyOn, decoyUnknown} {
 		decoyState.Store(st)
 		dir := t.TempDir()
-		if got := voiceFetch("base", dir, ""); got != "error: decoy" {
+		if got := voiceFetch("base", dir); got != "error: decoy" {
 			t.Errorf("decoy state %d: %q", st, got)
 		}
 		if entries, _ := os.ReadDir(dir); len(entries) != 0 {
@@ -305,7 +316,7 @@ func TestVoiceFetchRefusedInDecoy(t *testing.T) {
 func TestVoiceDecoyStopsADownload(t *testing.T) {
 	var r *voiceRig
 	started := make(chan struct{}, 1)
-	r = newVoiceRig(t, "", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		r.hits.Add(1)
 		if req.Header.Get("Range") != "bytes=0-1048575" {
 			select {
@@ -318,7 +329,7 @@ func TestVoiceDecoyStopsADownload(t *testing.T) {
 		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
 	}))
 	dir := t.TempDir()
-	if got := voiceFetch("base", dir, ""); got != "ok" {
+	if got := voiceFetch("base", dir); got != "ok" {
 		t.Fatal(got)
 	}
 	<-started

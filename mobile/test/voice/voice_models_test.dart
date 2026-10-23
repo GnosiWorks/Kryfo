@@ -31,7 +31,7 @@ void main() {
 
   test('lists the pinned models', () async {
     e.answers['HaloVoiceModels'] =
-        '{"base":"https://x/","models":[{"id":"base","file":"ggml-base-q5_1.bin","size":59707625}]}';
+        '{"base":"http://x.onion/voice/","models":[{"id":"base","file":"ggml-base-q5_1.bin","size":59707625}]}';
     final m = await models.models();
     expect(m.single.id, 'base');
     expect(m.single.size, 59707625);
@@ -44,13 +44,13 @@ void main() {
   test('fetches into the app storage dir', () async {
     e.answers['HaloVoiceFetch'] = 'ok';
     expect(await models.fetch('base'), isTrue);
+    // the id and the dir, and no host: the engine pins where it fetches
     expect(
       e.calls.single,
-      'HaloVoiceFetch(base,/data/user/0/app.kryfo/files/voice,)',
+      'HaloVoiceFetch(base,/data/user/0/app.kryfo/files/voice)',
     );
     e.answers['HaloVoiceFetch'] = 'error: tor: not started';
-    expect(await models.fetch('base', base: 'http://abc.onion/v/'), isFalse);
-    expect(e.calls.last, endsWith(',http://abc.onion/v/)'));
+    expect(await models.fetch('base'), isFalse);
   });
 
   test('progress', () async {

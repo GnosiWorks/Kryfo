@@ -46,9 +46,9 @@ func voiceJSON(v any) string {
 	return string(b)
 }
 
-// a fresh client per download, on a circuit nothing else uses, that
-// follows a redirect only where the manifest allows
-func voiceClient(m *voice.Manifest) (*http.Client, error) {
+// a fresh client per download, on a circuit nothing else uses. the mirror
+// serves the files itself, so a redirect is never followed
+func voiceClient() (*http.Client, error) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	dial, err := voiceDial(hex.EncodeToString(b))
@@ -63,11 +63,8 @@ func voiceClient(m *voice.Manifest) (*http.Client, error) {
 			ResponseHeaderTimeout: 30 * time.Second,
 		},
 		Timeout: voiceChunkWait,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) > 3 || !m.RedirectOK(req.URL) {
-				return http.ErrUseLastResponse
-			}
-			return nil
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
 		},
 	}, nil
 }
@@ -98,16 +95,16 @@ func voiceModels() string {
 	return voiceJSON(out)
 }
 
-// start fetching model id into dir, from base or the pinned host when base
-// is "". "ok" when it runs (or already runs), "error: ..." when it could
-// not start. progress is polled with HaloVoiceProgress.
+// start fetching model id into dir from the mirror the app pins; no
+// caller picks the host. "ok" when it runs (or already runs), "error: ..."
+// when it could not start. progress is polled with HaloVoiceProgress.
 //
 //export HaloVoiceFetch
-func HaloVoiceFetch(cID, cDir, cBase *C.char) *C.char {
-	return C.CString(voiceFetch(goStr(cID), goStr(cDir), goStr(cBase)))
+func HaloVoiceFetch(cID, cDir *C.char) *C.char {
+	return C.CString(voiceFetch(goStr(cID), goStr(cDir)))
 }
 
-func voiceFetch(id, dir, base string) string {
+func voiceFetch(id, dir string) string {
 	// a decoy session downloads nothing, nor does one the app has not
 	// named yet
 	if !decoyClosed() {
@@ -116,11 +113,7 @@ func voiceFetch(id, dir, base string) string {
 	if err := voice.AppDir(dir); err != nil {
 		return fmt.Sprintf("error: %v", err)
 	}
-	pinned, err := voicePinned()
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-	m, err := pinned.WithBase(base)
+	m, err := voicePinned()
 	if err != nil {
 		return fmt.Sprintf("error: %v", err)
 	}
@@ -131,7 +124,7 @@ func voiceFetch(id, dir, base string) string {
 	if voiceJobs.Running(id) {
 		return "ok"
 	}
-	c, err := voiceClient(m)
+	c, err := voiceClient()
 	if err != nil {
 		return fmt.Sprintf("error: tor: %v", err)
 	}

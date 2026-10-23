@@ -6,12 +6,14 @@
 package voice
 
 import (
+	"bytes"
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 )
@@ -27,13 +29,14 @@ type Model struct {
 	SHA256 string `json:"sha256"`
 }
 
-// Manifest is where the models are and what they must hash to.
+// Manifest is where the models are and what they must hash to. Base is
+// our mirror, the only host the app asks; it serves each model under its
+// sha256. Source is where the files were first published, which the mirror
+// is filled from; the app never asks it.
 type Manifest struct {
-	Base string `json:"base"`
-	// hosts the base may send a download on to, a name or any name under
-	// it. empty: a redirect is not followed
-	RedirectHosts []string `json:"redirect_hosts"`
-	Models        []Model  `json:"models"`
+	Base   string  `json:"base"`
+	Source string  `json:"source"`
+	Models []Model `json:"models"`
 }
 
 var (
@@ -48,14 +51,22 @@ func Pinned() (*Manifest, error) {
 	return pinned, pinnedErr
 }
 
-// Parse reads and checks a manifest.
+// Parse reads and checks a manifest, refusing a field it does not know.
 func Parse(b []byte) (*Manifest, error) {
+	d := json.NewDecoder(bytes.NewReader(b))
+	d.DisallowUnknownFields()
 	var m Manifest
-	if err := json.Unmarshal(b, &m); err != nil {
+	if err := d.Decode(&m); err != nil {
 		return nil, err
+	}
+	if d.More() {
+		return nil, errors.New("trailing data")
 	}
 	if err := checkBase(m.Base); err != nil {
 		return nil, err
+	}
+	if u, err := url.Parse(m.Source); err != nil || u.Scheme != "https" || checkBase(m.Source) != nil {
+		return nil, fmt.Errorf("source %q", m.Source)
 	}
 	if len(m.Models) == 0 {
 		return nil, errors.New("no models")
@@ -94,8 +105,10 @@ func safeName(s string) bool {
 	return true
 }
 
+var onionRe = regexp.MustCompile(`^[a-z2-7]{56}\.onion$`)
+
 // https anywhere, or plain http to an onion, which tor already encrypts
-// end to end
+// end to end and authenticates by its name
 func checkBase(base string) error {
 	u, err := url.Parse(base)
 	if err != nil {
@@ -107,26 +120,10 @@ func checkBase(base string) error {
 	switch {
 	case u.Scheme == "https" && u.Host != "":
 		return nil
-	case u.Scheme == "http" && strings.HasSuffix(u.Hostname(), ".onion"):
+	case u.Scheme == "http" && onionRe.MatchString(u.Host):
 		return nil
 	}
 	return fmt.Errorf("base %q: https or an onion only", base)
-}
-
-// WithBase is the manifest fetched from base instead, with the same pins.
-// "" keeps the built-in host. another host serves the files itself, so it
-// gets no redirects.
-func (m *Manifest) WithBase(base string) (*Manifest, error) {
-	if base == "" || base == m.Base {
-		return m, nil
-	}
-	if err := checkBase(base); err != nil {
-		return nil, err
-	}
-	c := *m
-	c.Base = base
-	c.RedirectHosts = nil
-	return &c, nil
 }
 
 // Model is the model with id.
@@ -139,20 +136,6 @@ func (m *Manifest) Model(id string) (Model, bool) {
 	return Model{}, false
 }
 
-// URL is where md is fetched from.
-func (m *Manifest) URL(md Model) string { return m.Base + md.File }
-
-// RedirectOK says whether a download may follow a redirect to u: https,
-// and a host the manifest names.
-func (m *Manifest) RedirectOK(u *url.URL) bool {
-	if u == nil || u.Scheme != "https" || u.User != nil {
-		return false
-	}
-	host := strings.ToLower(u.Hostname())
-	for _, h := range m.RedirectHosts {
-		if host == h || strings.HasSuffix(host, "."+h) {
-			return true
-		}
-	}
-	return false
-}
+// URL is where md is fetched from: the mirror names it by its hash, so
+// the request says no more than the pin does
+func (m *Manifest) URL(md Model) string { return m.Base + md.SHA256 }

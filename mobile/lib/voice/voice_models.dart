@@ -78,11 +78,11 @@ class VoiceModels {
     }
   }
 
-  /// starts fetching [id]; [base] is another pinned host, '' for the
-  /// built-in one. false when it could not start
-  Future<bool> fetch(String id, {String base = ''}) async {
+  /// starts fetching [id] from the mirror the engine pins; nothing here
+  /// names a host. false when it could not start
+  Future<bool> fetch(String id) async {
     if (quiet()) return false;
-    return await call('HaloVoiceFetch', [id, await dir(), base]) == 'ok';
+    return await call('HaloVoiceFetch', [id, await dir()]) == 'ok';
   }
 
   Future<VoiceModelStatus> progress(String id) async {

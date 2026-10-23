@@ -7,19 +7,24 @@ nothing of it is built and no screen reaches mobile/lib/voice.
 
 ## what is here
 
-- `models.json`: the pinned models, whisper base and small, q5_1, with
-  their size and sha256, on a pinned huggingface revision. `Parse` refuses
-  non-https bases (an onion may be plain http), names that leave the
-  directory, and odd hashes or sizes.
+- `models.json`: the pinned model, whisper base q5_1, with its size and
+  sha256, and our onion mirror that serves it, the one the translation
+  packs come from. the mirror names the file by its sha256; `source` is
+  the huggingface revision it was filled from, which the app never asks.
+  `Parse` refuses a field it does not know, non-https hosts (an onion may
+  be plain http), names that leave the directory, and odd hashes or
+  sizes.
 - `fetch.go`, `jobs.go`, `store.go`: the download. every request is a
   1 MiB range with no user agent or compression. a cut leaves a part file
   the next start resumes from, a wrong hash throws the file away, and a
   model only ever lands in the app's own storage (`AppDir`). `Check`
   deletes a model that no longer matches its pin.
 - `../voice_ffi.go`: the exports. the download dials through tor only,
-  under a fresh socks name per download, with no direct fallback. a
-  redirect is followed only to https hosts the manifest names, and never
-  from another base.
+  under a fresh socks name per download, with no direct fallback, from
+  the pinned mirror and no other host: no caller passes one and no
+  redirect is followed. while a decoy is open, or before the app has said
+  whether one is, nothing is fetched, and a decoy opening stops a
+  download under way.
 - `native/`: libkryfo_voice, a four-call c api over whisper.cpp
   (`kryfo_voice.h`). 16-bit pcm in at any rate, segments out as they are
   decoded, a cancel flag another thread may set. it reads the model file
@@ -34,7 +39,13 @@ isolate, segments streamed back, cancel), the wav reader and the model
 download calls.
 
 when offline translation lands, its pack download and this one share one
-fetcher and one settings host; `WithBase` is the seam for that host.
+fetcher and one mirror.
+
+## the mirror
+
+the mirror serves each model at `<base><sha256>`, filled once from
+`source`: fetch `<source><file>`, check it against the pin and store it
+under its sha256.
 
 ## building the library
 
