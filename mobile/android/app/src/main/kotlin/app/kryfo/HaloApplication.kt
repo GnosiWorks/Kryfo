@@ -37,9 +37,12 @@ class HaloApplication : Application() {
         MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/app_icon")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+                    // with the launcher's label in the phone's language, which
+                    // the app switcher's title takes. null when unread: the app
+                    // keeps the plain look and asks again
                     "get" -> result.success(
                         try {
-                            AppIcon.current(this).name
+                            AppIcon.describe(this)
                         } catch (e: Exception) {
                             null
                         }

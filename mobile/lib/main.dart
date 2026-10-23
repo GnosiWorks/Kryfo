@@ -253,13 +253,6 @@ void main() async {
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();
-  // which icon the home screen shows, before the first frame: the pin pad's
-  // wordmark and the app switcher's title follow it. a short wait at most
-  try {
-    await readAppFace().timeout(const Duration(milliseconds: 300));
-  } catch (_) {
-    // read on in the background; the title follows once it is
-  }
   // the theme pref sits in secure storage, and the first read on a new phone
   // creates the keystore key, which takes seconds. the splash paints dark
   // first. started before the window check so a headless start loads it too.
@@ -270,6 +263,14 @@ void main() async {
       }
     }),
   );
+  // which icon the home screen shows, before the first frame, while the
+  // theme's read runs: the pin pad's wordmark and the app switcher's title
+  // follow it. a short wait at most
+  try {
+    await readAppFace().timeout(const Duration(milliseconds: 300));
+  } catch (_) {
+    // read on in the background; the title follows once it is
+  }
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('launch headless');
     // no window: the service or the job brought the process back, and
@@ -327,14 +328,16 @@ class HaloApp extends StatelessWidget {
           themeRevision,
           localeRevision,
           navRevision,
-          appFaceNow,
         ]),
-        builder: (context, _) => haloAppShell(
-          navigatorKey: rootNavKey,
-          locale: l10nLocale,
-          face: appFaceNow.value,
-          lock: (navigator) => _LockGate(child: navigator),
-          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        builder: (context, _) => FacedShell(
+          builder: (face, label) => haloAppShell(
+            navigatorKey: rootNavKey,
+            locale: l10nLocale,
+            face: face,
+            faceLabel: label,
+            lock: (navigator) => _LockGate(child: navigator),
+            home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+          ),
         ),
       ),
     );

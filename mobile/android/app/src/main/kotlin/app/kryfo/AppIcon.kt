@@ -86,6 +86,13 @@ object AppIcon {
 
     fun byName(name: String?): Face? = faces.firstOrNull { it.name == name }
 
+    // what dart is told: the face's name and, for a plain one, its label as
+    // the launcher shows it
+    fun describe(context: Context): Map<String, String?> {
+        val f = current(context)
+        return mapOf("name" to f.name, "label" to if (f.label == 0) null else context.getString(f.label))
+    }
+
     // the way in kryfo takes itself (a restart, the service's tap): the
     // launcher entry that is on, so the splash, the recents card and its
     // name are the home screen's. the screen by its own name if none reads

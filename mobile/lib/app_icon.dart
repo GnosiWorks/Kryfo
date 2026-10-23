@@ -29,13 +29,20 @@ extension AppFaceWords on AppFace {
   String get glyph => this == AppFace.kryfo ? 'ic_plain_dot' : 'ic_plain_$name';
 }
 
-/// the app switcher's title: the name on the home screen
-String switcherTitle(AppFace? face) => (face ?? AppFace.kryfo).label;
+/// the app switcher's title: the name on the home screen, as the launcher
+/// writes it. nothing while the icon is not known
+String switcherTitle(AppFace? face, [String? launcherLabel]) {
+  if (face == null) return '';
+  if (face == AppFace.kryfo) return 'Kryfo';
+  return launcherLabel ?? face.label;
+}
 
-/// the app switcher's colour: a plain icon's own, kryfo's accent otherwise
+/// the app switcher's colour: a plain icon's own, kryfo's accent once its
+/// icon is known, a plain dark one before
 Color? switcherColor(AppFace? face) {
+  if (face == AppFace.kryfo) return null;
   final art = plainArt[face?.name];
-  return art == null ? null : Color(art.background);
+  return Color(art?.background ?? 0xFF202124);
 }
 
 AppFace? faceNamed(String? name) {
@@ -61,10 +68,18 @@ class PlatformFaceChannel implements AppFaceChannel {
   static const _read = MethodChannel('kryfo/app_icon');
   static const _screen = MethodChannel('halo/platform');
 
+  // the name with the launcher's own label, in the phone's language
   @override
   Future<AppFace?> read() async {
     try {
-      return faceNamed(await _read.invokeMethod<String>('get'));
+      final r = await _read.invokeMethod<Object?>('get');
+      if (r is Map) {
+        final face = faceNamed(r['name'] as String?);
+        final label = r['label'];
+        if (face != null) appFaceLabel.value = label is String ? label : null;
+        return face;
+      }
+      return faceNamed(r as String?);
     } catch (e) {
       dlog('app icon: not read (${e.runtimeType})');
       return null;
@@ -87,20 +102,34 @@ class PlatformFaceChannel implements AppFaceChannel {
 
 AppFaceChannel appFaceChannel = const PlatformFaceChannel();
 
-/// the icon in use as last read, null until then. android is asked once a
-/// process: a switch ends the process it was made in
+/// the icon in use as android said it, null while it is not known: not
+/// read yet, or a read that failed. a switch ends the process it was made
+/// in, so one answer holds for the process
 final appFaceNow = ValueNotifier<AppFace?>(null);
 
-Future<AppFace> readAppFace() async {
+/// the launcher's label for a plain icon, in the phone's language, as
+/// android said it with the icon
+final appFaceLabel = ValueNotifier<String?>(null);
+
+/// kryfo's own look only once android has said kryfo's icon is on. an
+/// icon not known yet hides as a plain one does
+bool get looksKryfo => appFaceNow.value == AppFace.kryfo;
+
+/// the icon in use, read from android once known. null when the read
+/// failed: nothing is kept, and the next read asks again
+Future<AppFace?> readAppFace() async {
   final known = appFaceNow.value;
   if (known != null) return known;
-  final f = await appFaceChannel.read() ?? AppFace.kryfo;
-  appFaceNow.value = f;
+  final f = await appFaceChannel.read();
+  if (f != null) appFaceNow.value = f;
   return f;
 }
 
 @visibleForTesting
-void forgetAppFace() => appFaceNow.value = null;
+void forgetAppFace() {
+  appFaceNow.value = null;
+  appFaceLabel.value = null;
+}
 
 // set just before a switch and read once after it, for the line that says
 // it worked. the phone's, like the icon

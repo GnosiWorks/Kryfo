@@ -86,9 +86,11 @@ Future<bool> switchAppFace(AppFace face) async {
 /// after the restart a switch makes, once kryfo is open: a line that says
 /// it worked, read out too
 Future<void> sayFaceChanged() async {
-  if (!await takeFaceChanged()) return;
+  // the name it says is android's answer: without one it waits for the
+  // next reveal
   final face = await readAppFace();
-  showHaloToastAnywhere(l10n.iconChanged(face.label));
+  if (face == null || !await takeFaceChanged()) return;
+  showHaloToastAnywhere(l10n.iconChanged(appFaceLabel.value ?? face.label));
 }
 
 class IconScreen extends StatefulWidget {

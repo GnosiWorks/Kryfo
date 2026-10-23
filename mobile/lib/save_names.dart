@@ -6,9 +6,9 @@
 // are android's side (SavePlace.kt)
 import 'app_icon.dart';
 
-/// a new save is named plainly: a plain icon is on. the icon is read before
-/// the first frame; one that could not be read is kryfo's, as everywhere
-bool savesPlain() => (appFaceNow.value ?? AppFace.kryfo) != AppFace.kryfo;
+/// a new save is named plainly unless android has said kryfo's own icon
+/// is on: one not known names plainly, as android's side files it plainly
+bool savesPlain() => !looksKryfo;
 
 String _two(int n) => n.toString().padLeft(2, '0');
 

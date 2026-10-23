@@ -173,4 +173,11 @@ class AppIconTest {
             assertEquals("app.kryfo.KryfoActivity", a.targetActivity)
         }
     }
+
+    @Test
+    fun dartIsToldTheLaunchersOwnLabel() {
+        assertEquals(mapOf("name" to "kryfo", "label" to null), AppIcon.describe(app))
+        AppIcon.set(app, "notes")
+        assertEquals(mapOf("name" to "notes", "label" to "Notes"), AppIcon.describe(app))
+    }
 }

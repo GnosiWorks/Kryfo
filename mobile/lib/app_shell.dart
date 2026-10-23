@@ -19,6 +19,8 @@ MaterialApp haloAppShell({
   // the icon the home screen shows: the app switcher's title and colour
   // follow it. null while it is read
   AppFace? face,
+  // the launcher's label for it, in the phone's language
+  String? faceLabel,
 }) {
   return MaterialApp(
     navigatorKey: navigatorKey,
@@ -29,7 +31,7 @@ MaterialApp haloAppShell({
     scaffoldMessengerKey: haloMessengerKey,
     // android's recents card and a screen reader read this as the app's
     // name, over what the screen set when it opened
-    title: switcherTitle(face),
+    title: switcherTitle(face, faceLabel),
     color: switcherColor(face),
     // the debug banner is drawn above everything, the lock too
     debugShowCheckedModeBanner: false,
@@ -64,6 +66,19 @@ MaterialApp haloAppShell({
     // no stretch-glow
     scrollBehavior: const HaloScrollBehavior(),
     home: home,
+  );
+}
+
+/// builds the app again whenever android's answer about the icon comes in
+/// or changes, so the app switcher's title follows it
+class FacedShell extends StatelessWidget {
+  final Widget Function(AppFace? face, String? label) builder;
+  const FacedShell({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([appFaceNow, appFaceLabel]),
+    builder: (_, _) => builder(appFaceNow.value, appFaceLabel.value),
   );
 }
 

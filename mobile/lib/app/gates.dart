@@ -183,6 +183,9 @@ class _LockGateState extends State<_LockGate> {
       // back in front with no lock to lift: kryfo is open, so the plain
       // line has said its piece
       if (front && !lockState.locked) _plainSeen();
+      // a read that failed is asked again: until android answers, the app
+      // keeps the plain look
+      if (front && appFaceNow.value == null) unawaited(readAppFace());
     },
     localesChanged: systemLocalesChanged,
     revealed: () {
