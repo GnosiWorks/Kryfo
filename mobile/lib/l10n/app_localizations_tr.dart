@@ -2421,12 +2421,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo 15 dakikada bir mesajlara bakar. Pili yormaz ama mesajlar gecikebilir.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'Kilit ekranında';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Mesaj önizlemesini gizle';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Gönderen ve mesaj metni olmadan genel bir uyarı';
 
@@ -9087,4 +9081,132 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+
+  @override
+  String get settingsIconAndNotifications => 'Simge ve bildirimler';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, sade bildirimler';
+  }
+
+  @override
+  String get iconSectionTitle => 'Uygulama simgesi';
+
+  @override
+  String get iconHint =>
+      'Ana ekranın ve uygulama listen Kryfo yerine bu simgeyi ve adı gösterir.';
+
+  @override
+  String get iconHintKryfo =>
+      'Ana ekranın ve uygulama listen için sıradan bir simge ve ad seç.';
+
+  @override
+  String get iconWhatChanges => 'Bu neyi değiştirir';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Simge $name olarak değişsin mi?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo kapanıp yeniden açılır. Simge ana ekrandan kalkarsa uygulamalarında $name simgesini bul ve yeniden yerleştir.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Simgeyi değiştir';
+
+  @override
+  String get iconNoPinLine =>
+      'Ona dokunan Kryfo’yu görür. Uygulamaya PIN koyarsan onun yerine PIN tuş takımını görür.';
+
+  @override
+  String get iconSetPin => 'PIN belirle';
+
+  @override
+  String iconChanged(String name) {
+    return 'Simge $name olarak değişti';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Ana ekranın $name gösterecek';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, uygulama simgesi';
+  }
+
+  @override
+  String get notifShowAll => 'Ad ve mesaj';
+
+  @override
+  String get notifShowNew => 'Yalnızca “Yeni mesaj”';
+
+  @override
+  String get notifShowPlain => 'Sade';
+
+  @override
+  String get notifPlainHint =>
+      'Ad yok, mesaj yok, Kryfo renkleri yok. Nötr bir simge ve tek satır.';
+
+  @override
+  String get notifPlainLine => 'Yeni bir şey var';
+
+  @override
+  String get notifPlainChannel => 'Uyarılar';
+
+  @override
+  String get notifHeaderLimit =>
+      'Her bildirimin en üstünde yine Kryfo yazar. Android bir uygulamanın bunu değiştirmesine izin vermez.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Bildirimler ne gösterir';
+
+  @override
+  String get iconSheetChangesTitle => 'Neler değişir';
+
+  @override
+  String get iconSheetChanges =>
+      'Ana ekranındaki ve uygulama listendeki simge ve ad, paylaşma menüsü ve açık uygulamalar ekranı. Sade ile bildirimlerin gösterdikleri de.';
+
+  @override
+  String get iconSheetStaysTitle => 'Ne Kryfo olarak kalır';
+
+  @override
+  String get iconSheetStays =>
+      'Her bildirimin üst satırı, telefonunun ayarlar ve pil sayfaları, uygulama mağazası ve biri açtığında Kryfo’nun kendisi.';
+
+  @override
+  String get iconSheetGlance =>
+      'Ana ekranına bir göz atmaya dayanır. Telefonunun ayarlarına bakan birinden Kryfo’yu gizlemez.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki özel alan.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki Güvenli Klasör.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki gizli uygulamalar.';
+
+  @override
+  String get androidIconNotes => 'Notlar';
+
+  @override
+  String get androidIconWeather => 'Hava durumu';
+
+  @override
+  String get androidIconTasks => 'Görevler';
+
+  @override
+  String get androidIconNews => 'Haberler';
+
+  @override
+  String get androidServiceTitlePlain => 'Etkin';
 }

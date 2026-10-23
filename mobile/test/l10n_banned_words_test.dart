@@ -14,6 +14,7 @@ const _banned = {
     'plausible deniability',
     'safe from anyone',
     'untraceable',
+    'hidden from anyone',
   ],
   'de': [
     'unsichtbar',

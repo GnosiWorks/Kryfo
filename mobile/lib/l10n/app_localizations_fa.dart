@@ -2422,12 +2422,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo هر ۱۵ دقیقه دنبال پیام می‌گردد. باتری کمتری مصرف می‌کند، اما پیام‌ها ممکن است دیر برسند.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'روی صفحه‌ی قفل';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'پنهان کردن پیش‌نمایش پیام';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'یک اعلان کلی، بدون فرستنده و بدون متن پیام';
 
@@ -9077,4 +9071,132 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند.';
+
+  @override
+  String get settingsIconAndNotifications => 'نماد و اعلان‌ها';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon، اعلان‌های ساده';
+  }
+
+  @override
+  String get iconSectionTitle => 'نماد برنامه';
+
+  @override
+  String get iconHint =>
+      'صفحهٔ اصلی و فهرست برنامه‌هایتان به جای Kryfo این نماد و این نام را نشان می‌دهند.';
+
+  @override
+  String get iconHintKryfo =>
+      'یک نماد و نام معمولی برای صفحهٔ اصلی و فهرست برنامه‌هایتان انتخاب کنید.';
+
+  @override
+  String get iconWhatChanges => 'این چه چیزی را تغییر می‌دهد';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'نماد به $name تغییر کند؟';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo بسته می‌شود و دوباره باز می‌شود. اگر نماد از صفحهٔ اصلی رفت، $name را در برنامه‌هایتان پیدا کنید و دوباره سر جایش بگذارید.';
+  }
+
+  @override
+  String get iconConfirmButton => 'تغییر نماد';
+
+  @override
+  String get iconNoPinLine =>
+      'هر کس رویش بزند Kryfo را می‌بیند. برای برنامه PIN تعیین کنید تا به جای آن صفحه‌کلید PIN را ببیند.';
+
+  @override
+  String get iconSetPin => 'تعیین PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'نماد به $name تغییر کرد';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'صفحهٔ اصلی شما $name را نشان خواهد داد';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name، نماد برنامه';
+  }
+
+  @override
+  String get notifShowAll => 'نام و پیام';
+
+  @override
+  String get notifShowNew => 'فقط «پیام جدید»';
+
+  @override
+  String get notifShowPlain => 'ساده';
+
+  @override
+  String get notifPlainHint =>
+      'بدون نام، بدون پیام، بدون رنگ‌های Kryfo. یک نماد خنثی و یک خط.';
+
+  @override
+  String get notifPlainLine => 'چیز تازه‌ای هست';
+
+  @override
+  String get notifPlainChannel => 'هشدارها';
+
+  @override
+  String get notifHeaderLimit =>
+      'بالای هر اعلان همچنان Kryfo نوشته می‌شود. Android اجازه نمی‌دهد برنامه‌ای آن را تغییر دهد.';
+
+  @override
+  String get gettingMessagesWhatShows => 'اعلان‌ها چه نشان می‌دهند';
+
+  @override
+  String get iconSheetChangesTitle => 'چه چیزهایی تغییر می‌کند';
+
+  @override
+  String get iconSheetChanges =>
+      'نماد و نام در صفحهٔ اصلی و فهرست برنامه‌هایتان، منوی هم‌رسانی و صفحهٔ برنامه‌های باز. با «ساده»، آنچه اعلان‌ها نشان می‌دهند هم.';
+
+  @override
+  String get iconSheetStaysTitle => 'چه چیزهایی Kryfo می‌ماند';
+
+  @override
+  String get iconSheetStays =>
+      'خط بالای هر اعلان، صفحه‌های تنظیمات و باتری گوشی‌تان، فروشگاه برنامه‌ها، و خود Kryfo وقتی کسی بازش کند.';
+
+  @override
+  String get iconSheetGlance =>
+      'از پس یک نگاه گذرا به صفحهٔ اصلی‌تان برمی‌آید. Kryfo را از کسی که تنظیمات گوشی‌تان را می‌گردد پنهان نمی‌کند.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'شاید گوشی‌تان راه خودش را برای پنهان کردن برنامه‌ها داشته باشد: فضای خصوصی، در تنظیماتش.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'شاید گوشی‌تان راه خودش را برای پنهان کردن برنامه‌ها داشته باشد: پوشهٔ امن، در تنظیماتش.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'شاید گوشی‌تان راه خودش را برای پنهان کردن برنامه‌ها داشته باشد: برنامه‌های پنهان، در تنظیماتش.';
+
+  @override
+  String get androidIconNotes => 'یادداشت‌ها';
+
+  @override
+  String get androidIconWeather => 'آب‌وهوا';
+
+  @override
+  String get androidIconTasks => 'کارها';
+
+  @override
+  String get androidIconNews => 'اخبار';
+
+  @override
+  String get androidServiceTitlePlain => 'فعال';
 }

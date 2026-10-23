@@ -178,13 +178,26 @@ class _LockGateState extends State<_LockGate> {
     quiet: () => sessionQuiet,
     pad: (_) => const LockScreen(),
     lockingUp: appState.lockingUp,
-    inFront: appState.appInFront,
+    inFront: (front) {
+      appState.appInFront(front);
+      // back in front with no lock to lift: kryfo is open, so the plain
+      // line has said its piece
+      if (front && !lockState.locked) _plainSeen();
+    },
     localesChanged: systemLocalesChanged,
     revealed: () {
       appRevealed = true;
       homeRevealed();
+      _plainSeen();
+      unawaited(sayFaceChanged());
     },
   );
+}
+
+// a decoy clears the whole shade itself, and the plain line stands for
+// nothing of its own
+void _plainSeen() {
+  if (!sessionQuiet) unawaited(clearPlainNotification());
 }
 
 class TorHalo extends StatefulWidget {

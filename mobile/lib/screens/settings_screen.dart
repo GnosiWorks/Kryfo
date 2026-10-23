@@ -43,6 +43,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
 import 'getting_messages_screen.dart';
+import 'icon_screen.dart';
+import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
@@ -277,6 +279,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   // known already when anything read it before: the row never grows a line
   late bool? _hidePreview = hideNotifContentKnown(session.container);
+  // plain notifications, the phone's: they hide the preview too
+  bool? _plain = notifPlainKnown();
   Future<void> _confirmWipe() async {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(
@@ -318,6 +322,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    readAppFace();
     _readHidePreview();
     // a PIN set on the App lock screen hides the preview too
     hideNotifRevision.addListener(_readHidePreview);
@@ -351,6 +356,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _readHidePreview() {
     loadHideNotifContent(session.container).then((v) {
       if (mounted) setState(() => _hidePreview = v);
+    });
+    loadNotifPlain().then((v) {
+      if (mounted) setState(() => _plain = v);
     });
   }
 
@@ -519,7 +527,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.mark_email_unread_outlined,
                 label: l10n.settingsGettingMessages,
-                value: switch (_hidePreview) {
+                value: switch (_plain == true ? true : _hidePreview) {
                   null => deliveryModeName(appState.deliveryMode),
                   true => l10n.settingsPreviewHidden(
                     deliveryModeName(appState.deliveryMode),
@@ -532,10 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await Navigator.of(
                     context,
                   ).push(haloRoute(const GettingMessagesScreen()));
-                  final v = await loadHideNotifContent(session.container);
-                  if (mounted) {
-                    setState(() => _hidePreview = v);
-                  }
+                  _readHidePreview();
                 },
               ),
               HaloRow(
@@ -624,6 +629,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () =>
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
+              ),
+              // the icon and the notifications read the phone's values, in
+              // any session
+              ValueListenableBuilder<AppFace?>(
+                valueListenable: appFaceNow,
+                builder: (_, face, _) {
+                  return HaloRow(
+                    icon: Icons.apps_rounded,
+                    label: l10n.settingsIconAndNotifications,
+                    value: face == null
+                        ? null
+                        : _plain == true
+                        ? l10n.iconSettingsValue(face.label)
+                        : face.label,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(haloRoute(const IconScreen())),
+                  );
+                },
               ),
             ],
           ),

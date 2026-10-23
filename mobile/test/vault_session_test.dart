@@ -1663,6 +1663,24 @@ void main() {
       expect(w.io.rang, [_v]);
     });
 
+    test('shut, with plain notifications: a hidden chat lights no plain '
+        'line either', () async {
+      // a plain line stands for nothing hidden: it rings only for what
+      // would ring anyway
+      SharedPreferences.setMockInitialValues({'notif_plain': true});
+      final w = await _World.make();
+      await w.open();
+      await w.lockUp();
+      await w.onion(
+        _h,
+        await wrapMessage('are you there', msgUid: 'p1', sender: _as(_h)),
+      );
+      await w.onion(_m, await wrapMessage('all', msgUid: 'p2', groupId: _g2));
+      expect(w.io.rang, isEmpty);
+      await w.onion(_v, await wrapMessage('yo', msgUid: 'p3', sender: _as(_v)));
+      expect(w.io.rang, [_v]);
+    });
+
     test(
       'open: a hidden chat rings like any other, and goes at the lock',
       () async {

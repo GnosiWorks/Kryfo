@@ -49,7 +49,8 @@ import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StringCodec
 
-class MainActivity : FlutterFragmentActivity() {
+// open for KryfoActivity, the name the manifest gives the screen
+open class MainActivity : FlutterFragmentActivity() {
     private val tools = ToolsBridge(this)
     private var videos: VideoPlayers? = null
     companion object {
@@ -301,6 +302,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
         super.onCreate(savedInstanceState)
         underBars()
+        AppIcon.describeTask(this)
         windowSeen = WindowWatch(this).also {
             it.gone = { tellAway() }
             addContentView(it, ViewGroup.LayoutParams(0, 0))
@@ -386,8 +388,14 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    // the android version too, for the line about its own
+                    // way to hide apps (private space, 15 and later)
                     "phoneMaker" -> result.success(
-                        mapOf("manufacturer" to Build.MANUFACTURER, "brand" to Build.BRAND)
+                        mapOf(
+                            "manufacturer" to Build.MANUFACTURER,
+                            "brand" to Build.BRAND,
+                            "sdk" to Build.VERSION.SDK_INT.toString(),
+                        )
                     )
                     "photoPickerReady" -> result.success(PhotoPicker.ready(this))
                     "installSource" -> result.success(installSource())
@@ -515,6 +523,14 @@ class MainActivity : FlutterFragmentActivity() {
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
+                    }
+                    // the home screen's icon and name. the screen that was
+                    // opened through the old entry is closed by android, so
+                    // the app closes and opens again through its own
+                    "appIconSet" -> {
+                        val ok = AppIcon.set(this, call.argument<String>("icon"))
+                        result.success(ok)
+                        if (ok) ReopenActivity.start(this)
                     }
                     // a new process: a call stuck in a plugin's thread holds
                     // every call after it until this one is gone

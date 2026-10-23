@@ -5,4 +5,9 @@
     <string name="service_text">Jalur terenkripsimu tetap terbuka agar pesan bisa masuk</string>
     <string name="channel_name">Tetap terhubung</string>
     <string name="channel_description">Menjaga Kryfo tetap terhubung agar pesan terenkripsi masuk saat aplikasi ditutup. Mematikan ini menghentikan pengiriman.</string>
+    <string name="icon_notes">Catatan</string>
+    <string name="icon_weather">Cuaca</string>
+    <string name="icon_tasks">Tugas</string>
+    <string name="icon_news">Berita</string>
+    <string name="service_title_plain">Aktif</string>
 </resources>

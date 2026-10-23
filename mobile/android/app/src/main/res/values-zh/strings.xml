@@ -5,4 +5,9 @@
     <string name="service_text">你的加密线路保持连接，好让消息送达</string>
     <string name="channel_name">保持连接</string>
     <string name="channel_description">让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。</string>
+    <string name="icon_notes">笔记</string>
+    <string name="icon_weather">天气</string>
+    <string name="icon_tasks">待办</string>
+    <string name="icon_news">新闻</string>
+    <string name="service_title_plain">运行中</string>
 </resources>

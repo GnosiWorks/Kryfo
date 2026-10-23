@@ -3894,18 +3894,6 @@ abstract class AppLocalizations {
   /// screens/getting_messages_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'On the lock screen'**
-  String get gettingMessagesOnTheLockScreen;
-
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Hide message preview'**
-  String get gettingMessagesHideMessagePreview;
-
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'A generic alert, with no sender and no message text'**
   String get gettingMessagesAGenericAlertWith;
 
@@ -14630,6 +14618,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
   String get onboardingRelayThisNetworkSees;
+
+  /// screens/settings_screen.dart: the Security row into the icon screen, and that screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'Icon and notifications'**
+  String get settingsIconAndNotifications;
+
+  /// screens/settings_screen.dart: that row's value with plain notifications on; icon is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'{icon}, plain notifications'**
+  String iconSettingsValue(String icon);
+
+  /// screens/icon_screen.dart: the section with the icons
+  ///
+  /// In en, this message translates to:
+  /// **'App icon'**
+  String get iconSectionTitle;
+
+  /// screens/icon_screen.dart: under the icons when a plain one is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Your home screen and app list show this icon and name instead of Kryfo.'**
+  String get iconHint;
+
+  /// screens/icon_screen.dart: under the icons while Kryfo's own is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an everyday icon and name for your home screen and app list.'**
+  String get iconHintKryfo;
+
+  /// screens/icon_screen.dart: the link that opens the sheet about what changes, and that sheet's title
+  ///
+  /// In en, this message translates to:
+  /// **'What this changes'**
+  String get iconWhatChanges;
+
+  /// screens/icon_screen.dart: the confirm sheet's title; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Change the icon to {name}?'**
+  String iconConfirmTitle(String name);
+
+  /// screens/icon_screen.dart: the confirm sheet's line; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo closes and opens again. If the icon leaves your home screen, find {name} in your apps and place it again.'**
+  String iconConfirmLine(String name);
+
+  /// screens/icon_screen.dart: the button at the bottom and on the confirm sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Change icon'**
+  String get iconConfirmButton;
+
+  /// screens/icon_screen.dart: on the confirm sheet when no app PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone who taps it sees Kryfo. Set an app PIN so they see a PIN pad instead.'**
+  String get iconNoPinLine;
+
+  /// screens/icon_screen.dart: the second button on that sheet, opens the PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'Set a PIN'**
+  String get iconSetPin;
+
+  /// screens/icon_screen.dart: the toast once Kryfo is open again; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Icon changed to {name}'**
+  String iconChanged(String name);
+
+  /// screens/icon_screen.dart: what a screen reader says for the home screen preview
+  ///
+  /// In en, this message translates to:
+  /// **'Your home screen will show {name}'**
+  String iconPreviewLabel(String name);
+
+  /// screens/icon_screen.dart: what a screen reader says for one icon in the grid
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, app icon'**
+  String iconButtonLabel(String name);
+
+  /// screens/icon_screen.dart: notifications show the sender and the message
+  ///
+  /// In en, this message translates to:
+  /// **'Name and message'**
+  String get notifShowAll;
+
+  /// screens/icon_screen.dart: notifications say only New message; quote the notification's own words
+  ///
+  /// In en, this message translates to:
+  /// **'Only “New message”'**
+  String get notifShowNew;
+
+  /// screens/icon_screen.dart: plain notifications, the option's name
+  ///
+  /// In en, this message translates to:
+  /// **'Plain'**
+  String get notifShowPlain;
+
+  /// screens/icon_screen.dart: under that option
+  ///
+  /// In en, this message translates to:
+  /// **'No name, no message, no Kryfo colours. A neutral icon and one line.'**
+  String get notifPlainHint;
+
+  /// notifications.dart: the one line a plain notification says
+  ///
+  /// In en, this message translates to:
+  /// **'Something new'**
+  String get notifPlainLine;
+
+  /// notifications.dart: the plain notifications' channel name in the phone's settings. says nothing about messages
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get notifPlainChannel;
+
+  /// screens/icon_screen.dart: under the plain option, what Android keeps
+  ///
+  /// In en, this message translates to:
+  /// **'The top of each notification still says Kryfo. Android does not let an app change that.'**
+  String get notifHeaderLimit;
+
+  /// screens/getting_messages_screen.dart: the row into the notification choices
+  ///
+  /// In en, this message translates to:
+  /// **'What notifications show'**
+  String get gettingMessagesWhatShows;
+
+  /// screens/icon_screen.dart: the sheet, heading
+  ///
+  /// In en, this message translates to:
+  /// **'What changes'**
+  String get iconSheetChangesTitle;
+
+  /// screens/icon_screen.dart: the sheet, what changes
+  ///
+  /// In en, this message translates to:
+  /// **'The icon and name on your home screen and in your app list, the share menu and the app switcher. With Plain, what notifications show.'**
+  String get iconSheetChanges;
+
+  /// screens/icon_screen.dart: the sheet, heading
+  ///
+  /// In en, this message translates to:
+  /// **'What stays Kryfo'**
+  String get iconSheetStaysTitle;
+
+  /// screens/icon_screen.dart: the sheet, what keeps saying Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'The top line of every notification, your phone’s settings and battery pages, the app store, and Kryfo itself when someone opens it.'**
+  String get iconSheetStays;
+
+  /// screens/icon_screen.dart: the sheet, the limit. never promise more
+  ///
+  /// In en, this message translates to:
+  /// **'It holds up to a glance at your home screen. It does not hide Kryfo from someone who looks through your phone’s settings.'**
+  String get iconSheetGlance;
+
+  /// screens/icon_screen.dart: the sheet, phones on Android 15 and later. use Android's own name for private space
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: private space, in its settings.'**
+  String get iconSheetPrivateSpace;
+
+  /// screens/icon_screen.dart: the sheet, Samsung phones. use Samsung's own name for Secure Folder
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: Secure Folder, in its settings.'**
+  String get iconSheetSecureFolder;
+
+  /// screens/icon_screen.dart: the sheet, Xiaomi phones. use Xiaomi's own name for hidden apps
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: hidden apps, in its settings.'**
+  String get iconSheetXiaomi;
+
+  /// android: the launcher name of the plain Notes icon. a common word, never an app's or a brand's name
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get androidIconNotes;
+
+  /// android: the launcher name of the plain Weather icon
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get androidIconWeather;
+
+  /// android: the launcher name of the plain Tasks icon
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get androidIconTasks;
+
+  /// android: the launcher name of the plain News icon. not the word for text messages
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get androidIconNews;
+
+  /// android: the staying-connected notification's title with plain notifications on, one plain word
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get androidServiceTitlePlain;
 }
 
 class _AppLocalizationsDelegate

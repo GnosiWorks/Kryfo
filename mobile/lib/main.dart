@@ -47,6 +47,8 @@ import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'app_icon.dart' show readAppFace;
+import 'screens/icon_screen.dart' show sayFaceChanged;
 import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
@@ -251,6 +253,8 @@ void main() async {
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();
+  // which icon the home screen shows, before the pin pad draws its wordmark
+  unawaited(readAppFace());
   // the theme pref sits in secure storage, and the first read on a new phone
   // creates the keystore key, which takes seconds. the splash paints dark
   // first. started before the window check so a headless start loads it too.

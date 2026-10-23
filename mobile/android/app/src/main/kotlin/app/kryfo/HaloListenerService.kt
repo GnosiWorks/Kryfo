@@ -110,39 +110,54 @@ class HaloListenerService : Service() {
 
     // what the notification says now, and the words it was built from
     private var note: Notification? = null
-    private var noteWords: List<String>? = null
+    private var noteWords: Words? = null
 
     // startForeground went through. a second call re-checks the background
     // rules on android 14+, so a service in front only updates its words
     private var inFront = false
 
-    private fun words(): List<String> {
+    // with plain notifications on: one word, no line, the glyph of the
+    // home screen's icon and no colour of kryfo's
+    private data class Words(val title: String, val text: String?, val icon: Int, val color: Int?)
+
+    private fun words(): Words {
         val words = AppLocale.context(this)
-        return listOf(
+        if (DeliveryPrefs.plain(this)) {
+            val glyph = try {
+                AppIcon.current(this).glyph
+            } catch (e: Exception) {
+                AppIcon.kryfo.glyph
+            }
+            return Words(words.getString(R.string.service_title_plain), null, glyph, null)
+        }
+        return Words(
             words.getString(R.string.service_title),
-            words.getString(R.string.service_text)
+            words.getString(R.string.service_text),
+            R.drawable.ic_halo_notification,
+            0xFFF59E0B.toInt()
         )
     }
 
-    private fun build(words: List<String>): Notification {
-        val openIntent = Intent(this, MainActivity::class.java).apply {
+    private fun build(words: Words): Notification {
+        // the screen by its own name: the launcher entry may be off
+        val openIntent = Intent(this, KryfoActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 0, openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(words[0])
-            .setContentText(words[1])
-            .setSmallIcon(R.drawable.ic_halo_notification)
-            .setColor(0xFFF59E0B.toInt())
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(words.title)
+            .setSmallIcon(words.icon)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(pendingIntent)
             .setShowWhen(false)
-            .build()
+        if (words.text != null) builder.setContentText(words.text)
+        if (words.color != null) builder.setColor(words.color)
+        val notification = builder.build()
         note = notification
         noteWords = words
         return notification

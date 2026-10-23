@@ -2315,12 +2315,6 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 每 15 分钟查收一次消息。省电，但消息可能会晚到。';
 
   @override
-  String get gettingMessagesOnTheLockScreen => '锁屏上';
-
-  @override
-  String get gettingMessagesHideMessagePreview => '隐藏消息预览';
-
-  @override
   String get gettingMessagesAGenericAlertWith => '一条通用提醒，不显示发送者和消息内容';
 
   @override
@@ -8653,6 +8647,123 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+
+  @override
+  String get settingsIconAndNotifications => '图标和通知';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon，简洁通知';
+  }
+
+  @override
+  String get iconSectionTitle => '应用图标';
+
+  @override
+  String get iconHint => '主屏幕和应用列表会显示这个图标和名称，而不是 Kryfo。';
+
+  @override
+  String get iconHintKryfo => '为主屏幕和应用列表选一个普通的图标和名称。';
+
+  @override
+  String get iconWhatChanges => '这会改变什么';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return '把图标换成$name？';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo 会关闭再重新打开。如果图标从主屏幕上消失了，请在应用列表里找到$name，再把它放回去。';
+  }
+
+  @override
+  String get iconConfirmButton => '更换图标';
+
+  @override
+  String get iconNoPinLine => '点它的人会看到 Kryfo。设置应用 PIN 码后，他们只会看到 PIN 码键盘。';
+
+  @override
+  String get iconSetPin => '设置 PIN 码';
+
+  @override
+  String iconChanged(String name) {
+    return '图标已换成$name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return '主屏幕将显示$name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name，应用图标';
+  }
+
+  @override
+  String get notifShowAll => '名字和消息';
+
+  @override
+  String get notifShowNew => '只显示“新消息”';
+
+  @override
+  String get notifShowPlain => '简洁';
+
+  @override
+  String get notifPlainHint => '没有名字，没有消息，没有 Kryfo 的颜色。一个中性的图标和一行字。';
+
+  @override
+  String get notifPlainLine => '有新内容';
+
+  @override
+  String get notifPlainChannel => '提醒';
+
+  @override
+  String get notifHeaderLimit => '每条通知的顶部仍会显示 Kryfo。Android 不允许应用更改这一点。';
+
+  @override
+  String get gettingMessagesWhatShows => '通知显示什么';
+
+  @override
+  String get iconSheetChangesTitle => '会改变的';
+
+  @override
+  String get iconSheetChanges => '主屏幕和应用列表里的图标和名称、分享菜单和最近应用界面。选择简洁时，还有通知显示的内容。';
+
+  @override
+  String get iconSheetStaysTitle => '仍是 Kryfo 的';
+
+  @override
+  String get iconSheetStays => '每条通知的第一行、手机的设置和电池页面、应用商店，以及有人打开时的 Kryfo 本身。';
+
+  @override
+  String get iconSheetGlance => '它经得起别人瞥一眼你的主屏幕。但如果有人翻看手机的设置，它藏不住 Kryfo。';
+
+  @override
+  String get iconSheetPrivateSpace => '你的手机可能有自己的隐藏应用方式：设置里的私密空间。';
+
+  @override
+  String get iconSheetSecureFolder => '你的手机可能有自己的隐藏应用方式：设置里的安全文件夹。';
+
+  @override
+  String get iconSheetXiaomi => '你的手机可能有自己的隐藏应用方式：设置里的隐藏应用。';
+
+  @override
+  String get androidIconNotes => '笔记';
+
+  @override
+  String get androidIconWeather => '天气';
+
+  @override
+  String get androidIconTasks => '待办';
+
+  @override
+  String get androidIconNews => '新闻';
+
+  @override
+  String get androidServiceTitlePlain => '运行中';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -10963,12 +11074,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get gettingMessagesKryfoLooksForMessages =>
       'Kryfo 每 15 分鐘查收一次訊息。省電，但訊息可能會晚到。';
-
-  @override
-  String get gettingMessagesOnTheLockScreen => '在鎖定畫面上';
-
-  @override
-  String get gettingMessagesHideMessagePreview => '隱藏訊息預覽';
 
   @override
   String get gettingMessagesAGenericAlertWith => '只顯示一般提醒，不顯示傳送者和訊息內容';
@@ -17186,4 +17291,122 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get onboardingRelayThisNetworkSees =>
       '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+
+  @override
+  String get settingsIconAndNotifications => '圖示和通知';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon，簡潔通知';
+  }
+
+  @override
+  String get iconSectionTitle => '應用程式圖示';
+
+  @override
+  String get iconHint => '主畫面和應用程式清單會顯示這個圖示和名稱，而不是 Kryfo。';
+
+  @override
+  String get iconHintKryfo => '為主畫面和應用程式清單選一個普通的圖示和名稱。';
+
+  @override
+  String get iconWhatChanges => '這會改變什麼';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return '要把圖示換成$name嗎？';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo 會關閉再重新開啟。如果圖示從主畫面上不見了，請在應用程式中找到$name，再把它放回去。';
+  }
+
+  @override
+  String get iconConfirmButton => '更換圖示';
+
+  @override
+  String get iconNoPinLine => '點它的人會看到 Kryfo。設定應用程式 PIN 碼後，他們只會看到 PIN 碼鍵盤。';
+
+  @override
+  String get iconSetPin => '設定 PIN 碼';
+
+  @override
+  String iconChanged(String name) {
+    return '圖示已換成$name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return '主畫面將顯示$name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name，應用程式圖示';
+  }
+
+  @override
+  String get notifShowAll => '名字和訊息';
+
+  @override
+  String get notifShowNew => '只顯示「新訊息」';
+
+  @override
+  String get notifShowPlain => '簡潔';
+
+  @override
+  String get notifPlainHint => '沒有名字，沒有訊息，沒有 Kryfo 的顏色。一個中性的圖示和一行字。';
+
+  @override
+  String get notifPlainLine => '有新內容';
+
+  @override
+  String get notifPlainChannel => '提醒';
+
+  @override
+  String get notifHeaderLimit => '每則通知的頂端仍會顯示 Kryfo。Android 不允許應用程式更改這一點。';
+
+  @override
+  String get gettingMessagesWhatShows => '通知顯示什麼';
+
+  @override
+  String get iconSheetChangesTitle => '會改變的';
+
+  @override
+  String get iconSheetChanges =>
+      '主畫面和應用程式清單裡的圖示和名稱、分享選單和最近使用的應用程式畫面。選擇簡潔時，還有通知顯示的內容。';
+
+  @override
+  String get iconSheetStaysTitle => '仍是 Kryfo 的';
+
+  @override
+  String get iconSheetStays => '每則通知的第一行、手機的設定和電池頁面、應用程式商店，以及有人開啟時的 Kryfo 本身。';
+
+  @override
+  String get iconSheetGlance => '它經得起別人瞥一眼你的主畫面。但如果有人翻看手機的設定，它藏不住 Kryfo。';
+
+  @override
+  String get iconSheetPrivateSpace => '你的手機可能有自己的隱藏應用程式方式：設定裡的私人空間。';
+
+  @override
+  String get iconSheetSecureFolder => '你的手機可能有自己的隱藏應用程式方式：設定裡的安全資料夾。';
+
+  @override
+  String get iconSheetXiaomi => '你的手機可能有自己的隱藏應用程式方式：設定裡的隱藏應用程式。';
+
+  @override
+  String get androidIconNotes => '筆記';
+
+  @override
+  String get androidIconWeather => '天氣';
+
+  @override
+  String get androidIconTasks => '待辦';
+
+  @override
+  String get androidIconNews => '新聞';
+
+  @override
+  String get androidServiceTitlePlain => '執行中';
 }

@@ -2445,12 +2445,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo cerca messaggi ogni 15 minuti. Leggero sulla batteria, ma i messaggi possono arrivare in ritardo.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'Sulla schermata di blocco';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Nascondi anteprima';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Un avviso generico, senza mittente né testo';
 
@@ -9138,4 +9132,132 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo.';
+
+  @override
+  String get settingsIconAndNotifications => 'Icona e notifiche';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, notifiche neutre';
+  }
+
+  @override
+  String get iconSectionTitle => 'Icona dell\'app';
+
+  @override
+  String get iconHint =>
+      'La schermata Home e l\'elenco delle app mostrano questa icona e questo nome al posto di Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Scegli un\'icona e un nome comuni per la schermata Home e l\'elenco delle app.';
+
+  @override
+  String get iconWhatChanges => 'Cosa cambia';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Cambiare l\'icona in $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo si chiude e si riapre. Se l\'icona sparisce dalla schermata Home, cerca $name tra le tue app e rimettila al suo posto.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Cambia icona';
+
+  @override
+  String get iconNoPinLine =>
+      'Chi la tocca vede Kryfo. Con un PIN per l\'app, vede invece un tastierino del PIN.';
+
+  @override
+  String get iconSetPin => 'Imposta un PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Icona cambiata in $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'La schermata Home mostrerà $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, icona dell\'app';
+  }
+
+  @override
+  String get notifShowAll => 'Nome e messaggio';
+
+  @override
+  String get notifShowNew => 'Solo «Nuovo messaggio»';
+
+  @override
+  String get notifShowPlain => 'Neutre';
+
+  @override
+  String get notifPlainHint =>
+      'Nessun nome, nessun messaggio, nessun colore di Kryfo. Un\'icona neutra e una riga.';
+
+  @override
+  String get notifPlainLine => 'Qualcosa di nuovo';
+
+  @override
+  String get notifPlainChannel => 'Avvisi';
+
+  @override
+  String get notifHeaderLimit =>
+      'In cima a ogni notifica resta scritto Kryfo. Android non permette a un\'app di cambiarlo.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Cosa mostrano le notifiche';
+
+  @override
+  String get iconSheetChangesTitle => 'Che cosa cambia';
+
+  @override
+  String get iconSheetChanges =>
+      'L\'icona e il nome nella schermata Home e nell\'elenco delle app, il menu di condivisione e la vista delle app aperte. Con Neutre, anche ciò che mostrano le notifiche.';
+
+  @override
+  String get iconSheetStaysTitle => 'Cosa resta Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'La prima riga di ogni notifica, le pagine delle impostazioni e della batteria del telefono, lo store delle app e Kryfo stesso quando qualcuno lo apre.';
+
+  @override
+  String get iconSheetGlance =>
+      'Regge a un\'occhiata alla schermata Home. Non nasconde Kryfo a chi guarda nelle impostazioni del telefono.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: lo spazio privato, nelle impostazioni.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: la Cartella protetta, nelle impostazioni.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: le app nascoste, nelle impostazioni.';
+
+  @override
+  String get androidIconNotes => 'Note';
+
+  @override
+  String get androidIconWeather => 'Meteo';
+
+  @override
+  String get androidIconTasks => 'Attività';
+
+  @override
+  String get androidIconNews => 'Notizie';
+
+  @override
+  String get androidServiceTitlePlain => 'Attivo';
 }

@@ -5,4 +5,9 @@
     <string name="service_text">خط رمزگذاری‌شده‌ی شما باز می‌ماند تا پیام‌ها برسند</string>
     <string name="channel_name">متصل ماندن</string>
     <string name="channel_description">Kryfo را متصل نگه می‌دارد تا پیام‌های رمزگذاری‌شده وقتی بسته است هم برسند. خاموش کردنش، رسیدن پیام‌ها را متوقف می‌کند.</string>
+    <string name="icon_notes">یادداشت‌ها</string>
+    <string name="icon_weather">آب‌وهوا</string>
+    <string name="icon_tasks">کارها</string>
+    <string name="icon_news">اخبار</string>
+    <string name="service_title_plain">فعال</string>
 </resources>

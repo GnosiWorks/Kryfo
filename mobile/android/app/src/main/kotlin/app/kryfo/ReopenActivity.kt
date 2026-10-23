@@ -55,10 +55,11 @@ class ReopenActivity : Activity() {
         super.onCreate(savedInstanceState)
         val pid = intent.getIntExtra(PID, -1)
         if (pid > 0 && pid != Process.myPid()) Process.killProcess(pid)
-        // a launch into a process that is still dying fails over to a new one
+        // a launch into a process that is still dying fails over to a new one.
+        // the screen by its own name: the launcher entry may be off
         try {
             startActivity(
-                Intent.makeRestartActivityTask(ComponentName(this, MainActivity::class.java))
+                Intent.makeRestartActivityTask(ComponentName(this, KryfoActivity::class.java))
             )
         } catch (e: Exception) {
         }

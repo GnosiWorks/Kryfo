@@ -2479,12 +2479,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo проверяет сообщения каждые 15 минут. Бережёт батарею, но сообщения могут опаздывать.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'На экране блокировки';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Скрыть превью сообщений';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Обычное уведомление без отправителя и текста сообщения';
 
@@ -9227,4 +9221,132 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
+
+  @override
+  String get settingsIconAndNotifications => 'Значок и уведомления';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, простые уведомления';
+  }
+
+  @override
+  String get iconSectionTitle => 'Значок приложения';
+
+  @override
+  String get iconHint =>
+      'Главный экран и список приложений показывают этот значок и это название вместо Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Выбери обычный значок и название для главного экрана и списка приложений.';
+
+  @override
+  String get iconWhatChanges => 'Что это меняет';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Сменить значок на «$name»?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo закроется и откроется снова. Если значок пропадёт с главного экрана, найди «$name» среди приложений и поставь его обратно.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Сменить значок';
+
+  @override
+  String get iconNoPinLine =>
+      'Кто нажмёт на него, увидит Kryfo. Задай PIN-код приложения, и вместо этого будет поле для PIN-кода.';
+
+  @override
+  String get iconSetPin => 'Задать PIN-код';
+
+  @override
+  String iconChanged(String name) {
+    return 'Значок сменён на «$name»';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'На главном экране будет «$name»';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, значок приложения';
+  }
+
+  @override
+  String get notifShowAll => 'Имя и сообщение';
+
+  @override
+  String get notifShowNew => 'Только «Новое сообщение»';
+
+  @override
+  String get notifShowPlain => 'Простые';
+
+  @override
+  String get notifPlainHint =>
+      'Без имени, без сообщения, без цветов Kryfo. Нейтральный значок и одна строка.';
+
+  @override
+  String get notifPlainLine => 'Что-то новое';
+
+  @override
+  String get notifPlainChannel => 'Оповещения';
+
+  @override
+  String get notifHeaderLimit =>
+      'Вверху каждого уведомления по-прежнему написано Kryfo. Android не даёт приложениям это менять.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Что видно в уведомлениях';
+
+  @override
+  String get iconSheetChangesTitle => 'Что меняется';
+
+  @override
+  String get iconSheetChanges =>
+      'Значок и название на главном экране и в списке приложений, меню «Поделиться» и экран недавних приложений. С простыми уведомлениями ещё и то, что в них видно.';
+
+  @override
+  String get iconSheetStaysTitle => 'Что остаётся Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Верхняя строка каждого уведомления, страницы настроек и батареи телефона, магазин приложений и сам Kryfo, когда его кто-то открывает.';
+
+  @override
+  String get iconSheetGlance =>
+      'Это выдержит взгляд на главный экран. От того, кто просматривает настройки телефона, это Kryfo не скроет.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'У телефона может быть свой способ скрыть приложения: личное пространство, в его настройках.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'У телефона может быть свой способ скрыть приложения: защищённая папка, в его настройках.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'У телефона может быть свой способ скрыть приложения: скрытые приложения, в его настройках.';
+
+  @override
+  String get androidIconNotes => 'Заметки';
+
+  @override
+  String get androidIconWeather => 'Погода';
+
+  @override
+  String get androidIconTasks => 'Задачи';
+
+  @override
+  String get androidIconNews => 'Новости';
+
+  @override
+  String get androidServiceTitlePlain => 'Активно';
 }

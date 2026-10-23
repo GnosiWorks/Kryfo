@@ -25,6 +25,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/icon_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/screens/translation_screen.dart';
@@ -61,6 +62,7 @@ const _settingsFiles = {
   'backup_screen',
   'restore_screen',
   'getting_messages_screen',
+  'icon_screen',
   'helper_sheet',
   'follow_section',
   'dev_about_sheet',
@@ -219,7 +221,12 @@ final _pages = [
   _Page(
     'getting messages',
     () => const GettingMessagesScreen(),
-    () => [l10n.gettingMessagesOnTheLockScreen],
+    () => [l10n.settingsNotifications],
+  ),
+  _Page(
+    'icon and notifications',
+    () => IconScreen(hideLine: () async => null),
+    () => [l10n.iconSectionTitle, l10n.settingsNotifications],
   ),
   _Page(
     'restore',

@@ -164,6 +164,9 @@ const _phoneOnly = <String, Object>{
   'delivery_last_check': 5678,
   'delivery_last_wake': 91011,
   'hb.listen': 'x',
+  // plain notifications and the icon belong to the phone
+  'notif_plain': true,
+  'icon_changed': true,
 };
 
 const _everydaySettings = {

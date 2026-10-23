@@ -4,11 +4,12 @@ import 'dart:math' show Random, max;
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart' show ValueNotifier;
+import 'package:flutter/foundation.dart' show ValueNotifier, visibleForTesting;
 import 'package:flutter/services.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
+import 'app_icon.dart' show AppFaceWords, readAppFace;
 import 'container.dart';
 import 'devchat/support.dart' show kSupportPayload, supportSummaryLine;
 import 'lock_guard.dart' show lockGuard;
@@ -76,9 +77,31 @@ Future<void> nameNotificationChannel() async {
       enableVibration: true,
     ),
   );
+  if (_plainKnown ?? await loadNotifPlain()) await _makePlainChannel();
 }
 
 const _messagesChannel = 'halo_messages_v2';
+
+// plain notifications: a channel of its own, since android fixes a
+// channel's vibration when it is made and kryfo's two taps would tell. the
+// phone's own sound and buzz, and a name that says nothing
+const _plainChannel = 'kryfo_plain';
+
+Future<void> _makePlainChannel() async {
+  final android = notifPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  await android?.createNotificationChannel(
+    AndroidNotificationChannel(
+      _plainChannel,
+      l10n.notifPlainChannel,
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    ),
+  );
+}
 
 // the developer's own phone: people writing from the Marios row, on a
 // channel of their own. made the first time it is needed, so no other
@@ -221,6 +244,94 @@ Future<void> setHideNotifContent(
   await prefs.setBool(c.key(_hideContentKey), v);
   _hideKnown[c.key(_hideContentKey)] = v;
   hideNotifRevision.value++;
+}
+
+// the phone's: no name, no words, no colour, whoever is unlocked
+const _plainKey = 'notif_plain';
+bool? _plainKnown;
+
+Future<bool> loadNotifPlain() async {
+  final prefs = await SharedPreferences.getInstance();
+  final v = prefs.getBool(HaloContainer.everyday.key(_plainKey)) ?? false;
+  _plainKnown = v;
+  return v;
+}
+
+bool? notifPlainKnown() => _plainKnown;
+
+Future<void> setNotifPlain(bool v) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(HaloContainer.everyday.key(_plainKey), v);
+  _plainKnown = v;
+  hideNotifRevision.value++;
+  if (v) await _makePlainChannel();
+  // the service's own notification reads the same key and words itself
+  // again on a start
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('applyDeliveryMode');
+  } catch (e) {
+    dlog('plain: service not told (${e.runtimeType})');
+  }
+}
+
+@visibleForTesting
+void forgetNotifPlain() => _plainKnown = null;
+
+// the plain one up now, by id and tag: a new one takes its place
+final Set<(int, String?)> _plainUp = {};
+
+/// the plain line leaves the shade: kryfo is open and unlocked. what an
+/// earlier process posted is found by its channel
+Future<void> clearPlainNotification() async {
+  final up = {..._plainUp};
+  _plainUp.clear();
+  try {
+    for (final a in await notifPlugin.getActiveNotifications()) {
+      final id = a.id;
+      if (id != null && a.channelId == _plainChannel) up.add((id, a.tag));
+    }
+  } catch (e) {
+    dlog('plain: shade not read (${e.runtimeType})');
+  }
+  for (final (id, tag) in up) {
+    await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'plain');
+  }
+}
+
+Future<int> _showPlain({
+  required String chat,
+  required String tag,
+  String? msgUid,
+}) async {
+  await _makePlainChannel();
+  // one at a time, posted anew so the phone still alerts: the shade never
+  // says how many came
+  await clearPlainNotification();
+  final face = await readAppFace();
+  final details = AndroidNotificationDetails(
+    _plainChannel,
+    l10n.notifPlainChannel,
+    tag: tag,
+    importance: Importance.high,
+    priority: Priority.high,
+    category: AndroidNotificationCategory.message,
+    icon: face.glyph,
+    visibility: NotificationVisibility.private,
+    autoCancel: true,
+    when: DateTime.now().millisecondsSinceEpoch,
+  );
+  final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
+  _noteShown(chat, tag, msgUid, id);
+  _plainUp.add((id, tag));
+  await notifPlugin.show(
+    id: id,
+    body: l10n.notifPlainLine,
+    notificationDetails: NotificationDetails(android: details),
+    payload: tag,
+  );
+  return id;
 }
 
 // what a chat's notifications go under on android: its tag, random, made
@@ -369,6 +480,11 @@ Future<int?> showMessageNotification({
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return null;
+  // plain wins over the preview setting: nothing of the message, or of
+  // kryfo, in any field
+  if (await loadNotifPlain()) {
+    return _showPlain(chat: chat, tag: tag, msgUid: msgUid);
+  }
   final hidden = await loadHideNotifContent();
   if (hidden) {
     title = 'Kryfo';
