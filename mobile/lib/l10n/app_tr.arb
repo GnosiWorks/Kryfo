@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Yerleşik köprüler kullanılıyor",
   "bridgesUsingSnowflake": "Snowflake kullanılıyor",
   "bridgesUsingTorProject": "Tor Projesinin köprüleri kullanılıyor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo ara sıra kendiliğinden yeniden dener.",
-  "bridgesTheTorProjectCanSuggest": "Tor Projesi burada işe yarayan bir köprü önerebilir.",
   "bridgesBridgeRemoved": "Köprü kaldırıldı",
   "bridgesUndo": "Geri al",
   "bridgesRemoveBridgeN": "{n}. köprüyü kaldır",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Gizli kalanlar",
   "translatePrivacyNote": "Çeviri bu telefonda yapılır. Hiçbir mesaj çevrilmek için bir yere gönderilmez. Bir paketi indirmek sunucuya hangi paket olduğunu söyler. İndirme Tor üzerinden yapılır, bu yüzden sunucu kimin istediğini bilmez.",
   "translateAutoInChat": "Otomatik çevir",
-  "translateAutoInChatHint": "Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta."
+  "translateAutoInChatHint": "Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.",
+  "bridgesNoneUntilOnion": "Onion açılana kadar yok",
+  "bridgesRelayWorksWhereTor": "Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.",
+  "bridgesRelayThisNetworkSees": "Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.",
+  "onboardingRelayThisNetworkSees": "Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür."
 }

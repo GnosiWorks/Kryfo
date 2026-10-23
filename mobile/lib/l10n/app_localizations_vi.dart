@@ -7082,14 +7082,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesUsingTorProject => 'Đang dùng cầu nối từ Dự án Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Thỉnh thoảng Kryfo sẽ tự thử lại.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Dự án Tor có thể gợi ý một cầu nối dùng được ở đây.';
-
-  @override
   String get bridgesBridgeRemoved => 'Đã gỡ cầu nối';
 
   @override
@@ -9043,4 +9035,19 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.';
 }

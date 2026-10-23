@@ -7211,14 +7211,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesUsingTorProject => 'عبر جسور من مشروع Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'يستطيع مشروع Tor أن يقترح جسرًا يعمل هنا.';
-
-  @override
   String get bridgesBridgeRemoved => 'أُزيل الجسر';
 
   @override
@@ -9185,4 +9177,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'لا شيء حتى تشغيل Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
 }

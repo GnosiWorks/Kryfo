@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "عبر الجسور المدمجة",
   "bridgesUsingSnowflake": "عبر Snowflake",
   "bridgesUsingTorProject": "عبر جسور من مشروع Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر.",
-  "bridgesTheTorProjectCanSuggest": "يستطيع مشروع Tor أن يقترح جسرًا يعمل هنا.",
   "bridgesBridgeRemoved": "أُزيل الجسر",
   "bridgesUndo": "تراجع",
   "bridgesRemoveBridgeN": "إزالة الجسر ⁨{n}⁩",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "ما يبقى خاصًا",
   "translatePrivacyNote": "تتم الترجمة على هذا الهاتف. لا تُرسل أي رسالة إلى أي مكان لترجمتها. تنزيل حزمة يُخبر الخادم أي حزمة هي. يتم التنزيل عبر Tor، فلا يعرف الخادم من طلبها.",
   "translateAutoInChat": "ترجمة تلقائية",
-  "translateAutoInChatHint": "تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة."
+  "translateAutoInChatHint": "تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة.",
+  "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
+  "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.",
+  "bridgesRelayThisNetworkSees": "وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.",
+  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك."
 }

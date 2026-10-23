@@ -45,14 +45,15 @@ the engine then acts as if a censor sat on the network (engine/censor_on.go):
 tor's connections to relays are reset or stall, bridges get through. it is
 for driving blocked detection and automatic mode on any phone.
 HALO_TOR_BLOCKED=2 cuts the built-in obfs4 bridges off as well, so automatic
-has to reach snowflake or webtunnel.
+has to reach snowflake or webtunnel. HALO_TOR_BLOCKED=3 cuts every bridge
+off, so automatic runs out and offers relay mode.
 
 HALO_TEST_ID=1 makes the debug app app.kryfo.bridgetest, named "Kryfo test"
 on the launcher, which installs next to the real one with its own data.
 every other build is named "Kryfo", and gradle checks the name. build.sh
 refuses HALO_TOR_BLOCKED without HALO_TEST_ID=1, and the censor stays off in
 any other app. every gradle build except that debug app runs
-engine/censor-scan.sh on jniLibs and stops on a test engine, at either
+engine/censor-scan.sh on jniLibs and stops on a test engine, at any
 level, and repro/release.sh scans the engines in each apk the same way. run
 `./build.sh` again before any other build.
 

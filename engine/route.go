@@ -732,6 +732,9 @@ func networkChanged() {
 	// what proved the old network proves nothing about this one
 	routeBump()
 	netEpoch.Add(1)
+	// automatic holds tor off a new network until a pass proves a way:
+	// that pass starts now, not at the loop's next look
+	autoKick()
 	netMu.Lock()
 	netChangedAt = time.Now()
 	if netWorker {
@@ -776,8 +779,9 @@ func netBounceWorker() {
 		if !modeNeedsTor() || torIsPaused() || netAway() {
 			return
 		}
-		// automatic starts its own pass on the new network
-		if autoGateHeld() {
+		// automatic starts its own pass on the new network, or has one
+		// under way: one bounce for the change, the pass's
+		if autoGateHeld() || autoTakesChange() {
 			log.Println("halo: network bounce left to automatic")
 			return
 		}

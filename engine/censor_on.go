@@ -33,7 +33,8 @@ const censorMarker = "kryfo test censor build"
 // reset, stall, or mixed: each relay gets one of the two, the same every time
 var censorHow = "mixed"
 
-// 1 cuts direct tor off, 2 the built-in obfs4 bridges too (censor_two.go)
+// 1 cuts direct tor off, 2 the built-in obfs4 bridges too (censor_two.go),
+// 3 every bridge transport as well (censor_three.go)
 var censorLevel = 1
 
 var (
@@ -158,9 +159,16 @@ func censorConn(c net.Conn) {
 	}
 }
 
-// at level 2 the built-in obfs4 bridges are cut off too
+// at level 2 the built-in obfs4 bridges are cut off too, at level 3 every
+// bridge: nothing gets through
 func censorPTDial(transport, target string) error {
-	if censorLevel < 2 || transport != "obfs4" || !censorAllowed(procName(), runtime.GOOS) {
+	if censorLevel < 2 || !censorAllowed(procName(), runtime.GOOS) {
+		return nil
+	}
+	if censorLevel >= 3 {
+		return fmt.Errorf("censor: %w", syscall.ECONNRESET)
+	}
+	if transport != "obfs4" {
 		return nil
 	}
 	want := bridgeAddrKey(target)

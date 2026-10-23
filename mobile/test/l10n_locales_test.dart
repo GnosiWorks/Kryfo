@@ -2938,16 +2938,6 @@ final _calls = <_Call>[
   ('bridgesUsingBuiltIn', [], (l) => l.bridgesUsingBuiltIn),
   ('bridgesUsingSnowflake', [], (l) => l.bridgesUsingSnowflake),
   ('bridgesUsingTorProject', [], (l) => l.bridgesUsingTorProject),
-  (
-    'bridgesKryfoTriesAgainOnItsOwn',
-    [],
-    (l) => l.bridgesKryfoTriesAgainOnItsOwn,
-  ),
-  (
-    'bridgesTheTorProjectCanSuggest',
-    [],
-    (l) => l.bridgesTheTorProjectCanSuggest,
-  ),
   ('bridgesBridgeRemoved', [], (l) => l.bridgesBridgeRemoved),
   ('bridgesUndo', [], (l) => l.bridgesUndo),
   ('bridgesRemoveBridgeN', ["⟨n⟩"], (l) => l.bridgesRemoveBridgeN("⟨n⟩")),
@@ -3238,6 +3228,14 @@ final _calls = <_Call>[
   ('translatePrivacyNote', [], (l) => l.translatePrivacyNote),
   ('translateAutoInChat', [], (l) => l.translateAutoInChat),
   ('translateAutoInChatHint', [], (l) => l.translateAutoInChatHint),
+  ('bridgesNoneUntilOnion', [], (l) => l.bridgesNoneUntilOnion),
+  ('bridgesRelayWorksWhereTor', [], (l) => l.bridgesRelayWorksWhereTor),
+  ('bridgesRelayThisNetworkSees', [], (l) => l.bridgesRelayThisNetworkSees),
+  (
+    'onboardingRelayThisNetworkSees',
+    [],
+    (l) => l.onboardingRelayThisNetworkSees,
+  ),
 ];
 
 void main() {

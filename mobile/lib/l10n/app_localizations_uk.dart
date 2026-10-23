@@ -7221,14 +7221,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesUsingTorProject => 'Через мости від проєкту Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo час від часу сам пробує знову.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Проєкт Tor може підказати міст, який тут працює.';
-
-  @override
   String get bridgesBridgeRemoved => 'Міст прибрано';
 
   @override
@@ -9210,4 +9202,19 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Повідомлення іншими мовами показуються в перекладі. Оригінал за один дотик.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Нічого, доки не ввімкнено Onion';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Режим ретранслятора працює там, де Tor заблоковано, а повернутися можна будь-коли.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Режим ретранслятора проходить там, де Tor заблоковано, але ця мережа може бачити, що ти підключаєшся до Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу.';
 }

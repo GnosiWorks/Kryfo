@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Tramite bridge integrati",
   "bridgesUsingSnowflake": "Tramite Snowflake",
   "bridgesUsingTorProject": "Tramite bridge del Progetto Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo riprova da solo ogni tanto.",
-  "bridgesTheTorProjectCanSuggest": "Il Progetto Tor può suggerire un bridge che funziona qui.",
   "bridgesBridgeRemoved": "Bridge rimosso",
   "bridgesUndo": "Annulla",
   "bridgesRemoveBridgeN": "Rimuovi bridge {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Cosa resta privato",
   "translatePrivacyNote": "La traduzione avviene su questo telefono. Nessun messaggio viene mandato da qualche parte per essere tradotto. Scaricare un pacchetto dice al server quale pacchetto è. Arriva tramite Tor, quindi il server non sa chi l'ha chiesto.",
   "translateAutoInChat": "Traduci automaticamente",
-  "translateAutoInChatHint": "I messaggi in altre lingue appaiono tradotti. L'originale è a un tocco."
+  "translateAutoInChatHint": "I messaggi in altre lingue appaiono tradotti. L'originale è a un tocco.",
+  "bridgesNoneUntilOnion": "Niente finché Onion non è attivo",
+  "bridgesRelayWorksWhereTor": "La modalità relay funziona dove Tor è bloccato, e puoi tornare indietro quando vuoi.",
+  "bridgesRelayThisNetworkSees": "La modalità relay passa dove Tor è bloccato, ma questa rete può vedere che ti connetti a Kryfo.",
+  "onboardingRelayThisNetworkSees": "Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo."
 }

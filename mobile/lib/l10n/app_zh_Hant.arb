@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "正在使用內建橋接",
   "bridgesUsingSnowflake": "正在使用 Snowflake",
   "bridgesUsingTorProject": "正在使用 Tor 專案的橋接",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo 會不時自己重試。",
-  "bridgesTheTorProjectCanSuggest": "Tor 專案可以推薦一個在這裡可用的橋接。",
   "bridgesBridgeRemoved": "已移除橋接",
   "bridgesUndo": "復原",
   "bridgesRemoveBridgeN": "移除橋接 {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "哪些內容保持私密",
   "translatePrivacyNote": "翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。",
   "translateAutoInChat": "自動翻譯",
-  "translateAutoInChatHint": "其他語言的訊息會顯示譯文。點一下即可查看原文。"
+  "translateAutoInChatHint": "其他語言的訊息會顯示譯文。點一下即可查看原文。",
+  "bridgesNoneUntilOnion": "開啟 Onion 前不使用",
+  "bridgesRelayWorksWhereTor": "中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。",
+  "bridgesRelayThisNetworkSees": "中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。",
+  "onboardingRelayThisNetworkSees": "這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。"
 }

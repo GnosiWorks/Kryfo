@@ -11448,18 +11448,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo tries again by itself now and then.'**
-  String get bridgesKryfoTriesAgainOnItsOwn;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project can suggest a bridge that works here.'**
-  String get bridgesTheTorProjectCanSuggest;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Bridge removed'**
   String get bridgesBridgeRemoved;
 
@@ -14618,6 +14606,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages in other languages show translated. The original is one tap away.'**
   String get translateAutoInChatHint;
+
+  /// screens/bridges_screen.dart: the "In use" value while relay or fast mode is on, where no bridge is used
+  ///
+  /// In en, this message translates to:
+  /// **'None until onion is on'**
+  String get bridgesNoneUntilOnion;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode works where Tor is blocked, and you can switch back any time.'**
+  String get bridgesRelayWorksWhereTor;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
+  String get bridgesRelayThisNetworkSees;
+
+  /// screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
+  String get onboardingRelayThisNetworkSees;
 }
 
 class _AppLocalizationsDelegate

@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "از راه پل‌های داخلی",
   "bridgesUsingSnowflake": "از راه Snowflake",
   "bridgesUsingTorProject": "از راه پل‌های پروژه‌ی Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo هر از گاهی خودش دوباره تلاش می‌کند.",
-  "bridgesTheTorProjectCanSuggest": "پروژه‌ی Tor می‌تواند پلی پیشنهاد کند که این‌جا کار کند.",
   "bridgesBridgeRemoved": "پل حذف شد",
   "bridgesUndo": "واگرد",
   "bridgesRemoveBridgeN": "حذف پل ⁨{n}⁩",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "آنچه خصوصی می‌ماند",
   "translatePrivacyNote": "ترجمه روی همین گوشی انجام می‌شود. هیچ پیامی برای ترجمه به جایی فرستاده نمی‌شود. دانلود یک بسته به میزبان می‌گوید کدام بسته است. دانلود از راه Tor انجام می‌شود، پس میزبان نمی‌فهمد چه کسی آن را خواسته است.",
   "translateAutoInChat": "ترجمهٔ خودکار",
-  "translateAutoInChatHint": "پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است."
+  "translateAutoInChatHint": "پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است.",
+  "bridgesNoneUntilOnion": "هیچ، تا Onion روشن شود",
+  "bridgesRelayWorksWhereTor": "حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.",
+  "bridgesRelayThisNetworkSees": "حالت رله جایی که Tor مسدود است هم رد می‌شود، اما این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوی.",
+  "onboardingRelayThisNetworkSees": "این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند."
 }

@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Usando puentes integrados",
   "bridgesUsingSnowflake": "Usando Snowflake",
   "bridgesUsingTorProject": "Usando puentes del Proyecto Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo vuelve a intentarlo solo de vez en cuando.",
-  "bridgesTheTorProjectCanSuggest": "El Proyecto Tor puede sugerir un puente que funcione aquí.",
   "bridgesBridgeRemoved": "Puente quitado",
   "bridgesUndo": "Deshacer",
   "bridgesRemoveBridgeN": "Quitar puente {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Lo que queda en privado",
   "translatePrivacyNote": "La traducción ocurre en este teléfono. Ningún mensaje se envía a ningún sitio para traducirlo. Descargar un paquete le dice al servidor qué paquete es. Llega por Tor, así que el servidor no sabe quién lo pidió.",
   "translateAutoInChat": "Traducir automáticamente",
-  "translateAutoInChatHint": "Los mensajes en otros idiomas se muestran traducidos. El original está a un toque."
+  "translateAutoInChatHint": "Los mensajes en otros idiomas se muestran traducidos. El original está a un toque.",
+  "bridgesNoneUntilOnion": "Nada hasta activar Onion",
+  "bridgesRelayWorksWhereTor": "El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras.",
+  "bridgesRelayThisNetworkSees": "El modo repetidor pasa donde Tor está bloqueado, pero esta red puede ver que te conectas a Kryfo.",
+  "onboardingRelayThisNetworkSees": "Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección."
 }

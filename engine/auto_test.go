@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -20,6 +21,8 @@ import (
 // network, the pause and the mode change at set moments.
 
 type fakeAuto struct {
+	// the clock moves on the loop's goroutine and the test's: under clock
+	clock   sync.Mutex
 	now     time.Time
 	applied []string
 	// per method: what tor shows, given the time since the switch
@@ -44,10 +47,13 @@ func (f *fakeAuto) sleep(d time.Duration) {
 	// a moment of real time, so a call on its own goroutine can answer
 	// before the clock runs away from it
 	time.Sleep(20 * time.Microsecond)
+	f.clock.Lock()
 	f.now = f.now.Add(d)
+	now := f.now
+	f.clock.Unlock()
 	var left []fakeEvent
 	for _, e := range f.events {
-		if !f.now.Before(t0Auto.Add(e.at)) {
+		if !now.Before(t0Auto.Add(e.at)) {
 			e.f()
 		} else {
 			left = append(left, e)
@@ -91,7 +97,11 @@ func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	t.Helper()
 	f := &fakeAuto{now: t0Auto, started: true, script: map[string]func(*attemptSeen, time.Duration){}, applyErr: map[string]string{}}
 	oldNow, oldSleep, oldW := autoNow, autoSleep, autoW
-	autoNow = func() time.Time { return f.now }
+	autoNow = func() time.Time {
+		f.clock.Lock()
+		defer f.clock.Unlock()
+		return f.now
+	}
 	autoSleep = f.sleep
 	autoW = autoWorld{
 		started: func() bool { return f.started },
@@ -146,6 +156,7 @@ func resetAuto(t *testing.T) {
 		autoSt.blocked, autoSt.limited, autoSt.errCode, autoSt.askConsent = false, false, "", false
 	})
 	gateDrop()
+	autoUpAt.Store(torBounces.Load())
 	checkInMu.Lock()
 	checkInUntil = time.Time{}
 	checkInMu.Unlock()
@@ -177,7 +188,8 @@ func pass(t *testing.T, opts modeOpts) string {
 	return runPass(gen, netEpoch.Load(), "test")
 }
 
-func TestAutoDirectBlockedObfs4FailsSnowflakeWorks(t *testing.T) {
+// direct cut off by a censor: snowflake comes next, before the public obfs4
+func TestAutoDirectBlockedSnowflakeBeforeObfs4(t *testing.T) {
 	f := useFakeAuto(t, wifi())
 	f.script["direct"] = resetByCensor
 	f.script["obfs4"] = never
@@ -187,11 +199,11 @@ func TestAutoDirectBlockedObfs4FailsSnowflakeWorks(t *testing.T) {
 	if r := pass(t, modeOpts{}); r != seenOK {
 		t.Fatalf("pass ended %s", r)
 	}
-	// the line can say "trying another way, 2 of 3" while obfs4 runs
-	if mid.Phase != "trying" || mid.Attempt != 2 || mid.Attempts != 3 {
+	// the line can say "trying another way, 2 of 3" while snowflake runs
+	if mid.Phase != "trying" || mid.Attempt != 2 || mid.Attempts != 3 || mid.Method != "snowflake" {
 		t.Fatalf("status mid-pass %+v", mid)
 	}
-	if got := strings.Join(f.applied, " "); got != "direct/ obfs4/builtin snowflake/builtin" {
+	if got := strings.Join(f.applied, " "); got != "direct/ snowflake/builtin" {
 		t.Fatalf("tried %s", got)
 	}
 	m := memSnapshot()
@@ -347,9 +359,9 @@ func TestAutoNoNetworkIsIdle(t *testing.T) {
 func TestAutoKeepsBridgeWithSlowRelays(t *testing.T) {
 	f := useFakeAuto(t, wifi())
 	memBlocked("wifi", dayOf(f.now))
-	f.script["obfs4"] = worksAfter(10 * time.Second)
+	f.script["snowflake"] = worksAfter(10 * time.Second)
 	f.proven = false
-	if r := pass(t, modeOpts{}); r != seenOK || f.applied[0] != "obfs4/builtin" {
+	if r := pass(t, modeOpts{}); r != seenOK || f.applied[0] != "snowflake/builtin" {
 		t.Fatalf("pass %s, tried %v", r, f.applied)
 	}
 	if st := bridgeStatus(); st.Phase != "connected" || st.CanSend {
@@ -360,7 +372,7 @@ func TestAutoKeepsBridgeWithSlowRelays(t *testing.T) {
 func TestAutoFirstDialLateIsNotAFailure(t *testing.T) {
 	f := useFakeAuto(t, wifi())
 	memBlocked("wifi", dayOf(f.now))
-	f.script["obfs4"] = func(a *attemptSeen, el time.Duration) {
+	f.script["snowflake"] = func(a *attemptSeen, el time.Duration) {
 		if el >= 140*time.Second && a.firstDial.IsZero() {
 			a.firstDial = a.since.Add(el)
 		}
@@ -448,8 +460,8 @@ func TestAutoPassLogCountsLikeStatus(t *testing.T) {
 	memMu.Lock()
 	autoMem.Blocked = map[string]int64{"wifi": dayOf(f.now)}
 	memMu.Unlock()
-	f.script["obfs4"] = never
-	f.script["snowflake"] = worksAfter(5 * time.Second)
+	f.script["snowflake"] = never
+	f.script["obfs4"] = worksAfter(5 * time.Second)
 	var mid bridgeStatusView
 	f.at(10*time.Second, func() { mid = bridgeStatus() })
 	var buf bytes.Buffer
@@ -484,7 +496,7 @@ func TestAutoConsentMidPass(t *testing.T) {
 	if r := pass(t, modeOpts{Consent: "ask"}); r != seenOK {
 		t.Fatalf("pass %s, tried %v", r, f.applied)
 	}
-	if got := strings.Join(f.applied, " "); got != "direct/ obfs4/builtin webtunnel/moat" {
+	if got := strings.Join(f.applied, " "); got != "direct/ snowflake/builtin webtunnel/moat" {
 		t.Fatalf("tried %s", got)
 	}
 }
@@ -534,7 +546,7 @@ func TestAutoSetconfNeverAnswers(t *testing.T) {
 		tried = append(tried, s.Method)
 		return live.apply(s)
 	}
-	f.script["snowflake"] = worksAfter(time.Second)
+	f.script["obfs4"] = worksAfter(time.Second)
 	t0 := time.Now()
 	r := pass(t, modeOpts{})
 	took := time.Since(t0)
@@ -543,7 +555,7 @@ func TestAutoSetconfNeverAnswers(t *testing.T) {
 	if took > 3*time.Second {
 		t.Fatalf("an attempt waited %s on a SETCONF that never answered", took)
 	}
-	if len(tried) < 2 || tried[0] != "obfs4" {
+	if len(tried) < 2 || tried[0] != "snowflake" {
 		t.Fatalf("tried %v, result %s", tried, r)
 	}
 }

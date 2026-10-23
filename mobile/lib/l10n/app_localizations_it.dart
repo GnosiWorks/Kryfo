@@ -7162,14 +7162,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesUsingTorProject => 'Tramite bridge del Progetto Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo riprova da solo ogni tanto.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Il Progetto Tor può suggerire un bridge che funziona qui.';
-
-  @override
   String get bridgesBridgeRemoved => 'Bridge rimosso';
 
   @override
@@ -9131,4 +9123,19 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'I messaggi in altre lingue appaiono tradotti. L\'originale è a un tocco.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Niente finché Onion non è attivo';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'La modalità relay funziona dove Tor è bloccato, e puoi tornare indietro quando vuoi.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'La modalità relay passa dove Tor è bloccato, ma questa rete può vedere che ti connetti a Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo.';
 }

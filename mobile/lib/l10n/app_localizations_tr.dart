@@ -7116,14 +7116,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesUsingTorProject => 'Tor Projesinin köprüleri kullanılıyor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo ara sıra kendiliğinden yeniden dener.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Tor Projesi burada işe yarayan bir köprü önerebilir.';
-
-  @override
   String get bridgesBridgeRemoved => 'Köprü kaldırıldı';
 
   @override
@@ -9080,4 +9072,19 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
 }

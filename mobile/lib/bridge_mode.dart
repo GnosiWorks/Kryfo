@@ -367,6 +367,10 @@ class BridgeLine {
   // how long this way has been tried, in ms, when tor gives no percent:
   // the view counts on from it, so nothing else rebuilds each second
   final int? clockMs;
+  // relay mode, one tap away
+  final bool offerRelay;
+  // relay ahead of [action]. after it where this network may watch
+  final bool relayFirst;
 
   const BridgeLine({
     required this.head,
@@ -377,7 +381,27 @@ class BridgeLine {
     this.progress,
     this.action,
     this.clockMs,
+    this.offerRelay = false,
+    this.relayFirst = true,
   });
+
+  /// the line for someone who said tor is blocked or watched here. relay is
+  /// a plain connection this network sees, so the line says so and the
+  /// bridge way goes first
+  BridgeLine watched() => !offerRelay
+      ? this
+      : BridgeLine(
+          head: head,
+          detail: l10n.bridgesRelayThisNetworkSees,
+          detailKind: '$detailKind-watched',
+          tone: tone,
+          moving: moving,
+          progress: progress,
+          action: action,
+          clockMs: clockMs,
+          offerRelay: true,
+          relayFirst: false,
+        );
 }
 
 /// m:ss in the person's digits
@@ -454,16 +478,17 @@ BridgeLine bridgeStatusLine(
         action: BridgeAction.openWifi,
       );
     case 'exhausted':
-      // the words go with the button under them
+      // relay mode gets through where no bridge did, offered with asking
+      // the tor project or trying again. [BridgeLine.watched] turns it
+      // round where the network may watch
       final ask = consent != 'yes';
       return BridgeLine(
         head: l10n.bridgesNothingGotThrough,
-        detail: ask
-            ? l10n.bridgesTheTorProjectCanSuggest
-            : l10n.bridgesKryfoTriesAgainOnItsOwn,
+        detail: l10n.bridgesRelayWorksWhereTor,
         detailKind: ask ? 'exhausted-ask' : 'exhausted',
         tone: BridgeTone.rose,
         action: ask ? BridgeAction.getBridge : BridgeAction.tryAgain,
+        offerRelay: true,
       );
   }
   // a picked bridge tor cannot use, its listeners down or its lines
@@ -568,6 +593,8 @@ String bridgeChoiceName(BridgeChoice c) => switch (c) {
 /// the method in use, in the words "more" uses. transport names are kept
 /// left to right in a right-to-left language
 String bridgeMethodWords(BridgeStatus s, {BridgeChoice? choice}) {
+  // relay and fast use no bridge, whatever tor keeps for later
+  if (s.phase == 'not_tor_mode') return l10n.bridgesNoneUntilOnion;
   if (s.method.isEmpty) return l10n.bridgesNothingYet;
   if (s.method == 'direct') return l10n.bridgesTorNoBridge;
   // built-in bridges go to the engine as a picked set: named by the pick

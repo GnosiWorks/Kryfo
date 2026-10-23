@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Через встроенные мосты",
   "bridgesUsingSnowflake": "Через Snowflake",
   "bridgesUsingTorProject": "Через мосты от проекта Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo время от времени сам пробует снова.",
-  "bridgesTheTorProjectCanSuggest": "Проект Tor может подсказать мост, который здесь работает.",
   "bridgesBridgeRemoved": "Мост удалён",
   "bridgesUndo": "Отменить",
   "bridgesRemoveBridgeN": "Удалить мост {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Что остаётся в тайне",
   "translatePrivacyNote": "Перевод выполняется на этом телефоне. Сообщения никуда не отправляются для перевода. При скачивании пакета сервер узнаёт, какой это пакет. Загрузка идёт через Tor, поэтому сервер не знает, кто его запросил.",
   "translateAutoInChat": "Переводить автоматически",
-  "translateAutoInChatHint": "Сообщения на других языках показываются в переводе. Оригинал в одном касании."
+  "translateAutoInChatHint": "Сообщения на других языках показываются в переводе. Оригинал в одном касании.",
+  "bridgesNoneUntilOnion": "Ничего, пока не включён Onion",
+  "bridgesRelayWorksWhereTor": "Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент.",
+  "bridgesRelayThisNetworkSees": "Режим ретранслятора проходит там, где Tor заблокирован, но эта сеть может видеть, что ты подключаешься к Kryfo.",
+  "onboardingRelayThisNetworkSees": "Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес."
 }

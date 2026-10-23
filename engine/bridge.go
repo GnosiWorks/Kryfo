@@ -916,6 +916,7 @@ func reconnectTorBy(force, auto bool, why string) string {
 	}
 	atomic.StoreInt64(&lastTorRestart, now)
 	noteBounce(why)
+	noteTorBounced()
 
 	mu.Lock()
 	t := torNode

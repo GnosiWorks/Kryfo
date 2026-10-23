@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Usando pontes integradas",
   "bridgesUsingSnowflake": "Usando Snowflake",
   "bridgesUsingTorProject": "Usando pontes do Projeto Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "O Kryfo tenta de novo sozinho de vez em quando.",
-  "bridgesTheTorProjectCanSuggest": "O Projeto Tor pode sugerir uma ponte que funcione aqui.",
   "bridgesBridgeRemoved": "Ponte removida",
   "bridgesUndo": "Desfazer",
   "bridgesRemoveBridgeN": "Remover ponte {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "O que fica privado",
   "translatePrivacyNote": "A tradução acontece neste celular. Nenhuma mensagem é enviada a lugar algum para ser traduzida. Baixar um pacote informa ao servidor qual pacote é. Ele vem pelo Tor, então o servidor não sabe quem pediu.",
   "translateAutoInChat": "Traduzir automaticamente",
-  "translateAutoInChatHint": "Mensagens em outros idiomas aparecem traduzidas. O original fica a um toque."
+  "translateAutoInChatHint": "Mensagens em outros idiomas aparecem traduzidas. O original fica a um toque.",
+  "bridgesNoneUntilOnion": "Nada até ativar o Onion",
+  "bridgesRelayWorksWhereTor": "O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser.",
+  "bridgesRelayThisNetworkSees": "O modo retransmissor passa onde o Tor está bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.",
+  "onboardingRelayThisNetworkSees": "Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço."
 }

@@ -1266,8 +1266,16 @@ class _AutoStrip extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
-        final line = appState.bridgeLine;
+        final line = shownBridgeLine();
         final a = line.action;
+        final relay = CardAction(
+          label: l10n.homeUseOurRelay,
+          onTap: () => switchToRelay(context),
+          fill: line.relayFirst ? kCyan : null,
+          ink: line.relayFirst ? HaloColors.amberInk : HaloColors.amberText,
+        );
+        // relay quiet after the bridge way where the network may watch
+        final filled = !line.offerRelay || !line.relayFirst;
         return _HomeCard(
           show: appState.homeBridgeCard == 'auto',
           id: 'auto',
@@ -1277,6 +1285,8 @@ class _AutoStrip extends StatelessWidget {
           title: line.head,
           line: line.detail ?? '',
           actions: [
+            // nothing got through: relay mode and the other way
+            if (line.offerRelay && line.relayFirst) relay,
             if (a != null)
               CardAction(
                 label: bridgeActionLabel(a),
@@ -1288,9 +1298,10 @@ class _AutoStrip extends StatelessWidget {
                   }
                   await showTorBlockedSheet(context);
                 },
-                fill: HaloColors.amber,
-                ink: HaloColors.onAmber,
+                fill: filled ? HaloColors.amber : null,
+                ink: filled ? HaloColors.onAmber : HaloColors.amberText,
               ),
+            if (line.offerRelay && !line.relayFirst) relay,
             CardAction(
               label: l10n.bridgesDetails,
               onTap: () =>

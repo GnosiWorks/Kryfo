@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Đang dùng cầu nối có sẵn",
   "bridgesUsingSnowflake": "Đang dùng Snowflake",
   "bridgesUsingTorProject": "Đang dùng cầu nối từ Dự án Tor",
-  "bridgesKryfoTriesAgainOnItsOwn": "Thỉnh thoảng Kryfo sẽ tự thử lại.",
-  "bridgesTheTorProjectCanSuggest": "Dự án Tor có thể gợi ý một cầu nối dùng được ở đây.",
   "bridgesBridgeRemoved": "Đã gỡ cầu nối",
   "bridgesUndo": "Hoàn tác",
   "bridgesRemoveBridgeN": "Gỡ cầu nối {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Những gì được giữ riêng tư",
   "translatePrivacyNote": "Việc dịch diễn ra trên điện thoại này. Không tin nhắn nào được gửi đi đâu để dịch. Tải một gói sẽ cho máy chủ biết đó là gói nào. Gói được tải qua Tor nên máy chủ không biết ai đã yêu cầu.",
   "translateAutoInChat": "Tự động dịch",
-  "translateAutoInChatHint": "Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm."
+  "translateAutoInChatHint": "Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.",
+  "bridgesNoneUntilOnion": "Chưa dùng cho đến khi bật Onion",
+  "bridgesRelayWorksWhereTor": "Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.",
+  "bridgesRelayThisNetworkSees": "Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.",
+  "onboardingRelayThisNetworkSees": "Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn."
 }

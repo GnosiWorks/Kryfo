@@ -12,7 +12,8 @@ package main
 // order: what worked here last, direct, the tor project's advice (only
 // with consent, only through meek, never plain), built-in obfs4, built-in
 // snowflake, webtunnel lines the app keeps. direct is skipped on a network
-// type where it was blocked in the last 30 days.
+// type where it was blocked in the last 30 days. where tor looks blocked,
+// the built-in obfs4 goes after snowflake and webtunnel.
 
 import "C"
 
@@ -223,6 +224,8 @@ type autoStep struct {
 	Source string // builtin, moat, cached; empty for direct
 	Lines  []string
 	Limit  time.Duration
+	// stays where it was planned: what worked here last, the tor project's advice
+	pinned bool
 }
 
 // per transport, from the first dial
@@ -288,7 +291,7 @@ func planPass(kind string, mem autoMemory, opts modeOpts, today int64) []autoSte
 		case u.Method == "direct" && !skipDirect:
 			add(autoStep{Method: "direct", Limit: directLimit})
 		case u.Method != "direct" && len(lines) > 0:
-			add(autoStep{Method: u.Method, Source: u.Source, Lines: lines, Limit: stepLimit(u.Method, true)})
+			add(autoStep{Method: u.Method, Source: u.Source, Lines: lines, Limit: stepLimit(u.Method, true), pinned: true})
 		}
 	}
 	if !skipDirect {
@@ -303,7 +306,27 @@ func planPass(kind string, mem autoMemory, opts modeOpts, today int64) []autoSte
 	if lines := linesFor(autoUse{Method: "webtunnel", Source: "cached"}, opts); len(lines) > 0 {
 		add(autoStep{Method: "webtunnel", Source: "cached", Lines: lines, Limit: stepLimit("webtunnel", false)})
 	}
+	// tor said blocked or watched here, or direct blocked lately on this
+	// type of network: a censor that cuts tor's relays cuts the public obfs4
+	// bridges too. another type of network keeps its own order
+	if skipDirect {
+		steps = obfs4Last(steps, 0)
+	}
 	return steps
+}
+
+// the built-in obfs4 steps from [from] on go to the end, in their order
+func obfs4Last(steps []autoStep, from int) []autoStep {
+	out := append([]autoStep(nil), steps[:from]...)
+	var late []autoStep
+	for _, s := range steps[from:] {
+		if s.Method == "obfs4" && s.Source == "builtin" && !s.pinned {
+			late = append(late, s)
+			continue
+		}
+		out = append(out, s)
+	}
+	return append(out, late...)
 }
 
 // the steps moat's settings give, in its order
@@ -317,7 +340,7 @@ func moatSteps(settings []moatSetting) []autoStep {
 		if len(s.Lines) == 0 || methodLimit[s.Type] == 0 {
 			continue
 		}
-		out = append(out, autoStep{Method: s.Type, Source: src, Lines: s.Lines, Limit: stepLimit(s.Type, false)})
+		out = append(out, autoStep{Method: s.Type, Source: src, Lines: s.Lines, Limit: stepLimit(s.Type, false), pinned: true})
 	}
 	return out
 }
@@ -794,11 +817,15 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 	moatDone, moatAt := false, -1
 	// direct was found blocked here lately, or ran out on a network
 	// android could not check: either way tor did not get through as is
-	blocked := false
+	blocked, reordered := false, false
 	if d, ok := memSnapshot().Blocked[kind]; ok && fresh(d, today) {
 		blocked = true
 		stSet(func() { autoSt.blocked = true })
 	}
+	// direct blocked on this type of network, or tor said blocked or
+	// watched: the public obfs4 goes behind the rest. a network android
+	// could not check is not counted
+	censored := blocked || opts.SkipDirect
 	for i := 0; i < len(steps); i++ {
 		s := steps[i]
 		if s.Method == "moat" {
@@ -833,6 +860,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
+			noteAutoUp()
 			// through: there is nothing left to ask the tor project for
 			stSet(func() {
 				autoSt.phase, autoSt.method, autoSt.source = "connected", s.Method, s.Source
@@ -843,7 +871,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		case seenBlocked:
 			// with no network said to be there, nothing is learned of it
 			if s.Method == "direct" && !netValveOpen.Load() {
-				blocked = true
+				blocked, censored = true, true
 				memBlocked(kind, dayOf(autoNow()))
 				stSet(func() { autoSt.blocked, autoSt.errCode = true, "blocked" })
 				if consentNow() == "ask" {
@@ -858,6 +886,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			}
 		case passInterrupted:
 			return passInterrupted
+		}
+		// tor blocked as is: snowflake and webtunnel before the public obfs4
+		if censored && !reordered {
+			steps, reordered = obfs4Last(steps, i+1), true
 		}
 		// a bridge that did not get through here is not one to check in by
 		if v == seenFailed && s.Method != "direct" && !netValveOpen.Load() {
@@ -1086,6 +1118,43 @@ func autoStart(gen int64) {
 // passes are started here and nowhere else
 var autoRunPass = runPass
 
+// a change of network needs a pass of its own: after a pass that did not
+// get through, on another type of network, or with tor held off it
+func networkPassDue(n netInfo, result, kind string) bool {
+	return result != seenOK || n.Kind != kind || networkHold() != ""
+}
+
+// the loop's last pass, for the network bounce to read: the loop's own
+// copies stay in the loop
+var autoLast struct {
+	sync.Mutex
+	gen          int64
+	epoch        int64
+	kind, result string
+}
+
+func autoLastSet(gen, epoch int64, kind, result string) {
+	autoLast.Lock()
+	autoLast.gen, autoLast.epoch, autoLast.kind, autoLast.result = gen, epoch, kind, result
+	autoLast.Unlock()
+}
+
+// automatic puts a way back on this network with a pass of its own, by the
+// loop's rule, or has one for it already: the network bounce leaves tor to
+// it, so a change bounces tor once
+func autoTakesChange() bool {
+	if mode, _, _ := bridgeMode(); mode != bmAuto || autoIdleWhy() != "" {
+		return false
+	}
+	autoLast.Lock()
+	gen, epoch, kind, result := autoLast.gen, autoLast.epoch, autoLast.kind, autoLast.result
+	autoLast.Unlock()
+	if gen == 0 || gen != autoGen() {
+		return false
+	}
+	return epoch == netEpoch.Load() || networkPassDue(currentNet(), result, kind)
+}
+
 func autoLoop(gen int64) {
 	var (
 		result    string
@@ -1102,6 +1171,7 @@ func autoLoop(gen int64) {
 		consent   = consentNow()
 		valid     = autoValidFlips.Load()
 	)
+	autoLastSet(gen, epoch, kind, result)
 	for autoGen() == gen {
 		now := autoNow()
 		start := ""
@@ -1123,7 +1193,7 @@ func autoLoop(gen int64) {
 				start = "start"
 			// a new network, or one that left tor held off it, as a change
 			// of the same kind can: a pass puts a way back in place
-			case ep != epoch && (result != seenOK || n.Kind != kind || networkHold() != ""):
+			case ep != epoch && networkPassDue(n, result, kind):
 				start = "network"
 			case result == passInterrupted:
 				start = "again"
@@ -1144,7 +1214,9 @@ func autoLoop(gen int64) {
 				if networkHold() == "" {
 					heldN, heldAt = 0, time.Time{}
 				}
+				bounces := torBounces.Load()
 				if autoW.torUp() {
+					noteAutoUpSince(bounces)
 					downSince = time.Time{}
 					if upSince.IsZero() {
 						upSince = now
@@ -1182,7 +1254,9 @@ func autoLoop(gen int64) {
 			epoch = netEpoch.Load()
 			kind = currentNet().Kind
 			lastPass = autoNow()
+			autoLastSet(gen, epoch, kind, result)
 			result = autoRunPass(gen, epoch, start)
+			autoLastSet(gen, epoch, kind, result)
 			downSince, upSince = time.Time{}, time.Time{}
 			switch result {
 			case "exhausted":
@@ -1447,6 +1521,31 @@ func putCheckInStepSoon() {
 
 // ---- the status line ----
 
+// tor's bounces, when the last one was, and how many there had been when
+// automatic last saw tor carry: a bounce since then is a new connect
+var (
+	torBounces   atomic.Int64
+	torBouncedAt atomic.Int64
+	autoUpAt     atomic.Int64
+)
+
+func noteTorBounced() {
+	torBouncedAt.Store(autoNow().UnixNano())
+	torBounces.Add(1)
+}
+
+func noteAutoUp() { autoUpAt.Store(torBounces.Load()) }
+
+// tor seen up with the count read before the look: a reconnect counts its
+// bounce before tor leaves the network, so one under way is not up yet
+func noteAutoUpSince(bounces int64) {
+	if atomic.LoadInt32(&torRestarting) == 0 {
+		autoUpAt.Store(bounces)
+	}
+}
+
+func bouncedSinceUp() bool { return torBounces.Load() > autoUpAt.Load() }
+
 type bridgeStatusView struct {
 	Mode       string `json:"mode"`
 	Phase      string `json:"phase"`
@@ -1502,6 +1601,13 @@ func bridgeStatus() bridgeStatusView {
 	attempt, attempts := autoSt.attempt, autoSt.attempts
 	autoSt.Unlock()
 
+	// a bounce after the pass got through, as back on onion: connecting
+	// again the same way, with its own clock, not almost there
+	if mode == bmAuto && phase == "connected" && !v.CanSend && bouncedSinceUp() {
+		phase, since = "trying", time.Unix(0, torBouncedAt.Load())
+		attempt, attempts = 0, 0
+		v.Blocked, v.Limited = false, false
+	}
 	if mode != bmAuto {
 		method, source = linesMethod(), ""
 		switch mode {
@@ -1530,7 +1636,11 @@ func bridgeStatus() bridgeStatusView {
 		v.ErrorCode = c
 	}
 	switch why := autoIdleWhy(); {
-	case why == "not_tor_mode", why == "no_internet":
+	// relay and fast use no bridge, whatever tor keeps for later
+	case why == "not_tor_mode":
+		phase, v.ErrorCode = why, why
+		method, source = "", ""
+	case why == "no_internet":
 		phase, v.ErrorCode = why, why
 	// a portal tor gets through anyway is no portal to sign in to
 	case why == "captive" && v.CanSend:

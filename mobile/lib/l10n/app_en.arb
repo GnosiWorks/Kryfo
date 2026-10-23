@@ -8994,14 +8994,6 @@
   "@bridgesUsingTorProject": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo tries again by itself now and then.",
-  "@bridgesKryfoTriesAgainOnItsOwn": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTheTorProjectCanSuggest": "The Tor Project can suggest a bridge that works here.",
-  "@bridgesTheTorProjectCanSuggest": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesBridgeRemoved": "Bridge removed",
   "@bridgesBridgeRemoved": {
     "description": "screens/bridges_screen.dart"
@@ -11429,5 +11421,21 @@
   "translateAutoInChatHint": "Messages in other languages show translated. The original is one tap away.",
   "@translateAutoInChatHint": {
     "description": "under that switch"
+  },
+  "bridgesNoneUntilOnion": "None until onion is on",
+  "@bridgesNoneUntilOnion": {
+    "description": "screens/bridges_screen.dart: the \"In use\" value while relay or fast mode is on, where no bridge is used"
+  },
+  "bridgesRelayWorksWhereTor": "Relay mode works where Tor is blocked, and you can switch back any time.",
+  "@bridgesRelayWorksWhereTor": {
+    "description": "bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode"
+  },
+  "bridgesRelayThisNetworkSees": "Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.",
+  "@bridgesRelayThisNetworkSees": {
+    "description": "bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network"
+  },
+  "onboardingRelayThisNetworkSees": "This network can see you connect to Kryfo. Our relay sees your address.",
+  "@onboardingRelayThisNetworkSees": {
+    "description": "screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode"
   }
 }

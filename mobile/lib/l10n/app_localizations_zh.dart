@@ -6796,12 +6796,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesUsingTorProject => '正在使用 Tor 项目的网桥';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 会时不时自己重试。';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest => 'Tor 项目可以推荐一个在这里能用的网桥。';
-
-  @override
   String get bridgesBridgeRemoved => '网桥已移除';
 
   @override
@@ -8645,6 +8639,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateAutoInChatHint => '其他语言的消息会显示译文。点一下即可查看原文。';
+
+  @override
+  String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
+
+  @override
+  String get bridgesRelayWorksWhereTor => '中继模式在 Tor 被封锁的地方也能用，随时可以切换回来。';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      '中继模式在 Tor 被封锁的地方也能连上，但这个网络能看到你在连接 Kryfo。';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15440,12 +15448,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesUsingTorProject => '正在使用 Tor 專案的橋接';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 會不時自己重試。';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest => 'Tor 專案可以推薦一個在這裡可用的橋接。';
-
-  @override
   String get bridgesBridgeRemoved => '已移除橋接';
 
   @override
@@ -17170,4 +17172,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateAutoInChatHint => '其他語言的訊息會顯示譯文。點一下即可查看原文。';
+
+  @override
+  String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
+
+  @override
+  String get bridgesRelayWorksWhereTor => '中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      '中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
 }

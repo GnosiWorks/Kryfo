@@ -19,17 +19,18 @@ ENGINE_DIR="$(pwd)"
 TAGS=""
 case "${HALO_TOR_BLOCKED:-}" in
   ""|0) ;;
-  1|2)
+  1|2|3)
     if [ "${HALO_TEST_ID:-}" != 1 ]; then
       echo "error: HALO_TOR_BLOCKED needs HALO_TEST_ID=1"
       exit 1
     fi
     TAGS="-tags torblocked"
     [ "$HALO_TOR_BLOCKED" = 2 ] && TAGS="-tags torblocked,torblocked2"
+    [ "$HALO_TOR_BLOCKED" = 3 ] && TAGS="-tags torblocked,torblocked3"
     echo "censor level $HALO_TOR_BLOCKED: $TAGS"
     ;;
   *)
-    echo "error: HALO_TOR_BLOCKED is 1 or 2"
+    echo "error: HALO_TOR_BLOCKED is 1, 2 or 3"
     exit 1
     ;;
 esac

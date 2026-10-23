@@ -408,3 +408,175 @@ func TestOnlineIsNotValidated(t *testing.T) {
 		t.Fatalf("network %+v", n)
 	}
 }
+
+// a network change with direct as the way: the pass that puts a way back
+// starts at once, not when the loop next looks around
+func TestNetworkChangeStartsThePassAtOnce(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	quietBounce(t)
+	oldTick := autoTick
+	autoTick = time.Hour
+	defer func() { autoTick = oldTick }()
+	t.Cleanup(func() { autoDirectOK.Store(false) })
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	gen := autoGenN
+	autoMu.Unlock()
+	calls := make(chan string, 4)
+	autoRunPass = func(g, epoch int64, why string) string {
+		calls <- why
+		autoDirectOK.Store(true)
+		return seenOK
+	}
+	done := make(chan struct{})
+	go func() { autoLoop(gen); close(done) }()
+	defer func() { stopLoop(); autoKick(); <-done }()
+	if why := <-calls; why != "start" {
+		t.Fatalf("first pass %s", why)
+	}
+	// the loop sleeps its hour; the change has to wake it
+	time.Sleep(50 * time.Millisecond)
+	f.sleep(autoPassFloor)
+	networkChanged()
+	select {
+	case why := <-calls:
+		if why != "network" {
+			t.Fatalf("second pass %s", why)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("no pass after the network change until the loop's next look")
+	}
+}
+
+// one network change in automatic bounces tor once, the pass's: the network
+// bounce leaves it to automatic whether the pass comes before its quiet
+// is out or after
+func TestNetworkChangeBouncesOnceInAutomatic(t *testing.T) {
+	// the reconnects here set the floor and count bounces: none of it
+	// outlasts the test
+	t.Cleanup(func() {
+		atomic.StoreInt64(&lastTorRestart, 0)
+		noteAutoUp()
+	})
+	for _, passFirst := range []bool{true, false} {
+		f := useFakeAuto(t, wifi())
+		quietBounce(t)
+		underNetMu(func() {
+			netBounce = func() { _ = netReconnect() }
+			if passFirst {
+				netQuiet = 100 * time.Millisecond
+			}
+		})
+		oldTick := autoTick
+		autoTick = time.Hour
+		autoMu.Lock()
+		autoGenN++
+		bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+		gen := autoGenN
+		autoMu.Unlock()
+		calls := make(chan string, 4)
+		autoRunPass = func(g, epoch int64, why string) string {
+			if why == "network" && !passFirst {
+				// the loop comes to its pass after the bounce's quiet
+				time.Sleep(50 * time.Millisecond)
+			}
+			id := gateHold(g, time.Minute)
+			_ = reconnectAuto()
+			gateRelease(id)
+			autoDirectOK.Store(true)
+			calls <- why
+			return seenOK
+		}
+		done := make(chan struct{})
+		go func() { autoLoop(gen); close(done) }()
+		if why := <-calls; why != "start" {
+			t.Fatalf("first pass %s", why)
+		}
+		time.Sleep(20 * time.Millisecond)
+		f.sleep(autoPassFloor)
+		before := reconnectRuns.Load()
+		networkChanged()
+		select {
+		case why := <-calls:
+			if why != "network" {
+				t.Fatalf("second pass %s", why)
+			}
+		case <-time.After(3 * time.Second):
+			t.Fatal("no pass after the network change")
+		}
+		// past the bounce's quiet, with room for a bounce it would start
+		time.Sleep(300 * time.Millisecond)
+		if n := reconnectRuns.Load() - before; n != 1 {
+			t.Errorf("pass first %v: %d reconnects for one change, want 1", passFirst, n)
+		}
+		stopLoop()
+		autoKick()
+		<-done
+		autoTick = oldTick
+		autoDirectOK.Store(false)
+	}
+}
+
+// a bounce counted while tor is still up, before it leaves the network: the
+// loop's look then does not take it for tor up after the bounce, and the
+// line says trying until tor is up again
+func TestLoopDoesNotSwallowABounce(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	f.script["direct"] = worksAfter(time.Second)
+	var looks atomic.Int64
+	f.up = func() bool { looks.Add(1); return true }
+	oldTick := autoTick
+	autoTick = time.Millisecond
+	defer func() { autoTick = oldTick }()
+	t.Cleanup(func() {
+		autoDirectOK.Store(false)
+		atomic.StoreInt32(&torRestarting, 0)
+	})
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	gen := autoGenN
+	autoMu.Unlock()
+	passes := make(chan string, 4)
+	autoRunPass = func(g, epoch int64, why string) string {
+		r := runPass(g, epoch, why)
+		passes <- r
+		return r
+	}
+	done := make(chan struct{})
+	go func() { autoLoop(gen); close(done) }()
+	defer func() { stopLoop(); autoKick(); <-done }()
+	if r := <-passes; r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	waitLooks := func() {
+		t.Helper()
+		n := looks.Load()
+		if !waitUntil(2*time.Second, func() bool { return looks.Load() >= n+3 }) {
+			t.Fatal("the loop stopped looking")
+		}
+	}
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "connected" {
+		t.Fatalf("after the pass %+v", st)
+	}
+	// a reconnect under way: its bounce counted, tor not off the network yet
+	atomic.StoreInt32(&torRestarting, 1)
+	noteTorBounced()
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "trying" {
+		t.Fatalf("the loop took a bounce under way for tor up: %+v", st)
+	}
+	// the reconnect done and tor up: connected again
+	atomic.StoreInt32(&torRestarting, 0)
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "connected" {
+		t.Fatalf("tor up after the bounce %+v", st)
+	}
+	select {
+	case r := <-passes:
+		t.Fatalf("a pass for a bounce: %s", r)
+	default:
+	}
+}

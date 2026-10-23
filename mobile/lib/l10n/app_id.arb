@@ -353,8 +353,6 @@
   "bridgesUsingBuiltIn": "Memakai jembatan bawaan",
   "bridgesUsingSnowflake": "Memakai Snowflake",
   "bridgesUsingTorProject": "Memakai jembatan dari Tor Project",
-  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo mencoba lagi sendiri sesekali.",
-  "bridgesTheTorProjectCanSuggest": "Tor Project bisa menyarankan jembatan yang berfungsi di sini.",
   "bridgesBridgeRemoved": "Jembatan dihapus",
   "bridgesUndo": "Urungkan",
   "bridgesRemoveBridgeN": "Hapus jembatan {n}",
@@ -2389,5 +2387,9 @@
   "translatePrivacyTitle": "Yang tetap privat",
   "translatePrivacyNote": "Terjemahan terjadi di ponsel ini. Tidak ada pesan yang dikirim ke mana pun untuk diterjemahkan. Mengunduh paket memberi tahu server paket mana itu. Unduhannya lewat Tor, jadi server tidak tahu siapa yang meminta.",
   "translateAutoInChat": "Terjemahkan otomatis",
-  "translateAutoInChatHint": "Pesan dalam bahasa lain tampil terjemahannya. Aslinya tinggal satu ketukan."
+  "translateAutoInChatHint": "Pesan dalam bahasa lain tampil terjemahannya. Aslinya tinggal satu ketukan.",
+  "bridgesNoneUntilOnion": "Tidak ada sampai Onion aktif",
+  "bridgesRelayWorksWhereTor": "Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.",
+  "bridgesRelayThisNetworkSees": "Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.",
+  "onboardingRelayThisNetworkSees": "Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu."
 }
