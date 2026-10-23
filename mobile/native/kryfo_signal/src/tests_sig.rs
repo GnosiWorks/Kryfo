@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ks_sign and ks_verify_ctx against testdata/sig_v1.txt, and the line
 // between kryfo's signatures and libsignal's own
-use libsignal_protocol::{IdentityKey, IdentityKeyPair, PublicKey};
+use libsignal_protocol::{IdentityKey, IdentityKeyPair, PrivateKey, PublicKey};
 
-use crate::sig::{CONTEXTS, PREFIX, canonical_s, signed_text};
+use crate::sig::{Body, CONTEXTS, MOVE_LEN, PREFIX, body_fits, canonical_s, signed_text};
 use crate::tests::{Party, Rng, mutate, raw, run, w};
 use crate::*;
 
@@ -118,6 +118,51 @@ fn sign_of(pair: &[u8], context: &[u8], message: &[u8]) -> Result<Vec<u8>, Error
     run(sign, w().bytes(pair).bytes(context).bytes(message)).map(|mut o| o.remove(0))
 }
 
+// xeddsa over the kryfo text straight from the private key, past every
+// check of the shim: what libsignal alone would take
+fn raw_sign_with(private: &PrivateKey, context: &[u8], message: &[u8]) -> Vec<u8> {
+    private
+        .calculate_signature(&signed_text(context, message), &mut crate::ops::rng())
+        .unwrap()
+        .to_vec()
+}
+
+fn raw_sign(pair: &[u8], context: &[u8], message: &[u8]) -> Vec<u8> {
+    raw_sign_with(
+        IdentityKeyPair::try_from(pair).unwrap().private_key(),
+        context,
+        message,
+    )
+}
+
+// a body of the shape [body] asks for, [a] and [b] the keys a move names
+fn body_for(body: Body, a: &[u8], b: &[u8]) -> Vec<u8> {
+    match body {
+        Body::Magic(m) => [&m[..], b" some body"].concat(),
+        Body::Move => [a, b, &[7; 32]].concat(),
+    }
+}
+
+// move bodies one step off the one shape
+fn moves_refused(a: &[u8], b: &[u8]) -> Vec<(&'static str, Vec<u8>)> {
+    let good = body_for(Body::Move, a, b);
+    let mut top = good.clone();
+    top[65] |= 0x80;
+    let mut typed = good.clone();
+    typed[33] = 0x06;
+    let p: Vec<u8> = [&[0x05u8][..], &[0xed], &[0xff; 30], &[0x7f]].concat();
+    let zero: Vec<u8> = [&[0x05u8][..], &[0; 32]].concat();
+    vec![
+        ("short", good[..MOVE_LEN - 1].to_vec()),
+        ("long", [&good[..], &[0]].concat()),
+        ("same_key_twice", [a, a, &[7; 32]].concat()),
+        ("second_key_top_bit", top),
+        ("second_key_type", typed),
+        ("first_key_at_p", [&p[..], b, &[7; 32]].concat()),
+        ("first_key_zero", [&zero[..], b, &[7; 32]].concat()),
+    ]
+}
+
 #[test]
 fn the_vectors_hold() {
     let v = vectors();
@@ -225,21 +270,22 @@ fn prekey_and_kryfo_signatures_never_cross() {
             run(verify, w().bytes(&g.key).bytes(&g.text).bytes(&g.sig)),
             Err(Error::Args)
         );
-        // and a kryfo signature over a prekey's key is no prekey signature
-        if g.message.len() == 33 && g.message[0] == 0x05 {
+    }
+    // a kryfo text over a prekey's key or another identity, signed past
+    // the shim's checks, is neither libsignal signature
+    let (_, k1, k1_public) = v.keys.iter().find(|k| k.0 == "k1").unwrap();
+    let k1 = PrivateKey::deserialize(k1).unwrap();
+    for (key, public, _) in &v.prekeys {
+        assert_eq!(key, k1_public);
+        for (c, _) in CONTEXTS {
+            let s = raw_sign_with(&k1, c.as_bytes(), public);
             assert_eq!(
-                run(verify, w().bytes(&g.key).bytes(&g.message).bytes(&g.sig)),
+                run(verify, w().bytes(key).bytes(public).bytes(&s)),
                 Err(Error::Signature),
-                "{}",
-                g.name
+                "{c}"
             );
         }
     }
-    assert!(
-        v.good
-            .iter()
-            .any(|g| g.message.len() == 33 && g.message[0] == 0x05)
-    );
     for (key, other, sig) in &v.alts {
         let id = IdentityKey::decode(key).unwrap();
         let o = IdentityKey::decode(other).unwrap();
@@ -251,10 +297,14 @@ fn prekey_and_kryfo_signatures_never_cross() {
             );
         }
     }
-    for g in v.good.iter().filter(|g| g.message.len() == 33) {
-        let id = IdentityKey::decode(&g.key).unwrap();
-        let o = IdentityKey::decode(&g.message).unwrap();
-        assert!(!id.verify_alternate_identity(&o, &g.sig).unwrap());
+    for (key, other, _) in &v.alts {
+        assert_eq!(key, k1_public);
+        let id = IdentityKey::decode(key).unwrap();
+        let o = IdentityKey::decode(other).unwrap();
+        for (c, _) in CONTEXTS {
+            let s = raw_sign_with(&k1, c.as_bytes(), other);
+            assert!(!id.verify_alternate_identity(&o, &s).unwrap(), "{c}");
+        }
     }
 }
 
@@ -269,28 +319,35 @@ fn a_kryfo_signature_builds_no_bundle() {
         }
         run(bundle_build, &mut x)
     };
-    // bob's own key signs his signed prekey and kyber key under every
-    // context that takes a bare key: none stands in for libsignal's
-    for (c, magic) in CONTEXTS {
-        if magic.is_some() {
-            continue;
+    for (c, _) in CONTEXTS {
+        // the shim signs no bare prekey under any context
+        for i in [5, 8] {
+            assert_eq!(
+                sign_of(&bob.pair, c.as_bytes(), &fields[i]),
+                Err(Error::Args),
+                "{c}"
+            );
         }
+        // and the same text signed past the shim stands in for no
+        // prekey signature
         let mut f = fields.clone();
-        f[6] = sign_of(&bob.pair, c.as_bytes(), &fields[5]).unwrap();
+        f[6] = raw_sign(&bob.pair, c.as_bytes(), &fields[5]);
         assert_eq!(rebuild(&f), Err(Error::Signature), "{c}");
         let mut f = fields.clone();
-        f[9] = sign_of(&bob.pair, c.as_bytes(), &fields[8]).unwrap();
+        f[9] = raw_sign(&bob.pair, c.as_bytes(), &fields[8]);
         assert_eq!(rebuild(&f), Err(Error::Signature), "{c}");
     }
+    // the fields as they came build, so the refusals were the signatures'
+    rebuild(&fields).unwrap();
 }
 
 #[test]
 fn sign_then_verify() {
     let alice = Party::new(1);
     let bob = Party::new(2);
-    for (c, magic) in CONTEXTS {
-        let mut m = magic.map(|m| m.to_vec()).unwrap_or_default();
-        m.extend_from_slice(b" some body");
+    for (c, body) in CONTEXTS {
+        let m = body_for(*body, &alice.public, &bob.public);
+        assert!(body_fits(*body, &m), "{c}");
         let s = sign_of(&alice.pair, c.as_bytes(), &m).unwrap();
         assert_eq!(s.len(), 64);
         verify_ctx_of(&alice.public, c.as_bytes(), &m, &s).unwrap();
@@ -304,14 +361,32 @@ fn sign_then_verify() {
         assert_ne!(s, t);
         verify_ctx_of(&alice.public, c.as_bytes(), &m, &t).unwrap();
     }
+    // a move is signed by both identities over one body, and the new one
+    // is not in it
+    let carol = Party::new(3);
+    let m = body_for(Body::Move, &alice.public, &bob.public);
+    let s = sign_of(&carol.pair, b"move", &m).unwrap();
+    verify_ctx_of(&carol.public, b"move", &m, &s).unwrap();
 }
 
 #[test]
 fn sign_refuses() {
     let alice = Party::new(1);
-    // a context off the list, in any spelling
-    for c in [&b"Invite"[..], b"invite\0", b"kryfo-sig-v1", b"move ", b"x"] {
+    let bob = Party::new(2);
+    let mv = body_for(Body::Move, &alice.public, &bob.public);
+    // a context off the list in any spelling, one that is gone and one
+    // whose format is not here yet
+    for c in [
+        &b"Invite"[..],
+        b"invite\0",
+        b"kryfo-sig-v1",
+        b"move ",
+        b"x",
+        b"link-proof",
+        b"face-claim",
+    ] {
         assert_eq!(sign_of(&alice.pair, c, b"KIN4 x"), Err(Error::Args));
+        assert_eq!(sign_of(&alice.pair, c, &mv), Err(Error::Args));
         assert_eq!(
             verify_ctx_of(&alice.public, c, b"KIN4 x", &[0; 64]),
             Err(Error::Args)
@@ -319,26 +394,57 @@ fn sign_refuses() {
     }
     // nothing to sign, or no context
     assert_eq!(sign_of(&alice.pair, b"move", b""), Err(Error::Args));
-    assert_eq!(sign_of(&alice.pair, b"", b"x"), Err(Error::Args));
-    // a body that is not the context's format
-    for (c, magic) in CONTEXTS {
-        if magic.is_some() {
+    assert_eq!(sign_of(&alice.pair, b"", &mv), Err(Error::Args));
+    // a body of another context's shape, a cut magic, a magic in another
+    // case
+    for (c, body) in CONTEXTS {
+        for (_, other) in CONTEXTS.iter().filter(|o| o.1 != *body) {
+            let m = body_for(*other, &alice.public, &bob.public);
             assert_eq!(
-                sign_of(&alice.pair, c.as_bytes(), b"KXX1 x"),
-                Err(Error::Args)
+                sign_of(&alice.pair, c.as_bytes(), &m),
+                Err(Error::Args),
+                "{c}"
             );
         }
+        if let Body::Magic(m) = body {
+            let mut lower = m.to_vec();
+            lower[0] |= 0x20;
+            for x in [&m[..3], &lower[..]] {
+                assert_eq!(sign_of(&alice.pair, c.as_bytes(), x), Err(Error::Args));
+            }
+        }
+    }
+    // a move body one step off: refused, and signed past the shim it
+    // still does not hold
+    for (what, m) in moves_refused(&alice.public, &bob.public) {
+        assert!(!body_fits(Body::Move, &m), "{what}");
+        assert_eq!(
+            sign_of(&alice.pair, b"move", &m),
+            Err(Error::Args),
+            "{what}"
+        );
+        let s = raw_sign(&alice.pair, b"move", &m);
+        assert_eq!(
+            verify_ctx_of(&alice.public, b"move", &m, &s),
+            Err(Error::Signature),
+            "{what}"
+        );
     }
     // a key pair whose halves do not belong together
     let a = IdentityKeyPair::try_from(alice.pair.as_slice()).unwrap();
-    let b = IdentityKeyPair::try_from(Party::new(2).pair.as_slice()).unwrap();
+    let b = IdentityKeyPair::try_from(bob.pair.as_slice()).unwrap();
     let mixed = IdentityKeyPair::new(*b.identity_key(), *a.private_key()).serialize();
-    assert_eq!(sign_of(&mixed, b"move", b"x"), Err(Error::Key));
+    assert_eq!(sign_of(&mixed, b"move", &mv), Err(Error::Key));
+    // a pair whose public half is its key with the top bit set
+    let mut top = alice.public.clone();
+    top[32] |= 0x80;
+    let lax = IdentityKeyPair::new(IdentityKey::decode(&top).unwrap(), *a.private_key());
+    assert_eq!(sign_of(&lax.serialize(), b"move", &mv), Err(Error::Key));
     // a pair that does not read
-    assert_eq!(sign_of(&[1, 2, 3], b"move", b"x"), Err(Error::Key));
+    assert_eq!(sign_of(&[1, 2, 3], b"move", &mv), Err(Error::Key));
     // fields left over
     let mut x = w();
-    x.bytes(&alice.pair).bytes(b"move").bytes(b"x").bytes(b"y");
+    x.bytes(&alice.pair).bytes(b"move").bytes(&mv).bytes(b"y");
     assert_eq!(run(sign, &mut x), Err(Error::Args));
 }
 
@@ -363,12 +469,16 @@ fn verify_takes_only_prekey_keys() {
         );
     }
     // the identity key in one form only
-    let mut id = bob.public.clone();
-    id.push(0);
-    assert_eq!(
-        run(verify, w().bytes(&id).bytes(&spk[1]).bytes(&spk[2])),
-        Err(Error::Key)
-    );
+    let mut long = bob.public.clone();
+    long.push(0);
+    let mut top = bob.public.clone();
+    top[32] |= 0x80;
+    for id in [long, top] {
+        assert_eq!(
+            run(verify, w().bytes(&id).bytes(&spk[1]).bytes(&spk[2])),
+            Err(Error::Key)
+        );
+    }
 }
 
 #[test]
@@ -427,6 +537,13 @@ fn signature_calls_take_garbage() {
                 .bytes(&s)
                 .done(),
         ),
+        (
+            sign,
+            w().bytes(&alice.pair)
+                .bytes(b"move")
+                .bytes(&body_for(Body::Move, &alice.public, &Party::new(2).public))
+                .done(),
+        ),
         (build_info, Vec::new()),
     ];
     let mut rng = Rng(0x2545f4914f6cdd1d);
@@ -445,6 +562,7 @@ fn signature_calls_take_garbage() {
 fn write_sig_vectors() {
     let k1 = run(identity_generate, &mut w()).unwrap();
     let k2 = run(identity_generate, &mut w()).unwrap();
+    let k3 = run(identity_generate, &mut w()).unwrap();
     let private = |pair: &[u8]| {
         IdentityKeyPair::try_from(pair)
             .unwrap()
@@ -460,40 +578,42 @@ fn write_sig_vectors() {
     println!("#   lax: libsignal's own verify takes it, only the shim refuses it");
     println!("# prekey key public signature: libsignal's own prekey signature");
     println!("# alt key other signature: libsignal's alternate identity signature");
-    println!("key k1 {} {}", to_hex(&private(&k1[0])), to_hex(&k1[1]));
-    println!("key k2 {} {}", to_hex(&private(&k2[0])), to_hex(&k2[1]));
+    for (name, k) in [("k1", &k1), ("k2", &k2), ("k3", &k3)] {
+        println!("key {name} {} {}", to_hex(&private(&k[0])), to_hex(&k[1]));
+    }
+    // k1 moves its chat with k3 to k2: both k1 and k2 sign the one body
+    let mv = [&k1[1][..], &k3[1], &[0x33; 32]].concat();
     let mut good = Vec::new();
-    let bodies: Vec<(&str, &str, Vec<u8>)> = vec![
-        ("invite_1", "invite", [&b"KIN4"[..], &[1; 28]].concat()),
-        ("hello_1", "hello", [&b"KHL1"[..], &[2; 20]].concat()),
+    let bodies: Vec<(&str, &str, &str, Vec<u8>)> = vec![
+        (
+            "invite_1",
+            "k1",
+            "invite",
+            [&b"KIN4"[..], &[1; 28]].concat(),
+        ),
+        ("hello_1", "k1", "hello", [&b"KHL1"[..], &[2; 20]].concat()),
+        ("heal_1", "k1", "heal", [&b"KHB1"[..], &[3; 24]].concat()),
         (
             "device_list_1",
+            "k1",
             "device-list",
             [&b"KDL2"[..], &k1[1]].concat(),
         ),
-        ("link_proof_1", "link-proof", k2[1].clone()),
-        ("move_1", "move", vec![0x33; 32]),
-        ("face_claim_1", "face-claim", b"amber-otter-lake".to_vec()),
-        ("move_short", "move", vec![0]),
+        ("move_1", "k1", "move", mv.clone()),
+        ("move_2", "k2", "move", mv.clone()),
     ];
-    for (name, context, message) in bodies {
-        let s = sign_of(&k1[0], context.as_bytes(), &message).unwrap();
+    for (name, signer, context, message) in bodies {
+        let pair = if signer == "k1" { &k1[0] } else { &k2[0] };
+        let s = sign_of(pair, context.as_bytes(), &message).unwrap();
         let text = signed_text(context.as_bytes(), &message);
         println!(
-            "good {name} k1 {context} {} {} {}",
+            "good {name} {signer} {context} {} {} {}",
             to_hex(&message),
             to_hex(&text),
             to_hex(&s)
         );
         good.push((context, message, s));
     }
-    let s2 = sign_of(&k2[0], b"move", &[0x44; 32]).unwrap();
-    println!(
-        "good move_2 k2 move {} {} {}",
-        to_hex(&[0x44; 32]),
-        to_hex(&signed_text(b"move", &[0x44; 32])),
-        to_hex(&s2)
-    );
 
     let bad = |name: &str, want: &str, lax: bool, key: &[u8], c: &str, m: &[u8], s: &[u8]| {
         if lax {
@@ -580,9 +700,10 @@ fn write_sig_vectors() {
         s,
     );
     let (_, m5, s5) = &good[4];
+    bad("move_as_heal", "signature", false, &k1[1], "heal", m5, s5);
     bad(
         "move_as_link_proof",
-        "signature",
+        "args",
         false,
         &k1[1],
         "link-proof",
@@ -591,12 +712,38 @@ fn write_sig_vectors() {
     );
     bad(
         "move_as_face_claim",
-        "signature",
+        "args",
         false,
         &k1[1],
         "face-claim",
         m5,
         s5,
+    );
+    let (_, m2, s2) = &good[2];
+    bad("heal_as_hello", "signature", false, &k1[1], "hello", m2, s2);
+    // bodies only the shim refuses: signed past its checks
+    for (name, m) in moves_refused(&k1[1], &k3[1]) {
+        let s = raw_sign(&k1[0], b"move", &m);
+        bad(
+            &format!("move_{name}"),
+            "signature",
+            true,
+            &k1[1],
+            "move",
+            &m,
+            &s,
+        );
+    }
+    let raw = [3u8; 28];
+    let hs = raw_sign(&k1[0], b"heal", &raw);
+    bad(
+        "heal_without_magic",
+        "signature",
+        true,
+        &k1[1],
+        "heal",
+        &raw,
+        &hs,
     );
     bad("context_case", "args", false, &k1[1], "Invite", m, s);
     bad("context_unknown", "args", false, &k1[1], "kryfo", m, s);

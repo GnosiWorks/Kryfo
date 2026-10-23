@@ -14,23 +14,48 @@ type R<T> = Result<T, Error>;
 
 pub const PREFIX: &[u8] = b"kryfo-sig-v1";
 
-// each context, and the magic its body opens with where the format has one.
-// the full parse of a body comes with its format
-pub const CONTEXTS: &[(&str, Option<&[u8; 4]>)] = &[
-    ("invite", Some(b"KIN4")),
-    ("hello", Some(b"KHL1")),
-    ("device-list", Some(b"KDL2")),
-    ("link-proof", None),
-    ("move", None),
-    ("face-claim", None),
+// what a body must be before anything signs or checks it under a context.
+// the full parse of each format comes with its format
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Body {
+    /// a format that opens with this magic
+    Magic(&'static [u8; 4]),
+    /// the old identity, the peer's identity, sha256 of the new invite
+    Move,
+}
+
+// the only contexts there are. face-claim comes with its format; link
+// proofs carry no signature
+pub const CONTEXTS: &[(&str, Body)] = &[
+    ("invite", Body::Magic(b"KIN4")),
+    ("hello", Body::Magic(b"KHL1")),
+    ("heal", Body::Magic(b"KHB1")),
+    ("device-list", Body::Magic(b"KDL2")),
+    ("move", Body::Move),
 ];
 
-fn magic_of(context: &[u8]) -> R<Option<&'static [u8; 4]>> {
+pub const MOVE_LEN: usize = 33 + 33 + 32;
+
+fn body_of(context: &[u8]) -> R<Body> {
     CONTEXTS
         .iter()
         .find(|(c, _)| c.as_bytes() == context)
-        .map(|(_, m)| *m)
+        .map(|(_, b)| *b)
         .ok_or(Error::Args)
+}
+
+/// whether [message] has the shape [body] asks for
+pub fn body_fits(body: Body, message: &[u8]) -> bool {
+    match body {
+        Body::Magic(m) => message.starts_with(m),
+        // both keys in their one encoding, so one move has one body
+        Body::Move => {
+            message.len() == MOVE_LEN
+                && strict_public(&message[..33]).is_ok()
+                && strict_public(&message[33..66]).is_ok()
+                && message[..33] != message[33..66]
+        }
+    }
 }
 
 /// the bytes a signature under [context] covers
@@ -84,7 +109,7 @@ pub fn sign(input: &[u8]) -> R<Vec<u8>> {
     let context = r.need()?;
     let message = r.need()?;
     r.end()?;
-    if magic_of(context)?.is_some_and(|m| !message.starts_with(m)) {
+    if !body_fits(body_of(context)?, message) {
         return Err(Error::Args);
     }
     // a pair whose halves do not belong together would sign for a key it
@@ -108,11 +133,11 @@ pub fn verify_ctx(input: &[u8]) -> R<Vec<u8>> {
     let message = r.need()?;
     let sig = r.need()?;
     r.end()?;
-    let magic = magic_of(context)?;
+    let body = body_of(context)?;
     let Ok(sig) = <&[u8; 64]>::try_from(sig) else {
         return Err(Error::Signature);
     };
-    if magic.is_some_and(|m| !message.starts_with(m))
+    if !body_fits(body, message)
         || !canonical_s(sig)
         || !key.verify_signature(&signed_text(context, message), sig)
     {

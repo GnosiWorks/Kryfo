@@ -89,12 +89,15 @@ KS_CALL(ks_session_info);
 KS_CALL(ks_session_promote);
 /* identity, context, message -> signature (64), xeddsa over
  * "kryfo-sig-v1" 0x00 context 0x00 message. context is one of invite,
- * hello, device-list, link-proof, move, face-claim, else KS_ERR_ARGS;
- * an invite, hello or device-list body opens with KIN4, KHL1 or KDL2 */
+ * hello, heal, device-list, move, else KS_ERR_ARGS. an invite, hello,
+ * heal or device-list body opens with KIN4, KHL1, KHB1 or KDL2; a move
+ * body is two different canonical keys (33 each) and 32 bytes; any other
+ * body is KS_ERR_ARGS */
 KS_CALL(ks_sign);
 /* pub, context, message, signature -> () or KS_ERR_SIGNATURE. pub is
- * exactly 33 canonical bytes, else KS_ERR_KEY; the signature is 64 bytes
- * with s below the group order */
+ * exactly 33 canonical bytes, else KS_ERR_KEY; context as for ks_sign;
+ * a body ks_sign would refuse, or a signature not 64 bytes with s below
+ * the group order, is KS_ERR_SIGNATURE */
 KS_CALL(ks_verify_ctx);
 /* () -> the libsignal-protocol and spqr sources it was built from, as
  * Cargo.lock names them */

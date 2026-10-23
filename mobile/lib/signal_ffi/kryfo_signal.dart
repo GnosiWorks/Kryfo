@@ -56,15 +56,15 @@ const kLsKyber = 2;
 /// the abi these bindings were written for
 const kLsAbi = 2;
 
-/// what a kryfo signature is made for. the shim holds the same list and
-/// signs under no other, so a signature for one never holds for another
+/// what a kryfo signature is made for. the shim holds the same list, and
+/// the shape each body must have, and signs under no other, so a signature
+/// for one never holds for another
 enum LsSigContext {
   invite('invite'),
   hello('hello'),
+  heal('heal'),
   deviceList('device-list'),
-  linkProof('link-proof'),
-  move('move'),
-  faceClaim('face-claim');
+  move('move');
 
   const LsSigContext(this.wire);
   final String wire;

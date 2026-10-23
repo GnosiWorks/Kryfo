@@ -45,7 +45,7 @@ void main() {
   test('the bindings and the shim share one context list', () {
     final rust = File('$_crate/src/sig.rs').readAsStringSync();
     final listed = RegExp(
-      r'\("([a-z-]+)", (?:Some|None)',
+      r'\("([a-z-]+)", Body::',
     ).allMatches(rust).map((m) => m[1]).toList();
     expect(listed, [for (final c in LsSigContext.values) c.wire]);
   });
@@ -97,14 +97,43 @@ void main() {
         expect(s.verifyCtx(key, c, pub, sig), isFalse);
       }
     }
+    // the shim signs no bare prekey under any context
     final me = s.identityGenerate();
     final spk = s.signedPreKey(me, 1, 1000);
-    final sig = s.sign(me, LsSigContext.linkProof, spk.public);
-    expect(
-      s.verifyCtx(me.public, LsSigContext.linkProof, spk.public, sig),
-      isTrue,
-    );
-    expect(s.verify(me.public, spk.public, sig), isFalse);
+    for (final c in LsSigContext.values) {
+      expect(
+        () => s.sign(me, c, spk.public),
+        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.args)),
+        reason: c.wire,
+      );
+    }
+  }, skip: needsShim);
+
+  test('a move is signed by both identities over one body', () {
+    final s = shim!;
+    final old = s.identityGenerate();
+    final peer = s.identityGenerate();
+    final fresh = s.identityGenerate();
+    final body = Uint8List.fromList([
+      ...old.public,
+      ...peer.public,
+      ...List.filled(32, 7),
+    ]);
+    for (final me in [old, fresh]) {
+      final sig = s.sign(me, LsSigContext.move, body);
+      expect(s.verifyCtx(me.public, LsSigContext.move, body, sig), isTrue);
+      expect(s.verifyCtx(peer.public, LsSigContext.move, body, sig), isFalse);
+    }
+    // one byte short, or the same key twice
+    for (final bad in [
+      body.sublist(0, 97),
+      Uint8List.fromList([...old.public, ...old.public, ...List.filled(32, 7)]),
+    ]) {
+      expect(
+        () => s.sign(old, LsSigContext.move, bad),
+        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.args)),
+      );
+    }
   }, skip: needsShim);
 
   test(
