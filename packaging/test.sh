@@ -35,6 +35,13 @@ grep -qE '#define +AppVersion +"[0-9]' "$HERE/windows/kryfo.iss" \
 grep -q '^MimeType=x-scheme-handler/kryfo;$' "$HERE/flatpak/app.kryfo.Kryfo.desktop" \
   && grep -q '^Exec=kryfo %u$' "$HERE/flatpak/app.kryfo.Kryfo.desktop" \
   && ok "kryfo: links open the app" || no "the desktop file does not take kryfo: links"
+# the installer takes the shim from where its windows build leaves it
+sb="$ROOT/mobile/native/kryfo_signal/build-windows.sh"
+st="$(sed -n 's/^T=//p' "$sb")"
+[ -n "$st" ] && grep -qF 'DLL="target/$T/release/kryfo_signal.dll"' "$sb" \
+  && grep -qF "\\kryfo_signal\\target\\$st\\release\\kryfo_signal.dll\"" "$HERE/windows/kryfo.iss" \
+  && ok "kryfo.iss takes kryfo_signal.dll from build-windows.sh" \
+  || no "kryfo.iss and build-windows.sh disagree on kryfo_signal.dll"
 
 # a stand-in tree with the build outputs where the build leaves them
 R="$tmp/repo"
