@@ -215,7 +215,7 @@ extension AppStateRoute on AppState {
   void _newRoute() {
     _newTorTry();
     _usableAt = null;
-    _routeOnPurpose = true;
+    _routeOnPurpose = AppState.routeOnPurposePolls;
   }
 
   // tor torn down and started again on purpose
@@ -227,7 +227,11 @@ extension AppStateRoute on AppState {
   // the same, waited on, for the way out a stuck send offers
   Future<String> reconnectNow() {
     _newRoute();
-    return engine.reconnectNow();
+    return engine.reconnectNow().then((r) {
+      // turned down: no bounce is coming, the next bump is not this one
+      if (r.startsWith('error')) _routeOnPurpose = 0;
+      return r;
+    });
   }
 
   // automatic is trying a way in: a long wait is its work, not a dead tor
@@ -307,8 +311,8 @@ extension AppStateRoute on AppState {
         rgen != _routeGen) {
       // the bounce asked for has begun: what the old route carried is not
       // held through it
-      if (rgen != _routeGen && _routeOnPurpose) {
-        _routeOnPurpose = false;
+      if (rgen != _routeGen && _routeOnPurpose > 0) {
+        _routeOnPurpose = 0;
         _usableAt = null;
       }
       _torStatus = st;
@@ -321,6 +325,9 @@ extension AppStateRoute on AppState {
       if (_torCarries) _maybeRepoint();
     }
     if (fresh) _torTryingSince = torReady ? null : at;
+    // a change asked for and no new generation after a while: the engine
+    // turned it down or did it without a bounce
+    if (_routeOnPurpose > 0 && rgen == _routeGen) _routeOnPurpose--;
     // relays through tor while the watch says none: the engine tried and
     // found a network, and the app goes by that until the watch speaks
     if (_netWatchOn == false && _sendMode == 'private' && torUsable) {

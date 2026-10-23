@@ -68,7 +68,16 @@ class ProtectionLine extends StatefulWidget {
   final String label;
   final bool on;
   final String state;
-  const ProtectionLine(this.label, this.on, this.state, {super.key});
+  // what makes a new state rather than new words in the same one: a
+  // climbing percent changes in place
+  final Object? stateKey;
+  const ProtectionLine(
+    this.label,
+    this.on,
+    this.state, {
+    this.stateKey,
+    super.key,
+  });
   @override
   State<ProtectionLine> createState() => _ProtectionLineState();
 }
@@ -178,7 +187,7 @@ class _ProtectionLineState extends State<ProtectionLine>
                 ),
                 child: Text(
                   widget.state,
-                  key: ValueKey(widget.state),
+                  key: ValueKey(widget.stateKey ?? widget.state),
                   textAlign: TextAlign.end,
                   style: HaloType.mono(
                     size: 10,
@@ -433,6 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 8),
                       ProtectionLine(
                         l10n.settingsTorRouting,
+                        stateKey: (onTor, link.kind),
                         torOn,
                         torOn
                             ? l10n.settingsConnected
