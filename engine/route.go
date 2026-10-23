@@ -804,7 +804,11 @@ func netBounceWorker() {
 		if netOnAt.After(netChangedAt) && !torParked.Load() && sameNetwork(netOnNet, now) {
 			netMu.Unlock()
 			log.Println("halo: tor went on this network after the change, no bounce")
-			// the check still runs: tor has to prove itself here all the same
+			// the check still runs: tor has to prove itself here all the same.
+			// the change bumped the route and nothing tore the sockets down:
+			// they ask their probes now, so the proof comes within kickSpread
+			// and not with the next idle probe minutes away
+			kickRelays()
 			go netCheckFor(netEpoch.Load())
 			return
 		}
