@@ -9,7 +9,6 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.BroadcastReceiver
 import android.content.ComponentName
-import android.content.ContentValues
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.PersistableBundle
@@ -931,21 +930,10 @@ open class MainActivity : FlutterFragmentActivity() {
                 MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             else
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, mime)
-                // only the camera's own copies come this way
-                put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    SavePlace.folder(this@MainActivity, video, camera = true)
-                )
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-            val uri = contentResolver.insert(collection, values) ?: return false
+            val uri = contentResolver.insert(collection, SavePlace.newRow(this, name, mime))
+                ?: return false
             contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
-            values.clear()
-            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-            contentResolver.update(uri, values, null, null)
+            contentResolver.update(uri, SavePlace.doneRow(), null, null)
             true
         } catch (e: Exception) {
             false

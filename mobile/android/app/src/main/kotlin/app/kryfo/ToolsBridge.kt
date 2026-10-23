@@ -4,7 +4,6 @@ package app.kryfo
 import android.app.Activity
 import android.app.RecoverableSecurityException
 import android.content.ClipData
-import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -458,24 +457,13 @@ class ToolsBridge(private val activity: Activity) {
                     MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                 else
                     MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                val values = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, shown)
-                    put(MediaStore.MediaColumns.MIME_TYPE, type)
-                    put(
-                        MediaStore.MediaColumns.RELATIVE_PATH,
-                        SavePlace.folder(activity, video, camera = false)
-                    )
-                    put(MediaStore.MediaColumns.IS_PENDING, 1)
-                }
-                val uri = activity.contentResolver.insert(collection, values)
+                val uri = activity.contentResolver.insert(collection, SavePlace.newRow(activity, shown, type))
                     ?: throw IllegalStateException("no row")
                 try {
                     activity.contentResolver.openOutputStream(uri)!!.use { o ->
                         src.inputStream().use { it.copyTo(o, 256 * 1024) }
                     }
-                    values.clear()
-                    values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    activity.contentResolver.update(uri, values, null, null)
+                    activity.contentResolver.update(uri, SavePlace.doneRow(), null, null)
                 } catch (e: Exception) {
                     activity.contentResolver.delete(uri, null, null)
                     throw e
