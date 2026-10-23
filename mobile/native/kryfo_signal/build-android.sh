@@ -43,7 +43,10 @@ declare -A LINKER=([aarch64-linux-android]=aarch64-linux-android24-clang
 NDK_ROOT="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${NDK_HOME:-}}}"
 if [[ -z "$NDK_ROOT" ]]; then
   SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android-sdk}}"
-  if [[ -d "$SDK/ndk" ]]; then
+  # the pinned ndk, even when a newer one sits beside it
+  if [[ -d "$SDK/ndk/$NDK_WANT" ]]; then
+    NDK_ROOT="$SDK/ndk/$NDK_WANT"
+  elif [[ -d "$SDK/ndk" ]]; then
     NDK_ROOT="$SDK/ndk/$(ls "$SDK/ndk" | sort -V | tail -1)"
   fi
 fi
