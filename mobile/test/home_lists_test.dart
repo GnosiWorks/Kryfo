@@ -14,7 +14,14 @@ import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';

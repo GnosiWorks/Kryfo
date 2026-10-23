@@ -10,7 +10,17 @@ import 'package:flutter/services.dart';
 import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, session, sessionQuiet;
+import '../main.dart'
+    show
+        appState,
+        session,
+        sessionQuiet,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateScreen,
+        AppStateContacts,
+        AppStateSession,
+        AppStateRefresh;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';

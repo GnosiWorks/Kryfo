@@ -3,7 +3,6 @@
 // a delete. real libsignal over rows in maps
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -28,7 +27,14 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         signalEncrypt,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateDevchat,
+        AppStateReceive,
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart' show Shelved;
@@ -41,6 +47,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'dev_chat_fakes.dart' show DevTestDb;
 import 'mem_db.dart';
+import 'source_body.dart';
 
 const _dev = 'dev:m1';
 const _words = 'scare-raven-rare';
@@ -1097,7 +1104,7 @@ void main() {
     });
 
     test('the boot and a mode switch ask for it', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf('await _subscribeRooms();'));
       expect(
         boot.indexOf('await subscribeDevLane();'),

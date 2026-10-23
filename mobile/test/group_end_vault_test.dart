@@ -10,7 +10,14 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_end.dart';
 import 'package:kryfo/lock_state.dart' show PinResult, lockState;
 import 'package:kryfo/main.dart'
-    show AppState, QuietIdentity, useDatabasesForTest;
+    show
+        AppState,
+        QuietIdentity,
+        useDatabasesForTest,
+        AppStateVault,
+        AppStateGroups,
+        AppStateSession,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

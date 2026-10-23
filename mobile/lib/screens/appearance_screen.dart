@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../atmosphere.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState, kPhotoWall, session;
+import '../main.dart' show appState, kPhotoWall, session, AppStatePrefs;
 import '../theme.dart';
 import '../wallpaper.dart';
 import '../widgets/chat_backdrop.dart';

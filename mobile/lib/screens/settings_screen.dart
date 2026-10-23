@@ -3,7 +3,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, session, sessionQuiet;
+import '../main.dart'
+    show
+        appState,
+        session,
+        sessionQuiet,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile,
+        AppStateDelivery,
+        AppStateScreen,
+        AppStateBridges,
+        AppStateSession,
+        AppStateDevchat;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';

@@ -8,7 +8,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/media_resend.dart' show kNeedQuietMs;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

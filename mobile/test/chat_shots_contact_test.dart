@@ -8,7 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, appState, useDatabasesForTest, AppStateMessages;
 import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';

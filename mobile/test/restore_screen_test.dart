@@ -32,7 +32,8 @@ import 'package:kryfo/main.dart'
         rootNavKey,
         session,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateProfile;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';

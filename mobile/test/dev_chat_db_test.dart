@@ -12,13 +12,20 @@ import 'package:kryfo/devchat/dev_gate.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/dev_lane.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateDevchat,
+        AppStateRefresh;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show DatabaseExecutor;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 DevKey _key(String id, int n, {DevKeyStatus status = DevKeyStatus.current}) =>
     DevKey(
@@ -858,7 +865,7 @@ void main() {
     final src = [
       'lib/app/database.dart',
       'lib/app/state.dart',
-    ].map((f) => File(f).readAsStringSync()).join('\n');
+    ].map(sourceOf).join('\n');
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
     expect(int.parse(version), greaterThanOrEqualTo(55));
     final create = src.indexOf('onCreate: (db, _) async {');

@@ -3,7 +3,16 @@
 
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, session, GroupFull;
+import '../main.dart'
+    show
+        appState,
+        session,
+        GroupFull,
+        AppStateMessages,
+        AppStatePrefs,
+        AppStateGroups,
+        AppStateSession,
+        AppStateRooms;
 import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';

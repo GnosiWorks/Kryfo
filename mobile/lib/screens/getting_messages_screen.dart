@@ -7,7 +7,15 @@ import 'package:flutter/material.dart';
 
 import '../delivery_mode.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, reduceMotion, session;
+import '../main.dart'
+    show
+        appState,
+        reduceMotion,
+        session,
+        AppStateRoute,
+        AppStateDelivery,
+        AppStateBridges,
+        AppStateSession;
 import '../miui_autostart.dart';
 import '../notifications.dart';
 import '../ready_edge.dart';

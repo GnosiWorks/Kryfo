@@ -70,7 +70,18 @@ import '../main.dart'
         torValve,
         shredFile,
         kAdminGone,
-        themeRevision;
+        themeRevision,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile,
+        AppStateScreen,
+        AppStateVault,
+        AppStateGroups,
+        AppStateSession,
+        AppStateRefresh,
+        AppStateRooms;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';

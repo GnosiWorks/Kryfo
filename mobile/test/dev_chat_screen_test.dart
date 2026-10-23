@@ -31,7 +31,10 @@ import 'package:kryfo/main.dart'
         live,
         session,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateVault,
+        AppStateRefresh;
 import 'package:kryfo/picked.dart' show voiceFreeBytes;
 import 'package:kryfo/theme.dart' show haloToastOverlay, haloWhenOpen;
 import 'package:kryfo/media_progress.dart'

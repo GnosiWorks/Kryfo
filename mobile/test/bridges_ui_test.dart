@@ -17,7 +17,14 @@ import 'package:kryfo/l10n/numbers.dart' show whole;
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, bridgeWriteTap, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        bridgeWriteTap,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/widgets/motion.dart'

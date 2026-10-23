@@ -19,7 +19,9 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         readFcCounter,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateProfile,
+        AppStatePairing;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/wipe.dart' show wipeForget;
 import 'package:kryfo/router.dart';

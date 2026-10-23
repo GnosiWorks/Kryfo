@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart';

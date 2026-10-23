@@ -26,7 +26,10 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateMessages,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/notifications.dart' show showMessageNotification;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';

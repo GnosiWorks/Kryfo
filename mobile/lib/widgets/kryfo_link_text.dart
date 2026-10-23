@@ -17,7 +17,9 @@ import '../main.dart'
         linkKinOf,
         parseHaloUri,
         rootNavKey,
-        session;
+        session,
+        AppStateSession,
+        AppStateRooms;
 import '../rooms.dart';
 import '../screens/room_preview_sheet.dart';
 import '../theme.dart';

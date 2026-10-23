@@ -16,7 +16,16 @@ import 'package:kryfo/delivery_mode.dart' show deliveryModeName;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateDelivery,
+        AppStateScreen;
 import 'package:kryfo/notifications.dart'
     show loadHideNotifContent, setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;

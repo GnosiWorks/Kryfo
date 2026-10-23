@@ -19,7 +19,7 @@ import '../widgets/qr_wipe.dart';
 import '../address_text.dart';
 import '../open_outside.dart';
 import '../dlog.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, AppStateRoute;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';

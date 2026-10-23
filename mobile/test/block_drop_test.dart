@@ -9,7 +9,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateContacts,
+        AppStateReceive,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/router.dart';

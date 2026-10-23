@@ -25,7 +25,9 @@ import 'package:kryfo/main.dart'
         appState,
         themeRevision,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateMessages,
+        AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;

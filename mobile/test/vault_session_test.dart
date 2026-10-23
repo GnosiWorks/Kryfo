@@ -27,7 +27,13 @@ import 'package:kryfo/main.dart'
         searchFill,
         session,
         sessionQuiet,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateVault,
+        AppStateSession,
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';

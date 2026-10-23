@@ -7,6 +7,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'source_body.dart';
+
 final _import = RegExp(r'''^import\s+['"]([^'"]+)['"]''', multiLine: true);
 
 Set<String> _imports(String path) => {
@@ -48,7 +50,7 @@ void main() {
 
   test('the check on arrival calls nothing that sends', () {
     final run = _body(
-      File('lib/app/state.dart').readAsStringSync(),
+      sourceOf('lib/app/state.dart'),
       'Future<void> _runShield(',
     );
     final calls = {

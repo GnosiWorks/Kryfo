@@ -9,7 +9,16 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, session, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        session,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateContacts,
+        AppStateDevchat,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';

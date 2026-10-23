@@ -4,7 +4,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,17 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery,
+        AppStateBridges,
+        AppStateContacts,
+        AppStateReceive;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';
@@ -26,6 +35,7 @@ import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 class _Engine implements HaloEngine {
   _Engine(this.log);
@@ -279,7 +289,7 @@ void main() {
       final src = [
         'lib/app/state.dart',
         'lib/app/dev_screen.dart',
-      ].map((f) => File(f).readAsStringSync()).join('\n');
+      ].map(sourceOf).join('\n');
       final poll = src.substring(
         src.indexOf('Timer.periodic(const Duration(seconds: 1), (t) {'),
       );
@@ -604,7 +614,7 @@ void main() {
     });
 
     test('the boot sets the list before the invite address listens', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf("dlog('transport: booting in"));
       final init = boot.indexOf('engine.nostrInit(relaysFor(_sendMode));');
       expect(init, greaterThan(0));

@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloDb, appState;
+import 'package:kryfo/main.dart' show HaloDb, appState, AppStateBoot;
 import 'package:kryfo/reopen.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/theme.dart';

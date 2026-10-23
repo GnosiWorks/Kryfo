@@ -20,7 +20,9 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';

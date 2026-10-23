@@ -15,7 +15,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'container.dart';
 import 'dlog.dart';
 import 'main.dart'
-    show appState, engine, session, sessionQuiet, updateGetOnIsolate;
+    show
+        appState,
+        engine,
+        session,
+        sessionQuiet,
+        updateGetOnIsolate,
+        AppStateRoute;
 import 'store.dart' show kPlayBuild;
 import 'widgets/motion.dart' show TorStatus;
 import 'wipe.dart' show haloWiping;

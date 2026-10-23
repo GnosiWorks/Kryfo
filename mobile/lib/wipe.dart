@@ -14,7 +14,8 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'main.dart' show appState, engine, session, sessionQuiet;
+import 'main.dart'
+    show appState, engine, session, sessionQuiet, AppStateProfile;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
 import 'shred.dart' show shredFile;

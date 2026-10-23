@@ -13,7 +13,13 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, haloUriV3, kNotSent, useDatabasesForTest;
+    show
+        HaloDb,
+        appState,
+        haloUriV3,
+        kNotSent,
+        useDatabasesForTest,
+        AppStateRefresh;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';

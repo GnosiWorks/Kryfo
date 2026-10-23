@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../key_number.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/kryfo_avatar.dart';

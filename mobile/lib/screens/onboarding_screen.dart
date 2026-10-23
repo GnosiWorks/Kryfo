@@ -13,7 +13,16 @@ import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
-import '../main.dart' show appState, AppState;
+import '../main.dart'
+    show
+        appState,
+        AppState,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateBridges,
+        AppStateSession,
+        AppStateRefresh,
+        AppStateIdentity;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;

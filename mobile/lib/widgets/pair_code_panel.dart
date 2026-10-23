@@ -7,7 +7,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, engine, inviteKeyNumber, sessionQuiet;
+import '../main.dart'
+    show appState, engine, inviteKeyNumber, sessionQuiet, AppStateSession;
 import '../quiet_wait.dart';
 import '../theme.dart';
 import 'ease_size.dart';

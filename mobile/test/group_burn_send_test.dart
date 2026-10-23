@@ -10,7 +10,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateGroups;
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
