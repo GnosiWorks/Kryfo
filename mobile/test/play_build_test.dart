@@ -194,7 +194,7 @@ void main() {
 }
 
 final _takenAway = RegExp(
-  r'<uses-permission(-sdk-23|-sdk-m)? android:name="android\.permission\.'
+  r'<uses-permission(-sdk-23)? android:name="android\.permission\.'
   r'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
 );
 const _refused = 'const val MIME = "application/vnd.android.package-archive"';
