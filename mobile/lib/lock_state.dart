@@ -540,8 +540,9 @@ class LockCounters {
 bool decoyReady = false;
 
 // a line the lock screen shows about the fingerprint: too many wrong fingers
-// locked the sensor, or the phone would not keep a key for it and it is off
-enum FingerNote { lockedOut, refused }
+// locked the sensor, the phone would not keep a key for it and it is off,
+// or the phone was busy and the same finger may work in a moment
+enum FingerNote { lockedOut, refused, tryAgain }
 
 class LockState extends ChangeNotifier {
   LockState({
@@ -787,9 +788,11 @@ class LockState extends ChangeNotifier {
     }
     if (_biometric) {
       try {
-        _bioStale =
-            await _bio.state().timeout(most) != 'ok' ||
-            await _store.read(_kSeal) == null;
+        final st = await _bio.state().timeout(most);
+        final sealed = await _store.read(_kSeal) != null;
+        // a busy keystore says nothing about the key: the finger stays
+        // as it was, and the unlock asks again
+        if (st != 'error' || !sealed) _bioStale = st != 'ok' || !sealed;
       } catch (e) {
         // a hint for the screen only: the unlock asks the keystore again
         dlog('lock: finger state unread (${e.runtimeType})');
@@ -1476,6 +1479,9 @@ class LockState extends ChangeNotifier {
     }
   }
 
+  // the busy answers in a row since the last other one
+  int _fingerErrors = 0;
+
   // each turn on, off or new seal moves this: a seal that comes back after
   // a newer one was asked for is never written
   int _sealGen = 0;
@@ -1558,7 +1564,8 @@ class LockState extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    if (_fingerNote == FingerNote.lockedOut) {
+    if (_fingerNote == FingerNote.lockedOut ||
+        _fingerNote == FingerNote.tryAgain) {
       _fingerNote = null;
       notifyListeners();
     }
@@ -1568,6 +1575,21 @@ class LockState extends ChangeNotifier {
       l10n.commonCancel,
       seal,
     );
+    if (r.result == 'error') {
+      // the phone was busy or restarted its keystore: the finger stays on
+      // and the pin works. one that keeps failing gets a new key after
+      // the pin, as a stale one does
+      if (++_fingerErrors >= 3) {
+        _fingerErrors = 0;
+        _fingerNote = null;
+        _bioStale = true;
+      } else {
+        _fingerNote = FingerNote.tryAgain;
+      }
+      notifyListeners();
+      return false;
+    }
+    if (r.result != 'cancel') _fingerErrors = 0;
     if (r.result == 'invalidated' || r.result == 'none') {
       // a finger was added since, the key is gone, or the seal is another
       // key's: the pin first, which makes a new one. nothing counts
@@ -1743,7 +1765,10 @@ class LockState extends ChangeNotifier {
     if (!_locked) {
       _locked = true;
       // each lock tries the finger afresh
-      if (_fingerNote == FingerNote.lockedOut) _fingerNote = null;
+      if (_fingerNote == FingerNote.lockedOut ||
+          _fingerNote == FingerNote.tryAgain) {
+        _fingerNote = null;
+      }
       notifyListeners();
     }
   }

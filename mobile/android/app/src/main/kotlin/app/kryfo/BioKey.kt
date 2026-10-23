@@ -118,12 +118,16 @@ object BioKey {
 
     // a cipher ready for the prompt, or why there is none: "none" (never
     // made, or gone), "invalidated" (a finger was added since, or the key
-    // will not start any more), "error"
+    // will not start any more), "error" (the keystore was busy: the key
+    // stays and the finger tries again later). may pause, so never on the
+    // main thread
     fun cipher(): Pair<Cipher?, String> {
         if (!ready()) return null to "none"
         val made = madeAt()
         var last: Exception? = null
-        repeat(2) {
+        for (i in 0 until 2) {
+            // a busy keystore frees up in a moment, not in the same instant
+            if (i > 0) pause(RETRY_MS)
             try {
                 val key = keys.private(ALIAS) ?: return null to "none"
                 return opener(key) to "ok"
@@ -134,11 +138,57 @@ object BioKey {
                 last = e
             }
         }
+        if (busy(last)) {
+            told("busy", last)
+            return null to "error"
+        }
         // a key that will not start twice opens nothing again: it goes, and
         // the pin makes a new one
         told("not started", last)
         dropLater(made)
         return null to "invalidated"
+    }
+
+    const val RETRY_MS = 150L
+
+    // tests stand in a clock that does not wait
+    @Volatile
+    var pause: (Long) -> Unit = { Thread.sleep(it) }
+
+    // a keystore busy or restarting, which says nothing about the key: a
+    // full operation table at start (BackendBusyException is one), the
+    // same operation twice, or a code android itself calls passing
+    fun busy(e: Throwable?): Boolean {
+        if (BioSeal.passing(e)) return true
+        var c = e
+        var depth = 0
+        while (c != null && depth++ < 8) {
+            if (c is java.security.ProviderException) return true
+            if (Build.VERSION.SDK_INT >= 33 && c is android.security.KeyStoreException &&
+                c.isTransientFailure
+            ) {
+                return true
+            }
+            c = c.cause
+        }
+        return false
+    }
+
+    // after the finger only android's passing codes count: a provider
+    // failure there is the keystore refusing this key
+    fun passing(e: Throwable?): Boolean {
+        if (BioSeal.passing(e)) return true
+        var c = e
+        var depth = 0
+        while (c != null && depth++ < 8) {
+            if (Build.VERSION.SDK_INT >= 33 && c is android.security.KeyStoreException &&
+                c.isTransientFailure
+            ) {
+                return true
+            }
+            c = c.cause
+        }
+        return false
     }
 
     // the key that failed goes, in order with the seals, and only if it is
@@ -168,13 +218,21 @@ object BioKey {
         if (!ready()) return Ask("none")
         val made = madeAt()
         val pub = try {
-            keys.public(ALIAS)?.takeIf { BioSeal.fits(sealed, it) }
+            keys.public(ALIAS)
         } catch (e: Exception) {
+            // a read that failed says nothing about the key: it stays
             told("not read", e)
-            null
+            return Ask("error")
         }
         // no key, or a seal for another one: nothing a finger could open
         if (pub == null) return Ask("none")
+        val fits = try {
+            BioSeal.fits(sealed, pub)
+        } catch (e: Exception) {
+            told("not read", e)
+            return Ask("error")
+        }
+        if (!fits) return Ask("none")
         val (c, why) = cipher()
         if (c == null) return Ask(why)
         // a new key came meanwhile: the seal in hand is the old key's
@@ -187,7 +245,7 @@ object BioKey {
     fun opened(ask: Ask, sealed: BioSeal.Sealed, cipher: Cipher?): Triple<String, String?, String?> {
         val pub = ask.pub
         if (cipher == null || pub == null) return Triple("refused", null, null)
-        val r = BioSeal.open(cipher, sealed, pub)
+        val r = BioSeal.open(cipher, sealed, pub, ::passing)
         val opens = r.second
         var s = r.first
         val same = madeAt() == ask.made
@@ -245,7 +303,34 @@ object BioKey {
             done("none", null, null)
             return
         }
-        val ask = ask(sealed)
+        val exec = activity.mainExecutor
+        // the keystore may pause between tries: off the main thread
+        Thread {
+            val ask = try {
+                ask(sealed)
+            } catch (e: Exception) {
+                told("not asked", e)
+                Ask("error")
+            }
+            exec.execute {
+                try {
+                    prompt(activity, title, cancel, sealed, ask, done)
+                } catch (e: Exception) {
+                    told("no prompt", e)
+                    done("error", null, null)
+                }
+            }
+        }.start()
+    }
+
+    private fun prompt(
+        activity: Activity,
+        title: String,
+        cancel: String,
+        sealed: BioSeal.Sealed,
+        ask: Ask,
+        done: (String, String?, String?) -> Unit,
+    ) {
         val c = ask.cipher
         if (c == null) {
             done(ask.why, null, null)
@@ -272,7 +357,13 @@ object BioKey {
                     // rsa takes a moment, so not on the main thread
                     val cipher = r.cryptoObject?.cipher
                     Thread {
-                        val (s, opens, again) = opened(ask, sealed, cipher)
+                        // nothing thrown here may end the app at the lock
+                        val (s, opens, again) = try {
+                            opened(ask, sealed, cipher)
+                        } catch (e: Exception) {
+                            told("not opened", e)
+                            Triple("error", null, null)
+                        }
                         if (s == "refused") told("refused", null)
                         exec.execute { once(s, opens, again) }
                     }.start()

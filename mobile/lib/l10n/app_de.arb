@@ -2057,6 +2057,7 @@
   "lockFingerAfterPin": "Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.",
   "lockFingerLockedOut": "Zu viele Versuche mit dem Fingerabdruck. Gib deine PIN ein oder entsperre dein Handy einmal mit seiner eigenen Displaysperre, dann geht der Fingerabdruck wieder.",
   "lockFingerRefused": "Dein Handy wollte das Entsperren per Fingerabdruck für Kryfo nicht behalten, deshalb ist es aus. Deine PIN funktioniert weiterhin.",
+  "lockFingerTryAgain": "Dein Handy war gerade beschäftigt. Versuch es noch einmal mit deinem Fingerabdruck oder nimm deine PIN.",
   "pinsFingerRefused": "Dein Handy hat das Entsperren per Fingerabdruck für Kryfo nicht eingeschaltet. Deine PIN funktioniert weiterhin.",
   "pinsAdvanced": "Erweiterter Schutz",
   "pinsAdvancedLine": "Für den Fall, dass dich jemand zwingt, dein Handy zu entsperren.",

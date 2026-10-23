@@ -7797,6 +7797,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Handy wollte das Entsperren per Fingerabdruck für Kryfo nicht behalten, deshalb ist es aus. Deine PIN funktioniert weiterhin.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Dein Handy war gerade beschäftigt. Versuch es noch einmal mit deinem Fingerabdruck oder nimm deine PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Dein Handy hat das Entsperren per Fingerabdruck für Kryfo nicht eingeschaltet. Deine PIN funktioniert weiterhin.';
 

@@ -92,20 +92,49 @@ object BioSeal {
 
     // a cipher the finger has unlocked opens it: "ok" with what it holds,
     // "none" when it was sealed to another key, "refused" when the keystore
-    // would not finish what the finger began. never by the exception's
-    // type, which differs from one provider and one keystore to the next
-    fun open(c: Cipher, s: Sealed, pub: PublicKey): Pair<String, String?> {
-        if (!fits(s, pub)) return "none" to null
-        return try {
-            "ok" to String(c.doFinal(s.block), Charsets.UTF_8)
-        } catch (e: IllegalStateException) {
-            // a cipher never started: the seal was not even tried
-            "refused" to null
-        } catch (e: Exception) {
-            // a tagged seal is this key's, so this key refused it. one from
-            // before tags may be any key's of the same size
-            (if (s.version == V1) "none" else "refused") to null
+    // would not finish what the finger began, "error" when it was busy or
+    // restarted on the way and the same finger may work in a moment. never
+    // by the exception's type alone, which differs from one provider and
+    // one keystore to the next
+    fun open(
+        c: Cipher,
+        s: Sealed,
+        pub: PublicKey,
+        passing: (Throwable) -> Boolean = ::passing,
+    ): Pair<String, String?> = try {
+        if (!fits(s, pub)) {
+            "none" to null
+        } else {
+            try {
+                "ok" to String(c.doFinal(s.block), Charsets.UTF_8)
+            } catch (e: IllegalStateException) {
+                // a cipher never started: the seal was not even tried
+                "refused" to null
+            } catch (e: Exception) {
+                // a tagged seal is this key's, so this key refused it. one
+                // from before tags may be any key's of the same size
+                when {
+                    passing(e) -> "error"
+                    s.version == V1 -> "none"
+                    else -> "refused"
+                } to null
+            }
         }
+    } catch (e: Exception) {
+        // the public half would not read: nothing was tried
+        "error" to null
+    }
+
+    // a failure that says nothing about the key: the keystore was busy
+    // with the same operation. android's own codes are read in BioKey
+    fun passing(e: Throwable?): Boolean {
+        var c = e
+        var depth = 0
+        while (c != null && depth++ < 8) {
+            if (c is IllegalThreadStateException) return true
+            c = c.cause
+        }
+        return false
     }
 
     // why the prompt closed. too many wrong fingers lock the sensor for a

@@ -7862,6 +7862,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Телефон не сохранил вход по отпечатку для Kryfo, поэтому он выключен. PIN-код по-прежнему работает.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Телефон был занят в тот момент. Попробуйте отпечаток ещё раз или введите PIN-код.';
+
+  @override
   String get pinsFingerRefused =>
       'Телефон не дал включить вход по отпечатку для Kryfo. PIN-код по-прежнему работает.';
 

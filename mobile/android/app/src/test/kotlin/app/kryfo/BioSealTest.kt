@@ -231,6 +231,60 @@ class BioSealTest {
         }
     }
 
+    // another key's tagged seal whose block lies under this key's modulus,
+    // so only the tag tells it apart. drawn below on purpose, every run
+    @Test
+    fun anotherKeysTagAloneOpensNothing() {
+        val block = sealedBy(larger, above = false)
+        val other = BioSeal.parse("02" + hex(BioSeal.tag(larger.public)) + hex(block))!!
+        assertFalse(BioSeal.tag(larger.public).contentEquals(BioSeal.tag(keys.public)))
+        // the same block would fit this key: only the tag says no
+        assertTrue(BioSeal.fits(BioSeal.parse(v1(block))!!, keys.public))
+        assertFalse(BioSeal.fits(other, keys.public))
+        for (by in providers) {
+            assertEquals("none" to null, BioSeal.open(opener(keys, by), other, keys.public))
+        }
+        // and not even a cipher that would throw anything is asked
+        val loud = failingCipher(IllegalThreadStateException("asked"), keys.public)
+        assertEquals("none" to null, BioSeal.open(loud, other, keys.public))
+        // a real seal for the other key, drawn below too, reads the same
+        val real = BioSeal.parse(BioSeal.seal(larger.public, decoy))!!
+        assertFalse(BioSeal.fits(real, keys.public))
+    }
+
+    // the keystore busy with the operation is not a refusal: try again
+    @Test
+    fun aBusyFinishIsAnError() {
+        for (s in listOf(BioSeal.seal(keys.public, everyday), v1(block(BioSeal.seal(keys.public, decoy))))) {
+            val sealed = BioSeal.parse(s)!!
+            val busy = failingCipher(IllegalThreadStateException("busy"), keys.public)
+            assertEquals("error" to null, BioSeal.open(busy, sealed, keys.public))
+            val wrapped = failingCipher(
+                javax.crypto.IllegalBlockSizeException().apply { initCause(IllegalThreadStateException()) },
+                keys.public,
+            )
+            assertEquals("error" to null, BioSeal.open(wrapped, sealed, keys.public))
+            // anything else keeps its answer
+            val no = failingCipher(javax.crypto.IllegalBlockSizeException(), keys.public)
+            assertEquals(
+                (if (sealed.version == 1) "none" else "refused") to null,
+                BioSeal.open(no, sealed, keys.public),
+            )
+        }
+    }
+
+    // a public half no provider reads: an answer, never a throw
+    @Test
+    fun aPublicHalfThatWillNotReadIsAnError() {
+        val sealed = BioSeal.parse(BioSeal.seal(keys.public, everyday))!!
+        val odd = object : java.security.PublicKey {
+            override fun getAlgorithm() = "none such"
+            override fun getFormat() = "X.509"
+            override fun getEncoded() = ByteArray(4)
+        }
+        assertEquals("error" to null, BioSeal.open(opener(keys), sealed, odd))
+    }
+
     @Test
     fun aLockedSensorIsToldApartFromACancel() {
         assertEquals("lockout", BioSeal.closed(BioSeal.LOCKOUT))
