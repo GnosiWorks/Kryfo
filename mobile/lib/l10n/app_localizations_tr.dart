@@ -8944,4 +8944,16 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, tam metin';
+
+  @override
+  String get licencesInEngine => 'Ağ motorunda';
+
+  @override
+  String get licencesLoadFailed => 'Yüklenemedi';
+
+  @override
+  String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
 }

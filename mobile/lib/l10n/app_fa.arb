@@ -2351,5 +2351,9 @@
   "licencesParts": "اجزای متن‌باز",
   "licencesInSignal": "در کتابخانهٔ Signal",
   "licencesInApp": "در برنامه",
-  "licencesPartCount": "{count, plural, other{⁨{count}⁩ جزء}}"
+  "licencesPartCount": "{count, plural, other{⁨{count}⁩ جزء}}",
+  "licencesGplText": "متن کامل GNU GPL 3.0",
+  "licencesInEngine": "در موتور شبکه",
+  "licencesLoadFailed": "بارگیری نشد",
+  "settingsCopyLinkHint": "کپی پیوند"
 }

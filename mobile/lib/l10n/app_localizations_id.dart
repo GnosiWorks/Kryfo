@@ -8913,4 +8913,16 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, teks lengkap';
+
+  @override
+  String get licencesInEngine => 'Di mesin jaringan';
+
+  @override
+  String get licencesLoadFailed => 'Tidak dapat dimuat';
+
+  @override
+  String get settingsCopyLinkHint => 'Salin tautan';
 }

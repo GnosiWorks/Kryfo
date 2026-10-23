@@ -70,6 +70,10 @@ flutter:
     - assets/stickers/fokiaremix.kst
     # written by native/kryfo_signal/acknowledgments.sh
     - assets/licences/rust.json
+    # written by engine/acknowledgments.sh
+    - assets/licences/engine.json
+    # the repository's LICENSE
+    - assets/licences/gpl-3.0.txt
 
   fonts:
     - family: Fraunces

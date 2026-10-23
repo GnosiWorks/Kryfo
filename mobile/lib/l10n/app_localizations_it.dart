@@ -8994,4 +8994,16 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, testo completo';
+
+  @override
+  String get licencesInEngine => 'Nel motore di rete';
+
+  @override
+  String get licencesLoadFailed => 'Impossibile caricare';
+
+  @override
+  String get settingsCopyLinkHint => 'Copia link';
 }

@@ -9054,4 +9054,16 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'النص الكامل لرخصة GNU GPL 3.0';
+
+  @override
+  String get licencesInEngine => 'في محرّك الشبكة';
+
+  @override
+  String get licencesLoadFailed => 'تعذّر التحميل';
+
+  @override
+  String get settingsCopyLinkHint => 'نسخ الرابط';
 }

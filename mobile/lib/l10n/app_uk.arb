@@ -2351,5 +2351,9 @@
   "licencesParts": "Складники з відкритим кодом",
   "licencesInSignal": "У бібліотеці Signal",
   "licencesInApp": "У застосунку",
-  "licencesPartCount": "{count, plural, one{{count} складник} few{{count} складники} many{{count} складників} other{{count} складника}}"
+  "licencesPartCount": "{count, plural, one{{count} складник} few{{count} складники} many{{count} складників} other{{count} складника}}",
+  "licencesGplText": "GNU GPL 3.0, повний текст",
+  "licencesInEngine": "У мережевому рушії",
+  "licencesLoadFailed": "Не вдалося завантажити",
+  "settingsCopyLinkHint": "Скопіювати посилання"
 }

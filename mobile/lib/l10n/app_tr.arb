@@ -2351,5 +2351,9 @@
   "licencesParts": "Açık kaynak parçalar",
   "licencesInSignal": "Signal kitaplığında",
   "licencesInApp": "Uygulamada",
-  "licencesPartCount": "{count, plural, other{{count} parça}}"
+  "licencesPartCount": "{count, plural, other{{count} parça}}",
+  "licencesGplText": "GNU GPL 3.0, tam metin",
+  "licencesInEngine": "Ağ motorunda",
+  "licencesLoadFailed": "Yüklenemedi",
+  "settingsCopyLinkHint": "Bağlantıyı kopyala"
 }

@@ -762,6 +762,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.code,
                 label: l10n.settingsOpenSource,
                 value: 'github.com/GnosiWorks/Kryfo',
+                tapHint: l10n.settingsCopyLinkHint,
                 onTap: () async {
                   await Clipboard.setData(
                     const ClipboardData(

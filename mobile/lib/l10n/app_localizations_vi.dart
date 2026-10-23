@@ -8904,4 +8904,16 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, toàn văn';
+
+  @override
+  String get licencesInEngine => 'Trong bộ máy mạng';
+
+  @override
+  String get licencesLoadFailed => 'Không tải được';
+
+  @override
+  String get settingsCopyLinkHint => 'Sao chép liên kết';
 }

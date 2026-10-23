@@ -9018,4 +9018,16 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, voller Text';
+
+  @override
+  String get licencesInEngine => 'In der Netzwerk-Engine';
+
+  @override
+  String get licencesLoadFailed => 'Konnte nicht geladen werden';
+
+  @override
+  String get settingsCopyLinkHint => 'Link kopieren';
 }

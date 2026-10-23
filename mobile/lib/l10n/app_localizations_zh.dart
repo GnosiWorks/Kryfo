@@ -8516,6 +8516,18 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '网络引擎中';
+
+  @override
+  String get licencesLoadFailed => '无法加载';
+
+  @override
+  String get settingsCopyLinkHint => '复制链接';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -16912,4 +16924,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '網路引擎中';
+
+  @override
+  String get licencesLoadFailed => '無法載入';
+
+  @override
+  String get settingsCopyLinkHint => '複製連結';
 }

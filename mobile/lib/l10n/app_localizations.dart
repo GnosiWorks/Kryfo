@@ -14390,6 +14390,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} part} other{{count} parts}}'**
   String licencesPartCount(int count);
+
+  /// screens/licences_screen.dart: the row that opens the GPL text Kryfo is under
+  ///
+  /// In en, this message translates to:
+  /// **'GNU GPL 3.0, full text'**
+  String get licencesGplText;
+
+  /// screens/licences_screen.dart: the go modules and c libraries inside Kryfo's network engine (tor, openssl and others)
+  ///
+  /// In en, this message translates to:
+  /// **'In the network engine'**
+  String get licencesInEngine;
+
+  /// screens/licences_screen.dart: the value of a row whose list or text failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get licencesLoadFailed;
+
+  /// screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get settingsCopyLinkHint;
 }
 
 class _AppLocalizationsDelegate

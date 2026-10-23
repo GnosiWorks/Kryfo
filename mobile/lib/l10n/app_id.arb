@@ -2351,5 +2351,9 @@
   "licencesParts": "Komponen sumber terbuka",
   "licencesInSignal": "Di pustaka Signal",
   "licencesInApp": "Di aplikasi",
-  "licencesPartCount": "{count, plural, other{{count} komponen}}"
+  "licencesPartCount": "{count, plural, other{{count} komponen}}",
+  "licencesGplText": "GNU GPL 3.0, teks lengkap",
+  "licencesInEngine": "Di mesin jaringan",
+  "licencesLoadFailed": "Tidak dapat dimuat",
+  "settingsCopyLinkHint": "Salin tautan"
 }

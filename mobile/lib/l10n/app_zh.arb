@@ -2351,5 +2351,9 @@
   "licencesParts": "开源组件",
   "licencesInSignal": "Signal 库中",
   "licencesInApp": "应用中",
-  "licencesPartCount": "{count, plural, other{{count} 个组件}}"
+  "licencesPartCount": "{count, plural, other{{count} 个组件}}",
+  "licencesGplText": "GNU GPL 3.0 全文",
+  "licencesInEngine": "网络引擎中",
+  "licencesLoadFailed": "无法加载",
+  "settingsCopyLinkHint": "复制链接"
 }

@@ -8933,4 +8933,16 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'متن کامل GNU GPL 3.0';
+
+  @override
+  String get licencesInEngine => 'در موتور شبکه';
+
+  @override
+  String get licencesLoadFailed => 'بارگیری نشد';
+
+  @override
+  String get settingsCopyLinkHint => 'کپی پیوند';
 }

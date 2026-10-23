@@ -2351,5 +2351,9 @@
   "licencesParts": "Thành phần mã nguồn mở",
   "licencesInSignal": "Trong thư viện Signal",
   "licencesInApp": "Trong ứng dụng",
-  "licencesPartCount": "{count, plural, other{{count} thành phần}}"
+  "licencesPartCount": "{count, plural, other{{count} thành phần}}",
+  "licencesGplText": "GNU GPL 3.0, toàn văn",
+  "licencesInEngine": "Trong bộ máy mạng",
+  "licencesLoadFailed": "Không tải được",
+  "settingsCopyLinkHint": "Sao chép liên kết"
 }

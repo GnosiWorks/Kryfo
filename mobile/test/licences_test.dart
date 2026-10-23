@@ -1,19 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the licences screen: the rust list is made from the Cargo.lock in the
-// tree, names libsignal's AGPL crates, and the screen opens every list and
-// text, with and without motion
+// tree and names libsignal's AGPL crates, the engine list from the go vendor
+// dir and go-libtor, the data list from the assets' licence files, the GPL
+// text is the repository's. the screen opens every list and text, with and
+// without motion, says when a list fails, and holds still while it loads
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/licences.dart';
 import 'package:kryfo/screens/licences_screen.dart';
 
 const _lock = 'native/kryfo_signal/Cargo.lock';
 final _asset = File(kRustLicencesAsset);
+final _engineAsset = File(kEngineLicencesAsset);
+const _libtor = '../engine/vendor/github.com/alexballas/go-libtor';
+
+String _sha(String path) =>
+    sha256.convert(File(path).readAsBytesSync()).toString();
 
 const _agplCrates = [
   'libsignal-core',
@@ -23,19 +31,36 @@ const _agplCrates = [
   'spqr',
 ];
 
-Widget _host(Widget child, {bool still = false, bool rtl = false}) =>
-    MaterialApp(
-      home: MediaQuery(
-        data: MediaQueryData(
-          size: const Size(360, 720),
-          disableAnimations: still,
-        ),
-        child: Directionality(
-          textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-          child: child,
-        ),
-      ),
-    );
+// motion, direction and text size for every page the screen opens, not
+// only the first
+Widget _host(
+  Widget child, {
+  bool still = false,
+  bool rtl = false,
+  double scale = 1,
+}) => MaterialApp(
+  builder: (context, page) => MediaQuery(
+    data: MediaQuery.of(
+      context,
+    ).copyWith(disableAnimations: still, textScaler: TextScaler.linear(scale)),
+    child: Directionality(
+      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+      child: page!,
+    ),
+  ),
+  home: child,
+);
+
+// a load that fails, as an asset that will not open or parse does
+Future<T> _fail<T>(String why) => Future<T>.error(StateError(why))..ignore();
+
+// a phone-wide view tall enough that every row of the screen is built
+Future<void> _show(WidgetTester t, Widget w) async {
+  t.view.physicalSize = const Size(360, 4000);
+  t.view.devicePixelRatio = 1;
+  addTearDown(t.view.reset);
+  await t.pumpWidget(w);
+}
 
 RustLicences _fakeRust() => const RustLicences('v0.99.4', [
   LicencedPart(
@@ -57,6 +82,63 @@ List<LicencedPart> _fakeDart() => const [
   LicencedPart('flutter', ['flutter text one', 'flutter text two']),
 ];
 
+EngineLicences _fakeEngine() => const EngineLicences(
+  [
+    LicencedPart(
+      'golang.org/x/net',
+      ['Go BSD text'],
+      version: 'v0.60.0',
+      licence: 'BSD-3-Clause',
+    ),
+    LicencedPart(
+      'tor',
+      ['This file contains the license for Tor'],
+      version: '0.4.9.12',
+      licence: 'BSD-3-Clause',
+    ),
+  ],
+  [
+    LicencedPart('OpenCC', ['OpenCC Apache text'], licence: 'Apache-2.0'),
+  ],
+);
+
+const _gplText = 'GNU GENERAL PUBLIC LICENSE\n\nVersion 3, 29 June 2007';
+
+LicencesScreen _screen({
+  Future<RustLicences>? rust,
+  Future<List<LicencedPart>>? dart,
+  Future<EngineLicences>? engine,
+  Future<String>? gpl,
+}) => LicencesScreen(
+  rust: rust ?? Future.value(_fakeRust()),
+  dart: dart ?? Future.value(_fakeDart()),
+  engine: engine ?? Future.value(_fakeEngine()),
+  gpl: gpl ?? Future.value(_gplText),
+);
+
+// the module paths in vendor/modules.txt that bring at least one package
+List<String> _goModules() {
+  final mods = <String>[];
+  String? cur;
+  var used = false;
+  void done() {
+    if (cur != null && used) mods.add(cur);
+  }
+
+  for (final l in File('../engine/vendor/modules.txt').readAsLinesSync()) {
+    if (l.startsWith('# ')) {
+      done();
+      final f = l.substring(2).split(' ');
+      cur = f.length >= 2 && f[1] != '=>' ? f[0] : null;
+      used = false;
+    } else if (l.isNotEmpty && !l.startsWith('#')) {
+      used = true;
+    }
+  }
+  done();
+  return mods;
+}
+
 void main() {
   group('the rust list', () {
     test('was made from the Cargo.lock in this tree', () {
@@ -72,6 +154,7 @@ void main() {
         r'signalapp/libsignal\?tag=(v[0-9.]+)#',
       ).firstMatch(File(_lock).readAsStringSync())![1];
       expect(j['libsignal'], tag);
+      expect(kLibsignalTag, tag, reason: 'the screen names this tag');
     });
 
     test('names the AGPL crates and a text for every crate', () {
@@ -90,6 +173,77 @@ void main() {
     });
   });
 
+  group('the engine list', () {
+    final j =
+        jsonDecode(_engineAsset.readAsStringSync()) as Map<String, dynamic>;
+    const stale = 'out of date: run engine/acknowledgments.sh';
+
+    test('was made from the vendor dir, go-libtor and go in this tree', () {
+      expect(j['modules'], _sha('../engine/vendor/modules.txt'), reason: stale);
+      expect(j['libtor'], _sha('$_libtor/lock.json'), reason: stale);
+      final goMod = File('../engine/go.mod').readAsStringSync();
+      expect(
+        j['go'],
+        RegExp(r'^go (\S+)$', multiLine: true).firstMatch(goMod)![1],
+        reason: stale,
+      );
+    });
+
+    test('names every go module, go, tor and its c libraries', () {
+      final e = parseEngineLicences(_engineAsset.readAsStringSync());
+      final names = {for (final p in e.parts) p.name};
+      final mods = _goModules();
+      expect(mods, isNotEmpty);
+      expect(names, containsAll(mods));
+      expect(names, containsAll(['Go', 'tor', 'OpenSSL', 'libevent', 'zlib']));
+      expect(names.length, mods.length + 5);
+      for (final p in e.parts) {
+        expect(p.texts, isNotEmpty, reason: p.name);
+        expect(p.licence, isNotEmpty, reason: p.name);
+        expect(p.version, isNotEmpty, reason: p.name);
+      }
+    });
+
+    test('names every third-party data licence the app ships', () {
+      final files = <String, String>{
+        for (final d in Directory('assets').listSync().whereType<Directory>())
+          if (!d.path.endsWith('licences'))
+            for (final f in d.listSync().whereType<File>())
+              if (RegExp(
+                r'^(licen[cs]e|copying|notice)',
+                caseSensitive: false,
+              ).hasMatch(f.uri.pathSegments.last))
+                f.path.replaceAll(r'\', '/'): _sha(f.path),
+      };
+      final listed = <String, String>{
+        for (final d in j['data'] as List)
+          (d as Map)['file'] as String: d['sha256'] as String,
+      };
+      expect(listed, files, reason: stale);
+    });
+
+    test('the GPL text is the repository\'s LICENSE', () {
+      expect(
+        File(kGplAsset).readAsStringSync(),
+        File('../LICENSE').readAsStringSync(),
+      );
+    });
+  });
+
+  testWidgets('the app bundles every list and text it loads', (t) async {
+    final e = await t.runAsync(loadEngineLicences);
+    expect(e!.parts, isNotEmpty);
+    final gpl = await t.runAsync(loadGpl);
+    expect(gpl, contains('GNU GENERAL PUBLIC LICENSE'));
+    final r = await t.runAsync(loadRustLicences);
+    expect(r!.crates, isNotEmpty);
+  });
+
+  test('data parts sit among the dart packages by name', () {
+    final all = appParts(_fakeDart(), _fakeEngine().data);
+    expect(all.map((p) => p.name), ['ffi', 'flutter', 'OpenCC']);
+  });
+
   test('dart licences come one entry per package, sorted', () async {
     final parts = await loadDartLicences(
       Stream.fromIterable([
@@ -106,19 +260,18 @@ void main() {
     testWidgets('the screen opens each list and text, still: $still', (
       t,
     ) async {
-      await t.pumpWidget(
-        _host(
-          LicencesScreen(
-            rust: Future.value(_fakeRust()),
-            dart: Future.value(_fakeDart()),
-          ),
-          still: still,
-        ),
-      );
+      await _show(t, _host(_screen(), still: still));
       await t.pumpAndSettle();
       expect(find.textContaining('GNU General Public License'), findsOneWidget);
       expect(find.textContaining('libsignal v0.99.4'), findsOneWidget);
       expect(find.text('2 parts'), findsNWidgets(2));
+      expect(find.text('3 parts'), findsOneWidget);
+
+      await t.tap(find.text('GNU GPL 3.0, full text'));
+      await t.pumpAndSettle();
+      expect(find.text('Version 3, 29 June 2007'), findsOneWidget);
+      await t.pageBack();
+      await t.pumpAndSettle();
 
       await t.ensureVisible(find.text('In the Signal library'));
       await t.tap(find.text('In the Signal library'));
@@ -137,10 +290,32 @@ void main() {
       await t.ensureVisible(find.text('In the app'));
       await t.tap(find.text('In the app'));
       await t.pumpAndSettle();
+      expect(find.text('Apache-2.0'), findsOneWidget);
       await t.tap(find.text('flutter'));
       await t.pumpAndSettle();
       expect(find.text('flutter text one'), findsOneWidget);
       expect(find.text('flutter text two'), findsOneWidget);
+      await t.pageBack();
+      await t.pumpAndSettle();
+      await t.tap(find.text('OpenCC'));
+      await t.pumpAndSettle();
+      expect(find.text('OpenCC Apache text'), findsOneWidget);
+      await t.pageBack();
+      await t.pumpAndSettle();
+      await t.pageBack();
+      await t.pumpAndSettle();
+
+      await t.ensureVisible(find.text('In the network engine'));
+      await t.tap(find.text('In the network engine'));
+      await t.pumpAndSettle();
+      expect(find.text('0.4.9.12 · BSD-3-Clause'), findsOneWidget);
+      await t.tap(find.text('tor'));
+      await t.pumpAndSettle();
+      expect(find.text('tor 0.4.9.12'), findsOneWidget);
+      expect(
+        find.text('This file contains the license for Tor'),
+        findsOneWidget,
+      );
       await t.pageBack();
       await t.pumpAndSettle();
       await t.pageBack();
@@ -154,15 +329,7 @@ void main() {
   }
 
   testWidgets('a licence text stays left to right in an rtl app', (t) async {
-    await t.pumpWidget(
-      _host(
-        LicencesScreen(
-          rust: Future.value(_fakeRust()),
-          dart: Future.value(_fakeDart()),
-        ),
-        rtl: true,
-      ),
-    );
+    await _show(t, _host(_screen(), rtl: true));
     await t.pumpAndSettle();
     await t.ensureVisible(find.text('GNU AGPL 3.0, full text'));
     await t.tap(find.text('GNU AGPL 3.0, full text'));
@@ -172,15 +339,7 @@ void main() {
   });
 
   testWidgets('a list row points the way it opens in an rtl app', (t) async {
-    await t.pumpWidget(
-      _host(
-        LicencesScreen(
-          rust: Future.value(_fakeRust()),
-          dart: Future.value(_fakeDart()),
-        ),
-        rtl: true,
-      ),
-    );
+    await _show(t, _host(_screen(), rtl: true));
     await t.pumpAndSettle();
     // chevron_right mirrors itself in rtl, so the settings rows use it plain
     final rowChevron = t.widget<Icon>(find.byIcon(Icons.chevron_right).first);
@@ -199,14 +358,14 @@ void main() {
   });
 
   testWidgets('rows wait for the lists and do not open early', (t) async {
-    await t.pumpWidget(
+    await _show(
+      t,
       _host(
-        LicencesScreen(
+        _screen(
           rust: Future<RustLicences>.delayed(
             const Duration(seconds: 1),
             _fakeRust,
           ),
-          dart: Future.value(_fakeDart()),
         ),
       ),
     );
@@ -217,5 +376,121 @@ void main() {
     expect(find.text('libsignal-protocol'), findsNothing);
     await t.pumpAndSettle(const Duration(seconds: 2));
     expect(find.text('2 parts'), findsNWidgets(2));
+  });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('nothing moves when the lists arrive, text x$scale', (t) async {
+      Future<T> late<T>(T Function() v) =>
+          Future<T>.delayed(const Duration(seconds: 1), v);
+      await _show(
+        t,
+        _host(
+          _screen(
+            rust: late(_fakeRust),
+            dart: late(_fakeDart),
+            engine: late(_fakeEngine),
+            gpl: late(() => _gplText),
+          ),
+          still: true,
+          scale: scale,
+        ),
+      );
+      await t.pump();
+      final at = {
+        for (final s in [
+          'Signal protocol',
+          'Open source parts',
+          // a stacked count under large text wraps by its digits, which a
+          // made-up one-digit list does not match
+          if (scale == 1) 'In the network engine',
+        ])
+          s: t.getTopLeft(find.text(s)),
+      };
+      await t.pumpAndSettle(const Duration(seconds: 2));
+      expect(find.text('3 parts'), findsOneWidget);
+      for (final e in at.entries) {
+        expect(t.getTopLeft(find.text(e.key)), e.value, reason: e.key);
+      }
+    });
+  }
+
+  group('when a list fails to load', () {
+    late List<String> copied;
+    setUp(() {
+      copied = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (c) async {
+            if (c.method == 'Clipboard.setData') {
+              copied.add((c.arguments as Map)['text'] as String);
+            }
+            return null;
+          });
+    });
+    tearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+
+    for (final still in [false, true]) {
+      testWidgets('it says so and the texts become links, still: $still', (
+        t,
+      ) async {
+        await _show(
+          t,
+          _host(
+            _screen(
+              rust: _fail('no rust.json'),
+              engine: _fail('no engine.json'),
+              gpl: _fail('no gpl'),
+            ),
+            still: still,
+          ),
+        );
+        await t.pumpAndSettle();
+        // the app list needs the engine's data files too
+        expect(find.text('Could not load'), findsNWidgets(3));
+        expect(find.textContaining(RegExp(r'^\d+ parts')), findsNothing);
+        expect(find.text('gnu.org/licenses/gpl-3.0.txt'), findsOneWidget);
+        await t.tap(find.text('GNU GPL 3.0, full text'));
+        await t.pump();
+        expect(copied, ['https://www.gnu.org/licenses/gpl-3.0.txt']);
+        await t.pumpAndSettle(const Duration(seconds: 5));
+        await t.ensureVisible(find.text('GNU AGPL 3.0, full text'));
+        await t.tap(find.text('GNU AGPL 3.0, full text'));
+        await t.pump();
+        expect(copied.last, 'https://www.gnu.org/licenses/agpl-3.0.txt');
+        await t.pumpAndSettle(const Duration(seconds: 5));
+        // a failed list does not open
+        await t.ensureVisible(find.text('In the network engine'));
+        await t.tap(find.text('In the network engine'));
+        await t.pumpAndSettle();
+        expect(find.text('tor'), findsNothing);
+      });
+    }
+
+    testWidgets('the others still open', (t) async {
+      await _show(t, _host(_screen(rust: _fail('no rust.json'))));
+      await t.pumpAndSettle();
+      expect(find.text('Could not load'), findsOneWidget);
+      expect(find.text('3 parts'), findsOneWidget);
+      expect(find.text('2 parts'), findsOneWidget);
+    });
+  });
+
+  testWidgets('a screen reader hears that a source row copies its link', (
+    t,
+  ) async {
+    final h = t.ensureSemantics();
+    await _show(t, _host(_screen()));
+    await t.pumpAndSettle();
+    for (final label in ['Source code', 'libsignal source code']) {
+      await t.ensureVisible(find.text(label));
+      expect(
+        t.getSemantics(find.text(label)),
+        isSemantics(hasTapAction: true, onTapHint: 'Copy link'),
+        reason: label,
+      );
+    }
+    h.dispose();
   });
 }

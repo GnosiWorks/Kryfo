@@ -11212,5 +11212,21 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "licencesGplText": "GNU GPL 3.0, full text",
+  "@licencesGplText": {
+    "description": "screens/licences_screen.dart: the row that opens the GPL text Kryfo is under"
+  },
+  "licencesInEngine": "In the network engine",
+  "@licencesInEngine": {
+    "description": "screens/licences_screen.dart: the go modules and c libraries inside Kryfo's network engine (tor, openssl and others)"
+  },
+  "licencesLoadFailed": "Could not load",
+  "@licencesLoadFailed": {
+    "description": "screens/licences_screen.dart: the value of a row whose list or text failed to load"
+  },
+  "settingsCopyLinkHint": "Copy link",
+  "@settingsCopyLinkHint": {
+    "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
   }
 }

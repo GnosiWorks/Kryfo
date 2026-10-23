@@ -2351,5 +2351,9 @@
   "licencesParts": "Open-Source-Bestandteile",
   "licencesInSignal": "In der Signal-Bibliothek",
   "licencesInApp": "In der App",
-  "licencesPartCount": "{count, plural, one{{count} Bestandteil} other{{count} Bestandteile}}"
+  "licencesPartCount": "{count, plural, one{{count} Bestandteil} other{{count} Bestandteile}}",
+  "licencesGplText": "GNU GPL 3.0, voller Text",
+  "licencesInEngine": "In der Netzwerk-Engine",
+  "licencesLoadFailed": "Konnte nicht geladen werden",
+  "settingsCopyLinkHint": "Link kopieren"
 }

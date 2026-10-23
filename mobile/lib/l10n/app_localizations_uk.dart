@@ -9076,4 +9076,16 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, повний текст';
+
+  @override
+  String get licencesInEngine => 'У мережевому рушії';
+
+  @override
+  String get licencesLoadFailed => 'Не вдалося завантажити';
+
+  @override
+  String get settingsCopyLinkHint => 'Скопіювати посилання';
 }

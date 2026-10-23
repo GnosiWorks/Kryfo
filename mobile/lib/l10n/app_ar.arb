@@ -2351,5 +2351,9 @@
   "licencesParts": "مكوّنات مفتوحة المصدر",
   "licencesInSignal": "في مكتبة Signal",
   "licencesInApp": "في التطبيق",
-  "licencesPartCount": "{count, plural, zero{لا مكوّنات} one{مكوّن واحد} two{مكوّنان} few{⁨{count}⁩ مكوّنات} many{⁨{count}⁩ مكوّنًا} other{⁨{count}⁩ مكوّن}}"
+  "licencesPartCount": "{count, plural, zero{لا مكوّنات} one{مكوّن واحد} two{مكوّنان} few{⁨{count}⁩ مكوّنات} many{⁨{count}⁩ مكوّنًا} other{⁨{count}⁩ مكوّن}}",
+  "licencesGplText": "النص الكامل لرخصة GNU GPL 3.0",
+  "licencesInEngine": "في محرّك الشبكة",
+  "licencesLoadFailed": "تعذّر التحميل",
+  "settingsCopyLinkHint": "نسخ الرابط"
 }

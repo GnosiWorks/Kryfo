@@ -9086,4 +9086,16 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, полный текст';
+
+  @override
+  String get licencesInEngine => 'В сетевом движке';
+
+  @override
+  String get licencesLoadFailed => 'Не удалось загрузить';
+
+  @override
+  String get settingsCopyLinkHint => 'Скопировать ссылку';
 }

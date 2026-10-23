@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the licences screen lists: the rust crates inside the signal library,
-// from assets/licences/rust.json (native/kryfo_signal/acknowledgments.sh
-// writes it from Cargo.lock), and the dart packages flutter collects
+// what the licences screen lists: Kryfo's own GPL text, the rust crates
+// inside the signal library, from assets/licences/rust.json
+// (native/kryfo_signal/acknowledgments.sh writes it from Cargo.lock), the go
+// modules and c libraries inside the engine and the third-party data files,
+// from assets/licences/engine.json (engine/acknowledgments.sh), and the dart
+// packages flutter collects
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const kRustLicencesAsset = 'assets/licences/rust.json';
+const kEngineLicencesAsset = 'assets/licences/engine.json';
+// the repository's LICENSE, byte for byte
+const kGplAsset = 'assets/licences/gpl-3.0.txt';
+
+// the libsignal tag the shim is built from, as Cargo.lock names it
+const kLibsignalTag = 'v0.99.4';
 
 /// one package and the licence texts it ships with
 class LicencedPart {
@@ -51,6 +60,46 @@ Future<RustLicences> loadRustLicences([AssetBundle? bundle]) async =>
     parseRustLicences(
       await (bundle ?? rootBundle).loadString(kRustLicencesAsset),
     );
+
+class EngineLicences {
+  const EngineLicences(this.parts, this.data);
+  // go, the go modules, tor and the c libraries it is built with
+  final List<LicencedPart> parts;
+  // third-party data files the app ships, listed with the app's packages
+  final List<LicencedPart> data;
+}
+
+EngineLicences parseEngineLicences(String source) {
+  final j = jsonDecode(source) as Map<String, dynamic>;
+  final texts = [
+    for (final l in j['licences'] as List) (l as Map)['text'] as String,
+  ];
+  List<LicencedPart> parts(String key) => [
+    for (final c in j[key] as List)
+      LicencedPart(
+        (c as Map)['name'] as String,
+        [for (final i in c['texts'] as List) texts[i as int]],
+        version: c['version'] as String?,
+        licence: c['licence'] as String,
+      ),
+  ];
+  return EngineLicences(parts('parts'), parts('data'));
+}
+
+Future<EngineLicences> loadEngineLicences([AssetBundle? bundle]) async =>
+    parseEngineLicences(
+      await (bundle ?? rootBundle).loadString(kEngineLicencesAsset),
+    );
+
+Future<String> loadGpl([AssetBundle? bundle]) =>
+    (bundle ?? rootBundle).loadString(kGplAsset);
+
+int _byName(LicencedPart a, LicencedPart b) =>
+    a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+/// the app's list: its dart packages and the data files it ships, by name
+List<LicencedPart> appParts(List<LicencedPart> dart, List<LicencedPart> data) =>
+    [...dart, ...data]..sort(_byName);
 
 /// the dart packages and their licences, one entry per package
 Future<List<LicencedPart>> loadDartLicences([
