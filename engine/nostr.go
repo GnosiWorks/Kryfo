@@ -1362,6 +1362,21 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
 	seen := loadSeen(seenPath)
 	seenWhileRunning(ctx, seen)
+	// a contact's address is ranked for the public relays, see public_live.go.
+	// one just added counts as heard now
+	var live *liveAddr
+	if rankedLane(lane) {
+		heard := lastSaved
+		if freshOf(ctx) != nil {
+			heard = time.Now().Unix()
+		}
+		live = liveJoin(rcvPk, heard)
+		go func() {
+			<-ctx.Done()
+			liveLeave(rcvPk, live)
+		}()
+	}
+	ownURLs := ownRelays(urls)
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {
@@ -1443,6 +1458,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		lastEvRecv = time.Now().Unix()
 		lastEvMu.Unlock()
 		noteRecv()
+		if live != nil {
+			liveHeard(rcvPk, time.Now().Unix())
+		}
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast, from: from, until: until})
@@ -1503,6 +1521,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				rejoin = 2 * time.Second
 				deaf = 75 * time.Second
 			}
+			// past the cap, the address reads this public relay now and
+			// then instead of holding a socket on it. sweeping: the
+			// connection now is such a read. swept: one ended
+			sweeper := live != nil && !slices.Contains(ownURLs, u)
+			var nextSweep time.Time
+			sweeping, swept := false, false
 			turn := subTurn{tag: tag, fresh: freshOf(ctx)}
 			defer turn.done()
 			for {
@@ -1513,6 +1537,28 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				case <-ctx.Done():
 					return
 				default:
+				}
+				sweeping = false
+				if sweeper && !publicLive(rcvPk) {
+					// wall clock: a phone asleep is time that counts
+					now := time.Now().Round(0)
+					if nextSweep.IsZero() {
+						nextSweep = now.Add(firstSweepDelay())
+					}
+					if wait := nextSweep.Sub(now); wait > 0 {
+						// a kick only looks at the clock again
+						t := time.NewTimer(wait)
+						select {
+						case <-ctx.Done():
+							t.Stop()
+							return
+						case <-kickChan():
+						case <-t.C:
+						}
+						t.Stop()
+						continue
+					}
+					sweeping = true
 				}
 				// taken before the list and the client, so both are of one
 				// mode: a switch after this ends what it dials
@@ -1564,6 +1610,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				if !turn.take(ctx) {
 					return
+				}
+				// addresses that joined during the turn may have pushed this
+				// one past the cap
+				if sweeper && !sweeping && !publicLive(rcvPk) {
+					turn.done()
+					continue
 				}
 				// the client may be the new mode's, the relay the old list's
 				select {
@@ -1617,6 +1669,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// wall clock, like lastAlive: a connection that lived through a
 				// night asleep lived
 				connected := time.Now().Round(0)
+				// the round counts from a read that got through
+				if sweeping {
+					nextSweep = connected.Add(sweepDelay())
+				}
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
@@ -1714,6 +1770,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// until the relay says that was all, count them and remember
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
+				// a socket past the cap goes, until the address's next read
+				pastCap := func() {
+					if sweeping {
+						log.Printf("nostr: %s read for addr %s..., closed until the next round", u, rcvPk[:12])
+						return
+					}
+					log.Printf("nostr: %s past the cap for addr %s..., read now and then", u, rcvPk[:12])
+					nextSweep = time.Now().Round(0).Add(sweepDelay())
+				}
 				cctx, ccancel := context.WithCancel(conn)
 				// held events let go of come by their ids: the window has
 				// mostly moved past them. the poll keeps them together. asked
@@ -1740,8 +1805,17 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				atomic.AddInt64(&catchupStarted, 1)
 				walkBegins(tag)
 				noteCatchupStart(ck)
-				var settleOnce, walkOnce sync.Once
+				var settleOnce, walkOnce, sweptOnce sync.Once
 				var capT *time.Timer
+				// closed once this connection to a public relay has caught
+				// up: the rank is looked at again there, as addresses that
+				// joined after it may have pushed it past the cap
+				var caughtC chan struct{}
+				if sweeper {
+					caughtC = make(chan struct{})
+				}
+				// the select's copy, nil once it has been looked at
+				sweptC := (<-chan struct{})(caughtC)
 				// the poll holds the address until the walk is out, not just
 				// while a check-in waits for it, and no longer than the walk
 				// keeps bringing something
@@ -1758,6 +1832,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					})
 					holdT.Stop()
 					endHold()
+					if caughtC != nil {
+						sweptOnce.Do(func() { close(caughtC) })
+					}
 				}
 				// nobody waits on one relay for longer than this. whichever
 				// of the two fires first wins the Once, so a relay is either
@@ -1912,7 +1989,29 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							caught()
 							saveLast(atomic.LoadInt64(&pending))
 						}(oldest)
+					case <-sweptC:
+						sweptC = nil
+						// in the cap, ranked in meanwhile or still: it stays live
+						if publicLive(rcvPk) {
+							continue
+						}
+						pastCap()
+						idle.Stop()
+						stopKick()
+						r.Close()
+						swept = true
+						goto reconnect
 					case <-idle.C:
+						// fallen out of the cap: the socket goes, and the
+						// address reads this relay now and then from here.
+						// one still catching up goes once it has
+						if sweeper && sweptC == nil && !publicLive(rcvPk) {
+							pastCap()
+							stopKick()
+							r.Close()
+							swept = true
+							goto reconnect
+						}
 						// quiet is what a conversation looks like nearly all of the
 						// time, and cycling the sub re-runs the since window, which
 						// after a media send is a hundred base64 chunks. ask a
@@ -2007,6 +2106,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					turn.done()
 				}
 				switch {
+				case swept:
+					// the loop's top waits for the next round
+					swept = false
 				case kicked:
 					kicked = false
 				case youngDrops > 0:

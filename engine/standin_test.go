@@ -565,6 +565,8 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		relayClearBenches()
 	})
 
+	// addresses a test before this one left registered would crowd the cap
+	liveReset()
 	transportMode.Store(mode)
 	if socks != nil {
 		atomic.StoreInt32(&pinnedSocks, int32(socks.port()))
