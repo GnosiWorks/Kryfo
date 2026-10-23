@@ -54,7 +54,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
         final decoy = appState.inDecoyView;
         final b = appState.bridge;
         final s = appState.bridgeStatus;
-        final line = appState.bridgeLine;
+        final line = shownBridgeLine();
         // decoy: automatic, whatever runs underneath
         final chosen = decoy ? BridgeChoice.auto : b.choice;
         String? tag(BridgeChoice c) {
@@ -214,6 +214,12 @@ class _BridgesScreenState extends State<BridgesScreen> {
   }
 }
 
+/// the status line as the bridges page and the home card show it
+BridgeLine shownBridgeLine() {
+  final line = appState.bridgeLine;
+  return appState.bridge.skipDirect ? line.watched() : line;
+}
+
 /// relay taken from [switchToRelay] before the onboarding was done: its
 /// send step keeps it instead of writing onion over it
 bool relayTakenBeforeOnboarding = false;
@@ -321,6 +327,13 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final still = motionStill(context);
     final action = widget.onAction == null ? null : line.action;
     final relay = line.offerRelay ? widget.onRelay : null;
+    // the first filled, the second quiet under it
+    final buttons = <(String, VoidCallback)>[
+      if (relay != null && line.relayFirst) (l10n.homeUseOurRelay, relay),
+      if (action != null)
+        (bridgeActionLabel(action), () => widget.onAction!(action)),
+      if (relay != null && !line.relayFirst) (l10n.homeUseOurRelay, relay),
+    ];
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
     final detail = [?line.detail, ?clock].join(bridgeSep);
@@ -422,31 +435,23 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
                 : const SizedBox(width: double.infinity),
           ),
           EaseSize(
-            child: action == null && relay == null
+            child: buttons.isEmpty
                 ? const SizedBox(width: double.infinity)
                 : Padding(
                     padding: const EdgeInsets.only(top: 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (relay != null)
-                          HaloPrimaryButton(
-                            label: l10n.homeUseOurRelay,
-                            onTap: relay,
-                          ),
-                        if (relay != null && action != null)
-                          const SizedBox(height: 8),
-                        if (action != null)
-                          relay == null
-                              ? HaloPrimaryButton(
-                                  label: bridgeActionLabel(action),
-                                  onTap: () => widget.onAction!(action),
-                                )
+                        for (final (i, b) in buttons.indexed) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          i == 0
+                              ? HaloPrimaryButton(label: b.$1, onTap: b.$2)
                               : HaloGhostButton(
-                                  label: bridgeActionLabel(action),
-                                  onTap: () => widget.onAction!(action),
+                                  label: b.$1,
+                                  onTap: b.$2,
                                   quiet: true,
                                 ),
+                        ],
                       ],
                     ),
                   ),

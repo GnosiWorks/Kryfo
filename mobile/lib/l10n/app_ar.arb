@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.",
   "groupInfoEndGroupDetail": "يزيلها Kryfo من هاتف كل عضو لديه التحديث.",
   "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
-  "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت."
+  "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.",
+  "bridgesRelayThisNetworkSees": "وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.",
+  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك."
 }

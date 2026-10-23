@@ -3698,5 +3698,13 @@ void main() {
       l.bridgesRelayWorksWhereTor,
       "Relay mode works where Tor is blocked, and you can switch back any time.",
     );
+    expect(
+      l.bridgesRelayThisNetworkSees,
+      "Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.",
+    );
+    expect(
+      l.onboardingRelayThisNetworkSees,
+      "This network can see you connect to Kryfo. Our relay sees your address.",
+    );
   });
 }

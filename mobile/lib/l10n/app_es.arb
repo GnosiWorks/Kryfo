@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "Terminé este grupo, así que ya nadie puede enviar nada en él. Actualiza Kryfo para verlo como terminado.",
   "groupInfoEndGroupDetail": "Kryfo lo quita del teléfono de cada miembro que tenga la actualización.",
   "bridgesNoneUntilOnion": "Nada hasta activar Onion",
-  "bridgesRelayWorksWhereTor": "El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras."
+  "bridgesRelayWorksWhereTor": "El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras.",
+  "bridgesRelayThisNetworkSees": "El modo repetidor pasa donde Tor está bloqueado, pero esta red puede ver que te conectas a Kryfo.",
+  "onboardingRelayThisNetworkSees": "Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección."
 }

@@ -8862,4 +8862,12 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
 }

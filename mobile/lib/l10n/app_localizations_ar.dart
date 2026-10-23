@@ -8998,4 +8998,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
 }

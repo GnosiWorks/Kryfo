@@ -8966,4 +8966,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Der Relais-Modus kommt auch durch, wo Tor blockiert ist, aber dieses Netz kann sehen, dass du dich mit Kryfo verbindest.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse.';
 }

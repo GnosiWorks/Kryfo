@@ -8853,4 +8853,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.';
 }

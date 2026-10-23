@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "Encerrei este grupo, então ninguém pode mais enviar mensagens nele. Atualize o Kryfo para vê-lo como encerrado.",
   "groupInfoEndGroupDetail": "O Kryfo remove o grupo do celular de cada membro que tem a atualização.",
   "bridgesNoneUntilOnion": "Nada até ativar o Onion",
-  "bridgesRelayWorksWhereTor": "O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser."
+  "bridgesRelayWorksWhereTor": "O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser.",
+  "bridgesRelayThisNetworkSees": "O modo retransmissor passa onde o Tor está bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.",
+  "onboardingRelayThisNetworkSees": "Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço."
 }

@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "我結束了這個群組，之後誰都不能再在裡面傳訊息。更新 Kryfo 就能看到它已結束。",
   "groupInfoEndGroupDetail": "Kryfo 會從每位已更新的成員手機上移除它。",
   "bridgesNoneUntilOnion": "開啟 Onion 前不使用",
-  "bridgesRelayWorksWhereTor": "中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。"
+  "bridgesRelayWorksWhereTor": "中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。",
+  "bridgesRelayThisNetworkSees": "中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。",
+  "onboardingRelayThisNetworkSees": "這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。"
 }

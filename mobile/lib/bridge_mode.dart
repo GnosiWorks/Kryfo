@@ -367,8 +367,10 @@ class BridgeLine {
   // how long this way has been tried, in ms, when tor gives no percent:
   // the view counts on from it, so nothing else rebuilds each second
   final int? clockMs;
-  // relay mode, one tap away, ahead of [action]
+  // relay mode, one tap away
   final bool offerRelay;
+  // relay ahead of [action]. after it where this network may watch
+  final bool relayFirst;
 
   const BridgeLine({
     required this.head,
@@ -380,7 +382,26 @@ class BridgeLine {
     this.action,
     this.clockMs,
     this.offerRelay = false,
+    this.relayFirst = true,
   });
+
+  /// the line for someone who said tor is blocked or watched here. relay is
+  /// a plain connection this network sees, so the line says so and the
+  /// bridge way goes first
+  BridgeLine watched() => !offerRelay
+      ? this
+      : BridgeLine(
+          head: head,
+          detail: l10n.bridgesRelayThisNetworkSees,
+          detailKind: '$detailKind-watched',
+          tone: tone,
+          moving: moving,
+          progress: progress,
+          action: action,
+          clockMs: clockMs,
+          offerRelay: true,
+          relayFirst: false,
+        );
 }
 
 /// m:ss in the person's digits
@@ -457,8 +478,9 @@ BridgeLine bridgeStatusLine(
         action: BridgeAction.openWifi,
       );
     case 'exhausted':
-      // relay mode goes first: it gets through where no bridge did. asking
-      // the tor project or trying again stays the second way
+      // relay mode gets through where no bridge did, offered with asking
+      // the tor project or trying again. [BridgeLine.watched] turns it
+      // round where the network may watch
       final ask = consent != 'yes';
       return BridgeLine(
         head: l10n.bridgesNothingGotThrough,

@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "Ich habe diese Gruppe beendet, niemand kann mehr darin schreiben. Aktualisiere Kryfo, um sie als beendet zu sehen.",
   "groupInfoEndGroupDetail": "Kryfo entfernt sie vom Handy jedes Mitglieds, das das Update hat.",
   "bridgesNoneUntilOnion": "Nichts, bis Onion an ist",
-  "bridgesRelayWorksWhereTor": "Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln."
+  "bridgesRelayWorksWhereTor": "Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln.",
+  "bridgesRelayThisNetworkSees": "Der Relais-Modus kommt auch durch, wo Tor blockiert ist, aber dieses Netz kann sehen, dass du dich mit Kryfo verbindest.",
+  "onboardingRelayThisNetworkSees": "Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse."
 }

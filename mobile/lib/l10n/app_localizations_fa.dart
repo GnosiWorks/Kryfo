@@ -8882,4 +8882,12 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'حالت رله جایی که Tor مسدود است هم رد می‌شود، اما این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوی.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند.';
 }

@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "این گروه را پایان دادم، پس دیگر هیچ‌کس نمی‌تواند در آن پیام بفرستد. Kryfo را به‌روز کنید تا آن را پایان‌یافته ببینید.",
   "groupInfoEndGroupDetail": "Kryfo آن را از گوشی هر عضوی که به‌روزرسانی را دارد پاک می‌کند.",
   "bridgesNoneUntilOnion": "هیچ، تا Onion روشن شود",
-  "bridgesRelayWorksWhereTor": "حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی."
+  "bridgesRelayWorksWhereTor": "حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.",
+  "bridgesRelayThisNetworkSees": "حالت رله جایی که Tor مسدود است هم رد می‌شود، اما این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوی.",
+  "onboardingRelayThisNetworkSees": "این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند."
 }

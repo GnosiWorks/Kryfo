@@ -8938,4 +8938,12 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'El modo repetidor pasa donde Tor está bloqueado, pero esta red puede ver que te conectas a Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección.';
 }

@@ -8962,4 +8962,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Le mode relais fonctionne là où Tor est bloqué, et vous pouvez revenir quand vous voulez.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Le mode relais passe là où Tor est bloqué, mais ce réseau peut voir que vous vous connectez à Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Ce réseau peut voir que vous vous connectez à Kryfo. Notre relais voit votre adresse.';
 }

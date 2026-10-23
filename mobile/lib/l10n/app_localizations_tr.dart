@@ -8893,4 +8893,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
 }

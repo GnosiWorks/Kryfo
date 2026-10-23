@@ -14318,6 +14318,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Relay mode works where Tor is blocked, and you can switch back any time.'**
   String get bridgesRelayWorksWhereTor;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
+  String get bridgesRelayThisNetworkSees;
+
+  /// screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
+  String get onboardingRelayThisNetworkSees;
 }
 
 class _AppLocalizationsDelegate

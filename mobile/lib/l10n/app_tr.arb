@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "Bu grubu sonlandırdım, artık kimse buraya mesaj gönderemez. Sonlandığını görmek için Kryfo'yu güncelle.",
   "groupInfoEndGroupDetail": "Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır.",
   "bridgesNoneUntilOnion": "Onion açılana kadar yok",
-  "bridgesRelayWorksWhereTor": "Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin."
+  "bridgesRelayWorksWhereTor": "Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.",
+  "bridgesRelayThisNetworkSees": "Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.",
+  "onboardingRelayThisNetworkSees": "Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür."
 }

@@ -2339,5 +2339,7 @@
   "groupEndedOldNotice": "Mình đã kết thúc nhóm này, nên không ai gửi tin nhắn trong nhóm được nữa. Hãy cập nhật Kryfo để thấy nhóm đã kết thúc.",
   "groupInfoEndGroupDetail": "Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.",
   "bridgesNoneUntilOnion": "Chưa dùng cho đến khi bật Onion",
-  "bridgesRelayWorksWhereTor": "Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào."
+  "bridgesRelayWorksWhereTor": "Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.",
+  "bridgesRelayThisNetworkSees": "Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.",
+  "onboardingRelayThisNetworkSees": "Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn."
 }

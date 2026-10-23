@@ -9032,4 +9032,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bridgesRelayWorksWhereTor =>
       'Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Режим ретранслятора проходит там, где Tor заблокирован, но эта сеть может видеть, что ты подключаешься к Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
 }

@@ -3146,6 +3146,12 @@ final _calls = <_Call>[
   ('voiceStoppedAtLimit', [], (l) => l.voiceStoppedAtLimit),
   ('bridgesNoneUntilOnion', [], (l) => l.bridgesNoneUntilOnion),
   ('bridgesRelayWorksWhereTor', [], (l) => l.bridgesRelayWorksWhereTor),
+  ('bridgesRelayThisNetworkSees', [], (l) => l.bridgesRelayThisNetworkSees),
+  (
+    'onboardingRelayThisNetworkSees',
+    [],
+    (l) => l.onboardingRelayThisNetworkSees,
+  ),
 ];
 
 void main() {

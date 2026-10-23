@@ -20,6 +20,7 @@ import 'package:kryfo/main.dart'
     show AppState, HaloEngine, appState, bridgeWriteTap, useEngineForTest;
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
+import 'package:kryfo/widgets/halo_buttons.dart';
 import 'package:kryfo/widgets/motion.dart'
     show BreathDot, TorStatus, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
@@ -379,6 +380,24 @@ void main() {
       expect(line(_another).offerRelay, isFalse);
     });
 
+    test('blocked or watched: what relay costs, the bridge way first', () {
+      const s = BridgeStatus(mode: 'auto', phase: 'exhausted');
+      for (final c in ['no', 'yes']) {
+        final w = line(s, c: c).watched();
+        expect(w.head, l10n.bridgesNothingGotThrough);
+        expect(w.detail, l10n.bridgesRelayThisNetworkSees);
+        expect(w.offerRelay, isTrue);
+        expect(w.relayFirst, isFalse);
+        expect(w.action, line(s, c: c).action);
+        // connect as usual keeps relay first with the calm line
+        expect(line(s, c: c).relayFirst, isTrue);
+      }
+      // a line with no relay in it stays as it is
+      final t = line(_another);
+      expect(t.watched(), same(t));
+      expect(line(s, decoy: true).watched().offerRelay, isFalse);
+    });
+
     test('relay or fast mode: no bridge is in use', () {
       const s = BridgeStatus(
         mode: 'auto',
@@ -594,6 +613,53 @@ void main() {
       expect(find.text(l10n.homeSwitchedToRelay), findsOneWidget);
       await _done(t);
     });
+
+    // which button is the filled one
+    bool filled(WidgetTester t, String label) => find
+        .ancestor(
+          of: find.text(label),
+          matching: find.byType(HaloPrimaryButton),
+        )
+        .evaluate()
+        .isNotEmpty;
+
+    testWidgets('connect as usual: relay filled, first, no cost line', (
+      t,
+    ) async {
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsNothing);
+      expect(filled(t, l10n.homeUseOurRelay), isTrue);
+      expect(filled(t, l10n.bridgesGetABridge), isFalse);
+      await _done(t);
+    });
+
+    for (final (locale, scale) in [
+      (const Locale('en'), 1.0),
+      (const Locale('fa'), 2.0),
+    ]) {
+      testWidgets('blocked or watched: the cost said, the bridge way first '
+          '(${locale.languageCode}, x$scale)', (t) async {
+        await _open(
+          t,
+          setup: const BridgeSetup(skipDirect: true),
+          status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+          locale: locale,
+          scale: scale,
+        );
+        expect(t.takeException(), isNull);
+        expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+        expect(find.text(l10n.bridgesRelayWorksWhereTor), findsNothing);
+        final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+        final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+        expect(ask.top, lessThan(relay.top));
+        expect(filled(t, l10n.bridgesGetABridge), isTrue);
+        expect(filled(t, l10n.homeUseOurRelay), isFalse);
+        await _done(t);
+      });
+    }
 
     testWidgets('a decoy is never offered relay mode', (t) async {
       lockState.inDecoy = true;

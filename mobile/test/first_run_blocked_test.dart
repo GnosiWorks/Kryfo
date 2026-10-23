@@ -12,10 +12,11 @@ import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/screens/onboarding_screen.dart';
+import 'package:kryfo/widgets/card_action.dart';
 import 'package:kryfo/widgets/tor_boot_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dev_chat_fakes.dart' show devApp, devWorld;
+import 'dev_chat_fakes.dart' show devApp, devHome, devWorld;
 import 'narrow_settings.dart' show loadAppFonts;
 
 class _Engine implements HaloEngine {
@@ -250,6 +251,12 @@ void main() {
     // the line rises in before its buttons take a tap
     await t.pump();
     await t.pump(const Duration(seconds: 2));
+    // what relay costs here, and the bridge way first
+    expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+    expect(
+      t.getRect(find.text(l10n.bridgesGetABridge)).top,
+      lessThan(t.getRect(find.text(l10n.homeUseOurRelay)).top),
+    );
     await t.tap(find.text(l10n.homeUseOurRelay));
     for (
       var i = 0;
@@ -275,6 +282,9 @@ void main() {
     expect(find.text(l10n.onboardingFast), findsNothing);
     expect(checked(t, l10n.onboardingRelay), isTrue);
     expect(checked(t, l10n.onboardingOnion), isFalse);
+    // this network sees the connection to our relay: said, not "nobody else"
+    expect(find.text(l10n.onboardingRelayThisNetworkSees), findsOneWidget);
+    expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
     await t.tap(find.text(l10n.onboardingContinue));
     await t.pump();
     for (var i = 0; i < 20 && pages.page != 4; i++) {
@@ -287,6 +297,38 @@ void main() {
     expect(appState.sendMode, 'balanced');
     await done(t);
   });
+
+  for (final watched in [true, false]) {
+    testWidgets('the home card when nothing got through '
+        '(blocked or watched: $watched)', (t) async {
+      phone(t);
+      appState.bridgeSetupForTest = BridgeSetup(skipDirect: watched);
+      appState.setBridgeStatusForTest(
+        const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      addTearDown(() => appState.setBridgeStatusForTest(BridgeStatus.none));
+      expect(appState.homeBridgeCard, 'auto');
+      await t.pumpWidget(devApp(devHome()));
+      await t.pump(const Duration(seconds: 2));
+      CardAction card(String label) => t.widget<CardAction>(
+        find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
+      );
+      final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+      final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+      if (watched) {
+        expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+        expect(ask.left, lessThan(relay.left));
+        expect(card(l10n.bridgesGetABridge).fill, isNotNull);
+        expect(card(l10n.homeUseOurRelay).fill, isNull);
+      } else {
+        expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
+        expect(relay.left, lessThan(ask.left));
+        expect(card(l10n.homeUseOurRelay).fill, isNotNull);
+        expect(card(l10n.bridgesGetABridge).fill, isNull);
+      }
+      await done(t);
+    });
+  }
 
   group('the send step', () {
     Future<void> toSend(WidgetTester t) async {

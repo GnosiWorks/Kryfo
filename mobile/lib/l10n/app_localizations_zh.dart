@@ -8466,6 +8466,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor => '中继模式在 Tor 被封锁的地方也能用，随时可以切换回来。';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      '中继模式在 Tor 被封锁的地方也能连上，但这个网络能看到你在连接 Kryfo。';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -16812,4 +16820,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesRelayWorksWhereTor => '中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      '中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
 }

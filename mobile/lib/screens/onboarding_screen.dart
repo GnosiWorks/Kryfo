@@ -1222,9 +1222,10 @@ class _TransportScreenState extends State<_TransportScreen> {
             ),
             if (_relayTaken) ...[
               const SizedBox(height: 10),
+              // this network sees the plain connection to our relay
               _ModeCard(
                 title: l10n.onboardingRelay,
-                cost: l10n.onboardingOurRelaySeesYour,
+                cost: l10n.onboardingRelayThisNetworkSees,
                 gain: l10n.onboardingAboutASecondWorks,
                 on: _pick == 'balanced',
                 onTap: () => setState(() => _pick = 'balanced'),
