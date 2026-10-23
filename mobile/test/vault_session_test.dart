@@ -16,7 +16,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart'
-    show Draft, endProcessForTest, heldDraft, typedDraft;
+    show
+        Draft,
+        endProcessForTest,
+        flushDrafts,
+        heldDraft,
+        kDraftWait,
+        typedDraft;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
@@ -282,6 +288,8 @@ class _Io implements AppIo {
 // ---- one container's rows, and a handle on them ----
 
 class _Rows {
+  // the drafts table, by chat: a group's under group:
+  final drafts = <String, Draft>{};
   final people = <String, Map<String, Object?>>{};
   final groupRows = <String, Map<String, Object?>>{};
   final members = <String, List<String>>{};
@@ -421,6 +429,33 @@ class _Db implements HaloDb {
   @override
   HaloContainer get container => _container;
 
+  // ---- drafts ----
+  T _draft<T>(String name, T Function() f) {
+    if (untouchable) {
+      touched.add(name);
+      throw StateError('${_container.dbFile} was reached');
+    }
+    if (closed) throw StateError('${_container.dbFile} has no key here');
+    return f();
+  }
+
+  static String _chat(String id, bool group) => group ? 'group:$id' : id;
+
+  @override
+  bool get isOpen => !closed;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      _draft('draftOf', () => r.drafts[_chat(chatId, group)]);
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      _draft('putDraft', () => r.drafts[_chat(chatId, group)] = d);
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      _draft('dropDraftRow', () => r.drafts.remove(_chat(chatId, group)));
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async =>
+      const [];
+
   @override
   Future<void> close() async {
     if (untouchable) touched.add('close');
@@ -557,6 +592,7 @@ class _Db implements HaloDb {
     void Function(String msgUid)? gone,
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
+    bool Function(String chatId, bool group)? draftOnScreen,
   }) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -971,9 +1007,15 @@ class _Mover implements ChatMover {
           : m['peer_id'] == c.id && m['group_id'] == null;
       if (mine && d.msg(m['msg_uid'] as String) == null) d.msgs.add({...m});
     }
+    // as vault_life's drafts row goes with its chat
+    final draft = s.drafts[_key(c)];
+    if (draft != null) d.drafts[_key(c)] = draft;
   }
 
+  static String _key(ChatRef c) => c.group ? 'group:${c.id}' : c.id;
+
   void _drop(_Rows s, ChatRef c) {
+    s.drafts.remove(_key(c));
     if (c.group) {
       final who = s.members.remove(c.id) ?? const <String>[];
       s.groupRows.remove(c.id);
@@ -1074,6 +1116,11 @@ class _Mover implements ChatMover {
   @override
   Future<Map<String, (String, String)>> vaultCards() async {
     w.log.add('cards');
+    final hold = w.holdCards;
+    if (hold != null) {
+      w.cardsAsked?.complete();
+      await hold.future;
+    }
     return {
       for (final p in _v.people.values)
         if (p['accepted'] == 1)
@@ -1106,6 +1153,9 @@ class _World {
   late VaultRouter router;
   late AppState app;
   Completer<void>? holdMove;
+  // the cards read after a move's rows went, held there
+  Completer<void>? holdCards;
+  Completer<void>? cardsAsked;
   var _n = 0;
   // the decoy, and its own vault: the rows and key of halo_dv.db
   final decoyRows = _Rows();
@@ -1799,6 +1849,75 @@ void main() {
       expect(w.store.inbox, hasLength(1));
     });
 
+    test('words typed into a chat while it is hidden land nowhere outside '
+        'the vault', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      final hold = Completer<void>();
+      final asked = Completer<void>();
+      w
+        ..holdCards = hold
+        ..cardsAsked = asked;
+      final hiding = w.app.hideChats(people: [_v]);
+      await asked.future;
+      // its rows are in the vault, and the session still names the
+      // everyday side: the screen still open on it writes there
+      expect(w.router.hides(_v), isTrue);
+      final rows = session.draftsOf(_v);
+      expect(rows.container, HaloContainer.everyday);
+      typedDraft(rows, _v, const Draft('typed as it went'), group: false);
+      w.holdCards = null;
+      hold.complete();
+      expect(await hiding, 1);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.liveRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+      // once moved, the vault is where its words go
+      typedDraft(session.draftsOf(_v), _v, const Draft('now'), group: false);
+      await flushDrafts();
+      expect(w.vaultRows.drafts[_v]?.text, 'now');
+      expect(w.liveRows.drafts, isEmpty);
+    });
+
+    test('Show in chat list takes its draft out, the one still waiting '
+        'too, and the vault keeps none of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('ok'), group: false);
+      await flushDrafts();
+      // typed again just before: not written yet
+      typedDraft(
+        session.draftsOf(_h),
+        _h,
+        const Draft('ok, see you'),
+        group: false,
+      );
+      expect(await w.app.unhideChats(people: [_h]), 1);
+      expect(w.liveRows.drafts[_h]?.text, 'ok, see you');
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(session.draftsOf(_h).container, HaloContainer.everyday);
+    });
+
+    test('the lock writes what waits for the vault into it, and lets go '
+        'of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('mid'), group: false);
+      expect(w.vaultRows.drafts, isEmpty);
+      await w.lockUp();
+      expect(w.vaultRows.drafts[_h]?.text, 'mid');
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      expect(w.liveRows.drafts, isEmpty);
+    });
+
     test('Show in chat list brings a chat back', () async {
       final w = await _World.make();
       await w.open();
@@ -2279,12 +2398,18 @@ void main() {
             lock.inDecoy = true;
             lock.inVault = true;
         }
+        // words still waiting to be written as the wipe comes
+        addTearDown(endProcessForTest);
+        typedDraft(w.live, _v, const Draft('never kept'), group: false);
         if (from != 'the pin screen') {
           lock.lock();
           w.app.lockingUp();
         }
         await typeWipe(lock);
         await expectAllGone(exited);
+        expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+        await Future<void>.delayed(kDraftWait * 2);
+        expect(w.liveRows.drafts, isEmpty);
       });
     }
 

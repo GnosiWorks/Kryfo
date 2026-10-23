@@ -222,6 +222,10 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// whether [id]'s group has a screen open: its composer is not a draft
+/// left behind yet
+bool groupOnScreen(String id) => _openGroups[id]?.isNotEmpty ?? false;
+
 /// a group's unsent words go with it, from an open composer too: its screen
 /// closing would write them back
 Future<void> dropGroupDraft(String id) {
@@ -1123,7 +1127,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
-      _restoreReply();
+      unawaited(_restoreReply());
       unawaited(_refreshPinCount());
     } finally {
       // a throw mid-load must not leave _loading stuck true, or every later
@@ -3219,6 +3223,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         _ghost = true;
                       });
                       appState.saveGhostPref(true, opt.$1);
+                      // the draft takes the group's new clock
+                      _keepDraft();
                       Navigator.pop(c);
                     },
                     child: Padding(
@@ -4125,6 +4131,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _msgCtrl.text,
         replyTo: _replyTo?.msgUid ?? _draftReply,
         at: DateTime.now().millisecondsSinceEpoch,
+        // a timed group's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
       ),
       group: true,
     );
@@ -4140,23 +4148,58 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       text: d.text,
       selection: TextSelection.collapsed(offset: d.text.length),
     );
-    _restoreReply();
+    unawaited(_restoreReply());
   }
 
-  // the quote a kept draft had, once the messages it is among are here. one
-  // no longer there is let go
-  void _restoreReply() {
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the group, or from someone blocked, is let go; until then
+  // the draft keeps its uid
+  Future<void> _restoreReply() async {
     final uid = _draftReply;
-    if (uid == null || !_loaded || !mounted) return;
-    _draftReply = null;
-    if (_replyTo != null) return;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      return;
+    }
     for (final m in _messages) {
       if (m.msgUid == uid) {
+        _draftReply = null;
         setState(() => _replyTo = m);
         return;
       }
     }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.groupMessageIn(widget.groupId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || _draftReply != uid) return;
+    _draftReply = null;
+    final from = row?['peer_id'] as String?;
+    if (row == null || from == null || _blocked.contains(from)) return;
+    if (_replyTo != null) return;
+    final m = _GMsg(
+      sender: from,
+      senderName: _nameOf(from),
+      direction: row['direction'] as String,
+      text: row['plaintext'] as String? ?? '',
+      when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
   }
+
+  bool _quoteLookup = false;
 
   // a screen pushed over this one closed: this is the one being read again
   @override
@@ -4571,6 +4614,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         onToggleGhost: () {
                           setState(() => _ghost = !_ghost);
                           appState.saveGhostPref(_ghost, _burnSeconds);
+                          _keepDraft();
                         },
                         onLongPressGhost: _showBurnPicker,
                         onSend: _send,

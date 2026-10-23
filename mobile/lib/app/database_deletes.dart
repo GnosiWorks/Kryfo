@@ -9,6 +9,10 @@ mixin _DeleteRows {
   Future<Database> open();
   bool get isOpen;
   set _unfinished(Map<String, ({int bytes, int at})>? value);
+  Future<List<({String chat, bool group})>> spentDraftsIn(
+    DatabaseExecutor db,
+    int now,
+  );
 
   // the files go too, not just the rows. zeros first, then unlink, so a raw
   // read of the flash finds nothing either.
@@ -436,6 +440,7 @@ mixin _DeleteRows {
     void Function(String msgUid)? gone,
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
+    bool Function(String chatId, bool group)? draftOnScreen,
   }) async {
     // an open one is handed back at once, and nothing below opens it again
     final db = ifOpen && !isOpen ? null : await open();
@@ -477,6 +482,16 @@ mixin _DeleteRows {
     n += await _dropRows(db, waited);
     await _scrubMedia(media);
     await _lightWaited(db, now, idle, blocked);
+    // a timed chat's draft goes on the same clock as its messages
+    try {
+      await sweepDrafts(
+        this as DraftRows,
+        onScreen: draftOnScreen,
+        spent: await spentDraftsIn(db, now),
+      );
+    } catch (e) {
+      dlog('drafts: not swept (${e.runtimeType})');
+    }
     return n;
   }
 

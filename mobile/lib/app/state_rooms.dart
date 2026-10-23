@@ -867,13 +867,21 @@ extension AppStateRooms on AppState {
   @visibleForTesting
   Future<int> sweepBurns({bool stray = false}) async {
     void unring(String uid) => unawaited(_io.unnotifyMessage(uid));
-    var gone = await live.purgeExpired(gone: unring, blocked: _realBlocked);
+    var gone = await live.purgeExpired(
+      gone: unring,
+      blocked: _realBlocked,
+      draftOnScreen: _draftOnScreen,
+    );
     if (stray) await live.purgeStrayVotes();
     // the open vault's too. shut, its timers wait for the next open
     final v = _openVault;
     if (v != null) {
       try {
-        gone += await v.purgeExpired(gone: unring, blocked: _realBlocked);
+        gone += await v.purgeExpired(
+          gone: unring,
+          blocked: _realBlocked,
+          draftOnScreen: _draftOnScreen,
+        );
         if (stray) await v.purgeStrayVotes();
       } catch (e) {
         if (identical(_openVault, v)) rethrow;
@@ -884,13 +892,21 @@ extension AppStateRooms on AppState {
     final d = session.primary;
     if (!identical(d, live)) {
       try {
-        gone += await d.purgeExpired(gone: unring, ifOpen: true);
+        gone += await d.purgeExpired(
+          gone: unring,
+          ifOpen: true,
+          draftOnScreen: _draftOnScreen,
+        );
       } catch (e) {
         if (identical(session.primary, d) && d.isOpen) rethrow;
       }
     }
     return gone;
   }
+
+  // a composer still open is typed in, not left behind
+  static bool _draftOnScreen(String id, bool group) =>
+      group ? groupOnScreen(id) : chatOnScreen(id);
 
   // every container a room can be made in: the everyday one, and the
   // decoy's, whose rooms end on time too

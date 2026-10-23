@@ -243,6 +243,8 @@ extension AppStateBoot on AppState {
     await restoreKeptDrafts(live).catchError((Object e) {
       dlog('drafts: not restored (${e.runtimeType})');
     });
+    // a timed chat's draft past its time is gone before any screen reads it
+    await sweepDrafts(live);
     // read now, so settings shows it whole from the first frame
     unawaited(loadHideNotifContent());
     // in front means resumed, not that a view exists: android hands every

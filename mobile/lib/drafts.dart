@@ -16,17 +16,27 @@ import 'secure_store.dart';
 /// what a composer held and did not send
 @immutable
 class Draft {
-  const Draft(this.text, {this.replyTo, this.at = 0});
+  const Draft(this.text, {this.replyTo, this.at = 0, this.burnSecs});
 
   final String text;
   // the uid of the message it quotes
   final String? replyTo;
   // when it was last typed, in ms: the chat list orders by it
   final int at;
+  // typed while the chat sent timed messages: it goes as one of them
+  // would, this long after its last edit
+  final int? burnSecs;
 
   bool get isEmpty => text.trim().isEmpty;
 
-  bool sameAs(Draft o) => text == o.text && replyTo == o.replyTo;
+  bool sameAs(Draft o) =>
+      text == o.text && replyTo == o.replyTo && burnSecs == o.burnSecs;
+
+  /// past its time at [now]: a timed chat's draft is never shown after
+  bool spentAt(int now) {
+    final s = burnSecs;
+    return s != null && at + s * 1000 <= now;
+  }
 }
 
 /// a draft as the chat list reads it: its chat, and whether a group's
@@ -41,6 +51,8 @@ abstract interface class DraftRows {
   Future<Draft?> draftOf(String chatId, {required bool group});
   Future<void> putDraft(String chatId, Draft d, {required bool group});
   Future<void> dropDraftRow(String chatId, {required bool group});
+  // the chats whose timed draft is past its time at [now]
+  Future<List<({String chat, bool group})>> spentDrafts(int now);
 }
 
 /// how long typing rests before the draft is written
@@ -57,6 +69,9 @@ class _Waiting {
 
 final Map<String, Draft> _held = {};
 final Map<String, _Waiting> _waiting = {};
+// chats on their way between containers: nothing of theirs is held or
+// written until the session says where they are
+final Map<String, int> _moving = {};
 // set by a wipe: nothing is held or written after it
 bool _shut = false;
 
@@ -71,9 +86,37 @@ bool _ofContainer(HaloContainer c, String k) => k.startsWith(c.chatKey(''), 1);
 
 void _bump() => draftsRevision.value++;
 
-/// what this process holds for [chatId] in [c], without a read
-Draft? heldDraft(HaloContainer c, String chatId, {required bool group}) =>
-    _held[_key(c, chatId, group)];
+int _now() => DateTime.now().millisecondsSinceEpoch;
+
+/// what this process holds for [chatId] in [c], without a read. one past
+/// its time is let go
+Draft? heldDraft(HaloContainer c, String chatId, {required bool group}) {
+  final k = _key(c, chatId, group);
+  final d = _held[k];
+  if (d == null || !d.spentAt(_now())) return d;
+  _held.remove(k);
+  _waiting.remove(k)?.timer.cancel();
+  return null;
+}
+
+/// [chats] are moving between containers: their drafts are neither held
+/// nor written until the call handed back. a draft typed meanwhile would
+/// name a hidden chat in the everyday file
+void Function() holdDraftsOf(Iterable<String> chats) {
+  final ids = chats.toSet();
+  for (final id in ids) {
+    _moving[id] = (_moving[id] ?? 0) + 1;
+  }
+  var done = false;
+  return () {
+    if (done) return;
+    done = true;
+    for (final id in ids) {
+      final n = (_moving[id] ?? 1) - 1;
+      n > 0 ? _moving[id] = n : _moving.remove(id);
+    }
+  };
+}
 
 /// [chatId]'s draft: memory first, then its row. a read that fails is none
 Future<Draft?> readDraft(
@@ -82,13 +125,18 @@ Future<Draft?> readDraft(
   required bool group,
 }) async {
   final k = _key(rows.container, chatId, group);
-  final held = _held[k];
+  final held = heldDraft(rows.container, chatId, group: group);
   if (held != null || _shut) return held;
   try {
     final d = await rows.draftOf(chatId, group: group);
     // typed or dropped while it read: that wins
     if (d == null || d.isEmpty || _waiting.containsKey(k) || _shut) {
       return _held[k];
+    }
+    // past its time: the sweep had not reached it yet
+    if (d.spentAt(_now())) {
+      unawaited(dropDraft(rows, chatId, group: group));
+      return null;
     }
     return _held[k] ??= d;
   } catch (e) {
@@ -100,7 +148,7 @@ Future<Draft?> readDraft(
 /// a composer changed: held now, written once typing rests. an empty one
 /// is dropped at once
 void typedDraft(DraftRows rows, String chatId, Draft d, {required bool group}) {
-  if (_shut) return;
+  if (_shut || _moving.containsKey(chatId)) return;
   final k = _key(rows.container, chatId, group);
   if (d.isEmpty) {
     // an empty composer touched again holds nothing to drop
@@ -128,7 +176,7 @@ Future<void> _write(String k) async {
   if (w == null) return;
   w.timer.cancel();
   try {
-    if (_shut || !w.rows.isOpen) return;
+    if (_shut || _moving.containsKey(w.chatId) || !w.rows.isOpen) return;
     await w.rows.putDraft(w.chatId, w.draft, group: w.group);
     _bump();
   } catch (e) {
@@ -188,6 +236,49 @@ void forgetDrafts(HaloContainer c) {
   _held.removeWhere((k, _) => _ofContainer(c, k));
 }
 
+/// [chatId] left [c] with its rows: what memory held for it there goes,
+/// and a write still waiting is not made
+void forgetDraft(HaloContainer c, String chatId, {required bool group}) {
+  final k = _key(c, chatId, group);
+  _held.remove(k);
+  _waiting.remove(k)?.timer.cancel();
+}
+
+/// timed chats' drafts past their time go, from memory and their rows, as
+/// their timed messages would. [onScreen] keeps a composer still open.
+/// [spent], when the caller read it already, saves a read
+Future<void> sweepDrafts(
+  DraftRows rows, {
+  bool Function(String chatId, bool group)? onScreen,
+  List<({String chat, bool group})>? spent,
+}) async {
+  if (_shut || !rows.isOpen) return;
+  final c = rows.container;
+  final now = _now();
+  bool shown(String id, bool group) => onScreen?.call(id, group) ?? false;
+  try {
+    for (final e in _held.entries.toList()) {
+      if (!_ofContainer(c, e.key) || !e.value.spentAt(now)) continue;
+      final w = _waiting[e.key];
+      final group = e.key.startsWith('g');
+      final id = e.key.substring(1 + c.chatKey('').length);
+      if (shown(id, group)) continue;
+      _held.remove(e.key);
+      w?.timer.cancel();
+      _waiting.remove(e.key);
+    }
+    for (final d in spent ?? await rows.spentDrafts(now)) {
+      if (shown(d.chat, d.group)) continue;
+      // typed again since the row was written: the new one counts
+      if (_held.containsKey(_key(c, d.chat, d.group))) continue;
+      await rows.dropDraftRow(d.chat, group: d.group);
+      _bump();
+    }
+  } catch (e) {
+    dlog('drafts: not swept (${e.runtimeType})');
+  }
+}
+
 /// the wipe: nothing held and nothing written from here on
 void forgetAllDrafts() {
   _shut = true;
@@ -206,6 +297,7 @@ void endProcessForTest() {
   }
   _waiting.clear();
   _held.clear();
+  _moving.clear();
   _shut = false;
 }
 

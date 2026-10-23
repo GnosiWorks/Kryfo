@@ -1516,8 +1516,9 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
   }
 }
 
-// a chat's unsent words, under its wallKey. a table that will not make
-// costs only the drafts: the reads and writes of them give up quietly
+// a chat's unsent words, under its wallKey, and a timed chat's clock for
+// them. a table that will not make costs only the drafts: their reads and
+// writes give up quietly, and a vault move goes on without it
 Future<void> draftsTable(DatabaseExecutor db) async {
   try {
     await db.execute('''
@@ -1525,7 +1526,8 @@ Future<void> draftsTable(DatabaseExecutor db) async {
         chat TEXT PRIMARY KEY,
         body TEXT NOT NULL,
         reply_to TEXT,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        burn_secs INTEGER
       )
     ''');
     for (final (table, key) in const [

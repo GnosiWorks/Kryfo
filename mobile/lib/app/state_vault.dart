@@ -461,7 +461,17 @@ extension AppStateVault on AppState {
     // goes with its chat, and the two take the same time
     final done = Completer<void>();
     _moveDone = done;
+    void Function()? letDrafts;
     try {
+      // what waits for the vault goes out with the chat's rows
+      if (out) {
+        for (final c in chats) {
+          await writeDraftNow(vault, c.id, group: c.group);
+        }
+      }
+      // until the session is rebuilt it still names the old side: a draft
+      // typed meanwhile would land there
+      letDrafts = holdDraftsOf([for (final c in chats) c.id]);
       for (final c in chats) {
         _moving.add(c.id);
         if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
@@ -501,6 +511,7 @@ extension AppStateVault on AppState {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
       }
+      letDrafts?.call();
       _moving.clear();
       _moveDone = null;
       done.complete();
@@ -621,6 +632,8 @@ extension AppStateVault on AppState {
       if (everyday) await _router.load();
       marks = marks.done(c);
       await m.dropVault(c, marks);
+      // its draft went out with its rows: the vault's copy in memory goes
+      forgetDraft(vault.container, c.id, group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       n++;
     }

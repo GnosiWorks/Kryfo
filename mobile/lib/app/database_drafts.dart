@@ -30,6 +30,7 @@ mixin _DraftRows implements DraftRows {
       'body': d.text,
       'reply_to': d.replyTo,
       'updated_at': d.at,
+      'burn_secs': d.burnSecs,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -41,6 +42,30 @@ mixin _DraftRows implements DraftRows {
       where: 'chat = ?',
       whereArgs: [wallKey(chatId, group: group)],
     );
+  }
+
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async =>
+      spentDraftsIn(await open(), now);
+
+  /// the timed drafts past their time at [now], read on [db]
+  Future<List<({String chat, bool group})>> spentDraftsIn(
+    DatabaseExecutor db,
+    int now,
+  ) async {
+    final rows = await db.query(
+      'drafts',
+      columns: ['chat', 'body', 'updated_at', 'burn_secs'],
+      where: 'burn_secs IS NOT NULL',
+    );
+    return [
+      for (final r in rows)
+        if (r['chat'] case final String chat)
+          if (_draftOfRow(r).spentAt(now))
+            chat.startsWith('group:')
+                ? (chat: chat.substring(6), group: true)
+                : (chat: chat, group: false),
+    ];
   }
 
   /// every draft held here, newest first: what the chat list shows in
@@ -61,5 +86,6 @@ mixin _DraftRows implements DraftRows {
     r['body'] as String? ?? '',
     replyTo: r['reply_to'] as String?,
     at: (r['updated_at'] as num?)?.toInt() ?? 0,
+    burnSecs: (r['burn_secs'] as num?)?.toInt(),
   );
 }

@@ -627,6 +627,36 @@ mixin _MessageRows {
     );
   }
 
+  // one message of a 1:1 thread by its uid, for a draft quoting one older
+  // than the pages a chat holds. none when it is gone
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'peer_id = ? AND group_id IS NULL AND msg_uid = ?',
+      whereArgs: [peerId, msgUid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
+  }
+
+  // the same in a group
+  Future<Map<String, Object?>?> groupMessageIn(
+    String groupId,
+    String msgUid,
+  ) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'group_id = ? AND msg_uid = ?',
+      whereArgs: [groupId, msgUid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
+  }
+
   // newest page of a 1:1 thread. beforeRowid, written at beforeAt, pages
   // older on scroll-up so a 5000-message chat doesn't parse the world on
   // open.

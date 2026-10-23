@@ -294,6 +294,9 @@ const _peerRows = {
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
+// made after the chat tables, the drafts' in a try of its own: one side
+// may lack them, and a move then goes on without their rows
+const _mayLack = {'wallpapers', 'drafts'};
 const _groupRows = {
   'group_members': 'group_id = ?1',
   'reactions': 'msg_uid IN {uids}',
@@ -465,6 +468,7 @@ class SqlChatMover implements ChatMover {
           ? const {'id'}
           : const {},
     );
+    if (cols.isEmpty && _mayLack.contains(table)) return;
     final pick = [
       for (final col in cols)
         col == 'atmosphere' ? _moved(col, from.wallpapers, to.wallpapers) : col,
@@ -595,6 +599,9 @@ class SqlChatMover implements ChatMover {
         r['msg_uid'] as String,
     ];
     for (final e in (c.group ? _groupRows : _peerRows).entries) {
+      if (_mayLack.contains(e.key) && (await _cols(t, s, e.key)).isEmpty) {
+        continue;
+      }
       await t.execute('DELETE FROM $s.${e.key} WHERE ${_fill(e.value, c, s)}', [
         c.id,
       ]);

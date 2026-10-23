@@ -313,6 +313,10 @@ class Session {
   ) => _ofPeer(peerId).messagesAfter(peerId, afterRowid);
   Future<List<Map<String, Object?>>> messagesFor(String peerId) =>
       _ofPeer(peerId).messagesFor(peerId);
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) =>
+      _ofPeer(peerId).messageIn(peerId, msgUid);
+  Future<Map<String, Object?>?> groupMessageIn(String groupId, String msgUid) =>
+      _ofGroup(groupId).groupMessageIn(groupId, msgUid);
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,

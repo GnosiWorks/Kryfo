@@ -36,6 +36,8 @@ class _KeptRows implements DraftRows {
   @override
   Future<void> dropDraftRow(String chatId, {required bool group}) async =>
       rows.remove(chatId);
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async => [];
 }
 
 void main() {

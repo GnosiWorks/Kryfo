@@ -173,13 +173,35 @@ class _Db implements HaloDb {
 
   @override
   Future<Set<String>> blockedIds() async => blocked;
+  // a page as the database gives it: the newest [limit] before a row
   @override
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
     int? beforeAt,
     int limit = 60,
-  }) async => [...rows];
+  }) async {
+    final older = [
+      for (final r in rows)
+        if (beforeRowid == null || (r['rowid'] as int) < beforeRowid) r,
+    ];
+    return older.sublist(older.length > limit ? older.length - limit : 0);
+  }
+
+  // one row by its uid, as a kept quote older than the page reads it
+  int quoteReads = 0;
+  @override
+  Future<Map<String, Object?>?> groupMessageIn(
+    String groupId,
+    String msgUid,
+  ) async {
+    quoteReads++;
+    for (final r in rows) {
+      if (r['msg_uid'] == msgUid && r['group_id'] == groupId) return r;
+    }
+    return null;
+  }
+
   @override
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     await _wait();
@@ -584,6 +606,77 @@ void main() {
       await t.pump();
       expect(db.kept, isEmpty);
       await _close(t);
+    });
+
+    testWidgets('leaving writes the draft at once; a screen whose group '
+        'the session now keeps elsewhere writes nothing', (t) async {
+      final db = _use(t, _Db(members: ['me', _anna]));
+      addTearDown(endProcessForTest);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.enterText(find.byType(TextField), 'on the way');
+      await t.pump();
+      expect(db.kept, isEmpty);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'on the way');
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      // a lock or a hide: the group is another container's now
+      db.box = HaloContainer.vault;
+      await t.enterText(find.byType(TextField), 'typed after');
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'on the way');
+      expect(heldDraft(HaloContainer.vault, _group, group: true), isNull);
+    });
+
+    // seventy lines, a minute apart: the page holds the newest sixty
+    List<Map<String, Object?>> long() {
+      final at = DateTime.now().millisecondsSinceEpoch - 3600000;
+      return [
+        for (var i = 1; i <= 70; i++)
+          {..._in(i, _anna, 'line $i'), 'sent_at': at + i * 60000},
+      ];
+    }
+
+    testWidgets('a kept quote older than the page comes back from its row, '
+        'and stays kept', (t) async {
+      final db = _use(t, _Db(rows: long()));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'that one, yes',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'that one, yes');
+      expect(db.quoteReads, 1);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.text('line 1'), findsOneWidget);
+      // left without a touch: the row keeps its quote
+      await _close(t);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+    });
+
+    testWidgets('a kept quote of a message gone from the group is let go', (
+      t,
+    ) async {
+      final db = _use(t, _Db(rows: long()));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'about that',
+        replyTo: 'uid-gone',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'about that');
+      expect(db.kept['group:$_group']?.replyTo, isNull);
     });
 
     for (final room in [true, false]) {

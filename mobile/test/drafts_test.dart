@@ -10,7 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart';
-import 'package:kryfo/main.dart' show HaloDb;
+import 'package:kryfo/main.dart' show HaloDb, draftsTable;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -311,6 +311,136 @@ void main() {
       },
     );
 
+    test('a timed chat\'s draft goes when its timer would have taken it, '
+        'and is never read back after', () async {
+      if (skip()) return;
+      final live = HaloDb();
+      for (final id in ['ann', 'ben', 'cat', 'dan', 'eve']) {
+        await _person(live, id);
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // 30 seconds, last typed 31 and 10 seconds ago; one with no clock,
+      // a day old
+      await live.putDraft(
+        'ann',
+        Draft('gone', at: now - 31000, burnSecs: 30),
+        group: false,
+      );
+      await live.putDraft(
+        'ben',
+        Draft('not yet', at: now - 10000, burnSecs: 30),
+        group: false,
+      );
+      await live.putDraft(
+        'cat',
+        Draft('no clock', at: now - 86400000),
+        group: false,
+      );
+      // its chat is open: the composer is typed in, not left
+      await live.putDraft(
+        'dan',
+        Draft('still open', at: now - 31000, burnSecs: 30),
+        group: false,
+      );
+      await live.purgeExpired(draftOnScreen: (id, group) => id == 'dan');
+      expect(await _chats(live), ['ben', 'cat', 'dan']);
+      // one past its time the sweep has not reached: never read back
+      await live.putDraft(
+        'eve',
+        Draft('late', at: now - 31000, burnSecs: 30),
+        group: false,
+      );
+      expect(await readDraft(live, 'eve', group: false), isNull);
+      await pumpEventQueue();
+      expect(await _chats(live), ['ben', 'cat', 'dan']);
+      // nor one held in memory
+      typedDraft(
+        live,
+        'ann',
+        Draft('typed', at: now - 31000, burnSecs: 30),
+        group: false,
+      );
+      expect(heldDraft(live.container, 'ann', group: false), isNull);
+      // and the clock is kept across a stop
+      final next = await restart(live);
+      expect((await readDraft(next, 'ben', group: false))?.burnSecs, 30);
+      expect((await readDraft(next, 'cat', group: false))?.burnSecs, isNull);
+      await next.close();
+    });
+
+    test('clearing a chat\'s history keeps its draft', () async {
+      if (skip()) return;
+      final live = HaloDb();
+      await _person(live, 'ann');
+      await _group(live, 'g1');
+      await live.putDraft('ann', _d('still mine'), group: false);
+      await live.putDraft('g1', _d('ours too'), group: true);
+      await live.clearConversation('ann');
+      await live.clearGroupConversation('g1');
+      expect(await _chats(live), ['ann', 'group:g1']);
+      await live.close();
+    });
+
+    test(
+      'a drafts table that will not make leaves the file as it was',
+      () async {
+        if (skip()) return;
+        final live = HaloDb();
+        final db = await live.open();
+        for (final t in ['contacts', 'groups']) {
+          await db.execute('DROP TRIGGER drafts_${t}_gone');
+        }
+        await db.execute('DROP TABLE drafts');
+        await db.execute('ALTER TABLE contacts RENAME TO contacts_was');
+        // its trigger names a table that is not there: no throw
+        await draftsTable(db);
+        await db.execute('ALTER TABLE contacts_was RENAME TO contacts');
+        final made = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE name LIKE 'drafts%' "
+          'ORDER BY name',
+        );
+        expect([for (final r in made) r['name']], ['drafts']);
+        await live.close();
+      },
+    );
+
+    test('the everyday file never holds a hidden chat\'s words', () async {
+      if (skip()) return;
+      final live = HaloDb();
+      final vault = HaloDb.withKey(HaloContainer.vault, _vaultKey);
+      await _person(live, 'ann');
+      await _person(vault, 'zorro-hid');
+      final s = await Session.withVault(live, vault);
+      typedDraft(
+        s.draftsOf('zorro-hid'),
+        'zorro-hid',
+        _d('meet by the old mill'),
+        group: false,
+      );
+      typedDraft(s.draftsOf('ann'), 'ann', _d('hello'), group: false);
+      await flushDrafts();
+      await live.close();
+      await vault.close();
+      final every = File(p.join(docs.path, HaloContainer.everyday.dbFile));
+      final bytes = every.readAsBytesSync();
+      bool holds(String w) {
+        final b = w.codeUnits;
+        outer:
+        for (var i = 0; i + b.length <= bytes.length; i++) {
+          for (var j = 0; j < b.length; j++) {
+            if (bytes[i + j] != b[j]) continue outer;
+          }
+          return true;
+        }
+        return false;
+      }
+
+      // the host runs without the cipher: the file reads as it is
+      expect(holds('hello'), isTrue);
+      expect(holds('old mill'), isFalse);
+      expect(holds('zorro'), isFalse);
+    });
+
     test('a copy an older version wrote for a restart becomes rows', () async {
       if (skip()) return;
       final every = HaloContainer.everyday.id;
@@ -344,90 +474,15 @@ void main() {
     expect(heldDraft(HaloContainer.everyday, 'g1', group: true)?.text, 'y');
   });
 
-  test('every way a chat goes, and a hide and a block, empties an open '
-      'composer and its row', () {
+  // the panic wipe ends the process and a decoy's removal deletes its
+  // files, so what they let go of is read off the source; every other way
+  // a draft goes is a behaviour test (vault_session, drafts_paths,
+  // block_moves, the two screens)
+  test('a decoy removal forgets its drafts in memory', () {
     final main = sourceOf('lib/app/state.dart');
-    for (final f in [
-      'Future<void> leaveGroupAndAnnounce(',
-      'Future<void> _dropGroup(',
-      'Future<void> _destroyRoomTurn(',
-    ]) {
-      expect(
-        bodyOf(main, f),
-        contains('await dropGroupDraft(groupId);'),
-        reason: f,
-      );
-    }
-    for (final f in [
-      'Future<void> deleteConversation(',
-      'Future<void> block(',
-    ]) {
-      expect(bodyOf(main, f), contains('await dropChatDraft(haloId);'));
-    }
-    final hide = bodyOf(main, 'Future<List<ChatRef>> _hide(');
-    // before the copy, and the vault's copy after
-    expect(
-      hide.indexOf('await dropDraft(primary, c.id, group: c.group);'),
-      lessThan(hide.indexOf('await m.copyIn(c, marks);')),
-    );
-    expect(hide, contains('await dropDraft(vault, c.id, group: c.group);'));
-    // a vault shutting writes its drafts first, and forgets them
-    for (final f in [
-      'Future<void> _closeVault(',
-      'Future<void> _closeDecoyVault(',
-    ]) {
-      final b = bodyOf(main, f);
-      expect(
-        b.indexOf('await settleDrafts(v.container);'),
-        allOf(isNonNegative, lessThan(b.indexOf('v.close'))),
-        reason: f,
-      );
-    }
     expect(
       bodyOf(main, 'Future<void> _dropDecoyFiles('),
       contains('forgetDrafts(HaloContainer.decoy);'),
     );
-    expect(
-      bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> wipeHalo('),
-      contains('forgetAllDrafts();'),
-    );
-  });
-
-  test('both composers keep, read back and write on leaving', () {
-    for (final (f, id) in [
-      ('lib/screens/chat_screen.dart', 'widget.peerHaloId'),
-      ('lib/screens/group_chat_screen.dart', 'widget.groupId'),
-    ]) {
-      final src = sourceOf(f);
-      expect(src, contains('_msgCtrl.addListener(_keepDraft);'), reason: f);
-      expect(src, contains('if (kept == null) unawaited(_readDraft(rows));'));
-      expect(src, contains('_msgCtrl.removeListener(_keepDraft);'));
-      expect(src, contains('unawaited(writeDraftNow(rows, $id, group:'));
-      // the session still holding the chat where it did is checked first
-      expect(
-        src,
-        contains('return rows.container.chatKey($id) == _memo ? rows : null;'),
-        reason: f,
-      );
-    }
-  });
-
-  test('the drafts table moves with its chat and is made on upgrade', () {
-    final src = sourceOf('lib/app/database.dart');
-    expect(src, contains('version: 86,'));
-    expect(
-      src,
-      matches(RegExp(r'if \(oldV < 86\) \{[^}]*await draftsTable\(db\);')),
-    );
-    final create = src.substring(
-      src.indexOf('onCreate: (db, _) async {'),
-      src.indexOf('onUpgrade: (db, oldV, newV) async {'),
-    );
-    expect(create, contains('await draftsTable(db);'));
-    final made = bodyOf(src, 'Future<void> draftsTable(');
-    expect(made, contains('try {'));
-    final vault = File('lib/vault_life.dart').readAsStringSync();
-    expect(vault, contains("'drafts': 'chat = ?1',"));
-    expect(vault, contains("'drafts': \"chat = 'group:' || ?1\","));
   });
 }

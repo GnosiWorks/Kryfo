@@ -197,6 +197,10 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
+/// whether [id]'s chat has a screen open: its composer is not a draft
+/// left behind yet
+bool chatOnScreen(String id) => _openChats[id]?.isNotEmpty ?? false;
+
 /// a deleted chat's unsent words go with it, from an open composer too
 Future<void> dropChatDraft(String id) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
@@ -2877,7 +2881,7 @@ class _ChatScreenState extends State<ChatScreen>
         ).millisecondsSinceEpoch;
       }
     });
-    _restoreReply();
+    unawaited(_restoreReply());
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
@@ -3285,6 +3289,8 @@ class _ChatScreenState extends State<ChatScreen>
       _lastGhost = true;
       appState.saveGhostPref(true, picked);
     });
+    // the draft takes the chat's new clock
+    _keepDraft();
   }
 
   // a one-shot amber ring on a bubble when a reaction lands on it
@@ -5826,6 +5832,8 @@ class _ChatScreenState extends State<ChatScreen>
         _msgCtrl.text,
         replyTo: _replyTo?.msgUid ?? _draftReply,
         at: DateTime.now().millisecondsSinceEpoch,
+        // a timed chat's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
       ),
       group: false,
     );
@@ -5838,23 +5846,53 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted || d == null || _msgCtrl.text != before) return;
     _draftReply = d.replyTo;
     _takeDraft(composerWith(d.text, widget.initialText));
-    _restoreReply();
+    unawaited(_restoreReply());
   }
 
-  // the quote a kept draft had, once the messages it is among are here. one
-  // no longer there is let go
-  void _restoreReply() {
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the chat is let go; until then the draft keeps its uid
+  Future<void> _restoreReply() async {
     final uid = _draftReply;
-    if (uid == null || !_loaded || !mounted) return;
-    _draftReply = null;
-    if (_replyTo != null) return;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      return;
+    }
     for (final m in _messages) {
       if (m.msgUid == uid) {
+        _draftReply = null;
         setState(() => _replyTo = m);
         return;
       }
     }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.messageIn(widget.peerHaloId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || _draftReply != uid) return;
+    _draftReply = null;
+    if (row == null || _replyTo != null) return;
+    final m = _Msg(
+      row['direction'] as String,
+      row['plaintext'] as String? ?? '',
+      DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
   }
+
+  bool _quoteLookup = false;
 
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
@@ -6380,7 +6418,8 @@ class _ChatScreenState extends State<ChatScreen>
                 axisAlignment: -1,
                 child: FadeTransition(opacity: anim, child: child),
               ),
-              child: _replyTo != null
+              // the quote is part of the composer the blocked bar replaces
+              child: _replyTo != null && !_blocked
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
                       onCancel: () {
@@ -6493,11 +6532,14 @@ class _ChatScreenState extends State<ChatScreen>
                                     : l10n.chatPhotoProtectionOff,
                               );
                             },
-                            onToggleGhost: () => setState(() {
-                              _ghost = !_ghost;
-                              _lastGhost = _ghost;
-                              appState.saveGhostPref(_ghost, _burnSeconds);
-                            }),
+                            onToggleGhost: () {
+                              setState(() {
+                                _ghost = !_ghost;
+                                _lastGhost = _ghost;
+                                appState.saveGhostPref(_ghost, _burnSeconds);
+                              });
+                              _keepDraft();
+                            },
                             onPickBurn: _pickBurnDuration,
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,

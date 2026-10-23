@@ -488,8 +488,7 @@ extension AppStateContacts on AppState {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
-    // nothing typed for them is kept
-    await dropChatDraft(haloId);
+    // what was typed for them stays, under the blocked bar, for an unblock
     await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
     _bumpChatRev(haloId);

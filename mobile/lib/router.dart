@@ -1177,6 +1177,23 @@ Future<Set<String>> scrubHidden(Database db) async {
         await t.delete(table, where: 'address IN ($marks)', whereArgs: part);
       }
     }
+    // a hidden chat's unsent words, were any ever left on this side
+    final chats = [
+      for (final (id, group) in router.hiddenChats) group ? 'group:$id' : id,
+    ];
+    for (var i = 0; i < chats.length; i += 400) {
+      final part = chats.sublist(
+        i,
+        i + 400 > chats.length ? chats.length : i + 400,
+      );
+      final marks = List.filled(part.length, '?').join(', ');
+      try {
+        await t.delete('drafts', where: 'chat IN ($marks)', whereArgs: part);
+      } catch (e) {
+        // a file whose drafts table never made holds none
+        dlog('scrub: no drafts (${e.runtimeType})');
+      }
+    }
   });
   return people;
 }

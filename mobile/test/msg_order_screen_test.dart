@@ -11,6 +11,7 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/drafts.dart' show Draft, endProcessForTest, kDraftWait;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
@@ -28,6 +29,7 @@ import 'package:kryfo/main.dart'
         rootNavKey,
         useDatabasesForTest,
         useEngineForTest,
+        AppStateContacts,
         AppStateMessages,
         AppStateRoute,
         AppStateRefresh;
@@ -212,6 +214,24 @@ class _Db extends DevTestDb {
   }) async => [];
   @override
   Future<bool> messageExists(String msgUid) async => _row(msgUid) != null;
+  // one row by its uid, as a kept quote older than the pages reads it
+  int quoteReads = 0;
+  @override
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) async {
+    quoteReads++;
+    final r = _row(msgUid);
+    return r == null || r['peer_id'] != peerId || r['group_id'] != null
+        ? null
+        : {...r, 'rowid': r['id']};
+  }
+
+  @override
+  Future<void> setBlocked(String haloId, bool blocked) => mem.update(
+    'contacts',
+    {'blocked': blocked ? 1 : 0},
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+  );
   @override
   Future<void> setPowNonce(String msgUid, int nonce) async {}
   @override
@@ -429,6 +449,114 @@ void main() {
     field.controller!.clear();
     await t.pump();
     expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('a kept quote older than the pages held comes back from its '
+      'row, and stays kept', (t) async {
+    await seed(70);
+    addTearDown(endProcessForTest);
+    db.kept[_peer] = const Draft('yes, this one', replyTo: 'uid4', at: 1);
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'yes, this one');
+    // the newest 60 are held, the quoted one is not among them
+    expect(db.olderPages, 0);
+    expect(find.text(l10n.chatReplyingTo), findsOneWidget);
+    expect(find.text('note 4'), findsOneWidget);
+    // left without a touch: the row keeps its quote
+    await devClose(t);
+    expect(db.kept[_peer]?.replyTo, 'uid4');
+    // and after the app was stopped, again
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text('note 4'), findsOneWidget);
+    await t.enterText(find.byType(TextField).last, 'yes, this one!');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.replyTo, 'uid4');
+    await devClose(t);
+  });
+
+  testWidgets('with timed messages on, the draft keeps their clock, and '
+      'one past it never shows', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    const s = FlutterSecureStorage();
+    await s.write(key: HaloContainer.everyday.key('ghost_on'), value: '1');
+    await s.write(key: HaloContainer.everyday.key('ghost_secs'), value: '60');
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'gone in a minute');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.burnSecs, 60);
+    await devClose(t);
+    // stopped, and opened again after its minute
+    final now = DateTime.now().millisecondsSinceEpoch;
+    db.kept[_peer] = Draft('gone in a minute', at: now - 61000, burnSecs: 60);
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, isEmpty);
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('leaving the chat writes its draft at once', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'back in five');
+    await t.pump();
+    expect(db.kept, isEmpty);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'back in five');
+  });
+
+  testWidgets('a kept quote of a message gone from the chat is let go', (
+    t,
+  ) async {
+    await seed(70);
+    addTearDown(endProcessForTest);
+    db.kept[_peer] = const Draft('about that', replyTo: 'uid-gone', at: 1);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(db.quoteReads, 1);
+    expect(find.text(l10n.chatReplyingTo), findsNothing);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'about that');
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'about that');
+    expect(db.kept[_peer]?.replyTo, isNull);
+  });
+
+  testWidgets('a block keeps the draft under the blocked bar, and an '
+      'unblock gives it back', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'never sent this');
+    await t.pump(kDraftWait);
+    await t.runAsync(() => appState.block(_peer));
+    await settle(t);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'never sent this');
+    // after a restart the blocked bar stands where the composer was
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text('never sent this'), findsNothing);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'never sent this');
+    await t.runAsync(() => appState.unblock(_peer));
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'never sent this');
     await devClose(t);
   });
 
