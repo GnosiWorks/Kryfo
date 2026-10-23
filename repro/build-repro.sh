@@ -29,11 +29,13 @@ echo
 # its metaspace and the kotlin daemon that came to ~5.4G resident, too much
 # beside other work on an 8G box. gradle reads the user home's
 # gradle.properties over the project's, so f-droid and dev builds keep
-# theirs. the heap changes no byte of the apks; raise it here if r8 runs out
+# theirs. the heap changes no byte of the apks; raise it here if r8 runs out.
+# two workers keep fewer r8 and dex tasks in memory at once
 mkdir -p "$GRADLE_USER_HOME"
 cat > "$GRADLE_USER_HOME/gradle.properties" <<EOF
 org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=1G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true
 kotlin.daemon.jvmargs=-Xmx1g
+org.gradle.workers.max=2
 EOF
 # the daemons' own malloc: two arenas rather than one per thread, for
 # less memory beyond the heap with r8's few hundred threads
