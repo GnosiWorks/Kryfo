@@ -511,3 +511,66 @@ func TestNetworkChangeBouncesOnceInAutomatic(t *testing.T) {
 		autoDirectOK.Store(false)
 	}
 }
+
+// a bounce counted while tor is still up, before it leaves the network: the
+// loop's look then does not take it for tor up after the bounce, and the
+// line says trying until tor is up again
+func TestLoopDoesNotSwallowABounce(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	f.script["direct"] = worksAfter(time.Second)
+	var looks atomic.Int64
+	f.up = func() bool { looks.Add(1); return true }
+	oldTick := autoTick
+	autoTick = time.Millisecond
+	defer func() { autoTick = oldTick }()
+	t.Cleanup(func() {
+		autoDirectOK.Store(false)
+		atomic.StoreInt32(&torRestarting, 0)
+	})
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	gen := autoGenN
+	autoMu.Unlock()
+	passes := make(chan string, 4)
+	autoRunPass = func(g, epoch int64, why string) string {
+		r := runPass(g, epoch, why)
+		passes <- r
+		return r
+	}
+	done := make(chan struct{})
+	go func() { autoLoop(gen); close(done) }()
+	defer func() { stopLoop(); autoKick(); <-done }()
+	if r := <-passes; r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	waitLooks := func() {
+		t.Helper()
+		n := looks.Load()
+		if !waitUntil(2*time.Second, func() bool { return looks.Load() >= n+3 }) {
+			t.Fatal("the loop stopped looking")
+		}
+	}
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "connected" {
+		t.Fatalf("after the pass %+v", st)
+	}
+	// a reconnect under way: its bounce counted, tor not off the network yet
+	atomic.StoreInt32(&torRestarting, 1)
+	noteTorBounced()
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "trying" {
+		t.Fatalf("the loop took a bounce under way for tor up: %+v", st)
+	}
+	// the reconnect done and tor up: connected again
+	atomic.StoreInt32(&torRestarting, 0)
+	waitLooks()
+	if st := bridgeStatus(); st.Phase != "connected" {
+		t.Fatalf("tor up after the bounce %+v", st)
+	}
+	select {
+	case r := <-passes:
+		t.Fatalf("a pass for a bounce: %s", r)
+	default:
+	}
+}

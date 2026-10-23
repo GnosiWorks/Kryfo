@@ -1214,8 +1214,9 @@ func autoLoop(gen int64) {
 				if networkHold() == "" {
 					heldN, heldAt = 0, time.Time{}
 				}
+				bounces := torBounces.Load()
 				if autoW.torUp() {
-					noteAutoUp()
+					noteAutoUpSince(bounces)
 					downSince = time.Time{}
 					if upSince.IsZero() {
 						upSince = now
@@ -1534,6 +1535,14 @@ func noteTorBounced() {
 }
 
 func noteAutoUp() { autoUpAt.Store(torBounces.Load()) }
+
+// tor seen up with the count read before the look: a reconnect counts its
+// bounce before tor leaves the network, so one under way is not up yet
+func noteAutoUpSince(bounces int64) {
+	if atomic.LoadInt32(&torRestarting) == 0 {
+		autoUpAt.Store(bounces)
+	}
+}
 
 func bouncedSinceUp() bool { return torBounces.Load() > autoUpAt.Load() }
 
