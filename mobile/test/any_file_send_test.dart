@@ -94,7 +94,7 @@ void main() {
       ).replaceAll(RegExp(r'\s+'), ' ');
       expect(
         send,
-        contains('await cleanMediaFile(dest.path, name: name, raw: raw);'),
+        contains('await copyClean(src, dest.path, name: name, raw: raw);'),
         reason: file,
       );
     });

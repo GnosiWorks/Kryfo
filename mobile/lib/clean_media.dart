@@ -8,6 +8,9 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:path_provider/path_provider.dart';
+
 import 'file_kind.dart' show bytesSayIsoVideo;
 import 'image_strip.dart';
 import 'meta/file_source.dart';
@@ -81,8 +84,8 @@ bool readsClean(String path) {
   }
 }
 
-/// the folder in the cache that clean copies for a save are made in, swept
-/// at every start
+/// the folder in the cache that clean copies for a save or a send are made
+/// in, swept at every start
 const kSaveCopies = 'save_clean';
 
 /// what a save hands out for [path]: a clean copy made under [cache], the
@@ -128,4 +131,52 @@ String _leaf() => [
 String _safe(String? name) {
   final n = (name ?? '').replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
   return n.isEmpty ? 'file' : n;
+}
+
+/// [src] copied to [dest] clean. the copy is made and cleaned in a private
+/// folder under [cache] (the app's cache when null), and only a clean one,
+/// or one that is no media, is moved to [dest]. any error on the way shreds
+/// what was made and is a refusal, so the media folder never holds a copy
+/// that was not cleaned. [copier] stands in for the copy in tests
+Future<MediaCleaned> copyClean(
+  String src,
+  String dest, {
+  String name = '',
+  bool raw = false,
+  Directory? cache,
+  @visibleForTesting Future<void> Function(String from, String to)? copier,
+}) async {
+  Directory? dir;
+  var moved = false;
+  final MediaCleaned done;
+  try {
+    final root = cache ?? await getTemporaryDirectory();
+    dir = Directory('${root.path}/$kSaveCopies/${_leaf()}');
+    final part = '${dir.path}/${_safe(name)}';
+    await dir.create(recursive: true);
+    await (copier ?? (a, b) => File(a).copy(b))(src, part);
+    done = await cleanMediaFile(part, name: name, raw: raw);
+    if (done.how == MediaClean.refused) {
+      await shredTree(dir.path);
+      return done;
+    }
+    moved = true;
+    try {
+      await File(part).rename(dest);
+    } on FileSystemException {
+      // another file system: copied over, then the private copy goes
+      await File(part).copy(dest);
+    }
+  } catch (_) {
+    try {
+      if (dir != null) await shredTree(dir.path);
+      if (moved && await File(dest).exists()) await shredFile(dest);
+    } catch (_) {}
+    return MediaCleaned(MediaClean.refused, video: videoNameNeedsStrip(name));
+  }
+  // what is left in there is clean, and the start sweep takes it if this fails
+  try {
+    await shredTree(dir.path);
+  } catch (_) {}
+  return done;
 }

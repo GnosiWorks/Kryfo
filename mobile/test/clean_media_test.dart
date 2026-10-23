@@ -101,6 +101,63 @@ void main() {
     );
   });
 
+  group('a send', () {
+    late Directory cache;
+    setUp(() => cache = Directory('${tmp.path}/cache')..createSync());
+    List<FileSystemEntity> left() {
+      final d = Directory('${cache.path}/$kSaveCopies');
+      return d.existsSync() ? d.listSync(recursive: true) : const [];
+    }
+
+    test('a copy that throws half way leaves nothing behind', () async {
+      final src = put('a.jpg', jpeg(tiff: cameraTiff()));
+      final dest = '${tmp.path}/media/f_1_a.jpg';
+      Directory('${tmp.path}/media').createSync();
+      final r = await copyClean(
+        src,
+        dest,
+        name: 'a.jpg',
+        cache: cache,
+        copier: (a, b) async {
+          final bytes = File(a).readAsBytesSync();
+          File(b).writeAsBytesSync(bytes.sublist(0, bytes.length ~/ 2));
+          throw const FileSystemException('no space left on device');
+        },
+      );
+      expect(r.how, MediaClean.refused);
+      expect(File(dest).existsSync(), false);
+      expect(left().whereType<File>(), isEmpty);
+    });
+
+    test('only a clean copy reaches the media folder', () async {
+      final bytes = jpeg(tiff: cameraTiff(), xmp: xmpGps);
+      final src = put('b.jpg', bytes);
+      final dest = '${tmp.path}/f_2_b.jpg';
+      final r = await copyClean(src, dest, name: 'b.jpg', cache: cache);
+      expect(r.how, MediaClean.clean);
+      expect(readFile(dest).status, MetaStatus.nothing);
+      expect(File(src).readAsBytesSync(), bytes);
+      expect(left().whereType<File>(), isEmpty);
+    });
+
+    test('media that cannot be cleaned never reaches it', () async {
+      final src = put('u.heic', heif(coding: 'uri '));
+      final dest = '${tmp.path}/f_3_u.heic';
+      final r = await copyClean(src, dest, name: 'u.heic', cache: cache);
+      expect(r.how, MediaClean.refused);
+      expect(File(dest).existsSync(), false);
+      expect(left().whereType<File>(), isEmpty);
+    });
+
+    test('a file that is no media goes as it is', () async {
+      final src = put('n.txt', t('notes'));
+      final dest = '${tmp.path}/f_4_n.txt';
+      final r = await copyClean(src, dest, name: 'n.txt', cache: cache);
+      expect(r.how, MediaClean.notMedia);
+      expect(File(dest).readAsStringSync(), 'notes');
+    });
+  });
+
   group('a save', () {
     test('hands out a clean copy and leaves the file as it was', () async {
       final bytes = jpeg(tiff: cameraTiff());
@@ -134,7 +191,7 @@ void main() {
       'lib/screens/group_chat_screen.dart',
     ]) {
       final src = File(f).readAsStringSync();
-      expect(src, contains('cleanMediaFile(dest.path'), reason: f);
+      expect(src, contains('copyClean(src, dest.path'), reason: f);
       expect(src, isNot(contains('stripMp4Metadata(')), reason: f);
     }
     final cam = File('lib/screens/camera_screen.dart').readAsStringSync();

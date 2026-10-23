@@ -20,14 +20,10 @@ void main() {
     screens.forEach((file, sig) {
       final body = bodyOf(sourceOf(file), sig);
       expect(body, isNot(contains('.delete(')), reason: file);
-      // the one cleaner refuses a video that cannot be walked and a picture
-      // that cannot be read, and the copy is shredded before the refusal
-      final refused = body.substring(body.indexOf('MediaClean.refused'));
-      expect(
-        refused.substring(0, refused.indexOf('return null;')),
-        contains('await shredFile(dest.path);'),
-        reason: file,
-      );
+      // the copy is made and cleaned out of the media folder by the one
+      // cleaner, which shreds it on a refusal; nothing copies in before it
+      expect(body, contains('await copyClean(src, dest.path'), reason: file);
+      expect(body, isNot(contains('.copy(dest.path)')), reason: file);
     });
   });
 

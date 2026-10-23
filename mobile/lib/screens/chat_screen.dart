@@ -3874,15 +3874,14 @@ class _ChatScreenState extends State<ChatScreen>
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
-    await File(src).copy(dest.path);
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
     // one that cannot be read through, or still reads as anything after,
-    // is not sent. a raw picture is never walked as a video
-    final done = await cleanMediaFile(dest.path, name: name, raw: raw);
+    // is not sent. a raw picture is never walked as a video. the copy is
+    // made and cleaned out of the media folder and only moved in clean
+    final done = await copyClean(src, dest.path, name: name, raw: raw);
     if (done.how == MediaClean.refused) {
-      await shredFile(dest.path);
       if (mounted) {
         showHaloToast(
           context,
