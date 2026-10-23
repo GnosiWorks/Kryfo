@@ -248,7 +248,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         format: _format,
         passphrase: pass,
         dir: await notesOutDir(),
-        plainName: await savesPlain(),
+        plainName: savesPlain(),
         stopped: () => _stop,
         progress: (v) {
           if (mounted) setState(() => _progress = v);

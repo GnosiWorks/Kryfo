@@ -500,7 +500,7 @@ class _CameraScreenState extends State<CameraScreen>
   Future<void> _keepCopy() async {
     HapticFeedback.selectionClick();
     // under a plain icon, the camera's own names in the camera's folder
-    final plain = await savesPlain();
+    final plain = savesPlain();
     bool ok;
     if (_shot != null) {
       ok = await exportToPictures(

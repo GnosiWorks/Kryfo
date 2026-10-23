@@ -117,7 +117,7 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       final tempDir = await getTemporaryDirectory();
       // a restore finds it by its contents: a plain icon's plain name too
-      name = backupName(plain: await savesPlain());
+      name = backupName(plain: savesPlain());
       path = p.join(tempDir.path, name);
       void onProgress(int a, int b) {
         if (mounted && b > 0) setState(() => _progress = a / b);

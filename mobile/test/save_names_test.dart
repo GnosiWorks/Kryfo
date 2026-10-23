@@ -35,6 +35,9 @@ void main() {
   tearDown(forgetAppFace);
 
   test('a plain icon names new saves plainly, kryfo\'s as always', () async {
+    // not read: kryfo's, as a read that fails gives
+    forgetAppFace();
+    expect(savesPlain(), isFalse);
     for (final (face, plain) in [
       (AppFace.notes, true),
       (AppFace.news, true),
@@ -42,7 +45,8 @@ void main() {
     ]) {
       forgetAppFace();
       appFaceChannel = _Faces(face);
-      expect(await savesPlain(), plain, reason: face.name);
+      await readAppFace();
+      expect(savesPlain(), plain, reason: face.name);
     }
   });
 
@@ -115,25 +119,23 @@ void main() {
       sourceOf('lib/screens/camera_screen.dart'),
       'Future<void> _keepCopy(',
     );
-    expect(camera, contains('final plain = await savesPlain();'));
+    expect(camera, contains('final plain = savesPlain();'));
     expect(camera, contains('cameraName(video: false, plain: plain)'));
     expect(camera, contains('cameraName(video: true, plain: plain)'));
     expect(camera, isNot(contains("'kryfo_")));
     expect(
       sourceOf('lib/screens/backup_screen.dart'),
-      contains('name = backupName(plain: await savesPlain());'),
+      contains('name = backupName(plain: savesPlain());'),
     );
     expect(
       sourceOf('lib/screens/notes_export_screen.dart'),
-      contains('plainName: await savesPlain(),'),
+      contains('plainName: savesPlain(),'),
     );
     final card = sourceOf('lib/contact_card.dart');
     for (final ext in ['png', 'vcf']) {
       expect(
         card,
-        contains(
-          "cardName(plain: await savesPlain(), haloId: haloId, ext: '$ext')",
-        ),
+        contains("cardName(plain: savesPlain(), haloId: haloId, ext: '$ext')"),
       );
     }
     expect(card, isNot(contains("'kryfo-\$haloId")));

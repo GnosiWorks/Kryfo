@@ -150,7 +150,7 @@ Future<void> shareContactCard({
     if (bytes == null) throw Exception('could not encode the card');
 
     await _handOutCard(
-      cardName(plain: await savesPlain(), haloId: haloId, ext: 'png'),
+      cardName(plain: savesPlain(), haloId: haloId, ext: 'png'),
       (f) => f.writeAsBytes(bytes.buffer.asUint8List(), flush: true),
       text: l10n.contactCardMessageMeOnKryfo(haloId),
     );
@@ -173,7 +173,7 @@ Future<void> shareContactVcf({
       'URL:$uri\r\n'
       'END:VCARD\r\n';
   await _handOutCard(
-    cardName(plain: await savesPlain(), haloId: haloId, ext: 'vcf'),
+    cardName(plain: savesPlain(), haloId: haloId, ext: 'vcf'),
     (f) => f.writeAsString(vcf, flush: true),
   );
 }
