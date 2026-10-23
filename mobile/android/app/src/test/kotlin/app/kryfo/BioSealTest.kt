@@ -231,6 +231,27 @@ class BioSealTest {
         }
     }
 
+    // another key's tagged seal whose block lies under this key's modulus,
+    // so only the tag tells it apart. drawn below on purpose, every run
+    @Test
+    fun anotherKeysTagAloneOpensNothing() {
+        val block = sealedBy(larger, above = false)
+        val other = BioSeal.parse("02" + hex(BioSeal.tag(larger.public)) + hex(block))!!
+        assertFalse(BioSeal.tag(larger.public).contentEquals(BioSeal.tag(keys.public)))
+        // the same block would fit this key: only the tag says no
+        assertTrue(BioSeal.fits(BioSeal.parse(v1(block))!!, keys.public))
+        assertFalse(BioSeal.fits(other, keys.public))
+        for (by in providers) {
+            assertEquals("none" to null, BioSeal.open(opener(keys, by), other, keys.public))
+        }
+        // and not even a cipher that would throw anything is asked
+        val loud = failingCipher(IllegalThreadStateException("asked"), keys.public)
+        assertEquals("none" to null, BioSeal.open(loud, other, keys.public))
+        // a real seal for the other key, drawn below too, reads the same
+        val real = BioSeal.parse(BioSeal.seal(larger.public, decoy))!!
+        assertFalse(BioSeal.fits(real, keys.public))
+    }
+
     // the keystore busy with the operation is not a refusal: try again
     @Test
     fun aBusyFinishIsAnError() {
