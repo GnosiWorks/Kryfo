@@ -50,6 +50,8 @@ android {
     packaging {
         jniLibs {
             keepDebugSymbols += "**/libhalo.so"
+            // voice transcripts are off: a stray copy in jniLibs never ships
+            excludes += "**/libkryfo_voice.so"
         }
     }
     compileSdk = flutter.compileSdkVersion
