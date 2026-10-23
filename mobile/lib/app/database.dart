@@ -18,7 +18,8 @@ class HaloDb
         _SearchRows,
         _MediaRows,
         _GroupOwedRows,
-        _NotifRows
+        _NotifRows,
+        _DraftRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -114,24 +115,6 @@ class HaloDb
     });
   }
 
-  // the people and groups a chat is held with: a deleted chat's row stays,
-  // archived and not accepted, and is none
-  Future<({Set<String> people, Set<String> groups})> draftChats() async {
-    final d = await open();
-    final people = await d.query(
-      'contacts',
-      columns: ['halo_id', 'accepted', 'archived'],
-    );
-    final groups = await d.query('groups', columns: ['group_id']);
-    return (
-      people: {
-        for (final r in people)
-          if (r['accepted'] != 0 || r['archived'] != 1) r['halo_id'] as String,
-      },
-      groups: {for (final r in groups) r['group_id'] as String},
-    );
-  }
-
   // a wrapped container copied for a backup, and the key it opens with,
   // which the backup carries inside its own encryption
   Future<String> copyWithKey(String to) async {
@@ -164,7 +147,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 85,
+      version: 86,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -346,10 +329,11 @@ class HaloDb
         await blockedKeysTable(db);
         await groupEndIndexes(db);
         await wallpaperTable(db);
+        await draftsTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 85
+        // they add. 66 runs after it: it reads what they all make. 67 to 86
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -871,6 +855,10 @@ class HaloDb
             db,
             p.join(p.dirname(path), 'wallpapers${container.suffix}'),
           );
+        }
+        if (oldV < 86) {
+          // unsent words, kept per chat so a stopped process keeps them
+          await draftsTable(db);
         }
       },
     );
@@ -1525,6 +1513,32 @@ Future<void> wallpaperTable(DatabaseExecutor db) async {
       "atmosphere ON $table WHEN new.atmosphere IS NOT '$kPhotoWall' BEGIN "
       'DELETE FROM wallpapers WHERE chat = $newKey; END',
     );
+  }
+}
+
+// a chat's unsent words, under its wallKey. a table that will not make
+// costs only the drafts: the reads and writes of them give up quietly
+Future<void> draftsTable(DatabaseExecutor db) async {
+  try {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS drafts (
+        chat TEXT PRIMARY KEY,
+        body TEXT NOT NULL,
+        reply_to TEXT,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+    for (final (table, key) in const [
+      ('contacts', 'old.halo_id'),
+      ('groups', "'group:' || old.group_id"),
+    ]) {
+      await db.execute(
+        'CREATE TRIGGER IF NOT EXISTS drafts_${table}_gone AFTER DELETE ON '
+        '$table BEGIN DELETE FROM drafts WHERE chat = $key; END',
+      );
+    }
+  } catch (e) {
+    dlog('drafts: no table (${e.runtimeType})');
   }
 }
 

@@ -50,7 +50,16 @@ import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
 import 'drafts.dart'
-    show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
+    show
+        Draft,
+        DraftRows,
+        DraftsOnPause,
+        KeptDraft,
+        dropDraft,
+        forgetDrafts,
+        restartKeepingDrafts,
+        restoreKeptDrafts,
+        settleDrafts;
 import 'helper_delivery.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
@@ -151,6 +160,7 @@ part 'app/database_blocks.dart';
 part 'app/database_chat_settings.dart';
 part 'app/database_contacts.dart';
 part 'app/database_deletes.dart';
+part 'app/database_drafts.dart';
 part 'app/database_first_contact.dart';
 part 'app/database_group_owed.dart';
 part 'app/database_groups.dart';
@@ -210,9 +220,6 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
-  // a draft is written down for a restart only for a chat that is still
-  // there
-  everydayChats = () => live.draftChats();
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepNotesAtLaunch());
@@ -228,6 +235,8 @@ void main() async {
   // replaced, it is lost, so it is asked again on every return
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   WidgetsBinding.instance.addObserver(_underBars);
+  // a draft waiting to be written goes down before android may stop us
+  WidgetsBinding.instance.addObserver(const DraftsOnPause());
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the

@@ -198,11 +198,11 @@ bool landInOpenChat(String id, String words) {
 }
 
 /// a deleted chat's unsent words go with it, from an open composer too
-void dropChatDraft(String id) {
+Future<void> dropChatDraft(String id) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerPeer.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: false);
 }
 
 /// the note on a contact. [save] runs before the sheet goes; true when it
@@ -901,6 +901,8 @@ class _ChatScreenState extends State<ChatScreen>
   // the message being replied to. cleared after send or by the X in the
   // quote bar.
   _Msg? _replyTo;
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
 
   // search in chat. _matches are indices into _messages, _matchPos the
   // current hit, _matchKeys let a hit be scrolled into view.
@@ -1238,17 +1240,14 @@ class _ChatScreenState extends State<ChatScreen>
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterRow = _lastReadPerPeer[_memo];
-    _msgCtrl.text = composerWith(draftPerPeer[_memo] ?? '', widget.initialText);
-    // save the draft live on every keystroke so it survives leaving the chat
-    // regardless of when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerPeer.remove(_memo);
-      } else {
-        draftPerPeer[_memo] = t;
-      }
-    });
+    final rows = session.draftsOf(widget.peerHaloId);
+    final kept = heldDraft(rows.container, widget.peerHaloId, group: false);
+    _msgCtrl.text = composerWith(kept?.text ?? '', widget.initialText);
+    _draftReply = kept?.replyTo;
+    // after a stopped process the draft is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the chat and the app
+    _msgCtrl.addListener(_keepDraft);
     session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
@@ -2878,6 +2877,7 @@ class _ChatScreenState extends State<ChatScreen>
         ).millisecondsSinceEpoch;
       }
     });
+    _restoreReply();
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
@@ -4666,8 +4666,12 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void backOnTop() {
     // a copy of this chat opened over it may have changed the draft
-    final draft = draftPerPeer[_memo] ?? '';
-    if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+    final rows = _draftRows;
+    if (rows != null) {
+      final d = heldDraft(rows.container, widget.peerHaloId, group: false);
+      final draft = d?.text ?? '';
+      if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+    }
     if (lockGuard.isLocked()) {
       _underLock = true;
       return;
@@ -5180,6 +5184,7 @@ class _ChatScreenState extends State<ChatScreen>
       _replyTo = m;
       _replyFlash = m;
     });
+    _keepDraft();
     _composerFocus.requestFocus();
     Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted && identical(_replyFlash, m)) {
@@ -5209,11 +5214,12 @@ class _ChatScreenState extends State<ChatScreen>
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
     );
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerPeer.remove(_memo);
-    } else {
-      draftPerPeer[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.peerHaloId, group: false));
     }
     _msgCtrl.dispose();
     _composerFocus.dispose();
@@ -5802,6 +5808,54 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  // where this chat's draft is kept, while the session still holds the
+  // chat where it did when the chat opened: a chat left behind by a lock
+  // or a hide writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.peerHaloId);
+    return rows.container.chatKey(widget.peerHaloId) == _memo ? rows : null;
+  }
+
+  void _keepDraft() {
+    final rows = _draftRows;
+    if (rows == null) return;
+    typedDraft(
+      rows,
+      widget.peerHaloId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply,
+        at: DateTime.now().millisecondsSinceEpoch,
+      ),
+      group: false,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final d = await readDraft(rows, widget.peerHaloId, group: false);
+    if (!mounted || d == null || _msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    _takeDraft(composerWith(d.text, widget.initialText));
+    _restoreReply();
+  }
+
+  // the quote a kept draft had, once the messages it is among are here. one
+  // no longer there is let go
+  void _restoreReply() {
+    final uid = _draftReply;
+    if (uid == null || !_loaded || !mounted) return;
+    _draftReply = null;
+    if (_replyTo != null) return;
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+  }
+
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
@@ -6329,7 +6383,10 @@ class _ChatScreenState extends State<ChatScreen>
               child: _replyTo != null
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
+                      onCancel: () {
+                        setState(() => _replyTo = null);
+                        _keepDraft();
+                      },
                     )
                   : const SizedBox.shrink(),
             ),

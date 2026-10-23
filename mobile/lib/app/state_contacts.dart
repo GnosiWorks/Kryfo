@@ -96,7 +96,7 @@ extension AppStateContacts on AppState {
     // words a request, an introduction or a group gave hold nothing once
     // the chat is gone (NameHold.free). any other deleted chat's words go
     // only to an add the person makes, and asks (NameHold.ask)
-    dropChatDraft(haloId);
+    await dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     await _forgetPairSeen({haloId});
     // keep _xPubToHaloId: the row and subscription both survive so they can
@@ -207,7 +207,7 @@ extension AppStateContacts on AppState {
           ? await run()
           : await signalSession.serial(haloId, run);
       if (uids == null) return false;
-      dropChatDraft(haloId);
+      await dropChatDraft(haloId);
       if (!quiet) {
         // what the relay held is not fetched again, and the shade lets go
         // of their chat and of what they said in groups
@@ -488,6 +488,8 @@ extension AppStateContacts on AppState {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    // nothing typed for them is kept
+    await dropChatDraft(haloId);
     await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
     _bumpChatRev(haloId);

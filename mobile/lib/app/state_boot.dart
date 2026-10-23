@@ -239,8 +239,8 @@ extension AppStateBoot on AppState {
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
-    // drafts written down by a restart, asked for or not
-    await restoreKeptDrafts().catchError((Object e) {
+    // drafts an older version wrote down for a restart, into their rows
+    await restoreKeptDrafts(live).catchError((Object e) {
       dlog('drafts: not restored (${e.runtimeType})');
     });
     // read now, so settings shows it whole from the first frame

@@ -14,11 +14,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/drafts.dart' show draftPerGroup;
+import 'package:kryfo/drafts.dart'
+    show Draft, endProcessForTest, heldDraft, kDraftWait;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
+        wallKey,
         GroupPreview,
         HaloDb,
         HaloEngine,
@@ -105,6 +107,20 @@ class _Db implements HaloDb {
   HaloContainer box = HaloContainer.everyday;
   @override
   HaloContainer get container => box;
+
+  // the drafts table, as the file keeps it across a process
+  final kept = <String, Draft>{};
+  @override
+  bool get isOpen => true;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      kept[wallKey(chatId, group: group)];
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      kept[wallKey(chatId, group: group)] = d;
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      kept.remove(wallKey(chatId, group: group));
 
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async {
@@ -525,14 +541,49 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.enterText(find.byType(TextField), 'see you at nine');
       await t.pump();
-      final key = HaloContainer.everyday.chatKey(_group);
-      expect(draftPerGroup[key], 'see you at nine');
-      dropGroupDraft(_group);
+      addTearDown(endProcessForTest);
+      Object? kept() =>
+          heldDraft(HaloContainer.everyday, _group, group: true)?.text;
+      expect(kept(), 'see you at nine');
+      await dropGroupDraft(_group);
       await t.pump();
-      expect(draftPerGroup.containsKey(key), isFalse);
+      expect(kept(), isNull);
       // the screen closing does not write them back
       await _close(t);
-      expect(draftPerGroup.containsKey(key), isFalse);
+      expect(kept(), isNull);
+    });
+
+    testWidgets('words and their quote come back after the app was '
+        'stopped, and go once sent', (t) async {
+      final db = _use(t, _Db(rows: [_in(1, _anna, 'dinner at eight?')]));
+      addTearDown(endProcessForTest);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await t.enterText(find.byType(TextField), 'count me in');
+      await t.pump();
+      // written once typing rests
+      expect(db.kept, isEmpty);
+      await t.pump(kDraftWait);
+      expect(db.kept['group:$_group']?.text, 'count me in');
+      db.kept['group:$_group'] = const Draft(
+        'count me in',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      // android stops the app: only the file is left
+      await _close(t);
+      endProcessForTest();
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'count me in');
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      // emptied as a send empties it: the row goes at once
+      field.controller!.clear();
+      await t.pump();
+      expect(db.kept, isEmpty);
+      await _close(t);
     });
 
     for (final room in [true, false]) {

@@ -290,6 +290,7 @@ const _peerRows = {
   // the order of edits and reactions taken in
   'frame_order': 'msg_uid IN {uids}',
   'wallpapers': 'chat = ?1',
+  'drafts': 'chat = ?1',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
@@ -316,6 +317,7 @@ const _groupRows = {
   // what came in from its members and went (goneKey)
   'gone_in': "substr(peer_id, 1, length(?1) + 7) = 'group:' || ?1 || ':'",
   'wallpapers': "chat = 'group:' || ?1",
+  'drafts': "chat = 'group:' || ?1",
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its

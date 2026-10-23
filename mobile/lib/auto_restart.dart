@@ -3,12 +3,10 @@
 // route stalled for minutes and a reconnect it would not take. only out of
 // sight with the always-on service up, at most once in half an hour of time
 // since boot, and never where it would cut something short
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dlog.dart';
 import 'drafts.dart';
-import 'secure_store.dart';
 
 /// the most often a restart happens on its own
 const kAutoRestartEvery = Duration(minutes: 30);
@@ -159,10 +157,8 @@ class AutoRestart {
     required this.reconnect,
     required this.restart,
     required this.clock,
-    FlutterSecureStorage? draftStore,
     DateTime Function()? now,
-  }) : _drafts = draftStore ?? secureStore,
-       _now = now ?? DateTime.now;
+  }) : _now = now ?? DateTime.now;
 
   final AutoView Function() view;
 
@@ -175,7 +171,6 @@ class AutoRestart {
   /// the clock since boot, null when it cannot be read
   final Future<BootTime?> Function() clock;
 
-  final FlutterSecureStorage _drafts;
   final DateTime Function() _now;
 
   bool _busy = false;
@@ -237,7 +232,7 @@ class AutoRestart {
           // the person may have come back while it was written
           if (_step(true) != AutoStep.restart) return AutoStep.none;
           dlog('auto restart: tor dead in this process');
-          await restartKeepingDrafts(restart, store: _drafts);
+          await restartKeepingDrafts(restart);
       }
       return step;
     } catch (e) {

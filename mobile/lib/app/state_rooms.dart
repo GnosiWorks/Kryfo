@@ -787,7 +787,7 @@ extension AppStateRooms on AppState {
     }
     // what it put in the shade goes with it, while its tag is still here
     await _io.unnotify('group:$groupId');
-    dropGroupDraft(groupId);
+    await dropGroupDraft(groupId);
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
     // the line in the list is only for a room of the session on screen: an

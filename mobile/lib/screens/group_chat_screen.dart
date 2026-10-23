@@ -224,11 +224,11 @@ final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
 /// a group's unsent words go with it, from an open composer too: its screen
 /// closing would write them back
-void dropGroupDraft(String id) {
+Future<void> dropGroupDraft(String id) {
   for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerGroup.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: true);
 }
 
 /// pops [nav] back to [groupId]'s open screen. false when it is not open
@@ -464,6 +464,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, StickerLanding> _landings = {};
   final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -585,18 +587,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
-    // restore a draft left behind last time this group was open.
-    _msgCtrl.text = draftPerGroup[_memo] ?? '';
-    // save it live on every keystroke so it survives leaving regardless of
-    // when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerGroup.remove(_memo);
-      } else {
-        draftPerGroup[_memo] = t;
-      }
-    });
+    // the draft left behind last time this group was open
+    final rows = session.draftsOf(widget.groupId);
+    final kept = heldDraft(rows.container, widget.groupId, group: true);
+    _msgCtrl.text = kept?.text ?? '';
+    _draftReply = kept?.replyTo;
+    // after a stopped process it is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the group and the app
+    _msgCtrl.addListener(_keepDraft);
     _scrollCtrl.addListener(_updateSticky);
     _scrollCtrl.addListener(_onGroupScroll);
     Future.delayed(const Duration(milliseconds: 1200), () {
@@ -1124,6 +1123,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
+      _restoreReply();
       unawaited(_refreshPinCount());
     } finally {
       // a throw mid-load must not leave _loading stuck true, or every later
@@ -1763,6 +1763,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       _touched(x);
                     }
                     setState(() => _replyTo = answer);
+                    _keepDraft();
                   },
                   // the lifted copy in the overlay is the one that animates;
                   // the row underneath just steps aside
@@ -3452,6 +3453,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         onReply: () {
                           dismiss();
                           setState(() => _replyTo = anchor);
+                          _keepDraft();
                         },
                       ),
                     ),
@@ -4105,6 +4107,57 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _catchUp();
   }
 
+  // where this group's draft is kept, while the session still holds the
+  // group where it did when it opened: one left behind by a lock or a hide
+  // writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.groupId);
+    return rows.container.chatKey(widget.groupId) == _memo ? rows : null;
+  }
+
+  void _keepDraft() {
+    final rows = _draftRows;
+    if (rows == null) return;
+    typedDraft(
+      rows,
+      widget.groupId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply,
+        at: DateTime.now().millisecondsSinceEpoch,
+      ),
+      group: true,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final d = await readDraft(rows, widget.groupId, group: true);
+    if (!mounted || d == null || _msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    _msgCtrl.value = TextEditingValue(
+      text: d.text,
+      selection: TextSelection.collapsed(offset: d.text.length),
+    );
+    _restoreReply();
+  }
+
+  // the quote a kept draft had, once the messages it is among are here. one
+  // no longer there is let go
+  void _restoreReply() {
+    final uid = _draftReply;
+    if (uid == null || !_loaded || !mounted) return;
+    _draftReply = null;
+    if (_replyTo != null) return;
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+  }
+
   // a screen pushed over this one closed: this is the one being read again
   @override
   void backOnTop() {
@@ -4206,12 +4259,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       land();
     }
     _leaveRoomScreen();
-    // persist the draft one more time on the way out.
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerGroup.remove(_memo);
-    } else {
-      draftPerGroup[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.groupId, group: true));
     }
     _lastRowPerGroup[_memo] = _messages.fold(
       0,
@@ -4469,7 +4522,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               child: _replyTo != null
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
+                      onCancel: () {
+                        setState(() => _replyTo = null);
+                        _keepDraft();
+                      },
                     )
                   : const SizedBox.shrink(),
             ),

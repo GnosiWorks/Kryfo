@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/drafts.dart' show Draft, endProcessForTest, kDraftWait;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/l10n/l10n.dart';
@@ -46,6 +47,20 @@ const _peer = 'amber-long-thread';
 
 class _Db extends DevTestDb {
   _Db(super.mem);
+
+  // the drafts table, as the file keeps it across a process
+  final kept = <String, Draft>{};
+  @override
+  bool get isOpen => true;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      kept[chatId];
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      kept[chatId] = d;
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      kept.remove(chatId);
 
   // pages fetched above the newest one
   int olderPages = 0;
@@ -387,6 +402,35 @@ void main() {
   Finder text(String s) => find.text(s, findRichText: true);
   bool seen(String s) => text(s).hitTestable().evaluate().isNotEmpty;
   double y(WidgetTester t, String s) => t.getCenter(text(s)).dy;
+
+  testWidgets('words and their quote come back after the app was stopped, '
+      'and go once sent', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text(l10n.chatReplyingTo), findsNothing);
+    await t.enterText(find.byType(TextField).last, 'on my way');
+    await t.pump();
+    // written once typing rests
+    expect(db.kept, isEmpty);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'on my way');
+    db.kept[_peer] = const Draft('on my way', replyTo: 'uid4', at: 1);
+    // android stops the app: only the file is left
+    await devClose(t);
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'on my way');
+    expect(find.text(l10n.chatReplyingTo), findsOneWidget);
+    // emptied as a send empties it: the row goes at once
+    field.controller!.clear();
+    await t.pump();
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
 
   testWidgets('one that came late shows where and when it was written, '
       'and a jump lands on it there', (t) async {

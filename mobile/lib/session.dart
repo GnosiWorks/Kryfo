@@ -14,6 +14,7 @@ import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
 import 'dlog.dart';
+import 'drafts.dart' show KeptDraft;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
@@ -67,6 +68,26 @@ class Session {
   // what a chat's draft, read mark and progress are kept under: the
   // container that holds it and its id
   String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
+
+  // where a chat's draft is kept: the container that holds it, so a hidden
+  // chat's is never written outside the vault
+  HaloDb draftsOf(String chatId) => _ofChat(chatId);
+
+  /// the drafts home shows, newest first: each container's own rows, so a
+  /// chat both hold for a moment shows its owner's
+  Future<List<KeptDraft>> drafts() async {
+    final v = vault;
+    HaloDb owner(KeptDraft d) => d.group ? _ofGroup(d.chat) : _ofPeer(d.chat);
+    List<KeptDraft> own(HaloDb db, List<KeptDraft> all) => [
+      for (final d in all)
+        if (identical(owner(d), db)) d,
+    ];
+    final mine = own(primary, await primary.drafts());
+    if (v == null || !v.isOpen) return mine;
+    final hidden = own(v, await v.drafts());
+    return [...mine, ...hidden]
+      ..sort((a, b) => b.draft.at.compareTo(a.draft.at));
+  }
 
   // the tags a chat's notifications went under, in each container open
   Future<Set<String>> notifTagsOf(String chat) async {
