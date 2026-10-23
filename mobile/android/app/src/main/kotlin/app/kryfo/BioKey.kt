@@ -121,11 +121,7 @@ object BioKey {
     // will not start any more), "error"
     fun cipher(): Pair<Cipher?, String> {
         if (!ready()) return null to "none"
-        val made = try {
-            keys.madeAt(ALIAS)
-        } catch (_: Exception) {
-            null
-        }
+        val made = madeAt()
         var last: Exception? = null
         repeat(2) {
             try {
@@ -149,13 +145,65 @@ object BioKey {
     // still that key: a seal that ran meanwhile made one that stays
     private fun dropLater(made: Long?) {
         work.execute {
-            val now = try {
-                keys.madeAt(ALIAS)
-            } catch (_: Exception) {
+            if (madeAt() == made) delete()
+        }
+    }
+
+    private fun madeAt(): Long? = try {
+        keys.madeAt(ALIAS)
+    } catch (_: Exception) {
+        null
+    }
+
+    // what the prompt is asked with: the cipher a finger unlocks, the key
+    // the seal fits and when that key was made. or why no finger is asked for
+    class Ask(
+        val why: String,
+        val cipher: Cipher? = null,
+        val pub: PublicKey? = null,
+        val made: Long? = null,
+    )
+
+    fun ask(sealed: BioSeal.Sealed): Ask {
+        if (!ready()) return Ask("none")
+        val made = madeAt()
+        val pub = try {
+            keys.public(ALIAS)?.takeIf { BioSeal.fits(sealed, it) }
+        } catch (e: Exception) {
+            told("not read", e)
+            null
+        }
+        // no key, or a seal for another one: nothing a finger could open
+        if (pub == null) return Ask("none")
+        val (c, why) = cipher()
+        if (c == null) return Ask(why)
+        // a new key came meanwhile: the seal in hand is the old key's
+        if (madeAt() != made) return Ask("none")
+        return Ask("ok", c, pub, made)
+    }
+
+    // once a finger was taken: what the seal opens, and a seal from before
+    // tags made again with one for the same key, to keep in its place
+    fun opened(ask: Ask, sealed: BioSeal.Sealed, cipher: Cipher?): Triple<String, String?, String?> {
+        val pub = ask.pub
+        if (cipher == null || pub == null) return Triple("refused", null, null)
+        val r = BioSeal.open(cipher, sealed, pub)
+        val opens = r.second
+        var s = r.first
+        val same = madeAt() == ask.made
+        // the key changed under the prompt: the seal was the old key's
+        if (s == "refused" && !same) s = "none"
+        val again =
+            if (s == "ok" && opens != null && same && sealed.version < BioSeal.VERSION) {
+                try {
+                    BioSeal.seal(BioSeal.plain(pub), opens)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
                 null
             }
-            if (now == made) delete()
-        }
+        return Triple(s, opens, again)
     }
 
     // the class and the keystore's code only, for a person's own logcat
@@ -179,38 +227,40 @@ object BioKey {
     fun state(): String = cipher().second
 
     // the prompt, then the seal opened: "ok" with what it opens, or
-    // "cancel", "lockout", "invalidated", "none", "refused", "error"
+    // "cancel", "lockout", "invalidated", "none", "refused", "error". with
+    // "ok", a seal from before tags comes back made again with one
     fun unlock(
         activity: Activity,
         title: String,
         cancel: String,
         seal: String,
-        done: (String, String?) -> Unit,
+        done: (String, String?, String?) -> Unit,
     ) {
         if (Build.VERSION.SDK_INT < 28) {
-            done("none", null)
+            done("none", null, null)
             return
         }
         val sealed = BioSeal.parse(seal)
         if (sealed == null) {
-            done("none", null)
+            done("none", null, null)
             return
         }
-        val (c, why) = cipher()
+        val ask = ask(sealed)
+        val c = ask.cipher
         if (c == null) {
-            done(why, null)
+            done(ask.why, null, null)
             return
         }
         var answered = false
-        fun once(s: String, opens: String?) {
+        fun once(s: String, opens: String?, again: String?) {
             if (answered) return
             answered = true
-            done(s, opens)
+            done(s, opens, again)
         }
         val exec = activity.mainExecutor
         val prompt = BiometricPrompt.Builder(activity)
             .setTitle(title)
-            .setNegativeButton(cancel, exec) { _, _ -> once("cancel", null) }
+            .setNegativeButton(cancel, exec) { _, _ -> once("cancel", null, null) }
             .build()
         prompt.authenticate(
             BiometricPrompt.CryptoObject(c),
@@ -219,19 +269,17 @@ object BioKey {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
                     // the key opens only right after a finger it was made for.
-                    // a seal it cannot open was made for another key. rsa
-                    // takes a moment, so not on the main thread
+                    // rsa takes a moment, so not on the main thread
                     val cipher = r.cryptoObject?.cipher
                     Thread {
-                        val (s, opens) =
-                            if (cipher == null) "refused" to null else BioSeal.open(cipher, sealed)
+                        val (s, opens, again) = opened(ask, sealed, cipher)
                         if (s == "refused") told("refused", null)
-                        exec.execute { once(s, opens) }
+                        exec.execute { once(s, opens, again) }
                     }.start()
                 }
 
                 override fun onAuthenticationError(code: Int, msg: CharSequence?) {
-                    once(BioSeal.closed(code), null)
+                    once(BioSeal.closed(code), null, null)
                 }
             },
         )
