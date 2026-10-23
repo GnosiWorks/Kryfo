@@ -224,14 +224,14 @@ for f in out/app-*.apk; do
   rm -rf "$scan"
 done
 
-# the source of the agpl crates the shim links goes on the release page
-# beside the apks (agpl section 6), from the vendor dir this build used
-rm -f out/libsignal-*-source.tar.gz
-./agpl-source.sh "$WORK/src/$SHIM_TARGET/vendor" out
+# the shim's complete source goes on the release page beside the apks
+# (agpl and gpl section 6), from the vendor dir this build used
+rm -f out/libsignal-*-source.tar.gz out/libkryfo_signal-*-source.tar.gz
+./shim-source.sh "$WORK/src/$SHIM_TARGET/vendor" out
 
 if [ -z "$SIGN" ]; then
   echo
-  ( cd out && sha256sum app-*.apk libsignal-*-source.tar.gz )
+  ( cd out && sha256sum app-*.apk libkryfo_signal-*-source.tar.gz )
   echo
   echo "unsigned. sign each with:"
   echo "  apksigner sign --ks <keystore> --v1-signing-enabled false app-<abi>-release.apk"
@@ -273,9 +273,9 @@ done
 
 echo
 echo "== out/"
-( cd out && sha256sum app-*.apk libsignal-*-source.tar.gz )
+( cd out && sha256sum app-*.apk libkryfo_signal-*-source.tar.gz )
 echo
-echo "these are the release. attach them and the libsignal source tarball to"
+echo "these are the release. attach them and the shim's source tarball to"
 echo "the github release."
 echo "to have someone else confirm them, or to check them later:"
 echo "  ./verify.sh --ref $REF out/app-arm64-v8a-release.apk ..."

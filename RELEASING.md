@@ -91,10 +91,10 @@ both builds have to pass: MATCH at f-droid's path, SAME at another one. no
     git push origin vX.Y.Z
 
 attach the three apks from repro/out/ to the github release, and
-libsignal-<libsignal tag>-source.tar.gz from the same folder
-(libsignal-v0.99.4-source.tar.gz today: the tag is libsignal's, not
-Kryfo's): the source of the AGPL-3.0 crates the shim links, which the AGPL
-wants offered beside the apks.
+libkryfo_signal-X.Y.Z-source.tar.gz from the same folder (X.Y.Z is the
+release's version): the complete source of the signal shim, its own crate
+and every crate it links, libsignal's AGPL-3.0 ones among them, which
+the AGPL and the GPL want offered beside the apks.
 
 ## f-droid
 
