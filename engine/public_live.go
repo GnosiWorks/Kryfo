@@ -15,6 +15,7 @@ package main
 // next start.
 
 import (
+	"log"
 	mrand "math/rand/v2"
 	"strings"
 	"sync"
@@ -30,9 +31,22 @@ var publicLiveCap = 24
 // under liveMu
 var sweepEvery = time.Hour
 
+// the round while our relay is down: what reaches only the public relays
+// then comes within minutes. each address still keeps its own times
+var sweepEveryDown = 10 * time.Minute
+
+// our relay counts as down once every entry of it has failed and none has
+// answered for this long, the phone awake. its sockets probe every 75 s and
+// a tor rescue or a restart of the relay is over in a minute or two, so a
+// hiccup never sends the reads faster
+var ownDownAfter = 10 * time.Minute
+
 func sweepRound() time.Duration {
 	liveMu.Lock()
 	defer liveMu.Unlock()
+	if ownDown {
+		return sweepEveryDown
+	}
 	return sweepEvery
 }
 
@@ -57,6 +71,12 @@ var (
 	livePinned = map[string]bool{}
 	// a mode switch starts a new run
 	liveRun int
+	// closed when the round changes, so a wait for a read looks again
+	liveWakeC = make(chan struct{})
+	// our relay: down as above, and its last answer by the monotonic clock,
+	// which stops while the phone sleeps
+	ownDown     bool
+	ownAnswered time.Time
 )
 
 // only a contact's address is ranked: first-contact, room and pair
@@ -109,11 +129,22 @@ func livePin(rcvPks []string) {
 	liveMu.Unlock()
 }
 
-// a mode switch: every runner starts again, and the list is chosen anew
+// a mode switch: every runner starts again, and the list is chosen anew.
+// what failed the old way says nothing of our relay the new way
 func liveNewRun() {
 	liveMu.Lock()
+	defer liveMu.Unlock()
 	liveRun++
-	liveMu.Unlock()
+	ownAnswered = time.Now()
+	if ownDown {
+		ownDown = false
+		liveWakeLocked()
+	}
+}
+
+func liveWakeLocked() {
+	close(liveWakeC)
+	liveWakeC = make(chan struct{})
 }
 
 // under liveMu. pinned first, then the latest heard, the address breaking
@@ -155,10 +186,12 @@ func publicLive(rcvPk string) bool {
 	return liveNowLocked(rcvPk)
 }
 
-// as publicLive, with a channel closed when the wait for a read should
-// look again: none yet
+// as publicLive, with the channel closed when the round changes taken
+// under the same lock, so a change between the two is not missed
 func livePlace(rcvPk string) (bool, <-chan struct{}) {
-	return publicLive(rcvPk), nil
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	return liveNowLocked(rcvPk), liveWakeC
 }
 
 // the run's choice for rcvPk, made the first time its turn comes to dial a
@@ -200,6 +233,40 @@ func liveHeard(rcvPk string, at int64) {
 	a.heard = max(a.heard, at)
 }
 
+// an entry of our relay answered
+func ownRelayAnswered() {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	ownAnswered = time.Now()
+	if ownDown {
+		ownDown = false
+		log.Println("nostr: our relay answers again, public relays read at the usual round")
+		liveWakeLocked()
+	}
+}
+
+// an attempt on an entry of our relay failed
+func ownRelayFailed() {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	now := time.Now()
+	if ownAnswered.IsZero() {
+		ownAnswered = now
+	}
+	if !ownDown && now.Sub(ownAnswered) >= ownDownAfter {
+		ownDown = true
+		log.Println("nostr: our relay is down, public relays read more often")
+		liveWakeLocked()
+	}
+}
+
+// whether the round now is the one for our relay down
+func ownRelayDown() bool {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	return ownDown
+}
+
 // the next read of a public relay, a fourth either way so they spread out
 func sweepDelay() time.Duration {
 	every := sweepRound()
@@ -216,7 +283,8 @@ func sweepRetryDelay() time.Duration {
 }
 
 // the first read after a start lands anywhere in the first round, so a
-// start does not dial every address on every public relay at once
+// start does not dial every address on every public relay at once. the
+// same as the round turns short: each address its own time in it
 func firstSweepDelay() time.Duration {
 	return time.Duration(mrand.Int64N(int64(sweepRound()) + 1))
 }

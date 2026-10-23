@@ -1525,6 +1525,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			markAlive := func() {
 				lastAlive = time.Now().Round(0)
 				relayUp(u)
+				if ownEntry {
+					ownRelayAnswered()
+				}
 				if connGen >= 0 {
 					routeAliveOn(connGen, u)
 				}
@@ -1542,6 +1545,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			var nextSweep time.Time
 			sweeping, swept := false, false
 			cuts := 0
+			// the next read was drawn in the round for our relay down
+			drawnDown := false
+			// an attempt on our relay failed, while tor could carry it
+			ownMiss := func() {
+				if ownEntry && !(modeNeedsTor() && !torReadyNow()) {
+					ownRelayFailed()
+				}
+			}
 			turn := subTurn{tag: tag, fresh: freshOf(ctx)}
 			defer turn.done()
 			for {
@@ -1554,8 +1565,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				default:
 				}
 				sweeping = false
-				// both channels before the look, so a kick right after it
-				// still wakes the wait
+				// both channels before the look, so a change of the round or
+				// a kick right after it still wakes the wait
 				onPub, wake, kc0 := true, (<-chan struct{})(nil), kickChan()
 				if sweeper {
 					onPub, wake = livePlace(rcvPk)
@@ -1563,8 +1574,20 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if !onPub {
 					// wall clock: a phone asleep is time that counts
 					now := time.Now().Round(0)
-					if nextSweep.IsZero() {
-						nextSweep = now.Add(firstSweepDelay())
+					down := ownRelayDown()
+					switch {
+					case nextSweep.IsZero():
+						nextSweep, drawnDown = now.Add(firstSweepDelay()), down
+					case down && !drawnDown:
+						// our relay went down: this address's next read comes
+						// at its own time in the short round, if that is sooner
+						if t := now.Add(firstSweepDelay()); t.Before(nextSweep) {
+							nextSweep = t
+						}
+						drawnDown = true
+					case !down:
+						// one more read at most, then the usual round
+						drawnDown = false
 					}
 					if wait := nextSweep.Sub(now); wait > 0 {
 						if h := sweepWaitHook; h != nil {
@@ -1677,6 +1700,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					connDone()
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
+					ownMiss()
 					if relayAnswered(err) {
 						// turned away at the door, through a route that works
 						routeAliveOn(dialGen, u)
@@ -1757,6 +1781,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					connDone()
+					ownMiss()
 					relayFailed(u, dialAt)
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
@@ -2058,6 +2083,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
+						ownMiss()
 						stopKick()
 						r.Close()
 						goto reconnect
@@ -2099,6 +2125,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
+						ownMiss()
 						idle.Stop()
 						r.Close()
 						kicked = true

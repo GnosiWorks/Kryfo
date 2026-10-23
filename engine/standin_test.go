@@ -83,6 +83,8 @@ type relayStandIn struct {
 	refuse string
 	// a probe (limit 0) gets no answer, as over a dead circuit
 	probesQuiet bool
+	// every dial is turned away, as by a relay that is down
+	down bool
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -106,6 +108,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	c := &siConn{remote: r.RemoteAddr, opened: time.Now(), addrs: map[string]bool{},
 		published: map[string]bool{}, kill: cancel}
 	s.mu.Lock()
+	if s.down {
+		s.mu.Unlock()
+		http.Error(w, "down", http.StatusBadGateway)
+		return
+	}
 	s.conns = append(s.conns, c)
 	up := s.upgradeDelay
 	s.mu.Unlock()

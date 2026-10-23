@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -27,11 +28,26 @@ func setLiveCap(t *testing.T, cap int, every time.Duration) {
 	})
 }
 
-// nothing ranked, nothing heard, nothing pinned
+// nothing ranked, nothing heard, nothing pinned, our relay up
 func liveReset() {
 	liveMu.Lock()
 	liveAddrs, liveLast, livePinned = map[string]*liveAddr{}, map[string]int64{}, map[string]bool{}
+	ownDown, ownAnswered = false, time.Time{}
 	liveMu.Unlock()
+}
+
+// the round while our relay is down, and how long it fails before it is
+func setDownRound(t *testing.T, every, after time.Duration) {
+	t.Helper()
+	liveMu.Lock()
+	oldEvery, oldAfter := sweepEveryDown, ownDownAfter
+	sweepEveryDown, ownDownAfter = every, after
+	liveMu.Unlock()
+	t.Cleanup(func() {
+		liveMu.Lock()
+		sweepEveryDown, ownDownAfter = oldEvery, oldAfter
+		liveMu.Unlock()
+	})
 }
 
 // every socket waits a short turn, the start's free one spent, so all the
@@ -590,6 +606,112 @@ func TestACutReadIsTriedAgainWithinTheRound(t *testing.T) {
 	cutOn(pub, outRcv)
 	// an eighth to a quarter of the round, and the turn
 	waitFor(t, "the read tried again", 4*time.Second, func() bool { return everOn(pub, outRcv) >= 2 })
+}
+
+// our relay going down right as an address starts waiting for its next
+// read wakes the wait, not the end of the usual round
+func TestARoundChangeAsTheWaitBeginsIsNotMissed(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	setDownRound(t, time.Second, 10*time.Minute)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	// ours turns every dial away, so nothing says it is back
+	own.mu.Lock()
+	own.down = true
+	own.mu.Unlock()
+	in, out, inRcv, outRcv := livePair(t)
+	var once sync.Once
+	sweepWaitHook = func() {
+		once.Do(func() {
+			liveMu.Lock()
+			ownAnswered = time.Now().Add(-time.Hour)
+			liveMu.Unlock()
+			ownRelayFailed()
+		})
+	}
+	t.Cleanup(func() { sweepWaitHook = nil })
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "a read in the short round", 6*time.Second, func() bool {
+		return everOn(pub, outRcv) >= 1
+	})
+}
+
+// with our relay down the addresses past the cap read the public relays
+// every few minutes, each at its own times, and go back to the usual round
+// once ours answers again
+func TestOurRelayDownReadsThePublicRelaysMoreOften(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	setDownRound(t, 2*time.Second, 300*time.Millisecond)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	own.mu.Lock()
+	own.down = true
+	own.mu.Unlock()
+	peers := make([]xid, 6)
+	rcvs := make([]string, 6)
+	for i := range peers {
+		peers[i] = newXid(t)
+		rcvs[i] = mustRcv(t, peers[i])
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for i := range peers {
+		runOn(ctx, peers[i], rcvs[i])
+	}
+	sorted := slices.Clone(rcvs)
+	slices.Sort(sorted)
+	capped := sorted[1:]
+	waitFor(t, "every address past the cap read the public relay twice", 25*time.Second, func() bool {
+		for _, a := range capped {
+			if everOn(pub, a) < 2 {
+				return false
+			}
+		}
+		return true
+	})
+	// each its own times: the first reads do not come together
+	var firsts []time.Time
+	for _, a := range capped {
+		firsts = append(firsts, connsOn(pub.snapshot(), []string{a})[0].opened)
+	}
+	slices.SortFunc(firsts, func(a, b time.Time) int { return a.Compare(b) })
+	if firsts[len(firsts)-1].Sub(firsts[0]) < 200*time.Millisecond {
+		t.Fatalf("the reads came in one batch: %v", firsts)
+	}
+	// ours answers again: at most the one read drawn before, then quiet
+	own.mu.Lock()
+	own.down = false
+	own.mu.Unlock()
+	// a kick ends our relay's backoff, as the network coming back does
+	waitFor(t, "every address back on our relay", 20*time.Second, func() bool {
+		kickRelays()
+		for _, a := range rcvs {
+			if openOn(own, a) != 1 {
+				return false
+			}
+		}
+		return !ownRelayDown()
+	})
+	time.Sleep(3 * time.Second)
+	before := map[string]int{}
+	for _, a := range capped {
+		before[a] = everOn(pub, a)
+	}
+	time.Sleep(4 * time.Second)
+	for _, a := range capped {
+		if n := everOn(pub, a) - before[a]; n > 0 {
+			t.Fatalf("an address read the public relay %d more times with ours back", n)
+		}
+	}
 }
 
 // a delete lets go of the address while a take on its runner may still be
