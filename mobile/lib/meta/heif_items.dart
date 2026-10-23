@@ -83,6 +83,54 @@ class HeifMeta {
 
   Iterable<HeifRef> refsOf(String type) => refs.where((r) => r.type == type);
 
+  // references by type, from each item and to each item: built once on
+  // first use, after the meta box is read, so no lookup walks every one
+  Map<String, Map<int, List<HeifRef>>>? _from;
+  Map<String, Map<int, List<HeifRef>>>? _to;
+
+  void _index() {
+    final from = _from = {};
+    final to = _to = {};
+    for (final r in refs) {
+      ((from[r.type] ??= {})[r.from] ??= []).add(r);
+      final into = to[r.type] ??= {};
+      for (final id in r.to.length < 2 ? r.to : r.to.toSet()) {
+        (into[id] ??= []).add(r);
+      }
+    }
+  }
+
+  /// the [type] references from [id], in file order
+  List<HeifRef> refsFrom(String type, int id) {
+    if (_from == null) _index();
+    return _from![type]?[id] ?? const [];
+  }
+
+  /// the [type] references that point at [id], each once, in file order
+  List<HeifRef> refsTo(String type, int id) {
+    if (_to == null) _index();
+    return _to![type]?[id] ?? const [];
+  }
+
+  Set<int>? _besideOf;
+  final Map<int, int?> _beside = {};
+
+  /// the first item [id] is drawn into (dimg) that is not in [picture].
+  /// remembered per [picture] set, which a caller keeps as it is
+  int? drawnIntoBeside(int id, Set<int> picture) {
+    if (!identical(picture, _besideOf)) {
+      _besideOf = picture;
+      _beside.clear();
+    }
+    return _beside.putIfAbsent(id, () {
+      for (final r in refsTo('dimg', id)) {
+        final up = items[r.from];
+        if (up != null && !picture.contains(up.id)) return up.id;
+      }
+      return null;
+    });
+  }
+
   /// the urn of the item's auxC property, if it has one
   String? auxType(ByteSource s, int id) {
     for (final a in assoc[id] ?? const <HeifAssoc>[]) {
@@ -343,8 +391,8 @@ const kHeifCodings = {
 int? heifShownItem(HeifMeta m) {
   final primary = m.primary;
   if (primary == null || m.items[primary]?.type != 'tmap') return primary;
-  for (final r in m.refsOf('dimg')) {
-    if (r.from == primary && r.to.isNotEmpty) return r.to.first;
+  for (final r in m.refsFrom('dimg', primary)) {
+    if (r.to.isNotEmpty) return r.to.first;
   }
   return null;
 }
@@ -353,27 +401,26 @@ Set<int> heifPictureItems(ByteSource s, HeifMeta m) {
   final keep = <int>{};
   final primary = heifShownItem(m);
   if (primary == null || !m.items.containsKey(primary)) return keep;
+  // each kept item once: its tiles or layers, then the alpha planes
+  // pointing at it. a list, not recursion, so a long chain cannot overflow
+  final todo = <int>[];
   void add(int id) {
-    if (!keep.add(id)) return;
-    final it = m.items[id];
-    if (it != null && _derived.contains(it.type)) {
-      for (final r in m.refsOf('dimg').where((r) => r.from == id)) {
-        r.to.forEach(add);
-      }
-    }
+    if (keep.add(id)) todo.add(id);
   }
 
   add(primary);
-  // alpha planes of what is kept, and their own tiles
-  var grew = true;
-  while (grew) {
-    grew = false;
-    for (final r in m.refsOf('auxl')) {
+  while (todo.isNotEmpty) {
+    final id = todo.removeLast();
+    final it = m.items[id];
+    if (it != null && _derived.contains(it.type)) {
+      for (final r in m.refsFrom('dimg', id)) {
+        r.to.forEach(add);
+      }
+    }
+    for (final r in m.refsTo('auxl', id)) {
       if (keep.contains(r.from)) continue;
-      if (!r.to.any(keep.contains)) continue;
       if (!kAlphaUrns.contains(m.auxType(s, r.from))) continue;
       add(r.from);
-      grew = true;
     }
   }
   return keep;
@@ -413,7 +460,7 @@ HeifRole heifRole(
   if (it.type == 'Exif') return HeifRole.exif;
   if (it.isXmp) return HeifRole.xmp;
   if (it.type == 'tmap') return HeifRole.hdr;
-  if (m.refsOf('thmb').any((r) => r.from == id)) return HeifRole.thumbnail;
+  if (m.refsFrom('thmb', id).isNotEmpty) return HeifRole.thumbnail;
   final aux = m.auxType(s, id);
   if (aux != null) {
     final a = aux.toLowerCase();
@@ -423,20 +470,14 @@ HeifRole heifRole(
     return HeifRole.other;
   }
   // the second input of a tone map item is its gain map
-  for (final r in m.refsOf('dimg')) {
-    if (m.items[r.from]?.type == 'tmap' && r.to.contains(id)) {
-      return HeifRole.hdr;
-    }
+  for (final r in m.refsTo('dimg', id)) {
+    if (m.items[r.from]?.type == 'tmap') return HeifRole.hdr;
   }
   // an item a derived picture item is drawn from, not kept: a part of
   // something beside the picture, such as a gain map's tiles
-  for (final r in m.refsOf('dimg')) {
-    if (r.to.contains(id)) {
-      final up = m.items[r.from];
-      if (up != null && !picture.contains(up.id) && depth < 8) {
-        return heifRole(s, m, up.id, picture, depth + 1);
-      }
-    }
+  if (depth < 8) {
+    final up = m.drawnIntoBeside(id, picture);
+    if (up != null) return heifRole(s, m, up, picture, depth + 1);
   }
   if (it.type == 'mime' || it.type == 'uri ') return HeifRole.attached;
   // a whole second picture of a collection
