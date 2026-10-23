@@ -58,10 +58,6 @@ echo "ndk: $NDK_ROOT"
 echo "whisper.cpp: $SRC"
 echo "out: $OUT"
 
-# imports a library that only reads a model file and some memory has no
-# reason to have
-NET_SYMBOLS='^(socket|connect|bind|listen|accept|accept4|getaddrinfo|gethostbyname|gethostbyname2|gethostbyaddr|sendto|recvfrom|sendmsg|recvmsg|send|recv|curl_.*)$'
-
 check_so() {
   local so="$1"
   local dyn
@@ -82,9 +78,7 @@ check_so() {
     echo "error: $so exports [$exported]" >&2
     exit 1
   fi
-  local net
-  net="$("$LLVM/llvm-nm" -D --undefined-only "$so" | awk '{print $2}' | sed 's/@.*//' | grep -E "$NET_SYMBOLS" || true)"
-  if [[ -n "$net" ]]; then echo "error: $so imports network calls: $net" >&2; exit 1; fi
+  "$HERE/check-imports.sh" "$LLVM/llvm-nm" "$so" || exit 1
   if "$LLVM/llvm-readelf" -n "$so" | grep -q 'GNU_BUILD_ID'; then
     echo "error: $so has a build id" >&2
     exit 1
@@ -148,7 +142,7 @@ if [[ "${1:-}" == "--twice" ]]; then
   T="$(mktemp -d)"
   trap 'rm -rf "$T"' EXIT
   mkdir -p "$T/elsewhere/native"
-  cp -a CMakeLists.txt exports.map kryfo_voice.c kryfo_voice.h whisper.lock fetch-whisper.sh build.sh test .third_party "$T/elsewhere/native/"
+  cp -a CMakeLists.txt exports.map kryfo_voice.c kryfo_voice.h whisper.lock fetch-whisper.sh build.sh check-imports.sh test .third_party "$T/elsewhere/native/"
   echo "again from $T/elsewhere/native"
   KV_OUT="$T/out" KV_JNI_LIBS_DIR= "$T/elsewhere/native/build.sh"
   if (cd "$T/out" && sha256sum -c --quiet "$OUT/SHA256SUMS"); then

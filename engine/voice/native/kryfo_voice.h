@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a small c api over whisper.cpp for the app to call through dart:ffi. the
 // audio goes in as 16-bit pcm, the text comes out a segment at a time on
-// the calling thread, which the app keeps off the ui isolate. nothing in
-// here opens a file but the model, and nothing touches the network.
+// the calling thread, which the app keeps off the ui isolate. it reads the
+// model file and no other, touches no network and never spawns a process.
 #ifndef KRYFO_VOICE_H
 #define KRYFO_VOICE_H
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # the voice library for this machine, for the go and dart tests:
-# build/host/libkryfo_voice.so. --test also builds and runs the c test on
+# build/host/libkryfo_voice.so. --test also builds and runs the c tests on
 # whisper.cpp's own test model and sample; KV_REAL_MODEL=<a ggml model>
 # adds the checks on real words.
 set -euo pipefail
@@ -33,8 +33,10 @@ if ! { GIT_DIR=/nonexistent "$CMAKE" -S . -B build/host "${GEN[@]}" \
   exit 1
 fi
 echo "built $HERE/build/host/libkryfo_voice.so ($(wc -c <build/host/libkryfo_voice.so) bytes)"
+./check-imports.sh "$(command -v llvm-nm || command -v nm)" build/host/libkryfo_voice.so
 
 if [[ "$TESTS" == ON ]]; then
   build/host/kv_test "$SRC/models/for-tests-ggml-tiny.bin" "$SRC/samples/jfk.wav" ${KV_REAL_MODEL:+"$KV_REAL_MODEL"}
+  build/host/kv_abort_test
 fi
 echo "dart tests: KRYFO_VOICE_LIB=$HERE/build/host/libkryfo_voice.so flutter test test/voice"

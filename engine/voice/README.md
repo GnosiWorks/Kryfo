@@ -22,8 +22,12 @@ nothing of it is built and no screen reaches mobile/lib/voice.
   from another base.
 - `native/`: libkryfo_voice, a four-call c api over whisper.cpp
   (`kryfo_voice.h`). 16-bit pcm in at any rate, segments out as they are
-  decoded, a cancel flag another thread may set. it opens the model file
-  and nothing else and imports no network call (build.sh checks).
+  decoded, a cancel flag another thread may set. it reads the model file
+  and no other, and imports no network call and no way to start a
+  process (`check-imports.sh`, run by both build scripts). ggml's
+  backtrace on an assert would fork the app and run gdb: the link
+  answers fork, execlp and prctl with an error and `kv_open` sends an
+  assert straight to abort().
 
 the app side is mobile/lib/voice: the ffi bindings (a run on its own
 isolate, segments streamed back, cancel), the wav reader and the model

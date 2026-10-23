@@ -35,8 +35,16 @@ set(GGML_METAL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory("${WHISPER_SRC}" whisper EXCLUDE_FROM_ALL)
 
+# ggml's backtrace on an assert forks and runs gdb; kryfo_voice.c answers
+# these calls with an error so the library never spawns a process
+function(kv_no_spawn target)
+  target_link_options(${target} PRIVATE
+    -Wl,--wrap=fork -Wl,--wrap=execlp -Wl,--wrap=prctl)
+endfunction()
+
 add_library(kryfo_voice SHARED kryfo_voice.c)
 target_link_libraries(kryfo_voice PRIVATE whisper)
+kv_no_spawn(kryfo_voice)
 set_target_properties(kryfo_voice PROPERTIES
   C_VISIBILITY_PRESET hidden
   C_STANDARD 11)
@@ -56,4 +64,9 @@ option(KV_TESTS "build the c test against the host library" OFF)
 if(KV_TESTS)
   add_executable(kv_test test/kv_test.c)
   target_link_libraries(kv_test PRIVATE kryfo_voice pthread)
+  # ggml's abort paths sit behind the export list, so this links the same
+  # objects statically with the same wraps
+  add_executable(kv_abort_test test/kv_abort_test.c kryfo_voice.c)
+  target_link_libraries(kv_abort_test PRIVATE whisper)
+  kv_no_spawn(kv_abort_test)
 endif()

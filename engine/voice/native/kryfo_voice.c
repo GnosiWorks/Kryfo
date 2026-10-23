@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "kryfo_voice.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,6 +32,30 @@ static void kv_quiet(enum ggml_log_level level, const char *text, void *user) {
   (void)user;
 }
 
+// on an assert ggml forks the app, grants the child ptrace on it and runs
+// gdb by PATH. the link sends its fork, execlp and prctl here instead
+// (CMakeLists.txt), so the process holding the keys never spawns anything
+int __wrap_fork(void) {
+  errno = ENOSYS;
+  return -1;
+}
+
+int __wrap_execlp(const char *file, const char *arg, ...) {
+  (void)file;
+  (void)arg;
+  errno = ENOSYS;
+  return -1;
+}
+
+int __wrap_prctl(int option, ...) {
+  (void)option;
+  errno = EPERM;
+  return -1;
+}
+
+// an assert goes straight to abort(), without the backtrace attempt
+static void kv_abort_quiet(const char *message) { (void)message; }
+
 int32_t kv_abi(void) { return KV_ABI; }
 
 int32_t kv_open(const char *model_path, kv_model **out) {
@@ -38,6 +63,7 @@ int32_t kv_open(const char *model_path, kv_model **out) {
   *out = NULL;
   if (model_path == NULL || model_path[0] == 0) return KV_ERR_ARGS;
   whisper_log_set(kv_quiet, NULL);
+  ggml_set_abort_callback(kv_abort_quiet);
   struct whisper_context_params cp = whisper_context_default_params();
   cp.use_gpu = false;
   struct whisper_context *ctx = whisper_init_from_file_with_params(model_path, cp);
