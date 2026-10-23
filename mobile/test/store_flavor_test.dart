@@ -62,6 +62,21 @@ void main() {
     expect(keep, contains('compilerOptions.moduleName.set("app_release")'));
   });
 
+  test('the play overlay names the service type main gives it', () {
+    // lint checks the overlay's service element on its own
+    final type = RegExp(
+      r'HaloListenerService"[^>]*android:foregroundServiceType="(\w+)"',
+    );
+    final main = type.firstMatch(
+      sourceOf('$_app/src/main/AndroidManifest.xml'),
+    );
+    final play = type.firstMatch(
+      sourceOf('$_app/src/play/AndroidManifest.xml'),
+    );
+    expect(main?[1], 'specialUse');
+    expect(play?[1], main?[1]);
+  });
+
   test('the old store define stops the build', () {
     expect(gradle, contains('.startsWith("KRYFO_STORE=")'));
     expect(gradle, contains('throw GradleException("KRYFO_STORE is gone.'));
