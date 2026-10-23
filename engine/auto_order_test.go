@@ -88,6 +88,27 @@ func TestMoatOrderIsKept(t *testing.T) {
 	}
 }
 
+// direct blocked here and moat asked first: a step of moat's that fails does
+// not send moat's obfs4 behind the rest of its advice
+func TestMoatOrderIsKeptWhereBlocked(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	memBlocked("wifi", dayOf(f.now))
+	f.script["snowflake"] = never
+	f.script["obfs4"] = worksAfter(5 * time.Second)
+	f.script["webtunnel"] = never
+	f.moatOut = []moatSetting{
+		{Type: "snowflake", Source: "builtin", Lines: builtinLines("snowflake")},
+		{Type: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")},
+		{Type: "webtunnel", Source: "moat", Lines: []string{webtunnelLine(t)}},
+	}
+	if r := pass(t, modeOpts{Consent: "yes"}); r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	if got := strings.Join(f.applied, " "); got != "snowflake/builtin obfs4/builtin" {
+		t.Fatalf("tried %s", got)
+	}
+}
+
 // tor bounced after automatic got through, as on the way back to onion:
 // the line says connecting again, with its own clock, not almost there
 func TestBounceAfterPassIsNotAlmostThere(t *testing.T) {
