@@ -19,6 +19,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/licences_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/screens/transport_screen.dart';
@@ -55,6 +56,7 @@ const _settingsFiles = {
   'helper_sheet',
   'follow_section',
   'dev_about_sheet',
+  'licences_screen',
 };
 
 // opened from there, but not settings: a chat, the home and the camera
@@ -218,6 +220,11 @@ final _pages = [
     'why kryfo',
     () => const WhyKryfoScreen(),
     () => [l10n.whyKryfoTheHonestPart],
+  ),
+  _Page(
+    'licences',
+    () => const LicencesScreen(),
+    () => [l10n.licencesSignalTitle, l10n.licencesParts],
   ),
 ];
 
