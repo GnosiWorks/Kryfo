@@ -2391,5 +2391,21 @@
   "bridgesNoneUntilOnion": "Tidak ada sampai Onion aktif",
   "bridgesRelayWorksWhereTor": "Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.",
   "bridgesRelayThisNetworkSees": "Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.",
-  "onboardingRelayThisNetworkSees": "Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu."
+  "onboardingRelayThisNetworkSees": "Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.",
+  "settingsLicences": "Lisensi",
+  "settingsLicencesValue": "Bahan pembuat Kryfo",
+  "licencesKryfoLine": "Kryfo adalah perangkat lunak bebas di bawah GNU General Public License, versi 3 atau yang lebih baru. Siapa pun boleh membaca, mengubah, dan membagikan kodenya.",
+  "licencesSourceCode": "Kode sumber",
+  "licencesSignalTitle": "Protokol Signal",
+  "licencesSignalLine": "Kryfo memuat libsignal {version} buatan Signal, di bawah GNU Affero General Public License, versi 3. Kode sumbernya ada di github.com/signalapp/libsignal dan di samping setiap rilis Kryfo.",
+  "licencesAgplText": "GNU AGPL 3.0, teks lengkap",
+  "licencesSignalSource": "Kode sumber libsignal",
+  "licencesParts": "Komponen sumber terbuka",
+  "licencesInSignal": "Di pustaka Signal",
+  "licencesInApp": "Di aplikasi",
+  "licencesPartCount": "{count, plural, other{{count} komponen}}",
+  "licencesGplText": "GNU GPL 3.0, teks lengkap",
+  "licencesInEngine": "Di mesin jaringan",
+  "licencesLoadFailed": "Tidak dapat dimuat",
+  "settingsCopyLinkHint": "Salin tautan"
 }

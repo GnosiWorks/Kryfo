@@ -2391,5 +2391,21 @@
   "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
   "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.",
   "bridgesRelayThisNetworkSees": "وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.",
-  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك."
+  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.",
+  "settingsLicences": "التراخيص",
+  "settingsLicencesValue": "مما صُنع Kryfo",
+  "licencesKryfoLine": "Kryfo برنامج حر بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. يمكن لأي شخص قراءة شيفرته وتعديلها ومشاركتها.",
+  "licencesSourceCode": "الشيفرة المصدرية",
+  "licencesSignalTitle": "بروتوكول Signal",
+  "licencesSignalLine": "يتضمن Kryfo مكتبة libsignal ⁨{version}⁩ من صنع Signal، بموجب رخصة جنو أفيرو العمومية العامة، الإصدار 3. شيفرتها المصدرية على github.com/signalapp/libsignal وبجانب كل إصدار من Kryfo.",
+  "licencesAgplText": "النص الكامل لرخصة GNU AGPL 3.0",
+  "licencesSignalSource": "الشيفرة المصدرية لمكتبة libsignal",
+  "licencesParts": "مكوّنات مفتوحة المصدر",
+  "licencesInSignal": "في مكتبة Signal",
+  "licencesInApp": "في التطبيق",
+  "licencesPartCount": "{count, plural, zero{لا مكوّنات} one{مكوّن واحد} two{مكوّنان} few{⁨{count}⁩ مكوّنات} many{⁨{count}⁩ مكوّنًا} other{⁨{count}⁩ مكوّن}}",
+  "licencesGplText": "النص الكامل لرخصة GNU GPL 3.0",
+  "licencesInEngine": "في محرّك الشبكة",
+  "licencesLoadFailed": "تعذّر التحميل",
+  "settingsCopyLinkHint": "نسخ الرابط"
 }

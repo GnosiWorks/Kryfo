@@ -2391,5 +2391,21 @@
   "bridgesNoneUntilOnion": "Нічого, доки не ввімкнено Onion",
   "bridgesRelayWorksWhereTor": "Режим ретранслятора працює там, де Tor заблоковано, а повернутися можна будь-коли.",
   "bridgesRelayThisNetworkSees": "Режим ретранслятора проходить там, де Tor заблоковано, але ця мережа може бачити, що ти підключаєшся до Kryfo.",
-  "onboardingRelayThisNetworkSees": "Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу."
+  "onboardingRelayThisNetworkSees": "Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу.",
+  "settingsLicences": "Ліцензії",
+  "settingsLicencesValue": "З чого зроблено Kryfo",
+  "licencesKryfoLine": "Kryfo є вільною програмою за ліцензією GNU General Public License версії 3 або новішої. Будь-хто може читати, змінювати й поширювати її код.",
+  "licencesSourceCode": "Вихідний код",
+  "licencesSignalTitle": "Протокол Signal",
+  "licencesSignalLine": "Kryfo містить libsignal {version} від Signal за ліцензією GNU Affero General Public License версії 3. Її вихідний код є на github.com/signalapp/libsignal і поруч із кожним випуском Kryfo.",
+  "licencesAgplText": "GNU AGPL 3.0, повний текст",
+  "licencesSignalSource": "Вихідний код libsignal",
+  "licencesParts": "Складники з відкритим кодом",
+  "licencesInSignal": "У бібліотеці Signal",
+  "licencesInApp": "У застосунку",
+  "licencesPartCount": "{count, plural, one{{count} складник} few{{count} складники} many{{count} складників} other{{count} складника}}",
+  "licencesGplText": "GNU GPL 3.0, повний текст",
+  "licencesInEngine": "У мережевому рушії",
+  "licencesLoadFailed": "Не вдалося завантажити",
+  "settingsCopyLinkHint": "Скопіювати посилання"
 }

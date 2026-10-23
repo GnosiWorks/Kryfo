@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import java.io.FileInputStream
+import java.security.MessageDigest
 import java.util.Base64
 import java.util.Properties
 
@@ -52,6 +53,8 @@ android {
             keepDebugSymbols += "**/libhalo.so"
             // voice transcripts are off: a stray copy in jniLibs never ships
             excludes += "**/libkryfo_voice.so"
+            // the shim's build script checks these exact bytes
+            keepDebugSymbols += "**/libkryfo_signal.so"
         }
     }
     compileSdk = flutter.compileSdkVersion
@@ -173,6 +176,49 @@ tasks.named("preBuild") {
                     "the go engine has not been built. run:\n" +
                     "    cd engine && ./build.sh\n" +
                     "see BUILDING.md."
+            )
+        }
+        checkSignalShim()
+    }
+}
+
+// the libsignal shim, built in this tree from this tree's crate: the stamp
+// build-android.sh leaves names the library's sha256 and the crate's source.
+// a library copied from another checkout or built from older code is refused
+fun checkSignalShim() {
+    val abis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+    val rebuild = "run mobile/native/kryfo_signal/build-android.sh (see BUILDING.md)"
+    val missing = abis.filter { !file("src/main/jniLibs/$it/libkryfo_signal.so").exists() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "libkryfo_signal.so missing for ${missing.joinToString(", ")}.\n$rebuild"
+        )
+    }
+    // the fetch step of repro/release.sh builds with empty placeholders
+    if (System.getenv("HALO_STEP") == "fetch") return
+    val crate = rootProject.file("../native/kryfo_signal")
+    val tree = ProcessBuilder("bash", File(crate, "build-android.sh").path, "--tree-id")
+        .redirectErrorStream(true).start()
+    val treeId = tree.inputStream.bufferedReader().readText().trim()
+    if (tree.waitFor() != 0) throw GradleException("build-android.sh --tree-id failed: $treeId")
+    for (abi in abis) {
+        val so = file("src/main/jniLibs/$abi/libkryfo_signal.so")
+        val stamp = file("src/main/jniLibs/$abi/libkryfo_signal.stamp")
+        val fields = if (stamp.exists()) {
+            stamp.readLines().mapNotNull {
+                val parts = it.split(" ", limit = 2)
+                if (parts.size == 2) parts[0] to parts[1] else null
+            }.toMap()
+        } else emptyMap()
+        val sha = MessageDigest.getInstance("SHA-256")
+            .digest(so.readBytes()).joinToString("") { "%02x".format(it) }
+        when {
+            fields.isEmpty() -> throw GradleException("$abi/libkryfo_signal.so has no stamp.\n$rebuild")
+            fields["sha256"] != sha -> throw GradleException(
+                "$abi/libkryfo_signal.so is not the library its stamp names.\n$rebuild"
+            )
+            fields["tree"] != treeId -> throw GradleException(
+                "$abi/libkryfo_signal.so was built from other source than this checkout's.\n$rebuild"
             )
         }
     }

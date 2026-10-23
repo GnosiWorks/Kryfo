@@ -9131,4 +9131,67 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço.';
+
+  @override
+  String get settingsLicences => 'Licenças';
+
+  @override
+  String get settingsLicencesValue => 'Do que o Kryfo é feito';
+
+  @override
+  String get licencesKryfoLine =>
+      'O Kryfo é software livre sob a Licença Pública Geral GNU, versão 3 ou posterior. Qualquer pessoa pode ler, alterar e compartilhar o código.';
+
+  @override
+  String get licencesSourceCode => 'Código-fonte';
+
+  @override
+  String get licencesSignalTitle => 'Protocolo Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'O Kryfo inclui a libsignal $version, feita pelo Signal, sob a Licença Pública Geral Affero GNU, versão 3. O código-fonte está em github.com/signalapp/libsignal e junto de cada versão do Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, texto completo';
+
+  @override
+  String get licencesSignalSource => 'Código-fonte da libsignal';
+
+  @override
+  String get licencesParts => 'Componentes de código aberto';
+
+  @override
+  String get licencesInSignal => 'Na biblioteca do Signal';
+
+  @override
+  String get licencesInApp => 'No app';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString componentes',
+      one: '$countString componente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, texto completo';
+
+  @override
+  String get licencesInEngine => 'No motor de rede';
+
+  @override
+  String get licencesLoadFailed => 'Não foi possível carregar';
+
+  @override
+  String get settingsCopyLinkHint => 'Copiar link';
 }

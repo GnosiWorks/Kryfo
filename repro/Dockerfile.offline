@@ -8,8 +8,8 @@ FROM debian:bookworm-20250630-slim
 
 ENV GO_VERSION=1.26.9
 ENV GO_SHA256=42d158b4d8f7b61ac0a830567c940a86098fb7aac52e467a5ebec03ef5cc2f8d
-ENV NDK_VERSION=r28b
-ENV NDK_TGZ_SHA256=58c7fdf41a4b9177e0fcbe3fbb2f5ab1bb0d85ba26f35028c5a86fabbe2785f6
+ENV NDK_VERSION=r28c
+ENV NDK_TGZ_SHA256=1a477580b4a9c4bd92e11a643ea30056d2bf995b19b009d5906bbb27ed184707
 
 # go toolchain from local tarball, checksum-verified
 COPY dl/go${GO_VERSION}.linux-amd64.tar.gz /tmp/go.tgz

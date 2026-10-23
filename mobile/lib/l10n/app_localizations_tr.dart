@@ -9087,4 +9087,66 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+
+  @override
+  String get settingsLicences => 'Lisanslar';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo neyle yapıldı';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo, GNU Genel Kamu Lisansı sürüm 3 veya sonrası altında özgür bir yazılımdır. Kodunu herkes okuyabilir, değiştirebilir ve paylaşabilir.';
+
+  @override
+  String get licencesSourceCode => 'Kaynak kodu';
+
+  @override
+  String get licencesSignalTitle => 'Signal protokolü';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo, Signal\'in yaptığı libsignal $version sürümünü GNU Affero Genel Kamu Lisansı sürüm 3 altında içerir. Kaynak kodu github.com/signalapp/libsignal adresinde ve her Kryfo sürümünün yanında bulunur.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, tam metin';
+
+  @override
+  String get licencesSignalSource => 'libsignal kaynak kodu';
+
+  @override
+  String get licencesParts => 'Açık kaynak parçalar';
+
+  @override
+  String get licencesInSignal => 'Signal kitaplığında';
+
+  @override
+  String get licencesInApp => 'Uygulamada';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString parça',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, tam metin';
+
+  @override
+  String get licencesInEngine => 'Ağ motorunda';
+
+  @override
+  String get licencesLoadFailed => 'Yüklenemedi';
+
+  @override
+  String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
 }

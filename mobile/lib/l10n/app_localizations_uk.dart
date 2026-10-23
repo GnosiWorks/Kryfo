@@ -9217,4 +9217,69 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу.';
+
+  @override
+  String get settingsLicences => 'Ліцензії';
+
+  @override
+  String get settingsLicencesValue => 'З чого зроблено Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo є вільною програмою за ліцензією GNU General Public License версії 3 або новішої. Будь-хто може читати, змінювати й поширювати її код.';
+
+  @override
+  String get licencesSourceCode => 'Вихідний код';
+
+  @override
+  String get licencesSignalTitle => 'Протокол Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo містить libsignal $version від Signal за ліцензією GNU Affero General Public License версії 3. Її вихідний код є на github.com/signalapp/libsignal і поруч із кожним випуском Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, повний текст';
+
+  @override
+  String get licencesSignalSource => 'Вихідний код libsignal';
+
+  @override
+  String get licencesParts => 'Складники з відкритим кодом';
+
+  @override
+  String get licencesInSignal => 'У бібліотеці Signal';
+
+  @override
+  String get licencesInApp => 'У застосунку';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString складника',
+      many: '$countString складників',
+      few: '$countString складники',
+      one: '$countString складник',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, повний текст';
+
+  @override
+  String get licencesInEngine => 'У мережевому рушії';
+
+  @override
+  String get licencesLoadFailed => 'Не вдалося завантажити';
+
+  @override
+  String get settingsCopyLinkHint => 'Скопіювати посилання';
 }

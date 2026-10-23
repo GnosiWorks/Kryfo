@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # the shim for this machine, for the dart tests: libkryfo_signal.so (or
 # .dylib) in target/release. needs a stable rust (1.85 or newer) and protoc.
-# the android and ios builds are not wired yet (docs/spikes/LIBSIGNAL-SHIM.md)
+# android is build-android.sh. ios is not wired yet
 set -euo pipefail
 cd "$(dirname "$0")"
 

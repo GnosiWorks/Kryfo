@@ -3790,5 +3790,18 @@ void main() {
       l.onboardingRelayThisNetworkSees,
       "This network can see you connect to Kryfo. Our relay sees your address.",
     );
+    expect(l.settingsLicences, "Licences");
+    expect(l.settingsLicencesValue, "What Kryfo is built on");
+    expect(
+      l.licencesKryfoLine,
+      "Kryfo is free software under the GNU General Public License, version 3 or later. Anyone can read, change and share its code.",
+    );
+    expect(l.licencesSourceCode, "Source code");
+    expect(l.licencesSignalTitle, "Signal protocol");
+    expect(l.licencesAgplText, "GNU AGPL 3.0, full text");
+    expect(l.licencesSignalSource, "libsignal source code");
+    expect(l.licencesParts, "Open source parts");
+    expect(l.licencesInSignal, "In the Signal library");
+    expect(l.licencesInApp, "In the app");
   });
 }

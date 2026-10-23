@@ -8653,6 +8653,68 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+
+  @override
+  String get settingsLicences => '许可证';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo 由什么构成';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。任何人都可以阅读、修改和分享它的代码。';
+
+  @override
+  String get licencesSourceCode => '源代码';
+
+  @override
+  String get licencesSignalTitle => 'Signal 协议';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo 包含 Signal 开发的 libsignal $version，采用 GNU Affero 通用公共许可证第 3 版。它的源代码位于 github.com/signalapp/libsignal，每个 Kryfo 版本旁也附有一份。';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0 全文';
+
+  @override
+  String get licencesSignalSource => 'libsignal 源代码';
+
+  @override
+  String get licencesParts => '开源组件';
+
+  @override
+  String get licencesInSignal => 'Signal 库中';
+
+  @override
+  String get licencesInApp => '应用中';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个组件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '网络引擎中';
+
+  @override
+  String get licencesLoadFailed => '无法加载';
+
+  @override
+  String get settingsCopyLinkHint => '复制链接';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17186,4 +17248,66 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get onboardingRelayThisNetworkSees =>
       '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+
+  @override
+  String get settingsLicences => '授權條款';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo 由什麼構成';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。任何人都可以閱讀、修改和分享它的程式碼。';
+
+  @override
+  String get licencesSourceCode => '原始碼';
+
+  @override
+  String get licencesSignalTitle => 'Signal 協定';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo 包含 Signal 開發的 libsignal $version，採用 GNU Affero 通用公共授權條款第 3 版。它的原始碼位於 github.com/signalapp/libsignal，每個 Kryfo 版本旁也附有一份。';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0 全文';
+
+  @override
+  String get licencesSignalSource => 'libsignal 原始碼';
+
+  @override
+  String get licencesParts => '開源元件';
+
+  @override
+  String get licencesInSignal => 'Signal 函式庫中';
+
+  @override
+  String get licencesInApp => '應用程式中';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個元件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '網路引擎中';
+
+  @override
+  String get licencesLoadFailed => '無法載入';
+
+  @override
+  String get settingsCopyLinkHint => '複製連結';
 }

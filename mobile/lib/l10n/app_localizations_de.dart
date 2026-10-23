@@ -9162,4 +9162,67 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse.';
+
+  @override
+  String get settingsLicences => 'Lizenzen';
+
+  @override
+  String get settingsLicencesValue => 'Woraus Kryfo besteht';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo ist freie Software unter der GNU General Public License, Version 3 oder später. Alle können den Code lesen, ändern und weitergeben.';
+
+  @override
+  String get licencesSourceCode => 'Quellcode';
+
+  @override
+  String get licencesSignalTitle => 'Signal-Protokoll';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo enthält libsignal $version von Signal, unter der GNU Affero General Public License, Version 3. Der Quellcode liegt auf github.com/signalapp/libsignal und neben jeder Kryfo-Version.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, voller Text';
+
+  @override
+  String get licencesSignalSource => 'Quellcode von libsignal';
+
+  @override
+  String get licencesParts => 'Open-Source-Bestandteile';
+
+  @override
+  String get licencesInSignal => 'In der Signal-Bibliothek';
+
+  @override
+  String get licencesInApp => 'In der App';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Bestandteile',
+      one: '$countString Bestandteil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, voller Text';
+
+  @override
+  String get licencesInEngine => 'In der Netzwerk-Engine';
+
+  @override
+  String get licencesLoadFailed => 'Konnte nicht geladen werden';
+
+  @override
+  String get settingsCopyLinkHint => 'Link kopieren';
 }
