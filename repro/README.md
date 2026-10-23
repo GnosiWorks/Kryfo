@@ -67,7 +67,7 @@ build, `--cache` mounts your pub cache. neither for a release.
 | flutter | 3.41.7, commit cc0734ac | the f-droid srclib |
 | android ndk | 28.2.13676358 | ndkVersion in build.gradle.kts |
 | rust | 1.97.0, rustc 2d8144b7, minimal, three android targets | mobile/native/kryfo_signal/rust-toolchain.toml |
-| rust channel manifest | sha256 3804d266... | holds the sha256 of every component rustup fetches |
+| rust channel manifest | sha256 3804d266... | holds the sha256 of every component: the six rustup installs must carry its hashes |
 | rustup-init | 1.29.1, by sha256 | installs the toolchain, adds no byte to it |
 | protoc, gcc | debian's | protoc 3.21 and 36.2 give the same shim; gcc only links build scripts |
 | shim crates | Cargo.lock, vendored into the crate's target/vendor | libsignal 387da3e2 (v0.99.4), spqr fd320484 (v1.5.3) |

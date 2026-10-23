@@ -106,14 +106,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # rust for the libsignal shim (mobile/native/kryfo_signal), installed as the
 # build user where f-droid's lands. its rust-toolchain.toml names the
-# version. rustup-init is pinned by hash; the channel manifest is checked
-# before rustup reads it (it holds the sha256 of every component, and rustup
-# checks each download against it), and rustc's commit after. the component
-# hashes it gives, for reference: rustc 0a878730..., cargo 5c5bc94a...,
-# rust-std x86_64-unknown-linux-gnu 0c436181..., aarch64-linux-android
-# eb75fbb2..., armv7-linux-androideabi ba095045..., x86_64-linux-android
-# c8a4c0f2.... gcc links only build scripts and proc macros, never what
-# ships, and nothing in the shim's graph compiles C for android
+# version. rustup-init is pinned by hash, and so is the channel manifest,
+# which holds the sha256 of every component. rustup fetches the manifest
+# again on its own and checks each download against that copy, so after the
+# install the component hashes in the copy it kept
+# (lib/rustlib/multirust-channel-manifest.toml) must equal the pinned
+# manifest's, for each of the six components it installed and no others
+# (rustc 0a878730..., cargo 5c5bc94a..., rust-std x86_64-unknown-linux-gnu
+# 0c436181..., aarch64-linux-android eb75fbb2..., armv7-linux-androideabi
+# ba095045..., x86_64-linux-android c8a4c0f2...), and rustc's commit must
+# match. gcc links only build scripts and proc macros, never what ships, and
+# nothing in the shim's graph compiles C for android
 ENV RUST_VERSION=1.97.0
 ENV RUST_COMMIT=2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
 ENV RUST_CHANNEL_SHA256=3804d2666f7c12ce64205baa69b6be52f910b45b158091013264beb7aa1de7f5
@@ -127,7 +130,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER vagrant
 RUN curl -fsSL "https://static.rust-lang.org/dist/channel-rust-${RUST_VERSION}.toml" -o /tmp/channel.toml \
     && echo "${RUST_CHANNEL_SHA256}  /tmp/channel.toml" | sha256sum -c - \
-    && rm /tmp/channel.toml \
     && curl -fsSL "https://static.rust-lang.org/rustup/archive/${RUSTUP_INIT_VERSION}/x86_64-unknown-linux-gnu/rustup-init" -o /tmp/rustup-init \
     && echo "${RUSTUP_INIT_SHA256}  /tmp/rustup-init" | sha256sum -c - \
     && chmod +x /tmp/rustup-init \
@@ -137,6 +139,20 @@ RUN curl -fsSL "https://static.rust-lang.org/dist/channel-rust-${RUST_VERSION}.t
         --target aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android \
     && ${CARGO_HOME}/bin/rustup default ${RUST_VERSION} \
     && test "$(${CARGO_HOME}/bin/rustc -vV | sed -n 's/^commit-hash: //p')" = "${RUST_COMMIT}" \
+    && lib=${RUSTUP_HOME}/toolchains/${RUST_VERSION}-x86_64-unknown-linux-gnu/lib/rustlib \
+    && printf '%s\n' cargo-x86_64-unknown-linux-gnu rust-std-aarch64-linux-android \
+        rust-std-armv7-linux-androideabi rust-std-x86_64-linux-android \
+        rust-std-x86_64-unknown-linux-gnu rustc-x86_64-unknown-linux-gnu > /tmp/want \
+    && LC_ALL=C sort "$lib/components" | cmp - /tmp/want \
+    && for c in rustc:x86_64-unknown-linux-gnu cargo:x86_64-unknown-linux-gnu \
+        rust-std:x86_64-unknown-linux-gnu rust-std:aarch64-linux-android \
+        rust-std:armv7-linux-androideabi rust-std:x86_64-linux-android; do \
+        t="[pkg.${c%%:*}.target.${c#*:}]"; \
+        a=$(awk -v t="$t" '$0==t{on=1;next} /^\[/{on=0} on&&/^(hash|xz_hash) = /' /tmp/channel.toml); \
+        b=$(awk -v t="$t" '$0==t{on=1;next} /^\[/{on=0} on&&/^(hash|xz_hash) = /' "$lib/multirust-channel-manifest.toml"); \
+        [ -n "$a" ] && [ "$a" = "$b" ] || { echo "rust $c: not the pinned manifest's hashes" >&2; exit 1; }; \
+    done \
+    && rm /tmp/channel.toml /tmp/want \
     && chmod -R a+rwX ${RUSTUP_HOME} ${CARGO_HOME}
 USER root
 ENV PATH=/home/vagrant/.cargo/bin:$PATH
