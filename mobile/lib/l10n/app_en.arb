@@ -3897,16 +3897,6 @@
       }
     }
   },
-  "homeWaitingTorIsStill": "{count, plural, other{{count} waiting · Tor is still connecting}}",
-  "@homeWaitingTorIsStill": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "homeNoKryfosYet": "No Kryfos yet.",
   "@homeNoKryfosYet": {
     "description": "screens/home_screen.dart"
@@ -11546,6 +11536,18 @@
       },
       "last": {
         "type": "Object"
+      }
+    }
+  },
+  "homeWaitingState": "{count, plural, other{{count} waiting · {state}}}",
+  "@homeWaitingState": {
+    "description": "screens/home_screen.dart: the strip over the chats while the phone cannot send: how many wait, then the connection's words as the home pill shows them",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
       }
     }
   }

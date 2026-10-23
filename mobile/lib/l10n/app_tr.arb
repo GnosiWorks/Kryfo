@@ -913,7 +913,6 @@
   "homeWaiting": "Bekliyor",
   "homeNothingWaitingToSend": "Bekleyen mesaj yok",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} bekliyor · bağlanınca gider} other{{count} bekliyor · bağlanınca gider}}",
-  "homeWaitingTorIsStill": "{count, plural, one{{count} bekliyor · Tor hâlâ bağlanıyor} other{{count} bekliyor · Tor hâlâ bağlanıyor}}",
   "homeNoKryfosYet": "Henüz Kryfo yok.",
   "homeScanTheirCodeSend": "Onun kodunu tara, ona bir bağlantı gönder ya da sana verdiği @kullanıcı adını yaz.",
   "homeAddSomeone": "Birini ekle",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "Bağlantıyı kopyala",
   "appRelayNotAnswering": "Aktarıcı sessiz",
   "motionNoRelayYet": "HENÜZ AKTARICI YOK",
-  "motionTheRouteIsUp": "Rota hazır",
+  "motionTheRouteIsUp": "Rota kuruldu",
   "motionMessagesGoOnceARelay": "Bir aktarıcı bu rota üzerinden yanıt verir vermez mesajlar gider.",
   "motionOffline": "ÇEVRİMDIŞI",
   "motionNoNetwork": "Ağ yok",
   "motionTorPicksUpAgain": "Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, one{{count} bekliyor · {state}} other{{count} bekliyor · {state}}}"
 }

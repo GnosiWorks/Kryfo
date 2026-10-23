@@ -3134,20 +3134,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString đang chờ · Tor vẫn đang kết nối',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
@@ -9117,7 +9103,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get motionNoRelayYet => 'CHƯA CÓ RELAY';
 
   @override
-  String get motionTheRouteIsUp => 'Tuyến đường đã sẵn sàng';
+  String get motionTheRouteIsUp => 'Tuyến đường đã thông';
 
   @override
   String get motionMessagesGoOnceARelay =>
@@ -9136,5 +9122,15 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count đang chờ · $state',
+    );
+    return '$_temp0';
   }
 }

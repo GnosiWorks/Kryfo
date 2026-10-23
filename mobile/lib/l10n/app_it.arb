@@ -913,7 +913,6 @@
   "homeWaiting": "In attesa",
   "homeNothingWaitingToSend": "Niente in attesa di invio",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} in attesa · parte quando torni online} other{{count} in attesa · partono quando torni online}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} in attesa · Tor si sta ancora connettendo}}",
   "homeNoKryfosYet": "Ancora nessun Kryfo.",
   "homeScanTheirCodeSend": "Scansiona il suo codice, mandagli un link o scrivi il @nome utente che ti ha dato.",
   "homeAddSomeone": "Aggiungi qualcuno",
@@ -2408,11 +2407,12 @@
   "licencesLoadFailed": "Impossibile caricare",
   "settingsCopyLinkHint": "Copia link",
   "appRelayNotAnswering": "Il relay tace",
-  "motionNoRelayYet": "NESSUN RELAY ANCORA",
-  "motionTheRouteIsUp": "Il percorso è pronto",
+  "motionNoRelayYet": "ANCORA NESSUN RELAY",
+  "motionTheRouteIsUp": "Il percorso è aperto",
   "motionMessagesGoOnceARelay": "I messaggi partono appena un relay risponde lungo questo percorso.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Nessuna rete",
-  "motionTorPicksUpAgain": "Senza rete non parte niente. Tor riprende appena torna.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "motionTorPicksUpAgain": "Senza rete non parte niente. Tor riprende appena torna la rete.",
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} in attesa · {state}}}"
 }

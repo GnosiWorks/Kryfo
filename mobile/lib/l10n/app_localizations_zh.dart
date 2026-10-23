@@ -3015,20 +3015,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · Tor 仍在连接',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
@@ -8737,6 +8723,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
   }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条待发送 · $state',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -11746,20 +11742,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       count,
       locale: localeName,
       other: '$countString 則等待中 · 你恢復連線後傳送',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · Tor 仍在連線',
     );
     return '$_temp0';
   }
@@ -17353,5 +17335,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 則等待中 · $state',
+    );
+    return '$_temp0';
   }
 }

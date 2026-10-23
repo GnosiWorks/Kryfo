@@ -913,7 +913,6 @@
   "homeWaiting": "Очікування",
   "homeNothingWaitingToSend": "Черга порожня",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} в черзі · надішлемо, коли будеш онлайн}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} в черзі · Tor ще підключається}}",
   "homeNoKryfosYet": "Ще жодного Kryfo.",
   "homeScanTheirCodeSend": "Відскануй код, надішли посилання або введи @ім’я користувача, яке тобі дали.",
   "homeAddSomeone": "Додати когось",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "Скопіювати посилання",
   "appRelayNotAnswering": "Ретранслятор мовчить",
   "motionNoRelayYet": "РЕТРАНСЛЯТОРА ПОКИ НЕМАЄ",
-  "motionTheRouteIsUp": "Маршрут готовий",
+  "motionTheRouteIsUp": "Маршрут побудовано",
   "motionMessagesGoOnceARelay": "Повідомлення підуть, щойно ретранслятор відповість цим маршрутом.",
   "motionOffline": "ОФЛАЙН",
   "motionNoNetwork": "Немає мережі",
   "motionTorPicksUpAgain": "Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} в черзі · {state}}}"
 }

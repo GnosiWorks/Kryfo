@@ -4980,12 +4980,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · Tor is still connecting}}'**
-  String homeWaitingTorIsStill(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'No Kryfos yet.'**
   String get homeNoKryfosYet;
 
@@ -14768,6 +14762,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{state} · {last}'**
   String deliveryModeStateLast(String state, Object last);
+
+  /// screens/home_screen.dart: the strip over the chats while the phone cannot send: how many wait, then the connection's words as the home pill shows them
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} waiting · {state}}}'**
+  String homeWaitingState(int count, String state);
 }
 
 class _AppLocalizationsDelegate

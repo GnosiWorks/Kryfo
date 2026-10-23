@@ -913,7 +913,6 @@
   "homeWaiting": "En attente",
   "homeNothingWaitingToSend": "Rien en attente d’envoi",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} en attente · envoi dès votre retour}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} en attente · Tor se connecte encore}}",
   "homeNoKryfosYet": "Pas encore de Kryfos.",
   "homeScanTheirCodeSend": "Scannez son code, envoyez-lui un lien, ou tapez le @pseudo qu’on vous a donné.",
   "homeAddSomeone": "Ajouter quelqu’un",
@@ -2413,6 +2412,7 @@
   "motionMessagesGoOnceARelay": "Les messages partent dès qu’un relais répond par cette route.",
   "motionOffline": "HORS LIGNE",
   "motionNoNetwork": "Pas de réseau",
-  "motionTorPicksUpAgain": "Rien ne part sans réseau. Tor reprend dès qu’il revient.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "motionTorPicksUpAgain": "Rien ne part sans réseau. Tor reprend dès que le réseau revient.",
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} en attente · {state}}}"
 }

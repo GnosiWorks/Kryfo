@@ -11,12 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show percent;
-import 'package:kryfo/link_view.dart' show kRelayDownAfter;
+import 'package:kryfo/link_view.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         AppStateBridges,
         AppStateDelivery,
+        AppStateOutbox,
         AppStateRoute,
         HaloEngine,
         TorHalo,
@@ -28,7 +30,9 @@ import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dev_chat_fakes.dart' show devWorld;
+import 'dart:io';
+
+import 'dev_chat_fakes.dart' show devHome, devWorld;
 
 class _Engine implements HaloEngine {
   int retries = 0;
@@ -326,5 +330,94 @@ void main() {
       l10n.deliveryModeConnecting2(l10n.deliveryModeNoCheckInYet),
     );
     expect(said(), l10n.deliveryModeNoCheckInYet2);
+  });
+
+  group('the chats strip', () {
+    Finder strip(String words) =>
+        find.descendant(of: find.byType(Container), matching: find.text(words));
+
+    testWidgets('says what the pill says, with the same grace', (t) async {
+      addTearDown(() => appState.queuedForTest = 0);
+      await t.runAsync(() => devWorld());
+      appState.queuedForTest = 2;
+      t.view.physicalSize = const Size(1000, 2400);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await t.pumpWidget(
+        MaterialApp(
+          theme: buildHaloTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (ctx, child) => MediaQuery(
+            data: MediaQuery.of(ctx).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: devHome(),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      final waiting = l10n.homeWaitingState(2, l10n.appWaitingForARelay);
+
+      await poll(t, 'reachable|100|1|1|1');
+      expect(_inPill(l10n.appTorReady), findsOneWidget);
+      expect(find.text(l10n.homeWaiting), findsNothing);
+
+      // inside the grace: no strip under a pill that says ready
+      await poll(t, 'reachable|100|1|0|1');
+      expect(_inPill(l10n.appTorReady), findsOneWidget);
+      expect(find.text(l10n.homeWaiting), findsNothing);
+
+      // past it: the strip says what the pill says, not "still connecting"
+      appState.usableAtForTest = DateTime.now().subtract(
+        kPillGrace + const Duration(seconds: 1),
+      );
+      await nudge(t);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(_inPill(l10n.appWaitingForARelay), findsOneWidget);
+      expect(strip(waiting), findsOneWidget);
+
+      // tor still climbing: its words
+      appState.torTryingSinceForTest = DateTime.now();
+      await poll(t, 'starting|20|0|0|2');
+      expect(_inPill(l10n.appConnecting2), findsOneWidget);
+      expect(
+        strip(l10n.homeWaitingState(2, l10n.appConnecting2)),
+        findsOneWidget,
+      );
+
+      // no network: the offline strip
+      appState.noteOnline(false);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      expect(_inPill(l10n.appOffline), findsOneWidget);
+      expect(find.text(l10n.homeWaitingSendsWhenYou(2)), findsOneWidget);
+      await gone(t);
+    });
+  });
+
+  test('a chat\'s route line and its failed send line follow the reading', () {
+    LinkView v(LinkKind k) =>
+        LinkView(kind: k, status: TorStatus.reachable, pct: 100);
+    expect(v(LinkKind.ready).chatLine, isNull);
+    expect(v(LinkKind.ready).sendLine, isNull);
+    expect(v(LinkKind.relay).chatLine, isNull);
+    expect(v(LinkKind.connecting).chatLine, l10n.chatBuildingAPrivateRoute);
+    expect(v(LinkKind.climbing).sendLine, l10n.chatStillConnectingToTor);
+    // tor up with no relay: never "building" or "still connecting"
+    expect(v(LinkKind.relayWait).chatLine, l10n.appWaitingForARelay);
+    expect(v(LinkKind.relayWait).sendLine, l10n.appWaitingForARelay);
+    expect(v(LinkKind.offline).chatLine, l10n.appOffline);
+    // and the chat screen takes them from the reading, nothing else
+    final chat = File('lib/screens/chat_screen.dart').readAsStringSync();
+    expect(chat, contains('appState.linkView.sendLine'));
+    expect(chat, contains('link.chatLine'));
+    expect(chat, isNot(contains('!appState.torUsable')));
+    expect(chat, isNot(contains("startsWith('error:') && !appState.torReady")));
   });
 }

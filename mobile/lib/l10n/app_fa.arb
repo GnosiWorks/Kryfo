@@ -913,7 +913,6 @@
   "homeWaiting": "در انتظار",
   "homeNothingWaitingToSend": "چیزی در انتظار ارسال نیست",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ در انتظار · وقتی آنلاین شوید فرستاده می‌شود}}",
-  "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ در انتظار · Tor هنوز در حال اتصال است}}",
   "homeNoKryfosYet": "هنوز هیچ مخاطبی نیست.",
   "homeScanTheirCodeSend": "کد او را اسکن کنید، برایش پیوند بفرستید، یا نام کاربری‌ای را که به شما داده وارد کنید.",
   "homeAddSomeone": "افزودن یک نفر",
@@ -2414,5 +2413,6 @@
   "motionOffline": "آفلاین",
   "motionNoNetwork": "شبکه‌ای نیست",
   "motionTorPicksUpAgain": "بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد.",
-  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩"
+  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩",
+  "homeWaitingState": "{count, plural, other{⁨{count}⁩ در انتظار · ⁨{state}⁩}}"
 }

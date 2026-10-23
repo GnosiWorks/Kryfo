@@ -913,7 +913,6 @@
   "homeWaiting": "Esperando",
   "homeNothingWaitingToSend": "Nada esperando para enviar",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} esperando · sai quando você voltar}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} esperando · o Tor ainda está conectando}}",
   "homeNoKryfosYet": "Nenhum Kryfo ainda.",
   "homeScanTheirCodeSend": "Escaneie o código da pessoa, envie um link ou digite o @nome de usuário que ela passou.",
   "homeAddSomeone": "Adicionar alguém",
@@ -2408,11 +2407,12 @@
   "licencesLoadFailed": "Não foi possível carregar",
   "settingsCopyLinkHint": "Copiar link",
   "appRelayNotAnswering": "Retransmissor calado",
-  "motionNoRelayYet": "NENHUM RETRANSMISSOR AINDA",
-  "motionTheRouteIsUp": "A rota está pronta",
+  "motionNoRelayYet": "AINDA SEM RETRANSMISSOR",
+  "motionTheRouteIsUp": "A rota está aberta",
   "motionMessagesGoOnceARelay": "As mensagens saem assim que um retransmissor responder por esta rota.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Sem rede",
   "motionTorPicksUpAgain": "Sem rede, nada sai. O Tor continua assim que ela voltar.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} esperando · {state}}}"
 }

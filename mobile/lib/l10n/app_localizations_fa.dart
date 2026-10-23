@@ -3152,20 +3152,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ در انتظار · Tor هنوز در حال اتصال است',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'هنوز هیچ مخاطبی نیست.';
 
   @override
@@ -9163,5 +9149,15 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '⁨$state⁩ · ⁨$last⁩';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ در انتظار · ⁨$state⁩',
+    );
+    return '$_temp0';
   }
 }

@@ -3141,20 +3141,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString waiting · Tor is still connecting',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'No Kryfos yet.';
 
   @override
@@ -9141,5 +9127,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · $state',
+    );
+    return '$_temp0';
   }
 }

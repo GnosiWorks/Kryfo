@@ -1373,10 +1373,10 @@ void main() {
     expect(l.homeWaitingSendsWhenYou(1), "1 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(2), "2 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(5), "5 waiting · sends when you're back");
-    expect(l.homeWaitingTorIsStill(0), "0 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(1), "1 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(2), "2 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(5), "5 waiting · Tor is still connecting");
+    expect(l.homeWaitingState(0, "<state>"), "0 waiting · <state>");
+    expect(l.homeWaitingState(1, "<state>"), "1 waiting · <state>");
+    expect(l.homeWaitingState(2, "<state>"), "2 waiting · <state>");
+    expect(l.homeWaitingState(5, "<state>"), "5 waiting · <state>");
     expect(l.homeNoKryfosYet, "No Kryfos yet.");
     expect(
       l.homeScanTheirCodeSend,

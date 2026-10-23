@@ -913,7 +913,6 @@
   "homeWaiting": "Đang chờ",
   "homeNothingWaitingToSend": "Không có gì chờ gửi",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} đang chờ · sẽ gửi khi bạn trực tuyến lại}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} đang chờ · Tor vẫn đang kết nối}}",
   "homeNoKryfosYet": "Chưa có Kryfo nào.",
   "homeScanTheirCodeSend": "Quét mã của họ, gửi cho họ một liên kết, hoặc nhập @tên người dùng họ đưa cho bạn.",
   "homeAddSomeone": "Thêm người",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "Sao chép liên kết",
   "appRelayNotAnswering": "Relay im lặng",
   "motionNoRelayYet": "CHƯA CÓ RELAY",
-  "motionTheRouteIsUp": "Tuyến đường đã sẵn sàng",
+  "motionTheRouteIsUp": "Tuyến đường đã thông",
   "motionMessagesGoOnceARelay": "Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.",
   "motionOffline": "NGOẠI TUYẾN",
   "motionNoNetwork": "Không có mạng",
   "motionTorPicksUpAgain": "Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} đang chờ · {state}}}"
 }

@@ -3150,21 +3150,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString bekliyor · Tor hâlâ bağlanıyor',
-      one: '$countString bekliyor · Tor hâlâ bağlanıyor',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Henüz Kryfo yok.';
 
   @override
@@ -9154,7 +9139,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get motionNoRelayYet => 'HENÜZ AKTARICI YOK';
 
   @override
-  String get motionTheRouteIsUp => 'Rota hazır';
+  String get motionTheRouteIsUp => 'Rota kuruldu';
 
   @override
   String get motionMessagesGoOnceARelay =>
@@ -9173,5 +9158,16 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bekliyor · $state',
+      one: '$count bekliyor · $state',
+    );
+    return '$_temp0';
   }
 }

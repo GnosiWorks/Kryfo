@@ -83,7 +83,7 @@ void main() {
     expect(verify, isNot(matches(_accent)));
     final strip = _between(
       _src('lib/screens/home_screen.dart'),
-      'Widget _strip(BuildContext context, int n, bool offline) {',
+      'Widget _strip(BuildContext context, int n, bool offline, String state) {',
       'final head =',
     );
     expect(_accent.hasMatch(strip), isFalse, reason: 'waiting strip');

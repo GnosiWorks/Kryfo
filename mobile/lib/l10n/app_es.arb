@@ -913,7 +913,6 @@
   "homeWaiting": "En espera",
   "homeNothingWaitingToSend": "Nada pendiente de enviar",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} en espera · se envían cuando vuelvas}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} en espera · Tor sigue conectando}}",
   "homeNoKryfosYet": "Aún no hay Kryfos.",
   "homeScanTheirCodeSend": "Escanea su código, envíale un enlace o escribe el nombre de usuario con @ que te dio.",
   "homeAddSomeone": "Añadir a alguien",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "Copiar enlace",
   "appRelayNotAnswering": "Repetidor no responde",
   "motionNoRelayYet": "AÚN SIN REPETIDOR",
-  "motionTheRouteIsUp": "La ruta está lista",
+  "motionTheRouteIsUp": "La ruta está abierta",
   "motionMessagesGoOnceARelay": "Los mensajes salen en cuanto un repetidor responda por esta ruta.",
   "motionOffline": "SIN CONEXIÓN",
   "motionNoNetwork": "Sin red",
-  "motionTorPicksUpAgain": "Sin red no sale nada. Tor sigue en cuanto vuelva.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "motionTorPicksUpAgain": "Sin red no sale nada. Tor sigue en cuanto vuelva la red.",
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} en espera · {state}}}"
 }

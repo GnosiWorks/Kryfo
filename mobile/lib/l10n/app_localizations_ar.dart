@@ -3238,20 +3238,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ في الانتظار · ما زال Tor يتصل',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'لا جهات اتصال بعد.';
 
   @override
@@ -9264,7 +9250,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionNoRelayYet => 'لا مُرحِّل بعد';
 
   @override
-  String get motionTheRouteIsUp => 'المسار جاهز';
+  String get motionTheRouteIsUp => 'المسار قائم';
 
   @override
   String get motionMessagesGoOnceARelay =>
@@ -9283,5 +9269,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '⁨$state⁩ · ⁨$last⁩';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ في الانتظار · ⁨$state⁩',
+    );
+    return '$_temp0';
   }
 }

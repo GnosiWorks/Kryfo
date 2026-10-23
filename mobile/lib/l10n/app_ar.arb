@@ -913,7 +913,6 @@
   "homeWaiting": "في الانتظار",
   "homeNothingWaitingToSend": "لا شيء ينتظر الإرسال",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ في الانتظار · تُرسل عند عودتك}}",
-  "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ في الانتظار · ما زال Tor يتصل}}",
   "homeNoKryfosYet": "لا جهات اتصال بعد.",
   "homeScanTheirCodeSend": "اقرأ رمزه بالكاميرا، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.",
   "homeAddSomeone": "إضافة شخص",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "نسخ الرابط",
   "appRelayNotAnswering": "المُرحِّل صامت",
   "motionNoRelayYet": "لا مُرحِّل بعد",
-  "motionTheRouteIsUp": "المسار جاهز",
+  "motionTheRouteIsUp": "المسار قائم",
   "motionMessagesGoOnceARelay": "تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.",
   "motionOffline": "غير متصل",
   "motionNoNetwork": "لا توجد شبكة",
   "motionTorPicksUpAgain": "لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.",
-  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩"
+  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩",
+  "homeWaitingState": "{count, plural, other{⁨{count}⁩ في الانتظار · ⁨{state}⁩}}"
 }

@@ -913,7 +913,6 @@
   "homeWaiting": "Wartet",
   "homeNothingWaitingToSend": "Nichts wartet aufs Senden",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} wartet · geht raus, sobald du zurück bist} other{{count} warten · gehen raus, sobald du zurück bist}}",
-  "homeWaitingTorIsStill": "{count, plural, one{{count} wartet · Tor verbindet noch} other{{count} warten · Tor verbindet noch}}",
   "homeNoKryfosYet": "Noch keine Kryfos.",
   "homeScanTheirCodeSend": "Scanne den Code der Person, schick ihr einen Link oder gib den @Benutzernamen ein, den sie dir gegeben hat.",
   "homeAddSomeone": "Jemanden hinzufügen",
@@ -2414,5 +2413,6 @@
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Kein Netz",
   "motionTorPicksUpAgain": "Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, one{{count} wartet · {state}} other{{count} warten · {state}}}"
 }

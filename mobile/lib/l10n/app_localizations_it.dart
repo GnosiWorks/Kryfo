@@ -3178,20 +3178,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString in attesa · Tor si sta ancora connettendo',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Ancora nessun Kryfo.';
 
   @override
@@ -9203,10 +9189,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appRelayNotAnswering => 'Il relay tace';
 
   @override
-  String get motionNoRelayYet => 'NESSUN RELAY ANCORA';
+  String get motionNoRelayYet => 'ANCORA NESSUN RELAY';
 
   @override
-  String get motionTheRouteIsUp => 'Il percorso è pronto';
+  String get motionTheRouteIsUp => 'Il percorso è aperto';
 
   @override
   String get motionMessagesGoOnceARelay =>
@@ -9220,10 +9206,20 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get motionTorPicksUpAgain =>
-      'Senza rete non parte niente. Tor riprende appena torna.';
+      'Senza rete non parte niente. Tor riprende appena torna la rete.';
 
   @override
   String deliveryModeStateLast(String state, Object last) {
     return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in attesa · $state',
+    );
+    return '$_temp0';
   }
 }

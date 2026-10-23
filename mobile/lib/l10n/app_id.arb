@@ -913,7 +913,6 @@
   "homeWaiting": "Menunggu",
   "homeNothingWaitingToSend": "Tidak ada yang menunggu dikirim",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} menunggu · terkirim saat kamu online lagi}}",
-  "homeWaitingTorIsStill": "{count, plural, other{{count} menunggu · Tor masih menghubungkan}}",
   "homeNoKryfosYet": "Belum ada Kryfo.",
   "homeScanTheirCodeSend": "Pindai kodenya, kirimi dia tautan, atau ketik @nama pengguna yang dia berikan.",
   "homeAddSomeone": "Tambah orang",
@@ -2409,10 +2408,11 @@
   "settingsCopyLinkHint": "Salin tautan",
   "appRelayNotAnswering": "Relay diam",
   "motionNoRelayYet": "BELUM ADA RELAY",
-  "motionTheRouteIsUp": "Rutenya sudah siap",
+  "motionTheRouteIsUp": "Rute sudah terbentuk",
   "motionMessagesGoOnceARelay": "Pesan terkirim begitu ada relay yang menjawab lewat rute ini.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Tidak ada jaringan",
   "motionTorPicksUpAgain": "Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.",
-  "deliveryModeStateLast": "{state} · {last}"
+  "deliveryModeStateLast": "{state} · {last}",
+  "homeWaitingState": "{count, plural, other{{count} menunggu · {state}}}"
 }
