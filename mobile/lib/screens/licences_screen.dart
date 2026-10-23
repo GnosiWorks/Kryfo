@@ -231,10 +231,9 @@ class _PartsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                      // mirrors itself in rtl, as HaloRow's does
                       Icon(
-                        Directionality.of(context) == TextDirection.rtl
-                            ? Icons.chevron_left
-                            : Icons.chevron_right,
+                        Icons.chevron_right,
                         size: 18,
                         color: HaloColors.text3,
                       ),

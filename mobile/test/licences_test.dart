@@ -171,6 +171,33 @@ void main() {
     expect(text.textDirection, TextDirection.ltr);
   });
 
+  testWidgets('a list row points the way it opens in an rtl app', (t) async {
+    await t.pumpWidget(
+      _host(
+        LicencesScreen(
+          rust: Future.value(_fakeRust()),
+          dart: Future.value(_fakeDart()),
+        ),
+        rtl: true,
+      ),
+    );
+    await t.pumpAndSettle();
+    // chevron_right mirrors itself in rtl, so the settings rows use it plain
+    final rowChevron = t.widget<Icon>(find.byIcon(Icons.chevron_right).first);
+    expect(rowChevron.icon!.matchTextDirection, isTrue);
+    await t.ensureVisible(find.text('In the Signal library'));
+    await t.tap(find.text('In the Signal library'));
+    await t.pumpAndSettle();
+    final row = find.ancestor(
+      of: find.text('libsignal-protocol'),
+      matching: find.byType(InkWell),
+    );
+    final icon = t.widget<Icon>(
+      find.descendant(of: row, matching: find.byType(Icon)),
+    );
+    expect(icon.icon, Icons.chevron_right);
+  });
+
   testWidgets('rows wait for the lists and do not open early', (t) async {
     await t.pumpWidget(
       _host(
