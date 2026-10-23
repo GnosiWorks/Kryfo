@@ -222,6 +222,10 @@ func TestVoiceAsksForTheHash(t *testing.T) {
 	}
 	sum := sha256.Sum256(r.data)
 	want := "/v/" + hex.EncodeToString(sum[:])
+	// the handler wrote paths over loopback, which the race detector
+	// cannot see as an ordering
+	mu.Lock()
+	defer mu.Unlock()
 	for _, p := range paths {
 		if p != want {
 			t.Fatalf("asked for %q, want %q", p, want)
@@ -308,6 +312,8 @@ func TestVoiceFetchRefusedInDecoy(t *testing.T) {
 			t.Errorf("decoy state %d left %v", st, entries)
 		}
 	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if len(r.names) != 0 || r.hits.Load() != 0 {
 		t.Fatal("a decoy session dialled")
 	}
