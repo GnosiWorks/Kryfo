@@ -85,6 +85,9 @@ func liveRankedLocked(rcvPk string) bool {
 	if a == nil || len(liveAddrs) <= publicLiveCap {
 		return true
 	}
+	if publicLiveCap <= 0 {
+		return false
+	}
 	ahead := 0
 	for k, o := range liveAddrs {
 		if o.heard > a.heard || (o.heard == a.heard && k < rcvPk) {
@@ -139,6 +142,15 @@ func liveWake(rcvPk string) <-chan struct{} {
 func sweepDelay() time.Duration {
 	every := sweepRound()
 	return every*3/4 + time.Duration(mrand.Int64N(int64(every/2)+1))
+}
+
+// a read that ended before its catch-up did is tried again within the
+// round, an eighth to a quarter of it later, this many times in a row
+const sweepRetries = 2
+
+func sweepRetryDelay() time.Duration {
+	every := sweepRound()
+	return every/8 + time.Duration(mrand.Int64N(int64(every/8)+1))
 }
 
 // the first read after a start lands anywhere in the first round, so a

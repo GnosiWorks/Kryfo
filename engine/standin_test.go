@@ -60,6 +60,7 @@ type relayStandIn struct {
 	mu        sync.Mutex
 	pongDelay time.Duration
 	reqDelay  time.Duration // before stored events are sent
+	idsDelay  time.Duration // instead, before a req by ids is answered
 	conns     []*siConn
 	events    []nostr.Event
 	resent    int // stored events sent in answer to a req
@@ -165,6 +166,9 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			delay := s.reqDelay
+			if len(f.IDs) > 0 && s.idsDelay > 0 {
+				delay = s.idsDelay
+			}
 			stall := false
 			if !f.LimitZero {
 				s.asked++

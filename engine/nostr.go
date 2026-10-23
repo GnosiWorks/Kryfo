@@ -1530,10 +1530,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			}
 			// past the cap, the address reads this public relay now and
 			// then instead of holding a socket on it. sweeping: the
-			// connection now is such a read. swept: one ended
+			// connection now is such a read. swept: one ended. cuts: reads
+			// in a row that ended before their catch-up did
 			sweeper := live != nil && !slices.Contains(ownURLs, u)
 			var nextSweep time.Time
 			sweeping, swept := false, false
+			cuts := 0
 			turn := subTurn{tag: tag, fresh: freshOf(ctx)}
 			defer turn.done()
 			for {
@@ -1659,6 +1661,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// turned away at the door, through a route that works
 						routeAliveOn(dialGen, u)
 						relayRefused(u, dialAt, err)
+						// that was this round's read: every address past the
+						// cap asking again at the backoff's pace is the pile
+						// the relay turns away
+						if sweeping {
+							nextSweep = time.Now().Round(0).Add(sweepDelay())
+							cuts = 0
+						}
 					} else {
 						relayFailed(u, dialAt)
 					}
@@ -1677,10 +1686,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// wall clock, like lastAlive: a connection that lived through a
 				// night asleep lived
 				connected := time.Now().Round(0)
-				// the round counts from a read that got through
-				if sweeping {
-					nextSweep = connected.Add(sweepDelay())
-				}
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
@@ -1792,13 +1797,20 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// mostly moved past them. the poll keeps them together. asked
 				// on connecting, and on a probe this socket makes anyway
 				var asking atomic.Bool
+				// closed once the ask made on connecting is over, nil for none
+				var askDone chan struct{}
 				askWanted := func() {
 					ids := seen.wanted(time.Now())
 					if len(ids) == 0 || !asking.CompareAndSwap(false, true) {
 						return
 					}
 					walkBegins(tag)
+					done := make(chan struct{})
+					if askDone == nil {
+						askDone = done
+					}
 					go func() {
+						defer close(done)
 						defer asking.Store(false)
 						defer walkEnds(tag)
 						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, byIDs); answered {
@@ -1807,6 +1819,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					}()
 				}
 				askWanted()
+				firstAsk := askDone
 				// counted while this connection is still fetching what it
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
@@ -1824,6 +1837,22 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				// the select's copy, nil once it has been looked at
 				sweptC := (<-chan struct{})(caughtC)
+				// a read closes once what it asked by ids is answered too, or
+				// the ask gave up on its own quiet: the held ones may be on
+				// this relay alone
+				closeCaught := func() {
+					if caughtC == nil {
+						return
+					}
+					sweptOnce.Do(func() {
+						go func() {
+							if firstAsk != nil {
+								<-firstAsk
+							}
+							close(caughtC)
+						}()
+					})
+				}
 				// the poll holds the address until the walk is out, not just
 				// while a check-in waits for it, and no longer than the walk
 				// keeps bringing something
@@ -1840,9 +1869,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					})
 					holdT.Stop()
 					endHold()
-					if caughtC != nil {
-						sweptOnce.Do(func() { close(caughtC) })
-					}
+					closeCaught()
 				}
 				// nobody waits on one relay for longer than this. whichever
 				// of the two fires first wins the Once, so a relay is either
@@ -1868,6 +1895,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						atomic.AddInt32(&catchupActive, -1)
 						noteCatchupDone(ck, true)
 					})
+					// a read with no eose ends here, not as a live socket
+					closeCaught()
 				})
 				eose := sub.EndOfStoredEvents
 				stored := 0
@@ -2121,10 +2150,23 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if !kicked {
 					turn.done()
 				}
+				// the round counts from a read that caught up. one that ended
+				// before is tried again within the round
+				if sweeping {
+					now := time.Now().Round(0)
+					if atomic.LoadInt32(&caughtUp) == 1 || cuts >= sweepRetries {
+						nextSweep, cuts = now.Add(sweepDelay()), 0
+					} else {
+						nextSweep = now.Add(sweepRetryDelay())
+						cuts++
+					}
+				}
 				switch {
 				case swept:
 					// the loop's top waits for the next round
 					swept = false
+				case sweeping && !publicLive(rcvPk):
+					// so does a read cut short
 				case kicked:
 					kicked = false
 				case youngDrops > 0:

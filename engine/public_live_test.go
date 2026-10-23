@@ -427,3 +427,149 @@ func TestTheHeardFileHidesWhoIsLive(t *testing.T) {
 		}
 	}
 }
+
+// the anchor file an earlier run left, at unix seconds at
+func plantAnchor(t *testing.T, rcv string, at int64) {
+	t.Helper()
+	_, lastPath := addressFiles(rcv)
+	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(at, 10)), 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// the relay closes every socket that asked for addr, at once
+func cutOn(r *relayStandIn, addr string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, c := range r.conns {
+		if c.closed.IsZero() && c.addrs[addr] {
+			c.kill()
+			if c.ws != nil {
+				c.ws.CloseNow()
+			}
+		}
+	}
+}
+
+// a held id let go of is asked for by id on the next read. a read used to
+// close at the main answer's end, before the ask was answered, so what only
+// a public relay had never came while the address was past the cap
+func TestAReadWaitsForTheHeldItAsked(t *testing.T) {
+	setLiveCap(t, 1, 2*time.Second)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	pollHoldReset(t)
+	a, b := newXid(t), newXid(t)
+	ra, rb := mustRcv(t, a), mustRcv(t, b)
+	now := time.Now()
+	// b was heard from last, so a is past the cap. a's window starts a
+	// minute ago, well past the held one
+	plantAnchor(t, rb, now.Unix())
+	plantAnchor(t, ra, now.Unix()-60)
+	held := wrapToAt(t, a, myXPub, "held", now.Add(-30*time.Hour))
+	pub.store(held)
+	pub.mu.Lock()
+	pub.idsDelay = time.Second
+	pub.mu.Unlock()
+	seenPath, _ := addressFiles(ra)
+	s := loadSeen(seenPath)
+	if !s.claim(held.ID) || !s.hold(held.ID, held.CreatedAt, "", now, 0, 0) {
+		t.Fatal("not held")
+	}
+	markHeldFile(seenPath, seenFreeMark)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, b, rb)
+	runOn(ctx, a, ra)
+	aHex := hex.EncodeToString(a.pub[:])
+	waitFor(t, "the held text from the public relay", 12*time.Second, func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return slices.Contains(nostrInbox, aHex+"|held")
+	})
+	if everOn(pub, ra) == 0 {
+		t.Fatal("it came without a read of the public relay")
+	}
+}
+
+// the round counts from a read that caught up: one cut before its answer
+// is tried again within the round, not a whole round after the connect
+func TestACutReadIsTriedAgainWithinTheRound(t *testing.T) {
+	setLiveCap(t, 1, 8*time.Second)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	pub.mu.Lock()
+	pub.reqDelay = 2 * time.Second
+	pub.mu.Unlock()
+	in, out, inRcv, outRcv := livePair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "the first read", 12*time.Second, func() bool { return everOn(pub, outRcv) >= 1 })
+	cutOn(pub, outRcv)
+	// an eighth to a quarter of the round, and the turn
+	waitFor(t, "the read tried again", 4*time.Second, func() bool { return everOn(pub, outRcv) >= 2 })
+}
+
+// a public relay that turns the dial away has had this round's read. every
+// address past the cap redialling at the backoff's pace is the pile of
+// sockets the relay turns away
+func TestARefusedReadCountsAsTheRound(t *testing.T) {
+	setLiveCap(t, 0, 4*time.Second)
+	own := newRelayStandIn(t, 0)
+	u, dials := refusingRelay(t)
+	useStandIns(t, modeFast, nil, own)
+	useRelays(own.url(), u)
+	shortTurns(t)
+	freshInbox(t)
+	p := newXid(t)
+	rcv := mustRcv(t, p)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, p, rcv)
+	waitFor(t, "the first read", 6*time.Second, func() bool { return dials.Load() >= 1 })
+	time.Sleep(300 * time.Millisecond)
+	// a kick ends the backoff's wait, not the round's
+	end := time.Now().Add(2 * time.Second)
+	for time.Now().Before(end) {
+		kickRelays()
+		time.Sleep(30 * time.Millisecond)
+	}
+	if n := dials.Load(); n != 1 {
+		t.Fatalf("the refusing relay was dialled %d times in one round", n)
+	}
+}
+
+// a read whose relay never says that was all ends at the catch-up cap. it
+// used to stay open as a live socket for as long as the relay answered probes
+func TestAReadWithNoEndCloses(t *testing.T) {
+	setLiveCap(t, 0, 4*time.Second)
+	oldCap := catchupCap
+	catchupCap = 500 * time.Millisecond
+	t.Cleanup(func() { catchupCap = oldCap })
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	pub.mu.Lock()
+	pub.stallAt, pub.stallAll = 1, true
+	pub.mu.Unlock()
+	p := newXid(t)
+	rcv := mustRcv(t, p)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, p, rcv)
+	waitFor(t, "the first read", 6*time.Second, func() bool { return everOn(pub, rcv) >= 1 })
+	waitFor(t, "the read closed at the cap", 3*time.Second, func() bool {
+		cs := connsOn(pub.snapshot(), []string{rcv})
+		return len(cs) > 0 && !cs[0].closed.IsZero()
+	})
+}
