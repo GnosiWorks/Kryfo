@@ -8967,4 +8967,186 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo entfernt sie vom Handy jedes Mitglieds, das das Update hat.';
+
+  @override
+  String get translateAction => 'Übersetzen';
+
+  @override
+  String get translateShowOriginal => 'Original anzeigen';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Auf $language übersetzen';
+  }
+
+  @override
+  String get translateBarMore => 'Übersetzungsoptionen';
+
+  @override
+  String translateBarAlways(Object language) {
+    return '$language immer übersetzen';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return '$language nie übersetzen';
+  }
+
+  @override
+  String get translateBarHide => 'In diesem Chat ausblenden';
+
+  @override
+  String get translateWorking => 'Wird übersetzt…';
+
+  @override
+  String get translateFailed => 'Konnte nicht übersetzt werden';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Übersetzt aus $language';
+  }
+
+  @override
+  String get translateLangZh => 'Chinesisch';
+
+  @override
+  String translatePackTitle(Object language) {
+    return '$language auf diesem Handy übersetzen';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Nachrichten werden auf diesem Handy übersetzt und verlassen es nie. Dafür braucht es das Sprachpaket $language, etwa $size, einmal über Tor geladen.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Übersetzen funktioniert auf diesem Handy nicht.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Laden · etwa $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Trotzdem jetzt laden';
+
+  @override
+  String get translateResume => 'Download fortsetzen';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done von $total';
+  }
+
+  @override
+  String get translateFinishing => 'Dateien werden geprüft…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Auf diesem Handy · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '„Nur über WLAN“ ist an, und dieses Handy ist nicht im WLAN.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor ist noch nicht verbunden. Pakete werden nur über Tor geladen, versuch es also noch mal, sobald es verbunden ist.';
+
+  @override
+  String get translateFailNetwork =>
+      'Der Download wurde unterbrochen. Versuch es noch mal, er macht dort weiter, wo er aufgehört hat.';
+
+  @override
+  String get translateFailBadFile =>
+      'Eine Datei passte nicht zu dem, was Kryfo erwartet, und wurde verworfen. Versuch es noch mal.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Auf diesem Handy lassen sich keine Sprachpakete laden.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Pausiert · bisher $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Übersetzung';
+
+  @override
+  String get translateSettingsRow => 'Nachrichten übersetzen';
+
+  @override
+  String get translateSettingsHint => 'Auf diesem Handy, nie auf einem Server';
+
+  @override
+  String get translatePacksSection => 'Sprachpakete';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language und Englisch';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Nicht geladen · etwa $size';
+  }
+
+  @override
+  String get translateDownloading => 'Wird über Tor geladen';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Sprachpaket $language löschen?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Nachrichten auf $language lassen sich erst wieder übersetzen, wenn es neu geladen ist.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Sprachen';
+
+  @override
+  String get translateMyLanguages => 'Sprachen, die ich lese';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Nachrichten in diesen Sprachen werden nicht zum Übersetzen angeboten. Die Sprache der App gehört immer dazu.';
+
+  @override
+  String get translateInto => 'Übersetzen in';
+
+  @override
+  String get translateAppLanguage => 'Sprache der App';
+
+  @override
+  String get translateBehaviourSection => 'Downloads und Chats';
+
+  @override
+  String get translateAutoDefault => 'Chats automatisch übersetzen';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Für Chats, die du nicht selbst eingestellt hast. Jeder Chat kann es ein- oder ausschalten.';
+
+  @override
+  String get translateWifiOnly => 'Pakete nur über WLAN laden';
+
+  @override
+  String get translatePrivacyTitle => 'Was privat bleibt';
+
+  @override
+  String get translatePrivacyNote =>
+      'Übersetzt wird auf diesem Handy. Keine Nachricht wird zum Übersetzen irgendwohin geschickt. Wer ein Paket lädt, verrät dem Server, welches Paket es ist. Es kommt über Tor, also erfährt der Server nicht, wer gefragt hat.';
+
+  @override
+  String get translateAutoInChat => 'Automatisch übersetzen';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Nachrichten in anderen Sprachen erscheinen übersetzt. Das Original ist einen Tipp entfernt.';
 }

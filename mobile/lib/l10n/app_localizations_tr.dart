@@ -8894,4 +8894,184 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır.';
+
+  @override
+  String get translateAction => 'Çevir';
+
+  @override
+  String get translateShowOriginal => 'Orijinali göster';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Çevir · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Çeviri seçenekleri';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Her zaman çevir · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Asla çevirme · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Bu sohbette gizle';
+
+  @override
+  String get translateWorking => 'Çevriliyor…';
+
+  @override
+  String get translateFailed => 'Çevrilemedi';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Çeviri · $language';
+  }
+
+  @override
+  String get translateLangZh => 'Çince';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Bu telefonda çeviri: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Mesajlar bu telefonda çevrilir ve telefondan hiç çıkmaz. Bunun için yaklaşık $size boyutundaki $language dil paketi gerekir ve Tor üzerinden bir kez indirilir.';
+  }
+
+  @override
+  String get translatePackNoLib => 'Çeviri bu telefonda çalışmıyor.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'İndir · yaklaşık $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Yine de şimdi indir';
+
+  @override
+  String get translateResume => 'İndirmeye devam et';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => 'Dosyalar kontrol ediliyor…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Bu telefonda · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Yalnızca Wi-Fi” açık ve bu telefon Wi-Fi\'ye bağlı değil.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor henüz bağlanmadı. Paketler yalnızca Tor üzerinden iner, bağlanınca tekrar dene.';
+
+  @override
+  String get translateFailNetwork =>
+      'İndirme durdu. Tekrar dene, kaldığı yerden devam eder.';
+
+  @override
+  String get translateFailBadFile =>
+      'Bir dosya Kryfo\'nun beklediğiyle eşleşmedi ve silindi. Tekrar dene.';
+
+  @override
+  String get translateFailNoEngine => 'Bu telefona dil paketi indirilemiyor.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Duraklatıldı · şimdiye kadar $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Çeviri';
+
+  @override
+  String get translateSettingsRow => 'Mesajları çevir';
+
+  @override
+  String get translateSettingsHint => 'Bu telefonda, asla bir sunucuda değil';
+
+  @override
+  String get translatePacksSection => 'Dil paketleri';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language ve İngilizce';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'İndirilmedi · yaklaşık $size';
+  }
+
+  @override
+  String get translateDownloading => 'Tor üzerinden iniyor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return '$language paketi silinsin mi?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return '$language mesajlar, paket yeniden indirilene kadar çevrilemez.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Diller';
+
+  @override
+  String get translateMyLanguages => 'Okuduğum diller';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Bu dillerdeki mesajlar için çeviri önerilmez. Uygulamanın dili her zaman bunlardan biridir.';
+
+  @override
+  String get translateInto => 'Çeviri dili';
+
+  @override
+  String get translateAppLanguage => 'Uygulamanın dili';
+
+  @override
+  String get translateBehaviourSection => 'İndirmeler ve sohbetler';
+
+  @override
+  String get translateAutoDefault => 'Sohbetleri otomatik çevir';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Kendin ayarlamadığın sohbetler için. Her sohbet bunu açıp kapatabilir.';
+
+  @override
+  String get translateWifiOnly => 'Paketleri yalnızca Wi-Fi ile indir';
+
+  @override
+  String get translatePrivacyTitle => 'Gizli kalanlar';
+
+  @override
+  String get translatePrivacyNote =>
+      'Çeviri bu telefonda yapılır. Hiçbir mesaj çevrilmek için bir yere gönderilmez. Bir paketi indirmek sunucuya hangi paket olduğunu söyler. İndirme Tor üzerinden yapılır, bu yüzden sunucu kimin istediğini bilmez.';
+
+  @override
+  String get translateAutoInChat => 'Otomatik çevir';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.';
 }

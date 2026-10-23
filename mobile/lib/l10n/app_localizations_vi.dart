@@ -8854,4 +8854,187 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.';
+
+  @override
+  String get translateAction => 'Dịch';
+
+  @override
+  String get translateShowOriginal => 'Xem bản gốc';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Dịch sang $language';
+  }
+
+  @override
+  String get translateBarMore => 'Tùy chọn dịch';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Luôn dịch $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Không bao giờ dịch $language';
+  }
+
+  @override
+  String get translateBarHide => 'Ẩn trong cuộc trò chuyện này';
+
+  @override
+  String get translateWorking => 'Đang dịch…';
+
+  @override
+  String get translateFailed => 'Không dịch được';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Đã dịch từ $language';
+  }
+
+  @override
+  String get translateLangZh => 'Tiếng Trung';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Dịch trên điện thoại này: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Tin nhắn được dịch ngay trên điện thoại này và không bao giờ rời khỏi máy. Việc này cần gói ngôn ngữ $language, khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Tính năng dịch không chạy được trên điện thoại này.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Tải xuống · khoảng $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Vẫn tải ngay';
+
+  @override
+  String get translateResume => 'Tiếp tục tải';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => 'Đang kiểm tra tệp…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Trên điện thoại này · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Chỉ qua Wi-Fi” đang bật và điện thoại này không dùng Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor chưa kết nối. Gói chỉ được tải qua Tor, hãy thử lại khi đã kết nối.';
+
+  @override
+  String get translateFailNetwork =>
+      'Quá trình tải đã dừng. Hãy thử lại, nó sẽ tiếp tục từ chỗ đã dừng.';
+
+  @override
+  String get translateFailBadFile =>
+      'Một tệp không khớp với điều Kryfo mong đợi nên đã bị loại bỏ. Hãy thử lại.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Không thể tải gói ngôn ngữ trên điện thoại này.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Đã tạm dừng · đã tải $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Dịch thuật';
+
+  @override
+  String get translateSettingsRow => 'Dịch tin nhắn';
+
+  @override
+  String get translateSettingsHint =>
+      'Trên điện thoại này, không bao giờ trên máy chủ';
+
+  @override
+  String get translatePacksSection => 'Gói ngôn ngữ';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language và tiếng Anh';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Chưa tải · khoảng $size';
+  }
+
+  @override
+  String get translateDownloading => 'Đang tải qua Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Xóa gói $language?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Tin nhắn bằng $language sẽ không dịch được cho đến khi tải lại gói.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Ngôn ngữ';
+
+  @override
+  String get translateMyLanguages => 'Ngôn ngữ tôi đọc';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Tin nhắn bằng các ngôn ngữ này sẽ không được đề nghị dịch. Ngôn ngữ của ứng dụng luôn nằm trong số đó.';
+
+  @override
+  String get translateInto => 'Dịch sang';
+
+  @override
+  String get translateAppLanguage => 'Ngôn ngữ của ứng dụng';
+
+  @override
+  String get translateBehaviourSection => 'Tải xuống và trò chuyện';
+
+  @override
+  String get translateAutoDefault => 'Tự động dịch các cuộc trò chuyện';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Cho những cuộc trò chuyện bạn chưa tự đặt. Mỗi cuộc trò chuyện có thể bật hoặc tắt.';
+
+  @override
+  String get translateWifiOnly => 'Chỉ tải gói qua Wi-Fi';
+
+  @override
+  String get translatePrivacyTitle => 'Những gì được giữ riêng tư';
+
+  @override
+  String get translatePrivacyNote =>
+      'Việc dịch diễn ra trên điện thoại này. Không tin nhắn nào được gửi đi đâu để dịch. Tải một gói sẽ cho máy chủ biết đó là gói nào. Gói được tải qua Tor nên máy chủ không biết ai đã yêu cầu.';
+
+  @override
+  String get translateAutoInChat => 'Tự động dịch';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.';
 }

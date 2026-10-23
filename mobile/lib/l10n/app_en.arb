@@ -11153,5 +11153,273 @@
   "groupInfoEndGroupDetail": "Kryfo removes it from every member's phone that has the update.",
   "@groupInfoEndGroupDetail": {
     "description": "screens/group_info_screen.dart: a smaller line under that, saying where the removal reaches"
+  },
+  "translateAction": "Translate",
+  "@translateAction": {
+    "description": "translate/translate_bubble.dart and the message menu: under a message in another language"
+  },
+  "translateShowOriginal": "Show original",
+  "@translateShowOriginal": {
+    "description": "under a translated message, and in its menu: back to the words as they were sent"
+  },
+  "translateBarTo": "Translate to {language}",
+  "@translateBarTo": {
+    "description": "the bar at the top of a chat in another language: one tap translates the whole chat into the reader's language",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarMore": "Translation options",
+  "@translateBarMore": {
+    "description": "the bar's small menu button, for screen readers"
+  },
+  "translateBarAlways": "Always translate {language}",
+  "@translateBarAlways": {
+    "description": "in the bar's menu: every chat translates this language on its own",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarNever": "Never translate {language}",
+  "@translateBarNever": {
+    "description": "in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarHide": "Hide in this chat",
+  "@translateBarHide": {
+    "description": "in the bar's menu: the bar goes away in this chat"
+  },
+  "translateWorking": "Translating…",
+  "@translateWorking": {
+    "description": "under a message while it is translated on the phone"
+  },
+  "translateFailed": "Couldn't translate",
+  "@translateFailed": {
+    "description": "under a message the translation library failed on; Try again follows it"
+  },
+  "translateFrom": "Translated from {language}",
+  "@translateFrom": {
+    "description": "the small label under a translated message: the language it was written in",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateLangZh": "Chinese",
+  "@translateLangZh": {
+    "description": "the chinese language pack, and a message in chinese, by name"
+  },
+  "translatePackTitle": "Translate {language} on this phone",
+  "@translatePackTitle": {
+    "description": "translate/pack_sheet.dart: the sheet a translate tap opens when the language pack is not on the phone",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translatePackLine": "Messages are translated on this phone and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.",
+  "@translatePackLine": {
+    "description": "under that title: what the pack is, its size, and how it comes",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translatePackNoLib": "Translation doesn't work on this phone.",
+  "@translatePackNoLib": {
+    "description": "in that sheet when the translation library does not load on this phone"
+  },
+  "translateDownload": "Download · about {size}",
+  "@translateDownload": {
+    "description": "the button that starts a language pack download, with its size",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateDownloadAnyway": "Download now anyway",
+  "@translateDownloadAnyway": {
+    "description": "when wi-fi only is on and the phone is not on wi-fi: go now"
+  },
+  "translateResume": "Resume download",
+  "@translateResume": {
+    "description": "a download that was stopped part way"
+  },
+  "translateProgress": "{done} of {total}",
+  "@translateProgress": {
+    "description": "under the download bar: how much of the pack is here",
+    "placeholders": {
+      "done": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateFinishing": "Checking the files…",
+  "@translateFinishing": {
+    "description": "the download is in; its files are unpacked and checked"
+  },
+  "translateInstalled": "On this phone · {size}",
+  "@translateInstalled": {
+    "description": "a pack that is on the phone, with what it takes there",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateNeedsWifi": "Wi-Fi only is on, and this phone isn't on Wi-Fi.",
+  "@translateNeedsWifi": {
+    "description": "a download asked for while wi-fi only is on and the phone is on mobile data"
+  },
+  "translateFailNoTor": "Tor isn't connected yet. Packs download over Tor only, so try again once it is.",
+  "@translateFailNoTor": {
+    "description": "a download that could not start because tor is not up; it never goes another way"
+  },
+  "translateFailNetwork": "The download stopped. Try again and it picks up where it left off.",
+  "@translateFailNetwork": {
+    "description": "a download cut by the host or the circuit; the next try resumes"
+  },
+  "translateFailBadFile": "A file didn't match what Kryfo expects, so it was thrown away. Try again.",
+  "@translateFailBadFile": {
+    "description": "a downloaded file did not match the hash built into the app"
+  },
+  "translateFailNoEngine": "Language packs can't be downloaded on this phone.",
+  "@translateFailNoEngine": {
+    "description": "the engine on this phone cannot download language packs"
+  },
+  "translatePaused": "Paused · {size} so far",
+  "@translatePaused": {
+    "description": "a download stopped part way, with what it has so far",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateSettingsTitle": "Translation",
+  "@translateSettingsTitle": {
+    "description": "screens/translation_screen.dart: its title, and the section on the settings page"
+  },
+  "translateSettingsRow": "Translate messages",
+  "@translateSettingsRow": {
+    "description": "settings: the row that opens the translation page"
+  },
+  "translateSettingsHint": "On this phone, never on a server",
+  "@translateSettingsHint": {
+    "description": "under that row"
+  },
+  "translatePacksSection": "Language packs",
+  "@translatePacksSection": {
+    "description": "translation page: the section of language packs"
+  },
+  "translatePackPair": "{language} and English",
+  "@translatePackPair": {
+    "description": "a pack on the translation page: both directions with english",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateNotDownloaded": "Not downloaded · about {size}",
+  "@translateNotDownloaded": {
+    "description": "a pack not on the phone, with its download size",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateDownloading": "Downloading over Tor",
+  "@translateDownloading": {
+    "description": "a pack being downloaded, on the translation page"
+  },
+  "translateDeleteTitle": "Delete the {language} pack?",
+  "@translateDeleteTitle": {
+    "description": "the sheet that asks before a pack is deleted",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateDeleteLine": "Messages in {language} can't be translated until it's downloaded again.",
+  "@translateDeleteLine": {
+    "description": "under that title",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateLanguagesSection": "Languages",
+  "@translateLanguagesSection": {
+    "description": "translation page: the section of the person's languages"
+  },
+  "translateMyLanguages": "Languages I read",
+  "@translateMyLanguages": {
+    "description": "the languages the person reads, whose messages are not offered for translation"
+  },
+  "translateMyLanguagesHint": "Messages in these aren't offered for translation. The app's language is always one of them.",
+  "@translateMyLanguagesHint": {
+    "description": "under that row and in its sheet"
+  },
+  "translateInto": "Translate into",
+  "@translateInto": {
+    "description": "the language messages are translated into"
+  },
+  "translateAppLanguage": "The app's language",
+  "@translateAppLanguage": {
+    "description": "the choice that follows the app's own language"
+  },
+  "translateBehaviourSection": "Downloads and chats",
+  "@translateBehaviourSection": {
+    "description": "translation page: the section of downloads and automatic translation"
+  },
+  "translateAutoDefault": "Translate chats automatically",
+  "@translateAutoDefault": {
+    "description": "the default for chats nobody set: translate on its own"
+  },
+  "translateAutoDefaultHint": "For chats you haven't set yourself. Each chat can turn it on or off.",
+  "@translateAutoDefaultHint": {
+    "description": "under that switch"
+  },
+  "translateWifiOnly": "Download packs on Wi-Fi only",
+  "@translateWifiOnly": {
+    "description": "pack downloads wait for wi-fi"
+  },
+  "translatePrivacyTitle": "What stays private",
+  "@translatePrivacyTitle": {
+    "description": "translation page: the section on what a download says to whom"
+  },
+  "translatePrivacyNote": "Translation happens on this phone. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn't learn who asked.",
+  "@translatePrivacyNote": {
+    "description": "under that title"
+  },
+  "translateAutoInChat": "Translate automatically",
+  "@translateAutoInChat": {
+    "description": "contact page: this chat translates messages in other languages on its own"
+  },
+  "translateAutoInChatHint": "Messages in other languages show translated. The original is one tap away.",
+  "@translateAutoInChatHint": {
+    "description": "under that switch"
   }
 }

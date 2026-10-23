@@ -180,6 +180,10 @@ import '../widgets/key_held.dart';
 import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
+import '../translate/chat_translation.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bar.dart';
+import '../translate/translate_bubble.dart';
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -861,6 +865,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!o.removing) {
         o.removing = true;
         o.burnedAway = o.burnAt != null && o.burnAt! <= now;
+        _forgetTranslation(o);
         Future.delayed(kLeaveGone, () {
           if (mounted) setState(() => _messages.remove(o));
         });
@@ -1095,6 +1100,11 @@ class _ChatScreenState extends State<ChatScreen>
   DevOpening? _devOpening;
   // this chat in the session that opened it, for what is kept between visits
   late final String _memo;
+  // their messages in other languages, translated on the phone
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.peerHaloId),
+    null => null,
+  };
   // its row in this session's database, for when the chat was made
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
@@ -1409,6 +1419,7 @@ class _ChatScreenState extends State<ChatScreen>
         m.removing = true;
         m.burnedAway = true;
         if (m.msgUid != null) _earlier.drop(m.msgUid!);
+        _forgetTranslation(m);
       }
       if (back) {
         // it burned while the chat was out of view: gone, as it would be
@@ -1437,6 +1448,23 @@ class _ChatScreenState extends State<ChatScreen>
       setState(() {});
     }
   }
+
+  // the words of their last messages, what the translate bar looks at
+  List<String> _theirRecent() {
+    if (_translation == null) return const [];
+    final out = <String>[];
+    for (var i = _messages.length - 1; i >= 0 && out.length < 20; i--) {
+      final m = _messages[i];
+      if (m.direction != 'in' || m.welcome || m.sticker != null) continue;
+      if (m.removing || m.text.trim().isEmpty) continue;
+      out.add(m.text);
+    }
+    return out;
+  }
+
+  // its translation goes with it, not when the chat closes
+  void _forgetTranslation(_Msg m) =>
+      _translation?.forget(m.msgUid ?? '${m.came}', m.text);
 
   Future<void> _forgetBurnt(_Msg m) async {
     if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
@@ -1950,12 +1978,21 @@ class _ChatScreenState extends State<ChatScreen>
     final offset = box.localToGlobal(Offset.zero);
     final bubbleSize = box.size;
     const pickerH = 54.0;
+    // theirs in a language the person does not read
+    final trKey = target.msgUid ?? '${target.came}';
+    final translation = _translation;
+    final canTranslate =
+        translation != null &&
+        !welcome &&
+        target.direction == 'in' &&
+        target.sticker == null &&
+        translation.offer(target.text) != null;
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
     final rows = welcome
         ? 1
-        : 3 +
+        : (canTranslate ? 4 : 3) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
               (target.filePath != null && target.fileName != 'voice.wav'
@@ -2067,7 +2104,11 @@ class _ChatScreenState extends State<ChatScreen>
                     curve: kHouseCurve,
                     child: Material(
                       type: MaterialType.transparency,
-                      child: _Bubble(msg: target, album: album),
+                      child: _Bubble(
+                        msg: target,
+                        album: album,
+                        translation: _translation,
+                      ),
                     ),
                     builder: (_, t, child) => Transform.scale(
                       scale: 1.0 + 0.04 * t,
@@ -2164,6 +2205,21 @@ class _ChatScreenState extends State<ChatScreen>
                                 showHaloToast(context, l10n.commonCopied);
                               },
                       ),
+                      if (canTranslate)
+                        MenuAction(
+                          icon: Icons.translate_rounded,
+                          label: translation.shown(trKey, target.text)
+                              ? l10n.translateShowOriginal
+                              : l10n.translateAction,
+                          onTap: () => dismiss(
+                            then: () => askTranslate(
+                              context,
+                              translation,
+                              trKey,
+                              target.text,
+                            ),
+                          ),
+                        ),
                       // a sticker is not forwarded, copied or edited, and
                       // a photo, a file or a voice note is not forwarded
                       if (!welcome)
@@ -5040,6 +5096,7 @@ class _ChatScreenState extends State<ChatScreen>
         child: _Bubble(
           key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
+          translation: _translation,
           album: run,
           stickers: _stickers,
           stickerOrder: i,
@@ -5205,6 +5262,7 @@ class _ChatScreenState extends State<ChatScreen>
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
+    _translation?.dispose();
     _lastReadPerPeer[_memo] = _messages.fold(
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
@@ -6008,6 +6066,13 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // their messages in another language: the whole chat
+                    // translated with one tap. never in the decoy
+                    TranslateBarSlot(
+                      chat: _translation,
+                      theirs: _theirRecent(),
+                      allowed: !_isDev && !sessionQuiet && !_searching,
+                    ),
                     _Fold(
                       // his chat is no request: its lock line says the rest
                       (_flag != null && !_accepted) || _isDev
@@ -7417,9 +7482,12 @@ class _Bubble extends StatelessWidget {
   final AlbumRun<_Msg>? album;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
+  // the chat's translations: theirs in another language offer one
+  final ChatTranslation? translation;
   const _Bubble({
     super.key,
     required this.msg,
+    this.translation,
     this.album,
     this.onLongPressTile,
     this.stickers,
@@ -7450,7 +7518,7 @@ class _Bubble extends StatelessWidget {
 
   // builds the message body, underlining query matches in amber. plain
   // Text when there's no active query.
-  Widget _body(bool isOut, {bool image = false}) {
+  Widget _body(bool isOut, {bool image = false, String? words}) {
     final base = image
         ? HaloType.serif(size: 13.5, italic: true, color: HaloColors.text)
         : HaloType.sans(
@@ -7460,7 +7528,7 @@ class _Bubble extends StatelessWidget {
           );
     if (query.isEmpty) {
       return KryfoLinkText(
-        text: msg.text,
+        text: words ?? msg.text,
         style: base,
         onAmber: isOut && !image,
         linkColor: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
@@ -8009,9 +8077,25 @@ class _Bubble extends StatelessWidget {
                                           if (msg.text.isNotEmpty)
                                             writtenStart(
                                               msg.text,
-                                              _body(
-                                                isOut,
-                                                image: msg.mediaPath != null,
+                                              TranslatedBody(
+                                                chat: translation,
+                                                msgKey:
+                                                    msg.msgUid ?? '${msg.came}',
+                                                text: msg.text,
+                                                enabled:
+                                                    !isOut &&
+                                                    query.isEmpty &&
+                                                    msg.sticker == null &&
+                                                    !msg.welcome,
+                                                original: _body(
+                                                  isOut,
+                                                  image: msg.mediaPath != null,
+                                                ),
+                                                translated: (t) => _body(
+                                                  isOut,
+                                                  image: msg.mediaPath != null,
+                                                  words: t,
+                                                ),
                                               ),
                                             ),
                                           if (msg.url case final u?) ...[
