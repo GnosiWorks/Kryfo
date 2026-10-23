@@ -12,7 +12,6 @@ import '../widgets/press_scale.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
-import 'bridges_screen.dart' show relayTakenBeforeOnboarding;
 import 'my_kryfo_screen.dart';
 import '../main.dart' show appState, AppState;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
@@ -1169,8 +1168,9 @@ class _TransportScreen extends StatefulWidget {
 class _TransportScreenState extends State<_TransportScreen> {
   // said tor is blocked or watched at the start
   final bool _blocked = appState.bridge.skipDirect;
-  // relay taken where nothing got through: picked here, onion one tap away
-  final bool _relayTaken = relayTakenBeforeOnboarding;
+  // relay on when this step opens, taken where nothing got through: picked
+  // here, onion one tap away
+  final bool _relayTaken = appState.sendMode == 'balanced';
   late String _pick = _relayTaken ? 'balanced' : 'private';
   bool _busy = false;
 

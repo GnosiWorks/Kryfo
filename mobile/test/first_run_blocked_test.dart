@@ -57,7 +57,6 @@ void main() {
   });
 
   tearDown(() {
-    relayTakenBeforeOnboarding = false;
     appState.bridgeSetupForTest = const BridgeSetup();
     setL10nLocale(const Locale('en'));
   });
@@ -295,6 +294,42 @@ void main() {
     }
     expect(pages.page, 4);
     expect(appState.sendMode, 'balanced');
+    await done(t);
+  });
+
+  testWidgets('relay taken, then onion again: the send step keeps onion', (
+    t,
+  ) async {
+    await openSheet(t);
+    await t.tap(find.text(l10n.commonContinue));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    appState.setBridgeStatusForTest(
+      const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+    );
+    await t.pump();
+    await t.pump(const Duration(seconds: 2));
+    await t.tap(find.text(l10n.homeUseOurRelay));
+    for (var i = 0; i < 50 && appState.sendMode != 'balanced'; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    expect(appState.sendMode, 'balanced');
+    await done(t);
+    // back to onion before the send step: relay is not the mode now
+    await t.runAsync(() => appState.setSendMode('private'));
+    expect(appState.sendMode, 'private');
+    await t.pumpWidget(
+      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
+    );
+    await t.pump(const Duration(seconds: 6));
+    t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.onboardingOnion), findsOneWidget);
+    expect(find.text(l10n.onboardingRelay), findsNothing);
     await done(t);
   });
 

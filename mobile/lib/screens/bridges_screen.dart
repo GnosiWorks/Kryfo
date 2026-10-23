@@ -220,10 +220,6 @@ BridgeLine shownBridgeLine() {
   return appState.bridge.skipDirect ? line.watched() : line;
 }
 
-/// relay taken from [switchToRelay] before the onboarding was done: its
-/// send step keeps it instead of writing onion over it
-bool relayTakenBeforeOnboarding = false;
-
 /// relay mode in one tap, where tor found no way in
 Future<void> switchToRelay(BuildContext context) async {
   HapticFeedback.mediumImpact();
@@ -233,7 +229,6 @@ Future<void> switchToRelay(BuildContext context) async {
     if (context.mounted) showHaloToast(context, l10n.modesNotChanged);
     return;
   }
-  if (!appState.onboardingComplete) relayTakenBeforeOnboarding = true;
   if (context.mounted) showHaloToast(context, l10n.homeSwitchedToRelay);
 }
 
