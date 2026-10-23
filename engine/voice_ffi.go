@@ -97,7 +97,9 @@ func voiceModels() string {
 
 // start fetching model id into dir from the mirror the app pins; no
 // caller picks the host. "ok" when it runs (or already runs), "error: ..."
-// when it could not start. progress is polled with HaloVoiceProgress.
+// when it could not start. a download just stopped is waited for first,
+// so the call can block until it lets go. progress is polled with
+// HaloVoiceProgress.
 //
 //export HaloVoiceFetch
 func HaloVoiceFetch(cID, cDir *C.char) *C.char {
@@ -178,8 +180,9 @@ func voiceCheck(id, dir string) string {
 	if !ok {
 		return "error: no model " + id
 	}
-	// a part file is still being written
-	if voiceJobs.Running(id) {
+	// a part file is still being written, or a stopped download has not
+	// let go of it yet
+	if voiceJobs.Busy(id) {
 		return "no"
 	}
 	if voice.Check(dir, md) != nil {
@@ -207,6 +210,8 @@ func voiceRemove(id, dir string) string {
 	if voiceJobs.Running(id) {
 		return "error: downloading"
 	}
+	// a stopped download may still be writing its part file
+	voiceJobs.Wait(id)
 	if err := voice.Remove(dir, md); err != nil {
 		return fmt.Sprintf("error: %v", err)
 	}

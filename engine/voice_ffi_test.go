@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -350,5 +351,82 @@ func TestVoiceDecoyStopsADownload(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "m.bin")); err == nil {
 		t.Fatal("a model landed in the decoy")
+	}
+}
+
+// a conn whose Close waits for hold, so a stopped download cannot let go
+// of its file until the test says
+type heldConn struct {
+	net.Conn
+	hold <-chan struct{}
+}
+
+func (c heldConn) Close() error {
+	<-c.hold
+	return c.Conn.Close()
+}
+
+// a download tapped again right after a decoy closed starts fresh. the
+// old one, stopped but not ended, reads as cancelled at once and is
+// waited for, instead of an "ok" for nothing and then "cancelled"
+func TestVoiceFetchAfterDecoyStartsFresh(t *testing.T) {
+	var r *voiceRig
+	var stall atomic.Bool
+	stall.Store(true)
+	started := make(chan struct{}, 1)
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if stall.Load() && req.Header.Get("Range") != "bytes=0-1048575" {
+			select {
+			case started <- struct{}{}:
+			default:
+			}
+			<-req.Context().Done()
+			return
+		}
+		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
+	}))
+	hold := make(chan struct{})
+	var once sync.Once
+	release := func() { once.Do(func() { close(hold) }) }
+	// runs before the rig's cleanup, which waits for the download
+	t.Cleanup(release)
+	voiceDial = func(string) (dialFn, error) {
+		var d net.Dialer
+		return func(ctx context.Context, network, addr string) (net.Conn, error) {
+			c, err := d.DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			return heldConn{c, hold}, nil
+		}, nil
+	}
+	dir := t.TempDir()
+	if got := voiceFetch("base", dir); got != "ok" {
+		t.Fatal(got)
+	}
+	<-started
+	setDecoy(true)
+	if st := voiceJobs.Status("base"); st.State != voice.StateCancelled {
+		t.Fatalf("a stopped download reads %+v", st)
+	}
+	setDecoy(false)
+	stall.Store(false)
+	got := make(chan string, 1)
+	go func() { got <- voiceFetch("base", dir) }()
+	select {
+	case g := <-got:
+		t.Fatalf("answered %q while the stopped download held its file", g)
+	case <-time.After(100 * time.Millisecond):
+	}
+	release()
+	if g := <-got; g != "ok" {
+		t.Fatal(g)
+	}
+	if st := waitVoice(t, "base"); st.State != voice.StateDone {
+		t.Fatalf("the new download ended %+v", st)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, "m.bin"))
+	if err != nil || !bytes.Equal(b, r.data) {
+		t.Fatalf("model not landed whole: %v", err)
 	}
 }

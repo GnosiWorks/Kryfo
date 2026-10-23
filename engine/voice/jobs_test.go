@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -119,14 +120,92 @@ func TestJobsStopAllDoesNotWait(t *testing.T) {
 	j.Start("c", func(context.Context, Progress) error { return nil })
 	waitState(t, &j, "c", StateDone)
 	j.StopAll()
-	// both still hold their files; StopAll returned all the same
-	if !j.Running("a") || !j.Running("b") {
-		t.Fatal("StopAll waited")
+	// both still hold their files; StopAll returned all the same, and the
+	// app sees them stopped at once
+	for _, key := range []string{"a", "b"} {
+		if st := j.Status(key); st.State != StateCancelled || !j.Busy(key) {
+			t.Fatalf("%s after StopAll: %+v busy %v", key, st, j.Busy(key))
+		}
 	}
 	close(let)
 	waitState(t, &j, "a", StateCancelled)
 	waitState(t, &j, "b", StateCancelled)
 	if j.Status("c").State != StateDone {
 		t.Fatal("a finished download lost its word")
+	}
+}
+
+// a download asked for again right after a stop starts fresh once the
+// stopped one lets go, instead of being taken for the old one
+func TestJobsStartAfterStopIsFresh(t *testing.T) {
+	var j Jobs
+	let := make(chan struct{})
+	j.Start("base", func(ctx context.Context, prog Progress) error {
+		prog(4, 8)
+		<-ctx.Done()
+		<-let
+		return ctx.Err()
+	})
+	for j.Status("base").Done != 4 {
+		time.Sleep(time.Millisecond)
+	}
+	j.StopAll()
+	if j.Running("base") {
+		t.Fatal("a stopped download still says running")
+	}
+	j.Forget("base")
+	if !j.Busy("base") {
+		t.Fatal("forgot a download that still holds its file")
+	}
+	ran := make(chan struct{})
+	started := make(chan bool, 1)
+	go func() {
+		started <- j.Start("base", func(ctx context.Context, prog Progress) error {
+			close(ran)
+			return nil
+		})
+	}()
+	select {
+	case <-ran:
+		t.Fatal("the new download ran while the old one held the file")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(let)
+	if !<-started {
+		t.Fatal("the new download was refused")
+	}
+	<-ran
+	if st := waitState(t, &j, "base", StateDone); st.Done != 8 || st.Total != 8 {
+		t.Fatalf("fresh download %+v", st)
+	}
+}
+
+// Cancel on a download already stopped still waits for it to let go
+func TestJobsCancelAfterStopWaits(t *testing.T) {
+	var j Jobs
+	let := make(chan struct{})
+	held := true
+	var mu sync.Mutex
+	j.Start("base", func(ctx context.Context, prog Progress) error {
+		<-ctx.Done()
+		<-let
+		mu.Lock()
+		held = false
+		mu.Unlock()
+		return ctx.Err()
+	})
+	j.StopAll()
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		close(let)
+	}()
+	j.Cancel("base")
+	mu.Lock()
+	defer mu.Unlock()
+	if held {
+		t.Fatal("cancel returned while the stopped download held its file")
+	}
+	if j.Busy("base") || j.Status("base").State != StateCancelled {
+		t.Fatalf("after cancel %+v", j.Status("base"))
 	}
 }
