@@ -1998,6 +1998,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Vẫn ảnh đó, vẫn chất lượng đó';
 
   @override
+  String get cleanSamePicture => 'Vẫn ảnh đó';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, đã gỡ bỏ';
   }
@@ -5934,6 +5937,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Thông tin xác thực nội dung';
+
+  @override
+  String get cleanerHdrLayer => 'Lớp HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'Dữ liệu sau phần ảnh';

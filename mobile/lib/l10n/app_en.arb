@@ -2528,6 +2528,10 @@
   "@cleanSamePictureSameQuality": {
     "description": "screens/clean_screen.dart"
   },
+  "cleanSamePicture": "Same picture",
+  "@cleanSamePicture": {
+    "description": "screens/clean_screen.dart"
+  },
   "cleanRemoved": "{label}, removed",
   "@cleanRemoved": {
     "description": "screens/clean_screen.dart",
@@ -7449,6 +7453,10 @@
   },
   "cleanerContentCredentials": "Content credentials",
   "@cleanerContentCredentials": {
+    "description": "tools/cleaner.dart"
+  },
+  "cleanerHdrLayer": "HDR layer",
+  "@cleanerHdrLayer": {
     "description": "tools/cleaner.dart"
   },
   "cleanerDataAfterThePicture": "Data after the picture",

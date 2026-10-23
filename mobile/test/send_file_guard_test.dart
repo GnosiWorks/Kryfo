@@ -20,19 +20,10 @@ void main() {
     screens.forEach((file, sig) {
       final body = bodyOf(sourceOf(file), sig);
       expect(body, isNot(contains('.delete(')), reason: file);
-      // the video that cannot be walked and the picture that cannot be read
-      final video = body.substring(body.indexOf('videoNameNeedsStrip'));
-      final picture = body.substring(body.indexOf('stripPictureFileOffUi'));
-      expect(
-        video.substring(0, video.indexOf('return null;')),
-        contains('await shredFile(dest.path);'),
-        reason: file,
-      );
-      expect(
-        picture.substring(0, picture.indexOf('return null;')),
-        contains('await shredFile(dest.path);'),
-        reason: file,
-      );
+      // the copy is made and cleaned out of the media folder by the one
+      // cleaner, which shreds it on a refusal; nothing copies in before it
+      expect(body, contains('await copyClean(src, dest.path'), reason: file);
+      expect(body, isNot(contains('.copy(dest.path)')), reason: file);
     });
   });
 

@@ -2052,6 +2052,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Те саме зображення, та сама якість';
 
   @override
+  String get cleanSamePicture => 'Те саме зображення';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, видалено';
   }
@@ -6042,6 +6045,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Дані про походження';
+
+  @override
+  String get cleanerHdrLayer => 'HDR-шар';
 
   @override
   String get cleanerDataAfterThePicture => 'Дані після зображення';

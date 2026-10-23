@@ -3252,6 +3252,12 @@ abstract class AppLocalizations {
   /// screens/clean_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Same picture'**
+  String get cleanSamePicture;
+
+  /// screens/clean_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'{label}, removed'**
   String cleanRemoved(Object label);
 
@@ -9632,6 +9638,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Content credentials'**
   String get cleanerContentCredentials;
+
+  /// tools/cleaner.dart
+  ///
+  /// In en, this message translates to:
+  /// **'HDR layer'**
+  String get cleanerHdrLayer;
 
   /// tools/cleaner.dart
   ///

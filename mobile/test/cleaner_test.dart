@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/tools/cleaner.dart';
 
@@ -63,17 +65,77 @@ void main() {
     expect(readFile(rm.path!).status, MetaStatus.nothing);
   });
 
-  test('refuses a motion photo and leaves nothing', () async {
+  test('a motion photo heic keeps its still and loses the clip', () async {
     final src = put(
       'm.heic',
       heif(tiff: cameraTiff(), after: box('mpvd', t('ftypmp42'))),
     );
     final r = await cleanFileHere(src, '${tmp.path}/out', 'm.heic');
-    expect(r.failure, CleanFailure.motion);
-    expect(r.path, null);
-    final out = Directory('${tmp.path}/out');
-    expect(!out.existsSync() || out.listSync().isEmpty, true);
+    expect(r.before.embeddedVideo, true);
+    expect(r.failure, null);
+    expect(readFile(r.path!).status, MetaStatus.nothing);
+    expect(
+      latin1.decode(File(r.path!).readAsBytesSync()).contains('mpvd'),
+      false,
+    );
   });
+
+  test('a motion photo jpeg keeps its still and loses the clip', () async {
+    // the clip and a samsung trailer hang after the end marker
+    final clip = [...box('ftyp', t('mp42')), ...box('mdat', t('sound'))];
+    final x =
+        '<x:xmpmeta><rdf:Description GCamera:MotionPhoto="1"/></x:xmpmeta>';
+    final whole = jpeg(
+      tiff: cameraTiff(),
+      xmp: x,
+      mpf: true,
+      trailer: [
+        ...clip,
+        ...sefTrailer([('MCC_Data', t('262'))]),
+      ],
+    );
+    final src = put('mp.jpg', whole);
+    final r = await cleanFileHere(src, '${tmp.path}/out', 'mp.jpg');
+    expect(r.before.embeddedVideo, true);
+    expect(r.before.networkCountry, '262');
+    expect(r.failure, null);
+    final out = File(r.path!).readAsBytesSync();
+    expect(readFile(r.path!).status, MetaStatus.nothing);
+    // the scan data is the same bytes, and nothing follows the end marker
+    const scan = [0xFF, 0xDA, 0x00, 0x04, 0, 1, 5, 6, 0xFF, 0x00, 7];
+    int find(List<int> b) {
+      for (var k = 0; k + scan.length <= b.length; k++) {
+        var ok = true;
+        for (var n = 0; n < scan.length && ok; n++) {
+          ok = b[k + n] == scan[n];
+        }
+        if (ok) return k;
+      }
+      return -1;
+    }
+
+    final at = find(out);
+    final was = find(whole);
+    expect(at, greaterThan(0));
+    expect(out.sublist(at), whole.sublist(was, was + out.length - at));
+    expect(out.sublist(out.length - 2), [0xFF, 0xD9]);
+  });
+
+  test(
+    'a jpeg with an hdr layer keeps its picture and names the layer',
+    () async {
+      final x = '<x:xmpmeta><rdf:Description hdrgm:Version="1.0"/></x:xmpmeta>';
+      final src = put('h.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
+      final r = await cleanFileHere(src, '${tmp.path}/out', 'h.jpg');
+      expect(r.before.hdrLayer, true);
+      expect(r.failure, null);
+      expect(readFile(r.path!).status, MetaStatus.nothing);
+      expect(
+        removedLines(r.before).map((l) => l.label),
+        contains(l10n.cleanerHdrLayer),
+      );
+    },
+  );
 
   test('removes a vendor box too', () async {
     final src = put(

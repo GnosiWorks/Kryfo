@@ -5,11 +5,12 @@
 // first bytes, not the name:
 //   jpeg   the app segments go (jpeg_strip.dart)
 //   png    only the chunks a picture is drawn from are kept, whole, so no
-//          crc has to be redone
-//   webp   EXIF and 'XMP ' go, their VP8X flags are cleared
+//          crc has to be redone; an orientation goes back in alone
+//   webp   only the chunks a picture is drawn from are kept; an orientation
+//          goes back in alone and the VP8X flags say what is left
 //   gif    comments go, and every application block but the loop ones
-//   heif   heic and avif: exif and xmp items are zeroed where they sit so
-//          iloc offsets hold; unknown top level boxes are cut or emptied
+//   heif   heic and avif: only the items the picture is drawn from stay,
+//          nothing moves (heif_clean.dart)
 // true: read end to end and clean. false: not a kind known here, left alone.
 // null: it claims to be one and could not be read through, and a caller
 // drops a null rather than send what it could not vouch for.
@@ -20,7 +21,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
+import 'heif_clean.dart';
 import 'jpeg_strip.dart';
+import 'meta/byte_source.dart';
+import 'meta/meta_reader.dart';
+import 'meta/tiff.dart';
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
 
@@ -69,6 +74,8 @@ const _heifBrands = {
   'heim',
   'heis',
   'mif1',
+  'mif2',
+  'mif3',
   'msf1',
   'avif',
   'avis',
@@ -132,7 +139,18 @@ Future<bool?> stripPictureFileOffUi(String path) =>
 Uint8List? photoToSend(Uint8List src) {
   final out = stripPictureBytes(src);
   if (out == null || jpegHasExif(out)) return null;
+  // read again as the photo tool reads it: a picture that still holds
+  // anything does not go
+  if (pictureKind(out) != PictureKind.other && !_readsClean(out)) return null;
   return out;
+}
+
+bool _readsClean(Uint8List b) {
+  try {
+    return readMetaStrict(MemorySource(b)).status == MetaStatus.nothing;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// the same, off the ui thread
@@ -201,7 +219,7 @@ Uint8List? stripPictureBytes(Uint8List src) {
     case PictureKind.webp:
       return _webp(src);
     case PictureKind.heif:
-      return _heif(src);
+      return cleanHeif(src);
     case PictureKind.gif:
       return _gif(src);
     case PictureKind.other:
@@ -210,7 +228,6 @@ Uint8List? stripPictureBytes(Uint8List src) {
 }
 
 String _tag(Uint8List b, int i) => latin1.decode(b.sublist(i, i + 4));
-int _u16(Uint8List b, int i) => (b[i] << 8) | b[i + 1];
 int _u32(Uint8List b, int i) =>
     (b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3];
 int _u32le(Uint8List b, int i) =>
@@ -231,16 +248,26 @@ const _pngKeep = {
 Uint8List? _png(Uint8List src) {
   final out = BytesBuilder(copy: false);
   out.add(src.sublist(0, 8));
+  final turn = _pngTurn(src);
+  if (turn == null) return null;
   var i = 8;
   var dropped = false;
+  var turned = turn == 1;
   while (true) {
     if (i + 12 > src.length) return null; // no IEND before the file ran out
     final len = _u32(src, i);
     final end = i + 12 + len;
     if (len > 0x7fffffff || end > src.length) return null;
     final type = _tag(src, i + 4);
-    if (_pngKeep.contains(type)) {
+    // the orientation goes before the picture data, where readers look
+    if (!turned && (type == 'IDAT' || type == 'fdAT' || type == 'IEND')) {
+      out.add(_pngChunk('eXIf', orientationTiff(turn)));
+      turned = true;
+    }
+    if (_pngKeep.contains(type) ||
+        (type == 'eXIf' && !turned && _isTurnOnly(src, i + 8, len, turn))) {
       out.add(src.sublist(i, end));
+      if (type == 'eXIf') turned = true;
     } else {
       dropped = true;
     }
@@ -254,12 +281,83 @@ Uint8List? _png(Uint8List src) {
   return dropped ? out.toBytes() : src;
 }
 
+// the turn an eXIf chunk asks for, 1 when there is none. null when the
+// chunks cannot be walked
+int? _pngTurn(Uint8List src) {
+  var i = 8;
+  while (i + 12 <= src.length) {
+    final len = _u32(src, i);
+    final end = i + 12 + len;
+    if (len > 0x7fffffff || end > src.length) return null;
+    final type = _tag(src, i + 4);
+    if (type == 'eXIf') {
+      return readTiff(
+            Uint8List.sublistView(src, i + 8, i + 8 + len),
+          )?.orientation ??
+          1;
+    }
+    if (type == 'IEND') return 1;
+    i = end;
+  }
+  return null;
+}
+
+// true when [len] bytes at [at] are the orientation block this file wrote
+bool _isTurnOnly(Uint8List src, int at, int len, int turn) {
+  if (turn < 2 || turn > 8) return false;
+  final want = orientationTiff(turn);
+  if (len != want.length || at + len > src.length) return false;
+  for (var k = 0; k < len; k++) {
+    if (src[at + k] != want[k]) return false;
+  }
+  return true;
+}
+
+List<int> _pngChunk(String type, List<int> data) {
+  final typed = [...latin1.encode(type), ...data];
+  final crc = _crc32(typed);
+  return [..._be32(data.length), ...typed, ..._be32(crc)];
+}
+
+List<int> _be32(int v) => [
+  (v >> 24) & 255,
+  (v >> 16) & 255,
+  (v >> 8) & 255,
+  v & 255,
+];
+
+final Uint32List _crcTable = () {
+  final t = Uint32List(256);
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) {
+      c = (c & 1) != 0 ? 0xEDB88320 ^ (c >> 1) : c >> 1;
+    }
+    t[n] = c;
+  }
+  return t;
+}();
+
+int _crc32(List<int> data) {
+  var c = 0xFFFFFFFF;
+  for (final b in data) {
+    c = _crcTable[(c ^ b) & 0xFF] ^ (c >> 8);
+  }
+  return c ^ 0xFFFFFFFF;
+}
+
 // ---- webp ----
+
+// the webp chunks a picture is drawn from, still or animated
+const _webpKeep = {'VP8 ', 'VP8L', 'VP8X', 'ALPH', 'ANIM', 'ANMF', 'ICCP'};
 
 Uint8List? _webp(Uint8List src) {
   final chunks = <Uint8List>[];
   var i = 12;
   var dropped = false;
+  var turn = 1;
+  var exifKept = false;
+  if (src.length < 12) return null;
   final riffEnd = 8 + _u32le(src, 4);
   if (riffEnd > src.length) return null;
   while (i < riffEnd) {
@@ -269,26 +367,55 @@ Uint8List? _webp(Uint8List src) {
     final end = i + 8 + len + (len & 1); // chunks are padded to even
     if (end > riffEnd + 1 || i + 8 + len > src.length) return null;
     final stop = end > src.length ? src.length : end;
-    if (type == 'EXIF' || type == 'XMP ') {
+    if (type == 'EXIF' && turn == 1) {
+      var tiff = Uint8List.sublistView(src, i + 8, i + 8 + len);
+      // some writers put jpeg's "Exif\0\0" in front
+      if (len > 6 && tiff[0] == 0x45 && tiff[1] == 0x78 && tiff[4] == 0) {
+        tiff = Uint8List.sublistView(tiff, 6);
+      }
+      turn = readTiff(tiff)?.orientation ?? 1;
+    }
+    if (type == 'EXIF' && _isTurnOnly(src, i + 8, len, turn)) {
+      // written here before: it stays where it is
+      exifKept = true;
+      chunks.add(Uint8List.fromList(src.sublist(i, stop)));
+    } else if (!_webpKeep.contains(type)) {
       dropped = true;
     } else {
-      final c = Uint8List.fromList(src.sublist(i, stop));
-      // VP8X says up front which extras follow. bit 3 exif, bit 2 xmp
-      if (type == 'VP8X' && len >= 1 && (c[8] & 0x0C) != 0) {
-        c[8] &= ~0x0C & 0xFF;
-        dropped = true;
-      }
-      chunks.add(c);
+      chunks.add(Uint8List.fromList(src.sublist(i, stop)));
     }
     i = end;
   }
   // bytes after the riff are not the picture
   if (riffEnd + (riffEnd & 1) < src.length) dropped = true;
+  // VP8X says up front which extras follow: bit 3 exif, bit 2 xmp. only
+  // the exif one may stay, for an orientation written back alone
+  final keepTurn = turn >= 2 && turn <= 8;
+  for (final c in chunks) {
+    if (_tag(c, 0) != 'VP8X' || c.length < 9) continue;
+    final want = (c[8] & ~0x0C & 0xFF) | (keepTurn ? 0x08 : 0);
+    if (want != c[8]) {
+      c[8] = want;
+      dropped = true;
+    }
+  }
   if (!dropped) return src;
   final body = BytesBuilder(copy: false);
   for (final c in chunks) {
     body.add(c);
     if (c.length & 1 == 1) body.add([0]);
+  }
+  if (keepTurn && !exifKept && chunks.any((c) => _tag(c, 0) == 'VP8X')) {
+    final t = orientationTiff(turn);
+    body.add([
+      ...latin1.encode('EXIF'),
+      t.length & 255,
+      (t.length >> 8) & 255,
+      0,
+      0,
+      ...t,
+      if (t.length.isOdd) 0,
+    ]);
   }
   final b = body.toBytes();
   final size = 4 + b.length;
@@ -371,249 +498,4 @@ Uint8List? _gif(Uint8List src) {
     return null; // not a block a gif has
   }
   return dropped ? out.toBytes() : src;
-}
-
-// ---- heif ----
-
-class _Box {
-  final String type;
-  final int start; // of the header
-  final int body; // of the payload
-  final int end;
-  const _Box(this.type, this.start, this.body, this.end);
-}
-
-List<_Box>? _boxes(Uint8List b, int from, int to) {
-  final out = <_Box>[];
-  var i = from;
-  while (i < to) {
-    if (i + 8 > to) return null;
-    var size = _u32(b, i);
-    final type = _tag(b, i + 4);
-    var head = 8;
-    if (size == 1) {
-      if (i + 16 > to) return null;
-      if (_u32(b, i + 8) != 0) return null; // past anything we would hold
-      size = _u32(b, i + 12);
-      head = 16;
-    } else if (size == 0) {
-      size = to - i; // runs to the end
-    }
-    if (size < head || i + size > to) return null;
-    out.add(_Box(type, i, i + head, i + size));
-    i += size;
-  }
-  return out;
-}
-
-Uint8List? _heif(Uint8List src) {
-  final top = _boxes(src, 0, src.length);
-  if (top == null) return null;
-  final metas = top.where((x) => x.type == 'meta').toList();
-  if (metas.isEmpty) return null; // a heif with no meta has no picture either
-  final meta = metas.first;
-  if (meta.body + 4 > meta.end) return null;
-  final inner = _boxes(src, meta.body + 4, meta.end); // past version+flags
-  if (inner == null) return null;
-
-  // which items are about the picture and not of it
-  final strip = <int>{};
-  final iinf = inner.where((x) => x.type == 'iinf').toList();
-  if (iinf.isEmpty) return null;
-  {
-    final x = iinf.first;
-    if (x.body + 6 > x.end) return null;
-    final v = src[x.body];
-    final entriesAt = x.body + 4 + (v == 0 ? 2 : 4);
-    if (entriesAt > x.end) return null;
-    final infes = _boxes(src, entriesAt, x.end);
-    if (infes == null) return null;
-    for (final e in infes) {
-      if (e.type != 'infe') continue;
-      if (e.body + 4 > e.end) return null;
-      final ev = src[e.body];
-      if (ev < 2) continue; // v0/v1 carry no item type; nothing to match on
-      var p = e.body + 4;
-      final idLen = ev == 2 ? 2 : 4;
-      if (p + idLen + 2 + 4 > e.end) return null;
-      final id = idLen == 2 ? _u16(src, p) : _u32(src, p);
-      p += idLen + 2;
-      final type = _tag(src, p);
-      p += 4;
-      if (type == 'Exif') {
-        strip.add(id);
-      } else if (type == 'mime') {
-        // name, then content type, both null-terminated
-        final rest = latin1.decode(src.sublist(p, e.end), allowInvalid: true);
-        final lower = rest.toLowerCase();
-        if (lower.contains('xmp') || lower.contains('rdf+xml')) strip.add(id);
-      }
-    }
-  }
-  final iloc = inner.where((x) => x.type == 'iloc').toList();
-  final idat = inner.where((x) => x.type == 'idat').toList();
-  if (iloc.isEmpty && strip.isNotEmpty) return null;
-  // where every item is read from, taken before anything changes. a table
-  // that cannot be read only matters when there is something to do
-  final places = iloc.isEmpty ? <_Place>[] : _ilocPlaces(src, iloc.first);
-
-  // where the still ends: the meta box and every byte an item is read
-  // from. a clip hung after it (an mpvd box, or a whole mp4 appended) goes
-  var dataEnd = iloc.isEmpty || places == null ? src.length : meta.end;
-  for (final x in places ?? const <_Place>[]) {
-    if (x.method != 0) continue;
-    final to = x.len == 0 ? src.length : x.at + x.len;
-    if (to > dataEnd) dataEnd = to;
-  }
-  final sequence = _brands(src, top.first).any(_heifSequences.contains);
-  // top level boxes the format does not name are foreign too: samsung's
-  // sefd is one, the same vendor block it hangs behind a jpeg
-  final foreign = <_Box>[];
-  var appended = false;
-  for (final b in top) {
-    final after = b.start >= dataEnd;
-    if (after && b.type == 'ftyp') appended = true;
-    final media = b.type == 'moov' || b.type == 'mdat';
-    if (!_heifKnown.contains(b.type) ||
-        (after && (appended || (media && !sequence)))) {
-      foreign.add(b);
-    }
-  }
-  if (strip.isEmpty && foreign.isEmpty) return src;
-  if (places == null) return null;
-
-  final out = Uint8List.fromList(src);
-  final located = <int>{};
-  for (final x in places) {
-    if (!strip.contains(x.id)) {
-      // a picture item kept inside a box about to be emptied would be
-      // emptied with it
-      if (x.method == 0 && foreign.isNotEmpty) {
-        final to = x.len == 0 ? src.length : x.at + x.len;
-        if (foreign.any((f) => x.at < f.end && to > f.start)) return null;
-      }
-      continue;
-    }
-    int at;
-    if (x.method == 0) {
-      at = x.at;
-    } else if (x.method == 1) {
-      if (idat.isEmpty) return null;
-      at = idat.first.body + x.at;
-    } else {
-      return null; // built from other items; not something to guess at
-    }
-    // a zero length means "to the end of the file", which for metadata
-    // beside a picture is not a thing to take on trust
-    if (x.len == 0 || at < 0 || at + x.len > out.length) return null;
-    out.fillRange(at, at + x.len, 0);
-    located.add(x.id);
-  }
-  // named in iinf and never located: cannot say it is clean
-  if (located.length != strip.length) return null;
-  return _dropForeign(out, top, foreign);
-}
-
-// every extent the iloc box [x] lists, or null when it cannot be read
-List<_Place>? _ilocPlaces(Uint8List src, _Box x) {
-  final places = <_Place>[];
-  var p = x.body;
-  if (p + 8 > x.end) return null;
-  final v = src[p];
-  if (v > 2) return null;
-  p += 4;
-  final offSize = src[p] >> 4;
-  final lenSize = src[p] & 15;
-  final baseSize = src[p + 1] >> 4;
-  final idxSize = v == 0 ? 0 : src[p + 1] & 15;
-  p += 2;
-  int count;
-  if (v < 2) {
-    count = _u16(src, p);
-    p += 2;
-  } else {
-    if (p + 4 > x.end) return null;
-    count = _u32(src, p);
-    p += 4;
-  }
-  int? read(int size) {
-    if (size == 0) return 0;
-    if (size != 4 && size != 8) return null;
-    if (p + size > x.end) return null;
-    if (size == 8) {
-      if (_u32(src, p) != 0) return null;
-      p += 4;
-    }
-    final r = _u32(src, p);
-    p += 4;
-    return r;
-  }
-
-  for (var n = 0; n < count; n++) {
-    final idLen = v < 2 ? 2 : 4;
-    if (p + idLen > x.end) return null;
-    final id = idLen == 2 ? _u16(src, p) : _u32(src, p);
-    p += idLen;
-    var method = 0;
-    if (v > 0) {
-      if (p + 2 > x.end) return null;
-      method = _u16(src, p) & 15;
-      p += 2;
-    }
-    if (p + 2 > x.end) return null;
-    p += 2; // data reference index
-    final base = read(baseSize);
-    if (base == null) return null;
-    if (p + 2 > x.end) return null;
-    final extents = _u16(src, p);
-    p += 2;
-    for (var k = 0; k < extents; k++) {
-      if (idxSize > 0 && read(idxSize) == null) return null;
-      final off = read(offSize);
-      final len = read(lenSize);
-      if (off == null || len == null) return null;
-      places.add(_Place(id, method, base + off, len));
-    }
-  }
-  return places;
-}
-
-class _Place {
-  final int id;
-  final int method; // 0 the file, 1 idat, 2 another item
-  final int at; // base plus extent offset
-  final int len;
-  const _Place(this.id, this.method, this.at, this.len);
-}
-
-// major brand and compatible brands of the ftyp box at [f]
-Iterable<String> _brands(Uint8List b, _Box f) sync* {
-  if (f.type != 'ftyp') return;
-  for (var i = f.body; i + 4 <= f.end; i += 4) {
-    if (i == f.body + 4) continue; // minor version
-    yield _tag(b, i);
-  }
-}
-
-// brands of an image sequence, whose moov is the animation and stays
-const _heifSequences = {'msf1', 'hevc', 'hevx', 'hevm', 'hevs', 'avis'};
-
-const _heifKnown = {'ftyp', 'meta', 'mdat', 'free', 'skip', 'moov'};
-
-// at the tail they are cut off, which moves nothing. anywhere else they are
-// renamed to 'free' and zeroed in place, as mp4_strip does, so every offset
-// in iloc still points where it did
-Uint8List _dropForeign(Uint8List out, List<_Box> top, List<_Box> foreign) {
-  if (foreign.isEmpty) return out;
-  var cut = out.length;
-  for (final b in top.reversed) {
-    if (!foreign.contains(b)) break;
-    cut = b.start;
-  }
-  for (final b in foreign) {
-    if (b.start >= cut) continue;
-    out.setRange(b.start + 4, b.start + 8, const [0x66, 0x72, 0x65, 0x65]);
-    out.fillRange(b.body, b.end, 0);
-  }
-  return cut == out.length ? out : Uint8List.sublistView(out, 0, cut);
 }

@@ -24,6 +24,7 @@ class TiffInfo {
   bool comment = false;
   int thumbnailBytes = 0;
   int otherTags = 0;
+  String? liveId;
 }
 
 const _maxEntries = 512;
@@ -172,6 +173,7 @@ TiffInfo? readTiff(Uint8List block) {
           info.owner ??= text(e);
         case 0x927C:
           info.makerNote = true;
+          info.liveId ??= _appleLiveId(block, valueAt(e), t.u32(e + 4));
         case 0x9286:
           info.comment = true;
         default:
@@ -238,4 +240,34 @@ TiffInfo? readTiff(Uint8List block) {
     }
   }
   return info;
+}
+
+// apple's maker note starts "Apple iOS", then a big-endian ifd whose offsets
+// count from the note's start. tag 0x0011 is the id a live photo shares with
+// its video
+String? _appleLiveId(Uint8List b, int? at, int count) {
+  if (at == null || count < 16 || at + count > b.length) return null;
+  const head = [65, 112, 112, 108, 101, 32, 105, 79, 83, 0]; // Apple iOS\0
+  for (var k = 0; k < head.length; k++) {
+    if (b[at + k] != head[k]) return null;
+  }
+  final note = Uint8List.sublistView(b, at, at + count);
+  final t = _T(note, false);
+  const ifd = 14;
+  if (!t.has(ifd, 2)) return null;
+  final n = t.u16(ifd);
+  if (n > _maxEntries || !t.has(ifd + 2, n * 12)) return null;
+  for (var k = 0; k < n; k++) {
+    final e = ifd + 2 + k * 12;
+    if (t.u16(e) != 0x0011 || t.u16(e + 2) != 2) continue;
+    final len = t.u32(e + 4);
+    final off = len <= 4 ? e + 8 : t.u32(e + 8);
+    if (len == 0 || len > 128 || !t.has(off, len)) return null;
+    final s = latin1
+        .decode(note.sublist(off, off + len), allowInvalid: true)
+        .replaceAll(RegExp(r'[\x00-\x1F]'), '')
+        .trim();
+    return s.isEmpty ? null : s;
+  }
+  return null;
 }

@@ -29,7 +29,6 @@ import '../open_file.dart';
 import '../file_kind.dart'
     show
         FileShape,
-        bytesSayIsoVideo,
         fileFactsRead,
         fileFits,
         fileShapeNow,
@@ -89,8 +88,8 @@ import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
 import '../media_send.dart' show cancelMediaSend, mediaInflight;
+import '../clean_media.dart';
 import '../image_strip.dart';
-import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
@@ -2922,33 +2921,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${made}_$safe');
-    await File(src).copy(dest.path);
-    // a gallery video carries what a gallery photo does: where, on what,
-    // and when. stripped in place on our own copy; a file that cannot be
-    // walked is not sent, the same as a jpeg that cannot be. one renamed is
-    // told by its bytes
-    // a raw picture is not one, whatever it is called: the video cleaner
-    // would break it without cleaning it
-    if (!raw &&
-        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
-      final ok = await stripMp4Metadata(dest.path);
-      final left = ok == null ? null : await mp4MetadataCount(dest.path);
-      if (ok == null || left != 0) {
-        await shredFile(dest.path);
-        if (mounted) {
-          showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
-        }
-        return null;
-      }
-    }
-    // a picture sent as a file is cleaned like one sent as a photo. it is
-    // told by its bytes, not its name: jpeg, png, webp, heic, avif. one the
-    // app cannot read through is not sent; the photo button re-encodes and
-    // will take it.
-    else if (await stripPictureFileOffUi(dest.path) == null) {
-      await shredFile(dest.path);
+    // a gallery video carries where, on what and when, like a photo, and a
+    // picture sent as a file is cleaned like one sent as a photo. both are
+    // told by their bytes and cleaned on our own copy by the one cleaner;
+    // one that cannot be read through, or still reads as anything after,
+    // is not sent. a raw picture is never walked as a video. the copy is
+    // made and cleaned out of the media folder and only moved in clean
+    final done = await copyClean(src, dest.path, name: name, raw: raw);
+    if (done.how == MediaClean.refused) {
       if (mounted) {
-        showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
+        showHaloToast(
+          context,
+          done.video
+              ? l10n.groupChatCouldNotCleanThatVideo
+              : l10n.groupChatCouldNotCleanThatPictureSend,
+        );
       }
       return null;
     }

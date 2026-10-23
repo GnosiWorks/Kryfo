@@ -2014,6 +2014,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'همان تصویر، همان کیفیت';
 
   @override
+  String get cleanSamePicture => 'همان تصویر';
+
+  @override
   String cleanRemoved(Object label) {
     return '⁨$label⁩، حذف شد';
   }
@@ -5948,6 +5951,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'اعتبارنامه‌ی محتوا';
+
+  @override
+  String get cleanerHdrLayer => 'لایهٔ HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'داده‌ی بعد از تصویر';

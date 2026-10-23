@@ -61,7 +61,12 @@ Future<void> settle(WidgetTester t, Finder until) async {
   expect(until, findsWidgets);
 }
 
-Future<void> readThenRemove(WidgetTester t, PickedFile file) async {
+Future<void> readThenRemove(
+  WidgetTester t,
+  PickedFile file, {
+  List<String> shows = const [],
+  List<String> hides = const [],
+}) async {
   t.view.physicalSize = const Size(1000, 2000);
   t.view.devicePixelRatio = 2;
   addTearDown(t.view.reset);
@@ -78,6 +83,13 @@ Future<void> readThenRemove(WidgetTester t, PickedFile file) async {
   final clean = t.widget<CleanScreen>(find.byType(CleanScreen));
   expect(clean.localPath, isNotNull);
   await settle(t, find.text(l10n.cleanShareCleanCopy));
+  await t.pump(const Duration(seconds: 2));
+  for (final w in shows) {
+    expect(find.text(w), findsWidgets, reason: w);
+  }
+  for (final w in hides) {
+    expect(find.text(w), findsNothing, reason: w);
+  }
   await t.pumpWidget(const SizedBox());
   await t.pump(const Duration(seconds: 1));
 }
@@ -130,6 +142,25 @@ void main() {
         size: 100,
         mime: 'video/mp4',
       ),
+    );
+  });
+
+  testWidgets('a photo with an hdr layer: same picture, the layer removed', (
+    t,
+  ) async {
+    const x = '<x:xmpmeta><rdf:Description hdrgm:Version="1.0"/></x:xmpmeta>';
+    // no place in it, as for the video: the map data loads once per run
+    world(t, 'h.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
+    await readThenRemove(
+      t,
+      const PickedFile(
+        uri: 'content://test/h.jpg',
+        name: 'h.jpg',
+        size: 100,
+        mime: 'image/jpeg',
+      ),
+      shows: [l10n.cleanSamePicture, l10n.cleanerHdrLayer],
+      hides: [l10n.cleanSamePictureSameQuality],
     );
   });
 }

@@ -115,7 +115,12 @@ Future<CleanResult> cleanFileHere(
   if (before.status == MetaStatus.unreadable) {
     return fail(CleanFailure.unreadable);
   }
-  if (before.embeddedVideo || before.secondImage) {
+  // a jpeg ends at its end marker once clean, and a heif keeps only its
+  // picture's items, so a motion clip, the extra pictures, an hdr layer and
+  // a samsung trailer go. the result line then says "same picture" alone
+  final cuts = before.kind == MetaKind.jpeg || before.kind == MetaKind.heif;
+  if (!cuts &&
+      (before.embeddedVideo || before.secondImage || before.hdrLayer)) {
     return fail(CleanFailure.motion);
   }
   final size = File(inPath).lengthSync();
@@ -183,7 +188,7 @@ class RemovedLine {
 
 List<RemovedLine> removedLines(MetaReport r) {
   final out = <RemovedLine>[];
-  if (r.gps != null) {
+  if (r.gps != null || r.gpsPoints > 0) {
     out.add(RemovedLine(l10n.cleanerLocation));
   } else if (r.gpsBlank) {
     out.add(
@@ -201,11 +206,13 @@ List<RemovedLine> removedLines(MetaReport r) {
   }
   if (r.thumbnailBytes > 0) out.add(RemovedLine(l10n.cleanerHiddenThumbnail));
   if (r.credentials) out.add(RemovedLine(l10n.cleanerContentCredentials));
+  if (r.hdrLayer) out.add(RemovedLine(l10n.cleanerHdrLayer));
   if (r.trailingBytes > 0) {
     out.add(RemovedLine(l10n.cleanerDataAfterThePicture));
   }
   var other = r.otherExifTags + r.textKeys.length + r.videoTags.length;
-  other += r.extra.length;
+  other += r.extra.length + r.extraTracks;
+  if (r.leftoverBytes > 0 && r.extraTracks == 0) other++;
   for (final b in [
     r.software != null,
     r.lens != null,
@@ -216,6 +223,18 @@ List<RemovedLine> removedLines(MetaReport r) {
     r.comment,
     r.savedTime,
     r.stamps && r.created == null,
+    // named one by one in the found list later; counted until then
+    r.timecode,
+    r.handlerNames,
+    r.editHistory,
+    r.syntheticLabel,
+    r.syntheticPrompt.isNotEmpty,
+    r.smallCopies > 0,
+    r.depthMap || r.portraitMatte || r.beforeBlur,
+    r.extraPictures > 0,
+    r.sphere,
+    r.networkCountry != null,
+    r.liveId != null,
   ]) {
     if (b) other++;
   }

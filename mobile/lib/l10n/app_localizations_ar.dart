@@ -2062,6 +2062,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'الصورة نفسها، بالجودة نفسها';
 
   @override
+  String get cleanSamePicture => 'الصورة نفسها';
+
+  @override
   String cleanRemoved(Object label) {
     return '⁨$label⁩، أُزيل';
   }
@@ -6039,6 +6042,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'بيانات اعتماد المحتوى';
+
+  @override
+  String get cleanerHdrLayer => 'طبقة HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'بيانات بعد الصورة';

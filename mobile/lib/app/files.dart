@@ -43,6 +43,9 @@ Future<void> sweepCaptures() async {
       if (n.contains('/kryfo-backup-')) await shredFile(f.path);
     }
     await sweepShareCopies(tmp);
+    // clean copies made for a save the app died during
+    final saves = Directory('${tmp.path}/$kSaveCopies');
+    if (await saves.exists()) await shredTree(saves.path);
     // the gallery picker's whole copies, in folders of their own
     await sweepPickerLeftovers(tmp);
     await sweepFilePickerCopies(tmp);
