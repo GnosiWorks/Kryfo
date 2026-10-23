@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'halo_switch.dart';
+import 'motion.dart' show motionStill;
 import 'swap.dart';
 
 // a section's title, the same on every settings page and sheet. it brings
@@ -93,7 +94,9 @@ class HaloRow extends StatelessWidget {
   // an on or off setting: a switch stands in for the value and the chevron
   final bool? toggled;
   // the saved value is still being read: the switch's place is kept empty
-  // and it fades in where it belongs, never sliding from a default
+  // and it fades in where it belongs, never sliding from a default. a value
+  // given meanwhile holds the place unseen, so nothing moves when the real
+  // one fades in
   final bool pending;
   // what a screen reader says a tap does, when the label alone does not
   final String? tapHint;
@@ -179,14 +182,14 @@ class HaloRow extends StatelessWidget {
                         top: 4,
                         end: 10,
                       ),
-                      child: Text(v, style: valueStyle),
+                      child: _shown(context, Text(v, style: valueStyle)),
                     ),
                 ],
               ),
             ),
             if (v.isNotEmpty && !stacked) ...[
               const SizedBox(width: 8),
-              Text(v, style: valueStyle),
+              _shown(context, Text(v, style: valueStyle)),
             ],
             if (on != null) ...[
               const SizedBox(width: 10),
@@ -222,6 +225,20 @@ class HaloRow extends StatelessWidget {
     }
     return Semantics(toggled: on, onTapHint: tapHint, child: row);
   }
+}
+
+extension on HaloRow {
+  Widget _shown(BuildContext context, Widget value) => ExcludeSemantics(
+    excluding: pending,
+    child: AnimatedOpacity(
+      opacity: pending ? 0 : 1,
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      child: value,
+    ),
+  );
 }
 
 double _width(String s, TextStyle style, TextScaler scaler, TextDirection dir) {
