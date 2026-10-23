@@ -154,6 +154,7 @@ class _Io implements AppIo {
   @override
   Future<String> pinFirst(List<String> xPubs) async {
     pins.add([...xPubs]);
+    told.add('pins');
     return 'ok';
   }
 
@@ -211,7 +212,13 @@ class _Io implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) {
+    listened.add(xPub);
+    told.add('listen');
+  }
+
+  // listens and pin tellings, in the order they came
+  final told = <String>[];
   @override
   String edPub() => 'ed-me';
   @override
@@ -1600,6 +1607,14 @@ void main() {
         expect(w.io.pins, [<String>[]]);
       },
     );
+  });
+
+  test('the pins are told before the first listen', () async {
+    final w = await _World.make();
+    w.live.people[_v]!['pinned'] = 1;
+    await w.app.subscribeKnown();
+    expect(w.io.told.first, 'pins');
+    expect(w.io.told.where((t) => t == 'listen'), isNotEmpty);
   });
 
   group('every way in', () {
