@@ -1072,6 +1072,12 @@ func TestAReadReachesBackToWhatItLastHandedOver(t *testing.T) {
 		defer nostrMu.Unlock()
 		return slices.Contains(nostrInbox, outHex+"|only on a public relay")
 	})
+	// to the quarter hour: the read's own end would carry this phone's clock
+	for _, c := range connsOn(pub.snapshot(), []string{outRcv}) {
+		if len(c.reqs) > 0 && c.reqs[0].filter.Since%900 != 0 {
+			t.Fatalf("the widened since is not on the quarter hour: %d", c.reqs[0].filter.Since)
+		}
+	}
 }
 
 // a held line keeps when its id reached the relay. from a public relay that
@@ -1124,6 +1130,44 @@ func TestAHeldLineKeepsNoReachFromAPublicRelay(t *testing.T) {
 		f := strings.Fields(line)
 		if len(f) > 4 && f[3] != "0" {
 			t.Fatalf("the held line keeps when it reached the public relay: %q", line)
+		}
+	}
+}
+
+// after a start nothing is known of what a public relay handed over, and
+// our relay moves the anchor with its catch-up before a public read comes:
+// the first read reaches back to the anchor the runner started with
+func TestTheFirstReadAfterAStartReachesBackToItsAnchor(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	// the public relay's dial comes after our relay's catch-up
+	pub.mu.Lock()
+	pub.upgradeDelay = time.Second
+	pub.mu.Unlock()
+	p := newXid(t)
+	rcv := mustRcv(t, p)
+	now := time.Now()
+	plantAnchor(t, rcv, now.Add(-3*time.Hour).Unix())
+	// sent while ours was down the night before, stamped far back
+	pub.store(wrapToAt(t, p, myXPub, "only on a public relay", now.Add(-14*time.Hour)))
+	// this morning's, on ours: it moves the anchor up at our catch-up
+	own.store(wrapToAt(t, p, myXPub, "this morning", now))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, p, rcv)
+	tag := hex.EncodeToString(p.pub[:])
+	waitFor(t, "the night's wrap from the public relay", 15*time.Second, func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return slices.Contains(nostrInbox, tag+"|only on a public relay")
+	})
+	for _, c := range connsOn(pub.snapshot(), []string{rcv}) {
+		if len(c.reqs) > 0 && c.reqs[0].filter.Since%900 != 0 {
+			t.Fatalf("the widened since is not on the quarter hour: %d", c.reqs[0].filter.Since)
 		}
 	}
 }

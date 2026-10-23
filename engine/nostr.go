@@ -1366,6 +1366,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
 	seen := loadSeen(seenPath)
 	seenWhileRunning(ctx, seen)
+	// the anchor as this runner found it, before our relay moves it
+	startAnchor := lastSaved
 	// a contact's address is ranked for the public relays, see public_live.go.
 	// one just added counts as heard now and is live until the next start
 	var live *liveAddr
@@ -1744,9 +1746,17 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// a public relay's window reaches back to what it is known to
 				// have handed over, not only to the anchor: our relay moves
 				// that with every wrap, and a read may come hours after a
-				// wrap only this relay has
-				if h := nostr.Timestamp(heardOf(ck) / 1000); sweeper && base > 0 && h > 0 && h < base {
-					base = h
+				// wrap only this relay has. after a start nothing is known
+				// yet: back to the anchor the runner started with. to the
+				// quarter hour, or the since would carry this phone's clock
+				if sweeper && base > 0 {
+					reach := nostr.Timestamp(heardOf(ck) / 1000)
+					if reach <= 0 {
+						reach = nostr.Timestamp(startAnchor)
+					}
+					if reach > 0 && reach < base {
+						base = reach / 900 * 900
+					}
 				}
 				// a wrap can be a 16k base64 slice of a video, so a reconnect
 				// seconds after the last one asks for twenty, not a hundred. a
