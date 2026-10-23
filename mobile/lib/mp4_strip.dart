@@ -71,7 +71,7 @@ bool? stripMp4Sync(String path) {
       if (kFreeBoxes.contains(b.type)) {
         p.zero(b.body, b.end);
       } else if (!kMp4Top.contains(b.type)) {
-        if (kept.any((k) => k.$1 < b.end && k.$2 > b.start)) return null;
+        if (Ranges.overlaps(kept, b.start, b.end)) return null;
         p.neuter(b);
       } else if (b.type == 'mdat' && lay.moov != null) {
         for (final (x, y) in Ranges.gaps(kept, b.body, b.end)) {

@@ -290,12 +290,7 @@ void _openEnded(List<IsoBox> top, List<Mp4Track> tracks) {
   }
 }
 
-int _boxEnd(List<IsoBox> top, int at) {
-  for (final b in top) {
-    if (at >= b.start && at < b.end) return b.end;
-  }
-  return at;
-}
+int _boxEnd(List<IsoBox> top, int at) => boxAt(top, at)?.end ?? at;
 
 class _Sizes {
   final int count;

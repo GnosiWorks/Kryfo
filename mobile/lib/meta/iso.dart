@@ -120,7 +120,8 @@ class Ranges {
   static List<(int, int)> gaps(List<(int, int)> merged, int from, int to) {
     final out = <(int, int)>[];
     var at = from;
-    for (final (a, b) in merged) {
+    for (var i = endingPast(merged, from); i < merged.length; i++) {
+      final (a, b) = merged[i];
       if (b <= at) continue;
       if (a >= to) break;
       if (a > at) out.add((at, a));
@@ -130,6 +131,44 @@ class Ranges {
     if (at < to) out.add((at, to));
     return out;
   }
+
+  /// whether any of [sorted] (in order, none overlapping) overlaps
+  /// [from]..[to], found by halves
+  static bool overlaps(List<(int, int)> sorted, int from, int to) {
+    final i = endingPast(sorted, from);
+    return i < sorted.length && sorted[i].$1 < to;
+  }
+
+  /// the first of [sorted] that ends past [at], or its length
+  static int endingPast(List<(int, int)> sorted, int at) {
+    var lo = 0, hi = sorted.length;
+    while (lo < hi) {
+      final mid = (lo + hi) >> 1;
+      if (sorted[mid].$2 <= at) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
+  }
+}
+
+/// the box of [boxes] (in file order, as isoBoxes gives them) that holds
+/// [at], found by halves
+IsoBox? boxAt(List<IsoBox> boxes, int at) {
+  var lo = 0, hi = boxes.length;
+  while (lo < hi) {
+    final mid = (lo + hi) >> 1;
+    if (boxes[mid].start <= at) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  if (lo == 0) return null;
+  final b = boxes[lo - 1];
+  return at < b.end ? b : null;
 }
 
 /// true when [len] bytes at [at] hold anything but zeros, read in pieces
