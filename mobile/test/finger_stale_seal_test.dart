@@ -278,4 +278,26 @@ void main() {
     await pumpEventQueue();
     expect(lock.store.m.containsKey(_sealKey), isFalse);
   });
+
+  test('the platform hands an old seal back made again, and nothing '
+      'else', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const ch = MethodChannel('halo/platform');
+    final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    Object? answer;
+    m.setMockMethodCallHandler(ch, (c) async => answer);
+    addTearDown(() => m.setMockMethodCallHandler(ch, null));
+    final bio = PlatformLockBio();
+    answer = {'r': 'ok', 'p': 'x', 's': '02ab'};
+    final ok = await bio.unlock('t', 'c', '01ab');
+    expect([ok.result, ok.opens, ok.again], ['ok', 'x', '02ab']);
+    answer = {'r': 'none', 'p': null, 's': null};
+    final none = await bio.unlock('t', 'c', '02ab');
+    expect([none.result, none.opens, none.again], ['none', null, null]);
+    // an answer from before the made-again seal
+    answer = {'r': 'ok', 'p': 'x'};
+    expect((await bio.unlock('t', 'c', '01ab')).again, isNull);
+    answer = null;
+    expect((await bio.unlock('t', 'c', '01ab')).result, 'error');
+  });
 }
