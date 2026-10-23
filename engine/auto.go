@@ -306,14 +306,10 @@ func planPass(kind string, mem autoMemory, opts modeOpts, today int64) []autoSte
 	if lines := linesFor(autoUse{Method: "webtunnel", Source: "cached"}, opts); len(lines) > 0 {
 		add(autoStep{Method: "webtunnel", Source: "cached", Lines: lines, Limit: stepLimit("webtunnel", false)})
 	}
-	// tor said blocked or watched here, or direct was blocked lately on any
+	// tor said blocked or watched here, or direct blocked lately on this
 	// type of network: a censor that cuts tor's relays cuts the public obfs4
-	// bridges too
-	censored := opts.SkipDirect
-	for _, d := range mem.Blocked {
-		censored = censored || fresh(d, today)
-	}
-	if censored {
+	// bridges too. another type of network keeps its own order
+	if skipDirect {
 		steps = obfs4Last(steps, 0)
 	}
 	return steps
@@ -826,6 +822,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		blocked = true
 		stSet(func() { autoSt.blocked = true })
 	}
+	// direct blocked on this type of network, or tor said blocked or
+	// watched: the public obfs4 goes behind the rest. a network android
+	// could not check is not counted
+	censored := blocked || opts.SkipDirect
 	for i := 0; i < len(steps); i++ {
 		s := steps[i]
 		if s.Method == "moat" {
@@ -871,7 +871,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		case seenBlocked:
 			// with no network said to be there, nothing is learned of it
 			if s.Method == "direct" && !netValveOpen.Load() {
-				blocked = true
+				blocked, censored = true, true
 				memBlocked(kind, dayOf(autoNow()))
 				stSet(func() { autoSt.blocked, autoSt.errCode = true, "blocked" })
 				if consentNow() == "ask" {
@@ -888,7 +888,7 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			return passInterrupted
 		}
 		// tor blocked as is: snowflake and webtunnel before the public obfs4
-		if blocked && !reordered {
+		if censored && !reordered {
 			steps, reordered = obfs4Last(steps, i+1), true
 		}
 		// a bridge that did not get through here is not one to check in by

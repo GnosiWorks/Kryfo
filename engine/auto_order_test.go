@@ -32,8 +32,8 @@ func TestBlockedPlanPutsObfs4Last(t *testing.T) {
 			"direct/ moat/ obfs4/builtin snowflake/builtin webtunnel/cached"},
 		{"blocked here", autoMemory{Blocked: map[string]int64{"wifi": today}}, wt,
 			"moat/ snowflake/builtin webtunnel/cached obfs4/builtin"},
-		{"blocked on the other network", autoMemory{Blocked: map[string]int64{"cellular": today - 2}}, wt,
-			"direct/ moat/ snowflake/builtin webtunnel/cached obfs4/builtin"},
+		{"blocked on the other network: this one keeps its order", autoMemory{Blocked: map[string]int64{"cellular": today - 2}}, wt,
+			"direct/ moat/ obfs4/builtin snowflake/builtin webtunnel/cached"},
 		{"blocked long ago", autoMemory{Blocked: map[string]int64{"cellular": today - 40}}, modeOpts{},
 			"direct/ moat/ obfs4/builtin snowflake/builtin"},
 		{"blocked or watched, said by the person", autoMemory{}, modeOpts{SkipDirect: true},
@@ -67,6 +67,21 @@ func TestBlockedPassTriesObfs4Last(t *testing.T) {
 	// the way that got through is the one remembered
 	if m := memSnapshot(); m.Last["wifi"].Method != "obfs4" {
 		t.Fatalf("remembered %+v", m)
+	}
+}
+
+// direct ran out on a network android could not check: not counted as
+// blocked, so the order stays
+func TestUncheckedNetworkKeepsTheOrder(t *testing.T) {
+	f := useFakeAuto(t, netInfo{On: true, Kind: "wifi"})
+	f.script["direct"] = never
+	f.script["snowflake"] = never
+	f.script["obfs4"] = worksAfter(5 * time.Second)
+	if r := pass(t, modeOpts{}); r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	if got := strings.Join(f.applied, " "); got != "direct/ obfs4/builtin" {
+		t.Fatalf("tried %s", got)
 	}
 }
 
