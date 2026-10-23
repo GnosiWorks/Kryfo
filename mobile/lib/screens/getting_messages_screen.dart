@@ -271,11 +271,6 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       icon: Icons.notifications_none_rounded,
                       label: l10n.gettingMessagesWhatShows,
                       value: _show == null ? null : notifShowName(_show!),
-                      // a pin turns previews off. if someone turns them
-                      // back on, say what that gives away
-                      hint: lockState.lockOn && _show == NotifShow.all
-                          ? l10n.gettingMessagesShowsMessageTextIn
-                          : null,
                       onTap: () async {
                         await Navigator.of(context).push(
                           haloRoute(const IconScreen(toNotifications: true)),
@@ -284,6 +279,22 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       },
                     ),
                   ],
+                ),
+              ),
+              // a pin turns previews off. if someone turns them back on,
+              // say what that gives away, in the warning's own colour
+              Unfold(
+                open: lockState.lockOn && _show == NotifShow.all,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
+                  child: Text(
+                    l10n.gettingMessagesShowsMessageTextIn,
+                    style: HaloType.sans(
+                      size: 12,
+                      color: HaloColors.rose,
+                      height: 1.35,
+                    ),
+                  ),
                 ),
               ),
               Padding(
