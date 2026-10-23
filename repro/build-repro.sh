@@ -37,9 +37,6 @@ org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=1G -XX:ReservedCodeCacheSize=5
 kotlin.daemon.jvmargs=-Xmx1g
 org.gradle.workers.max=2
 EOF
-# the daemons' own malloc: two arenas rather than one per thread, for
-# less memory beyond the heap with r8's few hundred threads
-export MALLOC_ARENA_MAX=2
 
 # HALO_STEP=fetch fills the pub and gradle caches mounted by release.sh
 # --fetch, so the release build can then run with no network. gradle
