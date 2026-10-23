@@ -210,15 +210,23 @@ extension AppStateRoute on AppState {
 
   void _newTorTry() => _torTryNew = true;
 
+  // a route changed on purpose: a try of its own, and nothing the old one
+  // carried is held for it. a network handover keeps the grace
+  void _newRoute() {
+    _newTorTry();
+    _usableAt = null;
+    _routeOnPurpose = true;
+  }
+
   // tor torn down and started again on purpose
   void restartTor() {
     engine.restartTor();
-    _newTorTry();
+    _newRoute();
   }
 
   // the same, waited on, for the way out a stuck send offers
   Future<String> reconnectNow() {
-    _newTorTry();
+    _newRoute();
     return engine.reconnectNow();
   }
 
@@ -297,6 +305,12 @@ extension AppStateRoute on AppState {
         pct != _bootstrapPct ||
         rok != _routeOK ||
         rgen != _routeGen) {
+      // the bounce asked for has begun: what the old route carried is not
+      // held through it
+      if (rgen != _routeGen && _routeOnPurpose) {
+        _routeOnPurpose = false;
+        _usableAt = null;
+      }
       _torStatus = st;
       _routeOK = rok;
       _routeGen = rgen;
@@ -351,6 +365,26 @@ extension AppStateRoute on AppState {
     online: _online,
     now: DateTime.now(),
   );
+
+  /// the connection as the home pill and the tor sheet both show it
+  LinkView get linkView => linkViewAt(DateTime.now());
+
+  @visibleForTesting
+  LinkView linkViewAt(DateTime now) => linkViewOf(
+    mode: _sendMode,
+    status: _torStatus,
+    pct: _bootstrapPct,
+    online: _online,
+    usable: torUsable,
+    usableAt: _usableAt,
+    tryingSince: _torTryingSince,
+    relayDownSince: _relayDownSince,
+    now: now,
+  );
+
+  DateTime? get relayDownSince => _relayDownSince;
+  @visibleForTesting
+  set relayDownSinceForTest(DateTime? t) => _relayDownSince = t;
 
   // tor can carry traffic. "reachable" is the end of publishing, not the
   // start of being usable. tor's word is not enough on its own: it can say
@@ -467,13 +501,16 @@ extension AppStateRoute on AppState {
   @visibleForTesting
   void sampleRelayHealth({DateTime? now}) {
     final at = now ?? DateTime.now();
+    final wasDown = _relayDownSince != null;
     try {
       _noteRelayHealth(engine.transportState()['relays'] as List?, now: at);
     } catch (_) {
       // transport not readable yet: nothing to conclude
     }
     final v = suggestFastFallbackAt(at);
-    if (v != _fastHintShown) {
+    // the pill counts the spell from here on its own clock
+    final moved = wasDown != (_relayDownSince != null);
+    if (v != _fastHintShown || moved) {
       _fastHintShown = v;
       notifyListeners();
     }

@@ -9077,4 +9077,27 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند.';
+
+  @override
+  String get appRelayNotAnswering => 'رله ساکت است';
+
+  @override
+  String get motionNoRelayYet => 'هنوز رله‌ای نیست';
+
+  @override
+  String get motionTheRouteIsUp => 'مسیر برقرار است';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'پیام‌ها به محض اینکه رله‌ای از این مسیر پاسخ دهد فرستاده می‌شوند.';
+
+  @override
+  String get motionOffline => 'آفلاین';
+
+  @override
+  String get motionNoNetwork => 'شبکه‌ای نیست';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد.';
 }

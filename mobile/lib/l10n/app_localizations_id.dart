@@ -9057,4 +9057,27 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
+
+  @override
+  String get appRelayNotAnswering => 'Relay diam';
+
+  @override
+  String get motionNoRelayYet => 'BELUM ADA RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Rutenya sudah siap';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Pesan terkirim begitu ada relay yang menjawab lewat rute ini.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Tidak ada jaringan';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.';
 }

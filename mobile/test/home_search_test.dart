@@ -13,12 +13,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, TorHalo, useDatabasesForTest, useEngineForTest;
+    show
+        AppStateRoute,
+        HaloDb,
+        HaloEngine,
+        TorHalo,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Db implements HaloDb {
@@ -298,6 +306,47 @@ void main() {
           sem.dispose();
         },
       );
+    }
+  }
+
+  // the pill's longest words, in the languages that run longest, beside
+  // the three buttons at large text: nothing overflows, the id stays legible
+  for (final code in ['de', 'ru', 'pt', 'es', 'fr', 'tr', 'vi', 'fa', 'ar']) {
+    for (final state in ['relay-wait', 'relay-down', 'climbing']) {
+      testWidgets('the header fits the pill saying $state in $code', (t) async {
+        addTearDown(() {
+          appState.sendModeForTest = 'private';
+          appState.relayDownSinceForTest = null;
+          appState.torTryingSinceForTest = null;
+          appState.setTorStatusForTest(TorStatus.off);
+          appState.setRouteOKForTest(true);
+        });
+        setL10nLocale(Locale(code));
+        _phone(t, size: const Size(360, 760));
+        final ago = DateTime.now().subtract(const Duration(minutes: 2));
+        switch (state) {
+          case 'relay-wait':
+            appState.sendModeForTest = 'private';
+            appState.setTorStatusForTest(TorStatus.reachable);
+            appState.setRouteOKForTest(false);
+          case 'relay-down':
+            appState.sendModeForTest = 'balanced';
+            appState.relayDownSinceForTest = ago;
+          default:
+            appState.sendModeForTest = 'private';
+            appState.torTryingSinceForTest = ago;
+            appState.takeTorStatus('starting|45|0|0|0');
+        }
+        await t.pumpWidget(_app(locale: Locale(code), scale: 1.3));
+        await _settle(t);
+        expect(t.takeException(), isNull);
+        final tor = t.getRect(find.byType(TorHalo));
+        expect(tor.left, greaterThanOrEqualTo(0));
+        expect(tor.right, lessThanOrEqualTo(360));
+        final date = t.getRect(find.text('neon-tiger-saturn'));
+        expect(date.width, greaterThan(60));
+        await _drain(t);
+      });
     }
   }
 }

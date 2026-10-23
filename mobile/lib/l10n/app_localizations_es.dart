@@ -9134,4 +9134,27 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección.';
+
+  @override
+  String get appRelayNotAnswering => 'Repetidor no responde';
+
+  @override
+  String get motionNoRelayYet => 'AÚN SIN REPETIDOR';
+
+  @override
+  String get motionTheRouteIsUp => 'La ruta está lista';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Los mensajes salen en cuanto un repetidor responda por esta ruta.';
+
+  @override
+  String get motionOffline => 'SIN CONEXIÓN';
+
+  @override
+  String get motionNoNetwork => 'Sin red';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Sin red no sale nada. Tor sigue en cuanto vuelva.';
 }

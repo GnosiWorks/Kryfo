@@ -11437,5 +11437,33 @@
   "onboardingRelayThisNetworkSees": "This network can see you connect to Kryfo. Our relay sees your address.",
   "@onboardingRelayThisNetworkSees": {
     "description": "screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode"
+  },
+  "appRelayNotAnswering": "Relay not answering",
+  "@appRelayNotAnswering": {
+    "description": "app/gates.dart: the home pill in relay mode while its relay has not answered for a while"
+  },
+  "motionNoRelayYet": "NO RELAY YET",
+  "@motionNoRelayYet": {
+    "description": "widgets/motion.dart: the tor sheet's route label, all caps, while tor's route is up and no relay has answered through it"
+  },
+  "motionTheRouteIsUp": "The route is up",
+  "@motionTheRouteIsUp": {
+    "description": "widgets/motion.dart: the tor sheet's large italic line while tor's route is up and no relay has answered through it"
+  },
+  "motionMessagesGoOnceARelay": "Messages go out as soon as a relay answers through this route.",
+  "@motionMessagesGoOnceARelay": {
+    "description": "widgets/motion.dart: the tor sheet's small line under that"
+  },
+  "motionOffline": "OFFLINE",
+  "@motionOffline": {
+    "description": "widgets/motion.dart: the tor sheet's route label, all caps, while the phone has no network"
+  },
+  "motionNoNetwork": "No network",
+  "@motionNoNetwork": {
+    "description": "widgets/motion.dart: the tor sheet's large italic line while the phone has no network"
+  },
+  "motionTorPicksUpAgain": "Nothing goes out without a network. Tor picks up again when one is back.",
+  "@motionTorPicksUpAgain": {
+    "description": "widgets/motion.dart: the tor sheet's small line under that"
   }
 }

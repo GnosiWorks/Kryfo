@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "開啟 Onion 前不使用",
   "bridgesRelayWorksWhereTor": "中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。",
   "bridgesRelayThisNetworkSees": "中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。",
-  "onboardingRelayThisNetworkSees": "這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。"
+  "onboardingRelayThisNetworkSees": "這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。",
+  "appRelayNotAnswering": "中繼無回應",
+  "motionNoRelayYet": "尚無中繼",
+  "motionTheRouteIsUp": "路線已建好",
+  "motionMessagesGoOnceARelay": "一旦有中繼透過這條路線回應，訊息就會送出。",
+  "motionOffline": "離線",
+  "motionNoNetwork": "沒有網路",
+  "motionTorPicksUpAgain": "沒有網路時什麼都送不出去。網路恢復後，Tor 會繼續。"
 }

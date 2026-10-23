@@ -9227,4 +9227,27 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
+
+  @override
+  String get appRelayNotAnswering => 'Ретранслятор молчит';
+
+  @override
+  String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКА НЕТ';
+
+  @override
+  String get motionTheRouteIsUp => 'Маршрут готов';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Сообщения уйдут, как только ретранслятор ответит по этому маршруту.';
+
+  @override
+  String get motionOffline => 'НЕ В СЕТИ';
+
+  @override
+  String get motionNoNetwork => 'Нет сети';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Без сети ничего не уходит. Tor продолжит, как только она появится.';
 }

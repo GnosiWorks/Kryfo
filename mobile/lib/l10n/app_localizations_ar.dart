@@ -9192,4 +9192,27 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
+
+  @override
+  String get appRelayNotAnswering => 'المُرحِّل صامت';
+
+  @override
+  String get motionNoRelayYet => 'لا مُرحِّل بعد';
+
+  @override
+  String get motionTheRouteIsUp => 'المسار جاهز';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.';
+
+  @override
+  String get motionOffline => 'غير متصل';
+
+  @override
+  String get motionNoNetwork => 'لا توجد شبكة';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.';
 }

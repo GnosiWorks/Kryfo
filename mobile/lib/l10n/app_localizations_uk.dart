@@ -9217,4 +9217,27 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу.';
+
+  @override
+  String get appRelayNotAnswering => 'Ретранслятор мовчить';
+
+  @override
+  String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКИ НЕМАЄ';
+
+  @override
+  String get motionTheRouteIsUp => 'Маршрут готовий';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Повідомлення підуть, щойно ретранслятор відповість цим маршрутом.';
+
+  @override
+  String get motionOffline => 'ОФЛАЙН';
+
+  @override
+  String get motionNoNetwork => 'Немає мережі';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться.';
 }

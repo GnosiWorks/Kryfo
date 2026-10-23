@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Tidak ada sampai Onion aktif",
   "bridgesRelayWorksWhereTor": "Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.",
   "bridgesRelayThisNetworkSees": "Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.",
-  "onboardingRelayThisNetworkSees": "Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu."
+  "onboardingRelayThisNetworkSees": "Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.",
+  "appRelayNotAnswering": "Relay diam",
+  "motionNoRelayYet": "BELUM ADA RELAY",
+  "motionTheRouteIsUp": "Rutenya sudah siap",
+  "motionMessagesGoOnceARelay": "Pesan terkirim begitu ada relay yang menjawab lewat rute ini.",
+  "motionOffline": "OFFLINE",
+  "motionNoNetwork": "Tidak ada jaringan",
+  "motionTorPicksUpAgain": "Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali."
 }

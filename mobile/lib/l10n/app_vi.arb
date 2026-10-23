@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Chưa dùng cho đến khi bật Onion",
   "bridgesRelayWorksWhereTor": "Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.",
   "bridgesRelayThisNetworkSees": "Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.",
-  "onboardingRelayThisNetworkSees": "Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn."
+  "onboardingRelayThisNetworkSees": "Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.",
+  "appRelayNotAnswering": "Relay im lặng",
+  "motionNoRelayYet": "CHƯA CÓ RELAY",
+  "motionTheRouteIsUp": "Tuyến đường đã sẵn sàng",
+  "motionMessagesGoOnceARelay": "Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.",
+  "motionOffline": "NGOẠI TUYẾN",
+  "motionNoNetwork": "Không có mạng",
+  "motionTorPicksUpAgain": "Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại."
 }

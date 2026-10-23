@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Nada até ativar o Onion",
   "bridgesRelayWorksWhereTor": "O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser.",
   "bridgesRelayThisNetworkSees": "O modo retransmissor passa onde o Tor está bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.",
-  "onboardingRelayThisNetworkSees": "Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço."
+  "onboardingRelayThisNetworkSees": "Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço.",
+  "appRelayNotAnswering": "Retransmissor calado",
+  "motionNoRelayYet": "NENHUM RETRANSMISSOR AINDA",
+  "motionTheRouteIsUp": "A rota está pronta",
+  "motionMessagesGoOnceARelay": "As mensagens saem assim que um retransmissor responder por esta rota.",
+  "motionOffline": "OFFLINE",
+  "motionNoNetwork": "Sem rede",
+  "motionTorPicksUpAgain": "Sem rede, nada sai. O Tor continua assim que ela voltar."
 }

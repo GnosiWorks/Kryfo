@@ -9050,4 +9050,27 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.';
+
+  @override
+  String get appRelayNotAnswering => 'Relay im lặng';
+
+  @override
+  String get motionNoRelayYet => 'CHƯA CÓ RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Tuyến đường đã sẵn sàng';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.';
+
+  @override
+  String get motionOffline => 'NGOẠI TUYẾN';
+
+  @override
+  String get motionNoNetwork => 'Không có mạng';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.';
 }

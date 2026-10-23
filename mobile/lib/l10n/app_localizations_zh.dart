@@ -8653,6 +8653,27 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+
+  @override
+  String get appRelayNotAnswering => '中继无响应';
+
+  @override
+  String get motionNoRelayYet => '暂无中继';
+
+  @override
+  String get motionTheRouteIsUp => '路线已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中继通过这条路线响应，消息就会发出。';
+
+  @override
+  String get motionOffline => '离线';
+
+  @override
+  String get motionNoNetwork => '没有网络';
+
+  @override
+  String get motionTorPicksUpAgain => '没有网络时什么都发不出去。网络恢复后，Tor 会继续。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17186,4 +17207,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get onboardingRelayThisNetworkSees =>
       '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+
+  @override
+  String get appRelayNotAnswering => '中繼無回應';
+
+  @override
+  String get motionNoRelayYet => '尚無中繼';
+
+  @override
+  String get motionTheRouteIsUp => '路線已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中繼透過這條路線回應，訊息就會送出。';
+
+  @override
+  String get motionOffline => '離線';
+
+  @override
+  String get motionNoNetwork => '沒有網路';
+
+  @override
+  String get motionTorPicksUpAgain => '沒有網路時什麼都送不出去。網路恢復後，Tor 會繼續。';
 }

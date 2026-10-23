@@ -9087,4 +9087,27 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+
+  @override
+  String get appRelayNotAnswering => 'Aktarıcı sessiz';
+
+  @override
+  String get motionNoRelayYet => 'HENÜZ AKTARICI YOK';
+
+  @override
+  String get motionTheRouteIsUp => 'Rota hazır';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Bir aktarıcı bu rota üzerinden yanıt verir vermez mesajlar gider.';
+
+  @override
+  String get motionOffline => 'ÇEVRİMDIŞI';
+
+  @override
+  String get motionNoNetwork => 'Ağ yok';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.';
 }

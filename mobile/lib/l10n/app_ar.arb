@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
   "bridgesRelayWorksWhereTor": "وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.",
   "bridgesRelayThisNetworkSees": "وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.",
-  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك."
+  "onboardingRelayThisNetworkSees": "يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.",
+  "appRelayNotAnswering": "المُرحِّل صامت",
+  "motionNoRelayYet": "لا مُرحِّل بعد",
+  "motionTheRouteIsUp": "المسار جاهز",
+  "motionMessagesGoOnceARelay": "تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.",
+  "motionOffline": "غير متصل",
+  "motionNoNetwork": "لا توجد شبكة",
+  "motionTorPicksUpAgain": "لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود."
 }

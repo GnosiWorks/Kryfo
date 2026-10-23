@@ -67,7 +67,9 @@ void main() {
       await t.pumpWidget(app(const Center(child: TorHalo(label: true))));
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.appTorReady), findsNothing);
-      expect(find.text(l10n.appConnecting2), findsOneWidget);
+      // tor's route is up: it says what it waits for, not connecting
+      expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
+      expect(find.text(l10n.appConnecting2), findsNothing);
 
       _set('private', TorStatus.publishing);
       await t.pump(const Duration(milliseconds: 400));
@@ -189,7 +191,9 @@ void main() {
     testWidgets('the tor sheet while tor is bootstrapped', (t) async {
       _set('private', TorStatus.bootstrapped, route: false);
       await openSheet(t);
-      expect(inSheet(l10n.appConnecting2), findsOneWidget);
+      // the pill's words: tor is up and waits for a relay
+      expect(inSheet(l10n.appWaitingForARelay), findsOneWidget);
+      expect(inSheet(l10n.appConnecting2), findsNothing);
       expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
       expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
 
@@ -279,8 +283,8 @@ void main() {
       await gone(t);
     });
 
-    testWidgets('a long connecting says what it waits for, a decoy only '
-        'that it connects', (t) async {
+    testWidgets('a long connecting says how far it is, a route up what it '
+        'waits for, and a decoy the same', (t) async {
       addTearDown(() {
         appState.torTryingSinceForTest = null;
         lockState.inDecoy = false;
@@ -305,11 +309,12 @@ void main() {
       await t.pump();
       expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
 
+      // a decoy is not told apart from the app by its words
       lockState.inDecoy = true;
       appState.setRouteOKForTest(false);
       await t.pump();
-      expect(find.text(l10n.appConnecting2), findsOneWidget);
-      expect(find.text(l10n.appWaitingForARelay), findsNothing);
+      expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
+      expect(find.text(l10n.appConnecting2), findsNothing);
       await gone(t);
     });
   });
@@ -361,20 +366,31 @@ void main() {
     });
   });
 
-  // the pill holds it through a blip shorter than its grace
+  // the pill and the sheet hold it through a blip shorter than its grace
   // (pill_grace_test), and nothing else differs
-  test('settings and the pill read the same predicate', () {
+  test('settings, the pill and the sheet read the same predicate', () {
     final settings = File(
       'lib/screens/settings_screen.dart',
     ).readAsStringSync();
     expect(settings, contains('appState.torUsable'));
     final main = File('lib/app/gates.dart').readAsStringSync();
-    final pill = main.substring(main.indexOf('class TorHaloState'));
-    expect(pill, contains('final ready = appState.pillReady;'));
+    final pill = main.substring(
+      main.indexOf('class TorHaloState'),
+      main.indexOf('class TorSheet'),
+    );
+    final sheet = main.substring(main.indexOf('class TorSheet'));
+    // one reading each, and no tor status of their own
+    expect(pill, contains('final v = appState.linkView;'));
+    expect(sheet, contains('LinkViewBuilder('));
+    for (final view in [pill, sheet]) {
+      expect(view, isNot(contains('appState.torStatus')));
+      expect(view, isNot(contains('appState.torUsable')));
+      expect(view, isNot(contains('appState.pillReady')));
+    }
     final state = sourceOf('lib/app/state.dart');
-    final held = state.substring(state.indexOf('bool get pillReady'));
+    final read = state.substring(state.indexOf('LinkView linkViewAt('));
     expect(
-      held.substring(0, held.indexOf(');')),
+      read.substring(0, read.indexOf(');')),
       contains('usable: torUsable,'),
     );
   });

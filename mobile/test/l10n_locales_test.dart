@@ -3236,6 +3236,13 @@ final _calls = <_Call>[
     [],
     (l) => l.onboardingRelayThisNetworkSees,
   ),
+  ('appRelayNotAnswering', [], (l) => l.appRelayNotAnswering),
+  ('motionNoRelayYet', [], (l) => l.motionNoRelayYet),
+  ('motionTheRouteIsUp', [], (l) => l.motionTheRouteIsUp),
+  ('motionMessagesGoOnceARelay', [], (l) => l.motionMessagesGoOnceARelay),
+  ('motionOffline', [], (l) => l.motionOffline),
+  ('motionNoNetwork', [], (l) => l.motionNoNetwork),
+  ('motionTorPicksUpAgain', [], (l) => l.motionTorPicksUpAgain),
 ];
 
 void main() {

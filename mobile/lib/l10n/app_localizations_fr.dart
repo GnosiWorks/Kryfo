@@ -9158,4 +9158,27 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Ce réseau peut voir que vous vous connectez à Kryfo. Notre relais voit votre adresse.';
+
+  @override
+  String get appRelayNotAnswering => 'Relais muet';
+
+  @override
+  String get motionNoRelayYet => 'PAS ENCORE DE RELAIS';
+
+  @override
+  String get motionTheRouteIsUp => 'La route est tracée';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Les messages partent dès qu’un relais répond par cette route.';
+
+  @override
+  String get motionOffline => 'HORS LIGNE';
+
+  @override
+  String get motionNoNetwork => 'Pas de réseau';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Rien ne part sans réseau. Tor reprend dès qu’il revient.';
 }

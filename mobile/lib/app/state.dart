@@ -631,6 +631,8 @@ class AppState extends ChangeNotifier {
 
   // when the status poll last saw the route carry, for the pill's grace
   DateTime? _usableAt;
+  // a route changed on purpose: the engine's next generation is not held
+  bool _routeOnPurpose = false;
 
   static const offlineAfter = Duration(minutes: 5);
   // when tor first started trying this session. a network that

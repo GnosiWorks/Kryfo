@@ -3790,5 +3790,18 @@ void main() {
       l.onboardingRelayThisNetworkSees,
       "This network can see you connect to Kryfo. Our relay sees your address.",
     );
+    expect(l.appRelayNotAnswering, "Relay not answering");
+    expect(l.motionNoRelayYet, "NO RELAY YET");
+    expect(l.motionTheRouteIsUp, "The route is up");
+    expect(
+      l.motionMessagesGoOnceARelay,
+      "Messages go out as soon as a relay answers through this route.",
+    );
+    expect(l.motionOffline, "OFFLINE");
+    expect(l.motionNoNetwork, "No network");
+    expect(
+      l.motionTorPicksUpAgain,
+      "Nothing goes out without a network. Tor picks up again when one is back.",
+    );
   });
 }

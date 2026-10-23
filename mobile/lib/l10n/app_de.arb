@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Nichts, bis Onion an ist",
   "bridgesRelayWorksWhereTor": "Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln.",
   "bridgesRelayThisNetworkSees": "Der Relais-Modus kommt auch durch, wo Tor blockiert ist, aber dieses Netz kann sehen, dass du dich mit Kryfo verbindest.",
-  "onboardingRelayThisNetworkSees": "Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse."
+  "onboardingRelayThisNetworkSees": "Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse.",
+  "appRelayNotAnswering": "Relais schweigt",
+  "motionNoRelayYet": "NOCH KEIN RELAIS",
+  "motionTheRouteIsUp": "Die Route steht",
+  "motionMessagesGoOnceARelay": "Nachrichten gehen raus, sobald ein Relais über diese Route antwortet.",
+  "motionOffline": "OFFLINE",
+  "motionNoNetwork": "Kein Netz",
+  "motionTorPicksUpAgain": "Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist."
 }

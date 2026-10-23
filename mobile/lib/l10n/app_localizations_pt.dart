@@ -9131,4 +9131,27 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço.';
+
+  @override
+  String get appRelayNotAnswering => 'Retransmissor calado';
+
+  @override
+  String get motionNoRelayYet => 'NENHUM RETRANSMISSOR AINDA';
+
+  @override
+  String get motionTheRouteIsUp => 'A rota está pronta';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'As mensagens saem assim que um retransmissor responder por esta rota.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Sem rede';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Sem rede, nada sai. O Tor continua assim que ela voltar.';
 }

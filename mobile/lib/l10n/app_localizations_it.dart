@@ -9138,4 +9138,27 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo.';
+
+  @override
+  String get appRelayNotAnswering => 'Il relay tace';
+
+  @override
+  String get motionNoRelayYet => 'NESSUN RELAY ANCORA';
+
+  @override
+  String get motionTheRouteIsUp => 'Il percorso è pronto';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'I messaggi partono appena un relay risponde lungo questo percorso.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Nessuna rete';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Senza rete non parte niente. Tor riprende appena torna.';
 }

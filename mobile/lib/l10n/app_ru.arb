@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Ничего, пока не включён Onion",
   "bridgesRelayWorksWhereTor": "Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент.",
   "bridgesRelayThisNetworkSees": "Режим ретранслятора проходит там, где Tor заблокирован, но эта сеть может видеть, что ты подключаешься к Kryfo.",
-  "onboardingRelayThisNetworkSees": "Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес."
+  "onboardingRelayThisNetworkSees": "Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.",
+  "appRelayNotAnswering": "Ретранслятор молчит",
+  "motionNoRelayYet": "РЕТРАНСЛЯТОРА ПОКА НЕТ",
+  "motionTheRouteIsUp": "Маршрут готов",
+  "motionMessagesGoOnceARelay": "Сообщения уйдут, как только ретранслятор ответит по этому маршруту.",
+  "motionOffline": "НЕ В СЕТИ",
+  "motionNoNetwork": "Нет сети",
+  "motionTorPicksUpAgain": "Без сети ничего не уходит. Tor продолжит, как только она появится."
 }

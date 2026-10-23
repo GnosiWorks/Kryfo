@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "هیچ، تا Onion روشن شود",
   "bridgesRelayWorksWhereTor": "حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.",
   "bridgesRelayThisNetworkSees": "حالت رله جایی که Tor مسدود است هم رد می‌شود، اما این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوی.",
-  "onboardingRelayThisNetworkSees": "این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند."
+  "onboardingRelayThisNetworkSees": "این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند.",
+  "appRelayNotAnswering": "رله ساکت است",
+  "motionNoRelayYet": "هنوز رله‌ای نیست",
+  "motionTheRouteIsUp": "مسیر برقرار است",
+  "motionMessagesGoOnceARelay": "پیام‌ها به محض اینکه رله‌ای از این مسیر پاسخ دهد فرستاده می‌شوند.",
+  "motionOffline": "آفلاین",
+  "motionNoNetwork": "شبکه‌ای نیست",
+  "motionTorPicksUpAgain": "بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد."
 }

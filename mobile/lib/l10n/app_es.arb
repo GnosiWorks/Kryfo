@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Nada hasta activar Onion",
   "bridgesRelayWorksWhereTor": "El modo repetidor funciona donde Tor está bloqueado, y puedes volver cuando quieras.",
   "bridgesRelayThisNetworkSees": "El modo repetidor pasa donde Tor está bloqueado, pero esta red puede ver que te conectas a Kryfo.",
-  "onboardingRelayThisNetworkSees": "Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección."
+  "onboardingRelayThisNetworkSees": "Esta red puede ver que te conectas a Kryfo. Nuestro repetidor ve tu dirección.",
+  "appRelayNotAnswering": "Repetidor no responde",
+  "motionNoRelayYet": "AÚN SIN REPETIDOR",
+  "motionTheRouteIsUp": "La ruta está lista",
+  "motionMessagesGoOnceARelay": "Los mensajes salen en cuanto un repetidor responda por esta ruta.",
+  "motionOffline": "SIN CONEXIÓN",
+  "motionNoNetwork": "Sin red",
+  "motionTorPicksUpAgain": "Sin red no sale nada. Tor sigue en cuanto vuelva."
 }

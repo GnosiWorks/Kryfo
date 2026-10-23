@@ -9054,4 +9054,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'This network can see you connect to Kryfo. Our relay sees your address.';
+
+  @override
+  String get appRelayNotAnswering => 'Relay not answering';
+
+  @override
+  String get motionNoRelayYet => 'NO RELAY YET';
+
+  @override
+  String get motionTheRouteIsUp => 'The route is up';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Messages go out as soon as a relay answers through this route.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'No network';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Nothing goes out without a network. Tor picks up again when one is back.';
 }

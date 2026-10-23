@@ -2391,5 +2391,12 @@
   "bridgesNoneUntilOnion": "Rien tant qu’Onion n’est pas activé",
   "bridgesRelayWorksWhereTor": "Le mode relais fonctionne là où Tor est bloqué, et vous pouvez revenir quand vous voulez.",
   "bridgesRelayThisNetworkSees": "Le mode relais passe là où Tor est bloqué, mais ce réseau peut voir que vous vous connectez à Kryfo.",
-  "onboardingRelayThisNetworkSees": "Ce réseau peut voir que vous vous connectez à Kryfo. Notre relais voit votre adresse."
+  "onboardingRelayThisNetworkSees": "Ce réseau peut voir que vous vous connectez à Kryfo. Notre relais voit votre adresse.",
+  "appRelayNotAnswering": "Relais muet",
+  "motionNoRelayYet": "PAS ENCORE DE RELAIS",
+  "motionTheRouteIsUp": "La route est tracée",
+  "motionMessagesGoOnceARelay": "Les messages partent dès qu’un relais répond par cette route.",
+  "motionOffline": "HORS LIGNE",
+  "motionNoNetwork": "Pas de réseau",
+  "motionTorPicksUpAgain": "Rien ne part sans réseau. Tor reprend dès qu’il revient."
 }
