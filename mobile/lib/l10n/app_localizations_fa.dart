@@ -8891,6 +8891,27 @@ class AppLocalizationsFa extends AppLocalizations {
   String get translateShowOriginal => 'نمایش متن اصلی';
 
   @override
+  String translateBarTo(Object language) {
+    return 'ترجمه به $language';
+  }
+
+  @override
+  String get translateBarMore => 'گزینه‌های ترجمه';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'همیشه $language را ترجمه کن';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'هرگز $language را ترجمه نکن';
+  }
+
+  @override
+  String get translateBarHide => 'پنهان کردن در این گفتگو';
+
+  @override
   String get translateWorking => 'در حال ترجمه…';
 
   @override

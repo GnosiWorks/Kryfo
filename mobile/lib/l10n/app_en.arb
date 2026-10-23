@@ -11162,6 +11162,41 @@
   "@translateShowOriginal": {
     "description": "under a translated message, and in its menu: back to the words as they were sent"
   },
+  "translateBarTo": "Translate to {language}",
+  "@translateBarTo": {
+    "description": "the bar at the top of a chat in another language: one tap translates the whole chat into the reader's language",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarMore": "Translation options",
+  "@translateBarMore": {
+    "description": "the bar's small menu button, for screen readers"
+  },
+  "translateBarAlways": "Always translate {language}",
+  "@translateBarAlways": {
+    "description": "in the bar's menu: every chat translates this language on its own",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarNever": "Never translate {language}",
+  "@translateBarNever": {
+    "description": "in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateBarHide": "Hide in this chat",
+  "@translateBarHide": {
+    "description": "in the bar's menu: the bar goes away in this chat"
+  },
   "translateWorking": "Translating…",
   "@translateWorking": {
     "description": "under a message while it is translated on the phone"

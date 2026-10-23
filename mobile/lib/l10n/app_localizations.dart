@@ -14331,6 +14331,36 @@ abstract class AppLocalizations {
   /// **'Show original'**
   String get translateShowOriginal;
 
+  /// the bar at the top of a chat in another language: one tap translates the whole chat into the reader's language
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to {language}'**
+  String translateBarTo(Object language);
+
+  /// the bar's small menu button, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Translation options'**
+  String get translateBarMore;
+
+  /// in the bar's menu: every chat translates this language on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Always translate {language}'**
+  String translateBarAlways(Object language);
+
+  /// in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation
+  ///
+  /// In en, this message translates to:
+  /// **'Never translate {language}'**
+  String translateBarNever(Object language);
+
+  /// in the bar's menu: the bar goes away in this chat
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in this chat'**
+  String get translateBarHide;
+
   /// under a message while it is translated on the phone
   ///
   /// In en, this message translates to:

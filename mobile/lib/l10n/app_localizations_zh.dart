@@ -8474,6 +8474,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateShowOriginal => '显示原文';
 
   @override
+  String translateBarTo(Object language) {
+    return '翻译成$language';
+  }
+
+  @override
+  String get translateBarMore => '翻译选项';
+
+  @override
+  String translateBarAlways(Object language) {
+    return '总是翻译$language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return '不再翻译$language';
+  }
+
+  @override
+  String get translateBarHide => '在此聊天中隐藏';
+
+  @override
   String get translateWorking => '正在翻译…';
 
   @override
@@ -16970,6 +16991,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateShowOriginal => '顯示原文';
+
+  @override
+  String translateBarTo(Object language) {
+    return '翻譯成$language';
+  }
+
+  @override
+  String get translateBarMore => '翻譯選項';
+
+  @override
+  String translateBarAlways(Object language) {
+    return '總是翻譯$language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return '不再翻譯$language';
+  }
+
+  @override
+  String get translateBarHide => '在此聊天中隱藏';
 
   @override
   String get translateWorking => '正在翻譯…';

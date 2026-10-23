@@ -8971,6 +8971,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get translateShowOriginal => 'Voir l’original';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Traduire · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Options de traduction';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Toujours traduire · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Ne jamais traduire · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Masquer dans cette discussion';
+
+  @override
   String get translateWorking => 'Traduction…';
 
   @override

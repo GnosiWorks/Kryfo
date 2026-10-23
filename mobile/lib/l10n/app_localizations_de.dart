@@ -8975,6 +8975,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get translateShowOriginal => 'Original anzeigen';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Auf $language übersetzen';
+  }
+
+  @override
+  String get translateBarMore => 'Übersetzungsoptionen';
+
+  @override
+  String translateBarAlways(Object language) {
+    return '$language immer übersetzen';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return '$language nie übersetzen';
+  }
+
+  @override
+  String get translateBarHide => 'In diesem Chat ausblenden';
+
+  @override
   String get translateWorking => 'Wird übersetzt…';
 
   @override

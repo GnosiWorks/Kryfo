@@ -15,12 +15,15 @@ class TranslateSettings {
   final bool autoDefault;
   // model downloads wait for wi-fi
   final bool wifiOnly;
+  // languages every chat nobody set translates on its own
+  final List<String> always;
 
   const TranslateSettings({
     this.mine = const [],
     this.target = '',
     this.autoDefault = false,
     this.wifiOnly = true,
+    this.always = const [],
   });
 
   TranslateSettings copyWith({
@@ -28,11 +31,13 @@ class TranslateSettings {
     String? target,
     bool? autoDefault,
     bool? wifiOnly,
+    List<String>? always,
   }) => TranslateSettings(
     mine: mine ?? this.mine,
     target: target ?? this.target,
     autoDefault: autoDefault ?? this.autoDefault,
     wifiOnly: wifiOnly ?? this.wifiOnly,
+    always: always ?? this.always,
   );
 
   Map<String, Object?> toJson() => {
@@ -40,6 +45,7 @@ class TranslateSettings {
     'target': target,
     'auto': autoDefault,
     'wifi': wifiOnly,
+    'always': always,
   };
 
   static TranslateSettings fromJson(String? s) {
@@ -51,6 +57,9 @@ class TranslateSettings {
         target: j['target'] as String? ?? '',
         autoDefault: j['auto'] as bool? ?? false,
         wifiOnly: j['wifi'] as bool? ?? true,
+        always: [
+          for (final l in (j['always'] as List? ?? const [])) l as String,
+        ],
       );
     } catch (_) {
       return const TranslateSettings();
@@ -64,6 +73,9 @@ abstract class TranslateStore {
   // null when the chat was never set: the default applies
   Future<bool?> chatAuto(String chatId);
   Future<void> setChatAuto(String chatId, bool? on);
+  // the person put the chat's translate bar away
+  Future<bool> barHidden(String chatId);
+  Future<void> setBarHidden(String chatId, bool hidden);
 }
 
 class MemoryTranslateStore implements TranslateStore {
@@ -80,6 +92,12 @@ class MemoryTranslateStore implements TranslateStore {
   @override
   Future<void> setChatAuto(String chatId, bool? on) async =>
       on == null ? chats.remove(chatId) : chats[chatId] = on;
+  final Set<String> barsHidden = {};
+  @override
+  Future<bool> barHidden(String chatId) async => barsHidden.contains(chatId);
+  @override
+  Future<void> setBarHidden(String chatId, bool hidden) async =>
+      hidden ? barsHidden.add(chatId) : barsHidden.remove(chatId);
 }
 
 // one small table, made when first used. a chat's row goes with its contact
@@ -100,8 +118,8 @@ class DbTranslateStore implements TranslateStore {
     ''');
     await d.execute(
       'CREATE TRIGGER IF NOT EXISTS translate_prefs_follow AFTER DELETE ON '
-      "contacts BEGIN DELETE FROM translate_prefs WHERE k = 'chat:' || "
-      'old.halo_id; END',
+      "contacts BEGIN DELETE FROM translate_prefs WHERE k IN ('chat:' || "
+      "old.halo_id, 'bar:' || old.halo_id); END",
     );
     return d;
   }
@@ -136,6 +154,7 @@ class DbTranslateStore implements TranslateStore {
       _put(await _ready(await db()), 'all', jsonEncode(s.toJson()));
 
   static String chatKey(String chatId) => 'chat:$chatId';
+  static String barKey(String chatId) => 'bar:$chatId';
 
   @override
   Future<bool?> chatAuto(String chatId) async {
@@ -149,10 +168,21 @@ class DbTranslateStore implements TranslateStore {
     chatKey(chatId),
     on == null ? null : (on ? '1' : '0'),
   );
+
+  @override
+  Future<bool> barHidden(String chatId) async =>
+      await _get(await _ready(await chatDb(chatId)), barKey(chatId)) == '1';
+
+  @override
+  Future<void> setBarHidden(String chatId, bool hidden) async => _put(
+    await _ready(await chatDb(chatId)),
+    barKey(chatId),
+    hidden ? '1' : null,
+  );
 }
 
-// a chat deleted with its contact row kept: its switch goes. no table yet
-// means nothing was ever set
+// a chat deleted with its contact row kept: its switch and its bar go. no
+// table yet means nothing was ever set
 Future<void> forgetChatTranslate(
   Future<Database> Function() db,
   String chatId,
@@ -160,8 +190,11 @@ Future<void> forgetChatTranslate(
   try {
     await (await db()).delete(
       'translate_prefs',
-      where: 'k = ?',
-      whereArgs: [DbTranslateStore.chatKey(chatId)],
+      where: 'k IN (?, ?)',
+      whereArgs: [
+        DbTranslateStore.chatKey(chatId),
+        DbTranslateStore.barKey(chatId),
+      ],
     );
   } catch (_) {}
 }

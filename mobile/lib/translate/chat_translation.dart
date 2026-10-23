@@ -69,9 +69,91 @@ class ChatTranslation extends ChangeNotifier {
   Future<void> _load() async {
     await hub.ready();
     final on = await hub.chatAuto(chatId);
+    final set = await hub.chatAutoSet(chatId);
+    final hidden = await hub.barHidden(chatId);
+    var lib = false;
+    try {
+      lib = await hub.translator.hasLibrary();
+    } catch (_) {}
     if (_gone) return;
     _auto = on;
+    _explicit = set;
+    _barHidden = hidden;
+    _hasLib = lib;
     notifyListeners();
+  }
+
+  // what this chat itself was set to, null when nobody set it: then a
+  // language set to always translate does
+  bool? _explicit;
+  bool? _barHidden;
+  bool? _hasLib;
+
+  // whether messages in [o]'s language translate on their own here
+  bool autoOn(Offer o) =>
+      _auto == true ||
+      (_auto != null &&
+          _explicit == null &&
+          hub.settings.always.contains(o.from));
+
+  // the language most of their recent messages are in, when the person
+  // does not read it: what the bar at the top of the chat offers. two of
+  // them at least, and at least half of those with words
+  Offer? barOffer(Iterable<String> theirs) {
+    if (_barHidden != false || _hasLib != true || _auto == null) return null;
+    if (hub.locked) return null;
+    final counts = <Offer, int>{};
+    var seen = 0;
+    for (final t in theirs) {
+      if (t.trim().isEmpty) continue;
+      seen++;
+      final o = offer(t);
+      if (o != null) counts[o] = (counts[o] ?? 0) + 1;
+    }
+    Offer? best;
+    var most = 0;
+    counts.forEach((o, n) {
+      if (n > most) {
+        best = o;
+        most = n;
+      }
+    });
+    return most >= 2 && most * 2 >= seen ? best : null;
+  }
+
+  // the bar's tap: the whole chat in the reader's language from now on.
+  // what it needs first when a pack or the library is not there
+  Future<PackNeed?> translateAll(Offer o) async {
+    if (hub.locked) return null;
+    final block = await hub.blockFor(o);
+    if (block != null) return PackNeed(o, hub.missing(o), block);
+    _explicit = true;
+    await setAuto(true);
+    return null;
+  }
+
+  // and back: every message as it came, tapped ones too
+  Future<void> showOriginalAll() async {
+    _explicit = false;
+    await setAuto(false);
+    if (_gone) return;
+    for (final e in _msgs.entries.toList()) {
+      if (e.value.phase != MsgPhase.shown) continue;
+      _msgs[e.key] = MsgTranslation(
+        MsgPhase.idle,
+        text: e.value.text,
+        offer: e.value.offer,
+      );
+      _keptOriginal.add(e.key);
+    }
+    notifyListeners();
+  }
+
+  // put away for this chat: the bar goes and does not come back here
+  Future<void> hideBar() async {
+    _barHidden = true;
+    notifyListeners();
+    await hub.hideBar(chatId);
   }
 
   // a pack that came, settings that changed, or this chat set on its page:
@@ -87,13 +169,27 @@ class ChatTranslation extends ChangeNotifier {
       unawaited(_load());
     } else if (now != null && now != _auto) {
       _auto = now;
+      // a change is someone setting it, here or on the person's page
+      _explicit = now;
       _keptOriginal.clear();
-      if (!now) {
-        // what auto translated goes back; what was tapped stays
-        _msgs.removeWhere((k, _) => _byAuto.contains(k));
-        _source.removeWhere((k, _) => _byAuto.contains(k));
-        _byAuto.clear();
-      }
+    }
+    // what auto translated and no longer would goes back; what was tapped
+    // stays
+    bool undone(String k) {
+      final o = _msgs[k]?.offer;
+      return _byAuto.contains(k) && (o == null || !autoOn(o));
+    }
+
+    final back = [
+      for (final k in _byAuto)
+        if (undone(k)) k,
+    ];
+    for (final k in back) {
+      // the words go back; what was made stays for a tap or the next turn
+      // on, in memory with the rest
+      final m = _msgs[k]!;
+      _msgs[k] = MsgTranslation(MsgPhase.idle, text: m.text, offer: m.offer);
+      _byAuto.remove(k);
     }
     _autoTried.clear();
     notifyListeners();
@@ -195,10 +291,18 @@ class ChatTranslation extends ChangeNotifier {
   // a bubble on screen in a chat that translates on its own. a pack that is
   // not there is never fetched for it, and nothing is said
   void autoFor(String key, String text) {
-    if (_auto != true || hub.locked || _keptOriginal.contains(key)) return;
-    if (of(key, text).phase != MsgPhase.idle || !_autoTried.add(key)) return;
+    if (hub.locked || _keptOriginal.contains(key)) return;
+    final now = of(key, text);
+    if (now.phase != MsgPhase.idle) return;
     final o = offer(text);
-    if (o == null || hub.missing(o).isNotEmpty) return;
+    if (o == null || !autoOn(o) || !_autoTried.add(key)) return;
+    if (hub.missing(o).isNotEmpty) return;
+    // made before and turned back: shown again at once
+    if (now.text != null && now.offer == o) {
+      _set(key, text, MsgTranslation(MsgPhase.shown, text: now.text, offer: o));
+      _byAuto.add(key);
+      return;
+    }
     unawaited(
       _run(key, text, o).then((_) {
         if (shown(key)) _byAuto.add(key);

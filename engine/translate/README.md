@@ -39,7 +39,13 @@ screen shows translation and no part of it runs, though the opencc tables
 the app side is mobile/lib/translate/ and screens/translation_screen.dart.
 the language guess runs in dart, so a message's words never go to the
 engine for it. translations are kept in memory only, per open chat, never
-stored, and wiped with the language guesses when the app locks. a reader of traditional chinese gets the models' simplified
+stored, and wiped with the language guesses when the app locks.
+a chat whose recent messages are mostly in one language the person does
+not read gets a slim bar at its top (translate/translate_bar.dart): one
+tap translates the whole chat, and its menu sets the language to always or
+never translate, or puts the bar away in that chat. it is worked out from
+the guesses the chat holds in memory; only those three choices are stored.
+the decoy never shows it, and 1:1 chats only, like the rest. a reader of traditional chinese gets the models' simplified
 output converted with opencc's tables (apache 2.0, mobile/assets/opencc,
 remade by its fetch.sh): s2tw, taiwan's forms, for zh_Hant and zh_TW, as
 the app's own traditional strings use, and s2hk for zh_HK and zh_MO. a

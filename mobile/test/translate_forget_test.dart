@@ -166,6 +166,7 @@ void main() {
       final store = DbTranslateStore(() async => db);
       await store.setChatAuto('calm-grey-heron', true);
       await store.setChatAuto('quick-red-fox', true);
+      await store.setBarHidden('calm-grey-heron', true);
       final f = fakeHub(installed: true);
       TranslationHub.instance = f.hub;
       addTearDown(() => TranslationHub.instance = null);
@@ -177,6 +178,7 @@ void main() {
         hasLength(1),
       );
       expect(await store.chatAuto('calm-grey-heron'), isNull);
+      expect(await store.barHidden('calm-grey-heron'), isFalse);
       expect(await store.chatAuto('quick-red-fox'), isTrue);
       expect(f.hub.chatAutoNow('calm-grey-heron'), isNull);
       await db.close();

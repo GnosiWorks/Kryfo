@@ -9007,6 +9007,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateShowOriginal => 'عرض الأصل';
 
   @override
+  String translateBarTo(Object language) {
+    return 'ترجمة إلى $language';
+  }
+
+  @override
+  String get translateBarMore => 'خيارات الترجمة';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'ترجمة $language دائمًا';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'عدم ترجمة $language أبدًا';
+  }
+
+  @override
+  String get translateBarHide => 'إخفاء في هذه المحادثة';
+
+  @override
   String get translateWorking => 'جارٍ الترجمة…';
 
   @override

@@ -9041,6 +9041,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translateShowOriginal => 'Показать оригинал';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Перевести · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Параметры перевода';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Всегда переводить · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Никогда не переводить · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Скрыть в этом чате';
+
+  @override
   String get translateWorking => 'Перевод…';
 
   @override

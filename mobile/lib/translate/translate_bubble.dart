@@ -67,7 +67,7 @@ class TranslatedBody extends StatelessWidget {
         final m = chat.of(msgKey, text);
         final o = m.offer ?? chat.offer(text);
         if (o == null) return original;
-        if (chat.auto == true && m.phase == MsgPhase.idle) {
+        if (m.phase == MsgPhase.idle && chat.autoOn(o)) {
           scheduleMicrotask(() => chat.autoFor(msgKey, text));
         }
         final shown = m.phase == MsgPhase.shown && m.text != null;

@@ -8902,6 +8902,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translateShowOriginal => 'Orijinali göster';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Çevir · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Çeviri seçenekleri';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Her zaman çevir · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Asla çevirme · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Bu sohbette gizle';
+
+  @override
   String get translateWorking => 'Çevriliyor…';
 
   @override

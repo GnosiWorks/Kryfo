@@ -8862,6 +8862,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translateShowOriginal => 'Xem bản gốc';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Dịch sang $language';
+  }
+
+  @override
+  String get translateBarMore => 'Tùy chọn dịch';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Luôn dịch $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Không bao giờ dịch $language';
+  }
+
+  @override
+  String get translateBarHide => 'Ẩn trong cuộc trò chuyện này';
+
+  @override
   String get translateWorking => 'Đang dịch…';
 
   @override

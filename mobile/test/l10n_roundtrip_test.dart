@@ -3703,6 +3703,11 @@ void main() {
     expect(l.gettingMessagesHelperChecking, "Checking…");
     expect(l.translateAction, "Translate");
     expect(l.translateShowOriginal, "Show original");
+    expect(l.translateBarTo("<language>"), "Translate to <language>");
+    expect(l.translateBarMore, "Translation options");
+    expect(l.translateBarAlways("<language>"), "Always translate <language>");
+    expect(l.translateBarNever("<language>"), "Never translate <language>");
+    expect(l.translateBarHide, "Hide in this chat");
     expect(l.translateWorking, "Translating…");
     expect(l.translateFailed, "Couldn't translate");
     expect(l.translateFrom("<language>"), "Translated from <language>");

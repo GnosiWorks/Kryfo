@@ -25,12 +25,14 @@ void main() {
       target: 'en',
       autoDefault: true,
       wifiOnly: false,
+      always: ['ru'],
     );
     final back = TranslateSettings.fromJson(jsonEncode(s.toJson()));
     expect(back.mine, s.mine);
     expect(back.target, 'en');
     expect(back.autoDefault, isTrue);
     expect(back.wifiOnly, isFalse);
+    expect(back.always, ['ru']);
   });
 
   test('a host kept by an older build is not read, nor written back', () {
@@ -78,6 +80,10 @@ void main() {
     await store.setChatAuto('quick-red-fox', false);
     expect(await store.chatAuto('calm-grey-heron'), isTrue);
     expect(await store.chatAuto('quick-red-fox'), isFalse);
+    expect(await store.barHidden('calm-grey-heron'), isFalse);
+    await store.setBarHidden('calm-grey-heron', true);
+    await store.setBarHidden('quick-red-fox', true);
+    expect(await store.barHidden('calm-grey-heron'), isTrue);
 
     await db.delete(
       'contacts',
@@ -86,6 +92,9 @@ void main() {
     );
     expect(await store.chatAuto('calm-grey-heron'), isNull);
     expect(await store.chatAuto('quick-red-fox'), isFalse);
+    // the bar's flag goes with the contact too
+    expect(await store.barHidden('calm-grey-heron'), isFalse);
+    expect(await store.barHidden('quick-red-fox'), isTrue);
     // the settings stay
     expect((await store.load()).autoDefault, isTrue);
     await db.close();

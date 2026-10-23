@@ -170,6 +170,7 @@ import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
 
 // the chats open in the stack, by id: shared words land in the one on top
@@ -1434,6 +1435,19 @@ class _ChatScreenState extends State<ChatScreen>
       _lastBurnSec = sec;
       setState(() {});
     }
+  }
+
+  // the words of their last messages, what the translate bar looks at
+  List<String> _theirRecent() {
+    if (_translation == null) return const [];
+    final out = <String>[];
+    for (var i = _messages.length - 1; i >= 0 && out.length < 20; i--) {
+      final m = _messages[i];
+      if (m.direction != 'in' || m.welcome || m.sticker != null) continue;
+      if (m.removing || m.text.trim().isEmpty) continue;
+      out.add(m.text);
+    }
+    return out;
   }
 
   // its translation goes with it, not when the chat closes
@@ -6040,6 +6054,13 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // their messages in another language: the whole chat
+                    // translated with one tap. never in the decoy
+                    TranslateBarSlot(
+                      chat: _translation,
+                      theirs: _theirRecent(),
+                      allowed: !_isDev && !sessionQuiet && !_searching,
+                    ),
                     _Fold(
                       // his chat is no request: its lock line says the rest
                       (_flag != null && !_accepted) || _isDev

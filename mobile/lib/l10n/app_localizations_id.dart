@@ -8871,6 +8871,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get translateShowOriginal => 'Lihat aslinya';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Terjemahkan ke $language';
+  }
+
+  @override
+  String get translateBarMore => 'Opsi terjemahan';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Selalu terjemahkan $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Jangan terjemahkan $language';
+  }
+
+  @override
+  String get translateBarHide => 'Sembunyikan di chat ini';
+
+  @override
   String get translateWorking => 'Menerjemahkan…';
 
   @override

@@ -9031,6 +9031,27 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateShowOriginal => 'Показати оригінал';
 
   @override
+  String translateBarTo(Object language) {
+    return 'Перекласти · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Параметри перекладу';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Завжди перекладати · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Ніколи не перекладати · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Сховати в цьому чаті';
+
+  @override
   String get translateWorking => 'Переклад…';
 
   @override
