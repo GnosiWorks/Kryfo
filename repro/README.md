@@ -12,7 +12,10 @@ the release build. it clones the commit clean, builds the engine, the
 shim and the three apks in the pinned container at f-droid's build path,
 signs them outside the container with apksigner, and leaves them in `out/`
 with `libkryfo_signal-<version>-source.tar.gz`, the complete source of the
-signal shim (its own crate and every crate it links) for the release page. the keystore
+signal shim for the release page: its own crate and every crate its
+Cargo.lock names, build scripts and their dependencies included, vendored
+with checksums and a `.cargo/config.toml`, so `cargo build --offline` builds
+it from the archive alone. the keystore
 never goes into the container. `--unsigned` stops before signing.
 
 a step that fails on the network (a fetch error, a mirror answering 404) is
