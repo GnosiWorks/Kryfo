@@ -32,6 +32,8 @@ func sweepRound() time.Duration {
 type liveAddr struct {
 	// when it last brought something, unix seconds, 0 for never
 	heard int64
+	// closed when the address moves into the cap
+	wake chan struct{}
 }
 
 var (
@@ -47,7 +49,7 @@ func rankedLane(lane string) bool { return strings.HasPrefix(lane, laneEveryday+
 func liveJoin(rcvPk string, heard int64) *liveAddr {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	a := &liveAddr{heard: heard}
+	a := &liveAddr{heard: heard, wake: make(chan struct{})}
 	if old := liveAddrs[rcvPk]; old != nil && old.heard > heard {
 		a.heard = old.heard
 	}
@@ -90,13 +92,31 @@ func publicLive(rcvPk string) bool {
 	return liveRankedLocked(rcvPk)
 }
 
-// rcvPk brought something at at
+// rcvPk brought something at at. one that moves into the cap wakes its
+// runners, so a contact who writes is live everywhere again
 func liveHeard(rcvPk string, at int64) {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	if a := liveAddrs[rcvPk]; a != nil && at > a.heard {
-		a.heard = at
+	a := liveAddrs[rcvPk]
+	if a == nil || at <= a.heard {
+		return
 	}
+	was := liveRankedLocked(rcvPk)
+	a.heard = at
+	if !was && liveRankedLocked(rcvPk) {
+		close(a.wake)
+		a.wake = make(chan struct{})
+	}
+}
+
+// closed when rcvPk moves into the cap, nil for one not ranked
+func liveWake(rcvPk string) <-chan struct{} {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	if a := liveAddrs[rcvPk]; a != nil {
+		return a.wake
+	}
+	return nil
 }
 
 // the next read of a public relay, a fourth either way so they spread out

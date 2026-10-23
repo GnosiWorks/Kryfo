@@ -73,7 +73,13 @@ func TestLiveRankKeepsTheLatestHeard(t *testing.T) {
 	if !publicLive("a") || !publicLive("b") || publicLive("c") {
 		t.Fatal("past the cap the two heard from last are live")
 	}
+	wake := liveWake("c")
 	liveHeard("c", 40)
+	select {
+	case <-wake:
+	default:
+		t.Fatal("an address that moved into the cap was not woken")
+	}
 	if !publicLive("c") || publicLive("b") {
 		t.Fatal("c heard from last is live, b fell out")
 	}
@@ -225,6 +231,67 @@ func TestJustAddedIsLiveOnThePublicRelays(t *testing.T) {
 	waitFor(t, "the new address live on the public relay", 10*time.Second, func() bool {
 		return openOn(pub, rcv) == 1
 	})
+}
+
+// a contact past the cap who writes reaches us on our relay. its address
+// goes live on the public relays at once, not at its next read, and the
+// one it pushed out of the cap lets go of its socket at its next probe
+func TestAContactWhoWritesGoesLiveOnThePublicRelays(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	oldSpread := kickSpread
+	kickSpread = 0
+	t.Cleanup(func() { kickSpread = oldSpread })
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	peers := []xid{newXid(t), newXid(t), newXid(t)}
+	rcvs := make([]string, len(peers))
+	for i, p := range peers {
+		rcvs[i] = mustRcv(t, p)
+	}
+	// nothing heard yet: the first by address holds the one place
+	order := []int{0, 1, 2}
+	slices.SortFunc(order, func(a, b int) int { return strings.Compare(rcvs[a], rcvs[b]) })
+	first, last := order[0], order[2]
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for i, p := range peers {
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcvs[i])
+	}
+	waitFor(t, "every address on our relay and the first on the public one", 15*time.Second, func() bool {
+		for _, a := range rcvs {
+			if openOn(own, a) != 1 {
+				return false
+			}
+		}
+		return openOn(pub, rcvs[first]) == 1
+	})
+	if everOn(pub, rcvs[last]) != 0 {
+		t.Fatal("an address past the cap dialled the public relay")
+	}
+	own.pushLive(wrapTo(t, peers[last], myXPub, "hello"))
+	lastHex := hex.EncodeToString(peers[last].pub[:])
+	waitFor(t, "the message on our relay", 10*time.Second, func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return slices.Contains(nostrInbox, lastHex+"|hello")
+	})
+	waitFor(t, "the writer live on the public relay", 5*time.Second, func() bool {
+		return openOn(pub, rcvs[last]) == 1
+	})
+	kickUntil(t, "the address pushed out closing its public socket", func() bool {
+		return openOn(pub, rcvs[first]) == 0
+	})
+	if openOn(pub, rcvs[last]) != 1 {
+		t.Fatal("the writer lost its public socket on the kick")
+	}
+	for _, a := range rcvs {
+		if openOn(own, a) != 1 {
+			t.Fatal("every address stays live on our relay")
+		}
+	}
 }
 
 // only the contacts' receive lanes are ranked

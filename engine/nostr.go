@@ -1552,6 +1552,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						case <-ctx.Done():
 							t.Stop()
 							return
+						case <-liveWake(rcvPk):
 						case <-kickChan():
 						case <-t.C:
 						}
@@ -2047,6 +2048,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						turn.skip()
 					case <-kickC:
 						kickT, kickC = nil, nil
+						// fallen out of the cap: the kick's probe closes it
+						if sweeper && sweptC == nil && !publicLive(rcvPk) {
+							pastCap()
+							idle.Stop()
+							r.Close()
+							swept = true
+							goto reconnect
+						}
 						// a socket that is still answering does not need
 						// reviving, and dropping it costs a full since window
 						// on every contact and every relay, so ask before
