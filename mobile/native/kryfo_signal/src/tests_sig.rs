@@ -123,7 +123,11 @@ fn the_vectors_hold() {
     let v = vectors();
     assert!(v.good.len() >= CONTEXTS.len());
     for c in CONTEXTS {
-        assert!(v.good.iter().any(|g| g.context == c.0), "no vector for {}", c.0);
+        assert!(
+            v.good.iter().any(|g| g.context == c.0),
+            "no vector for {}",
+            c.0
+        );
     }
     for g in &v.good {
         // the text is spelled out in the file: the construction is pinned,
@@ -231,7 +235,11 @@ fn prekey_and_kryfo_signatures_never_cross() {
             );
         }
     }
-    assert!(v.good.iter().any(|g| g.message.len() == 33 && g.message[0] == 0x05));
+    assert!(
+        v.good
+            .iter()
+            .any(|g| g.message.len() == 33 && g.message[0] == 0x05)
+    );
     for (key, other, sig) in &v.alts {
         let id = IdentityKey::decode(key).unwrap();
         let o = IdentityKey::decode(other).unwrap();
@@ -315,7 +323,10 @@ fn sign_refuses() {
     // a body that is not the context's format
     for (c, magic) in CONTEXTS {
         if magic.is_some() {
-            assert_eq!(sign_of(&alice.pair, c.as_bytes(), b"KXX1 x"), Err(Error::Args));
+            assert_eq!(
+                sign_of(&alice.pair, c.as_bytes(), b"KXX1 x"),
+                Err(Error::Args)
+            );
         }
     }
     // a key pair whose halves do not belong together
@@ -390,7 +401,10 @@ fn the_header_matches_the_library() {
     for c in &calls {
         assert!(lib.contains(&format!("    {c} => ")), "{c} not exported");
     }
-    assert_eq!(lib.matches(" => ops::").count() + lib.matches(" => sig::").count(), calls.len());
+    assert_eq!(
+        lib.matches(" => ops::").count() + lib.matches(" => sig::").count(),
+        calls.len()
+    );
 }
 
 #[test]
@@ -398,7 +412,13 @@ fn signature_calls_take_garbage() {
     let alice = Party::new(1);
     let s = sign_of(&alice.pair, b"invite", b"KIN4 garbage").unwrap();
     let seeds: Vec<(Op, Vec<u8>)> = vec![
-        (sign, w().bytes(&alice.pair).bytes(b"invite").bytes(b"KIN4 x").done()),
+        (
+            sign,
+            w().bytes(&alice.pair)
+                .bytes(b"invite")
+                .bytes(b"KIN4 x")
+                .done(),
+        ),
         (
             verify_ctx,
             w().bytes(&alice.public)
@@ -446,7 +466,11 @@ fn write_sig_vectors() {
     let bodies: Vec<(&str, &str, Vec<u8>)> = vec![
         ("invite_1", "invite", [&b"KIN4"[..], &[1; 28]].concat()),
         ("hello_1", "hello", [&b"KHL1"[..], &[2; 20]].concat()),
-        ("device_list_1", "device-list", [&b"KDL2"[..], &k1[1]].concat()),
+        (
+            "device_list_1",
+            "device-list",
+            [&b"KDL2"[..], &k1[1]].concat(),
+        ),
         ("link_proof_1", "link-proof", k2[1].clone()),
         ("move_1", "move", vec![0x33; 32]),
         ("face_claim_1", "face-claim", b"amber-otter-lake".to_vec()),
@@ -474,7 +498,10 @@ fn write_sig_vectors() {
     let bad = |name: &str, want: &str, lax: bool, key: &[u8], c: &str, m: &[u8], s: &[u8]| {
         if lax {
             let k = PublicKey::deserialize(key).unwrap();
-            assert!(k.verify_signature(&signed_text(c.as_bytes(), m), s), "{name}");
+            assert!(
+                k.verify_signature(&signed_text(c.as_bytes(), m), s),
+                "{name}"
+            );
         }
         println!(
             "bad {name} {want} {} {} {c} {} {}",
@@ -522,8 +549,20 @@ fn write_sig_vectors() {
     bad("key_one", "key", false, &one, c, m, s);
     bad("other_key", "signature", false, &k2[1], c, m, s);
     bad("sig_short", "signature", false, &k1[1], c, m, &s[..63]);
-    bad("sig_long", "signature", false, &k1[1], c, m, &[&s[..], &[0]].concat());
-    for (name, i, bit) in [("sig_r_flip", 3, 1), ("sig_s_flip", 40, 4), ("sig_sign_bit", 63, 0x80)] {
+    bad(
+        "sig_long",
+        "signature",
+        false,
+        &k1[1],
+        c,
+        m,
+        &[&s[..], &[0]].concat(),
+    );
+    for (name, i, bit) in [
+        ("sig_r_flip", 3, 1),
+        ("sig_s_flip", 40, 4),
+        ("sig_sign_bit", 63, 0x80),
+    ] {
         let mut f = s.clone();
         f[i] ^= bit;
         bad(name, "signature", false, &k1[1], c, m, &f);
@@ -531,10 +570,34 @@ fn write_sig_vectors() {
     let mut mm = m.clone();
     mm[10] ^= 1;
     bad("message_changed", "signature", false, &k1[1], c, &mm, s);
-    bad("invite_without_magic", "signature", false, &k1[1], "invite", &m[4..], s);
+    bad(
+        "invite_without_magic",
+        "signature",
+        false,
+        &k1[1],
+        "invite",
+        &m[4..],
+        s,
+    );
     let (_, m5, s5) = &good[4];
-    bad("move_as_link_proof", "signature", false, &k1[1], "link-proof", m5, s5);
-    bad("move_as_face_claim", "signature", false, &k1[1], "face-claim", m5, s5);
+    bad(
+        "move_as_link_proof",
+        "signature",
+        false,
+        &k1[1],
+        "link-proof",
+        m5,
+        s5,
+    );
+    bad(
+        "move_as_face_claim",
+        "signature",
+        false,
+        &k1[1],
+        "face-claim",
+        m5,
+        s5,
+    );
     bad("context_case", "args", false, &k1[1], "Invite", m, s);
     bad("context_unknown", "args", false, &k1[1], "kryfo", m, s);
 

@@ -54,7 +54,13 @@ fn lock_packages() -> Vec<(String, String, Option<String>)> {
     };
     lock.split("[[package]]")
         .skip(1)
-        .map(|p| (field(p, "name").unwrap(), field(p, "version").unwrap(), field(p, "source")))
+        .map(|p| {
+            (
+                field(p, "name").unwrap(),
+                field(p, "version").unwrap(),
+                field(p, "source"),
+            )
+        })
         .collect()
 }
 
@@ -79,7 +85,10 @@ fn the_lock_names_the_reviewed_commits() {
     for (name, s) in &git {
         assert!(s == LIBSIGNAL || s == SPQR, "{name} from {s}");
     }
-    assert!(git.len() > 2, "libsignal's own crates come from the same commit");
+    assert!(
+        git.len() > 2,
+        "libsignal's own crates come from the same commit"
+    );
     // the manifest asks for the same tags, so the lock is not stale
     let toml = manifest("Cargo.toml");
     assert!(toml.contains(
@@ -94,12 +103,9 @@ fn the_lock_names_the_reviewed_commits() {
 
 #[test]
 fn the_library_says_what_it_was_built_from() {
-    let mut out = std::ptr::null_mut();
-    let mut n = 0;
-    let code = unsafe { kryfo_signal::ks_build_info(std::ptr::null(), 0, &mut out, &mut n) };
-    assert_eq!(code, 0);
-    let b = unsafe { std::slice::from_raw_parts(out, n) }.to_vec();
-    unsafe { kryfo_signal::ks_free(out, n) };
+    // the call itself, not ks_build_info: the c boundary would set a quiet
+    // panic hook and take the reasons out of every failure below
+    let b = kryfo_signal::build_info(&[]).unwrap();
     let mut fields = Vec::new();
     let mut rest = &b[..];
     while !rest.is_empty() {
@@ -155,9 +161,16 @@ fn android_builds_name_the_reviewed_commits() {
             }
         }
         // libsignal's own refusals are in it
-        for s in [&b"X3DH no longer supported"[..], b"Kyber pre key must be present"] {
+        for s in [
+            &b"X3DH no longer supported"[..],
+            b"Kyber pre key must be present",
+        ] {
             if !contains(&b, s) {
-                problems.push(format!("{}: no {:?}", so.display(), String::from_utf8_lossy(s)));
+                problems.push(format!(
+                    "{}: no {:?}",
+                    so.display(),
+                    String::from_utf8_lossy(s)
+                ));
             }
         }
     }
@@ -205,10 +218,7 @@ impl Side {
                 .await
                 .unwrap();
             store
-                .save_kyber_pre_key(
-                    2.into(),
-                    &KyberPreKeyRecord::new(2.into(), ts, &k, &k_sig),
-                )
+                .save_kyber_pre_key(2.into(), &KyberPreKeyRecord::new(2.into(), ts, &k, &k_sig))
                 .await
                 .unwrap();
         });
@@ -344,7 +354,10 @@ fn a_bundle_with_a_bad_kyber_part_builds_nothing() {
     let mut broken = bob.kyber.2.clone();
     broken[5] ^= 1;
     let cases = [
-        ("kyber signature broken", (bob.kyber.0, bob.kyber.1.clone(), broken)),
+        (
+            "kyber signature broken",
+            (bob.kyber.0, bob.kyber.1.clone(), broken),
+        ),
         (
             "another identity's kyber key",
             (bob.kyber.0, carol.kyber.1.clone(), bob.kyber.2.clone()),
@@ -401,7 +414,9 @@ fn dart_bob(f: &HashMap<String, Vec<u8>>) -> InMemSignalProtocolStore {
     let spk = SignedPreKeyRecord::deserialize(&f["bob_spk"]).unwrap();
     block_on(async {
         s.save_pre_key(pk.id().unwrap(), &pk).await.unwrap();
-        s.save_signed_pre_key(spk.id().unwrap(), &spk).await.unwrap();
+        s.save_signed_pre_key(spk.id().unwrap(), &spk)
+            .await
+            .unwrap();
     });
     s
 }
@@ -565,14 +580,21 @@ fn assert_spqr_required(rec: &SessionRecord, side: &str) {
             min_version,
         } => {
             assert_eq!(version as i32, spqr::Version::V1 as i32, "{side}");
-            assert_eq!(min_version as i32, spqr::Version::V1 as i32, "{side}: min_version");
+            assert_eq!(
+                min_version as i32,
+                spqr::Version::V1 as i32,
+                "{side}: min_version"
+            );
         }
         spqr::CurrentVersion::NegotiationComplete(v) => {
             assert_eq!(v as i32, spqr::Version::V1 as i32, "{side}");
         }
     }
     // a message without the pq part is what a peer without spqr sends
-    assert!(spqr::recv(pq, &Vec::new()).is_err(), "{side}: took a v0 message");
+    assert!(
+        spqr::recv(pq, &Vec::new()).is_err(),
+        "{side}: took a v0 message"
+    );
 }
 
 #[test]
