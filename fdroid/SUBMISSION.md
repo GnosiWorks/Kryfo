@@ -21,6 +21,20 @@ so the first version after a go bump needs a merge request that moves the
 `go@` srclib to the new tag, or the build fails. every go bump moves go.mod, both
 dockerfiles, prep-offline.sh and the recipe together.
 
+## flavors
+
+from 0.6.0 the app has a foss and a play flavor, and f-droid builds foss. the
+build line gets `--flavor foss` and `output:` becomes
+`build/app/outputs/flutter-apk/app-<abi>-foss-release.apk`, while `binary:`
+keeps the release asset `app-<abi>-release.apk`. the 0.5.3 blocks build no
+flavor, so like a go bump this needs a merge request with the 0.6.0 blocks.
+
+no `gradle: [foss]`: with `gradle:` set, fdroidserver runs its own gradle
+assemble in `subdir` instead of the flutter build line. its scanner reads
+only the dependency lines of the flavors named in `gradle:`, the unflavored
+ones when it names none, so it skips a `playImplementation` line, which a
+foss build never resolves either.
+
 ## what can go wrong
 
 - the flutter srclib may not have 3.41.7 yet

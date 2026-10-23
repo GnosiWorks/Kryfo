@@ -17,13 +17,14 @@ val keystoreProperties = Properties().apply {
     }
 }
 
-// the google play build: --dart-define=KRYFO_STORE=play. read from the define
-// the dart side reads, so the two halves cannot disagree. every other build
-// leaves this false and comes out as before
-val playStore = (project.findProperty("dart-defines") as String?)
-    ?.split(",")
-    ?.any { String(Base64.getDecoder().decode(it)) == "KRYFO_STORE=play" }
-    ?: false
+// the play build was a dart define once. a script that still passes it would
+// get a foss bundle under play's name, so it stops here
+if ((project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.any { String(Base64.getDecoder().decode(it)).startsWith("KRYFO_STORE=") } == true
+) {
+    throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
+}
 
 android {
     lint {
@@ -78,16 +79,27 @@ android {
         applicationId = "app.kryfo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // play gets one bundle per version, above the per-abi apks (N*10+1
-        // to +3, room left to +8) and below the next version's
-        versionCode = if (playStore) flutter.versionCode * 10 + 9 else flutter.versionCode
+        versionCode = flutter.versionCode
         versionName = flutter.versionName
         // the launcher name, see the label check below
         manifestPlaceholders["appLabel"] = "Kryfo"
     }
 
-    if (playStore) {
-        sourceSets.getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
+    // foss is what f-droid, github and the site ship, with no google code.
+    // play is the google play build: its code and dependencies go only in
+    // src/play and playImplementation, so foss never sees them. flutter hands
+    // the flavor to dart as well (lib/store.dart), so the halves agree
+    flavorDimensions += "store"
+    productFlavors {
+        create("foss") {
+            dimension = "store"
+        }
+        create("play") {
+            dimension = "store"
+            // play gets one bundle per version, above the per-abi apks
+            // (N*10+1 to +3, room left to +8) and below the next version's
+            versionCode = flutter.versionCode * 10 + 9
+        }
     }
 
     signingConfigs {
@@ -125,6 +137,15 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// kotlin puts the module name into internal names, and the flavors turned
+// app_release into app_fossRelease. r8's code is the same either way but
+// its map id in classes.dex is not, so release builds keep the old name
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    if (name == "compileFossReleaseKotlin" || name == "compilePlayReleaseKotlin") {
+        compilerOptions.moduleName.set("app_release")
+    }
 }
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
@@ -250,7 +271,7 @@ android.applicationVariants.configureEach {
         val abiVersionCode =
             abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
         // play builds a bundle and keeps its own code
-        if (abiVersionCode != null && !playStore) {
+        if (abiVersionCode != null && variant.flavorName == "foss") {
             (output as ApkVariantOutputImpl).versionCodeOverride =
                 variant.versionCode * 10 + abiVersionCode
         }

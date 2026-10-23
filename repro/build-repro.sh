@@ -35,7 +35,7 @@ if [ "$HALO_STEP" = fetch ]; then
     mkdir -p "android/app/src/main/jniLibs/$abi"
     : > "android/app/src/main/jniLibs/$abi/libhalo.so"
   done
-  HALO_UNSIGNED=1 flutter build apk --release --split-per-abi
+  HALO_UNSIGNED=1 flutter build apk --release --split-per-abi --flavor foss
   exit 0
 fi
 
@@ -74,10 +74,15 @@ echo
 echo "== apk (unsigned: the keystore never comes near this container)"
 cd "$SRC/mobile"
 export HALO_UNSIGNED=1
-flutter build apk --release --split-per-abi $NO_PUB
+# foss is what f-droid and github ship. play is built and signed elsewhere
+flutter build apk --release --split-per-abi --flavor foss $NO_PUB
 
 echo
 echo "== out"
-cp build/app/outputs/flutter-apk/app-*-release*.apk "$OUT/"
+# the flavor goes into flutter's names. the release assets keep the names
+# f-droid's binary: line points at
+for f in build/app/outputs/flutter-apk/app-*-foss-release*.apk; do
+  cp "$f" "$OUT/$(basename "$f" | sed 's/-foss-release/-release/')"
+done
 cd "$OUT"
 sha256sum app-*.apk

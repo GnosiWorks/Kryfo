@@ -6,7 +6,8 @@ a feature goes into a release finished or not at all.
 
 - `flutter analyze` shows nothing but the known deprecation infos
 - `flutter test` passes
-- `cd mobile/android && ./gradlew --offline :app:lintDebug :app:lintVitalAnalyzeRelease` passes
+- `cd mobile/android && ./gradlew --offline :app:lintFossDebug :app:lintPlayDebug
+  :app:lintVitalAnalyzeFossRelease :app:lintVitalAnalyzePlayRelease` passes
 - every `ALTER TABLE` in mobile/lib/app/database.dart is inside a try/catch,
   and every new column is in each `CREATE TABLE` (test/schema_parity_test.dart)
 - no logging outside dlog: `grep -rn "print(" mobile/lib | grep -v dlog` is empty
@@ -98,6 +99,8 @@ metadata/app.kryfo.yml. one `Builds:` block per abi (version codes N*10+1,
 agree with the release:
 
 - `ndk: r28c`, the one repro/Dockerfile pins
+- the build line has `--flavor foss` and `output:` is
+  `build/app/outputs/flutter-apk/app-<abi>-foss-release.apk`
 - `binary:` points at the release asset `app-<abi>-release.apk`
 - the signature is a pure insertion, release.sh passes `--alignment-preserved`
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints
