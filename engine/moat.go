@@ -130,6 +130,7 @@ func setDecoy(on bool) {
 		decoyState.Store(decoyOn)
 		// a call under way gives up and dials nothing more
 		cancelMoatCalls()
+		stopVoiceDownloads()
 	} else {
 		decoyState.Store(decoyOff)
 	}

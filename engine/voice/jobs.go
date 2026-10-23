@@ -113,6 +113,18 @@ func (j *Jobs) Cancel(key string) {
 	<-jb.done
 }
 
+// StopAll stops every download without waiting for them to end, for a
+// caller that may not block. what they fetched stays for the next Start.
+func (j *Jobs) StopAll() {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	for _, jb := range j.m {
+		if jb.st.State == StateRunning {
+			jb.cancel()
+		}
+	}
+}
+
 // Forget drops key's last word, once its files are gone.
 func (j *Jobs) Forget(key string) {
 	j.mu.Lock()

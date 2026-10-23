@@ -108,6 +108,10 @@ func Fetch(ctx context.Context, get Getter, m *Manifest, md Model, dir string, p
 		os.Remove(part)
 		return err
 	}
+	// a stop that came during the last chunk or the hash lands nothing
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	return os.Rename(part, Path(dir, md))
 }
 

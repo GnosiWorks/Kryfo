@@ -105,3 +105,28 @@ func TestJobsFailureKind(t *testing.T) {
 		}
 	}
 }
+
+func TestJobsStopAllDoesNotWait(t *testing.T) {
+	var j Jobs
+	let := make(chan struct{})
+	for _, key := range []string{"a", "b"} {
+		j.Start(key, func(ctx context.Context, prog Progress) error {
+			<-ctx.Done()
+			<-let
+			return ctx.Err()
+		})
+	}
+	j.Start("c", func(context.Context, Progress) error { return nil })
+	waitState(t, &j, "c", StateDone)
+	j.StopAll()
+	// both still hold their files; StopAll returned all the same
+	if !j.Running("a") || !j.Running("b") {
+		t.Fatal("StopAll waited")
+	}
+	close(let)
+	waitState(t, &j, "a", StateCancelled)
+	waitState(t, &j, "b", StateCancelled)
+	if j.Status("c").State != StateDone {
+		t.Fatal("a finished download lost its word")
+	}
+}

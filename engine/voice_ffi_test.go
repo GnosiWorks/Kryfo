@@ -53,6 +53,8 @@ func newVoiceRig(t *testing.T, redirectHosts string, h http.Handler) *voiceRig {
 	pool := x509.NewCertPool()
 	pool.AddCert(r.srv.Certificate())
 	oldPinned, oldDial, oldTLS := voicePinned, voiceDial, voiceTLS
+	oldDecoy := decoyState.Load()
+	decoyState.Store(decoyOff)
 	voicePinned = func() (*voice.Manifest, error) { return man, nil }
 	voiceTLS = &tls.Config{RootCAs: pool}
 	voiceDial = func(name string) (dialFn, error) {
@@ -67,6 +69,7 @@ func newVoiceRig(t *testing.T, redirectHosts string, h http.Handler) *voiceRig {
 		voiceJobs.Forget("base")
 		r.srv.Close()
 		voicePinned, voiceDial, voiceTLS = oldPinned, oldDial, oldTLS
+		decoyState.Store(oldDecoy)
 	})
 	return r
 }
@@ -277,5 +280,58 @@ func TestVoiceCancelKeepsPart(t *testing.T) {
 	st, err := os.Stat(filepath.Join(dir, "m.bin.part"))
 	if err != nil || st.Size() != voice.Chunk {
 		t.Fatalf("part %v %v", st, err)
+	}
+}
+
+// the decoy downloads nothing: not while one is open, not before the app
+// has said, and a decoy opening stops a download the real session started
+func TestVoiceFetchRefusedInDecoy(t *testing.T) {
+	r := newVoiceRig(t, "", nil)
+	for _, st := range []int32{decoyOn, decoyUnknown} {
+		decoyState.Store(st)
+		dir := t.TempDir()
+		if got := voiceFetch("base", dir, ""); got != "error: decoy" {
+			t.Errorf("decoy state %d: %q", st, got)
+		}
+		if entries, _ := os.ReadDir(dir); len(entries) != 0 {
+			t.Errorf("decoy state %d left %v", st, entries)
+		}
+	}
+	if len(r.names) != 0 || r.hits.Load() != 0 {
+		t.Fatal("a decoy session dialled")
+	}
+}
+
+func TestVoiceDecoyStopsADownload(t *testing.T) {
+	var r *voiceRig
+	started := make(chan struct{}, 1)
+	r = newVoiceRig(t, "", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		r.hits.Add(1)
+		if req.Header.Get("Range") != "bytes=0-1048575" {
+			select {
+			case started <- struct{}{}:
+			default:
+			}
+			<-req.Context().Done()
+			return
+		}
+		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
+	}))
+	dir := t.TempDir()
+	if got := voiceFetch("base", dir, ""); got != "ok" {
+		t.Fatal(got)
+	}
+	<-started
+	setDecoy(true)
+	if st := waitVoice(t, "base"); st.State != voice.StateCancelled {
+		t.Fatalf("download ran on in the decoy: %+v", st)
+	}
+	hits := r.hits.Load()
+	time.Sleep(100 * time.Millisecond)
+	if r.hits.Load() != hits {
+		t.Fatal("asked the host again with a decoy open")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "m.bin")); err == nil {
+		t.Fatal("a model landed in the decoy")
 	}
 }

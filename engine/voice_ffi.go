@@ -108,6 +108,11 @@ func HaloVoiceFetch(cID, cDir, cBase *C.char) *C.char {
 }
 
 func voiceFetch(id, dir, base string) string {
+	// a decoy session downloads nothing, nor does one the app has not
+	// named yet
+	if !decoyClosed() {
+		return "error: decoy"
+	}
 	if err := voice.AppDir(dir); err != nil {
 		return fmt.Sprintf("error: %v", err)
 	}
@@ -134,8 +139,17 @@ func voiceFetch(id, dir, base string) string {
 		defer c.CloseIdleConnections()
 		return voice.Fetch(ctx, voice.HTTPGetter(c), m, md, dir, prog)
 	})
+	// a decoy that opened while this started missed the job
+	if !decoyClosed() {
+		voiceJobs.Cancel(id)
+		return "error: decoy"
+	}
 	return "ok"
 }
+
+// a decoy opening stops every model download. setDecoy runs on the app's
+// thread, so this does not wait for them
+func stopVoiceDownloads() { voiceJobs.StopAll() }
 
 //export HaloVoiceProgress
 func HaloVoiceProgress(cID *C.char) *C.char {

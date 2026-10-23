@@ -197,6 +197,30 @@ func TestFetchCancelled(t *testing.T) {
 	}
 }
 
+// a stop that comes with the last chunk leaves the part, never the model
+func TestFetchStoppedAtTheEndLandsNothing(t *testing.T) {
+	data, md := fakeModel(Chunk + 10)
+	m, get := serve(t, &fakeHost{data: data})
+	ctx, cancel := context.WithCancel(context.Background())
+	last := func(c context.Context, url string, off, n int64) (io.ReadCloser, int64, error) {
+		if off+n == md.Size {
+			cancel()
+		}
+		return get(context.Background(), url, off, n)
+	}
+	dir := t.TempDir()
+	if err := Fetch(ctx, last, m, md, dir, nil); !errors.Is(err, context.Canceled) {
+		t.Fatalf("err %v", err)
+	}
+	if _, err := os.Stat(Path(dir, md)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("the model landed after the stop")
+	}
+	// the next start finds the whole part and only checks it
+	if err := Fetch(context.Background(), get, m, md, dir, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestFetchRefusesSharedDir(t *testing.T) {
 	_, md := fakeModel(10)
 	called := false

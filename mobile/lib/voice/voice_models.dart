@@ -56,7 +56,8 @@ class VoiceModels {
   final Future<String> Function() dir;
 
   /// a quiet session (the decoy) downloads nothing and sees no model, as
-  /// the translation packs do
+  /// the translation packs do. the engine holds to it too: it refuses a
+  /// download while a decoy is open and stops one when a decoy opens
   final bool Function() quiet;
 
   Future<List<VoiceModelInfo>> models() async {
