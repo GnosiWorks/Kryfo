@@ -86,6 +86,15 @@ object AppIcon {
 
     fun byName(name: String?): Face? = faces.firstOrNull { it.name == name }
 
+    // the way in kryfo takes itself (a restart, the service's tap): the
+    // launcher entry that is on, so the splash, the recents card and its
+    // name are the home screen's. the screen by its own name if none reads
+    fun entry(context: Context): ComponentName = try {
+        component(context, current(context))
+    } catch (e: Exception) {
+        ComponentName(context, KryfoActivity::class.java)
+    }
+
     private fun on(context: Context, s: Switches, f: Face): Boolean =
         when (s.state(component(context, f))) {
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true

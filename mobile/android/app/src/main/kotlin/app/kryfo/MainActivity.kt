@@ -524,9 +524,10 @@ open class MainActivity : FlutterFragmentActivity() {
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
                     }
-                    // the home screen's icon and name. the screen that was
-                    // opened through the old entry is closed by android, so
-                    // the app closes and opens again through its own
+                    // the home screen's icon and name. android leaves the
+                    // open screen up (DONT_KILL_APP), so kryfo closes and
+                    // opens again itself, through the entry now on: what
+                    // the shade and recents held named the old one
                     "appIconSet" -> {
                         val ok = AppIcon.set(this, call.argument<String>("icon"))
                         result.success(ok)

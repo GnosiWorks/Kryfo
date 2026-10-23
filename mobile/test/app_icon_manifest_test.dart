@@ -186,21 +186,37 @@ void main() {
     expect(File('$_res/drawable/ic_plain_dot.xml').existsSync(), isTrue);
   });
 
-  test('the screen is named by its own class wherever kryfo opens it', () {
+  test('kryfo opens itself through the launcher entry that is on', () {
+    // so the splash, the recents card and its name are the home screen's
     for (final f in Directory(_kt).listSync().whereType<File>()) {
-      expect(
-        f.readAsStringSync(),
-        isNot(contains('MainActivity::class.java')),
-        reason: f.path,
-      );
+      final src = f.readAsStringSync();
+      expect(src, isNot(contains('MainActivity::class.java')), reason: f.path);
+      // the screen by its own name only as the fallback in AppIcon and
+      // the restart
+      if (!f.path.endsWith('AppIcon.kt') &&
+          !f.path.endsWith('ReopenActivity.kt')) {
+        expect(
+          src,
+          isNot(contains('KryfoActivity::class.java')),
+          reason: f.path,
+        );
+      }
     }
     expect(
       bodyOf(sourceOf('$_kt/HaloListenerService.kt'), 'private fun build('),
-      contains('Intent(this, KryfoActivity::class.java)'),
+      contains('Intent().setComponent(AppIcon.entry(this))'),
+    );
+    final reopen = bodyOf(
+      sourceOf('$_kt/ReopenActivity.kt'),
+      'override fun onCreate(',
     );
     expect(
-      sourceOf('$_kt/ReopenActivity.kt'),
-      contains('ComponentName(this, KryfoActivity::class.java)'),
+      reopen.indexOf('makeRestartActivityTask(AppIcon.entry(this))'),
+      lessThan(reopen.indexOf('KryfoActivity::class.java')),
+    );
+    expect(
+      sourceOf('$_kt/AppIcon.kt'),
+      contains('component(context, current(context))'),
     );
   });
 

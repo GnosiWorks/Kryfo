@@ -139,8 +139,9 @@ class HaloListenerService : Service() {
     }
 
     private fun build(words: Words): Notification {
-        // the screen by its own name: the launcher entry may be off
-        val openIntent = Intent(this, KryfoActivity::class.java).apply {
+        // through the launcher entry that is on, so a tap opens on the home
+        // screen's face
+        val openIntent = Intent().setComponent(AppIcon.entry(this)).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val pendingIntent = PendingIntent.getActivity(

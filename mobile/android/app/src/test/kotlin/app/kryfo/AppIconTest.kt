@@ -144,4 +144,33 @@ class AppIconTest {
         }
         assertEquals("Notes", app.getString(R.string.icon_notes))
     }
+
+    @Test
+    fun kryfoStartsItselfThroughTheEntryThatIsOn() {
+        assertEquals(c("MainActivity"), AppIcon.entry(app))
+        AppIcon.set(app, "news")
+        assertEquals(c("IconNews"), AppIcon.entry(app))
+    }
+
+    // what a launcher lists: exactly the entry that is on, exported, and
+    // opening the one screen
+    private fun launchers() = pm.queryIntentActivities(
+        android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+            .setPackage(app.packageName),
+        0
+    )
+
+    @Test
+    fun theLauncherSeesOnlyTheEntryThatIsOn() {
+        for (name in listOf("kryfo", "tasks", "kryfo")) {
+            AppIcon.set(app, name)
+            val found = launchers()
+            assertEquals(name, 1, found.size)
+            val a = found.single().activityInfo
+            assertEquals("app.kryfo." + AppIcon.byName(name)!!.alias, a.name)
+            assertTrue(a.exported)
+            assertEquals("app.kryfo.KryfoActivity", a.targetActivity)
+        }
+    }
 }
