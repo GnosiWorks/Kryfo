@@ -3773,7 +3773,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Tambahkan aku di Kryfo. ID-ku $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
   }
 
   @override
@@ -3823,7 +3823,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Tautan ini berisi ID-mu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
+      'Tautan ini berisi tiga katamu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
 
   @override
   String get myKryfoSendTheLink => 'Kirim tautan';
@@ -4085,7 +4085,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo bersumber terbuka';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO-MU';
+  String get onboardingYourKryfoId => 'NAMAMU';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4492,7 +4492,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileChangeYourFace => 'Ganti wajahmu';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Namamu';
 
   @override
   String get profileOnionAddress => 'Alamat onion';
@@ -6481,7 +6481,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat ID Kryfo-mu.';
+      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat tiga katamu.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Diambil lewat Tor · oleh perangkatmu';

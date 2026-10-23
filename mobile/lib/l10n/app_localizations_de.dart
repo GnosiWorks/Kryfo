@@ -3825,7 +3825,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Füg mich auf Kryfo hinzu. Meine ID ist $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
+    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
   }
 
   @override
@@ -3875,7 +3875,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Der Link enthält deine ID, deine Adresse und die Schlüssel, um einen Chat zu beginnen. Er funktioniert, bis du ihn in den Einstellungen zurücksetzt.';
+      'Der Link enthält deine drei Wörter, deine Adresse und die Schlüssel, um einen Chat zu beginnen. Er funktioniert, bis du ihn in den Einstellungen zurücksetzt.';
 
   @override
   String get myKryfoSendTheLink => 'Link senden';
@@ -4141,7 +4141,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo ist Open Source';
 
   @override
-  String get onboardingYourKryfoId => 'DEINE KRYFO-ID';
+  String get onboardingYourKryfoId => 'DEIN NAME';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4553,7 +4553,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get profileChangeYourFace => 'Gesicht ändern';
 
   @override
-  String get profileKryfoId => 'Kryfo-ID';
+  String get profileKryfoId => 'Dein Name';
 
   @override
   String get profileOnionAddress => 'Onion-Adresse';
@@ -6557,7 +6557,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Du trittst mit einem eigens für diesen Raum erstellten Schlüssel bei. Niemand darin sieht deine Kryfo-ID.';
+      'Du trittst mit einem eigens für diesen Raum erstellten Schlüssel bei. Niemand darin sieht deine drei Wörter.';
 
   @override
   String get linkStubFetchedOverTorBy =>

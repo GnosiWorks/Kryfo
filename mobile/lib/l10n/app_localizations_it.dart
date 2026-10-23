@@ -3820,7 +3820,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Aggiungimi su Kryfo. Il mio ID è $myId\n\nTocca per aggiungermi:\n$uri\n\nKryfo è un messenger privato. Niente numero di telefono, niente email.';
+    return 'Aggiungimi su Kryfo. Lì mi chiamo $myId\n\nTocca per aggiungermi:\n$uri\n\nKryfo è un messenger privato. Niente numero di telefono, niente email.';
   }
 
   @override
@@ -3870,7 +3870,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Il link contiene il tuo id, il tuo indirizzo e le chiavi per iniziare una chat. Funziona finché non lo reimposti nelle impostazioni.';
+      'Il link contiene le tue tre parole, il tuo indirizzo e le chiavi per iniziare una chat. Funziona finché non lo reimposti nelle impostazioni.';
 
   @override
   String get myKryfoSendTheLink => 'Invia il link';
@@ -4134,7 +4134,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo è open source';
 
   @override
-  String get onboardingYourKryfoId => 'IL TUO ID KRYFO';
+  String get onboardingYourKryfoId => 'IL TUO NOME';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4541,7 +4541,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileChangeYourFace => 'Cambia il tuo volto';
 
   @override
-  String get profileKryfoId => 'Id Kryfo';
+  String get profileKryfoId => 'Il tuo nome';
 
   @override
   String get profileOnionAddress => 'Indirizzo onion';
@@ -6548,7 +6548,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Entri con una chiave creata per questa stanza. Nessuno lì dentro vede il tuo ID Kryfo.';
+      'Entri con una chiave creata per questa stanza. Nessuno lì dentro vede le tue tre parole.';
 
   @override
   String get linkStubFetchedOverTorBy =>

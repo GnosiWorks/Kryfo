@@ -3623,7 +3623,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
   }
 
   @override
@@ -3669,7 +3669,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      '链接里有你的 ID、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
+      '链接里有你的三个词、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
 
   @override
   String get myKryfoSendTheLink => '发送链接';
@@ -3912,7 +3912,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo 是开源的';
 
   @override
-  String get onboardingYourKryfoId => '你的 KRYFO ID';
+  String get onboardingYourKryfoId => '你的名字';
 
   @override
   String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。*别人都没有这组词。*';
@@ -4278,7 +4278,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String profileCopied(Object what) {
-    return '$what 已复制';
+    return '$what已复制';
   }
 
   @override
@@ -4288,7 +4288,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileChangeYourFace => '更换你的脸';
 
   @override
-  String get profileKryfoId => 'Kryfo ID';
+  String get profileKryfoId => '你的名字';
 
   @override
   String get profileOnionAddress => 'Onion 地址';
@@ -6211,8 +6211,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kryfoLinkTextJoin2 => '加入';
 
   @override
-  String get kryfoLinkTextYouJoinUnderA =>
-      '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的 Kryfo ID。';
+  String get kryfoLinkTextYouJoinUnderA => '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的三个词。';
 
   @override
   String get linkStubFetchedOverTorBy => '经由 Tor 获取 · 由你的设备';
@@ -12337,7 +12336,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
   }
 
   @override
@@ -12383,7 +12382,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      '這個連結帶有你的 ID、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
+      '這個連結帶有你的三個詞、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
 
   @override
   String get myKryfoSendTheLink => '傳送連結';
@@ -12626,7 +12625,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingKryfoIsOpenSource => 'Kryfo 開放原始碼';
 
   @override
-  String get onboardingYourKryfoId => '你的 KRYFO ID';
+  String get onboardingYourKryfoId => '你的名字';
 
   @override
   String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。*沒有其他人有這組詞。*';
@@ -12992,7 +12991,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String profileCopied(Object what) {
-    return '已複製 $what';
+    return '$what已複製';
   }
 
   @override
@@ -13002,7 +13001,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileChangeYourFace => '更換你的臉';
 
   @override
-  String get profileKryfoId => 'Kryfo ID';
+  String get profileKryfoId => '你的名字';
 
   @override
   String get profileOnionAddress => 'Onion 位址';
@@ -14925,8 +14924,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get kryfoLinkTextJoin2 => '加入';
 
   @override
-  String get kryfoLinkTextYouJoinUnderA =>
-      '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 Kryfo ID。';
+  String get kryfoLinkTextYouJoinUnderA => '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的三個詞。';
 
   @override
   String get linkStubFetchedOverTorBy => '經由 Tor 擷取 · 由你的裝置';

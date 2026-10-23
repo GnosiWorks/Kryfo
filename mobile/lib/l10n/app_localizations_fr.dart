@@ -3822,7 +3822,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Ajoutez-moi sur Kryfo. Mon ID Kryfo est $myId\n\nTouchez pour m’ajouter :\n$uri\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.';
+    return 'Ajoutez-moi sur Kryfo. Mon nom sur Kryfo est $myId\n\nTouchez pour m’ajouter :\n$uri\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.';
   }
 
   @override
@@ -3872,7 +3872,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Le lien contient votre ID, votre adresse et les clés pour démarrer une discussion. Il fonctionne jusqu’à ce que vous le réinitialisiez dans les paramètres.';
+      'Le lien contient vos trois mots, votre adresse et les clés pour démarrer une discussion. Il fonctionne jusqu’à ce que vous le réinitialisiez dans les paramètres.';
 
   @override
   String get myKryfoSendTheLink => 'Envoyer le lien';
@@ -4138,7 +4138,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo est open source';
 
   @override
-  String get onboardingYourKryfoId => 'VOTRE ID KRYFO';
+  String get onboardingYourKryfoId => 'VOTRE NOM';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4548,7 +4548,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileChangeYourFace => 'Changer de visage';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Votre nom';
 
   @override
   String get profileOnionAddress => 'Adresse onion';
@@ -6556,7 +6556,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Vous rejoignez avec une clé créée pour ce salon. Personne à l’intérieur ne voit votre ID Kryfo.';
+      'Vous rejoignez avec une clé créée pour ce salon. Personne à l’intérieur ne voit vos trois mots.';
 
   @override
   String get linkStubFetchedOverTorBy =>

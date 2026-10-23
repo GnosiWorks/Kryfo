@@ -4708,7 +4708,7 @@
   "@myKryfoInviteCopiedClearsIn": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoAddMeOnKryfo": "Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.",
+  "myKryfoAddMeOnKryfo": "Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.",
   "@myKryfoAddMeOnKryfo": {
     "description": "screens/my_kryfo_screen.dart",
     "placeholders": {
@@ -4772,7 +4772,7 @@
   "@myKryfoYourLinkAppearsOnce": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoTheLinkCarriesYour": "The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.",
+  "myKryfoTheLinkCarriesYour": "The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.",
   "@myKryfoTheLinkCarriesYour": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -5077,7 +5077,7 @@
   "@onboardingKryfoIsOpenSource": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourKryfoId": "YOUR KRYFO ID",
+  "onboardingYourKryfoId": "YOUR NAME",
   "@onboardingYourKryfoId": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5585,7 +5585,7 @@
   "@profileChangeYourFace": {
     "description": "screens/profile_screen.dart"
   },
-  "profileKryfoId": "Kryfo id",
+  "profileKryfoId": "Your name",
   "@profileKryfoId": {
     "description": "screens/profile_screen.dart"
   },
@@ -8160,7 +8160,7 @@
   "@kryfoLinkTextJoin2": {
     "description": "widgets/kryfo_link_text.dart"
   },
-  "kryfoLinkTextYouJoinUnderA": "You join under a key made for this room. Nobody in it sees your Kryfo id.",
+  "kryfoLinkTextYouJoinUnderA": "You join under a key made for this room. Nobody in it sees your three words.",
   "@kryfoLinkTextYouJoinUnderA": {
     "description": "widgets/kryfo_link_text.dart"
   },
