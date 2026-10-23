@@ -10,7 +10,12 @@ import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show appState, useDatabasesForTest, useEngineForTest;
+    show
+        AppStateRefresh,
+        AppStateRoute,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/translate/hub.dart';
