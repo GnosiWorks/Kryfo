@@ -4,7 +4,8 @@
 # out/<abi>/ with the pinned ndk and cmake, from the pinned whisper.cpp.
 # after fetch-whisper.sh has run once nothing here needs the network.
 # the library is not copied into the app while transcripts are off;
-# JNI_LIBS_DIR=<dir> copies it there.
+# KV_JNI_LIBS_DIR=<dir> copies it there. its own name: engine/build.sh
+# reads JNI_LIBS_DIR, and that one may be exported for a release
 #
 #   ./build.sh           the three abis
 #   ./build.sh --twice   then again from a copy at another path, and
@@ -135,12 +136,12 @@ build_abi x86_64 24 -DGGML_SSE42=ON -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OF
 
 (cd "$OUT" && sha256sum */libkryfo_voice.so >SHA256SUMS && cat SHA256SUMS)
 
-if [[ -n "${JNI_LIBS_DIR:-}" ]]; then
+if [[ -n "${KV_JNI_LIBS_DIR:-}" ]]; then
   for abi in arm64-v8a armeabi-v7a x86_64; do
-    mkdir -p "$JNI_LIBS_DIR/$abi"
-    cp "$OUT/$abi/libkryfo_voice.so" "$JNI_LIBS_DIR/$abi/"
+    mkdir -p "$KV_JNI_LIBS_DIR/$abi"
+    cp "$OUT/$abi/libkryfo_voice.so" "$KV_JNI_LIBS_DIR/$abi/"
   done
-  echo "copied into $JNI_LIBS_DIR"
+  echo "copied into $KV_JNI_LIBS_DIR"
 fi
 
 if [[ "${1:-}" == "--twice" ]]; then
@@ -149,7 +150,7 @@ if [[ "${1:-}" == "--twice" ]]; then
   mkdir -p "$T/elsewhere/native"
   cp -a CMakeLists.txt exports.map kryfo_voice.c kryfo_voice.h whisper.lock fetch-whisper.sh build.sh test .third_party "$T/elsewhere/native/"
   echo "again from $T/elsewhere/native"
-  KV_OUT="$T/out" JNI_LIBS_DIR= "$T/elsewhere/native/build.sh"
+  KV_OUT="$T/out" KV_JNI_LIBS_DIR= "$T/elsewhere/native/build.sh"
   if (cd "$T/out" && sha256sum -c --quiet "$OUT/SHA256SUMS"); then
     echo "SAME: both builds gave the same bytes"
   else

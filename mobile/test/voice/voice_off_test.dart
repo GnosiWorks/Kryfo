@@ -92,11 +92,37 @@ void main() {
               .where(
                 (f) => !f.path.contains('/build/') && !f.path.endsWith('.so'),
               ))
-        if (RegExp(r'\.(kts|gradle|xml|properties|pro)$').hasMatch(f.path) &&
-            f.readAsStringSync().contains('kryfo_voice'))
-          f.path,
+        if (RegExp(r'\.(kts|gradle|xml|properties|pro)$').hasMatch(f.path))
+          for (final line in f.readAsLinesSync())
+            if (line.contains('kryfo_voice')) '${f.path}: ${line.trim()}',
     ];
-    expect(hits, isEmpty);
+    // the one mention is gradle leaving it out
+    expect(hits, [
+      'android/app/build.gradle.kts: excludes += "**/libkryfo_voice.so"',
+    ]);
     expect(VoiceLibrary.hostBuilt, contains('build/host'));
   });
+
+  test('no copy of the library sits in jniLibs', () {
+    final jni = Directory('android/app/src/main/jniLibs');
+    final hits = [
+      if (jni.existsSync())
+        for (final f in jni.listSync(recursive: true).whereType<File>())
+          if (f.path.endsWith('/libkryfo_voice.so')) f.path,
+    ];
+    expect(hits, isEmpty);
+  });
+
+  test(
+    'the voice build copies into the app only when asked by its own name',
+    () {
+      // engine/build.sh reads JNI_LIBS_DIR and a release exports it, so a
+      // shared name would carry the library into a release
+      final sh = File('../engine/voice/native/build.sh').readAsStringSync();
+      final reads = RegExp(
+        r'\$\{?(\w*JNI_LIBS_DIR)',
+      ).allMatches(sh).map((m) => m[1]).toSet();
+      expect(reads, {'KV_JNI_LIBS_DIR'});
+    },
+  );
 }

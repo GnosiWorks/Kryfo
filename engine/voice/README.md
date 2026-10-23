@@ -46,8 +46,9 @@ same files. build.sh wants ndk 28.2.13676358 and cmake 3.22.1, the ones
 repro/Dockerfile already pins, and builds with prefix maps, no build id,
 16 kb pages and `SOURCE_DATE_EPOCH`.
 
-the app build does not package the library yet. `JNI_LIBS_DIR` copies it
-into jniLibs once transcripts are turned on.
+the app build does not package the library yet: gradle excludes it and
+`KV_JNI_LIBS_DIR` copies it into jniLibs once transcripts are turned on.
+it is not `JNI_LIBS_DIR`, which engine/build.sh reads for libhalo.
 
 ## licences
 
