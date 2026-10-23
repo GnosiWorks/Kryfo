@@ -3793,7 +3793,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Beni Kryfo’da ekle. Kimliğim: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
+    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
   }
 
   @override
@@ -3843,7 +3843,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Bağlantı kimliğini, adresini ve sohbet başlatmak için gereken anahtarları taşır. Ayarlardan sıfırlayana kadar çalışır.';
+      'Bağlantı üç kelimeni, adresini ve sohbet başlatmak için gereken anahtarları taşır. Ayarlardan sıfırlayana kadar çalışır.';
 
   @override
   String get myKryfoSendTheLink => 'Bağlantıyı gönder';
@@ -4108,7 +4108,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo açık kaynaklı';
 
   @override
-  String get onboardingYourKryfoId => 'KRYFO KİMLİĞİN';
+  String get onboardingYourKryfoId => 'ADIN';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4513,7 +4513,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileChangeYourFace => 'Yüzünü değiştir';
 
   @override
-  String get profileKryfoId => 'Kryfo kimliği';
+  String get profileKryfoId => 'Adın';
 
   @override
   String get profileOnionAddress => 'Onion adresi';
@@ -6506,7 +6506,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bu oda için üretilmiş bir anahtarla katılırsın. İçerideki hiç kimse Kryfo kimliğini görmez.';
+      'Bu oda için üretilmiş bir anahtarla katılırsın. İçerideki hiç kimse üç kelimeni görmez.';
 
   @override
   String get linkStubFetchedOverTorBy =>
@@ -9087,6 +9087,68 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+
+  @override
+  String get settingsLicences => 'Lisanslar';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo neyle yapıldı';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo, GNU Genel Kamu Lisansı sürüm 3 veya sonrası altında özgür bir yazılımdır. Kodunu herkes okuyabilir, değiştirebilir ve paylaşabilir.';
+
+  @override
+  String get licencesSourceCode => 'Kaynak kodu';
+
+  @override
+  String get licencesSignalTitle => 'Signal protokolü';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo, Signal\'in yaptığı libsignal $version sürümünü GNU Affero Genel Kamu Lisansı sürüm 3 altında içerir. Kaynak kodu github.com/signalapp/libsignal adresinde ve her Kryfo sürümünün yanında bulunur.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, tam metin';
+
+  @override
+  String get licencesSignalSource => 'libsignal kaynak kodu';
+
+  @override
+  String get licencesParts => 'Açık kaynak parçalar';
+
+  @override
+  String get licencesInSignal => 'Signal kitaplığında';
+
+  @override
+  String get licencesInApp => 'Uygulamada';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString parça',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, tam metin';
+
+  @override
+  String get licencesInEngine => 'Ağ motorunda';
+
+  @override
+  String get licencesLoadFailed => 'Yüklenemedi';
+
+  @override
+  String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
 
   @override
   String get appRelayNotAnswering => 'Aktarıcı sessiz';

@@ -3879,7 +3879,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Добавь меня в Kryfo. Мой ID — $myId\n\nНажми, чтобы добавить:\n$uri\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
+    return 'Добавь меня в Kryfo. Там меня зовут $myId\n\nНажми, чтобы добавить:\n$uri\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
   }
 
   @override
@@ -3929,7 +3929,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'В ссылке — твой ID, твой адрес и ключи, чтобы начать чат. Она работает, пока ты не сбросишь её в настройках.';
+      'В ссылке — твои три слова, твой адрес и ключи, чтобы начать чат. Она работает, пока ты не сбросишь её в настройках.';
 
   @override
   String get myKryfoSendTheLink => 'Отправить ссылку';
@@ -4195,7 +4195,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Код Kryfo открыт';
 
   @override
-  String get onboardingYourKryfoId => 'ТВОЙ KRYFO ID';
+  String get onboardingYourKryfoId => 'ТВОЁ ИМЯ';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4601,7 +4601,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileChangeYourFace => 'Сменить лицо';
 
   @override
-  String get profileKryfoId => 'Kryfo ID';
+  String get profileKryfoId => 'Твоё имя';
 
   @override
   String get profileOnionAddress => 'Onion-адрес';
@@ -6618,7 +6618,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Ты входишь под ключом, созданным для этой комнаты. Никто в ней не видит твой Kryfo ID.';
+      'Ты входишь под ключом, созданным для этой комнаты. Никто в ней не видит твои три слова.';
 
   @override
   String get linkStubFetchedOverTorBy =>
@@ -9227,6 +9227,71 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
+
+  @override
+  String get settingsLicences => 'Лицензии';
+
+  @override
+  String get settingsLicencesValue => 'Из чего сделан Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo является свободной программой под лицензией GNU General Public License версии 3 или более поздней. Любой может читать, менять и распространять её код.';
+
+  @override
+  String get licencesSourceCode => 'Исходный код';
+
+  @override
+  String get licencesSignalTitle => 'Протокол Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo содержит libsignal $version от Signal под лицензией GNU Affero General Public License версии 3. Её исходный код есть на github.com/signalapp/libsignal и рядом с каждым выпуском Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, полный текст';
+
+  @override
+  String get licencesSignalSource => 'Исходный код libsignal';
+
+  @override
+  String get licencesParts => 'Компоненты с открытым кодом';
+
+  @override
+  String get licencesInSignal => 'В библиотеке Signal';
+
+  @override
+  String get licencesInApp => 'В приложении';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString компонента',
+      many: '$countString компонентов',
+      few: '$countString компонента',
+      one: '$countString компонент',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, полный текст';
+
+  @override
+  String get licencesInEngine => 'В сетевом движке';
+
+  @override
+  String get licencesLoadFailed => 'Не удалось загрузить';
+
+  @override
+  String get settingsCopyLinkHint => 'Скопировать ссылку';
 
   @override
   String get appRelayNotAnswering => 'Ретранслятор молчит';

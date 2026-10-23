@@ -3768,7 +3768,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Thêm tôi trên Kryfo. ID của tôi là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
   }
 
   @override
@@ -3818,7 +3818,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Liên kết chứa ID, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
+      'Liên kết chứa ba từ của bạn, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
 
   @override
   String get myKryfoSendTheLink => 'Gửi liên kết';
@@ -4079,7 +4079,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo là mã nguồn mở';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO CỦA BẠN';
+  String get onboardingYourKryfoId => 'TÊN CỦA BẠN';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4484,7 +4484,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileChangeYourFace => 'Đổi khuôn mặt';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Tên của bạn';
 
   @override
   String get profileOnionAddress => 'Địa chỉ onion';
@@ -6470,7 +6470,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID Kryfo của bạn.';
+      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ba từ của bạn.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Tải qua Tor · bởi thiết bị của bạn';
@@ -9050,6 +9050,68 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.';
+
+  @override
+  String get settingsLicences => 'Giấy phép';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo được xây dựng từ đâu';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo là phần mềm tự do theo Giấy phép Công cộng GNU, phiên bản 3 trở lên. Mọi người đều có thể đọc, sửa và chia sẻ mã nguồn của nó.';
+
+  @override
+  String get licencesSourceCode => 'Mã nguồn';
+
+  @override
+  String get licencesSignalTitle => 'Giao thức Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo có libsignal $version do Signal làm, theo Giấy phép Công cộng GNU Affero, phiên bản 3. Mã nguồn của nó có tại github.com/signalapp/libsignal và bên cạnh mỗi bản phát hành Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, toàn văn';
+
+  @override
+  String get licencesSignalSource => 'Mã nguồn libsignal';
+
+  @override
+  String get licencesParts => 'Thành phần mã nguồn mở';
+
+  @override
+  String get licencesInSignal => 'Trong thư viện Signal';
+
+  @override
+  String get licencesInApp => 'Trong ứng dụng';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString thành phần',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, toàn văn';
+
+  @override
+  String get licencesInEngine => 'Trong bộ máy mạng';
+
+  @override
+  String get licencesLoadFailed => 'Không tải được';
+
+  @override
+  String get settingsCopyLinkHint => 'Sao chép liên kết';
 
   @override
   String get appRelayNotAnswering => 'Relay im lặng';

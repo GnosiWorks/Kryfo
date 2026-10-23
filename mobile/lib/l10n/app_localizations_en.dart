@@ -3776,7 +3776,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Add me on Kryfo. My ID is $myId\n\nTap to add me:\n$uri\n\nKryfo is a private messenger. No phone number, no email.';
+    return 'Add me on Kryfo. My name there is $myId\n\nTap to add me:\n$uri\n\nKryfo is a private messenger. No phone number, no email.';
   }
 
   @override
@@ -3826,7 +3826,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.';
+      'The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.';
 
   @override
   String get myKryfoSendTheLink => 'Send the link';
@@ -4086,7 +4086,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo is open source';
 
   @override
-  String get onboardingYourKryfoId => 'YOUR KRYFO ID';
+  String get onboardingYourKryfoId => 'YOUR NAME';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4492,7 +4492,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileChangeYourFace => 'Change your face';
 
   @override
-  String get profileKryfoId => 'Kryfo id';
+  String get profileKryfoId => 'Your name';
 
   @override
   String get profileOnionAddress => 'Onion address';
@@ -6481,7 +6481,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'You join under a key made for this room. Nobody in it sees your Kryfo id.';
+      'You join under a key made for this room. Nobody in it sees your three words.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Fetched over Tor · by your device';
@@ -9054,6 +9054,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'This network can see you connect to Kryfo. Our relay sees your address.';
+
+  @override
+  String get settingsLicences => 'Licences';
+
+  @override
+  String get settingsLicencesValue => 'What Kryfo is built on';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo is free software under the GNU General Public License, version 3 or later. Anyone can read, change and share its code.';
+
+  @override
+  String get licencesSourceCode => 'Source code';
+
+  @override
+  String get licencesSignalTitle => 'Signal protocol';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo includes libsignal $version, made by Signal, under the GNU Affero General Public License, version 3. Its source code is at github.com/signalapp/libsignal and beside every Kryfo release.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, full text';
+
+  @override
+  String get licencesSignalSource => 'libsignal source code';
+
+  @override
+  String get licencesParts => 'Open source parts';
+
+  @override
+  String get licencesInSignal => 'In the Signal library';
+
+  @override
+  String get licencesInApp => 'In the app';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString parts',
+      one: '$countString part',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, full text';
+
+  @override
+  String get licencesInEngine => 'In the network engine';
+
+  @override
+  String get licencesLoadFailed => 'Could not load';
+
+  @override
+  String get settingsCopyLinkHint => 'Copy link';
 
   @override
   String get appRelayNotAnswering => 'Relay not answering';

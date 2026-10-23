@@ -3773,7 +3773,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Tambahkan aku di Kryfo. ID-ku $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
   }
 
   @override
@@ -3823,7 +3823,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Tautan ini berisi ID-mu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
+      'Tautan ini berisi tiga katamu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
 
   @override
   String get myKryfoSendTheLink => 'Kirim tautan';
@@ -4085,7 +4085,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo bersumber terbuka';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO-MU';
+  String get onboardingYourKryfoId => 'NAMAMU';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4492,7 +4492,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileChangeYourFace => 'Ganti wajahmu';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Namamu';
 
   @override
   String get profileOnionAddress => 'Alamat onion';
@@ -6481,7 +6481,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat ID Kryfo-mu.';
+      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat tiga katamu.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Diambil lewat Tor · oleh perangkatmu';
@@ -9057,6 +9057,68 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
+
+  @override
+  String get settingsLicences => 'Lisensi';
+
+  @override
+  String get settingsLicencesValue => 'Bahan pembuat Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo adalah perangkat lunak bebas di bawah GNU General Public License, versi 3 atau yang lebih baru. Siapa pun boleh membaca, mengubah, dan membagikan kodenya.';
+
+  @override
+  String get licencesSourceCode => 'Kode sumber';
+
+  @override
+  String get licencesSignalTitle => 'Protokol Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo memuat libsignal $version buatan Signal, di bawah GNU Affero General Public License, versi 3. Kode sumbernya ada di github.com/signalapp/libsignal dan di samping setiap rilis Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, teks lengkap';
+
+  @override
+  String get licencesSignalSource => 'Kode sumber libsignal';
+
+  @override
+  String get licencesParts => 'Komponen sumber terbuka';
+
+  @override
+  String get licencesInSignal => 'Di pustaka Signal';
+
+  @override
+  String get licencesInApp => 'Di aplikasi';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString komponen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, teks lengkap';
+
+  @override
+  String get licencesInEngine => 'Di mesin jaringan';
+
+  @override
+  String get licencesLoadFailed => 'Tidak dapat dimuat';
+
+  @override
+  String get settingsCopyLinkHint => 'Salin tautan';
 
   @override
   String get appRelayNotAnswering => 'Relay diam';

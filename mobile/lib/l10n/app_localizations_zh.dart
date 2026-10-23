@@ -3623,7 +3623,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
   }
 
   @override
@@ -3669,7 +3669,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      '链接里有你的 ID、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
+      '链接里有你的三个词、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
 
   @override
   String get myKryfoSendTheLink => '发送链接';
@@ -3912,7 +3912,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo 是开源的';
 
   @override
-  String get onboardingYourKryfoId => '你的 KRYFO ID';
+  String get onboardingYourKryfoId => '你的名字';
 
   @override
   String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。*别人都没有这组词。*';
@@ -4278,7 +4278,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String profileCopied(Object what) {
-    return '$what 已复制';
+    return '$what已复制';
   }
 
   @override
@@ -4288,7 +4288,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileChangeYourFace => '更换你的脸';
 
   @override
-  String get profileKryfoId => 'Kryfo ID';
+  String get profileKryfoId => '你的名字';
 
   @override
   String get profileOnionAddress => 'Onion 地址';
@@ -6211,8 +6211,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kryfoLinkTextJoin2 => '加入';
 
   @override
-  String get kryfoLinkTextYouJoinUnderA =>
-      '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的 Kryfo ID。';
+  String get kryfoLinkTextYouJoinUnderA => '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的三个词。';
 
   @override
   String get linkStubFetchedOverTorBy => '经由 Tor 获取 · 由你的设备';
@@ -8653,6 +8652,68 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+
+  @override
+  String get settingsLicences => '许可证';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo 由什么构成';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。任何人都可以阅读、修改和分享它的代码。';
+
+  @override
+  String get licencesSourceCode => '源代码';
+
+  @override
+  String get licencesSignalTitle => 'Signal 协议';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo 包含 Signal 开发的 libsignal $version，采用 GNU Affero 通用公共许可证第 3 版。它的源代码位于 github.com/signalapp/libsignal，每个 Kryfo 版本旁也附有一份。';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0 全文';
+
+  @override
+  String get licencesSignalSource => 'libsignal 源代码';
+
+  @override
+  String get licencesParts => '开源组件';
+
+  @override
+  String get licencesInSignal => 'Signal 库中';
+
+  @override
+  String get licencesInApp => '应用中';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个组件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '网络引擎中';
+
+  @override
+  String get licencesLoadFailed => '无法加载';
+
+  @override
+  String get settingsCopyLinkHint => '复制链接';
 
   @override
   String get appRelayNotAnswering => '中继无响应';
@@ -12296,7 +12357,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
   }
 
   @override
@@ -12342,7 +12403,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      '這個連結帶有你的 ID、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
+      '這個連結帶有你的三個詞、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
 
   @override
   String get myKryfoSendTheLink => '傳送連結';
@@ -12585,7 +12646,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingKryfoIsOpenSource => 'Kryfo 開放原始碼';
 
   @override
-  String get onboardingYourKryfoId => '你的 KRYFO ID';
+  String get onboardingYourKryfoId => '你的名字';
 
   @override
   String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。*沒有其他人有這組詞。*';
@@ -12951,7 +13012,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String profileCopied(Object what) {
-    return '已複製 $what';
+    return '$what已複製';
   }
 
   @override
@@ -12961,7 +13022,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileChangeYourFace => '更換你的臉';
 
   @override
-  String get profileKryfoId => 'Kryfo ID';
+  String get profileKryfoId => '你的名字';
 
   @override
   String get profileOnionAddress => 'Onion 位址';
@@ -14884,8 +14945,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get kryfoLinkTextJoin2 => '加入';
 
   @override
-  String get kryfoLinkTextYouJoinUnderA =>
-      '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 Kryfo ID。';
+  String get kryfoLinkTextYouJoinUnderA => '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的三個詞。';
 
   @override
   String get linkStubFetchedOverTorBy => '經由 Tor 擷取 · 由你的裝置';
@@ -17207,6 +17267,68 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get onboardingRelayThisNetworkSees =>
       '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+
+  @override
+  String get settingsLicences => '授權條款';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo 由什麼構成';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。任何人都可以閱讀、修改和分享它的程式碼。';
+
+  @override
+  String get licencesSourceCode => '原始碼';
+
+  @override
+  String get licencesSignalTitle => 'Signal 協定';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo 包含 Signal 開發的 libsignal $version，採用 GNU Affero 通用公共授權條款第 3 版。它的原始碼位於 github.com/signalapp/libsignal，每個 Kryfo 版本旁也附有一份。';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0 全文';
+
+  @override
+  String get licencesSignalSource => 'libsignal 原始碼';
+
+  @override
+  String get licencesParts => '開源元件';
+
+  @override
+  String get licencesInSignal => 'Signal 函式庫中';
+
+  @override
+  String get licencesInApp => '應用程式中';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個元件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0 全文';
+
+  @override
+  String get licencesInEngine => '網路引擎中';
+
+  @override
+  String get licencesLoadFailed => '無法載入';
+
+  @override
+  String get settingsCopyLinkHint => '複製連結';
 
   @override
   String get appRelayNotAnswering => '中繼無回應';

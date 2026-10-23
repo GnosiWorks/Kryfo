@@ -3825,7 +3825,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Füg mich auf Kryfo hinzu. Meine ID ist $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
+    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
   }
 
   @override
@@ -3875,7 +3875,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Der Link enthält deine ID, deine Adresse und die Schlüssel, um einen Chat zu beginnen. Er funktioniert, bis du ihn in den Einstellungen zurücksetzt.';
+      'Der Link enthält deine drei Wörter, deine Adresse und die Schlüssel, um einen Chat zu beginnen. Er funktioniert, bis du ihn in den Einstellungen zurücksetzt.';
 
   @override
   String get myKryfoSendTheLink => 'Link senden';
@@ -4141,7 +4141,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo ist Open Source';
 
   @override
-  String get onboardingYourKryfoId => 'DEINE KRYFO-ID';
+  String get onboardingYourKryfoId => 'DEIN NAME';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4553,7 +4553,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get profileChangeYourFace => 'Gesicht ändern';
 
   @override
-  String get profileKryfoId => 'Kryfo-ID';
+  String get profileKryfoId => 'Dein Name';
 
   @override
   String get profileOnionAddress => 'Onion-Adresse';
@@ -6557,7 +6557,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Du trittst mit einem eigens für diesen Raum erstellten Schlüssel bei. Niemand darin sieht deine Kryfo-ID.';
+      'Du trittst mit einem eigens für diesen Raum erstellten Schlüssel bei. Niemand darin sieht deine drei Wörter.';
 
   @override
   String get linkStubFetchedOverTorBy =>
@@ -9162,6 +9162,69 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse.';
+
+  @override
+  String get settingsLicences => 'Lizenzen';
+
+  @override
+  String get settingsLicencesValue => 'Woraus Kryfo besteht';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo ist freie Software unter der GNU General Public License, Version 3 oder später. Alle können den Code lesen, ändern und weitergeben.';
+
+  @override
+  String get licencesSourceCode => 'Quellcode';
+
+  @override
+  String get licencesSignalTitle => 'Signal-Protokoll';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo enthält libsignal $version von Signal, unter der GNU Affero General Public License, Version 3. Der Quellcode liegt auf github.com/signalapp/libsignal und neben jeder Kryfo-Version.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, voller Text';
+
+  @override
+  String get licencesSignalSource => 'Quellcode von libsignal';
+
+  @override
+  String get licencesParts => 'Open-Source-Bestandteile';
+
+  @override
+  String get licencesInSignal => 'In der Signal-Bibliothek';
+
+  @override
+  String get licencesInApp => 'In der App';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Bestandteile',
+      one: '$countString Bestandteil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, voller Text';
+
+  @override
+  String get licencesInEngine => 'In der Netzwerk-Engine';
+
+  @override
+  String get licencesLoadFailed => 'Konnte nicht geladen werden';
+
+  @override
+  String get settingsCopyLinkHint => 'Link kopieren';
 
   @override
   String get appRelayNotAnswering => 'Relais schweigt';

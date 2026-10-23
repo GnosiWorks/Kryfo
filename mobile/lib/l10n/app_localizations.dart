@@ -5970,7 +5970,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
+  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
   String myKryfoAddMeOnKryfo(Object myId, Object uri);
 
   /// screens/my_kryfo_screen.dart
@@ -6054,7 +6054,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.'**
+  /// **'The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.'**
   String get myKryfoTheLinkCarriesYour;
 
   /// screens/my_kryfo_screen.dart
@@ -6486,7 +6486,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'YOUR KRYFO ID'**
+  /// **'YOUR NAME'**
   String get onboardingYourKryfoId;
 
   /// screens/onboarding_screen.dart
@@ -7206,7 +7206,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo id'**
+  /// **'Your name'**
   String get profileKryfoId;
 
   /// screens/profile_screen.dart
@@ -10368,7 +10368,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'You join under a key made for this room. Nobody in it sees your Kryfo id.'**
+  /// **'You join under a key made for this room. Nobody in it sees your three words.'**
   String get kryfoLinkTextYouJoinUnderA;
 
   /// widgets/link_stub.dart
@@ -14630,6 +14630,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
   String get onboardingRelayThisNetworkSees;
+
+  /// screens/settings_screen.dart: the row in About that opens the licences
+  ///
+  /// In en, this message translates to:
+  /// **'Licences'**
+  String get settingsLicences;
+
+  /// screens/settings_screen.dart: the value beside that row
+  ///
+  /// In en, this message translates to:
+  /// **'What Kryfo is built on'**
+  String get settingsLicencesValue;
+
+  /// screens/licences_screen.dart: Kryfo's own licence, at the top
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is free software under the GNU General Public License, version 3 or later. Anyone can read, change and share its code.'**
+  String get licencesKryfoLine;
+
+  /// screens/licences_screen.dart: the row that copies Kryfo's source link
+  ///
+  /// In en, this message translates to:
+  /// **'Source code'**
+  String get licencesSourceCode;
+
+  /// screens/licences_screen.dart: the section about libsignal
+  ///
+  /// In en, this message translates to:
+  /// **'Signal protocol'**
+  String get licencesSignalTitle;
+
+  /// screens/licences_screen.dart: version is the libsignal tag, like v0.99.4
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo includes libsignal {version}, made by Signal, under the GNU Affero General Public License, version 3. Its source code is at github.com/signalapp/libsignal and beside every Kryfo release.'**
+  String licencesSignalLine(String version);
+
+  /// screens/licences_screen.dart: the row that opens the AGPL text
+  ///
+  /// In en, this message translates to:
+  /// **'GNU AGPL 3.0, full text'**
+  String get licencesAgplText;
+
+  /// screens/licences_screen.dart: the row that copies libsignal's source link
+  ///
+  /// In en, this message translates to:
+  /// **'libsignal source code'**
+  String get licencesSignalSource;
+
+  /// screens/licences_screen.dart: the section listing every package
+  ///
+  /// In en, this message translates to:
+  /// **'Open source parts'**
+  String get licencesParts;
+
+  /// screens/licences_screen.dart: the rust crates inside the signal library
+  ///
+  /// In en, this message translates to:
+  /// **'In the Signal library'**
+  String get licencesInSignal;
+
+  /// screens/licences_screen.dart: the dart packages in the app
+  ///
+  /// In en, this message translates to:
+  /// **'In the app'**
+  String get licencesInApp;
+
+  /// screens/licences_screen.dart: how many packages a list holds
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} part} other{{count} parts}}'**
+  String licencesPartCount(int count);
+
+  /// screens/licences_screen.dart: the row that opens the GPL text Kryfo is under
+  ///
+  /// In en, this message translates to:
+  /// **'GNU GPL 3.0, full text'**
+  String get licencesGplText;
+
+  /// screens/licences_screen.dart: the go modules and c libraries inside Kryfo's network engine (tor, openssl and others)
+  ///
+  /// In en, this message translates to:
+  /// **'In the network engine'**
+  String get licencesInEngine;
+
+  /// screens/licences_screen.dart: the value of a row whose list or text failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get licencesLoadFailed;
+
+  /// screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get settingsCopyLinkHint;
 
   /// app/gates.dart: the home pill in relay mode while its relay has not answered for a while
   ///

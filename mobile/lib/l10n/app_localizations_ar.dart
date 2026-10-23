@@ -3887,7 +3887,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'أضفني على Kryfo. معرّفي هو ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$uri⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
+    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$uri⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
   }
 
   @override
@@ -3936,7 +3936,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'يحمل الرابط معرّفك وعنوانك والمفاتيح اللازمة لبدء محادثة. يبقى صالحًا حتى تعيد تعيينه من الإعدادات.';
+      'يحمل الرابط كلماتك الثلاث وعنوانك والمفاتيح اللازمة لبدء محادثة. يبقى صالحًا حتى تعيد تعيينه من الإعدادات.';
 
   @override
   String get myKryfoSendTheLink => 'إرسال الرابط';
@@ -4195,7 +4195,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo مفتوح المصدر';
 
   @override
-  String get onboardingYourKryfoId => 'معرّف KRYFO الخاص بك';
+  String get onboardingYourKryfoId => 'اسمك';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4595,7 +4595,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileChangeYourFace => 'تغيير وجهك';
 
   @override
-  String get profileKryfoId => 'معرّف Kryfo';
+  String get profileKryfoId => 'اسمك';
 
   @override
   String get profileOnionAddress => 'عنوان onion';
@@ -6607,7 +6607,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'تنضم بمفتاح صُنع لهذه الغرفة. لا أحد فيها يرى معرّف Kryfo الخاص بك.';
+      'تنضم بمفتاح صُنع لهذه الغرفة. لا أحد فيها يرى كلماتك الثلاث.';
 
   @override
   String get linkStubFetchedOverTorBy => 'جُلبت عبر Tor · بواسطة جهازك';
@@ -9192,6 +9192,73 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get onboardingRelayThisNetworkSees =>
       'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
+
+  @override
+  String get settingsLicences => 'التراخيص';
+
+  @override
+  String get settingsLicencesValue => 'مما صُنع Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo برنامج حر بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. يمكن لأي شخص قراءة شيفرته وتعديلها ومشاركتها.';
+
+  @override
+  String get licencesSourceCode => 'الشيفرة المصدرية';
+
+  @override
+  String get licencesSignalTitle => 'بروتوكول Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'يتضمن Kryfo مكتبة libsignal ⁨$version⁩ من صنع Signal، بموجب رخصة جنو أفيرو العمومية العامة، الإصدار 3. شيفرتها المصدرية على github.com/signalapp/libsignal وبجانب كل إصدار من Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'النص الكامل لرخصة GNU AGPL 3.0';
+
+  @override
+  String get licencesSignalSource => 'الشيفرة المصدرية لمكتبة libsignal';
+
+  @override
+  String get licencesParts => 'مكوّنات مفتوحة المصدر';
+
+  @override
+  String get licencesInSignal => 'في مكتبة Signal';
+
+  @override
+  String get licencesInApp => 'في التطبيق';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ مكوّن',
+      many: '⁨$countString⁩ مكوّنًا',
+      few: '⁨$countString⁩ مكوّنات',
+      two: 'مكوّنان',
+      one: 'مكوّن واحد',
+      zero: 'لا مكوّنات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'النص الكامل لرخصة GNU GPL 3.0';
+
+  @override
+  String get licencesInEngine => 'في محرّك الشبكة';
+
+  @override
+  String get licencesLoadFailed => 'تعذّر التحميل';
+
+  @override
+  String get settingsCopyLinkHint => 'نسخ الرابط';
 
   @override
   String get appRelayNotAnswering => 'المُرحِّل صامت';
