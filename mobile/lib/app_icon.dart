@@ -4,8 +4,10 @@
 // so this side only asks and tells; nothing about it is saved here
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_icon_art.dart' show plainArt;
 import 'container.dart';
 import 'dlog.dart';
 import 'l10n/l10n.dart';
@@ -25,6 +27,15 @@ extension AppFaceWords on AppFace {
 
   /// the small icon a plain notification wears
   String get glyph => this == AppFace.kryfo ? 'ic_plain_dot' : 'ic_plain_$name';
+}
+
+/// the app switcher's title: the name on the home screen
+String switcherTitle(AppFace? face) => (face ?? AppFace.kryfo).label;
+
+/// the app switcher's colour: a plain icon's own, kryfo's accent otherwise
+Color? switcherColor(AppFace? face) {
+  final art = plainArt[face?.name];
+  return art == null ? null : Color(art.background);
 }
 
 AppFace? faceNamed(String? name) {

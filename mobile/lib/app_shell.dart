@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_icon.dart';
 import 'back_on_top.dart';
 import 'l10n/app_localizations.dart';
 import 'lock_layer.dart';
@@ -15,6 +16,9 @@ MaterialApp haloAppShell({
   // the lock, around the navigator
   required Widget Function(Widget navigator) lock,
   Locale? locale,
+  // the icon the home screen shows: the app switcher's title and colour
+  // follow it. null while it is read
+  AppFace? face,
 }) {
   return MaterialApp(
     navigatorKey: navigatorKey,
@@ -23,7 +27,10 @@ MaterialApp haloAppShell({
     // back reaches android through the lock, which keeps it while it is up
     onNavigationNotification: lockBack.navigation,
     scaffoldMessengerKey: haloMessengerKey,
-    title: 'Kryfo',
+    // android's recents card and a screen reader read this as the app's
+    // name, over what the screen set when it opened
+    title: switcherTitle(face),
+    color: switcherColor(face),
     // the debug banner is drawn above everything, the lock too
     debugShowCheckedModeBanner: false,
     theme: buildHaloTheme(),
