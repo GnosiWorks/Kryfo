@@ -1591,10 +1591,13 @@ void main() {
           expect(w.io.dropped, isEmpty);
           await w.app.subscribeKnown();
           expect([...w.io.listened]..sort(), listened);
-          expect(w.io.pins, [
-            ['x-$_v'],
-          ]);
+          // the same pins as with the vault the other way: nothing new told
+          expect(w.io.pins, isEmpty);
         }
+        // an unpin is told at the next listen, for the run after it
+        w.live.people[_v]!['pinned'] = 0;
+        await w.app.subscribeKnown();
+        expect(w.io.pins, [<String>[]]);
       },
     );
   });

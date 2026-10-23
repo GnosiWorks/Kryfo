@@ -354,8 +354,12 @@ extension AppStateReceive on AppState {
       }
       if (xPub != null && xPub.isNotEmpty) pins.add(xPub);
     }
+    // the engine starts with none and keeps what it was told
+    final told = (pins..sort()).join(',');
+    if (told == _pinsTold) return;
     try {
       await _io.pinFirst(pins);
+      _pinsTold = told;
     } catch (e) {
       // the order only: everyone is listened on all the same
       dlog('listen: pins not told (${e.runtimeType})');
