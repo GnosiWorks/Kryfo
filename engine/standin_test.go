@@ -60,6 +60,7 @@ type relayStandIn struct {
 	mu        sync.Mutex
 	pongDelay time.Duration
 	reqDelay  time.Duration // before stored events are sent
+	idsDelay  time.Duration // instead, before a req by ids is answered
 	conns     []*siConn
 	events    []nostr.Event
 	resent    int // stored events sent in answer to a req
@@ -82,6 +83,11 @@ type relayStandIn struct {
 	refuse string
 	// a probe (limit 0) gets no answer, as over a dead circuit
 	probesQuiet bool
+	// every dial is turned away, as by a relay that is down
+	down bool
+	// a req is taken and the socket closed with no answer, as a listener
+	// with nothing behind it does
+	hangUp bool
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -105,6 +111,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	c := &siConn{remote: r.RemoteAddr, opened: time.Now(), addrs: map[string]bool{},
 		published: map[string]bool{}, kill: cancel}
 	s.mu.Lock()
+	if s.down {
+		s.mu.Unlock()
+		http.Error(w, "down", http.StatusBadGateway)
+		return
+	}
 	s.conns = append(s.conns, c)
 	up := s.upgradeDelay
 	s.mu.Unlock()
@@ -164,7 +175,14 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 					match = append(match, ev)
 				}
 			}
+			if s.hangUp {
+				s.mu.Unlock()
+				return
+			}
 			delay := s.reqDelay
+			if len(f.IDs) > 0 && s.idsDelay > 0 {
+				delay = s.idsDelay
+			}
 			stall := false
 			if !f.LimitZero {
 				s.asked++
@@ -565,6 +583,8 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		relayClearBenches()
 	})
 
+	// addresses a test before this one left registered would crowd the cap
+	liveReset()
 	transportMode.Store(mode)
 	if socks != nil {
 		atomic.StoreInt32(&pinnedSocks, int32(socks.port()))

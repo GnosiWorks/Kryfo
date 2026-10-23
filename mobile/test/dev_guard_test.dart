@@ -123,6 +123,8 @@ List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
 // opens to, and a note of every call
 class _Io implements AppIo {
   @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  @override
   Future<String?> decryptIf(
     String peer,
     String cipher,

@@ -185,6 +185,8 @@ class _Seal implements VaultSeal {
 
 class _Io implements AppIo {
   @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  @override
   Future<String?> decryptIf(
     String peer,
     String cipher,
