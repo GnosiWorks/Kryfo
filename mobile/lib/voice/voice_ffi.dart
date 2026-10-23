@@ -281,6 +281,24 @@ class VoiceRun {
   }
 }
 
+/// a run's segment bytes as text. whisper's tokens are bytes, so a segment
+/// can end inside a character the next one finishes: the cut bytes wait for
+/// it instead of turning into two replacement marks
+@visibleForTesting
+class VoiceSegmentText {
+  final _out = StringBuffer();
+  late final _sink = const Utf8Decoder(
+    allowMalformed: true,
+  ).startChunkedConversion(StringConversionSink.fromStringSink(_out));
+
+  String add(List<int> bytes) {
+    _sink.add(bytes);
+    final s = _out.toString();
+    _out.clear();
+    return s;
+  }
+}
+
 // the run's isolate: open, run, close, and say how it went
 void _work(_Job j) {
   final DynamicLibrary lib;
@@ -295,16 +313,18 @@ void _work(_Job j) {
   final close = lib.lookupFunction<_CloseC, _CloseD>('kv_close');
 
   final pcm = j.pcm.materialize().asInt16List();
+  final text = VoiceSegmentText();
   final onSegment = NativeCallable<_SegC>.isolateLocal((
     Pointer<Void> _,
     int index,
     int t0,
     int t1,
-    Pointer<Uint8> text,
+    Pointer<Uint8> bytes,
     int len,
   ) {
-    // exactly len bytes: no scan for the nul
-    final s = utf8.decode(text.asTypedList(len), allowMalformed: true);
+    // exactly len bytes, copied: no scan for the nul, and whisper reuses
+    // the buffer
+    final s = text.add(Uint8List.fromList(bytes.asTypedList(len)));
     j.reply.send([0, index, t0, t1, s]);
   });
   final arena = Arena();
