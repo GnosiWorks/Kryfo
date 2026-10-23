@@ -203,13 +203,10 @@ void main() {
 
   group('no permission to install', () {
     test('the manifest takes it out of whatever a plugin merges in', () {
-      for (final tag in [
-        'uses-permission',
-        'uses-permission-sdk-23',
-        'uses-permission-sdk-m',
-      ]) {
+      final manifest = sourceOf('android/app/src/main/AndroidManifest.xml');
+      for (final tag in ['uses-permission', 'uses-permission-sdk-23']) {
         expect(
-          sourceOf('android/app/src/main/AndroidManifest.xml'),
+          manifest,
           contains(
             '<$tag android:name="android.permission.'
             'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
@@ -217,6 +214,9 @@ void main() {
           reason: tag,
         );
       }
+      // the old name lint calls deprecated. the merger ignores
+      // tools:node on it, so gradle's check is what stops it
+      expect(manifest, isNot(contains('<uses-permission-sdk-m')));
     });
 
     test('gradle checks the merged manifest before every apk and bundle', () {

@@ -818,9 +818,12 @@ class MainActivity : FlutterFragmentActivity() {
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_TITLE, name)
             // a backup starts in the phone's own Download folder: a file made
-            // from the dialog's Downloads view can list there as 0 B
-            SaveDoc.startIn(backup)?.let {
-                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
+            // from the dialog's Downloads view can list there as 0 B. the
+            // extra is api 26, and startIn is null below it too
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                SaveDoc.startIn(backup)?.let {
+                    putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
+                }
             }
         }
         val p = SaveDoc.begin(path) { result.success(it) }

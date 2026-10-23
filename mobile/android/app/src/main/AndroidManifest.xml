@@ -23,7 +23,6 @@
          person picks; gradle checks the merged manifest for this too -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
-    <uses-permission-sdk-m android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <application
         android:label="${appLabel}"
         android:name=".HaloApplication"
