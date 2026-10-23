@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -22,16 +23,16 @@ func TestProbeAfterABumpProvesTheRoute(t *testing.T) {
 	defer func() { kickSpread = oldSpread }()
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
-	// the runner ends before the stand-ins' cleanups put things back
-	done := make(chan struct{})
+	// the runner and the per-relay goroutines it starts end before the
+	// stand-ins' cleanups put things back
+	base := runtime.NumGoroutine()
 	t.Cleanup(func() {
 		cancel()
-		<-done
+		waitFor(t, "the runner gone", 10*time.Second, func() bool {
+			return runtime.NumGoroutine() <= base
+		})
 	})
-	go func() {
-		defer close(done)
-		nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
-	}()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
 	waitFor(t, "the subscription", 10*time.Second, func() bool {
 		cs := ours.snapshot()
 		return len(cs) == 1 && len(cs[0].reqs) > 0
@@ -160,6 +161,10 @@ func TestARouteThatDiesAfterAnAnswerStillReadsDown(t *testing.T) {
 	if routeOK() {
 		t.Fatal("still up 21 s after the next round failed")
 	}
+	// the rescue counts from the next round's first failure
+	routeMu.Lock()
+	firstFailAt = first
+	routeMu.Unlock()
 	if why := routeNeedsRescue(first.Add(deadFor - time.Second)); why != "" {
 		t.Fatalf("a rescue before deadFor: %q", why)
 	}
