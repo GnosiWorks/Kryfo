@@ -149,6 +149,14 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // the pinned chats' keys the engine was told, each time
+  final pins = <List<String>>[];
+  @override
+  Future<String> pinFirst(List<String> xPubs) async {
+    pins.add([...xPubs]);
+    return 'ok';
+  }
+
   @override
   Future<String?> decryptIf(
     String peer,
@@ -1551,6 +1559,44 @@ void main() {
       expect(w.redrawn, 0);
       expect(w.live.seen, hasLength(1));
     });
+  });
+
+  group('the public relays\' list', () {
+    // the engine keeps live sockets on the public relays for the pinned chats
+    // first. what it is told is the everyday rows' pins alone, so the vault
+    // opening or shutting changes no socket there
+    test(
+      'the vault opening or shutting changes nothing the engine is told',
+      () async {
+        final w = await _World.make();
+        w.live.people[_v]!['pinned'] = 1;
+        w.vault.people[_h]!['pinned'] = 1;
+        await w.app.subscribeKnown();
+        final listened = [...w.io.listened]..sort();
+        expect(w.io.pins, [
+          ['x-$_v'],
+        ]);
+        expect(listened, containsAll(['x-$_v', 'x-$_h']));
+        for (final open in [true, false, true]) {
+          w.io.listened.clear();
+          w.io.pins.clear();
+          w.io.dropped.clear();
+          if (open) {
+            await w.open();
+          } else {
+            w.close();
+          }
+          expect(w.io.listened, isEmpty);
+          expect(w.io.pins, isEmpty);
+          expect(w.io.dropped, isEmpty);
+          await w.app.subscribeKnown();
+          expect([...w.io.listened]..sort(), listened);
+          expect(w.io.pins, [
+            ['x-$_v'],
+          ]);
+        }
+      },
+    );
   });
 
   group('every way in', () {

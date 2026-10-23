@@ -1367,14 +1367,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	seen := loadSeen(seenPath)
 	seenWhileRunning(ctx, seen)
 	// a contact's address is ranked for the public relays, see public_live.go.
-	// one just added counts as heard now
+	// one just added counts as heard now and is live until the next start
 	var live *liveAddr
 	if rankedLane(lane) {
 		heard := lastSaved
 		if freshOf(ctx) != nil {
 			heard = time.Now().Unix()
 		}
-		live = liveJoin(rcvPk, heard)
+		live = liveJoin(rcvPk, heard, freshOf(ctx) != nil)
 		go func() {
 			<-ctx.Done()
 			liveLeave(rcvPk, live)
@@ -1505,6 +1505,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// this subscription's catch-up record, apart from every other
 			// contact's on the same relay
 			ck := catchupKey(u, rcvPk)
+			// one of our relay's entries
+			ownEntry := slices.Contains(ownURLs, u)
 			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
@@ -1536,7 +1538,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// then instead of holding a socket on it. sweeping: the
 			// connection now is such a read. swept: one ended. cuts: reads
 			// in a row that ended before their catch-up did
-			sweeper := live != nil && !slices.Contains(ownURLs, u)
+			sweeper := live != nil && !ownEntry
 			var nextSweep time.Time
 			sweeping, swept := false, false
 			cuts := 0
@@ -1552,8 +1554,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				default:
 				}
 				sweeping = false
-				// both channels before the look, so a move into the cap or
-				// a kick right after it still wakes the wait
+				// both channels before the look, so a kick right after it
+				// still wakes the wait
 				onPub, wake, kc0 := true, (<-chan struct{})(nil), kickChan()
 				if sweeper {
 					onPub, wake = livePlace(rcvPk)
@@ -1634,11 +1636,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if !turn.take(ctx) {
 					return
 				}
-				// addresses that joined during the turn may have pushed this
-				// one past the cap
-				if sweeper && !sweeping && !publicLive(rcvPk) {
-					turn.done()
-					continue
+				// the run's choice, made at the first turn, with the start's
+				// other addresses joined during it
+				if sweeper {
+					onPub := liveChoose(rcvPk)
+					if !onPub && !sweeping {
+						turn.done()
+						continue
+					}
+					// chosen live at its first read: it holds the socket
+					sweeping = sweeping && !onPub
 				}
 				// the client may be the new mode's, the relay the old list's
 				select {
@@ -1796,15 +1803,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// until the relay says that was all, count them and remember
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
-				// a socket past the cap goes, until the address's next read
-				pastCap := func() {
-					if sweeping {
-						log.Printf("nostr: %s read for addr %s..., closed until the next round", u, rcvPk[:12])
-						return
-					}
-					log.Printf("nostr: %s past the cap for addr %s..., read now and then", u, rcvPk[:12])
-					nextSweep = time.Now().Round(0).Add(sweepDelay())
-				}
 				cctx, ccancel := context.WithCancel(conn)
 				// held events let go of come by their ids: the window has
 				// mostly moved past them. the poll keeps them together. asked
@@ -1841,11 +1839,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				noteCatchupStart(ck)
 				var settleOnce, walkOnce, sweptOnce sync.Once
 				var capT *time.Timer
-				// closed once this connection to a public relay has caught
-				// up: the rank is looked at again there, as addresses that
-				// joined after it may have pushed it past the cap
+				// closed once a read of a public relay has caught up: the
+				// socket goes there, until the address's next read
 				var caughtC chan struct{}
-				if sweeper {
+				if sweeping {
 					caughtC = make(chan struct{})
 				}
 				// the select's copy, nil once it has been looked at
@@ -2041,27 +2038,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						}(oldest)
 					case <-sweptC:
 						sweptC = nil
-						// in the cap, ranked in meanwhile or still: it stays live
-						if publicLive(rcvPk) {
-							continue
-						}
-						pastCap()
+						log.Printf("nostr: %s read for addr %s..., closed until the next round", u, rcvPk[:12])
 						idle.Stop()
 						stopKick()
 						r.Close()
 						swept = true
 						goto reconnect
 					case <-idle.C:
-						// fallen out of the cap: the socket goes, and the
-						// address reads this relay now and then from here.
-						// one still catching up goes once it has
-						if sweeper && sweptC == nil && !publicKeep(rcvPk) {
-							pastCap()
-							stopKick()
-							r.Close()
-							swept = true
-							goto reconnect
-						}
 						// quiet is what a conversation looks like nearly all of the
 						// time, and cycling the sub re-runs the since window, which
 						// after a media send is a hundred base64 chunks. ask a
@@ -2097,14 +2080,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						turn.skip()
 					case <-kickC:
 						kickT, kickC = nil, nil
-						// fallen out of the cap: the kick's probe closes it
-						if sweeper && sweptC == nil && !publicKeep(rcvPk) {
-							pastCap()
-							idle.Stop()
-							r.Close()
-							swept = true
-							goto reconnect
-						}
 						// a socket that is still answering does not need
 						// reviving, and dropping it costs a full since window
 						// on every contact and every relay, so ask before
@@ -2178,7 +2153,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				case swept:
 					// the loop's top waits for the next round
 					swept = false
-				case sweeping && !publicLive(rcvPk):
+				case sweeping:
 					// so does a read cut short
 				case kicked:
 					kicked = false
@@ -2336,6 +2311,33 @@ func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
 	}
 	nostrMarkHeld(peers)
 	return C.CString("ok")
+}
+
+// the pinned chats, which keep live sockets on the public relays first.
+// they count from the next start or mode switch on, and stay in memory
+//
+//export HaloNostrPinned
+func HaloNostrPinned(cPeersJSON *C.char) *C.char {
+	var peers []string
+	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
+		return C.CString("error: bad list")
+	}
+	nostrPinned(peers)
+	return C.CString("ok")
+}
+
+func nostrPinned(peers []string) {
+	var rcv []string
+	for _, h := range peers {
+		peer, err := peerArr(h)
+		if err != nil {
+			continue
+		}
+		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+			rcv = append(rcv, rcvPk)
+		}
+	}
+	livePin(rcv)
 }
 
 func nostrMarkHeld(peers []string) {

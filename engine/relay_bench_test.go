@@ -63,6 +63,8 @@ func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 	pub := newRefuserStandIn(t)
 	useStandIns(t, modeBalanced, nil, own)
 	setRelays([]string{own.url(), pub.url()})
+	// all thirty dial the public relay at once, none past the cap
+	setLiveCap(t, 30, time.Hour)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// a big inbox keeps live sockets on the public relays only for the contact
-// addresses heard from most lately. every other one listens live on our
-// relay and reads each public relay now and then. a public relay turns
-// away a pile of sockets from one exit, and every socket costs pings,
-// probes and memory on the phone and a stream on tor.
+// a big inbox keeps live sockets on the public relays only for a few
+// contact addresses: the pinned chats first, then the ones heard from most
+// lately. every other one listens live on our relay and reads each public
+// relay now and then. a public relay turns away a pile of sockets from one
+// exit, and every socket costs pings, probes and memory on the phone and a
+// stream on tor.
+//
+// the list is chosen once a run, at a start or a mode switch, when every
+// socket dials anyway. while the process lives nobody moves in or out: a
+// socket opening on one address as another closes would show a public
+// relay that the two are one phone. someone just added is live until the
+// next start.
 
 import (
 	mrand "math/rand/v2"
@@ -32,8 +39,10 @@ func sweepRound() time.Duration {
 type liveAddr struct {
 	// when it last brought something, unix seconds, 0 for never
 	heard int64
-	// closed when the address moves into the cap
-	wake chan struct{}
+	// the run it joined in
+	run int
+	// the run's choice: 0 not made yet, 1 live on the public relays, -1 not
+	chosen int8
 }
 
 var (
@@ -43,19 +52,28 @@ var (
 	// started again, as every one is on a mode switch. in memory only: on
 	// disk it would say when each contact last wrote
 	liveLast = map[string]int64{}
+	// the app's pinned chats, by address. in memory only, as the app tells
+	// it before it listens
+	livePinned = map[string]bool{}
+	// a mode switch starts a new run
+	liveRun int
 )
 
 // only a contact's address is ranked: first-contact, room and pair
 // addresses stay live everywhere
 func rankedLane(lane string) bool { return strings.HasPrefix(lane, laneEveryday+":") }
 
-// a runner listens on rcvPk. returns the handle it leaves with
-func liveJoin(rcvPk string, heard int64) *liveAddr {
+// a runner listens on rcvPk. fresh: someone just added, live until the
+// next start. returns the handle it leaves with
+func liveJoin(rcvPk string, heard int64, fresh bool) *liveAddr {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	a := &liveAddr{heard: max(heard, liveLast[rcvPk]), wake: make(chan struct{})}
+	a := &liveAddr{heard: max(heard, liveLast[rcvPk]), run: liveRun}
 	if old := liveAddrs[rcvPk]; old != nil && old.heard > a.heard {
 		a.heard = old.heard
+	}
+	if fresh {
+		a.chosen = 1
 	}
 	liveAddrs[rcvPk] = a
 	liveLast[rcvPk] = a.heard
@@ -68,6 +86,7 @@ func liveForget(rcvPk string) {
 	liveMu.Lock()
 	delete(liveLast, rcvPk)
 	delete(liveAddrs, rcvPk)
+	delete(livePinned, rcvPk)
 	liveMu.Unlock()
 }
 
@@ -80,8 +99,25 @@ func liveLeave(rcvPk string, a *liveAddr) {
 	liveMu.Unlock()
 }
 
-// under liveMu. the latest heard first, the address breaking ties, so
-// every runner of an address gets the same answer
+// the pinned chats' addresses, for the runs from here on
+func livePin(rcvPks []string) {
+	liveMu.Lock()
+	livePinned = map[string]bool{}
+	for _, k := range rcvPks {
+		livePinned[k] = true
+	}
+	liveMu.Unlock()
+}
+
+// a mode switch: every runner starts again, and the list is chosen anew
+func liveNewRun() {
+	liveMu.Lock()
+	liveRun++
+	liveMu.Unlock()
+}
+
+// under liveMu. pinned first, then the latest heard, the address breaking
+// ties, so every runner of an address gets the same answer
 func liveRankedLocked(rcvPk string) bool {
 	a := liveAddrs[rcvPk]
 	if a == nil || len(liveAddrs) <= publicLiveCap {
@@ -90,9 +126,11 @@ func liveRankedLocked(rcvPk string) bool {
 	if publicLiveCap <= 0 {
 		return false
 	}
+	pin := livePinned[rcvPk]
 	ahead := 0
 	for k, o := range liveAddrs {
-		if o.heard > a.heard || (o.heard == a.heard && k < rcvPk) {
+		op := livePinned[k]
+		if (op && !pin) || (op == pin && (o.heard > a.heard || (o.heard == a.heard && k < rcvPk))) {
 			ahead++
 			if ahead >= publicLiveCap {
 				return false
@@ -102,31 +140,55 @@ func liveRankedLocked(rcvPk string) bool {
 	return true
 }
 
-// whether rcvPk keeps live sockets on the public relays
-func publicLive(rcvPk string) bool {
-	liveMu.Lock()
-	defer liveMu.Unlock()
+// under liveMu. the run's choice once made, else where the rank puts it now
+func liveNowLocked(rcvPk string) bool {
+	if a := liveAddrs[rcvPk]; a != nil && a.chosen != 0 {
+		return a.chosen > 0
+	}
 	return liveRankedLocked(rcvPk)
 }
 
-// as publicLive, with the channel closed when it moves into the cap taken
-// under the same lock, so a move between the two is not missed
-func livePlace(rcvPk string) (bool, <-chan struct{}) {
+// whether rcvPk holds live sockets on the public relays
+func publicLive(rcvPk string) bool {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	var wake <-chan struct{}
-	if a := liveAddrs[rcvPk]; a != nil {
-		wake = a.wake
-	}
-	return liveRankedLocked(rcvPk), wake
+	return liveNowLocked(rcvPk)
 }
 
-// whether a socket rcvPk holds on a public relay stays. the one place a
-// socket is let go of while its runner lives
-func publicKeep(rcvPk string) bool { return publicLive(rcvPk) }
+// as publicLive, with a channel closed when the wait for a read should
+// look again: none yet
+func livePlace(rcvPk string) (bool, <-chan struct{}) {
+	return publicLive(rcvPk), nil
+}
 
-// rcvPk brought something at at. one that moves into the cap wakes its
-// runners, so a contact who writes is live everywhere again
+// the run's choice for rcvPk, made the first time its turn comes to dial a
+// public relay: by then the start's other addresses have joined. live only
+// while the run's list has room, so it holds the cap however the turns fall
+func liveChoose(rcvPk string) bool {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	a := liveAddrs[rcvPk]
+	if a == nil {
+		return true
+	}
+	if a.chosen == 0 {
+		a.chosen = -1
+		if liveRankedLocked(rcvPk) {
+			n := 0
+			for _, o := range liveAddrs {
+				if o.run == a.run && o.chosen > 0 {
+					n++
+				}
+			}
+			if n < publicLiveCap {
+				a.chosen = 1
+			}
+		}
+	}
+	return a.chosen > 0
+}
+
+// rcvPk brought something at at. it ranks by it from the next run on
 func liveHeard(rcvPk string, at int64) {
 	liveMu.Lock()
 	defer liveMu.Unlock()
@@ -135,15 +197,7 @@ func liveHeard(rcvPk string, at int64) {
 		return
 	}
 	liveLast[rcvPk] = max(liveLast[rcvPk], at)
-	if at <= a.heard {
-		return
-	}
-	was := liveRankedLocked(rcvPk)
-	a.heard = at
-	if !was && liveRankedLocked(rcvPk) {
-		close(a.wake)
-		a.wake = make(chan struct{})
-	}
+	a.heard = max(a.heard, at)
 }
 
 // the next read of a public relay, a fourth either way so they spread out

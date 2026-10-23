@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -28,10 +27,10 @@ func setLiveCap(t *testing.T, cap int, every time.Duration) {
 	})
 }
 
-// nothing ranked, nothing heard
+// nothing ranked, nothing heard, nothing pinned
 func liveReset() {
 	liveMu.Lock()
-	liveAddrs, liveLast = map[string]*liveAddr{}, map[string]int64{}
+	liveAddrs, liveLast, livePinned = map[string]*liveAddr{}, map[string]int64{}, map[string]bool{}
 	liveMu.Unlock()
 }
 
@@ -65,33 +64,34 @@ func everOn(r *relayStandIn, addr string) int {
 func TestLiveRankKeepsTheLatestHeard(t *testing.T) {
 	setLiveCap(t, 2, time.Hour)
 	liveReset()
-	a := liveJoin("a", 30)
+	a := liveJoin("a", 30, false)
 	defer liveLeave("a", a)
-	b := liveJoin("b", 20)
+	b := liveJoin("b", 20, false)
 	defer liveLeave("b", b)
 	if !publicLive("a") || !publicLive("b") {
 		t.Fatal("under the cap every address is live")
 	}
-	c := liveJoin("c", 10)
-	defer liveLeave("c", c)
+	c := liveJoin("c", 10, false)
 	if !publicLive("a") || !publicLive("b") || publicLive("c") {
 		t.Fatal("past the cap the two heard from last are live")
 	}
-	_, wake := livePlace("c")
+	for _, k := range []string{"a", "b", "c"} {
+		liveChoose(k)
+	}
+	// the run's list holds: c heard from last moves nobody
 	liveHeard("c", 40)
-	select {
-	case <-wake:
-	default:
-		t.Fatal("an address that moved into the cap was not woken")
+	if !publicLive("a") || !publicLive("b") || publicLive("c") {
+		t.Fatal("an arrival changed the run's list")
 	}
-	if !publicLive("c") || publicLive("b") {
-		t.Fatal("c heard from last is live, b fell out")
+	// the next run ranks by it, a runner started again in place
+	liveNewRun()
+	for _, k := range []string{"a", "b"} {
+		liveJoin(k, 0, false)
 	}
-	// a runner started again in place keeps its address when the old one leaves
-	c2 := liveJoin("c", 0)
+	c2 := liveJoin("c", 0, false)
 	liveLeave("c", c)
-	if !publicLive("c") {
-		t.Fatal("the new runner's address lost its rank")
+	if !publicLive("c") || publicLive("b") {
+		t.Fatal("the next run did not take c heard from last")
 	}
 	liveLeave("c", c2)
 	if !publicLive("b") {
@@ -100,6 +100,49 @@ func TestLiveRankKeepsTheLatestHeard(t *testing.T) {
 	if !publicLive("unranked") {
 		t.Fatal("an address not ranked is live everywhere")
 	}
+}
+
+// pinned chats come first, then the latest heard
+func TestPinnedChatsRankFirst(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	livePin([]string{"b"})
+	a := liveJoin("a", 30, false)
+	defer liveLeave("a", a)
+	b := liveJoin("b", 10, false)
+	defer liveLeave("b", b)
+	if !liveChoose("b") || liveChoose("a") {
+		t.Fatal("the pinned chat is not the one live")
+	}
+}
+
+// a run's list never grows past the cap, whatever order the turns come in:
+// one whose turn came before the others joined keeps the place it took
+func TestTheRunsListHoldsTheCap(t *testing.T) {
+	setLiveCap(t, 2, time.Hour)
+	liveReset()
+	liveJoin("d", 10, false)
+	if !liveChoose("d") {
+		t.Fatal("alone and not live")
+	}
+	for i, k := range []string{"a", "b", "c"} {
+		liveJoin(k, int64(40-i*10), false)
+	}
+	live := 1
+	for _, k := range []string{"a", "b", "c"} {
+		if liveChoose(k) {
+			live++
+		}
+	}
+	if live != 2 || !publicLive("d") || !publicLive("a") {
+		t.Fatalf("%d live, want d and a", live)
+	}
+	// someone just added is live on top, until the next start
+	e := liveJoin("e", 0, true)
+	if !liveChoose("e") {
+		t.Fatal("someone just added is not live")
+	}
+	liveLeave("e", e)
 }
 
 // a big inbox held one socket per address on every public relay: 271
@@ -162,7 +205,7 @@ func TestBigInboxKeepsFewPublicSockets(t *testing.T) {
 
 // an address past the cap still reads the public relay now and then, so a
 // wrap that only reached a public relay comes in. one that brings something
-// is live there from then on.
+// still only reads: the run's list holds
 func TestQuietAddressReadsThePublicRelay(t *testing.T) {
 	setLiveCap(t, 1, 2*time.Second)
 	own := newRelayStandIn(t, 0)
@@ -191,8 +234,8 @@ func TestQuietAddressReadsThePublicRelay(t *testing.T) {
 		defer nostrMu.Unlock()
 		return slices.Contains(nostrInbox, lastHex+"|only on a public relay")
 	})
-	waitFor(t, "the address that brought it live on the public relay", 10*time.Second, func() bool {
-		return openOn(pub, rcvs[last]) == 1
+	waitFor(t, "the address that brought it letting go after its read", 10*time.Second, func() bool {
+		return openOn(pub, rcvs[last]) == 0
 	})
 	// the quiet one reads and lets go, round after round
 	waitFor(t, "two reads of the quiet address", 15*time.Second, func() bool {
@@ -201,8 +244,8 @@ func TestQuietAddressReadsThePublicRelay(t *testing.T) {
 	if n := openOn(pub, rcvs[mid]); n > 1 {
 		t.Fatalf("the quiet address holds %d sockets on the public relay", n)
 	}
-	if openOn(pub, rcvs[first]) > 1 {
-		t.Fatal("the address pushed out holds more than one socket on the public relay")
+	if openOn(pub, rcvs[first]) != 1 {
+		t.Fatal("the live address does not hold its one socket on the public relay")
 	}
 	for _, a := range rcvs {
 		if openOn(own, a) != 1 {
@@ -237,10 +280,10 @@ func TestJustAddedIsLiveOnThePublicRelays(t *testing.T) {
 	})
 }
 
-// a contact past the cap who writes reaches us on our relay. its address
-// goes live on the public relays at once, not at its next read, and the
-// one it pushed out of the cap lets go of its socket at its next probe
-func TestAContactWhoWritesGoesLiveOnThePublicRelays(t *testing.T) {
+// a contact past the cap who writes reaches us on our relay. no socket on
+// a public relay opens or closes for it: one opening for the writer as
+// another closes would show the relay that the two are one phone
+func TestAContactWhoWritesMovesNoPublicSocket(t *testing.T) {
 	setLiveCap(t, 1, 1000*time.Hour)
 	oldSpread := kickSpread
 	kickSpread = 0
@@ -250,51 +293,81 @@ func TestAContactWhoWritesGoesLiveOnThePublicRelays(t *testing.T) {
 	useStandIns(t, modeFast, nil, own, pub)
 	shortTurns(t)
 	freshInbox(t)
-	peers := []xid{newXid(t), newXid(t), newXid(t)}
-	rcvs := make([]string, len(peers))
-	for i, p := range peers {
-		rcvs[i] = mustRcv(t, p)
-	}
-	// nothing heard yet: the first by address holds the one place
-	order := []int{0, 1, 2}
-	slices.SortFunc(order, func(a, b int) int { return strings.Compare(rcvs[a], rcvs[b]) })
-	first, last := order[0], order[2]
+	in, out, inRcv, outRcv := livePair(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	for i, p := range peers {
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcvs[i])
-	}
-	waitFor(t, "every address on our relay and the first on the public one", 15*time.Second, func() bool {
-		for _, a := range rcvs {
-			if openOn(own, a) != 1 {
-				return false
-			}
-		}
-		return openOn(pub, rcvs[first]) == 1
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "both on our relay and the first on the public one", 15*time.Second, func() bool {
+		return openOn(own, inRcv) == 1 && openOn(own, outRcv) == 1 && openOn(pub, inRcv) == 1
 	})
-	if everOn(pub, rcvs[last]) != 0 {
-		t.Fatal("an address past the cap dialled the public relay")
-	}
-	own.pushLive(wrapTo(t, peers[last], myXPub, "hello"))
-	lastHex := hex.EncodeToString(peers[last].pub[:])
+	own.pushLive(wrapTo(t, out, myXPub, "hello"))
+	outHex := hex.EncodeToString(out.pub[:])
 	waitFor(t, "the message on our relay", 10*time.Second, func() bool {
 		nostrMu.Lock()
 		defer nostrMu.Unlock()
-		return slices.Contains(nostrInbox, lastHex+"|hello")
+		return slices.Contains(nostrInbox, outHex+"|hello")
 	})
-	waitFor(t, "the writer live on the public relay", 5*time.Second, func() bool {
-		return openOn(pub, rcvs[last]) == 1
-	})
-	kickUntil(t, "the address pushed out closing its public socket", func() bool {
-		return openOn(pub, rcvs[first]) == 0
-	})
-	if openOn(pub, rcvs[last]) != 1 {
-		t.Fatal("the writer lost its public socket on the kick")
+	// kicks and their probes, as the job's knocks bring them
+	end := time.Now().Add(3 * time.Second)
+	for time.Now().Before(end) {
+		kickRelays()
+		time.Sleep(50 * time.Millisecond)
 	}
-	for _, a := range rcvs {
-		if openOn(own, a) != 1 {
-			t.Fatal("every address stays live on our relay")
-		}
+	if n := everOn(pub, outRcv); n != 0 {
+		t.Fatalf("the writer dialled the public relay %d times", n)
+	}
+	if everOn(pub, inRcv) != 1 || openOn(pub, inRcv) != 1 {
+		t.Fatal("the live address's public socket closed or was replaced")
+	}
+}
+
+// the list is chosen again at a mode switch, when every runner starts
+// again anyway: a chat pinned since ranks first then. the pin changes no
+// socket before that
+func TestTheListIsChosenAgainAtAModeSwitch(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	oldSpread := kickSpread
+	kickSpread = 0
+	t.Cleanup(func() { kickSpread = oldSpread })
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	in, out, inRcv, outRcv := livePair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "the first live on the public relay", 15*time.Second, func() bool {
+		return openOn(own, outRcv) == 1 && openOn(pub, inRcv) == 1
+	})
+	nostrPinned([]string{hex.EncodeToString(out.pub[:])})
+	end := time.Now().Add(2 * time.Second)
+	for time.Now().Before(end) {
+		kickRelays()
+		time.Sleep(50 * time.Millisecond)
+	}
+	if everOn(pub, outRcv) != 0 || everOn(pub, inRcv) != 1 {
+		t.Fatal("a pin moved a public socket before the next run")
+	}
+	// the switch: every runner ends, the list is chosen anew
+	cancel()
+	waitFor(t, "the old sockets closed", 10*time.Second, func() bool {
+		return openOn(pub, inRcv) == 0 && openOn(own, outRcv) == 0
+	})
+	liveNewRun()
+	spendFirstTurn()
+	ctx2, cancel2 := context.WithCancel(context.Background())
+	defer cancel2()
+	runOn(ctx2, in, inRcv)
+	runOn(ctx2, out, outRcv)
+	waitFor(t, "the pinned chat live on the public relay", 15*time.Second, func() bool {
+		return openOn(pub, outRcv) == 1
+	})
+	time.Sleep(time.Second)
+	if openOn(pub, inRcv) != 0 {
+		t.Fatal("the one it ranks above is still live")
 	}
 }
 
@@ -304,26 +377,26 @@ func TestAContactWhoWritesGoesLiveOnThePublicRelays(t *testing.T) {
 func TestTheRankOutlivesARestart(t *testing.T) {
 	setLiveCap(t, 1, time.Hour)
 	liveReset()
-	a := liveJoin("a", 10)
-	b := liveJoin("b", 20)
+	a := liveJoin("a", 10, false)
+	b := liveJoin("b", 20, false)
 	defer liveLeave("b", b)
 	liveHeard("a", 30)
 	liveLeave("a", a)
-	a = liveJoin("a", 10)
+	a = liveJoin("a", 10, false)
 	if !publicLive("a") || publicLive("b") {
 		t.Fatal("a runner started again lost what its address heard")
 	}
 	liveLeave("a", a)
 	dropAddressFiles("a")
-	a = liveJoin("a", 10)
+	a = liveJoin("a", 10, false)
 	defer liveLeave("a", a)
 	if publicLive("a") {
 		t.Fatal("an address let go of kept when it was heard")
 	}
 	// someone just added keeps their place over a restart too
-	c := liveJoin("c", 40)
+	c := liveJoin("c", 40, false)
 	liveLeave("c", c)
-	c = liveJoin("c", 0)
+	c = liveJoin("c", 0, false)
 	defer liveLeave("c", c)
 	if !publicLive("c") {
 		t.Fatal("someone just added fell out on a restart")
@@ -519,36 +592,12 @@ func TestACutReadIsTriedAgainWithinTheRound(t *testing.T) {
 	waitFor(t, "the read tried again", 4*time.Second, func() bool { return everOn(pub, outRcv) >= 2 })
 }
 
-// a move into the cap right as an address starts waiting for its next read
-// wakes the wait, not the round's end
-func TestAMoveIntoTheCapAsTheWaitBeginsIsNotMissed(t *testing.T) {
-	setLiveCap(t, 1, 1000*time.Hour)
-	own := newRelayStandIn(t, 0)
-	pub := newRelayStandIn(t, 0)
-	useStandIns(t, modeFast, nil, own, pub)
-	shortTurns(t)
-	freshInbox(t)
-	in, out, inRcv, outRcv := livePair(t)
-	var once sync.Once
-	sweepWaitHook = func() {
-		once.Do(func() { liveHeard(outRcv, time.Now().Unix()) })
-	}
-	t.Cleanup(func() { sweepWaitHook = nil })
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	runOn(ctx, in, inRcv)
-	runOn(ctx, out, outRcv)
-	waitFor(t, "the address moved into the cap live on the public relay", 10*time.Second, func() bool {
-		return openOn(pub, outRcv) == 1
-	})
-}
-
 // a delete lets go of the address while a take on its runner may still be
 // under way. that take writes no rank back
 func TestADeletedContactLeavesNoRank(t *testing.T) {
 	setLiveCap(t, 1, time.Hour)
 	liveReset()
-	a := liveJoin("a", 10)
+	a := liveJoin("a", 10, false)
 	dropAddressFiles("a")
 	liveHeard("a", 50)
 	liveLeave("a", a)
@@ -558,9 +607,9 @@ func TestADeletedContactLeavesNoRank(t *testing.T) {
 	if kept {
 		t.Fatal("when the deleted contact last wrote stayed in memory")
 	}
-	b := liveJoin("b", 20)
+	b := liveJoin("b", 20, false)
 	defer liveLeave("b", b)
-	a = liveJoin("a", 0)
+	a = liveJoin("a", 0, false)
 	defer liveLeave("a", a)
 	if publicLive("a") {
 		t.Fatal("the contact added again started with the old rank")

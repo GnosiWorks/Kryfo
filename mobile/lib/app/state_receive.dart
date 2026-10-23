@@ -272,6 +272,10 @@ extension AppStateReceive on AppState {
           if (r['listen'] == 1) r,
       ],
     );
+    // the pinned chats go first on the public relays, told before any
+    // runner starts. the everyday rows only: a hidden chat ranks like any
+    // other whether the vault is open or shut
+    await _pinFirst(rows);
     final fresh = <String, String>{};
     var short = false;
     // each on its own: one that throws leaves the rest listened on
@@ -332,6 +336,30 @@ extension AppStateReceive on AppState {
       }
     }
     return (keys: {...fresh.keys, ...heard}, short: short);
+  }
+
+  Future<void> _pinFirst(List<Map<String, Object?>> rows) async {
+    final pins = <String>[];
+    for (final r in rows) {
+      if (r['pinned'] != 1) continue;
+      var xPub = r['xpub'] as String?;
+      if (xPub == null || xPub.isEmpty) {
+        final haloId = r['halo_id'] as String?;
+        if (haloId == null) continue;
+        try {
+          xPub = await signalSession.peerXPubHex(haloId);
+        } catch (_) {
+          continue;
+        }
+      }
+      if (xPub != null && xPub.isNotEmpty) pins.add(xPub);
+    }
+    try {
+      await _io.pinFirst(pins);
+    } catch (e) {
+      // the order only: everyone is listened on all the same
+      dlog('listen: pins not told (${e.runtimeType})');
+    }
   }
 
   bool _heardAsOther(String xPub, String haloId) {
