@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
-import 'app_icon.dart' show AppFaceWords, readAppFace;
+import 'app_icon.dart' show AppFace, AppFaceWords, readAppFace;
 import 'container.dart';
 import 'devchat/support.dart' show kSupportPayload, supportSummaryLine;
 import 'lock_guard.dart' show lockGuard;
@@ -309,34 +309,53 @@ Future<void> clearPlainNotification() async {
 const _plainTag = 'p';
 
 // one plain post at a time: two arrivals together would each find the
-// shade empty and leave two lines
+// shade empty and leave two lines. a link that hangs gives up, so the next
+// still posts
 Future<void> _plainTurn = Future.value();
 
-Future<int> _showPlain({
+@visibleForTesting
+Duration plainPostLimit = const Duration(seconds: 10);
+
+Future<int?> _showPlain({
   required String chat,
   required String tag,
   String? msgUid,
+  bool silent = false,
 }) {
-  final done = Completer<int>();
+  final done = Completer<int?>();
   _plainTurn = _plainTurn.then((_) async {
     try {
-      done.complete(await _postPlain(chat: chat, tag: tag, msgUid: msgUid));
-    } catch (e, st) {
-      done.completeError(e, st);
+      done.complete(
+        await _postPlain(
+          chat: chat,
+          tag: tag,
+          msgUid: msgUid,
+          silent: silent,
+        ).timeout(plainPostLimit),
+      );
+    } catch (e) {
+      // one that hangs or fails shows nothing; the arrival goes on as any
+      // that rang nothing
+      dlog('plain: not posted (${e.runtimeType})');
+      done.complete(null);
     }
   });
   return done.future;
 }
 
-Future<int> _postPlain({
+Future<int?> _postPlain({
   required String chat,
   required String tag,
   String? msgUid,
+  bool silent = false,
 }) async {
+  // a decoy may have opened while this waited its turn: it shows nothing
+  if (await quietNow()) return null;
   await _makePlainChannel();
   // one at a time, posted anew so the phone still alerts: the shade never
   // says how many came
   await clearPlainNotification();
+  // the glyph of the icon on the home screen; a plain dot while not known
   final face = await readAppFace();
   final details = AndroidNotificationDetails(
     _plainChannel,
@@ -345,9 +364,11 @@ Future<int> _postPlain({
     importance: Importance.high,
     priority: Priority.high,
     category: AndroidNotificationCategory.message,
-    icon: face.glyph,
+    icon: face?.glyph ?? AppFace.kryfo.glyph,
     visibility: NotificationVisibility.private,
     autoCancel: true,
+    // in place of what was up already: no sound, no buzz, no heads-up
+    silent: silent,
     when: DateTime.now().millisecondsSinceEpoch,
   );
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
@@ -362,8 +383,9 @@ Future<int> _postPlain({
   return id;
 }
 
-// plain turned on with named ones up: they go, and one plain line stands
-// for them, for the newest one's chat. a decoy has none up
+// plain turned on with named ones up: they go, and one silent plain line
+// stands for them, for the newest one's chat. what is up was not opened
+// yet: a chat that was read took its own down. a decoy has none up
 Future<void> _plainOverNamed() async {
   if (await quietNow()) return;
   final named = <ActiveNotification>[];
@@ -390,7 +412,7 @@ Future<void> _plainOverNamed() async {
   for (final e in _shownFor.entries) {
     if (e.value.any((x) => x.$2 == newest)) chat = e.key;
   }
-  await _showPlain(chat: chat, tag: newest);
+  await _showPlain(chat: chat, tag: newest, silent: true);
 }
 
 // what a chat's notifications go under on android: its tag, random, made

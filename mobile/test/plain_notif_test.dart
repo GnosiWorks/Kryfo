@@ -3,6 +3,8 @@
 // buzz, no title, one line, no colour, the glyph of the home screen's icon,
 // and nothing of the sender or the message in any field. one at a time, so
 // the shade never says how many came. a decoy still shows nothing at all
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,6 +17,8 @@ import 'package:kryfo/notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Shade extends AndroidFlutterLocalNotificationsPlugin {
+  // the next show never answers, as a platform call that hangs
+  bool hangNext = false;
   final posted = <(int, String?, String?)>[];
   final shown =
       <({String? title, String? body, AndroidNotificationDetails d})>[];
@@ -31,6 +35,10 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
     AndroidNotificationDetails? notificationDetails,
     String? payload,
   }) async {
+    if (hangNext) {
+      hangNext = false;
+      await Completer<void>().future;
+    }
     posted.add((id, notificationDetails?.tag, notificationDetails?.channelId));
     shown.add((title: title, body: body, d: notificationDetails!));
     payloads.add(payload);
@@ -245,6 +253,9 @@ void main() {
     expect(shade.posted, hasLength(1));
     final last = shade.shown.last;
     expect(last.d.channelId, 'kryfo_plain');
+    // in place of what was up, while kryfo is open: no sound, no buzz, no
+    // heads-up
+    expect(last.d.silent, isTrue);
     expect(last.body, l10n.notifPlainLine);
     expect(last.title, isNull);
     // for the newest one's chat
@@ -265,6 +276,40 @@ void main() {
     shade.posted.add((9, 't-x', 'halo_messages_v2'));
     await setNotifPlain(true);
     expect(shade.shown, isEmpty);
+  });
+
+  test('a new message after turning plain on still alerts', () async {
+    final shade = _start(prefs: {'notif_plain': true});
+    await _ring('bob', 'hi');
+    expect(shade.shown.single.d.silent, isFalse);
+  });
+
+  test('a post that hangs gives way, and the next line still shows', () async {
+    final shade = _start(prefs: {'notif_plain': true});
+    plainPostLimit = const Duration(milliseconds: 50);
+    addTearDown(() => plainPostLimit = const Duration(seconds: 10));
+    shade.hangNext = true;
+    final stuck = _ringId('bob');
+    expect(await stuck, isNull);
+    await _ring('amy', 'two');
+    expect(shade.up, hasLength(1));
+    expect(shade.payloads.last, 't-amy');
+  });
+
+  test('a post queued before a decoy opens never lands', () async {
+    final shade = _start(prefs: {'notif_plain': true});
+    shade.hangNext = true;
+    plainPostLimit = const Duration(milliseconds: 200);
+    addTearDown(() => plainPostLimit = const Duration(seconds: 10));
+    final first = _ringId('bob');
+    final queued = _ringId('amy');
+    // the decoy opens while the second waits its turn
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.state': '{"q":true}',
+    });
+    expect(await first, isNull);
+    expect(await queued, isNull);
+    expect(shade.up, isEmpty);
   });
 }
 
