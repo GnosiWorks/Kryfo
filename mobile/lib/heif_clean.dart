@@ -85,7 +85,7 @@ Uint8List? _clean(Uint8List src) {
   }
 
   final sequence = _brands(src, top.first).any(_sequences.contains);
-  final foreign = <IsoBox>[];
+  final foreign = <IsoBox>{};
   var appended = false;
   for (final b in top) {
     final after = b.start >= dataEnd;
@@ -107,9 +107,10 @@ Uint8List? _clean(Uint8List src) {
     anim = readMp4LayoutOf(s, top, c);
     used.addAll(anim.keptSamples);
   }
-  // a kept picture byte inside a box about to go
+  // a kept picture byte inside a box about to go. foreign is in file order
+  final gone = [for (final f in foreign) (f.start, f.end)];
   for (final (a, b) in used.merged) {
-    if (foreign.any((f) => a < f.end && b > f.start)) return null;
+    if (Ranges.overlaps(gone, a, b)) return null;
   }
 
   final rebuilt = _metaBody(s, m, keep, usedIdat);
@@ -140,7 +141,7 @@ Uint8List? _clean(Uint8List src) {
       if (e.len == 0) continue;
       final a = e.at.clamp(0, src.length);
       final b = (e.at + e.len).clamp(0, src.length);
-      if (kept.any((k) => a < k.$2 && b > k.$1)) continue;
+      if (Ranges.overlaps(kept, a, b)) continue;
       if (a < meta.end && b > meta.start) continue; // written again above
       out.fillRange(a, b, 0);
     }
