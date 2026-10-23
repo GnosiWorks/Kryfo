@@ -39,6 +39,10 @@ type liveAddr struct {
 var (
 	liveMu    sync.Mutex
 	liveAddrs = map[string]*liveAddr{}
+	// the latest arrival or add per address, kept while its runner is
+	// started again, as every one is on a mode switch. in memory only: on
+	// disk it would say when each contact last wrote
+	liveLast = map[string]int64{}
 )
 
 // only a contact's address is ranked: first-contact, room and pair
@@ -49,12 +53,20 @@ func rankedLane(lane string) bool { return strings.HasPrefix(lane, laneEveryday+
 func liveJoin(rcvPk string, heard int64) *liveAddr {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	a := &liveAddr{heard: heard, wake: make(chan struct{})}
-	if old := liveAddrs[rcvPk]; old != nil && old.heard > heard {
+	a := &liveAddr{heard: max(heard, liveLast[rcvPk]), wake: make(chan struct{})}
+	if old := liveAddrs[rcvPk]; old != nil && old.heard > a.heard {
 		a.heard = old.heard
 	}
 	liveAddrs[rcvPk] = a
+	liveLast[rcvPk] = a.heard
 	return a
+}
+
+// the address was let go of: nothing of when it was heard stays
+func liveForget(rcvPk string) {
+	liveMu.Lock()
+	delete(liveLast, rcvPk)
+	liveMu.Unlock()
 }
 
 // a runner started again in its place keeps the address
@@ -98,7 +110,11 @@ func liveHeard(rcvPk string, at int64) {
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	a := liveAddrs[rcvPk]
-	if a == nil || at <= a.heard {
+	if a == nil {
+		return
+	}
+	liveLast[rcvPk] = max(liveLast[rcvPk], at)
+	if at <= a.heard {
 		return
 	}
 	was := liveRankedLocked(rcvPk)

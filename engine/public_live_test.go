@@ -27,7 +27,7 @@ func setLiveCap(t *testing.T, cap int, every time.Duration) {
 // nothing ranked, nothing heard
 func liveReset() {
 	liveMu.Lock()
-	liveAddrs = map[string]*liveAddr{}
+	liveAddrs, liveLast = map[string]*liveAddr{}, map[string]int64{}
 	liveMu.Unlock()
 }
 
@@ -291,6 +291,38 @@ func TestAContactWhoWritesGoesLiveOnThePublicRelays(t *testing.T) {
 		if openOn(own, a) != 1 {
 			t.Fatal("every address stays live on our relay")
 		}
+	}
+}
+
+// every runner is started again on a mode switch, the old one gone before
+// the new one starts. what was heard on the address is kept for it, and
+// nothing of it once the address is let go of
+func TestTheRankOutlivesARestart(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	a := liveJoin("a", 10)
+	b := liveJoin("b", 20)
+	defer liveLeave("b", b)
+	liveHeard("a", 30)
+	liveLeave("a", a)
+	a = liveJoin("a", 10)
+	if !publicLive("a") || publicLive("b") {
+		t.Fatal("a runner started again lost what its address heard")
+	}
+	liveLeave("a", a)
+	dropAddressFiles("a")
+	a = liveJoin("a", 10)
+	defer liveLeave("a", a)
+	if publicLive("a") {
+		t.Fatal("an address let go of kept when it was heard")
+	}
+	// someone just added keeps their place over a restart too
+	c := liveJoin("c", 40)
+	liveLeave("c", c)
+	c = liveJoin("c", 0)
+	defer liveLeave("c", c)
+	if !publicLive("c") {
+		t.Fatal("someone just added fell out on a restart")
 	}
 }
 

@@ -141,6 +141,7 @@ func addressFiles(rcvPk string) (seenPath, lastPath string) {
 // what is still finishing on them
 func dropAddressFiles(rcvPk string) {
 	dropHeard(rcvPk)
+	liveForget(rcvPk)
 	seenPath, lastPath := addressFiles(rcvPk)
 	if seenPath == "" {
 		return
