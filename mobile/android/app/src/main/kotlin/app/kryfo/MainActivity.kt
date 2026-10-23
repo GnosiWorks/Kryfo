@@ -437,8 +437,8 @@ class MainActivity : FlutterFragmentActivity() {
                         val title = call.argument<String>("title") ?: "kryfo"
                         val cancel = call.argument<String>("cancel") ?: "Cancel"
                         val seal = call.argument<String>("seal") ?: ""
-                        BioKey.unlock(this, title, cancel, seal) { r, opens ->
-                            result.success(mapOf("r" to r, "p" to opens))
+                        BioKey.unlock(this, title, cancel, seal) { r, opens, again ->
+                            result.success(mapOf("r" to r, "p" to opens, "s" to again))
                         }
                     }
                     // the pin hold runs on these: time since boot, which a

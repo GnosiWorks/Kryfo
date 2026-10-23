@@ -166,12 +166,15 @@ class PlatformLockClock implements LockClock {
 }
 
 // what a finger gave back: "ok" with the container the seal opened, or
-// "cancel", "lockout", "invalidated", "none", "error", or "refused" (the
-// finger was taken but the phone would not open the seal with it)
+// "cancel", "lockout", "invalidated", "none" (no key, or a seal made for
+// another one), "error", or "refused" (the finger was taken but the phone
+// would not open its own key's seal with it). with "ok", [again] is an old
+// seal made again in the form that names its key, to keep in its place
 class BioOpened {
-  const BioOpened(this.result, [this.opens]);
+  const BioOpened(this.result, [this.opens, this.again]);
   final String result;
   final String? opens;
+  final String? again;
 }
 
 // fingerprint unlock (BioKey.kt): what a finger opens is sealed to a key the
@@ -214,8 +217,12 @@ class PlatformLockBio implements LockBio {
       'cancel': cancel,
       'seal': seal,
     });
-    final r = m?['r'], p = m?['p'];
-    return BioOpened(r is String ? r : 'error', p is String ? p : null);
+    final r = m?['r'], p = m?['p'], s = m?['s'];
+    return BioOpened(
+      r is String ? r : 'error',
+      p is String ? p : null,
+      s is String ? s : null,
+    );
   }
 }
 
@@ -1555,13 +1562,15 @@ class LockState extends ChangeNotifier {
       _fingerNote = null;
       notifyListeners();
     }
+    final gen = _sealGen;
     final r = await _bio.unlock(
       l10n.lockStateUnlockKryfo,
       l10n.commonCancel,
       seal,
     );
     if (r.result == 'invalidated' || r.result == 'none') {
-      // a finger was added since, or the key is gone: the pin first
+      // a finger was added since, the key is gone, or the seal is another
+      // key's: the pin first, which makes a new one. nothing counts
       _bioStale = true;
       notifyListeners();
       return false;
@@ -1590,7 +1599,21 @@ class LockState extends ChangeNotifier {
     if (!opened) return false;
     _locked = false;
     notifyListeners();
+    final again = r.again;
+    if (again != null) unawaited(_keepSeal(gen, seal, again));
     return true;
+  }
+
+  // an old seal a finger opened, made again for the same key in the form
+  // that names it. not over a seal set since, nor after a turn off
+  Future<void> _keepSeal(int gen, String was, String again) async {
+    bool moved() => gen != _sealGen || !_biometric;
+    try {
+      if (moved() || await _store.read(_kSeal) != was || moved()) return;
+      await _store.write(_kSeal, again);
+    } catch (e) {
+      dlog('lock: finger seal not kept (${e.runtimeType})');
+    }
   }
 
   Future<bool> _openByFinger(String? opens) async {
