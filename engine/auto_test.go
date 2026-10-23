@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -20,6 +21,8 @@ import (
 // network, the pause and the mode change at set moments.
 
 type fakeAuto struct {
+	// the clock moves on the loop's goroutine and the test's: under clock
+	clock   sync.Mutex
 	now     time.Time
 	applied []string
 	// per method: what tor shows, given the time since the switch
@@ -44,10 +47,13 @@ func (f *fakeAuto) sleep(d time.Duration) {
 	// a moment of real time, so a call on its own goroutine can answer
 	// before the clock runs away from it
 	time.Sleep(20 * time.Microsecond)
+	f.clock.Lock()
 	f.now = f.now.Add(d)
+	now := f.now
+	f.clock.Unlock()
 	var left []fakeEvent
 	for _, e := range f.events {
-		if !f.now.Before(t0Auto.Add(e.at)) {
+		if !now.Before(t0Auto.Add(e.at)) {
 			e.f()
 		} else {
 			left = append(left, e)
@@ -91,7 +97,11 @@ func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	t.Helper()
 	f := &fakeAuto{now: t0Auto, started: true, script: map[string]func(*attemptSeen, time.Duration){}, applyErr: map[string]string{}}
 	oldNow, oldSleep, oldW := autoNow, autoSleep, autoW
-	autoNow = func() time.Time { return f.now }
+	autoNow = func() time.Time {
+		f.clock.Lock()
+		defer f.clock.Unlock()
+		return f.now
+	}
 	autoSleep = f.sleep
 	autoW = autoWorld{
 		started: func() bool { return f.started },
