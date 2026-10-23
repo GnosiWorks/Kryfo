@@ -2427,7 +2427,6 @@ void main() {
     expect(l.settingsWipeKryfo2, "Wipe Kryfo");
     expect(l.settingsYourProtections, "Your protections");
     expect(l.settingsTorRouting, "Tor routing");
-    expect(l.settingsConnecting, "Connecting");
     expect(l.settingsOffMode, "Off · relay mode");
     expect(l.settingsOffFastMode, "Off · fast mode");
     expect(l.settingsAppLock, "App lock");
@@ -3816,5 +3815,6 @@ void main() {
       l.motionTorPicksUpAgain,
       "Nothing goes out without a network. Tor picks up again when one is back.",
     );
+    expect(l.deliveryModeStateLast("<state>", "<last>"), "<state> · <last>");
   });
 }

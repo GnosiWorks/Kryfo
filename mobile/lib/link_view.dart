@@ -2,6 +2,8 @@
 // the one reading of the connection that the home pill and the tor sheet
 // both show. each takes its words, colour and route picture from here, so
 // the two cannot say different things
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'l10n/l10n.dart';
@@ -125,6 +127,11 @@ class LinkView {
       ? TorStatus.bootstrapped
       : status;
 
+  /// the route the send mode uses carries, or did a moment ago: what every
+  /// screen that says connected means
+  bool get connected =>
+      kind == LinkKind.ready || kind == LinkKind.relay || kind == LinkKind.fast;
+
   /// the dot pulses only while tor is still coming up
   bool get pulsing => kind == LinkKind.connecting || kind == LinkKind.climbing;
 
@@ -189,4 +196,31 @@ LinkView linkViewOf({
     return v(LinkKind.connecting, at: until);
   }
   return v(LinkKind.climbing);
+}
+
+/// one timer for the moment a reading changes by time alone
+class LinkClock {
+  Timer? _t;
+  DateTime? _for;
+
+  void arm(DateTime? at, VoidCallback fire) {
+    if (at == _for && (_t?.isActive ?? false)) return;
+    cancel();
+    if (at == null) return;
+    _for = at;
+    final left = at.difference(DateTime.now());
+    _t = Timer(
+      left.isNegative ? Duration.zero : left + const Duration(milliseconds: 50),
+      () {
+        _for = null;
+        fire();
+      },
+    );
+  }
+
+  void cancel() {
+    _t?.cancel();
+    _t = null;
+    _for = null;
+  }
 }

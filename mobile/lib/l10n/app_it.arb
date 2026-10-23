@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Cancella Kryfo",
   "settingsYourProtections": "Le tue protezioni",
   "settingsTorRouting": "Instradamento Tor",
-  "settingsConnecting": "In connessione",
   "settingsOffMode": "Spento · modalità relay",
   "settingsOffFastMode": "Spento · modalità veloce",
   "settingsAppLock": "Blocco app",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "I messaggi partono appena un relay risponde lungo questo percorso.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Nessuna rete",
-  "motionTorPicksUpAgain": "Senza rete non parte niente. Tor riprende appena torna."
+  "motionTorPicksUpAgain": "Senza rete non parte niente. Tor riprende appena torna.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

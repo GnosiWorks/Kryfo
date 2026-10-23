@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Hapus total Kryfo",
   "settingsYourProtections": "Perlindunganmu",
   "settingsTorRouting": "Perutean Tor",
-  "settingsConnecting": "Menghubungkan",
   "settingsOffMode": "Mati · mode relay",
   "settingsOffFastMode": "Mati · mode cepat",
   "settingsAppLock": "Kunci aplikasi",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Pesan terkirim begitu ada relay yang menjawab lewat rute ini.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Tidak ada jaringan",
-  "motionTorPicksUpAgain": "Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali."
+  "motionTorPicksUpAgain": "Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

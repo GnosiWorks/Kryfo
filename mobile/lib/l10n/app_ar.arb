@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "مسح Kryfo",
   "settingsYourProtections": "وسائل حمايتك",
   "settingsTorRouting": "التوجيه عبر Tor",
-  "settingsConnecting": "جارٍ الاتصال",
   "settingsOffMode": "معطّل · وضع المُرحِّل",
   "settingsOffFastMode": "معطّل · الوضع السريع",
   "settingsAppLock": "قفل التطبيق",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.",
   "motionOffline": "غير متصل",
   "motionNoNetwork": "لا توجد شبكة",
-  "motionTorPicksUpAgain": "لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود."
+  "motionTorPicksUpAgain": "لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.",
+  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩"
 }

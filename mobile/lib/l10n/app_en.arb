@@ -6508,10 +6508,6 @@
   "@settingsTorRouting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsConnecting": "Connecting",
-  "@settingsConnecting": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOffMode": "Off · relay mode",
   "@settingsOffMode": {
     "description": "screens/settings_screen.dart"
@@ -11540,5 +11536,17 @@
   "motionTorPicksUpAgain": "Nothing goes out without a network. Tor picks up again when one is back.",
   "@motionTorPicksUpAgain": {
     "description": "widgets/motion.dart: the tor sheet's small line under that"
+  },
+  "deliveryModeStateLast": "{state} · {last}",
+  "@deliveryModeStateLast": {
+    "description": "delivery_mode.dart: the check-ins line while not connected: the connection's words as the home pill shows them, then the last check-in",
+    "placeholders": {
+      "state": {
+        "type": "String"
+      },
+      "last": {
+        "type": "Object"
+      }
+    }
   }
 }

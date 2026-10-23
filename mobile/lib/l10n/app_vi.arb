@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Xóa sạch Kryfo",
   "settingsYourProtections": "Lớp bảo vệ của bạn",
   "settingsTorRouting": "Định tuyến Tor",
-  "settingsConnecting": "Đang kết nối",
   "settingsOffMode": "Tắt · chế độ relay",
   "settingsOffFastMode": "Tắt · chế độ nhanh",
   "settingsAppLock": "Khóa ứng dụng",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.",
   "motionOffline": "NGOẠI TUYẾN",
   "motionNoNetwork": "Không có mạng",
-  "motionTorPicksUpAgain": "Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại."
+  "motionTorPicksUpAgain": "Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

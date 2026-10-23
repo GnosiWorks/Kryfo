@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "پاک کردن Kryfo",
   "settingsYourProtections": "محافظت‌های شما",
   "settingsTorRouting": "مسیریابی Tor",
-  "settingsConnecting": "در حال اتصال",
   "settingsOffMode": "خاموش · حالت رله",
   "settingsOffFastMode": "خاموش · حالت سریع",
   "settingsAppLock": "قفل برنامه",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "پیام‌ها به محض اینکه رله‌ای از این مسیر پاسخ دهد فرستاده می‌شوند.",
   "motionOffline": "آفلاین",
   "motionNoNetwork": "شبکه‌ای نیست",
-  "motionTorPicksUpAgain": "بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد."
+  "motionTorPicksUpAgain": "بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد.",
+  "deliveryModeStateLast": "⁨{state}⁩ · ⁨{last}⁩"
 }

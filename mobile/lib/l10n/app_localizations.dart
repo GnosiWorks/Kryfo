@@ -8442,12 +8442,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Connecting'**
-  String get settingsConnecting;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Off · relay mode'**
   String get settingsOffMode;
 
@@ -14768,6 +14762,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing goes out without a network. Tor picks up again when one is back.'**
   String get motionTorPicksUpAgain;
+
+  /// delivery_mode.dart: the check-ins line while not connected: the connection's words as the home pill shows them, then the last check-in
+  ///
+  /// In en, this message translates to:
+  /// **'{state} · {last}'**
+  String deliveryModeStateLast(String state, Object last);
 }
 
 class _AppLocalizationsDelegate

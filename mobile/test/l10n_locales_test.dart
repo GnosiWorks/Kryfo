@@ -2001,7 +2001,6 @@ final _calls = <_Call>[
   ('settingsWipeKryfo2', [], (l) => l.settingsWipeKryfo2),
   ('settingsYourProtections', [], (l) => l.settingsYourProtections),
   ('settingsTorRouting', [], (l) => l.settingsTorRouting),
-  ('settingsConnecting', [], (l) => l.settingsConnecting),
   ('settingsOffMode', [], (l) => l.settingsOffMode),
   ('settingsOffFastMode', [], (l) => l.settingsOffFastMode),
   ('settingsAppLock', [], (l) => l.settingsAppLock),
@@ -3243,6 +3242,11 @@ final _calls = <_Call>[
   ('motionOffline', [], (l) => l.motionOffline),
   ('motionNoNetwork', [], (l) => l.motionNoNetwork),
   ('motionTorPicksUpAgain', [], (l) => l.motionTorPicksUpAgain),
+  (
+    'deliveryModeStateLast',
+    ['⟨state⟩', '⟨last⟩'],
+    (l) => l.deliveryModeStateLast("⟨state⟩", "⟨last⟩"),
+  ),
 ];
 
 void main() {

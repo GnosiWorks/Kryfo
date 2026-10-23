@@ -5324,9 +5324,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTorRouting => 'Маршрутизація Tor';
 
   @override
-  String get settingsConnecting => 'Підключення';
-
-  @override
   String get settingsOffMode => 'Вимкнено · ретранслятор';
 
   @override
@@ -9305,4 +9302,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

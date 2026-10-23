@@ -4995,9 +4995,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsConnecting => '正在连接';
-
-  @override
   String get settingsOffMode => '关 · 中继模式';
 
   @override
@@ -8735,6 +8732,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get motionTorPicksUpAgain => '没有网络时什么都发不出去。网络恢复后，Tor 会继续。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13729,9 +13731,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsConnecting => '連線中';
-
-  @override
   String get settingsOffMode => '關閉 · 中繼模式';
 
   @override
@@ -17350,4 +17349,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get motionTorPicksUpAgain => '沒有網路時什麼都送不出去。網路恢復後，Tor 會繼續。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "抹掉 Kryfo",
   "settingsYourProtections": "你的保护",
   "settingsTorRouting": "Tor 路由",
-  "settingsConnecting": "正在连接",
   "settingsOffMode": "关 · 中继模式",
   "settingsOffFastMode": "关 · 快速模式",
   "settingsAppLock": "应用锁",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "一旦有中继通过这条路线响应，消息就会发出。",
   "motionOffline": "离线",
   "motionNoNetwork": "没有网络",
-  "motionTorPicksUpAgain": "没有网络时什么都发不出去。网络恢复后，Tor 会继续。"
+  "motionTorPicksUpAgain": "没有网络时什么都发不出去。网络恢复后，Tor 会继续。",
+  "deliveryModeStateLast": "{state} · {last}"
 }

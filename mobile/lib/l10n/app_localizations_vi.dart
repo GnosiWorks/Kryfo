@@ -5224,9 +5224,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsTorRouting => 'Định tuyến Tor';
 
   @override
-  String get settingsConnecting => 'Đang kết nối';
-
-  @override
   String get settingsOffMode => 'Tắt · chế độ relay';
 
   @override
@@ -9135,4 +9132,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

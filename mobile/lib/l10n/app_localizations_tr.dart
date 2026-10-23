@@ -5248,9 +5248,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsTorRouting => 'Tor yönlendirme';
 
   @override
-  String get settingsConnecting => 'Bağlanıyor';
-
-  @override
   String get settingsOffMode => 'Kapalı · aktarıcı modu';
 
   @override
@@ -9172,4 +9169,9 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Стерти Kryfo",
   "settingsYourProtections": "Твій захист",
   "settingsTorRouting": "Маршрутизація Tor",
-  "settingsConnecting": "Підключення",
   "settingsOffMode": "Вимкнено · ретранслятор",
   "settingsOffFastMode": "Вимкнено · швидкий режим",
   "settingsAppLock": "Блокування Kryfo",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Повідомлення підуть, щойно ретранслятор відповість цим маршрутом.",
   "motionOffline": "ОФЛАЙН",
   "motionNoNetwork": "Немає мережі",
-  "motionTorPicksUpAgain": "Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться."
+  "motionTorPicksUpAgain": "Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

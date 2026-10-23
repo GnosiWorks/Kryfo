@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Kryfo löschen",
   "settingsYourProtections": "Dein Schutz",
   "settingsTorRouting": "Tor-Routing",
-  "settingsConnecting": "Verbinde",
   "settingsOffMode": "Aus · Relais-Modus",
   "settingsOffFastMode": "Aus · Schnell-Modus",
   "settingsAppLock": "App-Sperre",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Nachrichten gehen raus, sobald ein Relais über diese Route antwortet.",
   "motionOffline": "OFFLINE",
   "motionNoNetwork": "Kein Netz",
-  "motionTorPicksUpAgain": "Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist."
+  "motionTorPicksUpAgain": "Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

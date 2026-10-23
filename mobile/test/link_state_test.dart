@@ -243,7 +243,8 @@ void main() {
       await t.pumpWidget(app(const GettingMessagesScreen()));
       await t.pump(const Duration(seconds: 2));
       expect(find.text(l10n.deliveryModeConnected), findsNothing);
-      expect(find.text(l10n.deliveryModeConnecting), findsOneWidget);
+      // the pill's words: tor is up and waits for a relay
+      expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
     });
   });
 
@@ -372,7 +373,13 @@ void main() {
     final settings = File(
       'lib/screens/settings_screen.dart',
     ).readAsStringSync();
-    expect(settings, contains('appState.torUsable'));
+    expect(settings, contains('LinkViewBuilder('));
+    expect(settings, isNot(contains('appState.torUsable')));
+    final getting = File(
+      'lib/screens/getting_messages_screen.dart',
+    ).readAsStringSync();
+    expect(getting, contains('appState.linkView'));
+    expect(getting, isNot(contains('appState.linkUp')));
     final main = File('lib/app/gates.dart').readAsStringSync();
     final pill = main.substring(
       main.indexOf('class TorHaloState'),

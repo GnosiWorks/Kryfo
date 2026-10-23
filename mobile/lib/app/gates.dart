@@ -204,7 +204,7 @@ class LinkViewBuilder extends StatefulWidget {
 }
 
 class _LinkViewBuilderState extends State<LinkViewBuilder> {
-  final _clock = _LinkClock();
+  final _clock = LinkClock();
 
   @override
   void initState() {
@@ -231,36 +231,9 @@ class _LinkViewBuilderState extends State<LinkViewBuilder> {
   }
 }
 
-// one timer for the moment a reading changes by time alone
-class _LinkClock {
-  Timer? _t;
-  DateTime? _for;
-
-  void arm(DateTime? at, VoidCallback fire) {
-    if (at == _for && (_t?.isActive ?? false)) return;
-    cancel();
-    if (at == null) return;
-    _for = at;
-    final left = at.difference(DateTime.now());
-    _t = Timer(
-      left.isNegative ? Duration.zero : left + const Duration(milliseconds: 50),
-      () {
-        _for = null;
-        fire();
-      },
-    );
-  }
-
-  void cancel() {
-    _t?.cancel();
-    _t = null;
-    _for = null;
-  }
-}
-
 class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
-  final _clock = _LinkClock();
+  final _clock = LinkClock();
 
   @override
   void initState() {

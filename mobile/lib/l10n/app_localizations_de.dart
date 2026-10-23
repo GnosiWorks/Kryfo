@@ -5294,9 +5294,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTorRouting => 'Tor-Routing';
 
   @override
-  String get settingsConnecting => 'Verbinde';
-
-  @override
   String get settingsOffMode => 'Aus · Relais-Modus';
 
   @override
@@ -9248,4 +9245,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

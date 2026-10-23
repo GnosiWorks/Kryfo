@@ -5229,9 +5229,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTorRouting => 'Perutean Tor';
 
   @override
-  String get settingsConnecting => 'Menghubungkan';
-
-  @override
   String get settingsOffMode => 'Mati · mode relay';
 
   @override
@@ -9142,4 +9139,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
 }

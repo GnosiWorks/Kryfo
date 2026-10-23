@@ -16,6 +16,7 @@ import '../main.dart'
         AppStateDelivery,
         AppStateBridges,
         AppStateSession;
+import '../link_view.dart';
 import '../miui_autostart.dart';
 import '../notifications.dart';
 import '../ready_edge.dart';
@@ -88,6 +89,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   void dispose() {
     _timers.dispose();
     _torUp.dispose();
+    _clock.cancel();
     appState.removeListener(_changed);
     super.dispose();
   }
@@ -95,6 +97,9 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   void _changed() {
     if (mounted) setState(() {});
   }
+
+  // the connection's reading changes by time alone too: a grace ends
+  final _clock = LinkClock();
 
   Future<void> _pick(DeliveryMode m) async {
     if (_busy || m == appState.deliveryMode) return;
@@ -149,23 +154,32 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
         : checking
         ? l10n.gettingMessagesHelperChecking
         : l10n.gettingMessagesHelperRelayNotYet;
-    // the app's one meaning of connected, the same the home screen shows
-    final connecting = appState.linkComing;
-    final status = deliveryStatus(
+    // the reading the home pill and the tor sheet show, grace and words
+    // alike. tor resting between check-ins keeps the check-in lines
+    final link = appState.linkView;
+    _clock.arm(link.recheckAt, _changed);
+    // the dot pulses with the pill's
+    final connecting = link.pulsing;
+    final resting = mode == DeliveryMode.checkins && link.kind == LinkKind.off;
+    DeliveryStatus said(String words) => deliveryStatus(
       mode: mode,
-      connected: appState.linkUp,
+      connected: link.connected,
       connecting: connecting,
+      state: link.connected || resting ? null : words,
       lastCheckMs: appState.lastCheckAt,
       lastWakeMs: appState.lastWakeAt,
       nowMs: DateTime.now().millisecondsSinceEpoch,
       helperName: appState.helperName,
     );
+    final status = said(link.text);
+    // a screen reader hears a new state, not each percent of a climb
+    final heard = said(link.spoken).text;
     // how tor gets out, when it is not the usual way. never in a decoy
     final bs = appState.bridgeStatus;
     final String? bridgeNote =
         appState.inDecoyView || appState.sendMode != 'private'
         ? null
-        : bs.throughBridge && appState.linkUp
+        : bs.throughBridge && link.connected
         ? l10n.bridgesThroughABridge
         : appState.autoStruggling
         ? appState.bridgeLine.head
@@ -347,10 +361,12 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       // change in place
                       child: Semantics(
                         liveRegion: true,
+                        label: heard,
+                        excludeSemantics: true,
                         child: RiseSwap(
                           child: Text(
                             status.text,
-                            key: ValueKey((status.live, connecting)),
+                            key: ValueKey((status.live, link.kind)),
                             style: HaloType.mono(
                               size: 12,
                               color: status.live

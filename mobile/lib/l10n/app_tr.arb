@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Kryfo’yu sil",
   "settingsYourProtections": "Korumaların",
   "settingsTorRouting": "Tor yönlendirme",
-  "settingsConnecting": "Bağlanıyor",
   "settingsOffMode": "Kapalı · aktarıcı modu",
   "settingsOffFastMode": "Kapalı · hızlı mod",
   "settingsAppLock": "Uygulama kilidi",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Bir aktarıcı bu rota üzerinden yanıt verir vermez mesajlar gider.",
   "motionOffline": "ÇEVRİMDIŞI",
   "motionNoNetwork": "Ağ yok",
-  "motionTorPicksUpAgain": "Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder."
+  "motionTorPicksUpAgain": "Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.",
+  "deliveryModeStateLast": "{state} · {last}"
 }

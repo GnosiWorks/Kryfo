@@ -5318,9 +5318,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTorRouting => 'التوجيه عبر Tor';
 
   @override
-  String get settingsConnecting => 'جارٍ الاتصال';
-
-  @override
   String get settingsOffMode => 'معطّل · وضع المُرحِّل';
 
   @override
@@ -9282,4 +9279,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get motionTorPicksUpAgain =>
       'لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '⁨$state⁩ · ⁨$last⁩';
+  }
 }

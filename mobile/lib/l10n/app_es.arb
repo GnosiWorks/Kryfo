@@ -1490,7 +1490,6 @@
   "settingsWipeKryfo2": "Borrar Kryfo",
   "settingsYourProtections": "Tus protecciones",
   "settingsTorRouting": "Enrutamiento Tor",
-  "settingsConnecting": "Conectando",
   "settingsOffMode": "Apagado · modo Repetidor",
   "settingsOffFastMode": "Apagado · modo Rápido",
   "settingsAppLock": "Bloqueo de la app",
@@ -2414,5 +2413,6 @@
   "motionMessagesGoOnceARelay": "Los mensajes salen en cuanto un repetidor responda por esta ruta.",
   "motionOffline": "SIN CONEXIÓN",
   "motionNoNetwork": "Sin red",
-  "motionTorPicksUpAgain": "Sin red no sale nada. Tor sigue en cuanto vuelva."
+  "motionTorPicksUpAgain": "Sin red no sale nada. Tor sigue en cuanto vuelva.",
+  "deliveryModeStateLast": "{state} · {last}"
 }
