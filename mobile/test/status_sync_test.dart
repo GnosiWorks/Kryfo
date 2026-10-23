@@ -388,6 +388,53 @@ void main() {
       await gone(t);
     });
 
+    for (final label in [true, false]) {
+      testWidgets('a screen reader opens the sheet from the '
+          '${label ? 'pill' : 'chat dot'}', (t) async {
+        final sem = t.ensureSemantics();
+        phone(t);
+        final m = t.binding.defaultBinaryMessenger;
+        m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+        addTearDown(
+          () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+        );
+        await t.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (ctx, child) => MediaQuery(
+              data: MediaQuery.of(ctx).copyWith(disableAnimations: true),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: Center(child: TorHalo(label: label)),
+            ),
+          ),
+        );
+        await poll(t, 'reachable|100|1|1|1');
+        // one stop: the state's words, a button, and the tap on it
+        final pill = find.bySemanticsLabel(l10n.appTorReady);
+        expect(pill, findsOneWidget);
+        final node = t.getSemantics(pill);
+        expect(
+          node,
+          isSemantics(
+            label: l10n.appTorReady,
+            isButton: true,
+            hasTapAction: true,
+            isLiveRegion: true,
+          ),
+        );
+        t.semantics.tap(find.semantics.byLabel(l10n.appTorReady));
+        for (var i = 0; i < 5; i++) {
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        expect(find.byType(TorSheet), findsOneWidget);
+        sem.dispose();
+        await gone(t);
+      });
+    }
+
     testWidgets('with the sheet open only the sheet speaks', (t) async {
       final sem = t.ensureSemantics();
       phone(t);

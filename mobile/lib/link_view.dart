@@ -82,6 +82,10 @@ class LinkView {
     LinkKind.fast => l10n.appFast,
   };
 
+  /// a shorter phrase for the same state, for a language whose words do not
+  /// fit the header at the smallest size (pill_fit.dart)
+  String? get shortText => null;
+
   /// what a screen reader hears, once per change of kind: a climbing
   /// percent is not a new state
   String get spoken => kind == LinkKind.climbing ? l10n.appConnecting2 : text;
@@ -131,6 +135,23 @@ class LinkView {
   /// screen that says connected means
   bool get connected =>
       kind == LinkKind.ready || kind == LinkKind.relay || kind == LinkKind.fast;
+
+  /// a chat's line over its composer while the route is not up: its long
+  /// words only while tor is still coming up, the pill's otherwise. null
+  /// while connected
+  String? get chatLine => connected
+      ? null
+      : pulsing
+      ? l10n.chatBuildingAPrivateRoute
+      : text;
+
+  /// what a send that failed says while the route is not up, null while
+  /// connected
+  String? get sendLine => connected
+      ? null
+      : pulsing
+      ? l10n.chatStillConnectingToTor
+      : text;
 
   /// the dot pulses only while tor is still coming up
   bool get pulsing => kind == LinkKind.connecting || kind == LinkKind.climbing;

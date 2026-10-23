@@ -48,6 +48,7 @@ import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
 import 'link_view.dart';
+import 'pill_fit.dart';
 import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';

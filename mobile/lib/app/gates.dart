@@ -325,6 +325,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
     return GestureDetector(
       onTap: tappable ? _tap : null,
       behavior: HitTestBehavior.opaque,
+      // the tap is on the labelled node below, one stop for a screen reader
+      excludeFromSemantics: true,
       child: AnimatedBuilder(
         animation: Listenable.merge([appState, _c]),
         builder: (context, _) {
@@ -399,22 +401,20 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             );
           } else {
             // the header keeps room for its buttons and the id beside them:
-            // large text grows the words up to a point, a long state takes
-            // two lines, and a word too long for its line shrinks to fit
+            // the words grow with large text up to a point, take two lines,
+            // and never shrink below the header's smallest text (pill_fit)
             final room = MediaQuery.sizeOf(context).width * 0.24;
-            final scaler = MediaQuery.textScalerOf(
-              context,
-            ).clamp(maxScaleFactor: 1.15);
-            shown = tinted((c) {
-              final style = HaloType.mono(size: 11, color: c);
-              final words = Text(
-                v.text,
-                key: ValueKey(v.kind),
-                maxLines: 2,
-                textScaler: scaler,
-                style: style,
-              );
-              return Row(
+            final fit = fitPill(
+              text: v.text,
+              short: v.shortText,
+              style: HaloType.mono(size: kPillPx),
+              room: room,
+              userScale:
+                  MediaQuery.textScalerOf(context).scale(kPillPx) / kPillPx,
+              direction: Directionality.of(context),
+            );
+            shown = tinted(
+              (c) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   dot(c),
@@ -443,25 +443,18 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                       ),
                       // the words change in place within a kind and cross
                       // over between kinds
-                      child: _widestWord(v.text, style, scaler) <= room
-                          ? words
-                          : FittedBox(
-                              key: ValueKey(v.kind),
-                              fit: BoxFit.scaleDown,
-                              alignment: AlignmentDirectional.centerStart,
-                              child: Text(
-                                v.text,
-                                maxLines: 1,
-                                softWrap: false,
-                                textScaler: scaler,
-                                style: style,
-                              ),
-                            ),
+                      child: Text(
+                        fit.text,
+                        key: ValueKey(v.kind),
+                        maxLines: 2,
+                        textScaler: TextScaler.linear(fit.scale),
+                        style: HaloType.mono(size: kPillPx, color: c),
+                      ),
                     ),
                   ),
                 ],
-              );
-            });
+              ),
+            );
           }
           // heard once per change of state, not per percent, and a tap
           // explains it
@@ -470,28 +463,13 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             liveRegion: true,
             button: tappable,
             label: v.spoken,
+            onTap: tappable ? _tap : null,
             child: ExcludeSemantics(child: shown),
           );
         },
       ),
     );
   }
-}
-
-// the widest single word of [text] as drawn: a line may break between
-// words, never inside one
-double _widestWord(String text, TextStyle style, TextScaler scaler) {
-  var widest = 0.0;
-  for (final w in text.split(' ')) {
-    final p = TextPainter(
-      text: TextSpan(text: w, style: style),
-      textDirection: TextDirection.ltr,
-      textScaler: scaler,
-    )..layout();
-    if (p.width > widest) widest = p.width;
-    p.dispose();
-  }
-  return widest;
 }
 
 /// the sheet behind the pill: tor's route and what it means now, from the
