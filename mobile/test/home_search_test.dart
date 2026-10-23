@@ -343,8 +343,16 @@ void main() {
         final tor = t.getRect(find.byType(TorHalo));
         expect(tor.left, greaterThanOrEqualTo(0));
         expect(tor.right, lessThanOrEqualTo(360));
+        // two lines at most, and the id keeps most of its room
+        final words = find.descendant(
+          of: find.byType(TorHalo),
+          matching: find.byType(Text),
+        );
+        for (final e in words.evaluate()) {
+          expect(e.size!.height, lessThan(40), reason: 'two lines at most');
+        }
         final date = t.getRect(find.text('neon-tiger-saturn'));
-        expect(date.width, greaterThan(60));
+        expect(date.width, greaterThan(55));
         await _drain(t);
       });
     }

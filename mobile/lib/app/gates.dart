@@ -424,54 +424,70 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   SizedBox(width: 20, height: 20, child: Center(child: dot(c))),
             );
           } else {
-            // the header keeps room for its buttons: large text grows the
-            // words up to a point, and a long language's words shrink to fit
-            final room = MediaQuery.sizeOf(context).width * 0.42;
-            shown = tinted(
-              (c) => Row(
+            // the header keeps room for its buttons and the id beside them:
+            // large text grows the words up to a point, a long state takes
+            // two lines, and a word too long for its line shrinks to fit
+            final room = MediaQuery.sizeOf(context).width * 0.24;
+            final scaler = MediaQuery.textScalerOf(
+              context,
+            ).clamp(maxScaleFactor: 1.15);
+            shown = tinted((c) {
+              final style = HaloType.mono(size: 11, color: c);
+              final words = Text(
+                v.text,
+                key: ValueKey(v.kind),
+                maxLines: 2,
+                textScaler: scaler,
+                style: style,
+              );
+              return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   dot(c),
                   const SizedBox(width: 6),
                   ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: room),
-                    child: MediaQuery.withClampedTextScaling(
-                      maxScaleFactor: 1.3,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
+                    child: AnimatedSwitcher(
+                      duration: still
+                          ? Duration.zero
+                          : const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeIn,
+                      layoutBuilder: (now, before) => Stack(
                         alignment: AlignmentDirectional.centerStart,
-                        child: AnimatedSwitcher(
-                          duration: still
-                              ? Duration.zero
-                              : const Duration(milliseconds: 220),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeIn,
-                          transitionBuilder: (child, anim) => FadeTransition(
-                            opacity: anim,
-                            child: SlideTransition(
-                              position: Tween(
-                                begin: const Offset(0, 0.35),
-                                end: Offset.zero,
-                              ).animate(anim),
-                              child: child,
-                            ),
-                          ),
-                          // the words change in place within a kind and cross
-                          // over between kinds
-                          child: Text(
-                            v.text,
-                            key: ValueKey(v.kind),
-                            maxLines: 1,
-                            softWrap: false,
-                            style: HaloType.mono(size: 11, color: c),
-                          ),
+                        children: [...before, ?now],
+                      ),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: SlideTransition(
+                          position: Tween(
+                            begin: const Offset(0, 0.35),
+                            end: Offset.zero,
+                          ).animate(anim),
+                          child: child,
                         ),
                       ),
+                      // the words change in place within a kind and cross
+                      // over between kinds
+                      child: _widestWord(v.text, style, scaler) <= room
+                          ? words
+                          : FittedBox(
+                              key: ValueKey(v.kind),
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                v.text,
+                                maxLines: 1,
+                                softWrap: false,
+                                textScaler: scaler,
+                                style: style,
+                              ),
+                            ),
                     ),
                   ),
                 ],
-              ),
-            );
+              );
+            });
           }
           // heard once per change of state, not per percent, and a tap
           // explains it
@@ -486,6 +502,22 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
       ),
     );
   }
+}
+
+// the widest single word of [text] as drawn: a line may break between
+// words, never inside one
+double _widestWord(String text, TextStyle style, TextScaler scaler) {
+  var widest = 0.0;
+  for (final w in text.split(' ')) {
+    final p = TextPainter(
+      text: TextSpan(text: w, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout();
+    if (p.width > widest) widest = p.width;
+    p.dispose();
+  }
+  return widest;
 }
 
 /// the sheet behind the pill: tor's route and what it means now, from the
