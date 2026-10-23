@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # check-imports.sh <llvm-nm or nm> <libkryfo_voice.so>: fails when the
 # library imports a network call or a way to start a process. it reads a
-# model file and some memory, and has no reason for either.
+# model file, /proc/cpuinfo and some memory, and has no reason for either.
 set -euo pipefail
 nm="$1"
 so="$2"

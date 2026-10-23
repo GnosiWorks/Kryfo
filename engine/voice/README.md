@@ -27,12 +27,17 @@ nothing of it is built and no screen reaches mobile/lib/voice.
   download under way.
 - `native/`: libkryfo_voice, a four-call c api over whisper.cpp
   (`kryfo_voice.h`). 16-bit pcm in at any rate, segments out as they are
-  decoded, a cancel flag another thread may set. it reads the model file
-  and no other, and imports no network call and no way to start a
-  process (`check-imports.sh`, run by both build scripts). ggml's
-  backtrace on an assert would fork the app and run gdb: the link
-  answers fork, execlp and prctl with an error and `kv_open` sends an
-  assert straight to abort().
+  decoded, a cancel flag another thread may set. the files it opens are
+  the model, `/proc/cpuinfo` once (ggml reads the cpu's name for its
+  backend) and, only on a crash path (an uncaught c++ exception),
+  `/proc/self/status`, where ggml's backtrace looks for a tracer. it
+  imports no network call and no way to start a process
+  (`check-imports.sh`, run by both build scripts). ggml's backtrace on
+  an assert would fork the app and run gdb: the link answers fork,
+  execlp and prctl with an error and `kv_open` sends an assert straight
+  to abort(). those wraps answer every caller, so `check-wraps.sh` fails
+  the build when anything but ggml.c calls one of them (the SVE length
+  lookup of a cpu variant or kleidiai build would).
 
 the app side is mobile/lib/voice: the ffi bindings (a run on its own
 isolate, segments streamed back, cancel), the wav reader and the model
