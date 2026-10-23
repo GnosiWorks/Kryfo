@@ -5970,7 +5970,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
+  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
   String myKryfoAddMeOnKryfo(Object myId, Object uri);
 
   /// screens/my_kryfo_screen.dart
@@ -6054,7 +6054,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.'**
+  /// **'The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.'**
   String get myKryfoTheLinkCarriesYour;
 
   /// screens/my_kryfo_screen.dart
@@ -6486,7 +6486,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'YOUR KRYFO ID'**
+  /// **'YOUR NAME'**
   String get onboardingYourKryfoId;
 
   /// screens/onboarding_screen.dart
@@ -7206,7 +7206,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo id'**
+  /// **'Your name'**
   String get profileKryfoId;
 
   /// screens/profile_screen.dart
@@ -10368,7 +10368,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'You join under a key made for this room. Nobody in it sees your Kryfo id.'**
+  /// **'You join under a key made for this room. Nobody in it sees your three words.'**
   String get kryfoLinkTextYouJoinUnderA;
 
   /// widgets/link_stub.dart

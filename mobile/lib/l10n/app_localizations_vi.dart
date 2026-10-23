@@ -3768,7 +3768,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Thêm tôi trên Kryfo. ID của tôi là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
   }
 
   @override
@@ -3818,7 +3818,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Liên kết chứa ID, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
+      'Liên kết chứa ba từ của bạn, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
 
   @override
   String get myKryfoSendTheLink => 'Gửi liên kết';
@@ -4079,7 +4079,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo là mã nguồn mở';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO CỦA BẠN';
+  String get onboardingYourKryfoId => 'TÊN CỦA BẠN';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4484,7 +4484,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileChangeYourFace => 'Đổi khuôn mặt';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Tên của bạn';
 
   @override
   String get profileOnionAddress => 'Địa chỉ onion';
@@ -6470,7 +6470,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID Kryfo của bạn.';
+      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ba từ của bạn.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Tải qua Tor · bởi thiết bị của bạn';

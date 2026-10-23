@@ -1730,7 +1730,7 @@ void main() {
     expect(l.myKryfoInviteCopiedClearsIn, "Invite copied · clears in 60s");
     expect(
       l.myKryfoAddMeOnKryfo("<myId>", "<uri>"),
-      "Add me on Kryfo. My ID is <myId>\n\nTap to add me:\n<uri>\n\nKryfo is a private messenger. No phone number, no email.",
+      "Add me on Kryfo. My name there is <myId>\n\nTap to add me:\n<uri>\n\nKryfo is a private messenger. No phone number, no email.",
     );
     expect(l.myKryfoAddMeOnKryfo2, "Add me on Kryfo");
     expect(l.myKryfoAddSomeone, "Add someone");
@@ -1765,7 +1765,7 @@ void main() {
     );
     expect(
       l.myKryfoTheLinkCarriesYour,
-      "The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.",
+      "The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.",
     );
     expect(l.myKryfoSendTheLink, "Send the link");
     expect(l.myKryfoAsACard, "As a card");
@@ -1841,7 +1841,7 @@ void main() {
     expect(l.onboardingBegin, "Begin");
     expect(l.onboardingHaveABackupRestore, "Have a backup? Restore →");
     expect(l.onboardingKryfoIsOpenSource, "Kryfo is open source");
-    expect(l.onboardingYourKryfoId, "YOUR KRYFO ID");
+    expect(l.onboardingYourKryfoId, "YOUR NAME");
     expect(
       l.onboardingGeneratedFromAKey,
       "Generated from a key that lives only on this phone. *No one else has these words.*",
@@ -2049,7 +2049,7 @@ void main() {
     expect(l.profileCopied("<what>"), "<what> copied");
     expect(l.profileProfile, "Profile");
     expect(l.profileChangeYourFace, "Change your face");
-    expect(l.profileKryfoId, "Kryfo id");
+    expect(l.profileKryfoId, "Your name");
     expect(l.profileOnionAddress, "Onion address");
     expect(l.profileSupporterBadge, "Supporter badge");
     expect(
@@ -2933,7 +2933,7 @@ void main() {
     expect(l.kryfoLinkTextJoin2, "Join");
     expect(
       l.kryfoLinkTextYouJoinUnderA,
-      "You join under a key made for this room. Nobody in it sees your Kryfo id.",
+      "You join under a key made for this room. Nobody in it sees your three words.",
     );
     expect(l.linkStubFetchedOverTorBy, "Fetched over Tor · by your device");
     expect(
