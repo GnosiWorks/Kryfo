@@ -628,33 +628,34 @@ mixin _MessageRows {
   }
 
   // one message of a 1:1 thread by its uid, for a draft quoting one older
-  // than the pages a chat holds. none when it is gone
-  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) async {
-    final db = await open();
-    final r = await db.query(
-      'messages',
-      columns: ['*', 'rowid AS rowid'],
-      where: 'peer_id = ? AND group_id IS NULL AND msg_uid = ?',
-      whereArgs: [peerId, msgUid],
-      limit: 1,
-    );
-    return r.isEmpty ? null : r.first;
-  }
+  // than the pages a chat holds. none when it is gone, or past its time
+  // and only not swept yet
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) =>
+      _byUid(msgUid, (r) => r['peer_id'] == peerId && r['group_id'] == null);
 
   // the same in a group
-  Future<Map<String, Object?>?> groupMessageIn(
-    String groupId,
+  Future<Map<String, Object?>?> groupMessageIn(String groupId, String msgUid) =>
+      _byUid(msgUid, (r) => r['group_id'] == groupId);
+
+  // by msg_uid alone, so its own index is the one read: a group's would
+  // walk every row of the group
+  Future<Map<String, Object?>?> _byUid(
     String msgUid,
+    bool Function(Map<String, Object?> r) ours,
   ) async {
     final db = await open();
-    final r = await db.query(
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final rows = await db.query(
       'messages',
       columns: ['*', 'rowid AS rowid'],
-      where: 'group_id = ? AND msg_uid = ?',
-      whereArgs: [groupId, msgUid],
-      limit: 1,
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
     );
-    return r.isEmpty ? null : r.first;
+    for (final r in rows) {
+      final burn = (r['burn_at'] as num?)?.toInt();
+      if (ours(r) && (burn == null || burn > now)) return r;
+    }
+    return null;
   }
 
   // newest page of a 1:1 thread. beforeRowid, written at beforeAt, pages

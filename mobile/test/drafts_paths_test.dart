@@ -100,6 +100,17 @@ void main() {
     expect(live.rowsOf.keys, [_c]);
   });
 
+  test('"this isn\'t them" takes their draft with everything else', () async {
+    await typed(_c);
+    await typed(_o);
+    expect(await app.notThem(_c, 'x-$_c'), isTrue);
+    expect(live.people.containsKey(_c), isFalse);
+    expect(live.rowsOf.keys, [_o]);
+    expect(heldDraft(HaloContainer.everyday, _c, group: false), isNull);
+    await Future<void>.delayed(kDraftWait * 2);
+    expect(live.rowsOf.keys, [_o]);
+  });
+
   test('a block keeps the draft, and an unblock finds it there', () async {
     await typed(_c);
     await app.block(_c);

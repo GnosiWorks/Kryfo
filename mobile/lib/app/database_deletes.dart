@@ -441,6 +441,7 @@ mixin _DeleteRows {
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
     bool Function(String chatId, bool group)? draftOnScreen,
+    void Function(HaloContainer c, String chatId, bool group)? draftGone,
   }) async {
     // an open one is handed back at once, and nothing below opens it again
     final db = ifOpen && !isOpen ? null : await open();
@@ -487,6 +488,7 @@ mixin _DeleteRows {
       await sweepDrafts(
         this as DraftRows,
         onScreen: draftOnScreen,
+        gone: draftGone,
         spent: await spentDraftsIn(db, now),
       );
     } catch (e) {

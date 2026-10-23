@@ -69,16 +69,18 @@ mixin _DraftRows implements DraftRows {
   }
 
   /// every draft held here, newest first: what the chat list shows in
-  /// place of a row's last message
+  /// place of a row's last message. a timed one past its time is none
   Future<List<KeptDraft>> drafts() async {
     final db = await open();
     final rows = await db.query('drafts', orderBy: 'updated_at DESC');
+    final now = DateTime.now().millisecondsSinceEpoch;
     return [
       for (final r in rows)
         if (r['chat'] case final String chat)
-          chat.startsWith('group:')
-              ? (chat: chat.substring(6), group: true, draft: _draftOfRow(r))
-              : (chat: chat, group: false, draft: _draftOfRow(r)),
+          if (!_draftOfRow(r).spentAt(now))
+            chat.startsWith('group:')
+                ? (chat: chat.substring(6), group: true, draft: _draftOfRow(r))
+                : (chat: chat, group: false, draft: _draftOfRow(r)),
     ];
   }
 

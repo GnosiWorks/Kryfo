@@ -441,6 +441,61 @@ void main() {
       expect(holds('zorro'), isFalse);
     });
 
+    test('a quote is read by its uid, in its own chat, and not once past '
+        'its time', () async {
+      if (skip()) return;
+      final live = HaloDb();
+      await _person(live, 'ann');
+      await _group(live, 'g1');
+      final db = await live.open();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final (uid, group, burnAt) in [
+        ('u-1', null, null),
+        ('u-2', 'g1', null),
+        ('u-3', null, now - 1000),
+        ('u-4', 'g1', now + 60000),
+      ]) {
+        await db.insert('messages', {
+          'peer_id': 'ann',
+          'group_id': group,
+          'direction': 'in',
+          'plaintext': 'words of $uid',
+          'sent_at': 1,
+          'msg_uid': uid,
+          'burn_at': burnAt,
+        });
+      }
+      expect(
+        (await live.messageIn('ann', 'u-1'))?['plaintext'],
+        'words of u-1',
+      );
+      // a group's is not the 1:1 chat's, nor the other way
+      expect(await live.messageIn('ann', 'u-2'), isNull);
+      expect(await live.groupMessageIn('g1', 'u-1'), isNull);
+      expect((await live.groupMessageIn('g1', 'u-2'))?['msg_uid'], 'u-2');
+      // past its time and not swept yet: gone
+      expect(await live.messageIn('ann', 'u-3'), isNull);
+      expect((await live.groupMessageIn('g1', 'u-4'))?['msg_uid'], 'u-4');
+      expect(await live.groupMessageIn('g2', 'u-2'), isNull);
+      await live.close();
+    });
+
+    test('a write that comes due while its chat moves waits for the move, '
+        'then is made', () async {
+      if (skip()) return;
+      final live = HaloDb();
+      await _person(live, 'ann');
+      typedDraft(live, 'ann', _d('typed before'), group: false);
+      final let = holdDraftsOf(['ann']);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(await _chats(live), isEmpty);
+      let();
+      await pumpEventQueue();
+      expect((await live.draftOf('ann', group: false))?.text, 'typed before');
+      await live.close();
+    });
+
     test('a copy an older version wrote for a restart becomes rows', () async {
       if (skip()) return;
       final every = HaloContainer.everyday.id;
@@ -461,6 +516,43 @@ void main() {
       );
       await live.close();
     });
+  });
+
+  test('only new words start a draft\'s clock again', () async {
+    final db = _Rows(MemDb());
+    Draft? last() => heldDraft(db.container, 'ann', group: false);
+    void typed(Draft d, {bool clock = false, bool known = true}) {
+      typedDraft(db, 'ann', d, group: false, clock: clock, timedKnown: known);
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    typed(Draft('hi', at: now - 5000, burnSecs: 3600));
+    // put back with the composer's setting not read yet, or read as off:
+    // the same words keep their clock
+    typed(Draft('hi', at: now), known: false);
+    typed(Draft('hi', at: now));
+    expect(last()?.burnSecs, 3600);
+    expect(last()?.at, now - 5000);
+    // a quote picked is not new words either
+    typed(Draft('hi', replyTo: 'u-1', at: now));
+    expect(last()?.replyTo, 'u-1');
+    expect(last()?.at, now - 5000);
+    expect(last()?.burnSecs, 3600);
+    // new words before the setting is read keep its timer, the time moves
+    typed(Draft('hi there', replyTo: 'u-1', at: now), known: false);
+    expect(last()?.burnSecs, 3600);
+    expect(last()?.at, now);
+    // new words with it read take it
+    typed(Draft('hi there!', replyTo: 'u-1', at: now + 1));
+    expect(last()?.burnSecs, isNull);
+    // the person picks a timer: the draft takes it
+    typed(
+      Draft('hi there!', replyTo: 'u-1', at: now + 2, burnSecs: 30),
+      clock: true,
+    );
+    expect(last()?.burnSecs, 30);
+    expect(last()?.at, now + 2);
+    endProcessForTest();
   });
 
   test('a decoy\'s delete takes the decoy\'s draft, never the everyday '

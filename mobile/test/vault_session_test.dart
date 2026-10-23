@@ -593,6 +593,7 @@ class _Db implements HaloDb {
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
     bool Function(String chatId, bool group)? draftOnScreen,
+    void Function(HaloContainer c, String chatId, bool group)? draftGone,
   }) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;

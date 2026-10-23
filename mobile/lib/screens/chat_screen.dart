@@ -5,6 +5,7 @@ import '../lock_state.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../container.dart' show HaloContainer;
 import '../drafts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -197,9 +198,19 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
-/// whether [id]'s chat has a screen open: its composer is not a draft
-/// left behind yet
-bool chatOnScreen(String id) => _openChats[id]?.isNotEmpty ?? false;
+/// whether [id]'s chat is the page on top: its composer is being typed
+/// in, not a draft left behind
+bool chatOnScreen(String id) => (_openChats[id] ?? const []).any(
+  (s) => s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyChatComposer(HaloContainer c, String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
 
 /// a deleted chat's unsent words go with it, from an open composer too
 Future<void> dropChatDraft(String id) {
@@ -673,6 +684,8 @@ class _ChatScreenState extends State<ChatScreen>
   String? _firstUnreadKey;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // marks the next message so the other phone blocks screenshots of it. off
   // by default, since then neither side can screenshot the chat.
   bool _secureNext = false;
@@ -1221,6 +1234,7 @@ class _ChatScreenState extends State<ChatScreen>
           _burnSeconds = p.$2;
           _lastGhost = p.$1;
           _lastBurnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
@@ -3290,7 +3304,7 @@ class _ChatScreenState extends State<ChatScreen>
       appState.saveGhostPref(true, picked);
     });
     // the draft takes the chat's new clock
-    _keepDraft();
+    _keepDraft(clock: true);
   }
 
   // a one-shot amber ring on a bubble when a reaction lands on it
@@ -3575,7 +3589,7 @@ class _ChatScreenState extends State<ChatScreen>
     // note says
     final disguise = take.disguise || _devAnon;
     final msgUid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     // sent is sent: leaving the chat does not stop it. the lock does, and
     // nothing of it outlives the lock
     var locked = false;
@@ -3975,7 +3989,7 @@ class _ChatScreenState extends State<ChatScreen>
     // a file goes protected only when asked for in the preview
     final wantSecure = shown?.secure ?? secure ?? (!isFile && _secureNext);
     // a few photos at once: the first one answers
-    final replyToUid = shown == null ? _replyTo?.msgUid : shown.replyTo;
+    final replyToUid = shown == null ? _takeQuote() : shown.replyTo;
     final msg =
         shown ??
         _Msg(
@@ -4051,7 +4065,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return;
     final alone = _requestPending;
     final plan = albumPlan(r.items, r.caption, alone: alone);
-    final reply = _replyTo?.msgUid;
+    final reply = _takeQuote();
     final now = DateTime.now().millisecondsSinceEpoch;
     final waiting = [
       for (final (k, go) in plan.indexed)
@@ -4480,7 +4494,7 @@ class _ChatScreenState extends State<ChatScreen>
     _sendTurn = turn.future;
     var handed = false;
     try {
-      final replyToUid = _replyTo?.msgUid;
+      final replyToUid = _takeQuote();
       // a pending preview only belongs to a message that still holds its link
       final url = typed ? firstUrl(text) : null;
       final preview = url != null && _pendingPreview?['url'] == url
@@ -4675,8 +4689,15 @@ class _ChatScreenState extends State<ChatScreen>
     final rows = _draftRows;
     if (rows != null) {
       final d = heldDraft(rows.container, widget.peerHaloId, group: false);
-      final draft = d?.text ?? '';
-      if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+      if (d == null && _msgCtrl.text.trim().isNotEmpty) {
+        // sent from a copy over it, or its timer ran out while a page was
+        // on top: gone here too, its row with it
+        _timedDraftGone();
+        unawaited(dropDraft(rows, widget.peerHaloId, group: false));
+      } else {
+        final draft = d?.text ?? '';
+        if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+      }
     }
     if (lockGuard.isLocked()) {
       _underLock = true;
@@ -5822,7 +5843,8 @@ class _ChatScreenState extends State<ChatScreen>
     return rows.container.chatKey(widget.peerHaloId) == _memo ? rows : null;
   }
 
-  void _keepDraft() {
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
     final rows = _draftRows;
     if (rows == null) return;
     typedDraft(
@@ -5836,6 +5858,8 @@ class _ChatScreenState extends State<ChatScreen>
         burnSecs: _ghost ? _burnSeconds : null,
       ),
       group: false,
+      clock: clock,
+      timedKnown: _ghostKnown,
     );
   }
 
@@ -5893,6 +5917,21 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool _quoteLookup = false;
+
+  // what a send answers: the quote up, or a kept one still being looked
+  // up, which the send then takes so the lookup does not put it back
+  String? _takeQuote() {
+    final uid = _replyTo?.msgUid ?? _draftReply;
+    _draftReply = null;
+    return uid;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
+  }
 
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
@@ -6538,7 +6577,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 _lastGhost = _ghost;
                                 appState.saveGhostPref(_ghost, _burnSeconds);
                               });
-                              _keepDraft();
+                              _keepDraft(clock: true);
                             },
                             onPickBurn: _pickBurnDuration,
                             burnSeconds: _burnSeconds,

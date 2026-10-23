@@ -150,6 +150,7 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../container.dart' show HaloContainer;
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
@@ -222,9 +223,19 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
-/// whether [id]'s group has a screen open: its composer is not a draft
-/// left behind yet
-bool groupOnScreen(String id) => _openGroups[id]?.isNotEmpty ?? false;
+/// whether [id]'s group is the page on top: its composer is being typed
+/// in, not a draft left behind
+bool groupOnScreen(String id) => (_openGroups[id] ?? const []).any(
+  (s) => s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyGroupComposer(HaloContainer c, String id) {
+  for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
 
 /// a group's unsent words go with it, from an open composer too: its screen
 /// closing would write them back
@@ -526,6 +537,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // ghost mode, kept as the 1:1 chats keep it. when on, new messages carry
   // a burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // this group's voice notes go out disguised
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
@@ -612,6 +625,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         setState(() {
           _ghost = p.$1;
           _burnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
@@ -1957,7 +1971,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     setState(() => _sending = true);
     _msgCtrl.clear();
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     final burnSeconds = _ghost ? _burnSeconds : null;
     final url = firstUrl(text);
     final preview = url != null && _pendingPreview?['url'] == url
@@ -2178,7 +2192,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // same row, reply, burn timer, ticks and retry
   Future<void> _sendSticker(Sticker s, StickerWire w, StickerPick pick) async {
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     final burnSeconds = _ghost ? _burnSeconds : null;
     final optimistic = _GMsg(
       sender: appState.sessionId,
@@ -2637,7 +2651,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // the message being answered goes with the next file, and its bar with it
   String? _takeReply() {
-    final r = _replyTo?.msgUid;
+    final r = _takeQuote();
     if (_replyTo != null && mounted) setState(() => _replyTo = null);
     return r;
   }
@@ -3224,7 +3238,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       });
                       appState.saveGhostPref(true, opt.$1);
                       // the draft takes the group's new clock
-                      _keepDraft();
+                      _keepDraft(clock: true);
                       Navigator.pop(c);
                     },
                     child: Padding(
@@ -4121,7 +4135,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return rows.container.chatKey(widget.groupId) == _memo ? rows : null;
   }
 
-  void _keepDraft() {
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
     final rows = _draftRows;
     if (rows == null) return;
     typedDraft(
@@ -4135,6 +4150,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         burnSecs: _ghost ? _burnSeconds : null,
       ),
       group: true,
+      clock: clock,
+      timedKnown: _ghostKnown,
     );
   }
 
@@ -4200,6 +4217,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   bool _quoteLookup = false;
+
+  // what a send answers: the quote up, or a kept one still being looked
+  // up, which the send then takes so the lookup does not put it back
+  String? _takeQuote() {
+    final uid = _replyTo?.msgUid ?? _draftReply;
+    _draftReply = null;
+    return uid;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
+  }
 
   // a screen pushed over this one closed: this is the one being read again
   @override
@@ -4614,7 +4646,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         onToggleGhost: () {
                           setState(() => _ghost = !_ghost);
                           appState.saveGhostPref(_ghost, _burnSeconds);
-                          _keepDraft();
+                          _keepDraft(clock: true);
                         },
                         onLongPressGhost: _showBurnPicker,
                         onSend: _send,

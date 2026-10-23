@@ -243,7 +243,7 @@ extension AppStateBoot on AppState {
     await restoreKeptDrafts(live).catchError((Object e) {
       dlog('drafts: not restored (${e.runtimeType})');
     });
-    // a timed chat's draft past its time is gone before any screen reads it
+    // a timed chat's draft that ran out while the app was stopped goes
     await sweepDrafts(live);
     // read now, so settings shows it whole from the first frame
     unawaited(loadHideNotifContent());

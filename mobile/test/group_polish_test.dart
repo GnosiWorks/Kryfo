@@ -660,6 +660,43 @@ void main() {
       expect(db.kept['group:$_group']?.replyTo, 'uid-1');
     });
 
+    testWidgets('opening a group after a stop keeps a timed draft\'s clock', (
+      t,
+    ) async {
+      final db = _use(t, _Db(members: ['me', _anna]));
+      addTearDown(endProcessForTest);
+      final at = DateTime.now().millisecondsSinceEpoch - 60000;
+      db.kept['group:$_group'] = Draft('bring the map', at: at, burnSecs: 3600);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'bring the map');
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.burnSecs, 3600);
+      expect(db.kept['group:$_group']?.at, at);
+    });
+
+    testWidgets('a kept quote of a blocked member\'s message is let go', (
+      t,
+    ) async {
+      final db = _use(t, _Db(rows: long(), blocked: {_anna}));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.text('line 1'), findsNothing);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'what she said');
+      expect(db.kept['group:$_group']?.replyTo, isNull);
+    });
+
     testWidgets('a kept quote of a message gone from the group is let go', (
       t,
     ) async {

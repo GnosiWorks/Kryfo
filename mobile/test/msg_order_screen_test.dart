@@ -13,7 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
-import 'package:kryfo/drafts.dart' show Draft, endProcessForTest, kDraftWait;
+import 'package:kryfo/drafts.dart'
+    show Draft, endProcessForTest, kDraftWait, sweepDrafts;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/l10n/l10n.dart';
@@ -29,6 +30,8 @@ import 'package:kryfo/main.dart'
         rootNavKey,
         useDatabasesForTest,
         useEngineForTest,
+        draftTypedIn,
+        emptyComposerOf,
         AppStateContacts,
         AppStateMessages,
         AppStateRoute,
@@ -63,6 +66,11 @@ class _Db extends DevTestDb {
   @override
   Future<void> dropDraftRow(String chatId, {required bool group}) async =>
       kept.remove(chatId);
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async => [
+    for (final e in kept.entries)
+      if (e.value.spentAt(now)) (chat: e.key, group: false),
+  ];
 
   // pages fetched above the newest one
   int olderPages = 0;
@@ -503,6 +511,97 @@ void main() {
     expect(db.kept, isEmpty);
     await devClose(t);
   });
+
+  testWidgets('opening a chat after a stop keeps a timed draft\'s clock; '
+      'only new words take the chat\'s', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    // typed an hour long a minute ago; timed messages are off by now
+    final at = DateTime.now().millisecondsSinceEpoch - 60000;
+    db.kept[_peer] = Draft('meet at the gate', at: at, burnSecs: 3600);
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'meet at the gate');
+    await t.pump(kDraftWait);
+    await devClose(t);
+    expect(db.kept[_peer]?.burnSecs, 3600);
+    expect(db.kept[_peer]?.at, at);
+    // a word more is an edit: the chat's setting, off, is the draft's now
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'meet at the north gate');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.burnSecs, isNull);
+    expect(db.kept[_peer]!.at, greaterThan(at));
+    await devClose(t);
+  });
+
+  for (final away in [
+    'a page on top',
+    'the app in the background',
+    'the lock down',
+  ]) {
+    testWidgets('a timed draft past its time goes with $away, from the open '
+        'composer too; on the page in front it stays', (t) async {
+      await seed(6);
+      addTearDown(endProcessForTest);
+      lockState.openForTest(enabled: true);
+      addTearDown(lockState.openForTest);
+      // the states one at a time, as android goes through them
+      const out = [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ];
+      void go(Iterable<AppLifecycleState> to) {
+        for (final st in to) {
+          t.binding.handleAppLifecycleStateChanged(st);
+        }
+      }
+
+      if (t.binding.lifecycleState != AppLifecycleState.resumed) {
+        go([AppLifecycleState.resumed]);
+      }
+      var gone = false;
+      addTearDown(() {
+        if (gone) go([...out.reversed.skip(1), AppLifecycleState.resumed]);
+      });
+      final at = DateTime.now().millisecondsSinceEpoch - 29000;
+      db.kept[_peer] = Draft('gone soon', at: at, burnSecs: 30);
+      await devOpen(t, chat());
+      await settle(t);
+      TextField field() => t.widget<TextField>(find.byType(TextField).last);
+      expect(field().controller!.text, 'gone soon');
+      await t.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
+      Future<void> sweep() => t.runAsync(
+        () => sweepDrafts(db, onScreen: draftTypedIn, gone: emptyComposerOf),
+      );
+      // being typed in: left alone
+      await sweep();
+      await t.pump();
+      expect(field().controller!.text, 'gone soon');
+      expect(db.kept[_peer], isNotNull);
+      final ctrl = field().controller!;
+      if (away == 'a page on top') {
+        Navigator.of(
+          t.element(find.byType(ChatScreen)),
+        ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox()));
+        await t.pump(const Duration(seconds: 1));
+      } else if (away == 'the lock down') {
+        lockState.lock();
+      } else {
+        go(out);
+        gone = true;
+      }
+      await sweep();
+      await t.pump();
+      expect(db.kept, isEmpty);
+      expect(ctrl.text, isEmpty);
+      await devClose(t);
+    });
+  }
 
   testWidgets('leaving the chat writes its draft at once', (t) async {
     await seed(6);

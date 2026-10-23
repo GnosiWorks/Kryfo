@@ -870,7 +870,8 @@ extension AppStateRooms on AppState {
     var gone = await live.purgeExpired(
       gone: unring,
       blocked: _realBlocked,
-      draftOnScreen: _draftOnScreen,
+      draftOnScreen: draftTypedIn,
+      draftGone: emptyComposerOf,
     );
     if (stray) await live.purgeStrayVotes();
     // the open vault's too. shut, its timers wait for the next open
@@ -880,7 +881,8 @@ extension AppStateRooms on AppState {
         gone += await v.purgeExpired(
           gone: unring,
           blocked: _realBlocked,
-          draftOnScreen: _draftOnScreen,
+          draftOnScreen: draftTypedIn,
+          draftGone: emptyComposerOf,
         );
         if (stray) await v.purgeStrayVotes();
       } catch (e) {
@@ -895,7 +897,8 @@ extension AppStateRooms on AppState {
         gone += await d.purgeExpired(
           gone: unring,
           ifOpen: true,
-          draftOnScreen: _draftOnScreen,
+          draftOnScreen: draftTypedIn,
+          draftGone: emptyComposerOf,
         );
       } catch (e) {
         if (identical(session.primary, d) && d.isOpen) rethrow;
@@ -903,10 +906,6 @@ extension AppStateRooms on AppState {
     }
     return gone;
   }
-
-  // a composer still open is typed in, not left behind
-  static bool _draftOnScreen(String id, bool group) =>
-      group ? groupOnScreen(id) : chatOnScreen(id);
 
   // every container a room can be made in: the everyday one, and the
   // decoy's, whose rooms end on time too
@@ -998,3 +997,15 @@ extension AppStateRooms on AppState {
     return rooms.length;
   }
 }
+
+/// a composer on the page in front, in an app in front and unlocked: being
+/// typed in, so the sweep leaves its timed draft until it is left
+bool draftTypedIn(String id, bool group) =>
+    WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+    !lockGuard.isLocked() &&
+    (group ? groupOnScreen(id) : chatOnScreen(id));
+
+/// a timed draft gone empties a composer of it left open, as its timed
+/// messages leave an open chat
+void emptyComposerOf(HaloContainer c, String id, bool group) =>
+    group ? emptyGroupComposer(c, id) : emptyChatComposer(c, id);

@@ -72,6 +72,8 @@ final Map<String, _Waiting> _waiting = {};
 // chats on their way between containers: nothing of theirs is held or
 // written until the session says where they are
 final Map<String, int> _moving = {};
+// writes that came due during a move, made when it lets go
+final Set<String> _putOff = {};
 // set by a wipe: nothing is held or written after it
 bool _shut = false;
 
@@ -115,6 +117,15 @@ void Function() holdDraftsOf(Iterable<String> chats) {
       final n = (_moving[id] ?? 1) - 1;
       n > 0 ? _moving[id] = n : _moving.remove(id);
     }
+    final due = [
+      for (final k in _putOff)
+        if (_waiting[k] case final w? when !_moving.containsKey(w.chatId)) k,
+    ];
+    _putOff.removeAll(due);
+    _putOff.removeWhere((k) => !_waiting.containsKey(k));
+    for (final k in due) {
+      unawaited(_write(k));
+    }
   };
 }
 
@@ -146,8 +157,19 @@ Future<Draft?> readDraft(
 }
 
 /// a composer changed: held now, written once typing rests. an empty one
-/// is dropped at once
-void typedDraft(DraftRows rows, String chatId, Draft d, {required bool group}) {
+/// is dropped at once. only new words start the draft's clock again (its
+/// at and burnSecs): a quote picked or let go, or the draft put back, keep
+/// the one it had. [clock]: the person changed the chat's timer, and the
+/// draft takes it. [timedKnown] false: the composer has not read its timed
+/// setting yet, so new words keep the timer the draft had
+void typedDraft(
+  DraftRows rows,
+  String chatId,
+  Draft d, {
+  required bool group,
+  bool clock = false,
+  bool timedKnown = true,
+}) {
   if (_shut || _moving.containsKey(chatId)) return;
   final k = _key(rows.container, chatId, group);
   if (d.isEmpty) {
@@ -158,8 +180,17 @@ void typedDraft(DraftRows rows, String chatId, Draft d, {required bool group}) {
     return;
   }
   final was = _held[k];
-  // a cursor move or the draft put back is not a new draft
-  if (was != null && was.sameAs(d)) return;
+  if (was != null) {
+    final words = was.text != d.text;
+    // a cursor move or the draft put back is not a new draft
+    if (!words && !clock && was.replyTo == d.replyTo) return;
+    if (!words && !clock) {
+      d = Draft(d.text, replyTo: d.replyTo, at: was.at, burnSecs: was.burnSecs);
+    } else if (!timedKnown) {
+      d = Draft(d.text, replyTo: d.replyTo, at: d.at, burnSecs: was.burnSecs);
+    }
+    if (d.sameAs(was) && d.at == was.at) return;
+  }
   _held[k] = d;
   _waiting.remove(k)?.timer.cancel();
   _waiting[k] = _Waiting(
@@ -175,8 +206,15 @@ Future<void> _write(String k) async {
   final w = _waiting.remove(k);
   if (w == null) return;
   w.timer.cancel();
+  // its chat is moving: written once the move lets go, unless the move
+  // dropped it
+  if (!_shut && _moving.containsKey(w.chatId)) {
+    _waiting[k] = w;
+    _putOff.add(k);
+    return;
+  }
   try {
-    if (_shut || _moving.containsKey(w.chatId) || !w.rows.isOpen) return;
+    if (_shut || !w.rows.isOpen) return;
     await w.rows.putDraft(w.chatId, w.draft, group: w.group);
     _bump();
   } catch (e) {
@@ -245,11 +283,13 @@ void forgetDraft(HaloContainer c, String chatId, {required bool group}) {
 }
 
 /// timed chats' drafts past their time go, from memory and their rows, as
-/// their timed messages would. [onScreen] keeps a composer still open.
-/// [spent], when the caller read it already, saves a read
+/// their timed messages would. [onScreen] keeps a composer being typed in;
+/// [gone] empties an open composer whose draft went. [spent], when the
+/// caller read it already, saves a read
 Future<void> sweepDrafts(
   DraftRows rows, {
   bool Function(String chatId, bool group)? onScreen,
+  void Function(HaloContainer c, String chatId, bool group)? gone,
   List<({String chat, bool group})>? spent,
 }) async {
   if (_shut || !rows.isOpen) return;
@@ -266,6 +306,7 @@ Future<void> sweepDrafts(
       _held.remove(e.key);
       w?.timer.cancel();
       _waiting.remove(e.key);
+      gone?.call(c, id, group);
     }
     for (final d in spent ?? await rows.spentDrafts(now)) {
       if (shown(d.chat, d.group)) continue;
@@ -273,6 +314,7 @@ Future<void> sweepDrafts(
       if (_held.containsKey(_key(c, d.chat, d.group))) continue;
       await rows.dropDraftRow(d.chat, group: d.group);
       _bump();
+      gone?.call(c, d.chat, d.group);
     }
   } catch (e) {
     dlog('drafts: not swept (${e.runtimeType})');
@@ -298,6 +340,7 @@ void endProcessForTest() {
   _waiting.clear();
   _held.clear();
   _moving.clear();
+  _putOff.clear();
   _shut = false;
 }
 
