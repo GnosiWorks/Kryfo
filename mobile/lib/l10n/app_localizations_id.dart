@@ -9241,4 +9241,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Aktif';
+
+  @override
+  String get lockStateUnlockPlain => 'Buka kunci';
+
+  @override
+  String get iconSheetOthers =>
+      'Aplikasi di ponselmu tetap bisa melihat bahwa Kryfo terpasang, dan dialog serta permintaan Android sendiri bisa menampilkan namanya.';
 }

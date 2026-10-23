@@ -9414,4 +9414,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Активно';
+
+  @override
+  String get lockStateUnlockPlain => 'Разблокировать';
+
+  @override
+  String get iconSheetOthers =>
+      'Приложения на телефоне по-прежнему могут видеть, что Kryfo установлен, а окна и запросы самого Android могут показывать его название.';
 }

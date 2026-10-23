@@ -14924,6 +14924,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Active'**
   String get androidServiceTitlePlain;
+
+  /// lock_state.dart: the fingerprint prompt's title while a plain icon is on. says nothing of Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get lockStateUnlockPlain;
+
+  /// screens/icon_screen.dart: the sheet, what other apps and Android itself still show
+  ///
+  /// In en, this message translates to:
+  /// **'Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.'**
+  String get iconSheetOthers;
 }
 
 class _AppLocalizationsDelegate

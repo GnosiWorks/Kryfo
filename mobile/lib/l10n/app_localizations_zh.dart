@@ -8826,6 +8826,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => '运行中';
+
+  @override
+  String get lockStateUnlockPlain => '解锁';
+
+  @override
+  String get iconSheetOthers =>
+      '手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17533,4 +17540,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get androidServiceTitlePlain => '執行中';
+
+  @override
+  String get lockStateUnlockPlain => '解鎖';
+
+  @override
+  String get iconSheetOthers =>
+      '手機上的其他應用程式仍能看到已安裝 Kryfo，Android 本身的對話框和提示也可能顯示它的名稱。';
 }

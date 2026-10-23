@@ -3261,6 +3261,8 @@ final _calls = <_Call>[
   ('androidIconTasks', [], (l) => l.androidIconTasks),
   ('androidIconNews', [], (l) => l.androidIconNews),
   ('androidServiceTitlePlain', [], (l) => l.androidServiceTitlePlain),
+  ('lockStateUnlockPlain', [], (l) => l.lockStateUnlockPlain),
+  ('iconSheetOthers', [], (l) => l.iconSheetOthers),
 ];
 
 void main() {

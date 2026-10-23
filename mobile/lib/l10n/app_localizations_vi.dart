@@ -9234,4 +9234,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Đang hoạt động';
+
+  @override
+  String get lockStateUnlockPlain => 'Mở khóa';
+
+  @override
+  String get iconSheetOthers =>
+      'Các ứng dụng trên điện thoại vẫn có thể thấy Kryfo đã được cài đặt, và các hộp thoại, lời nhắc của chính Android có thể hiện tên của nó.';
 }

@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Wetter",
   "androidIconTasks": "Aufgaben",
   "androidIconNews": "Neuigkeiten",
-  "androidServiceTitlePlain": "Aktiv"
+  "androidServiceTitlePlain": "Aktiv",
+  "lockStateUnlockPlain": "Entsperren",
+  "iconSheetOthers": "Apps auf deinem Handy können weiterhin sehen, dass Kryfo installiert ist, und Androids eigene Dialoge und Abfragen können seinen Namen zeigen."
 }

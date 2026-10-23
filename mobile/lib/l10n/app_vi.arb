@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Thời tiết",
   "androidIconTasks": "Công việc",
   "androidIconNews": "Tin tức",
-  "androidServiceTitlePlain": "Đang hoạt động"
+  "androidServiceTitlePlain": "Đang hoạt động",
+  "lockStateUnlockPlain": "Mở khóa",
+  "iconSheetOthers": "Các ứng dụng trên điện thoại vẫn có thể thấy Kryfo đã được cài đặt, và các hộp thoại, lời nhắc của chính Android có thể hiện tên của nó."
 }

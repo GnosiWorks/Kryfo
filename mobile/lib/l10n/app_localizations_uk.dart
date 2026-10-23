@@ -9404,4 +9404,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Активно';
+
+  @override
+  String get lockStateUnlockPlain => 'Розблокувати';
+
+  @override
+  String get iconSheetOthers =>
+      'Застосунки на телефоні й далі можуть бачити, що Kryfo встановлено, а вікна й запити самого Android можуть показувати його назву.';
 }

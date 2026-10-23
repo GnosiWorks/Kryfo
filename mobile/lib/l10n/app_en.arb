@@ -11674,5 +11674,13 @@
   "androidServiceTitlePlain": "Active",
   "@androidServiceTitlePlain": {
     "description": "android: the staying-connected notification's title with plain notifications on, one plain word"
+  },
+  "lockStateUnlockPlain": "Unlock",
+  "iconSheetOthers": "Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.",
+  "@lockStateUnlockPlain": {
+    "description": "lock_state.dart: the fingerprint prompt's title while a plain icon is on. says nothing of Kryfo"
+  },
+  "@iconSheetOthers": {
+    "description": "screens/icon_screen.dart: the sheet, what other apps and Android itself still show"
   }
 }

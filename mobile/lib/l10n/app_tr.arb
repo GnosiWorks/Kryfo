@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Hava durumu",
   "androidIconTasks": "Görevler",
   "androidIconNews": "Haberler",
-  "androidServiceTitlePlain": "Etkin"
+  "androidServiceTitlePlain": "Etkin",
+  "lockStateUnlockPlain": "Kilidi aç",
+  "iconSheetOthers": "Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir."
 }

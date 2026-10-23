@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Погода",
   "androidIconTasks": "Задачи",
   "androidIconNews": "Новости",
-  "androidServiceTitlePlain": "Активно"
+  "androidServiceTitlePlain": "Активно",
+  "lockStateUnlockPlain": "Разблокировать",
+  "iconSheetOthers": "Приложения на телефоне по-прежнему могут видеть, что Kryfo установлен, а окна и запросы самого Android могут показывать его название."
 }

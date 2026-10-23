@@ -2440,5 +2440,7 @@
   "androidIconWeather": "天气",
   "androidIconTasks": "待办",
   "androidIconNews": "新闻",
-  "androidServiceTitlePlain": "运行中"
+  "androidServiceTitlePlain": "运行中",
+  "lockStateUnlockPlain": "解锁",
+  "iconSheetOthers": "手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。"
 }

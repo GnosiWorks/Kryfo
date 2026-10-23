@@ -2440,5 +2440,7 @@
   "androidIconWeather": "آب‌وهوا",
   "androidIconTasks": "کارها",
   "androidIconNews": "اخبار",
-  "androidServiceTitlePlain": "فعال"
+  "androidServiceTitlePlain": "فعال",
+  "lockStateUnlockPlain": "باز کردن قفل",
+  "iconSheetOthers": "برنامه‌های گوشی‌تان همچنان می‌توانند ببینند Kryfo نصب است، و پنجره‌ها و درخواست‌های خود Android ممکن است نامش را نشان دهند."
 }

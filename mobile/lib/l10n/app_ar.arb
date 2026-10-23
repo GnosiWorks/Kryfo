@@ -2440,5 +2440,7 @@
   "androidIconWeather": "الطقس",
   "androidIconTasks": "مهام",
   "androidIconNews": "أخبار",
-  "androidServiceTitlePlain": "نشط"
+  "androidServiceTitlePlain": "نشط",
+  "lockStateUnlockPlain": "فتح القفل",
+  "iconSheetOthers": "لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه."
 }

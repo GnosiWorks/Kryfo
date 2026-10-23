@@ -9381,4 +9381,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'نشط';
+
+  @override
+  String get lockStateUnlockPlain => 'فتح القفل';
+
+  @override
+  String get iconSheetOthers =>
+      'لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه.';
 }

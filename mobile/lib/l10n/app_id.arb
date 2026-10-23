@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Cuaca",
   "androidIconTasks": "Tugas",
   "androidIconNews": "Berita",
-  "androidServiceTitlePlain": "Aktif"
+  "androidServiceTitlePlain": "Aktif",
+  "lockStateUnlockPlain": "Buka kunci",
+  "iconSheetOthers": "Aplikasi di ponselmu tetap bisa melihat bahwa Kryfo terpasang, dan dialog serta permintaan Android sendiri bisa menampilkan namanya."
 }

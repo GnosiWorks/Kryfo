@@ -9271,4 +9271,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Etkin';
+
+  @override
+  String get lockStateUnlockPlain => 'Kilidi aç';
+
+  @override
+  String get iconSheetOthers =>
+      'Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir.';
 }

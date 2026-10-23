@@ -3872,5 +3872,10 @@ void main() {
     expect(l.licencesParts, "Open source parts");
     expect(l.licencesInSignal, "In the Signal library");
     expect(l.licencesInApp, "In the app");
+    expect(l.lockStateUnlockPlain, "Unlock");
+    expect(
+      l.iconSheetOthers,
+      "Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.",
+    );
   });
 }

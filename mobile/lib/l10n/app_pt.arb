@@ -2440,5 +2440,7 @@
   "androidIconWeather": "Clima",
   "androidIconTasks": "Tarefas",
   "androidIconNews": "Notícias",
-  "androidServiceTitlePlain": "Ativo"
+  "androidServiceTitlePlain": "Ativo",
+  "lockStateUnlockPlain": "Desbloquear",
+  "iconSheetOthers": "Os apps do seu celular ainda podem ver que o Kryfo está instalado, e as janelas e pedidos do próprio Android podem mostrar o nome dele."
 }

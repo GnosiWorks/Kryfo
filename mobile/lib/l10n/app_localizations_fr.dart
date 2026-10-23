@@ -9342,4 +9342,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'Actif';
+
+  @override
+  String get lockStateUnlockPlain => 'Déverrouiller';
+
+  @override
+  String get iconSheetOthers =>
+      'Les applis de votre téléphone peuvent toujours voir que Kryfo est installé, et les fenêtres et demandes d’Android peuvent afficher son nom.';
 }

@@ -9261,4 +9261,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get androidServiceTitlePlain => 'فعال';
+
+  @override
+  String get lockStateUnlockPlain => 'باز کردن قفل';
+
+  @override
+  String get iconSheetOthers =>
+      'برنامه‌های گوشی‌تان همچنان می‌توانند ببینند Kryfo نصب است، و پنجره‌ها و درخواست‌های خود Android ممکن است نامش را نشان دهند.';
 }
