@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -50,7 +51,8 @@ func liveReset() {
 	liveMu.Lock()
 	liveAddrs, liveLast, livePinned = map[string]*liveAddr{}, map[string]int64{}, map[string]bool{}
 	livePicks, liveTaken, liveJoinedAt = map[string]livePick{}, 0, time.Time{}
-	ownDown, ownKnown, ownAnsweredAt, ownFailedAt = false, false, 0, 0
+	liveRunAt, liveJoinRun = time.Time{}, map[string]int{}
+	ownDown, ownKnown, ownAnsweredAt, ownFailedAt, pubAnsweredAt = false, false, 0, 0, 0
 	liveMu.Unlock()
 }
 
@@ -656,7 +658,7 @@ func TestARoundChangeAsTheWaitBeginsIsNotMissed(t *testing.T) {
 		once.Do(func() {
 			liveMu.Lock()
 			now := ownClock()
-			ownKnown, ownAnsweredAt, ownFailedAt = true, now-time.Hour, now-time.Hour
+			ownKnown, ownAnsweredAt, ownFailedAt, pubAnsweredAt = true, now-time.Hour, now-time.Hour, now
 			liveMu.Unlock()
 			ownRelayFailed()
 		})
@@ -720,7 +722,7 @@ func TestOurRelayDownReadsThePublicRelaysMoreOften(t *testing.T) {
 	if len(slots) < 4 {
 		t.Fatalf("the reads came in batches: %v", firsts)
 	}
-	// ours answers again: at most the one read drawn before, then quiet
+	// ours answers again: the usual round from here
 	own.mu.Lock()
 	own.down = false
 	own.mu.Unlock()
@@ -734,13 +736,14 @@ func TestOurRelayDownReadsThePublicRelaysMoreOften(t *testing.T) {
 		}
 		return !ownRelayDown()
 	})
-	// the read each drew in the short round, at most 5 s on
-	time.Sleep(6 * time.Second)
+	// the short round's reads are dropped with it: none left to go out
+	// together at the next wake
+	time.Sleep(time.Second)
 	before := map[string]int{}
 	for _, a := range capped {
 		before[a] = everOn(pub, a)
 	}
-	time.Sleep(4 * time.Second)
+	time.Sleep(6 * time.Second)
 	for _, a := range capped {
 		if n := everOn(pub, a) - before[a]; n > 0 {
 			t.Fatalf("an address read the public relay %d more times with ours back", n)
@@ -990,13 +993,14 @@ func TestOurRelayTakingReqsWithNoAnswerIsDown(t *testing.T) {
 	})
 }
 
-// the time to our relay counting as down runs while the phone sleeps: one
-// that slept through an outage reads more often on its first wake after it.
-// a wake whose first attempts fail together and then answer is a hiccup
+// the time to our relay counting as down runs while the phone sleeps, but
+// only failures while the public relays answer count: a wake whose circuits
+// come back slowly fails everywhere, over a minute or more, and is not an
+// outage of ours
 func TestOurRelayDownCountsTheTimeAsleep(t *testing.T) {
 	liveReset()
 	t.Cleanup(liveReset)
-	setDownRound(t, time.Minute, 10*time.Minute, 30*time.Second)
+	setDownRound(t, time.Minute, 10*time.Minute, 2*time.Minute)
 	var mu sync.Mutex
 	at := time.Hour
 	clock := func(d time.Duration) {
@@ -1011,34 +1015,55 @@ func TestOurRelayDownCountsTheTimeAsleep(t *testing.T) {
 		return at
 	}
 	t.Cleanup(func() { ownClock = old })
+	// failures every 5 s from w to w+d; pub: a public relay answers from
+	// that far into them on, nil for none
+	wake := func(d time.Duration, pub *time.Duration) {
+		for gone := time.Duration(0); gone <= d; gone += 5 * time.Second {
+			if pub != nil && gone >= *pub {
+				pubRelayAnswered()
+			}
+			ownRelayFailed()
+			clock(5 * time.Second)
+		}
+	}
 	ownRelayAnswered()
-	// asleep eleven minutes, our relay gone meanwhile
+	// a slow wake: eleven minutes asleep, a minute of failures with nothing
+	// answering, then ours does
+	clock(11*time.Minute + 30*time.Second)
+	wake(time.Minute, nil)
+	if ownRelayDown() {
+		t.Fatal("a slow wake was taken for our relay down")
+	}
+	ownRelayAnswered()
+	// a wake whose exit circuits come back before the onion one: the public
+	// relays answer half a minute before ours does
 	clock(11 * time.Minute)
+	pubAt := 30 * time.Second
+	wake(90*time.Second, &pubAt)
+	if ownRelayDown() {
+		t.Fatal("ours coming back a minute after the public relays was taken for down")
+	}
+	ownRelayAnswered()
+	// a failure while they answered, then a sleep: the wake's one failure is
+	// no span
+	pubRelayAnswered()
+	ownRelayFailed()
+	clock(15 * time.Minute)
 	ownRelayFailed()
 	if ownRelayDown() {
-		t.Fatal("down on the wake's first failure")
+		t.Fatal("a span carried over a sleep")
 	}
-	clock(31 * time.Second)
-	ownRelayFailed()
+	// slept through an outage of ours: on the wake the public relays answer
+	// and ours keeps failing
+	clock(11 * time.Minute)
+	pubAt = 10 * time.Second
+	wake(3*time.Minute, &pubAt)
 	if !ownRelayDown() {
-		t.Fatal("not down after a sleep through the outage and half a minute of failures")
+		t.Fatal("not down after a sleep through the outage and minutes of failures")
 	}
 	ownRelayAnswered()
 	if ownRelayDown() {
 		t.Fatal("still down once it answered")
-	}
-	// asleep again with our relay fine: the wake's sockets fail at once on a
-	// dead circuit, then one answers
-	clock(11 * time.Minute)
-	for i := 0; i < 20; i++ {
-		ownRelayFailed()
-	}
-	clock(2 * time.Second)
-	ownRelayAnswered()
-	clock(40 * time.Second)
-	ownRelayFailed()
-	if ownRelayDown() {
-		t.Fatal("a hiccup at a wake sent the reads faster")
 	}
 }
 
@@ -1132,6 +1157,159 @@ func TestAHeldLineKeepsNoReachFromAPublicRelay(t *testing.T) {
 			t.Fatalf("the held line keeps when it reached the public relay: %q", line)
 		}
 	}
+}
+
+// how the run's list stands for k within limit: chosen or still waiting
+func placeWithin(k string, limit time.Duration) (live, chosen bool) {
+	end := time.Now().Add(limit)
+	for time.Now().Before(end) {
+		l, wait, _ := livePlace(k)
+		if wait <= 0 {
+			return l, true
+		}
+		time.Sleep(min(wait, 20*time.Millisecond))
+	}
+	return false, false
+}
+
+// a stranger's openers restart that runner over and over: a runner started
+// again is not a new address, and holds nobody's place open
+func TestARejoinDoesNotHoldTheListOpen(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	liveJoin("a", 30, false)
+	b := liveJoin("b", 10, false)
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case <-stop:
+				return
+			case <-time.After(100 * time.Millisecond):
+			}
+			liveLeave("b", b)
+			b = liveJoin("b", 10, false)
+		}
+	}()
+	live, chosen := placeWithin("a", 2*time.Second)
+	close(stop)
+	<-done
+	if !chosen || !live {
+		t.Fatal("a runner restarted every 100 ms held the list open")
+	}
+}
+
+// new addresses joining without a pause hold the list no longer than its
+// ceiling
+func TestTheListWaitsNoLongerThanItsCeiling(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	liveMu.Lock()
+	old := liveSettleMax
+	liveSettleMax = time.Second
+	liveMu.Unlock()
+	t.Cleanup(func() {
+		liveMu.Lock()
+		liveSettleMax = old
+		liveMu.Unlock()
+	})
+	liveJoin("a", 1000, false)
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for i := 0; ; i++ {
+			select {
+			case <-stop:
+				return
+			case <-time.After(100 * time.Millisecond):
+			}
+			liveJoin(fmt.Sprintf("n%d", i), 0, false)
+		}
+	}()
+	live, chosen := placeWithin("a", 2500*time.Millisecond)
+	close(stop)
+	<-done
+	if !chosen || !live {
+		t.Fatal("a stream of new addresses kept the list from being chosen")
+	}
+}
+
+// a mode switch chooses the new run's list once the app listens again, with
+// the pins it tells before that, not with the last ones
+func TestAModeSwitchChoosesWithThePinsToldAfterIt(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	liveJoin("a", 30, false)
+	liveJoin("b", 10, false)
+	if !choose("a") || choose("b") {
+		t.Fatal("a heard from last is not the one live")
+	}
+	liveNewRun()
+	// the old runners come back first, before the app listens again
+	time.Sleep(400 * time.Millisecond)
+	if _, wait, _ := livePlace("b"); wait <= 0 {
+		t.Fatal("the new run chose before anyone joined it")
+	}
+	livePin([]string{"b"})
+	liveJoin("a", 0, false)
+	liveJoin("b", 0, false)
+	if !choose("b") || choose("a") {
+		t.Fatal("the new run did not take the pin told before the listen")
+	}
+}
+
+// an address that joins after the list was chosen, a pinned row whose key
+// came late, gets the place its rank gives while the run has one left, and
+// reads now and then when the run's places are all given
+func TestALateJoinTakesAFreePlaceOnly(t *testing.T) {
+	setLiveCap(t, 2, time.Hour)
+	liveReset()
+	liveJoin("a", 30, false)
+	if !choose("a") {
+		t.Fatal("alone and not live")
+	}
+	livePin([]string{"c", "d"})
+	liveJoin("c", 0, false)
+	if !choose("c") {
+		t.Fatal("a pinned late join with a place free is not live")
+	}
+	liveJoin("d", 0, false)
+	if choose("d") || !publicLive("a") {
+		t.Fatal("a late join took a place the run had given")
+	}
+}
+
+// the reads keep their times on the boot clock: a wall clock set back or
+// ahead moves none of them, and time asleep counts
+func TestReadsKeepTheirTimesOnTheBootClock(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	var ahead atomic.Int64
+	old := ownClock
+	ownClock = func() time.Duration { return old() + time.Duration(ahead.Load()) }
+	t.Cleanup(func() { ownClock = old })
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	in, out, inRcv, outRcv := livePair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "the first live on the public relay", 15*time.Second, func() bool {
+		return openOn(own, outRcv) == 1 && openOn(pub, inRcv) == 1
+	})
+	time.Sleep(500 * time.Millisecond)
+	if everOn(pub, outRcv) != 0 {
+		t.Fatal("read before its time")
+	}
+	// two rounds asleep, by the boot clock: the wake's kick finds it due
+	ahead.Store(int64(2000 * time.Hour))
+	kickUntil(t, "the read after the sleep", func() bool { return everOn(pub, outRcv) >= 1 })
 }
 
 // after a start nothing is known of what a public relay handed over, and

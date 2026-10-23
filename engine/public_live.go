@@ -37,19 +37,24 @@ var sweepEvery = time.Hour
 var sweepEveryDown = 10 * time.Minute
 
 // our relay counts as down once none of its entries has answered for this
-// long, sleep included, and its attempts have failed for ownFailSpan. its
-// sockets probe every 75 s and a tor rescue or a restart of the relay is
-// over in a minute or two, so a hiccup never sends the reads faster. a
-// phone that slept through an outage goes over on its first wake after it
+// long, sleep included, and its attempts have failed for ownFailSpan while
+// the public relays answer. faster public reads only help when those do,
+// and a wake whose circuits come back slowly fails everywhere at once
 var ownDownAfter = 10 * time.Minute
 
-// failures one moment apart are one hiccup, as every socket fails at a wake
-// on a dead circuit
-var ownFailSpan = 30 * time.Second
+// how long ours fails while a public relay answers. an onion circuit can
+// take a minute longer than an exit one at a wake
+var ownFailSpan = 2 * time.Minute
 
-// the list waits until no address has joined for this long: at a start the
-// app listens on everyone in one go, and the turns may come at once
+// a public relay answering this lately says the route works
+var pubAnswerRecent = 2 * time.Minute
+
+// the list waits until no address new to the run has joined for this long:
+// at a start the app listens on everyone in one go, and the turns may come
+// at once. never longer than liveSettleMax from the run's start
 var liveSettle = 3 * time.Second
+
+var liveSettleMax = 30 * time.Second
 
 func sweepRound() time.Duration {
 	liveMu.Lock()
@@ -82,8 +87,11 @@ var (
 	livePicks = map[string]livePick{}
 	// places the rank gave in this run. a delete gives none back
 	liveTaken int
-	// the last join of an address not chosen yet in this run
+	// the last join of an address new to this run, when the run began, and
+	// the run each address last joined in
 	liveJoinedAt time.Time
+	liveRunAt    time.Time
+	liveJoinRun  = map[string]int{}
 	// the app's pinned chats, by address. in memory only, as the app tells
 	// it before it listens
 	livePinned = map[string]bool{}
@@ -91,12 +99,14 @@ var (
 	liveRun int
 	// closed when the round changes, so a wait for a read looks again
 	liveWakeC = make(chan struct{})
-	// our relay: down as above. its last answer and the first failure since,
-	// by ownClock, which counts sleep
+	// our relay: down as above. its last answer, the first failure since that
+	// came while the public relays answered, and their last answer, by
+	// ownClock, which counts sleep
 	ownDown       bool
 	ownKnown      bool
 	ownAnsweredAt time.Duration
 	ownFailedAt   time.Duration
+	pubAnsweredAt time.Duration
 )
 
 // only a contact's address is ranked: first-contact, room and pair
@@ -115,10 +125,17 @@ func liveJoin(rcvPk string, heard int64, fresh bool) *liveAddr {
 	}
 	liveAddrs[rcvPk] = a
 	liveLast[rcvPk] = a.heard
+	if liveRunAt.IsZero() {
+		liveRunAt = time.Now()
+	}
+	// a runner started again holds no one up: a stranger's openers restart
+	// one over and over
+	first := liveJoinRun[rcvPk] != liveRun+1
+	liveJoinRun[rcvPk] = liveRun + 1
 	if p := livePicks[rcvPk]; p.run != liveRun || p.chosen == 0 {
 		if fresh {
 			livePicks[rcvPk] = livePick{run: liveRun, chosen: 1}
-		} else {
+		} else if first {
 			liveJoinedAt = time.Now()
 		}
 	}
@@ -133,6 +150,7 @@ func liveForget(rcvPk string) {
 	delete(liveLast, rcvPk)
 	delete(liveAddrs, rcvPk)
 	delete(livePicks, rcvPk)
+	delete(liveJoinRun, rcvPk)
 	liveMu.Unlock()
 }
 
@@ -157,14 +175,14 @@ func livePin(rcvPks []string) {
 }
 
 // a mode switch: every runner starts again, and the list is chosen anew
-// once they have joined. what failed the old way says nothing of our relay
-// the new way
+// once they have joined, with the pins the app tells first. what failed the
+// old way says nothing of our relay the new way
 func liveNewRun() {
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	liveRun++
 	liveTaken = 0
-	liveJoinedAt = time.Now()
+	liveJoinedAt, liveRunAt = time.Time{}, time.Now()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
 	if ownDown {
 		ownDown = false
@@ -228,7 +246,7 @@ func livePlace(rcvPk string) (live bool, wait time.Duration, wake <-chan struct{
 	if p := livePicks[rcvPk]; p.run == liveRun && p.chosen != 0 {
 		return p.chosen > 0, 0, wake
 	}
-	if w := liveSettle - time.Since(liveJoinedAt); w > 0 {
+	if w := liveSettleLocked(); w > 0 {
 		return false, w, wake
 	}
 	p := livePick{run: liveRun, chosen: -1}
@@ -238,6 +256,20 @@ func livePlace(rcvPk string) (live bool, wait time.Duration, wake <-chan struct{
 	}
 	livePicks[rcvPk] = p
 	return p.chosen > 0, 0, wake
+}
+
+// under liveMu. how long the run's list still waits: until no address new
+// to the run joined for liveSettle, one at least, so the pins the app tells
+// before it listens are in. liveSettleMax from the run's start at most
+func liveSettleLocked() time.Duration {
+	most := liveSettleMax - time.Since(liveRunAt)
+	if most <= 0 {
+		return 0
+	}
+	if liveJoinedAt.IsZero() {
+		return min(liveSettle, most)
+	}
+	return min(liveSettle-time.Since(liveJoinedAt), most)
 }
 
 // rcvPk brought something at at. it ranks by it from the next run on, and
@@ -251,6 +283,13 @@ func liveHeard(rcvPk string, at int64) {
 	}
 	liveLast[rcvPk] = max(liveLast[rcvPk], at)
 	a.heard = max(a.heard, at)
+}
+
+// a public relay answered: the route works
+func pubRelayAnswered() {
+	liveMu.Lock()
+	pubAnsweredAt = ownClock()
+	liveMu.Unlock()
 }
 
 // an entry of our relay answered: an eose, an event or a probe's reply
@@ -272,6 +311,12 @@ func ownRelayFailed() {
 	now := ownClock()
 	if !ownKnown {
 		ownKnown, ownAnsweredAt = true, now
+	}
+	// with no public relay answering either, it is the route or a wake, not
+	// ours: the span starts again once one does
+	if pubAnsweredAt == 0 || now-pubAnsweredAt > pubAnswerRecent {
+		ownFailedAt = 0
+		return
 	}
 	if ownFailedAt == 0 {
 		ownFailedAt = now

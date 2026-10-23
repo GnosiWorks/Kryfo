@@ -1544,7 +1544,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// connection now is such a read. swept: one ended. cuts: reads
 			// in a row that ended before their catch-up did
 			sweeper := live != nil && !ownEntry
-			var nextSweep time.Time
+			// by ownClock: sleep counts, and a clock set back or ahead moves
+			// nothing. 0 until the first is drawn
+			var nextSweep time.Duration
 			sweeping, swept := false, false
 			cuts := 0
 			// the next read was drawn in the round for our relay down
@@ -1582,24 +1584,22 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					continue
 				}
 				if !onPub {
-					// wall clock: a phone asleep is time that counts
-					now := time.Now().Round(0)
+					now := ownClock()
 					down := ownRelayDown()
 					switch {
-					case nextSweep.IsZero():
-						nextSweep, drawnDown = now.Add(firstSweepDelay()), down
+					case nextSweep == 0:
+						nextSweep, drawnDown = now+firstSweepDelay(), down
 					case down && !drawnDown:
 						// our relay went down: this address's next read comes
 						// at its own time in the short round, if that is sooner
-						if t := now.Add(firstSweepDelay()); t.Before(nextSweep) {
-							nextSweep = t
-						}
+						nextSweep = min(nextSweep, now+firstSweepDelay())
 						drawnDown = true
-					case !down:
-						// one more read at most, then the usual round
-						drawnDown = false
+					case !down && drawnDown:
+						// ours is back: the short round's reads are dropped, the
+						// next comes at its own time in the usual one
+						nextSweep, drawnDown = now+firstSweepDelay(), false
 					}
-					if wait := nextSweep.Sub(now); wait > 0 {
+					if wait := nextSweep - now; wait > 0 {
 						if h := sweepWaitHook; h != nil {
 							h()
 						}
@@ -1708,7 +1708,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// cap asking again at the backoff's pace is the pile
 						// the relay turns away
 						if sweeping {
-							nextSweep = time.Now().Round(0).Add(sweepDelay())
+							nextSweep, drawnDown = ownClock()+sweepDelay(), ownRelayDown()
 							cuts = 0
 						}
 					} else {
@@ -1814,6 +1814,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if ownEntry {
 						spoke = true
 						ownRelayAnswered()
+					} else {
+						pubRelayAnswered()
 					}
 					if covered.Load() {
 						noteHeard(conn, u, rcvPk, time.Now(), false)
@@ -2030,6 +2032,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if ownEntry {
 							spoke = true
 							ownRelayAnswered()
+						} else {
+							pubRelayAnswered()
 						}
 						if stored < limit || oldest == 0 {
 							// the whole window came in this one answer, the
@@ -2196,13 +2200,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// the round counts from a read that caught up. one that ended
 				// before is tried again within the round
 				if sweeping {
-					now := time.Now().Round(0)
+					now := ownClock()
 					if atomic.LoadInt32(&caughtUp) == 1 || cuts >= sweepRetries {
-						nextSweep, cuts = now.Add(sweepDelay()), 0
+						nextSweep, cuts = now+sweepDelay(), 0
 					} else {
-						nextSweep = now.Add(sweepRetryDelay())
+						nextSweep = now + sweepRetryDelay()
 						cuts++
 					}
+					drawnDown = ownRelayDown()
 				}
 				switch {
 				case swept:
