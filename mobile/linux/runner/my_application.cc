@@ -85,12 +85,10 @@ static gboolean my_application_local_command_line(GApplication* application,
 }
 
 static void my_application_startup(GApplication* application) {
-
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
 }
 
 static void my_application_shutdown(GApplication* application) {
-
   G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
 
