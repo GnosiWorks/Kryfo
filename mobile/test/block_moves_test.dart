@@ -64,6 +64,8 @@ Future<void> _tables(SqliteMem db, String s) async {
         'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
     'CREATE TABLE $s.wallpapers (chat TEXT PRIMARY KEY, atmo TEXT NOT NULL, '
         'photo BLOB)',
+    'CREATE TABLE $s.drafts (chat TEXT PRIMARY KEY, body TEXT NOT NULL, '
+        'reply_to TEXT, updated_at INTEGER NOT NULL)',
     // a person's own, for a chat with them moved alone
     'CREATE TABLE $s.frames_out (id INTEGER PRIMARY KEY, peer_id TEXT)',
     'CREATE TABLE $s.first_kept (hash TEXT PRIMARY KEY, peer TEXT)',
