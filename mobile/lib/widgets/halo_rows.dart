@@ -95,6 +95,8 @@ class HaloRow extends StatelessWidget {
   // the saved value is still being read: the switch's place is kept empty
   // and it fades in where it belongs, never sliding from a default
   final bool pending;
+  // what a screen reader says a tap does, when the label alone does not
+  final String? tapHint;
   const HaloRow({
     super.key,
     required this.label,
@@ -106,6 +108,7 @@ class HaloRow extends StatelessWidget {
     this.rose = false,
     this.toggled,
     this.pending = false,
+    this.tapHint,
   });
 
   @override
@@ -214,8 +217,10 @@ class HaloRow extends StatelessWidget {
         ),
       ),
     );
-    if (on == null) return row;
-    return Semantics(toggled: on, child: row);
+    if (on == null) {
+      return tapHint == null ? row : Semantics(onTapHint: tapHint, child: row);
+    }
+    return Semantics(toggled: on, onTapHint: tapHint, child: row);
   }
 }
 
