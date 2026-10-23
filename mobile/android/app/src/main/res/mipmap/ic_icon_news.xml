@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/icon_art.dart from lib/app_icon_art.dart -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group
+        android:scaleX="1"
+        android:scaleY="1"
+        android:translateX="-18"
+        android:translateY="-18">
+        <path
+            android:fillColor="#FF3A3F45"
+            android:pathData="M34,18 h40 a16,16 0 0 1 16,16 v40 a16,16 0 0 1 -16,16 h-40 a16,16 0 0 1 -16,-16 v-40 a16,16 0 0 1 16,-16 z" />
+        <path
+            android:fillColor="#FFF1EEE8"
+            android:pathData="M36,32 h36 a5,5 0 0 1 5,5 v34 a5,5 0 0 1 -5,5 h-36 a5,5 0 0 1 -5,-5 v-34 a5,5 0 0 1 5,-5 z" />
+        <path
+            android:strokeColor="#FF3A3F45"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:pathData="M37,40 L71,40" />
+        <path
+            android:fillColor="#FFA9B1B9"
+            android:pathData="M39,47 h10 a2,2 0 0 1 2,2 v8 a2,2 0 0 1 -2,2 h-10 a2,2 0 0 1 -2,-2 v-8 a2,2 0 0 1 2,-2 z" />
+        <path
+            android:strokeColor="#FF8D949C"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M56,49 L71,49" />
+        <path
+            android:strokeColor="#FF8D949C"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M56,56 L71,56" />
+        <path
+            android:strokeColor="#FF8D949C"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M37,65 L71,65" />
+        <path
+            android:strokeColor="#FF8D949C"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M37,71 L62,71" />
+    </group>
+</vector>
