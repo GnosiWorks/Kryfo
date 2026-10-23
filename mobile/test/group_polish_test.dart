@@ -188,14 +188,18 @@ class _Db implements HaloDb {
     return older.sublist(older.length > limit ? older.length - limit : 0);
   }
 
-  // one row by its uid, as a kept quote older than the page reads it
+  // one row by its uid, as a kept quote older than the page reads it,
+  // after [quoteGate] when a test holds it
   int quoteReads = 0;
+  Completer<void>? quoteGate;
   @override
   Future<Map<String, Object?>?> groupMessageIn(
     String groupId,
     String msgUid,
   ) async {
     quoteReads++;
+    final gate = quoteGate;
+    if (gate != null) await gate.future;
     for (final r in rows) {
       if (r['msg_uid'] == msgUid && r['group_id'] == groupId) return r;
     }
@@ -710,6 +714,33 @@ void main() {
       expect(find.text('line 1'), findsOneWidget);
       await _close(t);
       expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+    });
+
+    testWidgets('a send before the kept quote is looked up answers no '
+        'quote, and the lookup puts none back', (t) async {
+      final db = _use(t, _Db(rows: long(), blocked: {_anna}));
+      addTearDown(endProcessForTest);
+      final gate = Completer<void>();
+      db.quoteGate = gate;
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'what she said');
+      field.onSubmitted!(field.controller!.text);
+      await t.pump(const Duration(milliseconds: 300));
+      gate.complete();
+      await t.pump(const Duration(seconds: 1));
+      // the bubble sent quotes nothing, and no bar comes back
+      expect(find.text('what she said'), findsOneWidget);
+      expect(find.text(l10n.groupChatMessageUnavailable), findsNothing);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await _close(t);
     });
 
     testWidgets('a kept quote of a message gone from the group is let go', (

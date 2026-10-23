@@ -223,6 +223,22 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// what a group send answers, and what of a kept quote it leaves with the
+/// words: only the bar that shows is answered. one still being looked up,
+/// or one of someone blocked, is never sent, and goes only with the words
+/// it was kept for
+@visibleForTesting
+({String? answers, String? pending, String? hidden}) quoteOnSend({
+  String? shown,
+  String? pending,
+  String? hidden,
+  required bool words,
+}) => (
+  answers: shown,
+  pending: words ? null : pending,
+  hidden: words ? null : hidden,
+);
+
 /// whether [id]'s group is the page in front, its own sheets over it or
 /// not: its composer is being typed in, not a draft left behind
 bool groupOnScreen(String id) => (_openGroups[id] ?? const []).any(
@@ -1975,7 +1991,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     setState(() => _sending = true);
     _msgCtrl.clear();
     final uid = newMsgUid();
-    final replyToUid = _takeQuote();
+    final replyToUid = _takeQuote(words: true);
     final burnSeconds = _ghost ? _burnSeconds : null;
     final url = firstUrl(text);
     final preview = url != null && _pendingPreview?['url'] == url
@@ -4238,14 +4254,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   bool _quoteLookup = false;
 
-  // what a send answers: the quote up, or a kept one still being looked
-  // up, which the send then takes so the lookup does not put it back
-  String? _takeQuote() {
-    final uid = _replyTo?.msgUid ?? _draftReply;
-    _draftReply = null;
-    // never one the person cannot see; a send lets it go
-    _hiddenQuote = null;
-    return uid;
+  // what a send answers: only the quote bar that shows. [words]: the send
+  // takes the composer's words, and a kept quote goes with them
+  String? _takeQuote({bool words = false}) {
+    final q = quoteOnSend(
+      shown: _replyTo?.msgUid,
+      pending: _draftReply,
+      hidden: _hiddenQuote,
+      words: words,
+    );
+    _draftReply = q.pending;
+    _hiddenQuote = q.hidden;
+    return q.answers;
   }
 
   // its timed draft went with the chat's timer: words and quote both
