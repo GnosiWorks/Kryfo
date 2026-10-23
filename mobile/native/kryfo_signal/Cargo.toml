@@ -12,6 +12,10 @@ publish = false
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+# only the canary test mtecheck.sh runs, never in a build
+mtecheck = []
+
 [dependencies]
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.99.4" }
 # the versions libsignal-protocol already pulls in, so nothing new is built

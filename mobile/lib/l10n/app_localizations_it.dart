@@ -9134,6 +9134,69 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo.';
 
   @override
+  String get settingsLicences => 'Licenze';
+
+  @override
+  String get settingsLicencesValue => 'Di cosa è fatto Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo è software libero sotto la GNU General Public License, versione 3 o successiva. Chiunque può leggerne, modificarne e condividerne il codice.';
+
+  @override
+  String get licencesSourceCode => 'Codice sorgente';
+
+  @override
+  String get licencesSignalTitle => 'Protocollo Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo include libsignal $version, creato da Signal, sotto la GNU Affero General Public License, versione 3. Il suo codice sorgente è su github.com/signalapp/libsignal e accanto a ogni versione di Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, testo completo';
+
+  @override
+  String get licencesSignalSource => 'Codice sorgente di libsignal';
+
+  @override
+  String get licencesParts => 'Componenti open source';
+
+  @override
+  String get licencesInSignal => 'Nella libreria Signal';
+
+  @override
+  String get licencesInApp => 'Nell\'app';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString componenti',
+      one: '$countString componente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, testo completo';
+
+  @override
+  String get licencesInEngine => 'Nel motore di rete';
+
+  @override
+  String get licencesLoadFailed => 'Impossibile caricare';
+
+  @override
+  String get settingsCopyLinkHint => 'Copia link';
+
+  @override
   String get settingsIconAndNotifications => 'Icona e notifiche';
 
   @override

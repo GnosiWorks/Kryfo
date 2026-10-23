@@ -12,6 +12,8 @@ a feature goes into a release finished or not at all.
   and every new column is in each `CREATE TABLE` (test/schema_parity_test.dart)
 - no logging outside dlog: `grep -rn "print(" mobile/lib | grep -v dlog` is empty
 - the engine builds from clean: `cd engine && ulimit -n 65536 && HALO_FULL=1 ./build.sh`
+- the shim builds and its licence list is current:
+  `mobile/native/kryfo_signal/build-android.sh` and `acknowledgments.sh --check`
 - the tor tests pass: `cd engine && ./torconf-tests.sh` (needs the network, ~30 min).
   the two blocked tests build with the test censor on their own
 - jniLibs holds a normal engine, not the test censor build: gradle and
@@ -89,7 +91,13 @@ both builds have to pass: MATCH at f-droid's path, SAME at another one. no
     git push origin main
     git push origin vX.Y.Z
 
-attach the three apks from repro/out/ to the github release.
+attach the three apks from repro/out/ to the github release, and
+libkryfo_signal-X.Y.Z-source.tar.gz from the same folder (X.Y.Z is the
+release's version): the complete source of the signal shim, which the AGPL
+and the GPL want offered beside the apks. it holds the shim's own crate and
+every crate its Cargo.lock names (libsignal's AGPL-3.0 ones, and the build
+scripts and their dependencies too), vendored with checksums, so it builds
+with `cargo build --offline` and nothing else. its README says how.
 
 ## f-droid
 
@@ -101,6 +109,8 @@ agree with the release:
 - `ndk: r28c`, the one repro/Dockerfile pins
 - the build line has `--flavor foss` and `output:` is
   `build/app/outputs/flutter-apk/app-<abi>-foss-release.apk`
+- rust from mobile/native/kryfo_signal/rust-toolchain.toml, and
+  `build-android.sh` run before the engine in every block
 - `binary:` points at the release asset `app-<abi>-release.apk`
 - the signature is a pure insertion, release.sh passes `--alignment-preserved`
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints

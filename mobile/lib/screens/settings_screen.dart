@@ -23,6 +23,7 @@ import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
+import 'licences_screen.dart';
 import 'why_kryfo_screen.dart';
 import 'appearance_screen.dart';
 import 'transport_screen.dart';
@@ -814,6 +815,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.code,
                 label: l10n.settingsOpenSource,
                 value: 'github.com/GnosiWorks/Kryfo',
+                tapHint: l10n.settingsCopyLinkHint,
                 onTap: () async {
                   await Clipboard.setData(
                     const ClipboardData(
@@ -824,6 +826,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showHaloToast(context, l10n.settingsLinkCopied);
                   }
                 },
+              ),
+              HaloRow(
+                icon: Icons.article_outlined,
+                label: l10n.settingsLicences,
+                value: l10n.settingsLicencesValue,
+                onTap: () =>
+                    Navigator.push(context, haloRoute(const LicencesScreen())),
               ),
             ],
           ),

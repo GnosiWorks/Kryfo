@@ -9223,6 +9223,71 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
 
   @override
+  String get settingsLicences => 'Лицензии';
+
+  @override
+  String get settingsLicencesValue => 'Из чего сделан Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo является свободной программой под лицензией GNU General Public License версии 3 или более поздней. Любой может читать, менять и распространять её код.';
+
+  @override
+  String get licencesSourceCode => 'Исходный код';
+
+  @override
+  String get licencesSignalTitle => 'Протокол Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo содержит libsignal $version от Signal под лицензией GNU Affero General Public License версии 3. Её исходный код есть на github.com/signalapp/libsignal и рядом с каждым выпуском Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, полный текст';
+
+  @override
+  String get licencesSignalSource => 'Исходный код libsignal';
+
+  @override
+  String get licencesParts => 'Компоненты с открытым кодом';
+
+  @override
+  String get licencesInSignal => 'В библиотеке Signal';
+
+  @override
+  String get licencesInApp => 'В приложении';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString компонента',
+      many: '$countString компонентов',
+      few: '$countString компонента',
+      one: '$countString компонент',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, полный текст';
+
+  @override
+  String get licencesInEngine => 'В сетевом движке';
+
+  @override
+  String get licencesLoadFailed => 'Не удалось загрузить';
+
+  @override
+  String get settingsCopyLinkHint => 'Скопировать ссылку';
+
+  @override
   String get settingsIconAndNotifications => 'Значок и уведомления';
 
   @override

@@ -251,12 +251,37 @@ int _u32(Uint8List b) => ByteData.sublistView(b).getUint32(0, Endian.little);
 int? _optU32(Uint8List b) => b.isEmpty ? null : _u32(b);
 Uint8List? _opt(Uint8List b) => b.isEmpty ? null : b;
 
+/// the library's abi checked against these bindings before anything else
+/// is looked up, so a stale library fails here and says why
+void lsCheckAbi(int? got) {
+  if (got == kLsAbi) return;
+  if (got == null || got < kLsAbi) {
+    throw StateError(
+      'the signal library is older than the app '
+      '(abi ${got ?? 'none'}, the app wants $kLsAbi): rebuild it with '
+      'native/kryfo_signal/build-android.sh',
+    );
+  }
+  throw StateError(
+    'the signal library is newer than the app (abi $got, the app wants $kLsAbi)',
+  );
+}
+
+int? _abiOf(DynamicLibrary lib) {
+  if (!lib.providesSymbol('ks_abi_version')) return null;
+  return lib.lookupFunction<Uint32 Function(), int Function()>(
+    'ks_abi_version',
+  )();
+}
+
 class KryfoSignal {
-  KryfoSignal._(DynamicLibrary lib)
+  factory KryfoSignal._(DynamicLibrary lib) {
+    lsCheckAbi(_abiOf(lib));
+    return KryfoSignal._bound(lib);
+  }
+
+  KryfoSignal._bound(DynamicLibrary lib)
     : _free = lib.lookupFunction<_FreeC, _Free>('ks_free'),
-      _abi = lib.lookupFunction<Uint32 Function(), int Function()>(
-        'ks_abi_version',
-      ),
       _fns = {
         'identity_generate': lib.lookupFunction<_CallC, _Call>(
           'ks_identity_generate',
@@ -297,17 +322,17 @@ class KryfoSignal {
         'sign': lib.lookupFunction<_CallC, _Call>('ks_sign'),
         'verify_ctx': lib.lookupFunction<_CallC, _Call>('ks_verify_ctx'),
         'build_info': lib.lookupFunction<_CallC, _Call>('ks_build_info'),
-      } {
-    if (_abi() != kLsAbi) {
-      throw StateError(
-        'kryfo_signal abi ${_abi()}, these bindings want $kLsAbi',
-      );
-    }
-  }
+      };
 
   final _Free _free;
-  final int Function() _abi;
   final Map<String, _Call> _fns;
+
+  static KryfoSignal? _shared;
+
+  /// the platform's library, opened on first use rather than at app start,
+  /// so an app that never calls the shim never loads it. a failed open is
+  /// not kept: the next call tries again and throws the same way
+  static KryfoSignal get shared => _shared ??= open();
 
   /// the env var the host tests name the library by
   static const envVar = 'KRYFO_SIGNAL_LIB';

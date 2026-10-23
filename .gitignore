@@ -18,6 +18,7 @@
 **/Pods/
 **/build/
 **/jniLibs/**/*.so
+**/jniLibs/**/*.stamp
 **/local.properties
 *.bak
 *.jks
