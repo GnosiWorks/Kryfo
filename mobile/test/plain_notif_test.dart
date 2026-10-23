@@ -19,6 +19,7 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   final shown =
       <({String? title, String? body, AndroidNotificationDetails d})>[];
   final channels = <AndroidNotificationChannel>[];
+  final payloads = <String?>[];
 
   List<int> get up => [for (final p in posted) p.$1];
 
@@ -32,6 +33,7 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   }) async {
     posted.add((id, notificationDetails?.tag, notificationDetails?.channelId));
     shown.add((title: title, body: body, d: notificationDetails!));
+    payloads.add(payload);
   }
 
   @override
@@ -209,6 +211,60 @@ void main() {
     await _ring('bob', 'hi', uid: 'm1');
     await clearNotificationsFor('bob');
     expect(shade.up, isEmpty);
+  });
+
+  test('every plain line goes under one tag, whoever wrote', () async {
+    final shade = _start(prefs: {'notif_plain': true});
+    await _ring('bob', 'one');
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    await _ring('amy', 'two');
+    final tags = {for (final s in shade.shown) s.d.tag};
+    expect(tags, hasLength(1));
+    expect(tags.single, isNot(anyOf('t-bob', 't-amy')));
+    // the tap still opens the newest one's chat
+    expect(shade.payloads.last, 't-amy');
+  });
+
+  test('two arriving together still leave one line', () async {
+    final shade = _start(prefs: {'notif_plain': true});
+    final a = _ring('bob', 'one');
+    final b = _ring('amy', 'two');
+    final c = _ring('cy', 'three');
+    await Future.wait([a, b, c]);
+    expect(shade.shown, hasLength(3));
+    expect(shade.up, hasLength(1));
+  });
+
+  test('turning plain on puts one plain line in place of named ones', () async {
+    final shade = _start(prefs: {'notif_hide_content': false});
+    await _ring('bob', 'meet at six');
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    await _ring('amy', 'the address');
+    expect(shade.up, hasLength(2));
+    await setNotifPlain(true);
+    expect(shade.posted, hasLength(1));
+    final last = shade.shown.last;
+    expect(last.d.channelId, 'kryfo_plain');
+    expect(last.body, l10n.notifPlainLine);
+    expect(last.title, isNull);
+    // for the newest one's chat
+    expect(shade.payloads.last, 't-amy');
+    // opening that chat takes it down
+    await clearNotificationsFor('amy');
+    expect(shade.up, isEmpty);
+  });
+
+  test('turning plain on with nothing up posts nothing', () async {
+    final shade = _start();
+    await setNotifPlain(true);
+    expect(shade.shown, isEmpty);
+  });
+
+  test('a decoy turning plain on posts nothing', () async {
+    final shade = _start(quiet: true);
+    shade.posted.add((9, 't-x', 'halo_messages_v2'));
+    await setNotifPlain(true);
+    expect(shade.shown, isEmpty);
   });
 }
 

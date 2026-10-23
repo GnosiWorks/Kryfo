@@ -264,7 +264,10 @@ Future<void> setNotifPlain(bool v) async {
   await prefs.setBool(HaloContainer.everyday.key(_plainKey), v);
   _plainKnown = v;
   hideNotifRevision.value++;
-  if (v) await _makePlainChannel();
+  if (v) {
+    await _makePlainChannel();
+    await _plainOverNamed();
+  }
   // the service's own notification reads the same key and words itself
   // again on a start
   try {
@@ -300,7 +303,32 @@ Future<void> clearPlainNotification() async {
   }
 }
 
+// every plain line goes under this one tag: a chat's own tag would let a
+// listener count how many people wrote. the tap still opens the chat, by
+// the payload
+const _plainTag = 'p';
+
+// one plain post at a time: two arrivals together would each find the
+// shade empty and leave two lines
+Future<void> _plainTurn = Future.value();
+
 Future<int> _showPlain({
+  required String chat,
+  required String tag,
+  String? msgUid,
+}) {
+  final done = Completer<int>();
+  _plainTurn = _plainTurn.then((_) async {
+    try {
+      done.complete(await _postPlain(chat: chat, tag: tag, msgUid: msgUid));
+    } catch (e, st) {
+      done.completeError(e, st);
+    }
+  });
+  return done.future;
+}
+
+Future<int> _postPlain({
   required String chat,
   required String tag,
   String? msgUid,
@@ -313,7 +341,7 @@ Future<int> _showPlain({
   final details = AndroidNotificationDetails(
     _plainChannel,
     l10n.notifPlainChannel,
-    tag: tag,
+    tag: _plainTag,
     importance: Importance.high,
     priority: Priority.high,
     category: AndroidNotificationCategory.message,
@@ -323,8 +351,8 @@ Future<int> _showPlain({
     when: DateTime.now().millisecondsSinceEpoch,
   );
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  _noteShown(chat, tag, msgUid, id);
-  _plainUp.add((id, tag));
+  _noteShown(chat, _plainTag, msgUid, id);
+  _plainUp.add((id, _plainTag));
   await notifPlugin.show(
     id: id,
     body: l10n.notifPlainLine,
@@ -332,6 +360,37 @@ Future<int> _showPlain({
     payload: tag,
   );
   return id;
+}
+
+// plain turned on with named ones up: they go, and one plain line stands
+// for them, for the newest one's chat. a decoy has none up
+Future<void> _plainOverNamed() async {
+  if (await quietNow()) return;
+  final named = <ActiveNotification>[];
+  try {
+    for (final a in await notifPlugin.getActiveNotifications()) {
+      if (a.id != null && a.channelId == _messagesChannel) named.add(a);
+    }
+  } catch (e) {
+    dlog('plain: shade not read (${e.runtimeType})');
+    return;
+  }
+  if (named.isEmpty) return;
+  named.sort((a, b) => a.id!.compareTo(b.id!));
+  for (final a in named) {
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: a.id!, tag: a.tag),
+      'plain',
+    );
+  }
+  final newest = named.last.tag;
+  if (newest == null) return;
+  // the chat it was posted for, as this process knows it, else its tag
+  var chat = newest;
+  for (final e in _shownFor.entries) {
+    if (e.value.any((x) => x.$2 == newest)) chat = e.key;
+  }
+  await _showPlain(chat: chat, tag: newest);
 }
 
 // what a chat's notifications go under on android: its tag, random, made
