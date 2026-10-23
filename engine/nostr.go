@@ -1525,9 +1525,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			markAlive := func() {
 				lastAlive = time.Now().Round(0)
 				relayUp(u)
-				if ownEntry {
-					ownRelayAnswered()
-				}
 				if connGen >= 0 {
 					routeAliveOn(connGen, u)
 				}
@@ -1567,9 +1564,17 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				sweeping = false
 				// both channels before the look, so a change of the round or
 				// a kick right after it still wakes the wait
-				onPub, wake, kc0 := true, (<-chan struct{})(nil), kickChan()
+				onPub, kc0 := true, kickChan()
+				var settle time.Duration
+				var wake <-chan struct{}
 				if sweeper {
-					onPub, wake = livePlace(rcvPk)
+					onPub, settle, wake = livePlace(rcvPk)
+				}
+				if settle > 0 {
+					// the start's addresses are still joining: the list is
+					// chosen once they are in
+					sleepOrKickCtx(ctx, kc0, settle)
+					continue
 				}
 				if !onPub {
 					// wall clock: a phone asleep is time that counts
@@ -1658,17 +1663,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				if !turn.take(ctx) {
 					return
-				}
-				// the run's choice, made at the first turn, with the start's
-				// other addresses joined during it
-				if sweeper {
-					onPub := liveChoose(rcvPk)
-					if !onPub && !sweeping {
-						turn.done()
-						continue
-					}
-					// chosen live at its first read: it holds the socket
-					sweeping = sweeping && !onPub
 				}
 				// the client may be the new mode's, the relay the old list's
 				select {
@@ -1792,8 +1786,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// set once the catch-up ran to its end: from then on each
 				// sign of life says the relay handed over all it took
 				var covered atomic.Bool
+				// our relay said something on this connection, not just took
+				// the req: a listener with nothing behind it takes those too
+				spoke := false
 				aliveNow := func() {
 					markAlive()
+					if ownEntry {
+						spoke = true
+						ownRelayAnswered()
+					}
 					if covered.Load() {
 						noteHeard(conn, u, rcvPk, time.Now(), false)
 					}
@@ -1948,6 +1949,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							stopKick()
 							r.Close()
 							dropped = true
+							if !spoke {
+								ownMiss()
+							}
 							// the request itself was answered with CLOSED: a
 							// relay that hands over nothing owes nothing
 							if eose != nil && stored == 0 {
@@ -2003,6 +2007,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					case <-eose:
 						eose = nil
 						firstOpen.Store(false)
+						if ownEntry {
+							spoke = true
+							ownRelayAnswered()
+						}
 						if stored < limit || oldest == 0 {
 							// the whole window came in this one answer, the
 							// stretches walked before included

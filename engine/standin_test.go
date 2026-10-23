@@ -85,6 +85,9 @@ type relayStandIn struct {
 	probesQuiet bool
 	// every dial is turned away, as by a relay that is down
 	down bool
+	// a req is taken and the socket closed with no answer, as a listener
+	// with nothing behind it does
+	hangUp bool
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -171,6 +174,10 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 				if f.Matches(ev) && !f.LimitZero {
 					match = append(match, ev)
 				}
+			}
+			if s.hangUp {
+				s.mu.Unlock()
+				return
 			}
 			delay := s.reqDelay
 			if len(f.IDs) > 0 && s.idsDelay > 0 {
