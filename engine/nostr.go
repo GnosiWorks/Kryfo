@@ -1377,6 +1377,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		}()
 	}
 	ownURLs := ownRelays(urls)
+	if live != nil {
+		for _, u := range urls {
+			if !slices.Contains(ownURLs, u) {
+				heardInMemory(catchupKey(u, rcvPk))
+			}
+		}
+	}
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {

@@ -4,7 +4,10 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -336,6 +339,91 @@ func TestOnlyContactAddressesAreCapped(t *testing.T) {
 	for _, l := range []string{laneEveryday, laneFirstContact, roomLane("ab"), pairLane("ab"), laneServices} {
 		if rankedLane(l) {
 			t.Fatalf("%s is ranked", l)
+		}
+	}
+}
+
+// two contacts with nothing heard: the first by address holds the one place
+// on the public relay, the other is past the cap
+func livePair(t *testing.T) (in, out xid, inRcv, outRcv string) {
+	t.Helper()
+	a, b := newXid(t), newXid(t)
+	ra, rb := mustRcv(t, a), mustRcv(t, b)
+	if ra < rb {
+		return a, b, ra, rb
+	}
+	return b, a, rb, ra
+}
+
+func runOn(ctx context.Context, p xid, rcv string) {
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+}
+
+// relay to ms, as the heard file holds them
+func readHeard(t *testing.T, rcv string) map[string]int64 {
+	t.Helper()
+	b, err := os.ReadFile(heardFile(rcv))
+	if err != nil {
+		return nil
+	}
+	out := map[string]int64{}
+	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		i := strings.LastIndexByte(line, ' ')
+		if i <= 0 {
+			continue
+		}
+		v, _ := strconv.ParseInt(line[i+1:], 10, 64)
+		out[line[:i]] = v
+	}
+	return out
+}
+
+// past the cap an address reads the public relays now and then, while the
+// ones heard from last hold sockets there. what the heard file says of the
+// public relays would sort the contacts into the two, so a seized phone's
+// files must not tell a live address from one past the cap
+func TestTheHeardFileHidesWhoIsLive(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	in, out, inRcv, outRcv := livePair(t)
+	// files an earlier version left, a line for every relay
+	old := time.Now().Add(-48 * time.Hour).UnixMilli()
+	for _, r := range []string{inRcv, outRcv} {
+		body := fmt.Sprintf("%s %d\n%s %d\n", own.url(), old, pub.url(), old)
+		if err := os.WriteFile(heardFile(r), []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "one address live on the public relay, both on ours", 15*time.Second, func() bool {
+		return openOn(pub, inRcv) == 1 && openOn(own, inRcv) == 1 && openOn(own, outRcv) == 1
+	})
+	waitFor(t, "both heard files written after our relay's catch-up", 10*time.Second, func() bool {
+		return readHeard(t, inRcv)[own.url()] > old && readHeard(t, outRcv)[own.url()] > old
+	})
+	// the live one's catch-up on the public relay is in too
+	time.Sleep(500 * time.Millisecond)
+	a, b := readHeard(t, inRcv), readHeard(t, outRcv)
+	for name, h := range map[string]map[string]int64{"live": a, "capped": b} {
+		if _, ok := h[pub.url()]; ok {
+			t.Errorf("the %s address's heard file names the public relay: %v", name, h)
+		}
+	}
+	if len(a) != len(b) {
+		t.Fatalf("the files differ: %v and %v", a, b)
+	}
+	step := heardSaveStep.Milliseconds()
+	for relay, v := range a {
+		w, ok := b[relay]
+		if !ok || v-w > step || w-v > step {
+			t.Fatalf("the files differ on %s: %v and %v", relay, a, b)
 		}
 	}
 }
