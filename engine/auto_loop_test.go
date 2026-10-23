@@ -453,6 +453,12 @@ func TestNetworkChangeStartsThePassAtOnce(t *testing.T) {
 // bounce leaves it to automatic whether the pass comes before its quiet
 // is out or after
 func TestNetworkChangeBouncesOnceInAutomatic(t *testing.T) {
+	// the reconnects here set the floor and count bounces: none of it
+	// outlasts the test
+	t.Cleanup(func() {
+		atomic.StoreInt64(&lastTorRestart, 0)
+		noteAutoUp()
+	})
 	for _, passFirst := range []bool{true, false} {
 		f := useFakeAuto(t, wifi())
 		quietBounce(t)
