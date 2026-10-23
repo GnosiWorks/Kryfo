@@ -109,11 +109,17 @@ class TranslateBar extends StatelessWidget {
             child: Semantics(
               button: true,
               label: size > 0 ? '$label, ${packSize(size)}' : label,
+              // the ink's own tap is excluded with its words: a double tap
+              // needs one here
+              onTap: () => _main(context, all),
               excludeSemantics: true,
               child: InkWell(
                 onTap: () => _main(context, all),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 40),
+                  // the bar's full height, so the ripple has no dead strip
+                  constraints: const BoxConstraints(
+                    minHeight: kMinInteractiveDimension,
+                  ),
                   child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(16, 9, 4, 9),
                     child: Row(
@@ -124,35 +130,40 @@ class TranslateBar extends StatelessWidget {
                           color: HaloColors.amberText,
                         ),
                         const SizedBox(width: 9),
+                        // large text: the size takes its own line and the
+                        // label wraps whole, never cut short
                         Flexible(
-                          child: AnimatedSwitcher(
-                            duration: still
-                                ? Duration.zero
-                                : const Duration(milliseconds: 180),
-                            layoutBuilder: (cur, prev) => Stack(
-                              alignment: AlignmentDirectional.centerStart,
-                              children: [...prev, ?cur],
-                            ),
-                            child: Text(
-                              label,
-                              key: ValueKey(label),
-                              style: style,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 2,
+                            children: [
+                              AnimatedSwitcher(
+                                duration: still
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 180),
+                                layoutBuilder: (cur, prev) => Stack(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  children: [...prev, ?cur],
+                                ),
+                                child: Text(
+                                  label,
+                                  key: ValueKey(label),
+                                  style: style,
+                                ),
+                              ),
+                              if (size > 0)
+                                Text(
+                                  packSize(size),
+                                  key: const ValueKey('tr-bar-size'),
+                                  style: HaloType.mono(
+                                    size: 11,
+                                    color: HaloColors.text2,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        if (size > 0) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            packSize(size),
-                            key: const ValueKey('tr-bar-size'),
-                            style: HaloType.mono(
-                              size: 11,
-                              color: HaloColors.text2,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

@@ -9,6 +9,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
@@ -18,6 +19,7 @@ import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/settings.dart';
 import 'package:kryfo/translate/translate_bar.dart';
 import 'package:kryfo/translate/translate_bubble.dart';
+import 'package:kryfo/widgets/motion.dart' show kHouseCurve, kHouseTime;
 
 import 'translate_fakes.dart';
 
@@ -203,6 +205,11 @@ void main() {
     await open(t, f, [_zh1, _zh2]);
     final gz = builtInCatalog.bundle('zh')!.gz;
     expect(find.text(packSize(gz)), findsOneWidget);
+    // at the usual text size the size sits on the label's line
+    expect(
+      (t.getCenter(find.text(packSize(gz))).dy - t.getCenter(_to()).dy).abs(),
+      lessThan(2),
+    );
     await t.tap(_to());
     await t.pumpAndSettle();
     // the sheet: the size, and a download only on its own button
@@ -352,6 +359,117 @@ void main() {
     expect(find.byTooltip(l10n.translateBarMore), findsOneWidget);
     handle.dispose();
   });
+
+  testWidgets('a screen reader double tap translates the chat', (t) async {
+    final handle = t.ensureSemantics();
+    final f = fakeHub(installed: true, words: _words);
+    await open(t, f, [_zh1, _zh2]);
+    final node = t.getSemantics(
+      find.bySemanticsLabel(l10n.translateBarTo(langName('en'))),
+    );
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    t.semantics.tap(
+      find.semantics.byLabel(l10n.translateBarTo(langName('en'))),
+    );
+    await t.pumpAndSettle();
+    expect(find.text(_en1), findsOneWidget);
+    expect(find.text(_en2), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('it slides in on the house spring', (t) async {
+    final f = fakeHub(installed: true, words: _words);
+    await f.hub.ready();
+    final c = ChatTranslation(f.hub, 'heron');
+    addTearDown(c.dispose);
+    // no messages yet: no bar
+    await t.pumpWidget(chatOf(c, const []));
+    await t.pumpAndSettle();
+    await t.pumpWidget(chatOf(c, const [_zh1, _zh2]));
+    final sw = t.widget<AnimatedSwitcher>(
+      find
+          .descendant(
+            of: find.byType(TranslateBarSlot),
+            matching: find.byType(AnimatedSwitcher),
+          )
+          .first,
+    );
+    expect(sw.switchInCurve, kHouseCurve);
+    expect(sw.duration, kHouseTime);
+    await t.pump(const Duration(milliseconds: 40));
+    final part = t.getSize(find.byType(TranslateBarSlot)).height;
+    await t.pumpAndSettle();
+    final full = t.getSize(find.byType(TranslateBarSlot)).height;
+    expect(part, greaterThan(0));
+    expect(part, lessThan(full));
+  });
+
+  testWidgets('each tap answers with a light click', (t) async {
+    final calls = <String>[];
+    final m = t.binding.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        calls.add(call.arguments as String);
+      }
+      return null;
+    });
+    addTearDown(
+      () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    final f = fakeHub(installed: true, words: _words);
+    await open(t, f, [_zh1, _zh2]);
+    await t.tap(_to());
+    await t.pumpAndSettle();
+    expect(calls, ['HapticFeedbackType.selectionClick']);
+    await t.tap(find.byKey(const ValueKey('tr-bar-more')));
+    await t.pumpAndSettle();
+    expect(calls.length, 2);
+  });
+
+  testWidgets('the whole bar is one tap target, the touch size or more', (
+    t,
+  ) async {
+    final f = fakeHub(installed: true, words: _words);
+    await open(t, f, [_zh1, _zh2]);
+    final ink = t.getSize(
+      find.descendant(of: _bar(), matching: find.byType(InkWell)).first,
+    );
+    expect(ink.height, greaterThanOrEqualTo(kMinInteractiveDimension));
+    // the ripple reaches the hairline, no dead strip above or below
+    expect(ink.height, t.getSize(_bar()).height - 0.5);
+  });
+
+  for (final lang in ['de', 'ru', 'fa']) {
+    testWidgets('large text on a narrow phone, a pack to fetch, $lang', (
+      t,
+    ) async {
+      t.view.physicalSize = const Size(320, 640);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      final f = fakeHub(words: _words);
+      await open(t, f, [_zh1, _zh2], scale: 2, locale: Locale(lang));
+      expect(t.takeException(), isNull);
+      expect(_bar(), findsOneWidget);
+      final gz = builtInCatalog.bundle('zh')!.gz;
+      // the size is never pushed off or cut
+      final size = find.text(packSize(gz));
+      expect(size, findsOneWidget);
+      final r = t.getRect(size);
+      expect(r.left, greaterThanOrEqualTo(0));
+      expect(r.right, lessThanOrEqualTo(320));
+      expect(t.renderObject<RenderParagraph>(size).didExceedMaxLines, isFalse);
+      // nor is the label cut short
+      final label = find.descendant(
+        of: _bar(),
+        matching: find.text(l10n.translateBarTo(langName('en'))),
+      );
+      expect(t.renderObject<RenderParagraph>(label).didExceedMaxLines, isFalse);
+      final bar = t.getRect(_bar());
+      final l = t.getRect(label);
+      expect(bar.contains(l.topLeft) && bar.contains(l.bottomRight), isTrue);
+      expect(l.overlaps(r), isFalse);
+    });
+  }
 
   for (final light in [false, true]) {
     testWidgets('it reads in ${light ? 'light' : 'dark'}', (t) async {
