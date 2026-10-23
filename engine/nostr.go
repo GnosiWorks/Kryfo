@@ -1438,7 +1438,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	// an id that opened once comes with the stamp it opened with. from and
 	// until: when it reached the relay, in ms by this clock, as far as the
 	// way it came tells (inboxDone)
-	take := func(ev nostr.Event, from, until int64) (fresh, opened bool) {
+	// bare: it came from a public relay, whose reach the disk keeps none of
+	take := func(ev nostr.Event, from, until int64, bare bool) (fresh, opened bool) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
 		mine := nostrSentIDs[id]
@@ -1474,7 +1475,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		}
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
-		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast, from: from, until: until})
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast, from: from, until: until, bare: bare})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
@@ -1485,13 +1486,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	}
 	// what an ask by ids brings was held: it reached the relay when it
 	// first came, as far as that was known, or at any time before now
-	byIDs := func(ev nostr.Event) bool {
-		from, until := seen.heldReach(ev.ID)
-		if until <= 0 {
-			from, until = 0, time.Now().UnixMilli()
+	byIDsOn := func(bare bool) func(nostr.Event) bool {
+		return func(ev nostr.Event) bool {
+			from, until := seen.heldReach(ev.ID)
+			if until <= 0 {
+				from, until = 0, time.Now().UnixMilli()
+			}
+			fresh, _ := take(ev, from, until, bare)
+			return fresh
 		}
-		fresh, _ := take(ev, from, until)
-		return fresh
 	}
 
 	for i, url := range urls {
@@ -1738,6 +1741,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// pass over it, takes the window from where that walk began
 				cc := catchupConnect(ck, ownKeys, last, nostr.Timestamp(connected.Unix()))
 				resumed, base := cc.Resumed, cc.Base
+				// a public relay's window reaches back to what it is known to
+				// have handed over, not only to the anchor: our relay moves
+				// that with every wrap, and a read may come hours after a
+				// wrap only this relay has
+				if h := nostr.Timestamp(heardOf(ck) / 1000); sweeper && base > 0 && h > 0 && h < base {
+					base = h
+				}
 				// a wrap can be a 16k base64 slice of a video, so a reconnect
 				// seconds after the last one asks for twenty, not a hundred. a
 				// cold start, or a gap long enough to have missed a
@@ -1805,7 +1815,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				// a walk's pages reach back below the first answer
 				walked := func(ev nostr.Event) bool {
-					fresh, _ := take(ev, heardOf(ck), time.Now().UnixMilli())
+					fresh, _ := take(ev, heardOf(ck), time.Now().UnixMilli(), sweeper)
 					return fresh
 				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
@@ -1850,7 +1860,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						defer close(done)
 						defer asking.Store(false)
 						defer walkEnds(tag)
-						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, byIDs); answered {
+						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, byIDsOn(sweeper)); answered {
 							seen.notOnRelay(u, urls, missing)
 						}
 					}()
@@ -1981,7 +1991,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 								now := time.Now().UnixMilli()
 								from, until = now, now
 							}
-							fresh, opened := take(ev, from, until)
+							fresh, opened := take(ev, from, until, sweeper)
 							if fresh && opened && eose == nil {
 								liveCame(tag)
 							}
@@ -2839,7 +2849,13 @@ func markHeld(done []inboxDone, names []string, now time.Time) (kept []inboxDone
 			kept = append(kept, d)
 			continue
 		}
-		held, late := d.set.holdSince(d.id, d.at, names[i], now, d.from, d.until, d.freed)
+		// how a public relay was read is not written: a live socket's
+		// moment and a read's span would tell the two apart on disk
+		from := d.from
+		if d.bare {
+			from = 0
+		}
+		held, late := d.set.holdSince(d.id, d.at, names[i], now, from, d.until, d.freed)
 		if late {
 			stale = append(stale, i)
 			continue

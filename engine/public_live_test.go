@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"slices"
@@ -1038,5 +1039,91 @@ func TestOurRelayDownCountsTheTimeAsleep(t *testing.T) {
 	ownRelayFailed()
 	if ownRelayDown() {
 		t.Fatal("a hiccup at a wake sent the reads faster")
+	}
+}
+
+// a read's window reaches back to what that relay is known to have handed
+// over. our relay moves the anchor with every wrap, and a wrap only a public
+// relay has, stamped back the most, fell below a window drawn from it
+func TestAReadReachesBackToWhatItLastHandedOver(t *testing.T) {
+	setLiveCap(t, 1, 2*time.Second)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	in, out, inRcv, outRcv := livePair(t)
+	now := time.Now()
+	plantAnchor(t, inRcv, now.Unix())
+	plantAnchor(t, outRcv, now.Unix())
+	// the last read of the public relay three hours ago, as the run holds it
+	heardMu.Lock()
+	heardAt[catchupKey(pub.url(), outRcv)] = now.Add(-3 * time.Hour).UnixMilli()
+	heardMu.Unlock()
+	// sent since, its outer stamp ten hours back
+	pub.store(wrapToAt(t, out, myXPub, "only on a public relay", now.Add(-13*time.Hour)))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	outHex := hex.EncodeToString(out.pub[:])
+	waitFor(t, "the wrap from the public relay", 15*time.Second, func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return slices.Contains(nostrInbox, outHex+"|only on a public relay")
+	})
+}
+
+// a held line keeps when its id reached the relay. from a public relay that
+// would tell a live socket's moment from a read's span on disk, so it keeps
+// no from there
+func TestAHeldLineKeepsNoReachFromAPublicRelay(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	pollHoldReset(t)
+	in, out, inRcv, outRcv := livePair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "the live address caught up on the public relay", 15*time.Second, func() bool {
+		return openOn(pub, inRcv) == 1 && openOn(own, inRcv) == 1
+	})
+	time.Sleep(500 * time.Millisecond)
+	pub.pushLive(wrapTo(t, in, myXPub, "held"))
+	inHex := hex.EncodeToString(in.pub[:])
+	seenPath, _ := addressFiles(inRcv)
+	waitFor(t, "the text held", 10*time.Second, func() bool {
+		if b := pollRaw(t); b.K != "" {
+			var h []int
+			var g []string
+			for i, e := range b.M {
+				if e.T == inHex {
+					h = append(h, i)
+					g = append(g, "")
+				}
+			}
+			hj, _ := json.Marshal(h)
+			gj, _ := json.Marshal(g)
+			nostrAck(b.K, fmt.Sprintf(`{"f":[],"h":%s,"g":%s}`, hj, gj))
+		}
+		return heldOnFile(seenPath) == 1
+	})
+	b, err := os.ReadFile(seenPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, line := range strings.Split(string(b), "\n") {
+		if !strings.HasPrefix(line, seenHeldMark) {
+			continue
+		}
+		f := strings.Fields(line)
+		if len(f) > 4 && f[3] != "0" {
+			t.Fatalf("the held line keeps when it reached the public relay: %q", line)
+		}
 	}
 }
