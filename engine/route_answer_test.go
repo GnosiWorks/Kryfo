@@ -2,9 +2,6 @@
 package main
 
 import (
-	"context"
-	"encoding/hex"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,39 +9,32 @@ import (
 )
 
 // a bump that tore nothing down: the live socket's next probe answer
-// proves the route again, with no redial
+// proves the route again, with no redial. one asked before a bump proves
+// nothing about the route after it
 func TestProbeAfterABumpProvesTheRoute(t *testing.T) {
-	socks := newSocksStandIn(t)
-	ours := newRelayStandIn(t, 0)
-	useStandIns(t, modePrivate, socks, ours)
+	useStandIns(t, modePrivate, nil)
 	resetRoute(t, "reachable", 100)
-	oldSpread := kickSpread
-	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
-	peer := newXid(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	// the runner and the per-relay goroutines it starts end before the
-	// stand-ins' cleanups put things back
-	base := runtime.NumGoroutine()
-	t.Cleanup(func() {
-		cancel()
-		waitFor(t, "the runner gone", 10*time.Second, func() bool {
-			return runtime.NumGoroutine() <= base
-		})
-	})
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
-	waitFor(t, "the subscription", 10*time.Second, func() bool {
-		cs := ours.snapshot()
-		return len(cs) == 1 && len(cs[0].reqs) > 0
-	})
-	waitFor(t, "the route proven", 10*time.Second, routeOK)
+	u := "wss://live.example"
+	if !probeProves(u, func() bool { return true }) || !routeOK() {
+		t.Fatal("an answered probe did not prove the route")
+	}
 	routeBump()
 	if routeOK() {
 		t.Fatal("the bump left the route proven")
 	}
-	kickUntil(t, "the probe proved the route", routeOK)
-	if n := len(ours.snapshot()); n != 1 {
-		t.Fatalf("proved by a redial, not the live socket: %d connections", n)
+	if probeProves(u, func() bool { return false }) || routeOK() {
+		t.Fatal("an unanswered probe proved the route")
+	}
+	// asked, and the route bumped while the answer was on its way
+	probeProves(u, func() bool {
+		routeBump()
+		return true
+	})
+	if routeOK() {
+		t.Fatal("a probe asked before a bump proved the route after it")
+	}
+	if !probeProves(u, func() bool { return true }) || !routeOK() {
+		t.Fatal("a probe asked after the bump did not prove it")
 	}
 }
 

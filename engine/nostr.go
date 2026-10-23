@@ -1291,6 +1291,17 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	return accepted
 }
 
+// asks relay u a question and, when it answers, takes the answer as proof
+// of the route generation the question was asked in
+func probeProves(u string, ask func() bool) bool {
+	gen := routeGeneration()
+	if !ask() {
+		return false
+	}
+	routeAliveOn(gen, u)
+	return true
+}
+
 // how long a runner waits for tor before it tries again
 var torRetryWait = 10 * time.Second
 
@@ -1688,11 +1699,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// whenever the socket was dialled: a bump that tore nothing
 				// down leaves it carrying
 				probe := func() bool {
-					gen := routeGeneration()
-					if !relayResponds(conn, r, rcvPk) {
+					if !probeProves(u, func() bool { return relayResponds(conn, r, rcvPk) }) {
 						return false
 					}
-					routeAliveOn(gen, u)
 					aliveNow()
 					return true
 				}
