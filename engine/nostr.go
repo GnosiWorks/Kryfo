@@ -196,6 +196,10 @@ func sleepOrKickCtx(ctx context.Context, kc chan struct{}, d time.Duration) bool
 // the tests
 var runnerParkHook func()
 
+// called by a runner past the cap as it starts waiting for its next read,
+// for the tests
+var sweepWaitHook func()
+
 // a req shaped like any other this socket sends: its own address, nothing
 // older than now and no stored events. the relay answers eose, which is the
 // cheapest proof that this circuit still carries data, and unlike cycling
@@ -1548,21 +1552,30 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				default:
 				}
 				sweeping = false
-				if sweeper && !publicLive(rcvPk) {
+				// both channels before the look, so a move into the cap or
+				// a kick right after it still wakes the wait
+				onPub, wake, kc0 := true, (<-chan struct{})(nil), kickChan()
+				if sweeper {
+					onPub, wake = livePlace(rcvPk)
+				}
+				if !onPub {
 					// wall clock: a phone asleep is time that counts
 					now := time.Now().Round(0)
 					if nextSweep.IsZero() {
 						nextSweep = now.Add(firstSweepDelay())
 					}
 					if wait := nextSweep.Sub(now); wait > 0 {
+						if h := sweepWaitHook; h != nil {
+							h()
+						}
 						// a kick only looks at the clock again
 						t := time.NewTimer(wait)
 						select {
 						case <-ctx.Done():
 							t.Stop()
 							return
-						case <-liveWake(rcvPk):
-						case <-kickChan():
+						case <-wake:
+						case <-kc0:
 						case <-t.C:
 						}
 						t.Stop()
@@ -2042,7 +2055,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// fallen out of the cap: the socket goes, and the
 						// address reads this relay now and then from here.
 						// one still catching up goes once it has
-						if sweeper && sweptC == nil && !publicLive(rcvPk) {
+						if sweeper && sweptC == nil && !publicKeep(rcvPk) {
 							pastCap()
 							stopKick()
 							r.Close()
@@ -2085,7 +2098,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					case <-kickC:
 						kickT, kickC = nil, nil
 						// fallen out of the cap: the kick's probe closes it
-						if sweeper && sweptC == nil && !publicLive(rcvPk) {
+						if sweeper && sweptC == nil && !publicKeep(rcvPk) {
 							pastCap()
 							idle.Stop()
 							r.Close()

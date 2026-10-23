@@ -62,10 +62,12 @@ func liveJoin(rcvPk string, heard int64) *liveAddr {
 	return a
 }
 
-// the address was let go of: nothing of when it was heard stays
+// the address was let go of: nothing of when it was heard stays, and a
+// take still under way on its runner writes nothing back
 func liveForget(rcvPk string) {
 	liveMu.Lock()
 	delete(liveLast, rcvPk)
+	delete(liveAddrs, rcvPk)
 	liveMu.Unlock()
 }
 
@@ -107,6 +109,22 @@ func publicLive(rcvPk string) bool {
 	return liveRankedLocked(rcvPk)
 }
 
+// as publicLive, with the channel closed when it moves into the cap taken
+// under the same lock, so a move between the two is not missed
+func livePlace(rcvPk string) (bool, <-chan struct{}) {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	var wake <-chan struct{}
+	if a := liveAddrs[rcvPk]; a != nil {
+		wake = a.wake
+	}
+	return liveRankedLocked(rcvPk), wake
+}
+
+// whether a socket rcvPk holds on a public relay stays. the one place a
+// socket is let go of while its runner lives
+func publicKeep(rcvPk string) bool { return publicLive(rcvPk) }
+
 // rcvPk brought something at at. one that moves into the cap wakes its
 // runners, so a contact who writes is live everywhere again
 func liveHeard(rcvPk string, at int64) {
@@ -126,16 +144,6 @@ func liveHeard(rcvPk string, at int64) {
 		close(a.wake)
 		a.wake = make(chan struct{})
 	}
-}
-
-// closed when rcvPk moves into the cap, nil for one not ranked
-func liveWake(rcvPk string) <-chan struct{} {
-	liveMu.Lock()
-	defer liveMu.Unlock()
-	if a := liveAddrs[rcvPk]; a != nil {
-		return a.wake
-	}
-	return nil
 }
 
 // the next read of a public relay, a fourth either way so they spread out

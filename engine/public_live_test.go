@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -76,7 +77,7 @@ func TestLiveRankKeepsTheLatestHeard(t *testing.T) {
 	if !publicLive("a") || !publicLive("b") || publicLive("c") {
 		t.Fatal("past the cap the two heard from last are live")
 	}
-	wake := liveWake("c")
+	_, wake := livePlace("c")
 	liveHeard("c", 40)
 	select {
 	case <-wake:
@@ -359,6 +360,15 @@ func runOn(ctx context.Context, p xid, rcv string) {
 	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
 }
 
+// the anchor file an earlier run left, at unix seconds at
+func plantAnchor(t *testing.T, rcv string, at int64) {
+	t.Helper()
+	_, lastPath := addressFiles(rcv)
+	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(at, 10)), 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // relay to ms, as the heard file holds them
 func readHeard(t *testing.T, rcv string) map[string]int64 {
 	t.Helper()
@@ -376,6 +386,20 @@ func readHeard(t *testing.T, rcv string) map[string]int64 {
 		out[line[:i]] = v
 	}
 	return out
+}
+
+// the relay closes every socket that asked for addr, at once
+func cutOn(r *relayStandIn, addr string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, c := range r.conns {
+		if c.closed.IsZero() && c.addrs[addr] {
+			c.kill()
+			if c.ws != nil {
+				c.ws.CloseNow()
+			}
+		}
+	}
 }
 
 // past the cap an address reads the public relays now and then, while the
@@ -424,29 +448,6 @@ func TestTheHeardFileHidesWhoIsLive(t *testing.T) {
 		w, ok := b[relay]
 		if !ok || v-w > step || w-v > step {
 			t.Fatalf("the files differ on %s: %v and %v", relay, a, b)
-		}
-	}
-}
-
-// the anchor file an earlier run left, at unix seconds at
-func plantAnchor(t *testing.T, rcv string, at int64) {
-	t.Helper()
-	_, lastPath := addressFiles(rcv)
-	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(at, 10)), 0600); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// the relay closes every socket that asked for addr, at once
-func cutOn(r *relayStandIn, addr string) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	for _, c := range r.conns {
-		if c.closed.IsZero() && c.addrs[addr] {
-			c.kill()
-			if c.ws != nil {
-				c.ws.CloseNow()
-			}
 		}
 	}
 }
@@ -516,6 +517,54 @@ func TestACutReadIsTriedAgainWithinTheRound(t *testing.T) {
 	cutOn(pub, outRcv)
 	// an eighth to a quarter of the round, and the turn
 	waitFor(t, "the read tried again", 4*time.Second, func() bool { return everOn(pub, outRcv) >= 2 })
+}
+
+// a move into the cap right as an address starts waiting for its next read
+// wakes the wait, not the round's end
+func TestAMoveIntoTheCapAsTheWaitBeginsIsNotMissed(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	in, out, inRcv, outRcv := livePair(t)
+	var once sync.Once
+	sweepWaitHook = func() {
+		once.Do(func() { liveHeard(outRcv, time.Now().Unix()) })
+	}
+	t.Cleanup(func() { sweepWaitHook = nil })
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	runOn(ctx, in, inRcv)
+	runOn(ctx, out, outRcv)
+	waitFor(t, "the address moved into the cap live on the public relay", 10*time.Second, func() bool {
+		return openOn(pub, outRcv) == 1
+	})
+}
+
+// a delete lets go of the address while a take on its runner may still be
+// under way. that take writes no rank back
+func TestADeletedContactLeavesNoRank(t *testing.T) {
+	setLiveCap(t, 1, time.Hour)
+	liveReset()
+	a := liveJoin("a", 10)
+	dropAddressFiles("a")
+	liveHeard("a", 50)
+	liveLeave("a", a)
+	liveMu.Lock()
+	_, kept := liveLast["a"]
+	liveMu.Unlock()
+	if kept {
+		t.Fatal("when the deleted contact last wrote stayed in memory")
+	}
+	b := liveJoin("b", 20)
+	defer liveLeave("b", b)
+	a = liveJoin("a", 0)
+	defer liveLeave("a", a)
+	if publicLive("a") {
+		t.Fatal("the contact added again started with the old rank")
+	}
 }
 
 // a public relay that turns the dial away has had this round's read. every
