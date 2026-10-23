@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart';
 import 'package:kryfo/main.dart' show HaloDb, draftsTable;
+import 'package:kryfo/screens/group_chat_screen.dart' show quoteOnSend;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -560,6 +561,28 @@ void main() {
     );
     expect(last()?.burnSecs, 60);
     endProcessForTest();
+  });
+
+  test('a group send answers only the quote that shows; a kept one goes '
+      'only with the words it was kept for', () {
+    // a sticker or a file: the words stay, and so does what they quote
+    expect(
+      quoteOnSend(shown: null, pending: 'u-1', hidden: null, words: false),
+      (answers: null, pending: 'u-1', hidden: null),
+    );
+    expect(
+      quoteOnSend(shown: null, pending: null, hidden: 'u-2', words: false),
+      (answers: null, pending: null, hidden: 'u-2'),
+    );
+    // the words sent: their kept quote goes, answered only when it shows
+    expect(
+      quoteOnSend(shown: null, pending: 'u-1', hidden: 'u-2', words: true),
+      (answers: null, pending: null, hidden: null),
+    );
+    expect(
+      quoteOnSend(shown: 'u-3', pending: null, hidden: null, words: false),
+      (answers: 'u-3', pending: null, hidden: null),
+    );
   });
 
   test('a decoy\'s delete takes the decoy\'s draft, never the everyday '

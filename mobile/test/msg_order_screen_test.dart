@@ -58,9 +58,14 @@ class _Db extends DevTestDb {
   final kept = <String, Draft>{};
   @override
   bool get isOpen => true;
+  // a read of the row that fails, as a busy or damaged file
+  bool readFails = false;
   @override
-  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
-      kept[chatId];
+  Future<Draft?> draftOf(String chatId, {required bool group}) async {
+    if (readFails) throw StateError('not read');
+    return kept[chatId];
+  }
+
   @override
   Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
       kept[chatId] = d;
@@ -667,6 +672,44 @@ void main() {
     db.kept[_peer] = const Draft('mine first', at: 1);
     await devOpen(t, chat(text: 'and this'));
     await settle(t);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first\nand this');
+    await devClose(t);
+  });
+
+  testWidgets('forwarded words never replace a stored draft that would not '
+      'read; they join it once it does', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    lockState.openForTest();
+    db.kept[_peer] = const Draft('mine first', at: 1);
+    db.readFails = true;
+    await devOpen(t, chat(text: 'and this'), routes: true);
+    await settle(t);
+    final ctrl = t.widget<TextField>(find.byType(TextField).last).controller!;
+    expect(ctrl.text, 'and this');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first');
+    final at = t.element(find.byType(ChatScreen));
+    Future<void> away() async {
+      unawaited(
+        Navigator.of(
+          at,
+        ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox())),
+      );
+      await t.pump(const Duration(seconds: 1));
+      Navigator.of(at).pop();
+      await settle(t);
+    }
+
+    // back on top, still unread: nothing emptied, nothing written
+    await away();
+    expect(ctrl.text, 'and this');
+    expect(db.kept[_peer]?.text, 'mine first');
+    // it reads now: the row's words, then the forwarded ones
+    db.readFails = false;
+    await away();
+    expect(ctrl.text, 'mine first\nand this');
     await t.pump(kDraftWait);
     expect(db.kept[_peer]?.text, 'mine first\nand this');
     await devClose(t);

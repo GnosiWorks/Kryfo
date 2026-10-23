@@ -2954,6 +2954,9 @@ class _ChatScreenState extends State<ChatScreen>
       }
     });
     unawaited(_restoreReply());
+    // a stored draft that would not read is tried again
+    final kept = _draftRows;
+    if (_rowUnread && kept != null) unawaited(_readDraft(kept));
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
@@ -4746,7 +4749,7 @@ class _ChatScreenState extends State<ChatScreen>
   void backOnTop() {
     // a copy of this chat opened over it may have changed the draft
     final rows = _draftRows;
-    if (rows != null) {
+    if (rows != null && !_rowUnread) {
       final d = heldDraft(rows.container, widget.peerHaloId, group: false);
       if (d == null && _msgCtrl.text.trim().isNotEmpty) {
         // sent from a copy over it, or its timer ran out while a page was
@@ -5907,7 +5910,7 @@ class _ChatScreenState extends State<ChatScreen>
   // [clock]: the person changed the timer, the draft takes it
   void _keepDraft({bool clock = false}) {
     final rows = _draftRows;
-    if (rows == null) return;
+    if (rows == null || _rowUnread) return;
     typedDraft(
       rows,
       widget.peerHaloId,
@@ -5927,17 +5930,36 @@ class _ChatScreenState extends State<ChatScreen>
   // the kept draft read back, unless something was typed meanwhile
   Future<void> _readDraft(DraftRows rows) async {
     final before = _msgCtrl.text;
-    final d = await readDraft(rows, widget.peerHaloId, group: false);
+    final r = await readKeptDraft(rows, widget.peerHaloId, group: false);
     if (!mounted) return;
-    if (d == null) {
-      if (_handedIn && _msgCtrl.text == before) _keepDraft();
+    // not read, with words handed in: they stay aside, nothing is written
+    // over the row, and the next load reads it again
+    if (!r.read) {
+      if (_handedIn) _rowUnread = true;
       return;
     }
-    if (_msgCtrl.text != before) return;
+    final again = _rowUnread;
+    _rowUnread = false;
+    final d = r.draft;
+    if (d == null) {
+      final left = _msgCtrl.text.trim().isNotEmpty;
+      if (left && (again || (_handedIn && _msgCtrl.text == before))) {
+        _keepDraft();
+      }
+      return;
+    }
+    if (!again && _msgCtrl.text != before) return;
     _draftReply = d.replyTo;
-    _takeDraft(composerWith(d.text, widget.initialText));
+    // read late: the row's words first, then what was put in meanwhile
+    _takeDraft(
+      composerWith(d.text, again ? _msgCtrl.text : widget.initialText),
+    );
     unawaited(_restoreReply());
   }
+
+  // the stored draft could not be read under handed-in words: nothing is
+  // written until it is, so they never take its place
+  bool _rowUnread = false;
 
   // the quote a kept draft had, once the messages are here: from the pages
   // held, else from its own row, as it may be older than them. only one

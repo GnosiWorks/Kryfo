@@ -134,25 +134,33 @@ Future<Draft?> readDraft(
   DraftRows rows,
   String chatId, {
   required bool group,
+}) async => (await readKeptDraft(rows, chatId, group: group)).draft;
+
+/// [readDraft], saying too whether the row could be read: a composer must
+/// not write over a row it could not read
+Future<({Draft? draft, bool read})> readKeptDraft(
+  DraftRows rows,
+  String chatId, {
+  required bool group,
 }) async {
   final k = _key(rows.container, chatId, group);
   final held = heldDraft(rows.container, chatId, group: group);
-  if (held != null || _shut) return held;
+  if (held != null || _shut) return (draft: held, read: true);
   try {
     final d = await rows.draftOf(chatId, group: group);
     // typed or dropped while it read: that wins
     if (d == null || d.isEmpty || _waiting.containsKey(k) || _shut) {
-      return _held[k];
+      return (draft: _held[k], read: true);
     }
     // past its time: the sweep had not reached it yet
     if (d.spentAt(_now())) {
       unawaited(dropDraft(rows, chatId, group: group));
-      return null;
+      return (draft: null, read: true);
     }
-    return _held[k] ??= d;
+    return (draft: _held[k] ??= d, read: true);
   } catch (e) {
     dlog('drafts: not read (${e.runtimeType})');
-    return null;
+    return (draft: null, read: false);
   }
 }
 
