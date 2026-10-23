@@ -45,6 +45,12 @@ endfunction()
 add_library(kryfo_voice SHARED kryfo_voice.c)
 target_link_libraries(kryfo_voice PRIVATE whisper)
 kv_no_spawn(kryfo_voice)
+# the wraps hit every caller; this fails the build when one outside ggml.c
+# is compiled in
+add_custom_command(TARGET kryfo_voice POST_BUILD
+  COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/check-wraps.sh" "${CMAKE_NM}"
+    "${CMAKE_CURRENT_BINARY_DIR}/whisper"
+  VERBATIM)
 set_target_properties(kryfo_voice PROPERTIES
   C_VISIBILITY_PRESET hidden
   C_STANDARD 11)
