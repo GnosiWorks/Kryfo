@@ -1118,6 +1118,43 @@ func autoStart(gen int64) {
 // passes are started here and nowhere else
 var autoRunPass = runPass
 
+// a change of network needs a pass of its own: after a pass that did not
+// get through, on another type of network, or with tor held off it
+func networkPassDue(n netInfo, result, kind string) bool {
+	return result != seenOK || n.Kind != kind || networkHold() != ""
+}
+
+// the loop's last pass, for the network bounce to read: the loop's own
+// copies stay in the loop
+var autoLast struct {
+	sync.Mutex
+	gen          int64
+	epoch        int64
+	kind, result string
+}
+
+func autoLastSet(gen, epoch int64, kind, result string) {
+	autoLast.Lock()
+	autoLast.gen, autoLast.epoch, autoLast.kind, autoLast.result = gen, epoch, kind, result
+	autoLast.Unlock()
+}
+
+// automatic puts a way back on this network with a pass of its own, by the
+// loop's rule, or has one for it already: the network bounce leaves tor to
+// it, so a change bounces tor once
+func autoTakesChange() bool {
+	if mode, _, _ := bridgeMode(); mode != bmAuto || autoIdleWhy() != "" {
+		return false
+	}
+	autoLast.Lock()
+	gen, epoch, kind, result := autoLast.gen, autoLast.epoch, autoLast.kind, autoLast.result
+	autoLast.Unlock()
+	if gen == 0 || gen != autoGen() {
+		return false
+	}
+	return epoch == netEpoch.Load() || networkPassDue(currentNet(), result, kind)
+}
+
 func autoLoop(gen int64) {
 	var (
 		result    string
@@ -1134,6 +1171,7 @@ func autoLoop(gen int64) {
 		consent   = consentNow()
 		valid     = autoValidFlips.Load()
 	)
+	autoLastSet(gen, epoch, kind, result)
 	for autoGen() == gen {
 		now := autoNow()
 		start := ""
@@ -1155,7 +1193,7 @@ func autoLoop(gen int64) {
 				start = "start"
 			// a new network, or one that left tor held off it, as a change
 			// of the same kind can: a pass puts a way back in place
-			case ep != epoch && (result != seenOK || n.Kind != kind || networkHold() != ""):
+			case ep != epoch && networkPassDue(n, result, kind):
 				start = "network"
 			case result == passInterrupted:
 				start = "again"
@@ -1215,7 +1253,9 @@ func autoLoop(gen int64) {
 			epoch = netEpoch.Load()
 			kind = currentNet().Kind
 			lastPass = autoNow()
+			autoLastSet(gen, epoch, kind, result)
 			result = autoRunPass(gen, epoch, start)
+			autoLastSet(gen, epoch, kind, result)
 			downSince, upSince = time.Time{}, time.Time{}
 			switch result {
 			case "exhausted":

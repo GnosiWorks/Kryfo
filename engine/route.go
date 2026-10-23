@@ -779,8 +779,9 @@ func netBounceWorker() {
 		if !modeNeedsTor() || torIsPaused() || netAway() {
 			return
 		}
-		// automatic starts its own pass on the new network
-		if autoGateHeld() {
+		// automatic starts its own pass on the new network, or has one
+		// under way: one bounce for the change, the pass's
+		if autoGateHeld() || autoTakesChange() {
 			log.Println("halo: network bounce left to automatic")
 			return
 		}
