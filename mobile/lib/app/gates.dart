@@ -362,7 +362,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               !v.held &&
               v.status == TorStatus.reachable;
           final still = motionStill(context);
-          // one route, one colour. onion stays violet whether tor is merely
+          // relay does not go through tor, so tor being off never greys it.
+          // one route, one colour: onion stays violet whether tor is merely
           // usable or fully published
           final accent = switch (v.kind) {
             LinkKind.relay => HaloColors.sky,
