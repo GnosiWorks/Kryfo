@@ -6,7 +6,7 @@ use libsignal_protocol::IdentityKeyPair;
 use crate::wire::{Reader, Writer};
 use crate::*;
 
-const NOW: u64 = 1_760_000_000_000;
+pub(crate) const NOW: u64 = 1_760_000_000_000;
 
 #[test]
 fn an_undated_classic_opener_still_goes_out() {
@@ -47,7 +47,7 @@ fn an_undated_classic_opener_still_goes_out() {
     );
 }
 
-fn run(op: Op, w: &mut Writer) -> Result<Vec<Vec<u8>>, Error> {
+pub(crate) fn run(op: Op, w: &mut Writer) -> Result<Vec<Vec<u8>>, Error> {
     let input = w.done();
     let mut out = std::ptr::null_mut();
     let mut n = 0;
@@ -79,25 +79,25 @@ fn run(op: Op, w: &mut Writer) -> Result<Vec<Vec<u8>>, Error> {
     Ok(fields)
 }
 
-fn u32_of(b: &[u8]) -> u32 {
+pub(crate) fn u32_of(b: &[u8]) -> u32 {
     u32::from_le_bytes(b.try_into().unwrap())
 }
 
-fn w() -> Writer {
+pub(crate) fn w() -> Writer {
     Writer::default()
 }
 
-struct Party {
-    pair: Vec<u8>,
-    public: Vec<u8>,
-    reg: u32,
-    pk: Vec<u8>,
-    spk: Vec<u8>,
-    kyber: Vec<u8>,
+pub(crate) struct Party {
+    pub(crate) pair: Vec<u8>,
+    pub(crate) public: Vec<u8>,
+    pub(crate) reg: u32,
+    pub(crate) pk: Vec<u8>,
+    pub(crate) spk: Vec<u8>,
+    pub(crate) kyber: Vec<u8>,
 }
 
 impl Party {
-    fn new(reg: u32) -> Self {
+    pub(crate) fn new(reg: u32) -> Self {
         let id = run(identity_generate, &mut w()).unwrap();
         let pk = run(prekey_generate, w().u32(7)).unwrap();
         let spk = run(signed_prekey_generate, w().bytes(&id[0]).u32(1).u64(NOW)).unwrap();
@@ -113,7 +113,7 @@ impl Party {
     }
 
     // the fields bundle_build takes, from this party's records
-    fn bundle_fields(&self, with_kyber: bool) -> Writer {
+    pub(crate) fn bundle_fields(&self, with_kyber: bool) -> Writer {
         let pk = run(prekey_public, w().u32(0).bytes(&self.pk)).unwrap();
         let spk = run(prekey_public, w().u32(1).bytes(&self.spk)).unwrap();
         let k = run(prekey_public, w().u32(2).bytes(&self.kyber)).unwrap();
@@ -134,7 +134,7 @@ impl Party {
         f
     }
 
-    fn bundle(&self) -> Vec<u8> {
+    pub(crate) fn bundle(&self) -> Vec<u8> {
         run(bundle_build, &mut self.bundle_fields(true))
             .unwrap()
             .remove(0)
@@ -679,21 +679,21 @@ fn a_panic_stops_at_the_boundary() {
 // fuzz-style: random and mutated input through every call. none may
 // panic (run asserts that) and none may hand back output on an error
 
-struct Rng(u64);
+pub(crate) struct Rng(pub(crate) u64);
 
 impl Rng {
-    fn next(&mut self) -> u64 {
+    pub(crate) fn next(&mut self) -> u64 {
         self.0 ^= self.0 << 13;
         self.0 ^= self.0 >> 7;
         self.0 ^= self.0 << 17;
         self.0
     }
-    fn below(&mut self, n: usize) -> usize {
+    pub(crate) fn below(&mut self, n: usize) -> usize {
         (self.next() % n as u64) as usize
     }
 }
 
-fn mutate(rng: &mut Rng, b: &[u8]) -> Vec<u8> {
+pub(crate) fn mutate(rng: &mut Rng, b: &[u8]) -> Vec<u8> {
     let mut v = b.to_vec();
     for _ in 0..1 + rng.below(4) {
         match rng.below(4) {
@@ -719,7 +719,7 @@ fn mutate(rng: &mut Rng, b: &[u8]) -> Vec<u8> {
     v
 }
 
-fn raw(op: Op, input: &[u8]) {
+pub(crate) fn raw(op: Op, input: &[u8]) {
     let mut out = std::ptr::null_mut();
     let mut n = 0;
     let code = unsafe { call(op, input.as_ptr(), input.len(), &mut out, &mut n) };

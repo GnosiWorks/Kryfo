@@ -4,6 +4,7 @@
 // dart and handed straight back to ks_free, which wipes it. no native
 // handle outlives a call, so there is nothing for a finalizer to hold
 
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
@@ -53,7 +54,21 @@ const kLsSigned = 1;
 const kLsKyber = 2;
 
 /// the abi these bindings were written for
-const kLsAbi = 1;
+const kLsAbi = 2;
+
+/// what a kryfo signature is made for. the shim holds the same list, and
+/// the shape each body must have, and signs under no other, so a signature
+/// for one never holds for another
+enum LsSigContext {
+  invite('invite'),
+  hello('hello'),
+  heal('heal'),
+  deviceList('device-list'),
+  move('move');
+
+  const LsSigContext(this.wire);
+  final String wire;
+}
 
 class LsIdentity {
   const LsIdentity(this.pair, this.public);
@@ -279,6 +294,9 @@ class KryfoSignal {
         'session_promote': lib.lookupFunction<_CallC, _Call>(
           'ks_session_promote',
         ),
+        'sign': lib.lookupFunction<_CallC, _Call>('ks_sign'),
+        'verify_ctx': lib.lookupFunction<_CallC, _Call>('ks_verify_ctx'),
+        'build_info': lib.lookupFunction<_CallC, _Call>('ks_build_info'),
       } {
     if (_abi() != kLsAbi) {
       throw StateError(
@@ -385,6 +403,7 @@ class KryfoSignal {
     return LsPreKey(_u32(o[0]), Uint8List.fromList(record), o[1], o[2]);
   }
 
+  /// libsignal's signature over a prekey's public key (33 or 1569 bytes)
   bool verify(List<int> identityKey, List<int> message, List<int> signature) {
     try {
       _call('verify', [identityKey, message, signature]);
@@ -559,4 +578,37 @@ class KryfoSignal {
   /// [held] with [newer]'s current state in front, each session once
   Uint8List sessionPromote(Uint8List held, Uint8List newer) =>
       _call('session_promote', [held, newer])[0];
+
+  /// [me]'s signature over [message] for [context] (64 bytes)
+  Uint8List sign(LsIdentity me, LsSigContext context, List<int> message) =>
+      _call('sign', [me.pair, utf8.encode(context.wire), message])[0];
+
+  /// whether [signature] is [identityKey]'s over [message] for [context].
+  /// a key or signature in any but its one encoding is false
+  bool verifyCtx(
+    List<int> identityKey,
+    LsSigContext context,
+    List<int> message,
+    List<int> signature,
+  ) {
+    try {
+      _call('verify_ctx', [
+        identityKey,
+        utf8.encode(context.wire),
+        message,
+        signature,
+      ]);
+      return true;
+    } on LsError catch (e) {
+      if (e.code == LsError.signature || e.code == LsError.key) return false;
+      rethrow;
+    }
+  }
+
+  /// the libsignal and spqr sources the library was built from, as its
+  /// Cargo.lock names them
+  ({String libsignal, String spqr}) buildInfo() {
+    final o = _call('build_info', const []);
+    return (libsignal: utf8.decode(o[0]), spqr: utf8.decode(o[1]));
+  }
 }

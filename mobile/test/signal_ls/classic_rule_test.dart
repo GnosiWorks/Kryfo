@@ -48,6 +48,34 @@ void main() {
     expect(_builds.hasMatch(_code(File(_legacy).readAsStringSync())), isTrue);
   });
 
+  test('the old library builds sessions only where it already does', () {
+    // every way libsignal_protocol_dart starts a session: as the initiator
+    // from a card, and as the responder on an opener, which a SessionCipher
+    // does inside decrypt and decryptWithCallback. lib/app is a part of
+    // main.dart and sees the library without importing it, so all of lib
+    // is read
+    final found = <String, Map<String, int>>{};
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final path = f.path.replaceAll(r'\', '/');
+      final code = _code(f.readAsStringSync());
+      for (final m in _starts.allMatches(code)) {
+        (found[path] ??= {}).update(m[1]!, (n) => n + 1, ifAbsent: () => 1);
+      }
+    }
+    expect(found, _startsAllowed);
+  });
+
+  test('the session scan sees the responder path', () {
+    int count(String src) => _starts.allMatches(_code(src)).length;
+    expect(count('final c = SessionCipher(a, b, c, d, addr);'), 1);
+    expect(count('await sig.SessionCipher(a, b, c, d, e).decrypt(m);'), 1);
+    expect(count('cipher.decryptWithCallback(pkm, check);'), 1);
+    expect(count('final m = PreKeySignalMessage(body);'), 1);
+    expect(count('cipher.decryptFromSignalWithCallback(m, check);'), 0);
+    expect(count('// SessionCipher(a).decrypt(m)'), 0);
+  });
+
   test('the scan sees through a prefix and past comments', () {
     expect(
       _builds.hasMatch(_code('await sig.SessionBuilder(a, b).x();')),
@@ -94,6 +122,30 @@ void main() {
     expect(() => lsBundleOf(shim!, card), throwsA(isA<ClassicRefused>()));
   }, skip: needsShim);
 }
+
+// what starts a session in the old library, or reads an opener for one
+final _starts = RegExp(
+  r'\b(SessionBuilder|processPreKeyBundle|SessionCipher|PreKeySignalMessage|'
+  r'decryptWithCallback)\b',
+);
+
+// where each of those stands today: the initiator in the legacy file, the
+// responder in lib/app/signal.dart, and send_order.dart reading an opener's
+// inner message for its counter only. any new place fails here; when the
+// app runs on the shim these go and the map shrinks to nothing
+const _startsAllowed = {
+  'lib/signal_session.dart': {
+    'SessionBuilder': 1,
+    'processPreKeyBundle': 1,
+    'SessionCipher': 1,
+  },
+  'lib/app/signal.dart': {
+    'SessionCipher': 2,
+    'PreKeySignalMessage': 1,
+    'decryptWithCallback': 2,
+  },
+  'lib/send_order.dart': {'PreKeySignalMessage': 1},
+};
 
 // a card with none of the kyber fields, its keys never read: the guard
 // looks for the kyber prekey before anything else
