@@ -223,10 +223,10 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
-/// whether [id]'s group is the page on top: its composer is being typed
-/// in, not a draft left behind
+/// whether [id]'s group is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
 bool groupOnScreen(String id) => (_openGroups[id] ?? const []).any(
-  (s) => s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false),
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
 );
 
 /// [id]'s timed draft in [c] went: a composer of it still open empties,
@@ -481,6 +481,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   _GMsg? _replyTo;
   // the quote a kept draft had, until the messages are here to find it in
   String? _draftReply;
+  // a kept quote of someone blocked: out of sight, never sent, kept in the
+  // draft, and shown again once they are not blocked
+  String? _hiddenQuote;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -1780,6 +1783,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     for (final x in members) {
                       _touched(x);
                     }
+                    _hiddenQuote = null;
                     setState(() => _replyTo = answer);
                     _keepDraft();
                   },
@@ -2211,6 +2215,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     var ok = false;
     try {
@@ -2653,6 +2659,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   String? _takeReply() {
     final r = _takeQuote();
     if (_replyTo != null && mounted) setState(() => _replyTo = null);
+    // the quote is answered: the kept draft lets it go too
+    if (r != null) _keepDraft();
     return r;
   }
 
@@ -3472,6 +3480,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         },
                         onReply: () {
                           dismiss();
+                          _hiddenQuote = null;
                           setState(() => _replyTo = anchor);
                           _keepDraft();
                         },
@@ -4144,7 +4153,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       widget.groupId,
       Draft(
         _msgCtrl.text,
-        replyTo: _replyTo?.msgUid ?? _draftReply,
+        replyTo: _replyTo?.msgUid ?? _draftReply ?? _hiddenQuote,
         at: DateTime.now().millisecondsSinceEpoch,
         // a timed group's draft goes as its messages would
         burnSecs: _ghost ? _burnSeconds : null,
@@ -4173,15 +4182,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // gone from the group, or from someone blocked, is let go; until then
   // the draft keeps its uid
   Future<void> _restoreReply() async {
-    final uid = _draftReply;
+    final uid = _draftReply ?? _hiddenQuote;
     if (uid == null || !_loaded || !mounted || _quoteLookup) return;
     if (_replyTo != null) {
       _draftReply = null;
+      _hiddenQuote = null;
       return;
     }
     for (final m in _messages) {
       if (m.msgUid == uid) {
         _draftReply = null;
+        _hiddenQuote = null;
         setState(() => _replyTo = m);
         return;
       }
@@ -4197,10 +4208,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } finally {
       _quoteLookup = false;
     }
-    if (!mounted || _draftReply != uid) return;
+    if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
     _draftReply = null;
     final from = row?['peer_id'] as String?;
-    if (row == null || from == null || _blocked.contains(from)) return;
+    if (row == null || from == null) {
+      _hiddenQuote = null;
+      return;
+    }
+    // someone blocked: kept, out of sight, tried again on every load
+    if (_blocked.contains(from)) {
+      _hiddenQuote = uid;
+      return;
+    }
+    _hiddenQuote = null;
     if (_replyTo != null) return;
     final m = _GMsg(
       sender: from,
@@ -4223,12 +4243,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   String? _takeQuote() {
     final uid = _replyTo?.msgUid ?? _draftReply;
     _draftReply = null;
+    // never one the person cannot see; a send lets it go
+    _hiddenQuote = null;
     return uid;
   }
 
   // its timed draft went with the chat's timer: words and quote both
   void _timedDraftGone() {
     _draftReply = null;
+    _hiddenQuote = null;
     if (_replyTo != null) setState(() => _replyTo = null);
     _msgCtrl.clear();
   }

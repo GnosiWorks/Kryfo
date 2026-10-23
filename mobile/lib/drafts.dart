@@ -186,7 +186,7 @@ void typedDraft(
     if (!words && !clock && was.replyTo == d.replyTo) return;
     if (!words && !clock) {
       d = Draft(d.text, replyTo: d.replyTo, at: was.at, burnSecs: was.burnSecs);
-    } else if (!timedKnown) {
+    } else if (!clock && !timedKnown) {
       d = Draft(d.text, replyTo: d.replyTo, at: d.at, burnSecs: was.burnSecs);
     }
     if (d.sameAs(was) && d.at == was.at) return;

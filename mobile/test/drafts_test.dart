@@ -552,6 +552,13 @@ void main() {
     );
     expect(last()?.burnSecs, 30);
     expect(last()?.at, now + 2);
+    // a pick before the setting is read is the person's choice all the same
+    typed(
+      Draft('hi there!', replyTo: 'u-1', at: now + 3, burnSecs: 60),
+      clock: true,
+      known: false,
+    );
+    expect(last()?.burnSecs, 60);
     endProcessForTest();
   });
 

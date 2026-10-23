@@ -5,6 +5,7 @@
 // above it there, and one written before the pages held comes in with
 // its own page as the reader scrolls up, once, between its neighbours.
 // the chat's own screen over rows kept in maps
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -407,12 +408,13 @@ void main() {
       .firstWhere((s) => s.axisDirection == AxisDirection.up)
       .position;
 
-  Widget chat({String? jumpTo}) => ChatScreen(
+  Widget chat({String? jumpTo, String? text}) => ChatScreen(
     peerHaloId: _peer,
     peerOnion: '',
     peerXPub: 'ab' * 32,
     avatarSeed: _peer,
     jumpToUid: jumpTo,
+    initialText: text,
   );
 
   // one from them that comes now, written at [at]
@@ -602,6 +604,73 @@ void main() {
       await devClose(t);
     });
   }
+
+  testWidgets('a timed draft past its time stays under the chat\'s own '
+      'sheet, and goes under another page', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    lockState.openForTest();
+    if (t.binding.lifecycleState != AppLifecycleState.resumed) {
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    }
+    final at = DateTime.now().millisecondsSinceEpoch - 29000;
+    db.kept[_peer] = Draft('pick a time', at: at, burnSecs: 30);
+    await devOpen(t, chat(), routes: true);
+    await settle(t);
+    final ctrl = t.widget<TextField>(find.byType(TextField).last).controller!;
+    expect(ctrl.text, 'pick a time');
+    await t.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
+    Future<void> sweep() async {
+      await t.runAsync(
+        () => sweepDrafts(db, onScreen: draftTypedIn, gone: emptyComposerOf),
+      );
+      await t.pump();
+    }
+
+    final at2 = t.element(find.byType(ChatScreen));
+    // the timer picker, a sheet of its own: still typed in
+    unawaited(
+      showModalBottomSheet<void>(
+        context: at2,
+        builder: (_) => const SizedBox(height: 120),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    await sweep();
+    expect(ctrl.text, 'pick a time');
+    expect(db.kept[_peer], isNotNull);
+    Navigator.of(at2).pop();
+    await t.pump(const Duration(seconds: 1));
+    // another page over it: left
+    unawaited(
+      Navigator.of(
+        at2,
+      ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox())),
+    );
+    await t.pump(const Duration(seconds: 1));
+    await sweep();
+    expect(ctrl.text, isEmpty);
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('forwarded words are a draft from the start, joined to the '
+      'one kept after a stop', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat(text: 'look at this'));
+    await settle(t);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'look at this');
+    await devClose(t);
+    endProcessForTest();
+    db.kept[_peer] = const Draft('mine first', at: 1);
+    await devOpen(t, chat(text: 'and this'));
+    await settle(t);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first\nand this');
+    await devClose(t);
+  });
 
   testWidgets('leaving the chat writes its draft at once', (t) async {
     await seed(6);

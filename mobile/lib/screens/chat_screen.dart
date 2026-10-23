@@ -198,10 +198,10 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
-/// whether [id]'s chat is the page on top: its composer is being typed
-/// in, not a draft left behind
+/// whether [id]'s chat is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
 bool chatOnScreen(String id) => (_openChats[id] ?? const []).any(
-  (s) => s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false),
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
 );
 
 /// [id]'s timed draft in [c] went: a composer of it still open empties,
@@ -1266,6 +1266,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (kept == null) unawaited(_readDraft(rows));
     // kept on every keystroke, so it survives leaving the chat and the app
     _msgCtrl.addListener(_keepDraft);
+    // words handed in by a share or a forward are a draft from the start;
+    // after a stop, once the row they join is read
+    if (kept != null && _handedIn) _keepDraft();
     session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
@@ -3634,6 +3637,8 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         masked = await making.file;
         if (locked) return lockedOut(masked);
@@ -3701,6 +3706,8 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         HapticFeedback.lightImpact();
       }
@@ -4015,6 +4022,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       if (shown == null) _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    if (shown == null) _keepDraft();
     if (shown == null) _scrollToEnd();
     HapticFeedback.lightImpact();
     await _answerSupport();
@@ -4088,6 +4097,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     final ready = <(_Msg, _Ready)>[];
     for (final (k, go) in plan.indexed) {
@@ -4524,6 +4535,8 @@ class _ChatScreenState extends State<ChatScreen>
         if (typed) _pendingPreview = null;
       });
       if (typed) _msgCtrl.clear();
+      // the quote is answered: the kept draft lets it go too
+      _keepDraft();
       _scrollToEnd();
       // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
@@ -5867,7 +5880,12 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _readDraft(DraftRows rows) async {
     final before = _msgCtrl.text;
     final d = await readDraft(rows, widget.peerHaloId, group: false);
-    if (!mounted || d == null || _msgCtrl.text != before) return;
+    if (!mounted) return;
+    if (d == null) {
+      if (_handedIn && _msgCtrl.text == before) _keepDraft();
+      return;
+    }
+    if (_msgCtrl.text != before) return;
     _draftReply = d.replyTo;
     _takeDraft(composerWith(d.text, widget.initialText));
     unawaited(_restoreReply());
@@ -5917,6 +5935,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool _quoteLookup = false;
+
+  bool get _handedIn => (widget.initialText ?? '').trim().isNotEmpty;
 
   // what a send answers: the quote up, or a kept one still being looked
   // up, which the send then takes so the lookup does not put it back

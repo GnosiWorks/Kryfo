@@ -677,10 +677,12 @@ void main() {
       expect(db.kept['group:$_group']?.at, at);
     });
 
-    testWidgets('a kept quote of a blocked member\'s message is let go', (
+    testWidgets('a kept quote of a blocked member\'s message stays in the '
+        'draft out of sight, and shows again once they are unblocked', (
       t,
     ) async {
-      final db = _use(t, _Db(rows: long(), blocked: {_anna}));
+      final blocked = {_anna};
+      final db = _use(t, _Db(rows: long(), blocked: blocked));
       addTearDown(endProcessForTest);
       db.kept['group:$_group'] = const Draft(
         'what she said',
@@ -689,12 +691,25 @@ void main() {
       );
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
-      expect(db.quoteReads, 1);
+      // read, and read again on each load while they stay blocked
+      expect(db.quoteReads, isPositive);
       expect(find.byIcon(Icons.close_rounded), findsNothing);
       expect(find.text('line 1'), findsNothing);
+      // a word more keeps it too
+      await t.enterText(find.byType(TextField), 'what she said, yes');
+      await t.pump(kDraftWait);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
       await _close(t);
-      expect(db.kept['group:$_group']?.text, 'what she said');
-      expect(db.kept['group:$_group']?.replyTo, isNull);
+      expect(db.kept['group:$_group']?.text, 'what she said, yes');
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+      // unblocked: the next open shows it
+      blocked.clear();
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.text('line 1'), findsOneWidget);
+      await _close(t);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
     });
 
     testWidgets('a kept quote of a message gone from the group is let go', (
