@@ -2442,5 +2442,6 @@
   "androidIconNews": "Notizie",
   "androidServiceTitlePlain": "Attivo",
   "lockStateUnlockPlain": "Sblocca",
-  "iconSheetOthers": "Le app sul telefono possono comunque vedere che Kryfo è installato, e le finestre e le richieste di Android possono mostrarne il nome."
+  "iconSheetOthers": "Le app sul telefono possono comunque vedere che Kryfo è installato, e le finestre e le richieste di Android possono mostrarne il nome.",
+  "iconSheetSaves": "Finché è attiva un'icona neutra, le nuove foto, i video e i file vengono salvati con nomi comuni nelle cartelle abituali del telefono. Ciò che è già salvato resta dov'è."
 }

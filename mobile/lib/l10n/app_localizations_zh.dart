@@ -8833,6 +8833,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       '手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。';
+
+  @override
+  String get iconSheetSaves =>
+      '使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17547,4 +17551,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get iconSheetOthers =>
       '手機上的其他應用程式仍能看到已安裝 Kryfo，Android 本身的對話框和提示也可能顯示它的名稱。';
+
+  @override
+  String get iconSheetSaves =>
+      '使用簡潔圖示時，新的照片、影片和檔案會以普通的名稱存進手機常用的資料夾。之前儲存的內容留在原處。';
 }

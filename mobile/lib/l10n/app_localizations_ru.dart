@@ -9421,4 +9421,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'Приложения на телефоне по-прежнему могут видеть, что Kryfo установлен, а окна и запросы самого Android могут показывать его название.';
+
+  @override
+  String get iconSheetSaves =>
+      'Пока включён простой значок, новые фото, видео и файлы сохраняются с обычными названиями в обычные папки телефона. То, что уже сохранено, остаётся на месте.';
 }

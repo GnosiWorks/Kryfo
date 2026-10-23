@@ -3263,6 +3263,7 @@ final _calls = <_Call>[
   ('androidServiceTitlePlain', [], (l) => l.androidServiceTitlePlain),
   ('lockStateUnlockPlain', [], (l) => l.lockStateUnlockPlain),
   ('iconSheetOthers', [], (l) => l.iconSheetOthers),
+  ('iconSheetSaves', [], (l) => l.iconSheetSaves),
 ];
 
 void main() {

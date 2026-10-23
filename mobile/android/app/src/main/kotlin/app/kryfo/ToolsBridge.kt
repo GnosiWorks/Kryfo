@@ -461,7 +461,10 @@ class ToolsBridge(private val activity: Activity) {
                 val values = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, shown)
                     put(MediaStore.MediaColumns.MIME_TYPE, type)
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, if (video) "Movies/Kryfo" else "Pictures/Kryfo")
+                    put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        SavePlace.folder(activity, video, camera = false)
+                    )
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
                 val uri = activity.contentResolver.insert(collection, values)

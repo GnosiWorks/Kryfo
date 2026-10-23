@@ -2442,5 +2442,6 @@
   "androidIconNews": "Haberler",
   "androidServiceTitlePlain": "Etkin",
   "lockStateUnlockPlain": "Kilidi aç",
-  "iconSheetOthers": "Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir."
+  "iconSheetOthers": "Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir.",
+  "iconSheetSaves": "Sade bir simge açıkken yeni fotoğraflar, videolar ve dosyalar telefonunun olağan klasörlerine sıradan adlarla kaydedilir. Daha önce kaydedilenler olduğu yerde kalır."
 }

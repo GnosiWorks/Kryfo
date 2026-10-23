@@ -9388,4 +9388,8 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه.';
+
+  @override
+  String get iconSheetSaves =>
+      'ما دامت أيقونة بسيطة مفعّلة، تُحفظ الصور والفيديوهات والملفات الجديدة بأسماء عادية في مجلدات هاتفك المعتادة. وما حُفظ من قبل يبقى في مكانه.';
 }

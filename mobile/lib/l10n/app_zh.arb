@@ -2442,5 +2442,6 @@
   "androidIconNews": "新闻",
   "androidServiceTitlePlain": "运行中",
   "lockStateUnlockPlain": "解锁",
-  "iconSheetOthers": "手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。"
+  "iconSheetOthers": "手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。",
+  "iconSheetSaves": "使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。"
 }

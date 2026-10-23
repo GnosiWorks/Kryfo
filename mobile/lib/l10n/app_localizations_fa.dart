@@ -9268,4 +9268,8 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'برنامه‌های گوشی‌تان همچنان می‌توانند ببینند Kryfo نصب است، و پنجره‌ها و درخواست‌های خود Android ممکن است نامش را نشان دهند.';
+
+  @override
+  String get iconSheetSaves =>
+      'تا وقتی یک نماد ساده روشن است، عکس‌ها، ویدیوها و فایل‌های تازه با نام‌های معمولی در پوشه‌های همیشگی گوشی‌تان ذخیره می‌شوند. آنچه از قبل ذخیره شده سر جایش می‌ماند.';
 }

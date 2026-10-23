@@ -9278,4 +9278,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir.';
+
+  @override
+  String get iconSheetSaves =>
+      'Sade bir simge açıkken yeni fotoğraflar, videolar ve dosyalar telefonunun olağan klasörlerine sıradan adlarla kaydedilir. Daha önce kaydedilenler olduğu yerde kalır.';
 }

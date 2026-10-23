@@ -9326,4 +9326,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'Las apps de tu teléfono aún pueden ver que Kryfo está instalado, y los diálogos y avisos propios de Android pueden mostrar su nombre.';
+
+  @override
+  String get iconSheetSaves =>
+      'Mientras un icono neutro esté activo, las fotos, los vídeos y los archivos nuevos se guardan con nombres corrientes en las carpetas habituales de tu teléfono. Lo que ya se guardó se queda donde está.';
 }

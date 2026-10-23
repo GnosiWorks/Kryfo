@@ -31,6 +31,7 @@ import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../dlog.dart';
+import '../save_names.dart' show backupName, savesPlain;
 
 // a test's backup, in place of the engine's
 @visibleForTesting
@@ -115,8 +116,8 @@ class _BackupScreenState extends State<BackupScreen> {
     final move = _move && !widget.withHiddenChats;
     try {
       final tempDir = await getTemporaryDirectory();
-      final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      name = 'kryfo-backup-$ts.kryfo';
+      // a restore finds it by its contents: a plain icon's plain name too
+      name = backupName(plain: await savesPlain());
       path = p.join(tempDir.path, name);
       void onProgress(int a, int b) {
         if (mounted && b > 0) setState(() => _progress = a / b);

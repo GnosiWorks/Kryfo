@@ -934,9 +934,10 @@ open class MainActivity : FlutterFragmentActivity() {
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
                 put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                // only the camera's own copies come this way
                 put(
                     MediaStore.MediaColumns.RELATIVE_PATH,
-                    if (video) "Movies/Kryfo" else "Pictures/Kryfo"
+                    SavePlace.folder(this@MainActivity, video, camera = true)
                 )
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }

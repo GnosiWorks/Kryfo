@@ -9248,4 +9248,8 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'Aplikasi di ponselmu tetap bisa melihat bahwa Kryfo terpasang, dan dialog serta permintaan Android sendiri bisa menampilkan namanya.';
+
+  @override
+  String get iconSheetSaves =>
+      'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
 }

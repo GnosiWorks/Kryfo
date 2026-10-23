@@ -9241,4 +9241,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get iconSheetOthers =>
       'Các ứng dụng trên điện thoại vẫn có thể thấy Kryfo đã được cài đặt, và các hộp thoại, lời nhắc của chính Android có thể hiện tên của nó.';
+
+  @override
+  String get iconSheetSaves =>
+      'Khi đang dùng biểu tượng đơn giản, ảnh, video và tệp mới được lưu với tên bình thường vào các thư mục quen thuộc của điện thoại. Những gì đã lưu trước đó vẫn ở nguyên chỗ cũ.';
 }

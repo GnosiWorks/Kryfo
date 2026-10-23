@@ -903,6 +903,8 @@ class _ChangesSheet extends StatelessWidget {
             body(l10n.iconSheetStays),
             const SizedBox(height: 8),
             body(l10n.iconSheetOthers),
+            const SizedBox(height: 8),
+            body(l10n.iconSheetSaves),
             const SizedBox(height: 14),
             Text(
               l10n.iconSheetGlance,

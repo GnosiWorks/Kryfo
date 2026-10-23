@@ -331,6 +331,9 @@ void main() {
     expect(find.text(l10n.iconSheetGlance), findsOneWidget);
     expect(find.text(l10n.iconSheetStays), findsOneWidget);
     expect(find.text(l10n.iconSheetSecureFolder), findsOneWidget);
+    // what other apps and android still see, and where new saves go
+    expect(find.text(l10n.iconSheetOthers), findsOneWidget);
+    expect(find.text(l10n.iconSheetSaves), findsOneWidget);
   });
 
   test('the phone\'s own way to hide apps, only where kryfo knows it', () {

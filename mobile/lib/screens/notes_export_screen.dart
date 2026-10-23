@@ -41,6 +41,7 @@ import 'backup_screen.dart'
         stopSaveForDrop;
 import 'lock_file_screen.dart' show ageErrorBody, ageErrorTitle;
 import 'notes_screen.dart' show kNotesPeerId;
+import '../save_names.dart' show savesPlain;
 
 /// the open notes, everyday or a decoy's: never while hidden chats are open
 bool notesExportHere() => !lockState.inVault && !sessionBackupHasHidden;
@@ -247,6 +248,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         format: _format,
         passphrase: pass,
         dir: await notesOutDir(),
+        plainName: await savesPlain(),
         stopped: () => _stop,
         progress: (v) {
           if (mounted) setState(() => _progress = v);
