@@ -1085,8 +1085,6 @@ void main() {
       l.gettingMessagesKryfoLooksForMessages,
       "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
     );
-    expect(l.gettingMessagesOnTheLockScreen, "On the lock screen");
-    expect(l.gettingMessagesHideMessagePreview, "Hide message preview");
     expect(
       l.gettingMessagesAGenericAlertWith,
       "A generic alert, with no sender and no message text",
@@ -3790,6 +3788,77 @@ void main() {
       l.onboardingRelayThisNetworkSees,
       "This network can see you connect to Kryfo. Our relay sees your address.",
     );
+    expect(l.settingsIconAndNotifications, "Icon and notifications");
+    expect(l.iconSettingsValue("<icon>"), "<icon>, plain notifications");
+    expect(l.iconSectionTitle, "App icon");
+    expect(
+      l.iconHint,
+      "Your home screen and app list show this icon and name instead of Kryfo.",
+    );
+    expect(
+      l.iconHintKryfo,
+      "Pick an everyday icon and name for your home screen and app list.",
+    );
+    expect(l.iconWhatChanges, "What this changes");
+    expect(l.iconConfirmTitle("<name>"), "Change the icon to <name>?");
+    expect(
+      l.iconConfirmLine("<name>"),
+      "Kryfo closes and opens again. If the icon leaves your home screen, find <name> in your apps and place it again.",
+    );
+    expect(l.iconConfirmButton, "Change icon");
+    expect(
+      l.iconNoPinLine,
+      "Anyone who taps it sees Kryfo. Set an app PIN so they see a PIN pad instead.",
+    );
+    expect(l.iconSetPin, "Set a PIN");
+    expect(l.iconChanged("<name>"), "Icon changed to <name>");
+    expect(l.iconPreviewLabel("<name>"), "Your home screen will show <name>");
+    expect(l.iconButtonLabel("<name>"), "<name>, app icon");
+    expect(l.notifShowAll, "Name and message");
+    expect(l.notifShowNew, "Only “New message”");
+    expect(l.notifShowPlain, "Plain");
+    expect(
+      l.notifPlainHint,
+      "No name, no message, no Kryfo colours. A neutral icon and one line.",
+    );
+    expect(l.notifPlainLine, "Something new");
+    expect(l.notifPlainChannel, "Alerts");
+    expect(
+      l.notifHeaderLimit,
+      "The top of each notification still says Kryfo. Android does not let an app change that.",
+    );
+    expect(l.gettingMessagesWhatShows, "What notifications show");
+    expect(l.iconSheetChangesTitle, "What changes");
+    expect(
+      l.iconSheetChanges,
+      "The icon and name on your home screen and in your app list, the share menu and the app switcher. With Plain, what notifications show.",
+    );
+    expect(l.iconSheetStaysTitle, "What stays Kryfo");
+    expect(
+      l.iconSheetStays,
+      "The top line of every notification, your phone’s settings and battery pages, the app store, and Kryfo itself when someone opens it.",
+    );
+    expect(
+      l.iconSheetGlance,
+      "It holds up to a glance at your home screen. It does not hide Kryfo from someone who looks through your phone’s settings.",
+    );
+    expect(
+      l.iconSheetPrivateSpace,
+      "Your phone may have its own way to hide apps: private space, in its settings.",
+    );
+    expect(
+      l.iconSheetSecureFolder,
+      "Your phone may have its own way to hide apps: Secure Folder, in its settings.",
+    );
+    expect(
+      l.iconSheetXiaomi,
+      "Your phone may have its own way to hide apps: hidden apps, in its settings.",
+    );
+    expect(l.androidIconNotes, "Notes");
+    expect(l.androidIconWeather, "Weather");
+    expect(l.androidIconTasks, "Tasks");
+    expect(l.androidIconNews, "News");
+    expect(l.androidServiceTitlePlain, "Active");
     expect(l.settingsLicences, "Licences");
     expect(l.settingsLicencesValue, "What Kryfo is built on");
     expect(
@@ -3803,5 +3872,14 @@ void main() {
     expect(l.licencesParts, "Open source parts");
     expect(l.licencesInSignal, "In the Signal library");
     expect(l.licencesInApp, "In the app");
+    expect(l.lockStateUnlockPlain, "Unlock");
+    expect(
+      l.iconSheetOthers,
+      "Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.",
+    );
+    expect(
+      l.iconSheetSaves,
+      "While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.",
+    );
   });
 }

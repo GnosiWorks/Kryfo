@@ -2411,12 +2411,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo tìm tin nhắn mới mỗi 15 phút. Tiết kiệm pin, nhưng tin nhắn có thể đến muộn.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'Trên màn hình khóa';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Ẩn xem trước tin nhắn';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Một thông báo chung, không có người gửi và không có nội dung tin nhắn';
 
@@ -9116,4 +9110,143 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Sao chép liên kết';
+
+  @override
+  String get settingsIconAndNotifications => 'Biểu tượng và thông báo';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, thông báo đơn giản';
+  }
+
+  @override
+  String get iconSectionTitle => 'Biểu tượng ứng dụng';
+
+  @override
+  String get iconHint =>
+      'Màn hình chính và danh sách ứng dụng của bạn hiện biểu tượng và tên này thay cho Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Chọn một biểu tượng và tên bình thường cho màn hình chính và danh sách ứng dụng.';
+
+  @override
+  String get iconWhatChanges => 'Điều này thay đổi gì';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Đổi biểu tượng thành $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo sẽ đóng rồi mở lại. Nếu biểu tượng biến khỏi màn hình chính, hãy tìm $name trong các ứng dụng của bạn và đặt lại.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Đổi biểu tượng';
+
+  @override
+  String get iconNoPinLine =>
+      'Ai chạm vào cũng sẽ thấy Kryfo. Đặt mã PIN cho ứng dụng để họ chỉ thấy bàn phím mã PIN.';
+
+  @override
+  String get iconSetPin => 'Đặt mã PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Đã đổi biểu tượng thành $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Màn hình chính của bạn sẽ hiện $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, biểu tượng ứng dụng';
+  }
+
+  @override
+  String get notifShowAll => 'Tên và tin nhắn';
+
+  @override
+  String get notifShowNew => 'Chỉ “Tin nhắn mới”';
+
+  @override
+  String get notifShowPlain => 'Đơn giản';
+
+  @override
+  String get notifPlainHint =>
+      'Không tên, không tin nhắn, không màu của Kryfo. Một biểu tượng trung tính và một dòng.';
+
+  @override
+  String get notifPlainLine => 'Có điều mới';
+
+  @override
+  String get notifPlainChannel => 'Cảnh báo';
+
+  @override
+  String get notifHeaderLimit =>
+      'Phần trên cùng của mỗi thông báo vẫn ghi Kryfo. Android không cho ứng dụng đổi phần đó.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Thông báo hiện gì';
+
+  @override
+  String get iconSheetChangesTitle => 'Những gì thay đổi';
+
+  @override
+  String get iconSheetChanges =>
+      'Biểu tượng và tên trên màn hình chính và trong danh sách ứng dụng, menu chia sẻ và màn hình ứng dụng đang mở. Với Đơn giản, cả những gì thông báo hiện.';
+
+  @override
+  String get iconSheetStaysTitle => 'Những gì vẫn là Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Dòng trên cùng của mỗi thông báo, các trang cài đặt và pin của điện thoại, cửa hàng ứng dụng, và chính Kryfo khi ai đó mở nó.';
+
+  @override
+  String get iconSheetGlance =>
+      'Nó chịu được một cái liếc qua màn hình chính. Nó không giấu Kryfo khỏi người xem kỹ phần cài đặt của điện thoại.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: không gian riêng tư, trong phần cài đặt.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: Thư mục bảo mật, trong phần cài đặt.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: ẩn ứng dụng, trong phần cài đặt.';
+
+  @override
+  String get androidIconNotes => 'Ghi chú';
+
+  @override
+  String get androidIconWeather => 'Thời tiết';
+
+  @override
+  String get androidIconTasks => 'Công việc';
+
+  @override
+  String get androidIconNews => 'Tin tức';
+
+  @override
+  String get androidServiceTitlePlain => 'Đang hoạt động';
+
+  @override
+  String get lockStateUnlockPlain => 'Mở khóa';
+
+  @override
+  String get iconSheetOthers =>
+      'Các ứng dụng trên điện thoại vẫn có thể thấy Kryfo đã được cài đặt, và các hộp thoại, lời nhắc của chính Android có thể hiện tên của nó.';
+
+  @override
+  String get iconSheetSaves =>
+      'Khi đang dùng biểu tượng đơn giản, ảnh, video và tệp mới được lưu với tên bình thường vào các thư mục quen thuộc của điện thoại. Những gì đã lưu trước đó vẫn ở nguyên chỗ cũ.';
 }

@@ -3026,14 +3026,6 @@
   "@gettingMessagesKryfoLooksForMessages": {
     "description": "screens/getting_messages_screen.dart"
   },
-  "gettingMessagesOnTheLockScreen": "On the lock screen",
-  "@gettingMessagesOnTheLockScreen": {
-    "description": "screens/getting_messages_screen.dart"
-  },
-  "gettingMessagesHideMessagePreview": "Hide message preview",
-  "@gettingMessagesHideMessagePreview": {
-    "description": "screens/getting_messages_screen.dart"
-  },
   "gettingMessagesAGenericAlertWith": "A generic alert, with no sender and no message text",
   "@gettingMessagesAGenericAlertWith": {
     "description": "screens/getting_messages_screen.dart"
@@ -11516,5 +11508,187 @@
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
+  },
+  "settingsIconAndNotifications": "Icon and notifications",
+  "@settingsIconAndNotifications": {
+    "description": "screens/settings_screen.dart: the Security row into the icon screen, and that screen's title"
+  },
+  "iconSettingsValue": "{icon}, plain notifications",
+  "@iconSettingsValue": {
+    "description": "screens/settings_screen.dart: that row's value with plain notifications on; icon is the icon's name",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "iconSectionTitle": "App icon",
+  "@iconSectionTitle": {
+    "description": "screens/icon_screen.dart: the section with the icons"
+  },
+  "iconHint": "Your home screen and app list show this icon and name instead of Kryfo.",
+  "@iconHint": {
+    "description": "screens/icon_screen.dart: under the icons when a plain one is picked"
+  },
+  "iconHintKryfo": "Pick an everyday icon and name for your home screen and app list.",
+  "@iconHintKryfo": {
+    "description": "screens/icon_screen.dart: under the icons while Kryfo's own is picked"
+  },
+  "iconWhatChanges": "What this changes",
+  "@iconWhatChanges": {
+    "description": "screens/icon_screen.dart: the link that opens the sheet about what changes, and that sheet's title"
+  },
+  "iconConfirmTitle": "Change the icon to {name}?",
+  "@iconConfirmTitle": {
+    "description": "screens/icon_screen.dart: the confirm sheet's title; name is the icon's name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iconConfirmLine": "Kryfo closes and opens again. If the icon leaves your home screen, find {name} in your apps and place it again.",
+  "@iconConfirmLine": {
+    "description": "screens/icon_screen.dart: the confirm sheet's line; name is the icon's name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iconConfirmButton": "Change icon",
+  "@iconConfirmButton": {
+    "description": "screens/icon_screen.dart: the button at the bottom and on the confirm sheet"
+  },
+  "iconNoPinLine": "Anyone who taps it sees Kryfo. Set an app PIN so they see a PIN pad instead.",
+  "@iconNoPinLine": {
+    "description": "screens/icon_screen.dart: on the confirm sheet when no app PIN is set"
+  },
+  "iconSetPin": "Set a PIN",
+  "@iconSetPin": {
+    "description": "screens/icon_screen.dart: the second button on that sheet, opens the PIN setup"
+  },
+  "iconChanged": "Icon changed to {name}",
+  "@iconChanged": {
+    "description": "screens/icon_screen.dart: the toast once Kryfo is open again; name is the icon's name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iconPreviewLabel": "Your home screen will show {name}",
+  "@iconPreviewLabel": {
+    "description": "screens/icon_screen.dart: what a screen reader says for the home screen preview",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iconButtonLabel": "{name}, app icon",
+  "@iconButtonLabel": {
+    "description": "screens/icon_screen.dart: what a screen reader says for one icon in the grid",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifShowAll": "Name and message",
+  "@notifShowAll": {
+    "description": "screens/icon_screen.dart: notifications show the sender and the message"
+  },
+  "notifShowNew": "Only “New message”",
+  "@notifShowNew": {
+    "description": "screens/icon_screen.dart: notifications say only New message; quote the notification's own words"
+  },
+  "notifShowPlain": "Plain",
+  "@notifShowPlain": {
+    "description": "screens/icon_screen.dart: plain notifications, the option's name"
+  },
+  "notifPlainHint": "No name, no message, no Kryfo colours. A neutral icon and one line.",
+  "@notifPlainHint": {
+    "description": "screens/icon_screen.dart: under that option"
+  },
+  "notifPlainLine": "Something new",
+  "@notifPlainLine": {
+    "description": "notifications.dart: the one line a plain notification says"
+  },
+  "notifPlainChannel": "Alerts",
+  "@notifPlainChannel": {
+    "description": "notifications.dart: the plain notifications' channel name in the phone's settings. says nothing about messages"
+  },
+  "notifHeaderLimit": "The top of each notification still says Kryfo. Android does not let an app change that.",
+  "@notifHeaderLimit": {
+    "description": "screens/icon_screen.dart: under the plain option, what Android keeps"
+  },
+  "gettingMessagesWhatShows": "What notifications show",
+  "@gettingMessagesWhatShows": {
+    "description": "screens/getting_messages_screen.dart: the row into the notification choices"
+  },
+  "iconSheetChangesTitle": "What changes",
+  "@iconSheetChangesTitle": {
+    "description": "screens/icon_screen.dart: the sheet, heading"
+  },
+  "iconSheetChanges": "The icon and name on your home screen and in your app list, the share menu and the app switcher. With Plain, what notifications show.",
+  "@iconSheetChanges": {
+    "description": "screens/icon_screen.dart: the sheet, what changes"
+  },
+  "iconSheetStaysTitle": "What stays Kryfo",
+  "@iconSheetStaysTitle": {
+    "description": "screens/icon_screen.dart: the sheet, heading"
+  },
+  "iconSheetStays": "The top line of every notification, your phone’s settings and battery pages, the app store, and Kryfo itself when someone opens it.",
+  "@iconSheetStays": {
+    "description": "screens/icon_screen.dart: the sheet, what keeps saying Kryfo"
+  },
+  "iconSheetGlance": "It holds up to a glance at your home screen. It does not hide Kryfo from someone who looks through your phone’s settings.",
+  "@iconSheetGlance": {
+    "description": "screens/icon_screen.dart: the sheet, the limit. never promise more"
+  },
+  "iconSheetPrivateSpace": "Your phone may have its own way to hide apps: private space, in its settings.",
+  "@iconSheetPrivateSpace": {
+    "description": "screens/icon_screen.dart: the sheet, phones on Android 15 and later. use Android's own name for private space"
+  },
+  "iconSheetSecureFolder": "Your phone may have its own way to hide apps: Secure Folder, in its settings.",
+  "@iconSheetSecureFolder": {
+    "description": "screens/icon_screen.dart: the sheet, Samsung phones. use Samsung's own name for Secure Folder"
+  },
+  "iconSheetXiaomi": "Your phone may have its own way to hide apps: hidden apps, in its settings.",
+  "@iconSheetXiaomi": {
+    "description": "screens/icon_screen.dart: the sheet, Xiaomi phones. use Xiaomi's own name for hidden apps"
+  },
+  "androidIconNotes": "Notes",
+  "@androidIconNotes": {
+    "description": "android: the launcher name of the plain Notes icon. a common word, never an app's or a brand's name"
+  },
+  "androidIconWeather": "Weather",
+  "@androidIconWeather": {
+    "description": "android: the launcher name of the plain Weather icon"
+  },
+  "androidIconTasks": "Tasks",
+  "@androidIconTasks": {
+    "description": "android: the launcher name of the plain Tasks icon"
+  },
+  "androidIconNews": "News",
+  "@androidIconNews": {
+    "description": "android: the launcher name of the plain News icon. not the word for text messages"
+  },
+  "androidServiceTitlePlain": "Active",
+  "@androidServiceTitlePlain": {
+    "description": "android: the staying-connected notification's title with plain notifications on, one plain word"
+  },
+  "lockStateUnlockPlain": "Unlock",
+  "iconSheetOthers": "Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.",
+  "@lockStateUnlockPlain": {
+    "description": "lock_state.dart: the fingerprint prompt's title while a plain icon is on. says nothing of Kryfo"
+  },
+  "@iconSheetOthers": {
+    "description": "screens/icon_screen.dart: the sheet, what other apps and Android itself still show"
+  },
+  "iconSheetSaves": "While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.",
+  "@iconSheetSaves": {
+    "description": "screens/icon_screen.dart: the sheet, where new saves go while a plain icon is on"
   }
 }

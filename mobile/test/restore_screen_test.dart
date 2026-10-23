@@ -167,6 +167,62 @@ void main() {
     tmp.deleteSync(recursive: true);
   });
 
+  // a backup saved under a plain icon has a plain name: the file is known
+  // by what it holds
+  testWidgets('a plainly named backup is read like any other', (t) async {
+    phone(t);
+    pickForTest = () async {
+      final f = File('${tmp.path}/backup_20261024_090507.bin')
+        ..writeAsStringSync('kryfo-backup:abc');
+      return AndroidPlatformFile.fromMap({
+        'name': 'backup_20261024_090507.bin',
+        'path': f.path,
+        'size': f.lengthSync(),
+      });
+    };
+    var inspected = 0;
+    inspectForTest = (_) async {
+      inspected++;
+      return const BackupSummary(
+        when: null,
+        version: 1,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+    };
+    await t.pumpWidget(
+      app(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => Navigator.of(ctx).push(
+              MaterialPageRoute<void>(builder: (_) => const RestoreScreen()),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.restorePickTheBackupFile));
+    final picked = find.text('backup_20261024_090507.bin');
+    for (var i = 0; i < 40 && picked.evaluate().isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+    // taken for a backup by what it holds
+    expect(picked, findsOneWidget);
+    expect(find.text(l10n.restoreThatFileIsNot), findsNothing);
+    await t.enterText(find.byType(TextField), 'the passphrase');
+    await t.tap(find.text(l10n.restoreCheckTheFile));
+    await t.pumpAndSettle();
+    expect(inspected, 1);
+  });
+
   testWidgets('a restore under way cannot be left', (t) async {
     phone(t);
     final running = Completer<void>();

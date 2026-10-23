@@ -5,4 +5,9 @@
     <string name="service_text">Sua linha criptografada fica aberta para as mensagens chegarem</string>
     <string name="channel_name">Mantendo a conexão</string>
     <string name="channel_description">Mantém o Kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. Desativar isto interrompe a entrega.</string>
+    <string name="icon_notes">Notas</string>
+    <string name="icon_weather">Clima</string>
+    <string name="icon_tasks">Tarefas</string>
+    <string name="icon_news">Notícias</string>
+    <string name="service_title_plain">Ativo</string>
 </resources>

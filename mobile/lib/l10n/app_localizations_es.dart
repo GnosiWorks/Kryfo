@@ -2446,12 +2446,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Kryfo busca mensajes cada 15 minutos. Gasta poca batería, pero los mensajes pueden llegar tarde.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'En la pantalla de bloqueo';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Ocultar vista previa';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Un aviso genérico, sin remitente ni texto del mensaje';
 
@@ -9201,4 +9195,143 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copiar enlace';
+
+  @override
+  String get settingsIconAndNotifications => 'Icono y notificaciones';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, notificaciones neutras';
+  }
+
+  @override
+  String get iconSectionTitle => 'Icono de la app';
+
+  @override
+  String get iconHint =>
+      'Tu pantalla de inicio y tu lista de apps muestran este icono y este nombre en lugar de Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Elige un icono y un nombre corrientes para tu pantalla de inicio y tu lista de apps.';
+
+  @override
+  String get iconWhatChanges => 'Qué cambia con esto';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return '¿Cambiar el icono a $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo se cierra y se vuelve a abrir. Si el icono desaparece de tu pantalla de inicio, busca $name entre tus apps y vuelve a colocarlo.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Cambiar icono';
+
+  @override
+  String get iconNoPinLine =>
+      'Quien lo toque verá Kryfo. Con un PIN para la app, verá un teclado de PIN en su lugar.';
+
+  @override
+  String get iconSetPin => 'Elegir un PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Icono cambiado a $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Tu pantalla de inicio mostrará $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, icono de la app';
+  }
+
+  @override
+  String get notifShowAll => 'Nombre y mensaje';
+
+  @override
+  String get notifShowNew => 'Solo «Nuevo mensaje»';
+
+  @override
+  String get notifShowPlain => 'Neutras';
+
+  @override
+  String get notifPlainHint =>
+      'Sin nombre, sin mensaje, sin los colores de Kryfo. Un icono neutro y una línea.';
+
+  @override
+  String get notifPlainLine => 'Algo nuevo';
+
+  @override
+  String get notifPlainChannel => 'Avisos';
+
+  @override
+  String get notifHeaderLimit =>
+      'La parte de arriba de cada notificación sigue diciendo Kryfo. Android no deja que una app cambie eso.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Qué muestran las notificaciones';
+
+  @override
+  String get iconSheetChangesTitle => 'Qué cambia';
+
+  @override
+  String get iconSheetChanges =>
+      'El icono y el nombre en tu pantalla de inicio y en tu lista de apps, el menú de compartir y la vista de apps abiertas. Con Neutras, lo que muestran las notificaciones.';
+
+  @override
+  String get iconSheetStaysTitle => 'Qué sigue siendo Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'La línea de arriba de cada notificación, las páginas de ajustes y de batería de tu teléfono, la tienda de apps y Kryfo mismo cuando alguien lo abre.';
+
+  @override
+  String get iconSheetGlance =>
+      'Aguanta un vistazo a tu pantalla de inicio. No oculta Kryfo a quien revise los ajustes de tu teléfono.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Puede que tu teléfono tenga su propia forma de ocultar apps: el espacio privado, en sus ajustes.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Puede que tu teléfono tenga su propia forma de ocultar apps: la Carpeta segura, en sus ajustes.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Puede que tu teléfono tenga su propia forma de ocultar apps: ocultar aplicaciones, en sus ajustes.';
+
+  @override
+  String get androidIconNotes => 'Notas';
+
+  @override
+  String get androidIconWeather => 'Tiempo';
+
+  @override
+  String get androidIconTasks => 'Tareas';
+
+  @override
+  String get androidIconNews => 'Noticias';
+
+  @override
+  String get androidServiceTitlePlain => 'Activo';
+
+  @override
+  String get lockStateUnlockPlain => 'Desbloquear';
+
+  @override
+  String get iconSheetOthers =>
+      'Las apps de tu teléfono aún pueden ver que Kryfo está instalado, y los diálogos y avisos propios de Android pueden mostrar su nombre.';
+
+  @override
+  String get iconSheetSaves =>
+      'Mientras un icono neutro esté activo, las fotos, los vídeos y los archivos nuevos se guardan con nombres corrientes en las carpetas habituales de tu teléfono. Lo que ya se guardó se queda donde está.';
 }

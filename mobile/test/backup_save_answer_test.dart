@@ -28,6 +28,7 @@ import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show phone, press;
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 
 class _Db implements HaloDb {
   _Db(this.container);
@@ -55,6 +56,9 @@ void main() {
     asked = [];
     dialogs = [];
     saveArgs = [];
+    // kryfo's own icon, unless a test says otherwise
+    appFaceNow.value = AppFace.kryfo;
+    addTearDown(() => appFaceNow.value = null);
     stage = () => idle;
     shares = 'picked';
     tmp = Directory.systemTemp.createTempSync('backup_answer');
@@ -93,7 +97,7 @@ void main() {
 
   List<File> made() => [
     for (final f in tmp.listSync().whereType<File>())
-      if (f.path.contains('kryfo-backup-')) f,
+      if (f.path.contains('kryfo-backup-') || f.path.contains('/backup_')) f,
   ];
 
   // the disk works outside the test's clock
@@ -201,6 +205,31 @@ void main() {
     expect(find.text(l10n.backupBackupSavedKeepThe), findsNothing);
     // the line is the page's own colour, never a grey
     expect(textOf(notSaved).style!.color, HaloColors.text);
+  }
+
+  // what the save dialog is asked to name the file
+  for (final (face, plain) in [
+    (AppFace.kryfo, false),
+    (AppFace.notes, true),
+    (null, true),
+  ]) {
+    testWidgets(
+      'the backup\'s name under ${face?.name ?? 'an icon not read'}',
+      (t) async {
+        appFaceNow.value = face;
+        await open(t);
+        final name = saveArgs.single['name']! as String;
+        if (plain) {
+          expect(name, matches(RegExp(r'^backup_\d{8}_\d{6}\.bin$')));
+          expect(name.toLowerCase(), isNot(contains('kryfo')));
+        } else {
+          expect(name, matches(RegExp(r'^kryfo-backup-\d+\.kryfo$')));
+        }
+        dialogs.single.complete({'state': 'saved', 'where': 'Download'});
+        await until(t, () => screen.evaluate().isEmpty);
+        await t.pumpAndSettle(const Duration(seconds: 5));
+      },
+    );
   }
 
   testWidgets('an answer that never comes ends as not saved', (t) async {

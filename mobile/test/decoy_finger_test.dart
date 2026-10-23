@@ -13,6 +13,7 @@ import 'dart:math';
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 import 'package:kryfo/backup.dart' show kIdentitySecureKeys;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -676,6 +677,30 @@ void main() {
         if (c.method == m) c,
     ];
 
+    test('under a plain icon the fingerprint sheet names nothing', () async {
+      _finger();
+      final lock = await makeLock(appOnly, bio: PlatformLockBio());
+      final s = lock.state;
+      expect(await s.setBiometric(true), isTrue);
+      for (final (face, want) in [
+        (AppFace.notes, l10n.lockStateUnlockPlain),
+        (null, l10n.lockStateUnlockPlain),
+        (AppFace.kryfo, l10n.lockStateUnlockKryfo),
+      ]) {
+        appFaceNow.value = face;
+        calls.clear();
+        s.lock();
+        expect(await s.tryBiometric(), isTrue);
+        final ask = of('bioUnlock').single.arguments as Map;
+        expect(ask['title'], want, reason: '$face');
+        expect(
+          ask['title'],
+          face == AppFace.kryfo ? contains('Kryfo') : isNot(contains('Kryfo')),
+        );
+      }
+      appFaceNow.value = null;
+    });
+
     test(
       'the decoy seals itself, and a finger opens it from either side',
       () async {
@@ -695,6 +720,8 @@ void main() {
         final seal = lock.store.m[_sealKey]!;
         expect(seal, hasLength(514));
 
+        appFaceNow.value = AppFace.kryfo;
+        addTearDown(() => appFaceNow.value = null);
         expect(await s.verifyPin(appPin), PinResult.normal);
         s.lock();
         expect(await s.tryBiometric(), isTrue);

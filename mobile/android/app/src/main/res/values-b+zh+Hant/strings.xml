@@ -5,4 +5,9 @@
     <string name="service_text">你的加密線路保持開啟，讓訊息能送達</string>
     <string name="channel_name">保持連線</string>
     <string name="channel_description">讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。</string>
+    <string name="icon_notes">筆記</string>
+    <string name="icon_weather">天氣</string>
+    <string name="icon_tasks">待辦</string>
+    <string name="icon_news">新聞</string>
+    <string name="service_title_plain">執行中</string>
 </resources>

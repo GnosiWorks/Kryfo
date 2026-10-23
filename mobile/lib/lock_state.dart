@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:local_auth/local_auth.dart';
 
+import 'app_icon.dart' show AppFace, appFaceNow;
 import 'container.dart';
 import 'dlog.dart';
 import 'engine_strings.dart';
@@ -81,6 +82,12 @@ Future<bool?> quietRead([LockStore? store]) async {
     return null;
   }
 }
+
+// android's fingerprint sheet comes up over the pad: under a plain icon, or
+// one not read yet, its title names nothing
+String fingerTitle(AppFace? face) => face == AppFace.kryfo
+    ? l10n.lockStateUnlockKryfo
+    : l10n.lockStateUnlockPlain;
 
 // secure storage, behind a seam so a test can count what is read and written
 abstract class LockStore {
@@ -1571,7 +1578,7 @@ class LockState extends ChangeNotifier {
     }
     final gen = _sealGen;
     final r = await _bio.unlock(
-      l10n.lockStateUnlockKryfo,
+      fingerTitle(appFaceNow.value),
       l10n.commonCancel,
       seal,
     );

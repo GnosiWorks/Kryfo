@@ -17,6 +17,7 @@ import 'dlog.dart';
 import 'shred.dart';
 import 'store_zip.dart';
 import 'tools/age_ffi.dart';
+import 'save_names.dart' show notesName;
 
 enum NotesFormat { text, markdown }
 
@@ -227,6 +228,8 @@ Future<({String path, String name})> makeNotesExport(
   bool Function()? stopped,
   void Function(double done)? progress,
   int? run,
+  // under a plain icon the file's name says nothing of kryfo
+  bool plainName = false,
 }) async {
   final mine = run ?? _run.value;
   _began = true;
@@ -238,6 +241,7 @@ Future<({String path, String name})> makeNotesExport(
       format: format,
       passphrase: passphrase,
       dir: dir,
+      plainName: plainName,
       now: now,
       stopped: () => _run.value != mine || (stopped?.call() ?? false),
       progress: progress,
@@ -255,6 +259,7 @@ Future<({String path, String name})> _make(
   required NotesFormat format,
   required String? passphrase,
   required Directory dir,
+  bool plainName = false,
   DateTime? now,
   bool Function()? stopped,
   void Function(double done)? progress,
@@ -265,7 +270,11 @@ Future<({String path, String name})> _make(
   final ext = format == NotesFormat.text ? 'txt' : 'md';
   final kind = files.isEmpty ? ext : 'zip';
   final lock = passphrase != null;
-  final name = 'kryfo-notes-${_day(at)}.$kind${lock ? '.age' : ''}';
+  final name = notesName(
+    plain: plainName,
+    day: _day(at),
+    ext: '$kind${lock ? '.age' : ''}',
+  );
   final leaf = _leaf();
   final plain = p.join(dir.path, '$leaf.$kind');
   final locked = p.join(dir.path, '$leaf.age');

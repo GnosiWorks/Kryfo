@@ -2446,13 +2446,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo sucht alle 15 Minuten nach Nachrichten. Schont den Akku, aber Nachrichten können verspätet ankommen.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'Auf dem Sperrbildschirm';
-
-  @override
-  String get gettingMessagesHideMessagePreview =>
-      'Nachrichtenvorschau verbergen';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Ein allgemeiner Hinweis, ohne Absender und ohne Nachrichtentext';
 
@@ -9229,4 +9222,143 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Link kopieren';
+
+  @override
+  String get settingsIconAndNotifications => 'Symbol und Benachrichtigungen';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, schlichte Benachrichtigungen';
+  }
+
+  @override
+  String get iconSectionTitle => 'App-Symbol';
+
+  @override
+  String get iconHint =>
+      'Startbildschirm und App-Liste zeigen dieses Symbol und diesen Namen statt Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Wähle ein alltägliches Symbol und einen Namen für Startbildschirm und App-Liste.';
+
+  @override
+  String get iconWhatChanges => 'Was das ändert';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Symbol zu $name ändern?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo schließt sich und öffnet sich wieder. Ist das Symbol danach nicht mehr auf dem Startbildschirm, such $name in deinen Apps und leg es wieder dort ab.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Symbol ändern';
+
+  @override
+  String get iconNoPinLine =>
+      'Wer darauf tippt, sieht Kryfo. Mit einer App-PIN sieht man stattdessen ein PIN-Feld.';
+
+  @override
+  String get iconSetPin => 'PIN festlegen';
+
+  @override
+  String iconChanged(String name) {
+    return 'Symbol zu $name geändert';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Dein Startbildschirm zeigt $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, App-Symbol';
+  }
+
+  @override
+  String get notifShowAll => 'Name und Nachricht';
+
+  @override
+  String get notifShowNew => 'Nur „Neue Nachricht“';
+
+  @override
+  String get notifShowPlain => 'Schlicht';
+
+  @override
+  String get notifPlainHint =>
+      'Kein Name, keine Nachricht, keine Kryfo-Farben. Ein neutrales Symbol und eine Zeile.';
+
+  @override
+  String get notifPlainLine => 'Etwas Neues';
+
+  @override
+  String get notifPlainChannel => 'Hinweise';
+
+  @override
+  String get notifHeaderLimit =>
+      'Oben in jeder Benachrichtigung steht weiterhin Kryfo. Android lässt Apps das nicht ändern.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Was Benachrichtigungen zeigen';
+
+  @override
+  String get iconSheetChangesTitle => 'Was sich ändert';
+
+  @override
+  String get iconSheetChanges =>
+      'Symbol und Name auf dem Startbildschirm und in der App-Liste, das Teilen-Menü und die Übersicht der offenen Apps. Mit Schlicht auch, was Benachrichtigungen zeigen.';
+
+  @override
+  String get iconSheetStaysTitle => 'Was Kryfo bleibt';
+
+  @override
+  String get iconSheetStays =>
+      'Die oberste Zeile jeder Benachrichtigung, die Einstellungs- und Akkuseiten deines Handys, der App-Store und Kryfo selbst, wenn jemand es öffnet.';
+
+  @override
+  String get iconSheetGlance =>
+      'Das hält einem Blick auf den Startbildschirm stand. Vor jemandem, der die Einstellungen deines Handys durchsieht, verbirgt es Kryfo nicht.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Dein Handy hat vielleicht eine eigene Art, Apps zu verbergen: den privaten Bereich, in seinen Einstellungen.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Dein Handy hat vielleicht eine eigene Art, Apps zu verbergen: den sicheren Ordner, in seinen Einstellungen.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Dein Handy hat vielleicht eine eigene Art, Apps zu verbergen: Apps ausblenden, in seinen Einstellungen.';
+
+  @override
+  String get androidIconNotes => 'Notizen';
+
+  @override
+  String get androidIconWeather => 'Wetter';
+
+  @override
+  String get androidIconTasks => 'Aufgaben';
+
+  @override
+  String get androidIconNews => 'Neuigkeiten';
+
+  @override
+  String get androidServiceTitlePlain => 'Aktiv';
+
+  @override
+  String get lockStateUnlockPlain => 'Entsperren';
+
+  @override
+  String get iconSheetOthers =>
+      'Apps auf deinem Handy können weiterhin sehen, dass Kryfo installiert ist, und Androids eigene Dialoge und Abfragen können seinen Namen zeigen.';
+
+  @override
+  String get iconSheetSaves =>
+      'Solange ein schlichtes Symbol an ist, werden neue Fotos, Videos und Dateien mit gewöhnlichen Namen in den üblichen Ordnern deines Handys gespeichert. Was schon gespeichert ist, bleibt, wo es ist.';
 }

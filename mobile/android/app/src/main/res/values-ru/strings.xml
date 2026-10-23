@@ -5,4 +5,9 @@
     <string name="service_text">Твоё зашифрованное соединение остаётся открытым, чтобы сообщения доходили</string>
     <string name="channel_name">Постоянная связь</string>
     <string name="channel_description">Держит Kryfo на связи, чтобы зашифрованные сообщения приходили, пока он закрыт. Если выключить, доставка прекратится.</string>
+    <string name="icon_notes">Заметки</string>
+    <string name="icon_weather">Погода</string>
+    <string name="icon_tasks">Задачи</string>
+    <string name="icon_news">Новости</string>
+    <string name="service_title_plain">Активно</string>
 </resources>

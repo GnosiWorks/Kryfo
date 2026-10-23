@@ -20,4 +20,12 @@ object DeliveryPrefs {
         val m = mode(context)
         return m != "checkins" && m != "helper"
     }
+
+    // plain notifications, set in dart's notification settings: the
+    // service's own notification says nothing either
+    fun plain(context: Context): Boolean = try {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getBoolean("flutter.notif_plain", false)
+    } catch (e: Exception) {
+        false
+    }
 }

@@ -2415,12 +2415,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo mencari pesan setiap 15 menit. Hemat baterai, tapi pesan bisa terlambat.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'Di layar kunci';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Sembunyikan pratinjau pesan';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Pemberitahuan umum, tanpa pengirim dan tanpa isi pesan';
 
@@ -9123,4 +9117,143 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Salin tautan';
+
+  @override
+  String get settingsIconAndNotifications => 'Ikon dan notifikasi';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, notifikasi polos';
+  }
+
+  @override
+  String get iconSectionTitle => 'Ikon aplikasi';
+
+  @override
+  String get iconHint =>
+      'Layar utama dan daftar aplikasimu menampilkan ikon dan nama ini, bukan Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Pilih ikon dan nama yang biasa saja untuk layar utama dan daftar aplikasimu.';
+
+  @override
+  String get iconWhatChanges => 'Apa yang berubah';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Ganti ikon menjadi $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo tertutup lalu terbuka lagi. Kalau ikonnya hilang dari layar utama, cari $name di aplikasimu dan taruh lagi.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Ganti ikon';
+
+  @override
+  String get iconNoPinLine =>
+      'Siapa pun yang mengetuknya akan melihat Kryfo. Pasang PIN aplikasi agar yang terlihat papan PIN.';
+
+  @override
+  String get iconSetPin => 'Buat PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Ikon diganti menjadi $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Layar utamamu akan menampilkan $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, ikon aplikasi';
+  }
+
+  @override
+  String get notifShowAll => 'Nama dan pesan';
+
+  @override
+  String get notifShowNew => 'Hanya “Pesan baru”';
+
+  @override
+  String get notifShowPlain => 'Polos';
+
+  @override
+  String get notifPlainHint =>
+      'Tanpa nama, tanpa pesan, tanpa warna Kryfo. Ikon netral dan satu baris.';
+
+  @override
+  String get notifPlainLine => 'Ada yang baru';
+
+  @override
+  String get notifPlainChannel => 'Pemberitahuan';
+
+  @override
+  String get notifHeaderLimit =>
+      'Bagian atas setiap notifikasi tetap bertuliskan Kryfo. Android tidak mengizinkan aplikasi mengubahnya.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Yang ditampilkan notifikasi';
+
+  @override
+  String get iconSheetChangesTitle => 'Yang berubah';
+
+  @override
+  String get iconSheetChanges =>
+      'Ikon dan nama di layar utama dan daftar aplikasimu, menu bagikan, dan tampilan aplikasi terbuka. Dengan Polos, juga isi notifikasi.';
+
+  @override
+  String get iconSheetStaysTitle => 'Yang tetap Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Baris atas setiap notifikasi, halaman setelan dan baterai ponselmu, toko aplikasi, dan Kryfo sendiri saat seseorang membukanya.';
+
+  @override
+  String get iconSheetGlance =>
+      'Ini cukup untuk sekilas pandang ke layar utama. Ini tidak menyembunyikan Kryfo dari orang yang memeriksa setelan ponselmu.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: ruang pribadi, di setelannya.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: Folder Aman, di setelannya.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: aplikasi tersembunyi, di setelannya.';
+
+  @override
+  String get androidIconNotes => 'Catatan';
+
+  @override
+  String get androidIconWeather => 'Cuaca';
+
+  @override
+  String get androidIconTasks => 'Tugas';
+
+  @override
+  String get androidIconNews => 'Berita';
+
+  @override
+  String get androidServiceTitlePlain => 'Aktif';
+
+  @override
+  String get lockStateUnlockPlain => 'Buka kunci';
+
+  @override
+  String get iconSheetOthers =>
+      'Aplikasi di ponselmu tetap bisa melihat bahwa Kryfo terpasang, dan dialog serta permintaan Android sendiri bisa menampilkan namanya.';
+
+  @override
+  String get iconSheetSaves =>
+      'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
 }

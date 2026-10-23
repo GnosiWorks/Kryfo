@@ -47,6 +47,8 @@ import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'app_icon.dart' show appFaceNow, readAppFace;
+import 'screens/icon_screen.dart' show sayFaceChanged;
 import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
@@ -274,6 +276,14 @@ void main() async {
       }
     }),
   );
+  // which icon the home screen shows, before the first frame, while the
+  // theme's read runs: the pin pad's wordmark and the app switcher's title
+  // follow it. a short wait at most
+  try {
+    await readAppFace().timeout(const Duration(milliseconds: 300));
+  } catch (_) {
+    // read on in the background; the title follows once it is
+  }
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('launch headless');
     // no window: the service or the job brought the process back, and
@@ -332,11 +342,15 @@ class HaloApp extends StatelessWidget {
           localeRevision,
           navRevision,
         ]),
-        builder: (context, _) => haloAppShell(
-          navigatorKey: rootNavKey,
-          locale: l10nLocale,
-          lock: (navigator) => _LockGate(child: navigator),
-          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        builder: (context, _) => FacedShell(
+          builder: (face, label) => haloAppShell(
+            navigatorKey: rootNavKey,
+            locale: l10nLocale,
+            face: face,
+            faceLabel: label,
+            lock: (navigator) => _LockGate(child: navigator),
+            home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+          ),
         ),
       ),
     );

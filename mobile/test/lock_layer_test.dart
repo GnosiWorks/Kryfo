@@ -621,9 +621,17 @@ void main() {
     final m = File(
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
-    final at = m.indexOf('android:name=".MainActivity"');
+    // the screen itself: the launcher entries are aliases of it
+    final at = m.indexOf('android:name=".KryfoActivity"');
     final end = m.indexOf('>', at);
     expect(m.substring(at, end), contains('android:launchMode="singleTask"'));
+    expect(
+      '<activity\n            android:name=".KryfoActivity"'.allMatches(m),
+      hasLength(1),
+    );
+    for (final alias in RegExp(r'<activity-alias[^>]*>').allMatches(m)) {
+      expect(alias[0], contains('android:targetActivity=".KryfoActivity"'));
+    }
   });
 
   testWidgets('a decoy unlock drops what waited', (tester) async {
