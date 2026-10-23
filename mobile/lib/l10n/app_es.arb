@@ -2057,6 +2057,7 @@
   "lockFingerAfterPin": "Escribe tu PIN una vez para volver a usar tu huella.",
   "lockFingerLockedOut": "Demasiados intentos con la huella. Usa tu PIN, o desbloquea el teléfono una vez con su propio bloqueo de pantalla para volver a usar la huella.",
   "lockFingerRefused": "Tu teléfono no quiso mantener el desbloqueo con huella para Kryfo, así que está desactivado. Tu PIN sigue funcionando.",
+  "lockFingerTryAgain": "Tu teléfono estaba ocupado en ese momento. Vuelve a probar con tu huella o usa tu PIN.",
   "pinsFingerRefused": "Tu teléfono no permitió activar el desbloqueo con huella para Kryfo. Tu PIN sigue funcionando.",
   "pinsAdvanced": "Protección avanzada",
   "pinsAdvancedLine": "Para cuando alguien te obliga a desbloquear el teléfono.",

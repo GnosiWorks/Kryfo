@@ -415,7 +415,11 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                     // fingerprint unlock on a key a new finger invalidates
                     "bioReady" -> result.success(BioKey.ready())
-                    "bioState" -> result.success(BioKey.state())
+                    // the keystore may pause between tries: off the main thread
+                    "bioState" -> Thread {
+                        val s = BioKey.state()
+                        runOnUiThread { result.success(s) }
+                    }.start()
                     "bioSeal" -> {
                         val opens = call.argument<String>("opens")
                         if (opens.isNullOrEmpty()) {

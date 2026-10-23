@@ -231,6 +231,39 @@ class BioSealTest {
         }
     }
 
+    // the keystore busy with the operation is not a refusal: try again
+    @Test
+    fun aBusyFinishIsAnError() {
+        for (s in listOf(BioSeal.seal(keys.public, everyday), v1(block(BioSeal.seal(keys.public, decoy))))) {
+            val sealed = BioSeal.parse(s)!!
+            val busy = failingCipher(IllegalThreadStateException("busy"), keys.public)
+            assertEquals("error" to null, BioSeal.open(busy, sealed, keys.public))
+            val wrapped = failingCipher(
+                javax.crypto.IllegalBlockSizeException().apply { initCause(IllegalThreadStateException()) },
+                keys.public,
+            )
+            assertEquals("error" to null, BioSeal.open(wrapped, sealed, keys.public))
+            // anything else keeps its answer
+            val no = failingCipher(javax.crypto.IllegalBlockSizeException(), keys.public)
+            assertEquals(
+                (if (sealed.version == 1) "none" else "refused") to null,
+                BioSeal.open(no, sealed, keys.public),
+            )
+        }
+    }
+
+    // a public half no provider reads: an answer, never a throw
+    @Test
+    fun aPublicHalfThatWillNotReadIsAnError() {
+        val sealed = BioSeal.parse(BioSeal.seal(keys.public, everyday))!!
+        val odd = object : java.security.PublicKey {
+            override fun getAlgorithm() = "none such"
+            override fun getFormat() = "X.509"
+            override fun getEncoded() = ByteArray(4)
+        }
+        assertEquals("error" to null, BioSeal.open(opener(keys), sealed, odd))
+    }
+
     @Test
     fun aLockedSensorIsToldApartFromACancel() {
         assertEquals("lockout", BioSeal.closed(BioSeal.LOCKOUT))

@@ -205,14 +205,15 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     );
   }
 
-  // why a finger does nothing: the sensor is locked, or the phone would not
-  // keep a key for Kryfo and the finger is off
+  // why a finger does nothing: the sensor is locked, the phone would not
+  // keep a key for Kryfo and the finger is off, or the phone was busy
   Widget _fingerNoteLine() {
     final still = MediaQuery.of(context).disableAnimations;
     final note = _lock.fingerNote;
     final line = switch (note) {
       FingerNote.lockedOut when _fingerOn => l10n.lockFingerLockedOut,
       FingerNote.refused when !_fingerOn => l10n.lockFingerRefused,
+      FingerNote.tryAgain when _fingerOn => l10n.lockFingerTryAgain,
       _ => null,
     };
     final shown = line == null

@@ -12465,6 +12465,12 @@ abstract class AppLocalizations {
   /// **'Your phone would not keep fingerprint unlock for Kryfo, so it is off. Your PIN still works.'**
   String get lockFingerRefused;
 
+  /// lock screen, under the fingerprint button: the finger was taken but the phone was busy and did not finish; the finger stays on and the same finger may work in a moment
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone was busy just then. Try your fingerprint again, or use your PIN.'**
+  String get lockFingerTryAgain;
+
   /// toast: turning on Unlock with fingerprint failed because the phone would not make the fingerprint key; the switch stays off
   ///
   /// In en, this message translates to:

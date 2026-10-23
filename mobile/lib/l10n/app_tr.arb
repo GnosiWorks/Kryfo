@@ -2057,6 +2057,7 @@
   "lockFingerAfterPin": "Parmak izini yeniden kullanmak için PIN'ini bir kez gir.",
   "lockFingerLockedOut": "Parmak iziyle çok fazla deneme yapıldı. PIN’ini kullan ya da parmak izini yeniden kullanmak için telefonunun kilidini bir kez kendi ekran kilidiyle aç.",
   "lockFingerRefused": "Telefonun Kryfo için parmak iziyle kilit açmayı tutmadı, bu yüzden kapalı. PIN’in hâlâ çalışıyor.",
+  "lockFingerTryAgain": "Telefonun o an meşguldü. Parmak izini yeniden dene ya da PIN’ini kullan.",
   "pinsFingerRefused": "Telefonun, Kryfo için parmak iziyle kilit açmaya izin vermedi. PIN’in hâlâ çalışıyor.",
   "pinsAdvanced": "Gelişmiş koruma",
   "pinsAdvancedLine": "Biri seni telefonunun kilidini açmaya zorladığında.",

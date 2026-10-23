@@ -7782,6 +7782,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il telefono non ha mantenuto lo sblocco con l\'impronta per Kryfo, quindi è disattivato. Il PIN funziona ancora.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Il telefono era occupato in quel momento. Riprova con l\'impronta o usa il PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Il telefono non ha permesso di attivare lo sblocco con l\'impronta per Kryfo. Il PIN funziona ancora.';
 

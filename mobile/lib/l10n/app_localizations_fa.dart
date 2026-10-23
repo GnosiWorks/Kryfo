@@ -7723,6 +7723,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'گوشی شما باز کردن قفل با اثر انگشت را برای Kryfo نگه نداشت، پس خاموش شد. PIN شما همچنان کار می‌کند.';
 
   @override
+  String get lockFingerTryAgain =>
+      'گوشی شما همان لحظه مشغول بود. دوباره با اثر انگشت امتحان کنید یا از PIN خود استفاده کنید.';
+
+  @override
   String get pinsFingerRefused =>
       'گوشی شما اجازه نداد باز کردن قفل با اثر انگشت برای Kryfo روشن شود. PIN شما همچنان کار می‌کند.';
 

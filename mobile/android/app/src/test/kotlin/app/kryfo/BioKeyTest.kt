@@ -33,6 +33,9 @@ class BioKeyTest {
         var refuseMake = false
         var refuseStart = false
         var invalidated = false
+        // starts that fail with this, one per start, as a busy keystore does
+        val busy = ArrayDeque<Exception>()
+        var publicFails = false
 
         // a private key the rsa cipher will not start with
         private val wrongKind: PrivateKey =
@@ -45,12 +48,16 @@ class BioKeyTest {
             at[alias] = ++clock
         }
 
-        override fun public(alias: String): PublicKey? = made[alias]?.public
+        override fun public(alias: String): PublicKey? {
+            if (publicFails) throw ProviderException("keystore not answering")
+            return made[alias]?.public
+        }
 
         override fun private(alias: String): PrivateKey? {
             if (invalidated && made.containsKey(alias)) {
                 throw KeyPermanentlyInvalidatedException()
             }
+            busy.removeFirstOrNull()?.let { throw it }
             val p = made[alias]?.private ?: return null
             return if (refuseStart) wrongKind else p
         }
@@ -68,9 +75,107 @@ class BioKeyTest {
     // the key work queued so far has run
     private fun settled() = BioKey.work.submit {}.get()
 
+    // the pauses cipher() asked for, without waiting them out
+    private val paused = mutableListOf<Long>().also { p -> BioKey.pause = { p.add(it) } }
+
     @After
     fun back() {
         BioKey.keys = BioKey.Store
+        BioKey.pause = { Thread.sleep(it) }
+    }
+
+    // a keystore code as android hands it over, inside the cipher's own
+    // exception
+    private fun keystore(code: Int): Exception {
+        val k = android.security.KeyStoreException::class.java
+            .getDeclaredConstructor(Int::class.javaPrimitiveType, String::class.java)
+            .apply { isAccessible = true }
+            .newInstance(code, "keystore")
+        return javax.crypto.IllegalBlockSizeException().apply { initCause(k) }
+    }
+
+    // a busy keystore at the start is not a dead key: "error", the key
+    // stays, and the second try comes after a pause
+    @Test
+    fun aBusyKeystoreKeepsTheKey() {
+        assertNotNull(BioKey.seal(everyday))
+        for (busy in listOf(
+            android.security.keystore.BackendBusyException(50),
+            ProviderException("keystore busy"),
+            keystore(-28),
+        )) {
+            keys.busy.addAll(listOf(busy, busy))
+            assertEquals(null to "error", BioKey.cipher())
+            settled()
+            assertEquals(1, keys.made.size)
+        }
+        assertEquals(List(3) { BioKey.RETRY_MS }, paused)
+        // busy once only: the second try starts
+        keys.busy.add(ProviderException("keystore busy"))
+        assertEquals("ok", BioKey.cipher().second)
+        assertEquals("ok", BioKey.state())
+        // a key that is really gone or will not start still goes
+        keys.busy.addAll(List(2) { java.security.InvalidKeyException("not this key") })
+        assertEquals(null to "invalidated", BioKey.cipher())
+        settled()
+        assertTrue(keys.made.isEmpty())
+    }
+
+    @Test
+    fun aBusyKeystoreAsksForNoPin() {
+        val sealed = BioSeal.parse(BioKey.seal(everyday)!!)!!
+        keys.busy.addAll(List(2) { ProviderException("keystore busy") })
+        assertEquals("error", BioKey.ask(sealed).why)
+        // a public half that will not read is no reason for a new key
+        keys.publicFails = true
+        assertEquals("error", BioKey.ask(sealed).why)
+        settled()
+        assertEquals(1, keys.made.size)
+        keys.publicFails = false
+        assertEquals("ok", BioKey.ask(sealed).why)
+    }
+
+    // after the finger, a passing failure on a tagged seal is "error", so
+    // the finger stays on. a real refusal is still "refused"
+    @Test
+    fun aPassingFailureAfterTheFingerKeepsTheFinger() {
+        val sealed = BioSeal.parse(BioKey.seal(everyday)!!)!!
+        val pub = keys.made.values.single().public
+        val ask = BioKey.ask(sealed)
+        for (e in listOf(
+            // the same operation twice (OPERATION_BUSY)
+            IllegalThreadStateException("busy"),
+            // the operation lost, as when the keystore restarts
+            keystore(-28),
+            // the secure hardware busy
+            keystore(-48),
+        )) {
+            assertEquals(e.toString(), Triple("error", null, null), BioKey.opened(ask, sealed, failingCipher(e, pub)))
+        }
+        for (e in listOf(
+            // user not authenticated
+            keystore(-26),
+            // what a seal this key will not open gives
+            keystore(-1000),
+            javax.crypto.BadPaddingException(),
+            java.security.ProviderException("keystore said no"),
+        )) {
+            assertEquals(e.toString(), Triple("refused", null, null), BioKey.opened(ask, sealed, failingCipher(e, pub)))
+        }
+    }
+
+    // nothing thrown while the seal is opened reaches the thread
+    @Test
+    fun aPublicHalfThatWillNotReadThrowsNothing() {
+        val sealed = BioSeal.parse(BioKey.seal(everyday)!!)!!
+        val ask = BioKey.ask(sealed)
+        val odd = object : PublicKey {
+            override fun getAlgorithm() = "none such"
+            override fun getFormat() = "X.509"
+            override fun getEncoded() = ByteArray(4)
+        }
+        val broken = BioKey.Ask("ok", ask.cipher, odd, ask.made)
+        assertEquals(Triple("error", null, null), BioKey.opened(broken, sealed, ask.cipher))
     }
 
     private val decoy = "00000000000000000000000000000002"

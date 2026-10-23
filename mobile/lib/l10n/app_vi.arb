@@ -2057,6 +2057,7 @@
   "lockFingerAfterPin": "Nhập mã PIN một lần để dùng lại vân tay.",
   "lockFingerLockedOut": "Thử vân tay quá nhiều lần. Hãy dùng mã PIN, hoặc mở khóa điện thoại một lần bằng khóa màn hình của máy để dùng lại vân tay.",
   "lockFingerRefused": "Điện thoại không giữ được mở khóa bằng vân tay cho Kryfo nên tính năng này đã tắt. Mã PIN vẫn dùng được.",
+  "lockFingerTryAgain": "Điện thoại đang bận lúc đó. Hãy thử lại bằng vân tay hoặc dùng mã PIN.",
   "pinsFingerRefused": "Điện thoại không cho bật mở khóa bằng vân tay cho Kryfo. Mã PIN vẫn dùng được.",
   "pinsAdvanced": "Bảo vệ nâng cao",
   "pinsAdvancedLine": "Dành cho lúc có người bắt bạn mở khóa điện thoại.",

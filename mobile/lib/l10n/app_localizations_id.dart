@@ -7706,6 +7706,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Ponselmu tidak mau menyimpan buka kunci dengan sidik jari untuk Kryfo, jadi fitur ini mati. PIN tetap berfungsi.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Ponselmu sedang sibuk tadi. Coba lagi dengan sidik jari, atau pakai PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Ponselmu tidak mau menyalakan buka kunci dengan sidik jari untuk Kryfo. PIN tetap berfungsi.';
 

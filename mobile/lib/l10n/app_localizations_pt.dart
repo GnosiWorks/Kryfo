@@ -7768,6 +7768,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Seu celular não manteve o desbloqueio com a digital para o Kryfo, então ele está desligado. Seu PIN continua funcionando.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Seu celular estava ocupado naquele momento. Tente de novo com a digital ou use seu PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Seu celular não deixou ligar o desbloqueio com a digital para o Kryfo. Seu PIN continua funcionando.';
 

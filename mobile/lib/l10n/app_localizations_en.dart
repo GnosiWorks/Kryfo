@@ -7707,6 +7707,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone would not keep fingerprint unlock for Kryfo, so it is off. Your PIN still works.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Your phone was busy just then. Try your fingerprint again, or use your PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Your phone would not turn on fingerprint unlock for Kryfo. Your PIN still works.';
 
