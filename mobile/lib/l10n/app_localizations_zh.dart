@@ -605,7 +605,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appDisableAppLock => '关闭应用锁？';
 
   @override
-  String get appThePinWillBe => 'PIN 码将被移除。任何拿到你手机的人，打开 Kryfo 就能看到你的聊天和消息。';
+  String get appThePinWillBe => 'PIN 码将被移除。任何拿到你手机的人，打开 Kryfo 就能看到它。';
 
   @override
   String get appDisable => '关闭';
@@ -1447,7 +1447,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get chatBigFilesGoOut => '大文件会拆成加密的小块发出，所以需要一些时间。保持应用打开，它就会一直正常地发送下去。';
+  String get chatBigFilesGoOut => '大文件会拆成加密的小块发出，所以需要一些时间。保持应用打开，它就会一直发下去。';
 
   @override
   String get chatSendIt => '发送';
@@ -1561,7 +1561,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatEveryMessageHereIs =>
-      '这里的每条消息都会从这部手机上清除。这只清除你这边的消息副本——不会动到对方的设备。所以实际上不影响对方的任何本地存储。';
+      '这里的每条消息都会从这部手机上清除。这只清除你这边的副本——不会动到对方的设备。';
 
   @override
   String get chatClear => '清空';
@@ -1784,7 +1784,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatCompareLine(Object peerName) {
-    return '三个词谁都可以照抄。要确认这个聊天真的是和 $peerName，请当面或通过通话和对方核对安全码。';
+    return '三个词可以照抄。要确认这个聊天真的是和 $peerName，请当面或通过通话和对方核对安全码。';
   }
 
   @override
@@ -2952,7 +2952,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeAndroidIsBlockingThem =>
-      'Android 正在拦截通知，所以 Kryfo 关闭时，任何消息都不会送到你这里。你打开它时，消息仍会到达。';
+      'Android 正在拦截通知，所以 Kryfo 关闭时，什么都到不了你这里。你打开它时，消息仍会到达。';
 
   @override
   String get homeCouldnTOpenIt => '打不开。请在手机设置里找到 Kryfo';
@@ -6702,7 +6702,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoCanGetAround => 'Kryfo 现在能够绕过 Tor 封锁了';
 
   @override
-  String get bridgesThatSNotABridge => '这不是网桥地址';
+  String get bridgesThatSNotABridge => '这不是网桥配置';
 
   @override
   String get transportBridgeError => '上次错误';
@@ -6714,7 +6714,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesAskingTheTorProject => '正在询问 Tor 项目这里什么方式能用…';
 
   @override
-  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥地址。';
+  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥配置。';
 
   @override
   String get bridgesAutomatic => '自动';
@@ -6806,19 +6806,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTurnOnAutomatic => '开启自动';
 
   @override
-  String get bridgesPasteABridgeLine => '粘贴网桥地址';
+  String get bridgesPasteABridgeLine => '粘贴网桥配置';
 
   @override
   String get bridgesInUse => '正在使用';
 
   @override
-  String get bridgesPasteTheLineThey => '粘贴对方发给你的地址，或者扫码。网桥地址要找你认识的人拿。';
+  String get bridgesPasteTheLineThey => '粘贴对方发给你的那一行配置，或者扫码。网桥配置要找你认识的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
 
   @override
-  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥地址。';
+  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥配置。';
 
   @override
   String get bridgesNothingYet => '暂无';
@@ -6844,7 +6844,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get torBootSplashNeverTriesTorPlainly =>
-      '在这里，Kryfo 不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
+      '在这里，Kryfo 绝不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -6957,7 +6957,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesConnectingThroughYourBridge => '正在通过你的网桥连接…';
 
   @override
-  String get bridgesThisLineIsTooLong => '这条地址太长，Tor 用不了。';
+  String get bridgesThisLineIsTooLong => '这行配置太长，Tor 用不了。';
 
   @override
   String get bridgesAutomaticFindsAWay =>
@@ -6997,7 +6997,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBelarus => '白俄罗斯';
 
   @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这条地址';
+  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这行配置';
 
   @override
   String get bridgesTryAutomatic => '试试自动';
@@ -7370,7 +7370,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
 
   @override
-  String get lockFingerLockedOut => '指纹尝试次数过多。请使用 PIN 码，或先用手机本身的锁屏解锁一次，指纹即可恢复。';
+  String get lockFingerLockedOut => '指纹尝试次数过多。请使用 PIN 码，或先用手机自己的锁屏解锁一次，指纹即可恢复。';
 
   @override
   String get lockFingerRefused => '手机未能为 Kryfo 保留指纹解锁，因此已关闭。PIN 码仍然可用。';
@@ -7426,7 +7426,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
-  String get flowWipe2 => '所有聊天和你的身份都会一起抹除，如果有伪装，也会一起抹除。';
+  String get flowWipe2 => '所有聊天和你的身份都会一起抹除，有伪装的话也一样。';
 
   @override
   String get flowWipeChoose => '选择一个抹除 PIN';
@@ -7445,7 +7445,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowDecoyFinger =>
-      '设置伪装 PIN 后，这个应用只能用 PIN 码打开。如果在伪装里开启了指纹，手指只会打开伪装的聊天，而绝不会打开这个应用的正常聊天。';
+      '设置伪装 PIN 后，这个应用只能用 PIN 码打开。如果在伪装里开启了指纹，手指只会打开伪装，绝不会打开这个应用。';
 
   @override
   String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
@@ -7592,7 +7592,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get howVault =>
-      '用隐藏聊天 PIN 打开 Kryfo，就会看到隐藏聊天；用你的普通 PIN 码或指纹打开，则看不到。重新设置隐藏聊天，会替换这部手机上原有的隐藏聊天。忘了隐藏聊天 PIN，它们就永远没了。';
+      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
   String get chatHide => '隐藏此聊天';
@@ -7903,7 +7903,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appLinkWordsTaken(Object id) {
-    return '这里已经有人叫 $id，但密钥不同。和对方核对安全码，就能分辨谁是谁。没有添加任何人。';
+    return '这里已经有人叫 $id，密钥不同。和对方核对安全码，就知道谁是谁。未添加。';
   }
 
   @override
@@ -8295,7 +8295,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String fileTooBig(String size, String max) {
-    return '这个文件是 $size。文件最大为 $max。';
+    return '这个文件有 $size。文件最大为 $max。';
   }
 
   @override
@@ -9442,7 +9442,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appDisableAppLock => '要停用應用程式鎖嗎？';
 
   @override
-  String get appThePinWillBe => 'PIN 碼將被移除。任何拿到你手機的人，一打開 Kryfo 就能看到你的聊天和訊息。';
+  String get appThePinWillBe => 'PIN 碼將被移除。任何拿到你手機的人，一打開 Kryfo 就能看到裡面的內容。';
 
   @override
   String get appDisable => '停用';
@@ -10284,7 +10284,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get chatBigFilesGoOut => '大檔案會切成加密的小片段送出，所以需要一點時間。保持應用程式開啟，就會持續正常傳送。';
+  String get chatBigFilesGoOut => '大檔案會切成加密的小片段送出，所以需要一點時間。保持應用程式開啟，就會持續傳送。';
 
   @override
   String get chatSendIt => '傳送';
@@ -10397,8 +10397,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatClearThisConversation => '要清空這段對話嗎？';
 
   @override
-  String get chatEveryMessageHereIs =>
-      '這裡的每則訊息都會從這支手機上抹除。這只會清空你的訊息副本，不會動到對方的裝置。所以實際上不影響對方的任何本機儲存。';
+  String get chatEveryMessageHereIs => '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，不會動到對方的裝置。';
 
   @override
   String get chatClear => '清空';
@@ -10621,7 +10620,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatCompareLine(Object peerName) {
-    return '三個詞誰都可以照抄。要確認這個聊天真的是和 $peerName，請當面或透過通話和對方核對安全碼。';
+    return '三個詞可以照抄。要確認這個聊天真的是和 $peerName，請當面或透過通話和對方核對安全碼。';
   }
 
   @override
@@ -14288,7 +14287,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportStopBySystem => '由系統停止';
 
   @override
-  String get transportStopTooMuch => '占用過多';
+  String get transportStopTooMuch => '佔用過多';
 
   @override
   String get transportStopPermission => '權限已變更';
@@ -15683,7 +15682,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get torBootSplashNeverTriesTorPlainly =>
-      '在這裡，Kryfo 不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
+      '在這裡，Kryfo 絕不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
@@ -16266,7 +16265,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
-  String get flowWipe2 => '所有聊天和你的身分都會一起抹除，如果有偽裝，也會一起抹除。';
+  String get flowWipe2 => '所有聊天和你的身分都會一起抹除，有偽裝的話也一樣。';
 
   @override
   String get flowWipeChoose => '選擇一組抹除 PIN';
@@ -16285,7 +16284,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowDecoyFinger =>
-      '設定偽裝 PIN 後，這個應用程式只能用 PIN 碼開啟。如果在偽裝裡開啟了指紋，手指只會開啟偽裝的聊天，而絕不會開啟這個應用程式的正常聊天。';
+      '設定偽裝 PIN 後，這個應用程式只能用 PIN 碼開啟。如果在偽裝裡開啟了指紋，手指只會開啟偽裝，絕不會開啟這個應用程式。';
 
   @override
   String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';
@@ -16352,7 +16351,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '選擇要隱藏的聊天和群組。你的 PIN 碼開啟的 Kryfo 裡沒有它們。隱藏聊天 PIN 會開啟全部內容，包括隱藏聊天。';
 
   @override
-  String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示標記。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
+  String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示徽章。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
 
   @override
   String get flowVaultFinger => '你的指紋開啟的 Kryfo 裡沒有隱藏聊天。';
@@ -16432,7 +16431,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get howVault =>
-      '用隱藏聊天 PIN 開啟 Kryfo，就會看到隱藏聊天；用你的一般 PIN 碼或指紋開啟，則看不到。重新設定隱藏聊天，會取代這支手機上原有的隱藏聊天。忘了隱藏聊天 PIN，它們就永遠沒了。';
+      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
   String get chatHide => '隱藏此聊天';
@@ -16623,7 +16622,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String appLinkWordsTaken(Object id) {
-    return '這裡已經有人叫 $id，但金鑰不同。和對方核對安全碼，就能分辨誰是誰。沒有新增任何人。';
+    return '這裡已經有人叫 $id，金鑰不同。和對方核對安全碼，就知道誰是誰。未新增。';
   }
 
   @override
@@ -17015,7 +17014,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String fileTooBig(String size, String max) {
-    return '這個檔案是 $size。檔案最大為 $max。';
+    return '這個檔案有 $size。檔案最大為 $max。';
   }
 
   @override
