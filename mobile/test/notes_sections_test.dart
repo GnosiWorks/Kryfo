@@ -439,4 +439,19 @@ void main() {
       );
     }
   });
+
+  testWidgets('a note with no letters draws, like 123 or 12:30', (t) async {
+    _phone(t);
+    db.notes = [
+      for (final text in ['123', '0', '+49 30', '12:30', '3.14', '!!!'])
+        _note(text, _now),
+    ];
+    await t.pumpWidget(_framed());
+    await t.pump(const Duration(seconds: 2));
+    expect(t.takeException(), isNull);
+    for (final text in ['123', '12:30', '!!!']) {
+      expect(find.text(text), findsOneWidget);
+    }
+    await _drain(t);
+  });
 }
