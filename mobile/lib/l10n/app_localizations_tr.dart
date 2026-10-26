@@ -7713,6 +7713,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Telefonun Kryfo için parmak iziyle kilit açmayı tutmadı, bu yüzden kapalı. PIN’in hâlâ çalışıyor.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Telefonun o an meşguldü. Parmak izini yeniden dene ya da PIN’ini kullan.';
+
+  @override
   String get pinsFingerRefused =>
       'Telefonun, Kryfo için parmak iziyle kilit açmaya izin vermedi. PIN’in hâlâ çalışıyor.';
 
@@ -9164,10 +9168,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'Telefonun o an meşguldü. Parmak izini yeniden dene ya da PIN’ini kullan.';
 
   @override
   String get settingsIconAndNotifications => 'Simge ve bildirimler';

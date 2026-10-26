@@ -7755,6 +7755,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu teléfono no quiso mantener el desbloqueo con huella para Kryfo, así que está desactivado. Tu PIN sigue funcionando.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Tu teléfono estaba ocupado en ese momento. Vuelve a probar con tu huella o usa tu PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Tu teléfono no permitió activar el desbloqueo con huella para Kryfo. Tu PIN sigue funcionando.';
 
@@ -9212,10 +9216,6 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'Tu teléfono estaba ocupado en ese momento. Vuelve a probar con tu huella o usa tu PIN.';
 
   @override
   String get settingsIconAndNotifications => 'Icono y notificaciones';

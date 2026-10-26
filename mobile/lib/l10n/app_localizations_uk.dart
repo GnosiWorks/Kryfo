@@ -7827,6 +7827,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Телефон не зберіг вхід за відбитком для Kryfo, тому його вимкнено. PIN-код і далі працює.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Телефон був зайнятий тієї миті. Спробуйте відбиток ще раз або введіть PIN-код.';
+
+  @override
   String get pinsFingerRefused =>
       'Телефон не дозволив увімкнути вхід за відбитком для Kryfo. PIN-код і далі працює.';
 
@@ -9297,10 +9301,6 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'Телефон був зайнятий тієї миті. Спробуйте відбиток ще раз або введіть PIN-код.';
 
   @override
   String get settingsIconAndNotifications => 'Значок і сповіщення';

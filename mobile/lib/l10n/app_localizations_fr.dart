@@ -7767,6 +7767,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre téléphone n’a pas conservé le déverrouillage par empreinte pour Kryfo, il est donc désactivé. Votre code PIN fonctionne toujours.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Votre téléphone était occupé à ce moment-là. Réessayez avec votre empreinte ou utilisez votre code PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Votre téléphone n’a pas accepté d’activer le déverrouillage par empreinte pour Kryfo. Votre code PIN fonctionne toujours.';
 
@@ -9235,10 +9239,6 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'Votre téléphone était occupé à ce moment-là. Réessayez avec votre empreinte ou utilisez votre code PIN.';
 
   @override
   String get settingsIconAndNotifications => 'Icône et notifications';

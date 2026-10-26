@@ -9733,6 +9733,10 @@
   "@lockFingerRefused": {
     "description": "lock screen, where the fingerprint button was: the phone would not keep a fingerprint key for Kryfo, so the app turned fingerprint unlock off"
   },
+  "lockFingerTryAgain": "Your phone was busy just then. Try your fingerprint again, or use your PIN.",
+  "@lockFingerTryAgain": {
+    "description": "lock screen, under the fingerprint button: the finger was taken but the phone was busy and did not finish; the finger stays on and the same finger may work in a moment"
+  },
   "pinsFingerRefused": "Your phone would not turn on fingerprint unlock for Kryfo. Your PIN still works.",
   "@pinsFingerRefused": {
     "description": "toast: turning on Unlock with fingerprint failed because the phone would not make the fingerprint key; the switch stays off"
@@ -11542,10 +11546,6 @@
         "type": "String"
       }
     }
-  },
-  "lockFingerTryAgain": "Your phone was busy just then. Try your fingerprint again, or use your PIN.",
-  "@lockFingerTryAgain": {
-    "description": "lock screen, under the fingerprint button: the finger was taken but the phone was busy and did not finish; the finger stays on and the same finger may work in a moment"
   },
   "settingsIconAndNotifications": "Icon and notifications",
   "@settingsIconAndNotifications": {

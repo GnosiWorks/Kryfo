@@ -7817,6 +7817,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يحتفظ هاتفك بفتح القفل بالبصمة لـ Kryfo، لذا أُوقف. رمز PIN لا يزال يعمل.';
 
   @override
+  String get lockFingerTryAgain =>
+      'كان هاتفك مشغولًا في تلك اللحظة. جرّب بصمتك مرة أخرى، أو استخدم رمز PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'لم يسمح هاتفك بتشغيل فتح القفل بالبصمة لـ Kryfo. رمز PIN لا يزال يعمل.';
 
@@ -9274,10 +9278,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'كان هاتفك مشغولًا في تلك اللحظة. جرّب بصمتك مرة أخرى، أو استخدم رمز PIN.';
 
   @override
   String get settingsIconAndNotifications => 'الأيقونة والإشعارات';

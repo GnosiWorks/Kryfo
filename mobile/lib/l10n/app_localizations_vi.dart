@@ -7672,6 +7672,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điện thoại không giữ được mở khóa bằng vân tay cho Kryfo nên tính năng này đã tắt. Mã PIN vẫn dùng được.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Điện thoại đang bận lúc đó. Hãy thử lại bằng vân tay hoặc dùng mã PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Điện thoại không cho bật mở khóa bằng vân tay cho Kryfo. Mã PIN vẫn dùng được.';
 
@@ -9127,10 +9131,6 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain =>
-      'Điện thoại đang bận lúc đó. Hãy thử lại bằng vân tay hoặc dùng mã PIN.';
 
   @override
   String get settingsIconAndNotifications => 'Biểu tượng và thông báo';

@@ -7359,6 +7359,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFingerRefused => '手机未能为 Kryfo 保留指纹解锁，因此已关闭。PIN 码仍然可用。';
 
   @override
+  String get lockFingerTryAgain => '手机刚才正忙。请再试一次指纹，或使用 PIN 码。';
+
+  @override
   String get pinsFingerRefused => '手机未允许为 Kryfo 开启指纹解锁。PIN 码仍然可用。';
 
   @override
@@ -8727,9 +8730,6 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain => '手机刚才正忙。请再试一次指纹，或使用 PIN 码。';
 
   @override
   String get settingsIconAndNotifications => '图标和通知';
@@ -16217,6 +16217,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFingerRefused => '手機未能為 Kryfo 保留指紋解鎖，因此已關閉。PIN 碼仍然可用。';
 
   @override
+  String get lockFingerTryAgain => '手機剛才正忙。請再試一次指紋，或使用 PIN 碼。';
+
+  @override
   String get pinsFingerRefused => '手機未允許為 Kryfo 開啟指紋解鎖。PIN 碼仍然可用。';
 
   @override
@@ -17465,9 +17468,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get lockFingerTryAgain => '手機剛才正忙。請再試一次指紋，或使用 PIN 碼。';
 
   @override
   String get settingsIconAndNotifications => '圖示和通知';
