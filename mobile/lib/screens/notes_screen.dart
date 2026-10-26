@@ -771,8 +771,9 @@ class _NoteBubble extends StatelessWidget {
         height: 1.5,
       ),
     );
-    // in the direction it was written, as in a chat
-    final dir = writtenDir(text);
+    // in the direction it was written, as in a chat. digits alone have no
+    // direction, and the fold measure needs one
+    final dir = writtenDir(text) ?? Directionality.of(context);
     final still = motionStill(context);
     final content = LayoutBuilder(
       builder: (context, c) {
