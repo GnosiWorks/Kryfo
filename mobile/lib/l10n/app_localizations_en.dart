@@ -2417,12 +2417,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'On the lock screen';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Hide message preview';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'A generic alert, with no sender and no message text';
 
@@ -9138,4 +9132,147 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get lockFingerTryAgain =>
+      'Your phone was busy just then. Try your fingerprint again, or use your PIN.';
+
+  @override
+  String get settingsIconAndNotifications => 'Icon and notifications';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, plain notifications';
+  }
+
+  @override
+  String get iconSectionTitle => 'App icon';
+
+  @override
+  String get iconHint =>
+      'Your home screen and app list show this icon and name instead of Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Pick an everyday icon and name for your home screen and app list.';
+
+  @override
+  String get iconWhatChanges => 'What this changes';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Change the icon to $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo closes and opens again. If the icon leaves your home screen, find $name in your apps and place it again.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Change icon';
+
+  @override
+  String get iconNoPinLine =>
+      'Anyone who taps it sees Kryfo. Set an app PIN so they see a PIN pad instead.';
+
+  @override
+  String get iconSetPin => 'Set a PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Icon changed to $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Your home screen will show $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, app icon';
+  }
+
+  @override
+  String get notifShowAll => 'Name and message';
+
+  @override
+  String get notifShowNew => 'Only “New message”';
+
+  @override
+  String get notifShowPlain => 'Plain';
+
+  @override
+  String get notifPlainHint =>
+      'No name, no message, no Kryfo colours. A neutral icon and one line.';
+
+  @override
+  String get notifPlainLine => 'Something new';
+
+  @override
+  String get notifPlainChannel => 'Alerts';
+
+  @override
+  String get notifHeaderLimit =>
+      'The top of each notification still says Kryfo. Android does not let an app change that.';
+
+  @override
+  String get gettingMessagesWhatShows => 'What notifications show';
+
+  @override
+  String get iconSheetChangesTitle => 'What changes';
+
+  @override
+  String get iconSheetChanges =>
+      'The icon and name on your home screen and in your app list, the share menu and the app switcher. With Plain, what notifications show.';
+
+  @override
+  String get iconSheetStaysTitle => 'What stays Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'The top line of every notification, your phone’s settings and battery pages, the app store, and Kryfo itself when someone opens it.';
+
+  @override
+  String get iconSheetGlance =>
+      'It holds up to a glance at your home screen. It does not hide Kryfo from someone who looks through your phone’s settings.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Your phone may have its own way to hide apps: private space, in its settings.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Your phone may have its own way to hide apps: Secure Folder, in its settings.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Your phone may have its own way to hide apps: hidden apps, in its settings.';
+
+  @override
+  String get androidIconNotes => 'Notes';
+
+  @override
+  String get androidIconWeather => 'Weather';
+
+  @override
+  String get androidIconTasks => 'Tasks';
+
+  @override
+  String get androidIconNews => 'News';
+
+  @override
+  String get androidServiceTitlePlain => 'Active';
+
+  @override
+  String get lockStateUnlockPlain => 'Unlock';
+
+  @override
+  String get iconSheetOthers =>
+      'Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.';
+
+  @override
+  String get iconSheetSaves =>
+      'While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.';
 }

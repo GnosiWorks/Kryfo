@@ -55,6 +55,10 @@ class AppIo {
   // "mark" for each of [xPubs] where anything is held: nothing restarts
   Future<String> markHeld(List<String> xPubs) => engine.nostrMarkHeld(xPubs);
 
+  // the pinned chats, live on the public relays first from the next start
+  // or route switch on. the engine keeps them in memory only
+  Future<String> pinFirst(List<String> xPubs) => engine.nostrPinned(xPubs);
+
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
 

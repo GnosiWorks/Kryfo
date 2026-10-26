@@ -2482,12 +2482,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'يبحث Kryfo عن الرسائل كل ١٥ دقيقة. خفيف على البطارية، لكن قد تتأخر الرسائل.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'على شاشة القفل';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'إخفاء معاينة الرسائل';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'تنبيه عام، بلا مرسِل ولا نص رسالة';
 
@@ -9280,4 +9274,147 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get lockFingerTryAgain =>
+      'كان هاتفك مشغولًا في تلك اللحظة. جرّب بصمتك مرة أخرى، أو استخدم رمز PIN.';
+
+  @override
+  String get settingsIconAndNotifications => 'الأيقونة والإشعارات';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon، إشعارات بسيطة';
+  }
+
+  @override
+  String get iconSectionTitle => 'أيقونة التطبيق';
+
+  @override
+  String get iconHint =>
+      'تعرض شاشتك الرئيسية وقائمة تطبيقاتك هذه الأيقونة وهذا الاسم بدل Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'اختر أيقونة واسمًا عاديين لشاشتك الرئيسية وقائمة تطبيقاتك.';
+
+  @override
+  String get iconWhatChanges => 'ما الذي يغيّره هذا';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'تغيير الأيقونة إلى $name؟';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'يُغلق Kryfo ثم يفتح من جديد. إذا اختفت الأيقونة من شاشتك الرئيسية، فابحث عن $name بين تطبيقاتك وضعها في مكانها من جديد.';
+  }
+
+  @override
+  String get iconConfirmButton => 'تغيير الأيقونة';
+
+  @override
+  String get iconNoPinLine =>
+      'من ينقر عليها يرى Kryfo. عيّن رمز PIN للتطبيق ليرى لوحة الرمز بدلًا من ذلك.';
+
+  @override
+  String get iconSetPin => 'تعيين رمز PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'تغيّرت الأيقونة إلى $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'ستعرض شاشتك الرئيسية $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name، أيقونة التطبيق';
+  }
+
+  @override
+  String get notifShowAll => 'الاسم والرسالة';
+
+  @override
+  String get notifShowNew => 'فقط «رسالة جديدة»';
+
+  @override
+  String get notifShowPlain => 'بسيطة';
+
+  @override
+  String get notifPlainHint =>
+      'بلا اسم، بلا رسالة، بلا ألوان Kryfo. أيقونة محايدة وسطر واحد.';
+
+  @override
+  String get notifPlainLine => 'شيء جديد';
+
+  @override
+  String get notifPlainChannel => 'تنبيهات';
+
+  @override
+  String get notifHeaderLimit =>
+      'يبقى أعلى كل إشعار يقول Kryfo. لا يسمح Android لأي تطبيق بتغيير ذلك.';
+
+  @override
+  String get gettingMessagesWhatShows => 'ما تعرضه الإشعارات';
+
+  @override
+  String get iconSheetChangesTitle => 'ما الذي يتغيّر';
+
+  @override
+  String get iconSheetChanges =>
+      'الأيقونة والاسم على شاشتك الرئيسية وفي قائمة تطبيقاتك، وقائمة المشاركة، وشاشة التطبيقات المفتوحة. ومع «بسيطة»، ما تعرضه الإشعارات.';
+
+  @override
+  String get iconSheetStaysTitle => 'ما يبقى Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'السطر الأعلى من كل إشعار، وصفحات الإعدادات والبطارية في هاتفك، ومتجر التطبيقات، وKryfo نفسه حين يفتحه أحد.';
+
+  @override
+  String get iconSheetGlance =>
+      'يصمد أمام نظرة سريعة إلى شاشتك الرئيسية. لا يخفي Kryfo عمّن يتصفح إعدادات هاتفك.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المساحة الخاصة، في إعداداته.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المجلد الآمن، في إعداداته.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: التطبيقات المخفية، في إعداداته.';
+
+  @override
+  String get androidIconNotes => 'ملاحظات';
+
+  @override
+  String get androidIconWeather => 'الطقس';
+
+  @override
+  String get androidIconTasks => 'مهام';
+
+  @override
+  String get androidIconNews => 'أخبار';
+
+  @override
+  String get androidServiceTitlePlain => 'نشط';
+
+  @override
+  String get lockStateUnlockPlain => 'فتح القفل';
+
+  @override
+  String get iconSheetOthers =>
+      'لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه.';
+
+  @override
+  String get iconSheetSaves =>
+      'ما دامت أيقونة بسيطة مفعّلة، تُحفظ الصور والفيديوهات والملفات الجديدة بأسماء عادية في مجلدات هاتفك المعتادة. وما حُفظ من قبل يبقى في مكانه.';
 }

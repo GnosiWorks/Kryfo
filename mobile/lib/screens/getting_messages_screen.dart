@@ -23,11 +23,12 @@ import '../ready_edge.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import 'helper_sheet.dart';
+import 'icon_screen.dart'
+    show IconScreen, NotifShow, notifShowName, notifShowOf;
 import '../widgets/card_action.dart';
 import '../widgets/motion.dart';
-import '../widgets/halo_rows.dart' show HaloSection;
+import '../widgets/halo_rows.dart' show HaloGroup, HaloRow, HaloSection;
 import '../widgets/press_scale.dart';
-import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
@@ -48,23 +49,29 @@ class GettingMessagesScreen extends StatefulWidget {
 class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   final _timers = SeenTimers();
   bool _busy = false;
-  // what a notification shows on the lock screen: how messages arrive and
-  // what they say when they do are the same question. null until read, so
-  // the switch never opens on a default and slides
-  bool? _hidePreview;
+  // what a notification shows: how messages arrive and what they say when
+  // they do are the same question. null until read, so the row never opens
+  // on a default
+  NotifShow? _show;
   late final ReadyEdge _torUp;
+
+  // no .then() without a catch: a throw here must not break the page
+  void _readShow() {
+    Future.wait([loadNotifPlain(), loadHideNotifContent(session.container)])
+        .then((v) {
+          if (mounted) {
+            setState(() => _show = notifShowOf(plain: v[0], hidden: v[1]));
+          }
+        })
+        .catchError((Object e) {
+          dlog('getting messages: notification setting (${e.runtimeType})');
+        });
+  }
 
   @override
   void initState() {
     super.initState();
-    // no .then() without a catch: a throw here must not break the page
-    loadHideNotifContent(session.container)
-        .then((v) {
-          if (mounted) setState(() => _hidePreview = v);
-        })
-        .catchError((Object e) {
-          dlog('getting messages: preview setting (${e.runtimeType})');
-        });
+    _readShow();
     appState.addListener(_changed);
     // the helper app is offered once our relay says it can knock. tor is
     // often still coming up as the page opens, so it is asked again each
@@ -266,72 +273,41 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 22),
-                child: HaloSection(
-                  l10n.gettingMessagesOnTheLockScreen,
-                  flush: true,
+                child: HaloSection(l10n.settingsNotifications, flush: true),
+              ),
+              // what they say is chosen in one place, with the icon: this
+              // row goes there
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: HaloGroup(
+                  children: [
+                    HaloRow(
+                      icon: Icons.notifications_none_rounded,
+                      label: l10n.gettingMessagesWhatShows,
+                      value: _show == null ? null : notifShowName(_show!),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          haloRoute(const IconScreen(toNotifications: true)),
+                        );
+                        _readShow();
+                      },
+                    ),
+                  ],
                 ),
               ),
-              // one switch to a screen reader, named by its title and line
-              MergeSemantics(
+              // a pin turns previews off. if someone turns them back on,
+              // say what that gives away, in the warning's own colour
+              Unfold(
+                open: lockState.lockOn && _show == NotifShow.all,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.gettingMessagesHideMessagePreview,
-                              style: HaloType.sans(
-                                size: 14,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              l10n.gettingMessagesAGenericAlertWith,
-                              style: HaloType.sans(
-                                size: 12,
-                                color: HaloColors.text2,
-                              ),
-                            ),
-                            // a pin turns previews off. if someone turns them
-                            // back on, say what that gives away.
-                            Unfold(
-                              open: lockState.lockOn && _hidePreview == false,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  l10n.gettingMessagesShowsMessageTextIn,
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    color: HaloColors.rose,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      FadeSwap(
-                        child: _hidePreview == null
-                            ? const SizedBox(
-                                key: ValueKey('pending'),
-                                width: 46,
-                                height: 26,
-                              )
-                            : HaloSwitch(
-                                key: const ValueKey('switch'),
-                                value: _hidePreview!,
-                                onChanged: (v) {
-                                  setState(() => _hidePreview = v);
-                                  setHideNotifContent(v, session.container);
-                                },
-                              ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
+                  child: Text(
+                    l10n.gettingMessagesShowsMessageTextIn,
+                    style: HaloType.sans(
+                      size: 12,
+                      color: HaloColors.rose,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ),

@@ -2474,12 +2474,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo перевіряє повідомлення кожні 15 хвилин. Батарею майже не витрачає, але повідомлення можуть запізнюватися.';
 
   @override
-  String get gettingMessagesOnTheLockScreen => 'На заблокованому екрані';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Приховати текст повідомлень';
-
-  @override
   String get gettingMessagesAGenericAlertWith =>
       'Загальне сповіщення, без відправника й тексту повідомлення';
 
@@ -9303,4 +9297,147 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get lockFingerTryAgain =>
+      'Телефон був зайнятий тієї миті. Спробуйте відбиток ще раз або введіть PIN-код.';
+
+  @override
+  String get settingsIconAndNotifications => 'Значок і сповіщення';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, прості сповіщення';
+  }
+
+  @override
+  String get iconSectionTitle => 'Значок застосунку';
+
+  @override
+  String get iconHint =>
+      'Головний екран і список застосунків показують цей значок і цю назву замість Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Обери звичайний значок і назву для головного екрана та списку застосунків.';
+
+  @override
+  String get iconWhatChanges => 'Що це змінює';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Змінити значок на «$name»?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo закриється й відкриється знову. Якщо значок зникне з головного екрана, знайди «$name» серед застосунків і постав його назад.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Змінити значок';
+
+  @override
+  String get iconNoPinLine =>
+      'Хто натисне на нього, побачить Kryfo. Задай PIN-код застосунку, і замість цього буде поле для PIN-коду.';
+
+  @override
+  String get iconSetPin => 'Задати PIN-код';
+
+  @override
+  String iconChanged(String name) {
+    return 'Значок змінено на «$name»';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'На головному екрані буде «$name»';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, значок застосунку';
+  }
+
+  @override
+  String get notifShowAll => 'Ім’я і повідомлення';
+
+  @override
+  String get notifShowNew => 'Лише «Нове повідомлення»';
+
+  @override
+  String get notifShowPlain => 'Прості';
+
+  @override
+  String get notifPlainHint =>
+      'Без імені, без повідомлення, без кольорів Kryfo. Нейтральний значок і один рядок.';
+
+  @override
+  String get notifPlainLine => 'Щось нове';
+
+  @override
+  String get notifPlainChannel => 'Оповіщення';
+
+  @override
+  String get notifHeaderLimit =>
+      'Угорі кожного сповіщення й далі написано Kryfo. Android не дає застосункам це змінювати.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Що видно у сповіщеннях';
+
+  @override
+  String get iconSheetChangesTitle => 'Що змінюється';
+
+  @override
+  String get iconSheetChanges =>
+      'Значок і назва на головному екрані та в списку застосунків, меню «Поділитися» й екран недавніх застосунків. З простими сповіщеннями ще й те, що в них видно.';
+
+  @override
+  String get iconSheetStaysTitle => 'Що лишається Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Верхній рядок кожного сповіщення, сторінки налаштувань і батареї телефона, магазин застосунків і сам Kryfo, коли його хтось відкриває.';
+
+  @override
+  String get iconSheetGlance =>
+      'Це витримає погляд на головний екран. Від того, хто переглядає налаштування телефона, це Kryfo не сховає.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Телефон може мати свій спосіб сховати застосунки: приватний простір, у його налаштуваннях.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Телефон може мати свій спосіб сховати застосунки: захищену папку, у його налаштуваннях.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Телефон може мати свій спосіб сховати застосунки: приховані застосунки, у його налаштуваннях.';
+
+  @override
+  String get androidIconNotes => 'Нотатки';
+
+  @override
+  String get androidIconWeather => 'Погода';
+
+  @override
+  String get androidIconTasks => 'Завдання';
+
+  @override
+  String get androidIconNews => 'Новини';
+
+  @override
+  String get androidServiceTitlePlain => 'Активно';
+
+  @override
+  String get lockStateUnlockPlain => 'Розблокувати';
+
+  @override
+  String get iconSheetOthers =>
+      'Застосунки на телефоні й далі можуть бачити, що Kryfo встановлено, а вікна й запити самого Android можуть показувати його назву.';
+
+  @override
+  String get iconSheetSaves =>
+      'Поки ввімкнено простий значок, нові фото, відео й файли зберігаються зі звичайними назвами у звичайні папки телефона. Те, що вже збережено, лишається на місці.';
 }

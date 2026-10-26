@@ -32,6 +32,24 @@ class HaloApplication : Application() {
                     else -> result.notImplemented()
                 }
             }
+        // which icon the home screen shows, for a plain notification's glyph
+        // in a process with no screen too
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/app_icon")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    // with the launcher's label in the phone's language, which
+                    // the app switcher's title takes. null when unread: the app
+                    // keeps the plain look and asks again
+                    "get" -> result.success(
+                        try {
+                            AppIcon.describe(this)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    )
+                    else -> result.notImplemented()
+                }
+            }
         // the helper app mode, here so a process with no screen answers too
         MethodChannel(engine.dartExecutor.binaryMessenger, HelperPush.CHANNEL)
             .setMethodCallHandler { call, result ->

@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
+import '../app_icon.dart' show AppFace, appFaceNow;
 import '../lock_state.dart';
 import '../wipe.dart';
 import '../widgets/fit_column.dart';
@@ -205,14 +206,15 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     );
   }
 
-  // why a finger does nothing: the sensor is locked, or the phone would not
-  // keep a key for Kryfo and the finger is off
+  // why a finger does nothing: the sensor is locked, the phone would not
+  // keep a key for Kryfo and the finger is off, or the phone was busy
   Widget _fingerNoteLine() {
     final still = MediaQuery.of(context).disableAnimations;
     final note = _lock.fingerNote;
     final line = switch (note) {
       FingerNote.lockedOut when _fingerOn => l10n.lockFingerLockedOut,
       FingerNote.refused when !_fingerOn => l10n.lockFingerRefused,
+      FingerNote.tryAgain when _fingerOn => l10n.lockFingerTryAgain,
       _ => null,
     };
     final shown = line == null
@@ -280,12 +282,24 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
               builder: (_, _) => FitColumn(
                 children: [
                   const Spacer(flex: 3),
-                  Text(
-                    'Kryfo',
-                    style: HaloType.serif(
-                      size: 40,
-                      color: HaloColors.amberText,
-                      italic: true,
+                  // the name only under kryfo's own icon: one that looks
+                  // like notes says nothing of kryfo when it opens. an
+                  // empty line keeps the pad where it is either way
+                  ValueListenableBuilder<AppFace?>(
+                    valueListenable: appFaceNow,
+                    builder: (context, face, _) => AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      child: Text(
+                        face == AppFace.kryfo ? 'Kryfo' : '',
+                        key: ValueKey(face == AppFace.kryfo),
+                        style: HaloType.serif(
+                          size: 40,
+                          color: HaloColors.amberText,
+                          italic: true,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),

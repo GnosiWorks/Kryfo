@@ -18,6 +18,7 @@ import 'main.dart'
     show appState, engine, session, sessionQuiet, AppStateProfile;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
+import 'drafts.dart' show forgetAllDrafts;
 import 'shred.dart' show shredFile;
 
 // everything still running checks this before touching the database. the
@@ -65,6 +66,8 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
   wipeForget();
+  // a draft waiting to be written would land in a file being erased
+  forgetAllDrafts();
   // a repoint armed before this must not claim the handle back after the
   // release below
   try {

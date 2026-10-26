@@ -34,6 +34,7 @@ import '../lock_guard.dart' show lockGuard;
 import '../orientation.dart';
 import '../file_kind.dart' show fileFits;
 import 'scan_screen.dart' show cameraDenied;
+import '../save_names.dart' show cameraName, savesPlain;
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -498,14 +499,19 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _keepCopy() async {
     HapticFeedback.selectionClick();
-    final ts = DateTime.now().millisecondsSinceEpoch;
+    // under a plain icon, the camera's own names in the camera's folder
+    final plain = savesPlain();
     bool ok;
     if (_shot != null) {
-      ok = await exportToPictures(_shot!, 'kryfo_$ts.jpg', 'image/jpeg');
+      ok = await exportToPictures(
+        _shot!,
+        cameraName(video: false, plain: plain),
+        'image/jpeg',
+      );
     } else if (_clip != null) {
       ok = await exportToPictures(
         await File(_clip!).readAsBytes(),
-        'kryfo_$ts.mp4',
+        cameraName(video: true, plain: plain),
         'video/mp4',
       );
     } else {

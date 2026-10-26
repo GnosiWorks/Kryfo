@@ -35,6 +35,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'host_engine.dart';
 import 'pin_flow_fakes.dart' show phone, press;
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 
 class _Db implements HaloDb {
   _Db([this.container = HaloContainer.everyday]);
@@ -66,6 +67,8 @@ void main() {
   // android's copy as a lock finds it, and what it was told
   late String stage;
   late int stopping;
+  // what each save dialog was asked to name the file
+  final names = <String>[];
   late List<Object?> cancels;
   late List<bool> intactAtCancel;
 
@@ -78,6 +81,7 @@ void main() {
     stage = 'idle';
     stopping = 0;
     cancels = [];
+    names.clear();
     intactAtCancel = [];
     String? saving;
     var taken = false;
@@ -95,6 +99,7 @@ void main() {
         case 'saveDocument':
           // what the save window would copy, read as it opens
           final path = (call.arguments as Map)['path'] as String;
+          names.add((call.arguments as Map)['name'] as String);
           saving = path;
           taken = false;
           saved.add(File(path).readAsBytesSync());
@@ -315,6 +320,33 @@ void main() {
     await press(t, find.text(l10n.notesExport));
     await until(t, () => dialogs.isNotEmpty);
     expect(dialogs, hasLength(1));
+  }
+
+  // the export's name under each icon: nothing says kryfo unless android
+  // has said kryfo's own icon is on
+  for (final (face, own) in [
+    (AppFace.kryfo, true),
+    (AppFace.tasks, false),
+    (null, false),
+  ]) {
+    testWidgets(
+      'the export\'s name under ${face?.name ?? 'an icon not read'}',
+      (t) async {
+        appFaceNow.value = face;
+        addTearDown(() => appFaceNow.value = null);
+        await plain(t);
+        final name = names.single;
+        if (own) {
+          expect(name, startsWith('kryfo-notes-'));
+        } else {
+          expect(name, startsWith('notes-'));
+          expect(name.toLowerCase(), isNot(contains('kryfo')));
+        }
+        dialogs.single.complete({'state': 'saved', 'where': 'Download'});
+        await until(t, () => screen.evaluate().isEmpty);
+        await t.pumpAndSettle(const Duration(seconds: 5));
+      },
+    );
   }
 
   testWidgets('saved: a toast, and the file is gone', (t) async {

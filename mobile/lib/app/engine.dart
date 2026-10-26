@@ -927,6 +927,10 @@ class HaloEngine {
   Future<String> nostrMarkHeld(List<String> peerXPubHexes) =>
       _roomFfiOnIsolate('HaloNostrMarkHeld', [jsonEncode(peerXPubHexes)]);
 
+  // the pinned chats' keys (HaloNostrPinned)
+  Future<String> nostrPinned(List<String> peerXPubHexes) =>
+      _roomFfiOnIsolate('HaloNostrPinned', [jsonEncode(peerXPubHexes)]);
+
   // no more listening for a peer, and its address's files gone
   void nostrUnsubscribeBg(String peerXPubHex) => _background(
     _roomFfiOnIsolate('HaloNostrUnsubscribe', [peerXPubHex]),

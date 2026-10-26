@@ -5,4 +5,9 @@
     <string name="service_text">Đường truyền được mã hóa của bạn luôn mở để tin nhắn đến được</string>
     <string name="channel_name">Duy trì kết nối</string>
     <string name="channel_description">Giữ Kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. Tắt mục này sẽ dừng việc nhận tin.</string>
+    <string name="icon_notes">Ghi chú</string>
+    <string name="icon_weather">Thời tiết</string>
+    <string name="icon_tasks">Công việc</string>
+    <string name="icon_news">Tin tức</string>
+    <string name="service_title_plain">Đang hoạt động</string>
 </resources>

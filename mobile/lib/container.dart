@@ -335,4 +335,8 @@ const deviceKeys = {
   'kryfo.update.checked',
   'kryfo.update.latest',
   'kryfo.update.dismissed',
+  // plain notifications and the line after an icon switch: the icon is the
+  // phone's, so what goes with it is too
+  'notif_plain',
+  'icon_changed',
 };

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/icon_art.dart from lib/app_icon_art.dart -->
+<resources>
+    <color name="ic_icon_notes_bg">#FFD9C9A3</color>
+    <color name="ic_icon_weather_bg">#FF4A6A8A</color>
+    <color name="ic_icon_tasks_bg">#FF5F8268</color>
+    <color name="ic_icon_news_bg">#FF3A3F45</color>
+</resources>

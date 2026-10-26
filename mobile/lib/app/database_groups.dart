@@ -7,6 +7,7 @@ mixin _GroupRows {
   // what these rows take from the rest of HaloDb
   HaloContainer get container;
   Future<Database> open();
+  Future<void> dropDraftOf(String chatId, {required bool group});
   Future<void> _dropPhotos(Iterable<Object?> atmospheres);
   Future<void> clearGroupConversation(String groupId, {bool noteGone = true});
   Future<void> _dropGroupFiles(
@@ -210,7 +211,7 @@ mixin _GroupRows {
   /// its members, and what of ours still goes: take-backs, the end itself
   /// and its words for older versions
   Future<void> wipeEnded(String groupId) async {
-    dropDraft(container.chatKey(groupId), group: true);
+    await dropDraftOf(groupId, group: true);
     await clearGroupConversation(groupId, noteGone: false);
     final db = await open();
     // its wallpaper too: the line stays on a plain page, with no count. a
@@ -327,7 +328,7 @@ mixin _GroupRows {
   }
 
   Future<void> deleteGroup(String groupId) async {
-    dropDraft(container.chatKey(groupId), group: true);
+    await dropDraftOf(groupId, group: true);
     final db = await open();
     final room = (await getGroup(groupId))?['room_pub'] != null;
     // what its members were still sending goes with it

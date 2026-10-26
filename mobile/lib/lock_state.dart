@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:local_auth/local_auth.dart';
 
+import 'app_icon.dart' show AppFace, appFaceNow;
 import 'container.dart';
 import 'dlog.dart';
 import 'engine_strings.dart';
@@ -81,6 +82,12 @@ Future<bool?> quietRead([LockStore? store]) async {
     return null;
   }
 }
+
+// android's fingerprint sheet comes up over the pad: under a plain icon, or
+// one not read yet, its title names nothing
+String fingerTitle(AppFace? face) => face == AppFace.kryfo
+    ? l10n.lockStateUnlockKryfo
+    : l10n.lockStateUnlockPlain;
 
 // secure storage, behind a seam so a test can count what is read and written
 abstract class LockStore {
@@ -166,12 +173,15 @@ class PlatformLockClock implements LockClock {
 }
 
 // what a finger gave back: "ok" with the container the seal opened, or
-// "cancel", "lockout", "invalidated", "none", "error", or "refused" (the
-// finger was taken but the phone would not open the seal with it)
+// "cancel", "lockout", "invalidated", "none" (no key, or a seal made for
+// another one), "error", or "refused" (the finger was taken but the phone
+// would not open its own key's seal with it). with "ok", [again] is an old
+// seal made again in the form that names its key, to keep in its place
 class BioOpened {
-  const BioOpened(this.result, [this.opens]);
+  const BioOpened(this.result, [this.opens, this.again]);
   final String result;
   final String? opens;
+  final String? again;
 }
 
 // fingerprint unlock (BioKey.kt): what a finger opens is sealed to a key the
@@ -214,8 +224,12 @@ class PlatformLockBio implements LockBio {
       'cancel': cancel,
       'seal': seal,
     });
-    final r = m?['r'], p = m?['p'];
-    return BioOpened(r is String ? r : 'error', p is String ? p : null);
+    final r = m?['r'], p = m?['p'], s = m?['s'];
+    return BioOpened(
+      r is String ? r : 'error',
+      p is String ? p : null,
+      s is String ? s : null,
+    );
   }
 }
 
@@ -533,8 +547,9 @@ class LockCounters {
 bool decoyReady = false;
 
 // a line the lock screen shows about the fingerprint: too many wrong fingers
-// locked the sensor, or the phone would not keep a key for it and it is off
-enum FingerNote { lockedOut, refused }
+// locked the sensor, the phone would not keep a key for it and it is off,
+// or the phone was busy and the same finger may work in a moment
+enum FingerNote { lockedOut, refused, tryAgain }
 
 class LockState extends ChangeNotifier {
   LockState({
@@ -780,9 +795,11 @@ class LockState extends ChangeNotifier {
     }
     if (_biometric) {
       try {
-        _bioStale =
-            await _bio.state().timeout(most) != 'ok' ||
-            await _store.read(_kSeal) == null;
+        final st = await _bio.state().timeout(most);
+        final sealed = await _store.read(_kSeal) != null;
+        // a busy keystore says nothing about the key: the finger stays
+        // as it was, and the unlock asks again
+        if (st != 'error' || !sealed) _bioStale = st != 'ok' || !sealed;
       } catch (e) {
         // a hint for the screen only: the unlock asks the keystore again
         dlog('lock: finger state unread (${e.runtimeType})');
@@ -1469,6 +1486,9 @@ class LockState extends ChangeNotifier {
     }
   }
 
+  // the busy answers in a row since the last other one
+  int _fingerErrors = 0;
+
   // each turn on, off or new seal moves this: a seal that comes back after
   // a newer one was asked for is never written
   int _sealGen = 0;
@@ -1551,17 +1571,35 @@ class LockState extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    if (_fingerNote == FingerNote.lockedOut) {
+    if (_fingerNote == FingerNote.lockedOut ||
+        _fingerNote == FingerNote.tryAgain) {
       _fingerNote = null;
       notifyListeners();
     }
+    final gen = _sealGen;
     final r = await _bio.unlock(
-      l10n.lockStateUnlockKryfo,
+      fingerTitle(appFaceNow.value),
       l10n.commonCancel,
       seal,
     );
+    if (r.result == 'error') {
+      // the phone was busy or restarted its keystore: the finger stays on
+      // and the pin works. one that keeps failing gets a new key after
+      // the pin, as a stale one does
+      if (++_fingerErrors >= 3) {
+        _fingerErrors = 0;
+        _fingerNote = null;
+        _bioStale = true;
+      } else {
+        _fingerNote = FingerNote.tryAgain;
+      }
+      notifyListeners();
+      return false;
+    }
+    if (r.result != 'cancel') _fingerErrors = 0;
     if (r.result == 'invalidated' || r.result == 'none') {
-      // a finger was added since, or the key is gone: the pin first
+      // a finger was added since, the key is gone, or the seal is another
+      // key's: the pin first, which makes a new one. nothing counts
       _bioStale = true;
       notifyListeners();
       return false;
@@ -1590,7 +1628,21 @@ class LockState extends ChangeNotifier {
     if (!opened) return false;
     _locked = false;
     notifyListeners();
+    final again = r.again;
+    if (again != null) unawaited(_keepSeal(gen, seal, again));
     return true;
+  }
+
+  // an old seal a finger opened, made again for the same key in the form
+  // that names it. not over a seal set since, nor after a turn off
+  Future<void> _keepSeal(int gen, String was, String again) async {
+    bool moved() => gen != _sealGen || !_biometric;
+    try {
+      if (moved() || await _store.read(_kSeal) != was || moved()) return;
+      await _store.write(_kSeal, again);
+    } catch (e) {
+      dlog('lock: finger seal not kept (${e.runtimeType})');
+    }
   }
 
   Future<bool> _openByFinger(String? opens) async {
@@ -1720,7 +1772,10 @@ class LockState extends ChangeNotifier {
     if (!_locked) {
       _locked = true;
       // each lock tries the finger afresh
-      if (_fingerNote == FingerNote.lockedOut) _fingerNote = null;
+      if (_fingerNote == FingerNote.lockedOut ||
+          _fingerNote == FingerNote.tryAgain) {
+        _fingerNote = null;
+      }
       notifyListeners();
     }
   }

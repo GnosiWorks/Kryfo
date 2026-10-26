@@ -149,6 +149,8 @@ class ArrivalSeal implements VaultSeal {
 }
 
 class ArrivalIo implements AppIo {
+  @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];

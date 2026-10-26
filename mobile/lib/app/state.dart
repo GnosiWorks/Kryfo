@@ -273,6 +273,8 @@ class AppState extends ChangeNotifier {
   // happens here: a failure is kept for the next switch to the same mode,
   // and never told as a mode not saved
   bool _resubscribeDue = false;
+  // the pinned chats' keys the engine was last told, sorted and joined
+  String _pinsTold = '';
 
   static const _platformChannel = MethodChannel('halo/platform');
 

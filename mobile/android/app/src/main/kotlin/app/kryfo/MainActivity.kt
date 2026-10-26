@@ -9,7 +9,6 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.BroadcastReceiver
 import android.content.ComponentName
-import android.content.ContentValues
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.PersistableBundle
@@ -49,7 +48,8 @@ import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StringCodec
 
-class MainActivity : FlutterFragmentActivity() {
+// open for KryfoActivity, the name the manifest gives the screen
+open class MainActivity : FlutterFragmentActivity() {
     private val tools = ToolsBridge(this)
     private var videos: VideoPlayers? = null
     companion object {
@@ -301,6 +301,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
         super.onCreate(savedInstanceState)
         underBars()
+        AppIcon.describeTask(this)
         windowSeen = WindowWatch(this).also {
             it.gone = { tellAway() }
             addContentView(it, ViewGroup.LayoutParams(0, 0))
@@ -386,8 +387,14 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    // the android version too, for the line about its own
+                    // way to hide apps (private space, 15 and later)
                     "phoneMaker" -> result.success(
-                        mapOf("manufacturer" to Build.MANUFACTURER, "brand" to Build.BRAND)
+                        mapOf(
+                            "manufacturer" to Build.MANUFACTURER,
+                            "brand" to Build.BRAND,
+                            "sdk" to Build.VERSION.SDK_INT.toString(),
+                        )
                     )
                     "photoPickerReady" -> result.success(PhotoPicker.ready(this))
                     "installSource" -> result.success(installSource())
@@ -415,7 +422,11 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                     // fingerprint unlock on a key a new finger invalidates
                     "bioReady" -> result.success(BioKey.ready())
-                    "bioState" -> result.success(BioKey.state())
+                    // the keystore may pause between tries: off the main thread
+                    "bioState" -> Thread {
+                        val s = BioKey.state()
+                        runOnUiThread { result.success(s) }
+                    }.start()
                     "bioSeal" -> {
                         val opens = call.argument<String>("opens")
                         if (opens.isNullOrEmpty()) {
@@ -437,8 +448,8 @@ class MainActivity : FlutterFragmentActivity() {
                         val title = call.argument<String>("title") ?: "kryfo"
                         val cancel = call.argument<String>("cancel") ?: "Cancel"
                         val seal = call.argument<String>("seal") ?: ""
-                        BioKey.unlock(this, title, cancel, seal) { r, opens ->
-                            result.success(mapOf("r" to r, "p" to opens))
+                        BioKey.unlock(this, title, cancel, seal) { r, opens, again ->
+                            result.success(mapOf("r" to r, "p" to opens, "s" to again))
                         }
                     }
                     // the pin hold runs on these: time since boot, which a
@@ -515,6 +526,15 @@ class MainActivity : FlutterFragmentActivity() {
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
+                    }
+                    // the home screen's icon and name. android leaves the
+                    // open screen up (DONT_KILL_APP), so kryfo closes and
+                    // opens again itself, through the entry now on: what
+                    // the shade and recents held named the old one
+                    "appIconSet" -> {
+                        val ok = AppIcon.set(this, call.argument<String>("icon"))
+                        result.success(ok)
+                        if (ok) ReopenActivity.start(this)
                     }
                     // a new process: a call stuck in a plugin's thread holds
                     // every call after it until this one is gone
@@ -917,20 +937,10 @@ class MainActivity : FlutterFragmentActivity() {
                 MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             else
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, mime)
-                put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    if (video) "Movies/Kryfo" else "Pictures/Kryfo"
-                )
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-            val uri = contentResolver.insert(collection, values) ?: return false
+            val uri = contentResolver.insert(collection, SavePlace.newRow(this, name, mime))
+                ?: return false
             contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
-            values.clear()
-            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-            contentResolver.update(uri, values, null, null)
+            contentResolver.update(uri, SavePlace.doneRow(), null, null)
             true
         } catch (e: Exception) {
             false

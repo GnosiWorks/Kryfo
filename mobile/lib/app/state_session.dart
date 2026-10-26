@@ -184,6 +184,9 @@ extension AppStateSession on AppState {
   }
 
   Future<void> _dropDecoyFiles(HaloDb d) async {
+    // a draft waiting to be written would make the file again
+    forgetDrafts(HaloContainer.decoy);
+    forgetDrafts(HaloContainer.decoyVault);
     await listContainer(HaloContainer.decoy, false);
     await d.close();
     await HaloContainer.decoy.wipeFiles();
@@ -493,6 +496,8 @@ extension AppStateSession on AppState {
   // once a move under way is done, and its key goes with the handle
   Future<void> _closeDecoyVault(HaloDb v) async {
     try {
+      // its drafts are written before it shuts, and leave memory with it
+      await settleDrafts(v.container);
       await _serial(v.close);
     } catch (e) {
       dlog('vault: close (${e.runtimeType})');
@@ -511,6 +516,8 @@ extension AppStateSession on AppState {
 
   Future<void> _closeVault(HaloDb v, Completer<void> done) async {
     try {
+      // its drafts are written before it shuts, and leave memory with it
+      await settleDrafts(v.container);
       await _serial(() async {
         // what is being filed into it, or opened from the seal, lands first
         final until = DateTime.now().add(const Duration(seconds: 10));

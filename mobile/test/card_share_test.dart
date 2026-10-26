@@ -11,6 +11,7 @@ import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/open_file.dart' show shareGoesWithLock;
 
 import 'shred_twin.dart';
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +21,9 @@ void main() {
   final read = <String>[];
 
   setUp(() {
-    // a phone with no lock, open
+    // a phone with no lock, open, kryfo's own icon
     lockState.openForTest();
+    appFaceNow.value = AppFace.kryfo;
     cache = Directory.systemTemp.createTempSync('card_share');
     twins = Directory.systemTemp.createTempSync('card_twins');
     asked.clear();
@@ -47,6 +49,7 @@ void main() {
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
     shareGoesWithLock = () => false;
+    appFaceNow.value = null;
     cache.deleteSync(recursive: true);
     twins.deleteSync(recursive: true);
   });
@@ -64,6 +67,19 @@ void main() {
         expect(asked.single['quiet'], quiet);
         expect(asked.single['path'] as String, isNot(contains('quiet-otter')));
         expect(read.single, contains('BEGIN:VCARD'));
+        expect(cache.listSync(), isEmpty);
+      },
+    );
+  }
+
+  // under a plain icon, or one not read, nothing in the name says kryfo
+  for (final face in [AppFace.weather, null]) {
+    test(
+      'a card goes out plainly named under ${face?.name ?? 'an icon not read'}',
+      () async {
+        appFaceNow.value = face;
+        await shareContactVcf(haloId: 'quiet-otter-lamp', uri: 'kryfo://x');
+        expect(asked.single['name'], 'card-quiet-otter-lamp.vcf');
         expect(cache.listSync(), isEmpty);
       },
     );

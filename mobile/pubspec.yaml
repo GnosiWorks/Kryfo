@@ -129,23 +129,21 @@ flutter_launcher_icons:
   min_sdk_android: 23
   remove_alpha_ios: true
 
-# the android splash pngs are not made by this package, which is not a
-# dependency: two dozen pngs are not worth one. they come from
-# tool/ring_splash.py, which draws assets/icon/kryfo_ring.svg directly:
+# android draws no splash picture of kryfo's: on 12 and later the icon the
+# app was opened from (a plain icon keeps its face), on 11 and below plain
+# ink (res/drawable/launch_background.xml). tool/ring_splash.py draws
+# assets/icon/kryfo_ring.svg to pngs where a ring splash is wanted:
 #
-#   python3 tool/ring_splash.py <path> <size> full   legacy, ring across the canvas
-#   python3 tool/ring_splash.py <path> <size> safe   android 12+, inside the
-#                                                    middle two thirds it masks to
+#   python3 tool/ring_splash.py <path> <size> full   ring across the canvas
+#   python3 tool/ring_splash.py <path> <size> safe   inside the middle two
+#                                                    thirds android 12+ masks to
 #
 # this block is kept so the config matches what is on screen if anyone ever
 # does run the package.
 flutter_native_splash:
   color: "#0D0B09"
   image: "assets/icon/kryfo_ring.png"
-  android_12:
-    color: "#0D0B09"
-    image: "assets/icon/kryfo_ring.png"
-  android: true
+  android: false
   ios: true
 
 # the camera plugin's platform packages, vendored so the scanner builds offline

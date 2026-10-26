@@ -49,11 +49,26 @@ import 'in_front.dart';
 import 'reopen.dart';
 import 'link_view.dart';
 import 'pill_fit.dart';
+import 'app_icon.dart' show appFaceNow, readAppFace;
+import 'screens/icon_screen.dart' show sayFaceChanged;
 import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
 import 'drafts.dart'
-    show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
+    show
+        Draft,
+        DraftRows,
+        DraftsOnPause,
+        KeptDraft,
+        dropDraft,
+        forgetDraft,
+        forgetDrafts,
+        holdDraftsOf,
+        restartKeepingDrafts,
+        restoreKeptDrafts,
+        settleDrafts,
+        sweepDrafts,
+        writeDraftNow;
 import 'helper_delivery.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
@@ -154,6 +169,7 @@ part 'app/database_blocks.dart';
 part 'app/database_chat_settings.dart';
 part 'app/database_contacts.dart';
 part 'app/database_deletes.dart';
+part 'app/database_drafts.dart';
 part 'app/database_first_contact.dart';
 part 'app/database_group_owed.dart';
 part 'app/database_groups.dart';
@@ -213,9 +229,6 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
-  // a draft is written down for a restart only for a chat that is still
-  // there
-  everydayChats = () => live.draftChats();
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepNotesAtLaunch());
@@ -231,6 +244,8 @@ void main() async {
   // replaced, it is lost, so it is asked again on every return
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   WidgetsBinding.instance.addObserver(_underBars);
+  // a draft waiting to be written goes down before android may stop us
+  WidgetsBinding.instance.addObserver(const DraftsOnPause());
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the
@@ -263,6 +278,14 @@ void main() async {
       }
     }),
   );
+  // which icon the home screen shows, before the first frame, while the
+  // theme's read runs: the pin pad's wordmark and the app switcher's title
+  // follow it. a short wait at most
+  try {
+    await readAppFace().timeout(const Duration(milliseconds: 300));
+  } catch (_) {
+    // read on in the background; the title follows once it is
+  }
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('launch headless');
     // no window: the service or the job brought the process back, and
@@ -321,11 +344,15 @@ class HaloApp extends StatelessWidget {
           localeRevision,
           navRevision,
         ]),
-        builder: (context, _) => haloAppShell(
-          navigatorKey: rootNavKey,
-          locale: l10nLocale,
-          lock: (navigator) => _LockGate(child: navigator),
-          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        builder: (context, _) => FacedShell(
+          builder: (face, label) => haloAppShell(
+            navigatorKey: rootNavKey,
+            locale: l10nLocale,
+            face: face,
+            faceLabel: label,
+            lock: (navigator) => _LockGate(child: navigator),
+            home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+          ),
         ),
       ),
     );

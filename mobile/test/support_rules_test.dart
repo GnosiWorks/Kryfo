@@ -274,6 +274,8 @@ class _Phone extends HaloDb {
 // signal and the engine as the receive side reaches them
 class _Io implements AppIo {
   @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  @override
   Future<String?> decryptIf(
     String peer,
     String cipher,
