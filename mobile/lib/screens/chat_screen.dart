@@ -63,7 +63,7 @@ import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../media_send.dart'
-    show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
+    show sendChunkedMediaTo, cancelMediaSend, mediaInflight, mediaSendsTick;
 import '../clean_media.dart';
 import '../image_strip.dart';
 import '../widgets/decode_px.dart';
@@ -624,7 +624,14 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 // it has retried itself to the cap. online, the row keeps going on its own
 // and shows as pending.
 bool _sendLooksFailed(_Msg m) =>
-    m.failed && (m.gaveUp || m.notSent || _cannotSend());
+    m.failed && (m.gaveUp || m.notSent || _cannotSend() || _fileIdle(m));
+
+// a file of ours no send holds is not moving: it says not sent, and a tap
+// sends what is missing. one a send holds draws as sending
+bool _fileIdle(_Msg m) =>
+    m.direction == 'out' &&
+    (m.mediaPath != null || m.filePath != null) &&
+    (m.msgUid == null || !mediaInflight.contains(m.msgUid));
 
 // a row a block held back reads as not sent
 void _readNotSent(_Msg m, Map<String, Object?> r) {
@@ -1261,6 +1268,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _loadShots();
     appState.addListener(_onAppStateChanged);
+    mediaSendsTick.addListener(_mediaSendsMoved);
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
@@ -1663,6 +1671,71 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     _wasReachable = reachable;
+  }
+
+  // the sends this screen started, by row, until their verdict is drawn
+  final Map<String, int> _ownSends = {};
+  // rows seen held by a send this screen did not start
+  final Set<String> _seenGoing = {};
+  Timer? _followTimer;
+
+  // a beat after the tick, so a send that just let go has written its row
+  void _mediaSendsMoved() {
+    _followTimer?.cancel();
+    _followTimer = Timer(
+      const Duration(milliseconds: 400),
+      () => unawaited(_followMediaSends()),
+    );
+  }
+
+  // a file of ours that a send took up or let go of somewhere else: the
+  // outbox, or this chat left and opened again. one held shows as sending;
+  // one let go reads its row, and is done, waiting or not sent
+  Future<void> _followMediaSends() async {
+    if (!mounted) return;
+    var changed = false;
+    final ended = <_Msg>[];
+    for (final m in _messages) {
+      final uid = m.msgUid;
+      if (m.direction != 'out' ||
+          uid == null ||
+          (m.mediaPath == null && m.filePath == null) ||
+          _ownSends.containsKey(uid)) {
+        continue;
+      }
+      if (mediaInflight.contains(uid)) {
+        _seenGoing.add(uid);
+        if (!m.sending && (m.failed || m.parked) && !m.notSent) {
+          m
+            ..sending = true
+            ..failed = false
+            ..parked = false;
+          changed = true;
+        }
+      } else if (_seenGoing.remove(uid) && m.sending) {
+        ended.add(m);
+      }
+    }
+    if (ended.isNotEmpty) {
+      final backPaired = await session.isBackPaired(widget.peerHaloId);
+      for (final m in ended) {
+        final uid = m.msgUid!;
+        final s = await session.sendState(uid);
+        final held = !s.sent && await session.heldBack(uid);
+        if (!mounted) return;
+        // taken up again meanwhile, here or there
+        if (!m.sending || mediaInflight.contains(uid)) continue;
+        if (_ownSends.containsKey(uid)) continue;
+        m.sending = false;
+        if (!s.sent && !s.delivered) {
+          m.failed = held || backPaired;
+          m.parked = !held && !backPaired;
+          m.notSent = held;
+        }
+        changed = true;
+      }
+    }
+    if (changed && mounted) setState(() {});
   }
 
   // a receipt flips `delivered` in the db for a bubble already on screen,
@@ -2966,6 +3039,8 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (snap) {
       _scrollToEnd(instant: true);
     }
+    // a file still going from a screen left since is followed to its end
+    unawaited(_followMediaSends());
     if (_earlier.count > 0) {
       await _pruneEarlier();
       _lookEarlierSoon();
@@ -4276,6 +4351,8 @@ class _ChatScreenState extends State<ChatScreen>
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
     if (sessionQuiet || appState.everydayHeld) return 'parked';
+    // its verdict is _finishMediaSend's, which lets go of the count
+    _ownSends[msgUid] = (_ownSends[msgUid] ?? 0) + 1;
     return sendChunkedMediaTo(
       peerId: widget.peerHaloId,
       peerOnion: widget.peerOnion,
@@ -4306,9 +4383,26 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
+    try {
+      await _drawMediaVerdict(msg, result);
+    } finally {
+      final uid = msg.msgUid;
+      final n = uid == null ? null : _ownSends[uid];
+      if (n != null && n > 1) {
+        _ownSends[uid!] = n - 1;
+      } else if (n != null) {
+        _ownSends.remove(uid);
+      }
+      // another sender has it: followed like one this screen did not start
+      if (result == 'busy' && uid != null) unawaited(_followMediaSends());
+    }
+  }
+
+  Future<void> _drawMediaVerdict(_Msg msg, String result) async {
     // another sender already has this one; its verdict comes later. a
     // cancelled one has no row left to finish.
     if (result == 'busy' || result == 'cancelled') return;
+    if (msg.msgUid != null) _seenGoing.remove(msg.msgUid);
     if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
     if (result == 'ok' && msg.msgUid != null) {
       await session.markSent(msg.msgUid!);
@@ -5296,6 +5390,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
+    mediaSendsTick.removeListener(_mediaSendsMoved);
+    _followTimer?.cancel();
     wallpaperRevision.removeListener(_loadWall);
     _devOpening
       ?..removeListener(_onDevOpening)

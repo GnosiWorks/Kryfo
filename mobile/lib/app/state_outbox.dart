@@ -460,6 +460,9 @@ extension AppStateOutbox on AppState {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
+      // a file another send still holds: a try now would only come back
+      // busy and spend one of the row's tries
+      if (mediaInflight.contains(uid)) continue;
       // a decoy opened while this pass read: the rest waits, its tries kept
       if (everydayHeld) break;
       // to someone blocked in the row's own container: not sent, and it
