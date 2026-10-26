@@ -1001,6 +1001,9 @@ func TestOurRelayDownCountsTheTimeAsleep(t *testing.T) {
 	liveReset()
 	t.Cleanup(liveReset)
 	setDownRound(t, time.Minute, 10*time.Minute, 2*time.Minute)
+	// the clock is put back after the test, and that is no wake either
+	wakeReset()
+	t.Cleanup(wakeReset)
 	var mu sync.Mutex
 	at := time.Hour
 	clock := func(d time.Duration) {

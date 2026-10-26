@@ -946,6 +946,10 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	if modeNeedsTor() && !torReadyNow() {
 		return
 	}
+	// nor can a sleep, or the first stretch of the wake after it
+	if wakeExcuses(began) {
+		return
+	}
 	if modeNeedsTor() && route {
 		routeNoteFail(u)
 	}
@@ -1512,6 +1516,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			ck := catchupKey(u, rcvPk)
 			// one of our relay's entries
 			ownEntry := slices.Contains(ownURLs, u)
+			// counted for the width of a wake's turns
+			socks := &pubSockets
+			if ownEntry {
+				socks = &ownSockets
+			}
+			socks.Add(1)
+			defer socks.Add(-1)
 			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
@@ -1557,7 +1568,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					ownRelayFailed()
 				}
 			}
-			turn := subTurn{tag: tag, fresh: freshOf(ctx)}
+			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry}
 			defer turn.done()
 			for {
 				// nothing is counted while it parks or waits for tor below:
@@ -2129,7 +2140,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// it is asleep in sleepOrKick and still reconnects at
 						// once, which is the case the kick exists for.
 						if kickC == nil {
-							kickT = time.NewTimer(kickDelay())
+							kickT = time.NewTimer(kickDelayFor(ownEntry))
 							kickC = kickT.C
 							// a check-in waits for the probe, and for the
 							// redial if it goes unanswered
@@ -2144,6 +2155,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// tearing down.
 						if relayResponds(conn, r, rcvPk) {
 							aliveNow()
+							turn.probed(true)
 							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
@@ -2157,6 +2169,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
+						turn.probed(false)
 						ownMiss()
 						idle.Stop()
 						r.Close()
@@ -2648,8 +2661,14 @@ func nostrSendFirstContact(peerHex, fcPk, msg string) string {
 //
 //export HaloNostrKick
 func HaloNostrKick() *C.char {
-	kickRelays()
+	nostrKick()
 	return C.CString("ok")
+}
+
+func nostrKick() {
+	// a kick at a wake takes the wake's turns
+	wakeCheck()
+	kickRelays()
 }
 
 // what the go side is holding, for the transport screen and for finding

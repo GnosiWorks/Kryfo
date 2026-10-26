@@ -159,6 +159,17 @@ func routeNoteFail(u string) {
 	failedSinceOK[u] = true
 }
 
+// the phone slept: a dead spell begun before it starts again from the wake
+func routeSlept() {
+	routeMu.Lock()
+	for k := range failedSinceOK {
+		delete(failedSinceOK, k)
+	}
+	firstFailAt = time.Time{}
+	deadWait = 0
+	routeMu.Unlock()
+}
+
 // the route is about to be torn down on purpose. returns the new generation.
 func routeBump() int64 {
 	routeMu.Lock()
@@ -276,6 +287,8 @@ func routeWatch() {
 // the decision, apart from the loop so it can be tested with a clock. "" when
 // nothing should happen, otherwise the reason. records the rescue it allows.
 func routeNeedsRescue(now time.Time) string {
+	// a spell from before a sleep is not judged on
+	wakeCheck()
 	if !modeNeedsTor() || torIsPaused() {
 		return ""
 	}

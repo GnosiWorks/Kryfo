@@ -306,6 +306,7 @@ func ownRelayAnswered() {
 
 // an attempt on an entry of our relay failed
 func ownRelayFailed() {
+	wakeCheck()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()
@@ -326,6 +327,14 @@ func ownRelayFailed() {
 		log.Println("nostr: our relay is down, public relays read more often")
 		liveWakeLocked()
 	}
+}
+
+// the phone slept: a span of failures begun before it ends there, so a
+// public relay answering before ours at the wake finds no span to finish
+func liveSlept() {
+	liveMu.Lock()
+	ownFailedAt = 0
+	liveMu.Unlock()
 }
 
 // whether the round now is the one for our relay down
