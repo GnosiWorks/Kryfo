@@ -11,7 +11,7 @@ void main() {
     expect(isWipeWord('löschen', 'löschen'), isTrue);
     expect(isWipeWord('SIL', 'sil'), isTrue);
     expect(isWipeWord('стереть', 'стереть'), isTrue);
-    expect(isWipeWord('抹掉', '抹掉'), isTrue);
+    expect(isWipeWord('抹除', '抹除'), isTrue);
     expect(isWipeWord('wipe', 'стереть'), isTrue);
     expect(isWipeWord('پاك', 'پاک'), isTrue); // arabic kaf for persian
     expect(isWipeWord('اِمسَح', 'امسح'), isTrue); // with vowel marks

@@ -780,7 +780,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get batteryGuideXiaomiTitle => '让 Kryfo 保持运行';
 
   @override
-  String get batteryGuideXiaomi => '即使开了自启动，小米也会停止后台应用。要持续收到消息：';
+  String get batteryGuideXiaomi => '即使开了自启动，小米也会停止后台应用。如要持续收到消息：';
 
   @override
   String get batteryGuideXiaomiStep1 => '自启动：为 Kryfo 打开。';
@@ -1009,7 +1009,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get avatarPickerThatOneIsYours => '这个就是你的';
 
   @override
-  String get avatarPickerPickAFace => '选一张脸';
+  String get avatarPickerPickAFace => '选一个头像';
 
   @override
   String get commonSave => '保存';
@@ -1116,7 +1116,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupNotMade => '备份没能完成。请再试一次。';
 
   @override
-  String get backupNoSpace => '手机可用空间不足，无法完成备份。请释放一些空间后再试一次。';
+  String get backupNoSpace => '手机可用空间不足，无法完成备份。请清理一些空间后再试一次。';
 
   @override
   String get backupHiddenNotIn => '隐藏聊天不在其中。';
@@ -1125,7 +1125,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupHiddenIncluded => '你的隐藏聊天也在其中。';
 
   @override
-  String get backupMoveHiddenStay => '隐藏聊天留在这部手机上，并随它一起抹掉。';
+  String get backupMoveHiddenStay => '隐藏聊天留在这部手机上，并随它一起抹除。';
 
   @override
   String get backupHiddenGone => 'Kryfo 锁定时，你的隐藏聊天已关闭。用隐藏聊天 PIN 打开它们，再从那里备份。';
@@ -2180,7 +2180,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      '要验证这条链，我们就得向外部服务打听你的情况，所以我们不验证。你愿意的话照样可以发送。它不会解锁徽章。';
+      '要验证这条链，我们就得向外部服务获取你的情况，所以我们不验证。你愿意的话照样可以发送。它不会解锁徽章。';
 
   @override
   String get donateBitcoinBadgesNeedOnion => 'Bitcoin 徽章需要 onion 模式';
@@ -2210,7 +2210,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donateThePaymentServiceIs =>
-      '支付服务是一个 onion 服务，只有 onion 模式才能连上。什么都没有发送。';
+      '支付服务是一个 onion 服务，只有 onion 模式才能连上。现在什么都没有发送。';
 
   @override
   String get donateTorWasSlowTo =>
@@ -2709,7 +2709,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoLeaveGroup => '退出群组？';
 
   @override
-  String get groupInfoEverythingInItIs => '里面的一切会立即从这部手机上抹掉，你在这里用过的密钥也会永久消失。';
+  String get groupInfoEverythingInItIs => '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。';
 
   @override
   String groupChatYouWereRemovedFrom(Object name) {
@@ -2717,15 +2717,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupInfoLeaveGroupLine => '你将不再收到它的消息，里面的一切也会从这部手机上抹掉。';
+  String get groupInfoLeaveGroupLine => '你将不再收到它的消息，里面的一切也会从这部手机上抹除。';
 
   @override
   String get groupInfoLeaveGroupAdmin =>
-      '你将不再收到它的消息，里面的一切也会从这部手机上抹掉。你是管理员，退出后就没有人能再增减成员或重命名了。';
+      '你将不再收到它的消息，里面的一切也会从这部手机上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
 
   @override
   String get groupInfoLeaveRoomMaker =>
-      '里面的一切会立即从这部手机上抹掉，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
+      '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
 
   @override
   String get groupInfoLeave => '退出';
@@ -3562,21 +3562,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modesKeepItOff => '保持关闭';
 
   @override
-  String get movedWipeThisPhone => '要从这部手机上抹掉 Kryfo 吗？';
+  String get movedWipeThisPhone => '要从这部手机上抹除 Kryfo 吗？';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
-      'Kryfo 在这里保存的一切都会被抹掉：消息、联系人、密钥。另一台设备保留着全部内容。此操作无法撤销。';
+      'Kryfo 在这里保存的一切都会被抹除：消息、联系人、密钥。另一台设备保留着全部内容。此操作无法撤销。';
 
   @override
-  String get movedWipeIt => '抹掉';
+  String get movedWipeIt => '抹除';
 
   @override
   String get movedNotMovingAfterAll => '不迁移了？';
 
   @override
   String get movedOnlyDoThisIf =>
-      '只有在这个备份从未在任何地方导入过时才这么做。如果导入过，现在就有两台设备持有同一个身份，两边的消息都会开始丢失。';
+      '只有在这个备份从未在任何地方导入过时才这么做。如果导入过，现在就有两台设备持有同一个身份，两边都会开始丢失新消息。';
 
   @override
   String get movedIMStayingHere => '我留在这里';
@@ -3604,7 +3604,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get movedKeepItToRead => '留着查看';
 
   @override
-  String get movedWipeThisPhone2 => '从这部手机上抹掉 Kryfo';
+  String get movedWipeThisPhone2 => '从这部手机上抹除 Kryfo';
 
   @override
   String get movedIMNotMoving => '我不迁移了';
@@ -3890,7 +3890,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要加。';
+      '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要主动添加。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
@@ -3921,7 +3921,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingThreeWords => '三个词。*只属于你。*';
 
   @override
-  String get onboardingPickA => '选一张*脸*。';
+  String get onboardingPickA => '选一个*头像*。';
 
   @override
   String get onboardingDrawnOnThisPhone => '在这部手机上根据一个数字画出来，从不上传。随时可以更换。';
@@ -3994,7 +3994,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      '这就是全部身份。没有号码或邮箱可以泄露或被查到。和你聊天的人看到的是这三个词和你选的脸。';
+      '这就是全部身份。没有号码或邮箱可以泄露或被查到。和你聊天的人看到的是这三个词和你选的头像。';
 
   @override
   String get onboardingNobodyCanReachYou => '在你允许之前，谁也联系不到你';
@@ -4244,13 +4244,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 码会被移除，抹掉 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+      'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
 
   @override
-  String get pinsWipePin => '抹掉 PIN';
+  String get pinsWipePin => '抹除 PIN';
 
   @override
   String get pinsNeedsAPinFirst => '需要先设置 PIN 码';
@@ -4259,16 +4259,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsSet => '已设置';
 
   @override
-  String get pinsChangeWipePin => '更改抹掉 PIN';
+  String get pinsChangeWipePin => '更改抹除 PIN';
 
   @override
   String get pinsRemove => '移除';
 
   @override
-  String get pinsRemoveTheWipePin => '移除抹掉 PIN？';
+  String get pinsRemoveTheWipePin => '移除抹除 PIN？';
 
   @override
-  String get pinsTheLockScreenKeeps => '锁屏仍使用你的 PIN 码。抹掉 PIN 将不再起任何作用。';
+  String get pinsTheLockScreenKeeps => '锁屏仍使用你的 PIN 码。抹除 PIN 将不再起任何作用。';
 
   @override
   String profileCopied(Object what) {
@@ -4279,7 +4279,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileProfile => '个人资料';
 
   @override
-  String get profileChangeYourFace => '更换你的脸';
+  String get profileChangeYourFace => '更换你的头像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -4440,7 +4440,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get qrCouldNotSaveIt => '无法保存。请检查手机还有没有空间。';
 
   @override
-  String get qrNoAppOnThis => '这部手机上没有应用接收这张图片。';
+  String get qrNoAppOnThis => '这部手机上没有应用可以接收这张图片。';
 
   @override
   String get qrTooMuchForOne => '内容太多，一个码装不下。请缩短一些。';
@@ -4851,7 +4851,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenHonestAboutTheLast =>
-      '最后几行正是应用锁、抹掉 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
+      '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
 
   @override
   String get seenHidden => '已隐藏';
@@ -4940,7 +4940,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenIfSomeoneHoldsYour =>
-      '如果有人拿着你已解锁的手机，他们就能读你的消息。应用锁、抹掉 PIN 和加密存储在那之前有用，在那之后就没用了。';
+      '如果有人拿着你已解锁的手机，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
 
   @override
   String get seenTheCryptoItself => '加密本身';
@@ -4959,7 +4959,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenFast => '快速';
 
   @override
-  String get settingsWipeKryfo => '抹掉 Kryfo？';
+  String get settingsWipeKryfo => '抹除 Kryfo？';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -4977,10 +4977,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTheLastStepNothing => '最后一步。什么都不会留下。';
 
   @override
-  String get settingsWipeWord => '抹掉';
+  String get settingsWipeWord => '抹除';
 
   @override
-  String get settingsWipeKryfo2 => '抹掉 Kryfo';
+  String get settingsWipeKryfo2 => '抹除 Kryfo';
 
   @override
   String get settingsYourProtections => '你的保护';
@@ -5077,7 +5077,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsYourPinAndA => '你的 PIN 码和高级保护';
 
   @override
-  String get settingsPinWipePin => 'PIN 码 · 抹掉 PIN';
+  String get settingsPinWipePin => 'PIN 码 · 抹除 PIN';
 
   @override
   String get settingsBackUpIdentity => '备份身份';
@@ -5108,7 +5108,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsAnyoneWithAnOld =>
-      '任何拿着旧码或旧链接的人，都将无法再通过任何线路联系你。拿到了却从没用过的人，需要你给一个新的。联系人、聊天和历史记录都会保留。';
+      '任何拿着旧码或旧链接的人，都将无法再通过任何线路联系你。拿到了却从没用过的人，需要你给一个新码。联系人、聊天和历史记录都会保留。';
 
   @override
   String get settingsReset => '重置';
@@ -5178,7 +5178,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDangerZone => '危险区';
 
   @override
-  String get settingsWipeKryfoFromThis => '从这部手机上抹掉 Kryfo';
+  String get settingsWipeKryfoFromThis => '从这部手机上抹除 Kryfo';
 
   @override
   String get toolsMoreTools => '更多工具';
@@ -6699,10 +6699,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBuiltInBridges => '内置网桥';
 
   @override
-  String get bridgesKryfoCanGetAround => 'Kryfo 现在能绕过 Tor 封锁了';
+  String get bridgesKryfoCanGetAround => 'Kryfo 现在能够绕过 Tor 封锁了';
 
   @override
-  String get bridgesThatSNotABridge => '这不是网桥地址';
+  String get bridgesThatSNotABridge => '这不是网桥配置';
 
   @override
   String get transportBridgeError => '上次错误';
@@ -6714,7 +6714,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesAskingTheTorProject => '正在询问 Tor 项目这里什么方式能用…';
 
   @override
-  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥地址。';
+  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥配置。';
 
   @override
   String get bridgesAutomatic => '自动';
@@ -6806,19 +6806,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTurnOnAutomatic => '开启自动';
 
   @override
-  String get bridgesPasteABridgeLine => '粘贴网桥地址';
+  String get bridgesPasteABridgeLine => '粘贴网桥配置';
 
   @override
   String get bridgesInUse => '正在使用';
 
   @override
-  String get bridgesPasteTheLineThey => '粘贴对方发给你的地址，或者扫码。网桥地址要找你认识的人拿。';
+  String get bridgesPasteTheLineThey => '粘贴对方发给你的那一行配置，或者扫码。网桥配置要找你认识的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
 
   @override
-  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥地址。';
+  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥配置。';
 
   @override
   String get bridgesNothingYet => '暂无';
@@ -6957,7 +6957,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesConnectingThroughYourBridge => '正在通过你的网桥连接…';
 
   @override
-  String get bridgesThisLineIsTooLong => '这条地址太长，Tor 用不了。';
+  String get bridgesThisLineIsTooLong => '这行配置太长，Tor 用不了。';
 
   @override
   String get bridgesAutomaticFindsAWay =>
@@ -6997,7 +6997,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBelarus => '白俄罗斯';
 
   @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这条地址';
+  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这行配置';
 
   @override
   String get bridgesTryAutomatic => '试试自动';
@@ -7041,7 +7041,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get androidChannelDescription =>
-      '让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。';
+      '让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止接收消息。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -7385,10 +7385,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsAdvanced => '高级保护';
 
   @override
-  String get pinsAdvancedLine => '用于有人逼你解锁手机的时候。';
+  String get pinsAdvancedLine => '用于有人强迫你解锁手机时。';
 
   @override
-  String get pinsWipeLine => '在锁屏上输入它，会从这部手机上抹掉 Kryfo。';
+  String get pinsWipeLine => '在锁屏上输入它，会从这部手机上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '伪装 PIN';
@@ -7419,20 +7419,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowEnterYourPinLine => '就是打开 Kryfo 的那个。';
 
   @override
-  String get flowWipeTitle => '抹掉 PIN';
+  String get flowWipeTitle => '抹除 PIN';
 
   @override
   String get flowWipe1 =>
-      '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹掉 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+      '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
-  String get flowWipe2 => '所有聊天和你的身份都会一起抹掉，有伪装的话也一样。';
+  String get flowWipe2 => '所有聊天和你的身份都会一起抹除，有伪装的话也一样。';
 
   @override
-  String get flowWipeChoose => '选择一个抹掉 PIN';
+  String get flowWipeChoose => '选择一个抹除 PIN';
 
   @override
-  String get flowWipeDone => '抹掉 PIN 已设置';
+  String get flowWipeDone => '抹除 PIN 已设置';
 
   @override
   String get flowWipeDoneLine => '锁屏上没有任何迹象显示它的存在。';
@@ -7451,7 +7451,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
 
   @override
-  String get flowDecoyShade => '已经在通知栏里的通知已经被看到了。伪装打开期间，不会出现新的通知。';
+  String get flowDecoyShade => '已经在通知栏里的通知被看到了。但伪装打开期间，不会出现新的通知。';
 
   @override
   String get flowDecoyChoose => '选择一个伪装 PIN';
@@ -7468,7 +7468,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get howWipe =>
-      '在锁屏上输入抹掉 PIN，会抹掉所有聊天、你的身份和任何伪装，然后关闭 Kryfo。即使输错多次后键盘被暂停，它也照样有效。';
+      '在锁屏上输入抹除 PIN，会抹除所有聊天、你的身份和任何伪装，然后关闭 Kryfo。即使输错多次后键盘被暂停，它也照样有效。';
 
   @override
   String get howDecoy =>
@@ -7686,7 +7686,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get devDeleteFailed => '没能删除这个聊天。请再试一次。';
+  String get devDeleteFailed => '无法删除这个聊天。请再试一次。';
 
   @override
   String get supportTitle => 'Inbox';
@@ -7832,7 +7832,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoSeesWhat => '工作原理';
 
   @override
-  String get devWhoWords => '用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的脸和支持者徽章留在你这里。';
+  String get devWhoWords => '用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的头像和支持者徽章留在你这里。';
 
   @override
   String get devWhoAnon => '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
@@ -7890,7 +7890,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nameTakenTombLine =>
-      '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+      '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
 
   @override
   String get nameTakenUse => '使用这个链接';
@@ -8229,7 +8229,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceStopRecording => '停止录音';
 
   @override
-  String get voiceDeleteNote => '删除语音';
+  String get voiceDeleteNote => '删除语音消息';
 
   @override
   String get voiceDisguised => '已变声';
@@ -9617,7 +9617,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get batteryGuideXiaomiTitle => '讓 Kryfo 保持執行';
 
   @override
-  String get batteryGuideXiaomi => '即使開了自動啟動，小米也會停止背景應用程式。要持續收到訊息：';
+  String get batteryGuideXiaomi => '即使開了自動啟動，小米也會停止背景應用程式。如要持續收到訊息：';
 
   @override
   String get batteryGuideXiaomiStep1 => '自動啟動：為 Kryfo 打開。';
@@ -9846,7 +9846,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get avatarPickerThatOneIsYours => '這個是你的';
 
   @override
-  String get avatarPickerPickAFace => '選一張臉';
+  String get avatarPickerPickAFace => '選一個頭像';
 
   @override
   String get commonSave => '儲存';
@@ -9953,7 +9953,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupNotMade => '備份沒能完成。請再試一次。';
 
   @override
-  String get backupNoSpace => '手機可用空間不足，無法完成備份。請釋放一些空間後再試一次。';
+  String get backupNoSpace => '手機可用空間不足，無法完成備份。請清理一些空間後再試一次。';
 
   @override
   String get backupHiddenNotIn => '隱藏聊天不在其中。';
@@ -9962,7 +9962,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupHiddenIncluded => '你的隱藏聊天也在其中。';
 
   @override
-  String get backupMoveHiddenStay => '隱藏聊天留在這支手機上，並隨它一起清除。';
+  String get backupMoveHiddenStay => '隱藏聊天留在這支手機上，並隨它一起抹除。';
 
   @override
   String get backupHiddenGone => 'Kryfo 鎖定時，你的隱藏聊天已關閉。用隱藏聊天 PIN 開啟它們，再從那裡備份。';
@@ -11046,7 +11046,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateThePaymentServiceIs =>
-      '付款服務是 onion 服務，只有 Onion 模式才能連上。沒有傳送任何東西。';
+      '付款服務是 onion 服務，只有 Onion 模式才能連上。現在沒有傳送任何東西。';
 
   @override
   String get donateTorWasSlowTo =>
@@ -11546,7 +11546,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoLeaveGroup => '要離開群組嗎？';
 
   @override
-  String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上清除，你在這裡使用的金鑰也會永久消失。';
+  String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。';
 
   @override
   String groupChatYouWereRemovedFrom(Object name) {
@@ -11554,15 +11554,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get groupInfoLeaveGroupLine => '你將不再收到它的訊息，裡面的一切也會從這支手機上清除。';
+  String get groupInfoLeaveGroupLine => '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。';
 
   @override
   String get groupInfoLeaveGroupAdmin =>
-      '你將不再收到它的訊息，裡面的一切也會從這支手機上清除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
+      '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
 
   @override
   String get groupInfoLeaveRoomMaker =>
-      '裡面的一切會立即從這支手機上清除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
+      '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
 
   @override
   String get groupInfoLeave => '離開';
@@ -12400,21 +12400,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modesKeepItOff => '保持關閉';
 
   @override
-  String get movedWipeThisPhone => '要從這支手機清除 Kryfo 嗎？';
+  String get movedWipeThisPhone => '要從這支手機抹除 Kryfo 嗎？';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
       'Kryfo 在這裡保存的一切都會消失：訊息、聯絡人、金鑰。另一台裝置會保有這一切。這個動作無法復原。';
 
   @override
-  String get movedWipeIt => '清除';
+  String get movedWipeIt => '抹除';
 
   @override
   String get movedNotMovingAfterAll => '最後決定不搬了？';
 
   @override
   String get movedOnlyDoThisIf =>
-      '只有在備份從未匯入任何地方時才這麼做。如果已經匯入過，現在就有兩台裝置持有同一個身分，兩邊的訊息都會開始遺失。';
+      '只有在備份從未匯入任何地方時才這麼做。如果已經匯入過，現在就有兩台裝置持有同一個身分，兩邊都會開始遺失新訊息。';
 
   @override
   String get movedIMStayingHere => '我要留在這裡';
@@ -12442,7 +12442,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get movedKeepItToRead => '留著閱讀';
 
   @override
-  String get movedWipeThisPhone2 => '從這支手機清除 Kryfo';
+  String get movedWipeThisPhone2 => '從這支手機抹除 Kryfo';
 
   @override
   String get movedIMNotMoving => '我最後決定不搬了';
@@ -12728,7 +12728,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方親手新增。';
+      '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方主動新增。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
@@ -12759,7 +12759,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingThreeWords => '三個詞。*只屬於你。*';
 
   @override
-  String get onboardingPickA => '選一張*臉*。';
+  String get onboardingPickA => '選一個*頭像*。';
 
   @override
   String get onboardingDrawnOnThisPhone => '在這支手機上根據一個數字畫出來，從不上傳。隨時都可以更換。';
@@ -12832,7 +12832,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingThatIsTheWhole =>
-      '這就是你的全部身分。沒有號碼或電子郵件會外洩或被查到。和你聊天的人會看到這些詞和你選的臉。';
+      '這就是你的全部身分。沒有號碼或電子郵件會外洩或被查到。和你聊天的人會看到這些詞和你選的頭像。';
 
   @override
   String get onboardingNobodyCanReachYou => '除非你讓對方進來，否則沒有人能聯絡到你';
@@ -13082,13 +13082,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 碼會被移除，清除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+      'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
 
   @override
-  String get pinsWipePin => '清除 PIN';
+  String get pinsWipePin => '抹除 PIN';
 
   @override
   String get pinsNeedsAPinFirst => '需要先設定 PIN 碼';
@@ -13097,16 +13097,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsSet => '已設定';
 
   @override
-  String get pinsChangeWipePin => '變更清除 PIN';
+  String get pinsChangeWipePin => '變更抹除 PIN';
 
   @override
   String get pinsRemove => '移除';
 
   @override
-  String get pinsRemoveTheWipePin => '要移除清除 PIN 嗎？';
+  String get pinsRemoveTheWipePin => '要移除抹除 PIN 嗎？';
 
   @override
-  String get pinsTheLockScreenKeeps => '鎖定畫面會保留你的 PIN 碼。清除 PIN 將不再有任何作用。';
+  String get pinsTheLockScreenKeeps => '鎖定畫面會保留你的 PIN 碼。抹除 PIN 將不再有任何作用。';
 
   @override
   String profileCopied(Object what) {
@@ -13117,7 +13117,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileProfile => '個人檔案';
 
   @override
-  String get profileChangeYourFace => '更換你的臉';
+  String get profileChangeYourFace => '更換你的頭像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -13278,7 +13278,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get qrCouldNotSaveIt => '無法儲存。請確認手機還有空間。';
 
   @override
-  String get qrNoAppOnThis => '這支手機上沒有任何應用程式接收這張圖片。';
+  String get qrNoAppOnThis => '這支手機上沒有任何應用程式可以接收這張圖片。';
 
   @override
   String get qrTooMuchForOne => '內容太多，一個 QR 碼放不下。請縮短一點。';
@@ -13689,7 +13689,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenHonestAboutTheLast =>
-      '最後幾列正是應用程式鎖、清除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
+      '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
 
   @override
   String get seenHidden => '隱藏';
@@ -13778,7 +13778,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenIfSomeoneHoldsYour =>
-      '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、清除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
+      '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
 
   @override
   String get seenTheCryptoItself => '加密技術本身';
@@ -13797,7 +13797,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenFast => '快速';
 
   @override
-  String get settingsWipeKryfo => '要清除 Kryfo 嗎？';
+  String get settingsWipeKryfo => '要抹除 Kryfo 嗎？';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -13815,10 +13815,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTheLastStepNothing => '最後一步。什麼都不會留下。';
 
   @override
-  String get settingsWipeWord => '清除';
+  String get settingsWipeWord => '抹除';
 
   @override
-  String get settingsWipeKryfo2 => '清除 Kryfo';
+  String get settingsWipeKryfo2 => '抹除 Kryfo';
 
   @override
   String get settingsYourProtections => '你的防護';
@@ -13915,7 +13915,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsYourPinAndA => '你的 PIN 碼和進階保護';
 
   @override
-  String get settingsPinWipePin => 'PIN 碼 · 清除 PIN';
+  String get settingsPinWipePin => 'PIN 碼 · 抹除 PIN';
 
   @override
   String get settingsBackUpIdentity => '備份身分';
@@ -13946,7 +13946,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsAnyoneWithAnOld =>
-      '持有舊 QR 碼或連結的人，無論透過哪種路線，都將無法再聯絡你。拿到了但從沒用過的人，需要你再給一個新的。聯絡人、聊天和紀錄都會保留。';
+      '持有舊 QR 碼或連結的人，無論透過哪種路線，都將無法再聯絡你。拿到了但從沒用過的人，需要你再給一個新碼。聯絡人、聊天和紀錄都會保留。';
 
   @override
   String get settingsReset => '重設';
@@ -14016,7 +14016,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDangerZone => '危險區域';
 
   @override
-  String get settingsWipeKryfoFromThis => '從這支手機清除 Kryfo';
+  String get settingsWipeKryfoFromThis => '從這支手機抹除 Kryfo';
 
   @override
   String get toolsMoreTools => '更多工具';
@@ -14287,7 +14287,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportStopBySystem => '由系統停止';
 
   @override
-  String get transportStopTooMuch => '占用過多';
+  String get transportStopTooMuch => '佔用過多';
 
   @override
   String get transportStopPermission => '權限已變更';
@@ -15537,7 +15537,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesBuiltInBridges => '內建橋接';
 
   @override
-  String get bridgesKryfoCanGetAround => 'Kryfo 現在能繞過 Tor 封鎖了';
+  String get bridgesKryfoCanGetAround => 'Kryfo 現在能夠繞過 Tor 封鎖了';
 
   @override
   String get bridgesThatSNotABridge => '這不是橋接設定';
@@ -15879,7 +15879,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get androidChannelDescription =>
-      '讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。';
+      '讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止接收訊息。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -16224,10 +16224,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsAdvanced => '進階保護';
 
   @override
-  String get pinsAdvancedLine => '用於有人逼你解鎖手機的時候。';
+  String get pinsAdvancedLine => '用於有人強迫你解鎖手機時。';
 
   @override
-  String get pinsWipeLine => '在鎖定畫面輸入它，會從這支手機上清除 Kryfo。';
+  String get pinsWipeLine => '在鎖定畫面輸入它，會從這支手機上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '偽裝 PIN';
@@ -16258,20 +16258,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowEnterYourPinLine => '就是開啟 Kryfo 的那一組。';
 
   @override
-  String get flowWipeTitle => '清除 PIN';
+  String get flowWipeTitle => '抹除 PIN';
 
   @override
   String get flowWipe1 =>
-      '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上清除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+      '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
-  String get flowWipe2 => '所有聊天和你的身分都會一起清除，有偽裝的話也一樣。';
+  String get flowWipe2 => '所有聊天和你的身分都會一起抹除，有偽裝的話也一樣。';
 
   @override
-  String get flowWipeChoose => '選擇一組清除 PIN';
+  String get flowWipeChoose => '選擇一組抹除 PIN';
 
   @override
-  String get flowWipeDone => '已設定清除 PIN';
+  String get flowWipeDone => '已設定抹除 PIN';
 
   @override
   String get flowWipeDoneLine => '鎖定畫面上沒有任何跡象顯示它的存在。';
@@ -16290,7 +16290,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';
 
   @override
-  String get flowDecoyShade => '已經在通知欄裡的通知已經被看到了。偽裝開啟期間，不會出現新的通知。';
+  String get flowDecoyShade => '已經在通知欄裡的通知被看到了。但偽裝開啟期間，不會出現新的通知。';
 
   @override
   String get flowDecoyChoose => '選擇一組偽裝 PIN';
@@ -16307,7 +16307,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get howWipe =>
-      '在鎖定畫面輸入清除 PIN，會清除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。';
+      '在鎖定畫面輸入抹除 PIN，會抹除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。';
 
   @override
   String get howDecoy =>
@@ -16351,7 +16351,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '選擇要隱藏的聊天和群組。你的 PIN 碼開啟的 Kryfo 裡沒有它們。隱藏聊天 PIN 會開啟全部內容，包括隱藏聊天。';
 
   @override
-  String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示標記。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
+  String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示徽章。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
 
   @override
   String get flowVaultFinger => '你的指紋開啟的 Kryfo 裡沒有隱藏聊天。';
@@ -16524,7 +16524,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get devDeleteFailed => '沒能刪除這個聊天。請再試一次。';
+  String get devDeleteFailed => '無法刪除這個聊天。請再試一次。';
 
   @override
   String get settingsWriteToMarios => '傳訊息給 Marios';
@@ -16551,7 +16551,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoSeesWhat => '運作方式';
 
   @override
-  String get devWhoWords => '用你的三個詞，這就是一個普通的聊天：Marios 可以回覆你，你的臉和支持者徽章留在你這裡。';
+  String get devWhoWords => '用你的三個詞，這就是一個普通的聊天：Marios 可以回覆你，你的頭像和支持者徽章留在你這裡。';
 
   @override
   String get devWhoAnon => '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
@@ -16609,7 +16609,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get nameTakenTombLine =>
-      '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+      '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
 
   @override
   String get nameTakenUse => '使用這個連結';
@@ -16948,7 +16948,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get voiceStopRecording => '停止錄音';
 
   @override
-  String get voiceDeleteNote => '刪除語音';
+  String get voiceDeleteNote => '刪除語音訊息';
 
   @override
   String get voiceDisguised => '已變聲';
