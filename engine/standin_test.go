@@ -567,7 +567,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	mu.Unlock()
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
-	oldDir := savedDataDir
+	oldDir := savedDataDir()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
@@ -577,7 +577,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		mu.Unlock()
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
-		savedDataDir = oldDir
+		setSavedDataDir(oldDir)
 		setRelays(oldRelays)
 		nostrResetClient()
 		relayClearBenches()
@@ -591,7 +591,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	}
 	nostrResetClient()
 	relayClearBenches()
-	savedDataDir = t.TempDir()
+	setSavedDataDir(t.TempDir())
 	var urls []string
 	for _, r := range relays {
 		urls = append(urls, r.url())

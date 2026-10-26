@@ -116,13 +116,15 @@ func fakeTor(t *testing.T, port int) *tor.Tor {
 	t.Cleanup(func() { a.Close(); b.Close() })
 	n := &tor.Tor{ControlPort: port, Control: control.NewConn(textproto.NewConn(a))}
 	mu.Lock()
-	torNode, myAddr, savedDataDir = n, "fake.onion", t.TempDir()
+	torNode, myAddr = n, "fake.onion"
 	mu.Unlock()
+	setSavedDataDir(t.TempDir())
 	ctrlReset()
 	t.Cleanup(func() {
 		mu.Lock()
-		torNode, myAddr, savedDataDir = nil, "", ""
+		torNode, myAddr = nil, ""
 		mu.Unlock()
+		setSavedDataDir("")
 		ctrlReset()
 		atomic.StoreInt32(&torRestarting, 0)
 		atomic.StoreInt32(&reconnectRunning, 0)

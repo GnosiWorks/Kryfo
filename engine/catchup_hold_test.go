@@ -41,7 +41,7 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	now := time.Now()
 	ts := func(d time.Duration) nostr.Timestamp { return nostr.Timestamp(now.Add(d).Unix()) }
 	began := ts(-3 * time.Hour)
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -142,7 +142,7 @@ func newHalfWay(t *testing.T) *halfWay {
 	return h
 }
 
-func (h *halfWay) lastPath() string { return savedDataDir + "/nostr_last_" + h.rcv[:16] }
+func (h *halfWay) lastPath() string { return savedDataDir() + "/nostr_last_" + h.rcv[:16] }
 
 func (h *halfWay) anchor() int64 {
 	b, _ := os.ReadFile(h.lastPath())
@@ -456,7 +456,7 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 	}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -510,7 +510,7 @@ func TestOurRelayRefusingTheSubscriptionHoldsNothing(t *testing.T) {
 	keys := []string{catchupKey(closing, rcv), catchupKey(other.url(), rcv)}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	began := time.Now().Add(-8 * time.Hour).Unix()
 	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(began, 10)), 0600); err != nil {
 		t.Fatal(err)

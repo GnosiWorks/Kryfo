@@ -1345,7 +1345,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	// what the file holds, -1 while there is none
 	lastOnDisk := int64(-1)
 	var lastMu sync.Mutex
-	if savedDataDir != "" {
+	if savedDataDir() != "" {
 		seenPath, lastPath = addressFiles(rcvPk)
 		// a subscription on an address let go of before keeps files again
 		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {

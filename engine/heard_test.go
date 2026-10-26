@@ -126,13 +126,13 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 }
 
 func TestHeardMovesOnlyForwardAndNotForARunnerLetGo(t *testing.T) {
-	savedOld := savedDataDir
-	savedDataDir = t.TempDir()
+	savedOld := savedDataDir()
+	setSavedDataDir(t.TempDir())
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
 	setRelays([]string{"wss://r", "wss://s"})
-	defer func() { savedDataDir = savedOld; setRelays(oldRelays) }()
+	defer func() { setSavedDataDir(savedOld); setRelays(oldRelays) }()
 	rcv := strings.Repeat("ab", 32)
 	t.Cleanup(func() { dropHeard(rcv) })
 	k := catchupKey("wss://r", rcv)

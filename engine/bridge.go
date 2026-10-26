@@ -42,7 +42,6 @@ var (
 	torNode      *tor.Tor
 	listener     net.Listener
 	myAddr       string
-	savedDataDir string // kept so the dialer watchdog can relaunch tor
 	inbox        []string
 
 	myEdPriv ed25519.PrivateKey
@@ -51,6 +50,19 @@ var (
 	myXPub   [32]byte
 	myId     string
 )
+
+// kept so the dialer watchdog can relaunch tor. runners read it while a
+// start sets it, so it is never a plain string
+var savedDir atomic.Pointer[string]
+
+func savedDataDir() string {
+	if p := savedDir.Load(); p != nil {
+		return *p
+	}
+	return ""
+}
+
+func setSavedDataDir(d string) { savedDir.Store(&d) }
 
 var (
 	statusMu     sync.RWMutex
@@ -344,9 +356,7 @@ func startListener(dataDir string) string {
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
 		return fmt.Sprintf("error: mkdir tor: %v", err)
 	}
-	mu.Lock()
-	savedDataDir = dataDir
-	mu.Unlock()
+	setSavedDataDir(dataDir)
 
 	// a hard-killed previous process can leave tor's lock and run files
 	// behind, which fail this start. tor is single-instance per data dir and
@@ -920,7 +930,7 @@ func reconnectTorBy(force, auto bool, why string) string {
 
 	mu.Lock()
 	t := torNode
-	dir := savedDataDir
+	dir := savedDataDir()
 	addr := myAddr
 	mu.Unlock()
 
