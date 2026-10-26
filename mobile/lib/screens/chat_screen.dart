@@ -534,16 +534,15 @@ Widget _mediaStamp(_Msg msg) {
       children: [
         Text(_fmtTime(msg.when), style: mono),
         // a received one has its time alone
+        // ours: a clock until their receipt, then the tick and Delivered
         if (msg.direction == 'out') ...[
           const SizedBox(width: 3),
-          SentTick(
-            delivered: msg.delivered,
-            deliveredLabel: l10n.chatDelivered,
-            color: Colors.white,
-            labelStyle: mono.copyWith(
-              fontSize: 8.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: track(0.3),
+          Builder(
+            builder: (context) => _outMark(
+              context,
+              msg,
+              unconfirmed: !msg.delivered,
+              color: Colors.white,
             ),
           ),
         ],
@@ -569,6 +568,8 @@ Widget _outMark(
           key: const ValueKey('unconfirmed'),
           size: 10,
           color: color,
+          // gone from here, its receipt not back yet
+          semanticLabel: l10n.motionSent,
         )
       : SentTick(
           key: const ValueKey('sent'),
@@ -7843,10 +7844,11 @@ class _Bubble extends StatelessWidget {
     final pending = msg.sending || (msg.failed && !failedShown);
     // a finished media send means every slice was accepted somewhere, not
     // that it arrived: a relay taking the bytes is not the peer reading
-    // them. so media says nothing until the receipt lands, then Delivered.
+    // them. so media shows its time and a clock until the receipt lands,
+    // never a tick, then Delivered.
     final isMedia = msg.mediaPath != null || msg.filePath != null;
-    final ackOk = !isMedia || msg.delivered;
-    final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
+    final waitsAck = isMedia && !msg.delivered;
+    final showMeta = isOut && !pending && !failedShown && !parked;
     // a photo, a video, a file or a voice note that came in says when, as
     // ours do: there is no text of it to place it by
     final showTime = showMeta || (!isOut && isMedia);
@@ -8448,7 +8450,8 @@ class _Bubble extends StatelessWidget {
                                                             context,
                                                             msg,
                                                             unconfirmed:
-                                                                unconfirmed,
+                                                                unconfirmed ||
+                                                                waitsAck,
                                                             color: metaColor,
                                                           ),
                                                         if (msg.burnAt !=

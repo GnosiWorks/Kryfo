@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show percent;
 import 'package:kryfo/lock_state.dart';
@@ -24,6 +25,7 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
+        AppStateMessages,
         AppStateRefresh;
 import 'package:kryfo/media_progress.dart'
     show mediaProgressEnd, mediaProgressStart, mediaProgressUpdate;
@@ -32,6 +34,7 @@ import 'package:kryfo/media_send.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show SentTick;
 import 'package:kryfo/widgets/motion.dart' show SendPill;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
@@ -192,6 +195,7 @@ void main() {
   late MemDb mem;
   late Directory docs;
   late File note;
+  late DateTime written;
 
   setUpAll(() async {
     final me = Curve.generateKeyPair();
@@ -249,6 +253,7 @@ void main() {
       'sent': 1,
     });
     // written two minutes ago, not across yet
+    written = DateTime.fromMillisecondsSinceEpoch(at - 120000);
     await mem.insert('messages', {
       'peer_id': _peer,
       'direction': 'out',
@@ -326,6 +331,22 @@ void main() {
     await settle(t);
     expect(find.byType(SendPill), findsNothing);
     expect(failed(), findsNothing);
+    // across, not read yet: its time and a clock, never a tick
+    expect(find.text(hourMinute(written)), findsOneWidget);
+    expect(find.byIcon(Icons.schedule_rounded), findsOneWidget);
+    expect(find.byType(SentTick), findsNothing);
+    // their receipt: the tick and Delivered
+    await mem.update(
+      'messages',
+      {'delivered': 1},
+      where: 'msg_uid = ?',
+      whereArgs: ['v1'],
+    );
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(find.byIcon(Icons.schedule_rounded), findsNothing);
+    expect(find.byType(SentTick), findsOneWidget);
+    expect(find.text(l10n.chatDelivered), findsOneWidget);
     await devClose(t);
   });
 
