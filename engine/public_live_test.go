@@ -928,6 +928,65 @@ func TestARestartedRunnerKeepsItsPublicPlace(t *testing.T) {
 	}
 }
 
+// a request is listened on from the moment it comes, so it has its place
+// in the run already. the accept starts its runner fresh and it keeps that
+// place: no public socket opens on it at the accept, when the ack goes out.
+// it counts as heard at the accept and is live from the next start
+func TestAnAcceptedRequestIsLiveFromTheNextStart(t *testing.T) {
+	setLiveCap(t, 1, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	shortTurns(t)
+	freshInbox(t)
+	// in breaks the tie of two never heard from
+	in, req, inRcv, reqRcv := livePair(t)
+	inHex, reqHex := hex.EncodeToString(in.pub[:]), hex.EncodeToString(req.pub[:])
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		for _, h := range []string{inHex, reqHex} {
+			if c := nostrSubs[h]; c != nil {
+				c()
+				delete(nostrSubs, h)
+			}
+		}
+		nostrMu.Unlock()
+	})
+	nostrSubscribe(inHex, false)
+	nostrSubscribe(reqHex, false)
+	waitFor(t, "the request on our relay, the other live on the public one", 15*time.Second, func() bool {
+		return openOn(own, reqRcv) == 1 && openOn(pub, inRcv) == 1
+	})
+	// the accept
+	nostrSubscribe(reqHex, true)
+	waitFor(t, "the accepted request back on our relay", 10*time.Second, func() bool {
+		return openOn(own, reqRcv) == 1 && len(connsOn(own.snapshot(), []string{reqRcv})) >= 2
+	})
+	end := time.Now().Add(2 * time.Second)
+	for time.Now().Before(end) {
+		kickRelays()
+		time.Sleep(50 * time.Millisecond)
+	}
+	if n := everOn(pub, reqRcv); n != 0 {
+		t.Fatalf("the accept opened %d public sockets in the run", n)
+	}
+	if openOn(pub, inRcv) != 1 {
+		t.Fatal("the accept moved the live address off the public relay")
+	}
+	// the next start: every runner again, the list chosen anew
+	liveNewRun()
+	spendFirstTurn()
+	nostrSubscribe(inHex, false)
+	nostrSubscribe(reqHex, false)
+	waitFor(t, "the accepted request live on the public relay", 15*time.Second, func() bool {
+		return openOn(pub, reqRcv) == 1
+	})
+	time.Sleep(time.Second)
+	if openOn(pub, inRcv) != 0 {
+		t.Fatal("the one it ranks above is still live")
+	}
+}
+
 // at a start the app listens on everyone in one go, and with the turns free
 // the first to join dialled before the rest were in: the list went by row
 // order. it waits for the joins, so the latest heard are the ones live
