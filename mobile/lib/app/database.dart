@@ -1939,12 +1939,10 @@ Future<void> _signalTables(Database db, {String prefix = ''}) async {
 @visibleForTesting
 Future<void> upgradeTo91(Database db) async {
   await kyberTables(db);
-  try {
-    await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_id TEXT');
-    await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_plain TEXT');
-  } catch (e) {
-    dlog('first kept opened columns: $e');
-  }
+  // addColumn takes a column there already; anything else fails the open,
+  // and the step runs again
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_id TEXT');
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_plain TEXT');
 }
 
 /// one signal store's tables under [prefix], for a store kept in a file of
