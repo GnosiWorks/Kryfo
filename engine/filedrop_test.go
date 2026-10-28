@@ -496,13 +496,13 @@ func TestDropCancel(t *testing.T) {
 	done := make(chan string, 1)
 	go func() { done <- dropSend(sendJob(path, "uid9", "a")) }()
 	deadline := time.Now().Add(5 * time.Second)
-	for dropProgress(v.id) == "" && time.Now().Before(deadline) {
+	for dropProgress("s:uid9") == "" && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
 	}
-	if p := dropProgress(v.id); !strings.HasSuffix(p, fmt.Sprint(int64(dropPadChunks(480))*dropSealed)) {
+	if p := dropProgress("s:uid9"); !strings.HasSuffix(p, fmt.Sprint(int64(dropPadChunks(480))*dropSealed)) {
 		t.Fatalf("progress %q", p)
 	}
-	dropCancel(v.id)
+	dropCancel("s:uid9")
 	select {
 	case r := <-done:
 		if r != "error: cancelled" {
@@ -514,7 +514,7 @@ func TestDropCancel(t *testing.T) {
 	if len(f.drops) != 1 || f.files[v.id] != nil {
 		t.Fatal("what went up was not taken back")
 	}
-	if dropProgress(v.id) != "" {
+	if dropProgress("s:uid9") != "" {
 		t.Fatal("a finished send still shows progress")
 	}
 }

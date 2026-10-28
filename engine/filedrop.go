@@ -99,7 +99,8 @@ func dropClient(lane string) (*http.Client, error) {
 	}, nil
 }
 
-// ---- progress and cancel, by file id ----
+// ---- progress and cancel: "s:<message id>" for a send, "f:<file id>" for
+// a fetch ----
 
 type dropJob struct {
 	done, total atomic.Int64
@@ -318,11 +319,13 @@ func dropSend(jobJSON string) string {
 	if size == 0 {
 		return "error: read"
 	}
-	j, ctx, ok := dropStart(v.id)
+	// the app follows and stops a send by its message, a fetch by its file
+	key := "s:" + job.UID
+	j, ctx, ok := dropStart(key)
 	if !ok {
 		return "error: busy"
 	}
-	defer dropEnd(v.id)
+	defer dropEnd(key)
 	chunks := dropPadChunks(int((size + dropChunk - 1) / dropChunk))
 	sealed := int64(chunks) * dropSealed
 	j.total.Store(sealed)
@@ -717,11 +720,11 @@ func dropFetch(jobJSON string) string {
 	if job.Size <= 0 || job.Chunks < need || dropPadChunks(need) != job.Chunks {
 		return "error: bad"
 	}
-	j, ctx, ok := dropStart(job.ID)
+	j, ctx, ok := dropStart("f:" + job.ID)
 	if !ok {
 		return "error: busy"
 	}
-	defer dropEnd(job.ID)
+	defer dropEnd("f:" + job.ID)
 	sealed := int64(job.Chunks) * dropSealed
 	j.total.Store(sealed)
 	a, err := dropAEAD(key)
