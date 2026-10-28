@@ -23,6 +23,14 @@ a feature goes into a release finished or not at all.
   build/app/intermediates/merged_manifests/, plugins add permissions
 - a fresh clone resolves the lockfile: `flutter pub get --enforce-lockfile`
 - the update key is pinned: `KRYFO_RELEASE=1 flutter test test/update_key_test.dart`
+- the dev chat's current pinned card carries a kyber prekey, so a new dev chat can start:
+  `KRYFO_RELEASE=1 flutter test test/dev_key_test.dart`
+- each apk's signal shim was built from the libsignal and spqr Cargo.lock pins (release.sh runs it):
+  `repro/shim-check.sh out/app-*.apk`
+- a phone on 0.5.3 and this version still talk both ways: in mobile/tool/peer053,
+  `flutter pub get --offline` then
+  `KRYFO_SIGNAL_LIB=$PWD/../../native/kryfo_signal/target/release/libkryfo_signal.so flutter test`
+  (after `native/kryfo_signal/build-host.sh`)
 - the push gateway's key is pinned (`kPushGatewayPub` in mobile/lib/google_push.dart, from
   `kryfo-push pubkey` on the server): `KRYFO_RELEASE=1 flutter test test/push_gateway_key_test.dart`
 - the foss apk carries no google code: `unzip -p app-arm64-v8a-release.apk 'classes*.dex' | strings |

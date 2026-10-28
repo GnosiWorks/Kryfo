@@ -11,6 +11,8 @@ analyzer:
     - test/fixtures/upgrade_051/make_051.dart
     # runs inside a 0.5.3 checkout, against that tree's code (make_053.sh)
     - test/fixtures/upgrade_053/make_053.dart
+    # a package of its own, the 0.5.3 peer (tool/peer053/pubspec.yaml)
+    - tool/peer053/**
     # runs inside a 0.4.2 checkout, against that tree's code (make_042.sh)
     - test/fixtures/upgrade_042/make_042.dart
     # generated from app_fa.arb and app_ar.arb: the right-to-left messages
