@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -176,5 +177,62 @@ func TestTypingLineLogsNoOnion(t *testing.T) {
 		if strings.Contains(out, bad) {
 			t.Fatalf("output names %q:\n%s", bad, out)
 		}
+	}
+}
+
+// a door that ends each stream as the third line on it comes in, unread,
+// as handleConn does when doorLife runs out under a line
+type lifeDoor struct{ took int32 }
+
+func (l *lifeDoor) serve(conn net.Conn) {
+	defer conn.Close()
+	r := bufio.NewReader(conn)
+	for n := 0; ; n++ {
+		if _, err := r.ReadString('\n'); err != nil || n == 2 {
+			return
+		}
+		atomic.AddInt32(&l.took, 1)
+		conn.Write([]byte(doorAck))
+	}
+}
+
+// steady typing keeps one stream busy until the door ends it, and the line
+// caught in that close still gets through, on one new stream
+func TestTypingLineOutlivesTheDoorsStreamLife(t *testing.T) {
+	socks := newSocksStandIn(t)
+	l := &lifeDoor{}
+	d := newTestDoor(t, l.serve)
+	tn := doorSetup(t, socks, map[string]*testDoor{"life.onion": d})
+	for i := 0; i < 5; i++ {
+		if err := sendTyping(tn, "life.onion", doorLine(t, 900)); err != nil {
+			t.Fatalf("line %d: %v", i, err)
+		}
+	}
+	if n := atomic.LoadInt32(&l.took); n != 5 {
+		t.Fatalf("the door took %d of 5", n)
+	}
+	if d.count() != 3 {
+		t.Fatalf("%d streams, want 3", d.count())
+	}
+}
+
+// a typing dial that runs out of its short budget leaves a text to the
+// same onion, waiting on that dial, to dial again on its own budget
+func TestTypingDialTimeoutSparesARealSend(t *testing.T) {
+	old := typingBudget
+	typingBudget = 300 * time.Millisecond
+	defer func() { typingBudget = old }()
+	socks := newSocksStandIn(t)
+	socks.connectDelay = 600 * time.Millisecond
+	d := newTestDoor(t, handleConn)
+	tn := doorSetup(t, socks, map[string]*testDoor{"slow.onion": d})
+	typed := make(chan error, 1)
+	go func() { typed <- sendTyping(tn, "slow.onion", doorLine(t, 900)) }()
+	time.Sleep(50 * time.Millisecond)
+	if err := sendTo(tn, "slow.onion", doorLine(t, 2000)); err != nil {
+		t.Fatalf("the text failed with the typing dial: %v", err)
+	}
+	if err := <-typed; err == nil {
+		t.Fatal("the typing line beat its own budget")
 	}
 }

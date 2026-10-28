@@ -61,6 +61,10 @@ type doorStream struct {
 
 	wmu sync.Mutex // one line on the wire at a time
 
+	// the dial gave up on the budget of the line that started it, not on
+	// the door: a line that waited on it with time left dials again
+	cutShort bool
+
 	mu      sync.Mutex
 	waiting []chan error // one per line written, in order
 	acks    int
@@ -90,6 +94,18 @@ func doorOneLineOnly(onion string) bool {
 // the kept stream to onion, or a new one. fresh says it was dialled for
 // this line. lines that come while it is being dialled wait for it.
 func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
+	for {
+		s, fresh, err := doorGetOnce(ctx, t, onion)
+		if s == nil && !fresh && errors.Is(err, errDialCutShort) && ctx.Err() == nil {
+			continue
+		}
+		return s, fresh, err
+	}
+}
+
+var errDialCutShort = errors.New("dial ran out of its line's budget")
+
+func doorGetOnce(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
 	doorMu.Lock()
 	if s := doorStreams[onion]; s != nil {
 		s.mu.Lock()
@@ -111,6 +127,9 @@ func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, 
 			}
 			if s.conn == nil {
 				s.done()
+				if s.cutShort {
+					return nil, false, errDialCutShort
+				}
 				return nil, false, s.err
 			}
 			return s, false, nil
@@ -126,6 +145,8 @@ func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, 
 		s.mu.Lock()
 		s.err = err
 		s.mu.Unlock()
+		// read by waiters only after ready closes
+		s.cutShort = ctx.Err() != nil
 		doorMu.Lock()
 		if doorStreams[onion] == s {
 			delete(doorStreams, onion)
@@ -386,9 +407,11 @@ var (
 	errTypingTo    = errors.New("not an onion")
 )
 
-// a typing line to a peer's door: the private route only, one try on the
-// kept stream or one dial, inside typingBudget. it is worth nothing once
-// late, so a failure is not tried again and nothing is kept for later
+// a typing line to a peer's door: the private route only, on the kept
+// stream or one dial, inside typingBudget. it is worth nothing once late,
+// so it is never kept for later. the one second try is for a kept stream
+// the door shut under it, as it does each doorLife, so steady typing does
+// not go dark
 func sendTyping(t *tor.Tor, onion, line string) error {
 	if currentMode() != modePrivate {
 		return errTypingRoute
@@ -407,10 +430,28 @@ func sendTyping(t *tor.Tor, onion, line string) error {
 	if doorOneLineOnly(onion) {
 		return sendOneLineBy(ctx, t, onion, line)
 	}
-	s, _, err := doorGet(ctx, t, onion)
+	s, fresh, err := doorGet(ctx, t, onion)
 	if err != nil {
 		return err
 	}
+	err = typingOn(ctx, s, line)
+	var shut doorShut
+	if err == nil || fresh || !errors.As(err, &shut) || ctx.Err() != nil {
+		return err
+	}
+	if doorOneLineOnly(onion) {
+		return sendOneLineBy(ctx, t, onion, line)
+	}
+	s, _, err = doorGet(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	return typingOn(ctx, s, line)
+}
+
+// one typing line on s, in what is left of the budget. a late ack leaves
+// the stream to the lines behind it
+func typingOn(ctx context.Context, s *doorStream, line string) error {
 	defer s.done()
 	left := time.Until(deadlineOf(ctx))
 	if left <= 0 {
