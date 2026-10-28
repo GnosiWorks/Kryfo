@@ -87,6 +87,7 @@ func TestGifAsksOnItsOwnLane(t *testing.T) {
 		return srv.Client(), nil
 	}
 	defer func() { gifClient = old }()
+	useGifHost(t, srv.URL)
 	if out := gifAsk(http.MethodPost, srv.URL+"/gif/v1/search", `{"q":"seal"}`); out != `{"items":[]}` {
 		t.Fatalf("search: %q", out)
 	}
@@ -114,10 +115,43 @@ func TestGifAskRefusesAnAnswerPastTheCap(t *testing.T) {
 	old := gifClient
 	gifClient = func() (*http.Client, error) { return srv.Client(), nil }
 	defer func() { gifClient = old }()
+	useGifHost(t, srv.URL)
 	if out := gifAsk(http.MethodGet, srv.URL+"/big", ""); out != "error: read: too big" {
 		t.Fatalf("past the cap: %d bytes", len(out))
 	}
 	if out := gifAsk(http.MethodGet, srv.URL+"/full", ""); len(out) != gifAskMax {
 		t.Fatalf("at the cap: %d bytes", len(out))
+	}
+}
+
+// the gif calls go to our gif relay and nowhere else, whatever url the app
+// hands over
+func useGifHost(t *testing.T, u string) {
+	t.Helper()
+	old := gifHost
+	gifHost = strings.TrimPrefix(strings.TrimPrefix(u, "http://"), "https://")
+	t.Cleanup(func() { gifHost = old })
+}
+
+func TestGifCallsGoToOurRelayOnly(t *testing.T) {
+	hits := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+	old := gifClient
+	gifClient = func() (*http.Client, error) { return srv.Client(), nil }
+	defer func() { gifClient = old }()
+	for _, u := range []string{srv.URL + "/gif/v1/trending", "https://example.com/gif/v1/trending", "https://relay.kryfo.app.evil.example/x"} {
+		if out := gifAsk(http.MethodGet, u, ""); out != "error: not our gif relay" {
+			t.Fatalf("%s: %q", u, out)
+		}
+	}
+	if hits != 0 {
+		t.Fatalf("%d calls reached a host that is not ours", hits)
+	}
+	if !gifHostOK("https://relay.kryfo.app/gif/v1/m/x") || !gifHostOK("https://RELAY.kryfo.app/gif") {
+		t.Fatal("our gif relay is refused")
 	}
 }

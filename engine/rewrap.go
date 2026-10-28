@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"time"
 
 	"fiatjaf.com/nostr"
 	"github.com/mailru/easyjson"
@@ -33,9 +34,14 @@ type keptSeal struct {
 var (
 	keptMu    sync.Mutex
 	keptSeals = map[string]keptSeal{}
+	keptAt    = map[string]time.Time{}
 	keptOrder []string
 	keptBytes int
 )
+
+// a seal this young is never let go of for room: its send may still be on
+// its way, and the queue may want it. the cap is soft for these
+const keptYoung = publishWait + 5*time.Second
 
 // a var for the tests. a photo is a hundred seals of about 40 kB, so this
 // holds a few of them in flight, small enough for a 32-bit phone
@@ -60,13 +66,19 @@ func keepSeal(id string, k keptSeal) {
 		keptOrder = append(keptOrder, id)
 	}
 	keptSeals[id] = k
+	keptAt[id] = time.Now()
 	keptBytes += k.size()
 	for keptBytes > keptMaxBytes && len(keptOrder) > 0 {
 		oldest := keptOrder[0]
+		o, ok := keptSeals[oldest]
+		if ok && time.Since(keptAt[oldest]) < keptYoung {
+			break
+		}
 		keptOrder = keptOrder[1:]
-		if o, ok := keptSeals[oldest]; ok {
+		if ok {
 			keptBytes -= o.size()
 			delete(keptSeals, oldest)
+			delete(keptAt, oldest)
 		}
 	}
 }
@@ -86,6 +98,7 @@ func forgetSeal(id string) {
 	if k, ok := keptSeals[id]; ok {
 		keptBytes -= k.size()
 		delete(keptSeals, id)
+		delete(keptAt, id)
 	}
 	// the order is trimmed of ids that are gone once it has many of them
 	if len(keptOrder) > 2*len(keptSeals)+64 {

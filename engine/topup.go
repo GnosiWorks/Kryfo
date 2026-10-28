@@ -523,8 +523,11 @@ func topupFlush(st, u string) bool {
 			sent++
 			topupDone(st, it.Ev.ID)
 		case topupBusy(err):
-			// the relay asks for later: that counts as a try
-			topupTried(st, it.Ev.ID)
+			// the relay asks for later. slow down is only that, until the
+			// wrap's own end; an error of the relay's counts as a try
+			if strings.Contains(err.Error(), "error:") {
+				topupTried(st, it.Ev.ID)
+			}
 			log.Printf("nostr: store %s took %d waiting wraps, then: %v", st, sent, err)
 			return false
 		case strings.HasPrefix(err.Error(), "msg: "):

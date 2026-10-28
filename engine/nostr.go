@@ -1278,10 +1278,11 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 							missed = append(missed, st)
 						}
 					}
-					public := tookPublic
+					public, took := tookPublic, anyTook
 					tookMu.Unlock()
-					// every store has it: nothing will need it wrapped again
-					if len(missed) == 0 {
+					// every store has it: nothing will need it wrapped again.
+					// a route that ended before anyone took it sends it again
+					if len(missed) == 0 && (took || !routeGone(routeC)) {
 						forgetSeal(ev.ID.Hex())
 					}
 					if !routeGone(routeC) {

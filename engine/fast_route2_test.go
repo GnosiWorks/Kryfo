@@ -433,10 +433,21 @@ func TestATopUpGivesUpOnANo(t *testing.T) {
 			t.Fatalf("%q: kept %v, want %v", c.refuse, kept, c.kept)
 		}
 	}
-	// a wrap that keeps meeting a slow down is let go after its tries
+	// a slow down is waited out as long as the wrap lives, however often
 	topupAdd(storeFirst, laneEveryday, ev)
 	a.mu.Lock()
 	a.refuse = "rate-limited: slow down"
+	a.mu.Unlock()
+	for i := 0; i < 3*topupMaxTries; i++ {
+		topupFlush(storeFirst, a.url())
+	}
+	if n := len(topupFor(storeFirst)); n != 1 {
+		t.Fatal("a wrap was given up on for being asked to slow down")
+	}
+	// the relay's own errors are tries, and a wrap that keeps meeting them
+	// is let go after them
+	a.mu.Lock()
+	a.refuse = "error: the relay is full, try later"
 	a.mu.Unlock()
 	for i := 0; i < topupMaxTries+1 && len(topupFor(storeFirst)) > 0; i++ {
 		topupFlush(storeFirst, a.url())
@@ -661,7 +672,7 @@ func TestKeptSealsGoWhenDoneAndStaySmall(t *testing.T) {
 
 	// past the cap the oldest go, the newest stay
 	keptMu.Lock()
-	keptSeals, keptOrder, keptBytes = map[string]keptSeal{}, nil, 0
+	keptSeals, keptAt, keptOrder, keptBytes = map[string]keptSeal{}, map[string]time.Time{}, nil, 0
 	keptMu.Unlock()
 	one := keptSeal{Seal: strings.Repeat("x", 1000), To: "p"}
 	old := keptMaxBytes
@@ -669,6 +680,8 @@ func TestKeptSealsGoWhenDoneAndStaySmall(t *testing.T) {
 	t.Cleanup(func() { keptMaxBytes = old })
 	for i := 0; i < 5; i++ {
 		keepSeal(strconv.Itoa(i), one)
+		// past the young span, so room may be made
+		ageSeal(strconv.Itoa(i))
 	}
 	for i, want := range []bool{false, false, true, true, true} {
 		if _, ok := keptSealOf(strconv.Itoa(i)); ok != want {
@@ -753,4 +766,67 @@ func TestAnOnionGoesThroughTorOnFast(t *testing.T) {
 	if c, _ := relayClientFor(laneEveryday, "wss://relay.kryfo.app"); c != direct {
 		t.Fatal("our clearnet name went through tor on fast")
 	}
+}
+
+// a seal past its young span, as if made long ago
+func ageSeal(id string) {
+	keptMu.Lock()
+	keptAt[id] = time.Now().Add(-keptYoung - time.Second)
+	keptMu.Unlock()
+}
+
+// a seal whose send may still be on its way is never let go of for room:
+// the cap gives way until it is older
+func TestAYoungSealIsNeverEvicted(t *testing.T) {
+	keptMu.Lock()
+	keptSeals, keptAt, keptOrder, keptBytes = map[string]keptSeal{}, map[string]time.Time{}, nil, 0
+	keptMu.Unlock()
+	one := keptSeal{Seal: strings.Repeat("y", 1000), To: "p"}
+	old := keptMaxBytes
+	keptMaxBytes = 2*one.size() + 10
+	t.Cleanup(func() { keptMaxBytes = old })
+	for i := 0; i < 4; i++ {
+		keepSeal("young"+strconv.Itoa(i), one)
+	}
+	for i := 0; i < 4; i++ {
+		if _, ok := keptSealOf("young" + strconv.Itoa(i)); !ok {
+			t.Fatalf("young seal %d let go of for room", i)
+		}
+	}
+	// once they are old, the next one makes room from the oldest
+	for i := 0; i < 4; i++ {
+		ageSeal("young" + strconv.Itoa(i))
+	}
+	keepSeal("new", one)
+	if _, ok := keptSealOf("young0"); ok {
+		t.Fatal("an old seal stayed past the cap")
+	}
+	if _, ok := keptSealOf("new"); !ok {
+		t.Fatal("the newest seal went")
+	}
+}
+
+// a route that ended before any relay took the wrap keeps its seal: the
+// send goes out again on the new route, and may need it
+func TestASealOutlivesARouteThatEndedFirst(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	ev := wrapKeptAt(t, mustXid(), newXid(t).pub, "x", time.Now())
+	ended := make(chan struct{})
+	close(ended)
+	if n := nostrPublishOn(context.Background(), laneEveryday, ev, ended); n != 0 {
+		t.Fatalf("%d relays took it on a route that had ended", n)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if _, ok := keptSealOf(ev.ID.Hex()); !ok {
+		t.Fatal("the seal went with a route nobody sent on")
+	}
+	// on a live route that every store took it on, it goes
+	if ok := nostrPublishMulti(context.Background(), laneEveryday, ev); ok < 1 {
+		t.Fatal("not sent")
+	}
+	waitFor(t, "the seal let go", 10*time.Second, func() bool {
+		_, ok := keptSealOf(ev.ID.Hex())
+		return !ok
+	})
 }
