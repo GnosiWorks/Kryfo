@@ -9480,4 +9480,175 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Set a screen lock on your phone so this protection holds when it is locked.';
+
+  @override
+  String get settingsDevices => 'Devices';
+
+  @override
+  String get devicesLinkedDevices => 'Linked devices';
+
+  @override
+  String get devicesThisPhoneOnly => 'This phone only';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'This phone';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Only this phone can link or remove devices';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Linked $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Used today';
+
+  @override
+  String get devicesUsedThisWeek => 'Used this week';
+
+  @override
+  String get devicesUsedThisMonth => 'Used this month';
+
+  @override
+  String get devicesNotUsedYet => 'Not used yet';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Unlinks in $daysString days unless you open it',
+      one: 'Unlinks tomorrow unless you open it',
+      zero: 'Unlinks today unless you open it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo on your computer';
+
+  @override
+  String get devicesEmptyLine =>
+      'Link a computer to read and send your messages there. Up to five devices besides this phone.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Your contacts\' apps don\'t show your devices.';
+
+  @override
+  String get devicesUnusedRule =>
+      'A device you don\'t open for 30 days unlinks itself and wipes your chats from it.';
+
+  @override
+  String get devicesFull =>
+      'Five devices are linked. Remove one to link another.';
+
+  @override
+  String get devicesLinkADevice => 'Link a device';
+
+  @override
+  String get devicesRemoveAll => 'Remove all other devices';
+
+  @override
+  String get devicesRemoveAllTitle => 'Remove all other devices?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'They stop getting new messages and can\'t send as you. This phone keeps everything.';
+
+  @override
+  String get devicesRemoveAllYes => 'Remove all';
+
+  @override
+  String get devicesRemovedAll => 'Only this phone now';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'It stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.';
+
+  @override
+  String get devicesRemove => 'Remove';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name removed';
+  }
+
+  @override
+  String get devicesRename => 'Rename';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Rename $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Only you see this name. Your contacts never do.';
+
+  @override
+  String get devicesNameComputer => 'Computer';
+
+  @override
+  String get devicesDeviceCode => 'Device code';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'The same code shows on the device itself, in Settings.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Open Kryfo on your computer. It shows a code.';
+
+  @override
+  String get devicesLinkStep2 => 'Scan the code with this phone.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Check that both screens show the same six numbers.';
+
+  @override
+  String get devicesHistory => 'History';
+
+  @override
+  String get devicesHistoryCopy => 'Copy my chats';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'All your messages, with photos and videos from the last 30 days.';
+
+  @override
+  String get devicesHistoryNone => 'Start with no history';
+
+  @override
+  String get devicesHistoryNoneHint => 'Only new messages reach the device.';
+
+  @override
+  String get devicesSkipMedia => 'Skip photos and videos';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Only the text comes over. Quicker, and less to keep on the device.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Hidden chats and the decoy stay on this phone.';
+
+  @override
+  String get devicesScanCode => 'Scan the code';
 }

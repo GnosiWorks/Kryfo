@@ -9050,6 +9050,164 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
+
+  @override
+  String get settingsDevices => '设备';
+
+  @override
+  String get devicesLinkedDevices => '已关联的设备';
+
+  @override
+  String get devicesThisPhoneOnly => '仅这部手机';
+
+  @override
+  String get devicesNameSeparator => '、';
+
+  @override
+  String get devicesThisPhone => '这部手机';
+
+  @override
+  String get devicesOnlyThisPhone => '只有这部手机能关联或移除设备';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date关联';
+  }
+
+  @override
+  String get devicesUsedToday => '今天用过';
+
+  @override
+  String get devicesUsedThisWeek => '本周用过';
+
+  @override
+  String get devicesUsedThisMonth => '本月用过';
+
+  @override
+  String get devicesNotUsedYet => '还没用过';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysString 天内不打开就会解除关联',
+      one: '明天不打开就会解除关联',
+      zero: '今天不打开就会解除关联',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => '在电脑上用 Kryfo';
+
+  @override
+  String get devicesEmptyLine => '关联一台电脑，就能在上面读和发消息。除了这部手机，最多再关联五台设备。';
+
+  @override
+  String get devicesContactsSeeNothing => '你的联系人的应用不会显示你的设备。';
+
+  @override
+  String get devicesUnusedRule => '一台设备 30 天没打开，就会自己解除关联，并抹除上面的聊天。';
+
+  @override
+  String get devicesFull => '已关联五台设备。移除一台才能再关联。';
+
+  @override
+  String get devicesLinkADevice => '关联设备';
+
+  @override
+  String get devicesRemoveAll => '移除其他所有设备';
+
+  @override
+  String get devicesRemoveAllTitle => '移除其他所有设备？';
+
+  @override
+  String get devicesRemoveAllLine => '它们不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
+
+  @override
+  String get devicesRemoveAllYes => '全部移除';
+
+  @override
+  String get devicesRemovedAll => '现在只有这部手机';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '移除“$name”？';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      '它不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
+
+  @override
+  String get devicesRemove => '移除';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '已移除“$name”';
+  }
+
+  @override
+  String get devicesRename => '重命名';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '重命名“$name”';
+  }
+
+  @override
+  String get devicesRenameLine => '只有你能看到这个名字，你的联系人永远看不到。';
+
+  @override
+  String get devicesNameComputer => '电脑';
+
+  @override
+  String get devicesDeviceCode => '设备代码';
+
+  @override
+  String get devicesDeviceCodeLine => '同样的代码也会显示在那台设备的设置里。';
+
+  @override
+  String get devicesLinkStep1 => '在电脑上打开 Kryfo，它会显示一个二维码。';
+
+  @override
+  String get devicesLinkStep2 => '用这部手机扫描它。';
+
+  @override
+  String get devicesLinkStep3 => '确认两块屏幕显示的六位数字相同。';
+
+  @override
+  String get devicesHistory => '历史记录';
+
+  @override
+  String get devicesHistoryCopy => '复制我的聊天';
+
+  @override
+  String get devicesHistoryCopyHint => '所有消息，以及最近 30 天的照片和视频。';
+
+  @override
+  String get devicesHistoryNone => '不带历史记录开始';
+
+  @override
+  String get devicesHistoryNoneHint => '设备只会收到新消息。';
+
+  @override
+  String get devicesSkipMedia => '跳过照片和视频';
+
+  @override
+  String get devicesSkipMediaHint => '只复制文字。更快，设备上存的也更少。';
+
+  @override
+  String get devicesHiddenStay => '隐藏聊天和伪装都留在这部手机上。';
+
+  @override
+  String get devicesScanCode => '扫描二维码';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17981,4 +18139,162 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get settingsDevices => '裝置';
+
+  @override
+  String get devicesLinkedDevices => '已連結的裝置';
+
+  @override
+  String get devicesThisPhoneOnly => '僅這支手機';
+
+  @override
+  String get devicesNameSeparator => '、';
+
+  @override
+  String get devicesThisPhone => '這支手機';
+
+  @override
+  String get devicesOnlyThisPhone => '只有這支手機能連結或移除裝置';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date連結';
+  }
+
+  @override
+  String get devicesUsedToday => '今天用過';
+
+  @override
+  String get devicesUsedThisWeek => '本週用過';
+
+  @override
+  String get devicesUsedThisMonth => '本月用過';
+
+  @override
+  String get devicesNotUsedYet => '還沒用過';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysString 天內不開啟就會解除連結',
+      one: '明天不開啟就會解除連結',
+      zero: '今天不開啟就會解除連結',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => '在電腦上用 Kryfo';
+
+  @override
+  String get devicesEmptyLine => '連結一台電腦，就能在上面讀取和傳送訊息。除了這支手機，最多再連結五台裝置。';
+
+  @override
+  String get devicesContactsSeeNothing => '你的聯絡人的 App 不會顯示你的裝置。';
+
+  @override
+  String get devicesUnusedRule => '一台裝置 30 天沒開啟，就會自己解除連結，並抹除上面的聊天。';
+
+  @override
+  String get devicesFull => '已連結五台裝置。移除一台才能再連結。';
+
+  @override
+  String get devicesLinkADevice => '連結裝置';
+
+  @override
+  String get devicesRemoveAll => '移除其他所有裝置';
+
+  @override
+  String get devicesRemoveAllTitle => '移除其他所有裝置？';
+
+  @override
+  String get devicesRemoveAllLine => '它們不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
+
+  @override
+  String get devicesRemoveAllYes => '全部移除';
+
+  @override
+  String get devicesRemovedAll => '現在只有這支手機';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '移除「$name」？';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      '它不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
+
+  @override
+  String get devicesRemove => '移除';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '已移除「$name」';
+  }
+
+  @override
+  String get devicesRename => '重新命名';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '重新命名「$name」';
+  }
+
+  @override
+  String get devicesRenameLine => '只有你能看到這個名稱，你的聯絡人永遠看不到。';
+
+  @override
+  String get devicesNameComputer => '電腦';
+
+  @override
+  String get devicesDeviceCode => '裝置代碼';
+
+  @override
+  String get devicesDeviceCodeLine => '同樣的代碼也會顯示在那台裝置的設定裡。';
+
+  @override
+  String get devicesLinkStep1 => '在電腦上開啟 Kryfo，它會顯示一個 QR 碼。';
+
+  @override
+  String get devicesLinkStep2 => '用這支手機掃描它。';
+
+  @override
+  String get devicesLinkStep3 => '確認兩個螢幕顯示的六位數字相同。';
+
+  @override
+  String get devicesHistory => '歷史記錄';
+
+  @override
+  String get devicesHistoryCopy => '複製我的聊天';
+
+  @override
+  String get devicesHistoryCopyHint => '所有訊息，以及最近 30 天的照片和影片。';
+
+  @override
+  String get devicesHistoryNone => '不帶歷史記錄開始';
+
+  @override
+  String get devicesHistoryNoneHint => '裝置只會收到新訊息。';
+
+  @override
+  String get devicesSkipMedia => '略過照片和影片';
+
+  @override
+  String get devicesSkipMediaHint => '只複製文字。更快，裝置上存的也更少。';
+
+  @override
+  String get devicesHiddenStay => '隱藏聊天和偽裝都留在這支手機上。';
+
+  @override
+  String get devicesScanCode => '掃描 QR 碼';
 }

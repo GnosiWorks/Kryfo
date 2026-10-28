@@ -9587,4 +9587,176 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Activez un verrouillage d’écran sur votre téléphone pour que cette protection tienne quand il est verrouillé.';
+
+  @override
+  String get settingsDevices => 'Appareils';
+
+  @override
+  String get devicesLinkedDevices => 'Appareils associés';
+
+  @override
+  String get devicesThisPhoneOnly => 'Ce téléphone seulement';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Ce téléphone';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Seul ce téléphone peut associer ou retirer des appareils';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Associé le $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Utilisé aujourd’hui';
+
+  @override
+  String get devicesUsedThisWeek => 'Utilisé cette semaine';
+
+  @override
+  String get devicesUsedThisMonth => 'Utilisé ce mois-ci';
+
+  @override
+  String get devicesNotUsedYet => 'Pas encore utilisé';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Sera dissocié dans $daysString jours si vous ne l’ouvrez pas',
+      one: 'Sera dissocié demain si vous ne l’ouvrez pas',
+      zero: 'Sera dissocié aujourd’hui si vous ne l’ouvrez pas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo sur votre ordinateur';
+
+  @override
+  String get devicesEmptyLine =>
+      'Associez un ordinateur pour y lire et envoyer vos messages. Jusqu’à cinq appareils en plus de ce téléphone.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Les applis de vos contacts n’affichent pas vos appareils.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Un appareil que vous n’ouvrez pas pendant 30 jours se dissocie tout seul et efface vos discussions.';
+
+  @override
+  String get devicesFull =>
+      'Cinq appareils sont associés. Retirez-en un pour en associer un autre.';
+
+  @override
+  String get devicesLinkADevice => 'Associer un appareil';
+
+  @override
+  String get devicesRemoveAll => 'Retirer tous les autres appareils';
+
+  @override
+  String get devicesRemoveAllTitle => 'Retirer tous les autres appareils ?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Ils ne reçoivent plus de nouveaux messages et ne peuvent plus envoyer en votre nom. Ce téléphone garde tout.';
+
+  @override
+  String get devicesRemoveAllYes => 'Tout retirer';
+
+  @override
+  String get devicesRemovedAll => 'Plus que ce téléphone';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Retirer $name ?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Il ne reçoit plus de nouveaux messages et ne peut plus envoyer en votre nom. Il efface vos discussions la prochaine fois qu’il est en ligne. Un appareil que quelqu’un a trafiqué peut garder ce qu’il a déjà.';
+
+  @override
+  String get devicesRemove => 'Retirer';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name retiré';
+  }
+
+  @override
+  String get devicesRename => 'Renommer';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Renommer $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Vous seul voyez ce nom. Vos contacts, jamais.';
+
+  @override
+  String get devicesNameComputer => 'Ordinateur';
+
+  @override
+  String get devicesDeviceCode => 'Code de l’appareil';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Le même code s’affiche sur l’appareil lui-même, dans les Paramètres.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Ouvrez Kryfo sur votre ordinateur. Un code s’affiche.';
+
+  @override
+  String get devicesLinkStep2 => 'Scannez le code avec ce téléphone.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Vérifiez que les deux écrans affichent les mêmes six chiffres.';
+
+  @override
+  String get devicesHistory => 'Historique';
+
+  @override
+  String get devicesHistoryCopy => 'Copier mes discussions';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tous vos messages, avec les photos et vidéos des 30 derniers jours.';
+
+  @override
+  String get devicesHistoryNone => 'Commencer sans historique';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Seuls les nouveaux messages arrivent sur l’appareil.';
+
+  @override
+  String get devicesSkipMedia => 'Ignorer les photos et vidéos';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Seul le texte est copié. Plus rapide, et moins de choses sur l’appareil.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Les discussions masquées et le leurre restent sur ce téléphone.';
+
+  @override
+  String get devicesScanCode => 'Scanner le code';
 }

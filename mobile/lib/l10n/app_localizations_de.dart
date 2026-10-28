@@ -9587,4 +9587,176 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.';
+
+  @override
+  String get settingsDevices => 'Geräte';
+
+  @override
+  String get devicesLinkedDevices => 'Verknüpfte Geräte';
+
+  @override
+  String get devicesThisPhoneOnly => 'Nur dieses Handy';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Dieses Handy';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Nur dieses Handy kann Geräte verknüpfen oder entfernen';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Verknüpft am $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Heute benutzt';
+
+  @override
+  String get devicesUsedThisWeek => 'Diese Woche benutzt';
+
+  @override
+  String get devicesUsedThisMonth => 'Diesen Monat benutzt';
+
+  @override
+  String get devicesNotUsedYet => 'Noch nicht benutzt';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Wird in $daysString Tagen getrennt, wenn du es nicht öffnest',
+      one: 'Wird morgen getrennt, wenn du es nicht öffnest',
+      zero: 'Wird heute getrennt, wenn du es nicht öffnest',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo auf deinem Computer';
+
+  @override
+  String get devicesEmptyLine =>
+      'Verknüpfe einen Computer, um dort deine Nachrichten zu lesen und zu senden. Bis zu fünf Geräte neben diesem Handy.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Die Apps deiner Kontakte zeigen deine Geräte nicht an.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Ein Gerät, das du 30 Tage nicht öffnest, trennt sich selbst und löscht deine Chats darauf.';
+
+  @override
+  String get devicesFull =>
+      'Fünf Geräte sind verknüpft. Entferne eins, um ein weiteres zu verknüpfen.';
+
+  @override
+  String get devicesLinkADevice => 'Gerät verknüpfen';
+
+  @override
+  String get devicesRemoveAll => 'Alle anderen Geräte entfernen';
+
+  @override
+  String get devicesRemoveAllTitle => 'Alle anderen Geräte entfernen?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Sie bekommen keine neuen Nachrichten mehr und können nicht als du senden. Dieses Handy behält alles.';
+
+  @override
+  String get devicesRemoveAllYes => 'Alle entfernen';
+
+  @override
+  String get devicesRemovedAll => 'Jetzt nur noch dieses Handy';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '$name entfernen?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Es bekommt keine neuen Nachrichten mehr und kann nicht als du senden. Es löscht deine Chats, sobald es das nächste Mal online ist. Ein Gerät, an dem jemand etwas verändert hat, kann behalten, was es schon hat.';
+
+  @override
+  String get devicesRemove => 'Entfernen';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name entfernt';
+  }
+
+  @override
+  String get devicesRename => 'Umbenennen';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '$name umbenennen';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Nur du siehst diesen Namen. Deine Kontakte nie.';
+
+  @override
+  String get devicesNameComputer => 'Computer';
+
+  @override
+  String get devicesDeviceCode => 'Gerätecode';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Derselbe Code steht auf dem Gerät selbst, in den Einstellungen.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Öffne Kryfo auf deinem Computer. Es zeigt einen Code.';
+
+  @override
+  String get devicesLinkStep2 => 'Scanne den Code mit diesem Handy.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Prüfe, ob beide Bildschirme dieselben sechs Ziffern zeigen.';
+
+  @override
+  String get devicesHistory => 'Verlauf';
+
+  @override
+  String get devicesHistoryCopy => 'Meine Chats übertragen';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Alle deine Nachrichten, mit Fotos und Videos der letzten 30 Tage.';
+
+  @override
+  String get devicesHistoryNone => 'Ohne Verlauf beginnen';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Nur neue Nachrichten kommen auf das Gerät.';
+
+  @override
+  String get devicesSkipMedia => 'Fotos und Videos auslassen';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Nur der Text kommt rüber. Schneller, und weniger auf dem Gerät.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Versteckte Chats und die Tarnung bleiben auf diesem Handy.';
+
+  @override
+  String get devicesScanCode => 'Code scannen';
 }

@@ -9647,4 +9647,178 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Увімкніть блокування екрана на телефоні, щоб цей захист діяв і тоді, коли він заблокований.';
+
+  @override
+  String get settingsDevices => 'Пристрої';
+
+  @override
+  String get devicesLinkedDevices => 'Пов’язані пристрої';
+
+  @override
+  String get devicesThisPhoneOnly => 'Лише цей телефон';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Цей телефон';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Лише цей телефон може пов’язувати й прибирати пристрої';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Пов’язано $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Використано сьогодні';
+
+  @override
+  String get devicesUsedThisWeek => 'Використано цього тижня';
+
+  @override
+  String get devicesUsedThisMonth => 'Використано цього місяця';
+
+  @override
+  String get devicesNotUsedYet => 'Ще не використано';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Відв’яжеться через $daysString дня, якщо його не відкрити',
+      many: 'Відв’яжеться через $daysString днів, якщо його не відкрити',
+      few: 'Відв’яжеться через $daysString дні, якщо його не відкрити',
+      one: 'Відв’яжеться завтра, якщо його не відкрити',
+      zero: 'Відв’яжеться сьогодні, якщо його не відкрити',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo на комп’ютері';
+
+  @override
+  String get devicesEmptyLine =>
+      'Пов’яжіть комп’ютер, щоб читати й надсилати з нього повідомлення. До п’яти пристроїв, крім цього телефона.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Застосунки ваших контактів не показують ваші пристрої.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Пристрій, який не відкривали 30 днів, сам відв’язується й стирає з себе ваші чати.';
+
+  @override
+  String get devicesFull =>
+      'Пов’язано п’ять пристроїв. Приберіть один, щоб пов’язати інший.';
+
+  @override
+  String get devicesLinkADevice => 'Пов’язати пристрій';
+
+  @override
+  String get devicesRemoveAll => 'Прибрати всі інші пристрої';
+
+  @override
+  String get devicesRemoveAllTitle => 'Прибрати всі інші пристрої?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Вони перестануть отримувати нові повідомлення й не зможуть писати від вашого імені. На цьому телефоні все залишиться.';
+
+  @override
+  String get devicesRemoveAllYes => 'Прибрати всі';
+
+  @override
+  String get devicesRemovedAll => 'Тепер лише цей телефон';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Прибрати $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Він перестане отримувати нові повідомлення й не зможе писати від вашого імені. Він зітре ваші чати, коли наступного разу буде в мережі. Пристрій, який хтось зламав, може зберегти те, що на ньому вже є.';
+
+  @override
+  String get devicesRemove => 'Прибрати';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name прибрано';
+  }
+
+  @override
+  String get devicesRename => 'Перейменувати';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Перейменувати $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Цю назву бачите лише ви. Ваші контакти її не бачать.';
+
+  @override
+  String get devicesNameComputer => 'Комп’ютер';
+
+  @override
+  String get devicesDeviceCode => 'Код пристрою';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Той самий код видно на самому пристрої, у налаштуваннях.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Відкрийте Kryfo на комп’ютері. Він покаже код.';
+
+  @override
+  String get devicesLinkStep2 => 'Відскануйте код цим телефоном.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Перевірте, що на обох екранах ті самі шість цифр.';
+
+  @override
+  String get devicesHistory => 'Історія';
+
+  @override
+  String get devicesHistoryCopy => 'Перенести мої чати';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Усі ваші повідомлення, а також фото й відео за останні 30 днів.';
+
+  @override
+  String get devicesHistoryNone => 'Почати без історії';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'На пристрій надходитимуть лише нові повідомлення.';
+
+  @override
+  String get devicesSkipMedia => 'Без фото й відео';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Переноситься лише текст. Швидше, і на пристрої менше зберігається.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Приховані чати й приманка лишаються на цьому телефоні.';
+
+  @override
+  String get devicesScanCode => 'Сканувати код';
 }

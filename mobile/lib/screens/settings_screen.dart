@@ -52,6 +52,8 @@ import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import 'follow_section.dart';
+import 'linked_devices_screen.dart';
+import '../devices/own_devices.dart' show kLinkedDevicesOn;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
@@ -686,6 +688,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          if (kLinkedDevicesOn) ...[
+            HaloSection(l10n.settingsDevices),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.devices_rounded,
+                  label: l10n.devicesLinkedDevices,
+                  value: l10n.devicesThisPhoneOnly,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const LinkedDevicesScreen())),
+                ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsAppearance),
           HaloGroup(
             children: [
