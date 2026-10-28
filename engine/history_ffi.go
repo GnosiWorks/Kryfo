@@ -147,9 +147,13 @@ func HaloHistSendNew(cKey, cBind, cIdentity, cSpool, cRoot *C.char, skip, chunk 
 //export HaloHistSendChat
 func HaloHistSendChat(h C.longlong, meta *C.uchar, n C.int) C.int {
 	s := histSender(h)
-	b, ok := histBytes(meta, n, devices.MaxMeta)
-	if s == nil || !ok {
+	if s == nil || n < 0 {
 		return -1
+	}
+	// a row too big to copy in is not a row: Chat counts it as left out
+	b, ok := histBytes(meta, n, devices.MaxRecord)
+	if !ok {
+		b = []byte("{")
 	}
 	c, err := s.Chat(b)
 	if errors.Is(err, devices.ErrLeft) {
