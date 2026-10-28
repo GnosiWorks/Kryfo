@@ -681,3 +681,84 @@ func TestGapLimitFitsWallets(t *testing.T) {
 		t.Fatalf("reopenMinLeft %v", reopenMinLeft)
 	}
 }
+
+func smallGap(t *testing.T, n int) {
+	t.Helper()
+	old := gapLimit
+	gapLimit = n
+	t.Cleanup(func() { gapLimit = old })
+}
+
+// a held guard spends none of the hourly allowance, so the first donors
+// after a payment reopens it are not turned away
+func TestHeldGuardSpendsNoAllowance(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	smallGap(t, 3)
+	for i := 0; i < 3; i++ {
+		invoice(t, "supporter")
+	}
+	left := invoices.tokens
+	for i := 0; i < 5; i++ {
+		if code, _ := invoice(t, "supporter"); code != http.StatusTooManyRequests {
+			t.Fatalf("held: %d", code)
+		}
+	}
+	if invoices.tokens < left-0.01 {
+		t.Fatalf("held refusals took %.2f tokens", left-invoices.tokens)
+	}
+	f.invs[2].Status = "Settled"
+	gap.checked = time.Now().Add(-gapRecheck)
+	if code, _ := invoice(t, "supporter"); code != 200 {
+		t.Fatalf("after a payment: %d", code)
+	}
+}
+
+// the allowance saying no gives the guard's place back
+func TestAllowanceRefusalGivesTheReservationBack(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	invoices = newBucket(1)
+	invoices.tokens = 0
+	for i := 0; i < 2*gapLimit; i++ {
+		if code, _ := invoice(t, "supporter"); code != http.StatusTooManyRequests {
+			t.Fatalf("code %d", code)
+		}
+	}
+	if gap.unpaid != 0 || gap.inflight != 0 || gap.held || f.made != 0 {
+		t.Fatalf("unpaid %d inflight %d held %v made %d", gap.unpaid, gap.inflight, gap.held, f.made)
+	}
+	roomyBucket()
+	if code, _ := invoice(t, "supporter"); code != 200 {
+		t.Fatalf("code %d", code)
+	}
+}
+
+// a baseline that does not parse is an error, never quietly no baseline
+func TestGapSinceMustParse(t *testing.T) {
+	t.Setenv("BADGE_GAP_SINCE_T", "")
+	if v, err := envTime("BADGE_GAP_SINCE_T"); err != nil || !v.IsZero() {
+		t.Fatalf("unset: %v %v", v, err)
+	}
+	for _, bad := range []string{"2026-11-01", "yesterday", "2026-11-01 12:00:00"} {
+		t.Setenv("BADGE_GAP_SINCE_T", bad)
+		if _, err := envTime("BADGE_GAP_SINCE_T"); err == nil {
+			t.Fatalf("%q parsed", bad)
+		}
+	}
+	t.Setenv("BADGE_GAP_SINCE_T", "2026-11-01T12:00:00Z")
+	v, err := envTime("BADGE_GAP_SINCE_T")
+	if err != nil || v.Unix() != 1793534400 {
+		t.Fatalf("%v %v", v, err)
+	}
+	old := gapSince
+	t.Cleanup(func() { gapSince = old })
+	gapSince = time.Time{}
+	if gapSinceLine() != "none" {
+		t.Fatal(gapSinceLine())
+	}
+	gapSince = v
+	if gapSinceLine() != "2026-11-01T12:00:00Z" {
+		t.Fatal(gapSinceLine())
+	}
+}

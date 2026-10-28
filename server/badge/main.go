@@ -112,6 +112,9 @@ func main() {
 	if apiKey == "" || storeID == "" {
 		log.Fatal("set BTCPAY_APIKEY and BTCPAY_STOREID")
 	}
+	if gapSinceErr != nil {
+		log.Fatal(gapSinceErr)
+	}
 	loadOrCreateKey()
 	pub := base64.RawURLEncoding.EncodeToString(priv.Public().(ed25519.PublicKey))
 	log.Printf("badge pubkey (pin this in the app): %s", pub)
@@ -122,8 +125,8 @@ func main() {
 	http.HandleFunc("/invoice", handleInvoice)
 	http.HandleFunc("/receipt", handleReceipt)
 
-	log.Printf("halo badge service on %s, %d invoices an hour, %d unpaid in a row at most",
-		listen, perHour, gapLimit)
+	log.Printf("halo badge service on %s, %d invoices an hour, %d unpaid in a row at most, "+
+		"counted since %s", listen, perHour, gapLimit, gapSinceLine())
 	// timeouts, so a client that opens a connection and says nothing does
 	// not hold it for ever
 	srv := &http.Server{
@@ -186,14 +189,9 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// after the tier check, so a malformed request costs nothing
-	if !invoices.take(time.Now()) {
-		log.Printf("invoice refused: over %d an hour", perHour)
-		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
-		return
-	}
 	// a wallet restored from seed looks only so far past its last paid
-	// address. no more unpaid ones than that in a row
+	// address. no more unpaid ones than that in a row. asked before the
+	// hourly allowance, so a held guard spends none of it
 	ok, err := gap.reserve(time.Now())
 	if err != nil {
 		log.Printf("invoice refused: cannot count unpaid invoices: %v", err)
@@ -201,6 +199,12 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok {
+		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
+		return
+	}
+	if !invoices.take(time.Now()) {
+		gap.giveBack()
+		log.Printf("invoice refused: over %d an hour", perHour)
 		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
 		return
 	}
@@ -327,19 +331,33 @@ func touched(additional string) bool {
 var gapLimit = envInt("BADGE_GAP_LIMIT", 15)
 
 // invoices made before this time are not counted, for when the wallet is
-// known to see up to there (RFC 3339, empty for all)
-var gapSince = envTime("BADGE_GAP_SINCE")
+// known to see up to there (RFC 3339, empty for all). checked in main
+var gapSince, gapSinceErr = envTime("BADGE_GAP_SINCE")
 
 // how long a count from btcpay is trusted, so a refusal does not ask again
 // on every tap and a payment reopens it within minutes
 var gapRecheck = 2 * time.Minute
 
-func envTime(k string) time.Time {
-	t, err := time.Parse(time.RFC3339, os.Getenv(k))
-	if err != nil {
-		return time.Time{}
+// an unset value is no time. one that does not parse is an error: a
+// baseline thought set and silently ignored keeps the guard held
+func envTime(k string) (time.Time, error) {
+	v := os.Getenv(k)
+	if v == "" {
+		return time.Time{}, nil
 	}
-	return t
+	t, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("%s=%q is not RFC 3339 (2026-11-01T12:00:00Z)", k, v)
+	}
+	return t, nil
+}
+
+// the baseline as the start line says it
+func gapSinceLine() string {
+	if gapSince.IsZero() {
+		return "none"
+	}
+	return gapSince.UTC().Format(time.RFC3339)
 }
 
 // counts the unpaid invoices since the last paid one and refuses new
@@ -351,7 +369,12 @@ type gapGuard struct {
 	// invoices asked for and not yet answered: not in btcpay's list yet
 	inflight int
 	held     bool
+	// when the hold was last said in the journal
+	said time.Time
 }
+
+// while held, the journal hears about it this often
+const gapSayEvery = time.Hour
 
 var gap = &gapGuard{}
 
@@ -366,8 +389,11 @@ func (g *gapGuard) reserve(now time.Time) (bool, error) {
 		g.unpaid, g.checked = n+g.inflight, now
 	}
 	if g.unpaid >= gapLimit {
-		if !g.held {
-			log.Printf("invoices held: %d unpaid in a row, the limit is %d", g.unpaid, gapLimit)
+		if !g.held || now.Sub(g.said) >= gapSayEvery {
+			log.Printf("INVOICES HELD: %d unpaid in a row, the limit is %d. badges wait, the app "+
+				"shows the fixed address. reopens on a payment, or set BADGE_GAP_SINCE once the "+
+				"wallet sees every address", g.unpaid, gapLimit)
+			g.said = now
 		}
 		g.held = true
 		return false, nil
@@ -379,6 +405,14 @@ func (g *gapGuard) reserve(now time.Time) (bool, error) {
 	g.unpaid++
 	g.inflight++
 	return true, nil
+}
+
+// a reservation the allowance then refused: no invoice was asked for
+func (g *gapGuard) giveBack() {
+	g.mu.Lock()
+	g.unpaid--
+	g.inflight--
+	g.mu.Unlock()
 }
 
 func (g *gapGuard) done() {
