@@ -17,7 +17,8 @@ import (
 // a stand-in for the shim's ks_sign and ks_verify_ctx: randomised 64-byte
 // signatures that only the key's holder can make, the same prefix and
 // context text, the same context table, and the body rules phase 2 adds
-// (the body parses, and its identity is the signer)
+// (the body parses, and its identity is the signer). history-counts is not
+// in the shim's table yet; this is the rule it is to get
 type shim struct {
 	mu      sync.Mutex
 	secrets map[Key][]byte
@@ -78,6 +79,11 @@ func signedText(context string, body []byte) []byte {
 }
 
 func bodyFits(signer Key, context string, body []byte) bool {
+	// a history head: it parses, and it names the signer
+	if context == ContextHistory && bytes.HasPrefix(body, []byte(headMagic)) {
+		h, err := ParseHead(append(bytes.Clone(body), make([]byte, SigSize)...))
+		return err == nil && h.Identity == signer
+	}
 	if context != ContextList || !bytes.HasPrefix(body, []byte(listMagic)) {
 		return false
 	}
