@@ -609,6 +609,10 @@ extension AppStateDelivery on AppState {
       unawaited(_tidy(live));
       if (sessionQuiet) unawaited(_tidy(_session.primary));
     }
+    // google push left while offline: its delete is tried again
+    if (front && playBuild && _deliveryMode != DeliveryMode.google) {
+      unawaited(GooglePush.instance.settle());
+    }
     if (front && knockMode(_deliveryMode)) {
       unawaited(_lookAtHelper().catchError((Object _) {}));
       unawaited(refreshHelperOffer());

@@ -70,7 +70,7 @@ leaving the mode tells the helper app to drop the endpoints at once, so our rela
 
 the token reaches our relay sealed to our push gateway's key, in a different seal for each of the sixteen endpoints, so the relay holds sixteen strings it cannot tie together. when something arrives for you, the relay knocks the gateway, which opens the seal in memory and asks google to wake your phone with an empty message. Kryfo then fetches over tor as always. fake wake-ups are mixed in, as in the helper app mode.
 
-google sees that this install uses Kryfo, when it is woken, and your phone's IP as it always does for play services. it never sees who wrote, what was said or how many. our gateway keeps no table, writes no file and logs nothing per token; in memory it holds a keyed hash of a token and the times of its last pushes, for an hour at most, to keep one push a phone every 45 seconds. firebase's analytics, advertising id and delivery metrics are switched off in the app.
+google sees that this install uses Kryfo, when it is woken, and your phone's IP as it always does for play services. it never sees who wrote, what was said or how many. our gateway keeps no table, writes no file and logs nothing per token; in memory it holds a keyed hash of a token and the times of its last pushes for an hour, to keep one push a phone every 45 seconds, a keyed hash of a token google says is no phone's for a day, and, for a wake-up held back to keep that pace, the token itself for up to 45 seconds. firebase's analytics, advertising id and delivery metrics are switched off in the app.
 
 ## third parties
 

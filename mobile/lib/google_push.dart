@@ -206,4 +206,7 @@ class GooglePush extends HelperPush {
 
   @override
   Future<void> knockAgain() => HelperPush.instance.knockAgain();
+
+  /// a delete owed since google push was left (no network then) goes again
+  Future<void> settle() => _ask<bool>('settle');
 }
