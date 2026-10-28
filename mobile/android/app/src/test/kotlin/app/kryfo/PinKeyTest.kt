@@ -42,12 +42,26 @@ class PinKeyTest {
         val failing = ArrayDeque<Exception>()
         // calls hang until this opens
         var hang: CountDownLatch? = null
+        // the next has() answers false once, as a busy keystore may
+        var falseOnce = false
+        var hasCalls = 0
+        // a make takes this long, and a delete waits on this
+        var makeMs = 0L
+        var deleteHang: CountDownLatch? = null
         var clock = 0L
 
-        override fun has(alias: String) = made.containsKey(alias)
+        override fun has(alias: String): Boolean {
+            hasCalls++
+            if (falseOnce) {
+                falseOnce = false
+                return false
+            }
+            return made.containsKey(alias)
+        }
 
         override fun make(alias: String, strongBox: Boolean, unlocked: Boolean) {
-            makes.add(strongBox to unlocked)
+            if (makeMs > 0) Thread.sleep(makeMs)
+            synchronized(makes) { makes.add(strongBox to unlocked) }
             if (refuseAll || (strongBox && refuseStrongBox)) throw ProviderException("refused")
             made[alias] = ByteArray(32) { (it * 7 + makes.size).toByte() }
             strong = strongBox
@@ -68,6 +82,7 @@ class PinKeyTest {
             if (!made.containsKey(alias)) null else if (strong) PinKey.STRONGBOX else PinKey.TEE
 
         override fun delete(alias: String) {
+            deleteHang?.await(5, TimeUnit.SECONDS)
             deletes++
             made.remove(alias)
         }
@@ -246,6 +261,47 @@ class PinKeyTest {
         assertEquals("busy", why)
         assertTrue("waited $took ms", took < 2000)
         assertTrue(keys.has(PinKey.ALIAS))
+    }
+
+    @Test
+    fun oneFalseLookupIsBusyNotGone() {
+        PinKey.make()
+        keys.falseOnce = true
+        assertEquals(true, PinKey.info()["k"])
+        keys.falseOnce = true
+        keys.failing.add(ProviderException("busy"))
+        keys.failing.add(ProviderException("busy"))
+        keys.failing.add(ProviderException("busy"))
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        assertTrue(keys.has(PinKey.ALIAS))
+        // gone is asked twice, a second apart
+        keys.made.clear()
+        paused.clear()
+        assertEquals("gone", PinKey.mac(xHex)["e"])
+        assertTrue(paused.contains(PinKey.GONE_GAP_MS))
+    }
+
+    @Test
+    fun makesRunOneAtATime() {
+        keys.makeMs = 50
+        PinKey.nanos = System::nanoTime
+        val out = arrayOfNulls<Map<String, Any>>(2)
+        val ts = (0..1).map { i -> Thread { out[i] = PinKey.make() }.apply { start() } }
+        ts.forEach { it.join(10_000) }
+        assertEquals(1, keys.makes.size)
+        assertEquals(out[0]!!["kc"], out[1]!!["kc"])
+    }
+
+    @Test
+    fun aHungDropDoesNotHoldTheWipe() {
+        PinKey.make()
+        val gate = CountDownLatch(1)
+        keys.deleteHang = gate
+        val t0 = System.nanoTime()
+        assertFalse(PinKey.dropWithin(200))
+        assertTrue((System.nanoTime() - t0) / 1_000_000 < 2000)
+        gate.countDown()
+        keys.deleteHang = null
     }
 
     @Test

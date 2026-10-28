@@ -537,8 +537,10 @@ open class MainActivity : FlutterFragmentActivity() {
                     // the preference writes still queued for disk.
                     "wipe" -> {
                         // the pin key before anything: what it sealed never
-                        // opens again, whatever the clear leaves
-                        PinKey.drop()
+                        // opens again, whatever the clear leaves. a keystore
+                        // that hangs gets half a second, never the clear
+                        // itself, which takes the key with the rest
+                        PinKey.dropWithin(500)
                         // then the sticky listener: if the clear is
                         // refused and dart exits, nothing brings the app back
                         try {

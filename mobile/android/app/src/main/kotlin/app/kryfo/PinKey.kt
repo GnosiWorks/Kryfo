@@ -168,11 +168,34 @@ object PinKey {
         null
     }
 
+    // how long apart the two lookups of goneSure are
+    const val GONE_GAP_MS = 1000L
+
+    // a keystore that is busy or restarting can answer "no such alias" for a
+    // moment, so gone needs the lookup to say so twice, a second apart, with
+    // the key itself not found in between. anything else is busy
+    fun goneSure(): Boolean {
+        if (hasKey() != false) return false
+        pause(GONE_GAP_MS)
+        val level = try {
+            keys.level(ALIAS)
+        } catch (_: Exception) {
+            return false
+        }
+        if (level != null) return false
+        return hasKey() == false
+    }
+
     // {"k": a key is there, "u": it works only while the phone is unlocked,
     // "l": where it lives, "s": the phone has a screen lock, "v": android's
     // version}, or {"e": "busy"}
     fun info(): Map<String, Any> {
-        val has = hasKey() ?: return mapOf("e" to "busy")
+        var has = hasKey() ?: return mapOf("e" to "busy")
+        // no key only when it holds a second later as well
+        if (!has && !goneSure()) {
+            has = hasKey() ?: return mapOf("e" to "busy")
+            if (!has) return mapOf("e" to "busy")
+        }
         val noted = notes?.read()
         val level = if (!has) {
             SOFTWARE
@@ -195,6 +218,9 @@ object PinKey {
     // a new key, tested before it is used: strongbox when it is there, works
     // and is quick, else the tee. never over a key that is there: that one is
     // kept and described. {"k", "u", "l", "kc", "ms"}, or {"e": "refused"}
+    // one at a time, from any engine: a second make never runs over the key
+    // a first one just made and described
+    @Synchronized
     fun make(): Map<String, Any> {
         val has = hasKey() ?: return mapOf("e" to "busy")
         if (has) {
@@ -208,6 +234,8 @@ object PinKey {
         val unlocked = sdk >= 35
         val tries = if (sdk >= 28) listOf(true, false) else listOf(false)
         for (strong in tries) {
+            // generating over an alias replaces it: asked again right before
+            if (hasKey() != false) return mapOf("e" to "busy")
             try {
                 keys.make(ALIAS, strong, unlocked)
             } catch (e: Exception) {
@@ -281,13 +309,28 @@ object PinKey {
         return if (m == null) mapOf("e" to why) else mapOf("m" to hex(m))
     }
 
-    // the wipe and the lock turned off only
+    // the wipe and the lock turned off only. never beside a make
+    @Synchronized
     fun drop() {
         dropQuietly()
         try {
             notes?.clear()
         } catch (_: Exception) {
         }
+    }
+
+    // drop() for the native wipe: a keystore that hangs gets ms, and the
+    // wipe goes on without it. true when the drop finished
+    fun dropWithin(ms: Long): Boolean {
+        val t = Thread { drop() }.apply {
+            isDaemon = true
+            start()
+        }
+        try {
+            t.join(ms)
+        } catch (_: InterruptedException) {
+        }
+        return !t.isAlive
     }
 
     private fun dropQuietly() {
@@ -358,7 +401,7 @@ object PinKey {
         // may fail a lookup too
         val why = when {
             locked(e) -> "locked"
-            hasKey() == false -> "gone"
+            goneSure() -> "gone"
             else -> "busy"
         }
         told(why, e)
