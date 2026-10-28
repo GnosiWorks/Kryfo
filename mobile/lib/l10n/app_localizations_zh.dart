@@ -3009,20 +3009,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · Tor 仍在连接',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
@@ -4987,9 +4973,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Tor 路由';
-
-  @override
-  String get settingsConnecting => '正在连接';
 
   @override
   String get settingsOffMode => '关 · 中继模式';
@@ -8713,6 +8696,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCopyLinkHint => '复制链接';
 
   @override
+  String get appRelayNotAnswering => '中继无响应';
+
+  @override
+  String get motionNoRelayYet => '暂无中继';
+
+  @override
+  String get motionTheRouteIsUp => '路线已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中继通过这条路线响应，消息就会发出。';
+
+  @override
+  String get motionOffline => '离线';
+
+  @override
+  String get motionNoNetwork => '没有网络';
+
+  @override
+  String get motionTorPicksUpAgain => '没有网络时什么都发不出去。网络恢复后，Tor 会继续。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条待发送 · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsIconAndNotifications => '图标和通知';
 
   @override
@@ -11847,20 +11866,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · Tor 仍在連線',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => '還沒有 Kryfo 聯絡人。';
 
   @override
@@ -13825,9 +13830,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsTorRouting => 'Tor 路由';
-
-  @override
-  String get settingsConnecting => '連線中';
 
   @override
   String get settingsOffMode => '關閉 · 中繼模式';
@@ -17430,6 +17432,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsCopyLinkHint => '複製連結';
+
+  @override
+  String get appRelayNotAnswering => '中繼無回應';
+
+  @override
+  String get motionNoRelayYet => '尚無中繼';
+
+  @override
+  String get motionTheRouteIsUp => '路線已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中繼透過這條路線回應，訊息就會送出。';
+
+  @override
+  String get motionOffline => '離線';
+
+  @override
+  String get motionNoNetwork => '沒有網路';
+
+  @override
+  String get motionTorPicksUpAgain => '沒有網路時什麼都送不出去。網路恢復後，Tor 會繼續。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 則等待中 · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => '圖示和通知';

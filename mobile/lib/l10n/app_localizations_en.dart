@@ -3135,20 +3135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString waiting · Tor is still connecting',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'No Kryfos yet.';
 
   @override
@@ -5218,9 +5204,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Tor routing';
-
-  @override
-  String get settingsConnecting => 'Connecting';
 
   @override
   String get settingsOffMode => 'Off · relay mode';
@@ -9116,6 +9099,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copy link';
+
+  @override
+  String get appRelayNotAnswering => 'Relay not answering';
+
+  @override
+  String get motionNoRelayYet => 'NO RELAY YET';
+
+  @override
+  String get motionTheRouteIsUp => 'The route is up';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Messages go out as soon as a relay answers through this route.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'No network';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Nothing goes out without a network. Tor picks up again when one is back.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icon and notifications';

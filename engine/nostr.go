@@ -947,7 +947,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 		return
 	}
 	if modeNeedsTor() && route {
-		routeNoteFail(u)
+		routeNoteFailFrom(u, began)
 	}
 	_, short := ownWaitRule(u, false)
 	relayHealthMu.Lock()
@@ -1293,6 +1293,17 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 		}
 	}
 	return accepted
+}
+
+// asks relay u a question and, when it answers, takes the answer as proof
+// of the route generation the question was asked in
+func probeProves(u string, ask func() bool) bool {
+	gen := routeGeneration()
+	if !ask() {
+		return false
+	}
+	routeAliveOn(gen, u)
+	return true
 }
 
 // how long a runner waits for tor before it tries again
@@ -1821,6 +1832,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						noteHeard(conn, u, rcvPk, time.Now(), false)
 					}
 				}
+				// an answer speaks for the route the probe was asked on,
+				// whenever the socket was dialled: a bump that tore nothing
+				// down leaves it carrying
+				probe := func() bool {
+					if !probeProves(u, func() bool { return relayResponds(conn, r, rcvPk) }) {
+						return false
+					}
+					aliveNow()
+					return true
+				}
 				caught := func() {
 					covered.Store(true)
 					noteHeard(conn, u, rcvPk, time.Now(), true)
@@ -2108,8 +2129,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// question that fetches nothing instead: it costs a frame
 						// and an eose, and a real eose proves the circuit still
 						// carries data.
-						if relayResponds(conn, r, rcvPk) {
-							aliveNow()
+						if probe() {
 							askWanted()
 							idle.Reset(quietFor(deaf))
 							continue
@@ -2142,8 +2162,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// reviving, and dropping it costs a full since window
 						// on every contact and every relay, so ask before
 						// tearing down.
-						if relayResponds(conn, r, rcvPk) {
-							aliveNow()
+						if probe() {
 							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()

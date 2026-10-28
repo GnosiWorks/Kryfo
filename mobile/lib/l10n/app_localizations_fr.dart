@@ -3171,20 +3171,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString en attente · Tor se connecte encore',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Pas encore de Kryfos.';
 
   @override
@@ -5280,9 +5266,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Routage Tor';
-
-  @override
-  String get settingsConnecting => 'Connexion';
 
   @override
   String get settingsOffMode => 'Désactivé · mode Relais';
@@ -9219,6 +9202,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copier le lien';
+
+  @override
+  String get appRelayNotAnswering => 'Relais muet';
+
+  @override
+  String get motionNoRelayYet => 'PAS ENCORE DE RELAIS';
+
+  @override
+  String get motionTheRouteIsUp => 'La route est tracée';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Les messages partent dès qu’un relais répond par cette route.';
+
+  @override
+  String get motionOffline => 'HORS LIGNE';
+
+  @override
+  String get motionNoNetwork => 'Pas de réseau';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Rien ne part sans réseau. Tor reprend dès que le réseau revient.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count en attente · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icône et notifications';

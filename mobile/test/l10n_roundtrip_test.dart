@@ -1371,10 +1371,10 @@ void main() {
     expect(l.homeWaitingSendsWhenYou(1), "1 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(2), "2 waiting · sends when you're back");
     expect(l.homeWaitingSendsWhenYou(5), "5 waiting · sends when you're back");
-    expect(l.homeWaitingTorIsStill(0), "0 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(1), "1 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(2), "2 waiting · Tor is still connecting");
-    expect(l.homeWaitingTorIsStill(5), "5 waiting · Tor is still connecting");
+    expect(l.homeWaitingState(0, "<state>"), "0 waiting · <state>");
+    expect(l.homeWaitingState(1, "<state>"), "1 waiting · <state>");
+    expect(l.homeWaitingState(2, "<state>"), "2 waiting · <state>");
+    expect(l.homeWaitingState(5, "<state>"), "5 waiting · <state>");
     expect(l.homeNoKryfosYet, "No Kryfos yet.");
     expect(
       l.homeScanTheirCodeSend,
@@ -2425,7 +2425,6 @@ void main() {
     expect(l.settingsWipeKryfo2, "Wipe Kryfo");
     expect(l.settingsYourProtections, "Your protections");
     expect(l.settingsTorRouting, "Tor routing");
-    expect(l.settingsConnecting, "Connecting");
     expect(l.settingsOffMode, "Off · relay mode");
     expect(l.settingsOffFastMode, "Off · fast mode");
     expect(l.settingsAppLock, "App lock");
@@ -3875,6 +3874,20 @@ void main() {
     expect(l.licencesParts, "Open source parts");
     expect(l.licencesInSignal, "In the Signal library");
     expect(l.licencesInApp, "In the app");
+    expect(l.appRelayNotAnswering, "Relay not answering");
+    expect(l.motionNoRelayYet, "NO RELAY YET");
+    expect(l.motionTheRouteIsUp, "The route is up");
+    expect(
+      l.motionMessagesGoOnceARelay,
+      "Messages go out as soon as a relay answers through this route.",
+    );
+    expect(l.motionOffline, "OFFLINE");
+    expect(l.motionNoNetwork, "No network");
+    expect(
+      l.motionTorPicksUpAgain,
+      "Nothing goes out without a network. Tor picks up again when one is back.",
+    );
+    expect(l.deliveryModeStateLast("<state>", "<last>"), "<state> · <last>");
     expect(l.lockStateUnlockPlain, "Unlock");
     expect(
       l.iconSheetOthers,

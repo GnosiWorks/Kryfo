@@ -3171,20 +3171,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString en espera · Tor sigue conectando',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Aún no hay Kryfos.';
 
   @override
@@ -5271,9 +5257,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Enrutamiento Tor';
-
-  @override
-  String get settingsConnecting => 'Conectando';
 
   @override
   String get settingsOffMode => 'Apagado · modo Repetidor';
@@ -9196,6 +9179,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copiar enlace';
+
+  @override
+  String get appRelayNotAnswering => 'Repetidor no responde';
+
+  @override
+  String get motionNoRelayYet => 'AÚN SIN REPETIDOR';
+
+  @override
+  String get motionTheRouteIsUp => 'La ruta está abierta';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Los mensajes salen en cuanto un repetidor responda por esta ruta.';
+
+  @override
+  String get motionOffline => 'SIN CONEXIÓN';
+
+  @override
+  String get motionNoNetwork => 'Sin red';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Sin red no sale nada. Tor sigue en cuanto vuelva la red.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count en espera · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icono y notificaciones';

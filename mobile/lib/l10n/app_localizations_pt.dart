@@ -3165,20 +3165,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString esperando · o Tor ainda está conectando',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Nenhum Kryfo ainda.';
 
   @override
@@ -5258,9 +5244,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Roteamento pelo Tor';
-
-  @override
-  String get settingsConnecting => 'Conectando';
 
   @override
   String get settingsOffMode => 'Desligado · retransmissor';
@@ -9193,6 +9176,44 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copiar link';
+
+  @override
+  String get appRelayNotAnswering => 'Retransmissor calado';
+
+  @override
+  String get motionNoRelayYet => 'AINDA SEM RETRANSMISSOR';
+
+  @override
+  String get motionTheRouteIsUp => 'A rota está aberta';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'As mensagens saem assim que um retransmissor responder por esta rota.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Sem rede';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Sem rede, nada sai. O Tor continua assim que ela voltar.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count esperando · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Ícone e notificações';
