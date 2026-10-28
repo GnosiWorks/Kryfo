@@ -33,14 +33,13 @@ val fossTasksOnly = gradle.startParameter.taskNames.let { t ->
     t.isNotEmpty() && t.all { it.contains("foss", ignoreCase = true) }
 }
 // the values, or why there are none
-val firebaseValues: Result<Map<String, String>> = when {
-    fossTasksOnly -> Result.success(emptyMap())
-    googleServicesFile == null -> Result.failure(GradleException(
+val firebaseValues: Result<Map<String, String>> = when (val f = googleServicesFile) {
+    null -> if (fossTasksOnly) Result.success(emptyMap()) else Result.failure(GradleException(
         "google-services.json for the play build is missing.\n" +
             "put the firebase project's file at ~/.kryfo-secrets/play/google-services.json\n" +
             "or name it in KRYFO_GOOGLE_SERVICES. it never goes in git, and foss builds do not need it."
     ))
-    else -> runCatching { firebaseValuesOf(googleServicesFile, "app.kryfo") }
+    else -> if (fossTasksOnly) Result.success(emptyMap()) else runCatching { firebaseValuesOf(f, "app.kryfo") }
 }
 
 fun firebaseValuesOf(f: File, pkg: String): Map<String, String> {
@@ -50,8 +49,8 @@ fun firebaseValuesOf(f: File, pkg: String): Map<String, String> {
     val info = j["project_info"] as? Map<String, Any?> ?: emptyMap()
     @Suppress("UNCHECKED_CAST")
     val client = (j["client"] as? List<Map<String, Any?>>)?.firstOrNull {
-        val info = it["client_info"] as? Map<String, Any?>
-        (info?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == pkg
+        val ci = it["client_info"] as? Map<String, Any?>
+        (ci?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == pkg
     } ?: throw GradleException("${f.name} has no android app $pkg: download it again from the firebase console")
     val appId = (client["client_info"] as Map<*, *>)["mobilesdk_app_id"] as? String
     val apiKey = (client["api_key"] as? List<*>)?.firstNotNullOfOrNull { (it as? Map<*, *>)?.get("current_key") as? String }
