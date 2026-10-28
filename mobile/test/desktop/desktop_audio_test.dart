@@ -2,6 +2,7 @@
 // voice notes on linux: just_audio's player, as the bubbles use it, over a
 // gstreamer pipe
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -130,13 +131,49 @@ void main() {
     await player.dispose();
   });
 
-  test('gstreamer loads where it is installed', () {
+  test('a file plays only as ogg or wav, chosen by its first bytes', () {
+    List<int> b(String s) => s.codeUnits;
+    expect(voiceKindOf(b('OggS\x00\x02')), VoiceKind.ogg);
+    expect(voiceKindOf(b('RIFF\x24\x00\x00\x00WAVEfmt ')), VoiceKind.wav);
+    // a riff that is not wave, an mp4, a matroska, nothing at all
+    expect(voiceKindOf(b('RIFF\x24\x00\x00\x00AVI LIST')), isNull);
+    expect(voiceKindOf(b('\x00\x00\x00\x18ftypmp42')), isNull);
+    expect(voiceKindOf([0x1a, 0x45, 0xdf, 0xa3]), isNull);
+    expect(voiceKindOf(const []), isNull);
+  });
+
+  test('the pipelines are fixed: no autoplug, no video', () {
+    for (final k in VoiceKind.values) {
+      final d = voicePipeline(k);
+      expect(d, startsWith('filesrc name=src ! '));
+      expect(d, endsWith('autoaudiosink'));
+      for (final bad in [
+        'playbin',
+        'decodebin',
+        'uridecodebin',
+        'video',
+        'location',
+      ]) {
+        expect(d.contains(bad), isFalse, reason: bad);
+      }
+    }
+    expect(voicePipeline(VoiceKind.ogg), contains('oggdemux ! opusdec'));
+    expect(voicePipeline(VoiceKind.wav), contains('wavparse'));
+  });
+
+  test('gstreamer turns down a file of another kind before any element', () {
     final g = Gst.instance;
     if (g == null) {
       markTestSkipped('no gstreamer here');
       return;
     }
-    // a pipe of an element the system lacks is refused, not crashed
-    expect(() => GstPipe(g, element: 'no-such-element'), throwsStateError);
+    final dir = Directory.systemTemp.createTempSync('gst');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final mp4 = File('${dir.path}/a.wav')
+      ..writeAsBytesSync([0, 0, 0, 0x18, ...'ftypmp42'.codeUnits]);
+    final pipe = GstPipe(g);
+    expect(pipe.build(mp4.path), isFalse);
+    expect(pipe.build('${dir.path}/missing'), isFalse);
+    pipe.dispose();
   });
 }

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // voice notes on linux. just_audio has no linux side; gstreamer is on every
-// linux desktop that plays sound, so a playbin per player plays the file,
-// driven over ffi. nothing is written anywhere: the file is read in place
+// linux desktop that plays sound. a file someone sent is never handed to
+// playbin, which picks a decoder for whatever it finds: its first bytes
+// choose one of two fixed pipelines, ogg opus or wav, and nothing else
+// plays. no video sink exists in either. the file is read in place
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
@@ -42,7 +44,8 @@ const _changeSuccess = 1;
 
 typedef _InitC = Void Function(Pointer<Void>, Pointer<Void>);
 typedef _Init = void Function(Pointer<Void>, Pointer<Void>);
-typedef _MakeC = Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _ParseC = Pointer<Void> Function(Pointer<Utf8>, Pointer<Pointer<Void>>);
+typedef _ByNameC = Pointer<Void> Function(Pointer<Void>, Pointer<Utf8>);
 typedef _SetStateC = Int32 Function(Pointer<Void>, Int32);
 typedef _SetState = int Function(Pointer<Void>, int);
 typedef _GetStateC =
@@ -75,10 +78,28 @@ typedef _SetDblC =
 typedef _SetDbl =
     void Function(Pointer<Void>, Pointer<Utf8>, double, Pointer<Void>);
 
+typedef _SetenvC = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
+typedef _Setenv = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
+
+void _setenv(String k, String v) {
+  final f = DynamicLibrary.process().lookupFunction<_SetenvC, _Setenv>(
+    'setenv',
+  );
+  final a = k.toNativeUtf8(), b = v.toNativeUtf8();
+  try {
+    f(a, b, 1);
+  } finally {
+    calloc.free(a);
+    calloc.free(b);
+  }
+}
+
 /// libgstreamer, loaded once. null when the system has none
 class Gst {
   Gst._(DynamicLibrary l)
-    : _make = l.lookupFunction<_MakeC, _MakeC>('gst_element_factory_make'),
+    : _parse = l.lookupFunction<_ParseC, _ParseC>('gst_parse_launch'),
+      _byName = l.lookupFunction<_ByNameC, _ByNameC>('gst_bin_get_by_name'),
+      _errorFree = l.lookupFunction<_UnrefC, _Unref>('g_error_free'),
       _setState = l.lookupFunction<_SetStateC, _SetState>(
         'gst_element_set_state',
       ),
@@ -103,7 +124,9 @@ class Gst {
     l.lookupFunction<_InitC, _Init>('gst_init')(nullptr, nullptr);
   }
 
-  final Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>) _make;
+  final Pointer<Void> Function(Pointer<Utf8>, Pointer<Pointer<Void>>) _parse;
+  final Pointer<Void> Function(Pointer<Void>, Pointer<Utf8>) _byName;
+  final _Unref _errorFree;
   final _SetState _setState;
   final _GetState _getState;
   final _Query _queryPosition;
@@ -119,9 +142,15 @@ class Gst {
   static Gst? _one;
   static bool _tried = false;
 
+  /// where gstreamer keeps its plugin registry: inside the app's folder,
+  /// not ~/.cache, set before gstreamer starts
+  static String? registryDir;
+
   static Gst? get instance {
     if (_tried) return _one;
     _tried = true;
+    final dir = registryDir;
+    if (dir != null) _setenv('GST_REGISTRY', '$dir/gst-registry.bin');
     try {
       _one = Gst._(DynamicLibrary.open('libgstreamer-1.0.so.0'));
     } catch (_) {
@@ -139,36 +168,118 @@ class Gst {
   }
 }
 
-/// a gstreamer playbin
+/// what a file's first bytes say it is
+enum VoiceKind { ogg, wav }
+
+/// ogg (OggS) or wav (RIFF....WAVE); null for anything else
+VoiceKind? voiceKindOf(List<int> head) {
+  bool at(int o, String m) =>
+      head.length >= o + m.length &&
+      [for (var i = 0; i < m.length; i++) head[o + i]].join(',') ==
+          m.codeUnits.join(',');
+  if (at(0, 'OggS')) return VoiceKind.ogg;
+  if (at(0, 'RIFF') && at(8, 'WAVE')) return VoiceKind.wav;
+  return null;
+}
+
+/// the one pipeline each kind gets. the file's path is set on filesrc
+/// afterwards as a property, never written into this text
+String voicePipeline(VoiceKind k) => switch (k) {
+  VoiceKind.ogg =>
+    'filesrc name=src ! oggdemux ! opusdec ! audioconvert ! audioresample '
+        '! volume name=vol ! autoaudiosink',
+  VoiceKind.wav =>
+    'filesrc name=src ! wavparse ! audioconvert ! audioresample '
+        '! volume name=vol ! autoaudiosink',
+};
+
+/// a fixed gstreamer pipeline for one voice note
 class GstPipe implements AudioPipe {
-  GstPipe(this._gst, {String element = 'playbin'}) {
-    final name = element.toNativeUtf8();
-    try {
-      _el = _gst._make(name, nullptr);
-    } finally {
-      calloc.free(name);
-    }
-    if (_el == nullptr) throw StateError('no $element in gstreamer');
-    _bus = _gst._bus(_el);
-  }
+  GstPipe(this._gst);
 
   final Gst _gst;
-  late final Pointer<Void> _el;
-  late final Pointer<Void> _bus;
+  Pointer<Void> _el = nullptr;
+  Pointer<Void> _bus = nullptr;
+  Pointer<Void> _vol = nullptr;
+  double _volume = 1;
   String? _failed;
   bool _gone = false;
 
-  void _set(String prop, String value) {
+  void _setOn(Pointer<Void> el, String prop, String value) {
     final k = prop.toNativeUtf8(), v = value.toNativeUtf8();
     try {
-      _gst._setString(_el, k, v, nullptr);
+      _gst._setString(el, k, v, nullptr);
     } finally {
       calloc.free(k);
       calloc.free(v);
     }
   }
 
+  Pointer<Void> _named(String name) {
+    final n = name.toNativeUtf8();
+    try {
+      return _gst._byName(_el, n);
+    } finally {
+      calloc.free(n);
+    }
+  }
+
+  void _drop() {
+    if (_el == nullptr) return;
+    _gst._setState(_el, _stateNull);
+    if (_vol != nullptr) _gst._unref(_vol);
+    if (_bus != nullptr) _gst._unref(_bus);
+    _gst._unref(_el);
+    _el = _bus = _vol = nullptr;
+  }
+
+  /// the pipeline for [path], or false when its bytes are neither kind
+  @visibleForTesting
+  bool build(String path) {
+    _drop();
+    final head = <int>[];
+    try {
+      final f = File(path).openSync();
+      try {
+        head.addAll(f.readSync(12));
+      } finally {
+        f.closeSync();
+      }
+    } catch (_) {
+      return false;
+    }
+    final kind = voiceKindOf(head);
+    if (kind == null) return false;
+    final desc = voicePipeline(kind).toNativeUtf8();
+    final err = calloc<Pointer<Void>>();
+    try {
+      _el = _gst._parse(desc, err);
+      if (err.value != nullptr) {
+        _gst._errorFree(err.value);
+        if (_el != nullptr) _gst._unref(_el);
+        _el = nullptr;
+        return false;
+      }
+    } finally {
+      calloc.free(desc);
+      calloc.free(err);
+    }
+    if (_el == nullptr) return false;
+    _bus = _gst._bus(_el);
+    final src = _named('src');
+    if (src == nullptr) {
+      _drop();
+      return false;
+    }
+    _setOn(src, 'location', path);
+    _gst._unref(src);
+    _vol = _named('vol');
+    volume(_volume);
+    return true;
+  }
+
   int? _query(bool duration) {
+    if (_el == nullptr) return null;
     final out = calloc<Int64>();
     try {
       final ok = duration
@@ -182,8 +293,7 @@ class GstPipe implements AudioPipe {
 
   @override
   Future<Duration?> load(String path) async {
-    _gst._setState(_el, _stateNull);
-    _set('uri', Uri.file(path).toString());
+    if (!build(path)) return null;
     if (_gst._setState(_el, _statePaused) == _changeFailure) return null;
     final st = calloc<Int32>(), pend = calloc<Int32>();
     try {
@@ -205,24 +315,32 @@ class GstPipe implements AudioPipe {
   }
 
   @override
-  void play() => _gst._setState(_el, _statePlaying);
+  void play() {
+    if (_el != nullptr) _gst._setState(_el, _statePlaying);
+  }
 
   @override
-  void pause() => _gst._setState(_el, _statePaused);
+  void pause() {
+    if (_el != nullptr) _gst._setState(_el, _statePaused);
+  }
 
   @override
-  void seek(Duration to) => _gst._seek(
-    _el,
-    _formatTime,
-    _seekFlush | _seekAccurate,
-    to.inMicroseconds * 1000,
-  );
+  void seek(Duration to) => _el == nullptr
+      ? null
+      : _gst._seek(
+          _el,
+          _formatTime,
+          _seekFlush | _seekAccurate,
+          to.inMicroseconds * 1000,
+        );
 
   @override
   void volume(double v) {
+    _volume = v.clamp(0, 1).toDouble();
+    if (_vol == nullptr) return;
     final k = 'volume'.toNativeUtf8();
     try {
-      _gst._setDouble(_el, k, v.clamp(0, 1).toDouble(), nullptr);
+      _gst._setDouble(_vol, k, _volume, nullptr);
     } finally {
       calloc.free(k);
     }
@@ -232,11 +350,13 @@ class GstPipe implements AudioPipe {
   Duration position() => Duration(microseconds: (_query(false) ?? 0) ~/ 1000);
 
   @override
-  bool ended() => _gst.took(_bus, _msgEos);
+  bool ended() => _bus != nullptr && _gst.took(_bus, _msgEos);
 
   @override
   String? failed() {
-    if (_gst.took(_bus, _msgError)) _failed = 'playback failed';
+    if (_bus != nullptr && _gst.took(_bus, _msgError)) {
+      _failed = 'playback failed';
+    }
     final f = _failed;
     _failed = null;
     return f;
@@ -246,9 +366,7 @@ class GstPipe implements AudioPipe {
   void dispose() {
     if (_gone) return;
     _gone = true;
-    _gst._setState(_el, _stateNull);
-    _gst._unref(_bus);
-    _gst._unref(_el);
+    _drop();
   }
 }
 
