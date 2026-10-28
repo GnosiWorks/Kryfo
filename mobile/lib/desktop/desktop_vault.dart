@@ -3,8 +3,8 @@
 // a secret to any process of the same user. so everything the app keeps in
 // secure storage (database keys, identity keys, settings) lives in one
 // file sealed under a key made from a passphrase asked at every start:
-// scrypt (n 2^15, r 8, p 1, the backups' cost) to a key, an hmac of it with
-// fresh bytes for every write, aes-256-gcm through the engine
+// scrypt (n 2^17, r 8, p 1) to a key, an hmac of it with fresh bytes for
+// every write, aes-256-gcm through the engine
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
@@ -19,29 +19,36 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 
 import '../engine_strings.dart' show engineTakeSecret, freeSecret;
+import 'desktop_posix.dart' show syncFolder;
 
 /// the shortest passphrase the desktop takes, in characters: as a backup
 const kVaultMinLength = 12;
 
+/// scrypt's cost: 128 MiB, about a third of a second on a desktop cpu and
+/// under a second on a modest laptop
+const kVaultLogN = 17;
+
 const _magic = [0x4b, 0x52, 0x59, 0x56]; // KRYV
-const _version = 1;
+const _version = 2;
 const _saltLen = 16;
 const _freshLen = 32;
-const _head = 4 + 1 + _saltLen + _freshLen;
+// magic, version, cost, salt, fresh bytes
+const _head = 4 + 1 + 1 + _saltLen + _freshLen;
 // the record type the seal binds
 const _type = 0x56;
 
 /// the cryptography, behind a seam so a test can run it on the host engine
 abstract class VaultCrypto {
   /// 64 hex, or null when the engine refused
-  Future<String?> keyOf(String passphrase, Uint8List salt);
+  Future<String?> keyOf(String passphrase, Uint8List salt, int logN);
   Uint8List seal(String keyHex, Uint8List plain);
 
   /// null when the key is wrong or a byte changed
   Uint8List? open(String keyHex, Uint8List sealed);
 }
 
-typedef _KeyC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
+typedef _KeyC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, Int32);
+typedef _Key = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, int);
 typedef _ChunkC =
     Int32 Function(
       Pointer<Utf8>,
@@ -54,16 +61,16 @@ typedef _ChunkC =
 typedef _Chunk =
     int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
-String? _engineKey(String passphrase, Uint8List salt) {
-  final fn = DynamicLibrary.process().lookupFunction<_KeyC, _KeyC>(
-    'HaloBackupKey',
+String? _engineKey(String passphrase, Uint8List salt, int logN) {
+  final fn = DynamicLibrary.process().lookupFunction<_KeyC, _Key>(
+    'HaloVaultKey',
   );
   final pp = passphrase.toNativeUtf8();
   final ps = calloc<Uint8>(_saltLen);
   try {
     ps.asTypedList(_saltLen).setAll(0, salt);
-    final r = engineTakeSecret(fn(pp, ps));
-    return r.startsWith('error:') ? null : r;
+    final r = engineTakeSecret(fn(pp, ps, logN));
+    return r.startsWith('error') ? null : r;
   } finally {
     freeSecret(pp);
     calloc.free(ps);
@@ -76,8 +83,8 @@ class EngineVaultCrypto implements VaultCrypto {
 
   // scrypt takes a tenth of a second or so: never on the frame's thread
   @override
-  Future<String?> keyOf(String passphrase, Uint8List salt) =>
-      Isolate.run(() => _engineKey(passphrase, salt));
+  Future<String?> keyOf(String passphrase, Uint8List salt, int logN) =>
+      Isolate.run(() => _engineKey(passphrase, salt, logN));
 
   static final _sealChunk = DynamicLibrary.process()
       .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
@@ -132,19 +139,84 @@ class VaultLocked implements Exception {
   String toString() => 'VaultLocked';
 }
 
+/// how the sealed bytes reach the disk, behind a seam so a test can make
+/// a write fail as a full disk does
+abstract class VaultDisk {
+  /// [bytes] in place of [path], all or nothing, on the disk when it returns
+  void replace(String path, Uint8List bytes);
+}
+
+/// a file written beside, flushed, renamed over, and its folder flushed so
+/// the rename itself survives a cut
+class RealVaultDisk implements VaultDisk {
+  const RealVaultDisk();
+
+  @override
+  void replace(String path, Uint8List bytes) {
+    final tmp = File('$path.new');
+    try {
+      final f = tmp.openSync(mode: FileMode.writeOnly);
+      try {
+        f.writeFromSync(bytes);
+        f.flushSync();
+      } finally {
+        f.closeSync();
+      }
+      tmp.renameSync(path);
+    } catch (_) {
+      try {
+        tmp.deleteSync();
+      } catch (_) {}
+      rethrow;
+    }
+    syncFolder(File(path).parent.path);
+  }
+}
+
+// a change waiting for its write: seen by reads until it lands or fails
+class _Change {
+  _Change.put(this.key, this.value) : all = false;
+  _Change.drop(this.key) : value = null, all = false;
+  _Change.clear() : key = null, value = null, all = true;
+  final String? key;
+  final String? value;
+  final bool all;
+
+  void apply(Map<String, String> m) {
+    if (all) {
+      m.clear();
+    } else if (value == null) {
+      m.remove(key);
+    } else {
+      m[key!] = value!;
+    }
+  }
+}
+
 /// the sealed file and, once opened, what it holds
 class DesktopVault {
-  DesktopVault(this.path, {VaultCrypto? crypto, Random? random})
-    : _crypto = crypto ?? const EngineVaultCrypto(),
-      _random = random ?? Random.secure();
+  DesktopVault(
+    this.path, {
+    VaultCrypto? crypto,
+    Random? random,
+    VaultDisk? disk,
+    this.logN = kVaultLogN,
+  }) : _crypto = crypto ?? const EngineVaultCrypto(),
+       _random = random ?? Random.secure(),
+       _disk = disk ?? const RealVaultDisk();
 
   final String path;
+  final int logN;
   final VaultCrypto _crypto;
   final Random _random;
+  final VaultDisk _disk;
 
   Uint8List? _salt;
+  int _cost = kVaultLogN;
   List<int>? _key;
+  // what the file on disk holds
   Map<String, String>? _map;
+  final _waiting = <_Change>[];
   Future<void> _writes = Future.value();
 
   bool get exists => File(path).existsSync();
@@ -164,12 +236,13 @@ class DesktopVault {
       throw ArgumentError('passphrase too short');
     }
     final salt = _bytes(_saltLen);
-    final k = await _crypto.keyOf(passphrase, salt);
+    final k = await _crypto.keyOf(passphrase, salt, logN);
     if (k == null) throw StateError('no key from the engine');
     _salt = salt;
+    _cost = logN;
     _key = _unhex(k);
+    _persist(const {});
     _map = {};
-    await _persist();
   }
 
   /// false for a wrong passphrase or a changed file
@@ -180,22 +253,29 @@ class DesktopVault {
         raw[4] != _version) {
       return false;
     }
-    final salt = Uint8List.fromList(raw.sublist(5, 5 + _saltLen));
-    final fresh = raw.sublist(5 + _saltLen, _head);
-    final k = await _crypto.keyOf(passphrase, salt);
+    final cost = raw[5];
+    final salt = Uint8List.fromList(raw.sublist(6, 6 + _saltLen));
+    final fresh = raw.sublist(6 + _saltLen, _head);
+    final k = await _crypto.keyOf(passphrase, salt, cost);
     if (k == null) return false;
     final key = _unhex(k);
     final fileKey = _hex(Hmac(sha256, key).convert(fresh).bytes);
     final plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(_head)));
-    if (plain == null) return false;
+    if (plain == null) {
+      key.fillRange(0, key.length, 0);
+      return false;
+    }
     final Object? m;
     try {
       m = jsonDecode(utf8.decode(plain));
     } catch (_) {
       return false;
+    } finally {
+      plain.fillRange(0, plain.length, 0);
     }
     if (m is! Map) return false;
     _salt = salt;
+    _cost = cost;
     _key = key;
     _map = {
       for (final e in m.entries)
@@ -211,54 +291,89 @@ class DesktopVault {
     if (k != null) k.fillRange(0, k.length, 0);
     _key = null;
     _map = null;
+    _waiting.clear();
   }
 
   Map<String, String> get _held => _map ?? (throw const VaultLocked());
 
-  String? read(String key) => _held[key];
-  Map<String, String> readAll() => Map.of(_held);
-  bool containsKey(String key) => _held.containsKey(key);
-
-  Future<void> write(String key, String value) {
-    _held[key] = value;
-    return _queue();
+  // the file's state with every change still on its way
+  Map<String, String> get _seen {
+    final m = Map.of(_held);
+    for (final c in _waiting) {
+      c.apply(m);
+    }
+    return m;
   }
 
-  Future<void> delete(String key) {
-    if (_held.remove(key) == null) return _writes;
-    return _queue();
+  String? read(String key) => _seen[key];
+  Map<String, String> readAll() => _seen;
+  bool containsKey(String key) => _seen.containsKey(key);
+
+  Future<void> write(String key, String value) =>
+      _queue(_Change.put(key, value));
+
+  Future<void> delete(String key) => _queue(_Change.drop(key));
+
+  Future<void> deleteAll() => _queue(_Change.clear());
+
+  // one write at a time. a change shows in reads at once; one whose write
+  // fails is taken back and its caller hears why, and the next write goes on
+  Future<void> _queue(_Change c) {
+    _held;
+    _waiting.add(c);
+    final done = _writes.catchError((_) {}).then((_) {
+      try {
+        final next = Map.of(_held);
+        c.apply(next);
+        _persist(next);
+        _map = next;
+      } finally {
+        _waiting.remove(c);
+      }
+    });
+    _writes = done;
+    return done;
   }
 
-  Future<void> deleteAll() {
-    _held.clear();
-    return _queue();
-  }
-
-  // one write at a time, each with what is held when it runs
-  Future<void> _queue() => _writes = _writes.then((_) => _persist());
-
-  Future<void> _persist() async {
+  void _persist(Map<String, String> m) {
     final fresh = _bytes(_freshLen);
-    final sealed = _crypto.seal(
-      _fileKey(fresh),
-      Uint8List.fromList(utf8.encode(jsonEncode(_held))),
-    );
+    final plain = Uint8List.fromList(utf8.encode(jsonEncode(m)));
+    final Uint8List sealed;
+    try {
+      sealed = _crypto.seal(_fileKey(fresh), plain);
+    } finally {
+      plain.fillRange(0, plain.length, 0);
+    }
     final out = BytesBuilder(copy: false)
       ..add(_magic)
       ..addByte(_version)
+      ..addByte(_cost)
       ..add(_salt!)
       ..add(fresh)
       ..add(sealed);
-    // a new file renamed over the old: a cut never leaves half a vault
-    final tmp = File('$path.new');
-    final f = tmp.openSync(mode: FileMode.writeOnly);
-    try {
-      f.writeFromSync(out.takeBytes());
-      f.flushSync();
-    } finally {
-      f.closeSync();
+    _disk.replace(path, out.takeBytes());
+  }
+
+  /// the panic wipe: the file overwritten with random bytes and flushed
+  /// before it goes. best effort: a journaling or copy-on-write disk, an
+  /// ssd's remapping or a backup may still hold the old bytes
+  void destroy() {
+    close();
+    for (final f in [File(path), File('$path.new')]) {
+      try {
+        final n = f.lengthSync();
+        final r = f.openSync(mode: FileMode.writeOnlyAppend);
+        try {
+          r.setPositionSync(0);
+          r.writeFromSync(_bytes(n));
+          r.flushSync();
+        } finally {
+          r.closeSync();
+        }
+        f.deleteSync();
+      } catch (_) {}
     }
-    tmp.renameSync(path);
+    syncFolder(File(path).parent.path);
   }
 }
 

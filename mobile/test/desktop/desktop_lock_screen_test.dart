@@ -14,7 +14,7 @@ import 'package:path/path.dart' as p;
 // keys told apart, sealed as is behind a tag
 class _Plain implements VaultCrypto {
   @override
-  Future<String?> keyOf(String passphrase, Uint8List salt) async =>
+  Future<String?> keyOf(String passphrase, Uint8List salt, int logN) async =>
       sha256.convert([...passphrase.codeUnits, ...salt]).toString();
   @override
   Uint8List seal(String keyHex, Uint8List plain) => Uint8List.fromList([
