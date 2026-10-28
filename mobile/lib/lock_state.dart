@@ -324,6 +324,7 @@ class FfiPinEngine implements PinEngine {
   static String _err(String s) {
     if (s == 'error: collision') throw PinCollision();
     if (s == 'error: keystore') throw PinKeyBusy();
+    if (s == 'error: bad pin') throw ArgumentError('not a pin');
     return s;
   }
 
@@ -341,6 +342,8 @@ class FfiPinEngine implements PinEngine {
     String legacy,
   ) {
     _whole(pin);
+    // a pin the engine will not take (a control character, too long) comes
+    // back as an ArgumentError, as one with a nul does here
     return Isolate.run(() {
       final fn = _lib()
           .lookupFunction<
@@ -351,7 +354,7 @@ class FfiPinEngine implements PinEngine {
           t = table.toNativeUtf8(),
           l = legacy.toNativeUtf8();
       try {
-        return _json(_take(fn(p, t, l)));
+        return _json(_err(_take(fn(p, t, l))));
       } finally {
         _wipeFree(p);
         calloc.free(t);
@@ -1386,10 +1389,11 @@ class LockState extends ChangeNotifier {
     } finally {
       slow?.cancel();
       if (_keyNote == KeyNote.waiting) _setNote(null);
+      // a pin key that failed or hung says nothing of how long checks take
       final took = DateTime.now().difference(t0);
-      if (took > _checkMax) {
-        _checkMax = took > const Duration(seconds: 3)
-            ? const Duration(seconds: 3)
+      if (fail == null && took > _checkMax) {
+        _checkMax = took > const Duration(seconds: 2)
+            ? const Duration(seconds: 2)
             : took;
       }
     }
