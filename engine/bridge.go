@@ -392,6 +392,8 @@ func startListener(dataDir string) string {
 	}
 	mu.Lock()
 	torNode = t
+	close(torGone)
+	torGone = make(chan struct{})
 	mu.Unlock()
 	// whatever control socket we held belonged to the tor before this one,
 	// and so did the socks port any cached http client was built against.
@@ -631,6 +633,7 @@ func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 }
 
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
+	gone := torGoneCh()
 	if hsSubbed {
 		defer func() {
 			evMu.Lock()
@@ -642,11 +645,13 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		}()
 	}
 	for {
-		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
+		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
 			break
 		}
-		if !torStill(t) {
+		select {
+		case <-gone:
 			return
+		default:
 		}
 		statusMu.RLock()
 		stillPub := torStatus == "publishing" || torStatus == "starting"
@@ -1553,22 +1558,14 @@ func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, in
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
 // our descriptor is uploaded, or false after 120s. most networks upload
 // within 5-15 seconds.
-func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
-	// a watcher for a tor that is gone gives up its slot
-	look := time.NewTicker(publishLook)
-	defer look.Stop()
+func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
 	timeout := time.After(120 * time.Second)
 	if t == nil || t.Control == nil || !subbed {
-		for {
-			select {
-			case <-look.C:
-				if !torStill(t) {
-					return false
-				}
-			case <-timeout:
-				return false
-			}
+		select {
+		case <-gone:
+		case <-timeout:
 		}
+		return false
 	}
 
 	// how many hsdirs we have handed the descriptor to. the hashring is six
@@ -1608,10 +1605,9 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
 				return true
 			}
-		case <-look.C:
-			if !torStill(t) {
-				return false
-			}
+		// a watcher for a tor that is gone gives up its slot
+		case <-gone:
+			return false
 		case <-timeout:
 			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
 			return false
@@ -1619,13 +1615,22 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 	}
 }
 
-// how often the publish watcher checks its tor is still this process's
-const publishLook = time.Second
+// closed and replaced under mu whenever torNode changes, so a watcher of
+// the tor before lets go
+var torGone = make(chan struct{})
 
-func torStill(t *tor.Tor) bool {
+func torGoneCh() chan struct{} {
 	mu.Lock()
 	defer mu.Unlock()
-	return torNode == t
+	return torGone
+}
+
+// for the tests, which set torNode themselves
+func torGoneNow() {
+	mu.Lock()
+	close(torGone)
+	torGone = make(chan struct{})
+	mu.Unlock()
 }
 
 // polls tor for real bootstrap progress. tor.Start only means the process

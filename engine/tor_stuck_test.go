@@ -124,6 +124,7 @@ func fakeTor(t *testing.T, port int) *tor.Tor {
 		mu.Lock()
 		torNode, myAddr = nil, ""
 		mu.Unlock()
+		torGoneNow()
 		setSavedDataDir("")
 		ctrlReset()
 		atomic.StoreInt32(&torRestarting, 0)
@@ -381,6 +382,7 @@ func waitTorIdle(t *testing.T, limit time.Duration) {
 	mu.Lock()
 	torNode = nil
 	mu.Unlock()
+	torGoneNow()
 	waitFor(t, "the watchers to end", limit, func() bool {
 		return atomic.LoadInt32(&bootstrapWatching) == 0 && atomic.LoadInt32(&publishWatching) == 0
 	})
@@ -400,7 +402,8 @@ func TestPublishWatchEndsWithItsTor(t *testing.T) {
 	mu.Lock()
 	torNode = nil
 	mu.Unlock()
-	waitFor(t, "the watcher to let go", 3*publishLook, func() bool {
+	torGoneNow()
+	waitFor(t, "the watcher to let go", time.Second, func() bool {
 		return atomic.LoadInt32(&publishWatching) == 0
 	})
 }
