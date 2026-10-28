@@ -21,6 +21,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
 import 'helper_push.dart';
 
+// with a 480-character seal an endpoint is 510 of the relay's 512: a longer
+// gateway name needs a shorter seal (relay-live/knock.go knockSealedMax)
 const kPushGateway = 'https://relay.kryfo.app/push/';
 // the gateway's public key, pinned like the version key. the private half
 // is made on the server with `kryfo-push keygen` and never leaves it
@@ -73,10 +75,14 @@ class GooglePush extends HelperPush {
     }
   }
 
-  /// play services on the phone, so fcm can reach it. a build without
-  /// google push answers no
+  /// play services working now, so google push can be offered and picked.
+  /// a build without google push answers no
   Future<bool> available() async =>
       _available ??= (await _ask<bool>('available')) ?? false;
+
+  /// play services still on the phone, updating or wanting an update
+  /// included: google push in use stays while this holds
+  Future<bool> present() async => (await _ask<bool>('present')) ?? false;
 
   /// asked again next time: play services can be turned off meanwhile
   void forgetAvailable() => _available = null;
@@ -145,9 +151,8 @@ class GooglePush extends HelperPush {
   }
 
   @override
-  Future<List<HelperApp>> apps() async => await available()
-      ? const [HelperApp(kGooglePackage, 'Google')]
-      : const [];
+  Future<List<HelperApp>> apps() async =>
+      await present() ? const [HelperApp(kGooglePackage, 'Google')] : const [];
 
   @override
   Future<String?> chosen() async {

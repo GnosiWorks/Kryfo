@@ -34,6 +34,8 @@ const _token = 'cTestPhone:APA91bH_a_token_for_tests_only-0123456789abcdef';
 class FakeFirebase {
   String? token = _token;
   bool available = true;
+  // play services there but not working now (updating): null follows available
+  bool? present;
   bool on = false;
   final List<String> calls = [];
 
@@ -42,6 +44,8 @@ class FakeFirebase {
     switch (call.method) {
       case 'available':
         return available;
+      case 'present':
+        return present ?? available;
       case 'on':
         on = true;
         return token;
@@ -234,6 +238,14 @@ void main() {
     test('a push carries no slot: android cannot say which one '
         'knocked', () async {
       expect(await gp.knocked(), isNull);
+    });
+
+    test('play services wanting an update: not offered, but google push in '
+        'use stays', () async {
+      fb.available = false;
+      fb.present = true;
+      expect(await gp.available(), isFalse);
+      expect(await gp.apps(), isNotEmpty);
     });
 
     test('no play services, no google push', () async {
