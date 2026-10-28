@@ -3,16 +3,17 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/bits"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,8 +37,12 @@ type fakeFiles struct {
 	gets     atomic.Int32
 	ranges   []string
 	news     []map[string]any
-	gots     []string
-	drops    []string
+	// parts it forgets once, to make an end name what it lacks
+	forget atomic.Int32
+	// what it answers /new with for a file every recipient has
+	goneIDs map[string]bool
+	gots    []string
+	drops   []string
 }
 
 type fakeFile struct {
@@ -49,7 +54,7 @@ type fakeFile struct {
 }
 
 func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
-	f := &fakeFiles{files: map[string]*fakeFile{}}
+	f := &fakeFiles{files: map[string]*fakeFile{}, goneIDs: map[string]bool{}}
 	mux := http.NewServeMux()
 	word := func(w http.ResponseWriter, code int, e string) {
 		w.WriteHeader(code)
@@ -65,11 +70,16 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 			word(w, 507, f.refuse)
 			return
 		}
-		if !dropPowHolds(m["day"].(string), m["who"].(string), uint64(m["pow"].(float64)), dropPowBits) {
+		id := m["id"].(string)
+		size := int64(m["size"].(float64))
+		if !dropPowHolds(id, size, uint64(m["pow"].(float64)), dropPowBase+bits.Len64(uint64(size>>20))) {
 			word(w, 403, "denied")
 			return
 		}
-		id := m["id"].(string)
+		if f.goneIDs[id] {
+			json.NewEncoder(w).Encode(map[string]any{"have": []int{}, "gone": true})
+			return
+		}
 		ff := f.files[id]
 		if ff == nil {
 			got := []string{}
@@ -101,6 +111,15 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 			word(w, 404, "gone")
 			return
 		}
+		if sha256Hex(r.Header.Get(dropOwnHeader)) != ff.own {
+			word(w, 403, "denied")
+			return
+		}
+		if f.forget.Add(-1) >= 0 {
+			// taken and lost: the end names it
+			w.Write([]byte(`{"ok":true}`))
+			return
+		}
 		ff.parts[n] = b
 		w.Write([]byte(`{"ok":true}`))
 	})
@@ -108,12 +127,19 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		ff := f.files[r.PathValue("id")]
+		if sha256Hex(r.Header.Get(dropOwnHeader)) != ff.own {
+			word(w, 403, "denied")
+			return
+		}
 		var n int64
-		for _, p := range ff.parts {
+		have := []int{}
+		for k, p := range ff.parts {
 			n += int64(len(p))
+			have = append(have, k)
 		}
 		if n != ff.size {
-			word(w, 409, "parts")
+			w.WriteHeader(409)
+			json.NewEncoder(w).Encode(map[string]any{"e": "clash", "have": have})
 			return
 		}
 		ff.ended = true
@@ -127,6 +153,14 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 		f.mu.Unlock()
 		if ff == nil || !ff.ended {
 			word(w, 404, "gone")
+			return
+		}
+		named := false
+		for _, g := range ff.got {
+			named = named || g == sha256Hex(r.Header.Get(dropTokenHeader))
+		}
+		if !named {
+			word(w, 403, "denied")
 			return
 		}
 		var all []byte
@@ -188,7 +222,7 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 func dropRig(t *testing.T) (*fakeFiles, *[]string) {
 	t.Helper()
 	f, srv := newFakeFiles(t)
-	oldHosts, oldDial, oldSecret, oldBits, oldPause := dropHosts, dropDial, dropSecret, dropPowBits, dropPause
+	oldHosts, oldDial, oldSecret, oldBits, oldPause := dropHosts, dropDial, dropSecret, dropPowBase, dropPause
 	lanes := &[]string{}
 	var lanesMu sync.Mutex
 	dropHosts = map[string]string{"f1": srv.URL}
@@ -201,10 +235,10 @@ func dropRig(t *testing.T) (*fakeFiles, *[]string) {
 	secret := make([]byte, 32)
 	rand.Read(secret)
 	dropSecret = func() ([]byte, error) { return secret, nil }
-	dropPowBits = 6
+	dropPowBase = 2
 	dropPause = 10 * time.Millisecond
 	t.Cleanup(func() {
-		dropHosts, dropDial, dropSecret, dropPowBits, dropPause = oldHosts, oldDial, oldSecret, oldBits, oldPause
+		dropHosts, dropDial, dropSecret, dropPowBase, dropPause = oldHosts, oldDial, oldSecret, oldBits, oldPause
 	})
 	return f, lanes
 }
@@ -221,7 +255,7 @@ func writeRandom(t *testing.T, n int) (string, []byte) {
 }
 
 func sendJob(path, uid string, members ...string) string {
-	b, _ := json.Marshal(dropSendJob{Path: path, UID: uid, Members: members, Host: "f1", Lane: "everyday"})
+	b, _ := json.Marshal(dropSendJob{Path: path, UID: uid, Members: members, Host: "f1"})
 	return string(b)
 }
 
@@ -235,8 +269,15 @@ func mustSend(t *testing.T, job string) dropSent {
 	return s
 }
 
+// the fetch as the first member it was sent to makes it
 func fetchJob(s dropSent, path string) string {
-	b, _ := json.Marshal(dropFetchJob{Host: "f1", ID: s.ID, Key: s.Key, Size: s.Size, Chunks: s.Chunks, Path: path})
+	tok := ""
+	for _, t := range s.Tokens {
+		if tok == "" || t < tok {
+			tok = t
+		}
+	}
+	b, _ := json.Marshal(dropFetchJob{Host: "f1", ID: s.ID, Key: s.Key, Size: s.Size, Chunks: s.Chunks, Path: path, Token: tok, Sum: s.Sum})
 	return string(b)
 }
 
@@ -286,9 +327,9 @@ func TestDropSendAndFetch(t *testing.T) {
 func TestDropValuesStable(t *testing.T) {
 	dropRig(t)
 	path, _ := writeRandom(t, 1000)
-	a, _, _ := dropValuesFor(path, "u")
-	b, _, _ := dropValuesFor(path, "u")
-	c, _, _ := dropValuesFor(path, "v")
+	a, _, _, _ := dropValuesFor(path, "u")
+	b, _, _, _ := dropValuesFor(path, "u")
+	c, _, _, _ := dropValuesFor(path, "v")
 	if a.id != b.id || string(a.key) != string(b.key) || a.token("m") != b.token("m") {
 		t.Fatal("the values moved between sends")
 	}
@@ -296,7 +337,7 @@ func TestDropValuesStable(t *testing.T) {
 		t.Fatal("two messages or two members share values")
 	}
 	os.WriteFile(path, []byte("other bytes"), 0o600)
-	d, _, _ := dropValuesFor(path, "u")
+	d, _, _, _ := dropValuesFor(path, "u")
 	if d.id == a.id || string(d.key) == string(a.key) {
 		t.Fatal("other bytes under the old key")
 	}
@@ -306,7 +347,7 @@ func TestDropValuesStable(t *testing.T) {
 func TestDropSendResumes(t *testing.T) {
 	f, _ := dropRig(t)
 	path, _ := writeRandom(t, 3*80*dropChunk)
-	v, _, _ := dropValuesFor(path, "uid2")
+	v, _, _, _ := dropValuesFor(path, "uid2")
 	// the first go dies on its second part with every try used
 	f.failParts.Store(1 + int32(dropTries))
 	if r := dropSend(sendJob(path, "uid2", "bob")); r != "error: net" {
@@ -414,7 +455,7 @@ func TestDropFillerMustBeZeros(t *testing.T) {
 		f.Write(a.Seal(nil, dropNonce(i), plain, dropAAD(chunks)))
 	}
 	job := dropFetchJob{Size: 17 * dropChunk, Chunks: chunks, Path: filepath.Join(t.TempDir(), "x")}
-	if w := dropOpenInto(f, a, job); w != "bad" {
+	if _, w := dropOpenInto(f, a, job, make([]byte, 32)); w != "bad" {
 		t.Fatalf("filler with a byte in it: %q", w)
 	}
 }
@@ -490,7 +531,7 @@ func TestDropTakeBack(t *testing.T) {
 func TestDropCancel(t *testing.T) {
 	f, _ := dropRig(t)
 	path, _ := writeRandom(t, 6*80*dropChunk)
-	v, _, _ := dropValuesFor(path, "uid9")
+	v, _, _, _ := dropValuesFor(path, "uid9")
 	f.failParts.Store(1000)
 	dropPause = 200 * time.Millisecond
 	done := make(chan string, 1)
@@ -519,24 +560,172 @@ func TestDropCancel(t *testing.T) {
 	}
 }
 
-// the day key is one per container and per day, and its work holds
-func TestDropDayKey(t *testing.T) {
+// two uploads of one sender carry nothing in common the service can see:
+// no key, no day, nothing but their own values
+func TestDropUploadsShareNothing(t *testing.T) {
+	f, _ := dropRig(t)
+	p1, _ := writeRandom(t, 1000)
+	p2, _ := writeRandom(t, 1000)
+	mustSend(t, sendJob(p1, "uid-a", "alice"))
+	mustSend(t, sendJob(p2, "uid-b", "alice"))
+	if len(f.news) != 2 {
+		t.Fatalf("%d begins", len(f.news))
+	}
+	a, b := f.news[0], f.news[1]
+	keys := []string{}
+	for k := range a {
+		keys = append(keys, k)
+		if k != "size" && fmt.Sprint(a[k]) == fmt.Sprint(b[k]) {
+			t.Fatalf("both uploads carry the same %s", k)
+		}
+	}
+	sort.Strings(keys)
+	if fmt.Sprint(keys) != "[got id own pow size]" {
+		t.Fatalf("an upload says %v", keys)
+	}
+}
+
+// an end that names a part the service lacks gets that part again
+func TestDropEndNamesWhatIsMissing(t *testing.T) {
+	f, _ := dropRig(t)
+	path, plain := writeRandom(t, 2*80*dropChunk)
+	f.forget.Store(1)
+	s := mustSend(t, sendJob(path, "uid-c", "a"))
+	if f.puts.Load() != 3 {
+		t.Fatalf("%d parts sent, want the lost one again", f.puts.Load())
+	}
+	out := filepath.Join(t.TempDir(), "x")
+	if r := dropFetch(fetchJob(s, out)); r != "ok" {
+		t.Fatalf("fetch: %s", r)
+	}
+	back, _ := os.ReadFile(out)
+	if !bytes.Equal(back, plain) {
+		t.Fatal("different bytes")
+	}
+}
+
+// a file every recipient already has is not sent again
+func TestDropNoUploadAfterGot(t *testing.T) {
+	f, _ := dropRig(t)
+	path, _ := writeRandom(t, 3*80*dropChunk)
+	v, _, _, _ := dropValuesFor(path, "uid-d")
+	f.goneIDs[v.id] = true
+	s := mustSend(t, sendJob(path, "uid-d", "a"))
+	if f.puts.Load() != 0 || s.ID != v.id {
+		t.Fatalf("%d parts sent for a file every recipient has", f.puts.Load())
+	}
+}
+
+// a chunk on disk that a power cut left unwritten is fetched again, not
+// the end of the file
+func TestDropBadChunkOnDiskFetchedAgain(t *testing.T) {
+	f, _ := dropRig(t)
+	path, plain := writeRandom(t, 100*dropChunk)
+	s := mustSend(t, sendJob(path, "uid-e", "a"))
+	out := filepath.Join(t.TempDir(), "got.bin")
+	// a .part as a cut left it: its length all there, chunk 40 zeros
+	sealed := int64(s.Chunks) * dropSealed
+	var all []byte
+	for n := 0; n < len(f.files[s.ID].parts); n++ {
+		all = append(all, f.files[s.ID].parts[n]...)
+	}
+	part := append([]byte(nil), all[:sealed]...)
+	clear(part[40*dropSealed : 41*dropSealed])
+	os.WriteFile(out+".part", part, 0o600)
+	if r := dropFetch(fetchJob(s, out)); r != "ok" {
+		t.Fatalf("fetch: %s", r)
+	}
+	back, _ := os.ReadFile(out)
+	if !bytes.Equal(back, plain) {
+		t.Fatal("the file came back different")
+	}
+	if last := f.ranges[len(f.ranges)-1]; last != fmt.Sprintf("bytes=%d-", 40*dropSealed) {
+		t.Fatalf("fetched again from %q", last)
+	}
+}
+
+// every chunk opens but the bytes are not the ones the sender read
+func TestDropHashMustMatch(t *testing.T) {
 	dropRig(t)
-	ctx := context.Background()
-	d1, w1, p1, _ := dropDayKey(ctx, "everyday")
-	_, w2, _, _ := dropDayKey(ctx, "everyday")
-	_, w3, _, _ := dropDayKey(ctx, "decoy")
-	if w1 != w2 || w1 == w3 {
-		t.Fatal("one key a container a day")
+	path, _ := writeRandom(t, 5000)
+	s := mustSend(t, sendJob(path, "uid-f", "a"))
+	s.Sum = strings.Repeat("00", 32)
+	out := filepath.Join(t.TempDir(), "got.bin")
+	if r := dropFetch(fetchJob(s, out)); r != "error: bad" {
+		t.Fatalf("a hash that does not match: %s", r)
 	}
-	if !dropPowHolds(d1, w1, p1, dropPowBits) {
-		t.Fatal("the work does not hold")
+	if _, err := os.Stat(out); !os.IsNotExist(err) {
+		t.Fatal("a file that is not the sender's is in place")
 	}
-	old := dropNow
-	dropNow = func() time.Time { return time.Now().Add(24 * time.Hour) }
-	defer func() { dropNow = old }()
-	if _, w4, _, _ := dropDayKey(ctx, "everyday"); w4 == w1 {
-		t.Fatal("the key outlived its day")
+}
+
+// a download asks with the recipient's token: none, or another, is refused
+func TestDropFetchNeedsItsToken(t *testing.T) {
+	dropRig(t)
+	path, _ := writeRandom(t, 5000)
+	s := mustSend(t, sendJob(path, "uid-g", "a"))
+	var job dropFetchJob
+	json.Unmarshal([]byte(fetchJob(s, filepath.Join(t.TempDir(), "x"))), &job)
+	job.Token = strings.Repeat("ab", 32)
+	b, _ := json.Marshal(job)
+	if r := dropFetch(string(b)); r != "error: denied" {
+		t.Fatalf("another token: %s", r)
+	}
+	job.Token = ""
+	b, _ = json.Marshal(job)
+	if r := dropFetch(string(b)); r != "error: bad" {
+		t.Fatalf("no token: %s", r)
+	}
+}
+
+// with hidden chats closed: the sealed bytes come and stay sealed, and the
+// fetch once they open goes on from them with no download
+func TestDropBlindFetchThenOpen(t *testing.T) {
+	f, _ := dropRig(t)
+	path, plain := writeRandom(t, 3*dropChunk+5)
+	s := mustSend(t, sendJob(path, "uid-h", "a"))
+	out := filepath.Join(t.TempDir(), "got.bin")
+	var job dropFetchJob
+	json.Unmarshal([]byte(fetchJob(s, out)), &job)
+	job.Key, job.Sum, job.Blind = "", "", true
+	b, _ := json.Marshal(job)
+	if r := dropFetch(string(b)); r != "held" {
+		t.Fatalf("blind: %s", r)
+	}
+	if _, err := os.Stat(out); !os.IsNotExist(err) {
+		t.Fatal("a blind fetch opened the file")
+	}
+	held, _ := os.ReadFile(out + ".part")
+	if bytes.Contains(held, plain[:32]) {
+		t.Fatal("the held bytes are not sealed")
+	}
+	gets := f.gets.Load()
+	if r := dropFetch(fetchJob(s, out)); r != "ok" {
+		t.Fatalf("open: %s", r)
+	}
+	if f.gets.Load() != gets {
+		t.Fatal("the open downloaded again")
+	}
+	back, _ := os.ReadFile(out)
+	if !bytes.Equal(back, plain) {
+		t.Fatal("different bytes")
+	}
+}
+
+// a transfer's lane goes with it: no name a file is kept
+func TestDropLaneGoes(t *testing.T) {
+	_, lanes := dropRig(t)
+	path, _ := writeRandom(t, 1000)
+	s := mustSend(t, sendJob(path, "uid-i", "a"))
+	dropFetch(fetchJob(s, filepath.Join(t.TempDir(), "x")))
+	if len(*lanes) == 0 {
+		t.Fatal("no lane dialed")
+	}
+	laneMu.Lock()
+	_, kept := laneNames["files:"+s.ID]
+	laneMu.Unlock()
+	if kept {
+		t.Fatal("the file's lane name stayed")
 	}
 }
 

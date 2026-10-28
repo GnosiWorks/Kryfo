@@ -20,7 +20,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -51,8 +50,16 @@ const (
 // a sender cannot point a phone at a server of their choosing
 var dropHosts = map[string]string{"f1": "https://files.kryfo.app"}
 
-// the work a sender's key for the day costs, as the service asks it
-var dropPowBits = 20
+// the work an upload costs, as the service asks it: this many bits under
+// 1 MB, one more each doubling (server/files/wire.go, powBits)
+var dropPowBase = 18
+
+// the sender's token on what only the sender does, a recipient's on a
+// download (server/files/main.go)
+const (
+	dropOwnHeader   = "X-Kryfo-Own"
+	dropTokenHeader = "X-Kryfo-Token"
+)
 
 // tries per part and per download before the call gives up. the app calls
 // again later and goes on from where it was
@@ -224,16 +231,16 @@ func fileSum(path string) ([]byte, int64, error) {
 	return h.Sum(nil), n, nil
 }
 
-func dropValuesFor(path, uid string) (dropValues, int64, error) {
+func dropValuesFor(path, uid string) (dropValues, []byte, int64, error) {
 	secret, err := dropSecret()
 	if err != nil {
-		return dropValues{}, 0, err
+		return dropValues{}, nil, 0, err
 	}
 	sum, size, err := fileSum(path)
 	if err != nil {
-		return dropValues{}, 0, err
+		return dropValues{}, nil, 0, err
 	}
-	return dropDerive(secret, uid, sum), size, nil
+	return dropDerive(secret, uid, sum), sum, size, nil
 }
 
 // ---- sealing ----
@@ -278,16 +285,15 @@ type dropSendJob struct {
 	UID     string   `json:"uid"`
 	Members []string `json:"members"`
 	Host    string   `json:"host"`
-	// whose day key: one per container, so two identities on one phone
-	// are never one sender to the service
-	Lane string `json:"lane"`
 }
 
 type dropSent struct {
-	ID     string            `json:"id"`
-	Key    string            `json:"key"`
-	Size   int64             `json:"size"`
-	Chunks int               `json:"chunks"`
+	ID     string `json:"id"`
+	Key    string `json:"key"`
+	Size   int64  `json:"size"`
+	Chunks int    `json:"chunks"`
+	// the file's sha256, which the recipient checks once it is opened
+	Sum    string            `json:"sum"`
 	Tokens map[string]string `json:"tokens"`
 }
 
@@ -312,13 +318,15 @@ func dropSend(jobJSON string) string {
 	if len(job.Members) == 0 || len(job.Members) > dropMaxGot {
 		return "error: bad"
 	}
-	v, size, err := dropValuesFor(job.Path, job.UID)
+	v, sum, size, err := dropValuesFor(job.Path, job.UID)
 	if err != nil {
 		return "error: read"
 	}
 	if size == 0 {
 		return "error: read"
 	}
+	// the file's lane goes with the send: a name a file is never kept
+	defer dropLane("files:" + v.id)
 	// the app follows and stops a send by its message, a fetch by its file
 	key := "s:" + job.UID
 	j, ctx, ok := dropStart(key)
@@ -334,7 +342,7 @@ func dropSend(jobJSON string) string {
 		return "error: tor"
 	}
 	defer c.CloseIdleConnections()
-	out := dropSent{ID: v.id, Key: hex.EncodeToString(v.key), Size: size, Chunks: chunks, Tokens: map[string]string{}}
+	out := dropSent{ID: v.id, Key: hex.EncodeToString(v.key), Size: size, Chunks: chunks, Sum: hex.EncodeToString(sum), Tokens: map[string]string{}}
 	got := []string{}
 	for _, m := range job.Members {
 		t := v.token(m)
@@ -353,22 +361,26 @@ func dropSend(jobJSON string) string {
 }
 
 func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJob, v dropValues, size int64, chunks int, sealed int64, got []string, j *dropJob) string {
-	day, who, pow, err := dropDayKey(ctx, job.Lane)
+	pow, err := dropPow(ctx, v.id, sealed)
 	if err != nil {
 		return "cancelled"
 	}
+	// nothing of the sender in it: no key, no day, nothing two uploads of
+	// one person share
 	body, _ := json.Marshal(map[string]any{
-		"id": v.id, "size": sealed, "got": got, "own": sha256Hex(v.own),
-		"day": day, "who": who, "pow": pow,
+		"id": v.id, "size": sealed, "got": got, "own": sha256Hex(v.own), "pow": pow,
 	})
 	var begun struct {
 		Have []int `json:"have"`
 		End  bool  `json:"end"`
+		Gone bool  `json:"gone"`
 	}
-	if word := dropAsk(ctx, c, http.MethodPost, base+"/files/new", body, &begun); word != "" {
+	if word := dropAsk(ctx, c, http.MethodPost, base+"/files/new", body, &begun, nil); word != "" {
 		return word
 	}
-	if begun.End {
+	// whole already, or every recipient has it: the frame goes again, the
+	// file does not
+	if begun.End || begun.Gone {
 		j.done.Store(sealed)
 		return ""
 	}
@@ -391,7 +403,7 @@ func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJo
 			if have[n] {
 				continue
 			}
-			if word := dropPutPart(ctx, c, base, v.id, f, a, size, chunks, n, j, have); word != "" {
+			if word := dropPutPart(ctx, c, base, v.id, v.own, f, a, size, chunks, n, j, have); word != "" {
 				return word
 			}
 			have[n] = true
@@ -400,7 +412,7 @@ func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJo
 			E    string `json:"e"`
 			Have []int  `json:"have"`
 		}
-		word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+v.id+"/end", nil, &ended)
+		word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+v.id+"/end", nil, &ended, map[string]string{dropOwnHeader: v.own})
 		if word == "" {
 			j.done.Store(sealed)
 			return ""
@@ -417,6 +429,19 @@ func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJo
 	return "busy"
 }
 
+// the work for one upload, bound to its id and size
+func dropPow(ctx context.Context, id string, sealed int64) (uint64, error) {
+	want := dropPowBase + bits.Len64(uint64(sealed>>20))
+	for n := uint64(0); ; n++ {
+		if dropPowHolds(id, sealed, n, want) {
+			return n, nil
+		}
+		if n&0xffff == 0 && ctx.Err() != nil {
+			return 0, ctx.Err()
+		}
+	}
+}
+
 func (j *dropJob) progressOf(have map[int]bool, sealed int64) {
 	var d int64
 	for n := range have {
@@ -425,7 +450,7 @@ func (j *dropJob) progressOf(have map[int]bool, sealed int64) {
 	j.done.Store(d)
 }
 
-func dropPutPart(ctx context.Context, c *http.Client, base, id string, f io.ReaderAt, a cipher.AEAD, size int64, chunks, n int, j *dropJob, have map[int]bool) string {
+func dropPutPart(ctx context.Context, c *http.Client, base, id, own string, f io.ReaderAt, a cipher.AEAD, size int64, chunks, n int, j *dropJob, have map[int]bool) string {
 	first := n * 80
 	last := min(first+80, chunks)
 	part := make([]byte, 0, (last-first)*dropSealed)
@@ -452,6 +477,7 @@ func dropPutPart(ctx context.Context, c *http.Client, base, id string, f io.Read
 		}
 		req.ContentLength = int64(len(part))
 		req.Header.Set("User-Agent", "")
+		req.Header.Set(dropOwnHeader, own)
 		word = dropDo(ctx, c, req, nil)
 		if word == "" || !dropRetry(word) {
 			return word
@@ -490,7 +516,7 @@ func dropWait(ctx context.Context, try int) bool {
 // busy. full and limit are for later, and the app says so
 func dropRetry(word string) bool { return word == "net" }
 
-func dropAsk(ctx context.Context, c *http.Client, method, url string, body []byte, into any) string {
+func dropAsk(ctx context.Context, c *http.Client, method, url string, body []byte, into any, hdr map[string]string) string {
 	var word string
 	for try := 0; try < dropTries; try++ {
 		if try > 0 && !dropWait(ctx, try) {
@@ -505,6 +531,9 @@ func dropAsk(ctx context.Context, c *http.Client, method, url string, body []byt
 			return "bad"
 		}
 		req.Header.Set("User-Agent", "")
+		for k, v := range hdr {
+			req.Header.Set(k, v)
+		}
 		if body != nil {
 			req.Header.Set("Content-Type", "application/json")
 		}
@@ -551,22 +580,10 @@ func dropDo(ctx context.Context, c *http.Client, req *http.Request, into any) st
 	return "bad"
 }
 
-// ---- a sender's key for the day ----
+// ---- the work ----
 
-type dayKey struct {
-	day, who string
-	pow      uint64
-}
-
-var (
-	dayKeysMu sync.Mutex
-	dayKeys   = map[string]dayKey{}
-	// the clock the day comes from, for the tests
-	dropNow = time.Now
-)
-
-func dropPowHolds(day, who string, nonce uint64, want int) bool {
-	h := sha256.Sum256([]byte("kryfo-files-v1:" + day + ":" + who + ":" + strconv.FormatUint(nonce, 10)))
+func dropPowHolds(id string, size int64, nonce uint64, want int) bool {
+	h := sha256.Sum256([]byte("kryfo-files-v2:" + id + ":" + strconv.FormatInt(size, 10) + ":" + strconv.FormatUint(nonce, 10)))
 	got := 0
 	for _, b := range h {
 		if b == 0 {
@@ -579,37 +596,13 @@ func dropPowHolds(day, who string, nonce uint64, want int) bool {
 	return got >= want
 }
 
-// a fresh random key each day, its work done once. kept in memory only
-func dropDayKey(ctx context.Context, lane string) (string, string, uint64, error) {
-	day := dropNow().UTC().Format("2006-01-02")
-	dayKeysMu.Lock()
-	defer dayKeysMu.Unlock()
-	if k, ok := dayKeys[lane]; ok && k.day == day {
-		return k.day, k.who, k.pow, nil
-	}
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", "", 0, err
-	}
-	who := hex.EncodeToString(b)
-	var n uint64
-	for !dropPowHolds(day, who, n, dropPowBits) {
-		n++
-		if n&0xffff == 0 && ctx.Err() != nil {
-			return "", "", 0, ctx.Err()
-		}
-	}
-	dayKeys[lane] = dayKey{day, who, n}
-	return day, who, n, nil
-}
-
 // ---- take back, got ----
 
 func dropTakeBack(c *http.Client, base string, v dropValues) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	body, _ := json.Marshal(map[string]string{"t": v.own})
-	word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+v.id+"/drop", body, nil)
+	word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+v.id+"/drop", body, nil, nil)
 	if word == "gone" {
 		return ""
 	}
@@ -633,10 +626,11 @@ func dropDrop(jobJSON string) string {
 	if !ok {
 		return "error: bad"
 	}
-	v, _, err := dropValuesFor(job.Path, job.UID)
+	v, _, _, err := dropValuesFor(job.Path, job.UID)
 	if err != nil {
 		return "error: read"
 	}
+	defer dropLane("files:" + v.id)
 	c, err := dropClient("files:" + v.id)
 	if err != nil {
 		return "error: tor"
@@ -661,6 +655,7 @@ func dropGot(host, id, token string) string {
 	if !ok || !dropIDShape(id) || len(token) != 64 {
 		return "error: bad"
 	}
+	defer dropLane("files:" + id)
 	c, err := dropClient("files:" + id)
 	if err != nil {
 		return "error: tor"
@@ -669,7 +664,7 @@ func dropGot(host, id, token string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	body, _ := json.Marshal(map[string]string{"t": token})
-	word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+id+"/got", body, nil)
+	word := dropAsk(ctx, c, http.MethodPost, base+"/files/"+id+"/got", body, nil, nil)
 	if word == "" || word == "gone" {
 		return "ok"
 	}
@@ -693,13 +688,27 @@ type dropFetchJob struct {
 	Size   int64  `json:"size"`
 	Chunks int    `json:"chunks"`
 	Path   string `json:"path"`
+	// this recipient's token, which the service asks for a download
+	Token string `json:"token"`
+	// the file's sha256 as the sender read it
+	Sum string `json:"sum"`
+	// the sealed bytes only, into path.part, with no key to open them:
+	// hidden chats closed. "held" once all are in
+	Blind bool `json:"blind"`
 }
+
+// a fetch whose bytes on disk do not open is fetched again from the chunk
+// that failed this many times before it is given up: a power cut can leave
+// a chunk that was never written
+var dropOpenTries = 2
 
 // fetches a file into path, whole and opened or not at all. the sealed
 // bytes of a fetch cut off stay beside it in path.part, and the next call
-// goes on from there. they are opened only once all are in, so bytes a
-// power cut left on disk unchecked never reach the file. "ok" or
-// "error: <word>": gone, bad (it does not open), cancelled, net, tor, file
+// goes on from there. they are opened only once all are in, through a file
+// moved over whole, so bytes a power cut left unchecked never reach the
+// file. "ok", "held" for a blind fetch, or "error: <word>": gone, denied,
+// bad (it does not open, or is not the file that was sent), cancelled,
+// net, tor, file
 //
 //export HaloFileFetch
 func HaloFileFetch(cJob *C.char) *C.char {
@@ -712,9 +721,22 @@ func dropFetch(jobJSON string) string {
 		return "error: bad"
 	}
 	base, ok := dropHosts[job.Host]
-	key, err := hex.DecodeString(job.Key)
-	if !ok || err != nil || len(key) != 32 || !dropIDShape(job.ID) {
+	if !ok || !dropIDShape(job.ID) || !dropHexShape(job.Token) {
 		return "error: bad"
+	}
+	var a cipher.AEAD
+	var sum []byte
+	if !job.Blind {
+		key, err := hex.DecodeString(job.Key)
+		if err != nil || len(key) != 32 {
+			return "error: bad"
+		}
+		if sum, err = hex.DecodeString(job.Sum); err != nil || len(sum) != 32 {
+			return "error: bad"
+		}
+		if a, err = dropAEAD(key); err != nil {
+			return "error: bad"
+		}
 	}
 	need := int((job.Size + dropChunk - 1) / dropChunk)
 	if job.Size <= 0 || job.Chunks < need || dropPadChunks(need) != job.Chunks {
@@ -725,12 +747,9 @@ func dropFetch(jobJSON string) string {
 		return "error: busy"
 	}
 	defer dropEnd("f:" + job.ID)
+	defer dropLane("files:" + job.ID)
 	sealed := int64(job.Chunks) * dropSealed
 	j.total.Store(sealed)
-	a, err := dropAEAD(key)
-	if err != nil {
-		return "error: bad"
-	}
 	c, err := dropClient("files:" + job.ID)
 	if err != nil {
 		return "error: tor"
@@ -742,23 +761,33 @@ func dropFetch(jobJSON string) string {
 		return "error: file"
 	}
 	word := ""
-	for try := 0; try < dropTries; try++ {
-		if try > 0 && !dropWait(ctx, try) {
-			word = "cancelled"
+	for round := 0; round <= dropOpenTries; round++ {
+		word = dropFetchRounds(ctx, c, base, job, a, f, j)
+		if word != "" {
 			break
 		}
-		word = dropFetchFrom(ctx, c, base, job, a, f, j)
-		if word == "" || !dropRetry(word) {
+		if job.Blind {
+			word = "held"
 			break
 		}
-	}
-	if word == "" {
-		word = dropOpenInto(f, a, job)
+		bad, w := dropOpenInto(f, a, job, sum)
+		word = w
+		if word != "bad" || bad < 0 {
+			break
+		}
+		// a chunk on disk that does not open: from it on, again
+		if f.Truncate(int64(bad)*dropSealed) != nil {
+			word = "file"
+			break
+		}
 	}
 	f.Close()
-	// sealed bytes that do not open, or a file that is gone, are no start
-	// for another try. a whole file needs them no more
-	if word == "" || word == "bad" || word == "gone" {
+	switch word {
+	case "held":
+		return "held"
+	case "", "bad", "gone", "denied":
+		// a file whole or one that will not come needs its sealed bytes
+		// no more
 		_ = os.Remove(part)
 	}
 	if word != "" {
@@ -767,8 +796,31 @@ func dropFetch(jobJSON string) string {
 	return "ok"
 }
 
+func dropHexShape(t string) bool {
+	if len(t) != 64 {
+		return false
+	}
+	_, err := hex.DecodeString(t)
+	return err == nil
+}
+
+func dropFetchRounds(ctx context.Context, c *http.Client, base string, job dropFetchJob, a cipher.AEAD, f *os.File, j *dropJob) string {
+	word := ""
+	for try := 0; try < dropTries; try++ {
+		if try > 0 && !dropWait(ctx, try) {
+			return "cancelled"
+		}
+		word = dropFetchFrom(ctx, c, base, job, a, f, j)
+		if word == "" || !dropRetry(word) {
+			return word
+		}
+	}
+	return word
+}
+
 // the rest of the sealed bytes, from the last whole chunk on disk. each
-// chunk is checked as it comes, so a wrong key stops at once
+// chunk is checked as it comes when there is a key, so a wrong key stops
+// at once
 func dropFetchFrom(ctx context.Context, c *http.Client, base string, job dropFetchJob, a cipher.AEAD, f *os.File, j *dropJob) string {
 	st, err := f.Stat()
 	if err != nil {
@@ -786,6 +838,7 @@ func dropFetchFrom(ctx context.Context, c *http.Client, base string, job dropFet
 		return "bad"
 	}
 	req.Header.Set("User-Agent", "")
+	req.Header.Set(dropTokenHeader, job.Token)
 	if from > 0 {
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", int64(from)*dropSealed))
 	}
@@ -800,14 +853,16 @@ func dropFetchFrom(ctx context.Context, c *http.Client, base string, job dropFet
 	switch {
 	case resp.StatusCode == http.StatusNotFound:
 		return "gone"
+	case resp.StatusCode == http.StatusForbidden:
+		return "denied"
 	case resp.StatusCode == http.StatusOK && from == 0, resp.StatusCode == http.StatusPartialContent && from > 0:
-	case resp.StatusCode >= 500:
-		return "net"
 	default:
-		return "bad"
+		// a proxy in front, a limit, a range it did not take: for later,
+		// never the end of the file
+		return "net"
 	}
 	if resp.ContentLength >= 0 && resp.ContentLength != sealed-int64(from)*dropSealed {
-		return "bad"
+		return "net"
 	}
 	buf := make([]byte, dropSealed)
 	aad := dropAAD(job.Chunks)
@@ -818,8 +873,10 @@ func dropFetchFrom(ctx context.Context, c *http.Client, base string, job dropFet
 			}
 			return "net"
 		}
-		if _, err := a.Open(nil, dropNonce(i), buf, aad); err != nil {
-			return "bad"
+		if a != nil {
+			if _, err := a.Open(nil, dropNonce(i), buf, aad); err != nil {
+				return "bad"
+			}
 		}
 		if _, err := f.WriteAt(buf, int64(i)*dropSealed); err != nil {
 			return "file"
@@ -830,30 +887,33 @@ func dropFetchFrom(ctx context.Context, c *http.Client, base string, job dropFet
 }
 
 // every sealed chunk opened again from disk into path, through a file
-// beside it that is moved over only once it is whole
-func dropOpenInto(f *os.File, a cipher.AEAD, job dropFetchJob) string {
+// beside it that is moved over only once it is whole and its hash is the
+// sender's. the chunk that did not open, or -1
+func dropOpenInto(f *os.File, a cipher.AEAD, job dropFetchJob, sum []byte) (int, string) {
 	tmp := job.Path + ".open"
 	out, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
-		return "file"
+		return -1, "file"
 	}
-	word := ""
+	word, bad := "", -1
+	h := sha256.New()
 	buf := make([]byte, dropSealed)
 	aad := dropAAD(job.Chunks)
 	for i := 0; i < job.Chunks && word == ""; i++ {
 		if _, err := f.ReadAt(buf, int64(i)*dropSealed); err != nil {
-			word = "bad"
+			word, bad = "bad", i
 			break
 		}
 		plain, err := a.Open(nil, dropNonce(i), buf, aad)
 		if err != nil {
-			word = "bad"
+			word, bad = "bad", i
 			break
 		}
 		off := int64(i) * dropChunk
 		switch {
 		case off < job.Size:
 			n := min(int64(dropChunk), job.Size-off)
+			h.Write(plain[:n])
 			if _, err := out.Write(plain[:n]); err != nil {
 				word = "file"
 			} else if !allZero(plain[n:]) {
@@ -863,6 +923,11 @@ func dropOpenInto(f *os.File, a cipher.AEAD, job dropFetchJob) string {
 			// past the end there is nothing but filler
 			word = "bad"
 		}
+	}
+	// every chunk opened, but not into the file the sender read: it
+	// changed on their side while it went
+	if word == "" && !hmac.Equal(h.Sum(nil), sum) {
+		word = "bad"
 	}
 	if word == "" {
 		if err := out.Sync(); err != nil {
@@ -878,5 +943,5 @@ func dropOpenInto(f *os.File, a cipher.AEAD, job dropFetchJob) string {
 	if word != "" {
 		_ = os.Remove(tmp)
 	}
-	return word
+	return bad, word
 }
