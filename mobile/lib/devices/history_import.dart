@@ -20,8 +20,7 @@ import 'history_export.dart'
         historyLeftOf,
         kHistoryContactCols,
         kHistoryGroupCols,
-        kHistoryMessageCols,
-        kHistoryStaysShots;
+        kHistoryMessageCols;
 import 'history_ffi.dart';
 
 // files on their way in, beside the media folder's own
