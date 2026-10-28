@@ -49,7 +49,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/scam_shield.dart' show ShieldFlag;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,7 +71,7 @@ String _rndHex(int n) => _hex([for (var i = 0; i < n; i++) _rnd.nextInt(256)]);
 typedef _Phone = ({SignalSession ss, String xPub});
 
 Future<_Phone> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final ss = SignalSession();
   await ss.bootstrap(
@@ -82,7 +82,7 @@ Future<_Phone> _phone() async {
   return (ss: ss, xPub: _hex(xPub));
 }
 
-List<int> _keyOf(_Phone p) => p.ss.identityKeyPair.getPublicKey().serialize();
+List<int> _keyOf(_Phone p) => p.ss.identity.public;
 
 // the three words an ed key stands for, as the engine derives them
 final _idOf = <String, String>{};
@@ -152,16 +152,7 @@ Future<String?> _reads(SignalSession ss, String cipher) async {
   try {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      ss.sessionStore,
-      ss.preKeyStore,
-      ss.signedPreKeyStore,
-      ss.identityStore,
-      SignalProtocolAddress(_me, 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await ss.open(_me, w[0], body);
     return utf8.decode(plain);
   } catch (_) {
     return null;
@@ -275,7 +266,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     useEngineForTest(
       _Engine(_hex(me.publicKey.serialize().sublist(1)), _rndHex(32)),
     );
@@ -556,19 +547,13 @@ void main() {
       await app.receiveRelay([(peer: amber.xPub, cipher: turned)]);
       await _settle();
       final mine = live.msgs.where((m) => m['peer_id'] == _amber).length;
-      final addr = SignalProtocolAddress(_amber, 1);
-      final before = (await signalSession.sessionStore.loadSession(
-        addr,
-      )).serialize();
+      final before = await signalSession.sessionStore.load(_amber);
       // a fresh install walks the relay's backlog, its seen marks gone,
       // and the opener comes again
       live.seen.clear();
       await app.receiveRelay([(peer: amber.xPub, cipher: c)]);
       await _settle();
-      expect(
-        (await signalSession.sessionStore.loadSession(addr)).serialize(),
-        before,
-      );
+      expect(await signalSession.sessionStore.load(_amber), before);
       expect(live.msgs.where((m) => m['peer_id'] == _amber).length, mine);
       // what she writes next still opens
       final next = await amber.ss.encryptTo(
@@ -1119,9 +1104,7 @@ void main() {
       ));
       expect(live.people.containsKey(shut), isFalse);
       // their own card too: no everyday row, and their session stays
-      final before = await signalSession.sessionStore.loadSession(
-        SignalProtocolAddress(shut, 1),
-      );
+      final before = await signalSession.sessionStore.load(shut);
       final own = await card(shut, held);
       expect(await linkKinOf(own, hidden: app.hiddenWhileShut), (
         LinkKin.stranger,
@@ -1134,12 +1117,7 @@ void main() {
       // nor does any chat open for them
       expect(opened, isEmpty);
       expect(live.people.containsKey(shut), isFalse);
-      expect(
-        (await signalSession.sessionStore.loadSession(
-          SignalProtocolAddress(shut, 1),
-        )).serialize(),
-        before.serialize(),
-      );
+      expect(await signalSession.sessionStore.load(shut), before);
       // a decoy holding them asks about them as about any of its own
       final decoy = ArrivalRows(HaloContainer.decoy);
       decoy.person(shut, onion: 'o-s', xpub: held.xPub);
@@ -1236,9 +1214,8 @@ void main() {
     _idOf[memberEd] = _hidden;
     await world(hiddenMembers: [RouterCard(_hidden, 'o-m', member.xPub)]);
     // nothing of the name held here from a test before
-    final addr = SignalProtocolAddress(_hidden, 1);
-    await signalSession.sessionStore.deleteSession(addr);
-    await signalSession.identityStore.removePeerIdentity(addr);
+    await signalSession.sessionStore.delete(_hidden);
+    await signalSession.identityStore.removePeerIdentity(_hidden);
     final other = await _phone();
     final line = (
       peer: 'firstcontact',

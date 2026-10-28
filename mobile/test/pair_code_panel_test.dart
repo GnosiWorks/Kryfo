@@ -24,7 +24,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/widgets/pair_code_panel.dart';
 import 'package:kryfo/widgets/pair_join.dart' show pairNow, pairUnreached;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'arrival_fakes.dart';
 import 'mem_db.dart';
@@ -57,7 +57,7 @@ void main() {
   final live = ArrivalRows(HaloContainer.everyday);
 
   setUpAll(() async {
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: Uint8List.fromList(pair.publicKey.serialize().sublist(1)),
@@ -138,9 +138,7 @@ void main() {
     e.answer = 'ok';
     await share(t);
     await t.pump(const Duration(milliseconds: 400));
-    final own = keyNumber(
-      signalSession.identityKeyPair.getPublicKey().serialize(),
-    )!;
+    final own = keyNumber(signalSession.identity.public)!;
     // the joiner reads the same off what it fetches
     expect(inviteKeyNumber(e.payloads.last), own);
     expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);

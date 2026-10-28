@@ -8135,6 +8135,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devWhoChoiceStays => 'انتخاب شما با این گفت‌وگو می‌ماند.';
 
   @override
+  String get devUpdateToWrite =>
+      'برای پیام دادن به Marios، Kryfo را به‌روز کنید.';
+
+  @override
   String get devKeyCheckFailed =>
       'بررسی کلید Marios ممکن نشد. چیزی فرستاده نشد.';
 
@@ -8197,6 +8201,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '⁨$id⁩ باید Kryfo را به‌روز کند تا بتوانید همدیگر را اضافه کنید.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9700,6 +9709,87 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'اسکن کد';
+
+  @override
+  String get desktopLockTitle => 'Kryfo قفل است';
+
+  @override
+  String get desktopLockBody => 'عبارت عبور این رایانه را بنویسید.';
+
+  @override
+  String get desktopLockNewTitle => 'قفل کردن Kryfo روی این رایانه';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo هر بار که باز می‌شود این عبارت عبور را می‌پرسد. پیام‌ها، عکس‌ها، پیام‌های صوتی، فایل‌ها، مخاطبان و کلیدهای شما را روی این رایانه قفل می‌کند.';
+
+  @override
+  String get desktopLockHonest =>
+      'کسی که پوشهٔ Kryfo را کپی کند می‌تواند روی رایانهٔ خودش، با هر سرعتی که آن رایانه اجازه دهد، عبارت‌های عبور را امتحان کند. چهار کلمهٔ تصادفی یا بیشتر دوام می‌آورد. یک عبارت کوتاه نه.';
+
+  @override
+  String get desktopLockForgot =>
+      'بدون عبارت عبور هیچ‌یک از پیام‌ها، فایل‌ها یا کلیدهای شما اینجا باز نمی‌شود، حتی برای ما.';
+
+  @override
+  String get desktopLockField => 'عبارت عبور';
+
+  @override
+  String get desktopLockRepeat => 'همان عبارت عبور دوباره';
+
+  @override
+  String get desktopLockSet => 'قفل با این عبارت';
+
+  @override
+  String get desktopLockOpen => 'باز کردن Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'دست‌کم $countString کاراکتر';
+  }
+
+  @override
+  String get desktopLockMismatch => 'عبارت‌های عبور یکی نیستند';
+
+  @override
+  String get desktopLockWrong => 'این عبارت عبور درست نیست';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo نتوانست قفلش را اینجا باز کند. دوباره اجرایش کنید.';
+
+  @override
+  String get desktopTrayQuit => 'خروج از Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo هنوز نمی‌تواند روی این رایانه از دوربین استفاده کند. به‌جایش از پیوند یا کد استفاده کنید.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo همین حالا روی این رایانه باز است.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'پوشهٔ Kryfo مال حساب دیگری روی این رایانه است، پس Kryfo آن را باز نمی‌کند.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo نتوانست پوشه‌اش را فقط برای شما خصوصی کند، پس باز نمی‌شود.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'این قفل را نسخهٔ دیگری از Kryfo ساخته که این نسخه نمی‌تواند آن را بخواند.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
 
   @override
   String get modesPickHow =>

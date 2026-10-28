@@ -33,8 +33,7 @@ import 'package:kryfo/widgets/album_grid.dart';
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -197,13 +196,13 @@ void main() {
   final base = DateTime.now().millisecondsSinceEpoch - 3600000;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     final amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),

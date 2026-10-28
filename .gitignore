@@ -53,6 +53,7 @@ fix2.py
 icon-backup-*/
 mobile/*.py
 mobile/android/key.properties
+mobile/linux/out/
 onionfix.py
 patch*.py
 patch_*.py

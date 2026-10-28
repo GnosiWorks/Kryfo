@@ -8106,6 +8106,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
 
   @override
+  String get devUpdateToWrite => 'Hãy cập nhật Kryfo để nhắn tin cho Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Không thể kiểm tra khóa của Marios. Không có gì được gửi đi.';
 
@@ -8169,6 +8172,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9669,6 +9677,87 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get desktopLockTitle => 'Kryfo đang khóa';
+
+  @override
+  String get desktopLockBody => 'Nhập cụm mật khẩu của máy tính này.';
+
+  @override
+  String get desktopLockNewTitle => 'Khóa Kryfo trên máy tính này';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, ảnh, tin nhắn thoại, tệp, danh bạ và khóa của bạn trên máy tính này.';
+
+  @override
+  String get desktopLockHonest =>
+      'Ai sao chép thư mục của Kryfo đều có thể thử cụm mật khẩu trên máy của họ, nhanh đến mức máy cho phép. Bốn từ ngẫu nhiên trở lên sẽ trụ được. Cụm mật khẩu ngắn thì không.';
+
+  @override
+  String get desktopLockForgot =>
+      'Không có cụm mật khẩu thì không tin nhắn, tệp hay khóa nào của bạn ở đây mở được, kể cả chúng tôi.';
+
+  @override
+  String get desktopLockField => 'Cụm mật khẩu';
+
+  @override
+  String get desktopLockRepeat => 'Nhập lại cụm mật khẩu';
+
+  @override
+  String get desktopLockSet => 'Khóa bằng cụm mật khẩu này';
+
+  @override
+  String get desktopLockOpen => 'Mở Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Ít nhất $countString ký tự';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Hai cụm mật khẩu không khớp';
+
+  @override
+  String get desktopLockWrong => 'Đó không phải cụm mật khẩu';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.';
+
+  @override
+  String get desktopTrayQuit => 'Thoát Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo đã mở sẵn trên máy tính này.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Thư mục của Kryfo thuộc về một tài khoản khác trên máy tính này, nên Kryfo sẽ không mở nó.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
   String get modesPickHow =>

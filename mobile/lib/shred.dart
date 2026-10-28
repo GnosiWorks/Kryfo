@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
 
 /// zeros over [path] where its bytes are, then the name goes, also when a
@@ -18,7 +19,8 @@ Future<void> shredFile(String path, {void Function(int length)? probe}) async {
     await _unlink(Link(path));
     return;
   }
-  final f = File(path);
+  // the disk's bytes: on desktop a sealed file is overwritten as it lies
+  final f = rawFiles(() => File(path));
   try {
     // append keeps the length and the blocks; a write mode would truncate
     // and the zeros would land in new blocks

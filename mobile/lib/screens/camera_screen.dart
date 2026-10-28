@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -195,7 +196,7 @@ class _CameraScreenState extends State<CameraScreen>
       _cams = await availableCameras();
       if (_cams.isEmpty) {
         setState(() {
-          _error = l10n.cameraNoCameraOnThis;
+          _error = onDesktop ? l10n.desktopNoCamera : l10n.cameraNoCameraOnThis;
           _denied = false;
           _micOff = false;
         });

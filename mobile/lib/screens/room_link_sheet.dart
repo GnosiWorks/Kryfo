@@ -11,6 +11,8 @@ import '../dlog.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../widgets/motion.dart';
@@ -275,12 +277,13 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                   label: l10n.roomLinkSendToAContact,
                   onTap: () => _toContact(uri),
                 ),
-                _Quiet(
-                  label: l10n.commonShare,
-                  onTap: () => lockState.hold(
-                    () => SharePlus.instance.share(ShareParams(text: uri)),
+                if (canShareOut)
+                  _Quiet(
+                    label: l10n.commonShare,
+                    onTap: () => lockState.hold(
+                      () => SharePlus.instance.share(ShareParams(text: uri)),
+                    ),
                   ),
-                ),
               ],
             ),
           ],

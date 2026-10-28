@@ -8213,6 +8213,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get devWhoChoiceStays => 'Deine Wahl bleibt für diesen Chat bestehen.';
 
   @override
+  String get devUpdateToWrite => 'Aktualisiere Kryfo, um Marios zu schreiben.';
+
+  @override
   String get devKeyCheckFailed =>
       'Der Schlüssel von Marios konnte nicht geprüft werden. Nichts wurde gesendet.';
 
@@ -8275,6 +8278,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Das ist deine eigene Einladung. Teile sie mit jemand anderem, um euch zu verbinden.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id muss Kryfo aktualisieren, bevor ihr euch gegenseitig hinzufügen könnt.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9783,6 +9791,89 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Code scannen';
+
+  @override
+  String get desktopLockTitle => 'Kryfo ist gesperrt';
+
+  @override
+  String get desktopLockBody => 'Gib die Passphrase für diesen Computer ein.';
+
+  @override
+  String get desktopLockNewTitle => 'Kryfo auf diesem Computer sperren';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo fragt bei jedem Start nach dieser Passphrase. Sie sperrt deine Nachrichten, Fotos, Sprachnachrichten, Dateien, Kontakte und Schlüssel auf diesem Computer.';
+
+  @override
+  String get desktopLockHonest =>
+      'Wer den Kryfo-Ordner kopiert, kann auf dem eigenen Computer Passphrasen durchprobieren, so schnell dieser es erlaubt. Vier oder mehr zufällige Wörter halten stand. Eine kurze Passphrase nicht.';
+
+  @override
+  String get desktopLockForgot =>
+      'Ohne die Passphrase lässt sich hier keine deiner Nachrichten, Dateien oder Schlüssel öffnen, auch nicht von uns.';
+
+  @override
+  String get desktopLockField => 'Passphrase';
+
+  @override
+  String get desktopLockRepeat => 'Dieselbe Passphrase noch einmal';
+
+  @override
+  String get desktopLockSet => 'Mit dieser Passphrase sperren';
+
+  @override
+  String get desktopLockOpen => 'Kryfo öffnen';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Mindestens $countString Zeichen';
+  }
+
+  @override
+  String get desktopLockMismatch =>
+      'Die beiden Passphrasen stimmen nicht überein';
+
+  @override
+  String get desktopLockWrong => 'Das ist nicht die Passphrase';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo konnte seine Sperre hier nicht öffnen. Starte es noch einmal.';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo beenden';
+
+  @override
+  String get desktopTrayTip => 'Kryfo läuft und empfängt Nachrichten';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo kann auf diesem Computer noch keine Kamera nutzen. Nimm stattdessen den Link oder den Code.';
+
+  @override
+  String get desktopAlreadyOpen =>
+      'Kryfo ist auf diesem Computer schon geöffnet.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
 
   @override
   String get modesPickHow =>

@@ -10,7 +10,6 @@
 // a box or samsung trailer after the last one kept is cut off. the walk
 // seeks and writes, so a long clip never sits in memory.
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'meta/byte_source.dart';
@@ -20,6 +19,7 @@ import 'meta/meta_reader.dart';
 import 'meta/mp4_tracks.dart';
 import 'meta/sef.dart';
 import 'mp4_clean.dart';
+import 'desktop/desktop_mode.dart' show runIsolated;
 
 /// the containers this walk understands. mkv is a different format.
 bool videoNameNeedsStrip(String name) {
@@ -35,13 +35,13 @@ bool videoNameNeedsStrip(String name) {
 /// null when it is not an mp4 or a size or table cannot be trusted: a
 /// caller drops a null rather than pass on what it could not read.
 Future<bool?> stripMp4Metadata(String path) =>
-    Isolate.run(() => stripMp4Sync(path));
+    runIsolated(() => stripMp4Sync(path));
 
 /// how many things the reader still finds in [path], or null when it cannot
 /// be read through, so an unreadable file never reads as clean. the check a
 /// caller runs after the strip.
 Future<int?> mp4MetadataCount(String path) =>
-    Isolate.run(() => mp4MetadataCountSync(path));
+    runIsolated(() => mp4MetadataCountSync(path));
 
 bool? stripMp4Sync(String path) {
   final raf = File(path).openSync(mode: FileMode.append);

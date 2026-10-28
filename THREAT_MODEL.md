@@ -134,6 +134,31 @@ put you in danger, read all of it.
 
 FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
+## on a computer
+
+the linux app is a test build and runs its own identity for now. on a
+computer there is no keystore, so a passphrase asked at every start locks
+what Kryfo keeps there: the database, photos, voice notes, files, contacts,
+keys and settings are sealed on the disk under it. what follows is not.
+
+- someone who copies Kryfo's folder can try passphrases on their own
+  computer as fast as it allows. a long passphrase holds, a short one does
+  not.
+- tor's own state stays on the disk as tor writes it: which relays it uses
+  as guards and its cached directory. it holds no key and no message.
+- the folder shows its shape: how many files there are, how big each is and
+  when each changed. every install has the same set of names, with or
+  without a decoy or hidden chats, but a used decoy or hidden chats are
+  bigger than empty ones.
+- what is open in memory can reach the disk through swap or hibernation.
+  use encrypted swap or zram, and no hibernation, or turn swap off.
+- someone who can write to the folder can put back an older copy of a file
+  and it opens: an older set of keys and settings, or an older picture under
+  the same name. Kryfo does not notice.
+- screenshots: a computer cannot keep Kryfo's window out of a screenshot.
+- malware running as you while Kryfo is open, or a keylogger, sees what you
+  see and what you type.
+
 ## status
 
 alpha, unaudited, one person. do not rely on it where being wrong would

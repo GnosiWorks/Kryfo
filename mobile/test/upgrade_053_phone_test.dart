@@ -3,8 +3,9 @@
 // phone): two test identities made there for this, each holding a chat with
 // the other, read out of their own backups and stored without the cipher.
 // this version reads both identities as they were, shows the safety number
-// the phone showed, and carries the chat on in both directions, whichever
-// side runs the shim and whichever still runs 0.5.3's library
+// the phone showed, and carries the chat on in both directions with both
+// phones updated. one phone still on 0.5.3's own library against one on
+// this version is tool/peer053
 import 'dart:convert';
 import 'dart:io';
 
@@ -16,9 +17,7 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_session_ls.dart';
 import 'package:kryfo/wire_pad.dart' show unpad;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -42,40 +41,15 @@ Uint8List _hex(String s) => Uint8List.fromList([
 String _hexOf(List<int> b) =>
     b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
 
-// one phone of the two, on the layer a test puts it on
+// one phone of the two
 abstract class _Side {
   Future<String> seal(String peer, String text);
   Future<String> read(String peer, String wire);
 }
 
-class _Old implements _Side {
-  _Old(this.s);
-  final SignalSession s;
-
-  @override
-  Future<String> seal(String peer, String text) => s.encryptTo(peer, text);
-
-  @override
-  Future<String> read(String peer, String wire) async {
-    final w = base64Decode(wire);
-    final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      s.sessionStore,
-      s.preKeyStore,
-      s.signedPreKeyStore,
-      s.identityStore,
-      SignalProtocolAddress(peer, 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
-    return unpad(utf8.decode(plain));
-  }
-}
-
 class _Shim implements _Side {
   _Shim(this.s);
-  final SignalSessionLs s;
+  final SignalSession s;
 
   @override
   Future<String> seal(String peer, String text) => s.encryptTo(peer, text);
@@ -143,20 +117,9 @@ void main() {
     return d;
   }
 
-  Future<_Side> old(String who) async {
-    final k = await keysOf(who);
-    final s = SignalSession();
-    await s.bootstrap(
-      database: await raw(who),
-      xPubBytes: k.pub,
-      xPrivBytes: k.priv,
-    );
-    return _Old(s);
-  }
-
   Future<_Side> onShim(String who) async {
     final k = await keysOf(who);
-    final s = SignalSessionLs(shim!);
+    final s = SignalSession(shim);
     await s.bootstrap(
       database: await raw(who),
       xPubBytes: k.pub,
@@ -203,14 +166,12 @@ void main() {
         final c = await dbOf(them).getContact(me);
         expect(c!['verified'], 1, reason: '$them verified $me');
         expect(c['verified_key'], c['xpub']);
-        // the old library's identity on that private key is the contact's key
-        final s = await old(me) as _Old;
-        expect(
-          _hexOf(s.s.identityKeyPair.getPublicKey().serialize()),
-          '05${c['xpub']}',
-        );
+        // the store's identity on that private key is the contact's key
+        final s = await onShim(me) as _Shim;
+        expect(_hexOf(s.s.identity.public), '05${c['xpub']}');
       }
     },
+    skip: needsShim,
   );
 
   test('the shim derives the same identity keys', () async {
@@ -231,15 +192,12 @@ void main() {
     expect(haloSafetyNumber(_hexOf(b.pub), _hexOf(a.pub)), _expected['safety']);
     // and the key each session runs on is the one the number is made of
     for (final (me, them, k) in [(_a, _b, b), (_b, _a, a)]) {
-      final s = await old(me) as _Old;
-      final rec = await s.s.sessionStore.loadSession(
-        SignalProtocolAddress(them, 1),
-      );
-      final remote = rec.sessionState.getRemoteIdentityKey()!.serialize();
-      expect(_hexOf(remote), '05${_hexOf(k.pub)}', reason: me);
-      expect(rec.sessionState.getSessionVersion(), 3);
+      final s = await onShim(me) as _Shim;
+      final info = (await s.s.sessionInfo(them))!;
+      expect(_hexOf(info.remoteIdentity!), '05${_hexOf(k.pub)}', reason: me);
+      expect(info.version, 3);
     }
-  });
+  }, skip: needsShim);
 
   Future<void> chat(_Side a, _Side b) async {
     for (var i = 0; i < 3; i++) {
@@ -253,21 +211,6 @@ void main() {
     expect(await b.read(_a, a1), 'a again');
     expect(await a.read(_b, await b.seal(_a, 'got both')), 'got both');
   }
-
-  test('the chat goes on with both phones on 0.5.3 library', () async {
-    if (skip()) return;
-    await chat(await old(_a), await old(_b));
-  });
-
-  test('the chat goes on with one phone on the shim', () async {
-    if (skip()) return;
-    await chat(await onShim(_a), await old(_b));
-  }, skip: needsShim);
-
-  test('the chat goes on with the other phone on the shim', () async {
-    if (skip()) return;
-    await chat(await old(_a), await onShim(_b));
-  }, skip: needsShim);
 
   test('the chat goes on with both phones on the shim', () async {
     if (skip()) return;

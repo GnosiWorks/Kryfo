@@ -44,8 +44,7 @@ import 'package:kryfo/widgets/chat_parts.dart' show GrowSwap;
 import 'package:kryfo/widgets/file_reach.dart';
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/wipe.dart' show haloWiping;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve, SignalProtocolAddress;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -83,10 +82,7 @@ class _Io extends ArrivalIo {
   @override
   Future<bool> hasSession(String peer) async =>
       !noSession.contains(peer) ||
-      signalSession.ready &&
-          await signalSession.sessionStore.containsSession(
-            SignalProtocolAddress(peer, 1),
-          );
+      signalSession.ready && await signalSession.sessionStore.contains(peer);
 
   @override
   Future<String> relaySend(String xPub, String cipher) async {
@@ -195,7 +191,7 @@ Future<void> _until(bool Function() done) async {
 
 // someone's card and the x key it is made from, as hex
 Future<({String card, String x})> _keysOf() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final x = pair.publicKey.serialize().sublist(1);
   final them = SignalSession();
   await them.bootstrap(
@@ -305,7 +301,7 @@ void main() {
   late Directory docs;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -722,11 +718,7 @@ void main() {
           greaterThan(DateTime.now().millisecondsSinceEpoch),
         );
         // signal's store outlives the test: the next starts with no session
-        addTearDown(
-          () => signalSession.sessionStore.deleteSession(
-            SignalProtocolAddress('carol', 1),
-          ),
-        );
+        addTearDown(() => signalSession.sessionStore.delete('carol'));
         // carol's keys come in over the relay and the session is made. her
         // card carries the key her x key makes, as a real one does
         final k = await _keysOf();

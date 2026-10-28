@@ -8254,6 +8254,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devWhoChoiceStays => 'يبقى اختيارك مع هذه المحادثة.';
 
   @override
+  String get devUpdateToWrite => 'حدّث Kryfo لتراسل Marios.';
+
+  @override
   String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
 
   @override
@@ -8313,6 +8316,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'يحتاج ⁨$id⁩ إلى تحديث Kryfo قبل أن تتمكنا من إضافة بعضكما.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9816,6 +9824,87 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get desktopLockTitle => 'Kryfo مقفل';
+
+  @override
+  String get desktopLockBody => 'اكتب عبارة المرور الخاصة بهذا الحاسوب.';
+
+  @override
+  String get desktopLockNewTitle => 'اقفل Kryfo على هذا الحاسوب';
+
+  @override
+  String get desktopLockNewBody =>
+      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك وصورك ورسائلك الصوتية وملفاتك وجهات اتصالك ومفاتيحك على هذا الحاسوب.';
+
+  @override
+  String get desktopLockHonest =>
+      'من ينسخ مجلد Kryfo يستطيع تجربة عبارات المرور على حاسوبه بأقصى سرعة يسمح بها. أربع كلمات عشوائية أو أكثر تصمد. أما العبارة القصيرة فلا.';
+
+  @override
+  String get desktopLockForgot =>
+      'من دون عبارة المرور لا يمكن فتح أي من رسائلك أو ملفاتك أو مفاتيحك هنا، ولا حتى من قبلنا.';
+
+  @override
+  String get desktopLockField => 'عبارة المرور';
+
+  @override
+  String get desktopLockRepeat => 'عبارة المرور نفسها مرة أخرى';
+
+  @override
+  String get desktopLockSet => 'اقفل بهذه العبارة';
+
+  @override
+  String get desktopLockOpen => 'افتح Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString حرفًا على الأقل';
+  }
+
+  @override
+  String get desktopLockMismatch => 'عبارتا المرور غير متطابقتين';
+
+  @override
+  String get desktopLockWrong => 'هذه ليست عبارة المرور';
+
+  @override
+  String get desktopLockFailed =>
+      'تعذّر على Kryfo فتح قفله هنا. جرّب تشغيله مرة أخرى.';
+
+  @override
+  String get desktopTrayQuit => 'أغلق Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo يعمل ويستقبل الرسائل';
+
+  @override
+  String get desktopNoCamera =>
+      'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo مفتوح بالفعل على هذا الحاسوب.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'مجلد Kryfo يخص حسابًا آخر على هذا الحاسوب، لذا لن يفتحه Kryfo.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'صنع هذا القفل إصدار آخر من Kryfo لا يستطيع هذا الإصدار قراءته.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
 
   @override
   String get modesPickHow =>

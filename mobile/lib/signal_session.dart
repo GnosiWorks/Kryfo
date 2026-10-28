@@ -1,23 +1,47 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// libsignal session bootstrap. derives identity from existing X25519 keys,
-// generates signed prekey + one-time prekeys on first run.
+// signal sessions over the libsignal shim (native/kryfo_signal). the same
+// tables, record bytes and restore marks libsignal_protocol_dart kept up to
+// 0.5.x, so a store a 0.5.x phone wrote goes on here. new sessions are
+// pqxdh with the pq ratchet only: a bundle without a kyber prekey and a
+// pre-pq opener are refused. sessions held from before go on as they are
 
 import 'dart:convert';
-import 'dart:math' show min;
+import 'dart:math' show Random, min;
+import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:crypto/crypto.dart' show sha256;
+
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'signal_stores.dart';
+
 import 'dlog.dart';
+import 'signal_ffi/kryfo_signal.dart';
+import 'signal_stores.dart';
 import 'wire_pad.dart';
 
+/// a first contact without the post-quantum prekey, or a session that
+/// would not be pqxdh: never built here
+class ClassicRefused implements Exception {
+  const ClassicRefused(this.why);
+  final String why;
+  @override
+  String toString() => 'ClassicRefused: $why';
+}
+
+/// where a first contact's opener is opened before it is filed under a name
+const kFirstContactSlot = '_pending_back_pair_';
+
 class SignalSession {
-  late HaloIdentityKeyStore identityStore;
-  late HaloPreKeyStore preKeyStore;
-  late HaloSessionStore sessionStore;
-  late HaloSignedPreKeyStore signedPreKeyStore;
-  late IdentityKeyPair identityKeyPair;
+  SignalSession([KryfoSignal? lib]) : _lib = lib;
+
+  KryfoSignal? _lib;
+  // the platform's library, opened when the store is first used
+  KryfoSignal get lib => _lib ??= KryfoSignal.shared;
+  late LsIdentityStore identityStore;
+  late LsPreKeyStore preKeyStore;
+  late LsSessionStore sessionStore;
+  late LsSignedPreKeyStore signedPreKeyStore;
+  late LsKyberPreKeyStore kyberPreKeyStore;
+  late LsIdentity identity;
   late int registrationId;
   bool _ready = false;
   bool get ready => _ready;
@@ -25,20 +49,18 @@ class SignalSession {
   String _prefix = '';
   // the base keys of the sessions a restore brought back. the phone the
   // file was made on went on sealing on them after it, so the peer has
-  // spent their next message keys already: a seal on one repeats a number
-  // the peer drops as a duplicate. none is sealed on again (see encryptTo)
+  // spent their next message keys already: none is sealed on again (see
+  // encryptTo). when each one's peer was last asked to start afresh, and
+  // how many times, by the same base key: [at, n]. and when the file was
+  // made, by its phone's clock
   Set<String> _restored = const {};
-  // when the person on each of those was last asked to start afresh, and
-  // how many times, by the same base key: [at, n]
   Map<String, List<int>> _asks = {};
-  // when the file they came back from was made, by its phone's clock
   int? _restoredFrom;
 
-  /// a restore brought sessions back into this store
   bool get hasRestored => _restored.isNotEmpty;
-
-  /// when the backup those sessions came from was made, while any is held
   int? get restoredFrom => hasRestored ? _restoredFrom : null;
+
+  int _now() => DateTime.now().millisecondsSinceEpoch;
 
   Future<void> bootstrap({
     required Database database,
@@ -58,69 +80,61 @@ class SignalSession {
       restoredFrom: restoredFrom,
     );
 
-    final spkRows = await database.query('${prefix}signed_prekeys', limit: 1);
-    SignedPreKeyRecord? spk;
-    if (spkRows.isNotEmpty) {
-      spk = SignedPreKeyRecord.fromSerialized(
-        spkRows.first['record'] as Uint8List,
-      );
-      final ok = Curve.verifySignature(
-        identityKeyPair.getPublicKey().publicKey,
-        spk.getKeyPair().publicKey.serialize(),
-        spk.signature,
-      );
-      dlog('signal: existing spk self-verify = $ok');
-      if (!ok) {
-        await signedPreKeyStore.removeSignedPreKey(spk.id);
-        spk = null;
+    // a signed prekey the old library made reads here as it is
+    final spk = await signedPreKeyStore.load(1);
+    var spkOk = false;
+    if (spk != null) {
+      try {
+        final p = lib.preKeyPublic(kLsSigned, spk);
+        spkOk = lib.verify(identity.public, p.public, p.signature);
+      } on LsError catch (e) {
+        dlog('signal: a signed prekey that does not read ($e)');
       }
+      dlog('signal: existing spk self-verify = $spkOk');
+      if (!spkOk) await signedPreKeyStore.remove(1);
     }
-    if (spk == null) {
-      final freshBytes = await compute(
-        _genSignedPreKeyTask,
-        identityKeyPair.serialize(),
-      );
-      final fresh = SignedPreKeyRecord.fromSerialized(freshBytes);
-      await signedPreKeyStore.storeSignedPreKey(fresh.id, fresh);
-      final ok = Curve.verifySignature(
-        identityKeyPair.getPublicKey().publicKey,
-        fresh.getKeyPair().publicKey.serialize(),
-        fresh.signature,
-      );
-      dlog('signal: generated signed prekey id=${fresh.id} self-verify = $ok');
+    if (!spkOk) {
+      final fresh = lib.signedPreKey(identity, 1, _now());
+      await signedPreKeyStore.store(1, fresh.record);
+      dlog('signal: generated signed prekey id=1');
     }
 
-    // keep prekeys 0-9 topped up by the ids present, not by count: once one
-    // is consumed a count misses the gap, and a first message finds no key
-    final pkRows = await database.query('${prefix}prekeys', columns: ['id']);
-    final have = pkRows.map((r) => r['id'] as int).toSet();
-    final missing = [
-      for (var i = 0; i < 10; i++)
-        if (!have.contains(i)) i,
-    ];
-    if (missing.isNotEmpty) {
-      final blobs = await compute(_genPreKeysTask, missing);
-      for (final blob in blobs) {
-        final k = PreKeyRecord.fromBuffer(blob);
-        await preKeyStore.storePreKey(k.id, k);
+    // prekeys 0-9 topped up by the ids present, and the invite's own
+    final have = (await preKeyStore.ids()).toSet();
+    for (final id in [for (var i = 0; i < 10; i++) i, invitePreKeyId]) {
+      if (have.contains(id)) continue;
+      await preKeyStore.store(id, lib.preKey(id).record);
+    }
+
+    // the invite's kyber prekey: a last resort key, kept like the invite's
+    // ec prekey, and made again when it no longer holds under this identity
+    final k = await kyberPreKeyStore.load(kInviteKyberId);
+    var kOk = false;
+    if (k != null) {
+      try {
+        final p = lib.preKeyPublic(kLsKyber, k);
+        kOk = lib.verify(identity.public, p.public, p.signature);
+      } on LsError catch (e) {
+        dlog('signal: a kyber prekey that does not read ($e)');
       }
-      dlog('signal: filled prekey ids=$missing');
     }
-    // the invite's own prekey, made once and kept: see invitePreKeyId
-    if (!have.contains(invitePreKeyId)) {
-      final blob = (await compute(_genPreKeysTask, [invitePreKeyId])).first;
-      final k = PreKeyRecord.fromBuffer(blob);
-      await preKeyStore.storePreKey(k.id, k);
-      dlog('signal: made the invite prekey');
-    }
+    if (!kOk) await _newInviteKyber();
 
     _ready = true;
-    dlog('signal: bootstrapped (regId=$registrationId)');
+    dlog('signal: bootstrapped on the shim (regId=$registrationId)');
   }
 
-  // a new identity in place of the one this store was opened with. the
-  // signed prekey is signed with the old key and the invite's prekey went
-  // out with it, so both are made again for the new one
+  Future<void> _newInviteKyber() async {
+    final fresh = lib.kyberPreKey(identity, kInviteKyberId, _now());
+    await kyberPreKeyStore.remove(kInviteKyberId);
+    await kyberPreKeyStore.store(
+      kInviteKyberId,
+      fresh.record,
+      lastResort: true,
+    );
+    dlog('signal: made the invite kyber prekey');
+  }
+
   Future<void> rekey({
     required Database database,
     required Uint8List xPubBytes,
@@ -134,6 +148,9 @@ class SignalSession {
       where: 'id = ?',
       whereArgs: [invitePreKeyId],
     );
+    await database.delete('${prefix}kyber_prekeys');
+    await database.delete('${prefix}kyber_used');
+    await database.delete('${prefix}opener_reads');
     await bootstrap(
       database: database,
       xPubBytes: xPubBytes,
@@ -142,9 +159,6 @@ class SignalSession {
     );
   }
 
-  // an identity that only ever opens sessions: its key pair and a
-  // registration id of its own. nobody starts one with it, so it hands out
-  // no prekeys and makes none
   Future<void> bootstrapInitiator({
     required Database database,
     required Uint8List xPubBytes,
@@ -156,8 +170,6 @@ class SignalSession {
     _ready = true;
   }
 
-  // [restored]: the first start after a restore. its sessions are marked
-  // before any store is up, so nothing can seal on one before that
   Future<void> _open(
     Database database,
     Uint8List xPubBytes,
@@ -166,17 +178,12 @@ class SignalSession {
     bool restored = false,
     int? restoredFrom,
   }) async {
-    // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
-    final clamped = Uint8List.fromList(xPrivBytes);
-    clamped[0] &= 0xF8;
-    clamped[31] &= 0x7F;
-    clamped[31] |= 0x40;
-    final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
-    final priv = Curve.decodePrivatePoint(clamped);
-    // do not zero `clamped` here: decodePrivatePoint keeps a reference to this
-    // buffer, and wiping it corrupts every signature this identity makes
-    identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
-
+    // libsignal clamps the scalar itself, as the old layer did by hand
+    identity = lib.identityFromPrivate(xPrivBytes);
+    final want = [0x05, ...xPubBytes];
+    if (!_eq(identity.public, want)) {
+      throw StateError('signal: the x25519 pair does not match');
+    }
     registrationId = await _loadOrGenRegId(database, prefix);
     _db = database;
     _prefix = prefix;
@@ -185,26 +192,49 @@ class SignalSession {
     _restoredFrom = await _loadFrom();
     if (restored) await markRestored(from: restoredFrom);
 
-    identityStore = HaloIdentityKeyStore(
+    identityStore = LsIdentityStore(
       database,
-      identityKeyPair,
+      identity,
       registrationId,
       prefix: prefix,
     );
-    preKeyStore = HaloPreKeyStore(database, prefix: prefix);
-    sessionStore = HaloSessionStore(database, prefix: prefix);
-    signedPreKeyStore = HaloSignedPreKeyStore(database, prefix: prefix);
+    preKeyStore = LsPreKeyStore(database, prefix: prefix);
+    sessionStore = LsSessionStore(database, prefix: prefix);
+    signedPreKeyStore = LsSignedPreKeyStore(database, prefix: prefix);
+    kyberPreKeyStore = LsKyberPreKeyStore(database, prefix: prefix);
   }
 
-  // one session step at a time per peer, seals and opens alike. each loads
-  // the record, awaits the identity store, then writes it back, so two
-  // that overlap lose one of the steps and the next seal repeats a number
   final Map<String, Future<void>> _steps = {};
+
+  // openers read again in the first-contact slot, not marked read until
+  // filed: each read's fingerprint (and its kyber id) by the record it put
+  // in the slot, so two at once never stand for each other
+  final Map<String, (int, Uint8List)> _slotReads = {};
+
+  static String _recordKey(Uint8List record) =>
+      base64Encode(sha256.convert(record).bytes);
+
+  // peers a frame waits on: too big for an opener, it goes once they answer
+  final Set<String> _awaiting = {};
+
+  // the session each peer had a post-quantum opener sealed on, by base key
+  final Map<String, String> _openerOut = {};
+
+  /// told when a frame waits for [peer]'s answer on a session nothing has
+  /// gone out on yet: a small opener has to go first
+  void Function(String peer)? onStarterNeeded;
+
+  /// told when an opener from [peer] built a new session here under their
+  /// own name: a rebuilt or restarted one, which an answer settles for them
+  void Function(String peer)? onNewSession;
+
+  /// told when [peer]'s first message opened on a session a frame was
+  /// waiting on: what waited goes now
+  void Function(String peer)? onAnswered;
 
   /// [job] run after every earlier one queued for [peer] has ended
   Future<T> serial<T>(String peer, Future<T> Function() job) {
     final out = (_steps[peer] ?? Future<void>.value()).then((_) => job());
-    // the caller gets any error from out; the chain only keeps the order
     final tail = out.then<void>((_) {}, onError: (_) {});
     _steps[peer] = tail;
     tail.whenComplete(() {
@@ -213,15 +243,125 @@ class SignalSession {
     return out;
   }
 
-  // [plain] sealed to [peer] in this store, as the wire carries it: the
-  // message type byte, then the message, in base64. a session a restore
-  // brought back is not sealed on: one is started afresh from the card
-  // [afresh] hands over, the old one archived so what the peer sealed on it
-  // still opens. with no card the seal fails with StartingAfresh
+  /// the card this store hands out, base64 json as before, now with the
+  /// kyber prekey. an old app reading it finds what it knows and builds a
+  /// classic session that this side refuses: both need the shim
+  Future<String> makeBundleB64() async {
+    final spk = lib.preKeyPublic(kLsSigned, (await signedPreKeyStore.load(1))!);
+    final pk = lib.preKeyPublic(
+      kLsOneTime,
+      (await preKeyStore.load(invitePreKeyId))!,
+    );
+    final k = lib.preKeyPublic(
+      kLsKyber,
+      (await kyberPreKeyStore.load(kInviteKyberId))!,
+    );
+    return base64Encode(
+      utf8.encode(
+        jsonEncode({
+          'registrationId': registrationId,
+          'deviceId': 1,
+          'preKeyId': pk.id,
+          'preKeyPublic': base64Encode(pk.public),
+          'signedPreKeyId': spk.id,
+          'signedPreKeyPublic': base64Encode(spk.public),
+          'signedPreKeySignature': base64Encode(spk.signature),
+          'kyberPreKeyId': k.id,
+          'kyberPreKeyPublic': base64Encode(k.public),
+          'kyberPreKeySignature': base64Encode(k.signature),
+          'identityKey': base64Encode(identity.public),
+        }),
+      ),
+    );
+  }
+
+  /// a session with [peer] built from their card, in front of any held.
+  /// the guard: only a pqxdh session with the pq ratchet is ever stored
+  Future<void> processBundle(String peer, LsBundle bundle) =>
+      serial(peer, () => _build(peer, bundle));
+
+  Future<void> _build(String peer, LsBundle bundle) async {
+    final (record, their) = lib.sessionFromBundle(
+      identity,
+      registrationId,
+      await sessionStore.load(peer),
+      bundle,
+      _now(),
+      pinned: identityStore.pinnedFor(peer),
+    );
+    _requirePq(record);
+    await identityStore.saw(peer, their);
+    await sessionStore.store(peer, record);
+  }
+
+  void _requirePq(Uint8List record) {
+    final info = lib.sessionInfo(record);
+    if (info.version < 4 || !info.pq) {
+      throw ClassicRefused('a new session that is not pqxdh with spqr');
+    }
+  }
+
+  Future<bool> hasSession(String peer) => sessionStore.contains(peer);
+
+  /// a session with [peer] that they have answered on: a seal on it is a
+  /// plain whisper message, never an opener. a trial seal, kept nowhere
+  Future<bool> settled(String peer) async {
+    final record = await sessionStore.load(peer);
+    if (record == null) return false;
+    try {
+      final m = lib.encrypt(
+        identity,
+        registrationId,
+        record,
+        const [0],
+        _now(),
+        pinned: identityStore.pinnedFor(peer),
+      );
+      return m.type == kLsWhisper;
+    } on LsError {
+      return false;
+    }
+  }
+
+  /// the identity [peer]'s current session runs on, null with none
+  Future<Uint8List?> sessionIdentity(String peer) async {
+    final r = await sessionStore.load(peer);
+    if (r == null) return null;
+    try {
+      return lib.sessionInfo(r).remoteIdentity;
+    } on LsError {
+      return null;
+    }
+  }
+
+  /// a session with [peer] built from [bundle] alone, in place of whatever
+  /// is held: a held one goes only once the new one is built
+  Future<void> rebuild(String peer, LsBundle bundle) => serial(peer, () async {
+    final (record, their) = lib.sessionFromBundle(
+      identity,
+      registrationId,
+      null,
+      bundle,
+      _now(),
+      pinned: identityStore.pinnedFor(peer),
+    );
+    _requirePq(record);
+    await identityStore.saw(peer, their);
+    await sessionStore.store(peer, record);
+  });
+
+  Future<LsSessionInfo?> sessionInfo(String peer) async {
+    final r = await sessionStore.load(peer);
+    return r == null ? null : lib.sessionInfo(r);
+  }
+
+  /// [plain] sealed to [peer], as the wire carries it: the type byte, then
+  /// the message, in base64. a session a restore brought back is not
+  /// sealed on: one is started afresh from the card [afresh] hands over
   Future<String> encryptTo(
     String peer,
     String plain, {
-    Future<PreKeyBundle?> Function()? afresh,
+    Future<LsBundle?> Function()? afresh,
     Future<bool> Function()? held,
     void Function()? keyMoved,
     // only on a session that is past its opener: never one to start one
@@ -230,9 +370,7 @@ class SignalSession {
     // asked in the lane, right before the seal: a key that came in a frame
     // opened ahead of this one is the key this one would go to
     if (held != null && await held()) throw KeyHeld(peer);
-    if (onlySettled && (await sealsOnRestored(peer) || !await settled(peer))) {
-      throw NotSettled(peer);
-    }
+    if (onlySettled && await sealsOnRestored(peer)) throw NotSettled(peer);
     if (await sealsOnRestored(peer)) {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
@@ -243,25 +381,331 @@ class SignalSession {
       // the card may name another key than the one checked above
       if (held != null && await held()) throw KeyHeld(peer);
     }
-    return _seal(peer, plain);
+    return _seal(peer, plain, onlySettled: onlySettled);
   });
 
-  /// a session with [peer] built from [card], in their lane
-  Future<void> processBundle(String peer, PreKeyBundle card) =>
-      serial(peer, () => _build(peer, card));
+  // [onlySettled]: a seal that comes out as an opener is thrown away, and
+  // nothing of it is stored
+  Future<String> _seal(
+    String peer,
+    String plain, {
+    bool onlySettled = false,
+  }) async {
+    final record = await sessionStore.load(peer);
+    if (record == null) {
+      if (onlySettled) throw NotSettled(peer);
+      throw const LsError(LsError.noSession);
+    }
+    final pinned = identityStore.pinnedFor(peer);
+    // a trial seal first, kept nowhere: whether this one goes out as an
+    // opener, which is filled to its own size
+    final opener =
+        lib
+            .encrypt(
+              identity,
+              registrationId,
+              record,
+              const [0],
+              _now(),
+              pinned: pinned,
+            )
+            .type ==
+        kLsPreKey;
+    if (onlySettled && opener) throw NotSettled(peer);
+    final String padded;
+    if (opener && lib.sessionInfo(record).version >= 4) {
+      // a post-quantum opener carries the kyber ciphertext: filled smaller,
+      // so it lands where a plain message does. one too big for that waits
+      // for their first answer, then goes plain
+      final o = padSealOpener(plain);
+      final base = _baseOf(lib.sessionInfo(record).current);
+      if (o == null) {
+        _awaiting.add(peer);
+        // nothing has gone on this session yet: a small opener goes first,
+        // or nobody hears of it and no answer can come
+        if (base != null && _openerOut[peer] != base) {
+          onStarterNeeded?.call(peer);
+        }
+        throw WaitsForAnswer(peer);
+      }
+      if (base != null) _openerOut[peer] = base;
+      padded = o;
+    } else {
+      padded = padSeal(plain);
+    }
+    final body = Uint8List.fromList(utf8.encode(padded));
+    final LsSealed m;
+    try {
+      m = lib.encrypt(
+        identity,
+        registrationId,
+        record,
+        body,
+        _now(),
+        pinned: pinned,
+      );
+    } finally {
+      body.fillRange(0, body.length, 0);
+    }
+    final their = lib.sessionInfo(m.record).remoteIdentity;
+    if (their != null) await identityStore.saw(peer, their);
+    await sessionStore.store(peer, m.record);
+    return base64Encode([m.type, ...m.message]);
+  }
 
-  // the one place libsignal_protocol_dart builds a session from a card;
-  // test/signal_ls/classic_rule_test.dart keeps it the only one
-  Future<void> _build(String peer, PreKeyBundle card) => SessionBuilder(
-    sessionStore,
-    preKeyStore,
-    signedPreKeyStore,
-    identityStore,
-    SignalProtocolAddress(peer, 1),
-  ).processPreKeyBundle(card);
+  /// [body] of [type] from [peer] opened. [check] sees the plaintext before
+  /// anything is stored; one that throws leaves the store as it was, the
+  /// prekeys unspent. nothing about the peer is written until the message
+  /// has opened, so there is nothing to put back after one that does not
+  /// [moved] is told when the key it opened under replaced another held
+  /// for [peer]
+  Future<Uint8List> open(
+    String peer,
+    int type,
+    Uint8List body, {
+    void Function(Uint8List plain)? check,
+    void Function()? moved,
+  }) => serial(peer, () async {
+    final held = await sessionStore.load(peer);
+    final pinned = identityStore.pinnedFor(peer);
+    if (type != kLsPreKey) {
+      if (held == null) throw const LsError(LsError.noSession);
+      final o = lib.decryptSignal(
+        identity,
+        registrationId,
+        held,
+        body,
+        pinned: pinned,
+      );
+      check?.call(o.plaintext);
+      if (await identityStore.saw(peer, o.identityKey)) moved?.call();
+      await sessionStore.store(peer, o.record);
+      _answered(peer);
+      return o.plaintext;
+    }
+    final info = lib.preKeyMessageInfo(body);
+    final known =
+        held != null && lib.sessionInfo(held).holds(info.version, info.baseKey);
+    final kyberId = info.kyberPreKeyId;
+    // one opener opens once, on whichever path it comes back
+    // every opener read strictly first, the classic ones too
+    final whole = _fingerprint(info, body);
+    final print = kyberId == null ? null : whole;
+    if (print != null && await kyberPreKeyStore.wasRead(kyberId!, print)) {
+      throw const LsError(LsError.duplicate);
+    }
+    if (!known &&
+        kyberId != null &&
+        await kyberPreKeyStore.wasUsed(kyberId, info.baseKey)) {
+      // another opener of a session this store built: read only for the
+      // name holding it, or in the first-contact slot (filed there and
+      // then only under that name, see keepOpenedSession)
+      final holder = await _holder(info.version, info.baseKey);
+      if (holder == null || (peer != holder.$1 && peer != kFirstContactSlot)) {
+        throw const LsError(LsError.duplicate);
+      }
+      return _openerAgain(
+        peer,
+        info,
+        print!,
+        body,
+        pinned,
+        check,
+        holder.$2,
+        keep: peer == kFirstContactSlot,
+      );
+    }
+    final pk = info.preKeyId;
+    final LsOpened o;
+    try {
+      o = lib.decryptPreKey(
+        identity,
+        registrationId,
+        held,
+        body,
+        preKey: known || pk == null ? null : await preKeyStore.load(pk),
+        signedPreKey: known
+            ? null
+            : await signedPreKeyStore.load(info.signedPreKeyId),
+        kyberPreKey: known || kyberId == null
+            ? null
+            : await kyberPreKeyStore.load(kyberId),
+        pinned: pinned,
+      );
+    } on LsError catch (e) {
+      if (!known || print == null || e.code != LsError.message) rethrow;
+      // the state it names is held here, the chain it was sealed on gone
+      // from the record (libsignal keeps five). never read before: the
+      // fingerprint says so
+      return _openerAgain(
+        peer,
+        info,
+        print,
+        body,
+        pinned,
+        check,
+        await identityStore.getIdentity(peer) ??
+            lib.sessionInfo(held).remoteIdentity,
+      );
+    }
+    if (!known) _requirePq(o.record);
+    check?.call(o.plaintext);
+    var changed = false;
+    // the record, the key it runs on and every key it spent, in one write
+    await _db.transaction((txn) async {
+      final ids = LsIdentityStore(
+        txn,
+        identity,
+        registrationId,
+        prefix: _prefix,
+      );
+      final kyber = LsKyberPreKeyStore(txn, prefix: _prefix);
+      changed = await ids.saw(peer, o.identityKey);
+      await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+      final usedPk = o.usedPreKey;
+      if (usedPk != null) {
+        await LsPreKeyStore(txn, prefix: _prefix).remove(usedPk);
+      }
+      final usedK = o.usedKyberPreKey;
+      if (usedK != null) {
+        await kyber.markUsed(usedK, info.signedPreKeyId, info.baseKey);
+      }
+      if (print != null) await kyber.markRead(kyberId!, print);
+    });
+    if (changed) moved?.call();
+    _answered(peer);
+    if (!known && held != null && peer != kFirstContactSlot) {
+      onNewSession?.call(peer);
+    }
+    return o.plaintext;
+  });
 
-  /// what a prekey open may change of [peer] before it is known to be
-  /// theirs: the key held, and their contact's marks
+  void _answered(String peer) {
+    if (_awaiting.remove(peer)) onAnswered?.call(peer);
+  }
+
+  // what an opener is, by what its mac and its keys cover: the base key and
+  // the message inside it. the fields around them (registration id, prekey
+  // ids) are not authenticated, so a copy with them changed is the same one
+  Uint8List _fingerprint(LsPreKeyMessageInfo info, Uint8List body) {
+    final outer = strictOpener(body);
+    // the same keys libsignal read, or the two reads differ
+    if (!_eq(outer.baseKey, info.baseKey) ||
+        !_eq(outer.identity, info.identityKey)) {
+      throw const LsError(LsError.message);
+    }
+    return Uint8List.fromList(
+      sha256.convert([...outer.baseKey, ...outer.message]).bytes,
+    );
+  }
+
+  // an opener never read before, of a session held here, read on its own
+  // from the keys it names: nothing of its state is kept outside the
+  // first-contact slot, and no key is spent. its fingerprint is marked, so
+  // it opens once. [owner] is the identity the session holding it runs on:
+  // the opener must be on the same one
+  Future<Uint8List> _openerAgain(
+    String peer,
+    LsPreKeyMessageInfo info,
+    Uint8List print,
+    Uint8List body,
+    Uint8List? pinned,
+    void Function(Uint8List plain)? check,
+    Uint8List? owner, {
+    bool keep = false,
+  }) async {
+    final pk = info.preKeyId;
+    final kyberId = info.kyberPreKeyId!;
+    final spk = await signedPreKeyStore.load(info.signedPreKeyId);
+    final kyber = await kyberPreKeyStore.load(kyberId);
+    if (spk == null || kyber == null) throw const LsError(LsError.noPreKey);
+    final o = lib.decryptPreKey(
+      identity,
+      registrationId,
+      null,
+      body,
+      preKey: pk == null ? null : await preKeyStore.load(pk),
+      signedPreKey: spk,
+      kyberPreKey: kyber,
+      pinned: pinned,
+    );
+    _requirePq(o.record);
+    if (owner == null || !_eq(owner, o.identityKey)) {
+      throw const LsError(LsError.untrusted);
+    }
+    check?.call(o.plaintext);
+    await _db.transaction((txn) async {
+      if (keep) {
+        await LsIdentityStore(
+          txn,
+          identity,
+          registrationId,
+          prefix: _prefix,
+        ).saw(peer, o.identityKey);
+        await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+        // marked read once it is filed under the name holding it
+        // (keepOpenedSession): one turned away there can come again
+        _slotReads[_recordKey(o.record)] = (kyberId, print);
+        while (_slotReads.length > 64) {
+          _slotReads.remove(_slotReads.keys.first);
+        }
+      } else {
+        await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
+      }
+    });
+    dlog('signal: an opener of a held session read on its own');
+    return o.plaintext;
+  }
+
+  // the name holding a state of [version] on [baseKey], and the identity
+  // its session runs on. the first-contact slot holds nothing for this
+  Future<(String, Uint8List?)?> _holder(int version, List<int> baseKey) async {
+    for (final (name, r) in await sessionStore.all()) {
+      if (name == kFirstContactSlot) continue;
+      try {
+        final info = lib.sessionInfo(r);
+        if (!info.holds(version, baseKey)) continue;
+        return (
+          name,
+          await identityStore.getIdentity(name) ?? info.remoteIdentity,
+        );
+      } on LsError {
+        // a record that does not read holds nothing
+      }
+    }
+    return null;
+  }
+
+  /// an opener's session filed for [peer]: one held already is kept as it
+  /// runs; a new one goes in front of it, the states before it kept behind
+  /// a state another name holds is never filed under [peer] as well: that
+  /// throws StateError, and nothing is written
+  Future<void> keepOpenedSession(String peer, Uint8List record) =>
+      serial<void>(peer, () async {
+        final cur0 = lib.sessionInfo(record).current;
+        if (cur0 != null) {
+          final h = await _holder(cur0.version, cur0.baseKey);
+          if (h != null && h.$1 != peer) {
+            throw StateError('signal: that session is held under another name');
+          }
+        }
+        final held = await sessionStore.load(peer);
+        if (held == null) {
+          await sessionStore.store(peer, record);
+          return;
+        }
+        final cur = lib.sessionInfo(record).current;
+        if (cur != null &&
+            lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
+          // a slot re-read filed where its session is: read now, for good
+          final r = _slotReads.remove(_recordKey(record));
+          if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
+          dlog('back-pair: an opener held already, the session kept');
+          return;
+        }
+        await sessionStore.store(peer, lib.sessionPromote(held, record));
+      });
+
   Future<IdentityMarks> marksOf(String peer) async {
     final k = await _db.query(
       '${_prefix}peer_identities',
@@ -284,7 +728,6 @@ class SignalSession {
     );
   }
 
-  /// [m] back in place, after an open that did not go through
   Future<void> restoreMarks(String peer, IdentityMarks m) async {
     final key = m.key;
     if (key == null) {
@@ -308,33 +751,17 @@ class SignalSession {
     );
   }
 
-  /// a session with [peer] that they have answered on: a seal on it is a
-  /// plain whisper message, never an opener
-  Future<bool> settled(String peer) async {
-    final addr = SignalProtocolAddress(peer, 1);
-    if (!await sessionStore.containsSession(addr)) return false;
-    final record = await sessionStore.loadSession(addr);
-    return !record.sessionState.hasUnacknowledgedPreKeyMessage();
-  }
-
-  /// whether the session a seal to [peer] would use came back with a restore
   Future<bool> sealsOnRestored(String peer) async =>
       await _restoredBase(peer) != null;
 
-  // the base key of [peer]'s session when it came back with a restore
   Future<String?> _restoredBase(String peer) async {
     if (_restored.isEmpty) return null;
-    final addr = SignalProtocolAddress(peer, 1);
-    if (!await sessionStore.containsSession(addr)) return null;
-    final record = await sessionStore.loadSession(addr);
-    final base = _baseOf(record.sessionState);
-    return _restored.contains(base) ? base : null;
+    final record = await sessionStore.load(peer);
+    if (record == null) return null;
+    final base = _baseOf(lib.sessionInfo(record).current);
+    return base != null && _restored.contains(base) ? base : null;
   }
 
-  /// [peer] holds a session that came back with a restore and is due an
-  /// ask to start afresh: never asked, or the wait since the last ask is
-  /// over. the wait grows to a week for someone who never answers
-  /// (askWait)
   Future<bool> askDue(String peer, int now) async {
     final at = await askDueAt(peer);
     return at != null && now >= at;
@@ -354,8 +781,6 @@ class SignalSession {
     ),
   };
 
-  /// when [peer] is next due an ask to start afresh, 0 when never asked.
-  /// null when no session of theirs came back with a restore
   Future<int?> askDueAt(String peer) async {
     final base = await _restoredBase(peer);
     if (base == null) return null;
@@ -364,8 +789,6 @@ class SignalSession {
     return a[0] + askWait(a[1]).inMilliseconds;
   }
 
-  /// [peer] was asked to start afresh at [now], written down so a start
-  /// after this one does not ask again before the wait is over
   Future<void> noteAsked(String peer, int now) async {
     final base = await _restoredBase(peer);
     if (base == null) return;
@@ -376,22 +799,16 @@ class SignalSession {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// a restore's marks go once no session a seal would use came back with
-  /// it. the sessions of anyone [leaveOut] names are never asked to start
-  /// afresh, and do not hold them. true when they went, or there were none
   Future<bool> dropRestoredWhenDone({
     bool Function(String peer)? leaveOut,
   }) async {
     if (_restored.isEmpty) return true;
-    for (final r in await _db.query(
-      '${_prefix}sessions',
-      columns: ['address', 'record'],
-    )) {
-      if (leaveOut?.call(r['address'] as String) ?? false) continue;
+    for (final (peer, record) in await sessionStore.all()) {
+      if (leaveOut?.call(peer) ?? false) continue;
       try {
-        final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
-        if (_restored.contains(_baseOf(record.sessionState))) return false;
-      } catch (_) {
+        final base = _baseOf(lib.sessionInfo(record).current);
+        if (base != null && _restored.contains(base)) return false;
+      } on LsError {
         // one that does not read is sealed on by no one
       }
     }
@@ -407,23 +824,20 @@ class SignalSession {
     return true;
   }
 
-  /// every session held now came back with a restore: written down with
-  /// the sessions, so it holds across starts. an earlier restore's list
-  /// goes, its sessions are in this one's. [from] is when the file was made
   Future<void> markRestored({int? from}) async {
     final keys = <String>{};
-    for (final r in await _db.query(
-      '${_prefix}sessions',
-      columns: ['record'],
-    )) {
+    for (final (_, record) in await LsSessionStore(
+      _db,
+      prefix: _prefix,
+    ).all()) {
       try {
-        final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
-        keys.add(_baseOf(record.sessionState));
-        for (final s in record.previousSessionStates) {
-          keys.add(_baseOf(s));
+        final info = lib.sessionInfo(record);
+        for (final s in [?info.current, ...info.archived]) {
+          final b = _baseOf(s);
+          if (b != null) keys.add(b);
         }
-      } catch (e) {
-        dlog('signal: a session not read (${e.runtimeType})');
+      } on LsError catch (e) {
+        dlog('signal: a session not read ($e)');
       }
     }
     await _db.insert('${_prefix}signal_meta', {
@@ -491,29 +905,12 @@ class SignalSession {
     }
   }
 
-  Future<String> _seal(String peer, String plain) async {
-    final cipher = SessionCipher(
-      sessionStore,
-      preKeyStore,
-      signedPreKeyStore,
-      identityStore,
-      SignalProtocolAddress(peer, 1),
-    );
-    // filled out before the seal, so the filler is sealed with the rest
-    final msg = await cipher.encrypt(
-      Uint8List.fromList(utf8.encode(padSeal(plain))),
-    );
-    return base64Encode([msg.getType(), ...msg.serialize()]);
-  }
-
-  // a new invite prekey under the same id. every bundle handed out before
-  // this names a key that no longer exists, so the openers built on them
-  // fail at the door: that is what "reset my invite link" has to mean.
+  /// a new invite prekey under the same id, and a new kyber one: every
+  /// card handed out before names keys that are gone
   Future<void> rotateInvitePreKey() async {
-    final blob = (await compute(_genPreKeysTask, [invitePreKeyId])).first;
-    final k = PreKeyRecord.fromBuffer(blob);
-    await preKeyStore.storePreKey(k.id, k);
-    dlog('signal: rotated the invite prekey');
+    await preKeyStore.replaceInvite(lib.preKey(invitePreKeyId).record);
+    await _newInviteKyber();
+    dlog('signal: rotated the invite prekeys');
   }
 
   Future<int> _loadOrGenRegId(Database d, String prefix) async {
@@ -524,17 +921,19 @@ class SignalSession {
       limit: 1,
     );
     if (rows.isNotEmpty) return int.parse(rows.first['v'] as String);
-    final id = generateRegistrationId(false);
+    // as libsignal_protocol_dart made them: 1 to 16380
+    final id = Random.secure().nextInt(16380) + 1;
     await d.insert('${prefix}signal_meta', {'k': 'regId', 'v': id.toString()});
     return id;
   }
 
-  Future<String?> peerXPubHex(String peerHaloId) async {
+  /// the x key held for [peer], null with none, or before the store is
+  /// open
+  Future<String?> peerXPubHex(String peer) async {
+    if (!_ready) return null;
     try {
-      final addr = SignalProtocolAddress(peerHaloId, 1);
-      final identity = await identityStore.getIdentity(addr);
-      if (identity == null) return null;
-      final raw = identity.publicKey.serialize();
+      final raw = await identityStore.getIdentity(peer);
+      if (raw == null) return null;
       final pub = raw.length == 33 ? raw.sublist(1) : raw;
       return pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     } catch (e) {
@@ -544,28 +943,126 @@ class SignalSession {
   }
 }
 
-/// a card's prekey bundle as signal takes it
-PreKeyBundle preKeyBundleOf(String bundleB64) {
+/// an opener's protobuf (a prekey message without the wire's type byte),
+/// read the one way libsignal could read it too: after the version byte,
+/// each field at most once, only the eight fields an opener has, each with
+/// its wire type, every varint in its shortest form and the ids under 2^32,
+/// nothing left over. libsignal keeps the last copy of a field, so a second
+/// one would make the opener mean another thing to a reader of the first:
+/// any of that is refused (KS_ERR_MESSAGE) before anything is decrypted
+({Uint8List message, Uint8List baseKey, Uint8List identity}) strictOpener(
+  Uint8List opener,
+) {
+  Never bad() => throw const LsError(LsError.message);
+  if (opener.length < 2) bad();
+  var at = 1;
+  int varint() {
+    var v = 0;
+    for (var shift = 0; shift < 64; shift += 7) {
+      if (at >= opener.length) bad();
+      final x = opener[at++];
+      v |= (x & 0x7f) << shift;
+      if (x < 0x80) {
+        // the shortest form: no last byte of zero after the first
+        if (x == 0 && shift > 0) bad();
+        return v;
+      }
+    }
+    bad();
+  }
+
+  const ids = {1, 5, 6, 7};
+  const bytes = {2, 3, 4, 8};
+  final seen = <int>{};
+  final got = <int, Uint8List>{};
+  while (at < opener.length) {
+    final tag = varint();
+    final field = tag >> 3;
+    final kind = tag & 7;
+    if (!seen.add(field)) bad();
+    if (ids.contains(field)) {
+      if (kind != 0) bad();
+      // past 2^63 a varint reads negative here
+      final v = varint();
+      if (v < 0 || v > 0xffffffff) bad();
+    } else if (bytes.contains(field)) {
+      if (kind != 2) bad();
+      final n = varint();
+      if (n < 0 || n > opener.length - at) bad();
+      got[field] = Uint8List.sublistView(opener, at, at + n);
+      at += n;
+    } else {
+      bad();
+    }
+  }
+  final message = got[4], baseKey = got[2], identity = got[3];
+  if (message == null || baseKey == null || identity == null) bad();
+  return (message: message, baseKey: baseKey, identity: identity);
+}
+
+/// the x25519 public key of [private32], as the app's identities derive it
+Uint8List xPublicOf(List<int> private32) =>
+    KryfoSignal.shared.identityFromPrivate(private32).public.sublist(1);
+
+/// [bundleB64] as the shim takes it, from the platform's library
+LsBundle cardBundle(String bundleB64) =>
+    lsBundleOf(KryfoSignal.shared, bundleB64);
+
+/// libsignal's prekey signature by [identityKey] over [public]
+bool preKeySigned(List<int> identityKey, List<int> public, List<int> sig) =>
+    KryfoSignal.shared.verify(identityKey, public, sig);
+
+/// a card's prekey bundle as the shim takes it. a card without the kyber
+/// prekey, as every 0.5.x phone hands out, is refused
+LsBundle lsBundleOf(KryfoSignal lib, String bundleB64) {
   final j =
       jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
-  return PreKeyBundle(
-    j['registrationId'] as int,
-    j['deviceId'] as int,
-    j['preKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
-    j['signedPreKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
-    base64Decode(j['signedPreKeySignature'] as String),
-    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
-  );
+  Uint8List? b(String k) {
+    final v = j[k];
+    return v is String ? base64Decode(v) : null;
+  }
+
+  if (b('kyberPreKeyPublic') == null || j['kyberPreKeyId'] is! int) {
+    throw const ClassicRefused('a card without a kyber prekey');
+  }
+  try {
+    return lib.bundleBuild(
+      registrationId: j['registrationId'] as int,
+      deviceId: j['deviceId'] as int,
+      preKeyId: j['preKeyId'] as int?,
+      preKey: b('preKeyPublic'),
+      signedPreKeyId: j['signedPreKeyId'] as int,
+      signedPreKey: b('signedPreKeyPublic')!,
+      signedPreKeySignature: b('signedPreKeySignature')!,
+      kyberPreKeyId: j['kyberPreKeyId'] as int,
+      kyberPreKey: b('kyberPreKeyPublic'),
+      kyberPreKeySignature: b('kyberPreKeySignature'),
+      identityKey: b('identityKey')!,
+    );
+  } on LsError catch (e) {
+    if (e.code == LsError.classic) {
+      throw const ClassicRefused('a card without a kyber prekey');
+    }
+    rethrow;
+  }
 }
 
 const _kRestored = 'restored_sessions';
 const _kRestoredAsks = 'restored_asks';
 const _kRestoredFrom = 'restored_from';
 
-// what names a session on both sides of it: the base key its opener made
-String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);
+// the base key that names a session on both sides, as signal_session.dart
+// writes it into the restore marks
+String? _baseOf(LsState? s) =>
+    s == null || s.baseKey.isEmpty ? null : base64Encode(s.baseKey);
+
+bool _eq(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
 
 /// the pref a restore leaves for the next start, which then marks the
 /// sessions it brought back as the store opens (bootstrap, restored)
@@ -574,7 +1071,7 @@ const kSessionsRestoredPref = 'signal.restored';
 /// and when the backup was made, which an ask to start afresh carries
 const kRestoredFromPref = 'signal.restored_from';
 
-// a peer's key and their contact's marks as they were before an open
+// a peer's key and their contact's marks as they were before a step
 class IdentityMarks {
   const IdentityMarks(this.key, this.verified, this.keyChanged);
   final List<int>? key;
@@ -586,11 +1083,7 @@ class IdentityMarks {
     final a = key;
     final b = now.key;
     if (a == null || b == null) return false;
-    if (a.length != b.length) return true;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return true;
-    }
-    return false;
+    return !_eq(a, b);
   }
 }
 
@@ -612,6 +1105,15 @@ class NotSettled implements Exception {
   String toString() => 'NotSettled: no answered session';
 }
 
+/// a frame too big for a post-quantum opener: it waits in the outbox for
+/// [peer]'s first answer on the session, then goes as a plain message. the
+/// outbox holds it as it holds one waiting for a card
+class WaitsForAnswer extends StartingAfresh {
+  WaitsForAnswer(super.peer);
+  @override
+  String toString() => 'WaitsForAnswer: too big for an opener';
+}
+
 /// a seal to [peer] waits for a session started afresh: the one held came
 /// back with a restore, and no card of theirs is kept to start one from
 class StartingAfresh implements Exception {
@@ -619,17 +1121,6 @@ class StartingAfresh implements Exception {
   final String peer;
   @override
   String toString() => 'StartingAfresh: waiting for their card';
-}
-
-// prekey generation is heavy curve math, slow enough on weak phones for
-// android to call the app dead, so it runs off the ui thread
-Uint8List _genSignedPreKeyTask(Uint8List idPairBytes) {
-  final pair = IdentityKeyPair.fromSerialized(idPairBytes);
-  return generateSignedPreKey(pair, 1).serialize();
-}
-
-List<Uint8List> _genPreKeysTask(List<int> ids) {
-  return [for (final id in ids) generatePreKeys(id, 1).first.serialize()];
 }
 
 final signalSession = SignalSession();

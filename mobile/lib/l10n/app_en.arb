@@ -10196,6 +10196,10 @@
   "@devWhoChoiceStays": {
     "description": "widgets/dev_note.dart: the last line of the sheet Who sees what: after the first message the choice is fixed"
   },
+  "devUpdateToWrite": "Update Kryfo to message Marios.",
+  "@devUpdateToWrite": {
+    "description": "screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error"
+  },
   "devKeyCheckFailed": "Could not check Marios's key. Nothing was sent.",
   "@devKeyCheckFailed": {
     "description": "screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out"
@@ -10267,6 +10271,15 @@
   "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
   "@appYourOwnInvite": {
     "description": "app/links.dart: a link, card or handle that is your own was added"
+  },
+  "appLinkNeedsUpdate": "{id} needs to update Kryfo before you can add each other.",
+  "@appLinkNeedsUpdate": {
+    "description": "app/links.dart, handleHaloUriAdded: a scanned or pasted card comes from a phone on Kryfo 0.5 or older, which has no post-quantum key; no chat can start until that person updates. id is their three words",
+    "placeholders": {
+      "id": {
+        "type": "Object"
+      }
+    }
   },
   "appLinkWordsTaken": "Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.",
   "@appLinkWordsTaken": {
@@ -12187,6 +12200,100 @@
   "devicesScanCode": "Scan the code",
   "@devicesScanCode": {
     "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
+  },
+  "desktopLockTitle": "Kryfo is locked",
+  "@desktopLockTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on"
+  },
+  "desktopLockBody": "Type the passphrase for this computer.",
+  "@desktopLockBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the title when a passphrase is set"
+  },
+  "desktopLockNewTitle": "Lock Kryfo on this computer",
+  "@desktopLockNewTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title on the first start, when a passphrase is chosen"
+  },
+  "desktopLockNewBody": "Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.",
+  "@desktopLockNewBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the first-start title"
+  },
+  "desktopLockHonest": "Someone who copies Kryfo's folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.",
+  "@desktopLockHonest": {
+    "description": "desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not"
+  },
+  "desktopLockForgot": "Without the passphrase none of your messages, files or keys here can be opened, not even by us.",
+  "@desktopLockForgot": {
+    "description": "desktop/desktop_lock_screen.dart: the small print when unlocking"
+  },
+  "desktopLockField": "Passphrase",
+  "@desktopLockField": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the passphrase field"
+  },
+  "desktopLockRepeat": "The same passphrase again",
+  "@desktopLockRepeat": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the second field on the first start"
+  },
+  "desktopLockSet": "Lock with this passphrase",
+  "@desktopLockSet": {
+    "description": "desktop/desktop_lock_screen.dart: the button that sets the passphrase"
+  },
+  "desktopLockOpen": "Open Kryfo",
+  "@desktopLockOpen": {
+    "description": "desktop/desktop_lock_screen.dart: the button that unlocks; also the tray menu item that shows the window"
+  },
+  "desktopLockShort": "At least {count} characters",
+  "@desktopLockShort": {
+    "description": "desktop/desktop_lock_screen.dart: the passphrase chosen is too short",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "desktopLockMismatch": "The two passphrases are not the same",
+  "@desktopLockMismatch": {
+    "description": "desktop/desktop_lock_screen.dart: the two fields differ"
+  },
+  "desktopLockWrong": "That is not the passphrase",
+  "@desktopLockWrong": {
+    "description": "desktop/desktop_lock_screen.dart: a wrong passphrase was typed"
+  },
+  "desktopLockFailed": "Kryfo could not open its lock here. Try starting it again.",
+  "@desktopLockFailed": {
+    "description": "desktop/desktop_lock_screen.dart: the lock could not be read or written"
+  },
+  "desktopTrayQuit": "Quit Kryfo",
+  "@desktopTrayQuit": {
+    "description": "desktop/desktop_start.dart: the tray menu item that ends the app"
+  },
+  "desktopTrayTip": "Kryfo is running and receiving messages",
+  "@desktopTrayTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip"
+  },
+  "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
+  "@desktopNoCamera": {
+    "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
+  },
+  "desktopAlreadyOpen": "Kryfo is already open on this computer.",
+  "@desktopAlreadyOpen": {
+    "description": "desktop/desktop_lock_screen.dart: a second copy of the app was started on the same folder"
+  },
+  "desktopFolderNotYours": "Kryfo's folder belongs to another account on this computer, so Kryfo will not open it.",
+  "@desktopFolderNotYours": {
+    "description": "desktop/desktop_lock_screen.dart: the app's data folder is owned by another user"
+  },
+  "desktopFolderNotPrivate": "Kryfo could not make its folder private to you, so it will not open.",
+  "@desktopFolderNotPrivate": {
+    "description": "desktop/desktop_lock_screen.dart: the data folder could not be made 0700"
+  },
+  "desktopLockOtherVersion": "This lock was made by another version of Kryfo, which this one cannot read.",
+  "@desktopLockOtherVersion": {
+    "description": "desktop/desktop_lock_screen.dart: the vault file is of a version this app does not read"
+  },
+  "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
+  "@desktopNoMemoryFolder": {
+    "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
   },
   "modesPickHow": "Pick how your messages travel. You can change it any time.",
   "@modesPickHow": {

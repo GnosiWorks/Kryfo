@@ -23,8 +23,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/rooms.dart' show firstKryfoLink;
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/pair_join.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 import 'pin_flow_fakes.dart' show app, phone;
@@ -136,7 +135,7 @@ void main() {
     late SignalSession ss;
     late String invite;
     await t.runAsync(() async {
-      final pair = Curve.generateKeyPair();
+      final pair = testKeyPair();
       ss = SignalSession();
       await ss.bootstrap(
         database: MemDb(),
@@ -150,7 +149,7 @@ void main() {
         'ab' * 32,
       );
     });
-    final own = keyNumber(ss.identityKeyPair.getPublicKey().serialize())!;
+    final own = keyNumber(ss.identity.public)!;
     final added = <String>[];
     await t.pumpWidget(
       app(

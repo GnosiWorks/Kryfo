@@ -21,7 +21,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 90;
+const _version = 91;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -58,6 +58,7 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   88: (capsColumns, 'ALTER TABLE contacts ADD COLUMN caps'),
   89: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
   90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
+  91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
@@ -92,6 +93,13 @@ const _added = {
   'wallpapers': ['chat', 'atmo', 'photo'],
   'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
   'file_fetches': ['msg_uid', 'sender', 'wire', 'path', 'state'],
+  'kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'dev_kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'dev_kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'opener_reads': ['kyber_id', 'opener'],
+  'dev_opener_reads': ['kyber_id', 'opener'],
+  'first_kept': ['opened_id', 'opened_plain'],
 };
 const _indexes = [
   'idx_media_chunks_group',
