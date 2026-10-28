@@ -81,7 +81,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appearanceSampleButton => 'رد';
 
   @override
-  String get appearanceAccentHint => 'تأخذ الأزرار ورسائلك والروابط هذا اللون. تبقى أيقونة التطبيق صفراء.';
+  String get appearanceAccentHint =>
+      'تأخذ الأزرار ورسائلك والروابط هذا اللون. تبقى أيقونة التطبيق صفراء.';
 
   @override
   String get appearanceChatWallpaper => 'خلفية المحادثات';
@@ -90,16 +91,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appearanceEveryChat => 'كل المحادثات';
 
   @override
-  String get appearanceWallpaperHint => 'خلفية المحادثة الخاصة، المختارة من قائمتها، تأتي أولًا. تبقى الصور على هذا الهاتف، مشفرة مع محادثاتك.';
+  String get appearanceWallpaperHint =>
+      'خلفية المحادثة الخاصة، المختارة من قائمتها، تأتي أولًا. تبقى الصور على هذا الهاتف، مشفرة مع محادثاتك.';
 
   @override
-  String get backupThatPassphraseDoesNot => 'عبارة المرور هذه لا تفتح هذا الملف';
+  String get backupThatPassphraseDoesNot =>
+      'عبارة المرور هذه لا تفتح هذا الملف';
 
   @override
   String get backupThatFileIsNot => 'هذا الملف ليس نسخة احتياطية من Kryfo';
 
   @override
-  String get backupThisBackupIsFrom => 'هذه النسخة الاحتياطية من إصدار أحدث من Kryfo. حدّث التطبيق ثم أعد المحاولة';
+  String get backupThisBackupIsFrom =>
+      'هذه النسخة الاحتياطية من إصدار أحدث من Kryfo. حدّث التطبيق ثم أعد المحاولة';
 
   @override
   String get backupThisFileIsDamaged => 'هذا الملف تالف ولا يمكن قراءته';
@@ -114,7 +118,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactCardMessageMeOn => 'راسلني على';
 
   @override
-  String get contactCardScanToAdd => 'امسح الرمز في Kryfo لإضافتي.\nلا تعرف هذه البطاقة عنك شيئًا سوى ذلك.';
+  String get contactCardScanToAdd =>
+      'امسح الرمز في Kryfo لإضافتي.\nلا تعرف هذه البطاقة عنك شيئًا سوى ذلك.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
@@ -125,7 +130,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactStatusBlocked => 'محظور';
 
   @override
-  String get contactStatusKeysVerifiedInPerson => 'تم التحقق من المفاتيح وجهًا لوجه';
+  String get contactStatusKeysVerifiedInPerson =>
+      'تم التحقق من المفاتيح وجهًا لوجه';
 
   @override
   String get contactStatusWaitingInRequests => 'ينتظر في الطلبات';
@@ -150,7 +156,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String deliveryModeMinAgo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -163,7 +170,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String deliveryMode1HourAgo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -184,7 +192,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String deliveryModeDaysAgo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -256,7 +265,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String introBudgetInDays(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -277,7 +287,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String introBudgetInHours(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -319,13 +330,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appOf(Object line, int held, int subs, Object c, int p, int e) {
-    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String heldString = heldNumberFormat.format(held);
-    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String subsString = subsNumberFormat.format(subs);
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -353,9 +372,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appConnectSPagesEvents(Object line, Object c, int p, int e) {
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -414,16 +437,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appSBy(Object how, int secs, String why) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String secsString = secsNumberFormat.format(secs);
 
-    String _temp0 = intl.Intl.selectLogic(
-      why,
-      {
-        'push': '⁨$how⁩، ⁨$secsString⁩ ث، عبر الدفع',
-        'other': '⁨$how⁩، ⁨$secsString⁩ ث، عبر المهمة الدورية',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(why, {
+      'push': '⁨$how⁩، ⁨$secsString⁩ ث، عبر الدفع',
+      'other': '⁨$how⁩، ⁨$secsString⁩ ث، عبر المهمة الدورية',
+    });
     return '$_temp0';
   }
 
@@ -455,7 +477,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appStartingTor => 'جارٍ تشغيل Tor';
 
   @override
-  String get appTimedMessagesAreNot => 'الرسائل المؤقتة لا تختفي. أعد تشغيل Kryfo';
+  String get appTimedMessagesAreNot =>
+      'الرسائل المؤقتة لا تختفي. أعد تشغيل Kryfo';
 
   @override
   String get appVoiceMessage2 => 'رسالة صوتية';
@@ -506,7 +529,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomJoinFull => 'هذه الغرفة ممتلئة.';
 
   @override
-  String get roomJoinFullLine => 'لا يوجد مكان شاغر الآن. حاول لاحقًا، أو اسأل من شارك الرابط.';
+  String get roomJoinFullLine =>
+      'لا يوجد مكان شاغر الآن. حاول لاحقًا، أو اسأل من شارك الرابط.';
 
   @override
   String get appBooting => 'جارٍ الإقلاع...';
@@ -518,7 +542,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appAddSomeone => 'إضافة شخص';
 
   @override
-  String get appScanTheirCodeOr => 'اقرأ رمزه بالكاميرا، أو الصق ما أعطاك: رابطًا أو @اسم مستخدم أو رابط غرفة.';
+  String get appScanTheirCodeOr =>
+      'اقرأ رمزه بالكاميرا، أو الصق ما أعطاك: رابطًا أو @اسم مستخدم أو رابط غرفة.';
 
   @override
   String get appScanTheirCode => 'اقرأ رمزه';
@@ -628,7 +653,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appDisableAppLock => 'تعطيل قفل التطبيق؟';
 
   @override
-  String get appThePinWillBe => 'سيُزال رمز PIN. كل من يمسك هاتفك سيرى Kryfo عندما يفتحه.';
+  String get appThePinWillBe =>
+      'سيُزال رمز PIN. كل من يمسك هاتفك سيرى Kryfo عندما يفتحه.';
 
   @override
   String get appDisable => 'تعطيل';
@@ -663,13 +689,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appTorIsOffTurn => 'Tor متوقف. شغّله لتتصل بخصوصية.';
 
   @override
-  String get appTheFirstConnectionTakes => 'يستغرق الاتصال الأول دقيقة أو دقيقتين ريثما يبني Tor مسارًا خاصًا. بعد ذلك يُحفظ مؤقتًا، فيصبح فتح Kryfo لاحقًا أسرع بكثير.';
+  String get appTheFirstConnectionTakes =>
+      'يستغرق الاتصال الأول دقيقة أو دقيقتين ريثما يبني Tor مسارًا خاصًا. بعد ذلك يُحفظ مؤقتًا، فيصبح فتح Kryfo لاحقًا أسرع بكثير.';
 
   @override
-  String get appTorNoRelayYet => 'شبكة Tor تعمل، لكن لم يستجب أي مُرحِّل بعد. يواصل Kryfo المحاولة، وتبقى الرسائل هنا إلى أن يستجيب أحدها.';
+  String get appTorNoRelayYet =>
+      'شبكة Tor تعمل، لكن لم يستجب أي مُرحِّل بعد. يواصل Kryfo المحاولة، وتبقى الرسائل هنا إلى أن يستجيب أحدها.';
 
   @override
-  String get appRelayAndFastModes => 'وضعا المُرحِّل والسريع يتجاوزان Tor وهما أسرع. تجدهما في الإعدادات، ضمن «السرعة والخصوصية»، وكلٌّ منهما يوضّح ما يكلّفه.';
+  String get appRelayAndFastModes =>
+      'وضعا المُرحِّل والسريع يتجاوزان Tor وهما أسرع. تجدهما في الإعدادات، ضمن «السرعة والخصوصية»، وكلٌّ منهما يوضّح ما يكلّفه.';
 
   @override
   String get appViaRelay => 'عبر مُرحِّل';
@@ -755,13 +784,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get miuiAutostartAlreadyAllowedToRun => 'مسموح له بالعمل في الخلفية بالفعل';
+  String get miuiAutostartAlreadyAllowedToRun =>
+      'مسموح له بالعمل في الخلفية بالفعل';
 
   @override
   String get miuiAutostartLetKryfoRunIn => 'اسمح لـ Kryfo بالعمل في الخلفية';
 
   @override
-  String get miuiAutostartYourPhonePausesApps => 'يوقف هاتفك التطبيقات مؤقتًا لتوفير البطارية. ودون استثناء، لا يستطيع Kryfo استلام الرسائل وهو مغلق.';
+  String get miuiAutostartYourPhonePausesApps =>
+      'يوقف هاتفك التطبيقات مؤقتًا لتوفير البطارية. ودون استثناء، لا يستطيع Kryfo استلام الرسائل وهو مغلق.';
 
   @override
   String get commonAllow => 'السماح';
@@ -773,49 +804,61 @@ class AppLocalizationsAr extends AppLocalizations {
   String get miuiAutostartOpenSettings => 'فتح الإعدادات';
 
   @override
-  String get miuiAutostartCouldnTOpenIt => 'تعذّر فتحها. ابحث عن التشغيل التلقائي في إعدادات الهاتف';
+  String get miuiAutostartCouldnTOpenIt =>
+      'تعذّر فتحها. ابحث عن التشغيل التلقائي في إعدادات الهاتف';
 
   @override
-  String get batteryGuideHuawei => 'تغلق هواوي وهونر التطبيقات التي تديرها بنفسها. في الشاشة التالية، ابحث عن Kryfo وأوقف «الإدارة التلقائية»، واترك «التشغيل التلقائي» و«التشغيل الثانوي» و«التشغيل في الخلفية» مفعّلة.';
+  String get batteryGuideHuawei =>
+      'تغلق هواوي وهونر التطبيقات التي تديرها بنفسها. في الشاشة التالية، ابحث عن Kryfo وأوقف «الإدارة التلقائية»، واترك «التشغيل التلقائي» و«التشغيل الثانوي» و«التشغيل في الخلفية» مفعّلة.';
 
   @override
-  String get batteryGuideOppo => 'توقف أوبو وريلمي التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالتشغيل التلقائي. ومن إعدادات البطارية، اسمح له بالنشاط في الخلفية أيضًا.';
+  String get batteryGuideOppo =>
+      'توقف أوبو وريلمي التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالتشغيل التلقائي. ومن إعدادات البطارية، اسمح له بالنشاط في الخلفية أيضًا.';
 
   @override
-  String get batteryGuideVivo => 'توقف فيفو التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالبدء في الخلفية. ومن إعدادات البطارية، اسمح له أيضًا باستهلاك طاقة عالٍ في الخلفية.';
+  String get batteryGuideVivo =>
+      'توقف فيفو التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالبدء في الخلفية. ومن إعدادات البطارية، اسمح له أيضًا باستهلاك طاقة عالٍ في الخلفية.';
 
   @override
-  String get batteryGuideSamsung => 'تضع سامسونج التطبيقات التي تظنها غير مستخدمة في وضع السكون. في الشاشة التالية، افتح «حدود الاستخدام في الخلفية» وأضف Kryfo إلى «التطبيقات التي لا تدخل السكون أبدًا».';
+  String get batteryGuideSamsung =>
+      'تضع سامسونج التطبيقات التي تظنها غير مستخدمة في وضع السكون. في الشاشة التالية، افتح «حدود الاستخدام في الخلفية» وأضف Kryfo إلى «التطبيقات التي لا تدخل السكون أبدًا».';
 
   @override
-  String get batteryGuideOnePlus => 'توقف ون بلس التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالتشغيل التلقائي. ومن إعدادات البطارية، اختر له «عدم التحسين».';
+  String get batteryGuideOnePlus =>
+      'توقف ون بلس التطبيقات في الخلفية. في الشاشة التالية، ابحث عن Kryfo واسمح له بالتشغيل التلقائي. ومن إعدادات البطارية، اختر له «عدم التحسين».';
 
   @override
   String get batteryGuideXiaomiTitle => 'أبقِ Kryfo قيد التشغيل';
 
   @override
-  String get batteryGuideXiaomi => 'توقف شاومي التطبيقات في الخلفية، حتى مع تفعيل التشغيل التلقائي. لتستمر الرسائل في الوصول:';
+  String get batteryGuideXiaomi =>
+      'توقف شاومي التطبيقات في الخلفية، حتى مع تفعيل التشغيل التلقائي. لتستمر الرسائل في الوصول:';
 
   @override
   String get batteryGuideXiaomiStep1 => 'التشغيل التلقائي: فعّله لـ Kryfo.';
 
   @override
-  String get batteryGuideXiaomiStep2 => 'توفير البطارية: اضبط Kryfo على «بلا قيود».';
+  String get batteryGuideXiaomiStep2 =>
+      'توفير البطارية: اضبط Kryfo على «بلا قيود».';
 
   @override
-  String get batteryGuideXiaomiStep3 => 'التطبيقات الأخيرة: اضغط مطولًا على Kryfo ثم انقر على القفل، حتى لا يغلقه «مسح الكل» ولا تنظيف الهاتف.';
+  String get batteryGuideXiaomiStep3 =>
+      'التطبيقات الأخيرة: اضغط مطولًا على Kryfo ثم انقر على القفل، حتى لا يغلقه «مسح الكل» ولا تنظيف الهاتف.';
 
   @override
-  String get batteryGuideXiaomiAfter => 'إذا أوقف الهاتف Kryfo رغم ذلك، فلن يصل شيء حتى تفتحه من جديد.';
+  String get batteryGuideXiaomiAfter =>
+      'إذا أوقف الهاتف Kryfo رغم ذلك، فلن يصل شيء حتى تفتحه من جديد.';
 
   @override
-  String get notificationsNewEncryptedMessagesFrom => 'رسائل مشفّرة جديدة من جهات اتصالك';
+  String get notificationsNewEncryptedMessagesFrom =>
+      'رسائل مشفّرة جديدة من جهات اتصالك';
 
   @override
   String get notificationsNewMessage => 'رسالة جديدة';
 
   @override
-  String get notificationsNewEncryptedMessagesFromYourContacts => 'رسائل مشفّرة جديدة من جهات اتصالك';
+  String get notificationsNewEncryptedMessagesFromYourContacts =>
+      'رسائل مشفّرة جديدة من جهات اتصالك';
 
   @override
   String get notificationsNewMessage2 => 'رسالة جديدة';
@@ -844,7 +887,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomsDays(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -868,7 +912,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomsHours(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -886,7 +931,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomsAboutHours(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -904,7 +950,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomsMinutes(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -952,7 +999,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get scamShieldAsksForSecret => 'يطلب رمزًا أو رمز PIN أو كلمات الاسترداد';
+  String get scamShieldAsksForSecret =>
+      'يطلب رمزًا أو رمز PIN أو كلمات الاسترداد';
 
   @override
   String get scamShieldAsksForMoneyFast => 'يطلب المال على عجل';
@@ -1014,16 +1062,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get archivedCount10 => 'عشر';
 
   @override
-  String get archivedChatRestingHereIt => 'تستريح هنا. تبقى صامتة حتى يكتب صاحبها، ثم تعود إلى الأعلى.';
+  String get archivedChatRestingHereIt =>
+      'تستريح هنا. تبقى صامتة حتى يكتب صاحبها، ثم تعود إلى الأعلى.';
 
   @override
-  String get archivedChatsRestingHere => 'تستريح هنا. تبقى صامتة حتى يكتب أحد، ثم تعود إلى الأعلى.';
+  String get archivedChatsRestingHere =>
+      'تستريح هنا. تبقى صامتة حتى يكتب أحد، ثم تعود إلى الأعلى.';
 
   @override
   String get archivedNothingArchived => 'لا شيء في الأرشيف';
 
   @override
-  String get archivedArchivedChatsAreStill => 'المحادثات المؤرشفة تبقى مشفّرة بين الطرفين';
+  String get archivedArchivedChatsAreStill =>
+      'المحادثات المؤرشفة تبقى مشفّرة بين الطرفين';
 
   @override
   String get archivedUnarchive => 'إلغاء الأرشفة';
@@ -1050,13 +1101,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupPassphrasesDonTMatch => 'عبارتا المرور غير متطابقتين';
 
   @override
-  String get backupBackupSavedKeepThe => 'حُفظت النسخة الاحتياطية · احفظ عبارة المرور في مكان آمن';
+  String get backupBackupSavedKeepThe =>
+      'حُفظت النسخة الاحتياطية · احفظ عبارة المرور في مكان آمن';
 
   @override
   String get backupKryfoBackup => 'نسخة Kryfo الاحتياطية';
 
   @override
-  String get backupYourEncryptedKryfoBackup => 'نسخة Kryfo الاحتياطية المشفّرة. احفظ هذا الملف وعبارة المرور معًا في مكان آمن، فالاستعادة تحتاج إليهما كليهما.';
+  String get backupYourEncryptedKryfoBackup =>
+      'نسخة Kryfo الاحتياطية المشفّرة. احفظ هذا الملف وعبارة المرور معًا في مكان آمن، فالاستعادة تحتاج إليهما كليهما.';
 
   @override
   String get backupBackUpKryfo => 'نسخ Kryfo احتياطيًا';
@@ -1071,13 +1124,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupMoveToAnotherDevice => 'الانتقال إلى جهاز آخر';
 
   @override
-  String get backupTheFileTakesThis => 'يأخذ الملف هذه الهوية معه. وبمجرد إنشائه يتوقف هذا الهاتف: لا يصل إليه شيء جديد، ولا يصل أي شيء يُرسل منه إلى أحد.';
+  String get backupTheFileTakesThis =>
+      'يأخذ الملف هذه الهوية معه. وبمجرد إنشائه يتوقف هذا الهاتف: لا يصل إليه شيء جديد، ولا يصل أي شيء يُرسل منه إلى أحد.';
 
   @override
-  String get backupOneEncryptedFileYour => 'ملف واحد مشفّر: هويتك، وجهات اتصالك، وكل رسالة، وكل صورة ورسالة صوتية وملف. استورده على الجهاز الآخر بعبارة المرور. وإلى أن تفعل، يمكنك أن تغيّر رأيك وتبقى على هذا الهاتف.';
+  String get backupOneEncryptedFileYour =>
+      'ملف واحد مشفّر: هويتك، وجهات اتصالك، وكل رسالة، وكل صورة ورسالة صوتية وملف. استورده على الجهاز الآخر بعبارة المرور. وإلى أن تفعل، يمكنك أن تغيّر رأيك وتبقى على هذا الهاتف.';
 
   @override
-  String get backupOneEncryptedFileYourIdentityYour => 'ملف واحد مشفّر: هويتك، وجهات اتصالك، وكل رسالة، وكل صورة ورسالة صوتية وملف على هذا الهاتف الآن. ما يُقال بعد اليوم ليس فيه، فأنشئ نسخة أخرى حين يهمّك ذلك. للاستعادة تحتاج إلى الملف وعبارة المرور، كليهما.';
+  String get backupOneEncryptedFileYourIdentityYour =>
+      'ملف واحد مشفّر: هويتك، وجهات اتصالك، وكل رسالة، وكل صورة ورسالة صوتية وملف على هذا الهاتف الآن. ما يُقال بعد اليوم ليس فيه، فأنشئ نسخة أخرى حين يهمّك ذلك. للاستعادة تحتاج إلى الملف وعبارة المرور، كليهما.';
 
   @override
   String get backupPassphrase => 'عبارة المرور';
@@ -1091,7 +1147,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get backupSaveComesAfter => 'عندما يصبح الملف جاهزًا، ستختار أين تحفظه.';
+  String get backupSaveComesAfter =>
+      'عندما يصبح الملف جاهزًا، ستختار أين تحفظه.';
 
   @override
   String get backupSaving => 'جارٍ الحفظ…';
@@ -1105,16 +1162,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupNotSaved => 'لم تُحفظ النسخة الاحتياطية. الملف ما زال هنا.';
 
   @override
-  String get backupNotSavedNoSpace => 'لم تكن هناك مساحة كافية في المكان الذي اخترته للحفظ. الملف ما زال هنا، فاختر مكانًا آخر أو أفرغ بعض المساحة.';
+  String get backupNotSavedNoSpace =>
+      'لم تكن هناك مساحة كافية في المكان الذي اخترته للحفظ. الملف ما زال هنا، فاختر مكانًا آخر أو أفرغ بعض المساحة.';
 
   @override
   String get backupShareInstead => 'المشاركة بدلًا من ذلك';
 
   @override
-  String get backupSavedUnchecked => 'حُفظت النسخة الاحتياطية، لكن Kryfo لم يتمكن من التحقق منها';
+  String get backupSavedUnchecked =>
+      'حُفظت النسخة الاحتياطية، لكن Kryfo لم يتمكن من التحقق منها';
 
   @override
-  String get backupHandedOver => 'سُلّمت النسخة الاحتياطية إلى التطبيق الذي اخترته · تحقّق من وصولها';
+  String get backupHandedOver =>
+      'سُلّمت النسخة الاحتياطية إلى التطبيق الذي اخترته · تحقّق من وصولها';
 
   @override
   String get backupMoveReachedTitle => 'هل وصل الملف إلى هاتفك الجديد؟';
@@ -1141,7 +1201,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupNotMade => 'تعذّر إنشاء النسخة الاحتياطية. حاول مجددًا.';
 
   @override
-  String get backupNoSpace => 'لا توجد مساحة فارغة كافية على هذا الهاتف لإنشاء النسخة الاحتياطية. أفرغ بعض المساحة وحاول مجددًا.';
+  String get backupNoSpace =>
+      'لا توجد مساحة فارغة كافية على هذا الهاتف لإنشاء النسخة الاحتياطية. أفرغ بعض المساحة وحاول مجددًا.';
 
   @override
   String get backupHiddenNotIn => 'المحادثات المخفية ليست فيه.';
@@ -1150,10 +1211,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupHiddenIncluded => 'محادثاتك المخفية فيه أيضًا.';
 
   @override
-  String get backupMoveHiddenStay => 'تبقى المحادثات المخفية على هذا الهاتف وتُمسح معه.';
+  String get backupMoveHiddenStay =>
+      'تبقى المحادثات المخفية على هذا الهاتف وتُمسح معه.';
 
   @override
-  String get backupHiddenGone => 'أُغلقت محادثاتك المخفية حين قُفل Kryfo. افتحها برمز PIN للمحادثات المخفية وأنشئ النسخة الاحتياطية من هناك.';
+  String get backupHiddenGone =>
+      'أُغلقت محادثاتك المخفية حين قُفل Kryfo. افتحها برمز PIN للمحادثات المخفية وأنشئ النسخة الاحتياطية من هناك.';
 
   @override
   String get blockedBlocked => 'المحظورون';
@@ -1175,7 +1238,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String bridges1LineSaved(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1192,7 +1256,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get bridgesWhenYouAskFor => 'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
+  String get bridgesWhenYouAskFor =>
+      'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
 
   @override
   String get bridgesAsking => 'جارٍ الطلب…';
@@ -1258,10 +1323,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraUseThis => 'استخدام هذه';
 
   @override
-  String get chatYouAreOfflineThis => 'أنت غير متصل · ستُرسل تلقائيًا عند عودة الاتصال';
+  String get chatYouAreOfflineThis =>
+      'أنت غير متصل · ستُرسل تلقائيًا عند عودة الاتصال';
 
   @override
-  String get chatStillConnectingToTor => 'ما زال الاتصال بـ Tor جاريًا · ستُرسل من تلقاء نفسها';
+  String get chatStillConnectingToTor =>
+      'ما زال الاتصال بـ Tor جاريًا · ستُرسل من تلقاء نفسها';
 
   @override
   String chatS(Object seconds) {
@@ -1306,7 +1373,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatEarlierMessagesArrived(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1359,11 +1427,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatUnsendMessage => 'سحب الرسالة';
 
   @override
-  String get chatItDisappearsWithNo => 'تُحذف من الهاتفين، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
+  String get chatItDisappearsWithNo =>
+      'تُحذف من الهاتفين، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
   String chatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1386,10 +1456,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatPinThisMessage => 'تثبيت هذه الرسالة؟';
 
   @override
-  String get chatItLeavesThePinned => 'ستُزال من قائمة الرسائل المثبّتة لدى كليكما.';
+  String get chatItLeavesThePinned =>
+      'ستُزال من قائمة الرسائل المثبّتة لدى كليكما.';
 
   @override
-  String get chatItGoesUnderThe => 'ستظهر في شريط التثبيت أعلى المحادثة، لدى كليكما.';
+  String get chatItGoesUnderThe =>
+      'ستظهر في شريط التثبيت أعلى المحادثة، لدى كليكما.';
 
   @override
   String get chatPinIt => 'تثبيتها';
@@ -1419,7 +1491,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatGhostTimer => 'الرسائل المؤقتة';
 
   @override
-  String get chatHowLongAfterReading => 'بعد كم من الوقت من قراءتها تختفي الرسائل؟ رسائلك تُحسب من لحظة إرسالها.';
+  String get chatHowLongAfterReading =>
+      'بعد كم من الوقت من قراءتها تختفي الرسائل؟ رسائلك تُحسب من لحظة إرسالها.';
 
   @override
   String get chatCamera => 'الكاميرا';
@@ -1447,7 +1520,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatRoughlyMin(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1482,7 +1556,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get chatBigFilesGoOut => 'تُرسل الملفات الكبيرة على قطع صغيرة مشفّرة، لذا تستغرق بعض الوقت. أبقِ التطبيق مفتوحًا ويستمر الإرسال.';
+  String get chatBigFilesGoOut =>
+      'تُرسل الملفات الكبيرة على قطع صغيرة مشفّرة، لذا تستغرق بعض الوقت. أبقِ التطبيق مفتوحًا ويستمر الإرسال.';
 
   @override
   String get chatSendIt => 'إرساله';
@@ -1494,7 +1569,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCouldNotCleanThat => 'تعذّر تنظيف ذلك الفيديو';
 
   @override
-  String get chatCouldNotCleanThatPictureSend => 'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
+  String get chatCouldNotCleanThatPictureSend =>
+      'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
 
   @override
   String get chatGifTooBig8 => 'ملف GIF كبير جدًا · ٨ م.ب كحد أقصى';
@@ -1540,7 +1616,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1587,7 +1664,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatPinnedToTop => 'ثُبّتت في الأعلى';
 
   @override
-  String get chatJustForYouNever => 'لك وحدك. لا تُرسل أبدًا، ولا تغادر هذا الهاتف أبدًا.';
+  String get chatJustForYouNever =>
+      'لك وحدك. لا تُرسل أبدًا، ولا تغادر هذا الهاتف أبدًا.';
 
   @override
   String get chatAQuietReminder => 'تذكير هادئ…';
@@ -1599,7 +1677,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatClearThisConversation => 'إفراغ هذه المحادثة؟';
 
   @override
-  String get chatEveryMessageHereIs => 'تُمسح كل رسالة هنا من هذا الهاتف. هذا يُفرغ نسختك فقط، ولا يمسّ جهازه.';
+  String get chatEveryMessageHereIs =>
+      'تُمسح كل رسالة هنا من هذا الهاتف. هذا يُفرغ نسختك فقط، ولا يمسّ جهازه.';
 
   @override
   String get chatClear => 'إفراغ';
@@ -1608,7 +1687,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatBlockThisContact => 'حظر جهة الاتصال هذه؟';
 
   @override
-  String get chatTheirMessagesStopArriving => 'تتوقف رسائله عن الوصول ويختفي من محادثاتك. لن يُبلَّغ بذلك أبدًا. يمكنك إلغاء الحظر في أي وقت من الإعدادات.';
+  String get chatTheirMessagesStopArriving =>
+      'تتوقف رسائله عن الوصول ويختفي من محادثاتك. لن يُبلَّغ بذلك أبدًا. يمكنك إلغاء الحظر في أي وقت من الإعدادات.';
 
   @override
   String get commonBlock => 'حظر';
@@ -1638,16 +1718,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatJumpToTheNewest => 'الانتقال إلى الأحدث';
 
   @override
-  String get chatBuildingAPrivateRoute => 'جارٍ بناء مسار خاص · الاتصال الأول هو البطيء، وما بعده سريع. كل ما ترسله الآن ينتظر في الطابور ويُسلَّم تلقائيًا.';
+  String get chatBuildingAPrivateRoute =>
+      'جارٍ بناء مسار خاص · الاتصال الأول هو البطيء، وما بعده سريع. كل ما ترسله الآن ينتظر في الطابور ويُسلَّم تلقائيًا.';
 
   @override
-  String get chatTheNextPhotoYou => 'الصورة التالية التي ترسلها تُفتح محمية · يمنع Kryfo لقطات الشاشة لها';
+  String get chatTheNextPhotoYou =>
+      'الصورة التالية التي ترسلها تُفتح محمية · يمنع Kryfo لقطات الشاشة لها';
 
   @override
   String get chatPhotoProtectionOff => 'حماية الصور معطّلة';
 
   @override
-  String get chatAcceptToReplyThey => 'اقبل لترد. يمكنه إرسال رسالة واحدة أخرى حتى تقبل.';
+  String get chatAcceptToReplyThey =>
+      'اقبل لترد. يمكنه إرسال رسالة واحدة أخرى حتى تقبل.';
 
   @override
   String chatIntroducedYouAcceptTo(Object introducer) {
@@ -1669,7 +1752,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatMessageRequest => 'طلب مراسلة';
 
   @override
-  String get chatTheyNeedToAccept => 'يجب أن يقبل قبل أن تتمكن من مواصلة المحادثة.';
+  String get chatTheyNeedToAccept =>
+      'يجب أن يقبل قبل أن تتمكن من مواصلة المحادثة.';
 
   @override
   String get chatWaitingForThemTo => 'بانتظار قبوله لطلبك';
@@ -1709,9 +1793,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatOf(int count, int pos) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String posString = posNumberFormat.format(pos);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1867,7 +1954,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatVerify => 'تحقّق';
 
   @override
-  String get cleanKryfoCanTClean => 'لا يستطيع Kryfo تنظيف هذا النوع من الملفات بعد.';
+  String get cleanKryfoCanTClean =>
+      'لا يستطيع Kryfo تنظيف هذا النوع من الملفات بعد.';
 
   @override
   String get cleanThisIsAMotion => 'هذه صورة متحركة.';
@@ -1888,37 +1976,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cleanKryfoCouldNotOpen => 'لم يستطع Kryfo فتح ذلك الملف.';
 
   @override
-  String get cleanItCleansJpegPng => 'يُنظّف ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV. لم يتغيّر شيء.';
+  String get cleanItCleansJpegPng =>
+      'يُنظّف ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV. لم يتغيّر شيء.';
 
   @override
-  String get cleanItHoldsAShort => 'تحمل مقطع فيديو قصيرًا بجانب الصورة، ولا يستطيع Kryfo تنظيف هذا الجزء بعد. أوقف خاصية الحركة في الكاميرا، أو أرسل لقطة شاشة لها.';
+  String get cleanItHoldsAShort =>
+      'تحمل مقطع فيديو قصيرًا بجانب الصورة، ولا يستطيع Kryfo تنظيف هذا الجزء بعد. أوقف خاصية الحركة في الكاميرا، أو أرسل لقطة شاشة لها.';
 
   @override
-  String get cleanPicturesOver64Mb => 'الصور التي تتجاوز ٦٤ م.ب لا تُنظَّف على الهاتف. لم يتغيّر شيء.';
+  String get cleanPicturesOver64Mb =>
+      'الصور التي تتجاوز ٦٤ م.ب لا تُنظَّف على الهاتف. لم يتغيّر شيء.';
 
   @override
-  String get cleanKryfoCouldNotRead => 'لم يستطع Kryfo قراءته حتى النهاية، لذا لن يعدّه نظيفًا. لم تُنشأ أي نسخة.';
+  String get cleanKryfoCouldNotRead =>
+      'لم يستطع Kryfo قراءته حتى النهاية، لذا لن يعدّه نظيفًا. لم تُنشأ أي نسخة.';
 
   @override
-  String get cleanSomethingInsideIsOf => 'بداخله شيء من نوع لا يعرف كيف يزيله، لذا لم تُنشأ أي نسخة.';
+  String get cleanSomethingInsideIsOf =>
+      'بداخله شيء من نوع لا يعرف كيف يزيله، لذا لم تُنشأ أي نسخة.';
 
   @override
-  String get cleanFreeSomeSpaceAnd => 'حرّر بعض المساحة ثم أعد المحاولة. لم يتغيّر شيء.';
+  String get cleanFreeSomeSpaceAnd =>
+      'حرّر بعض المساحة ثم أعد المحاولة. لم يتغيّر شيء.';
 
   @override
-  String get cleanTheAppThatShared => 'ربما استعاده التطبيق الذي شاركه. جرّب مشاركته مجددًا.';
+  String get cleanTheAppThatShared =>
+      'ربما استعاده التطبيق الذي شاركه. جرّب مشاركته مجددًا.';
 
   @override
   String get cleanNoAppOnThis => 'لم يستلم أي تطبيق على هذا الهاتف الملف.';
 
   @override
-  String get cleanCouldNotSaveIt => 'تعذّر حفظه. تأكد من وجود مساحة على الهاتف.';
+  String get cleanCouldNotSaveIt =>
+      'تعذّر حفظه. تأكد من وجود مساحة على الهاتف.';
 
   @override
   String get cleanTheOriginalIsGone => 'حُذف الأصل. وتبقى النسخة النظيفة.';
 
   @override
-  String get cleanAndroidWouldNotDelete => 'رفض أندرويد حذفه. احذفه من المعرض يدويًا.';
+  String get cleanAndroidWouldNotDelete =>
+      'رفض أندرويد حذفه. احذفه من المعرض يدويًا.';
 
   @override
   String get cleanCleanCopy => 'نسخة نظيفة';
@@ -1976,7 +2073,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cleanRemoved2 => 'أُزيل';
 
   @override
-  String get cleanWithTheLocationInside => 'وفيه الموقع. كل من يحصل عليه يعرف شارعك.';
+  String get cleanWithTheLocationInside =>
+      'وفيه الموقع. كل من يحصل عليه يعرف شارعك.';
 
   @override
   String get cleanWithEverythingItKnew => 'وفيه كل ما كان يعرفه.';
@@ -2057,19 +2155,22 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get contactTheirMessagesStopArriving => 'تتوقف رسائله عن الوصول. ولا يُبلَّغ بذلك.';
+  String get contactTheirMessagesStopArriving =>
+      'تتوقف رسائله عن الوصول. ولا يُبلَّغ بذلك.';
 
   @override
   String get contactDeleteChat => 'حذف المحادثة';
 
   @override
-  String get contactMessagesAndContactGone => 'الرسائل وجهة الاتصال، تُحذف من هذا الهاتف';
+  String get contactMessagesAndContactGone =>
+      'الرسائل وجهة الاتصال، تُحذف من هذا الهاتف';
 
   @override
   String get contactDeleteThisChat => 'حذف هذه المحادثة؟';
 
   @override
-  String get contactEveryMessageAndThe => 'كل رسالة وجهة الاتصال نفسها، تُحذف من هذا الهاتف. ولا يُرسل إليه أي شيء.';
+  String get contactEveryMessageAndThe =>
+      'كل رسالة وجهة الاتصال نفسها، تُحذف من هذا الهاتف. ولا يُرسل إليه أي شيء.';
 
   @override
   String get commonDelete => 'حذف';
@@ -2165,15 +2266,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String donateYourEarlierBitcoinPayment(String tier) {
-    String _temp0 = intl.Intl.selectLogic(
-      tier,
-      {
-        'supporter': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الداعم',
-        'patron': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الراعي',
-        'guardian': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الحارس',
-        'other': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الداعم',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الداعم',
+      'patron': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الراعي',
+      'guardian': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الحارس',
+      'other': 'رُصدت دفعتك السابقة بـ bitcoin · فُتحت شارة الداعم',
+    });
     return '$_temp0';
   }
 
@@ -2184,28 +2282,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateKeepKryfo => 'أبقِ Kryfo *مستقلًا*';
 
   @override
-  String get donateNoAdsNoInvestors => 'لا إعلانات، ولا مستثمرون، ولا شيء للبيع. يعيش على ما يقدّمه الداعمون.';
+  String get donateNoAdsNoInvestors =>
+      'لا إعلانات، ولا مستثمرون، ولا شيء للبيع. يعيش على ما يقدّمه الداعمون.';
 
   @override
-  String get donateBackItAnonymouslyBadge => 'ادعمه دون أن تكشف هويتك. الشارة اختيارية.\n*كل ميزات الخصوصية مجانية.*';
+  String get donateBackItAnonymouslyBadge =>
+      'ادعمه دون أن تكشف هويتك. الشارة اختيارية.\n*كل ميزات الخصوصية مجانية.*';
 
   @override
   String get donateAuditTitle => 'ساعد في تمويل تدقيق أمني';
 
   @override
-  String get donateAuditLine => 'التبرعات هنا تُحسب ضمن تمويل تدقيق مستقل. سيُنشر التقرير الكامل للجميع.';
+  String get donateAuditLine =>
+      'التبرعات هنا تُحسب ضمن تمويل تدقيق مستقل. سيُنشر التقرير الكامل للجميع.';
 
   @override
   String get donateCard => 'بطاقة';
 
   @override
-  String get donateCardOneTime => 'تبرع لمرة واحدة من متصفحك. أنت تختار المبلغ.';
+  String get donateCardOneTime =>
+      'تبرع لمرة واحدة من متصفحك. أنت تختار المبلغ.';
 
   @override
-  String get donateCardMarios => 'إلى أن يجهز مضيفنا المالي، تذهب مدفوعات البطاقات مباشرةً إلى Marios.';
+  String get donateCardMarios =>
+      'إلى أن يجهز مضيفنا المالي، تذهب مدفوعات البطاقات مباشرةً إلى Marios.';
 
   @override
-  String get donateCardSeesName => 'شركة الدفع ترى اسمك. العملات المشفرة هي الخيار الخاص.';
+  String get donateCardSeesName =>
+      'شركة الدفع ترى اسمك. العملات المشفرة هي الخيار الخاص.';
 
   @override
   String get donateCardPay => 'ادفع بالبطاقة';
@@ -2222,19 +2326,23 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get donateAddressCopiedClearsIn => 'نُسخ العنوان · يُزال من الحافظة بعد ٦٠ ث';
+  String get donateAddressCopiedClearsIn =>
+      'نُسخ العنوان · يُزال من الحافظة بعد ٦٠ ث';
 
   @override
   String get donateCopyAddress => 'نسخ العنوان';
 
   @override
-  String get donateBitcoinIsVerifiedBy => 'نتحقق من bitcoin عبر عقدتنا الخاصة، لذا تُفتح شارتك تلقائيًا فور وصول الدفعة.';
+  String get donateBitcoinIsVerifiedBy =>
+      'نتحقق من bitcoin عبر عقدتنا الخاصة، لذا تُفتح شارتك تلقائيًا فور وصول الدفعة.';
 
   @override
-  String get donateWeCanTVerify => 'لا يمكننا التحقق من هذه السلسلة دون سؤال خدمة خارجية عنك، لذا لا نفعل. أرسل إن شئت. لن تُفتح بها شارة.';
+  String get donateWeCanTVerify =>
+      'لا يمكننا التحقق من هذه السلسلة دون سؤال خدمة خارجية عنك، لذا لا نفعل. أرسل إن شئت. لن تُفتح بها شارة.';
 
   @override
-  String get donateBitcoinBadgesNeedOnion => 'شارات bitcoin تحتاج إلى وضع Onion';
+  String get donateBitcoinBadgesNeedOnion =>
+      'شارات bitcoin تحتاج إلى وضع Onion';
 
   @override
   String get donateSwitchToOnion => 'التبديل إلى Onion';
@@ -2246,7 +2354,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'تبدأ الشارات من ٢٠ دولارًا';
 
   @override
-  String get donateReachingThePaymentService => 'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
+  String get donateReachingThePaymentService =>
+      'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 
   @override
   String get donateThisCanTakeUp => 'قد يستغرق هذا دقيقة أو دقيقتين';
@@ -2260,13 +2369,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateUseTheAddressInstead => 'استخدام العنوان بدلًا من ذلك';
 
   @override
-  String get donateThePaymentServiceIs => 'خدمة الدفع عنوان onion، ولا يصل إليها إلا وضع Onion. لم يُرسل شيء.';
+  String get donateThePaymentServiceIs =>
+      'خدمة الدفع عنوان onion، ولا يصل إليها إلا وضع Onion. لم يُرسل شيء.';
 
   @override
-  String get donateTorWasSlowTo => 'تأخر Tor في الوصول إلى خدمة الدفع. يمكنك التبرع إلى العنوان أدناه، لكن شارتك لن تُفتح تلقائيًا. أعد المحاولة لاحقًا للحصول على الشارة.';
+  String get donateTorWasSlowTo =>
+      'تأخر Tor في الوصول إلى خدمة الدفع. يمكنك التبرع إلى العنوان أدناه، لكن شارتك لن تُفتح تلقائيًا. أعد المحاولة لاحقًا للحصول على الشارة.';
 
   @override
-  String get donateThePaymentServiceIsHavingTrouble => 'تواجه خدمة الدفع مشكلة الآن. ما زال بإمكانك التبرع إلى العنوان أدناه، لكن شارتك لن تُفتح تلقائيًا. أعد المحاولة لاحقًا للحصول على الشارة.';
+  String get donateThePaymentServiceIsHavingTrouble =>
+      'تواجه خدمة الدفع مشكلة الآن. ما زال بإمكانك التبرع إلى العنوان أدناه، لكن شارتك لن تُفتح تلقائيًا. أعد المحاولة لاحقًا للحصول على الشارة.';
 
   @override
   String get commonTryAgain => 'إعادة المحاولة';
@@ -2285,7 +2397,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateOpenWallet => 'فتح المحفظة';
 
   @override
-  String get donateThisScreenUpdatesItself => 'تتحدّث هذه الشاشة تلقائيًا لحظة رصد دفعتك.\nأبقِها مفتوحة. لا يُخزَّن شيء، ولا شيء يكشف هويتك.';
+  String get donateThisScreenUpdatesItself =>
+      'تتحدّث هذه الشاشة تلقائيًا لحظة رصد دفعتك.\nأبقِها مفتوحة. لا يُخزَّن شيء، ولا شيء يكشف هويتك.';
 
   @override
   String get donateWatchingTheChainFor => 'نراقب السلسلة بحثًا عن دفعتك';
@@ -2294,7 +2407,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateThisInvoiceExpired => 'انتهت صلاحية هذه الفاتورة';
 
   @override
-  String get donateInvoicesTimeOutIf => 'للفواتير مهلة. إن كنت أرسلت الدفعة بالفعل، فأبقِ هذه الشاشة مفتوحة: نسأل الخدمة مجددًا كل دقيقة لبعض الوقت، ثم في المرة القادمة التي تفتح فيها «ادعم». ابدأ فاتورة جديدة متى شئت.';
+  String get donateInvoicesTimeOutIf =>
+      'للفواتير مهلة. إن كنت أرسلت الدفعة بالفعل، فأبقِ هذه الشاشة مفتوحة: نسأل الخدمة مجددًا كل دقيقة لبعض الوقت، ثم في المرة القادمة التي تفتح فيها «ادعم». ابدأ فاتورة جديدة متى شئت.';
 
   @override
   String get donateNewInvoice => 'فاتورة جديدة';
@@ -2303,13 +2417,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateIPaidCheckAgain => 'دفعت، تحقّق مجددًا';
 
   @override
-  String get donateNoWallet => 'لا يوجد تطبيق على هذا الهاتف يفتح روابط bitcoin. انسخ العنوان بدلًا من ذلك.';
+  String get donateNoWallet =>
+      'لا يوجد تطبيق على هذا الهاتف يفتح روابط bitcoin. انسخ العنوان بدلًا من ذلك.';
 
   @override
   String get donateChecking => 'جارٍ التحقق…';
 
   @override
-  String get donateNotSeenYet => 'لم يظهر بعد. قد يستغرق ظهور الدفعة بضع دقائق.';
+  String get donateNotSeenYet =>
+      'لم يظهر بعد. قد يستغرق ظهور الدفعة بضع دقائق.';
 
   @override
   String get donatePaymentConfirmed => 'تأكّدت الدفعة';
@@ -2319,15 +2435,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String donateVerifiedOnChainYou(String tier) {
-    String _temp0 = intl.Intl.selectLogic(
-      tier,
-      {
-        'supporter': 'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
-        'patron': 'تم التحقق على السلسلة. أنت الآن راعٍ. لا أحد يستطيع أن ينزع ذلك منك.',
-        'guardian': 'تم التحقق على السلسلة. أنت الآن حارس. لا أحد يستطيع أن ينزع ذلك منك.',
-        'other': 'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
+      'patron':
+          'تم التحقق على السلسلة. أنت الآن راعٍ. لا أحد يستطيع أن ينزع ذلك منك.',
+      'guardian':
+          'تم التحقق على السلسلة. أنت الآن حارس. لا أحد يستطيع أن ينزع ذلك منك.',
+      'other':
+          'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
+    });
     return '$_temp0';
   }
 
@@ -2341,7 +2458,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gettingMessagesGettingMessages => 'استلام الرسائل';
 
   @override
-  String get gettingMessagesHowNewMessagesReach => 'كيف تصل الرسائل الجديدة إلى هذا الهاتف. يمكنك تغيير ذلك متى شئت.';
+  String get gettingMessagesHowNewMessagesReach =>
+      'كيف تصل الرسائل الجديدة إلى هذا الهاتف. يمكنك تغيير ذلك متى شئت.';
 
   @override
   String get gettingMessagesAlwaysOn => 'متصل دائمًا';
@@ -2350,7 +2468,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gettingMessagesMostPrivate => 'الأكثر خصوصية';
 
   @override
-  String get gettingMessagesMessagesArriveInstantlyNothing => 'تصل الرسائل فورًا. لا شيء يمر خارج Tor. يستهلك البطارية أكثر من غيره.';
+  String get gettingMessagesMessagesArriveInstantlyNothing =>
+      'تصل الرسائل فورًا. لا شيء يمر خارج Tor. يستهلك البطارية أكثر من غيره.';
 
   @override
   String get gettingMessagesCheckIns => 'تفقّد دوري';
@@ -2359,16 +2478,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gettingMessagesLightest => 'الأخف';
 
   @override
-  String get gettingMessagesKryfoLooksForMessages => 'يبحث Kryfo عن الرسائل كل ١٥ دقيقة. خفيف على البطارية، لكن قد تتأخر الرسائل.';
+  String get gettingMessagesKryfoLooksForMessages =>
+      'يبحث Kryfo عن الرسائل كل ١٥ دقيقة. خفيف على البطارية، لكن قد تتأخر الرسائل.';
 
   @override
-  String get gettingMessagesAGenericAlertWith => 'تنبيه عام، بلا مرسِل ولا نص رسالة';
+  String get gettingMessagesAGenericAlertWith =>
+      'تنبيه عام، بلا مرسِل ولا نص رسالة';
 
   @override
-  String get gettingMessagesShowsMessageTextIn => 'يُظهر نص الرسائل في الإشعارات، حتى عندما يكون Kryfo مقفلًا.';
+  String get gettingMessagesShowsMessageTextIn =>
+      'يُظهر نص الرسائل في الإشعارات، حتى عندما يكون Kryfo مقفلًا.';
 
   @override
-  String get gettingMessagesWhenThePhoneSits => 'حين يبقى الهاتف ساكنًا، يباعد أندرويد بين مرات التفقّد. يُظهر السطر أعلاه آخر تفقّد فعلي. وما دام Kryfo مفتوحًا يبقى متصلًا.';
+  String get gettingMessagesWhenThePhoneSits =>
+      'حين يبقى الهاتف ساكنًا، يباعد أندرويد بين مرات التفقّد. يُظهر السطر أعلاه آخر تفقّد فعلي. وما دام Kryfo مفتوحًا يبقى متصلًا.';
 
   @override
   String get groupChatJumpToTheNewest => 'الانتقال إلى الأحدث';
@@ -2425,7 +2548,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'تعذّر تنظيف ذلك الفيديو';
 
   @override
-  String get groupChatCouldNotCleanThatPictureSend => 'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
+  String get groupChatCouldNotCleanThatPictureSend =>
+      'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
 
   @override
   String get groupChat30Seconds => '٣٠ ثانية';
@@ -2446,7 +2570,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatBurnTimer => 'الرسائل المؤقتة';
 
   @override
-  String get groupChatNewMessagesDisappearOnceRead => 'تختفي الرسائل الجديدة بعد هذه المدة من قراءتها. رسائلك تُحسب من لحظة إرسالها.';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'تختفي الرسائل الجديدة بعد هذه المدة من قراءتها. رسائلك تُحسب من لحظة إرسالها.';
 
   @override
   String get groupChatToday => 'اليوم';
@@ -2459,7 +2584,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupChatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2482,10 +2608,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatPinThisMessage => 'تثبيت هذه الرسالة؟';
 
   @override
-  String get groupChatItLeavesThePinned => 'ستُزال من قائمة الرسائل المثبّتة لدى الجميع هنا.';
+  String get groupChatItLeavesThePinned =>
+      'ستُزال من قائمة الرسائل المثبّتة لدى الجميع هنا.';
 
   @override
-  String get groupChatItGoesUnderThe => 'ستظهر في شريط التثبيت أعلى المحادثة، لدى الجميع هنا.';
+  String get groupChatItGoesUnderThe =>
+      'ستظهر في شريط التثبيت أعلى المحادثة، لدى الجميع هنا.';
 
   @override
   String get groupChatUnpin => 'إلغاء التثبيت';
@@ -2506,7 +2634,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatForwardTo => 'إعادة توجيه إلى';
 
   @override
-  String get groupChatNoContactsToForward => 'لا جهات اتصال لإعادة التوجيه إليها';
+  String get groupChatNoContactsToForward =>
+      'لا جهات اتصال لإعادة التوجيه إليها';
 
   @override
   String get groupChatEditMessage => 'تعديل الرسالة';
@@ -2515,7 +2644,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatUnsendMessage => 'سحب الرسالة';
 
   @override
-  String get groupChatItDisappearsWithNo => 'تُحذف من هواتف الجميع، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
+  String get groupChatItDisappearsWithNo =>
+      'تُحذف من هواتف الجميع، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
   String get groupChatUnsend => 'سحب';
@@ -2543,7 +2673,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatNobodyHereYet => 'لا أحد هنا بعد.';
 
   @override
-  String get groupChatShareTheRoomLink => 'شارك رابط الغرفة. من ينضم يقرأ ما يُكتب من تلك اللحظة فصاعدًا.';
+  String get groupChatShareTheRoomLink =>
+      'شارك رابط الغرفة. من ينضم يقرأ ما يُكتب من تلك اللحظة فصاعدًا.';
 
   @override
   String get groupChatNobodyToReadIt => 'لا أحد غيرك هنا ليقرأه.';
@@ -2573,7 +2704,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupChatHere(int count, Object time) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2586,7 +2718,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupChatMembers(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2636,9 +2769,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupChatFileReach(int have, int count) {
-    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String haveString = haveNumberFormat.format(have);
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2656,7 +2792,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupChatFileGaveUp(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2705,7 +2842,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get groupInfoTheyWillStopReceiving => 'سيتوقف عن تلقي رسائل هذه المجموعة.';
+  String get groupInfoTheyWillStopReceiving =>
+      'سيتوقف عن تلقي رسائل هذه المجموعة.';
 
   @override
   String get groupInfoResetLink => 'إعادة تعيين الرابط';
@@ -2714,10 +2852,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupInfoResetTheRoomLink => 'إعادة تعيين رابط الغرفة؟';
 
   @override
-  String get groupInfoResetLinkLine => 'سيتوقف الرابط القديم عن العمل. يبقى من في الغرفة ويصلهم الرابط الجديد.';
+  String get groupInfoResetLinkLine =>
+      'سيتوقف الرابط القديم عن العمل. يبقى من في الغرفة ويصلهم الرابط الجديد.';
 
   @override
-  String get groupInfoRemoveRoomLine => 'يمكنه الانضمام مجددًا عبر رابط الغرفة. أعد تعيين الرابط لإبقائه خارجها. من بقي في الغرفة يصله الرابط الجديد.';
+  String get groupInfoRemoveRoomLine =>
+      'يمكنه الانضمام مجددًا عبر رابط الغرفة. أعد تعيين الرابط لإبقائه خارجها. من بقي في الغرفة يصله الرابط الجديد.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'إزالة وإعادة تعيين الرابط';
@@ -2730,7 +2870,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appGroupHoldsUpTo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2753,7 +2894,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupInfoClearThisConversation => 'إفراغ هذه المحادثة؟';
 
   @override
-  String get groupInfoEveryMessageHereIs => 'تُمسح كل رسالة هنا من هذا الهاتف. هذا يُفرغ نسختك فقط، ويحتفظ الأعضاء الآخرون بنسخهم.';
+  String get groupInfoEveryMessageHereIs =>
+      'تُمسح كل رسالة هنا من هذا الهاتف. هذا يُفرغ نسختك فقط، ويحتفظ الأعضاء الآخرون بنسخهم.';
 
   @override
   String get groupInfoClear => 'إفراغ';
@@ -2768,7 +2910,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupInfoLeaveGroup => 'مغادرة المجموعة؟';
 
   @override
-  String get groupInfoEverythingInItIs => 'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد.';
+  String get groupInfoEverythingInItIs =>
+      'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد.';
 
   @override
   String groupChatYouWereRemovedFrom(Object name) {
@@ -2776,13 +2919,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get groupInfoLeaveGroupLine => 'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف.';
+  String get groupInfoLeaveGroupLine =>
+      'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف.';
 
   @override
-  String get groupInfoLeaveGroupAdmin => 'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف. أنت مشرفها، فبعد مغادرتك لن يستطيع أحد تغيير أعضائها أو إعادة تسميتها.';
+  String get groupInfoLeaveGroupAdmin =>
+      'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف. أنت مشرفها، فبعد مغادرتك لن يستطيع أحد تغيير أعضائها أو إعادة تسميتها.';
 
   @override
-  String get groupInfoLeaveRoomMaker => 'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد. أنت من أنشأ هذه الغرفة، لذا لن يُدخل رابطها أحدًا بعد الآن.';
+  String get groupInfoLeaveRoomMaker =>
+      'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد. أنت من أنشأ هذه الغرفة، لذا لن يُدخل رابطها أحدًا بعد الآن.';
 
   @override
   String get groupInfoLeave => 'مغادرة';
@@ -2792,7 +2938,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupInfo1Member(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2861,7 +3008,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handlePublicHandle => 'اسم المستخدم العام';
 
   @override
-  String get handleOptionalYourThreeWords => 'اختياري. كلماتك الثلاث تبقى صالحة في كل الأحوال.';
+  String get handleOptionalYourThreeWords =>
+      'اختياري. كلماتك الثلاث تبقى صالحة في كل الأحوال.';
 
   @override
   String get handleWren => 'wren';
@@ -2876,7 +3024,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleClaimThisHandle => 'حجز اسم المستخدم هذا';
 
   @override
-  String get handleAnyoneWithThisLink => 'يمكن لأي شخص لديه هذا الرابط أن يبدأ محادثة خاصة معك. يحمل الرابط دعوتك ولا شيء غيرها.';
+  String get handleAnyoneWithThisLink =>
+      'يمكن لأي شخص لديه هذا الرابط أن يبدأ محادثة خاصة معك. يحمل الرابط دعوتك ولا شيء غيرها.';
 
   @override
   String get handleLinkCopied => 'نُسخ الرابط';
@@ -2890,7 +3039,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get handleDeleteLine => 'ستزول صفحتك العامة ويمكن لأي شخص أن يحجز الاسم. تبقى محادثاتك الحالية كما هي.';
+  String get handleDeleteLine =>
+      'ستزول صفحتك العامة ويمكن لأي شخص أن يحجز الاسم. تبقى محادثاتك الحالية كما هي.';
 
   @override
   String get handleDeleteYes => 'حذف اسم المستخدم';
@@ -2908,13 +3058,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleAlreadyTaken => 'محجوز بالفعل';
 
   @override
-  String get handleNameRule => 'من ٣ إلى ٢٠ حرفًا: أحرف لاتينية صغيرة أو أرقام أو _';
+  String get handleNameRule =>
+      'من ٣ إلى ٢٠ حرفًا: أحرف لاتينية صغيرة أو أرقام أو _';
 
   @override
   String get handleWhatAHandleDoes => 'ما فائدة اسم المستخدم';
 
   @override
-  String get handleAnyoneWhoKnowsIt => 'يمكن لأي شخص يعرفه أن يطلب مراسلتك. تحمل الصفحة دعوتك والسطر الذي كتبته، لا شيء غير ذلك، ولا تحتفظ بأي سجل لمن يقرؤها. يمكنك حذفه متى شئت.';
+  String get handleAnyoneWhoKnowsIt =>
+      'يمكن لأي شخص يعرفه أن يطلب مراسلتك. تحمل الصفحة دعوتك والسطر الذي كتبته، لا شيء غير ذلك، ولا تحتفظ بأي سجل لمن يقرؤها. يمكنك حذفه متى شئت.';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -2948,7 +3100,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String homeHours(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2966,7 +3119,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String homeMinutes(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3006,7 +3160,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeYourPhoneKeepsStopping => 'هاتفك يوقف Kryfo مرارًا';
 
   @override
-  String get homeItHasClosedKryfo => 'أغلق Kryfo ثلاث مرات اليوم، فتأخرت الرسائل أو انتظرت. التفقّد الدوري يصمد أمام ذلك: يستيقظ Kryfo كل ١٥ دقيقة بدلًا من البقاء متصلًا.';
+  String get homeItHasClosedKryfo =>
+      'أغلق Kryfo ثلاث مرات اليوم، فتأخرت الرسائل أو انتظرت. التفقّد الدوري يصمد أمام ذلك: يستيقظ Kryfo كل ١٥ دقيقة بدلًا من البقاء متصلًا.';
 
   @override
   String get homeSwitchToCheckIns => 'التبديل إلى التفقّد الدوري';
@@ -3018,10 +3173,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeNotificationsAreOff => 'الإشعارات معطّلة';
 
   @override
-  String get homeAndroidIsBlockingThem => 'أندرويد يحجبها، فلا يصلك شيء ما دام Kryfo مغلقًا. ولا تزال الرسائل تصل عندما تفتحه.';
+  String get homeAndroidIsBlockingThem =>
+      'أندرويد يحجبها، فلا يصلك شيء ما دام Kryfo مغلقًا. ولا تزال الرسائل تصل عندما تفتحه.';
 
   @override
-  String get homeCouldnTOpenIt => 'تعذّر فتحها. ابحث عن Kryfo في إعدادات الهاتف';
+  String get homeCouldnTOpenIt =>
+      'تعذّر فتحها. ابحث عن Kryfo في إعدادات الهاتف';
 
   @override
   String get homeTurnThemOn => 'تفعيلها';
@@ -3033,7 +3190,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeOurRelayIsQuiet => 'مُرحِّلنا صامت';
 
   @override
-  String get homeRelayModeUsesOnly => 'وضع المُرحِّل يستخدم مُرحِّلنا وحده، وهو لا يستجيب الآن. الوضع السريع يضيف مُرحِّلات عامة إلى جانبه، فتصل الرسائل رغم ذلك. ويبقى كل شيء مختومًا في الحالتين.';
+  String get homeRelayModeUsesOnly =>
+      'وضع المُرحِّل يستخدم مُرحِّلنا وحده، وهو لا يستجيب الآن. الوضع السريع يضيف مُرحِّلات عامة إلى جانبه، فتصل الرسائل رغم ذلك. ويبقى كل شيء مختومًا في الحالتين.';
 
   @override
   String get homeSwitchedToFast => 'الوضع السريع مفعّل';
@@ -3061,7 +3219,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String homeWaitingSendsWhenYou(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3076,7 +3235,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeNoKryfosYet => 'لا جهات اتصال بعد.';
 
   @override
-  String get homeScanTheirCodeSend => 'اقرأ رمزه بالكاميرا، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.';
+  String get homeScanTheirCodeSend =>
+      'اقرأ رمزه بالكاميرا، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.';
 
   @override
   String get homeAddSomeone => 'إضافة شخص';
@@ -3086,7 +3246,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String home1Chat(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3121,7 +3282,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String homeMembers(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3153,7 +3315,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeDeleteChat => 'حذف المحادثة';
 
   @override
-  String get homeMessagesAndContactGone => 'الرسائل وجهة الاتصال، تُحذف من هذا الهاتف';
+  String get homeMessagesAndContactGone =>
+      'الرسائل وجهة الاتصال، تُحذف من هذا الهاتف';
 
   @override
   String get homeDeleteThisChat => 'حذف هذه المحادثة؟';
@@ -3210,7 +3373,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String home1PersonWantsTo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3242,7 +3406,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get introduceCouldNotReachEither => 'تعذّر الوصول إلى أيٍّ منهما. أعد المحاولة لاحقًا';
+  String get introduceCouldNotReachEither =>
+      'تعذّر الوصول إلى أيٍّ منهما. أعد المحاولة لاحقًا';
 
   @override
   String introduceIntroduceTo(Object peerName) {
@@ -3250,19 +3415,25 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get introduceBothOfThemGet => 'يحصل كلٌّ منهما على بطاقة الآخر. ولا يرى أيٌّ منهما الاسم الذي تسمّي به الآخر.';
+  String get introduceBothOfThemGet =>
+      'يحصل كلٌّ منهما على بطاقة الآخر. ولا يرى أيٌّ منهما الاسم الذي تسمّي به الآخر.';
 
   @override
-  String get introduceNoOneElseTo => 'لا أحد آخر للتعريف به بعد. أضف جهة اتصال أخرى أولًا.';
+  String get introduceNoOneElseTo =>
+      'لا أحد آخر للتعريف به بعد. أضف جهة اتصال أخرى أولًا.';
 
   @override
   String get introduceANoteLikeMy => 'ملاحظة، مثل «ابن عمي» (اختيارية)';
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
-    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String maxString = maxNumberFormat.format(max);
-    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String leftString = leftNumberFormat.format(left);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3290,10 +3461,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'رقم الأمان';
 
   @override
-  String get keyVerificationNewNumber => 'تغيّر رمز الأمان بينما كانت هذه الصفحة مفتوحة. هذا هو الرقم الجديد، قارنه مرة أخرى.';
+  String get keyVerificationNewNumber =>
+      'تغيّر رمز الأمان بينما كانت هذه الصفحة مفتوحة. هذا هو الرقم الجديد، قارنه مرة أخرى.';
 
   @override
-  String get keyVerificationKeyMoved => 'تغيّر رمز الأمان للتو. قارن الرقم الجديد.';
+  String get keyVerificationKeyMoved =>
+      'تغيّر رمز الأمان للتو. قارن الرقم الجديد.';
 
   @override
   String keyVerificationNoKeyYet(Object peerName) {
@@ -3323,7 +3496,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockFileThisFileIsDamaged => 'هذا الملف تالف.';
 
   @override
-  String get lockFileThisFileWasLocked => 'قُفل هذا الملف بمفتاح، لا بكلمة مرور.';
+  String get lockFileThisFileWasLocked =>
+      'قُفل هذا الملف بمفتاح، لا بكلمة مرور.';
 
   @override
   String get lockFileThisIsNotA => 'هذا ليس ملفًا مقفلًا.';
@@ -3338,31 +3512,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockFileItNeedsAPassword => 'يحتاج إلى كلمة مرور.';
 
   @override
-  String get lockFileKryfoCouldNotRead => 'لم يستطع Kryfo قراءة الملف أو الكتابة فيه.';
+  String get lockFileKryfoCouldNotRead =>
+      'لم يستطع Kryfo قراءة الملف أو الكتابة فيه.';
 
   @override
-  String get lockFileCheckCapitalsAndSpaces => 'تحقّق من الأحرف الكبيرة والمسافات. لا أحد يستطيع إعادة تعيينها.';
+  String get lockFileCheckCapitalsAndSpaces =>
+      'تحقّق من الأحرف الكبيرة والمسافات. لا أحد يستطيع إعادة تعيينها.';
 
   @override
-  String get lockFileItMayHaveBeen => 'ربما انقطع في الطريق. اطلب إرساله مجددًا. لم يُحفظ شيء.';
+  String get lockFileItMayHaveBeen =>
+      'ربما انقطع في الطريق. اطلب إرساله مجددًا. لم يُحفظ شيء.';
 
   @override
-  String get lockFileItOpensWithThe => 'يُفتح بملف مفتاح الشخص الذي صُنع له، بأداة age على حاسوب. أما Kryfo فيفتح النوع المحمي بكلمة مرور.';
+  String get lockFileItOpensWithThe =>
+      'يُفتح بملف مفتاح الشخص الذي صُنع له، بأداة age على حاسوب. أما Kryfo فيفتح النوع المحمي بكلمة مرور.';
 
   @override
-  String get lockFileKryfoOpensFilesLocked => 'يفتح Kryfo الملفات المقفلة بـ age، وعادةً ما تنتهي أسماؤها بـ ‎.age';
+  String get lockFileKryfoOpensFilesLocked =>
+      'يفتح Kryfo الملفات المقفلة بـ age، وعادةً ما تنتهي أسماؤها بـ ‎.age';
 
   @override
-  String get lockFileCloseAFewApps => 'أغلق بعض التطبيقات ثم أعد المحاولة. يحتاج فحص كلمة المرور إلى بضع مئات من الميغابايتات للحظة.';
+  String get lockFileCloseAFewApps =>
+      'أغلق بعض التطبيقات ثم أعد المحاولة. يحتاج فحص كلمة المرور إلى بضع مئات من الميغابايتات للحظة.';
 
   @override
   String get lockFileNothingWasSaved => 'لم يُحفظ شيء.';
 
   @override
-  String get lockFileTypeOneOrLet => 'اكتب واحدة، أو دع Kryfo يقترح أربع كلمات.';
+  String get lockFileTypeOneOrLet =>
+      'اكتب واحدة، أو دع Kryfo يقترح أربع كلمات.';
 
   @override
-  String get lockFileTheAppThatHolds => 'ربما استعاده التطبيق الذي يحتفظ به. اختره مجددًا.';
+  String get lockFileTheAppThatHolds =>
+      'ربما استعاده التطبيق الذي يحتفظ به. اختره مجددًا.';
 
   @override
   String get lockFileHidePassword => 'إخفاء كلمة المرور';
@@ -3464,7 +3646,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockFileTheNameAloneCan => 'قد يكشف الاسم وحده ما في داخله.';
 
   @override
-  String get lockFileAnyoneWithThePassword => 'يمكن لأي شخص يملك كلمة المرور فتحه، في Kryfo أو على أي حاسوب بأداة age المجانية. إن نسيتها ضاع الملف إلى الأبد. لا أحد يستطيع إعادة تعيينها.';
+  String get lockFileAnyoneWithThePassword =>
+      'يمكن لأي شخص يملك كلمة المرور فتحه، في Kryfo أو على أي حاسوب بأداة age المجانية. إن نسيتها ضاع الملف إلى الأبد. لا أحد يستطيع إعادة تعيينها.';
 
   @override
   String get lockFileLocked2 => 'قُفل.';
@@ -3478,10 +3661,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get lockFileNoKryfoOnThe => 'لا يوجد Kryfo لدى الطرف الآخر؟ على حاسوب:';
+  String get lockFileNoKryfoOnThe =>
+      'لا يوجد Kryfo لدى الطرف الآخر؟ على حاسوب:';
 
   @override
-  String get lockFileItAsksForThe => 'ستطلب كلمة المرور. أداة age مجانية على age-encryption.org';
+  String get lockFileItAsksForThe =>
+      'ستطلب كلمة المرور. أداة age مجانية على age-encryption.org';
 
   @override
   String lockTooManyTriesS(Object lockState) {
@@ -3501,7 +3686,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupUnlockWithFingerprint => 'فتح القفل بالبصمة؟';
 
   @override
-  String get lockSetupThePinStillWorks => 'يبقى رمز PIN صالحًا متى أردته. هذا أسرع فقط.';
+  String get lockSetupThePinStillWorks =>
+      'يبقى رمز PIN صالحًا متى أردته. هذا أسرع فقط.';
 
   @override
   String get lockSetupUseFingerprint => 'استخدام البصمة';
@@ -3525,13 +3711,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupTheSameFourDigits => 'الأرقام نفسها مرة أخرى';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => 'أربعة أرقام أو أكثر، أي شيء ستتذكره';
+  String get lockSetupFourDigitsAnythingYou =>
+      'أربعة أرقام أو أكثر، أي شيء ستتذكره';
 
   @override
   String get modesOnion => 'Onion';
 
   @override
-  String get modesFullOnionRoutingThree => 'توجيه onion كامل، ثلاث قفزات. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ. لا أحد يرى مع من تتحدث.';
+  String get modesFullOnionRoutingThree =>
+      'توجيه onion كامل، ثلاث قفزات. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ. لا أحد يرى مع من تتحدث.';
 
   @override
   String get modesSlower => 'أبطأ';
@@ -3540,7 +3728,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modesRelay => 'مُرحِّل';
 
   @override
-  String get modesOneSealedConnectionTo => 'اتصال واحد مختوم بمُرحِّل Kryfo الخاص، مثل VPN لا يملك ما يسجّله. تصل الرسائل في نحو ثانية، ويعمل حيث يُحجب Tor.';
+  String get modesOneSealedConnectionTo =>
+      'اتصال واحد مختوم بمُرحِّل Kryfo الخاص، مثل VPN لا يملك ما يسجّله. تصل الرسائل في نحو ثانية، ويعمل حيث يُحجب Tor.';
 
   @override
   String get modesQuick => 'سريع';
@@ -3552,13 +3741,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modesFast => 'سريع';
 
   @override
-  String get modesPlainConnectionsToEvery => 'اتصالات عادية بكل المُرحِّلات. شبه فوري، والأقل خصوصية بين الثلاثة.';
+  String get modesPlainConnectionsToEvery =>
+      'اتصالات عادية بكل المُرحِّلات. شبه فوري، والأقل خصوصية بين الثلاثة.';
 
   @override
   String get modesInstant => 'فوري';
 
   @override
-  String get modesEveryRelayYouUse => 'كل مُرحِّل تستخدمه يعرف العنوان الذي تتصل منه، لا مُرحِّلنا وحده. تبقى الرسائل مختومة، لكن حقيقة أنك أرسلت رسالة ليست كذلك. معطّل افتراضيًا، ويعود معطّلًا بعد إعادة التثبيت.';
+  String get modesEveryRelayYouUse =>
+      'كل مُرحِّل تستخدمه يعرف العنوان الذي تتصل منه، لا مُرحِّلنا وحده. تبقى الرسائل مختومة، لكن حقيقة أنك أرسلت رسالة ليست كذلك. معطّل افتراضيًا، ويعود معطّلًا بعد إعادة التثبيت.';
 
   @override
   String get modesNotChanged => 'لم يتغيّر الوضع. حاول مجددًا.';
@@ -3602,13 +3793,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get modesOnionIsTheDefault => 'وضع Onion هو الافتراضي ويبقى كذلك ما لم تغيّره. يسري التبديل من الرسالة التالية.';
+  String get modesOnionIsTheDefault =>
+      'وضع Onion هو الافتراضي ويبقى كذلك ما لم تغيّره. يسري التبديل من الرسالة التالية.';
 
   @override
   String get modesFastMode => 'الوضع السريع';
 
   @override
-  String get modesPlainConnectionsToEveryRelayQuicker => 'اتصالات عادية بكل المُرحِّلات. أسرع، والمُرحِّلات تستطيع رؤية عنوان IP الخاص بك. تبقى الرسائل مشفّرة بين الطرفين في الحالتين.';
+  String get modesPlainConnectionsToEveryRelayQuicker =>
+      'اتصالات عادية بكل المُرحِّلات. أسرع، والمُرحِّلات تستطيع رؤية عنوان IP الخاص بك. تبقى الرسائل مشفّرة بين الطرفين في الحالتين.';
 
   @override
   String get modesTurnOnFastMode => 'تفعيل الوضع السريع';
@@ -3620,7 +3813,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get movedWipeThisPhone => 'مسح Kryfo من هذا الهاتف؟';
 
   @override
-  String get movedEverythingKryfoHoldsHere => 'يزول كل ما يحمله Kryfo هنا: الرسائل، وجهات الاتصال، والمفاتيح. ويحتفظ الجهاز الآخر بكل ذلك. لا يمكن التراجع عن هذا.';
+  String get movedEverythingKryfoHoldsHere =>
+      'يزول كل ما يحمله Kryfo هنا: الرسائل، وجهات الاتصال، والمفاتيح. ويحتفظ الجهاز الآخر بكل ذلك. لا يمكن التراجع عن هذا.';
 
   @override
   String get movedWipeIt => 'امسحه';
@@ -3629,7 +3823,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get movedNotMovingAfterAll => 'عدلت عن الانتقال؟';
 
   @override
-  String get movedOnlyDoThisIf => 'لا تفعل هذا إلا إن لم تُستورد النسخة الاحتياطية في أي مكان قط. وإن استُوردت، فهناك الآن جهازان يحملان هوية واحدة، وستبدأ الرسائل بالضياع على كليهما.';
+  String get movedOnlyDoThisIf =>
+      'لا تفعل هذا إلا إن لم تُستورد النسخة الاحتياطية في أي مكان قط. وإن استُوردت، فهناك الآن جهازان يحملان هوية واحدة، وستبدأ الرسائل بالضياع على كليهما.';
 
   @override
   String get movedIMStayingHere => 'سأبقى هنا';
@@ -3663,10 +3858,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get movedIMNotMoving => 'عدلت عن الانتقال';
 
   @override
-  String get myKryfoAHandleIs3 => 'اسم المستخدم من ٣ إلى ٢٠ حرفًا أو رقمًا أو _';
+  String get myKryfoAHandleIs3 =>
+      'اسم المستخدم من ٣ إلى ٢٠ حرفًا أو رقمًا أو _';
 
   @override
-  String get myKryfoInviteCopiedClearsIn => 'نُسخت الدعوة · تُزال من الحافظة بعد ٦٠ ث';
+  String get myKryfoInviteCopiedClearsIn =>
+      'نُسخت الدعوة · تُزال من الحافظة بعد ٦٠ ث';
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
@@ -3680,13 +3877,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myKryfoAddSomeone => 'إضافة شخص';
 
   @override
-  String get myKryfoKryfoDoesnTScan => 'لا يفحص Kryfo جهات اتصالك، وهذا هو المقصود.';
+  String get myKryfoKryfoDoesnTScan =>
+      'لا يفحص Kryfo جهات اتصالك، وهذا هو المقصود.';
 
   @override
-  String get myKryfoIfThisLinkEnds => 'إن وصل هذا الرابط إلى مكان لم تقصده، فأعد تعيينه من الإعدادات. وعندها سيحتاج كل من لديه إلى رابط جديد.';
+  String get myKryfoIfThisLinkEnds =>
+      'إن وصل هذا الرابط إلى مكان لم تقصده، فأعد تعيينه من الإعدادات. وعندها سيحتاج كل من لديه إلى رابط جديد.';
 
   @override
-  String get myKryfoAlreadyShareAFriend => 'لديكما صديق مشترك على Kryfo؟ يمكنه أن يعرّفكما على بعضكما من محادثته، فتتخطيان الطلب.';
+  String get myKryfoAlreadyShareAFriend =>
+      'لديكما صديق مشترك على Kryfo؟ يمكنه أن يعرّفكما على بعضكما من محادثته، فتتخطيان الطلب.';
 
   @override
   String get myKryfoHandleCopied => 'نُسخ اسم المستخدم';
@@ -3695,7 +3895,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myKryfoTheyReHereWith => 'معي هنا';
 
   @override
-  String get myKryfoPointYourPhonesAt => 'وجّه الهاتفين أحدهما نحو الآخر. لا يمر شيء عبر أي خادم.';
+  String get myKryfoPointYourPhonesAt =>
+      'وجّه الهاتفين أحدهما نحو الآخر. لا يمر شيء عبر أي خادم.';
 
   @override
   String get myKryfoScanTheirsInstead => 'اقرأ رمزه بدلًا من ذلك';
@@ -3707,13 +3908,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myKryfoTheyReSomewhereElse => 'في مكان آخر';
 
   @override
-  String get myKryfoSendThemALink => 'أرسل له رابطًا. يفتح مباشرة على شاشة الإضافة.';
+  String get myKryfoSendThemALink =>
+      'أرسل له رابطًا. يفتح مباشرة على شاشة الإضافة.';
 
   @override
   String get myKryfoYourLinkAppearsOnce => 'يظهر رابطك بمجرد اتصالك';
 
   @override
-  String get myKryfoTheLinkCarriesYour => 'يحمل الرابط كلماتك الثلاث وعنوانك والمفاتيح اللازمة لبدء محادثة. يبقى صالحًا حتى تعيد تعيينه من الإعدادات.';
+  String get myKryfoTheLinkCarriesYour =>
+      'يحمل الرابط كلماتك الثلاث وعنوانك والمفاتيح اللازمة لبدء محادثة. يبقى صالحًا حتى تعيد تعيينه من الإعدادات.';
 
   @override
   String get myKryfoSendTheLink => 'إرسال الرابط';
@@ -3734,10 +3937,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myKryfoIKnowTheirHandle => 'أعرف اسم مستخدمه';
 
   @override
-  String get myKryfoTypeTheNameThey => 'اكتب @الاسم الذي أعطاك إياه. يعمل إن كان قد حجز اسمًا.';
+  String get myKryfoTypeTheNameThey =>
+      'اكتب @الاسم الذي أعطاك إياه. يعمل إن كان قد حجز اسمًا.';
 
   @override
-  String get myKryfoTheLookupAsksFor => 'يرسل البحث ذلك الاسم وحده ولا شيء عنك. وتصله رسالتك الأولى كطلب.';
+  String get myKryfoTheLookupAsksFor =>
+      'يرسل البحث ذلك الاسم وحده ولا شيء عنك. وتصله رسالتك الأولى كطلب.';
 
   @override
   String get myKryfoLooking => 'جارٍ البحث…';
@@ -3752,10 +3957,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myKryfoAPublicHandle => 'اسم مستخدم عام';
 
   @override
-  String get myKryfoPutItInA => 'ضعه في نبذتك التعريفية. يمكن لأي شخص يعرفه أن يجدك.';
+  String get myKryfoPutItInA =>
+      'ضعه في نبذتك التعريفية. يمكن لأي شخص يعرفه أن يجدك.';
 
   @override
-  String get myKryfoANamePeopleCan => 'اسم يمكن للناس أن يجدوك به. معطّل حتى تحجز واحدًا.';
+  String get myKryfoANamePeopleCan =>
+      'اسم يمكن للناس أن يجدوك به. معطّل حتى تحجز واحدًا.';
 
   @override
   String get newGroupCouldNotCreate => 'تعذّر الإنشاء';
@@ -3780,7 +3987,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newGroupSelected(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3792,13 +4000,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get newGroupAddAtLeastOne => 'أضف جهة اتصال واحدة على الأقل قبل إنشاء مجموعة.';
+  String get newGroupAddAtLeastOne =>
+      'أضف جهة اتصال واحدة على الأقل قبل إنشاء مجموعة.';
 
   @override
   String get newGroupNeedsContacts => 'تُنشأ المجموعات مع جهات اتصالك';
 
   @override
-  String get newGroupAddSomeoneFirst => 'أضف شخصًا أولًا. لا تحتاج الغرفة إلى جهات اتصال: يمكن لأي شخص لديه رابطها الانضمام.';
+  String get newGroupAddSomeoneFirst =>
+      'أضف شخصًا أولًا. لا تحتاج الغرفة إلى جهات اتصال: يمكن لأي شخص لديه رابطها الانضمام.';
 
   @override
   String get notesDeleteThisNote => 'حذف هذه الملاحظة؟';
@@ -3843,7 +4053,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesAQuietPlace => 'مكان هادئ';
 
   @override
-  String get notesJotAnythingDownIt => 'دوّن أي شيء. يبقى على هذا الهاتف ولا يغادره أبدًا.';
+  String get notesJotAnythingDownIt =>
+      'دوّن أي شيء. يبقى على هذا الهاتف ولا يغادره أبدًا.';
 
   @override
   String get notesJotSomethingDown => 'دوّن شيئًا…';
@@ -3859,7 +4070,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String notesExportCount(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3894,7 +4106,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesExportLock => 'القفل بعبارة مرور';
 
   @override
-  String get notesExportLockLine => 'افتحه من الأدوات عبر «فتح ملف مقفل»، أو بأداة age على حاسوب';
+  String get notesExportLockLine =>
+      'افتحه من الأدوات عبر «فتح ملف مقفل»، أو بأداة age على حاسوب';
 
   @override
   String get notesExportPlainTitle => 'التصدير بلا عبارة مرور؟';
@@ -3912,10 +4125,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesExportNotSaved => 'لم تُحفظ الملاحظات. الملف ما زال هنا.';
 
   @override
-  String get notesExportGone => 'مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.';
+  String get notesExportGone =>
+      'مُسح الملف حين قُفل Kryfo. صدّر مرة أخرى لإنشاء ملف جديد.';
 
   @override
-  String get notesExportHoldsInstaller => 'يحتوي هذا التصدير على ملف لتثبيت تطبيق، لذا لا يمكن مشاركته. احفظه على هاتفك بدلًا من ذلك.';
+  String get notesExportHoldsInstaller =>
+      'يحتوي هذا التصدير على ملف لتثبيت تطبيق، لذا لا يمكن مشاركته. احفظه على هاتفك بدلًا من ذلك.';
 
   @override
   String get notesExportSaved => 'حُفظت الملاحظات';
@@ -3926,13 +4141,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notesExportSavedUnchecked => 'حُفظت الملاحظات، لكن Kryfo لم يتمكن من التحقق من النسخة';
+  String get notesExportSavedUnchecked =>
+      'حُفظت الملاحظات، لكن Kryfo لم يتمكن من التحقق من النسخة';
 
   @override
   String get notesExportFailed => 'تعذّر تصدير الملاحظات. لم يُحفظ شيء.';
 
   @override
-  String get notesExportTooLarge => 'أكبر من أن يُصدَّر. الصور والرسائل الصوتية تبلغ ٤ غ.ب أو أكثر.';
+  String get notesExportTooLarge =>
+      'أكبر من أن يُصدَّر. الصور والرسائل الصوتية تبلغ ٤ غ.ب أو أكثر.';
 
   @override
   String get notesExportSubject => 'ملاحظات Kryfo';
@@ -3944,13 +4161,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingPrivateMessaging => 'مراسلة خاصة،\n*بلا ثمن خفي*.';
 
   @override
-  String get onboardingYourNameIsThree => '*اسمك ثلاث كلمات.* بلا هاتف، ولا بريد إلكتروني، ولا دفتر عناوين.';
+  String get onboardingYourNameIsThree =>
+      '*اسمك ثلاث كلمات.* بلا هاتف، ولا بريد إلكتروني، ولا دفتر عناوين.';
 
   @override
-  String get onboardingNobodyGetsInUnless => '*لا يدخل أحد إلا إن سمحت له.* لن يجدك أحد ما لم تحجز اسم مستخدم عامًا. يُضاف الناس يدويًا، من الطرفين.';
+  String get onboardingNobodyGetsInUnless =>
+      '*لا يدخل أحد إلا إن سمحت له.* لن يجدك أحد ما لم تحجز اسم مستخدم عامًا. يُضاف الناس يدويًا، من الطرفين.';
 
   @override
-  String get onboardingTheFirstConnectionTakes => '*الاتصال الأول يستغرق دقيقة.* يبني Kryfo مسارًا خاصًا قبل أن يرسل. ثم يصبح سريعًا.';
+  String get onboardingTheFirstConnectionTakes =>
+      '*الاتصال الأول يستغرق دقيقة.* يبني Kryfo مسارًا خاصًا قبل أن يرسل. ثم يصبح سريعًا.';
 
   @override
   String get onboardingBegin => 'ابدأ';
@@ -3965,7 +4185,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingYourKryfoId => 'اسمك';
 
   @override
-  String get onboardingGeneratedFromAKey => 'مولَّد من مفتاح لا يوجد إلا على هذا الهاتف. *لا أحد غيرك يملك هذه الكلمات.*';
+  String get onboardingGeneratedFromAKey =>
+      'مولَّد من مفتاح لا يوجد إلا على هذا الهاتف. *لا أحد غيرك يملك هذه الكلمات.*';
 
   @override
   String get onboardingTryAnother => 'جرّب غيره';
@@ -3980,7 +4201,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingPickA => 'اختر *وجهًا*.';
 
   @override
-  String get onboardingDrawnOnThisPhone => 'يُرسم على هذا الهاتف من رقم، ولا يُرفع أبدًا. غيّره متى شئت.';
+  String get onboardingDrawnOnThisPhone =>
+      'يُرسم على هذا الهاتف من رقم، ولا يُرفع أبدًا. غيّره متى شئت.';
 
   @override
   String get onboardingThePeopleYouMessage => 'يراه أيضًا من تراسلهم';
@@ -3998,34 +4220,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingHowYourMessages => 'كيف *تنتقل* رسائلك.';
 
   @override
-  String get onboardingYouCanChangeThis => 'يمكنك تغيير هذا في أي وقت من الإعدادات، للجميع أو لمحادثة واحدة.';
+  String get onboardingYouCanChangeThis =>
+      'يمكنك تغيير هذا في أي وقت من الإعدادات، للجميع أو لمحادثة واحدة.';
 
   @override
   String get onboardingOnion => 'Onion';
 
   @override
-  String get onboardingSlowerAMessageTakes => 'أبطأ. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ.';
+  String get onboardingSlowerAMessageTakes =>
+      'أبطأ. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ.';
 
   @override
-  String get onboardingHidesYourAddressFrom => 'يُخفي عنوانك عن الجميع، بما في ذلك مُرحِّلنا.';
+  String get onboardingHidesYourAddressFrom =>
+      'يُخفي عنوانك عن الجميع، بما في ذلك مُرحِّلنا.';
 
   @override
   String get onboardingRelay => 'مُرحِّل';
 
   @override
-  String get onboardingOurRelaySeesYour => 'يرى مُرحِّلنا عنوانك. ولا أحد غيره.';
+  String get onboardingOurRelaySeesYour =>
+      'يرى مُرحِّلنا عنوانك. ولا أحد غيره.';
 
   @override
   String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب Tor.';
 
   @override
-  String get onboardingAutoFindsAWay => 'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
+  String get onboardingAutoFindsAWay =>
+      'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
 
   @override
   String get onboardingFast => 'سريع';
 
   @override
-  String get onboardingEveryRelayYouUse => 'كل مُرحِّل تستخدمه يرى عنوانك. الأقل خصوصية بين الثلاثة.';
+  String get onboardingEveryRelayYouUse =>
+      'كل مُرحِّل تستخدمه يرى عنوانك. الأقل خصوصية بين الثلاثة.';
 
   @override
   String get onboardingNearInstant => 'شبه فوري.';
@@ -4043,28 +4271,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingThreeThingsThen => 'ثلاثة أشياء،\nثم *تدخل*.';
 
   @override
-  String get onboardingEverythingElseTheApp => 'وكل ما عدا ذلك سيخبرك به التطبيق حين يهمّ.';
+  String get onboardingEverythingElseTheApp =>
+      'وكل ما عدا ذلك سيخبرك به التطبيق حين يهمّ.';
 
   @override
   String get onboardingYourNameIsThreeWords => 'اسمك ثلاث كلمات';
 
   @override
-  String get onboardingThatIsTheWhole => 'هذه هي الهوية كلها. لا رقم ولا بريد يمكن أن يتسرّب أو يُبحث عنه. من تتحدث معهم يرون هذه الكلمات والوجه الذي اخترته.';
+  String get onboardingThatIsTheWhole =>
+      'هذه هي الهوية كلها. لا رقم ولا بريد يمكن أن يتسرّب أو يُبحث عنه. من تتحدث معهم يرون هذه الكلمات والوجه الذي اخترته.';
 
   @override
-  String get onboardingNobodyCanReachYou => 'لا أحد يستطيع الوصول إليك حتى تسمح له بالدخول';
+  String get onboardingNobodyCanReachYou =>
+      'لا أحد يستطيع الوصول إليك حتى تسمح له بالدخول';
 
   @override
-  String get onboardingAStrangerWithYour => 'الغريب الذي يعرف كلماتك لا يستطيع إلا أن يطرق الباب. تنتظر رسالته الأولى في الطلبات حتى توافق، ويمكنك الرفض دون أن يعلم أبدًا.';
+  String get onboardingAStrangerWithYour =>
+      'الغريب الذي يعرف كلماتك لا يستطيع إلا أن يطرق الباب. تنتظر رسالته الأولى في الطلبات حتى توافق، ويمكنك الرفض دون أن يعلم أبدًا.';
 
   @override
-  String get onboardingTheFirstConnectionTakesAMinute => 'الاتصال الأول يستغرق دقيقة';
+  String get onboardingTheFirstConnectionTakesAMinute =>
+      'الاتصال الأول يستغرق دقيقة';
 
   @override
-  String get onboardingKryfoBuildsAPrivateRouteBefore => 'يبني Kryfo مسارًا خاصًا قبل أن يرسل أي شيء. وحين تكون غير متصل، تنتظر الرسائل وتصل عند عودتك.';
+  String get onboardingKryfoBuildsAPrivateRouteBefore =>
+      'يبني Kryfo مسارًا خاصًا قبل أن يرسل أي شيء. وحين تكون غير متصل، تنتظر الرسائل وتصل عند عودتك.';
 
   @override
-  String get onboardingYourIdentityLivesOn => 'هويتك موجودة على هذا الهاتف. انسخها احتياطيًا من الإعدادات حين تكون مستعدًا.';
+  String get onboardingYourIdentityLivesOn =>
+      'هويتك موجودة على هذا الهاتف. انسخها احتياطيًا من الإعدادات حين تكون مستعدًا.';
 
   @override
   String get onboardingIUnderstand => 'فهمت ←';
@@ -4073,13 +4308,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingOneQuiet => '*إشعار* واحد هادئ.';
 
   @override
-  String get onboardingAndroidNeedsAVisible => 'يحتاج أندرويد إلى إشعار ظاهر ما دام تطبيق ما يستمع في الخلفية. بهذا تصلك الرسائل حين يكون Kryfo مغلقًا.';
+  String get onboardingAndroidNeedsAVisible =>
+      'يحتاج أندرويد إلى إشعار ظاهر ما دام تطبيق ما يستمع في الخلفية. بهذا تصلك الرسائل حين يكون Kryfo مغلقًا.';
 
   @override
   String get onboardingSilentAndAtThe => 'صامت، وفي أسفل لوحة الإشعارات';
 
   @override
-  String get onboardingItNeverBuzzesTurn => 'لا يهتز أبدًا. إن أوقفته، تنتظر الرسائل حتى تفتح التطبيق مجددًا.';
+  String get onboardingItNeverBuzzesTurn =>
+      'لا يهتز أبدًا. إن أوقفته، تنتظر الرسائل حتى تفتح التطبيق مجددًا.';
 
   @override
   String get onboardingGotIt => 'حسنًا ←';
@@ -4088,13 +4325,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingNow => 'والآن، *أضف شخصًا*.';
 
   @override
-  String get onboardingTheAppIsReady => 'التطبيق جاهز. لا أحد يستطيع مراسلتك حتى تضيفه أو تسمح له بالدخول.';
+  String get onboardingTheAppIsReady =>
+      'التطبيق جاهز. لا أحد يستطيع مراسلتك حتى تضيفه أو تسمح له بالدخول.';
 
   @override
   String get onboardingEveryWayToAdd => 'كل طرق إضافة شخص';
 
   @override
-  String get onboardingShowYourCodeSend => 'اعرض رمزك، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.';
+  String get onboardingShowYourCodeSend =>
+      'اعرض رمزك، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.';
 
   @override
   String get onboardingScanTheirs => 'اقرأ رمزه';
@@ -4147,7 +4386,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get openLockedPassword => 'كلمة المرور';
 
   @override
-  String get openLockedThePasswordIsChecked => 'يُتحقق من كلمة المرور أولًا. وبعدها فقط يسأل Kryfo أين يضع الملف المفتوح، فيذهب إلى هناك مباشرة.';
+  String get openLockedThePasswordIsChecked =>
+      'يُتحقق من كلمة المرور أولًا. وبعدها فقط يسأل Kryfo أين يضع الملف المفتوح، فيذهب إلى هناك مباشرة.';
 
   @override
   String get openLockedOpened2 => 'فُتح.';
@@ -4171,13 +4411,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeLooking => 'جارٍ البحث…';
 
   @override
-  String get pairCodeNothingThereYetTrying => 'لا شيء بعد · جارٍ إعادة المحاولة';
+  String get pairCodeNothingThereYetTrying =>
+      'لا شيء بعد · جارٍ إعادة المحاولة';
 
   @override
-  String get pairCodeNothingAtThatCode => 'لا شيء عند هذا الرمز. ربما اختفى، أو لم يشاركه بعد.';
+  String get pairCodeNothingAtThatCode =>
+      'لا شيء عند هذا الرمز. ربما اختفى، أو لم يشاركه بعد.';
 
   @override
-  String get pairCodeUnreached => 'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
+  String get pairCodeUnreached =>
+      'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
 
   @override
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
@@ -4195,13 +4438,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeKeyNumber => 'رقم المفتاح';
 
   @override
-  String get pairCodeNumberMatches => 'تحقّق من تطابق المجموعات الأربع على الهاتفين';
+  String get pairCodeNumberMatches =>
+      'تحقّق من تطابق المجموعات الأربع على الهاتفين';
 
   @override
   String get pairCodeNumberDiffers => 'الرقم مختلف';
 
   @override
-  String get pairCodeNoNumberThere => 'لا يظهر رقم على شاشته؟ أضِفه، ثم قارن رقم الأمان في المحادثة.';
+  String get pairCodeNoNumberThere =>
+      'لا يظهر رقم على شاشته؟ أضِفه، ثم قارن رقم الأمان في المحادثة.';
 
   @override
   String get pairCodeNotAdded => 'لم تتم الإضافة. اطلب رمزًا جديدًا.';
@@ -4237,10 +4482,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'إبقاؤه كما هو';
 
   @override
-  String get photoKnowsReadOnThisPhone => 'قُرئ على هذا الهاتف · لم يذهب الفيديو إلى أي مكان';
+  String get photoKnowsReadOnThisPhone =>
+      'قُرئ على هذا الهاتف · لم يذهب الفيديو إلى أي مكان';
 
   @override
-  String get photoKnowsReadOnThisPhoneThePhoto => 'قُرئت على هذا الهاتف · لم تذهب الصورة إلى أي مكان';
+  String get photoKnowsReadOnThisPhoneThePhoto =>
+      'قُرئت على هذا الهاتف · لم تذهب الصورة إلى أي مكان';
 
   @override
   String get photoKnowsReadingTheFile => 'جارٍ قراءة الملف';
@@ -4279,7 +4526,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonOff => 'معطّل';
 
   @override
-  String get pinsOpensKryfoFourDigits => 'يفتح Kryfo. يُطلب حين يعود التطبيق إلى الواجهة.';
+  String get pinsOpensKryfoFourDigits =>
+      'يفتح Kryfo. يُطلب حين يعود التطبيق إلى الواجهة.';
 
   @override
   String get pinsChangePin => 'تغيير رمز PIN';
@@ -4294,7 +4542,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsTurnOffTheApp => 'إيقاف قفل التطبيق؟';
 
   @override
-  String get pinsThePinGoesAnd => 'يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
+  String get pinsThePinGoesAnd =>
+      'يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
@@ -4318,7 +4567,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsRemoveTheWipePin => 'إزالة رمز PIN للمسح؟';
 
   @override
-  String get pinsTheLockScreenKeeps => 'تحتفظ شاشة القفل برمز PIN الخاص بك. ولا يعود لرمز PIN للمسح أي مفعول.';
+  String get pinsTheLockScreenKeeps =>
+      'تحتفظ شاشة القفل برمز PIN الخاص بك. ولا يعود لرمز PIN للمسح أي مفعول.';
 
   @override
   String profileCopied(Object what) {
@@ -4342,15 +4592,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String profileYouAreAThank(String tier) {
-    String _temp0 = intl.Intl.selectLogic(
-      tier,
-      {
-        'supporter': 'أنت داعم. شكرًا لك.',
-        'patron': 'أنت راعٍ. شكرًا لك.',
-        'guardian': 'أنت حارس. شكرًا لك.',
-        'other': 'أنت داعم. شكرًا لك.',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'أنت داعم. شكرًا لك.',
+      'patron': 'أنت راعٍ. شكرًا لك.',
+      'guardian': 'أنت حارس. شكرًا لك.',
+      'other': 'أنت داعم. شكرًا لك.',
+    });
     return '$_temp0';
   }
 
@@ -4403,7 +4650,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrWiFi => 'Wi-Fi';
 
   @override
-  String get qrMadeOnThisPhone => 'صُنع على هذا الهاتف · لم يرَ أي موقع كلمة المرور';
+  String get qrMadeOnThisPhone =>
+      'صُنع على هذا الهاتف · لم يرَ أي موقع كلمة المرور';
 
   @override
   String get qrNetworkName => 'اسم الشبكة';
@@ -4427,7 +4675,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrEmail => 'البريد';
 
   @override
-  String get qrOpensTheirMailApp => 'يفتح تطبيق البريد لديه · لا يُرسل شيء من هنا';
+  String get qrOpensTheirMailApp =>
+      'يفتح تطبيق البريد لديه · لا يُرسل شيء من هنا';
 
   @override
   String get qrTo => 'إلى';
@@ -4445,7 +4694,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrSms => 'SMS';
 
   @override
-  String get qrOpensTheirMessagesApp => 'يفتح تطبيق الرسائل لديه · لا يُرسل شيء من هنا';
+  String get qrOpensTheirMessagesApp =>
+      'يفتح تطبيق الرسائل لديه · لا يُرسل شيء من هنا';
 
   @override
   String get qrMessage => 'الرسالة';
@@ -4499,7 +4749,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrTooMuchForOne => 'أكثر مما يتسع له رمز واحد. اختصره.';
 
   @override
-  String get qrThisIsALot => 'هذا كثير على رمز واحد. قد لا تقرؤه الكاميرات القديمة.';
+  String get qrThisIsALot =>
+      'هذا كثير على رمز واحد. قد لا تقرؤه الكاميرات القديمة.';
 
   @override
   String get qrPrivateQrCode => 'رمز QR خاص';
@@ -4554,7 +4805,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get requestsNothingMoreFromThem => 'لن يصلك منه شيء بعد الآن. ويُحذف طلبه ورسائله.';
+  String get requestsNothingMoreFromThem =>
+      'لن يصلك منه شيء بعد الآن. ويُحذف طلبه ورسائله.';
 
   @override
   String get requestsRequests => 'الطلبات';
@@ -4563,7 +4815,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requestsNoRequests => 'لا طلبات';
 
   @override
-  String get requestsMessagesFromPeopleYou => 'تظهر هنا أولًا رسائل من لم تُضِفهم.';
+  String get requestsMessagesFromPeopleYou =>
+      'تظهر هنا أولًا رسائل من لم تُضِفهم.';
 
   @override
   String get commonAccept => 'قبول';
@@ -4578,13 +4831,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreThisFileIsDamaged => 'هذا الملف تالف ولا يمكن قراءته';
 
   @override
-  String get restoreTypeThePassphraseThe => 'اكتب عبارة المرور التي أُنشئ بها الملف';
+  String get restoreTypeThePassphraseThe =>
+      'اكتب عبارة المرور التي أُنشئ بها الملف';
 
   @override
   String get restoreReplaceTheAccountOn => 'استبدال الحساب على هذا الهاتف؟';
 
   @override
-  String get restoreWhatIsHereNow => 'يزول ما هو موجود هنا الآن، بهويته وجهات اتصاله ورسائله. ويحل الملف محله. لا يمكن التراجع عن هذا.';
+  String get restoreWhatIsHereNow =>
+      'يزول ما هو موجود هنا الآن، بهويته وجهات اتصاله ورسائله. ويحل الملف محله. لا يمكن التراجع عن هذا.';
 
   @override
   String get restoreReplaceIt => 'استبداله';
@@ -4614,10 +4869,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get restorePrivacyKept => 'تعود إعدادات الخصوصية مع النسخة الاحتياطية. رموز PIN لا تنتقل أبدًا: عيّنها من جديد في الإعدادات.';
+  String get restorePrivacyKept =>
+      'تعود إعدادات الخصوصية مع النسخة الاحتياطية. رموز PIN لا تنتقل أبدًا: عيّنها من جديد في الإعدادات.';
 
   @override
-  String get restoreCheckProtections => 'الإعدادات ليست ضمن النسخة الاحتياطية. بعد إعادة فتح Kryfo، راجع «وسائل حمايتك» في الإعدادات.';
+  String get restoreCheckProtections =>
+      'الإعدادات ليست ضمن النسخة الاحتياطية. بعد إعادة فتح Kryfo، راجع «وسائل حمايتك» في الإعدادات.';
 
   @override
   String get restoreReopenKryfo => 'إعادة فتح Kryfo';
@@ -4626,7 +4883,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreTheRestoreDidNot => 'لم تكتمل الاستعادة. لم يتغيّر شيء';
 
   @override
-  String get restoreKryfoClosesRestoreAgain => 'استُبدل جزء مما كان هنا. سيُغلق Kryfo الآن. افتحه من جديد واستعد الملف مرة أخرى.';
+  String get restoreKryfoClosesRestoreAgain =>
+      'استُبدل جزء مما كان هنا. سيُغلق Kryfo الآن. افتحه من جديد واستعد الملف مرة أخرى.';
 
   @override
   String get restoreThisIdentity => 'هذه الهوية';
@@ -4663,7 +4921,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String restoreYourPhotosVoiceNotesCount(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4675,10 +4934,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get restoreYourOnionAddressSo => 'عنوان onion الخاص بك، ليظل من يصلون إليك مباشرةً قادرين على الوصول إليك.';
+  String get restoreYourOnionAddressSo =>
+      'عنوان onion الخاص بك، ليظل من يصلون إليك مباشرةً قادرين على الوصول إليك.';
 
   @override
-  String get restoreAnythingSentToYou => 'كل ما أُرسل إليك والهاتف القديم مطفأ، خلال أربعة عشر يومًا من إرساله.';
+  String get restoreAnythingSentToYou =>
+      'كل ما أُرسل إليك والهاتف القديم مطفأ، خلال أربعة عشر يومًا من إرساله.';
 
   @override
   String get restoreYourSupporterBadgeIf => 'شارة الداعم، إن كانت لديك.';
@@ -4687,13 +4948,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreWhatDoesnT => 'ما لا ينتقل';
 
   @override
-  String get restoreTheOldPhoneStops => 'يتوقف الهاتف القديم عن الاستلام لحظة ترسل أي شيء من هنا. أول رسالة ترسلها من هذا الجهاز هي آخر ما يستطيع الهاتف القديم متابعته، وكل ما يصله بعد ذلك لا يمكن قراءته هناك، ولا ينتظرك هنا أيضًا.';
+  String get restoreTheOldPhoneStops =>
+      'يتوقف الهاتف القديم عن الاستلام لحظة ترسل أي شيء من هنا. أول رسالة ترسلها من هذا الجهاز هي آخر ما يستطيع الهاتف القديم متابعته، وكل ما يصله بعد ذلك لا يمكن قراءته هناك، ولا ينتظرك هنا أيضًا.';
 
   @override
-  String get restoreIfThePhoneThis => 'إن كان الهاتف الذي جاء منه هذا الملف ما زال مستخدمًا، فتوقف عن استخدام Kryfo عليه قبل أن تتابع. هاتفان على Kryfo واحد يفقدان الرسائل كلاهما.';
+  String get restoreIfThePhoneThis =>
+      'إن كان الهاتف الذي جاء منه هذا الملف ما زال مستخدمًا، فتوقف عن استخدام Kryfo عليه قبل أن تتابع. هاتفان على Kryfo واحد يفقدان الرسائل كلاهما.';
 
   @override
-  String get restoreNotificationsNeedSettingUp => 'يجب إعداد الإشعارات من جديد على هذا الجهاز.';
+  String get restoreNotificationsNeedSettingUp =>
+      'يجب إعداد الإشعارات من جديد على هذا الجهاز.';
 
   @override
   String get restoreMoveItHere => 'نقله إلى هنا';
@@ -4708,7 +4972,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreFromABackupFile => 'من ملف نسخة احتياطية';
 
   @override
-  String get restoreABackupBringsBack => 'تُعيد النسخة الاحتياطية هويتك وجهات اتصالك، والرسائل التي كانت على الهاتف حين أُنشئ الملف. وما قيل بعد ذلك ليس فيها.';
+  String get restoreABackupBringsBack =>
+      'تُعيد النسخة الاحتياطية هويتك وجهات اتصالك، والرسائل التي كانت على الهاتف حين أُنشئ الملف. وما قيل بعد ذلك ليس فيها.';
 
   @override
   String get restoreTheFile => 'الملف';
@@ -4755,7 +5020,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreAnIdentity => 'هوية';
 
   @override
-  String get restoreMessagesSentOrReceived => 'الرسائل المُرسلة أو المستلمة بعد ذلك التاريخ ليست في هذا الملف.';
+  String get restoreMessagesSentOrReceived =>
+      'الرسائل المُرسلة أو المستلمة بعد ذلك التاريخ ليست في هذا الملف.';
 
   @override
   String restoreGb(Object bytes) {
@@ -4774,7 +5040,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomCreateBurnerRoom => 'غرفة مؤقتة';
 
   @override
-  String get roomCreateARoomThatEnds => 'غرفة تنتهي. ينضم الجميع بمفتاح صُنع لها، وحين تنتهي لا يبقى منها شيء على أي هاتف.';
+  String get roomCreateARoomThatEnds =>
+      'غرفة تنتهي. ينضم الجميع بمفتاح صُنع لها، وحين تنتهي لا يبقى منها شيء على أي هاتف.';
 
   @override
   String get roomCreateRoomName => 'اسم الغرفة';
@@ -4787,7 +5054,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomCreateNoOnePastThe(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4800,7 +5068,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomCreateOffUpTo(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4826,7 +5095,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomLinkSendTheRoomTo => 'إرسال الغرفة إلى';
 
   @override
-  String get roomLinkTheyWillKnowThis => 'سيعرف أن هذه الغرفة جاءت منك. وفي داخلها هو مفتاح كأي شخص آخر.';
+  String get roomLinkTheyWillKnowThis =>
+      'سيعرف أن هذه الغرفة جاءت منك. وفي داخلها هو مفتاح كأي شخص آخر.';
 
   @override
   String get roomLinkNoContactsYet => 'لا جهات اتصال بعد';
@@ -4837,7 +5107,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get roomLinkAnyoneWithThisCan => 'يمكن لأي شخص لديه هذا الرابط الانضمام حتى تنتهي الغرفة. يدخل بمفتاح صُنع لهذه الغرفة، ولا يرى شيئًا أُرسل قبل وصوله.';
+  String get roomLinkAnyoneWithThisCan =>
+      'يمكن لأي شخص لديه هذا الرابط الانضمام حتى تنتهي الغرفة. يدخل بمفتاح صُنع لهذه الغرفة، ولا يرى شيئًا أُرسل قبل وصوله.';
 
   @override
   String get roomLinkRoomLinkCopied => 'نُسخ رابط الغرفة';
@@ -4864,7 +5135,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get savedChatGone => 'تلك المحادثة لم تعد على هذا الهاتف';
 
   @override
-  String get savedLongPressAnyMessage => 'اضغط مطولًا على أي رسالة ثم اختر «حفظ» لتبقى هنا.';
+  String get savedLongPressAnyMessage =>
+      'اضغط مطولًا على أي رسالة ثم اختر «حفظ» لتبقى هنا.';
 
   @override
   String get savedViewInChat => 'عرض في المحادثة';
@@ -4882,16 +5154,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scanFlash => 'الفلاش';
 
   @override
-  String get scanPointAtAKryfo => 'وجّه نحو رمز QR من Kryfo · لا شيء يغادر هاتفك';
+  String get scanPointAtAKryfo =>
+      'وجّه نحو رمز QR من Kryfo · لا شيء يغادر هاتفك';
 
   @override
   String get seenWhatWeCanSee => 'ما يمكننا رؤيته';
 
   @override
-  String get seenEveryMessengerClaimsPrivacy => 'هذه هي القائمة، حسب المسار، بما فيها نقاط الضعف. اضغط على صف لتعرف السبب.';
+  String get seenEveryMessengerClaimsPrivacy =>
+      'هذه هي القائمة، حسب المسار، بما فيها نقاط الضعف. اضغط على صف لتعرف السبب.';
 
   @override
-  String get seenHonestAboutTheLast => 'لهذه الصفوف الأخيرة وُجد قفل التطبيق ورمز PIN للمسح والتخزين المشفّر، ولا أداة تحميك من شخص يمسك هاتفك وهو مفتوح. نموذج التهديدات الكامل موجود في THREAT_MODEL.md في المستودع، مكتوبًا وفق LINDDUN. الشيفرة مفتوحة، فيمكنك التحقق من كل هذا بنفسك.';
+  String get seenHonestAboutTheLast =>
+      'لهذه الصفوف الأخيرة وُجد قفل التطبيق ورمز PIN للمسح والتخزين المشفّر، ولا أداة تحميك من شخص يمسك هاتفك وهو مفتوح. نموذج التهديدات الكامل موجود في THREAT_MODEL.md في المستودع، مكتوبًا وفق LINDDUN. الشيفرة مفتوحة، فيمكنك التحقق من كل هذا بنفسك.';
 
   @override
   String get seenHidden => 'مخفي';
@@ -4912,13 +5187,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenWhoYouTalkTo => 'مع من تتحدث';
 
   @override
-  String get seenEachConversationGetsIts => 'لكل محادثة عنوانها الخاص، مشتق من المفتاحين. يرى المُرحِّل صناديق إيداع لا صلة بينها، لا شخصين.';
+  String get seenEachConversationGetsIts =>
+      'لكل محادثة عنوانها الخاص، مشتق من المفتاحين. يرى المُرحِّل صناديق إيداع لا صلة بينها، لا شخصين.';
 
   @override
   String get seenWhatYouSay => 'ما تقوله';
 
   @override
-  String get seenEndToEndEncrypted => 'مشفّر بين الطرفين بخوارزمية Double Ratchet من Signal، ثم مختوم مرة أخرى داخل غلاف هدية (gift wrap). لا نستطيع قراءته.';
+  String get seenEndToEndEncrypted =>
+      'مشفّر بين الطرفين بخوارزمية Double Ratchet من Signal، ثم مختوم مرة أخرى داخل غلاف هدية (gift wrap). لا نستطيع قراءته.';
 
   @override
   String get seenYourIpAddress => 'عنوان IP الخاص بك';
@@ -4930,25 +5207,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenEveryRelay => 'كل المُرحِّلات';
 
   @override
-  String get seenOnOnionEverythingLeaves => 'في وضع Onion يخرج كل شيء عبر Tor ولا يرى المُرحِّل إلا عقدة خروج، لا أنت أبدًا. في وضع المُرحِّل يذهب الاتصال مباشرة إلى مُرحِّلنا الخاص: لا شيء يمرّر عنوانك ولا شيء يُدوَّن، لكن ذلك الاتصال الواحد نراه نحن. في الوضع السريع يعرف كل مُرحِّل عام أنك اتصلت، لكن لا يعرف بمن ولا ماذا قلت.';
+  String get seenOnOnionEverythingLeaves =>
+      'في وضع Onion يخرج كل شيء عبر Tor ولا يرى المُرحِّل إلا عقدة خروج، لا أنت أبدًا. في وضع المُرحِّل يذهب الاتصال مباشرة إلى مُرحِّلنا الخاص: لا شيء يمرّر عنوانك ولا شيء يُدوَّن، لكن ذلك الاتصال الواحد نراه نحن. في الوضع السريع يعرف كل مُرحِّل عام أنك اتصلت، لكن لا يعرف بمن ولا ماذا قلت.';
 
   @override
   String get seenYourContactGraph => 'شبكة معارفك';
 
   @override
-  String get seenKryfoDoesNotScan => 'لا يفحص Kryfo جهات اتصالك. لا يوجد هنا رقم هاتف ليتسرّب.';
+  String get seenKryfoDoesNotScan =>
+      'لا يفحص Kryfo جهات اتصالك. لا يوجد هنا رقم هاتف ليتسرّب.';
 
   @override
   String get seenIntroducer => 'من عرّفكما';
 
   @override
-  String get seenWhenAContactIntroduces => 'حين تعرّفك جهة اتصال على شخص ما، تعرف تلك الجهة أنكما صرتما على اتصال. ولا أحد غيرها. يرى المُرحِّل نصًا مشفّرًا، ولا يرى أي خادم شبكة المعارف أبدًا.';
+  String get seenWhenAContactIntroduces =>
+      'حين تعرّفك جهة اتصال على شخص ما، تعرف تلك الجهة أنكما صرتما على اتصال. ولا أحد غيرها. يرى المُرحِّل نصًا مشفّرًا، ولا يرى أي خادم شبكة المعارف أبدًا.';
 
   @override
   String get seenTheScamShield => 'درع مكافحة الاحتيال';
 
   @override
-  String get seenScamShieldRequestsOnly => 'يعمل على هاتفك بقواعد مضمّنة في التطبيق. بلا شبكة، ولا تنزيل قوائم. لا يقرأ إلا طلبات الرسائل من الغرباء، ولا يقرأ أبدًا ما ترسله إليك جهة اتصال أو مجموعة.';
+  String get seenScamShieldRequestsOnly =>
+      'يعمل على هاتفك بقواعد مضمّنة في التطبيق. بلا شبكة، ولا تنزيل قوائم. لا يقرأ إلا طلبات الرسائل من الغرباء، ولا يقرأ أبدًا ما ترسله إليك جهة اتصال أو مجموعة.';
 
   @override
   String get seenBurnerRooms => 'الغرف المؤقتة';
@@ -4957,7 +5238,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenRoomKeys => 'مفاتيح الغرفة';
 
   @override
-  String get seenYouJoinARoom => 'تنضم إلى الغرفة بمفتاح صُنع لها، فلا يعرف من فيها شيئًا يصلح في مكان آخر. من ينضم متأخرًا لا يحصل على السجل السابق. وعند انتهاء الغرفة تُتلف المفاتيح والرسائل والوسائط.';
+  String get seenYouJoinARoom =>
+      'تنضم إلى الغرفة بمفتاح صُنع لها، فلا يعرف من فيها شيئًا يصلح في مكان آخر. من ينضم متأخرًا لا يحصل على السجل السابق. وعند انتهاء الغرفة تُتلف المفاتيح والرسائل والوسائط.';
 
   @override
   String get seenLinkPreviews => 'معاينات الروابط';
@@ -4966,19 +5248,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenOverTor => 'عبر Tor';
 
   @override
-  String get seenAPreviewIsFetched => 'يجلب المُرسِل المعاينة عبر Tor، وتنتقل داخل الرسالة المشفّرة. الهاتف المستقبِل لا يرسل أي طلب. يعرف الموقع أن شخصًا يستخدم Tor طلب صفحة، ولا شيء آخر. لا تُحمَّل أي صورة أبدًا، ويبقى رابط الغريب نصًا عاديًا.';
+  String get seenAPreviewIsFetched =>
+      'يجلب المُرسِل المعاينة عبر Tor، وتنتقل داخل الرسالة المشفّرة. الهاتف المستقبِل لا يرسل أي طلب. يعرف الموقع أن شخصًا يستخدم Tor طلب صفحة، ولا شيء آخر. لا تُحمَّل أي صورة أبدًا، ويبقى رابط الغريب نصًا عاديًا.';
 
   @override
   String get seenASeizedUnlockedPhone => 'هاتف مُصادَر غير مقفل';
 
   @override
-  String get seenIfSomeoneHoldsYour => 'إن أمسك أحدٌ هاتفك وهو مفتوح، فسيقرأ رسائلك. قفل التطبيق ورمز PIN للمسح والتخزين المشفّر تساعد قبل تلك اللحظة، لا بعدها.';
+  String get seenIfSomeoneHoldsYour =>
+      'إن أمسك أحدٌ هاتفك وهو مفتوح، فسيقرأ رسائلك. قفل التطبيق ورمز PIN للمسح والتخزين المشفّر تساعد قبل تلك اللحظة، لا بعدها.';
 
   @override
   String get seenTheCryptoItself => 'التشفير نفسه';
 
   @override
-  String get seenTheRatchetAndStorage => 'طبقتا ratchet والتخزين معياريتان. أما الطبقة التي تربطهما فمن صنعنا ولم يراجعها أي طرف مستقل. إنه برنامج في مرحلة ألفا.';
+  String get seenTheRatchetAndStorage =>
+      'طبقتا ratchet والتخزين معياريتان. أما الطبقة التي تربطهما فمن صنعنا ولم يراجعها أي طرف مستقل. إنه برنامج في مرحلة ألفا.';
 
   @override
   String get seenOnion => 'Onion';
@@ -4993,7 +5278,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsWipeKryfo => 'مسح Kryfo؟';
 
   @override
-  String get settingsIdentityMessagesContactsAnd => 'الهوية والرسائل وجهات الاتصال والإعدادات على هذا الهاتف. تزول إلى الأبد ما لم تكن لديك نسخة احتياطية.';
+  String get settingsIdentityMessagesContactsAnd =>
+      'الهوية والرسائل وجهات الاتصال والإعدادات على هذا الهاتف. تزول إلى الأبد ما لم تكن لديك نسخة احتياطية.';
 
   @override
   String get commonContinue => 'متابعة';
@@ -5074,7 +5360,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsAcceptIntroductions => 'قبول التعريفات';
 
   @override
-  String get settingsFriendsCanIntroduceYou => 'يمكن لأصدقائك تعريفك على أصدقائهم';
+  String get settingsFriendsCanIntroduceYou =>
+      'يمكن لأصدقائك تعريفك على أصدقائهم';
 
   @override
   String get settingsScamShield => 'درع مكافحة الاحتيال';
@@ -5128,19 +5415,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsResetMyInviteLink => 'إعادة تعيين رابط دعوتي';
 
   @override
-  String get settingsOldLinksAndCodes => 'تتوقف الروابط والرموز القديمة عن العمل، للجميع';
+  String get settingsOldLinksAndCodes =>
+      'تتوقف الروابط والرموز القديمة عن العمل، للجميع';
 
   @override
   String get settingsResetInviteLink => 'إعادة تعيين رابط الدعوة؟';
 
   @override
-  String get settingsAnyoneWithAnOld => 'كل من لديه رمز أو رابط قديم لن يستطيع الوصول إليك بعد الآن، عبر أي مسار. ومن لديه الرابط ولم يستخدمه قط سيحتاج إلى رابط جديد منك. وتبقى جهات الاتصال والمحادثات والسجل.';
+  String get settingsAnyoneWithAnOld =>
+      'كل من لديه رمز أو رابط قديم لن يستطيع الوصول إليك بعد الآن، عبر أي مسار. ومن لديه الرابط ولم يستخدمه قط سيحتاج إلى رابط جديد منك. وتبقى جهات الاتصال والمحادثات والسجل.';
 
   @override
   String get settingsReset => 'إعادة تعيين';
 
   @override
-  String get settingsInviteResetShareThe => 'أُعيد تعيين الدعوة · شارك الرمز الجديد';
+  String get settingsInviteResetShareThe =>
+      'أُعيد تعيين الدعوة · شارك الرمز الجديد';
 
   @override
   String get settingsWhatWeCanSee => 'ما يمكننا رؤيته';
@@ -5161,13 +5451,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsReportInKryfo => 'الكتابة في Kryfo';
 
   @override
-  String get settingsReportInKryfoSub => 'المحادثة مع Marios. يمكنك الكتابة دون الكشف عن هويتك.';
+  String get settingsReportInKryfoSub =>
+      'المحادثة مع Marios. يمكنك الكتابة دون الكشف عن هويتك.';
 
   @override
   String get settingsReportByEmail => 'إرسال بريد إلكتروني';
 
   @override
-  String get settingsReportByEmailSub => 'gnosiworks@proton.me، من تطبيق البريد لديك';
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me، من تطبيق البريد لديك';
 
   @override
   String get settingsBugOrSecurityFlaw => 'خلل أو ثغرة أمنية';
@@ -5179,10 +5471,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsLinkCopied => 'نُسخ الرابط';
 
   @override
-  String get settingsTheOfflineMapIn => 'الخريطة غير المتصلة في «الأدوات» مرسومة من Natural Earth (ملكية عامة). أسماء المدن من GeoNames (geonames.org) بترخيص CC BY 4.0.';
+  String get settingsTheOfflineMapIn =>
+      'الخريطة غير المتصلة في «الأدوات» مرسومة من Natural Earth (ملكية عامة). أسماء المدن من GeoNames (geonames.org) بترخيص CC BY 4.0.';
 
   @override
-  String get settingsNotIndependentlyAuditedPre => 'لم يخضع لتدقيق مستقل. إصدار ألفا: صالح للتجربة، لا للاستخدام في المواقف عالية المخاطر بعد.';
+  String get settingsNotIndependentlyAuditedPre =>
+      'لم يخضع لتدقيق مستقل. إصدار ألفا: صالح للتجربة، لا للاستخدام في المواقف عالية المخاطر بعد.';
 
   @override
   String get settingsFollowTitle => 'متابعة GnosiWorks (المطوّر)';
@@ -5211,7 +5505,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toolsMakeAPrivateQr => 'إنشاء رمز QR خاص';
 
   @override
-  String get toolsLinksWiFiContacts => 'روابط، وWi-Fi، وجهات اتصال، وغيرها. يُصنع دون اتصال';
+  String get toolsLinksWiFiContacts =>
+      'روابط، وWi-Fi، وجهات اتصال، وغيرها. يُصنع دون اتصال';
 
   @override
   String get toolsLockAFile => 'قفل ملف';
@@ -5226,7 +5521,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toolsAnyAgeFileSomeone => 'أي ملف ‎.age أرسله لك أحد';
 
   @override
-  String get toolsWorksOfflineNoContacts => 'يعمل دون اتصال · لا حاجة إلى جهات اتصال';
+  String get toolsWorksOfflineNoContacts =>
+      'يعمل دون اتصال · لا حاجة إلى جهات اتصال';
 
   @override
   String get toolsUsefulFrom => 'مفيدة منذ';
@@ -5235,16 +5531,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toolsTheFirstMinute => 'الدقيقة الأولى.';
 
   @override
-  String get toolsEverythingHereHappensOn => 'كل شيء هنا يحدث على هذا الهاتف. لا يُرفع شيء، ولا يحتاج أحد غيرك إلى أن يكون على Kryfo.';
+  String get toolsEverythingHereHappensOn =>
+      'كل شيء هنا يحدث على هذا الهاتف. لا يُرفع شيء، ولا يحتاج أحد غيرك إلى أن يكون على Kryfo.';
 
   @override
   String get toolsPhotoCleaner => 'منظّف الصور';
 
   @override
-  String get toolsRemovesHiddenInfo => 'يزيل المعلومات المخفية (البيانات الوصفية) مثل المكان والوقت وطراز الهاتف';
+  String get toolsRemovesHiddenInfo =>
+      'يزيل المعلومات المخفية (البيانات الوصفية) مثل المكان والوقت وطراز الهاتف';
 
   @override
-  String get toolsPickAPhotoAnd => 'اختر صورة أو فيديو لترى ما يكشفه، ثم أزل كل ذلك بلمسة واحدة. يمكنك أيضًا مشاركة واحد مع Kryfo من معرض الصور.';
+  String get toolsPickAPhotoAnd =>
+      'اختر صورة أو فيديو لترى ما يكشفه، ثم أزل كل ذلك بلمسة واحدة. يمكنك أيضًا مشاركة واحد مع Kryfo من معرض الصور.';
 
   @override
   String get toolsPickAPhoto => 'اختيار صورة';
@@ -5256,7 +5555,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportTransport => 'النقل';
 
   @override
-  String get transportNothingHereLeavesThe => 'لا شيء هنا يغادر الهاتف. إنها الحالة نفسها التي يستخدمها المحرّك ليقرر ما يفعل.';
+  String get transportNothingHereLeavesThe =>
+      'لا شيء هنا يغادر الهاتف. إنها الحالة نفسها التي يستخدمها المحرّك ليقرر ما يفعل.';
 
   @override
   String get transportStayingAlive => 'يبقى نشطًا';
@@ -5299,7 +5599,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String transportFails(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5341,7 +5642,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get transportWithNoContactsThe => 'من دون جهات اتصال لا يشترك التطبيق في أي عنوان على المُرحِّلات، فلا يمكن أن تصلك أي رسالة. اقرأ رمز شخص ما لإصلاح ذلك.';
+  String get transportWithNoContactsThe =>
+      'من دون جهات اتصال لا يشترك التطبيق في أي عنوان على المُرحِّلات، فلا يمكن أن تصلك أي رسالة. اقرأ رمز شخص ما لإصلاح ذلك.';
 
   @override
   String get transportSendAnythingWaitingNow => 'إرسال كل ما ينتظر، الآن';
@@ -5548,9 +5850,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
-    final intl.NumberFormat dialsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat dialsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String dialsString = dialsNumberFormat.format(dials);
-    final intl.NumberFormat timeoutsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat timeoutsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String timeoutsString = timeoutsNumberFormat.format(timeouts);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5613,7 +5917,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String vouchersVouchedBy(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5654,43 +5959,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get whyKryfoWhyKryfo => 'لماذا Kryfo';
 
   @override
-  String get whyKryfoKryfoKreeFoGreek => 'Kryfo · كري-فو · تعني «مخفي» باليونانية.\nمكان هادئ للحديث، بُني كي لا يراقبك أحد.';
+  String get whyKryfoKryfoKreeFoGreek =>
+      'Kryfo · كري-فو · تعني «مخفي» باليونانية.\nمكان هادئ للحديث، بُني كي لا يراقبك أحد.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'يمر عبر Tor';
 
   @override
-  String get whyKryfoByDefaultEveryMessage => 'افتراضيًا، تنتقل كل رسالة عبر Tor، سلسلة من المُرحِّلات. لا أحد، لا نحن ولا شبكتك، يستطيع أن يرى مع من تتحدث أو أين أنت.';
+  String get whyKryfoByDefaultEveryMessage =>
+      'افتراضيًا، تنتقل كل رسالة عبر Tor، سلسلة من المُرحِّلات. لا أحد، لا نحن ولا شبكتك، يستطيع أن يرى مع من تتحدث أو أين أنت.';
 
   @override
   String get whyKryfoEndToEndEncrypted => 'مشفّر بين الطرفين';
 
   @override
-  String get whyKryfoMessagesAreSealedWith => 'الرسائل مختومة بمفاتيح لا يملكها إلا أنت ومن تتحدث معه. لا نستطيع قراءتها.';
+  String get whyKryfoMessagesAreSealedWith =>
+      'الرسائل مختومة بمفاتيح لا يملكها إلا أنت ومن تتحدث معه. لا نستطيع قراءتها.';
 
   @override
   String get whyKryfoNoServersHoldingYour => 'لا خوادم تحتفظ بحياتك';
 
   @override
-  String get whyKryfoNoAccountNoPhone => 'لا حساب، ولا رقم هاتف، ولا خادم مركزي يخزّن محادثاتك. إنها تعيش على هذا الهاتف، مشفّرة وهي مخزّنة.';
+  String get whyKryfoNoAccountNoPhone =>
+      'لا حساب، ولا رقم هاتف، ولا خادم مركزي يخزّن محادثاتك. إنها تعيش على هذا الهاتف، مشفّرة وهي مخزّنة.';
 
   @override
   String get whyKryfoNothingLeaks => 'لا شيء يتسرّب';
 
   @override
-  String get whyKryfoNoReadReceiptsOr => 'لا إشعارات قراءة ولا مؤشرات كتابة تُسلَّم لأحد، ولا قائمة جهات اتصال تُرفع. البيانات الوصفية هي ما تسرّبه معظم التطبيقات. أما Kryfo فمبني كي لا يفعل.';
+  String get whyKryfoNoReadReceiptsOr =>
+      'لا إشعارات قراءة ولا مؤشرات كتابة تُسلَّم لأحد، ولا قائمة جهات اتصال تُرفع. البيانات الوصفية هي ما تسرّبه معظم التطبيقات. أما Kryfo فمبني كي لا يفعل.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'تحقّق من أنه هو فعلًا';
 
   @override
-  String get whyKryfoCompareASafetyNumber => 'قارن رقم الأمان وجهًا لوجه أو عبر قناة تثق بها، لتعرف أن لا أحد ينتحل شخصية جهة اتصالك.';
+  String get whyKryfoCompareASafetyNumber =>
+      'قارن رقم الأمان وجهًا لوجه أو عبر قناة تثق بها، لتعرف أن لا أحد ينتحل شخصية جهة اتصالك.';
 
   @override
   String get whyKryfoTheHonestPart => 'الجزء الصريح';
 
   @override
-  String get whyKryfoKryfoIsPreAlpha => 'ما زال Kryfo في مرحلة ألفا ولم يخضع لتدقيق. التشفير حقيقي لكن لم يفحصه أي خبير خارجي بعد، فلا تعتمد عليه بعدُ حيث تتوقف سلامتك عليه.';
+  String get whyKryfoKryfoIsPreAlpha =>
+      'ما زال Kryfo في مرحلة ألفا ولم يخضع لتدقيق. التشفير حقيقي لكن لم يفحصه أي خبير خارجي بعد، فلا تعتمد عليه بعدُ حيث تتوقف سلامتك عليه.';
 
   @override
   String get cleanerLocation => 'الموقع';
@@ -5724,7 +6036,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String cleaner1OtherField(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5741,11 +6054,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get lockWordsFourRandomWordsBeat => 'أربع كلمات عشوائية أقوى من كلمة ذكية واحدة.';
+  String get lockWordsFourRandomWordsBeat =>
+      'أربع كلمات عشوائية أقوى من كلمة ذكية واحدة.';
 
   @override
   String lockWordsTooShortAtLeast(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5762,13 +6077,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get lockWordsWeakWhoeverGetsThe => 'ضعيفة. من يحصل على الملف يمكنه التخمين بالسرعة التي يريدها.';
+  String get lockWordsWeakWhoeverGetsThe =>
+      'ضعيفة. من يحصل على الملف يمكنه التخمين بالسرعة التي يريدها.';
 
   @override
   String get lockWordsFairLongerIsStronger => 'مقبولة. الأطول أقوى.';
 
   @override
-  String get lockWordsStrongFourRandomWords => 'قوية. أربع كلمات عشوائية أقوى من كلمة ذكية واحدة.';
+  String get lockWordsStrongFourRandomWords =>
+      'قوية. أربع كلمات عشوائية أقوى من كلمة ذكية واحدة.';
 
   @override
   String photoStoryKm(Object m) {
@@ -5777,7 +6094,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStory1Metre(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5826,7 +6144,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoStoryThisFileIsDamaged => 'هذا الملف تالف أو مبتور.';
 
   @override
-  String get photoStoryKryfoCouldNotRead => 'لم يستطع Kryfo قراءته حتى النهاية.';
+  String get photoStoryKryfoCouldNotRead =>
+      'لم يستطع Kryfo قراءته حتى النهاية.';
 
   @override
   String get photoStoryWhereItWasRecorded => 'أين سُجّل';
@@ -5848,10 +6167,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoStoryLocationHiddenByAndroid => 'أخفى أندرويد الموقع';
 
   @override
-  String get photoStoryAndroidBlanksItWhen => 'يُفرغه أندرويد حين تُختار الصورة بهذه الطريقة. ومشاركتها مع Kryfo من معرضك غالبًا ما تُبقيه. وقد تظل الصورة التي في معرضك تحمله.';
+  String get photoStoryAndroidBlanksItWhen =>
+      'يُفرغه أندرويد حين تُختار الصورة بهذه الطريقة. ومشاركتها مع Kryfo من معرضك غالبًا ما تُبقيه. وقد تظل الصورة التي في معرضك تحمله.';
 
   @override
-  String get photoStoryLocationBlankedByAndroid => 'الموقع: أفرغه أندرويد قبل أن يراه Kryfo';
+  String get photoStoryLocationBlankedByAndroid =>
+      'الموقع: أفرغه أندرويد قبل أن يراه Kryfo';
 
   @override
   String photoStoryF(Object r) {
@@ -5916,13 +6237,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoStoryHiddenThumbnail => 'صورة مصغّرة مخفية';
 
   @override
-  String get photoStoryASmallCopyOf => 'نسخة صغيرة من الصورة داخل الملف. قد تُظهر ما أزاله القص';
+  String get photoStoryASmallCopyOf =>
+      'نسخة صغيرة من الصورة داخل الملف. قد تُظهر ما أزاله القص';
 
   @override
   String get photoStoryMakerNotes => 'ملاحظات الصانع';
 
   @override
-  String get photoStoryMakerNotesABlock => 'ملاحظات الصانع: كتلة لا يقرؤها إلا الصانع';
+  String get photoStoryMakerNotesABlock =>
+      'ملاحظات الصانع: كتلة لا يقرؤها إلا الصانع';
 
   @override
   String get photoStoryEditingHistory => 'سجل التعديل';
@@ -5974,7 +6297,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStoryDataAfterTheEnd(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6007,7 +6331,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStoryCameraSettingsFlashFocus(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6025,7 +6350,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStory1MoreField(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6126,7 +6452,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrPayloadOpensAMap => 'يفتح خريطة';
 
   @override
-  String get qrPayloadLatitudeRunsFrom90 => 'خط العرض من ‎-90 إلى ٩٠، وخط الطول من ‎-180 إلى ١٨٠.';
+  String get qrPayloadLatitudeRunsFrom90 =>
+      'خط العرض من ‎-90 إلى ٩٠، وخط الطول من ‎-180 إلى ١٨٠.';
 
   @override
   String get qrPayloadPayThisAddress => 'ادفع لهذا العنوان';
@@ -6135,7 +6462,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qrPayloadABitcoinAddressIs => 'عنوان bitcoin أحرف وأرقام فقط.';
 
   @override
-  String get qrPayloadTheAmountIsIn => 'المبلغ بـ BTC، بما يصل إلى ٨ منازل عشرية.';
+  String get qrPayloadTheAmountIsIn =>
+      'المبلغ بـ BTC، بما يصل إلى ٨ منازل عشرية.';
 
   @override
   String vouchTextAnd(Object names, Object names2) {
@@ -6144,7 +6472,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
-    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String restString = restNumberFormat.format(rest);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6179,10 +6509,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bootFailedKryfoCouldNotStart => 'تعذّر تشغيل Kryfo';
 
   @override
-  String get bootFailedThisIsAFault => 'هذا عطل في هذا الجهاز، لا في الشبكة. لا علاقة لـ Tor بذلك.';
+  String get bootFailedThisIsAFault =>
+      'هذا عطل في هذا الجهاز، لا في الشبكة. لا علاقة لـ Tor بذلك.';
 
   @override
-  String get bootFailedKeysDidNotAnswer => 'توقّف مخزن المفاتيح في هاتفك عن الاستجابة. إغلاق Kryfo وإعادة فتحه يحلّ المشكلة عادةً.';
+  String get bootFailedKeysDidNotAnswer =>
+      'توقّف مخزن المفاتيح في هاتفك عن الاستجابة. إغلاق Kryfo وإعادة فتحه يحلّ المشكلة عادةً.';
 
   @override
   String get bootFailedCloseAndReopen => 'إغلاق Kryfo وإعادة فتحه';
@@ -6242,7 +6574,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String kryfoLinkTextClosesInUpTo(int cap, Object time) {
-    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String capString = capNumberFormat.format(cap);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6257,13 +6591,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kryfoLinkTextJoin2 => 'انضمام';
 
   @override
-  String get kryfoLinkTextYouJoinUnderA => 'تنضم بمفتاح صُنع لهذه الغرفة. لا أحد فيها يرى كلماتك الثلاث.';
+  String get kryfoLinkTextYouJoinUnderA =>
+      'تنضم بمفتاح صُنع لهذه الغرفة. لا أحد فيها يرى كلماتك الثلاث.';
 
   @override
   String get linkStubFetchedOverTorBy => 'جُلبت عبر Tor · بواسطة جهازك';
 
   @override
-  String get linkStubFetchedOverTorByTheirDevice => 'جُلبت عبر Tor · بواسطة جهازه';
+  String get linkStubFetchedOverTorByTheirDevice =>
+      'جُلبت عبر Tor · بواسطة جهازه';
 
   @override
   String mediaBubblesB(Object bytes) {
@@ -6329,19 +6665,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionYouReAnonymous => 'أنت مجهول الهوية';
 
   @override
-  String get motionTorIsStartingIn => 'يبدأ Tor في الخلفية. يضيء هذا الرسم مع تشكّل الاتصال.';
+  String get motionTorIsStartingIn =>
+      'يبدأ Tor في الخلفية. يضيء هذا الرسم مع تشكّل الاتصال.';
 
   @override
-  String get motionMakingAFreshRoute => 'جارٍ إنشاء مسار جديد عبر مُرحِّلات مجهولة.';
+  String get motionMakingAFreshRoute =>
+      'جارٍ إنشاء مسار جديد عبر مُرحِّلات مجهولة.';
 
   @override
-  String get motionBouncingThroughRelaysSo => 'يتنقّل بين المُرحِّلات كي لا يستطيع أحد تتبّع هذا إليك.';
+  String get motionBouncingThroughRelaysSo =>
+      'يتنقّل بين المُرحِّلات كي لا يستطيع أحد تتبّع هذا إليك.';
 
   @override
-  String get motionTellingTheNetworkYou => 'جارٍ إبلاغ الشبكة أنك متصل، دون كشف مكانك.';
+  String get motionTellingTheNetworkYou =>
+      'جارٍ إبلاغ الشبكة أنك متصل، دون كشف مكانك.';
 
   @override
-  String get motionYourIpIsHidden => 'عنوان IP الخاص بك مخفي. لا يصل إليك إلا من لديه Kryfo الخاص بك.';
+  String get motionYourIpIsHidden =>
+      'عنوان IP الخاص بك مخفي. لا يصل إليك إلا من لديه Kryfo الخاص بك.';
 
   @override
   String get motionBuilding2 => 'جارٍ البناء';
@@ -6370,7 +6711,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motion3Hops => '٣ قفزات';
 
   @override
-  String get movedStripThisKryfoHasMoved => 'انتقل Kryfo هذا إلى جهاز آخر. لا يصل أي شيء يُرسل من هنا إلى أحد.';
+  String get movedStripThisKryfoHasMoved =>
+      'انتقل Kryfo هذا إلى جهاز آخر. لا يصل أي شيء يُرسل من هنا إلى أحد.';
 
   @override
   String get navBarChats => 'المحادثات';
@@ -6391,7 +6733,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'دعوتك ليست جاهزة بعد';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => 'اقرأ ستة أرقام بصوت عالٍ فيستطيع إضافتك. لا حاجة إلى تبادل أي شيء آخر.';
+  String get pairCodePanelReadSixDigitsOut =>
+      'اقرأ ستة أرقام بصوت عالٍ فيستطيع إضافتك. لا حاجة إلى تبادل أي شيء آخر.';
 
   @override
   String get pairCodePanelWorking => 'جارٍ العمل';
@@ -6400,7 +6743,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelOrMakeASix => 'أو أنشئ رمزًا من ستة أرقام لتقرأه';
 
   @override
-  String get pairCodePanelBurned => 'اختفى هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
+  String get pairCodePanelBurned =>
+      'اختفى هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
 
   @override
   String get pairCodePanelCodeCopied => 'نُسخ الرمز';
@@ -6411,16 +6755,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get pairCodePanelTheyTapAddChoose => 'يضغط «إضافة»، ويختار «رمز»، ثم يكتب هذه الأرقام.';
+  String get pairCodePanelTheyTapAddChoose =>
+      'يضغط «إضافة»، ويختار «رمز»، ثم يكتب هذه الأرقام.';
 
   @override
-  String get pairCodePanelTheyOpenKryfoTap => 'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الستة. أنشئ رمزًا جديدًا للشخص التالي.';
+  String get pairCodePanelTheyOpenKryfoTap =>
+      'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الستة. أنشئ رمزًا جديدًا للشخص التالي.';
 
   @override
   String get pairCodePanelYourWords => 'كلماتك الثلاث';
 
   @override
-  String get pairCodePanelAcceptOnce => 'يصلك طلبه بعد أن يضيفك. اقبله فقط بعد أن يقول إن المجموعات الأربع تطابقت.';
+  String get pairCodePanelAcceptOnce =>
+      'يصلك طلبه بعد أن يضيفك. اقبله فقط بعد أن يقول إن المجموعات الأربع تطابقت.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6453,7 +6800,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get pinsNothingPinnedHereYet => 'لا شيء مثبّت هنا بعد. اضغط مطولًا على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
+  String get pinsNothingPinnedHereYet =>
+      'لا شيء مثبّت هنا بعد. اضغط مطولًا على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
 
   @override
   String get pinsJump => 'انتقال';
@@ -6494,13 +6842,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get torBootSplashNoShortcutsNoTraces => 'لا طرق مختصرة، ولا آثار';
 
   @override
-  String get torBootSplashTheNetworkThatKeeps => 'الشبكة التي تحمي خصوصيتك تستعد';
+  String get torBootSplashTheNetworkThatKeeps =>
+      'الشبكة التي تحمي خصوصيتك تستعد';
 
   @override
-  String get torBootSplashMadeOnThisPhone => 'صُنع على هذا الهاتف. لا يُرسل شيء إلى أي مكان.';
+  String get torBootSplashMadeOnThisPhone =>
+      'صُنع على هذا الهاتف. لا يُرسل شيء إلى أي مكان.';
 
   @override
-  String get torBootSplashFirstLaunchTakesA => 'التشغيل الأول يستغرق لحظة · عند البدء فقط';
+  String get torBootSplashFirstLaunchTakesA =>
+      'التشغيل الأول يستغرق لحظة · عند البدء فقط';
 
   @override
   String get torBootSplashTakingLonger => 'يستغرق هذا وقتًا أطول من المعتاد';
@@ -6515,7 +6866,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get torBootSplashHopExit => 'الخروج';
 
   @override
-  String get videoBubbleNothingHereOpensThat => 'لا شيء هنا يفتحه · ستتم مشاركته بدلًا من ذلك';
+  String get videoBubbleNothingHereOpensThat =>
+      'لا شيء هنا يفتحه · ستتم مشاركته بدلًا من ذلك';
 
   @override
   String videoBubbleMb(Object b) {
@@ -6597,13 +6949,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreHiddenChats => 'المحادثات المخفية';
 
   @override
-  String get restoreHiddenFollow => 'محادثاتك المخفية، برمز PIN جديد للمحادثات المخفية تختاره في النهاية.';
+  String get restoreHiddenFollow =>
+      'محادثاتك المخفية، برمز PIN جديد للمحادثات المخفية تختاره في النهاية.';
 
   @override
-  String get restoreChooseHiddenPin => 'تضم هذه النسخة الاحتياطية محادثات مخفية. اختر لها رمز PIN للمحادثات المخفية.';
+  String get restoreChooseHiddenPin =>
+      'تضم هذه النسخة الاحتياطية محادثات مخفية. اختر لها رمز PIN للمحادثات المخفية.';
 
   @override
-  String get restoreHiddenLockFirst => 'المحادثات المخفية تحتاج إلى قفل التطبيق، لذلك يحصل Kryfo أولًا على رمز PIN خاص به.';
+  String get restoreHiddenLockFirst =>
+      'المحادثات المخفية تحتاج إلى قفل التطبيق، لذلك يحصل Kryfo أولًا على رمز PIN خاص به.';
 
   @override
   String get profileIdentity => 'الهوية';
@@ -6619,9 +6974,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String avatarPickerOption(String what, int n, int count) {
-    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
     final String nString = nNumberFormat.format(n);
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$what، $nString من $countString';
@@ -6736,7 +7094,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesBridgeFromAFriend => 'جسر من صديق';
 
   @override
-  String get bridgesKryfoCanAskThe => 'يستطيع Kryfo أن يطلب من مشروع Tor جسرًا لتجاوز الحجب.';
+  String get bridgesKryfoCanAskThe =>
+      'يستطيع Kryfo أن يطلب من مشروع Tor جسرًا لتجاوز الحجب.';
 
   @override
   String get bridgesNotNeededRightNow => 'غير مطلوب الآن';
@@ -6783,7 +7142,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesLookingForAVolunteer => 'جارٍ البحث عن متطوع';
 
   @override
-  String get bridgesFastestWhereTorIsnt => 'الأسرع حيث لا يُحجب Tor. لا يتصل Kryfo أبدًا خارج Tor.';
+  String get bridgesFastestWhereTorIsnt =>
+      'الأسرع حيث لا يُحجب Tor. لا يتصل Kryfo أبدًا خارج Tor.';
 
   @override
   String get transportBridgePhase => 'المرحلة';
@@ -6810,13 +7170,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesYourBridgeCouldNot => 'تعذّر تشغيل الجسر';
 
   @override
-  String get bridgesKryfoStaysOfflineRather => 'يبقى Kryfo غير متصل بدل أن يتصل من دونه.';
+  String get bridgesKryfoStaysOfflineRather =>
+      'يبقى Kryfo غير متصل بدل أن يتصل من دونه.';
 
   @override
   String get bridgesSignInToThisWifi => 'سجّل الدخول إلى شبكة Wi-Fi هذه';
 
   @override
-  String get bridgesThisNetworkWantsA => 'تطلب هذه الشبكة تسجيل الدخول أولًا. بعد دخولك، يتصل Kryfo.';
+  String get bridgesThisNetworkWantsA =>
+      'تطلب هذه الشبكة تسجيل الدخول أولًا. بعد دخولك، يتصل Kryfo.';
 
   @override
   String get bridgesWaitingForWifiSignIn => 'بانتظار تسجيل الدخول إلى Wi-Fi';
@@ -6857,19 +7219,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesInUse => 'قيد الاستخدام';
 
   @override
-  String get bridgesPasteTheLineThey => 'الصق السطر الذي أرسله إليك، أو اقرأ رمزه. خذ أسطر الجسور ممن تعرفهم.';
+  String get bridgesPasteTheLineThey =>
+      'الصق السطر الذي أرسله إليك، أو اقرأ رمزه. خذ أسطر الجسور ممن تعرفهم.';
 
   @override
-  String get bridgesYouReOnAMode => 'وضعك الحالي لا يستخدم Tor. تُطبَّق هذه الخيارات حين تعود إليه.';
+  String get bridgesYouReOnAMode =>
+      'وضعك الحالي لا يستخدم Tor. تُطبَّق هذه الخيارات حين تعود إليه.';
 
   @override
-  String get bridgesPasteOrScanALine => 'الصق سطرًا أعطاك إياه شخص تثق به، أو اقرأ رمزه.';
+  String get bridgesPasteOrScanALine =>
+      'الصق سطرًا أعطاك إياه شخص تثق به، أو اقرأ رمزه.';
 
   @override
   String get bridgesNothingYet => 'لا شيء بعد';
 
   @override
-  String get torBootSplashIfTorIsBlocked => 'إن كان Tor محجوبًا أو مراقَبًا حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
+  String get torBootSplashIfTorIsBlocked =>
+      'إن كان Tor محجوبًا أو مراقَبًا حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
 
   @override
   String get bridgesScanACode => 'قراءة رمز';
@@ -6887,7 +7253,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get torBootSplashStartThroughABridge => 'ابدأ عبر جسر';
 
   @override
-  String get torBootSplashNeverTriesTorPlainly => 'لن يحاول Kryfo الوصول إلى Tor مباشرةً هنا أبدًا. سيجد جسرًا يعمل بنفسه، أو يمكنك اختيار جسرك في الخطوة التالية.';
+  String get torBootSplashNeverTriesTorPlainly =>
+      'لن يحاول Kryfo الوصول إلى Tor مباشرةً هنا أبدًا. سيجد جسرًا يعمل بنفسه، أو يمكنك اختيار جسرك في الخطوة التالية.';
 
   @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';
@@ -6896,7 +7263,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesFindingAWayIn => 'جارٍ البحث عن طريقة للاتصال…';
 
   @override
-  String get bridgesGoesThroughAVolunteer => 'يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.';
+  String get bridgesGoesThroughAVolunteer =>
+      'يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.';
 
   @override
   String get bridgesLetTheTorProject => 'دع مشروع Tor يخمّن';
@@ -6909,7 +7277,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6932,13 +7301,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'يجد Kryfo طريقة تعمل حيث أنت.';
 
   @override
-  String get bridgesTheTorProjectKnows => 'لدى مشروع Tor نصائح خاصة لهذه البلدان.';
+  String get bridgesTheTorProjectKnows =>
+      'لدى مشروع Tor نصائح خاصة لهذه البلدان.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'لا يستطيع هذا الجسر العبور';
 
   @override
-  String get bridgesBridgesTheTorProject => 'جسور أعطاك إياها مشروع Tor سابقًا.';
+  String get bridgesBridgesTheTorProject =>
+      'جسور أعطاك إياها مشروع Tor سابقًا.';
 
   @override
   String get bridgesConnectingDots => 'جارٍ الاتصال…';
@@ -6950,7 +7321,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesRussia => 'روسيا';
 
   @override
-  String get bridgesObfs4BridgesThatCome => 'جسور تأتي مع Kryfo (obfs4). سريعة التجربة، وكثيرًا ما تُحجب.';
+  String get bridgesObfs4BridgesThatCome =>
+      'جسور تأتي مع Kryfo (obfs4). سريعة التجربة، وكثيرًا ما تُحجب.';
 
   @override
   String get bridgesYourNetworkMayBe => 'قد تكون شبكتك مقيّدة';
@@ -6971,14 +7343,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'تخمين مشروع Tor';
 
   @override
-  String get bridgesOurRelayUsuallyGets => 'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
+  String get bridgesOurRelayUsuallyGets =>
+      'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
 
   @override
   String get bridgesUseThisBridge => 'استخدام هذا الجسر';
 
   @override
   String bridgesUseTheseBridges(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7008,19 +7382,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesThisLineIsTooLong => 'هذا السطر أطول من أن يستخدمه Tor.';
 
   @override
-  String get bridgesAutomaticFindsAWay => 'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. وللعثور على جسر، قد يسأل Kryfo مشروع Tor إن وافقت.';
+  String get bridgesAutomaticFindsAWay =>
+      'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. وللعثور على جسر، قد يسأل Kryfo مشروع Tor إن وافقت.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'من مشروع Tor';
 
   @override
-  String get bridgesBridgesGoDeadWithout => 'قد تتوقف الجسور عن العمل دون إنذار. يستطيع «تلقائي» إيجاد طريقة أخرى.';
+  String get bridgesBridgesGoDeadWithout =>
+      'قد تتوقف الجسور عن العمل دون إنذار. يستطيع «تلقائي» إيجاد طريقة أخرى.';
 
   @override
   String get bridgesHongKong => 'هونغ كونغ';
 
   @override
-  String get bridgesWhenTorIsBlockedAutomatic => 'حين يُحجب Tor، يسأل «تلقائي» مشروع Tor عمّا يعمل في بلدك.';
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'حين يُحجب Tor، يسأل «تلقائي» مشروع Tor عمّا يعمل في بلدك.';
 
   @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';
@@ -7069,7 +7446,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get languageRedrawLine => 'يُعاد رسم Kryfo باللغة الجديدة ويفتح على محادثاتك.';
+  String get languageRedrawLine =>
+      'يُعاد رسم Kryfo باللغة الجديدة ويفتح على محادثاتك.';
 
   @override
   String languageButton(Object language) {
@@ -7086,7 +7464,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get androidChannelName => 'البقاء متصلًا';
 
   @override
-  String get androidChannelDescription => 'يُبقي Kryfo متصلًا لتصل الرسائل المشفّرة وهو مغلق. إيقاف هذا يوقف التوصيل.';
+  String get androidChannelDescription =>
+      'يُبقي Kryfo متصلًا لتصل الرسائل المشفّرة وهو مغلق. إيقاف هذا يوقف التوصيل.';
 
   @override
   String get videoViewerPlay => 'تشغيل';
@@ -7098,7 +7477,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get videoViewerPlayAgain => 'إعادة التشغيل';
 
   @override
-  String get videoViewerCannotPlay => 'لا يستطيع هذا الهاتف تشغيل هذا الفيديو هنا.';
+  String get videoViewerCannotPlay =>
+      'لا يستطيع هذا الهاتف تشغيل هذا الفيديو هنا.';
 
   @override
   String get videoViewerOpenElsewhere => 'فتح في تطبيق آخر';
@@ -7226,7 +7606,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pollCloseTitle => 'إغلاق هذا الاستطلاع؟';
 
   @override
-  String get pollCloseLine => 'سيرى الجميع النتيجة النهائية، ولن يتمكن أحد من التصويت بعد ذلك.';
+  String get pollCloseLine =>
+      'سيرى الجميع النتيجة النهائية، ولن يتمكن أحد من التصويت بعد ذلك.';
 
   @override
   String get pollCloseYes => 'إغلاقه';
@@ -7284,7 +7665,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchIntroTitle => 'ابحث في محادثاتك';
 
   @override
-  String get searchIntroLine => 'الأسماء والكلمات والصور والملفات والروابط. يجري البحث على هذا الهاتف ولا يرسل أي شيء إلى أي مكان.';
+  String get searchIntroLine =>
+      'الأسماء والكلمات والصور والملفات والروابط. يجري البحث على هذا الهاتف ولا يرسل أي شيء إلى أي مكان.';
 
   @override
   String get searchNothing => 'لم يُعثر على شيء';
@@ -7334,7 +7716,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleShowInSearch => 'أظهرني في البحث';
 
   @override
-  String get handleShowInSearchLine => 'يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
+  String get handleShowInSearchLine =>
+      'يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
 
   @override
   String handleShownAs(Object name) {
@@ -7345,7 +7728,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleNameInSearch => 'الاسم في البحث';
 
   @override
-  String get handleNameInSearchLine => 'اختياري. يظهر بجانب اسم المستخدم عندما يبحث أحد. يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
+  String get handleNameInSearchLine =>
+      'اختياري. يظهر بجانب اسم المستخدم عندما يبحث أحد. يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
 
   @override
   String get handleNameHint => 'اسمك، أو اتركه فارغًا';
@@ -7362,13 +7746,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get handleRegistryFailed => 'تعذّر الوصول إلى السجل. حاول مجددًا بعد دقيقة.';
+  String get handleRegistryFailed =>
+      'تعذّر الوصول إلى السجل. حاول مجددًا بعد دقيقة.';
 
   @override
-  String get handleStillReaching => 'ما زال الاتصال بالسجل جاريًا. عبر Tor قد يستغرق ذلك حتى دقيقة.';
+  String get handleStillReaching =>
+      'ما زال الاتصال بالسجل جاريًا. عبر Tor قد يستغرق ذلك حتى دقيقة.';
 
   @override
-  String get handleSearchNeedsTor => 'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
+  String get handleSearchNeedsTor =>
+      'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
 
   @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
@@ -7408,7 +7795,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get peopleFingerprintLine => 'تأكد من تطابقها مع ما يراه الطرف الآخر في تطبيقه.';
+  String get peopleFingerprintLine =>
+      'تأكد من تطابقها مع ما يراه الطرف الآخر في تطبيقه.';
 
   @override
   String get peopleAdding => 'جارٍ الإضافة…';
@@ -7425,19 +7813,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinPickDifferent => 'اختر رمز PIN آخر';
 
   @override
-  String get lockFingerAfterPin => 'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
+  String get lockFingerAfterPin =>
+      'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
 
   @override
-  String get lockFingerLockedOut => 'محاولات كثيرة جدًا بالبصمة. استخدم رمز PIN، أو افتح قفل هاتفك مرة واحدة بقفل الشاشة الخاص به لتعود البصمة.';
+  String get lockFingerLockedOut =>
+      'محاولات كثيرة جدًا بالبصمة. استخدم رمز PIN، أو افتح قفل هاتفك مرة واحدة بقفل الشاشة الخاص به لتعود البصمة.';
 
   @override
-  String get lockFingerRefused => 'لم يحتفظ هاتفك بفتح القفل بالبصمة لـ Kryfo، لذا أُوقف. رمز PIN لا يزال يعمل.';
+  String get lockFingerRefused =>
+      'لم يحتفظ هاتفك بفتح القفل بالبصمة لـ Kryfo، لذا أُوقف. رمز PIN لا يزال يعمل.';
 
   @override
-  String get lockFingerTryAgain => 'كان هاتفك مشغولًا في تلك اللحظة. جرّب بصمتك مرة أخرى، أو استخدم رمز PIN.';
+  String get lockFingerTryAgain =>
+      'كان هاتفك مشغولًا في تلك اللحظة. جرّب بصمتك مرة أخرى، أو استخدم رمز PIN.';
 
   @override
-  String get pinsFingerRefused => 'لم يسمح هاتفك بتشغيل فتح القفل بالبصمة لـ Kryfo. رمز PIN لا يزال يعمل.';
+  String get pinsFingerRefused =>
+      'لم يسمح هاتفك بتشغيل فتح القفل بالبصمة لـ Kryfo. رمز PIN لا يزال يعمل.';
 
   @override
   String get pinsAdvanced => 'حماية متقدمة';
@@ -7446,7 +7839,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsAdvancedLine => 'لحين يجبرك أحد على فتح قفل هاتفك.';
 
   @override
-  String get pinsWipeLine => 'إن كُتب على شاشة القفل، يمسح Kryfo من هذا الهاتف.';
+  String get pinsWipeLine =>
+      'إن كُتب على شاشة القفل، يمسح Kryfo من هذا الهاتف.';
 
   @override
   String get pinsDecoyPin => 'رمز PIN للتمويه';
@@ -7464,7 +7858,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsTheDecoyGoes => 'يزول معه Kryfo الفارغ الذي يفتحه.';
 
   @override
-  String get pinsTurnOffWithDecoy => 'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
+  String get pinsTurnOffWithDecoy =>
+      'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
   String get pinsHowThisWorks => 'كيف يعمل هذا';
@@ -7479,10 +7874,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowWipeTitle => 'رمز PIN للمسح';
 
   @override
-  String get flowWipe1 => 'إن كُتب على شاشة القفل بدل رمز PIN الخاص بك، يمسح Kryfo من هذا الهاتف ويغلقه. ولمن يراقب، يبدو أن التطبيق توقف فحسب.';
+  String get flowWipe1 =>
+      'إن كُتب على شاشة القفل بدل رمز PIN الخاص بك، يمسح Kryfo من هذا الهاتف ويغلقه. ولمن يراقب، يبدو أن التطبيق توقف فحسب.';
 
   @override
-  String get flowWipe2 => 'تذهب معه كل محادثة وهويتك، ومعهما التمويه إن كان لديك.';
+  String get flowWipe2 =>
+      'تذهب معه كل محادثة وهويتك، ومعهما التمويه إن كان لديك.';
 
   @override
   String get flowWipeChoose => 'اختر رمز PIN للمسح';
@@ -7500,13 +7897,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowDecoy1 => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
 
   @override
-  String get flowDecoyFinger => 'ما دام رمز PIN للتمويه مضبوطًا، يُفتح هذا التطبيق برمز PIN فقط. وإذا كانت البصمة مفعّلة في التمويه، فالإصبع يفتح التمويه، ولا يفتح هذا التطبيق أبدًا.';
+  String get flowDecoyFinger =>
+      'ما دام رمز PIN للتمويه مضبوطًا، يُفتح هذا التطبيق برمز PIN فقط. وإذا كانت البصمة مفعّلة في التمويه، فالإصبع يفتح التمويه، ولا يفتح هذا التطبيق أبدًا.';
 
   @override
-  String get flowDecoyDigits => 'استخدم عدد الأرقام نفسه الذي في رمز PIN الخاص بك، لأن أي شخص يراقب يمكنه عدّ النقاط.';
+  String get flowDecoyDigits =>
+      'استخدم عدد الأرقام نفسه الذي في رمز PIN الخاص بك، لأن أي شخص يراقب يمكنه عدّ النقاط.';
 
   @override
-  String get flowDecoyShade => 'الإشعارات الموجودة في لوحة الإشعارات قد شوهدت بالفعل. وما دام التمويه مفتوحًا، لا يظهر أي إشعار جديد.';
+  String get flowDecoyShade =>
+      'الإشعارات الموجودة في لوحة الإشعارات قد شوهدت بالفعل. وما دام التمويه مفتوحًا، لا يظهر أي إشعار جديد.';
 
   @override
   String get flowDecoyChoose => 'اختر رمز PIN للتمويه';
@@ -7515,16 +7915,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowDecoyDone => 'تم تعيين رمز PIN للتمويه';
 
   @override
-  String get flowDecoyDoneLine => 'اكتبه على شاشة القفل لفتح Kryfo الفارغ. وللخروج منه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
+  String get flowDecoyDoneLine =>
+      'اكتبه على شاشة القفل لفتح Kryfo الفارغ. وللخروج منه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
 
   @override
-  String get flowLaw => 'في بعض الدول، يُعدّ رفض فتح قفل الهاتف أو إخفاء البيانات عن المسؤولين جريمة في حد ذاته. اعرف القانون حيث تسافر.';
+  String get flowLaw =>
+      'في بعض الدول، يُعدّ رفض فتح قفل الهاتف أو إخفاء البيانات عن المسؤولين جريمة في حد ذاته. اعرف القانون حيث تسافر.';
 
   @override
-  String get howWipe => 'إن كُتب رمز PIN للمسح على شاشة القفل، يمسح كل محادثة وهويتك وأي تمويه، ثم يغلق Kryfo. ويعمل حتى أثناء إيقاف لوحة الأرقام بعد محاولات خاطئة.';
+  String get howWipe =>
+      'إن كُتب رمز PIN للمسح على شاشة القفل، يمسح كل محادثة وهويتك وأي تمويه، ثم يغلق Kryfo. ويعمل حتى أثناء إيقاف لوحة الأرقام بعد محاولات خاطئة.';
 
   @override
-  String get howDecoy => 'يفتح رمز PIN للتمويه نسخة ثانية فارغة من Kryfo بكلماتها الثلاث الخاصة. وتواصل الرسائل إلى Kryfo الحقيقي الوصول في الخلفية بصمت. وللخروج من التمويه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
+  String get howDecoy =>
+      'يفتح رمز PIN للتمويه نسخة ثانية فارغة من Kryfo بكلماتها الثلاث الخاصة. وتواصل الرسائل إلى Kryfo الحقيقي الوصول في الخلفية بصمت. وللخروج من التمويه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
 
   @override
   String get flowNotSet => 'تعذّر التعيين. حاول مرة أخرى.';
@@ -7533,7 +7937,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsHiddenChats => 'المحادثات المخفية';
 
   @override
-  String get pinsHiddenLine => 'تبقى المحادثات التي تختارها بعيدة عن الأنظار حتى تُدخل رمز PIN للمحادثات المخفية: لا في القائمة، ولا في البحث، ولا إشعارات.';
+  String get pinsHiddenLine =>
+      'تبقى المحادثات التي تختارها بعيدة عن الأنظار حتى تُدخل رمز PIN للمحادثات المخفية: لا في القائمة، ولا في البحث، ولا إشعارات.';
 
   @override
   String get pinsSetUp => 'إعداد';
@@ -7551,28 +7956,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsRemoveHiddenTitle => 'إلغاء المحادثات المخفية؟';
 
   @override
-  String get pinsRemoveHiddenLine => 'تعود إلى قائمة محادثاتك، ولا يعود رمز PIN للمحادثات المخفية يفتح شيئًا.';
+  String get pinsRemoveHiddenLine =>
+      'تعود إلى قائمة محادثاتك، ولا يعود رمز PIN للمحادثات المخفية يفتح شيئًا.';
 
   @override
-  String get pinsTurnOffHiddenFirst => 'المحادثات المخفية تحتاج إلى قفل التطبيق. ألغِها أولًا، فتعود إلى قائمة محادثاتك.';
+  String get pinsTurnOffHiddenFirst =>
+      'المحادثات المخفية تحتاج إلى قفل التطبيق. ألغِها أولًا، فتعود إلى قائمة محادثاتك.';
 
   @override
   String get flowVaultTitle => 'المحادثات المخفية';
 
   @override
-  String get flowVault1 => 'اختر محادثات ومجموعات لإخفائها. رمز PIN الخاص بك يفتح Kryfo من دونها. ورمز PIN للمحادثات المخفية يفتح كل شيء، بما فيه المحادثات المخفية.';
+  String get flowVault1 =>
+      'اختر محادثات ومجموعات لإخفائها. رمز PIN الخاص بك يفتح Kryfo من دونها. ورمز PIN للمحادثات المخفية يفتح كل شيء، بما فيه المحادثات المخفية.';
 
   @override
-  String get flowVault2 => 'ما دامت بعيدة عن الأنظار، لا تُظهر أي إشعار ولا عدّاد. وتواصل رسائلها الوصول وتنتظر، مختومة، رمز PIN للمحادثات المخفية.';
+  String get flowVault2 =>
+      'ما دامت بعيدة عن الأنظار، لا تُظهر أي إشعار ولا عدّاد. وتواصل رسائلها الوصول وتنتظر، مختومة، رمز PIN للمحادثات المخفية.';
 
   @override
   String get flowVaultFinger => 'بصمتك تفتح Kryfo من دون المحادثات المخفية.';
 
   @override
-  String get flowVaultDigits => 'اجعل رمز PIN الخاص بك أيضًا من ستة أرقام أو أكثر، لأن أي شخص يراقب يمكنه عدّ النقاط.';
+  String get flowVaultDigits =>
+      'اجعل رمز PIN الخاص بك أيضًا من ستة أرقام أو أكثر، لأن أي شخص يراقب يمكنه عدّ النقاط.';
 
   @override
-  String get flowVaultReplace => 'هذا يستبدل أي محادثات مخفية موجودة على هذا الهاتف.';
+  String get flowVaultReplace =>
+      'هذا يستبدل أي محادثات مخفية موجودة على هذا الهاتف.';
 
   @override
   String get flowVaultChoose => 'اختر رمز PIN للمحادثات المخفية';
@@ -7587,7 +7998,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowVaultForgetTitle => 'تذكّر رمز PIN هذا';
 
   @override
-  String get flowVaultForget => 'إن نسيت رمز PIN هذا، تضيع محادثاتك المخفية إلى الأبد. لا أحد يستطيع استعادتها.';
+  String get flowVaultForget =>
+      'إن نسيت رمز PIN هذا، تضيع محادثاتك المخفية إلى الأبد. لا أحد يستطيع استعادتها.';
 
   @override
   String get flowVaultForgetOk => 'فهمت';
@@ -7596,11 +8008,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowVaultPickTitle => 'اختر محادثات لإخفائها';
 
   @override
-  String get flowVaultPickLine => 'ستغادر قائمة محادثاتك الآن. ورمز PIN للمحادثات المخفية يعيدها إلى الظهور.';
+  String get flowVaultPickLine =>
+      'ستغادر قائمة محادثاتك الآن. ورمز PIN للمحادثات المخفية يعيدها إلى الظهور.';
 
   @override
   String flowVaultPickButton(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7623,7 +8037,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowVaultBackupTitle => 'إنشاء نسخة احتياطية الآن؟';
 
   @override
-  String get flowVaultBackupLine => 'النسخة الاحتياطية التي تُنشأ الآن تضم محادثاتك المخفية أيضًا، بعبارة مرور خاصة بها. إن نسيت رمز PIN للمحادثات المخفية، فهي الطريق الوحيد إليها.';
+  String get flowVaultBackupLine =>
+      'النسخة الاحتياطية التي تُنشأ الآن تضم محادثاتك المخفية أيضًا، بعبارة مرور خاصة بها. إن نسيت رمز PIN للمحادثات المخفية، فهي الطريق الوحيد إليها.';
 
   @override
   String get flowVaultBackupNow => 'إنشاء نسخة احتياطية';
@@ -7635,16 +8050,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowVaultDone => 'تم إعداد المحادثات المخفية';
 
   @override
-  String get flowVaultDoneLine => 'أدخل رمز PIN للمحادثات المخفية على شاشة القفل لتراها. انتقل إلى تطبيق آخر فتعود بعيدة عن الأنظار.';
+  String get flowVaultDoneLine =>
+      'أدخل رمز PIN للمحادثات المخفية على شاشة القفل لتراها. انتقل إلى تطبيق آخر فتعود بعيدة عن الأنظار.';
 
   @override
   String get flowVaultChanged => 'تم تغيير رمز PIN للمحادثات المخفية';
 
   @override
-  String get flowVaultChangedLine => 'تُفتح محادثاتك المخفية الآن بالرمز الجديد. والرمز القديم لم يعد يفتح شيئًا.';
+  String get flowVaultChangedLine =>
+      'تُفتح محادثاتك المخفية الآن بالرمز الجديد. والرمز القديم لم يعد يفتح شيئًا.';
 
   @override
-  String get howVault => 'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك وبصمتك يفتحانه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الهاتف منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
+  String get howVault =>
+      'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك وبصمتك يفتحانه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الهاتف منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
 
   @override
   String get chatHide => 'إخفاء المحادثة';
@@ -7688,7 +8106,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stickerNewer => 'من إصدار أحدث من Kryfo';
 
   @override
-  String get devLinkMismatch => 'يقول هذا الرابط إنه Marios، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
+  String get devLinkMismatch =>
+      'يقول هذا الرابط إنه Marios، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
 
   @override
   String get devName => 'Marios';
@@ -7697,7 +8116,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devRowTitle => 'Marios · صانع Kryfo';
 
   @override
-  String get devWelcome => 'مرحبًا، أنا Marios، أطوّر Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.';
+  String get devWelcome =>
+      'مرحبًا، أنا Marios، أطوّر Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.';
 
   @override
   String get devPinned => 'مدمج في Kryfo';
@@ -7706,7 +8126,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devAnonymous => 'مجهول الهوية';
 
   @override
-  String get devAboutLine => 'مفتاح Marios مدمج في Kryfo. كل رسالة تصل منه تُطابَق مع هذا المفتاح، فلا يستطيع أحد غيره أن يكتب باسمه.';
+  String get devAboutLine =>
+      'مفتاح Marios مدمج في Kryfo. كل رسالة تصل منه تُطابَق مع هذا المفتاح، فلا يستطيع أحد غيره أن يكتب باسمه.';
 
   @override
   String get devKeyLabel => 'مفتاحه';
@@ -7715,13 +8136,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devDeleteLine => 'تُحذف كل رسالة، ولن تعود هذه المحادثة.';
 
   @override
-  String get devDeleteLineAnon => 'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة.';
+  String get devDeleteLineAnon =>
+      'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة.';
 
   @override
-  String get devDeleteLineBack => 'تُحذف كل رسالة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
+  String get devDeleteLineBack =>
+      'تُحذف كل رسالة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
 
   @override
-  String get devDeleteLineAnonBack => 'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
+  String get devDeleteLineAnonBack =>
+      'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
 
   @override
   String devDeleteNotTakenBack(int count) {
@@ -7746,7 +8170,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String supportWaiting(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7772,7 +8197,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportEmpty => 'No one has written yet';
 
   @override
-  String get supportEmptyLine => 'Chats people start from the Marios row land here, not in requests.';
+  String get supportEmptyLine =>
+      'Chats people start from the Marios row land here, not in requests.';
 
   @override
   String get supportMarkDone => 'Done';
@@ -7787,11 +8213,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportMenu => 'Inbox options';
 
   @override
-  String get supportDeleteLine => 'Every message in this chat goes from this phone. If they write again, it comes back here.';
+  String get supportDeleteLine =>
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7805,7 +8233,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String supportNotifNewMessages(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7824,7 +8253,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
-  String get supportResetPinned => 'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
+  String get supportResetPinned =>
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
   String get supportViaDev => 'Via developer chat';
@@ -7833,7 +8263,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
-  String get supportMoveLine => 'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
+  String get supportMoveLine =>
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
   String get supportMove => 'Move';
@@ -7866,7 +8297,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenDevChatCell => 'إن كتبت';
 
   @override
-  String get seenDevChatLine => 'لا شيء حتى تكتب. بعدها ما ترسله، وكلماتك الثلاث ما لم تكتب بهوية مجهولة.';
+  String get seenDevChatLine =>
+      'لا شيء حتى تكتب. بعدها ما ترسله، وكلماتك الثلاث ما لم تكتب بهوية مجهولة.';
 
   @override
   String get devWriteAnonymously => 'اكتب بهوية مجهولة';
@@ -7878,10 +8310,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devWhoSeesWhat => 'كيف يعمل هذا';
 
   @override
-  String get devWhoWords => 'بكلماتك الثلاث، هذه محادثة مثل أي محادثة أخرى: يستطيع Marios أن يرد عليك، ويبقى وجهك وشارة الداعم معك.';
+  String get devWhoWords =>
+      'بكلماتك الثلاث، هذه محادثة مثل أي محادثة أخرى: يستطيع Marios أن يرد عليك، ويبقى وجهك وشارة الداعم معك.';
 
   @override
-  String get devWhoAnon => 'إن كتبت بهوية مجهولة، يصنع Kryfo اسمًا ومفاتيح جديدة لهذه المحادثة وحدها. تبقى على هذا الهاتف ولا تُستخدم في أي مكان آخر أبدًا.';
+  String get devWhoAnon =>
+      'إن كتبت بهوية مجهولة، يصنع Kryfo اسمًا ومفاتيح جديدة لهذه المحادثة وحدها. تبقى على هذا الهاتف ولا تُستخدم في أي مكان آخر أبدًا.';
 
   @override
   String get devWhoNothingYet => 'لا يخرج شيء من هاتفك حتى ترسل رسالتك الأولى.';
@@ -7893,7 +8327,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
 
   @override
-  String get devLockLine => 'سيقرأ Marios هذه الرسائل. يمكنك أن تكتب المزيد بعد أن يرد.';
+  String get devLockLine =>
+      'سيقرأ Marios هذه الرسائل. يمكنك أن تكتب المزيد بعد أن يرد.';
 
   @override
   String get devNewKey => 'لدى Marios مفتاح جديد';
@@ -7902,10 +8337,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devStartNewChat => 'ابدأ محادثة جديدة';
 
   @override
-  String get devKeyRetired => 'أُوقف هذا المفتاح. لا يمكن إرسال أي شيء أو استلامه هنا بعد الآن.';
+  String get devKeyRetired =>
+      'أُوقف هذا المفتاح. لا يمكن إرسال أي شيء أو استلامه هنا بعد الآن.';
 
   @override
-  String get devNamelessLine => 'يبقى الاسم الذي صُنع لهذه المحادثة على الهاتف الذي صُنع عليه، لذا يمكن هنا قراءتها فقط.';
+  String get devNamelessLine =>
+      'يبقى الاسم الذي صُنع لهذه المحادثة على الهاتف الذي صُنع عليه، لذا يمكن هنا قراءتها فقط.';
 
   @override
   String get devStartNewLine => 'تُحذف كل رسالة هنا، وتُفتح محادثة جديدة.';
@@ -7923,16 +8360,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nameTakenTitle => 'شخص آخر يستخدم هذه الكلمات';
 
   @override
-  String get nameTakenLine => 'شخص هنا حصل على هذه الكلمات من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+  String get nameTakenLine =>
+      'شخص هنا حصل على هذه الكلمات من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
 
   @override
-  String get nameTakenChatLine => 'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة. لست متأكدًا من مصدر الرابط؟ أبقِ على الموجود.';
+  String get nameTakenChatLine =>
+      'محادثتك تحت هذه الكلمات جاءت من طلب أو تعريف أو مجموعة، بمفتاح مختلف، ولم يتحقّق منها أحد. يمكن نسخ الكلمات. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه: تُحذف تلك المحادثة، وتقارن رقم الأمان في المحادثة الجديدة. لست متأكدًا من مصدر الرابط؟ أبقِ على الموجود.';
 
   @override
-  String get nameTakenDeletedLine => 'حذفت محادثة تحت هذه الكلمات، كانت بمفتاح مختلف. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+  String get nameTakenDeletedLine =>
+      'حذفت محادثة تحت هذه الكلمات، كانت بمفتاح مختلف. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
 
   @override
-  String get nameTakenTombLine => 'أزلت من هذا الهاتف شخصًا تحت هذه الكلمات لأنه لم يكن من ادّعى. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
+  String get nameTakenTombLine =>
+      'أزلت من هذا الهاتف شخصًا تحت هذه الكلمات لأنه لم يكن من ادّعى. إن جاءك هذا الرابط من الشخص الذي تعرفه، فاستخدمه، ثم قارن رقم الأمان معه.';
 
   @override
   String get nameTakenUse => 'استخدم هذا الرابط';
@@ -7962,7 +8403,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notThemNumbersDiffer => 'الرقمان مختلفان';
 
   @override
-  String get notThemLine => 'إن كان الرقمان مختلفين فعلًا، فربما يستخدم شخص آخر اسمه أو يقف بينكما.';
+  String get notThemLine =>
+      'إن كان الرقمان مختلفين فعلًا، فربما يستخدم شخص آخر اسمه أو يقف بينكما.';
 
   @override
   String get notThemButton => 'هذا ليس هو';
@@ -7971,7 +8413,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notThemSheetTitle => 'إزالة جهة الاتصال هذه وحظر مفتاحها؟';
 
   @override
-  String get notThemSheetLine => 'تُحذف المحادثة ورسائلها وملفاتها من هذا الهاتف. لا يأخذ كلماته الثلاث من جديد إلا رابط أو رمز تضيفه أنت. قارن رقم الأمان مع من تضيفه.';
+  String get notThemSheetLine =>
+      'تُحذف المحادثة ورسائلها وملفاتها من هذا الهاتف. لا يأخذ كلماته الثلاث من جديد إلا رابط أو رمز تضيفه أنت. قارن رقم الأمان مع من تضيفه.';
 
   @override
   String get notThemRemove => 'إزالة وحظر';
@@ -7980,16 +8423,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notThemDone => 'أُزيلت، وحُظر مفتاحها';
 
   @override
-  String get groupAdminGoneLine => 'أُزيل مشرفها من هذا الهاتف. لم تعد تغييرات المجموعة تصل إليك.';
+  String get groupAdminGoneLine =>
+      'أُزيل مشرفها من هذا الهاتف. لم تعد تغييرات المجموعة تصل إليك.';
 
   @override
   String get blockedKey => 'مفتاح محظور';
 
   @override
-  String get appKeyBlocked => 'لقد حظرت هذا المفتاح. ألغِ حظره من «المحظورون» في الإعدادات لتضيفه.';
+  String get appKeyBlocked =>
+      'لقد حظرت هذا المفتاح. ألغِ حظره من «المحظورون» في الإعدادات لتضيفه.';
 
   @override
-  String get devLinkGone => 'لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.';
+  String get devLinkGone =>
+      'لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.';
 
   @override
   String lockTooManyTriesFor(Object left) {
@@ -8009,7 +8455,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gifOptInTitle => 'ابحث عن صور GIF بخصوصية';
 
   @override
-  String get gifOptInLead => 'البحث عن صور GIF يحتاج إلى الإنترنت، لذلك يبقى متوقفًا حتى تريده.';
+  String get gifOptInLead =>
+      'البحث عن صور GIF يحتاج إلى الإنترنت، لذلك يبقى متوقفًا حتى تريده.';
 
   @override
   String get gifOptInOverTor => 'بحث عبر Tor';
@@ -8018,16 +8465,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gifOptInThroughKryfo => 'بحث عبر Kryfo';
 
   @override
-  String get gifOptInAsksForYou => 'خادم Kryfo يسأل خدمة GIF نيابة عنك. الخدمة لا تراك أبدًا، والخادم لا يحتفظ بأي سجل لما بحثت عنه.';
+  String get gifOptInAsksForYou =>
+      'خادم Kryfo يسأل خدمة GIF نيابة عنك. الخدمة لا تراك أبدًا، والخادم لا يحتفظ بأي سجل لما بحثت عنه.';
 
   @override
-  String get gifOptInLikeAPhoto => 'تنتقل صورة GIF مشفّرة، مثل الصورة. هاتف صديقك لا يجلب شيئًا.';
+  String get gifOptInLikeAPhoto =>
+      'تنتقل صورة GIF مشفّرة، مثل الصورة. هاتف صديقك لا يجلب شيئًا.';
 
   @override
   String get gifOptInOffWhenever => 'أوقفه متى شئت';
 
   @override
-  String get gifOptInWhereToTurnOff => 'الإعدادات، الخصوصية، البحث عن GIF. صور GIF على هاتفك تعمل دائمًا من دونه.';
+  String get gifOptInWhereToTurnOff =>
+      'الإعدادات، الخصوصية، البحث عن GIF. صور GIF على هاتفك تعمل دائمًا من دونه.';
 
   @override
   String get gifTurnOn => 'تشغيل البحث عن GIF';
@@ -8052,7 +8502,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gifSearchOff => 'البحث عن GIF متوقف';
 
   @override
-  String get gifSavedOnPhone => 'صور GIF المحفوظة على هاتفك موجودة في *على هذا الهاتف*.';
+  String get gifSavedOnPhone =>
+      'صور GIF المحفوظة على هاتفك موجودة في *على هذا الهاتف*.';
 
   @override
   String get gifTab => 'صور GIF';
@@ -8109,7 +8560,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get gifPhoneLine => 'صور GIF المحفوظة على هذا الهاتف. لا شيء يتصل بالإنترنت.';
+  String get gifPhoneLine =>
+      'صور GIF المحفوظة على هذا الهاتف. لا شيء يتصل بالإنترنت.';
 
   @override
   String get gifPhoneChoose => 'اختر صورة GIF';
@@ -8118,7 +8570,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGifSearch => 'البحث عن GIF';
 
   @override
-  String get settingsGifSearchHint => 'متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.';
+  String get settingsGifSearchHint =>
+      'متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.';
 
   @override
   String get shareChooseChat => 'اختر محادثة';
@@ -8130,10 +8583,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareNoOne => 'لا يوجد من تشارك معه';
 
   @override
-  String get valveStillConnecting => 'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
+  String get valveStillConnecting =>
+      'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
 
   @override
-  String get valveCouldNotReconnect => 'تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.';
+  String get valveCouldNotReconnect =>
+      'تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.';
 
   @override
   String get valveRestartKryfo => 'إعادة تشغيل Kryfo';
@@ -8150,7 +8605,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsCheckForUpdates => 'التحقق من التحديثات';
 
   @override
-  String get settingsCheckForUpdatesHint => 'مرة واحدة يوميًا عبر Tor. يسأل kryfo.app عن أحدث إصدار ولا يرسل أي شيء عنك.';
+  String get settingsCheckForUpdatesHint =>
+      'مرة واحدة يوميًا عبر Tor. يسأل kryfo.app عن أحدث إصدار ولا يرسل أي شيء عنك.';
 
   @override
   String get voiceDisguiseHere => 'تمويه صوتي هنا';
@@ -8162,23 +8618,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
 
   @override
-  String get chatShotsBothPhones => 'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
+  String get chatShotsBothPhones =>
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه المحادثة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
-  String get chatShotsBlocksBoth => 'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
+  String get chatShotsBlocksBoth =>
+      'يمنع لقطات الشاشة وتسجيل الشاشة على الهاتفين، ونسخ رسائل كل منكما أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
   String get chatShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المحادثة';
 
   @override
-  String get chatShotsMenuNote => 'نسخ رسائله وإعادة توجيهها وحفظها متوقف في هذه المحادثة';
+  String get chatShotsMenuNote =>
+      'نسخ رسائله وإعادة توجيهها وحفظها متوقف في هذه المحادثة';
 
   @override
-  String get chatShotsKeptOpen => 'فتح ملفاته في تطبيقات أخرى متوقف في هذه المحادثة';
+  String get chatShotsKeptOpen =>
+      'فتح ملفاته في تطبيقات أخرى متوقف في هذه المحادثة';
 
   @override
   String searchKeptMatches(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -8195,16 +8656,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get savedKeptInChat => 'محفوظة من محادثة تمنع لقطات الشاشة · افتح المحادثة لرؤيتها';
+  String get savedKeptInChat =>
+      'محفوظة من محادثة تمنع لقطات الشاشة · افتح المحادثة لرؤيتها';
 
   @override
-  String get roomShotsMenuNote => 'نسخ رسائل الآخرين وإعادة توجيهها وحفظها متوقف في هذه الغرفة';
+  String get roomShotsMenuNote =>
+      'نسخ رسائل الآخرين وإعادة توجيهها وحفظها متوقف في هذه الغرفة';
 
   @override
-  String get roomShotsKeptOpen => 'فتح ملفات الآخرين في تطبيقات أخرى متوقف في هذه الغرفة';
+  String get roomShotsKeptOpen =>
+      'فتح ملفات الآخرين في تطبيقات أخرى متوقف في هذه الغرفة';
 
   @override
-  String get chatShotsYouTurnedOn => 'فعّلت منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
+  String get chatShotsYouTurnedOn =>
+      'فعّلت منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
 
   @override
   String get chatShotsYouTurnedOff => 'أوقفت منع لقطات الشاشة';
@@ -8220,7 +8685,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get roomShotsBlocked => 'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
+  String get roomShotsBlocked =>
+      'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
   String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
@@ -8241,11 +8707,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeShotsLeaveOff => 'اتركه متوقفًا';
 
   @override
-  String get homeShotsTheySeeIt => 'يمنعها Kryfo على الهاتف الآخر أيضًا، ويتوقف نسخ رسائل كل منكما وإعادة توجيهها وحفظها. سيرى الطرف الآخر أنك فعّلته.';
+  String get homeShotsTheySeeIt =>
+      'يمنعها Kryfo على الهاتف الآخر أيضًا، ويتوقف نسخ رسائل كل منكما وإعادة توجيهها وحفظها. سيرى الطرف الآخر أنك فعّلته.';
 
   @override
   String homeShotsTurnedOn(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -8286,16 +8754,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNotDisguised => 'تعذّر تمويه هذه الرسالة، لذا لم تُرسل';
 
   @override
-  String get voiceNoRoom => 'لا توجد مساحة فارغة كافية على هذا الهاتف. أفرغ بعض المساحة ثم حاول مجددًا.';
+  String get voiceNoRoom =>
+      'لا توجد مساحة فارغة كافية على هذا الهاتف. أفرغ بعض المساحة ثم حاول مجددًا.';
 
   @override
-  String get voiceNoRoomNotSent => 'لم تكن هناك مساحة كافية لتمويه هذه الرسالة، لذا لم تُرسل';
+  String get voiceNoRoomNotSent =>
+      'لم تكن هناك مساحة كافية لتمويه هذه الرسالة، لذا لم تُرسل';
 
   @override
   String get voiceDisguising => 'جارٍ التمويه';
 
   @override
-  String get voiceLockedNotSent => 'قُفل Kryfo قبل أن تُرسل رسالتك الصوتية، لذا لم تُرسل';
+  String get voiceLockedNotSent =>
+      'قُفل Kryfo قبل أن تُرسل رسالتك الصوتية، لذا لم تُرسل';
 
   @override
   String get voiceNotSent => 'لم تُرسل رسالتك الصوتية';
@@ -8304,10 +8775,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsDisguiseByDefault => 'تمويه صوتي افتراضيًا';
 
   @override
-  String get settingsDisguiseByDefaultHint => 'يمكن لكل محادثة تغييره من قائمتها';
+  String get settingsDisguiseByDefaultHint =>
+      'يمكن لكل محادثة تغييره من قائمتها';
 
   @override
-  String get fileInstallerLine => 'هذا ملف لتثبيت تطبيق. لا تثبّت التطبيقات إلا من أشخاص تثق بهم.';
+  String get fileInstallerLine =>
+      'هذا ملف لتثبيت تطبيق. لا تثبّت التطبيقات إلا من أشخاص تثق بهم.';
 
   @override
   String get fileAppInstaller => 'ملف تثبيت تطبيق';
@@ -8327,7 +8800,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get fileSavedUnchecked => 'حُفظ، لكن Kryfo لم يتمكن من التحقق من النسخة';
+  String get fileSavedUnchecked =>
+      'حُفظ، لكن Kryfo لم يتمكن من التحقق من النسخة';
 
   @override
   String get fileNotSaved => 'تعذّر حفظ الملف';
@@ -8341,19 +8815,23 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get fileGoesAsItIs => 'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV فقط.';
+  String get fileGoesAsItIs =>
+      'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV فقط.';
 
   @override
   String get fileRawPictureTitle => 'إرسال هذه الصورة كما هي؟';
 
   @override
-  String get fileRawPictureLine => 'لا يمكن تنظيف هذه الصورة. تُرسل معها تفاصيل مثل مكان التقاطها. أرسلها كصورة عادية لتنظيفها.';
+  String get fileRawPictureLine =>
+      'لا يمكن تنظيف هذه الصورة. تُرسل معها تفاصيل مثل مكان التقاطها. أرسلها كصورة عادية لتنظيفها.';
 
   @override
-  String get voiceStoppedAtLimit => 'تتوقف الرسائل الصوتية عند ٣٠ دقيقة. استمع إليها ثم أرسلها.';
+  String get voiceStoppedAtLimit =>
+      'تتوقف الرسائل الصوتية عند ٣٠ دقيقة. استمع إليها ثم أرسلها.';
 
   @override
-  String get gettingMessagesHelperBody => 'فوري وخفيف. يرى خادمه عنوان IP الخاص بك ومتى تصل الرسائل، ولا يرى أبدًا ما فيها.';
+  String get gettingMessagesHelperBody =>
+      'فوري وخفيف. يرى خادمه عنوان IP الخاص بك ومتى تصل الرسائل، ولا يرى أبدًا ما فيها.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'التبديل إلى Onion';
@@ -8362,7 +8840,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gettingMessagesHelperSetUp => 'إعداد';
 
   @override
-  String get gettingMessagesHelperNote => 'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على خادم التطبيق المساعد معرفة متى تصل الرسائل الحقيقية. خادم مساعد خاص بك يُعلم مُرحِّلنا بعنوانه. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+  String get gettingMessagesHelperNote =>
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على خادم التطبيق المساعد معرفة متى تصل الرسائل الحقيقية. خادم مساعد خاص بك يُعلم مُرحِّلنا بعنوانه. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
 
   @override
   String get gettingMessagesHelperOnionOnly => 'متاح على مسار Onion';
@@ -8377,7 +8856,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helperSheetNeedTitle => 'تحتاج إلى تطبيق مساعد';
 
   @override
-  String get helperSheetNeedLine => 'يحتفظ التطبيق المساعد باتصال خفيف واحد لكل تطبيقاتك ويوقظ Kryfo حين يصل شيء. يصلح أي تطبيق UnifiedPush، وntfy بداية جيدة.';
+  String get helperSheetNeedLine =>
+      'يحتفظ التطبيق المساعد باتصال خفيف واحد لكل تطبيقاتك ويوقظ Kryfo حين يصل شيء. يصلح أي تطبيق UnifiedPush، وntfy بداية جيدة.';
 
   @override
   String get helperSheetGetNtfy => 'احصل على ntfy';
@@ -8389,7 +8869,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helperSheetPickTitle => 'اختر تطبيقًا مساعدًا';
 
   @override
-  String get helperSheetPickLine => 'لا يطلب Kryfo منه إلا إيقاظ التطبيق. لا تمر رسائلك عبره أبدًا.';
+  String get helperSheetPickLine =>
+      'لا يطلب Kryfo منه إلا إيقاظ التطبيق. لا تمر رسائلك عبره أبدًا.';
 
   @override
   String helperSheetSetUp(Object name) {
@@ -8405,7 +8886,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeHelperGoneTitle => 'تطبيقك المساعد لم يعد موجودًا';
 
   @override
-  String get homeHelperGoneLine => 'يتفقّد Kryfo كل ١٥ دقيقة إلى أن تختار طريقة أخرى.';
+  String get homeHelperGoneLine =>
+      'يتفقّد Kryfo كل ١٥ دقيقة إلى أن تختار طريقة أخرى.';
 
   @override
   String get homeHelperGoneChoose => 'اختر طريقة أخرى';
@@ -8414,7 +8896,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeHelperRelayTitle => 'لم يعد المُرحِّل يوقظ Kryfo';
 
   @override
-  String get gettingMessagesHelperRefused => 'لا يقبل مُرحِّلنا الآن بعض تسجيلات هذا الهاتف. تصل تلك المحادثات مع التفقّد كل ١٥ دقيقة، ويواصل Kryfo المحاولة. قد يفيد أيضًا اختيار تطبيق مساعد أو خادم آخر.';
+  String get gettingMessagesHelperRefused =>
+      'لا يقبل مُرحِّلنا الآن بعض تسجيلات هذا الهاتف. تصل تلك المحادثات مع التفقّد كل ١٥ دقيقة، ويواصل Kryfo المحاولة. قد يفيد أيضًا اختيار تطبيق مساعد أو خادم آخر.';
 
   @override
   String albumLabel(Object count) {
@@ -8483,7 +8966,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupInfoEndThisGroup => 'إنهاء هذه المجموعة للجميع؟';
 
   @override
-  String get groupInfoEndGroupLine => 'تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو حدّث التطبيق.';
+  String get groupInfoEndGroupLine =>
+      'تُحذف للجميع: تُزال رسائلها ووسائطها من هاتف كل عضو حدّث التطبيق.';
 
   @override
   String get groupInfoDeleteGroup => 'حذف المجموعة';
@@ -8492,13 +8976,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupInfoDeleteThisGroup => 'حذف هذه المجموعة؟';
 
   @override
-  String get groupInfoDeleteGroupLine => 'تختفي المجموعة المنتهية من قائمة محادثاتك.';
+  String get groupInfoDeleteGroupLine =>
+      'تختفي المجموعة المنتهية من قائمة محادثاتك.';
 
   @override
-  String get groupEndedOldNotice => 'أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.';
+  String get groupEndedOldNotice =>
+      'أنهيت هذه المجموعة، فلم يعد أحد يستطيع الإرسال فيها. حدّث Kryfo لتراها منتهية.';
 
   @override
-  String get groupInfoEndGroupDetail => 'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
+  String get groupInfoEndGroupDetail =>
+      'يزيلها Kryfo من هاتف كل عضو لديه التحديث.';
 
   @override
   String get translateAction => 'ترجمة';
@@ -8579,16 +9066,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get translateNeedsWifi => 'خيار «عبر Wi-Fi فقط» مفعّل، وهذا الهاتف غير متصل بشبكة Wi-Fi.';
+  String get translateNeedsWifi =>
+      'خيار «عبر Wi-Fi فقط» مفعّل، وهذا الهاتف غير متصل بشبكة Wi-Fi.';
 
   @override
-  String get translateFailNoTor => 'لم يتصل Tor بعد. تُنزَّل الحزم عبر Tor فقط، فحاول مجددًا بعد اتصاله.';
+  String get translateFailNoTor =>
+      'لم يتصل Tor بعد. تُنزَّل الحزم عبر Tor فقط، فحاول مجددًا بعد اتصاله.';
 
   @override
-  String get translateFailNetwork => 'توقف التنزيل. حاول مجددًا وسيكمل من حيث توقف.';
+  String get translateFailNetwork =>
+      'توقف التنزيل. حاول مجددًا وسيكمل من حيث توقف.';
 
   @override
-  String get translateFailBadFile => 'لم يطابق أحد الملفات ما يتوقعه Kryfo فتم التخلص منه. حاول مجددًا.';
+  String get translateFailBadFile =>
+      'لم يطابق أحد الملفات ما يتوقعه Kryfo فتم التخلص منه. حاول مجددًا.';
 
   @override
   String get translateFailNoEngine => 'لا يمكن تنزيل حزم اللغة على هذا الهاتف.';
@@ -8640,7 +9131,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateMyLanguages => 'لغات أقرؤها';
 
   @override
-  String get translateMyLanguagesHint => 'لا تُعرض ترجمة الرسائل المكتوبة بهذه اللغات. لغة التطبيق دائمًا من بينها.';
+  String get translateMyLanguagesHint =>
+      'لا تُعرض ترجمة الرسائل المكتوبة بهذه اللغات. لغة التطبيق دائمًا من بينها.';
 
   @override
   String get translateInto => 'الترجمة إلى';
@@ -8655,7 +9147,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateAutoDefault => 'ترجمة المحادثات تلقائيًا';
 
   @override
-  String get translateAutoDefaultHint => 'للمحادثات التي لم تضبطها بنفسك. يمكن لكل محادثة تشغيلها أو إيقافها.';
+  String get translateAutoDefaultHint =>
+      'للمحادثات التي لم تضبطها بنفسك. يمكن لكل محادثة تشغيلها أو إيقافها.';
 
   @override
   String get translateWifiOnly => 'تنزيل الحزم عبر Wi-Fi فقط';
@@ -8664,25 +9157,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translatePrivacyTitle => 'ما يبقى خاصًا';
 
   @override
-  String get translatePrivacyNote => 'تتم الترجمة على هذا الهاتف. لا تُرسل أي رسالة إلى أي مكان لترجمتها. تنزيل حزمة يُخبر الخادم أي حزمة هي. يتم التنزيل عبر Tor، فلا يعرف الخادم من طلبها.';
+  String get translatePrivacyNote =>
+      'تتم الترجمة على هذا الهاتف. لا تُرسل أي رسالة إلى أي مكان لترجمتها. تنزيل حزمة يُخبر الخادم أي حزمة هي. يتم التنزيل عبر Tor، فلا يعرف الخادم من طلبها.';
 
   @override
   String get translateAutoInChat => 'ترجمة تلقائية';
 
   @override
-  String get translateAutoInChatHint => 'تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة.';
+  String get translateAutoInChatHint =>
+      'تظهر الرسائل المكتوبة بلغات أخرى مترجمة. الأصل على بُعد لمسة واحدة.';
 
   @override
   String get bridgesNoneUntilOnion => 'لا شيء حتى تشغيل Onion';
 
   @override
-  String get bridgesRelayWorksWhereTor => 'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
+  String get bridgesRelayWorksWhereTor =>
+      'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
 
   @override
-  String get bridgesRelayThisNetworkSees => 'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
+  String get bridgesRelayThisNetworkSees =>
+      'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
 
   @override
-  String get onboardingRelayThisNetworkSees => 'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
+  String get onboardingRelayThisNetworkSees =>
+      'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
 
   @override
   String get settingsLicences => 'التراخيص';
@@ -8691,7 +9189,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsLicencesValue => 'مما صُنع Kryfo';
 
   @override
-  String get licencesKryfoLine => 'Kryfo برنامج حر بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. يمكن لأي شخص قراءة شيفرته وتعديلها ومشاركتها.';
+  String get licencesKryfoLine =>
+      'Kryfo برنامج حر بموجب رخصة جنو العمومية العامة، الإصدار 3 أو أحدث. يمكن لأي شخص قراءة شيفرته وتعديلها ومشاركتها.';
 
   @override
   String get licencesSourceCode => 'الشيفرة المصدرية';
@@ -8721,7 +9220,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String licencesPartCount(int count) {
-    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -8759,7 +9259,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionTheRouteIsUp => 'المسار قائم';
 
   @override
-  String get motionMessagesGoOnceARelay => 'تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.';
+  String get motionMessagesGoOnceARelay =>
+      'تُرسَل الرسائل حالما يستجيب مُرحِّل عبر هذا المسار.';
 
   @override
   String get motionOffline => 'غير متصل';
@@ -8768,7 +9269,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionNoNetwork => 'لا توجد شبكة';
 
   @override
-  String get motionTorPicksUpAgain => 'لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.';
+  String get motionTorPicksUpAgain =>
+      'لا يُرسَل شيء بلا شبكة. يواصل Tor حالما تعود.';
 
   @override
   String deliveryModeStateLast(String state, Object last) {
@@ -8797,10 +9299,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iconSectionTitle => 'أيقونة التطبيق';
 
   @override
-  String get iconHint => 'تعرض شاشتك الرئيسية وقائمة تطبيقاتك هذه الأيقونة وهذا الاسم بدل Kryfo.';
+  String get iconHint =>
+      'تعرض شاشتك الرئيسية وقائمة تطبيقاتك هذه الأيقونة وهذا الاسم بدل Kryfo.';
 
   @override
-  String get iconHintKryfo => 'اختر أيقونة واسمًا عاديين لشاشتك الرئيسية وقائمة تطبيقاتك.';
+  String get iconHintKryfo =>
+      'اختر أيقونة واسمًا عاديين لشاشتك الرئيسية وقائمة تطبيقاتك.';
 
   @override
   String get iconWhatChanges => 'ما الذي يغيّره هذا';
@@ -8819,7 +9323,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iconConfirmButton => 'تغيير الأيقونة';
 
   @override
-  String get iconNoPinLine => 'من ينقر عليها يرى Kryfo. عيّن رمز PIN للتطبيق ليرى لوحة الرمز بدلًا من ذلك.';
+  String get iconNoPinLine =>
+      'من ينقر عليها يرى Kryfo. عيّن رمز PIN للتطبيق ليرى لوحة الرمز بدلًا من ذلك.';
 
   @override
   String get iconSetPin => 'تعيين رمز PIN';
@@ -8849,7 +9354,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifShowPlain => 'بسيطة';
 
   @override
-  String get notifPlainHint => 'بلا اسم، بلا رسالة، بلا ألوان Kryfo. أيقونة محايدة وسطر واحد.';
+  String get notifPlainHint =>
+      'بلا اسم، بلا رسالة، بلا ألوان Kryfo. أيقونة محايدة وسطر واحد.';
 
   @override
   String get notifPlainLine => 'شيء جديد';
@@ -8858,7 +9364,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifPlainChannel => 'تنبيهات';
 
   @override
-  String get notifHeaderLimit => 'يبقى أعلى كل إشعار يقول Kryfo. لا يسمح Android لأي تطبيق بتغيير ذلك.';
+  String get notifHeaderLimit =>
+      'يبقى أعلى كل إشعار يقول Kryfo. لا يسمح Android لأي تطبيق بتغيير ذلك.';
 
   @override
   String get gettingMessagesWhatShows => 'ما تعرضه الإشعارات';
@@ -8867,25 +9374,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iconSheetChangesTitle => 'ما الذي يتغيّر';
 
   @override
-  String get iconSheetChanges => 'الأيقونة والاسم على شاشتك الرئيسية وفي قائمة تطبيقاتك، وقائمة المشاركة، وشاشة التطبيقات المفتوحة. ومع «بسيطة»، ما تعرضه الإشعارات.';
+  String get iconSheetChanges =>
+      'الأيقونة والاسم على شاشتك الرئيسية وفي قائمة تطبيقاتك، وقائمة المشاركة، وشاشة التطبيقات المفتوحة. ومع «بسيطة»، ما تعرضه الإشعارات.';
 
   @override
   String get iconSheetStaysTitle => 'ما يبقى Kryfo';
 
   @override
-  String get iconSheetStays => 'السطر الأعلى من كل إشعار، وصفحات الإعدادات والبطارية في هاتفك، ومتجر التطبيقات، وKryfo نفسه حين يفتحه أحد.';
+  String get iconSheetStays =>
+      'السطر الأعلى من كل إشعار، وصفحات الإعدادات والبطارية في هاتفك، ومتجر التطبيقات، وKryfo نفسه حين يفتحه أحد.';
 
   @override
-  String get iconSheetGlance => 'يصمد أمام نظرة سريعة إلى شاشتك الرئيسية. لا يخفي Kryfo عمّن يتصفح إعدادات هاتفك.';
+  String get iconSheetGlance =>
+      'يصمد أمام نظرة سريعة إلى شاشتك الرئيسية. لا يخفي Kryfo عمّن يتصفح إعدادات هاتفك.';
 
   @override
-  String get iconSheetPrivateSpace => 'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المساحة الخاصة، في إعداداته.';
+  String get iconSheetPrivateSpace =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المساحة الخاصة، في إعداداته.';
 
   @override
-  String get iconSheetSecureFolder => 'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المجلد الآمن، في إعداداته.';
+  String get iconSheetSecureFolder =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: المجلد الآمن، في إعداداته.';
 
   @override
-  String get iconSheetXiaomi => 'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: التطبيقات المخفية، في إعداداته.';
+  String get iconSheetXiaomi =>
+      'قد تكون لهاتفك طريقته الخاصة لإخفاء التطبيقات: التطبيقات المخفية، في إعداداته.';
 
   @override
   String get androidIconNotes => 'ملاحظات';
@@ -8906,10 +9419,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockStateUnlockPlain => 'فتح القفل';
 
   @override
-  String get iconSheetOthers => 'لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه.';
+  String get iconSheetOthers =>
+      'لا تزال التطبيقات على هاتفك قادرة على معرفة أن Kryfo مثبّت، وقد تعرض نوافذ Android وطلباته الخاصة اسمه.';
 
   @override
-  String get iconSheetSaves => 'ما دامت أيقونة بسيطة مفعّلة، تُحفظ الصور والفيديوهات والملفات الجديدة بأسماء عادية في مجلدات هاتفك المعتادة. وما حُفظ من قبل يبقى في مكانه.';
+  String get iconSheetSaves =>
+      'ما دامت أيقونة بسيطة مفعّلة، تُحفظ الصور والفيديوهات والملفات الجديدة بأسماء عادية في مجلدات هاتفك المعتادة. وما حُفظ من قبل يبقى في مكانه.';
 
   @override
   String get passFieldLabel => 'عبارة المرور';
@@ -8935,16 +9450,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get lockKeyBusy => 'شريحة الأمان في هاتفك مشغولة الآن. حاول مرة أخرى بعد لحظة.';
+  String get lockKeyBusy =>
+      'شريحة الأمان في هاتفك مشغولة الآن. حاول مرة أخرى بعد لحظة.';
 
   @override
-  String get lockKeyLocked => 'افتح قفل هاتفك مرة واحدة برمز PIN الخاص به، ثم حاول مرة أخرى.';
+  String get lockKeyLocked =>
+      'افتح قفل هاتفك مرة واحدة برمز PIN الخاص به، ثم حاول مرة أخرى.';
 
   @override
   String get lockKeyWaiting => 'ما زالت شريحة الأمان في الهاتف تتحقق';
 
   @override
-  String get lockKeyLost => 'فقد هذا الهاتف المفتاح الذي يتحقق من رموز PIN الخاصة بك، لذا قد لا تفتح بعض الرموز. يمكن إعادة ضبط Kryfo واستعادة نسخة احتياطية.';
+  String get lockKeyLost =>
+      'فقد هذا الهاتف المفتاح الذي يتحقق من رموز PIN الخاصة بك، لذا قد لا تفتح بعض الرموز. يمكن إعادة ضبط Kryfo واستعادة نسخة احتياطية.';
 
   @override
   String get lockKeyReset => 'إعادة ضبط Kryfo';
@@ -8953,19 +9471,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockKeyResetTitle => 'إعادة ضبط Kryfo؟';
 
   @override
-  String get lockKeyResetLine => 'يُحذف كل ما في Kryfo على هذا الهاتف ويُغلق Kryfo. بعد ذلك يمكنك استعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+  String get lockKeyResetLine =>
+      'يُحذف كل ما في Kryfo على هذا الهاتف ويُغلق Kryfo. بعد ذلك يمكنك استعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
 
   @override
   String get lockKeyResetSureTitle => 'لا يمكن التراجع عن هذا';
 
   @override
-  String get lockKeyResetSureLine => 'تُحذف الآن كل المحادثات والمفاتيح والإعدادات في Kryfo على هذا الهاتف.';
+  String get lockKeyResetSureLine =>
+      'تُحذف الآن كل المحادثات والمفاتيح والإعدادات في Kryfo على هذا الهاتف.';
 
   @override
   String get lockKeyResetSure => 'حذف كل شيء';
 
   @override
-  String get flowVaultPassLine => '١٢ حرفًا على الأقل. لوحة مفاتيح الهاتف ترى ما تكتبه، لذا استخدم لوحة لا تتعلم الكلمات ولا تزامنها.';
+  String get flowVaultPassLine =>
+      '١٢ حرفًا على الأقل. لوحة مفاتيح الهاتف ترى ما تكتبه، لذا استخدم لوحة لا تتعلم الكلمات ولا تزامنها.';
 
   @override
   String get flowVaultPassAgain => 'عبارة المرور نفسها مرة أخرى';
@@ -8974,7 +9495,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cardTitle => 'أكمِل تحديث الأمان';
 
   @override
-  String get cardLine => 'إن كنت تستخدم رموز PIN أخرى، فاكتب كل رمز منها هنا مرة واحدة.';
+  String get cardLine =>
+      'إن كنت تستخدم رموز PIN أخرى، فاكتب كل رمز منها هنا مرة واحدة.';
 
   @override
   String get cardType => 'اكتب رمز PIN';
@@ -8983,11 +9505,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cardAnswer => 'تم. اكتب رمزًا آخر، أو اضغط تم عندما تنتهي.';
 
   @override
-  String get keyLine => 'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+  String get keyLine =>
+      'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
 
   @override
-  String get keyLineUnlocked => 'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط، وفقط ما دام قفله مفتوحًا. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+  String get keyLineUnlocked =>
+      'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط، وفقط ما دام قفله مفتوحًا. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
 
   @override
-  String get keyLineScreenLock => 'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
+  String get keyLineScreenLock =>
+      'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
 }
