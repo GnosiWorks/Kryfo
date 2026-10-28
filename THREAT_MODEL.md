@@ -19,9 +19,14 @@ put you in danger, read all of it.
   messages from 0.5.2 on are padded to one of five sizes, so a relay sees
   roughly how big a message is, not how long. how many you send and when
   still shows. on the onion route, the relays never learn your ip address
-  or who you are.
-  in fast mode, our two relays see your ip address, never what you say. if
-  both are down, fast mode reaches public relays through tor, never directly.
+  or who you are. it writes to both our relays, each through its own onion,
+  and to a few public ones, so one of ours can stop without messages
+  stopping.
+  in fast mode, our two relays see your ip address, never what you say. each
+  of them sees which mailboxes one ip address reads and writes, and when both
+  people in a chat use fast mode, it can see that two ip addresses share a
+  mailbox. the app never shows this to anyone. while the first relay is down,
+  fast mode also reaches public relays, through tor, never directly.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, the app can

@@ -44,13 +44,19 @@ the same `relay-live` runs on a second box at another hosting company,
 other: a feed of every wrap between them is what `limits.go` refuses anyone.
 the app's fast route writes to both and reads both. the first ok ends a send,
 the first copy is the one shown, and a wrap one store missed waits on the
-phone and is offered again once that store answers, for up to 14 days, with
-the same id (`engine/topup.go`). each store keeps its own catch-up anchor per
-address (`engine/stores.go`), so a back-dated wrap only one of them holds is
-never stepped over because the other moved on. public relays are the fast
-route's backup only while neither store answers, and are reached through tor.
-the private route lists the first store only, through its onion and its
-clearnet name.
+phone, sealed, and goes to that store once it answers, for up to 14 days: the
+same wrap within a few minutes, after that a fresh wrap around the same seal,
+so a reader whose window moved on still asks for it (`engine/topup.go`,
+`engine/rewrap.go`). a send the first store missed also goes to the public
+relays through tor at once, as a private sender's does. each store keeps its
+own catch-up anchor per address (`engine/stores.go`), so a back-dated wrap only
+one of them holds is never stepped over because the other moved on. while the
+first store is down the fast route also reads the public relays, through tor
+only. a relay is ours by its name alone, and one that is not ours is never
+dialled in the clear on the fast route. the private route lists both stores
+too, each through its own onion (the first also through its clearnet name over
+tor), with its own anchor per store, writes every wrap to both and to the
+public relays, and queues nothing.
 
 ## `dmrelay/`: next, not deployable yet
 
