@@ -642,12 +642,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'متصل · عبور از ۳ رله';
 
   @override
-  String get appReadyToSendPublishing =>
-      'آماده‌ی ارسال · در حال انتشار نشانی شما';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'آماده‌ی ارسال · در حال تکمیل راه‌اندازی';
+  String get appReadyToChatAddressFinishing =>
+      'آماده‌ی گفتگو · نشانی در حال تکمیل';
 
   @override
   String appConnecting(Object pct) {
@@ -6545,6 +6541,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get motionYouReAnonymous => 'ناشناس هستید';
 
   @override
+  String get motionReadyToChat => 'آماده‌ی گفتگو';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor در پس‌زمینه راه می‌افتد. این نمودار با شکل گرفتن اتصال روشن می‌شود.';
 
@@ -6563,6 +6562,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP شما پنهان است. فقط کسانی که Kryfo شما را دارند می‌توانند به شما برسند.';
+
+  @override
+  String get motionAddressFinishing =>
+      'پیام‌ها همین حالا از راه Tor می‌روند. نشانی خصوصی شما در پس‌زمینه کامل می‌شود.';
 
   @override
   String get motionBuilding2 => 'در حال ساخت';

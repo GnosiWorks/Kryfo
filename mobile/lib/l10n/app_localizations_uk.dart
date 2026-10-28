@@ -662,12 +662,8 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підключено · маршрут через 3 ретранслятори';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Готово до надсилання · публікуємо твою адресу';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Готово до надсилання · завершуємо налаштування';
+  String get appReadyToChatAddressFinishing =>
+      'Можна спілкуватися · адреса майже готова';
 
   @override
   String appConnecting(Object pct) {
@@ -6660,6 +6656,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get motionYouReAnonymous => 'Анонімно';
 
   @override
+  String get motionReadyToChat => 'Можна спілкуватися';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor запускається у фоні. Цей граф засвічується, поки формується з’єднання.';
 
@@ -6678,6 +6677,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Твою IP-адресу приховано. Зв’язатися з тобою можуть лише ті, хто має твій Kryfo.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Повідомлення вже йдуть через Tor. Твоя приватна адреса налаштовується у фоні.';
 
   @override
   String get motionBuilding2 => 'будується';

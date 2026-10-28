@@ -643,11 +643,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connected · routed through 3 relays';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Ready to send · publishing your address';
-
-  @override
-  String get appReadyToSendFinishing => 'Ready to send · finishing setup';
+  String get appReadyToChatAddressFinishing =>
+      'Ready to chat · address finishing';
 
   @override
   String appConnecting(Object pct) {
@@ -6532,6 +6529,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get motionYouReAnonymous => 'You\'re anonymous';
 
   @override
+  String get motionReadyToChat => 'Ready to chat';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor is starting in the background. This graph lights up as the connection forms.';
 
@@ -6550,6 +6550,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Your ip is hidden. Only people with your Kryfo can reach you.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Messages already go out through Tor. Your private address finishes in the background.';
 
   @override
   String get motionBuilding2 => 'building';

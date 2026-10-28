@@ -1056,14 +1056,8 @@ abstract class AppLocalizations {
   /// app/gates.dart
   ///
   /// In en, this message translates to:
-  /// **'Ready to send · publishing your address'**
-  String get appReadyToSendPublishing;
-
-  /// app/gates.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to send · finishing setup'**
-  String get appReadyToSendFinishing;
+  /// **'Ready to chat · address finishing'**
+  String get appReadyToChatAddressFinishing;
 
   /// app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
@@ -10476,6 +10470,12 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
+  /// **'Ready to chat'**
+  String get motionReadyToChat;
+
+  /// widgets/motion.dart
+  ///
+  /// In en, this message translates to:
   /// **'Tor is starting in the background. This graph lights up as the connection forms.'**
   String get motionTorIsStartingIn;
 
@@ -10502,6 +10502,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your ip is hidden. Only people with your Kryfo can reach you.'**
   String get motionYourIpIsHidden;
+
+  /// widgets/motion.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Messages already go out through Tor. Your private address finishes in the background.'**
+  String get motionAddressFinishing;
 
   /// widgets/motion.dart
   ///
