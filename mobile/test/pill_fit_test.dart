@@ -24,6 +24,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Cyrillic': ['NotoSans-Cyrillic.ttf'],
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
     'Instrument Sans': ['InstrumentSans.ttf'],
   };
   for (final e in families.entries) {
@@ -98,7 +99,7 @@ void main() {
 
   // the pill on screen draws what the fit says: the whole phrase, in two
   // lines at most, at the fitted size
-  for (final code in ['pt', 'ru', 'es', 'uk', 'id', 'ar']) {
+  for (final code in ['pt', 'ru', 'es', 'uk', 'id', 'ar', 'hi']) {
     testWidgets('the pill draws its whole phrase in $code at the largest '
         'text', (t) async {
       SharedPreferences.setMockInitialValues({});
