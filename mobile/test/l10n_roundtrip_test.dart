@@ -2648,7 +2648,7 @@ void main() {
     expect(l.whyKryfoNothingLeaks, "Nothing leaks");
     expect(
       l.whyKryfoNoReceiptsTyping,
-      "No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.",
+      "No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.",
     );
     expect(l.whyKryfoVerifyItIsReally, "Verify it is really them");
     expect(
