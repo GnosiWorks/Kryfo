@@ -51,10 +51,11 @@ google push in the play build. a relay posts an empty knock to
 sealed to the gateway's key, a different seal for each of the phone's
 sixteen endpoints) and asks fcm to wake the phone with an empty
 high-priority message. what it could log: nothing per token. it keeps no
-table and writes no file; in ram it holds a keyed hash of a token with the
+table on disk and writes no file; in ram it holds a keyed hash of a token with the
 times of its last pushes for an hour, to keep one push per phone every 45
 seconds and thirty an hour, a keyed hash of a token fcm calls no phone's for
-a day, and a held-back push's token for up to 45 seconds. once an hour it
+a day, short hashes of the seals each token was knocked on, up to a day
+each, to refuse copies, and a held-back push's token for up to 45 seconds. once an hour it
 logs counts. google sees the install and when it
 is woken, never by whom or with what. it has no public route: only our relay
 posts to it, on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`, 127.0.0.1:3340 by
