@@ -72,7 +72,8 @@ class _RootShellState extends State<RootShell> {
           )
           .toList(),
       onAddContact: () => showAddContact(context),
-      onNewGroup: () => _open(const NewGroupScreen()),
+      onNewGroup: () =>
+          openNewGroup(context, onAdd: () => showAddContact(context)),
       onNewRoom: () async {
         final id = await showRoomCreateSheet(context);
         if (id == null || !mounted) return;

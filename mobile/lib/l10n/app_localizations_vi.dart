@@ -511,7 +511,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appScanTheirCode => 'Quét mã của họ';
 
   @override
-  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @wren';
+  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @name';
 
   @override
   String get appAddThem => 'Thêm họ';
@@ -608,9 +608,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Tốc độ & riêng tư →';
-
-  @override
-  String get appGettingMessages => 'Nhận tin nhắn →';
 
   @override
   String get appDisableAppLock => 'Tắt khóa ứng dụng?';
@@ -2384,13 +2381,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateJustGladToHelp => 'Vui vì giúp được';
 
   @override
-  String get gettingMessagesGettingMessages => 'Nhận tin nhắn';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cách tin nhắn mới đến điện thoại này. Bạn có thể đổi bất cứ lúc nào.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Luôn bật';
 
   @override
@@ -2919,7 +2909,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không bắt buộc. Ba từ của bạn vẫn hoạt động dù thế nào.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Một dòng về bạn · không bắt buộc';
@@ -3887,6 +3877,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy thêm ít nhất một liên hệ trước khi tạo nhóm.';
 
   @override
+  String get newGroupNeedsContacts => 'Nhóm được tạo với các liên hệ của bạn';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Hãy thêm ai đó trước. Phòng không cần liên hệ: ai có liên kết đều có thể vào.';
+
+  @override
   String get notesDeleteThisNote => 'Xóa ghi chú này?';
 
   @override
@@ -4429,6 +4426,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Tắt khi đã đặt mã PIN ngụy trang: ngón tay chỉ mở phần ngụy trang.';
 
   @override
   String get pinsWipePin => 'Mã PIN xóa sạch';
@@ -5226,9 +5227,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 chặng';
-
-  @override
-  String get settingsGettingMessages => 'Nhận tin nhắn';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -6387,6 +6385,36 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Đóng và mở lại Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Nếu thử lại vẫn không được';
+
+  @override
+  String get bootFailedRestoreBackup => 'Khôi phục bản sao lưu';
+
+  @override
+  String get bootFailedStartFresh => 'Bắt đầu lại từ đầu';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Bắt đầu lại từ đầu?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Thao tác này xóa sạch mọi thứ Kryfo lưu trên điện thoại này: cuộc trò chuyện, liên hệ, tệp phương tiện, cuộc trò chuyện ẩn và ba từ của bạn. Tệp sao lưu lưu ở nơi khác không bị ảnh hưởng.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Tiếp tục';
+
+  @override
+  String get bootFailedStartFreshSure =>
+      'Xóa sạch mọi thứ trên điện thoại này?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Không thể hoàn tác. Kryfo sẽ đóng và mở lại như mới cài đặt.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Xóa sạch và bắt đầu lại';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo không đọc được liên kết đó';
@@ -9284,6 +9312,93 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Khi đang dùng biểu tượng đơn giản, ảnh, video và tệp mới được lưu với tên bình thường vào các thư mục quen thuộc của điện thoại. Những gì đã lưu trước đó vẫn ở nguyên chỗ cũ.';
+
+  @override
+  String get deliveryModeGooglePush => 'Thông báo đẩy Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Tin nhắn mới đến điện thoại này thế nào, kêu ra sao và hiện gì. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cách tin nhắn đến với bạn';
+
+  @override
+  String get notificationsRecommended => 'Nên dùng';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Đến ngay và nhẹ. Google có thể thấy khi nào điện thoại của bạn được đánh thức, không bao giờ biết ai viết hay viết gì.';
+
+  @override
+  String get notificationsGoogleStarting => 'Đang bật…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Không bật được thông báo đẩy Google. Hãy kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên cùng máy chủ và có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn, nên ai vận hành hoặc thu giữ máy chủ của chúng tôi cũng có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Hiện relay của chúng tôi chưa nhận một số đăng ký của điện thoại này. Các cuộc trò chuyện đó đến với lần kiểm tra mỗi 15 phút, và Kryfo vẫn tiếp tục thử.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Âm thanh và rung';
+
+  @override
+  String get notificationsSoundHint => 'Trong cài đặt của chính Android';
+
+  @override
+  String get notificationsEachShows => 'Mỗi thông báo hiện';
+
+  @override
+  String get notificationsBatteryTips => 'Mẹo về pin';
+
+  @override
+  String get notificationsBatteryAllowed => 'Đã cho phép';
+
+  @override
+  String get notificationsBatteryNotYet => 'Chưa cho phép';
+
+  @override
+  String get notificationsMakerSwitch => 'Công tắc của hãng điện thoại';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cách tin nhắn *đến với bạn*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Bạn có thể đổi điều này bất cứ lúc nào trong Thông báo.';
+
+  @override
+  String get homeGoogleTitle => 'Đã có thông báo đẩy Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Đến ngay và đỡ tốn pin. Google có thể thấy khi nào điện thoại của bạn được đánh thức, không bao giờ biết ai viết hay viết gì.';
+
+  @override
+  String get homeGoogleUse => 'Dùng ngay';
+
+  @override
+  String get homeGoogleOn => 'Thông báo đẩy Google đã bật';
+
+  @override
+  String get homeGoogleGoneTitle => 'Không dùng được thông báo đẩy Google';
+
+  @override
+  String get appNotificationsLink => 'Thông báo →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Đẩy Google $got · bị hạ $low';
+  }
 
   @override
   String get passFieldLabel => 'Cụm mật khẩu';

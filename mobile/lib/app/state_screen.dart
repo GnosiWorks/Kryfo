@@ -99,6 +99,9 @@ extension AppStateScreen on AppState {
   // what a 1:1 envelope says of the chat's block, and of their phone
   Future<void> _takeShots(String peer, UnwrappedMessage env, HaloDb db) async {
     if (env.groupId != null || isDevId(peer)) return;
+    // written in the developer chat, whose frames never carry the word: it
+    // says nothing of their phone, and must not undo what their chat said
+    if (env.supportMarker != null) return;
     try {
       final was = (await db.shotsOf(peer)).blocking;
       final changed = await db.takeShots(

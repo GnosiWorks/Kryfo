@@ -518,7 +518,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appScanTheirCode => 'اسکن کد او';
 
   @override
-  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@bolbol';
+  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@name';
 
   @override
   String get appAddThem => 'افزودن';
@@ -615,9 +615,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'سرعت و حریم خصوصی ←';
-
-  @override
-  String get appGettingMessages => 'دریافت پیام‌ها ←';
 
   @override
   String get appDisableAppLock => 'قفل برنامه غیرفعال شود؟';
@@ -2395,13 +2392,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get donateJustGladToHelp => 'فقط خوشحالم که کمک کردم';
 
   @override
-  String get gettingMessagesGettingMessages => 'دریافت پیام‌ها';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'پیام‌های تازه چطور به این گوشی می‌رسند. هر وقت خواستید می‌توانید عوضش کنید.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'همیشه روشن';
 
   @override
@@ -2935,7 +2925,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'اختیاری است. سه واژه‌ی شما در هر حال کار می‌کند.';
 
   @override
-  String get handleWren => 'bolbol';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'یک خط درباره‌ی شما · اختیاری';
@@ -3909,6 +3899,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیش از ساختن گروه، دست‌کم یک مخاطب اضافه کنید.';
 
   @override
+  String get newGroupNeedsContacts => 'گروه‌ها با مخاطبان شما ساخته می‌شوند';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'اول یک نفر را اضافه کنید. اتاق به مخاطب نیازی ندارد: هر کس پیوندش را داشته باشد می‌تواند وارد شود.';
+
+  @override
   String get notesDeleteThisNote => 'این یادداشت حذف شود؟';
 
   @override
@@ -4453,6 +4450,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'تا وقتی PIN فریب تنظیم شده خاموش است: انگشت فقط فریب را باز می‌کند.';
 
   @override
   String get pinsWipePin => 'PIN پاک‌سازی';
@@ -5242,9 +5243,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · سه گام';
-
-  @override
-  String get settingsGettingMessages => 'دریافت پیام‌ها';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -6410,6 +6408,35 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'بستن و باز کردن دوبارهٔ Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'اگر تلاش دوباره کمکی نکرد';
+
+  @override
+  String get bootFailedRestoreBackup => 'بازیابی نسخه‌ی پشتیبان';
+
+  @override
+  String get bootFailedStartFresh => 'شروع از نو';
+
+  @override
+  String get bootFailedStartFreshTitle => 'از نو شروع شود؟';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'این کار هر چه Kryfo روی این گوشی نگه می‌دارد را پاک می‌کند: گفت‌وگوها، مخاطبان، رسانه‌ها، گفت‌وگوهای پنهان و سه واژه‌ی شما. فایل پشتیبانی که جای دیگری ذخیره شده دست‌نخورده می‌ماند.';
+
+  @override
+  String get bootFailedStartFreshNext => 'ادامه';
+
+  @override
+  String get bootFailedStartFreshSure => 'همه‌چیز روی این گوشی پاک شود؟';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'این کار برگشت‌پذیر نیست. Kryfo بسته می‌شود و مثل یک نصب تازه دوباره باز می‌شود.';
+
+  @override
+  String get bootFailedStartFreshYes => 'پاک کن و از نو شروع کن';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>
@@ -9311,6 +9338,93 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'تا وقتی یک نماد ساده روشن است، عکس‌ها، ویدیوها و فایل‌های تازه با نام‌های معمولی در پوشه‌های همیشگی گوشی‌تان ذخیره می‌شوند. آنچه از قبل ذخیره شده سر جایش می‌ماند.';
+
+  @override
+  String get deliveryModeGooglePush => 'اعلان فوری گوگل';
+
+  @override
+  String get deliveryModeGoogle => 'گوگل';
+
+  @override
+  String get notificationsLead =>
+      'پیام‌های تازه چطور به این گوشی می‌رسند، چه صدایی دارند و چه نشان می‌دهند. هر وقت خواستید می‌توانید عوضش کنید.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'پیام‌ها چطور به شما می‌رسند';
+
+  @override
+  String get notificationsRecommended => 'پیشنهادی';
+
+  @override
+  String get notificationsGoogleBody =>
+      'فوری و سبک. گوگل می‌تواند ببیند گوشی‌تان کِی بیدار می‌شود، هرگز نه اینکه چه کسی نوشته یا چه گفته شده.';
+
+  @override
+  String get notificationsGoogleStarting => 'در حال روشن شدن…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'اعلان فوری گوگل راه نیفتاد. اتصال را بررسی کنید و دوباره امتحان کنید.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی همان سرور اجرا می‌شود و می‌تواند آن‌ها را به هم ربط دهد، و با کمک گوگل به حساب گوگل شما هم، پس هر کسی که سرور ما را اداره یا توقیف کند هم می‌تواند. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'رله‌ی ما فعلاً بعضی از ثبت‌های این گوشی را نمی‌پذیرد. آن گفتگوها با سرکشی هر ۱۵ دقیقه می‌رسند و Kryfo همچنان تلاش می‌کند.';
+
+  @override
+  String get notificationsSoundAndVibration => 'صدا و لرزش';
+
+  @override
+  String get notificationsSoundHint => 'در تنظیمات خود اندروید';
+
+  @override
+  String get notificationsEachShows => 'هر اعلان نشان می‌دهد';
+
+  @override
+  String get notificationsBatteryTips => 'نکته‌های باتری';
+
+  @override
+  String get notificationsBatteryAllowed => 'مجاز';
+
+  @override
+  String get notificationsBatteryNotYet => 'مجاز نیست';
+
+  @override
+  String get notificationsMakerSwitch => 'کلید سازنده‌ی گوشی‌تان';
+
+  @override
+  String get onboardingDeliveryHeadline => 'پیام‌ها چطور *به شما می‌رسند*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'هر وقت بخواهید می‌توانید این را در «اعلان‌ها» عوض کنید.';
+
+  @override
+  String get homeGoogleTitle => 'اعلان فوری گوگل آمد';
+
+  @override
+  String get homeGoogleLine =>
+      'فوری و کم‌مصرف. گوگل می‌تواند ببیند گوشی‌تان کِی بیدار می‌شود، هرگز نه اینکه چه کسی نوشته یا چه گفته شده.';
+
+  @override
+  String get homeGoogleUse => 'استفاده کنید';
+
+  @override
+  String get homeGoogleOn => 'اعلان فوری گوگل روشن است';
+
+  @override
+  String get homeGoogleGoneTitle => 'اعلان فوری گوگل در دسترس نیست';
+
+  @override
+  String get appNotificationsLink => 'اعلان‌ها ←';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'اعلان‌های گوگل $got · پایین‌آمده $low';
+  }
 
   @override
   String get passFieldLabel => 'عبارت عبور';

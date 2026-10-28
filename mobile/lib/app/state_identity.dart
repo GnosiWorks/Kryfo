@@ -101,7 +101,7 @@ extension AppStateIdentity on AppState {
   // phone's mailboxes together
   Future<void> _forgetOnMove() async {
     try {
-      if (_deliveryMode == DeliveryMode.helper) {
+      if (knockMode(_deliveryMode)) {
         await setDeliveryMode(DeliveryMode.checkins);
       }
       await _helperOp(() => helper.dropForgets());
@@ -130,6 +130,12 @@ extension AppStateIdentity on AppState {
   Future<void> markOnboardingComplete() async {
     onboardingComplete = true;
     await secureStore.write(key: 'onboarding_done', value: 'true');
+    // onboarding asked how messages reach this phone: no card about it later
+    if (_googleOffer.isEmpty) {
+      _googleOffer = 'said';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kGoogleOfferKey, 'said');
+    }
     // words shared while the app was being set up are let go, not held for
     // the home that comes next
     final shared = await ToolsBridge.instance.peekSharedText();

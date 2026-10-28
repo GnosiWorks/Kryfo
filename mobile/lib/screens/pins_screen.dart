@@ -280,6 +280,12 @@ class _PinsScreenState extends State<PinsScreen> {
                         on: _fingerTo ?? _lock.biometric,
                         onTap: _flipFinger,
                       )
+                    : on && _lock.fingerToDecoy
+                    ? _Toggle(
+                        label: l10n.pinsUnlockWithFingerprint,
+                        on: false,
+                        line: l10n.pinsFingerOpensDecoy,
+                      )
                     : null,
               ),
               Unfold(
@@ -870,36 +876,44 @@ class _PinCard extends StatelessWidget {
               Expanded(
                 child: HaloPrimaryButton(label: primary, onTap: onPrimary),
               ),
-              EaseSize(
-                child: FadeSwap(
-                  child: secondary == null
-                      ? const SizedBox(key: ValueKey('none'), height: 46)
-                      : Padding(
-                          key: ValueKey(secondary),
-                          padding: const EdgeInsetsDirectional.only(start: 8),
-                          child: PressScale(
-                            scale: 0.97,
-                            onTap: onSecondary,
-                            child: Container(
-                              height: 46,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(color: HaloColors.line),
-                              ),
-                              child: Text(
-                                secondary!,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.rose,
+              // a long word at a large font wraps here rather than
+              // pushing past the card
+              Flexible(
+                child: EaseSize(
+                  child: FadeSwap(
+                    child: secondary == null
+                        ? const SizedBox(key: ValueKey('none'), height: 46)
+                        : Padding(
+                            key: ValueKey(secondary),
+                            padding: const EdgeInsetsDirectional.only(start: 8),
+                            child: PressScale(
+                              scale: 0.97,
+                              onTap: onSecondary,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minHeight: 46,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(color: HaloColors.line),
+                                ),
+                                child: Text(
+                                  secondary!,
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    color: HaloColors.rose,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -912,30 +926,57 @@ class _PinCard extends StatelessWidget {
 
 // an on or off row is a switch, as in settings: the row and the switch
 // each flip it
+// [onTap] null: the switch cannot be used here, and [line] says why
 class _Toggle extends StatelessWidget {
   final String label;
   final bool on;
-  final VoidCallback onTap;
-  const _Toggle({required this.label, required this.on, required this.onTap});
+  final VoidCallback? onTap;
+  final String? line;
+  const _Toggle({required this.label, required this.on, this.onTap, this.line});
   @override
-  Widget build(BuildContext context) => MergeSemantics(
-    child: GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true,
-      child: Row(
-        children: [
-          Icon(Icons.fingerprint, size: 18, color: HaloColors.amber),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: HaloType.sans(size: 13.5, color: HaloColors.text),
+  Widget build(BuildContext context) {
+    final tap = onTap;
+    final why = line;
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: tap,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: Row(
+          children: [
+            Icon(
+              Icons.fingerprint,
+              size: 18,
+              color: tap == null ? HaloColors.text2 : HaloColors.amber,
             ),
-          ),
-          HaloSwitch(value: on, onChanged: (_) => onTap()),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: HaloType.sans(size: 13.5, color: HaloColors.text),
+                  ),
+                  if (why != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      why,
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.text2,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            HaloSwitch(value: on, onChanged: tap == null ? null : (_) => tap()),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

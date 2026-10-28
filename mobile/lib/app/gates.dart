@@ -54,6 +54,11 @@ class _OnboardingGateState extends State<_OnboardingGate> {
               appState.retryBoot();
             },
             onReopen: appState.bootStuck ? reopenApp : null,
+            // a database that will not open stays as it is until one of
+            // these is chosen, and start fresh asks twice
+            onRestore: () =>
+                Navigator.of(context).push(haloRoute(const RestoreScreen())),
+            onStartFresh: () => unawaited(wipeHalo()),
           );
         } else if (!appState.ready || _hold || appState.firstRunAsk) {
           before = const TorBootSplash(key: ValueKey('splash'));

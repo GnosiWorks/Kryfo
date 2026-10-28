@@ -70,13 +70,21 @@ if you run your own helper server, its name is part of every endpoint, so our re
 
 leaving the mode tells the helper app to drop the endpoints at once, so our relay's next knock finds them gone, and our relay is asked to forget them, a few at a time. both are best effort: whatever is missed runs out within 30 days. moving Kryfo to another phone drops the endpoints without asking the relay. a panic wipe makes no call at all, so the helper app keeps its endpoints until our relay's registrations run out, and its server sees knocks that nothing answers.
 
+## google push (google play build only)
+
+"Google push" is a way of getting messages in the build from google play, on phones with google play services. it is not in the f-droid, github or site builds. nothing of google's runs before you pick it: no firebase, no token. picking it asks google for one token for this install; picking another way deletes it, or as soon as the phone can.
+
+the token reaches our relay sealed to our push gateway's key, in a different seal for each of the sixteen endpoints, so the relay on its own holds sixteen strings it cannot tie together. the push gateway runs on the same server and holds the key that opens them: it could tie a phone's sixteen together and see its fcm token, which google can match to the phone and its google account. so whoever runs or seizes our server could do that too. if that matters to you, pick another way. when something arrives for you, the relay knocks the gateway, which opens the seal in memory and asks google to wake your phone with an empty message. Kryfo then fetches over tor as always. fake wake-ups are mixed in, as in the helper app mode.
+
+google sees that this install uses Kryfo, when it is woken, and your phone's IP as it always does for play services. it never sees who wrote, what was said or how many. our gateway keeps no table on disk, writes no file and logs nothing per token; in memory it holds a keyed hash of a token and the times of its last pushes for an hour, to keep one push a phone every 45 seconds, a keyed hash of a token google says is no phone's for a day, short hashes of the seals it was knocked on, up to a day each, to refuse copies, and, for a wake-up held back to keep that pace, the token itself for up to 45 seconds. firebase's analytics, advertising id and delivery metrics are switched off in the app.
+
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
+Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
 
 ## law enforcement and data requests
 
-we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over.
+we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over, except, for google push users, what the google push section says our server could link.
 
 ## children
 

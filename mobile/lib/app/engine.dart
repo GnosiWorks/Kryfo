@@ -382,6 +382,24 @@ class HaloEngine {
     }
   }
 
+  // google push: the fcm token sealed once to the gateway's key, a new seal
+  // each call (engine/push_seal.go). "error: ..." for a key or a token that
+  // is not one, or an engine without the call
+  String pushSeal(String publicKey, String token) {
+    final k = publicKey.toNativeUtf8();
+    final t = token.toNativeUtf8();
+    try {
+      return engineTake(
+        _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloPushSeal')(k, t),
+      );
+    } catch (_) {
+      return 'error: no engine';
+    } finally {
+      malloc.free(k);
+      malloc.free(t);
+    }
+  }
+
   // the bridges that come with kryfo for one transport
   List<String> builtinBridges(String transport) {
     try {

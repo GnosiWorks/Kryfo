@@ -333,6 +333,11 @@ const deviceKeys = {
   'helper_forget_tried',
   'helper_relay_knocks',
   'helper_gone',
+  // google push, the phone's as the helper app's are
+  'gpush_endpoints',
+  'gpush_sealed_for',
+  'gpush_on',
+  'gpush_offer',
   'kryfo.update.checked',
   'kryfo.update.latest',
   'kryfo.update.dismissed',

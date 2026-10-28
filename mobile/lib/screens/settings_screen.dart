@@ -25,7 +25,7 @@ import '../scam_prefs.dart';
 import '../typing.dart' show loadTypingOn;
 import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
-import '../miui_autostart.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'licences_screen.dart';
 import 'why_kryfo_screen.dart';
@@ -47,7 +47,7 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
-import 'getting_messages_screen.dart';
+import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
@@ -75,12 +75,15 @@ class ProtectionLine extends StatefulWidget {
   // what makes a new state rather than new words in the same one: a
   // climbing percent changes in place
   final Object? stateKey;
+  // a line that leads somewhere: the whole line is the button
+  final VoidCallback? onTap;
   const ProtectionLine(
     this.label,
     this.on,
     this.state, {
     this.stateKey,
     super.key,
+    this.onTap,
   });
   @override
   State<ProtectionLine> createState() => _ProtectionLineState();
@@ -138,71 +141,92 @@ class _ProtectionLineState extends State<ProtectionLine>
           child: child,
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        child: Row(
-          children: [
-            AnimatedBuilder(
-              animation: _mark,
-              builder: (_, _) => CustomPaint(
-                size: const Size.square(18),
-                painter: _MarkPainter(
-                  _mark.value,
-                  HaloColors.amber,
-                  HaloColors.text3,
-                  HaloColors.onAmber,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            // the label wraps and the state keeps its place: in a long
-            // language at a big font size the two do not fit one line
-            Expanded(
-              child: Text(
-                widget.label,
-                style: HaloType.sans(size: 13, color: HaloColors.text),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // a long state wraps at its end rather than running off it
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.sizeOf(context).width * 0.4,
-              ),
-              child: AnimatedSwitcher(
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (c, a) => FadeTransition(
-                  opacity: a,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, 0.35),
-                      end: Offset.zero,
-                    ).animate(a),
-                    child: c,
+      child: _tappable(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Row(
+            children: [
+              AnimatedBuilder(
+                animation: _mark,
+                builder: (_, _) => CustomPaint(
+                  size: const Size.square(18),
+                  painter: _MarkPainter(
+                    _mark.value,
+                    HaloColors.amber,
+                    HaloColors.text3,
+                    HaloColors.onAmber,
                   ),
                 ),
-                layoutBuilder: (top, gone) => Stack(
-                  alignment: AlignmentDirectional.centerEnd,
-                  children: [...gone, ?top],
-                ),
+              ),
+              const SizedBox(width: 10),
+              // the label wraps and the state keeps its place: in a long
+              // language at a big font size the two do not fit one line
+              Expanded(
                 child: Text(
-                  widget.state,
-                  key: ValueKey(widget.stateKey ?? widget.state),
-                  textAlign: TextAlign.end,
-                  style: HaloType.mono(
-                    size: 10,
-                    color: on ? HaloColors.amberText : HaloColors.text3,
+                  widget.label,
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // a long state wraps at its end rather than running off it
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.4,
+                ),
+                child: AnimatedSwitcher(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (c, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.35),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: c,
+                    ),
+                  ),
+                  layoutBuilder: (top, gone) => Stack(
+                    alignment: AlignmentDirectional.centerEnd,
+                    children: [...gone, ?top],
+                  ),
+                  child: Text(
+                    widget.state,
+                    key: ValueKey(widget.stateKey ?? widget.state),
+                    textAlign: TextAlign.end,
+                    style: HaloType.mono(
+                      size: 10,
+                      color: on ? HaloColors.amberText : HaloColors.text3,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              if (widget.onTap != null) ...[
+                const SizedBox(width: 2),
+                Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.chevron_left
+                      : Icons.chevron_right,
+                  size: 16,
+                  color: HaloColors.text3,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _tappable(Widget child) {
+    final tap = widget.onTap;
+    if (tap == null) return child;
+    return Semantics(
+      button: true,
+      child: PressScale(scale: 0.98, onTap: tap, child: child),
     );
   }
 }
@@ -371,6 +395,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // how messages arrive, how they sound and what they show: one screen
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(haloRoute(const NotificationsScreen()));
+    _readHidePreview();
+  }
+
   void _readHidePreview() {
     loadHideNotifContent(session.container).then((v) {
       if (mounted) setState(() => _hidePreview = v);
@@ -486,6 +516,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             l10n.settingsNotifications,
                             false,
                             l10n.settingsBlockedByAndroid,
+                            key: const ValueKey('notifsBlockedLine'),
+                            onTap: _openNotifications,
                           ),
                         ),
                       ),
@@ -545,8 +577,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // one row: how messages arrive and what they say when they do
               // belong together
               HaloRow(
-                icon: Icons.mark_email_unread_outlined,
-                label: l10n.settingsGettingMessages,
+                icon: Icons.notifications_none_rounded,
+                label: l10n.settingsNotifications,
                 value: switch (_plain == true ? true : _hidePreview) {
                   null => deliveryModeName(appState.deliveryMode),
                   true => l10n.settingsPreviewHidden(
@@ -556,18 +588,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     deliveryModeName(appState.deliveryMode),
                   ),
                 },
-                onTap: () async {
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(const GettingMessagesScreen()));
-                  _readHidePreview();
-                },
-              ),
-              HaloRow(
-                icon: Icons.battery_saver,
-                label: l10n.settingsRunInBackground,
-                value: l10n.settingsSoMessagesArrive,
-                onTap: () => forceShowBackgroundPrompt(context),
+                onTap: _openNotifications,
               ),
               HaloRow(
                 icon: Icons.lan_outlined,

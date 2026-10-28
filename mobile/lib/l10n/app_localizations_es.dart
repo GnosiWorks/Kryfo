@@ -521,7 +521,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appScanTheirCode => 'Escanear su código';
 
   @override
-  String get appAKryfoLinkA => 'Un enlace de Kryfo, de sala o @wren';
+  String get appAKryfoLinkA => 'Un enlace de Kryfo, de sala o @name';
 
   @override
   String get appAddThem => 'Añadir';
@@ -618,9 +618,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Velocidad y privacidad →';
-
-  @override
-  String get appGettingMessages => 'Recibir mensajes →';
 
   @override
   String get appDisableAppLock => '¿Desactivar el bloqueo?';
@@ -2419,13 +2416,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateJustGladToHelp => 'Solo quiero ayudar';
 
   @override
-  String get gettingMessagesGettingMessages => 'Recibir mensajes';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cómo llegan los mensajes nuevos a este teléfono. Puedes cambiarlo cuando quieras.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Siempre activo';
 
   @override
@@ -2959,7 +2949,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Opcional. Tus tres palabras siguen funcionando igual.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Una línea sobre ti · opcional';
@@ -3937,6 +3927,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Añade al menos un contacto antes de crear un grupo.';
 
   @override
+  String get newGroupNeedsContacts => 'Los grupos se hacen con tus contactos';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Añade primero a alguien. Una sala no necesita contactos: cualquiera con su enlace puede entrar.';
+
+  @override
   String get notesDeleteThisNote => '¿Eliminar esta nota?';
 
   @override
@@ -4486,6 +4483,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Desbloquear con huella';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Desactivado mientras haya un PIN señuelo: un dedo solo abre el señuelo.';
 
   @override
   String get pinsWipePin => 'PIN de borrado';
@@ -5281,9 +5282,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 saltos';
-
-  @override
-  String get settingsGettingMessages => 'Recibir mensajes';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -6461,6 +6459,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Cerrar y volver a abrir Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Si volver a intentarlo no ayuda';
+
+  @override
+  String get bootFailedRestoreBackup => 'Restaurar una copia de seguridad';
+
+  @override
+  String get bootFailedStartFresh => 'Empezar de cero';
+
+  @override
+  String get bootFailedStartFreshTitle => '¿Empezar de cero?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Esto borra todo lo que Kryfo guarda en este teléfono: chats, contactos, archivos, chats ocultos y tus tres palabras. Una copia de seguridad guardada en otro sitio no se toca.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continuar';
+
+  @override
+  String get bootFailedStartFreshSure => '¿Borrar todo en este teléfono?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'No se puede deshacer. Kryfo se cierra y se abre de nuevo como recién instalado.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Borrar y empezar de cero';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo no sabe leer ese enlace';
@@ -9369,6 +9396,93 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Mientras un icono neutro esté activo, las fotos, los vídeos y los archivos nuevos se guardan con nombres corrientes en las carpetas habituales de tu teléfono. Lo que ya se guardó se queda donde está.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push de Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Cómo llegan los mensajes nuevos a este teléfono, cómo suenan y qué muestran. Puedes cambiarlo cuando quieras.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cómo te llegan los mensajes';
+
+  @override
+  String get notificationsRecommended => 'Recomendado';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Al instante y ligero. Google puede ver cuándo se despierta tu teléfono, nunca quién escribió ni qué se dijo.';
+
+  @override
+  String get notificationsGoogleStarting => 'Activando…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'El push de Google no pudo empezar. Revisa la conexión y vuelve a intentarlo.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor solo guarda direcciones que no puede unir entre sí. El servicio de push funciona en el mismo servidor y podría unirlas, y con ayuda de Google, a tu cuenta de Google, así que quien gestione o incaute nuestro servidor también podría. Si eso te importa, elige otra forma. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Nuestro repetidor no está aceptando algunos registros de este teléfono por ahora. Esos chats llegan con la consulta cada 15 minutos, y Kryfo sigue intentándolo.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Sonido y vibración';
+
+  @override
+  String get notificationsSoundHint => 'En los ajustes de Android';
+
+  @override
+  String get notificationsEachShows => 'Cada notificación muestra';
+
+  @override
+  String get notificationsBatteryTips => 'Consejos de batería';
+
+  @override
+  String get notificationsBatteryAllowed => 'Permitido';
+
+  @override
+  String get notificationsBatteryNotYet => 'No permitido';
+
+  @override
+  String get notificationsMakerSwitch => 'El interruptor de tu fabricante';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cómo *te llegan* los mensajes.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Puedes cambiarlo cuando quieras en Notificaciones.';
+
+  @override
+  String get homeGoogleTitle => 'Ya está el push de Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Al instante y cuida la batería. Google puede ver cuándo se despierta tu teléfono, nunca quién escribió ni qué se dijo.';
+
+  @override
+  String get homeGoogleUse => 'Usarlo';
+
+  @override
+  String get homeGoogleOn => 'El push de Google está activado';
+
+  @override
+  String get homeGoogleGoneTitle => 'El push de Google no está disponible';
+
+  @override
+  String get appNotificationsLink => 'Notificaciones →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push de Google $got · rebajados $low';
+  }
 
   @override
   String get passFieldLabel => 'Frase de contraseña';

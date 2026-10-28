@@ -353,6 +353,10 @@ class AppState extends ChangeNotifier {
   Future<void> _helperQueue = Future.value();
   // some registration refused several times running: said on the screen
   bool _helperRefused = false;
+  // google push, play builds: play services on the phone, and the card that
+  // offers it to a phone set up before it came ('due' or 'said')
+  bool _googleAvailable = false;
+  String _googleOffer = '';
 
   // sleep and wake one at a time, in the order they were asked for: a wake
   // that crossed a sleep still running left tor asleep while the app

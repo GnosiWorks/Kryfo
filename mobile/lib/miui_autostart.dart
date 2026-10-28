@@ -78,6 +78,37 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   if (context.mounted) await _askBattery(context);
 }
 
+/// whether android lets kryfo run in the background, for the battery row
+Future<bool> batteryExempt() async {
+  try {
+    return await Permission.ignoreBatteryOptimizations.isGranted;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// the battery row: the exemption asked for, or said to be there already
+Future<void> askBatteryExemption(BuildContext context) async {
+  if (await batteryExempt()) {
+    if (context.mounted) {
+      showHaloToast(context, l10n.miuiAutostartAlreadyAllowedToRun);
+    }
+    return;
+  }
+  if (context.mounted) await _askBattery(context);
+}
+
+/// the phone maker's own switch, or null where the exemption is enough
+Future<BrandGuide?> makerGuide() async => brandGuide(await phoneBrand());
+
+/// the maker's row: its guide, and its settings page
+Future<void> showMakerGuide(BuildContext context) async {
+  final brand = await phoneBrand();
+  final guide = brandGuide(brand);
+  if (guide == null || !context.mounted) return;
+  await _askBrand(context, brand, guide);
+}
+
 Future<void> _askBattery(BuildContext context) async {
   final ok = await showConfirmSheet(
     context,

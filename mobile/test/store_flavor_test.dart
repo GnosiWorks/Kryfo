@@ -40,14 +40,24 @@ void main() {
   });
 
   test('google code can only come in through the play flavor', () {
-    final google = RegExp(r'com\.google\.(firebase|android\.gms)|firebase');
-    final deps = gradle.substring(gradle.indexOf('\ndependencies {'));
-    for (final l in deps.split('\n')) {
+    // a dependency on google's maven names, wherever it is declared
+    final google = RegExp(r'"com\.google\.(firebase|android\.gms)');
+    for (final l in gradle.split('\n')) {
+      if (l.trimLeft().startsWith('//')) continue;
       if (google.hasMatch(l)) {
-        expect(l.trimLeft(), startsWith('playImplementation('), reason: l);
+        expect(
+          l.trimLeft(),
+          anyOf(
+            startsWith('playImplementation('),
+            startsWith('"playImplementation"('),
+          ),
+          reason: l,
+        );
       }
     }
-    expect(gradle, isNot(contains('google-services')));
+    // the firebase values are read by hand: no google-services plugin
+    expect(gradle, isNot(contains('com.google.gms.google-services')));
+    expect(gradle, isNot(contains('com.google.gms:google-services')));
     for (final dir in ['main', 'foss']) {
       for (final f in _files('$_app/src/$dir')) {
         if (!RegExp(r'\.(kt|java|xml)$').hasMatch(f.path)) continue;

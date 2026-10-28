@@ -816,7 +816,7 @@ abstract class AppLocalizations {
   /// app/shell.dart
   ///
   /// In en, this message translates to:
-  /// **'A Kryfo link, a room link or @wren'**
+  /// **'A Kryfo link, a room link or @name'**
   String get appAKryfoLinkA;
 
   /// app/shell.dart
@@ -1004,12 +1004,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speed & privacy →'**
   String get appSpeedPrivacy;
-
-  /// app/dev_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages →'**
-  String get appGettingMessages;
 
   /// app/dev_screen.dart
   ///
@@ -1527,7 +1521,7 @@ abstract class AppLocalizations {
   /// **'Links to a lookalike of a well-known site'**
   String get scamShieldLinksToALookalike;
 
-  /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/getting_messages_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
+  /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/notifications_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
   ///
   /// In en, this message translates to:
   /// **'Back'**
@@ -3843,67 +3837,55 @@ abstract class AppLocalizations {
   /// **'Just glad to help'**
   String get donateJustGladToHelp;
 
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages'**
-  String get gettingMessagesGettingMessages;
-
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'How new messages reach this phone. You can change it whenever you like.'**
-  String get gettingMessagesHowNewMessagesReach;
-
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Always on'**
   String get gettingMessagesAlwaysOn;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Most private'**
   String get gettingMessagesMostPrivate;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.'**
   String get gettingMessagesMessagesArriveInstantlyNothing;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Check-ins'**
   String get gettingMessagesCheckIns;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Lightest'**
   String get gettingMessagesLightest;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.'**
   String get gettingMessagesKryfoLooksForMessages;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'A generic alert, with no sender and no message text'**
   String get gettingMessagesAGenericAlertWith;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Shows message text in notifications, even while Kryfo is locked.'**
   String get gettingMessagesShowsMessageTextIn;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.'**
@@ -4650,8 +4632,8 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'wren'**
-  String get handleWren;
+  /// **'name'**
+  String get handleHintName;
 
   /// screens/handle_screen.dart
   ///
@@ -6177,6 +6159,18 @@ abstract class AppLocalizations {
   /// **'Add at least one contact first before creating a group.'**
   String get newGroupAddAtLeastOne;
 
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Groups are made with your contacts'**
+  String get newGroupNeedsContacts;
+
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone first. A room needs no contacts: anyone with its link can join.'**
+  String get newGroupAddSomeoneFirst;
+
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
@@ -7124,6 +7118,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock with fingerprint'**
   String get pinsUnlockWithFingerprint;
+
+  /// screens/pins_screen.dart: under the fingerprint switch, which stays off in the everyday app while a decoy PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Off while a decoy PIN is set: a finger opens only the decoy.'**
+  String get pinsFingerOpensDecoy;
 
   /// screens/pins_screen.dart
   ///
@@ -8442,7 +8442,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Blocked by android'**
+  /// **'Blocked by Android'**
   String get settingsBlockedByAndroid;
 
   /// screens/settings_screen.dart
@@ -8468,12 +8468,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Onion · 3 hops'**
   String get settingsOnion3Hops;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages'**
-  String get settingsGettingMessages;
 
   /// screens/settings_screen.dart
   ///
@@ -10274,6 +10268,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close and reopen Kryfo'**
   String get bootFailedCloseAndReopen;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'If trying again does not help'**
+  String get bootFailedStillStuck;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get bootFailedRestoreBackup;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get bootFailedStartFresh;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh?'**
+  String get bootFailedStartFreshTitle;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.'**
+  String get bootFailedStartFreshLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get bootFailedStartFreshNext;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything on this phone?'**
+  String get bootFailedStartFreshSure;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Kryfo closes and opens again as a new install.'**
+  String get bootFailedStartFreshSureLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and start fresh'**
+  String get bootFailedStartFreshYes;
 
   /// widgets/kryfo_link_text.dart
   ///
@@ -12429,7 +12477,7 @@ abstract class AppLocalizations {
   /// **'Adding…'**
   String get peopleAdding;
 
-  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren
+  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @name
   ///
   /// In en, this message translates to:
   /// **'Nobody has claimed {handle}'**
@@ -14061,43 +14109,43 @@ abstract class AppLocalizations {
   /// **'Voice notes stop at 30 minutes. Listen to it, then send it.'**
   String get voiceStoppedAtLimit;
 
-  /// screens/getting_messages_screen.dart: the helper app card
+  /// screens/notifications_screen.dart: the helper app card
   ///
   /// In en, this message translates to:
   /// **'Instant and light. Its server sees your IP and when messages come, never what they say.'**
   String get gettingMessagesHelperBody;
 
-  /// screens/getting_messages_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion
+  /// screens/notifications_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion
   ///
   /// In en, this message translates to:
   /// **'Switch to Onion'**
   String get gettingMessagesHelperUseOnion;
 
-  /// screens/getting_messages_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app
+  /// screens/notifications_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app
   ///
   /// In en, this message translates to:
   /// **'Set up'**
   String get gettingMessagesHelperSetUp;
 
-  /// screens/getting_messages_screen.dart: under the status line in helper app mode
+  /// screens/notifications_screen.dart: under the status line in helper app mode
   ///
   /// In en, this message translates to:
   /// **'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get gettingMessagesHelperNote;
 
-  /// screens/getting_messages_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion
+  /// screens/notifications_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion
   ///
   /// In en, this message translates to:
   /// **'Available on the Onion route'**
   String get gettingMessagesHelperOnionOnly;
 
-  /// screens/getting_messages_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner
+  /// screens/notifications_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner
   ///
   /// In en, this message translates to:
   /// **'Checking…'**
   String get gettingMessagesHelperChecking;
 
-  /// screens/getting_messages_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps
+  /// screens/notifications_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps
   ///
   /// In en, this message translates to:
   /// **'Our relay does not offer this yet'**
@@ -14175,7 +14223,7 @@ abstract class AppLocalizations {
   /// **'The relay stopped waking Kryfo'**
   String get homeHelperRelayTitle;
 
-  /// screens/getting_messages_screen.dart: in helper app mode, when our relay keeps refusing some registrations
+  /// screens/notifications_screen.dart: in helper app mode, when our relay keeps refusing some registrations
   ///
   /// In en, this message translates to:
   /// **'Our relay is not taking some of this phone\'s registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying. Choosing another helper app or server can help too.'**
@@ -14913,7 +14961,7 @@ abstract class AppLocalizations {
   /// **'The top of each notification still says Kryfo. Android does not let an app change that.'**
   String get notifHeaderLimit;
 
-  /// screens/getting_messages_screen.dart: the row into the notification choices
+  /// screens/notifications_screen.dart: the row into the notification choices
   ///
   /// In en, this message translates to:
   /// **'What notifications show'**
@@ -15014,6 +15062,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.'**
   String get iconSheetSaves;
+
+  /// delivery_mode.dart: the mode name, google push (play builds)
+  ///
+  /// In en, this message translates to:
+  /// **'Google push'**
+  String get deliveryModeGooglePush;
+
+  /// delivery_mode.dart: who wakes the phone in google push, in "Woken by Google"
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get deliveryModeGoogle;
+
+  /// screens/notifications_screen.dart: under the title
+  ///
+  /// In en, this message translates to:
+  /// **'How new messages reach this phone, how they sound and what they show. You can change it whenever you like.'**
+  String get notificationsLead;
+
+  /// screens/notifications_screen.dart: section over the ways messages arrive
+  ///
+  /// In en, this message translates to:
+  /// **'How messages reach you'**
+  String get notificationsHowTheyReachYou;
+
+  /// screens/notifications_screen.dart, screens/onboarding_screen.dart: tag on google push
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get notificationsRecommended;
+
+  /// google push card: what it does and what google sees
+  ///
+  /// In en, this message translates to:
+  /// **'Instant and light. Google can see when your phone is woken, never who wrote or what was said.'**
+  String get notificationsGoogleBody;
+
+  /// google push is starting
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on…'**
+  String get notificationsGoogleStarting;
+
+  /// toast: no token came from google
+  ///
+  /// In en, this message translates to:
+  /// **'Google push could not start. Check the connection and try again.'**
+  String get notificationsGoogleNoStart;
+
+  /// screens/notifications_screen.dart: note under google push
+  ///
+  /// In en, this message translates to:
+  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google\'s help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
+  String get notificationsGoogleNote;
+
+  /// screens/notifications_screen.dart: google push, the relay refuses some registrations
+  ///
+  /// In en, this message translates to:
+  /// **'Our relay is not taking some of this phone\'s registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying.'**
+  String get notificationsGoogleRefused;
+
+  /// screens/notifications_screen.dart: section
+  ///
+  /// In en, this message translates to:
+  /// **'Sound and vibration'**
+  String get notificationsSoundAndVibration;
+
+  /// screens/notifications_screen.dart: the row opens android's settings for the messages channel
+  ///
+  /// In en, this message translates to:
+  /// **'Set in Android’s own settings'**
+  String get notificationsSoundHint;
+
+  /// screens/notifications_screen.dart: row, opens what notifications show
+  ///
+  /// In en, this message translates to:
+  /// **'Each notification shows'**
+  String get notificationsEachShows;
+
+  /// screens/notifications_screen.dart: section
+  ///
+  /// In en, this message translates to:
+  /// **'Battery tips'**
+  String get notificationsBatteryTips;
+
+  /// screens/notifications_screen.dart: kryfo may run in the background
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get notificationsBatteryAllowed;
+
+  /// screens/notifications_screen.dart: kryfo may not run in the background yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get notificationsBatteryNotYet;
+
+  /// screens/notifications_screen.dart: row, the maker's own background switch
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone maker’s switch'**
+  String get notificationsMakerSwitch;
+
+  /// screens/onboarding_screen.dart: play builds, the step that asks how messages arrive. *marked* words are italic
+  ///
+  /// In en, this message translates to:
+  /// **'How messages *reach you*.'**
+  String get onboardingDeliveryHeadline;
+
+  /// screens/onboarding_screen.dart: under the headline
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this any time in Notifications.'**
+  String get onboardingDeliveryLead;
+
+  /// screens/home_screen.dart: card offering google push after the update
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is here'**
+  String get homeGoogleTitle;
+
+  /// screens/home_screen.dart: the card's line
+  ///
+  /// In en, this message translates to:
+  /// **'Instant and easy on the battery. Google can see when your phone is woken, never who wrote or what was said.'**
+  String get homeGoogleLine;
+
+  /// screens/home_screen.dart: button, turns google push on
+  ///
+  /// In en, this message translates to:
+  /// **'Use it'**
+  String get homeGoogleUse;
+
+  /// screens/home_screen.dart: toast
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is on'**
+  String get homeGoogleOn;
+
+  /// screens/home_screen.dart: play services went, the phone checks in
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is not available'**
+  String get homeGoogleGoneTitle;
+
+  /// app/dev_screen.dart: link to the notifications screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications →'**
+  String get appNotificationsLink;
+
+  /// app/dev_screen.dart: pushes come, and how many android lowered from high priority
+  ///
+  /// In en, this message translates to:
+  /// **'Google pushes {got} · lowered {low}'**
+  String devGooglePushes(int got, int low);
 
   /// widgets/pass_pad.dart
   ///

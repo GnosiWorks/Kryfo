@@ -537,7 +537,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appScanTheirCode => 'Сканировать код';
 
   @override
-  String get appAKryfoLinkA => 'Ссылка Kryfo, ссылка на комнату или @wren';
+  String get appAKryfoLinkA => 'Ссылка Kryfo, ссылка на комнату или @name';
 
   @override
   String get appAddThem => 'Добавить';
@@ -635,9 +635,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Скорость и приватность →';
-
-  @override
-  String get appGettingMessages => 'Получение сообщений →';
 
   @override
   String get appDisableAppLock => 'Отключить блокировку?';
@@ -2452,13 +2449,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateJustGladToHelp => 'Просто помогаю';
 
   @override
-  String get gettingMessagesGettingMessages => 'Получение сообщений';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Как новые сообщения попадают на этот телефон. Можно поменять в любой момент.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Всегда на связи';
 
   @override
@@ -3008,7 +2998,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Необязательно. Твои три слова работают в любом случае.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Пара слов о себе · необязательно';
@@ -3998,6 +3988,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чтобы создать группу, сначала добавь хотя бы один контакт.';
 
   @override
+  String get newGroupNeedsContacts => 'Группы создаются из твоих контактов';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Сначала добавь кого-нибудь. Комнате контакты не нужны: войти может любой, у кого есть ссылка.';
+
+  @override
   String get notesDeleteThisNote => 'Удалить эту заметку?';
 
   @override
@@ -4546,6 +4543,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Разблокировка отпечатком';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Выключено, пока задана PIN-приманка: палец открывает только приманку.';
 
   @override
   String get pinsWipePin => 'PIN для стирания';
@@ -5342,9 +5343,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 узла';
-
-  @override
-  String get settingsGettingMessages => 'Получение сообщений';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -6531,6 +6529,35 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Закрыть и снова открыть Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Если повторная попытка не помогает';
+
+  @override
+  String get bootFailedRestoreBackup => 'Восстановить из копии';
+
+  @override
+  String get bootFailedStartFresh => 'Начать заново';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Начать заново?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Это сотрёт всё, что Kryfo хранит на этом телефоне: чаты, контакты, медиа, скрытые чаты и твои три слова. Файл резервной копии, сохранённый в другом месте, не пострадает.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Продолжить';
+
+  @override
+  String get bootFailedStartFreshSure => 'Стереть всё на этом телефоне?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Это нельзя отменить. Kryfo закроется и откроется как после новой установки.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Стереть и начать заново';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>
@@ -9464,6 +9491,93 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Пока включён простой значок, новые фото, видео и файлы сохраняются с обычными названиями в обычные папки телефона. То, что уже сохранено, остаётся на месте.';
+
+  @override
+  String get deliveryModeGooglePush => 'Пуш от Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Как новые сообщения попадают на этот телефон, как звучат и что показывают. Это можно изменить когда угодно.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Как до тебя доходят сообщения';
+
+  @override
+  String get notificationsRecommended => 'Рекомендуем';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Сразу и легко. Google видит, когда телефон будят, но не кто написал и что сказано.';
+
+  @override
+  String get notificationsGoogleStarting => 'Включаем…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Пуш от Google не запустился. Проверь соединение и попробуй ещё раз.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'К настоящим пробуждениям подмешиваются ложные, поэтому Google сложнее понять, когда приходят настоящие сообщения. Наш ретранслятор хранит только адреса, которые не может связать между собой. Служба пушей работает на том же сервере и могла бы их связать, а с помощью Google и с твоим аккаунтом Google, а значит, смог бы и тот, кто управляет нашим сервером или изымет его. Если для тебя это важно, выбери другой способ. Скрытые чаты, комнаты сверх первых нескольких и время от времени обычный контакт, примерно один месяц из пяти, ждут проверки, которую Kryfo всё равно делает каждые 15 минут.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Наш ретранслятор сейчас не принимает часть регистраций этого телефона. Эти чаты приходят с проверкой каждые 15 минут, а Kryfo продолжает пробовать.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Звук и вибрация';
+
+  @override
+  String get notificationsSoundHint => 'В настройках самого Android';
+
+  @override
+  String get notificationsEachShows => 'Уведомление показывает';
+
+  @override
+  String get notificationsBatteryTips => 'Советы по батарее';
+
+  @override
+  String get notificationsBatteryAllowed => 'Разрешено';
+
+  @override
+  String get notificationsBatteryNotYet => 'Не разрешено';
+
+  @override
+  String get notificationsMakerSwitch => 'Переключатель производителя';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Как до тебя *доходят* сообщения.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Это можно изменить когда угодно в разделе «Уведомления».';
+
+  @override
+  String get homeGoogleTitle => 'Пуш от Google уже здесь';
+
+  @override
+  String get homeGoogleLine =>
+      'Сразу и бережно к батарее. Google видит, когда телефон будят, но не кто написал и что сказано.';
+
+  @override
+  String get homeGoogleUse => 'Включить';
+
+  @override
+  String get homeGoogleOn => 'Пуш от Google включён';
+
+  @override
+  String get homeGoogleGoneTitle => 'Пуш от Google недоступен';
+
+  @override
+  String get appNotificationsLink => 'Уведомления →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Пуши Google $got · понижено $low';
+  }
 
   @override
   String get passFieldLabel => 'Парольная фраза';

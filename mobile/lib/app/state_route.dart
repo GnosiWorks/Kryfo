@@ -78,9 +78,9 @@ extension AppStateRoute on AppState {
     _usableAt = null;
     // typing goes and shows on the onion route alone
     if (m != 'private') _typingClear();
-    // the helper app mode registers over tor or not at all: off the
+    // the helper app and google push register over tor or not at all: off the
     // private route the phone checks in instead, and the relay forgets
-    if (m != 'private' && _deliveryMode == DeliveryMode.helper) {
+    if (m != 'private' && knockMode(_deliveryMode)) {
       await setDeliveryMode(DeliveryMode.checkins);
     }
     // saved first: a mode that was not saved is gone at the next start, so
