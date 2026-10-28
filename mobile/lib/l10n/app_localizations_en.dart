@@ -3135,20 +3135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString waiting · Tor is still connecting',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'No Kryfos yet.';
 
   @override
@@ -4373,10 +4359,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoKnowsPhoto => 'Photo';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'What this video knows';
+  String get photoKnowsVideoCleaner => 'Video cleaner';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'What this photo knows';
+  String get photoKnowsPhotoCleaner => 'Photo cleaner';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Remove all of it';
@@ -5220,9 +5206,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTorRouting => 'Tor routing';
 
   @override
-  String get settingsConnecting => 'Connecting';
-
-  @override
   String get settingsOffMode => 'Off · relay mode';
 
   @override
@@ -5455,10 +5438,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Everything here happens on this phone. Nothing is uploaded, and nobody else has to be on Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'What does this photo know?';
+  String get toolsPhotoCleaner => 'Photo cleaner';
 
   @override
-  String get toolsPlacePhoneTime => 'Place · phone · time';
+  String get toolsRemovesHiddenInfo =>
+      'Removes hidden info (metadata) like place, time and phone model';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9115,6 +9099,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copy link';
+
+  @override
+  String get appRelayNotAnswering => 'Relay not answering';
+
+  @override
+  String get motionNoRelayYet => 'NO RELAY YET';
+
+  @override
+  String get motionTheRouteIsUp => 'The route is up';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Messages go out as soon as a relay answers through this route.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'No network';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Nothing goes out without a network. Tor picks up again when one is back.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icon and notifications';

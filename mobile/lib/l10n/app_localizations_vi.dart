@@ -3128,20 +3128,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString đang chờ · Tor vẫn đang kết nối',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
@@ -4365,10 +4351,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsPhoto => 'Ảnh';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Video này biết gì';
+  String get photoKnowsVideoCleaner => 'Làm sạch video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Ảnh này biết gì';
+  String get photoKnowsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Gỡ bỏ tất cả';
@@ -5218,9 +5204,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsTorRouting => 'Định tuyến Tor';
 
   @override
-  String get settingsConnecting => 'Đang kết nối';
-
-  @override
   String get settingsOffMode => 'Tắt · chế độ relay';
 
   @override
@@ -5455,10 +5438,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ ở đây diễn ra trên điện thoại này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Ảnh này biết gì?';
+  String get toolsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
-  String get toolsPlacePhoneTime => 'Địa điểm · máy · giờ';
+  String get toolsRemovesHiddenInfo =>
+      'Xóa thông tin ẩn (siêu dữ liệu) như địa điểm, thời gian và mẫu điện thoại';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9110,6 +9094,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Sao chép liên kết';
+
+  @override
+  String get appRelayNotAnswering => 'Relay im lặng';
+
+  @override
+  String get motionNoRelayYet => 'CHƯA CÓ RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Tuyến đường đã thông';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.';
+
+  @override
+  String get motionOffline => 'NGOẠI TUYẾN';
+
+  @override
+  String get motionNoNetwork => 'Không có mạng';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count đang chờ · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Biểu tượng và thông báo';

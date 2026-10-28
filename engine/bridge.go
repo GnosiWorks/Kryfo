@@ -1364,14 +1364,7 @@ func handleConn(conn net.Conn) {
 
 //export HaloGetStatus
 func HaloGetStatus() *C.char {
-	ok, gen := 0, routeGeneration()
-	if routeOK() {
-		ok = 1
-	}
-	statusMu.RLock()
-	defer statusMu.RUnlock()
-	// status|bootstrap|hsdir uploads|route carries traffic|route generation
-	return C.CString(fmt.Sprintf("%s|%d|%d|%d|%d", torStatus, bootstrapPct, hsdirUploads, ok, gen))
+	return C.CString(statusLine())
 }
 
 //export HaloDrainInbox

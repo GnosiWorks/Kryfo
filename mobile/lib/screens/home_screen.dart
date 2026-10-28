@@ -36,6 +36,7 @@ import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart' hide live;
 import '../tor_valve.dart' show ValveStage;
+import '../link_view.dart' show LinkKind;
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/halo_hero.dart';
@@ -1441,29 +1442,28 @@ class _OfflineStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: appState,
-      builder: (context, _) {
+    // the reading the pill above it shows: the same grace, the same words
+    return LinkViewBuilder(
+      builder: (context, link) {
         // a message for someone who has not added you back waits on them,
         // and their chat says so: the strip counts only what the phone
         // itself holds back
         final n = appState.queued - appState.parkedQueued;
         // a send in flight while the phone can send is not news. the strip
         // speaks when the phone cannot send.
-        final cannotSend = !appState.online || !appState.torReady;
-        final offline = !appState.online;
-        final torDown = !offline && !appState.torReady;
-        // tor coming up is what every launch looks like: with an empty queue
-        // there is nothing to explain. offline is worth stating even with
-        // nothing queued.
-        final show = cannotSend && !(torDown && n == 0);
+        final offline = link.kind == LinkKind.offline;
+        final cannotSend = !link.connected;
+        // the route coming up is what every launch looks like: with an
+        // empty queue there is nothing to explain. offline is worth stating
+        // even with nothing queued.
+        final show = cannotSend && (offline || n > 0);
         // it opens its height and folds away, so the list slides
         return GrowSwap(
           alignment: Alignment.topCenter,
           child: show
               ? KeyedSubtree(
                   key: const ValueKey('strip'),
-                  child: _strip(context, n, offline),
+                  child: _strip(context, n, offline, link.text),
                 )
               : const SizedBox(key: ValueKey('no-strip'), width: 1),
         );
@@ -1471,7 +1471,7 @@ class _OfflineStrip extends StatelessWidget {
     );
   }
 
-  Widget _strip(BuildContext context, int n, bool offline) {
+  Widget _strip(BuildContext context, int n, bool offline, String state) {
     // a status: the warn yellow, never the accent
     final tint = offline ? HaloColors.rose : HaloColors.warn;
     final words = offline ? HaloColors.rose : HaloColors.warnText;
@@ -1482,7 +1482,7 @@ class _OfflineStrip extends StatelessWidget {
         ? l10n.homeNothingWaitingToSend
         : offline
         ? l10n.homeWaitingSendsWhenYou(n)
-        : l10n.homeWaitingTorIsStill(n);
+        : l10n.homeWaitingState(n, state);
 
     return Container(
       width: double.infinity,

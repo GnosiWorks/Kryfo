@@ -3212,20 +3212,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString в черзі · Tor ще підключається',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Ще жодного Kryfo.';
 
   @override
@@ -4465,10 +4451,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get photoKnowsPhoto => 'Фото';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Що знає це відео';
+  String get photoKnowsVideoCleaner => 'Очищення відео';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Що знає це фото';
+  String get photoKnowsPhotoCleaner => 'Очищення фото';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Прибрати все';
@@ -5318,9 +5304,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTorRouting => 'Маршрутизація Tor';
 
   @override
-  String get settingsConnecting => 'Підключення';
-
-  @override
   String get settingsOffMode => 'Вимкнено · ретранслятор';
 
   @override
@@ -5554,10 +5537,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усе тут відбувається на цьому телефоні. Нічого не вивантажується, і нікому іншому не треба мати Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Що знає це фото?';
+  String get toolsPhotoCleaner => 'Очищення фото';
 
   @override
-  String get toolsPlacePhoneTime => 'Місце · телефон · час';
+  String get toolsRemovesHiddenInfo =>
+      'Видаляє приховані дані (метадані): місце, час і модель телефону';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9280,6 +9264,44 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Скопіювати посилання';
+
+  @override
+  String get appRelayNotAnswering => 'Ретранслятор мовчить';
+
+  @override
+  String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКИ НЕМАЄ';
+
+  @override
+  String get motionTheRouteIsUp => 'Маршрут побудовано';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Повідомлення підуть, щойно ретранслятор відповість цим маршрутом.';
+
+  @override
+  String get motionOffline => 'ОФЛАЙН';
+
+  @override
+  String get motionNoNetwork => 'Немає мережі';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Без мережі нічого не йде. Tor продовжить, щойно вона з’явиться.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count в черзі · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Значок і сповіщення';

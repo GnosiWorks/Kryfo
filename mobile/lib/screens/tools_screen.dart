@@ -225,6 +225,9 @@ class _BreathingDotState extends State<_BreathingDot>
   }
 }
 
+// the photo cleaner leads the tab in the tools' own colours: a soft wash of
+// the accent and its hairline, so it sits calmly with the rows under it in
+// either theme
 class _PhotoCard extends StatelessWidget {
   final VoidCallback? onPhoto;
   final VoidCallback? onVideo;
@@ -232,7 +235,7 @@ class _PhotoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = HaloColors.onAmberBright;
+    final tint = HaloColors.amber;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 22),
       padding: const EdgeInsets.all(14),
@@ -241,16 +244,9 @@ class _PhotoCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [HaloColors.amberBright, HaloColors.amberBrightDeep],
+          colors: [photoCardWash(0.10), photoCardWash(0.04)],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: HaloColors.amberBright.withValues(alpha: 0.28),
-            blurRadius: 26,
-            spreadRadius: -12,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        border: Border.all(color: tint.withValues(alpha: 0.22), width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,8 +257,12 @@ class _PhotoCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: ink,
+                  color: tint.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: tint.withValues(alpha: 0.22),
+                    width: 0.8,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Stack(
@@ -271,7 +271,7 @@ class _PhotoCard extends StatelessWidget {
                     StrokeIcon(
                       _eyeOutline,
                       size: 21,
-                      color: HaloColors.amberBright,
+                      color: HaloColors.amberText,
                     ),
                     StrokeIcon(
                       _eyeIris,
@@ -288,21 +288,21 @@ class _PhotoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.toolsWhatDoesThisPhoto,
+                      l10n.toolsPhotoCleaner,
                       style: HaloType.sans(
                         size: 15.5,
                         weight: FontWeight.w600,
-                        color: ink,
+                        color: HaloColors.text,
                         height: 1.2,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      l10n.toolsPlacePhoneTime,
-                      style: HaloType.mono(
-                        size: 10,
-                        color: ink.withValues(alpha: 0.7),
-                        letter: 0.14,
+                      l10n.toolsRemovesHiddenInfo,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.warm,
+                        height: 1.35,
                       ),
                     ),
                   ],
@@ -313,10 +313,11 @@ class _PhotoCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             l10n.toolsPickAPhotoAnd,
-            style: HaloType.sans(size: 13, color: ink, height: 1.5),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _CardButton(
@@ -327,10 +328,15 @@ class _PhotoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              _CardButton(
-                label: l10n.toolsVideo,
-                filled: false,
-                onTap: onVideo,
+              // as wide as its word, and a long word wraps before the main
+              // button is squeezed
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 160),
+                child: _CardButton(
+                  label: l10n.toolsVideo,
+                  filled: false,
+                  onTap: onVideo,
+                ),
               ),
             ],
           ),
@@ -339,6 +345,18 @@ class _PhotoCard extends StatelessWidget {
     );
   }
 }
+
+/// the card's ground: the accent washed over the raised surface
+@visibleForTesting
+Color photoCardWash(double alpha) => Color.alphaBlend(
+  HaloColors.amber.withValues(alpha: alpha),
+  HaloColors.surface2,
+);
+
+/// what the main button wears over the card: a deeper wash of the same
+/// accent, never a solid block
+@visibleForTesting
+Color photoButtonFill() => HaloColors.amber.withValues(alpha: 0.16);
 
 class _CardButton extends StatelessWidget {
   final String label;
@@ -354,8 +372,6 @@ class _CardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = HaloColors.onAmberBright;
-    final fg = filled ? HaloColors.amberBright : ink;
     return Semantics(
       button: true,
       enabled: onTap != null,
@@ -366,29 +382,38 @@ class _CardButton extends StatelessWidget {
         scale: 0.96,
         onTap: onTap,
         child: Container(
-          height: 42,
-          padding: EdgeInsets.symmetric(horizontal: filled ? 0 : 16),
-          alignment: Alignment.center,
+          // large text takes a second line, never "…"
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: filled ? ink : null,
+            color: filled ? photoButtonFill() : null,
             borderRadius: BorderRadius.circular(12),
-            border: filled
-                ? null
-                : Border.all(color: ink.withValues(alpha: 0.35)),
+            border: Border.all(
+              color: filled
+                  ? HaloColors.amber.withValues(alpha: 0.30)
+                  : HaloColors.line2,
+              width: filled ? 0.8 : 1,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                StrokeIcon(icon!, size: 17, color: fg),
+                StrokeIcon(icon!, size: 17, color: HaloColors.amberText),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label,
-                style: HaloType.sans(
-                  size: 13.5,
-                  weight: filled ? FontWeight.w600 : FontWeight.w500,
-                  color: fg,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.sans(
+                    size: 13.5,
+                    weight: filled ? FontWeight.w600 : FontWeight.w500,
+                    color: HaloColors.text,
+                  ),
                 ),
               ),
             ],
