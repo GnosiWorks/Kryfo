@@ -47,6 +47,8 @@ import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'link_view.dart';
+import 'pill_fit.dart';
 import 'app_icon.dart' show appFaceNow, readAppFace;
 import 'screens/icon_screen.dart' show sayFaceChanged;
 import 'pill_grace.dart';

@@ -168,12 +168,9 @@ func kickChan() chan struct{} {
 	return kickCh
 }
 
-// sleep that a kick ends early. true when it was kicked. a runner waiting
-// out a failed dial still hears the job's kick this way.
-func sleepOrKick(d time.Duration) bool { return sleepOrKickOn(kickChan(), d) }
-
-// as sleepOrKick, on a kick channel taken before the check that led here, so
-// a kick between the two is not missed
+// sleep that a kick ends early, true when it was kicked, on a kick channel
+// taken before the check that led here, so a kick between the two is not
+// missed. a runner waiting out a failed dial still hears the job's kick
 func sleepOrKickOn(kc chan struct{}, d time.Duration) bool {
 	return sleepOrKickCtx(context.Background(), kc, d)
 }
@@ -947,7 +944,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 		return
 	}
 	if modeNeedsTor() && route {
-		routeNoteFail(u)
+		routeNoteFailFrom(u, began)
 	}
 	_, short := ownWaitRule(u, false)
 	relayHealthMu.Lock()
@@ -1295,6 +1292,17 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	return accepted
 }
 
+// asks relay u a question and, when it answers, takes the answer as proof
+// of the route generation the question was asked in
+func probeProves(u string, ask func() bool) bool {
+	gen := routeGeneration()
+	if !ask() {
+		return false
+	}
+	routeAliveOn(gen, u)
+	return true
+}
+
 // how long a runner waits for tor before it tries again
 var torRetryWait = 10 * time.Second
 
@@ -1332,6 +1340,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 // the same, with the stamp the sender put inside the wrap handed on with
 // each line: the outer stamps are made up, that one is their clock
 func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string, unwrap func(nostr2.Event) (string, nostr2.Timestamp, error)) {
+	runnersLive.Add(1)
+	defer runnersLive.Add(-1)
 	urls := relaysWhenSet(ctx)
 	if ctx.Err() != nil {
 		return
@@ -1345,7 +1355,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	// what the file holds, -1 while there is none
 	lastOnDisk := int64(-1)
 	var lastMu sync.Mutex
-	if savedDataDir != "" {
+	if savedDataDir() != "" {
 		seenPath, lastPath = addressFiles(rcvPk)
 		// a subscription on an address let go of before keeps files again
 		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
@@ -1502,7 +1512,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	for i, url := range urls {
 		// first relay is our own: it carries the traffic, heal it hard
 		own := i == 0
+		runnersLive.Add(1)
 		go func(u string) {
+			defer runnersLive.Add(-1)
+			// a wait a kick ends early, and so does the runner's end
+			nap := func(d time.Duration) { sleepOrKickCtx(ctx, kickChan(), d) }
 			if tag == laneFirstContact {
 				fcRelaysLive.Add(1)
 				defer fcRelaysLive.Add(-1)
@@ -1660,10 +1674,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						armRelayWatch()
 						atomic.StoreInt64(&lastTorRestart, 0)
 						go reconnectTorFor(whyDialer)
-						sleepOrKick(30 * time.Second)
+						nap(30 * time.Second)
 						continue
 					}
-					sleepOrKick(wait)
+					nap(wait)
 					continue
 				}
 				if !turn.take(ctx) {
@@ -1693,7 +1707,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
-					sleepOrKick(rejoin)
+					nap(rejoin)
 					continue
 				}
 				if err != nil {
@@ -1714,7 +1728,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					} else {
 						relayFailed(u, dialAt)
 					}
-					sleepOrKick(relayRetryAfter(u, retry, own))
+					nap(relayRetryAfter(u, retry, own))
 					continue
 				}
 				// the mode changed while it dialled. nothing is asked on it
@@ -1722,7 +1736,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				case <-routeC:
 					r.Close()
 					connDone()
-					sleepOrKick(rejoin)
+					nap(rejoin)
 					continue
 				default:
 				}
@@ -1797,7 +1811,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					connDone()
 					ownMiss()
 					relayFailed(u, dialAt)
-					sleepOrKick(relayRetryAfter(u, retry, own))
+					nap(relayRetryAfter(u, retry, own))
 					continue
 				}
 				// our own relay's successes clear its failure count too
@@ -1820,6 +1834,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if covered.Load() {
 						noteHeard(conn, u, rcvPk, time.Now(), false)
 					}
+				}
+				// an answer speaks for the route the probe was asked on,
+				// whenever the socket was dialled: a bump that tore nothing
+				// down leaves it carrying
+				probe := func() bool {
+					if !probeProves(u, func() bool { return relayResponds(conn, r, rcvPk) }) {
+						return false
+					}
+					aliveNow()
+					return true
 				}
 				caught := func() {
 					covered.Store(true)
@@ -2108,8 +2132,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// question that fetches nothing instead: it costs a frame
 						// and an eose, and a real eose proves the circuit still
 						// carries data.
-						if relayResponds(conn, r, rcvPk) {
-							aliveNow()
+						if probe() {
 							askWanted()
 							idle.Reset(quietFor(deaf))
 							continue
@@ -2126,7 +2149,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// delay, see kickSpread.
 						//
 						// a runner with no live subscription never gets here:
-						// it is asleep in sleepOrKick and still reconnects at
+						// it is asleep in its nap and still reconnects at
 						// once, which is the case the kick exists for.
 						if kickC == nil {
 							kickT = time.NewTimer(kickDelay())
@@ -2142,8 +2165,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// reviving, and dropping it costs a full since window
 						// on every contact and every relay, so ask before
 						// tearing down.
-						if relayResponds(conn, r, rcvPk) {
-							aliveNow()
+						if probe() {
 							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
@@ -2218,9 +2240,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				case kicked:
 					kicked = false
 				case youngDrops > 0:
-					sleepOrKick(youngDropWait(u, rejoin, youngDrops, own))
+					nap(youngDropWait(u, rejoin, youngDrops, own))
 				default:
-					sleepOrKick(rejoin)
+					nap(rejoin)
 				}
 			}
 		}(url)
@@ -2531,6 +2553,9 @@ func HaloFirstContactPk(counter C.int) *C.char {
 // relay again by itself, so only a missing loop needs a new listener, and
 // a phone offline would otherwise start one every minute
 var fcRelaysLive atomic.Int32
+
+// subscription runners and their relay loops still going, every lane
+var runnersLive atomic.Int32
 
 // how many relays the first-contact listener is on, -1 when there is none.
 // a listener that started on an empty list is on none and hears nothing

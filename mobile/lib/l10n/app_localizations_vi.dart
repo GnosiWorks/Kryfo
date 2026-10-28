@@ -3128,20 +3128,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString đang chờ · Tor vẫn đang kết nối',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
@@ -5216,9 +5202,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Định tuyến Tor';
-
-  @override
-  String get settingsConnecting => 'Đang kết nối';
 
   @override
   String get settingsOffMode => 'Tắt · chế độ relay';
@@ -9111,6 +9094,44 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Sao chép liên kết';
+
+  @override
+  String get appRelayNotAnswering => 'Relay im lặng';
+
+  @override
+  String get motionNoRelayYet => 'CHƯA CÓ RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Tuyến đường đã thông';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.';
+
+  @override
+  String get motionOffline => 'NGOẠI TUYẾN';
+
+  @override
+  String get motionNoNetwork => 'Không có mạng';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count đang chờ · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Biểu tượng và thông báo';

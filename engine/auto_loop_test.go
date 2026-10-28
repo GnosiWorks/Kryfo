@@ -272,6 +272,7 @@ func TestSkipDirectTakesTorOffBehindAPortal(t *testing.T) {
 	torNode = &tor.Tor{Control: &control.Conn{}}
 	mu.Unlock()
 	defer func() {
+		stopAutoLoops(t)
 		holdBounce, captiveBounce = oldH, oldC
 		mu.Lock()
 		torNode = had

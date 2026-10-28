@@ -37,13 +37,12 @@ import (
 )
 
 var (
-	mu           sync.Mutex
-	startMu      sync.Mutex
-	torNode      *tor.Tor
-	listener     net.Listener
-	myAddr       string
-	savedDataDir string // kept so the dialer watchdog can relaunch tor
-	inbox        []string
+	mu       sync.Mutex
+	startMu  sync.Mutex
+	torNode  *tor.Tor
+	listener net.Listener
+	myAddr   string
+	inbox    []string
 
 	myEdPriv ed25519.PrivateKey
 	myEdPub  ed25519.PublicKey
@@ -51,6 +50,19 @@ var (
 	myXPub   [32]byte
 	myId     string
 )
+
+// kept so the dialer watchdog can relaunch tor. runners read it while a
+// start sets it, so it is never a plain string
+var savedDir atomic.Pointer[string]
+
+func savedDataDir() string {
+	if p := savedDir.Load(); p != nil {
+		return *p
+	}
+	return ""
+}
+
+func setSavedDataDir(d string) { savedDir.Store(&d) }
 
 var (
 	statusMu     sync.RWMutex
@@ -344,9 +356,7 @@ func startListener(dataDir string) string {
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
 		return fmt.Sprintf("error: mkdir tor: %v", err)
 	}
-	mu.Lock()
-	savedDataDir = dataDir
-	mu.Unlock()
+	setSavedDataDir(dataDir)
 
 	// a hard-killed previous process can leave tor's lock and run files
 	// behind, which fail this start. tor is single-instance per data dir and
@@ -382,6 +392,8 @@ func startListener(dataDir string) string {
 	}
 	mu.Lock()
 	torNode = t
+	close(torGone)
+	torGone = make(chan struct{})
 	mu.Unlock()
 	// whatever control socket we held belonged to the tor before this one,
 	// and so did the socks port any cached http client was built against.
@@ -621,6 +633,7 @@ func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 }
 
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
+	gone := torGoneCh()
 	if hsSubbed {
 		defer func() {
 			evMu.Lock()
@@ -632,8 +645,13 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		}()
 	}
 	for {
-		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
+		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
 			break
+		}
+		select {
+		case <-gone:
+			return
+		default:
 		}
 		statusMu.RLock()
 		stillPub := torStatus == "publishing" || torStatus == "starting"
@@ -777,6 +795,10 @@ var stuckAfter = 2 * time.Minute
 // how many reconnects got past the guards, for the tests that count storms
 var reconnectRuns atomic.Int64
 
+// reconnects claimed and not yet released, replaced ones too, so a test
+// can see them all out before it puts back what they read
+var reconnectsLive atomic.Int32
+
 // one reconnect at a time, ever. the owner, the running flags and the done
 // channel of the one running change together under reconnectMu: a reconnect
 // that takes over makes itself the owner and waits for the one it replaced
@@ -851,6 +873,7 @@ func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string)
 	reconnectDone = done
 	atomic.StoreInt32(&torRestarting, 1)
 	reconnectRuns.Add(1)
+	reconnectsLive.Add(1)
 	return me, prev, done, ""
 }
 
@@ -871,6 +894,7 @@ func reconnectRelease(me int64, done chan struct{}) {
 	}
 	reconnectMu.Unlock()
 	close(done)
+	reconnectsLive.Add(-1)
 }
 
 func reconnectTorAs(force bool, why string) string { return reconnectTorBy(force, false, why) }
@@ -920,7 +944,7 @@ func reconnectTorBy(force, auto bool, why string) string {
 
 	mu.Lock()
 	t := torNode
-	dir := savedDataDir
+	dir := savedDataDir()
 	addr := myAddr
 	mu.Unlock()
 
@@ -1345,14 +1369,7 @@ func handleConn(conn net.Conn) {
 
 //export HaloGetStatus
 func HaloGetStatus() *C.char {
-	ok, gen := 0, routeGeneration()
-	if routeOK() {
-		ok = 1
-	}
-	statusMu.RLock()
-	defer statusMu.RUnlock()
-	// status|bootstrap|hsdir uploads|route carries traffic|route generation
-	return C.CString(fmt.Sprintf("%s|%d|%d|%d|%d", torStatus, bootstrapPct, hsdirUploads, ok, gen))
+	return C.CString(statusLine())
 }
 
 //export HaloDrainInbox
@@ -1541,13 +1558,16 @@ func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, in
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
 // our descriptor is uploaded, or false after 120s. most networks upload
 // within 5-15 seconds.
-func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
+func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
+	timeout := time.After(120 * time.Second)
 	if t == nil || t.Control == nil || !subbed {
-		time.Sleep(120 * time.Second)
+		select {
+		case <-gone:
+		case <-timeout:
+		}
 		return false
 	}
 
-	timeout := time.After(120 * time.Second)
 	// how many hsdirs we have handed the descriptor to. the hashring is six
 	// per replica, so three is a comfortable majority of one replica and the
 	// descriptor is fetchable well before that.
@@ -1585,11 +1605,32 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
 				return true
 			}
+		// a watcher for a tor that is gone gives up its slot
+		case <-gone:
+			return false
 		case <-timeout:
 			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
 			return false
 		}
 	}
+}
+
+// closed and replaced under mu whenever torNode changes, so a watcher of
+// the tor before lets go
+var torGone = make(chan struct{})
+
+func torGoneCh() chan struct{} {
+	mu.Lock()
+	defer mu.Unlock()
+	return torGone
+}
+
+// for the tests, which set torNode themselves
+func torGoneNow() {
+	mu.Lock()
+	close(torGone)
+	torGone = make(chan struct{})
+	mu.Unlock()
 }
 
 // polls tor for real bootstrap progress. tor.Start only means the process

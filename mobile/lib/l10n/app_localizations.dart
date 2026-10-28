@@ -4968,12 +4968,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · Tor is still connecting}}'**
-  String homeWaitingTorIsStill(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'No Kryfos yet.'**
   String get homeNoKryfosYet;
 
@@ -8426,12 +8420,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tor routing'**
   String get settingsTorRouting;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting'**
-  String get settingsConnecting;
 
   /// screens/settings_screen.dart
   ///
@@ -14720,6 +14708,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy link'**
   String get settingsCopyLinkHint;
+
+  /// app/gates.dart: the home pill in relay mode while its relay has not answered for a while
+  ///
+  /// In en, this message translates to:
+  /// **'Relay not answering'**
+  String get appRelayNotAnswering;
+
+  /// widgets/motion.dart: the tor sheet's route label, all caps, while tor's route is up and no relay has answered through it
+  ///
+  /// In en, this message translates to:
+  /// **'NO RELAY YET'**
+  String get motionNoRelayYet;
+
+  /// widgets/motion.dart: the tor sheet's large italic line while tor's route is up and no relay has answered through it
+  ///
+  /// In en, this message translates to:
+  /// **'The route is up'**
+  String get motionTheRouteIsUp;
+
+  /// widgets/motion.dart: the tor sheet's small line under that
+  ///
+  /// In en, this message translates to:
+  /// **'Messages go out as soon as a relay answers through this route.'**
+  String get motionMessagesGoOnceARelay;
+
+  /// widgets/motion.dart: the tor sheet's route label, all caps, while the phone has no network
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE'**
+  String get motionOffline;
+
+  /// widgets/motion.dart: the tor sheet's large italic line while the phone has no network
+  ///
+  /// In en, this message translates to:
+  /// **'No network'**
+  String get motionNoNetwork;
+
+  /// widgets/motion.dart: the tor sheet's small line under that
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing goes out without a network. Tor picks up again when one is back.'**
+  String get motionTorPicksUpAgain;
+
+  /// delivery_mode.dart: the check-ins line while not connected: the connection's words as the home pill shows them, then the last check-in
+  ///
+  /// In en, this message translates to:
+  /// **'{state} · {last}'**
+  String deliveryModeStateLast(String state, Object last);
+
+  /// screens/home_screen.dart: the strip over the chats while the phone cannot send: how many wait, then the connection's words as the home pill shows them
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} waiting · {state}}}'**
+  String homeWaitingState(int count, String state);
 
   /// screens/settings_screen.dart: the Security row into the icon screen, and that screen's title
   ///

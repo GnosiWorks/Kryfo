@@ -3146,20 +3146,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ در انتظار · Tor هنوز در حال اتصال است',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'هنوز هیچ مخاطبی نیست.';
 
   @override
@@ -5232,9 +5218,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'مسیریابی Tor';
-
-  @override
-  String get settingsConnecting => 'در حال اتصال';
 
   @override
   String get settingsOffMode => 'خاموش · حالت رله';
@@ -9138,6 +9121,44 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'کپی پیوند';
+
+  @override
+  String get appRelayNotAnswering => 'رله ساکت است';
+
+  @override
+  String get motionNoRelayYet => 'هنوز رله‌ای نیست';
+
+  @override
+  String get motionTheRouteIsUp => 'مسیر برقرار است';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'پیام‌ها به محض اینکه رله‌ای از این مسیر پاسخ دهد فرستاده می‌شوند.';
+
+  @override
+  String get motionOffline => 'آفلاین';
+
+  @override
+  String get motionNoNetwork => 'شبکه‌ای نیست';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '⁨$state⁩ · ⁨$last⁩';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ در انتظار · ⁨$state⁩',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'نماد و اعلان‌ها';

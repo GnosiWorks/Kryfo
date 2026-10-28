@@ -116,13 +116,16 @@ func fakeTor(t *testing.T, port int) *tor.Tor {
 	t.Cleanup(func() { a.Close(); b.Close() })
 	n := &tor.Tor{ControlPort: port, Control: control.NewConn(textproto.NewConn(a))}
 	mu.Lock()
-	torNode, myAddr, savedDataDir = n, "fake.onion", t.TempDir()
+	torNode, myAddr = n, "fake.onion"
 	mu.Unlock()
+	setSavedDataDir(t.TempDir())
 	ctrlReset()
 	t.Cleanup(func() {
 		mu.Lock()
-		torNode, myAddr, savedDataDir = nil, "", ""
+		torNode, myAddr = nil, ""
 		mu.Unlock()
+		torGoneNow()
+		setSavedDataDir("")
 		ctrlReset()
 		atomic.StoreInt32(&torRestarting, 0)
 		atomic.StoreInt32(&reconnectRunning, 0)
@@ -137,9 +140,7 @@ func fakeTor(t *testing.T, port int) *tor.Tor {
 // nobody to bring it back: the watch left off to the app, and the app's
 // watchdog only does first starts. off is rescued now.
 func TestHalfDoneReconnectIsRescued(t *testing.T) {
-	old := ctrlDeadline
-	ctrlDeadline = 300 * time.Millisecond
-	defer func() { ctrlDeadline = old }()
+	setCtrlDeadline(t, 300*time.Millisecond)
 	d := newDeadControl(t)
 	defer d.close()
 	fakeTor(t, d.port())
@@ -264,9 +265,7 @@ func TestStuckReconnectTakenOver(t *testing.T) {
 // the one that was taken over finishes later and must not clear the flag
 // of the one that took it
 func TestTakenOverReconnectLeavesTheFlag(t *testing.T) {
-	old := ctrlDeadline
-	ctrlDeadline = 400 * time.Millisecond
-	defer func() { ctrlDeadline = old }()
+	setCtrlDeadline(t, 400*time.Millisecond)
 	d := newDeadControl(t)
 	defer d.close()
 	fakeTor(t, d.port())
@@ -334,8 +333,10 @@ func TestBootstrapWatchAfterABounce(t *testing.T) {
 	f := newFakeControl(t, 50)
 	n := fakeTor(t, f.port())
 	resetRoute(t, "starting", 0)
-	go watchBootstrap(n)
-	defer f.pct.Store(100)
+	done := make(chan struct{})
+	go func() { watchBootstrap(n); close(done) }()
+	// at 100 the watcher is done, and gone before the polls are put back
+	defer func() { f.pct.Store(100); <-done }()
 	time.Sleep(100 * time.Millisecond)
 	statusMu.Lock()
 	bootstrapPct = 0
@@ -358,8 +359,10 @@ func TestBootstrapWatchSlowsOffline(t *testing.T) {
 	f := newFakeControl(t, 50)
 	n := fakeTor(t, f.port())
 	resetRoute(t, "starting", 0)
-	go watchBootstrap(n)
-	defer f.pct.Store(100)
+	done := make(chan struct{})
+	go func() { watchBootstrap(n); close(done) }()
+	// at 100 the watcher is done, and gone before the polls are put back
+	defer func() { f.pct.Store(100); <-done }()
 	time.Sleep(50 * time.Millisecond)
 	netOffline.Store(true)
 	time.Sleep(250 * time.Millisecond)
@@ -369,4 +372,46 @@ func TestBootstrapWatchSlowsOffline(t *testing.T) {
 	if offline > 4 {
 		t.Fatalf("%d polls in half a second with no network", offline)
 	}
+}
+
+// every reconnect a test set off is over, then its tor goes and the
+// watchers with it, so what they read is the next test's to change
+func waitTorIdle(t *testing.T, limit time.Duration) {
+	t.Helper()
+	waitFor(t, "the reconnects to end", limit, func() bool { return reconnectsLive.Load() == 0 })
+	mu.Lock()
+	torNode = nil
+	mu.Unlock()
+	torGoneNow()
+	waitFor(t, "the watchers to end", limit, func() bool {
+		return atomic.LoadInt32(&bootstrapWatching) == 0 && atomic.LoadInt32(&publishWatching) == 0
+	})
+}
+
+// a publish watcher left from a tor that is gone gives up its slot
+// rather than sit out its two minutes
+func TestPublishWatchEndsWithItsTor(t *testing.T) {
+	f := newFakeControl(t, 100)
+	n := fakeTor(t, f.port())
+	resetRoute(t, "publishing", 100)
+	goWatchPublished(n, "abcdefghijklmnop")
+	if atomic.LoadInt32(&publishWatching) != 1 {
+		t.Fatal("no publish watcher")
+	}
+	time.Sleep(100 * time.Millisecond)
+	mu.Lock()
+	torNode = nil
+	mu.Unlock()
+	torGoneNow()
+	waitFor(t, "the watcher to let go", time.Second, func() bool {
+		return atomic.LoadInt32(&publishWatching) == 0
+	})
+}
+
+// a shorter bound on control commands for one test
+func setCtrlDeadline(t *testing.T, d time.Duration) {
+	t.Helper()
+	old := ctrlDeadlineNs.Load()
+	ctrlDeadlineNs.Store(int64(d))
+	t.Cleanup(func() { ctrlDeadlineNs.Store(old) })
 }

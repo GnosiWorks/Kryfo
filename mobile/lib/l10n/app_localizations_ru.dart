@@ -3225,20 +3225,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString в очереди · Tor ещё подключается',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Пока ни одного Kryfo.';
 
   @override
@@ -5332,9 +5318,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Маршрутизация Tor';
-
-  @override
-  String get settingsConnecting => 'Подключение';
 
   @override
   String get settingsOffMode => 'Выкл. · ретранслятор';
@@ -9291,6 +9274,44 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Скопировать ссылку';
+
+  @override
+  String get appRelayNotAnswering => 'Ретранслятор молчит';
+
+  @override
+  String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКА НЕТ';
+
+  @override
+  String get motionTheRouteIsUp => 'Маршрут построен';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Сообщения уйдут, как только ретранслятор ответит по этому маршруту.';
+
+  @override
+  String get motionOffline => 'НЕ В СЕТИ';
+
+  @override
+  String get motionNoNetwork => 'Нет сети';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Без сети ничего не уходит. Tor продолжит, как только она появится.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count в очереди · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Значок и уведомления';

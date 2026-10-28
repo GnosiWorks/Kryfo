@@ -220,7 +220,9 @@ func TestAValveByHandCountsAsATry(t *testing.T) {
 	if !waitUntil(3*time.Second, func() bool { return netValveOpen.Load() }) {
 		t.Fatal("no try by hand")
 	}
-	if !waitUntil(5*time.Second, func() bool { return !netValveOpen.Load() && torParked.Load() }) {
+	if !waitUntil(5*time.Second, func() bool {
+		return !netValveOpen.Load() && torParked.Load() && valveTries.Load() == 0
+	}) {
 		t.Fatal("the try did not end parked")
 	}
 	if netValveDue(now.Add(70 * time.Second)) {

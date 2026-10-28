@@ -288,7 +288,7 @@ extension AppStateBridges on AppState {
       _lineChecks = BridgeLineCheck.parse(engine.bridgeLineChecks());
       _checksOf = _bridge.choice;
     }
-    _newTorTry();
+    _newRoute();
     return r;
   }
 
@@ -325,7 +325,7 @@ extension AppStateBridges on AppState {
       friendLines: lines.join('\n'),
       offerAuto: false,
     );
-    _newTorTry();
+    _newRoute();
     notifyListeners();
     await _writeBridgeSetup(_bridge);
     return FriendLines(true, lines.length, checks);
@@ -419,7 +419,7 @@ extension AppStateBridges on AppState {
   void bridgeRetry() {
     if (inDecoyView) return;
     engine.bridgeRetry();
-    _newTorTry();
+    _newRoute();
   }
 
   @visibleForTesting

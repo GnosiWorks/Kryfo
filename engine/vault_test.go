@@ -163,7 +163,7 @@ func ptr(s string) *string { return &s }
 // sealing, opening and every pin call write nothing to the log, stdout or
 // stderr, and leave the engine's identity alone
 func TestVaultAndPinLogNothing(t *testing.T) {
-	var logged bytes.Buffer
+	var logged logSink
 	log.SetOutput(&logged)
 	defer log.SetOutput(os.Stderr)
 	r, w, err := os.Pipe()

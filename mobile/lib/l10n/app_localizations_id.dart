@@ -3132,20 +3132,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString menunggu · Tor masih menghubungkan',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Belum ada Kryfo.';
 
   @override
@@ -5221,9 +5207,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Perutean Tor';
-
-  @override
-  String get settingsConnecting => 'Menghubungkan';
 
   @override
   String get settingsOffMode => 'Mati · mode relay';
@@ -9118,6 +9101,44 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Salin tautan';
+
+  @override
+  String get appRelayNotAnswering => 'Relay diam';
+
+  @override
+  String get motionNoRelayYet => 'BELUM ADA RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Rute sudah terbentuk';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Pesan terkirim begitu ada relay yang menjawab lewat rute ini.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Tidak ada jaringan';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count menunggu · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Ikon dan notifikasi';

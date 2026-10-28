@@ -3175,21 +3175,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString warten · Tor verbindet noch',
-      one: '$countString wartet · Tor verbindet noch',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Noch keine Kryfos.';
 
   @override
@@ -5285,9 +5270,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsTorRouting => 'Tor-Routing';
-
-  @override
-  String get settingsConnecting => 'Verbinde';
 
   @override
   String get settingsOffMode => 'Aus · Relais-Modus';
@@ -9223,6 +9205,45 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Link kopieren';
+
+  @override
+  String get appRelayNotAnswering => 'Relais schweigt';
+
+  @override
+  String get motionNoRelayYet => 'NOCH KEIN RELAIS';
+
+  @override
+  String get motionTheRouteIsUp => 'Die Route steht';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Nachrichten gehen raus, sobald ein Relais über diese Route antwortet.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Kein Netz';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Ohne Netz geht nichts raus. Tor macht weiter, sobald wieder eins da ist.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warten · $state',
+      one: '$count wartet · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Symbol und Benachrichtigungen';

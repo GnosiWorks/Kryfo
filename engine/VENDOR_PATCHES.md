@@ -210,9 +210,11 @@ moved to that utls.
 
 moat runs meek_lite inside the engine, where a panic in its worker
 goroutine would end the app. `vendor-patches/meeklite.patch` puts a recover
-in `ioWorker`, which then closes the channels and the conn on every way out,
-and makes the worker give up handing a reply to a reader once the conn is
-closed, so a moat call that ends early leaves no goroutine behind. vendor.sh
+in `ioWorker`, which then closes the conn and the read channel on every way
+out, and makes the worker give up handing a reply to a reader once the conn
+is closed, so a moat call that ends early leaves no goroutine behind. the
+worker never closes the write channel: a write that came as it ended would
+send on a closed channel. a write waits on the conn's close instead. vendor.sh
 applies it after anet's.
 
     diff -u "$(go env GOMODCACHE)/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird@<version>/transports/meeklite/meek.go" \

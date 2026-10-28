@@ -11,6 +11,8 @@ extension AppStateOutbox on AppState {
   @visibleForTesting
   int outboxTriesForTest(String uid) => _outboxTries[uid] ?? 0;
   @visibleForTesting
+  set queuedForTest(int n) => _q = _Queue(n, 0, const {}, const {});
+  @visibleForTesting
   int? outboxNextAtForTest(String uid) => _outboxNextAt[uid];
   // counted off the everyday outbox, so a quiet session shows none of it
   int get queued => sessionQuiet ? 0 : _q.n + _vq.n;
@@ -460,6 +462,9 @@ extension AppStateOutbox on AppState {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
+      // a file another send still holds: a try now would only come back
+      // busy and spend one of the row's tries
+      if (mediaInflight.contains(uid)) continue;
       // a decoy opened while this pass read: the rest waits, its tries kept
       if (everydayHeld) break;
       // to someone blocked in the row's own container: not sent, and it

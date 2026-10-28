@@ -234,20 +234,24 @@ void main() {
       eng.relays = _failing;
       app.sampleRelayHealth(now: t0);
       expect(app.suggestFastFallbackAt(t0), isFalse);
+      // the spell begins: the pill counts it on its own clock
+      expect(told, 1);
+      expect(app.relayDownSince, t0);
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 60)));
-      expect(told, 0);
+      expect(told, 1);
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 95)));
       expect(
         app.suggestFastFallbackAt(t0.add(const Duration(seconds: 95))),
         isTrue,
       );
-      expect(told, 1);
+      expect(told, 2);
 
       eng.relays = _fine;
       final later = t0.add(const Duration(hours: 2));
       app.sampleRelayHealth(now: later);
       expect(app.suggestFastFallbackAt(later), isFalse);
-      expect(told, 2);
+      expect(app.relayDownSince, isNull);
+      expect(told, 3);
     });
 
     test('a spell offline is not an outage, and the clock starts again when '
