@@ -296,11 +296,13 @@ func sendTo(t *tor.Tor, onion, line string) error {
 		if err == nil {
 			return nil
 		}
-		if fresh || try > 0 {
-			return err
-		}
+		// the stream showed an older door, which shut it on a line queued
+		// behind the first: this one goes on a stream of its own
 		if doorOneLineOnly(onion) {
 			return sendOneLine(ctx, t, onion, line)
+		}
+		if fresh || try > 0 {
+			return err
 		}
 	}
 }
