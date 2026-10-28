@@ -3,9 +3,11 @@
 // channel is answered here: sqflite's own calls, run by sqflite_common_ffi
 // on the sqlcipher the app ships. a library without sqlcipher, a missing key
 // or a wrong key never opens a file
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:path/path.dart' as p;
@@ -28,6 +30,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart'
     show createDatabaseFactoryFfi;
 import 'package:sqlite3/common.dart' show CommonDatabase;
 import 'package:sqlite3/open.dart';
+import 'package:sqlite3/sqlite3.dart' as ffi show Database;
 
 import 'desktop_paths.dart' show desktopDataDir;
 
@@ -41,48 +44,87 @@ class NoCipherError implements Exception {
   String toString() => 'NoCipherError: $why';
 }
 
-/// where the shipped sqlcipher can be: lib/ beside the runner, then by name
-/// (the flatpak's /app/lib). a debug or test run may name one in
+/// where the shipped sqlcipher can be, by full path only: lib/ beside the
+/// runner, and the flatpak's /app/lib. never a bare name the loader would
+/// look up anywhere on the system. a debug or test run may name one in
 /// KRYFO_SQLCIPHER
 List<String> sqlcipherCandidates({String? exe, Map<String, String>? env}) {
   final e = env ?? Platform.environment;
   final dir = p.dirname(exe ?? Platform.resolvedExecutable);
-  final win = Platform.isWindows;
-  final name = win ? 'sqlcipher.dll' : 'libsqlcipher.so.0';
+  if (Platform.isWindows) return [p.join(dir, 'sqlcipher.dll')];
   return [
     if (!kReleaseMode && e['KRYFO_SQLCIPHER'] != null) e['KRYFO_SQLCIPHER']!,
-    win ? p.join(dir, name) : p.join(dir, 'lib', name),
-    name,
+    p.join(dir, 'lib', 'libsqlcipher.so.0'),
+    if (e['FLATPAK_ID'] != null) '/app/lib/libsqlcipher.so.0',
   ];
 }
+
+/// the oldest sqlcipher the database takes: 4 has the settings the phone's
+/// files are made with
+const kMinCipherMajor = 4;
+
+typedef _KeyC = Int32 Function(Pointer<Void>, Pointer<Uint8>, Int32);
+typedef _Key = int Function(Pointer<Void>, Pointer<Uint8>, int);
+
+// sqlite3_key of the library this isolate opened
+_Key? _sqliteKey;
 
 /// the first candidate that loads and is sqlcipher. a library without
 /// sqlite3_key is passed over, whatever its name says
 DynamicLibrary openSqlcipher([List<String>? candidates]) {
   for (final c in candidates ?? sqlcipherCandidates()) {
+    if (!p.isAbsolute(c)) continue;
     final DynamicLibrary lib;
     try {
       lib = DynamicLibrary.open(c);
     } catch (_) {
       continue;
     }
-    if (lib.providesSymbol('sqlite3_key')) return lib;
+    if (!lib.providesSymbol('sqlite3_key')) continue;
+    _sqliteKey = lib.lookupFunction<_KeyC, _Key>('sqlite3_key');
+    return lib;
   }
   throw const NoCipherError('no sqlcipher library');
 }
+
+/// the major version of a cipher_version answer such as "4.19.0 community"
+@visibleForTesting
+int? cipherMajor(Object? version) => int.tryParse(
+  RegExp(r'^\s*(\d+)\.').firstMatch('${version ?? ''}')?.group(1) ?? '',
+);
 
 /// keys a connection just opened, before sqflite runs anything on it
 @visibleForTesting
 void keyConnection(CommonDatabase db, Object? password) {
   // plain sqlite takes PRAGMA key without a word and writes clear text
   final v = db.select('PRAGMA cipher_version');
-  if (v.isEmpty || '${v.first.values.first ?? ''}'.isEmpty) {
+  final major = v.isEmpty ? null : cipherMajor(v.first.values.first);
+  if (major == null) {
     throw const NoCipherError('the sqlite in this process is not sqlcipher');
+  }
+  if (major < kMinCipherMajor) {
+    throw const NoCipherError('sqlcipher older than 4');
   }
   if (password is! String || password.isEmpty) {
     throw const NoCipherError('no key');
   }
-  db.execute("PRAGMA key = '${password.replaceAll("'", "''")}'");
+  final key = _sqliteKey;
+  if (key == null || db is! ffi.Database) {
+    throw const NoCipherError('no sqlite3_key here');
+  }
+  // the key's bytes with their length, never through sql text
+  final bytes = utf8.encode(password);
+  final buf = calloc<Uint8>(bytes.length);
+  try {
+    buf.asTypedList(bytes.length).setAll(0, bytes);
+    if (key(db.handle.cast(), buf, bytes.length) != 0) {
+      throw const NoCipherError('the key was refused');
+    }
+  } finally {
+    buf.asTypedList(bytes.length).fillRange(0, bytes.length, 0);
+    bytes.fillRange(0, bytes.length, 0);
+    calloc.free(buf);
+  }
   // a wrong key shows only at the first read
   db.select('SELECT count(*) FROM sqlite_master');
 }

@@ -41,9 +41,31 @@ void main() {
     }
   }, skip: skip);
 
-  test('the app looks in its own lib folder, then by name', () {
+  test('the app looks only at full paths of its own', () {
     final c = sqlcipherCandidates(exe: '/opt/kryfo/kryfo', env: const {});
-    expect(c, ['/opt/kryfo/lib/libsqlcipher.so.0', 'libsqlcipher.so.0']);
-    expect(c.any((x) => x.contains('libsqlite3')), isFalse);
+    expect(c, ['/opt/kryfo/lib/libsqlcipher.so.0']);
+    final f = sqlcipherCandidates(
+      exe: '/app/lib/kryfo/kryfo',
+      env: const {'FLATPAK_ID': 'app.kryfo.Kryfo'},
+    );
+    expect(f, [
+      '/app/lib/kryfo/lib/libsqlcipher.so.0',
+      '/app/lib/libsqlcipher.so.0',
+    ]);
+    // a bare name is never tried, even when asked
+    expect(
+      () => openSqlcipher(['libsqlcipher.so.0']),
+      throwsA(isA<NoCipherError>()),
+    );
+  });
+
+  test('only sqlcipher 4 and later', () {
+    expect(cipherMajor('4.19.0 community'), 4);
+    expect(cipherMajor('10.0.1'), 10);
+    expect(cipherMajor('3.4.2'), 3);
+    expect(cipherMajor(''), isNull);
+    expect(cipherMajor(null), isNull);
+    expect(cipherMajor('community'), isNull);
+    expect(kMinCipherMajor, 4);
   });
 }

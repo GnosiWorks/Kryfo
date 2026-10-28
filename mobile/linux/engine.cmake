@@ -37,8 +37,11 @@ set(HALO_SQLCIPHER_LIB
 if(EXISTS "${HALO_SQLCIPHER_LIB}")
   install(FILES "${HALO_SQLCIPHER_LIB}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
-else()
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
   message(WARNING "no ${HALO_SQLCIPHER_LIB}: the app cannot open its database")
+else()
+  # a release without it would refuse every start
+  message(FATAL_ERROR "no ${HALO_SQLCIPHER_LIB}: run linux/build-sqlcipher.sh")
 endif()
 
 # the window's and the tray's icon

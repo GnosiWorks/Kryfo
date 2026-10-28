@@ -48,12 +48,12 @@ dependencies:
   # the database on linux and windows: sqlcipher shipped with the app, loaded
   # over ffi. sqlite3 stays on 2.x, which has no build hook to fetch or
   # compile a sqlite of its own
-  sqflite_common_ffi: ^2.3.7
+  sqflite_common_ffi: 2.3.7+1
   sqlite3: ^2.9.4
   # the plugins' desktop sides, replaced or set up in lib/desktop
   camera_platform_interface:
     path: third_party/camera/camera_platform_interface
-  sqflite_common: ^2.5.8
+  sqflite_common: 2.5.8
   connectivity_plus_platform_interface: ^2.1.0
   flutter_local_notifications_linux: ^8.0.1
   flutter_local_notifications_platform_interface: ^12.2.0
