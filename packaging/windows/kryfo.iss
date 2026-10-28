@@ -106,6 +106,16 @@ Source: "{#RepoDir}\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: 
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\kryfo.exe"; AppUserModelID: "app.kryfo"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\kryfo.exe"; AppUserModelID: "app.kryfo"; Tasks: desktopicon
 
+[Registry]
+; kryfo: links open in the app; a second start hands the link to the first
+Root: HKCU; Subkey: "Software\Classes\kryfo"; ValueType: string; ValueName: ""; ValueData: "URL:Kryfo"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\kryfo"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\kryfo\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\kryfo.exe"",0"
+Root: HKCU; Subkey: "Software\Classes\kryfo\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\kryfo.exe"" ""%1"""
+; error reporting leaves both alone. kryfo.exe sets the same at each start
+Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "kryfo.exe"; ValueData: 1; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "tor.exe"; ValueData: 1; Flags: uninsdeletevalue
+
 [Run]
 Filename: "{app}\kryfo.exe"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
 
