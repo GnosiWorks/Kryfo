@@ -605,8 +605,17 @@ func TestDropUploadsShareNothing(t *testing.T) {
 	keys := []string{}
 	for k := range a {
 		keys = append(keys, k)
-		if k != "size" && fmt.Sprint(a[k]) == fmt.Sprint(b[k]) {
+		// the nonce is a count from 1 up, so two cheap works often stop at
+		// the same number. it ties nothing: the work it proves is over the
+		// file's own id and size, checked below
+		if k != "size" && k != "pow" && fmt.Sprint(a[k]) == fmt.Sprint(b[k]) {
 			t.Fatalf("both uploads carry the same %s", k)
+		}
+	}
+	for _, m := range []map[string]any{a, b} {
+		size := int64(m["size"].(float64))
+		if !dropPowHolds(m["id"].(string), size, uint64(m["pow"].(float64)), f.bits) {
+			t.Fatal("the work is not over the file's own id and size")
 		}
 	}
 	sort.Strings(keys)

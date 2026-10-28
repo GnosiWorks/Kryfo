@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../open_file.dart' show ShareEnd, shareEndOf;
 import '../share_text.dart';
 
@@ -162,6 +163,7 @@ class ToolsBridge {
   }
 
   Future<ShareEnd> shareOut(String path, String mime) async {
+    if (!canShareOut) return ShareEnd.failed;
     try {
       return shareEndOf(
         await lockState.hold<Object?>(

@@ -1092,6 +1092,7 @@ class ArrivalRows implements HaloDb {
     String? uid,
     required int now,
     Reached? reached,
+    ({String id, String plain})? opened,
   }) async {
     _hit('keepFirst', null, null);
     if (kept.containsKey(hash)) return true;
@@ -1119,6 +1120,7 @@ class ArrivalRows implements HaloDb {
       tries: 0,
       nextAt: now + firstRetryGap(0).inMilliseconds,
       reached: reached,
+      opened: opened,
     );
     return true;
   }
@@ -1138,6 +1140,7 @@ class ArrivalRows implements HaloDb {
       tries: tries,
       nextAt: nextAt,
       reached: r.reached,
+      opened: r.opened,
     );
   }
 

@@ -19,6 +19,7 @@ import 'package:kryfo/main.dart'
         appState,
         makePreKeyBundleB64,
         processPeerBundle,
+        signalDecrypt,
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
@@ -28,7 +29,7 @@ import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -92,16 +93,7 @@ class _Wire implements HaloEngine {
 Future<UnwrappedMessage> _read(SignalSession them, String cipher) async {
   final w = base64Decode(cipher);
   final body = Uint8List.fromList(w.sublist(1));
-  final c = SessionCipher(
-    them.sessionStore,
-    them.preKeyStore,
-    them.signedPreKeyStore,
-    them.identityStore,
-    SignalProtocolAddress(_me, 1),
-  );
-  final plain = w[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await them.open(_me, w[0], body);
   return unwrapMessage(utf8.decode(plain));
 }
 
@@ -129,13 +121,13 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     them = SignalSession();
     await them.bootstrap(
       database: MemDb(),
@@ -147,6 +139,10 @@ void main() {
       await makePreKeyBundleB64(them),
       into: signalSession,
     );
+    // they have answered: slices go plain, never held for a first answer
+    await _read(them, await signalSession.encryptTo(_peer, '{"m":"hi"}'));
+    final back = base64Decode(await them.encryptTo(_me, 'hey'));
+    await signalSession.open(_peer, back[0], Uint8List.sublistView(back, 1));
     final r = Random(5);
     note = File('${docs.path}/voice.wav')
       ..writeAsBytesSync([
@@ -341,5 +337,129 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(wire.went, hasLength(2));
     expect(rowsOf('v-stop').single['sent'], 0);
+  });
+
+  test('a voice note sent first, with no hi, arrives: a small opener goes '
+      'ahead of it, and it goes once their answer opens', () async {
+    const p2 = 'amber-quiet-new';
+    final pair = testKeyPair();
+    final them2 = SignalSession();
+    await them2.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair.publicKey.serialize().sublist(1),
+      xPrivBytes: pair.privateKey.serialize(),
+    );
+    await processPeerBundle(
+      p2,
+      await makePreKeyBundleB64(them2),
+      into: signalSession,
+    );
+    await mem.insert('contacts', {
+      'halo_id': p2,
+      'onion': '',
+      'xpub': 'cd' * 32,
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 1,
+      'back_paired': 1,
+    });
+    await mem.insert('messages', {
+      'peer_id': p2,
+      'direction': 'out',
+      'plaintext': '',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 120000,
+      'msg_uid': 'v-wait',
+      'sent': 0,
+      'file_path': note.path,
+      'file_name': 'voice.wav',
+    });
+    final r = await sendChunkedMediaTo(
+      peerId: p2,
+      peerOnion: '',
+      peerXPub: 'cd' * 32,
+      backPaired: true,
+      needPow: false,
+      path: note.path,
+      msgUid: 'v-wait',
+      fileName: 'voice.wav',
+      voice: true,
+      sender: asSender(_me),
+      progressKey: p2,
+    );
+    expect(r, 'parked');
+    // the empty envelope went ahead of it, as an opener, with who it is
+    // from: what their request card shows
+    await _until(() => wire.went.length == 1);
+    final starter = wire.went.single;
+    expect(base64Decode(starter)[0], kLsPreKey);
+    final hello = await _read(them2, starter);
+    expect(hello.message, isEmpty);
+    expect(hello.msgUid, isNull);
+    expect(hello.senderHaloId, _me);
+    wire.went.clear();
+    // their answer to it releases the note
+    expect(
+      await signalDecrypt(p2, await them2.encryptTo(_me, '{"m":"hey"}')),
+      isNotNull,
+    );
+    await _until(() => rowsOf('v-wait').single['sent'] == 1);
+    final read = [for (final c in wire.went) await _read(them2, c)];
+    expect(read, isNotEmpty);
+    expect(read.every((m) => m.msgUid == 'v-wait'), isTrue);
+    // one small opener, not one per try
+    expect(
+      [for (final c in wire.went) base64Decode(c)[0]].every((t) => t == 2),
+      isTrue,
+    );
+  });
+
+  test('a contact who started their session again is answered at once, so '
+      'what they hold for the answer can go', () async {
+    // them, rebuilt (a restore, a heal): a new session from this card
+    final pair = testKeyPair();
+    final again = SignalSession();
+    await again.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair.publicKey.serialize().sublist(1),
+      xPrivBytes: pair.privateKey.serialize(),
+    );
+    await again.processBundle(
+      _me,
+      cardBundle(await makePreKeyBundleB64(signalSession)),
+    );
+    final opener = await again.encryptTo(_me, '{"m":"back again"}');
+    expect(base64Decode(opener)[0], kLsPreKey);
+    wire.went.clear();
+    expect(await signalDecrypt(_peer, opener, flagKeyChange: true), isNotNull);
+    await _until(() => wire.went.length == 1);
+    final w = base64Decode(wire.went.single);
+    expect(w[0], kLsWhisper);
+    final plain = await again.open(_me, w[0], Uint8List.sublistView(w, 1));
+    expect(unwrapMessage(utf8.decode(plain)).message, isEmpty);
+    // and their side is answered now: plain from here on
+    expect(await again.settled(_me), isTrue);
+    // another start within 30 s is not answered again, as receipts go
+    final pair2 = testKeyPair();
+    final twice = SignalSession();
+    await twice.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair2.publicKey.serialize().sublist(1),
+      xPrivBytes: pair2.privateKey.serialize(),
+    );
+    await twice.processBundle(
+      _me,
+      cardBundle(await makePreKeyBundleB64(signalSession)),
+    );
+    wire.went.clear();
+    expect(
+      await signalDecrypt(
+        _peer,
+        await twice.encryptTo(_me, '{"m":"and again"}'),
+        flagKeyChange: true,
+      ),
+      isNotNull,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(wire.went, isEmpty);
   });
 }

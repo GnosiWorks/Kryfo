@@ -2285,6 +2285,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Badges start at \$20';
 
   @override
+  String get donateShowTheAddress => 'Show the address';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount in bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'What the badge gives';
+
+  @override
+  String get donateGivesMark =>
+      'A mark by your name. You choose who sees it, if anyone.';
+
+  @override
+  String get donateGivesReceipt =>
+      'A signed receipt kept on this phone. It proves the badge with no account.';
+
+  @override
+  String get donateGivesFree =>
+      'Every privacy feature stays free, badge or not.';
+
+  @override
+  String get donateAddressOnTap =>
+      'The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin is busy right now. Try again later or pay by card.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'You can still send bitcoin to the address below. It gives no badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'This is the address you opened earlier. If you already sent, wait here.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Reaching the payment service over Tor…';
 
@@ -2376,6 +2415,21 @@ class AppLocalizationsEn extends AppLocalizations {
           'Verified on-chain. You\'re a guardian now. No one can take that off you.',
       'other':
           'Verified on-chain. You\'re a supporter now. No one can take that off you.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verified on-chain. Thank you for giving again. You keep your supporter badge.',
+      'patron':
+          'Verified on-chain. Thank you for giving again. You keep your patron badge.',
+      'guardian':
+          'Verified on-chain. Thank you for giving again. You keep your guardian badge.',
+      'other':
+          'Verified on-chain. Thank you for giving again. You keep your supporter badge.',
     });
     return '$_temp0';
   }
@@ -8229,6 +8283,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devWhoChoiceStays => 'Your choice stays with this chat.';
 
   @override
+  String get devUpdateToWrite => 'Update Kryfo to message Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Could not check Marios\'s key. Nothing was sent.';
 
@@ -8291,6 +8348,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'This is your own invite. Share it with someone else to connect.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id needs to update Kryfo before you can add each other.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9790,6 +9852,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scan the code';
+
+  @override
+  String get desktopLockTitle => 'Kryfo is locked';
+
+  @override
+  String get desktopLockBody => 'Type the passphrase for this computer.';
+
+  @override
+  String get desktopLockNewTitle => 'Lock Kryfo on this computer';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.';
+
+  @override
+  String get desktopLockHonest =>
+      'Someone who copies Kryfo\'s folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.';
+
+  @override
+  String get desktopLockForgot =>
+      'Without the passphrase none of your messages, files or keys here can be opened, not even by us.';
+
+  @override
+  String get desktopLockField => 'Passphrase';
+
+  @override
+  String get desktopLockRepeat => 'The same passphrase again';
+
+  @override
+  String get desktopLockSet => 'Lock with this passphrase';
+
+  @override
+  String get desktopLockOpen => 'Open Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'At least $countString characters';
+  }
+
+  @override
+  String get desktopLockMismatch => 'The two passphrases are not the same';
+
+  @override
+  String get desktopLockWrong => 'That is not the passphrase';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo could not open its lock here. Try starting it again.';
+
+  @override
+  String get desktopTrayQuit => 'Quit Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo is running and receiving messages';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo is already open on this computer.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo\'s folder belongs to another account on this computer, so Kryfo will not open it.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo could not make its folder private to you, so it will not open.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'This lock was made by another version of Kryfo, which this one cannot read.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
 
   @override
   String get historyChatStaysShots =>

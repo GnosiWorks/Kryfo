@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../desktop/desktop_mode.dart' show canShareOut;
+
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
@@ -133,7 +135,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   }
 
   void _shareLink() {
-    if (_uri == null) return;
+    if (_uri == null || !canShareOut) return;
     HapticFeedback.selectionClick();
     lockState.hold(
       () => SharePlus.instance.share(
@@ -478,6 +480,7 @@ class _Way2Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ready = uri != null;
+    final share = canShareOut;
     return _WayCard(
       title: l10n.myKryfoTheyReSomewhereElse,
       line: l10n.myKryfoSendThemALink,
@@ -527,31 +530,32 @@ class _Way2Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           HaloPrimaryButton(
-            label: l10n.myKryfoSendTheLink,
-            onTap: ready ? onShare : null,
+            label: share ? l10n.myKryfoSendTheLink : l10n.commonCopy,
+            onTap: ready ? (share ? onShare : onCopy) : null,
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _Ghost(
-                  icon: Icons.badge_outlined,
-                  label: l10n.myKryfoAsACard,
-                  sub: l10n.myKryfoAnImageWithThe,
-                  onTap: ready ? onCard : null,
+          if (share) const SizedBox(height: 10),
+          if (share)
+            Row(
+              children: [
+                Expanded(
+                  child: _Ghost(
+                    icon: Icons.badge_outlined,
+                    label: l10n.myKryfoAsACard,
+                    sub: l10n.myKryfoAnImageWithThe,
+                    onTap: ready ? onCard : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _Ghost(
-                  icon: Icons.contact_page_outlined,
-                  label: l10n.myKryfoAsAFile,
-                  sub: l10n.myKryfoContactFile,
-                  onTap: ready ? onFile : null,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Ghost(
+                    icon: Icons.contact_page_outlined,
+                    label: l10n.myKryfoAsAFile,
+                    sub: l10n.myKryfoContactFile,
+                    onTap: ready ? onFile : null,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

@@ -2278,6 +2278,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Huy hiệu từ \$20';
 
   @override
+  String get donateShowTheAddress => 'Hiện địa chỉ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount bằng bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Huy hiệu mang lại gì';
+
+  @override
+  String get donateGivesMark =>
+      'Một dấu bên cạnh tên bạn. Bạn chọn ai được thấy, hoặc không ai cả.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Một biên nhận có chữ ký lưu trên điện thoại này. Nó chứng minh huy hiệu mà không cần tài khoản.';
+
+  @override
+  String get donateGivesFree =>
+      'Mọi tính năng riêng tư vẫn miễn phí, dù có huy hiệu hay không.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Địa chỉ chỉ được tạo khi bạn chạm vào bên dưới. Nó là của bạn trong một giờ, nên quay lại bạn vẫn nhận đúng địa chỉ đó.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin đang bận. Hãy thử lại sau hoặc thanh toán bằng thẻ.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bạn vẫn có thể gửi bitcoin đến địa chỉ bên dưới. Địa chỉ này không mở huy hiệu.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Đây là địa chỉ bạn đã mở lúc trước. Nếu đã gửi rồi, hãy chờ ở đây.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
@@ -2370,6 +2409,21 @@ class AppLocalizationsVi extends AppLocalizations {
           'Đã xác minh trên chuỗi. Giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
       'other':
           'Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+      'patron':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.',
+      'guardian':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.',
+      'other':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
     });
     return '$_temp0';
   }
@@ -8217,6 +8271,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
 
   @override
+  String get devUpdateToWrite => 'Hãy cập nhật Kryfo để nhắn tin cho Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Không thể kiểm tra khóa của Marios. Không có gì được gửi đi.';
 
@@ -8280,6 +8337,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9787,6 +9849,87 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get desktopLockTitle => 'Kryfo đang khóa';
+
+  @override
+  String get desktopLockBody => 'Nhập cụm mật khẩu của máy tính này.';
+
+  @override
+  String get desktopLockNewTitle => 'Khóa Kryfo trên máy tính này';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, ảnh, tin nhắn thoại, tệp, danh bạ và khóa của bạn trên máy tính này.';
+
+  @override
+  String get desktopLockHonest =>
+      'Ai sao chép thư mục của Kryfo đều có thể thử cụm mật khẩu trên máy của họ, nhanh đến mức máy cho phép. Bốn từ ngẫu nhiên trở lên sẽ trụ được. Cụm mật khẩu ngắn thì không.';
+
+  @override
+  String get desktopLockForgot =>
+      'Không có cụm mật khẩu thì không tin nhắn, tệp hay khóa nào của bạn ở đây mở được, kể cả chúng tôi.';
+
+  @override
+  String get desktopLockField => 'Cụm mật khẩu';
+
+  @override
+  String get desktopLockRepeat => 'Nhập lại cụm mật khẩu';
+
+  @override
+  String get desktopLockSet => 'Khóa bằng cụm mật khẩu này';
+
+  @override
+  String get desktopLockOpen => 'Mở Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Ít nhất $countString ký tự';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Hai cụm mật khẩu không khớp';
+
+  @override
+  String get desktopLockWrong => 'Đó không phải cụm mật khẩu';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.';
+
+  @override
+  String get desktopTrayQuit => 'Thoát Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo đã mở sẵn trên máy tính này.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Thư mục của Kryfo thuộc về một tài khoản khác trên máy tính này, nên Kryfo sẽ không mở nó.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
   String get historyChatStaysShots =>

@@ -2341,6 +2341,45 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки від \$20';
 
   @override
+  String get donateShowTheAddress => 'Показати адресу';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount у bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Що дає значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак біля твого імені. Ти вирішуєш, хто його бачить, якщо взагалі хтось.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Підписана квитанція на цьому телефоні. Вона підтверджує значок без жодного акаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Усі функції приватності лишаються безкоштовними, зі значком чи без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адреса з\'являється, лише коли ти натиснеш нижче. Вона лишається твоєю цілу годину, тож якщо повернешся, отримаєш ту саму.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin зараз перевантажений. Спробуй пізніше або оплати карткою.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin усе одно можна надіслати на адресу нижче. Значка вона не дає.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Це адреса, яку ти відкривав раніше. Якщо вже надіслав, чекай тут.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Звертаємося до платіжного сервісу через Tor…';
 
@@ -2433,6 +2472,21 @@ class AppLocalizationsUk extends AppLocalizations {
           'Перевірено в блокчейні. Тепер у тебе статус хранителя. Ніхто не може цього в тебе забрати.',
       'other':
           'Перевірено в блокчейні. Тепер у тебе статус прихильника. Ніхто не може цього в тебе забрати.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
+      'patron':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «меценат» лишається з тобою.',
+      'guardian':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «хранитель» лишається з тобою.',
+      'other':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
     });
     return '$_temp0';
   }
@@ -8380,6 +8434,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get devWhoChoiceStays => 'Твій вибір збережеться для цього чату.';
 
   @override
+  String get devUpdateToWrite => 'Онови Kryfo, щоб написати Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не вдалося перевірити ключ Marios. Нічого не надіслано.';
 
@@ -8442,6 +8499,11 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Це твоє власне запрошення. Поділися ним з кимось, щоб зв’язатися.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id треба оновити Kryfo, перш ніж ви зможете додати одне одного.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9963,6 +10025,87 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканувати код';
+
+  @override
+  String get desktopLockTitle => 'Kryfo заблоковано';
+
+  @override
+  String get desktopLockBody => 'Введіть парольну фразу цього комп’ютера.';
+
+  @override
+  String get desktopLockNewTitle => 'Заблокувати Kryfo на цьому комп’ютері';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo питатиме цю парольну фразу під час кожного запуску. Вона замикає ваші повідомлення, фото, голосові, файли, контакти й ключі на цьому комп’ютері.';
+
+  @override
+  String get desktopLockHonest =>
+      'Той, хто скопіює теку Kryfo, зможе перебирати парольні фрази на своєму комп’ютері так швидко, як той дозволяє. Чотири й більше випадкових слів витримають. Коротка фраза не витримає.';
+
+  @override
+  String get desktopLockForgot =>
+      'Без парольної фрази тут не відкрити ні ваші повідомлення, ні файли, ні ключі, навіть нам.';
+
+  @override
+  String get desktopLockField => 'Парольна фраза';
+
+  @override
+  String get desktopLockRepeat => 'Та сама парольна фраза ще раз';
+
+  @override
+  String get desktopLockSet => 'Заблокувати цією фразою';
+
+  @override
+  String get desktopLockOpen => 'Відкрити Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Мінімум символів: $countString';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Парольні фрази не збігаються';
+
+  @override
+  String get desktopLockWrong => 'Це не та парольна фраза';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo не зміг відкрити блокування. Спробуйте запустити його знову.';
+
+  @override
+  String get desktopTrayQuit => 'Вийти з Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo працює й отримує повідомлення';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo поки не може користуватися камерою на цьому комп’ютері. Скористайтеся посиланням або кодом.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo вже відкрито на цьому комп’ютері.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Тека Kryfo належить іншому обліковому запису на цьому комп’ютері, тому Kryfo її не відкриє.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo не зміг зробити свою теку доступною лише вам, тому не відкриється.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Це блокування створила інша версія Kryfo, яку ця прочитати не може.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.';
 
   @override
   String get historyChatStaysShots =>

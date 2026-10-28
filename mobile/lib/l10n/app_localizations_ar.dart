@@ -2351,6 +2351,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'تبدأ الشارات من ٢٠ دولارًا';
 
   @override
+  String get donateShowTheAddress => 'أظهر العنوان';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount بـ bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'ما تمنحك إياه الشارة';
+
+  @override
+  String get donateGivesMark =>
+      'علامة بجانب اسمك. أنت تختار من يراها، أو لا أحد.';
+
+  @override
+  String get donateGivesReceipt =>
+      'إيصال موقَّع محفوظ على هذا الهاتف. يثبت الشارة دون أي حساب.';
+
+  @override
+  String get donateGivesFree =>
+      'تبقى كل ميزات الخصوصية مجانية، بشارة أو بدونها.';
+
+  @override
+  String get donateAddressOnTap =>
+      'لا يُنشأ العنوان إلا حين تنقر في الأسفل. يبقى لك لمدة ساعة، فإن عدت تحصل على العنوان نفسه.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin مشغول الآن. حاول لاحقًا أو ادفع بالبطاقة.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'لا يزال بإمكانك إرسال bitcoin إلى العنوان أدناه. لا يمنح شارة.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'هذا هو العنوان الذي فتحته من قبل. إن كنت قد أرسلت، فانتظر هنا.';
+
+  @override
   String get donateReachingThePaymentService =>
       'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 
@@ -2441,6 +2480,21 @@ class AppLocalizationsAr extends AppLocalizations {
           'تم التحقق على السلسلة. أنت الآن حارس. لا أحد يستطيع أن ينزع ذلك منك.',
       'other':
           'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
+      'patron':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الراعي.',
+      'guardian':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الحارس.',
+      'other':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
     });
     return '$_temp0';
   }
@@ -8364,6 +8418,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devWhoChoiceStays => 'يبقى اختيارك مع هذه المحادثة.';
 
   @override
+  String get devUpdateToWrite => 'حدّث Kryfo لتراسل Marios.';
+
+  @override
   String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
 
   @override
@@ -8423,6 +8480,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'يحتاج ⁨$id⁩ إلى تحديث Kryfo قبل أن تتمكنا من إضافة بعضكما.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9933,6 +9995,87 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get desktopLockTitle => 'Kryfo مقفل';
+
+  @override
+  String get desktopLockBody => 'اكتب عبارة المرور الخاصة بهذا الحاسوب.';
+
+  @override
+  String get desktopLockNewTitle => 'اقفل Kryfo على هذا الحاسوب';
+
+  @override
+  String get desktopLockNewBody =>
+      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك وصورك ورسائلك الصوتية وملفاتك وجهات اتصالك ومفاتيحك على هذا الحاسوب.';
+
+  @override
+  String get desktopLockHonest =>
+      'من ينسخ مجلد Kryfo يستطيع تجربة عبارات المرور على حاسوبه بأقصى سرعة يسمح بها. أربع كلمات عشوائية أو أكثر تصمد. أما العبارة القصيرة فلا.';
+
+  @override
+  String get desktopLockForgot =>
+      'من دون عبارة المرور لا يمكن فتح أي من رسائلك أو ملفاتك أو مفاتيحك هنا، ولا حتى من قبلنا.';
+
+  @override
+  String get desktopLockField => 'عبارة المرور';
+
+  @override
+  String get desktopLockRepeat => 'عبارة المرور نفسها مرة أخرى';
+
+  @override
+  String get desktopLockSet => 'اقفل بهذه العبارة';
+
+  @override
+  String get desktopLockOpen => 'افتح Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString حرفًا على الأقل';
+  }
+
+  @override
+  String get desktopLockMismatch => 'عبارتا المرور غير متطابقتين';
+
+  @override
+  String get desktopLockWrong => 'هذه ليست عبارة المرور';
+
+  @override
+  String get desktopLockFailed =>
+      'تعذّر على Kryfo فتح قفله هنا. جرّب تشغيله مرة أخرى.';
+
+  @override
+  String get desktopTrayQuit => 'أغلق Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo يعمل ويستقبل الرسائل';
+
+  @override
+  String get desktopNoCamera =>
+      'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo مفتوح بالفعل على هذا الحاسوب.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'مجلد Kryfo يخص حسابًا آخر على هذا الحاسوب، لذا لن يفتحه Kryfo.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'صنع هذا القفل إصدار آخر من Kryfo لا يستطيع هذا الإصدار قراءته.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
 
   @override
   String get historyChatStaysShots =>

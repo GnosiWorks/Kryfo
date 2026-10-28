@@ -100,7 +100,9 @@ echo "== apk (unsigned: the keystore never comes near this container)"
 cd "$SRC/mobile"
 export HALO_UNSIGNED=1
 # foss is what f-droid and github ship. play is built and signed elsewhere
-flutter build apk --release --split-per-abi --flavor foss $NO_PUB
+# a release candidate says so in its version name (release.sh --rc)
+flutter build apk --release --split-per-abi --flavor foss $NO_PUB \
+  ${HALO_BUILD_NAME:+--build-name "$HALO_BUILD_NAME"}
 
 echo
 echo "== out"

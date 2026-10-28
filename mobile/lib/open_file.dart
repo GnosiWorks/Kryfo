@@ -4,6 +4,7 @@
 // an app installer is never handed to another app, here or natively
 import 'package:flutter/services.dart';
 import 'dlog.dart';
+import 'desktop/desktop_mode.dart' show canShareOut;
 import 'file_kind.dart';
 import 'l10n/numbers.dart';
 
@@ -61,6 +62,7 @@ Future<ShareEnd> shareFileOut(
   bool backup = false,
   bool quiet = false,
 }) async {
+  if (!canShareOut) return ShareEnd.failed;
   var shown = name;
   if (!backup) {
     final facts = await readFileFacts(path, name);

@@ -2289,6 +2289,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Rozet için en az 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresi göster';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'Bitcoin ile $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Rozet sana ne verir';
+
+  @override
+  String get donateGivesMark =>
+      'Adının yanında bir işaret. Kimin göreceğini, hatta görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Bu telefonda saklanan imzalı bir makbuz. Rozeti hesap olmadan kanıtlar.';
+
+  @override
+  String get donateGivesFree =>
+      'Tüm gizlilik özellikleri rozetli de rozetsiz de ücretsiz kalır.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Adres, aşağıya dokunduğunda oluşur. Bir saat boyunca senindir, geri dönersen aynısını alırsın.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Aşağıdaki adrese yine de bitcoin gönderebilirsin. Rozet vermez.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Bu, daha önce açtığın adres. Zaten gönderdiysen burada bekle.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 
@@ -2380,6 +2419,21 @@ class AppLocalizationsTr extends AppLocalizations {
           'Zincirde doğrulandı. Artık bir koruyucusun. Bunu kimse elinden alamaz.',
       'other':
           'Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
+      'patron':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Hami rozetin seninle kalıyor.',
+      'guardian':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Koruyucu rozetin seninle kalıyor.',
+      'other':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
     });
     return '$_temp0';
   }
@@ -8257,6 +8311,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devWhoChoiceStays => 'Seçimin bu sohbette kalır.';
 
   @override
+  String get devUpdateToWrite => 'Marios’a yazmak için Kryfo’yu güncelle.';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.';
 
@@ -8319,6 +8376,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'Birbirinizi eklemeden önce $id Kryfo\'yu güncellemeli.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9826,6 +9888,87 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Kodu tara';
+
+  @override
+  String get desktopLockTitle => 'Kryfo kilitli';
+
+  @override
+  String get desktopLockBody => 'Bu bilgisayarın parola ifadesini yaz.';
+
+  @override
+  String get desktopLockNewTitle => 'Kryfo\'yu bu bilgisayarda kilitle';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, fotoğraflarını, sesli mesajlarını, dosyalarını, kişilerini ve anahtarlarını bu bilgisayarda kilitler.';
+
+  @override
+  String get desktopLockHonest =>
+      'Kryfo klasörünü kopyalayan biri, kendi bilgisayarında onun izin verdiği hızda parola ifadesi deneyebilir. Dört ya da daha fazla rastgele kelime dayanır. Kısa bir parola ifadesi dayanmaz.';
+
+  @override
+  String get desktopLockForgot =>
+      'Parola ifadesi olmadan buradaki mesajlarının, dosyalarının ya da anahtarlarının hiçbiri açılamaz, bizim tarafımızdan bile.';
+
+  @override
+  String get desktopLockField => 'Parola ifadesi';
+
+  @override
+  String get desktopLockRepeat => 'Aynı parola ifadesi bir daha';
+
+  @override
+  String get desktopLockSet => 'Bu parola ifadesiyle kilitle';
+
+  @override
+  String get desktopLockOpen => 'Kryfo\'yu aç';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'En az $countString karakter';
+  }
+
+  @override
+  String get desktopLockMismatch => 'İki parola ifadesi aynı değil';
+
+  @override
+  String get desktopLockWrong => 'Bu parola ifadesi doğru değil';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo buradaki kilidini açamadı. Yeniden başlatmayı dene.';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo\'dan çık';
+
+  @override
+  String get desktopTrayTip => 'Kryfo açık ve mesaj alıyor';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo bu bilgisayarda zaten açık.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Bu kilidi Kryfo\'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 
   @override
   String get historyChatStaysShots =>

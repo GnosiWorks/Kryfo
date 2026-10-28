@@ -2294,6 +2294,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'बैज \$20 से शुरू होते हैं';
 
   @override
+  String get donateShowTheAddress => 'पता दिखाएँ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'bitcoin में $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'बैज से क्या मिलता है';
+
+  @override
+  String get donateGivesMark =>
+      'आपके नाम के पास एक निशान। इसे कौन देखे, या कोई न देखे, यह आप तय करते हैं।';
+
+  @override
+  String get donateGivesReceipt =>
+      'इस फ़ोन पर रखी एक हस्ताक्षरित रसीद। यह बिना किसी खाते के बैज को साबित करती है।';
+
+  @override
+  String get donateGivesFree =>
+      'बैज हो या न हो, निजता की हर सुविधा मुफ़्त रहती है।';
+
+  @override
+  String get donateAddressOnTap =>
+      'पता तभी बनता है जब आप नीचे टैप करते हैं। यह एक घंटे तक आपका रहता है, इसलिए लौटने पर आपको वही पता मिलता है।';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'आप अब भी नीचे दिए पते पर bitcoin भेज सकते हैं। इससे बैज नहीं मिलता।';
+
+  @override
+  String get donateSameAddressAgain =>
+      'यह वही पता है जो आपने पहले खोला था। अगर आप भेज चुके हैं, तो यहीं प्रतीक्षा करें।';
+
+  @override
   String get donateReachingThePaymentService =>
       'Tor से भुगतान सेवा तक पहुँच रहे हैं…';
 
@@ -2384,6 +2423,21 @@ class AppLocalizationsHi extends AppLocalizations {
           'चेन पर पुष्टि हो गई। अब आप रक्षक हैं। यह आपसे कोई नहीं छीन सकता।',
       'other':
           'चेन पर पुष्टि हो गई। अब आप समर्थक हैं। यह आपसे कोई नहीं छीन सकता।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
+      'patron':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका संरक्षक बैज आपके पास ही रहता है।',
+      'guardian':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका रक्षक बैज आपके पास ही रहता है।',
+      'other':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
     });
     return '$_temp0';
   }
@@ -8242,6 +8296,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get devWhoChoiceStays => 'आपका चुनाव इस चैट के साथ रहता है।';
 
   @override
+  String get devUpdateToWrite =>
+      'Marios को संदेश भेजने के लिए Kryfo अपडेट करें।';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios की कुंजी जाँची नहीं जा सकी। कुछ नहीं भेजा गया।';
 
@@ -8304,6 +8362,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'यह आपका अपना आमंत्रण है। जुड़ने के लिए इसे किसी और के साथ शेयर करें।';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'एक-दूसरे को जोड़ने से पहले $id को Kryfo अपडेट करना होगा।';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9804,6 +9867,87 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'कोड स्कैन करें';
+
+  @override
+  String get desktopLockTitle => 'Kryfo लॉक है';
+
+  @override
+  String get desktopLockBody => 'इस कंप्यूटर का पासफ़्रेज़ लिखें।';
+
+  @override
+  String get desktopLockNewTitle => 'इस कंप्यूटर पर Kryfo लॉक करें';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, फ़ोटो, वॉइस नोट, फ़ाइलें, संपर्क और कुंजियाँ लॉक रखता है।';
+
+  @override
+  String get desktopLockHonest =>
+      'जो कोई Kryfo का फ़ोल्डर कॉपी कर ले, वह अपने कंप्यूटर पर उतनी तेज़ी से पासफ़्रेज़ आज़मा सकता है जितना उसका कंप्यूटर चल सके। चार या ज़्यादा बेतरतीब शब्द टिकते हैं। छोटा पासफ़्रेज़ नहीं टिकता।';
+
+  @override
+  String get desktopLockForgot =>
+      'पासफ़्रेज़ के बिना यहाँ आपका कोई संदेश, फ़ाइल या कुंजी नहीं खुल सकती, हमसे भी नहीं।';
+
+  @override
+  String get desktopLockField => 'पासफ़्रेज़';
+
+  @override
+  String get desktopLockRepeat => 'वही पासफ़्रेज़ फिर से';
+
+  @override
+  String get desktopLockSet => 'इस पासफ़्रेज़ से लॉक करें';
+
+  @override
+  String get desktopLockOpen => 'Kryfo खोलें';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'कम से कम $countString अक्षर';
+  }
+
+  @override
+  String get desktopLockMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
+
+  @override
+  String get desktopLockWrong => 'यह सही पासफ़्रेज़ नहीं है';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo यहाँ अपना लॉक नहीं खोल पाया। इसे फिर से शुरू करके देखें।';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo बंद करें';
+
+  @override
+  String get desktopTrayTip => 'Kryfo चल रहा है और संदेश ले रहा है';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo अभी इस कंप्यूटर पर कैमरा इस्तेमाल नहीं कर सकता। इसके बजाय लिंक या कोड इस्तेमाल करें।';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo इस कंप्यूटर पर पहले से खुला है।';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo का फ़ोल्डर इस कंप्यूटर के किसी दूसरे खाते का है, इसलिए Kryfo उसे नहीं खोलेगा।';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo अपना फ़ोल्डर सिर्फ़ आपके लिए निजी नहीं बना पाया, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'यह लॉक Kryfo के किसी दूसरे संस्करण ने बनाया है, जिसे यह संस्करण नहीं पढ़ सकता।';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 
   @override
   String get historyChatStaysShots =>

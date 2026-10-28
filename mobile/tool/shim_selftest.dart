@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a test app for a phone, never shipped: opens the bundled libsignal shim,
-// checks its abi, runs a pqxdh first contact and a few rounds of the pq
-// ratchet between two identities held in memory, and prints the result.
+// checks its abi and the sources it was built from, runs a pqxdh first
+// contact and a few rounds of the pq ratchet between two identities held in
+// memory, and prints the result.
 //   HALO_TEST_ID=1 flutter build apk --debug -t tool/shim_selftest.dart
 // then read `adb logcat -s flutter` for the line starting "shim self-test"
 import 'dart:convert';
@@ -64,9 +65,13 @@ String runShimSelfTest(KryfoSignal s) {
   if (info.version != 4 || !info.pq) {
     throw StateError('session version ${info.version}, pq ${info.pq}');
   }
+  // the library opened only if it names these, so this line says so
+  final built = s.buildInfo();
+  lsCheckBuild(built);
   return 'shim self-test ok: abi $kLsAbi, version ${info.version}, pq ratchet '
       'on, pqxdh with keys $pqxdh ms, $n rounds both ways '
-      '${rounds.elapsedMilliseconds} ms';
+      '${rounds.elapsedMilliseconds} ms, built from ${built.libsignal} and '
+      '${built.spqr}';
 }
 
 void main() {

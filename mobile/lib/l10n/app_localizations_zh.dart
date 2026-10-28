@@ -2192,6 +2192,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBadgesStartAt20 => '徽章 \$20 起';
 
   @override
+  String get donateShowTheAddress => '显示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 支付';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能给你什么';
+
+  @override
+  String get donateGivesMark => '名字旁边的一个标记。给谁看、给不给人看，都由你决定。';
+
+  @override
+  String get donateGivesReceipt => '一张保存在这台手机上的签名收据。无需任何账号即可证明徽章。';
+
+  @override
+  String get donateGivesFree => '无论有没有徽章，所有隐私功能都一直免费。';
+
+  @override
+  String get donateAddressOnTap => '点下方按钮时才会生成地址。它在一小时内都归你，回来时还是同一个。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 现在很忙。请稍后再试，或用银行卡支付。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址发送 bitcoin，但不会获得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '这是你之前打开的地址。如果已经发送，请在这里等待。';
+
+  @override
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
@@ -2275,6 +2307,17 @@ class AppLocalizationsZh extends AppLocalizations {
       'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
       'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
       'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
     });
     return '$_temp0';
   }
@@ -7872,6 +7915,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 后即可给 Marios 发消息。';
+
+  @override
   String get devKeyCheckFailed => '无法核对 Marios 的密钥。什么都没有发送。';
 
   @override
@@ -7928,6 +7974,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你们才能互相添加。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9333,6 +9384,81 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已锁定';
+
+  @override
+  String get desktopLockBody => '输入这台电脑的密码短语。';
+
+  @override
+  String get desktopLockNewTitle => '在这台电脑上锁定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、照片、语音消息、文件、联系人和密钥。';
+
+  @override
+  String get desktopLockHonest =>
+      '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
+
+  @override
+  String get desktopLockForgot => '没有密码短语，这里你的任何消息、文件或密钥都打不开，连我们也不行。';
+
+  @override
+  String get desktopLockField => '密码短语';
+
+  @override
+  String get desktopLockRepeat => '再输入一次相同的密码短语';
+
+  @override
+  String get desktopLockSet => '用这个密码短语锁定';
+
+  @override
+  String get desktopLockOpen => '打开 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 个字符';
+  }
+
+  @override
+  String get desktopLockMismatch => '两次输入的密码短语不一致';
+
+  @override
+  String get desktopLockWrong => '密码短语不对';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 无法在这里打开它的锁。请重新启动试试。';
+
+  @override
+  String get desktopTrayQuit => '退出 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已经在这台电脑上打开了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的文件夹属于这台电脑上的另一个账户，所以 Kryfo 不会打开它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。';
+
+  @override
+  String get desktopLockOtherVersion => '这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 
   @override
   String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
@@ -11525,6 +11651,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateBadgesStartAt20 => '徽章從 \$20 起';
 
   @override
+  String get donateShowTheAddress => '顯示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 付款';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能給你什麼';
+
+  @override
+  String get donateGivesMark => '名字旁的一個標記。給誰看、給不給人看，都由你決定。';
+
+  @override
+  String get donateGivesReceipt => '一張保存在這支手機上的簽名收據。不需任何帳號就能證明徽章。';
+
+  @override
+  String get donateGivesFree => '無論有沒有徽章，所有隱私功能都一直免費。';
+
+  @override
+  String get donateAddressOnTap => '點下方按鈕時才會產生地址。它在一小時內都屬於你，回來時還是同一個。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 現在很忙。請稍後再試，或刷卡付款。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '這是你之前開啟的地址。如果已經傳送，請在這裡等候。';
+
+  @override
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
@@ -11608,6 +11766,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
       'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
       'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
     });
     return '$_temp0';
   }
@@ -17088,6 +17257,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 後即可傳訊息給 Marios。';
+
+  @override
   String get devKeyCheckFailed => '無法核對 Marios 的金鑰。什麼都沒有傳送。';
 
   @override
@@ -17144,6 +17316,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你們才能互相新增。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -18550,6 +18727,81 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已鎖定';
+
+  @override
+  String get desktopLockBody => '輸入這台電腦的密碼短語。';
+
+  @override
+  String get desktopLockNewTitle => '在這台電腦上鎖定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、照片、語音訊息、檔案、聯絡人和金鑰。';
+
+  @override
+  String get desktopLockHonest =>
+      '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
+
+  @override
+  String get desktopLockForgot => '沒有密碼短語，這裡你的任何訊息、檔案或金鑰都打不開，連我們也不行。';
+
+  @override
+  String get desktopLockField => '密碼短語';
+
+  @override
+  String get desktopLockRepeat => '再輸入一次相同的密碼短語';
+
+  @override
+  String get desktopLockSet => '用這組密碼短語鎖定';
+
+  @override
+  String get desktopLockOpen => '打開 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 個字元';
+  }
+
+  @override
+  String get desktopLockMismatch => '兩次輸入的密碼短語不一致';
+
+  @override
+  String get desktopLockWrong => '密碼短語不對';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 無法在這裡打開它的鎖。請重新啟動試試。';
+
+  @override
+  String get desktopTrayQuit => '結束 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已經在這台電腦上開啟了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。';
+
+  @override
+  String get desktopLockOtherVersion => '這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
 
   @override
   String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';

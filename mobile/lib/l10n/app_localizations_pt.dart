@@ -2307,6 +2307,45 @@ class AppLocalizationsPt extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Selos a partir de US\$ 20';
 
   @override
+  String get donateShowTheAddress => 'Mostrar o endereço';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount em bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'O que o selo traz';
+
+  @override
+  String get donateGivesMark =>
+      'Uma marca ao lado do seu nome. Você escolhe quem a vê, se alguém.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Um recibo assinado guardado neste telefone. Ele comprova o selo sem nenhuma conta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todos os recursos de privacidade continuam gratuitos, com selo ou sem.';
+
+  @override
+  String get donateAddressOnTap =>
+      'O endereço é criado quando você toca abaixo. Ele fica seu por uma hora, então ao voltar você recebe o mesmo.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'O Bitcoin está sobrecarregado agora. Tente mais tarde ou pague com cartão.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Você ainda pode enviar bitcoin para o endereço abaixo. Ele não dá selo.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Este é o endereço que você abriu antes. Se já enviou, espere aqui.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Acessando o serviço de pagamento pelo Tor…';
 
@@ -2399,6 +2438,21 @@ class AppLocalizationsPt extends AppLocalizations {
           'Verificado na blockchain. Agora você é guardião. Ninguém pode tirar isso de você.',
       'other':
           'Verificado na blockchain. Agora você é apoiador. Ninguém pode tirar isso de você.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
+      'patron':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de mecenas.',
+      'guardian':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de guardião.',
+      'other':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
     });
     return '$_temp0';
   }
@@ -8294,6 +8348,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sua escolha fica valendo para esta conversa.';
 
   @override
+  String get devUpdateToWrite =>
+      'Atualize o Kryfo para mandar mensagem ao Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Não foi possível conferir a chave do Marios. Nada foi enviado.';
 
@@ -8356,6 +8414,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id precisa atualizar o Kryfo antes que vocês possam se adicionar.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9873,6 +9936,87 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Escanear o código';
+
+  @override
+  String get desktopLockTitle => 'O Kryfo está bloqueado';
+
+  @override
+  String get desktopLockBody => 'Digite a frase-senha deste computador.';
+
+  @override
+  String get desktopLockNewTitle => 'Bloquear o Kryfo neste computador';
+
+  @override
+  String get desktopLockNewBody =>
+      'O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, fotos, mensagens de voz, arquivos, contatos e chaves neste computador.';
+
+  @override
+  String get desktopLockHonest =>
+      'Quem copiar a pasta do Kryfo pode testar frases-senha no próprio computador, tão rápido quanto ele permitir. Quatro ou mais palavras aleatórias resistem. Uma frase-senha curta, não.';
+
+  @override
+  String get desktopLockForgot =>
+      'Sem a frase-senha nenhuma das suas mensagens, arquivos ou chaves aqui pode ser aberta, nem por nós.';
+
+  @override
+  String get desktopLockField => 'Frase-senha';
+
+  @override
+  String get desktopLockRepeat => 'A mesma frase-senha de novo';
+
+  @override
+  String get desktopLockSet => 'Bloquear com esta frase-senha';
+
+  @override
+  String get desktopLockOpen => 'Abrir o Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Pelo menos $countString caracteres';
+  }
+
+  @override
+  String get desktopLockMismatch => 'As duas frases-senha não são iguais';
+
+  @override
+  String get desktopLockWrong => 'Essa não é a frase-senha';
+
+  @override
+  String get desktopLockFailed =>
+      'O Kryfo não conseguiu abrir o bloqueio aqui. Tente abri-lo de novo.';
+
+  @override
+  String get desktopTrayQuit => 'Sair do Kryfo';
+
+  @override
+  String get desktopTrayTip => 'O Kryfo está aberto e recebendo mensagens';
+
+  @override
+  String get desktopNoCamera =>
+      'O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código.';
+
+  @override
+  String get desktopAlreadyOpen => 'O Kryfo já está aberto neste computador.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'A pasta do Kryfo pertence a outra conta deste computador, então o Kryfo não vai abri-la.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'O Kryfo não conseguiu deixar a pasta dele só para você, então não vai abrir.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Este bloqueio foi feito por outra versão do Kryfo, que esta não consegue ler.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.';
 
   @override
   String get historyChatStaysShots =>

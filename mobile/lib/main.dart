@@ -2,6 +2,8 @@
 
 import 'dart:async';
 import 'secure_store.dart';
+import 'desktop/desktop_mode.dart'
+    show containerClosed, containerOpened, onDesktop, startEngineIn;
 import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
@@ -20,7 +22,7 @@ export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide Curve;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'image_strip.dart' show cleanSavedPhoto, photoToSendOffUi;
@@ -84,7 +86,7 @@ import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
 import 'screens/chat_door.dart' show openChatAt;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
-import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
+import 'devchat/dev_start.dart' show DevCardOld, DevKeyCheckFailed, DevStart;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -137,12 +139,11 @@ import 'widgets/pair_join.dart' show pairUnreached;
 import 'widgets/pair_code_panel.dart' show PairCodes;
 import 'widgets/kryfo_link_text.dart'
     show addScanned, askTakeNameSheet, takeOutsideLink, takeOwnLink;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_ffi/kryfo_signal.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'key_number.dart';
-import 'signal_stores.dart'
-    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
+import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;

@@ -2346,6 +2346,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки — от \$20';
 
   @override
+  String get donateShowTheAddress => 'Показать адрес';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount в bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Что даёт значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак рядом с твоим именем. Ты решаешь, кто его видит, если вообще кто-то.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Подписанная квитанция на этом телефоне. Она подтверждает значок без всякого аккаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Все функции приватности остаются бесплатными, со значком или без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адрес создаётся, только когда ты нажмёшь ниже. Он остаётся твоим целый час, и если вернёшься, получишь тот же.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin сейчас перегружен. Попробуй позже или оплати картой.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin всё равно можно отправить на адрес ниже. Значка он не даёт.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Это адрес, который ты открывал раньше. Если уже отправил, жди здесь.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Связываемся с платёжным сервисом через Tor…';
 
@@ -2438,6 +2477,21 @@ class AppLocalizationsRu extends AppLocalizations {
           'Проверено в блокчейне — теперь ты хранитель. Этого у тебя никто не отнимет.',
       'other':
           'Проверено в блокчейне — теперь ты сторонник. Этого у тебя никто не отнимет.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
+      'patron':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «меценат» остаётся с тобой.',
+      'guardian':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «хранитель» остаётся с тобой.',
+      'other':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
     });
     return '$_temp0';
   }
@@ -8391,6 +8445,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
 
   @override
+  String get devUpdateToWrite => 'Обнови Kryfo, чтобы написать Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не удалось проверить ключ Marios. Ничего не отправлено.';
 
@@ -8453,6 +8510,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Это твоё собственное приглашение. Поделись им с кем-нибудь, чтобы связаться.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id нужно обновить Kryfo, прежде чем вы сможете добавить друг друга.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9972,6 +10034,87 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканировать код';
+
+  @override
+  String get desktopLockTitle => 'Kryfo заблокирован';
+
+  @override
+  String get desktopLockBody => 'Введите парольную фразу этого компьютера.';
+
+  @override
+  String get desktopLockNewTitle => 'Заблокировать Kryfo на этом компьютере';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, фото, голосовые, файлы, контакты и ключи на этом компьютере.';
+
+  @override
+  String get desktopLockHonest =>
+      'Тот, кто скопирует папку Kryfo, сможет перебирать парольные фразы на своём компьютере так быстро, как тот позволяет. Четыре и больше случайных слов выдержат. Короткая фраза не выдержит.';
+
+  @override
+  String get desktopLockForgot =>
+      'Без парольной фразы здесь не открыть ни ваши сообщения, ни файлы, ни ключи, даже нам.';
+
+  @override
+  String get desktopLockField => 'Парольная фраза';
+
+  @override
+  String get desktopLockRepeat => 'Та же парольная фраза ещё раз';
+
+  @override
+  String get desktopLockSet => 'Заблокировать этой фразой';
+
+  @override
+  String get desktopLockOpen => 'Открыть Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Минимум символов: $countString';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Парольные фразы не совпадают';
+
+  @override
+  String get desktopLockWrong => 'Это не та парольная фраза';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo не смог открыть блокировку. Попробуйте запустить его снова.';
+
+  @override
+  String get desktopTrayQuit => 'Выйти из Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo пока не может пользоваться камерой на этом компьютере. Используйте ссылку или код.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo уже открыт на этом компьютере.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Папка Kryfo принадлежит другой учётной записи на этом компьютере, поэтому Kryfo её не откроет.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Эту блокировку создала другая версия Kryfo, которую эта прочитать не может.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 
   @override
   String get historyChatStaysShots =>

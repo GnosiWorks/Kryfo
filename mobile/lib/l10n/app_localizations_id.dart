@@ -2282,6 +2282,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Lencana mulai dari \$20';
 
   @override
+  String get donateShowTheAddress => 'Tampilkan alamat';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount dalam bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Yang kamu dapat dari lencana';
+
+  @override
+  String get donateGivesMark =>
+      'Tanda di samping namamu. Kamu yang memilih siapa yang melihatnya, atau tidak ada sama sekali.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Tanda terima bertanda tangan yang tersimpan di ponsel ini. Ini membuktikan lencana tanpa akun apa pun.';
+
+  @override
+  String get donateGivesFree =>
+      'Semua fitur privasi tetap gratis, dengan atau tanpa lencana.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Alamat baru dibuat saat kamu mengetuk di bawah. Alamat itu milikmu selama satu jam, jadi saat kembali kamu mendapat yang sama.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Kamu tetap bisa mengirim bitcoin ke alamat di bawah. Alamat ini tidak memberi lencana.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Ini alamat yang kamu buka tadi. Kalau sudah mengirim, tunggu di sini.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Menghubungi layanan pembayaran lewat Tor…';
 
@@ -2374,6 +2413,21 @@ class AppLocalizationsId extends AppLocalizations {
           'Terverifikasi on-chain. Sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.',
       'other':
           'Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
+      'patron':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana patron kamu tetap milikmu.',
+      'guardian':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana penjaga kamu tetap milikmu.',
+      'other':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
     });
     return '$_temp0';
   }
@@ -8227,6 +8281,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get devWhoChoiceStays => 'Pilihanmu melekat pada obrolan ini.';
 
   @override
+  String get devUpdateToWrite =>
+      'Perbarui Kryfo untuk mengirim pesan ke Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.';
 
@@ -8289,6 +8347,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id perlu memperbarui Kryfo sebelum kalian bisa saling menambahkan.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9797,6 +9860,87 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Pindai kode';
+
+  @override
+  String get desktopLockTitle => 'Kryfo terkunci';
+
+  @override
+  String get desktopLockBody => 'Ketik frasa sandi untuk komputer ini.';
+
+  @override
+  String get desktopLockNewTitle => 'Kunci Kryfo di komputer ini';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo akan meminta frasa sandi ini setiap kali dibuka. Frasa ini mengunci pesan, foto, pesan suara, file, kontak, dan kuncimu di komputer ini.';
+
+  @override
+  String get desktopLockHonest =>
+      'Siapa pun yang menyalin folder Kryfo bisa mencoba frasa sandi di komputernya sendiri, secepat komputer itu mampu. Empat kata acak atau lebih akan bertahan. Frasa sandi yang pendek tidak.';
+
+  @override
+  String get desktopLockForgot =>
+      'Tanpa frasa sandi, tidak ada pesan, file, atau kuncimu di sini yang bisa dibuka, bahkan oleh kami.';
+
+  @override
+  String get desktopLockField => 'Frasa sandi';
+
+  @override
+  String get desktopLockRepeat => 'Frasa sandi yang sama sekali lagi';
+
+  @override
+  String get desktopLockSet => 'Kunci dengan frasa sandi ini';
+
+  @override
+  String get desktopLockOpen => 'Buka Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Minimal $countString karakter';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Kedua frasa sandi tidak sama';
+
+  @override
+  String get desktopLockWrong => 'Itu bukan frasa sandinya';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo tidak bisa membuka kuncinya di sini. Coba buka lagi.';
+
+  @override
+  String get desktopTrayQuit => 'Keluar dari Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo sudah terbuka di komputer ini.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
 
   @override
   String get historyChatStaysShots =>

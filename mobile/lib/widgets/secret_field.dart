@@ -32,6 +32,8 @@ class SecretField extends StatelessWidget {
   // false where the page already names the field above it: the label is
   // then only read out
   final bool labelAbove;
+  final FocusNode? focusNode;
+  final bool autofocus;
   const SecretField({
     super.key,
     required this.label,
@@ -43,6 +45,8 @@ class SecretField extends StatelessWidget {
     this.enabled = true,
     this.hint,
     this.labelAbove = true,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   @override
@@ -77,6 +81,8 @@ class SecretField extends StatelessWidget {
                       controller: controller,
                       child: TextField(
                         controller: controller,
+                        focusNode: focusNode,
+                        autofocus: autofocus,
                         enabled: enabled,
                         obscureText: !shown,
                         // never offered to the phone's autofill service

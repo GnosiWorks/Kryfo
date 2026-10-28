@@ -8,15 +8,14 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show signalDecrypt;
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
 const _bob = 'bob-open-order';
 
 Future<SignalSession> _store() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   await ss.bootstrap(
     database: MemDb(),
@@ -27,47 +26,22 @@ Future<SignalSession> _store() async {
 }
 
 Future<void> _start(SignalSession from, SignalSession to, String toName) async {
-  final spk = await to.signedPreKeyStore.loadSignedPreKey(1);
-  final pk = await to.preKeyStore.loadPreKey(invitePreKeyId);
-  await SessionBuilder(
-    from.sessionStore,
-    from.preKeyStore,
-    from.signedPreKeyStore,
-    from.identityStore,
-    SignalProtocolAddress(toName, 1),
-  ).processPreKeyBundle(
-    PreKeyBundle(
-      to.registrationId,
-      1,
-      pk.id,
-      pk.getKeyPair().publicKey,
-      spk.id,
-      spk.getKeyPair().publicKey,
-      spk.signature,
-      to.identityKeyPair.getPublicKey(),
-    ),
+  await from.processBundle(
+    toName,
+    lsBundleOf(from.lib, await to.makeBundleB64()),
   );
 }
 
 Future<String> _bobOpens(SignalSession bob, String from, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final c = SessionCipher(
-    bob.sessionStore,
-    bob.preKeyStore,
-    bob.signedPreKeyStore,
-    bob.identityStore,
-    SignalProtocolAddress(from, 1),
-  );
-  final plain = wire[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await bob.open(from, wire[0], body);
   return utf8.decode(plain);
 }
 
 void main() {
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),

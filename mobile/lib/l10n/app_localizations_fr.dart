@@ -2311,6 +2311,45 @@ class AppLocalizationsFr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Badges dès 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Afficher l\'adresse';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount en bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Ce que le badge apporte';
+
+  @override
+  String get donateGivesMark =>
+      'Une marque à côté de votre nom. Vous choisissez qui la voit, ou personne.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Un reçu signé gardé sur ce téléphone. Il prouve le badge, sans compte.';
+
+  @override
+  String get donateGivesFree =>
+      'Toutes les fonctions de confidentialité restent gratuites, badge ou pas.';
+
+  @override
+  String get donateAddressOnTap =>
+      'L\'adresse est créée quand vous touchez le bouton ci-dessous. Elle reste la vôtre pendant une heure : en revenant, vous retrouvez la même.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin est saturé pour le moment. Réessayez plus tard ou payez par carte.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Vous pouvez toujours envoyer du bitcoin à l\'adresse ci-dessous. Elle ne donne pas de badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'C\'est l\'adresse que vous avez ouverte tout à l\'heure. Si vous avez déjà envoyé, attendez ici.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Connexion au service de paiement par Tor…';
 
@@ -2402,6 +2441,21 @@ class AppLocalizationsFr extends AppLocalizations {
           'Vérifié sur la chaîne. Vous voilà parmi les gardiens. Personne ne peut vous l’enlever.',
       'other':
           'Vérifié sur la chaîne. Vous voilà parmi les soutiens. Personne ne peut vous l’enlever.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de soutien.',
+      'patron':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de mécène.',
+      'guardian':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de gardien.',
+      'other':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de soutien.',
     });
     return '$_temp0';
   }
@@ -8317,6 +8371,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre choix reste attaché à cette discussion.';
 
   @override
+  String get devUpdateToWrite => 'Mettez Kryfo à jour pour écrire à Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Impossible de vérifier la clé de Marios. Rien n’a été envoyé.';
 
@@ -8380,6 +8437,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'C’est votre propre invitation. Partagez-la avec quelqu’un d’autre pour vous connecter.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id doit mettre Kryfo à jour avant que vous puissiez vous ajouter.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9901,6 +9963,89 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scanner le code';
+
+  @override
+  String get desktopLockTitle => 'Kryfo est verrouillé';
+
+  @override
+  String get desktopLockBody =>
+      'Saisissez la phrase secrète de cet ordinateur.';
+
+  @override
+  String get desktopLockNewTitle => 'Verrouiller Kryfo sur cet ordinateur';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, photos, messages vocaux, fichiers, contacts et clés sur cet ordinateur.';
+
+  @override
+  String get desktopLockHonest =>
+      'Quiconque copie le dossier de Kryfo peut essayer des phrases secrètes sur son propre ordinateur, aussi vite que celui-ci le permet. Quatre mots aléatoires ou plus tiennent bon. Une phrase courte, non.';
+
+  @override
+  String get desktopLockForgot =>
+      'Sans la phrase secrète, aucun de vos messages, fichiers ou clés ici ne peut être ouvert, pas même par nous.';
+
+  @override
+  String get desktopLockField => 'Phrase secrète';
+
+  @override
+  String get desktopLockRepeat => 'La même phrase secrète, une seconde fois';
+
+  @override
+  String get desktopLockSet => 'Verrouiller avec cette phrase';
+
+  @override
+  String get desktopLockOpen => 'Ouvrir Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Au moins $countString caractères';
+  }
+
+  @override
+  String get desktopLockMismatch =>
+      'Les deux phrases secrètes ne sont pas identiques';
+
+  @override
+  String get desktopLockWrong => 'Ce n’est pas la phrase secrète';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo n’a pas pu ouvrir son verrou ici. Essayez de le relancer.';
+
+  @override
+  String get desktopTrayQuit => 'Quitter Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo est ouvert et reçoit des messages';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo ne peut pas encore utiliser de caméra sur cet ordinateur. Utilisez plutôt le lien ou le code.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo est déjà ouvert sur cet ordinateur.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Le dossier de Kryfo appartient à un autre compte de cet ordinateur, Kryfo ne l’ouvrira donc pas.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Ce verrou a été créé par une autre version de Kryfo, que celle-ci ne sait pas lire.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.';
 
   @override
   String get historyChatStaysShots =>
