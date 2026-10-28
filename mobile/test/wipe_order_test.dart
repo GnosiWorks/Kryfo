@@ -360,6 +360,30 @@ void main() {
     expect(exited, 0);
   });
 
+  test('the pin key goes first, before the secrets it guards', () async {
+    useEngineForTest(_Engine());
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.table': '{"v":3}',
+      'halo.db.passphrase': 'k',
+    });
+    var storeLeftAtDrop = -1;
+    final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+      call,
+    ) async {
+      platform.add(call.method);
+      if (call.method == 'pinKeyDrop') {
+        storeLeftAtDrop = (await const FlutterSecureStorage().readAll()).length;
+      }
+      return call.method == 'wipe' ? false : null;
+    });
+    await wipeHalo();
+    expect(platform.first, 'pinKeyDrop');
+    expect(storeLeftAtDrop, 2);
+    expect(platform.indexOf('pinKeyDrop'), lessThan(platform.indexOf('wipe')));
+    expect(exited, 0);
+  });
+
   test('the fingerprint key goes before the seal and the rest', () async {
     useEngineForTest(_Engine());
     FlutterSecureStorage.setMockInitialValues({
@@ -367,7 +391,8 @@ void main() {
       'halo.lock.biometric.seal': 'ab' * 257,
     });
     await wipeHalo();
-    expect(platform.first, 'bioDisable');
+    // the pin key before all of it, then the finger's
+    expect(platform.take(2), ['pinKeyDrop', 'bioDisable']);
     expect(platform, contains('wipe'));
     expect(await const FlutterSecureStorage().readAll(), isEmpty);
     expect(exited, 0);
