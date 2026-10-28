@@ -7,7 +7,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PIN="${TOR_PIN:-$HERE/tor-pin.txt}"
 OUT="${TOR_STAGE:-$HERE/../build/windows/tor}"
-VENDOR="${TOR_LICENSES:-$HERE/../../engine/vendor/github.com/alexballas/go-libtor/linux}"
 
 pin() { sed -n "s/^$1=//p" "$PIN"; }
 sha() { sha256sum "$1" | cut -d' ' -f1; }
@@ -43,9 +42,12 @@ got="$(sha "$tmp/tor/tor.exe")"
 
 rm -rf "$OUT"
 mkdir -p "$OUT/licenses"
-# only the files next to tor.exe: the engine runs the pluggable transports
-# itself, so tor/pluggable_transports stays out
-find "$tmp/tor" -maxdepth 1 -type f -exec cp {} "$OUT/" \;
-cp "$VENDOR/tor/LICENSE" "$OUT/licenses/tor.txt"
-cp "$VENDOR/libevent/LICENSE" "$OUT/licenses/libevent.txt"
+# tor.exe alone: the engine runs the pluggable transports itself, and
+# tor-gencert.exe is for directory authorities
+cp "$tmp/tor/tor.exe" "$OUT/"
+# the licences of what tor.exe has inside, as the bundle carries them
+for l in tor openssl libevent zlib; do
+  [ -f "$tmp/docs/$l.txt" ] || { echo "FAIL: no docs/$l.txt in the bundle"; exit 1; }
+  cp "$tmp/docs/$l.txt" "$OUT/licenses/$l.txt"
+done
 echo "staged tor $(pin TOR_BUNDLE_VERSION) in $OUT"

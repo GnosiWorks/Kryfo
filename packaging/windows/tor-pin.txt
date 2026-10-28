@@ -3,13 +3,12 @@
 # it against TOR_EXE_SHA256. kryfo.iss carries the same TOR_EXE_SHA256, and
 # halo.dll gets it from TOR_EXE= in engine/build-windows.sh.
 #
-# the sums are placeholders and the version is not checked yet. fill both
-# from that release's sha256sums-signed-build.txt after checking its
-# signature, and from sha256sum of the tor/tor.exe it contains. zeros match
-# no file, so a build with them stops at stage-tor.sh and at the installer's
-# own check.
-TOR_BUNDLE_VERSION=15.0.21
-TOR_VERSION=0.4.9.11
-TOR_BUNDLE_URL=https://dist.torproject.org/torbrowser/15.0.21/tor-expert-bundle-windows-x86_64-15.0.21.tar.gz
-TOR_BUNDLE_SHA256=0000000000000000000000000000000000000000000000000000000000000000
-TOR_EXE_SHA256=0000000000000000000000000000000000000000000000000000000000000000
+# both sums checked: the bundle's against
+# sha256sums-signed-build.txt, whose signature is good from the tor browser
+# developers key EF6E 286D DA85 EA2A 4BA7 DE68 4E2C 6E87 9329 8290; tor.exe
+# is tor 0.4.9.14 (8fe2745aee2c3511), the release the android engine has.
+TOR_BUNDLE_VERSION=15.0.26
+TOR_VERSION=0.4.9.14
+TOR_BUNDLE_URL=https://dist.torproject.org/torbrowser/15.0.26/tor-expert-bundle-windows-x86_64-15.0.26.tar.gz
+TOR_BUNDLE_SHA256=c1988c701de2f24f7d098d1d6d7f507b58f27740d097f29c246e0524d639b252
+TOR_EXE_SHA256=8c38513b3c4584154158e7c584f4144849dc679a64cd679553d72dad28230c54

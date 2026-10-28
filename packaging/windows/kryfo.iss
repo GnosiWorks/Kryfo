@@ -54,7 +54,7 @@
 #endif
 
 ; must equal TOR_EXE_SHA256 in tor-pin.txt and the pin in halo.dll
-#define TorExeSha256 "0000000000000000000000000000000000000000000000000000000000000000"
+#define TorExeSha256 "8c38513b3c4584154158e7c584f4144849dc679a64cd679553d72dad28230c54"
 
 #if Exec("powershell.exe", '-NoProfile -ExecutionPolicy Bypass -File "' + SourcePath + 'check-tor.ps1" -Path "' + TorDir + '\tor.exe" -Sha256 ' + TorExeSha256, SourcePath, 1, SW_HIDE) != 0
   #error tor.exe does not match TorExeSha256, see tor-pin.txt
@@ -98,8 +98,6 @@ Source: "{#FlutterDir}\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recu
 Source: "{#HaloDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SignalDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#TorDir}\tor.exe"; DestDir: "{app}\tor"; Flags: ignoreversion
-; whatever else the expert bundle keeps next to tor.exe
-Source: "{#TorDir}\*"; Excludes: "tor.exe";DestDir: "{app}\tor"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#TorDir}\licenses\*"; DestDir: "{app}\tor\licenses"; Flags: ignoreversion
 Source: "{#RepoDir}\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
