@@ -14,6 +14,7 @@ import 'container.dart';
 import 'delivery_mode.dart';
 import 'dlog.dart';
 import 'l10n/app_locale.dart';
+import 'route_merge.dart';
 import 'secure_store.dart';
 import 'theme.dart' show HaloAccent;
 
@@ -31,8 +32,8 @@ const _kShield = 'kryfo.scamshield.on';
 const _kTyping = 'kryfo.typing.on';
 const _kIntros = 'kryfo.intro.accept';
 
-// the routes a file may set. fast still asks again on a new install
-// (sendModeAtBoot)
+// the routes a file may set. an older file's fast is the one fast route now,
+// kept as balanced (routeAtBoot)
 const _kRoutes = {'private', 'balanced', 'fast'};
 
 // the accents a file may set
@@ -127,7 +128,7 @@ Future<bool> landCarriedSettings(
   }
   final route = carried[Carried.route];
   if (route is String && _kRoutes.contains(route)) {
-    await st.write(key: c.key(_kRoute), value: route);
+    await st.write(key: c.key(_kRoute), value: routeAtBoot(route));
   }
   final delivery = carried[Carried.delivery];
   final was = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';

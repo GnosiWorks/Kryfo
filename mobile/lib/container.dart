@@ -302,6 +302,7 @@ const deviceKeys = {
   'hb.jobAt',
   'auto_restart.at',
   'send_mode',
+  'route_merge_note',
   'block_screenshots',
   'theme_light',
   'theme_accent',

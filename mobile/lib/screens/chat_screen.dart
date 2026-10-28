@@ -7365,7 +7365,7 @@ class _ChatHead extends StatelessWidget {
     // the palette swaps in place: depending on the theme repaints the
     // header when it switches under an open chat
     Theme.of(context);
-    final relay = appState.sendMode == 'balanced';
+    final fast = appState.sendMode != 'private';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -7482,26 +7482,26 @@ class _ChatHead extends StatelessWidget {
                           Icon(
                             Icons.lock_outline,
                             size: 10,
-                            // relay and tor told apart by their own colours,
+                            // fast and tor told apart by their own colours,
                             // never by the accent
-                            color: relay ? HaloColors.sky : HaloColors.violet,
+                            color: fast
+                                ? HaloColors.greenText
+                                : HaloColors.violet,
                           ),
                           const SizedBox(width: 4),
                           // a longer language at a big font size would run
                           // past the header's buttons, so it ends in …
                           Flexible(
                             child: Text(
-                              relay
-                                  ? l10n.chatEncryptedViaRelay
-                                  : appState.sendMode == 'fast'
+                              fast
                                   ? l10n.chatEncryptedDirect
                                   : l10n.chatEncryptedOverTor,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: HaloType.mono(
                                 size: 10,
-                                color: relay
-                                    ? HaloColors.sky
+                                color: fast
+                                    ? HaloColors.greenText
                                     : HaloColors.text2,
                               ),
                             ),
@@ -9676,11 +9676,8 @@ class MediaGalleryScreen extends StatelessWidget {
 }
 
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
-PrivacyMode _pmFrom(String m) => m == 'fast'
-    ? PrivacyMode.fast
-    : m == 'balanced'
-    ? PrivacyMode.normal
-    : PrivacyMode.private;
+PrivacyMode _pmFrom(String m) =>
+    m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
 // the compare card, or once put off the quiet line in its place. one
 // grows or shrinks into the other while it fades, at once when the phone

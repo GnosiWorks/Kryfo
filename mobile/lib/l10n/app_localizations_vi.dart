@@ -662,16 +662,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Chế độ relay và chế độ nhanh bỏ qua Tor và nhanh hơn. Chúng nằm trong cài đặt, mục tốc độ & riêng tư, và mỗi chế độ đều nói rõ cái giá phải trả.';
-
-  @override
-  String get appViaRelay => 'Qua relay';
+      'Nhanh bỏ qua Tor nên nhanh hơn. Nằm trong cài đặt, mục tốc độ và quyền riêng tư, và có nói rõ cái giá phải trả.';
 
   @override
   String get appOffline => 'Ngoại tuyến';
-
-  @override
-  String get appFast => 'Nhanh';
 
   @override
   String get appTorOff => 'Tor tắt';
@@ -1701,9 +1695,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Người ủng hộ';
-
-  @override
-  String get chatEncryptedViaRelay => 'Được mã hóa · qua relay';
 
   @override
   String get chatEncryptedDirect => 'Được mã hóa · trực tiếp';
@@ -3073,26 +3064,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeLeaveThemOff => 'Cứ để tắt';
 
   @override
-  String get homeOurRelayIsQuiet => 'Relay của chúng tôi im lặng';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Chế độ relay chỉ dùng relay riêng của chúng tôi, và hiện nó không phản hồi. Chế độ nhanh thêm các relay công cộng bên cạnh, nên tin nhắn vẫn đến được. Dù thế nào mọi thứ vẫn được mã hóa kín.';
-
-  @override
-  String get homeSwitchedToFast => 'Đã chuyển sang Nhanh';
-
-  @override
-  String get homeUseFastMode => 'Dùng chế độ nhanh';
-
-  @override
   String get homeKeepWaiting => 'Tiếp tục chờ';
-
-  @override
-  String get homeSwitchedToRelay => 'Đã chuyển sang Relay';
-
-  @override
-  String get homeUseOurRelay => 'Dùng relay của Kryfo';
 
   @override
   String get homeOffline => 'Ngoại tuyến';
@@ -3585,41 +3557,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bốn chữ số trở lên, bất cứ số nào bạn sẽ nhớ được';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Định tuyến onion đầy đủ, ba chặng. Mỗi tin nhắn mất từ hai đến năm giây. Không ai thấy bạn nói chuyện với ai.';
-
-  @override
-  String get modesSlower => 'Chậm hơn';
-
-  @override
-  String get modesRelay => 'Relay';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi Tor bị chặn.';
-
-  @override
-  String get modesQuick => 'Nhanh';
-
-  @override
-  String get modesRelayOnly => 'Chỉ relay';
-
-  @override
   String get modesFast => 'Nhanh';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Kết nối thông thường tới mọi relay. Gần như tức thì, và kém riêng tư nhất trong ba chế độ.';
-
-  @override
-  String get modesInstant => 'Tức thì';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Mọi relay bạn dùng đều biết địa chỉ bạn kết nối từ đó, không chỉ relay của chúng tôi. Tin nhắn vẫn được mã hóa kín, nhưng việc bạn đã gửi tin thì không được che giấu. Mặc định tắt, và tắt lại sau khi cài đặt lại.';
 
   @override
   String get modesNotChanged => 'Chế độ chưa đổi. Hãy thử lại.';
@@ -3632,53 +3570,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesPrivacy => '& riêng tư';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'Đổi cho tất cả, hoặc cho từng cuộc trò chuyện';
-
-  @override
-  String get modesSoon => 'Sắp có';
-
-  @override
-  String get modesActive => 'Đang dùng';
-
-  @override
-  String get modesSpeed2 => 'TỐC ĐỘ';
-
-  @override
-  String get modesHops => 'CHẶNG';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Bị lộ';
-
-  @override
-  String get modesHidden => 'Ẩn';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Lưu ý:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion là chế độ mặc định và sẽ giữ nguyên trừ khi bạn thay đổi. Việc chuyển đổi có hiệu lực từ tin nhắn tiếp theo.';
-
-  @override
-  String get modesFastMode => 'Chế độ nhanh';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Kết nối thông thường tới mọi relay. Nhanh hơn, và các relay có thể thấy địa chỉ IP của bạn. Dù thế nào tin nhắn vẫn được mã hóa đầu cuối.';
-
-  @override
-  String get modesTurnOnFastMode => 'Bật chế độ nhanh';
-
-  @override
-  String get modesKeepItOff => 'Cứ để tắt';
 
   @override
   String get movedWipeThisPhone => 'Xóa sạch Kryfo khỏi điện thoại này?';
@@ -4099,22 +3990,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn có thể đổi bất cứ lúc nào trong cài đặt, cho mọi người hoặc cho một cuộc trò chuyện.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'Chậm hơn. Mỗi tin nhắn mất từ hai đến năm giây.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Ẩn địa chỉ của bạn với tất cả mọi người, kể cả relay của chúng tôi.';
-
-  @override
-  String get onboardingRelay => 'Relay';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Relay của chúng tôi thấy địa chỉ của bạn. Ngoài ra không ai thấy.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4125,23 +4002,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
 
   @override
-  String get onboardingFast => 'Nhanh';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Mọi relay bạn dùng đều thấy địa chỉ của bạn. Kém riêng tư nhất trong ba chế độ.';
-
-  @override
-  String get onboardingNearInstant => 'Gần như tức thì.';
-
-  @override
-  String get onboardingKeepOnion => 'Giữ onion →';
-
-  @override
   String get onboardingUseThis => 'Dùng chế độ này →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'Bỏ qua · onion là mặc định tốt';
 
   @override
   String get onboardingThreeThingsThen => 'Ba điều thôi,\nrồi *vào luôn*.';
@@ -5100,16 +4961,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenYourIpAddress => 'Địa chỉ IP của bạn';
 
   @override
-  String get seenOurRelay => 'Relay của Kryfo';
-
-  @override
-  String get seenEveryRelay => 'Mọi relay';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Ở chế độ onion, mọi thứ đi ra qua Tor và relay chỉ thấy một nút thoát, không bao giờ thấy bạn. Ở chế độ relay, kết nối đi thẳng tới relay riêng của chúng tôi: không có gì chuyển tiếp địa chỉ của bạn và không có gì được ghi lại, nhưng riêng kết nối đó thì chúng tôi thấy được. Ở chế độ nhanh, mọi relay công cộng đều biết bạn đã kết nối, nhưng không biết bạn nói chuyện với ai hay nói gì.';
-
-  @override
   String get seenYourContactGraph => 'Mạng liên hệ của bạn';
 
   @override
@@ -5165,12 +5016,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lớp ratchet và lớp lưu trữ là chuẩn. Lớp nối chúng lại là của chúng tôi và chưa có bên độc lập nào kiểm tra. Đây là bản alpha.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relay';
-
-  @override
   String get seenFast => 'Nhanh';
 
   @override
@@ -5205,9 +5050,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsTorRouting => 'Định tuyến Tor';
 
   @override
-  String get settingsOffMode => 'Tắt · chế độ relay';
-
-  @override
   String get settingsOffFastMode => 'Tắt · chế độ nhanh';
 
   @override
@@ -5221,9 +5063,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsFast => 'Nhanh';
-
-  @override
-  String get settingsRelay1Hop => 'Relay · 1 chặng';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 chặng';
@@ -7249,10 +7088,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
-
-  @override
   String get bridgesUseThisBridge => 'Dùng cầu nối này';
 
   @override
@@ -9071,15 +8906,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Chế độ relay vẫn dùng được ở nơi Tor bị chặn, và bạn có thể quay lại bất cứ lúc nào.';
+      'Nhanh hoạt động ở nơi Tor bị chặn, và bạn có thể đổi lại bất cứ lúc nào.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Chế độ relay vẫn vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Mạng này có thể thấy bạn kết nối tới Kryfo. Relay của chúng tôi thấy địa chỉ của bạn.';
+      'Nhanh vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get settingsLicences => 'Giấy phép';
@@ -9142,9 +8973,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Sao chép liên kết';
-
-  @override
-  String get appRelayNotAnswering => 'Relay im lặng';
 
   @override
   String get motionNoRelayYet => 'CHƯA CÓ RELAY';
@@ -9771,4 +9599,164 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get modesPickHow =>
+      'Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get modesPrivate => 'Riêng tư';
+
+  @override
+  String get modesPrivateTag => 'Tor · cầu nối khi cần';
+
+  @override
+  String get modesPrivateLine =>
+      'Không ai biết địa chỉ IP hay bạn là ai, kể cả máy chủ của chúng tôi. Tự tìm đường vượt qua chặn.';
+
+  @override
+  String get modesDefault => 'Mặc định';
+
+  @override
+  String get modesFastTag => 'Đi thẳng tới máy chủ của chúng tôi';
+
+  @override
+  String get modesFastLine =>
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó.';
+
+  @override
+  String get modesFastConnected => 'Nhanh · đã kết nối';
+
+  @override
+  String get modesFastConnecting => 'Nhanh · đang kết nối';
+
+  @override
+  String get modesFastDown => 'Nhanh · máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get modesBackupReady =>
+      'Luôn có một máy dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng.';
+
+  @override
+  String get modesDetails => 'Chi tiết';
+
+  @override
+  String get modesBothLine =>
+      'Cả hai đều mã hóa đầu cuối mọi tin nhắn. Chỉ khác ở chỗ ai có thể thấy địa chỉ IP của bạn.';
+
+  @override
+  String get modesConnectionBridges => 'Kết nối và cầu nối';
+
+  @override
+  String get modesWhatServersSee => 'Máy chủ của chúng tôi thấy được gì';
+
+  @override
+  String get serversTitle => 'Máy chủ của Nhanh';
+
+  @override
+  String get serversLine =>
+      'Mỗi tin nhắn được gửi tới cả hai máy chủ cùng lúc. Máy nào trả lời trước sẽ chuyển nó, và máy kia thay thế nếu một máy ngừng.';
+
+  @override
+  String get serversOne => 'Máy chủ 1';
+
+  @override
+  String get serversTwo => 'Máy chủ 2 · nhà cung cấp thứ hai';
+
+  @override
+  String get serversConnected => 'Đã kết nối';
+
+  @override
+  String get serversConnecting => 'Đang kết nối';
+
+  @override
+  String get serversNotAnswering => 'Không phản hồi';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Nhanh hơn';
+
+  @override
+  String get serversBackups => 'Relay công cộng';
+
+  @override
+  String get serversBackupsLine =>
+      'Chỉ dùng khi cả hai máy chủ của chúng tôi đều ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
+
+  @override
+  String get serversStandingBy => 'Đang chờ sẵn';
+
+  @override
+  String get serversInUse => 'Đang dùng';
+
+  @override
+  String get homeMergedTitle => 'Relay và Nhanh giờ đã là một';
+
+  @override
+  String get homeMergedLine =>
+      'Bạn đang dùng Nhanh. Luôn có một máy chủ dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng. Máy chủ của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+
+  @override
+  String get homeMergedGotIt => 'Đã hiểu';
+
+  @override
+  String get homeMergedUsePrivate => 'Dùng Riêng tư thay thế';
+
+  @override
+  String get homeOursDownTitle => 'Máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get homeOursDownLine =>
+      'Tin nhắn chờ trên điện thoại và sẽ được gửi khi một máy chủ trở lại. Trong lúc đó bạn có thể chuyển sang Riêng tư.';
+
+  @override
+  String get homeUsePrivate => 'Dùng Riêng tư';
+
+  @override
+  String get homeSwitchedToPrivate => 'Đã chuyển sang Riêng tư';
+
+  @override
+  String get homeUseFast => 'Dùng Nhanh';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Nhanh đi thẳng tới máy chủ của chúng tôi và thường vượt qua được. Hoặc để Kryfo tự tìm cách.';
+
+  @override
+  String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
+
+  @override
+  String get settingsPrivateTor => 'Riêng tư · Tor';
+
+  @override
+  String get seenOurServers => 'Máy chủ Kryfo';
+
+  @override
+  String get seenIpWhy =>
+      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Nếu cả hai đều ngừng, Nhanh chuyển sang relay công cộng, và chỉ qua Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'Ẩn địa chỉ của bạn với mọi người, kể cả máy chủ của chúng tôi.';
+
+  @override
+  String get onboardingFastSees =>
+      'Máy chủ của chúng tôi thấy địa chỉ của bạn khi bạn đang kết nối. Không ai khác.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'Mạng này có thể thấy bạn kết nối tới Kryfo. Máy chủ của chúng tôi thấy địa chỉ của bạn.';
+
+  @override
+  String get onboardingKeepPrivate => 'Giữ Riêng tư →';
+
+  @override
+  String get onboardingSkipPrivate => 'Bỏ qua · Riêng tư là mặc định tốt';
 }

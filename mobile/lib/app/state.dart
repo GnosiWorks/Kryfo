@@ -226,8 +226,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // send-privacy mode: 'private' | 'balanced' | 'fast'. private is tor and
-  // is the default; 'normal' is an old name for it, migrated on load.
+  // send-privacy mode: 'private' | 'balanced', shown as fast. private is tor
+  // and is the default; 'normal' and 'fast' are old names, moved on load.
   String _sendMode = 'private';
   // the mode the engine routes by, asked of it once and then kept as it is
   // told. private when it cannot say, as the engine starts
@@ -657,12 +657,14 @@ class AppState extends ChangeNotifier {
   int _pctBest = -1;
   DateTime? _pctMovedAt;
 
-  // our relay is not answering and it is the only one relay mode uses.
+  // neither of our servers answers, and fast uses nothing else.
   DateTime? _relayDownSince;
   bool _relayHintOff = false;
 
   // what the home screen was last told about the relay hint
-  bool _fastHintShown = false;
+  bool _oursDownHintShown = false;
+  // the one-time card about relay and fast becoming one: null until read
+  String? _routeMergeNote;
 
   bool _online = true;
   List<ContactPreview> contacts = [];

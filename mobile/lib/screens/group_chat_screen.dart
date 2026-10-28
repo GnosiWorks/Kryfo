@@ -6804,11 +6804,8 @@ class _GroupBubble extends StatelessWidget {
     );
   }
 
-  PrivacyMode _groupSendMode() => appState.sendMode == 'fast'
-      ? PrivacyMode.fast
-      : appState.sendMode == 'private'
-      ? PrivacyMode.private
-      : PrivacyMode.normal;
+  PrivacyMode _groupSendMode() =>
+      appState.sendMode == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
   List<Widget> _buildReactionChips(_GMsg m) {
     final counts = <String, int>{};

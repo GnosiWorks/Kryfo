@@ -672,16 +672,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Os modos retransmissor e rápido pulam o Tor e são mais velozes. Eles ficam nas configurações, em velocidade e privacidade, e cada um diz o que custa.';
-
-  @override
-  String get appViaRelay => 'Via retransmissor';
+      'O Rápido pula o Tor e é mais ágil. Fica nos ajustes, em velocidade e privacidade, e diz o que custa.';
 
   @override
   String get appOffline => 'Offline';
-
-  @override
-  String get appFast => 'Rápido';
 
   @override
   String get appTorOff => 'Tor desligado';
@@ -1723,9 +1717,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Apoiador';
-
-  @override
-  String get chatEncryptedViaRelay => 'Criptografado · via retransmissor';
 
   @override
   String get chatEncryptedDirect => 'Criptografado · direto';
@@ -3110,26 +3101,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get homeLeaveThemOff => 'Deixar desativadas';
 
   @override
-  String get homeOurRelayIsQuiet => 'Retransmissor em silêncio';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'O modo retransmissor usa só o nosso retransmissor, e ele não está respondendo agora. O modo rápido adiciona retransmissores públicos junto com ele, então as mensagens ainda chegam. Tudo continua lacrado de qualquer jeito.';
-
-  @override
-  String get homeSwitchedToFast => 'Mudou para rápido';
-
-  @override
-  String get homeUseFastMode => 'Usar o modo rápido';
-
-  @override
   String get homeKeepWaiting => 'Esperar';
-
-  @override
-  String get homeSwitchedToRelay => 'Mudou para retransmissor';
-
-  @override
-  String get homeUseOurRelay => 'Usar retransmissor';
 
   @override
   String get homeOffline => 'Offline';
@@ -3626,41 +3598,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Quatro dígitos ou mais, qualquer coisa que você vá lembrar';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Roteamento onion completo, três saltos. Uma mensagem leva de dois a cinco segundos. Ninguém vê com quem você fala.';
-
-  @override
-  String get modesSlower => 'Mais lento';
-
-  @override
-  String get modesRelay => 'Retransmissor';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Uma conexão lacrada com o retransmissor do próprio Kryfo, como uma VPN sem nada para registrar. Os envios chegam em cerca de um segundo, e funciona onde o Tor está bloqueado.';
-
-  @override
-  String get modesQuick => 'Ágil';
-
-  @override
-  String get modesRelayOnly => 'Só retransmissor';
-
-  @override
   String get modesFast => 'Rápido';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Conexões simples com cada retransmissor. Quase instantâneo, e o menos privado dos três.';
-
-  @override
-  String get modesInstant => 'Instantâneo';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Cada retransmissor que você usa sabe o endereço de onde você se conecta, não só o nosso. As mensagens continuam lacradas, mas o fato de você ter enviado uma, não. Desativado por padrão, e desativado de novo depois de reinstalar.';
 
   @override
   String get modesNotChanged => 'O modo não mudou. Tente de novo.';
@@ -3673,52 +3611,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'e privacidade';
-
-  @override
-  String get modesChangeGloballyOrPer => 'Mude para tudo ou por conversa';
-
-  @override
-  String get modesSoon => 'Em breve';
-
-  @override
-  String get modesActive => 'Ativo';
-
-  @override
-  String get modesSpeed2 => 'VELOCIDADE';
-
-  @override
-  String get modesHops => 'SALTOS';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Visível';
-
-  @override
-  String get modesHidden => 'Oculto';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Atenção:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion é o padrão e continua assim a não ser que você mude. A troca vale a partir da próxima mensagem.';
-
-  @override
-  String get modesFastMode => 'Modo rápido';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Conexões simples com cada retransmissor. Mais rápido, e os retransmissores podem ver seu endereço IP. As mensagens continuam criptografadas de ponta a ponta de qualquer jeito.';
-
-  @override
-  String get modesTurnOnFastMode => 'Ativar o modo rápido';
-
-  @override
-  String get modesKeepItOff => 'Deixar desativado';
 
   @override
   String get movedWipeThisPhone => 'Apagar o Kryfo deste celular?';
@@ -4142,22 +4034,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você pode mudar isso quando quiser nas configurações, para todos ou para uma conversa.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'Mais lento. Uma mensagem leva de dois a cinco segundos.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Esconde seu endereço de todo mundo, inclusive do nosso retransmissor.';
-
-  @override
-  String get onboardingRelay => 'Retransmissor';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Nosso retransmissor vê seu endereço. Mais ninguém vê.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4168,23 +4046,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Automático encontra sozinho um jeito de contornar o bloqueio.';
 
   @override
-  String get onboardingFast => 'Rápido';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Cada retransmissor que você usa vê seu endereço. O menos privado dos três.';
-
-  @override
-  String get onboardingNearInstant => 'Quase instantâneo.';
-
-  @override
-  String get onboardingKeepOnion => 'Manter onion →';
-
-  @override
   String get onboardingUseThis => 'Usar este →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'Pular · onion é um bom padrão';
 
   @override
   String get onboardingThreeThingsThen => 'Três coisas,\ne *você entra*.';
@@ -5142,16 +5004,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get seenYourIpAddress => 'Seu endereço IP';
 
   @override
-  String get seenOurRelay => 'Nosso retransm.';
-
-  @override
-  String get seenEveryRelay => 'Todo retransm.';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'No onion, tudo sai pelo Tor e o retransmissor vê um nó de saída, nunca você. No modo retransmissor, a conexão vai direto para o nosso retransmissor: nada repassa seu endereço e nada fica registrado, mas essa conexão nós conseguimos ver. No rápido, todo retransmissor público fica sabendo que você se conectou, mas não com quem nem o que você disse.';
-
-  @override
   String get seenYourContactGraph => 'Sua rede de contatos';
 
   @override
@@ -5207,12 +5059,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'As camadas do ratchet e do armazenamento são padrão. A camada que junta as duas é nossa, e ninguém independente a revisou. É um software em alfa.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Retransm.';
-
-  @override
   String get seenFast => 'Rápido';
 
   @override
@@ -5247,9 +5093,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTorRouting => 'Roteamento pelo Tor';
 
   @override
-  String get settingsOffMode => 'Desligado · retransmissor';
-
-  @override
   String get settingsOffFastMode => 'Desligado · modo rápido';
 
   @override
@@ -5263,9 +5106,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsFast => 'Rápido';
-
-  @override
-  String get settingsRelay1Hop => 'Retransmissor · 1 salto';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 saltos';
@@ -7316,10 +7156,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Palpite do Projeto Tor';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Nosso retransmissor é uma conexão simples e costuma passar. Ou deixe o Kryfo encontrar um jeito sozinho.';
-
-  @override
   String get bridgesUseThisBridge => 'Usar esta ponte';
 
   @override
@@ -9151,15 +8987,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'O modo retransmissor funciona onde o Tor está bloqueado, e você pode voltar quando quiser.';
+      'O Rápido funciona onde o Tor é bloqueado, e você pode voltar quando quiser.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'O modo retransmissor passa onde o Tor está bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Esta rede pode ver que você se conecta ao Kryfo. Nosso retransmissor vê seu endereço.';
+      'O Rápido passa onde o Tor é bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.';
 
   @override
   String get settingsLicences => 'Licenças';
@@ -9223,9 +9055,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copiar link';
-
-  @override
-  String get appRelayNotAnswering => 'Retransmissor calado';
 
   @override
   String get motionNoRelayYet => 'AINDA SEM RETRANSMISSOR';
@@ -9857,4 +9686,164 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Escanear o código';
+
+  @override
+  String get modesPickHow =>
+      'Escolha como suas mensagens viajam. Você pode mudar quando quiser.';
+
+  @override
+  String get modesPrivate => 'Privado';
+
+  @override
+  String get modesPrivateTag => 'Tor · pontes quando preciso';
+
+  @override
+  String get modesPrivateLine =>
+      'Ninguém fica sabendo seu endereço IP nem quem você é, nem nossos servidores. Encontra sozinho um jeito de contornar bloqueios.';
+
+  @override
+  String get modesDefault => 'Padrão';
+
+  @override
+  String get modesFastTag => 'Direto para nossos servidores';
+
+  @override
+  String get modesFastLine =>
+      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Nunca o que você diz. Seus contatos nunca veem.';
+
+  @override
+  String get modesFastConnected => 'Rápido · conectado';
+
+  @override
+  String get modesFastConnecting => 'Rápido · conectando';
+
+  @override
+  String get modesFastDown => 'Rápido · nossos servidores não respondem';
+
+  @override
+  String get modesBackupReady =>
+      'Um reserva está sempre pronto, então você continua conectado mesmo se um cair.';
+
+  @override
+  String get modesDetails => 'Detalhes';
+
+  @override
+  String get modesBothLine =>
+      'Os dois mantêm cada mensagem com criptografia de ponta a ponta. Só muda quem pode ver seu endereço IP.';
+
+  @override
+  String get modesConnectionBridges => 'Conexão e pontes';
+
+  @override
+  String get modesWhatServersSee => 'O que nossos servidores podem ver';
+
+  @override
+  String get serversTitle => 'Servidores do Rápido';
+
+  @override
+  String get serversLine =>
+      'Cada mensagem vai para os dois servidores ao mesmo tempo. O que responde primeiro a leva, e o outro assume se um parar.';
+
+  @override
+  String get serversOne => 'Servidor 1';
+
+  @override
+  String get serversTwo => 'Servidor 2 · segundo provedor';
+
+  @override
+  String get serversConnected => 'Conectado';
+
+  @override
+  String get serversConnecting => 'Conectando';
+
+  @override
+  String get serversNotAnswering => 'Não responde';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Mais rápido';
+
+  @override
+  String get serversBackups => 'Retransmissores públicos';
+
+  @override
+  String get serversBackupsLine =>
+      'Só se os nossos dois caírem, e só pelo Tor, então nunca veem seu endereço IP.';
+
+  @override
+  String get serversStandingBy => 'Em espera';
+
+  @override
+  String get serversInUse => 'Em uso';
+
+  @override
+  String get homeMergedTitle => 'Retransmissor e Rápido agora são um só';
+
+  @override
+  String get homeMergedLine =>
+      'Você está no Rápido. Um servidor reserva está sempre pronto, então você continua conectado mesmo se um cair. Nossos servidores veem seu endereço IP, nunca o que você diz.';
+
+  @override
+  String get homeMergedGotIt => 'Entendi';
+
+  @override
+  String get homeMergedUsePrivate => 'Usar Privado no lugar';
+
+  @override
+  String get homeOursDownTitle => 'Nossos servidores não respondem';
+
+  @override
+  String get homeOursDownLine =>
+      'As mensagens esperam no seu celular e saem quando um voltar. Enquanto isso, você pode mudar para Privado.';
+
+  @override
+  String get homeUsePrivate => 'Usar Privado';
+
+  @override
+  String get homeSwitchedToPrivate => 'Mudou para Privado';
+
+  @override
+  String get homeUseFast => 'Usar Rápido';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Mudou para Rápido';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'O Rápido vai direto para nossos servidores e costuma passar. Ou deixe o Kryfo encontrar um jeito sozinho.';
+
+  @override
+  String get appServersNotAnswering => 'Servidores sem resposta';
+
+  @override
+  String get settingsPrivateTor => 'Privado · Tor';
+
+  @override
+  String get seenOurServers => 'Nossos servidores';
+
+  @override
+  String get seenIpWhy =>
+      'No Privado tudo sai pelo Tor e nossos servidores veem um nó de saída, nunca você. No Rápido a conexão vai direto para nossos dois servidores: eles veem seu endereço IP enquanto você está conectado e não guardam registro. Se os dois caírem, o Rápido recorre a retransmissores públicos, e só pelo Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'Esconde seu endereço de todos, inclusive dos nossos servidores.';
+
+  @override
+  String get onboardingFastSees =>
+      'Nossos servidores veem seu endereço enquanto você está conectado. Ninguém mais.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'Esta rede pode ver que você se conecta ao Kryfo. Nossos servidores veem seu endereço.';
+
+  @override
+  String get onboardingKeepPrivate => 'Manter Privado →';
+
+  @override
+  String get onboardingSkipPrivate => 'Pular · Privado é um bom padrão';
 }

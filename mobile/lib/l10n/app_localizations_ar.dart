@@ -695,16 +695,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'وضعا المُرحِّل والسريع يتجاوزان Tor وهما أسرع. تجدهما في الإعدادات، ضمن «السرعة والخصوصية»، وكلٌّ منهما يوضّح ما يكلّفه.';
-
-  @override
-  String get appViaRelay => 'عبر مُرحِّل';
+      'الوضع السريع يتخطى Tor وهو أسرع. تجده في الإعدادات ضمن السرعة والخصوصية، ويقول ما الذي يكلفه.';
 
   @override
   String get appOffline => 'غير متصل';
-
-  @override
-  String get appFast => 'سريع';
 
   @override
   String get appTorOff => 'Tor متوقف';
@@ -1763,9 +1757,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatSupporter => 'داعم';
-
-  @override
-  String get chatEncryptedViaRelay => 'مشفّرة · عبر مُرحِّل';
 
   @override
   String get chatEncryptedDirect => 'مشفّرة · مباشرة';
@@ -3177,26 +3168,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeLeaveThemOff => 'إبقاؤها معطّلة';
 
   @override
-  String get homeOurRelayIsQuiet => 'مُرحِّلنا صامت';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'وضع المُرحِّل يستخدم مُرحِّلنا وحده، وهو لا يستجيب الآن. الوضع السريع يضيف مُرحِّلات عامة إلى جانبه، فتصل الرسائل رغم ذلك. ويبقى كل شيء مختومًا في الحالتين.';
-
-  @override
-  String get homeSwitchedToFast => 'الوضع السريع مفعّل';
-
-  @override
-  String get homeUseFastMode => 'استخدام الوضع السريع';
-
-  @override
   String get homeKeepWaiting => 'مواصلة الانتظار';
-
-  @override
-  String get homeSwitchedToRelay => 'وضع المُرحِّل مفعّل';
-
-  @override
-  String get homeUseOurRelay => 'استخدام مُرحِّلنا';
 
   @override
   String get homeOffline => 'غير متصل';
@@ -3705,41 +3677,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'أربعة أرقام أو أكثر، أي شيء ستتذكره';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'توجيه onion كامل، ثلاث قفزات. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ. لا أحد يرى مع من تتحدث.';
-
-  @override
-  String get modesSlower => 'أبطأ';
-
-  @override
-  String get modesRelay => 'مُرحِّل';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'اتصال واحد مختوم بمُرحِّل Kryfo الخاص، مثل VPN لا يملك ما يسجّله. تصل الرسائل في نحو ثانية، ويعمل حيث يُحجب Tor.';
-
-  @override
-  String get modesQuick => 'سريع';
-
-  @override
-  String get modesRelayOnly => 'المُرحِّل فقط';
-
-  @override
   String get modesFast => 'سريع';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'اتصالات عادية بكل المُرحِّلات. شبه فوري، والأقل خصوصية بين الثلاثة.';
-
-  @override
-  String get modesInstant => 'فوري';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'كل مُرحِّل تستخدمه يعرف العنوان الذي تتصل منه، لا مُرحِّلنا وحده. تبقى الرسائل مختومة، لكن حقيقة أنك أرسلت رسالة ليست كذلك. معطّل افتراضيًا، ويعود معطّلًا بعد إعادة التثبيت.';
 
   @override
   String get modesNotChanged => 'لم يتغيّر الوضع. حاول مجددًا.';
@@ -3752,52 +3690,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'والخصوصية';
-
-  @override
-  String get modesChangeGloballyOrPer => 'غيّره للكل، أو لكل محادثة';
-
-  @override
-  String get modesSoon => 'قريبًا';
-
-  @override
-  String get modesActive => 'مفعّل';
-
-  @override
-  String get modesSpeed2 => 'السرعة';
-
-  @override
-  String get modesHops => 'القفزات';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'ظاهر';
-
-  @override
-  String get modesHidden => 'مخفي';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*تنبيه:* ⁨$warning⁩';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'وضع Onion هو الافتراضي ويبقى كذلك ما لم تغيّره. يسري التبديل من الرسالة التالية.';
-
-  @override
-  String get modesFastMode => 'الوضع السريع';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'اتصالات عادية بكل المُرحِّلات. أسرع، والمُرحِّلات تستطيع رؤية عنوان IP الخاص بك. تبقى الرسائل مشفّرة بين الطرفين في الحالتين.';
-
-  @override
-  String get modesTurnOnFastMode => 'تفعيل الوضع السريع';
-
-  @override
-  String get modesKeepItOff => 'إبقاؤه معطّلًا';
 
   @override
   String get movedWipeThisPhone => 'مسح Kryfo من هذا الهاتف؟';
@@ -4214,22 +4106,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكنك تغيير هذا في أي وقت من الإعدادات، للجميع أو لمحادثة واحدة.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'أبطأ. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'يُخفي عنوانك عن الجميع، بما في ذلك مُرحِّلنا.';
-
-  @override
-  String get onboardingRelay => 'مُرحِّل';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'يرى مُرحِّلنا عنوانك. ولا أحد غيره.';
 
   @override
   String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب Tor.';
@@ -4239,23 +4117,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
 
   @override
-  String get onboardingFast => 'سريع';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'كل مُرحِّل تستخدمه يرى عنوانك. الأقل خصوصية بين الثلاثة.';
-
-  @override
-  String get onboardingNearInstant => 'شبه فوري.';
-
-  @override
-  String get onboardingKeepOnion => 'الإبقاء على Onion ←';
-
-  @override
   String get onboardingUseThis => 'استخدام هذا ←';
-
-  @override
-  String get onboardingSkipOnionIsA => 'تخطي · Onion خيار افتراضي جيد';
 
   @override
   String get onboardingThreeThingsThen => 'ثلاثة أشياء،\nثم *تدخل*.';
@@ -5195,16 +5057,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenYourIpAddress => 'عنوان IP الخاص بك';
 
   @override
-  String get seenOurRelay => 'مُرحِّلنا';
-
-  @override
-  String get seenEveryRelay => 'كل المُرحِّلات';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'في وضع Onion يخرج كل شيء عبر Tor ولا يرى المُرحِّل إلا عقدة خروج، لا أنت أبدًا. في وضع المُرحِّل يذهب الاتصال مباشرة إلى مُرحِّلنا الخاص: لا شيء يمرّر عنوانك ولا شيء يُدوَّن، لكن ذلك الاتصال الواحد نراه نحن. في الوضع السريع يعرف كل مُرحِّل عام أنك اتصلت، لكن لا يعرف بمن ولا ماذا قلت.';
-
-  @override
   String get seenYourContactGraph => 'شبكة معارفك';
 
   @override
@@ -5260,12 +5112,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'طبقتا ratchet والتخزين معياريتان. أما الطبقة التي تربطهما فمن صنعنا ولم يراجعها أي طرف مستقل. إنه برنامج في مرحلة ألفا.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'مُرحِّل';
-
-  @override
   String get seenFast => 'سريع';
 
   @override
@@ -5299,9 +5145,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTorRouting => 'التوجيه عبر Tor';
 
   @override
-  String get settingsOffMode => 'معطّل · وضع المُرحِّل';
-
-  @override
   String get settingsOffFastMode => 'معطّل · الوضع السريع';
 
   @override
@@ -5315,9 +5158,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsFast => 'سريع';
-
-  @override
-  String get settingsRelay1Hop => 'مُرحِّل · قفزة واحدة';
 
   @override
   String get settingsOnion3Hops => 'Onion · ثلاث قفزات';
@@ -7380,10 +7220,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'تخمين مشروع Tor';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
-
-  @override
   String get bridgesUseThisBridge => 'استخدام هذا الجسر';
 
   @override
@@ -9212,15 +9048,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
+      'يعمل الوضع السريع حيث يُحجب Tor، ويمكنك العودة في أي وقت.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
+      'يتجاوز الوضع السريع حجب Tor، لكن هذه الشبكة يمكنها أن ترى اتصالك بـ Kryfo.';
 
   @override
   String get settingsLicences => 'التراخيص';
@@ -9288,9 +9120,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'نسخ الرابط';
-
-  @override
-  String get appRelayNotAnswering => 'المُرحِّل صامت';
 
   @override
   String get motionNoRelayYet => 'لا مُرحِّل بعد';
@@ -9917,4 +9746,164 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get modesPickHow =>
+      'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
+
+  @override
+  String get modesPrivate => 'خاص';
+
+  @override
+  String get modesPrivateTag => 'Tor · جسور عند الحاجة';
+
+  @override
+  String get modesPrivateLine =>
+      'لا أحد يعرف عنوان IP الخاص بك أو من أنت، ولا حتى خوادمنا. يجد طريقًا حول الحجب بنفسه.';
+
+  @override
+  String get modesDefault => 'الافتراضي';
+
+  @override
+  String get modesFastTag => 'مباشرة إلى خوادمنا';
+
+  @override
+  String get modesFastLine =>
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا.';
+
+  @override
+  String get modesFastConnected => 'سريع · متصل';
+
+  @override
+  String get modesFastConnecting => 'سريع · جارٍ الاتصال';
+
+  @override
+  String get modesFastDown => 'سريع · خوادمنا لا ترد';
+
+  @override
+  String get modesBackupReady =>
+      'هناك احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها.';
+
+  @override
+  String get modesDetails => 'التفاصيل';
+
+  @override
+  String get modesBothLine =>
+      'كلاهما يُبقي كل رسالة مشفرة من طرف إلى طرف. ما يتغير فقط هو من يمكنه رؤية عنوان IP الخاص بك.';
+
+  @override
+  String get modesConnectionBridges => 'الاتصال والجسور';
+
+  @override
+  String get modesWhatServersSee => 'ما يمكن لخوادمنا رؤيته';
+
+  @override
+  String get serversTitle => 'خوادم الوضع السريع';
+
+  @override
+  String get serversLine =>
+      'تذهب كل رسالة إلى الخادمين معًا. الذي يرد أولًا يحملها، والآخر يتولى الأمر إذا توقف أحدهما.';
+
+  @override
+  String get serversOne => 'الخادم 1';
+
+  @override
+  String get serversTwo => 'الخادم 2 · مزوّد ثانٍ';
+
+  @override
+  String get serversConnected => 'متصل';
+
+  @override
+  String get serversConnecting => 'جارٍ الاتصال';
+
+  @override
+  String get serversNotAnswering => 'لا يرد';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms م.ث';
+  }
+
+  @override
+  String get serversQuicker => 'الأسرع';
+
+  @override
+  String get serversBackups => 'مُرحِّلات عامة';
+
+  @override
+  String get serversBackupsLine =>
+      'تُستخدم فقط إذا توقف خادمانا كلاهما، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
+
+  @override
+  String get serversStandingBy => 'في وضع الاستعداد';
+
+  @override
+  String get serversInUse => 'قيد الاستخدام';
+
+  @override
+  String get homeMergedTitle => 'أصبح المُرحِّل والسريع واحدًا الآن';
+
+  @override
+  String get homeMergedLine =>
+      'أنت على الوضع السريع. هناك خادم احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها. ترى خوادمنا عنوان IP الخاص بك، ولا ترى أبدًا ما تقوله.';
+
+  @override
+  String get homeMergedGotIt => 'فهمت';
+
+  @override
+  String get homeMergedUsePrivate => 'استخدم الخاص بدلًا من ذلك';
+
+  @override
+  String get homeOursDownTitle => 'خوادمنا لا ترد';
+
+  @override
+  String get homeOursDownLine =>
+      'تنتظر الرسائل على هاتفك وتُرسل عند عودة أحدها. يمكنك التبديل إلى الخاص في هذه الأثناء.';
+
+  @override
+  String get homeUsePrivate => 'استخدم الخاص';
+
+  @override
+  String get homeSwitchedToPrivate => 'تم التبديل إلى الخاص';
+
+  @override
+  String get homeUseFast => 'استخدم السريع';
+
+  @override
+  String get homeSwitchedToFastRoute => 'تم التبديل إلى السريع';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'السريع يذهب مباشرة إلى خوادمنا وعادةً ما ينجح. أو دع Kryfo يجد طريقًا بنفسه.';
+
+  @override
+  String get appServersNotAnswering => 'الخوادم لا ترد';
+
+  @override
+  String get settingsPrivateTor => 'خاص · Tor';
+
+  @override
+  String get seenOurServers => 'خوادمنا';
+
+  @override
+  String get seenIpWhy =>
+      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. إذا توقف كلاهما يلجأ السريع إلى مُرحِّلات عامة، وعبر Tor فقط.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'يخفي عنوانك عن الجميع، بما في ذلك خوادمنا.';
+
+  @override
+  String get onboardingFastSees =>
+      'ترى خوادمنا عنوانك أثناء اتصالك. لا أحد غيرها.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'يمكن لهذه الشبكة أن ترى اتصالك بـ Kryfo. ترى خوادمنا عنوانك.';
+
+  @override
+  String get onboardingKeepPrivate => 'الإبقاء على الخاص ←';
+
+  @override
+  String get onboardingSkipPrivate => 'تخطٍّ · الخاص خيار افتراضي جيد';
 }
