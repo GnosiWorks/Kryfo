@@ -294,6 +294,44 @@ void main() {
       expect(await a.read('bob', await bob.encryptTo('alice', 'back')), 'back');
     }, skip: needsShim);
 
+    test('two read again in the slot at once are each marked read by the '
+        'record it filed, never the other', () async {
+      final a = Phone();
+      final b = Phone();
+      final alice = await a.openLs();
+      final bob = await b.openLs();
+      await alice.processBundle(
+        'bob',
+        lsBundleOf(shim!, await bob.makeBundleB64()),
+      );
+      final first = await alice.encryptTo('bob', 'one');
+      final second = await alice.encryptTo('bob', 'two');
+      final third = await alice.encryptTo('bob', 'three');
+      expect(await b.read(kFirstContactSlot, first), 'one');
+      await bob.keepOpenedSession(
+        'alice',
+        (await bob.sessionStore.load(kFirstContactSlot))!,
+      );
+      // both in flight together, before either is filed (each first
+      // contact starts on an empty slot)
+      Future<Uint8List> inSlot(String w, String text) async {
+        await bob.sessionStore.delete(kFirstContactSlot);
+        expect(await b.read(kFirstContactSlot, w), text);
+        return (await bob.sessionStore.load(kFirstContactSlot))!;
+      }
+
+      final s2 = await inSlot(second, 'two');
+      final s3 = await inSlot(third, 'three');
+      await bob.keepOpenedSession('alice', s2);
+      await bob.sessionStore.delete(kFirstContactSlot);
+      await expectLater(b.read(kFirstContactSlot, second), dup());
+      // the third is not read until its own record is filed
+      await bob.keepOpenedSession('alice', await inSlot(third, 'three'));
+      await bob.keepOpenedSession('alice', s3);
+      await bob.sessionStore.delete(kFirstContactSlot);
+      await expectLater(b.read(kFirstContactSlot, third), dup());
+    }, skip: needsShim);
+
     test('late, past the chains a record keeps, one never read opens once, '
         'and the session goes on as it was', () async {
       final a = Phone();

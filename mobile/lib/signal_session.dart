@@ -206,9 +206,13 @@ class SignalSession {
 
   final Map<String, Future<void>> _steps = {};
 
-  // the opener read again in the first-contact slot last, not marked read
-  // until it is filed: (version, base key, kyber id, fingerprint)
-  (int, Uint8List, int, Uint8List)? _slotRead;
+  // openers read again in the first-contact slot, not marked read until
+  // filed: each read's fingerprint (and its kyber id) by the record it put
+  // in the slot, so two at once never stand for each other
+  final Map<String, (int, Uint8List)> _slotReads = {};
+
+  static String _recordKey(Uint8List record) =>
+      base64Encode(sha256.convert(record).bytes);
 
   // peers a frame waits on: too big for an opener, it goes once they answer
   final Set<String> _awaiting = {};
@@ -641,7 +645,10 @@ class SignalSession {
         await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
         // marked read once it is filed under the name holding it
         // (keepOpenedSession): one turned away there can come again
-        _slotRead = (info.version, info.baseKey, kyberId, print);
+        _slotReads[_recordKey(o.record)] = (kyberId, print);
+        while (_slotReads.length > 64) {
+          _slotReads.remove(_slotReads.keys.first);
+        }
       } else {
         await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
       }
@@ -691,11 +698,8 @@ class SignalSession {
         if (cur != null &&
             lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
           // a slot re-read filed where its session is: read now, for good
-          final r = _slotRead;
-          if (r != null && r.$1 == cur.version && _eq(r.$2, cur.baseKey)) {
-            await kyberPreKeyStore.markRead(r.$3, r.$4);
-            _slotRead = null;
-          }
+          final r = _slotReads.remove(_recordKey(record));
+          if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
           dlog('back-pair: an opener held already, the session kept');
           return;
         }
@@ -978,7 +982,9 @@ class SignalSession {
     if (!seen.add(field)) bad();
     if (ids.contains(field)) {
       if (kind != 0) bad();
-      if (varint() > 0xffffffff) bad();
+      // past 2^63 a varint reads negative here
+      final v = varint();
+      if (v < 0 || v > 0xffffffff) bad();
     } else if (bytes.contains(field)) {
       if (kind != 2) bad();
       final n = varint();

@@ -163,6 +163,36 @@ void main() {
       );
     }
     expect(() => strictOpener(b([body[0]])), refused());
+    // an id from 2^63 up reads negative as a dart int: refused as well
+    final o2 = strictOpener(body);
+    List<int> varint(int v) => [
+      for (; v >= 0x80; v >>= 7) 0x80 | (v & 0x7f),
+      v,
+    ];
+    List<int> field(int n, List<int> v) => [
+      n << 3 | 2,
+      ...varint(v.length),
+      ...v,
+    ];
+    List<int> bare(List<int> kyberId) => [
+      body[0],
+      ...field(2, o2.baseKey),
+      ...field(3, o2.identity),
+      0x38,
+      ...kyberId,
+      ...field(4, o2.message),
+    ];
+    expect(strictOpener(b(bare([0x01]))).baseKey, o2.baseKey);
+    expect(
+      () => strictOpener(
+        b(bare([0x81, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x01])),
+      ),
+      refused(),
+    );
+    expect(
+      () => strictOpener(b(bare([0x80, 0x80, 0x80, 0x80, 0x10]))),
+      refused(),
+    );
   }, skip: needsShim);
 
   test('classic openers 0.5.x phones made read strictly too', () {
