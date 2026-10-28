@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -285,6 +286,10 @@ func (s *relayStandIn) snapshot() []siConn {
 		cp.subIDs = append([]string(nil), c.subIDs...)
 		cp.reqs = append([]siReq(nil), c.reqs...)
 		cp.pings = append([]time.Time(nil), c.pings...)
+		cp.got = append([]nostr.Event(nil), c.got...)
+		// the handler keeps writing to the live maps
+		cp.addrs = maps.Clone(c.addrs)
+		cp.published = maps.Clone(c.published)
 		out = append(out, cp)
 	}
 	return out

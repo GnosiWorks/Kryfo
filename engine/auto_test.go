@@ -2,7 +2,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -483,7 +482,7 @@ func TestAutoPassLogCountsLikeStatus(t *testing.T) {
 	f.script["obfs4"] = worksAfter(5 * time.Second)
 	var mid bridgeStatusView
 	f.at(10*time.Second, func() { mid = bridgeStatus() })
-	var buf bytes.Buffer
+	var buf logSink
 	log.SetOutput(&buf)
 	r := pass(t, modeOpts{Consent: "no"})
 	log.SetOutput(os.Stderr)

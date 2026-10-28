@@ -34,8 +34,13 @@ func doorLine(t *testing.T, n int) string {
 type testDoor struct {
 	ln      net.Listener
 	streams int32
+	mu      sync.Mutex
+	conns   []net.Conn
+	serving sync.WaitGroup
 }
 
+// the door's streams are shut and their handlers gone by the end of the
+// test, so a later one may change what they read
 func newTestDoor(t *testing.T, serve func(net.Conn)) *testDoor {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -43,15 +48,32 @@ func newTestDoor(t *testing.T, serve func(net.Conn)) *testDoor {
 		t.Fatal(err)
 	}
 	d := &testDoor{ln: ln}
-	t.Cleanup(func() { ln.Close() })
+	d.serving.Add(1)
+	t.Cleanup(func() {
+		ln.Close()
+		d.mu.Lock()
+		for _, c := range d.conns {
+			c.Close()
+		}
+		d.mu.Unlock()
+		d.serving.Wait()
+	})
 	go func() {
+		defer d.serving.Done()
 		for {
 			c, err := ln.Accept()
 			if err != nil {
 				return
 			}
 			atomic.AddInt32(&d.streams, 1)
-			go serve(c)
+			d.mu.Lock()
+			d.conns = append(d.conns, c)
+			d.mu.Unlock()
+			d.serving.Add(1)
+			go func() {
+				defer d.serving.Done()
+				serve(c)
+			}()
 		}
 	}()
 	return d
@@ -205,7 +227,8 @@ func TestDoorStreamClosesWhenQuiet(t *testing.T) {
 func TestDoorClosesAQuietStream(t *testing.T) {
 	oldNext, oldKeep := doorNextLine, doorKeep
 	doorNextLine, doorKeep = 200*time.Millisecond, time.Minute
-	defer func() { doorNextLine, doorKeep = oldNext, oldKeep }()
+	// put back after the door's own cleanup has seen its handlers out
+	t.Cleanup(func() { doorNextLine, doorKeep = oldNext, oldKeep })
 	socks := newSocksStandIn(t)
 	d := newTestDoor(t, handleConn)
 	tn := doorSetup(t, socks, map[string]*testDoor{"n.onion": d})

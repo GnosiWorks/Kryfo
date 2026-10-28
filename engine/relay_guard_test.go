@@ -9,7 +9,6 @@ package main
 // stays up whatever frames arrive on it.
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -1219,7 +1218,7 @@ func (c *countingReader) Read(p []byte) (int, error) {
 
 // the relay library's own log lines go through the engine's gate
 func TestLibraryLogsFollowTheGate(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	oldOn := atomic.LoadInt32(&debugOn)
