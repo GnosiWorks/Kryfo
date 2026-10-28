@@ -9373,7 +9373,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor recibe una dirección sellada distinta para cada uno de tus buzones, así que no puede unirlos. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor solo guarda direcciones que no puede unir entre sí. El servicio de push funciona en el mismo servidor y podría unirlas, así que quien gestione o incaute nuestro servidor también podría. Si eso te importa, elige otra forma. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
 
   @override
   String get notificationsGoogleRefused =>

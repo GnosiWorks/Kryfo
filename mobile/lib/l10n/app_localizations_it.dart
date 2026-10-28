@@ -9377,7 +9377,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay riceve un indirizzo sigillato diverso per ognuna delle tue caselle, quindi non può collegarle tra loro. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sullo stesso server e potrebbe collegarli, quindi potrebbe farlo anche chi gestisce o sequestra il nostro server. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
 
   @override
   String get notificationsGoogleRefused =>

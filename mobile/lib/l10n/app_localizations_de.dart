@@ -9400,7 +9400,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais bekommt für jedes deiner Postfächer eine eigene versiegelte Adresse und kann sie so nicht miteinander verbinden. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf demselben Server und könnte sie verbinden, also könnte es auch, wer unseren Server betreibt oder beschlagnahmt. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get notificationsGoogleRefused =>

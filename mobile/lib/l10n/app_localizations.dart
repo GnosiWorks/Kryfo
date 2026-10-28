@@ -15018,7 +15018,7 @@ abstract class AppLocalizations {
   /// screens/notifications_screen.dart: note under google push
   ///
   /// In en, this message translates to:
-  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay gets a sealed address for each of your mailboxes, so it cannot tie them together. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
+  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get notificationsGoogleNote;
 
   /// screens/notifications_screen.dart: google push, the relay refuses some registrations
