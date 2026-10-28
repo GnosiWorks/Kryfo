@@ -65,6 +65,9 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  // the pin key before anything: hidden chats sealed under it open nowhere
+  // again, whatever of their files the flash keeps
+  await _dropPinKey();
   wipeForget();
   // a draft waiting to be written would land in a file being erased
   forgetAllDrafts();
@@ -127,6 +130,16 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   // before exit
   await Future.delayed(const Duration(milliseconds: 600));
   wipeExit(0);
+}
+
+Future<void> _dropPinKey() async {
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('pinKeyDrop').timeout(const Duration(seconds: 1));
+  } catch (e) {
+    dlog('wipe: pin key left (${e.runtimeType})');
+  }
 }
 
 // straight to the engine, not in turn behind a claim on its way: the wipe

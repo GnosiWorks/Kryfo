@@ -59,6 +59,7 @@ const _settingsFiles = {
   'pins_screen',
   'lock_setup_screen',
   'pin_flow_screen',
+  'update_pins_screen',
   'hide_picker',
   'backup_screen',
   'restore_screen',

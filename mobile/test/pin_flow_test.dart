@@ -60,7 +60,8 @@ Future<void> _flow(
 // the words on screen, the pad's digits left out
 Set<String> _words(WidgetTester t) => {
   for (final w in t.widgetList<Text>(find.byType(Text)))
-    if (w.data != null && !RegExp(r'^\d$').hasMatch(w.data!)) w.data!,
+    // the pad's own keys, digits and abc, say nothing
+    if (w.data != null && !RegExp(r'^(\d|abc|123)$').hasMatch(w.data!)) w.data!,
 };
 
 // intro, the app pin, a hidden chats pin twice

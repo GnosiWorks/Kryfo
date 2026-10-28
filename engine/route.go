@@ -79,6 +79,7 @@ func routeNoteOKAt(gen int64) bool {
 	// a route that carried again starts the gaps from the first
 	rescueWait = rescueJitter(rescueGap(0))
 	routeMu.Unlock()
+	wakeRouteProven()
 	correctStaleStart()
 	return true
 }
@@ -168,6 +169,17 @@ func routeNoteFailFrom(u string, began time.Time) {
 		deadWait = rescueJitter(deadFor)
 	}
 	failedSinceOK[u] = true
+}
+
+// the phone slept: a dead spell begun before it starts again from the wake
+func routeSlept() {
+	routeMu.Lock()
+	for k := range failedSinceOK {
+		delete(failedSinceOK, k)
+	}
+	firstFailAt = time.Time{}
+	deadWait = 0
+	routeMu.Unlock()
 }
 
 // the route is about to be torn down on purpose. returns the new generation.
@@ -314,6 +326,8 @@ func routeWatch() {
 // the decision, apart from the loop so it can be tested with a clock. "" when
 // nothing should happen, otherwise the reason. records the rescue it allows.
 func routeNeedsRescue(now time.Time) string {
+	// a spell from before a sleep is not judged on
+	wakeCheck()
 	if !modeNeedsTor() || torIsPaused() {
 		return ""
 	}

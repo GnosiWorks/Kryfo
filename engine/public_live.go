@@ -287,6 +287,7 @@ func liveHeard(rcvPk string, at int64) {
 
 // a public relay answered: the route works
 func pubRelayAnswered() {
+	wakeRouteProven()
 	liveMu.Lock()
 	pubAnsweredAt = ownClock()
 	liveMu.Unlock()
@@ -294,6 +295,8 @@ func pubRelayAnswered() {
 
 // an entry of our relay answered: an eose, an event or a probe's reply
 func ownRelayAnswered() {
+	wakeRouteProven()
+	wakeOwnProven()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
@@ -306,6 +309,7 @@ func ownRelayAnswered() {
 
 // an attempt on an entry of our relay failed
 func ownRelayFailed() {
+	wakeCheck()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()
@@ -326,6 +330,15 @@ func ownRelayFailed() {
 		log.Println("nostr: our relay is down, public relays read more often")
 		liveWakeLocked()
 	}
+}
+
+// the phone slept: a span of failures begun before it ends there, so a
+// public relay answering before ours at the wake finds no span to finish
+func liveSlept() (cut bool) {
+	liveMu.Lock()
+	cut, ownFailedAt = ownFailedAt != 0, 0
+	liveMu.Unlock()
+	return cut
 }
 
 // whether the round now is the one for our relay down

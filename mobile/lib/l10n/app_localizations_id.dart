@@ -9278,4 +9278,95 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
+
+  @override
+  String get passFieldLabel => 'Frasa sandi';
+
+  @override
+  String get padUseLetters => 'Pakai huruf';
+
+  @override
+  String get padUseDigits => 'Pakai angka';
+
+  @override
+  String get passWeak => 'Lemah';
+
+  @override
+  String get passFair => 'Cukup';
+
+  @override
+  String get passStrong => 'Kuat';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Kekuatan: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Chip keamanan ponsel sedang sibuk. Coba lagi sebentar lagi.';
+
+  @override
+  String get lockKeyLocked =>
+      'Buka kunci ponselmu sekali dengan PIN ponsel itu sendiri, lalu coba lagi.';
+
+  @override
+  String get lockKeyWaiting => 'Chip keamanan ponsel masih memeriksa';
+
+  @override
+  String get lockKeyLost =>
+      'Ponsel ini kehilangan kunci yang memeriksa PIN-mu, jadi beberapa PIN mungkin tidak bisa membuka. Kryfo bisa diatur ulang lalu cadangan dipulihkan.';
+
+  @override
+  String get lockKeyReset => 'Atur ulang Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Atur ulang Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Semua isi Kryfo di ponsel ini dihapus dan Kryfo ditutup. Setelah itu kamu bisa memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Ini tidak bisa dibatalkan';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Semua obrolan, kunci, dan pengaturan Kryfo di ponsel ini hilang sekarang.';
+
+  @override
+  String get lockKeyResetSure => 'Hapus semuanya';
+
+  @override
+  String get flowVaultPassLine =>
+      'Minimal 12 karakter. Keyboard ponsel melihat apa yang kamu ketik, jadi pakai keyboard yang tidak mempelajari atau menyinkronkan kata.';
+
+  @override
+  String get flowVaultPassAgain => 'Frasa sandi yang sama sekali lagi';
+
+  @override
+  String get cardTitle => 'Selesaikan pembaruan keamanan';
+
+  @override
+  String get cardLine =>
+      'Kalau kamu memakai PIN lain, ketik masing-masing sekali di sini.';
+
+  @override
+  String get cardType => 'Ketik PIN';
+
+  @override
+  String get cardAnswer =>
+      'Sudah. Ketik yang lain, atau ketuk Selesai kalau sudah.';
+
+  @override
+  String get keyLine =>
+      'PIN-mu hanya berfungsi di ponsel ini. Kalau suatu saat ponsel kehilangan kunci yang memeriksanya, kamu harus mengatur ulang Kryfo dan memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get keyLineUnlocked =>
+      'PIN-mu hanya berfungsi di ponsel ini, dan hanya saat ponsel tidak terkunci. Kalau suatu saat ponsel kehilangan kunci yang memeriksanya, kamu harus mengatur ulang Kryfo dan memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
 }

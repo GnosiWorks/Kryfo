@@ -9451,4 +9451,95 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Пока включён простой значок, новые фото, видео и файлы сохраняются с обычными названиями в обычные папки телефона. То, что уже сохранено, остаётся на месте.';
+
+  @override
+  String get passFieldLabel => 'Парольная фраза';
+
+  @override
+  String get padUseLetters => 'Ввести буквами';
+
+  @override
+  String get padUseDigits => 'Ввести цифрами';
+
+  @override
+  String get passWeak => 'Слабая';
+
+  @override
+  String get passFair => 'Средняя';
+
+  @override
+  String get passStrong => 'Надёжная';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Надёжность: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Чип безопасности телефона занят. Попробуйте ещё раз через минуту.';
+
+  @override
+  String get lockKeyLocked =>
+      'Разблокируйте телефон один раз его собственным PIN-кодом и попробуйте снова.';
+
+  @override
+  String get lockKeyWaiting => 'Чип безопасности телефона ещё проверяет';
+
+  @override
+  String get lockKeyLost =>
+      'Телефон потерял ключ, которым проверяются ваши PIN-коды, поэтому некоторые из них могут не открыть. Kryfo можно сбросить и восстановить из резервной копии.';
+
+  @override
+  String get lockKeyReset => 'Сбросить Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Сбросить Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Всё, что есть в Kryfo на этом телефоне, будет удалено, и Kryfo закроется. Затем можно восстановить резервную копию. Скрытые чаты вернутся только из копии, сделанной, пока они были открыты.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Это нельзя отменить';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Все чаты, ключи и настройки Kryfo на этом телефоне будут удалены прямо сейчас.';
+
+  @override
+  String get lockKeyResetSure => 'Удалить всё';
+
+  @override
+  String get flowVaultPassLine =>
+      'Не меньше 12 символов. Клавиатура телефона видит, что вы вводите, поэтому выберите ту, что не запоминает и не синхронизирует слова.';
+
+  @override
+  String get flowVaultPassAgain => 'Та же парольная фраза ещё раз';
+
+  @override
+  String get cardTitle => 'Завершите обновление безопасности';
+
+  @override
+  String get cardLine =>
+      'Если вы пользуетесь другими PIN-кодами, введите каждый здесь один раз.';
+
+  @override
+  String get cardType => 'Ввести PIN-код';
+
+  @override
+  String get cardAnswer =>
+      'Готово. Введите ещё один или нажмите «Готово», когда закончите.';
+
+  @override
+  String get keyLine =>
+      'Ваши PIN-коды работают только на этом телефоне. Если телефон когда-нибудь потеряет ключ, которым они проверяются, придётся сбросить Kryfo и восстановить резервную копию. Скрытые чаты вернутся только из копии, сделанной, пока они были открыты.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Ваши PIN-коды работают только на этом телефоне и только пока он разблокирован. Если телефон когда-нибудь потеряет ключ, которым они проверяются, придётся сбросить Kryfo и восстановить резервную копию. Скрытые чаты вернутся только из копии, сделанной, пока они были открыты.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Включите блокировку экрана на телефоне, чтобы эта защита действовала и тогда, когда он заблокирован.';
 }

@@ -9276,4 +9276,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.';
+
+  @override
+  String get passFieldLabel => 'Passphrase';
+
+  @override
+  String get padUseLetters => 'Use letters';
+
+  @override
+  String get padUseDigits => 'Use digits';
+
+  @override
+  String get passWeak => 'Weak';
+
+  @override
+  String get passFair => 'Fair';
+
+  @override
+  String get passStrong => 'Strong';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Strength: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'The phone\'s security chip is busy. Try again in a moment.';
+
+  @override
+  String get lockKeyLocked =>
+      'Unlock your phone with its own PIN once, then try again.';
+
+  @override
+  String get lockKeyWaiting => 'Still checking with the phone\'s security chip';
+
+  @override
+  String get lockKeyLost =>
+      'This phone lost the key that checks your PINs, so some PINs may not open. Kryfo can be reset and a backup restored.';
+
+  @override
+  String get lockKeyReset => 'Reset Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Reset Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Everything in Kryfo on this phone is deleted and Kryfo closes. Then you can restore a backup. Hidden chats come back only from a backup made while they were open.';
+
+  @override
+  String get lockKeyResetSureTitle => 'This cannot be undone';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'All chats, keys and settings in Kryfo on this phone go now.';
+
+  @override
+  String get lockKeyResetSure => 'Delete everything';
+
+  @override
+  String get flowVaultPassLine =>
+      'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.';
+
+  @override
+  String get flowVaultPassAgain => 'The same passphrase again';
+
+  @override
+  String get cardTitle => 'Finish the security update';
+
+  @override
+  String get cardLine => 'If you use other PINs, type them once here.';
+
+  @override
+  String get cardType => 'Type a PIN';
+
+  @override
+  String get cardAnswer =>
+      'Done. Type another, or tap Done when you are finished.';
+
+  @override
+  String get keyLine =>
+      'Your PINs only work on this phone. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Your PINs only work on this phone, and only while it is unlocked. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Set a screen lock on your phone so this protection holds when it is locked.';
 }
