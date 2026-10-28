@@ -103,6 +103,8 @@ import '../main.dart'
         session,
         sessionQuiet,
         signalEncrypt,
+        peerXPubOf,
+        AppStateDoor,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -1345,7 +1347,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadWall();
     // a new default under appearance shows here at once
     wallpaperRevision.addListener(_loadWall);
-    signalSession.peerXPubHex(widget.peerHaloId).then((v) {
+    peerXPubOf(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
       if (mounted && v != null && v.isNotEmpty) {
@@ -3313,7 +3315,7 @@ class _ChatScreenState extends State<ChatScreen>
       xPub: () async {
         var xpub = _peerXPub;
         xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        xpub ??= await peerXPubOf(widget.peerHaloId);
         if (xpub != null) _peerXPub = xpub;
         return xpub;
       },
@@ -3326,8 +3328,15 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
-      viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
+      viaFirst: (x, fc) => engine.sendFirstContact(
+        appState.identOf(widget.peerHaloId),
+        x,
+        fc,
+        cipher,
+      ),
+      viaRelay: (x) => Future(
+        () => engine.nostrSend(appState.identOf(widget.peerHaloId), x, cipher),
+      ),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
       bothWent: uid == null

@@ -7,10 +7,8 @@
 // id but theirs in an opener's field, and every engine call names their
 // identity. real signal and database methods over rows in maps; the wire
 // is a stand-in that keeps what it is handed
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,14 +16,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
     show
+        AppIo,
         HaloDb,
         HaloEngine,
+        OtherIdentity,
         appState,
+        newMsgUid,
         useDatabasesForTest,
         useEngineForTest,
-        AppStateContacts,
+        AppStateDevchat,
+        AppStateDoor,
         AppStateGroups,
-        AppStateHeal,
+        AppStateIdentity,
         AppStateMessages,
         AppStateOutbox,
         AppStateRoute;
@@ -36,6 +38,7 @@ import 'package:kryfo/wire_pad.dart' show unpad;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
+import 'engine_take_scan.dart' show sourceCode;
 import 'mem_db.dart';
 import 'signal_kit.dart';
 
@@ -43,8 +46,10 @@ const _p0Words = 'amber-otter-lake';
 const _p0Onion =
     'p0onionp0onionp0onionp0onionp0onionp0onionp0onionp0oniond.onion';
 const _p0Handle = 'mainface';
-const _p0Ed = 'e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1';
-const _p0Fc = 'fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00';
+const _p0Ed =
+    'e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1e0d1';
+const _p0Fc =
+    'fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00fc00';
 const _ci = 'brisk-cedar-moon';
 const _ciOnion =
     'theironiontheironiontheironiontheironiontheironiontheironion.onion';
@@ -92,6 +97,14 @@ class _Wire implements HaloEngine {
   @override
   String firstContactPk(int ident, int counter) => _p0Fc;
 
+  // the identities the door hands it
+  final put = <int>{};
+  @override
+  String identityPut(int ident, String xPrivHex) {
+    put.add(ident);
+    return 'ok';
+  }
+
   @override
   Future<String> nostrSend(int ident, String x, String c) {
     out.add(_Out('relay', ident, x, c));
@@ -129,7 +142,8 @@ String _hex(List<int> b) =>
     b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
 
 Uint8List _unhex(String h) => Uint8List.fromList([
-  for (var i = 0; i < h.length; i += 2) int.parse(h.substring(i, i + 2), radix: 16),
+  for (var i = 0; i < h.length; i += 2)
+    int.parse(h.substring(i, i + 2), radix: 16),
 ]);
 
 // every form a key or a name of the main identity takes on a wire
@@ -143,7 +157,12 @@ class _Main {
     _p0Onion,
     _p0Onion.replaceAll('.onion', ''),
     _p0Handle,
-    for (final k in [x, Uint8List.fromList([5, ...x]), _unhex(_p0Ed), _unhex(_p0Fc)])
+    for (final k in [
+      x,
+      Uint8List.fromList([5, ...x]),
+      _unhex(_p0Ed),
+      _unhex(_p0Fc),
+    ])
       ..._forms(k),
   ];
   late final _bytes = <Uint8List>[
@@ -227,7 +246,8 @@ void main() {
 
   tearDownAll(() => docs.deleteSync(recursive: true));
 
-  setUp(() async {
+  // one phone for every test: the main store is the app's own, made once
+  setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     mem = MemDb();
@@ -326,7 +346,8 @@ void main() {
       'peer_id': _ci,
       'direction': 'out',
       'plaintext': text,
-      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      // written a while ago: the outbox leaves a send seconds old alone
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 120000,
       'msg_uid': uid,
       'sent': 0,
     });
@@ -339,8 +360,8 @@ void main() {
     final uid = await sentRow('hi there');
     await appState.drainOutbox(wait: true);
     var got = await spy();
-    expect(got.map((m) => m.text), contains('hi there'));
-    final first = got.firstWhere((m) => m.text == 'hi there');
+    expect(got.map((m) => m.message), contains('hi there'));
+    final first = got.firstWhere((m) => m.message == 'hi there');
     expect(first.senderHaloId, isNull);
     expect(first.senderXPub, _hex(ciX));
     // they answer: the session settles
@@ -385,10 +406,7 @@ void main() {
     got = await spy();
     expect(got.where((m) => m.groupId == g), isNotEmpty);
     final roster = got.firstWhere((m) => m.rosterParticipants != null);
-    expect(
-      roster.rosterParticipants!.map((e) => e['x']),
-      contains(_hex(ciX)),
-    );
+    expect(roster.rosterParticipants!.map((e) => e['x']), contains(_hex(ciX)));
   });
 
   test('a frame naming the main identity is refused at the door, and '
@@ -396,7 +414,7 @@ void main() {
     await expectLater(
       appState.sealForTest(
         _ci,
-        await wrapMessage('', supporterBadge: _p0Words),
+        await wrapMessage('', supporterBadge: 'at $_p0Onion'),
       ),
       throwsA(isA<OtherIdentity>()),
     );
@@ -411,9 +429,43 @@ void main() {
     expect(wire.out, isEmpty);
   });
 
+  test('a typing frame seals at the door too, on their identity', () async {
+    // the session is settled by the first test's answer
+    const io = AppIo();
+    final cipher = await io.typingSeal(_ci, '{"ty":1}');
+    await io.typingSend(_ciOnion, cipher);
+    final got = await spy();
+    expect(got, hasLength(1));
+  });
+
+  test('nothing seals a frame for a contact but the door', () {
+    // every store's seal is called from the door's signalEncrypt, or from
+    // the dev chat's own lane
+    final seals = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final src = sourceCode(f.path);
+      if (src.contains('.encryptTo(')) seals.add(f.path.replaceAll(r'\', '/'));
+    }
+    expect(seals..sort(), ['lib/app/signal.dart', 'lib/devchat/dev_lane.dart']);
+    final signal = sourceCode('lib/app/signal.dart');
+    final enc = signal.substring(
+      signal.indexOf('Future<String> signalEncrypt('),
+    );
+    final body = enc.substring(0, enc.indexOf('\n}\n'));
+    expect(body, contains('appState.doorFor(peerId, plaintext)'));
+    expect(body.indexOf('doorFor'), lessThan(body.indexOf('.encryptTo(')));
+    // and the one frame outside a session goes through it as well
+    expect(
+      sourceCode('lib/app/state_heal.dart'),
+      contains('doorFor(memberId, payload, outside: true)'),
+    );
+  });
+
   test('the listen for them names their identity', () async {
     await appState.subscribePeer(_ci);
     final x = (await mem.query('contacts')).first['xpub'] as String;
-    expect(wire.listened, [(1, x)]);
+    expect(wire.listened, contains((1, x)));
+    expect(wire.listened.where((l) => l.$1 != 1 && l.$2 == x), isEmpty);
   });
 }

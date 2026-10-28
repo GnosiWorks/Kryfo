@@ -40,9 +40,9 @@ class _Rows extends HaloDb {
 class _Wire extends ArrivalIo {
   final out = <String>[];
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     out.add(cipher);
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 }
 

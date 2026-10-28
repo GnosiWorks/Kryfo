@@ -388,7 +388,7 @@ Future<String> buildHaloUriV2(String id, String onion) async {
 // still works when our onion will not publish
 Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
   final bundle = await makePreKeyBundleB64();
-  final fc = engine.firstContactPk(fcCounter);
+  final fc = engine.firstContactPk(kMainIdent, fcCounter);
   if (fc.isEmpty || fc.startsWith('error')) {
     return buildHaloUriV2(id, onion);
   }

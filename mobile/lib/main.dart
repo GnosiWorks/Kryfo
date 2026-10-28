@@ -200,6 +200,7 @@ part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';
 part 'app/signal.dart';
+part 'app/door.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
 part 'app/state_boot.dart';

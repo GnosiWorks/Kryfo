@@ -26,7 +26,7 @@ class _Registry implements HaloEngine {
   }
 
   @override
-  String firstContactPk(int counter) => '';
+  String firstContactPk(int ident, int counter) => '';
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');

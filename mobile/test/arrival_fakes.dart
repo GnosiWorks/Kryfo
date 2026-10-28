@@ -154,7 +154,7 @@ class ArrivalSeal implements VaultSeal {
 
 class ArrivalIo implements AppIo {
   @override
-  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -207,7 +207,7 @@ class ArrivalIo implements AppIo {
   // called as each is asked
   void Function(String xPub, String how)? onLetHeld;
   @override
-  Future<String> letHeld(String xPub, String how) async {
+  Future<String> letHeld(int ident, String xPub, String how) async {
     letGo.add((xPub, how));
     onLetHeld?.call(xPub, how);
     return 'ok';
@@ -216,8 +216,8 @@ class ArrivalIo implements AppIo {
   // each call marking what is held for these keys, on a start or unlock
   final marked = <List<String>>[];
   @override
-  Future<String> markHeld(List<String> xPubs) async {
-    marked.add(xPubs);
+  Future<String> markHeld(List<(int, String)> peers) async {
+    marked.add([for (final (_, x) in peers) x]);
     return 'ok';
   }
 
@@ -239,10 +239,11 @@ class ArrivalIo implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
   final unheard = <String>[];
   @override
-  void unlisten(String xPub) => unheard.add(xPub);
+  void unlisten(int ident, String xPub) => unheard.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
@@ -251,7 +252,7 @@ class ArrivalIo implements AppIo {
   var down = false;
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     if (down) return 'error: down';
     sent.add(('relay $xPub', cipher));
     return 'ok';
@@ -265,7 +266,12 @@ class ArrivalIo implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
   }
