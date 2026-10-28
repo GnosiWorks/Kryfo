@@ -56,6 +56,18 @@ class DesktopBinding extends WidgetsFlutterBinding {
 /// a history of them on disk, and the phone's choice of what to show does
 /// not reach that far
 class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
+  /// a click brings the window up from the tray before the chat opens
+  @override
+  Future<bool?> initialize({
+    required LinuxInitializationSettings settings,
+    DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
+  }) => super.initialize(
+    settings: settings,
+    onDidReceiveNotificationResponse: windowFirst(
+      onDidReceiveNotificationResponse,
+    ),
+  );
+
   @override
   Future<void> show({
     required int id,
@@ -104,6 +116,23 @@ class _PrefsPlace extends PathProviderLinux {
 /// tray words, in the app's language. the runner keeps the window's
 /// process running in the tray while one is shown
 const _desktopChannel = MethodChannel('kryfo/desktop');
+
+/// a notification click: the window up first, then what the app does
+@visibleForTesting
+DidReceiveNotificationResponseCallback windowFirst(
+  DidReceiveNotificationResponseCallback? then, {
+  Future<void> Function() show = showWindow,
+}) => (r) {
+  unawaited(show());
+  then?.call(r);
+};
+
+/// the window, shown and raised
+Future<void> showWindow() async {
+  try {
+    await _desktopChannel.invokeMethod<void>('show');
+  } catch (_) {}
+}
 
 Future<void> sayTrayWords() async {
   try {

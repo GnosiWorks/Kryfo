@@ -105,6 +105,9 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
     make_tray(self, map_string(args, "open"), map_string(args, "quit"),
               map_string(args, "tip"));
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else if (g_strcmp0(fl_method_call_get_name(call), "show") == 0) {
+    show_window(self);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
   } else {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
   }
@@ -233,10 +236,18 @@ static void my_application_class_init(MyApplicationClass* klass) {
 
 static void my_application_init(MyApplication* self) {}
 
+// unique, so a second start raises the first. the flag's new name came in
+// glib 2.74; ubuntu 22.04 has 2.72
+#if GLIB_CHECK_VERSION(2, 74, 0)
+#define KRYFO_APP_FLAGS G_APPLICATION_DEFAULT_FLAGS
+#else
+#define KRYFO_APP_FLAGS G_APPLICATION_FLAGS_NONE
+#endif
+
 MyApplication* my_application_new() {
   g_set_prgname(APPLICATION_ID);
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_DEFAULT_FLAGS, nullptr));
+                                     KRYFO_APP_FLAGS, nullptr));
 }
