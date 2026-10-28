@@ -4,13 +4,13 @@
 // read from the everyday database alone: hidden chats, the decoy and the
 // chat with the developer never go, and no hidden contact's key, address or
 // id is in any row that does
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../container.dart';
+import '../router.dart' show hiddenNames;
 import 'history_ffi.dart';
 
 /// how far back files go with the text
@@ -139,32 +139,6 @@ Future<Set<String>> _colsOf(DatabaseExecutor db, String t) async => {
     r['name'] as String,
 };
 
-// every id, key and address the hidden chats' list names, as the everyday
-// side keeps it for routing while the vault is shut
-Future<Set<String>> historyHiddenNames(DatabaseExecutor db) async {
-  final out = <String>{};
-  if (!await _hasTable(db, 'hidden_chats')) return out;
-  void leaves(Object? v) {
-    if (v is String) {
-      if (v.isNotEmpty) out.add(v);
-    } else if (v is Map) {
-      v.values.forEach(leaves);
-    } else if (v is List) {
-      v.forEach(leaves);
-    }
-  }
-
-  for (final r in await db.rawQuery('SELECT chat_id, card FROM hidden_chats')) {
-    leaves(r['chat_id']);
-    try {
-      leaves(jsonDecode(r['card'] as String? ?? ''));
-    } catch (_) {
-      // a card that is not json still names nothing that goes
-    }
-  }
-  return out;
-}
-
 bool _isDev(Object? id) => id is String && id.startsWith('dev:');
 
 /// builds and signs the stream for a new device. [db] is the everyday
@@ -192,7 +166,7 @@ Future<HistoryOutgoing> exportHistory({
       throw const HistoryNotHere('attached');
     }
   }
-  final hidden = await historyHiddenNames(db);
+  final hidden = await hiddenNames(db);
   final support = <String>{
     if (await _hasTable(db, 'support_chats'))
       for (final r in await db.rawQuery('SELECT halo_id FROM support_chats'))

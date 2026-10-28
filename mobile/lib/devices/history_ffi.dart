@@ -282,8 +282,7 @@ class HistorySender {
     }
   }
 
-  int _bytes(String name, List<int> b) {
-    final fn = _l.lookupFunction<_TakeC, _Take>(name);
+  int _bytes(_Take fn, List<int> b) {
     final p = _copyIn(b);
     try {
       return fn(_h, p, b.length);
@@ -297,14 +296,21 @@ class HistorySender {
 
   /// starts a chat; its number in the stream
   int chat(Map<String, Object?> meta) {
-    final n = _bytes('HaloHistSendChat', utf8.encode(jsonEncode(meta)));
+    final n = _bytes(
+      _l.lookupFunction<_TakeC, _Take>('HaloHistSendChat'),
+      utf8.encode(jsonEncode(meta)),
+    );
     if (n < 0) throw const HistoryRefused('chat');
     return n;
   }
 
   /// a message of the chat started last
   void message(Map<String, Object?> row) {
-    if (_bytes('HaloHistSendMessage', utf8.encode(jsonEncode(row))) != 0) {
+    if (_bytes(
+          _l.lookupFunction<_TakeC, _Take>('HaloHistSendMessage'),
+          utf8.encode(jsonEncode(row)),
+        ) !=
+        0) {
       throw const HistoryRefused('message');
     }
   }
@@ -332,7 +338,8 @@ class HistorySender {
   }
 
   void signed(Uint8List sig) {
-    if (_bytes('HaloHistSendSigned', sig) != 0) {
+    if (_bytes(_l.lookupFunction<_TakeC, _Take>('HaloHistSendSigned'), sig) !=
+        0) {
       throw const HistoryRefused('signature');
     }
   }
