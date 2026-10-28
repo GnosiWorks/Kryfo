@@ -13,6 +13,7 @@ import 'package:kryfo/screens/photo_knows_screen.dart';
 import 'package:kryfo/screens/tools_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
+import 'package:kryfo/widgets/tool_parts.dart';
 
 import 'meta_fixtures.dart';
 
@@ -198,6 +199,34 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
   }
+
+  testWidgets('large text: a tool button takes a second line, never cut', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      framed(
+        Center(
+          child: SizedBox(
+            width: 300,
+            child: ToolWideButton(
+              label: 'Remove all of it',
+              filled: true,
+              onTap: () {},
+            ),
+          ),
+        ),
+        scale: 1.5,
+      ),
+    );
+    expect(t.takeException(), isNull);
+    final p = t.renderObject<RenderParagraph>(find.text('Remove all of it'));
+    expect(p.didExceedMaxLines, isFalse);
+    final words = t.getSize(find.text('Remove all of it'));
+    expect(
+      t.getSize(find.byType(ToolWideButton)).height,
+      greaterThan(words.height),
+    );
+  });
 
   testWidgets('a photo with an hdr layer: same picture, the layer removed', (
     t,
