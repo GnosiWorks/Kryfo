@@ -63,11 +63,11 @@ List<String> sqlcipherCandidates({String? exe, Map<String, String>? env}) {
 /// files are made with
 const kMinCipherMajor = 4;
 
-typedef _KeyC = Int32 Function(Pointer<Void>, Pointer<Uint8>, Int32);
-typedef _Key = int Function(Pointer<Void>, Pointer<Uint8>, int);
+typedef _CipherKeyC = Int32 Function(Pointer<Void>, Pointer<Uint8>, Int32);
+typedef _CipherKey = int Function(Pointer<Void>, Pointer<Uint8>, int);
 
-// sqlite3_key of the library this isolate opened
-_Key? _sqliteKey;
+// the library this isolate opened
+DynamicLibrary? _cipherLib;
 
 /// the first candidate that loads and is sqlcipher. a library without
 /// sqlite3_key is passed over, whatever its name says
@@ -81,7 +81,7 @@ DynamicLibrary openSqlcipher([List<String>? candidates]) {
       continue;
     }
     if (!lib.providesSymbol('sqlite3_key')) continue;
-    _sqliteKey = lib.lookupFunction<_KeyC, _Key>('sqlite3_key');
+    _cipherLib = lib;
     return lib;
   }
   throw const NoCipherError('no sqlcipher library');
@@ -108,8 +108,8 @@ void keyConnection(CommonDatabase db, Object? password) {
   if (password is! String || password.isEmpty) {
     throw const NoCipherError('no key');
   }
-  final key = _sqliteKey;
-  if (key == null || db is! ffi.Database) {
+  final lib = _cipherLib;
+  if (lib == null || db is! ffi.Database) {
     throw const NoCipherError('no sqlite3_key here');
   }
   // the key's bytes with their length, never through sql text
@@ -117,7 +117,12 @@ void keyConnection(CommonDatabase db, Object? password) {
   final buf = calloc<Uint8>(bytes.length);
   try {
     buf.asTypedList(bytes.length).setAll(0, bytes);
-    if (key(db.handle.cast(), buf, bytes.length) != 0) {
+    final r = lib.lookupFunction<_CipherKeyC, _CipherKey>('sqlite3_key')(
+      db.handle.cast(),
+      buf,
+      bytes.length,
+    );
+    if (r != 0) {
       throw const NoCipherError('the key was refused');
     }
   } finally {
