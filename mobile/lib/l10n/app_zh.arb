@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "至少选一个",
   "newGroupSelected": "{count, plural, other{已选 {count} 个}}",
   "newGroupAddAtLeastOne": "创建群组之前，请先添加至少一位联系人。",
+  "newGroupNeedsContacts": "群组由你的联系人组成",
+  "newGroupAddSomeoneFirst": "请先添加联系人。聊天室不需要联系人：有链接的人都能加入。",
   "notesDeleteThisNote": "删除这条笔记？",
   "notesHoldHint": "长按一条笔记即可复制或删除。",
   "notesMenu": "笔记菜单",

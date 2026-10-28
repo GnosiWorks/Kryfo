@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "至少選一位",
   "newGroupSelected": "{count, plural, other{已選 {count} 位}}",
   "newGroupAddAtLeastOne": "建立群組前，請先新增至少一位聯絡人。",
+  "newGroupNeedsContacts": "群組由你的聯絡人組成",
+  "newGroupAddSomeoneFirst": "請先新增聯絡人。聊天室不需要聯絡人：有連結的人都能加入。",
   "notesDeleteThisNote": "要刪除這則筆記嗎？",
   "notesHoldHint": "長按一則筆記即可複製或刪除。",
   "notesMenu": "筆記選單",

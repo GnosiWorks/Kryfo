@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "Chọn ít nhất một người",
   "newGroupSelected": "{count, plural, other{Đã chọn {count}}}",
   "newGroupAddAtLeastOne": "Hãy thêm ít nhất một liên hệ trước khi tạo nhóm.",
+  "newGroupNeedsContacts": "Nhóm được tạo với các liên hệ của bạn",
+  "newGroupAddSomeoneFirst": "Hãy thêm ai đó trước. Phòng không cần liên hệ: ai có liên kết đều có thể vào.",
   "notesDeleteThisNote": "Xóa ghi chú này?",
   "notesHoldHint": "Nhấn giữ một ghi chú để sao chép hoặc xóa.",
   "notesMenu": "Menu ghi chú",

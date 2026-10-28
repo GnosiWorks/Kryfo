@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "اختر واحدًا على الأقل",
   "newGroupSelected": "{count, plural, other{تم تحديد ⁨{count}⁩}}",
   "newGroupAddAtLeastOne": "أضف جهة اتصال واحدة على الأقل قبل إنشاء مجموعة.",
+  "newGroupNeedsContacts": "تُنشأ المجموعات مع جهات اتصالك",
+  "newGroupAddSomeoneFirst": "أضف شخصًا أولًا. لا تحتاج الغرفة إلى جهات اتصال: يمكن لأي شخص لديه رابطها الانضمام.",
   "notesDeleteThisNote": "حذف هذه الملاحظة؟",
   "notesHoldHint": "اضغط مطولًا على ملاحظة لنسخها أو حذفها.",
   "notesMenu": "قائمة الملاحظات",

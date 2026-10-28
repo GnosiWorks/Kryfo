@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "Pilih minimal satu",
   "newGroupSelected": "{count, plural, other{{count} dipilih}}",
   "newGroupAddAtLeastOne": "Tambahkan minimal satu kontak dulu sebelum membuat grup.",
+  "newGroupNeedsContacts": "Grup dibuat bersama kontakmu",
+  "newGroupAddSomeoneFirst": "Tambahkan seseorang dulu. Ruang tidak butuh kontak: siapa pun yang punya tautannya bisa bergabung.",
   "notesDeleteThisNote": "Hapus catatan ini?",
   "notesHoldHint": "Tahan sebuah catatan untuk menyalin atau menghapusnya.",
   "notesMenu": "Menu catatan",

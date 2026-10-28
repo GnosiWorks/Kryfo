@@ -4856,6 +4856,14 @@
   "@newGroupAddAtLeastOne": {
     "description": "screens/new_group_screen.dart"
   },
+  "newGroupNeedsContacts": "Groups are made with your contacts",
+  "@newGroupNeedsContacts": {
+    "description": "screens/new_group_screen.dart"
+  },
+  "newGroupAddSomeoneFirst": "Add someone first. A room needs no contacts: anyone with its link can join.",
+  "@newGroupAddSomeoneFirst": {
+    "description": "screens/new_group_screen.dart"
+  },
   "notesDeleteThisNote": "Delete this note?",
   "@notesDeleteThisNote": {
     "description": "screens/notes_screen.dart"

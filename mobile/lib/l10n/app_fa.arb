@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "دست‌کم یکی انتخاب کنید",
   "newGroupSelected": "{count, plural, other{⁨{count}⁩ انتخاب‌شده}}",
   "newGroupAddAtLeastOne": "پیش از ساختن گروه، دست‌کم یک مخاطب اضافه کنید.",
+  "newGroupNeedsContacts": "گروه‌ها با مخاطبان شما ساخته می‌شوند",
+  "newGroupAddSomeoneFirst": "اول یک نفر را اضافه کنید. اتاق به مخاطب نیازی ندارد: هر کس پیوندش را داشته باشد می‌تواند وارد شود.",
   "notesDeleteThisNote": "این یادداشت حذف شود؟",
   "notesHoldHint": "برای کپی یا حذف، روی یادداشت نگه دارید.",
   "notesMenu": "منوی یادداشت‌ها",

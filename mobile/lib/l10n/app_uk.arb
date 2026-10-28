@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "Обери хоча б одного",
   "newGroupSelected": "{count, plural, other{{count} вибрано}}",
   "newGroupAddAtLeastOne": "Щоб створити групу, спершу додай хоча б один контакт.",
+  "newGroupNeedsContacts": "Групи створюються з твоїх контактів",
+  "newGroupAddSomeoneFirst": "Спершу додай когось. Кімнаті контакти не потрібні: увійти може будь-хто, хто має посилання.",
   "notesDeleteThisNote": "Видалити цю нотатку?",
   "notesHoldHint": "Утримуй нотатку, щоб скопіювати або видалити її.",
   "notesMenu": "Меню нотаток",

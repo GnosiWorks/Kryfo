@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "Escolha pelo menos um",
   "newGroupSelected": "{count, plural, one{{count} selecionado} other{{count} selecionados}}",
   "newGroupAddAtLeastOne": "Adicione pelo menos um contato antes de criar um grupo.",
+  "newGroupNeedsContacts": "Grupos são feitos com seus contatos",
+  "newGroupAddSomeoneFirst": "Adicione alguém primeiro. Uma sala não precisa de contatos: quem tiver o link pode entrar.",
   "notesDeleteThisNote": "Excluir esta nota?",
   "notesHoldHint": "Toque e segure uma nota para copiar ou apagar.",
   "notesMenu": "Menu das notas",

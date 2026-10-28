@@ -525,6 +525,9 @@ class _ChatsTab extends StatelessWidget {
                       dev: devShown,
                       onOpenDev: onOpenDevChat,
                       onAdd: onAddContact,
+                      onNewGroup: onNewGroup,
+                      onNewRoom: onNewRoom,
+                      expiredRoomName: expiredRoomName,
                     )
                   : _ContactList(
                       key: const ValueKey('list'),
@@ -1527,17 +1530,24 @@ class _OfflineStrip extends StatelessWidget {
 
 // ---- empty state ----
 
-// no chats yet: the developer chat's row on top, and under it the page
-// still asks to add someone. short phones and big fonts scroll it
+// no chats yet: the developer chat's row on top, the groups heading under
+// it, and the page still asks to add someone. short phones and big fonts
+// scroll it
 class _EmptyWithDev extends StatelessWidget {
   final DevRow? dev;
   final void Function(String chatId) onOpenDev;
   final VoidCallback onAdd;
+  final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
   const _EmptyWithDev({
     super.key,
     required this.dev,
     required this.onOpenDev,
     required this.onAdd,
+    required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
   });
 
   @override
@@ -1556,6 +1566,14 @@ class _EmptyWithDev extends StatelessWidget {
                     index: 0,
                     child: _DevSwipeRow(d: d, onTap: () => onOpenDev(d.chatId)),
                   ),
+          ),
+        ),
+        // a room needs no contacts, so the way to one is here too
+        SliverToBoxAdapter(
+          child: _GroupsHead(
+            onNewGroup: onNewGroup,
+            onNewRoom: onNewRoom,
+            expiredRoomName: expiredRoomName,
           ),
         ),
         SliverFillRemaining(
@@ -1718,13 +1736,17 @@ class _EmptyStateState extends State<_EmptyState>
                       color: HaloColors.onAmber,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      l10n.homeAddSomeone,
-                      style: HaloType.sans(
-                        size: 13.5,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                        height: 1,
+                    // a large font wraps the label instead of cutting it
+                    Flexible(
+                      child: Text(
+                        l10n.homeAddSomeone,
+                        textAlign: TextAlign.center,
+                        style: HaloType.sans(
+                          size: 13.5,
+                          weight: FontWeight.w600,
+                          color: HaloColors.onAmber,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ],
@@ -1922,43 +1944,10 @@ class _ContactListState extends State<_ContactList> {
           for (final (n, d) in top.indexed) _row(_top, d, n),
           // the groups heading is always there: it is where a group or a
           // room is made, even with none yet
-          _SectionHead(
-            label: l10n.homeGroups,
-            actions: [
-              _HeadAction(
-                icon: Icons.timer_outlined,
-                label: l10n.homeRoom,
-                color: HaloColors.violet,
-                onTap: widget.onNewRoom,
-              ),
-              _HeadAction(
-                icon: Icons.add_rounded,
-                label: l10n.homeNew,
-                color: HaloColors.amber,
-                onTap: widget.onNewGroup,
-              ),
-            ],
-          ),
-          // a room that just ended: one quiet line that opens under the
-          // heading and folds away a few seconds later
-          GrowSwap(
-            alignment: Alignment.topCenter,
-            child: widget.expiredRoomName == null
-                ? const SizedBox(key: ValueKey('no-expired'), width: 1)
-                : Padding(
-                    key: ValueKey('expired-${widget.expiredRoomName}'),
-                    padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                        l10n.homeRoomExpired(widget.expiredRoomName!),
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.violet,
-                        ),
-                      ),
-                    ),
-                  ),
+          _GroupsHead(
+            onNewGroup: widget.onNewGroup,
+            onNewRoom: widget.onNewRoom,
+            expiredRoomName: widget.expiredRoomName,
           ),
           for (final (n, g) in groups.indexed) _row(_groups, g, n),
           if (chats.isNotEmpty) ...[
@@ -1969,6 +1958,63 @@ class _ContactListState extends State<_ContactList> {
           ],
         ],
       ),
+    );
+  }
+}
+
+// the groups heading with its two ways in, and under it the line for a
+// room that just ended, which opens and folds away a few seconds later.
+// the empty home shows it too: a room needs no contacts
+class _GroupsHead extends StatelessWidget {
+  final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
+  const _GroupsHead({
+    required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final expired = expiredRoomName;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SectionHead(
+          label: l10n.homeGroups,
+          actions: [
+            _HeadAction(
+              icon: Icons.timer_outlined,
+              label: l10n.homeRoom,
+              color: HaloColors.violet,
+              onTap: onNewRoom,
+            ),
+            _HeadAction(
+              icon: Icons.add_rounded,
+              label: l10n.homeNew,
+              color: HaloColors.amber,
+              onTap: onNewGroup,
+            ),
+          ],
+        ),
+        GrowSwap(
+          alignment: Alignment.topCenter,
+          child: expired == null
+              ? const SizedBox(key: ValueKey('no-expired'), width: 1)
+              : Padding(
+                  key: ValueKey('expired-$expired'),
+                  padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      l10n.homeRoomExpired(expired),
+                      style: HaloType.mono(size: 10, color: HaloColors.violet),
+                    ),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

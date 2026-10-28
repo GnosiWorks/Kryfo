@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "En az birini seç",
   "newGroupSelected": "{count, plural, one{{count} seçildi} other{{count} seçildi}}",
   "newGroupAddAtLeastOne": "Grup oluşturmadan önce en az bir kişi ekle.",
+  "newGroupNeedsContacts": "Gruplar kişilerinle kurulur",
+  "newGroupAddSomeoneFirst": "Önce birini ekle. Oda için kişi gerekmez: bağlantısı olan herkes katılabilir.",
   "notesDeleteThisNote": "Bu not silinsin mi?",
   "notesHoldHint": "Kopyalamak ya da silmek için bir notun üstüne basılı tut.",
   "notesMenu": "Not menüsü",

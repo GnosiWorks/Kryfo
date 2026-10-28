@@ -1113,6 +1113,8 @@
   "newGroupPickAtLeastOne": "Mindestens eine wählen",
   "newGroupSelected": "{count, plural, other{{count} ausgewählt}}",
   "newGroupAddAtLeastOne": "Füge zuerst mindestens einen Kontakt hinzu, bevor du eine Gruppe erstellst.",
+  "newGroupNeedsContacts": "Gruppen entstehen mit deinen Kontakten",
+  "newGroupAddSomeoneFirst": "Füge zuerst jemanden hinzu. Ein Raum braucht keine Kontakte: Wer den Link hat, kann beitreten.",
   "notesDeleteThisNote": "Diese Notiz löschen?",
   "notesHoldHint": "Halte eine Notiz gedrückt, um sie zu kopieren oder zu löschen.",
   "notesMenu": "Notizen-Menü",
