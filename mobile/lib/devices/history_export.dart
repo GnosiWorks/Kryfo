@@ -16,6 +16,7 @@ import '../container.dart';
 import '../router.dart' show hiddenChatIds;
 import '../voice_format.dart' show isVoiceName;
 import 'history_ffi.dart';
+import 'history_open.dart';
 
 /// how far back files go with the text
 const kHistoryMediaDays = 30;
@@ -73,6 +74,7 @@ const kHistoryGroupCols = [
   'voice_disguise',
   'ended_at',
   'ended_by',
+  'shots_on',
 ];
 const kHistoryMessageCols = [
   'peer_id',
@@ -149,8 +151,22 @@ List<HistoryChatLeft> historyLeftOf(
 
 /// the planned stream on the phone
 class HistoryOutgoing {
-  HistoryOutgoing._(this._s, this.id, this.head, this.chats);
+  HistoryOutgoing._(this._s, this.id, this.head, this.chats) {
+    _off = historyCopyOpened(_end);
+  }
   final HistorySender _s;
+  late final void Function() _off;
+  bool _ended = false;
+
+  /// a chat was hidden while the copy was open: nothing more goes, and the
+  /// device discards what it took
+  bool get ended => _ended;
+
+  void _end() {
+    if (_ended) return;
+    _ended = true;
+    _s.close();
+  }
 
   /// the stream id the device needs with the first record, as hex
   final String id;
@@ -161,7 +177,10 @@ class HistoryOutgoing {
   List<HistoryChatLeft> get left => historyLeftOf(head, chats);
   int get leftChats => head.leftChats;
 
-  Uint8List record(int i) => _s.record(i);
+  Uint8List record(int i) {
+    if (_ended) throw const HistoryRefused('ended', forGood: true);
+    return _s.record(i);
+  }
 
   /// the device's tally: every chat it counted otherwise
   List<HistoryChatGap> checkTally(Uint8List tally) => [
@@ -169,7 +188,12 @@ class HistoryOutgoing {
       HistoryChatGap(chats[g.chat], g.want, g.got),
   ];
 
-  void close() => _s.close();
+  void close() {
+    _off();
+    if (_ended) return;
+    _ended = true;
+    _s.close();
+  }
 }
 
 Future<bool> _hasTable(DatabaseExecutor db, String t) async =>
@@ -194,23 +218,26 @@ class HistoryHiddenMeanwhile implements Exception {
   const HistoryHiddenMeanwhile();
 }
 
+enum _Voice { yes, no, tooBig }
+
 // a voice note by its bytes as well as its name: under skip a name alone
 // would let a sender's choice of name bring any file along
-Future<bool> _voiceFile(String path) async {
+Future<_Voice> _voiceFile(String path) async {
   try {
     final f = File(path);
     final n = await f.length();
-    if (n < 12 || n > kHistoryVoiceMax) return false;
+    if (n < 12) return _Voice.no;
     final raf = await f.open();
     try {
       final h = await raf.read(12);
       bool at(int i, String s) => String.fromCharCodes(h, i, i + 4) == s;
-      return at(0, 'OggS') || (at(0, 'RIFF') && at(8, 'WAVE'));
+      if (!at(0, 'OggS') && !(at(0, 'RIFF') && at(8, 'WAVE'))) return _Voice.no;
     } finally {
       await raf.close();
     }
+    return n > kHistoryVoiceMax ? _Voice.tooBig : _Voice.yes;
   } catch (_) {
-    return false;
+    return _Voice.no;
   }
 }
 
@@ -294,7 +321,6 @@ Future<HistoryOutgoing> exportHistory({
     final groupCols = [
       for (final c in kHistoryGroupCols)
         if (gcols.contains(c)) c,
-      if (gcols.contains('shots_on')) 'shots_on',
     ];
     final msgCols = [
       for (final c in kHistoryMessageCols)
@@ -479,10 +505,16 @@ Future<HistoryOutgoing> exportHistory({
                 : null;
             row[col] = rel;
             // the month's files; under skip only what really is a voice note
-            final goes =
-                at >= since &&
-                (!skipMedia || (named && await _voiceFile(path)));
-            if (!goes) continue;
+            if (at < since) continue;
+            final voice = skipMedia && named
+                ? await _voiceFile(path)
+                : _Voice.no;
+            // voice notes always come: one too big to is counted
+            if (voice == _Voice.tooBig) {
+              s.left(n);
+              continue;
+            }
+            if (skipMedia && voice != _Voice.yes) continue;
             // a file that would have gone and cannot is counted
             if (rel == null) {
               s.left(n);

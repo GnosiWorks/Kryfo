@@ -13,6 +13,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/history_export.dart';
 import 'package:kryfo/devices/history_ffi.dart';
 import 'package:kryfo/devices/history_import.dart';
+import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show searchTables;
 import 'package:path/path.dart' as p;
@@ -654,6 +655,39 @@ void main() {
       await d.db.query('messages', where: "group_id = '$_shotsGroup'"),
       isEmpty,
     );
+    // the block itself stays on the rows once the copy's notes are gone
+    await imp.clear();
+    expect(
+      (await d.db.query(
+        'groups',
+        where: "group_id = '$_shotsGroup'",
+      )).single['shots_on'],
+      1,
+    );
+    expect(
+      (await d.db.query(
+        'contacts',
+        where: "halo_id = '$_cara'",
+      )).single['shots_on'],
+      1,
+    );
+    out.close();
+  }, skip: skip);
+
+  test('a hide ends an open copy, and nothing more of it goes', () async {
+    final ph = await _phone(ana: 2);
+    final l = _Link();
+    final out = await _export(ph, l);
+    expect(historyCopiesOpen, 1);
+    endHistoryCopies();
+    expect(out.ended, isTrue);
+    expect(historyCopiesOpen, 0);
+    expect(
+      () => out.record(0),
+      throwsA(
+        isA<HistoryRefused>().having((e) => e.forGood, 'for good', isTrue),
+      ),
+    );
     out.close();
   }, skip: skip);
 
@@ -676,12 +710,20 @@ void main() {
         'first_seen': 1,
         'last_seen': 1,
       });
+      // the copy's message went out; this claim comes in under its uid
+      expect(real['direction'], 'out');
       await d.db.insert('messages', {
         'peer_id': _ana,
         'direction': 'in',
         'plaintext': 'not what was said',
         'sent_at': 1,
         'msg_uid': real['msg_uid'],
+      });
+      await d.db.insert('reactions', {
+        'msg_uid': real['msg_uid'],
+        'reactor': _ana,
+        'emoji': '😮',
+        'reacted_at': 5,
       });
       final imp = await _open(d, l, out);
       await _pump(out, imp);
@@ -696,6 +738,23 @@ void main() {
       expect(
         {for (final r in both) r['plaintext']: r['msg_uid'] == uid},
         {'ana says 3': true, 'not what was said': false},
+      );
+      // what came for the claim went with it
+      final other = both.firstWhere((r) => r['msg_uid'] != uid)['msg_uid'];
+      expect(
+        [
+          for (final r in await d.db.query(
+            'reactions',
+            where: 'msg_uid = ?',
+            whereArgs: [other],
+          ))
+            r['emoji'],
+        ],
+        ['😮'],
+      );
+      expect(
+        await d.db.query('reactions', where: 'msg_uid = ?', whereArgs: [uid]),
+        isEmpty,
       );
       final dup = await d.db.rawQuery(
         'SELECT msg_uid FROM messages WHERE msg_uid IS NOT NULL '
@@ -762,6 +821,81 @@ void main() {
     },
     skip: skip,
   );
+
+  test('one message with other words is still one message', () async {
+    final ph = await _phone(ana: 6);
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final real = (await ph.db.query(
+      'messages',
+      where: "plaintext = 'ana says 2'",
+    )).single;
+    // an edit reached the device before the copy did
+    await d.db.insert('contacts', {
+      'halo_id': _ana,
+      'onion': 'o',
+      'xpub': 'x',
+      'first_seen': 1,
+      'last_seen': 1,
+    });
+    await d.db.insert('messages', {
+      'peer_id': _ana,
+      'direction': real['direction'],
+      'plaintext': 'ana says 2, edited',
+      'edited': 1,
+      'sent_at': real['sent_at'],
+      'msg_uid': real['msg_uid'],
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    final rows = await d.db.query(
+      'messages',
+      where: 'msg_uid LIKE ?',
+      whereArgs: ['${real['msg_uid']}%'],
+    );
+    expect([for (final r in rows) r['plaintext']], ['ana says 2']);
+    out.close();
+  }, skip: skip);
+
+  test('a second copy later doubles nothing that was edited since', () async {
+    final ph = await _phone(ana: 6);
+    final first = _Link();
+    final out1 = await _export(ph, first);
+    final d = await _device();
+    var imp = await _open(d, first, out1);
+    await _pump(out1, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    await imp.clear();
+    out1.close();
+    final before = (await d.db.query('messages')).length;
+    // edited on the phone after the first copy
+    await ph.db.update('messages', {
+      'plaintext': 'ana says 4, edited',
+      'edited': 1,
+    }, where: "plaintext = 'ana says 4'");
+    final second = _Link();
+    final out2 = await _export(ph, second);
+    imp = await _open(d, second, out2);
+    await _pump(out2, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    expect((await d.db.query('messages')).length, before);
+    expect(
+      await d.db.query('messages', where: "plaintext = 'ana says 4'"),
+      isEmpty,
+    );
+    expect(
+      await d.db.query('messages', where: "plaintext = 'ana says 4, edited'"),
+      hasLength(1),
+    );
+    final dup = await d.db.rawQuery(
+      'SELECT msg_uid FROM messages WHERE msg_uid IS NOT NULL '
+      'GROUP BY msg_uid HAVING COUNT(*) > 1',
+    );
+    expect(dup, isEmpty);
+    out2.close();
+  }, skip: skip);
 
   test('a chat row too big to go is counted and the copy goes on', () async {
     final ph = await _phone(ana: 2);
@@ -907,6 +1041,12 @@ void main() {
       final out = await _export(ph, l, skip: true);
       expect(out.head.skipMedia, isTrue);
       expect(out.head.files, 1);
+      // voice notes always come: the one too big to is counted, nothing else
+      // skipped is
+      expect(
+        [for (final x in out.left) '${x.chat.id} ${x.rows} ${x.files}'],
+        ['$_ana 0 1', '$_ben 1 0'],
+      );
       final all = await _everyByte(out, l);
       for (final e in ph.files.entries) {
         if (e.key == 'vn1.ogg') continue;

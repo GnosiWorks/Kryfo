@@ -521,35 +521,56 @@ class HistoryImport {
       m['direction'] ??= 'in';
       m['plaintext'] ??= '';
       m['sent_at'] ??= 0;
-      // one that came here live before the copy is counted, not doubled,
-      // but only when it is the same message: same chat, sender, direction
-      // and words. a uid alone is anyone's to claim
+      // a row that came here live under the copy's uid. the same chat,
+      // sender and direction is the same message, edited or not: one row,
+      // in the copy's state, counted. any other row under the uid is
+      // someone else's claim: it keeps its own words and reactions under a
+      // uid of its own, so no two rows share one
       int? id;
       var made = 0;
       final uid = m['msg_uid'];
       if (uid is String) {
-        final there = await t.rawQuery(
-          'SELECT id FROM messages WHERE msg_uid = ? AND peer_id = ? AND '
-          '${chat.group ? 'group_id = ?' : 'group_id IS NULL'} AND '
-          'direction = ? AND plaintext = ? AND id NOT IN '
-          '(SELECT msg_id FROM history_rows) LIMIT 1',
-          [
-            uid,
-            m['peer_id'],
-            if (chat.group) chat.id,
-            m['direction'],
-            m['plaintext'],
-          ],
-        );
-        if (there.isNotEmpty) {
-          id = there.first['id'] as int;
-        } else {
-          // another row under the copy's uid: the copy keeps the uid, the
-          // other is kept under one of its own, so no two rows share one
-          await t.rawUpdate(
-            'UPDATE messages SET msg_uid = ? WHERE msg_uid = ? AND id NOT IN '
-            '(SELECT msg_id FROM history_rows)',
-            ['$uid.${_freshUid()}', uid],
+        for (final live in await t.rawQuery(
+          'SELECT id, peer_id, group_id, direction FROM messages '
+          'WHERE msg_uid = ? AND id NOT IN (SELECT msg_id FROM history_rows)',
+          [uid],
+        )) {
+          final same =
+              id == null &&
+              live['peer_id'] == m['peer_id'] &&
+              live['group_id'] == m['group_id'] &&
+              live['direction'] == m['direction'];
+          if (same) {
+            id = live['id'] as int;
+            await t.update('messages', m, where: 'id = ?', whereArgs: [id]);
+            if (fts) {
+              await t.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
+              final body = searchBody(m);
+              if (body.trim().isNotEmpty) {
+                await t.insert('msg_fts', {'rowid': id, 'body': body});
+              }
+            }
+            continue;
+          }
+          final own = '$uid.${_freshUid()}';
+          await t.update(
+            'messages',
+            {'msg_uid': own},
+            where: 'id = ?',
+            whereArgs: [live['id']],
+          );
+          // what came for it goes with it; the copy brings its own
+          await t.update(
+            'reactions',
+            {'msg_uid': own},
+            where: 'msg_uid = ?',
+            whereArgs: [uid],
+          );
+          await t.update(
+            'poll_votes',
+            {'poll_uid': own},
+            where: 'poll_uid = ?',
+            whereArgs: [uid],
           );
         }
       }
@@ -571,12 +592,14 @@ class HistoryImport {
       if (uid is! String) continue;
       for (final x in (r['x_reactions'] as List? ?? const [])) {
         final e = (x as Map).cast<String, dynamic>();
-        await t.insert('reactions', {
-          'msg_uid': uid,
-          'reactor': e['reactor'],
-          'emoji': e['emoji'],
-          'reacted_at': e['reacted_at'] ?? 0,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        // the later of two reactions by one person stays
+        await t.rawInsert(
+          'INSERT INTO reactions (msg_uid, reactor, emoji, reacted_at) '
+          'VALUES (?, ?, ?, ?) ON CONFLICT (msg_uid, reactor) DO UPDATE SET '
+          'emoji = excluded.emoji, reacted_at = excluded.reacted_at '
+          'WHERE excluded.reacted_at > reactions.reacted_at',
+          [uid, e['reactor'], e['emoji'], e['reacted_at'] ?? 0],
+        );
       }
       for (final x in (r['x_votes'] as List? ?? const [])) {
         final e = (x as Map).cast<String, dynamic>();
