@@ -165,7 +165,7 @@ void main() {
       }
       // sealed to the pinned key, from the one token, once a slot
       expect(sealer.asked, hasLength(16));
-      expect(sealer.asked.every((a) => a == (kPushGatewayKey, _token)), isTrue);
+      expect(sealer.asked.every((a) => a == (kPushGatewayPub, _token)), isTrue);
       expect(await gp.chosen(), kGooglePackage);
       // asked again, nothing is sealed anew: the relay keeps what it has
       await gp.endpoints();

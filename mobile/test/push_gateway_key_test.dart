@@ -13,14 +13,14 @@ void main() {
 
   test('the gateway key is an x25519 key', () {
     expect(
-      base64Url.decode(base64Url.normalize(kPushGatewayKey)),
+      base64Url.decode(base64Url.normalize(kPushGatewayPub)),
       hasLength(32),
     );
   });
 
   test(
     'the gateway key is the server\'s, not the development one',
-    () => expect(kPushGatewayKey, isNot(kPushGatewayDevKey)),
+    () => expect(kPushGatewayPub, isNot(kPushGatewayDevPub)),
     skip: release ? false : 'release check: KRYFO_RELEASE=1',
   );
 }

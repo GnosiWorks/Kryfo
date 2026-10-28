@@ -23,7 +23,7 @@ a feature goes into a release finished or not at all.
   build/app/intermediates/merged_manifests/, plugins add permissions
 - a fresh clone resolves the lockfile: `flutter pub get --enforce-lockfile`
 - the update key is pinned: `KRYFO_RELEASE=1 flutter test test/update_key_test.dart`
-- the push gateway's key is pinned (`kPushGatewayKey` in mobile/lib/google_push.dart, from
+- the push gateway's key is pinned (`kPushGatewayPub` in mobile/lib/google_push.dart, from
   `kryfo-push pubkey` on the server): `KRYFO_RELEASE=1 flutter test test/push_gateway_key_test.dart`
 - the foss apk carries no google code: `unzip -p app-arm64-v8a-release.apk 'classes*.dex' | strings |
   grep -c 'com/google/firebase\|com/google/android/gms/common'` is 0, and

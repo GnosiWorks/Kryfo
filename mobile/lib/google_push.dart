@@ -24,10 +24,10 @@ import 'helper_push.dart';
 const kPushGateway = 'https://relay.kryfo.app/push/';
 // the gateway's public key, pinned like the version key. the private half
 // is made on the server with `kryfo-push keygen` and never leaves it
-const kPushGatewayKey = kPushGatewayDevKey;
+const kPushGatewayPub = kPushGatewayDevPub;
 // the development key: test/push_gateway_key_test.dart refuses it for a
 // release
-const kPushGatewayDevKey = 'QRglUlzqI_cAwOAFO7vVY52Kpw7xO9xePWnMIldDhW0';
+const kPushGatewayDevPub = 'QRglUlzqI_cAwOAFO7vVY52Kpw7xO9xePWnMIldDhW0';
 // how the slot book names google push where it names a helper app
 const kGooglePackage = 'google';
 // instance -> its sealed endpoint
@@ -44,7 +44,7 @@ const _kAsk = Duration(seconds: 20);
 typedef PushSealer = String Function(String publicKey, String token);
 
 class GooglePush extends HelperPush {
-  GooglePush(super.ch, {this.seal, this.gatewayKey = kPushGatewayKey})
+  GooglePush(super.ch, {this.seal, this.gatewayKey = kPushGatewayPub})
     : _g = ch;
   static final GooglePush instance = GooglePush(
     const MethodChannel('halo/gpush'),
