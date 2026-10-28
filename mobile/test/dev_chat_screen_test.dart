@@ -50,9 +50,8 @@ import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
 import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
-import 'package:kryfo/voice_format.dart' show takePeerOpus;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
-import 'package:kryfo/voice_opus.dart' show voiceOggForTest;
+import 'package:kryfo/voice_opus.dart' show voiceOggForTest, voiceStopForTest;
 import 'package:kryfo/widgets/media_bubbles.dart'
     show VoiceBubble, VoiceMakingBubble;
 import 'package:kryfo/widgets/swipe_to_reply.dart';
@@ -1217,6 +1216,18 @@ void main() {
   });
 
   group('voice in opus', () {
+    // what the row says of their phone. no envelope ever writes it for the
+    // developer's chat: here it stands in for any chat's
+    Future<void> plays(int can) async {
+      final n = await _mem.update(
+        'contacts',
+        {'opus_can': can},
+        where: 'halo_id = ?',
+        whereArgs: [_dev],
+      );
+      expect(n, 1, reason: 'no row for the chat');
+    }
+
     // the engine's encoder, standing in: the opus copy it writes
     final ogg = File('test/fixtures/voice/note.ogg').readAsBytesSync();
     var encodes = 0;
@@ -1252,8 +1263,9 @@ void main() {
 
     testWidgets('to one that has: opus, and the wav goes', (t) async {
       await _world(container: HaloContainer.decoy, opens: true);
-      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
+      await _started();
       await _open(t);
+      await plays(1);
       await _speak(t, () => _sent().isNotEmpty);
       final note = _sent().single;
       expect(note['file_name'], 'voice.ogg');
@@ -1278,22 +1290,75 @@ void main() {
       t,
     ) async {
       await _world(container: HaloContainer.decoy, opens: true);
-      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
-      await takePeerOpus(_mem, _dev, carried: false, counts: true, written: 2);
+      await _started();
       await _open(t);
+      await plays(1);
+      await plays(-2);
       await _speak(t, () => _sent().isNotEmpty);
       expect(_sent().single['file_name'], 'voice.wav');
       expect(encodes, 0);
       await _close(t);
     });
 
+    for (final left in [false, true]) {
+      testWidgets('a lock during the encode stops it, and neither file is left'
+          '${left ? ', the chat left' : ''}', (t) async {
+        final asked = <String>[];
+        voiceStopForTest = asked.add;
+        addTearDown(() => voiceStopForTest = null);
+        final going = Completer<void>();
+        final stop = Completer<String>();
+        voiceOggForTest = (_, to) async {
+          // half an opus copy, then it runs until it is told to stop
+          File(to).writeAsBytesSync(ogg.sublist(0, 4000));
+          going.complete();
+          return stop.future;
+        };
+        await _world(container: HaloContainer.decoy, opens: true);
+        await _started();
+        await _open(t);
+        await plays(1);
+        final root = t.state<NavigatorState>(find.byType(Navigator).first);
+        haloToastOverlay = () => root.overlay;
+        addTearDown(() => haloToastOverlay = null);
+        final take = _file('vn_${_notes++}.wav', _wav());
+        _mic(t).onSend(VoiceTake(path: take, ms: 1200, disguise: false));
+        await _io(t, () => going.isCompleted, why: 'no encode began');
+        // the chat left while it is made: sent is sent, until the lock
+        if (left) t.state<NavigatorState>(find.byType(Navigator).first).pop();
+        for (var i = 0; i < 20; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await t.pump(const Duration(milliseconds: 60));
+        }
+        lockGuard.locking();
+        await _io(t, () => asked.isNotEmpty, why: 'the encode was not stopped');
+        expect(asked.single, endsWith('.ogg'));
+        stop.complete('error: stopped');
+        for (var i = 0; i < 30; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await t.pump(const Duration(milliseconds: 60));
+        }
+        expect(await media(t), isEmpty);
+        expect(_sent(), isEmpty);
+        expect(File(take).existsSync(), isFalse);
+        expect(find.text(l10n.voiceLockedNotSent), findsOneWidget);
+        await t.pump(const Duration(seconds: 5));
+        await _close(t);
+      });
+    }
+
     testWidgets('an encode that fails: the wav goes, nothing else is left', (
       t,
     ) async {
       voiceOggForTest = (_, _) async => 'error: rate';
       await _world(container: HaloContainer.decoy, opens: true);
-      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
+      await _started();
       await _open(t);
+      await plays(1);
       await _speak(t, () => _sent().isNotEmpty);
       final note = _sent().single;
       expect(note['file_name'], 'voice.wav');

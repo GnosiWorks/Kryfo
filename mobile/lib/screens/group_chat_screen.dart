@@ -2825,9 +2825,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       pending = m;
       // what goes: opus when every member's phone plays it, else the wav.
       // the bubble shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: dest.path);
+      // a lock under way stops the encode, and both files go
       final (wirePath, wireName) = await voiceForWire(
         dest.path,
         opus: await appState.opusForGroup(group),
+        stop: () => locked,
       );
       if (wirePath != dest.path) {
         voicePeaksSame(dest.path, wirePath);

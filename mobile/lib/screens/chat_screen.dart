@@ -193,8 +193,9 @@ import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
 import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
-import '../voice_opus.dart' show voiceForWire;
+import '../voice_opus.dart' show voiceAgain, voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
+import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -3555,10 +3556,17 @@ class _ChatScreenState extends State<ChatScreen>
     });
     final msgUid = msg.msgUid ?? newMsgUid();
     msg.msgUid = msgUid;
+    // an opus note to a phone that went back goes as wav
+    final (sendPath, sendName, scratch) = await voiceAgain(
+      path,
+      msg.fileName,
+      opus: await appState.opusFor(widget.peerHaloId),
+      scratch: '${(await getTemporaryDirectory()).path}/vn_${msgUid}_r.wav',
+    );
     await _sendChunkedMedia(
-      path: path,
+      path: sendPath,
       msgUid: msgUid,
-      fileName: msg.fileName!,
+      fileName: sendName!,
       voice: isVoiceName(msg.fileName),
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
@@ -3566,7 +3574,10 @@ class _ChatScreenState extends State<ChatScreen>
       replyTo: msg.replyTo,
       album: msg.album,
       writtenAt: msg.when.millisecondsSinceEpoch,
-    ).then((result) => _finishMediaSend(msg, result));
+    ).then((result) {
+      if (scratch != null) unawaited(shredFile(scratch));
+      return _finishMediaSend(msg, result);
+    });
   }
 
   Future<void> _showStickers() async {
@@ -3873,9 +3884,12 @@ class _ChatScreenState extends State<ChatScreen>
       await _answerSupport();
       // what goes: opus to a phone that plays it, else the wav. the bubble
       // shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: filePath);
+      // a lock under way stops the encode, and both files go
       final (wirePath, wireName) = await voiceForWire(
         filePath,
         opus: await appState.opusFor(peer),
+        stop: () => locked,
       );
       if (wirePath != filePath) {
         voicePeaksSame(filePath, wirePath);

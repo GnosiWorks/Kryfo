@@ -44,6 +44,10 @@ Future<String> _engineWav(String ogg, String wav) =>
 @visibleForTesting
 Future<String> Function(String wav, String ogg)? voiceOggForTest;
 
+/// stands in for the engine in tests: what HaloVoiceWav would answer
+@visibleForTesting
+Future<String> Function(String ogg, String wav)? voiceWavForTest;
+
 /// stands in for the engine in tests: what HaloVoicePeaks would answer
 @visibleForTesting
 String Function(String ogg, int bars)? voicePeaksForTest;
@@ -54,16 +58,46 @@ Future<void> _turn = Future.value();
 /// a test stands in for the engine's wave on this isolate
 bool get oggPeaksStandIn => voicePeaksForTest != null;
 
+/// stands in for the engine's stop in tests: the ogg paths asked to stop
+@visibleForTesting
+void Function(String ogg)? voiceStopForTest;
+
+typedef _StopC = Void Function(Pointer<Utf8>);
+typedef _StopD = void Function(Pointer<Utf8>);
+
+void _engineStop(String ogg) {
+  final hook = voiceStopForTest;
+  if (hook != null) return hook(ogg);
+  final p = ogg.toNativeUtf8();
+  try {
+    _lib().lookupFunction<_StopC, _StopD>('HaloVoiceStop')(p);
+  } catch (e) {
+    dlog('voice: no stop (${e.runtimeType})');
+  } finally {
+    malloc.free(p);
+  }
+}
+
 /// the wav at [wav] as ogg opus at [ogg]: how long it plays, or null with
-/// nothing at [ogg]
-Future<int?> encodeVoiceOgg(String wav, String ogg) =>
-    Zone.root.run(() => _encodeInTurn(wav, ogg));
+/// nothing at [ogg]. once [stop] says so, one waiting its turn never
+/// starts and one under way stops where it is
+Future<int?> encodeVoiceOgg(String wav, String ogg, {bool Function()? stop}) =>
+    Zone.root.run(() => _encodeInTurn(wav, ogg, stop));
 
 // the turn is kept in the root zone, so a caller's zone that goes away
 // never holds the next one
-Future<int?> _encodeInTurn(String wav, String ogg) {
+Future<int?> _encodeInTurn(String wav, String ogg, bool Function()? stop) {
   final before = _turn;
   final run = before.then((_) async {
+    if (stop?.call() ?? false) return null;
+    var stopped = false;
+    final watch = stop == null
+        ? null
+        : Timer.periodic(const Duration(milliseconds: 50), (_) {
+            if (stopped || !stop()) return;
+            stopped = true;
+            _engineStop(ogg);
+          });
     try {
       final hook = voiceOggForTest;
       final said = hook != null
@@ -74,6 +108,8 @@ Future<int?> _encodeInTurn(String wav, String ogg) {
       dlog('voice: not opus ($said)');
     } catch (e) {
       dlog('voice: not opus (${e.runtimeType})');
+    } finally {
+      watch?.cancel();
     }
     await shredFile(ogg);
     return null;
@@ -86,7 +122,10 @@ Future<int?> _encodeInTurn(String wav, String ogg) {
 /// only. false with nothing at [wav]
 Future<bool> decodeVoiceWav(String ogg, String wav) async {
   try {
-    final said = await _engineWav(ogg, wav);
+    final hook = voiceWavForTest;
+    final said = hook != null
+        ? await hook(ogg, wav)
+        : await _engineWav(ogg, wav);
     if (said.startsWith('ok ')) return true;
     dlog('voice: not decoded ($said)');
   } catch (e) {
@@ -131,10 +170,30 @@ List<double>? oggPeaks(String path, int bars) {
 /// a voice note as it goes: (path, name on the wire). opus when [opus]
 /// and the encode works, else the wav as it is. the wav stays where it
 /// is either way: the caller lets it go once nothing plays it
-Future<(String, String)> voiceForWire(String wav, {required bool opus}) async {
+/// [stop]: the lock came, see [encodeVoiceOgg]
+Future<(String, String)> voiceForWire(
+  String wav, {
+  required bool opus,
+  bool Function()? stop,
+}) async {
   if (!opus) return (wav, kVoiceWav);
   final ogg = oggPathOf(wav);
   if (ogg == wav) return (wav, kVoiceWav);
-  final ms = await encodeVoiceOgg(wav, ogg);
+  final ms = await encodeVoiceOgg(wav, ogg, stop: stop);
   return ms == null ? (wav, kVoiceWav) : (ogg, kVoiceOgg);
+}
+
+/// a voice note going again, whole: (path, name, scratch). an opus note to
+/// a phone that no longer says it plays opus goes as a wav made from it at
+/// [scratch], beside the takes the start sweeps, for the caller to shred
+/// once it went. anything else goes as it is, scratch null
+Future<(String, String?, String?)> voiceAgain(
+  String path,
+  String? name, {
+  required bool opus,
+  required String scratch,
+}) async {
+  if (name != kVoiceOgg || opus) return (path, name, null);
+  if (!await decodeVoiceWav(path, scratch)) return (path, name, null);
+  return (scratch, kVoiceWav, scratch);
 }

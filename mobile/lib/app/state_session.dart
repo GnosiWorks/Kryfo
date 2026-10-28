@@ -50,10 +50,9 @@ extension AppStateSession on AppState {
         final q = await _quietOf(d);
         if (q != null) {
           await _dropGroupLeftovers(d);
-          await _sweepUnnamedWallpapers(
-            d,
-            DateTime.now().subtract(const Duration(minutes: 10)),
-          );
+          final before = DateTime.now().subtract(const Duration(minutes: 10));
+          await _sweepUnnamedWallpapers(d, before);
+          await _sweepUnnamedMedia(before, d);
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -326,6 +325,7 @@ extension AppStateSession on AppState {
       // settled, both sides' rows name their files
       final before = DateTime.now().subtract(const Duration(minutes: 10));
       await _sweepUnnamedWallpapers(v, before);
+      await _sweepUnnamedMedia(before, v);
       if (decoy) {
         await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
       }

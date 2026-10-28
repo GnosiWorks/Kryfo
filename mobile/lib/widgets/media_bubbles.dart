@@ -540,7 +540,11 @@ class VoiceBubbleState extends State<VoiceBubble> {
   void dispose() {
     VoiceTurn.letGo(this);
     _unguard?.call();
-    _player.dispose();
+    // a player let go while it was still coming up can fail to close its
+    // streams: the bubble is gone either way
+    _player.dispose().catchError(
+      (Object e) => dlog('voice: player not let go (${e.runtimeType})'),
+    );
     _letFileGo();
     super.dispose();
   }
