@@ -280,6 +280,25 @@ void main() {
     expect(mediaSendProgress, isNot(contains('v-over')));
   });
 
+  test('the bound sits above one slice\'s own three tries: the onion\'s '
+      '15 s and three relay timeouts', () {
+    expect(was.inMilliseconds, greaterThan(15000 + 3 * 60600));
+  });
+
+  test('a stop while tor is still coming up lets go of the row at '
+      'once', () async {
+    appState.sendModeForTest = 'private';
+    addTearDown(() => appState.sendModeForTest = 'fast');
+    expect(appState.torReady, isFalse);
+    final going = send('v-tor');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(mediaInflight, contains('v-tor'));
+    cancelMediaSend('v-tor');
+    expect(await going.timeout(const Duration(seconds: 2)), 'cancelled');
+    expect(mediaInflight, isNot(contains('v-tor')));
+    expect(wire.calls, 0);
+  });
+
   test('a send that keeps moving is never stalled, however long it '
       'takes', () async {
     mediaStallAfter = const Duration(milliseconds: 300);

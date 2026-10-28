@@ -55,12 +55,13 @@ void cancelMediaSend(String msgUid) {
 
 // a send with no slice taken for this long has stopped moving. a 16k slice
 // is about 2 s a round over tor and up to 20 s on a slow bridge, and five
-// are in flight, so a moving send is heard from many times inside it; it
-// also covers one relay timeout (60 s) and the retry after it. past it the
-// send ends as stalled, lets go of the row, and the outbox goes on from the
-// slices that landed
+// are in flight, so a moving send is heard from many times inside it. one
+// slice's own three tries, the onion's 15 s and three relay timeouts of
+// 60 s, come to about 197 s, and five slices on one dying circuit fail
+// together, so the bound sits above that. past it the send ends as
+// stalled, lets go of the row, and the outbox goes on from what landed
 @visibleForTesting
-Duration mediaStallAfter = const Duration(minutes: 2);
+Duration mediaStallAfter = const Duration(minutes: 4);
 const kMediaStalled = 'error: stalled';
 // the watch looks this many times inside the bound. a phone asleep runs no
 // looks, so a frozen process is not read as a stalled send
@@ -201,9 +202,12 @@ Future<String> _sendChunkedMediaInner({
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
+    // a stop while tor is down lets go of the row at once
+    if (mediaCancelled.contains(msgUid)) return 'cancelled';
     await Future.delayed(const Duration(milliseconds: 400));
     torWait += 400;
   }
+  if (mediaCancelled.contains(msgUid)) return 'cancelled';
   if (!appState.torReady) return 'error: tor not ready';
   // a photo is cleaned on every send, retries and the outbox included
   if (fileName == null && !voice) {

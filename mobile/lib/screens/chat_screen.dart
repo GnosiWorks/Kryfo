@@ -1732,6 +1732,8 @@ class _ChatScreenState extends State<ChatScreen>
           m.failed = held || backPaired;
           m.parked = !held && !backPaired;
           m.notSent = held;
+        } else {
+          await _takeBurn(m);
         }
         changed = true;
       }
@@ -1766,10 +1768,19 @@ class _ChatScreenState extends State<ChatScreen>
         m.parked = false;
         m.failed = false;
         if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
+        await _takeBurn(m);
         changed = true;
       }
     }
     if (changed && mounted) setState(() {});
+  }
+
+  // a timed message of ours that another send finished: its clock runs from
+  // the row, started there if nothing started it yet
+  Future<void> _takeBurn(_Msg m) async {
+    if (m.burnSecs == null || m.burnAt != null || m.msgUid == null) return;
+    final at = await session.lightBurn(m.msgUid!);
+    if (at != null) m.burnAt = at;
   }
 
   // fast path for a live message: append rows newer than the newest we hold,
@@ -4352,35 +4363,51 @@ class _ChatScreenState extends State<ChatScreen>
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
     if (sessionQuiet || appState.everydayHeld) return 'parked';
-    // its verdict is _finishMediaSend's, which lets go of the count
+    // its verdict is _finishMediaSend's, which lets go of the count; a send
+    // that throws lets go of it here
     _ownSends[msgUid] = (_ownSends[msgUid] ?? 0) + 1;
-    return sendChunkedMediaTo(
-      peerId: widget.peerHaloId,
-      peerOnion: widget.peerOnion,
-      peerXPub: _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
-      backPaired: _backPaired,
-      needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
-      path: path,
-      msgUid: msgUid,
-      caption: caption,
-      fileName: fileName,
-      voice: voice,
-      voiceDisguised: voiceDisguised,
-      burnSeconds: burnSeconds,
-      secure: secure,
-      replyTo: replyTo,
-      album: album,
-      writtenAt: writtenAt,
-      sender: SenderInfo(
-        haloId: appState.sessionId,
-        edPub: appState.sessionEdPub,
-        onion: appState.sessionOnion,
-        xPub: appState.sessionXPub,
-        avatar: appState.myAvatar,
-      ),
-      progressKey: _memo,
-      blockedHere: () => session.isBlocked(widget.peerHaloId),
-    );
+    try {
+      return await sendChunkedMediaTo(
+        peerId: widget.peerHaloId,
+        peerOnion: widget.peerOnion,
+        peerXPub:
+            _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
+        backPaired: _backPaired,
+        needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
+        path: path,
+        msgUid: msgUid,
+        caption: caption,
+        fileName: fileName,
+        voice: voice,
+        voiceDisguised: voiceDisguised,
+        burnSeconds: burnSeconds,
+        secure: secure,
+        replyTo: replyTo,
+        album: album,
+        writtenAt: writtenAt,
+        sender: SenderInfo(
+          haloId: appState.sessionId,
+          edPub: appState.sessionEdPub,
+          onion: appState.sessionOnion,
+          xPub: appState.sessionXPub,
+          avatar: appState.myAvatar,
+        ),
+        progressKey: _memo,
+        blockedHere: () => session.isBlocked(widget.peerHaloId),
+      );
+    } catch (e) {
+      _ownSendDone(msgUid);
+      rethrow;
+    }
+  }
+
+  void _ownSendDone(String? uid) {
+    final n = uid == null ? null : _ownSends[uid];
+    if (n != null && n > 1) {
+      _ownSends[uid!] = n - 1;
+    } else if (n != null) {
+      _ownSends.remove(uid);
+    }
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
@@ -4388,14 +4415,10 @@ class _ChatScreenState extends State<ChatScreen>
       await _drawMediaVerdict(msg, result);
     } finally {
       final uid = msg.msgUid;
-      final n = uid == null ? null : _ownSends[uid];
-      if (n != null && n > 1) {
-        _ownSends[uid!] = n - 1;
-      } else if (n != null) {
-        _ownSends.remove(uid);
-      }
-      // another sender has it: followed like one this screen did not start
-      if (result == 'busy' && uid != null) unawaited(_followMediaSends());
+      _ownSendDone(uid);
+      // another send may have it by now, the outbox's or one it lost to:
+      // followed like one this screen did not start
+      if (result != 'ok' && uid != null) unawaited(_followMediaSends());
     }
   }
 

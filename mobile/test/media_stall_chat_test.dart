@@ -145,6 +145,24 @@ class _Db extends DevTestDb {
     sent: _row(msgUid)?['sent'] == 1,
     delivered: _row(msgUid)?['delivered'] == 1,
   );
+  // as the app's: the clock of a timed message of ours, started if unset
+  @override
+  Future<int?> lightBurn(String msgUid) async {
+    final r = _row(msgUid);
+    if (r == null) return null;
+    final lit = r['burn_at'] as int?;
+    final secs = r['burn_secs'] as int?;
+    if (lit != null || secs == null) return lit;
+    final at = DateTime.now().millisecondsSinceEpoch + secs * 1000;
+    await mem.update(
+      'messages',
+      {'burn_at': at},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+    return at;
+  }
+
   @override
   Future<void> saveMessage(
     String peerId,
@@ -347,6 +365,43 @@ void main() {
     expect(find.byIcon(Icons.schedule_rounded), findsNothing);
     expect(find.byType(SentTick), findsOneWidget);
     expect(find.text(l10n.chatDelivered), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('a timed note the outbox finished starts its clock in the '
+      'open chat', (t) async {
+    lockState.openForTest();
+    await mem.update(
+      'messages',
+      {'burn_secs': 3600},
+      where: 'msg_uid = ?',
+      whereArgs: ['v1'],
+    );
+    mediaInflight.add('v1');
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(SendPill), findsOneWidget);
+    // the outbox's send went, and lit the row's clock or left it to us
+    await mem.update(
+      'messages',
+      {'sent': 1},
+      where: 'msg_uid = ?',
+      whereArgs: ['v1'],
+    );
+    releaseMedia('v1');
+    await settle(t);
+    final row = mem.rows('messages').firstWhere((r) => r['msg_uid'] == 'v1');
+    expect(row['burn_at'], isNotNull);
+    // the countdown in the bubble's own line, not the composer's timer
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Icon &&
+            w.icon == Icons.local_fire_department_outlined &&
+            w.size == 11,
+      ),
+      findsOneWidget,
+    );
     await devClose(t);
   });
 
