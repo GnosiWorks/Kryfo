@@ -2414,6 +2414,21 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+      'patron':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.',
+      'guardian':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.',
+      'other':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Đeo huy hiệu của tôi';
 
   @override

@@ -2443,6 +2443,21 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
+      'patron':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de mecenas.',
+      'guardian':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de guardião.',
+      'other':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Usar meu selo';
 
   @override

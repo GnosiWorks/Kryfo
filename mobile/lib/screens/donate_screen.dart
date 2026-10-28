@@ -1000,8 +1000,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   BadgeInvoice? _inv;
   // the service handed back the invoice this phone opened earlier
   bool _again = false;
-  // the tier the signed receipt proves
+  // the badge the phone wears once the receipt is in, and whether it was
+  // already higher than what this payment proves
   SupporterTier _paid = SupporterTier.none;
+  bool _kept = false;
   Timer? _poll;
   Timer? _tick;
   int _secsLeft = 0;
@@ -1180,6 +1182,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         if (!mounted) return;
         setState(() {
           _paid = t;
+          _kept = t != tierOf(r.tier);
           _phase = _Phase.confirmed;
         });
         break;
@@ -1247,7 +1250,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       case _Phase.invoice:
         return _invoiceView();
       case _Phase.confirmed:
-        return _ConfirmedView(tier: _paid);
+        return _ConfirmedView(tier: _paid, kept: _kept);
       case _Phase.expired:
         return _expiredView();
     }
@@ -1825,7 +1828,9 @@ class _StaticAddress extends StatelessWidget {
 // confirmed: animated check that draws itself, then rolls into badge opt-in.
 class _ConfirmedView extends StatefulWidget {
   final SupporterTier tier;
-  const _ConfirmedView({required this.tier});
+  // a higher badge was already here and stays
+  final bool kept;
+  const _ConfirmedView({required this.tier, this.kept = false});
   @override
   State<_ConfirmedView> createState() => _ConfirmedViewState();
 }
@@ -1903,6 +1908,8 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             Text(
               t == SupporterTier.none
                   ? l10n.donateThankYouForKeeping
+                  : widget.kept
+                  ? l10n.donateVerifiedBadgeStays(tierKey(t))
                   : l10n.donateVerifiedOnChainYou(tierKey(t)),
               textAlign: TextAlign.center,
               style: HaloType.sans(

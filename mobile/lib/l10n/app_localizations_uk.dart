@@ -2477,6 +2477,21 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
+      'patron':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «меценат» лишається з тобою.',
+      'guardian':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «хранитель» лишається з тобою.',
+      'other':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Носити значок';
 
   @override

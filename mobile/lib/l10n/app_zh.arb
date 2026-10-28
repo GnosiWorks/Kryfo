@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "付款已确认",
   "donateThankYouForKeeping": "谢谢你让 Kryfo 保持独立。",
   "donateVerifiedOnChainYou": "{tier, select, supporter{已在链上验证——你现在是支持者了。谁也拿不走。} patron{已在链上验证——你现在是赞助人了。谁也拿不走。} guardian{已在链上验证——你现在是守护者了。谁也拿不走。} other{已在链上验证——你现在是支持者了。谁也拿不走。}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{已在链上验证。感谢你再次支持。你的支持者徽章保持不变。} patron{已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。} guardian{已在链上验证。感谢你再次支持。你的守护者徽章保持不变。} other{已在链上验证。感谢你再次支持。你的支持者徽章保持不变。}}",
   "donateWearMyBadge": "佩戴我的徽章",
   "donateJustGladToHelp": "能帮上忙就好",
   "gettingMessagesAlwaysOn": "始终在线",

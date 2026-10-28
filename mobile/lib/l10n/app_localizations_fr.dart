@@ -2446,6 +2446,21 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de soutien.',
+      'patron':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de mécène.',
+      'guardian':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de gardien.',
+      'other':
+          'Vérifié sur la chaîne. Merci de donner encore. Vous gardez votre badge de soutien.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Porter mon badge';
 
   @override

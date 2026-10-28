@@ -2485,6 +2485,21 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
+      'patron':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الراعي.',
+      'guardian':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الحارس.',
+      'other':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'إظهار شارتي';
 
   @override

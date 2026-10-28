@@ -2425,6 +2425,21 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
+      'patron':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان حامی شما سر جایش می‌ماند.',
+      'guardian':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان نگهبان شما سر جایش می‌ماند.',
+      'other':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'نمایش نشانم';
 
   @override

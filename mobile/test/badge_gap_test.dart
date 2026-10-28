@@ -464,6 +464,37 @@ void main() {
       await _drain(t);
     });
 
+    testWidgets('a smaller payment says the higher badge stays', (t) async {
+      SharedPreferences.setMockInitialValues({'supporter_tier': 'guardian'});
+      _phone(t);
+      final live = _Service([_made('inv1')]);
+      live.receipts['inv1'] = paid('inv1', 'patron');
+      await _open(t, live);
+      await _toReview(t);
+      await _showAddress(t);
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(await loadSupporterTier(), SupporterTier.guardian);
+      expect(
+        find.text(l10n.donateVerifiedBadgeStays('guardian')),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.donateVerifiedOnChainYou('patron')), findsNothing);
+      await _drain(t);
+    });
+
+    test('every language thanks and keeps the badge', () {
+      for (final locale in AppLocalizations.supportedLocales) {
+        final l = lookupAppLocalizations(locale);
+        for (final k in ['supporter', 'patron', 'guardian']) {
+          final w = l.donateVerifiedBadgeStays(k);
+          expect(w, isNot(contains('\u2014')), reason: locale.toLanguageTag());
+          expect(w, isNot(l.donateVerifiedOnChainYou(k)));
+        }
+      }
+    });
+
     test(
       'each is asked about: paid granted, gone dropped, open kept',
       () async {

@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "Zahlung bestätigt",
   "donateThankYouForKeeping": "Danke, dass du Kryfo unabhängig hältst.",
   "donateVerifiedOnChainYou": "{tier, select, supporter{On-chain verifiziert. Du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.} patron{On-chain verifiziert. Du unterstützt Kryfo jetzt als Förderer. Das kann dir niemand mehr nehmen.} guardian{On-chain verifiziert. Du unterstützt Kryfo jetzt als Hüter. Das kann dir niemand mehr nehmen.} other{On-chain verifiziert. Du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Unterstützer.} patron{On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Förderer.} guardian{On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Hüter.} other{On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Unterstützer.}}",
   "donateWearMyBadge": "Mein Abzeichen zeigen",
   "donateJustGladToHelp": "Ich helfe einfach gern",
   "gettingMessagesAlwaysOn": "Immer an",

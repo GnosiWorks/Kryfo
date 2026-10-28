@@ -3890,6 +3890,12 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}'**
+  String donateVerifiedBadgeStays(String tier);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Wear my badge'**
   String get donateWearMyBadge;
 

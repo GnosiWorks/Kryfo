@@ -3027,6 +3027,15 @@
       }
     }
   },
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}",
+  "@donateVerifiedBadgeStays": {
+    "description": "screens/donate_screen.dart",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "donateWearMyBadge": "Wear my badge",
   "@donateWearMyBadge": {
     "description": "screens/donate_screen.dart"

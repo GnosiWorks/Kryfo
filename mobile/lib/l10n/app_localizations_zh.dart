@@ -2312,6 +2312,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => '佩戴我的徽章';
 
   @override
@@ -11655,6 +11666,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
       'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
       'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
     });
     return '$_temp0';
   }

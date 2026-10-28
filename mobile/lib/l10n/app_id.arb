@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "Pembayaran dikonfirmasi",
   "donateThankYouForKeeping": "Terima kasih sudah menjaga Kryfo tetap mandiri.",
   "donateVerifiedOnChainYou": "{tier, select, supporter{Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.} patron{Terverifikasi on-chain. Sekarang kamu patron. Tidak ada yang bisa mencabutnya darimu.} guardian{Terverifikasi on-chain. Sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.} other{Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.} patron{Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana patron kamu tetap milikmu.} guardian{Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana penjaga kamu tetap milikmu.} other{Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.}}",
   "donateWearMyBadge": "Pakai lencanaku",
   "donateJustGladToHelp": "Senang bisa membantu",
   "gettingMessagesAlwaysOn": "Selalu aktif",

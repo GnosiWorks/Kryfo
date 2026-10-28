@@ -2424,6 +2424,21 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
+      'patron':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Hami rozetin seninle kalıyor.',
+      'guardian':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Koruyucu rozetin seninle kalıyor.',
+      'other':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Rozetimi tak';
 
   @override

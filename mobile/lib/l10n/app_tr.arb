@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "Ödeme onaylandı",
   "donateThankYouForKeeping": "Kryfo’yu bağımsız tuttuğun için teşekkürler.",
   "donateVerifiedOnChainYou": "{tier, select, supporter{Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.} patron{Zincirde doğrulandı. Artık bir hamisin. Bunu kimse elinden alamaz.} guardian{Zincirde doğrulandı. Artık bir koruyucusun. Bunu kimse elinden alamaz.} other{Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.} patron{Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Hami rozetin seninle kalıyor.} guardian{Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Koruyucu rozetin seninle kalıyor.} other{Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.}}",
   "donateWearMyBadge": "Rozetimi tak",
   "donateJustGladToHelp": "Yardım etmek yeter",
   "gettingMessagesAlwaysOn": "Hep açık",

@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "Đã xác nhận thanh toán",
   "donateThankYouForKeeping": "Cảm ơn bạn đã giúp Kryfo giữ được sự độc lập.",
   "donateVerifiedOnChainYou": "{tier, select, supporter{Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.} patron{Đã xác minh trên chuỗi. Giờ bạn là nhà bảo trợ. Không ai có thể lấy đi điều đó.} guardian{Đã xác minh trên chuỗi. Giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.} other{Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.} patron{Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.} guardian{Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.} other{Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.}}",
   "donateWearMyBadge": "Đeo huy hiệu của tôi",
   "donateJustGladToHelp": "Vui vì giúp được",
   "gettingMessagesAlwaysOn": "Luôn bật",

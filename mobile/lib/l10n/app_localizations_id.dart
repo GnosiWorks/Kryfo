@@ -2418,6 +2418,21 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
+      'patron':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana patron kamu tetap milikmu.',
+      'guardian':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana penjaga kamu tetap milikmu.',
+      'other':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Pakai lencanaku';
 
   @override

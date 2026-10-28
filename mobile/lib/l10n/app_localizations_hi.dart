@@ -2428,6 +2428,21 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
+      'patron':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका संरक्षक बैज आपके पास ही रहता है।',
+      'guardian':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका रक्षक बैज आपके पास ही रहता है।',
+      'other':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'मेरा बैज दिखाएँ';
 
   @override

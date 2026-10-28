@@ -731,6 +731,7 @@
   "donatePaymentConfirmed": "Pagamento confermato",
   "donateThankYouForKeeping": "Grazie per mantenere Kryfo indipendente.",
   "donateVerifiedOnChainYou": "{tier, select, supporter{Verificato on-chain. Ora sei tra i sostenitori. Nessuno può togliertelo.} patron{Verificato on-chain. Ora sei tra i mecenati. Nessuno può togliertelo.} guardian{Verificato on-chain. Ora sei tra i custodi. Nessuno può togliertelo.} other{Verificato on-chain. Ora sei tra i sostenitori. Nessuno può togliertelo.}}",
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da sostenitore resta.} patron{Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da mecenate resta.} guardian{Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da custode resta.} other{Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da sostenitore resta.}}",
   "donateWearMyBadge": "Mostra il mio badge",
   "donateJustGladToHelp": "Felice di aiutare",
   "gettingMessagesAlwaysOn": "Sempre attivo",

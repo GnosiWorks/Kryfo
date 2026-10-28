@@ -285,8 +285,8 @@ Future<SupporterTier?> settleOpenInvoice([
 }
 
 /// grants the tier a verified receipt names and keeps the receipt, unless
-/// the phone already holds a higher one. returns the tier it proves, none
-/// when it proves nothing
+/// the phone already holds a higher one. returns the badge the phone wears
+/// after it, none when the receipt proves nothing
 Future<SupporterTier> grantReceipt(
   BadgeReceipt r, [
   HaloContainer c = HaloContainer.everyday,
@@ -296,7 +296,8 @@ Future<SupporterTier> grantReceipt(
     return SupporterTier.none;
   }
   // an older, smaller invoice settling late never lowers a badge
-  if ((await loadSupporterTier(c)).index > t.index) return t;
+  final held = await loadSupporterTier(c);
+  if (held.index > t.index) return held;
   await saveSupporterTier(t, c);
   if (r.payload != null && r.sig != null) {
     await saveBadgeReceipt(r.payload!, r.sig!, c);
