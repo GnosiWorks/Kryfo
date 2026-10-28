@@ -16,7 +16,7 @@ void main() {
       expect(l.appAKryfoLinkA.toLowerCase(), isNot(contains('wren')));
       expect(l.handleHintName, 'name', reason: '$loc');
     }
-    expect(seen, hasLength(15));
+    expect(seen, hasLength(16));
   });
 
   test('right to left keeps the @ before the word', () {

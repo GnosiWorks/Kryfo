@@ -7578,6 +7578,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageNameAr => 'Арабский';
 
   @override
+  String get languageNameHi => 'Хинди';
+
+  @override
   String get languageLaterLine =>
       'Язык можно поменять в настройках в любой момент.';
 

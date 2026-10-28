@@ -7445,6 +7445,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get languageNameAr => 'عربی';
 
   @override
+  String get languageNameHi => 'هندی';
+
+  @override
   String get languageLaterLine =>
       'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید.';
 

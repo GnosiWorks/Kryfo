@@ -7423,6 +7423,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get languageNameAr => 'Tiếng Ả Rập';
 
   @override
+  String get languageNameHi => 'Tiếng Hindi';
+
+  @override
   String get languageLaterLine =>
       'Bạn có thể đổi bất cứ lúc nào trong cài đặt.';
 

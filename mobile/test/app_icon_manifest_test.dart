@@ -226,7 +226,7 @@ void main() {
         .whereType<Directory>()
         .where((d) => File('${d.path}/strings.xml').existsSync())
         .toList();
-    expect(dirs, hasLength(15));
+    expect(dirs, hasLength(16));
     for (final d in dirs) {
       final xml = File('${d.path}/strings.xml').readAsStringSync();
       for (final face in _plain.values) {
