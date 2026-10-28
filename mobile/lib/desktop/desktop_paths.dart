@@ -56,10 +56,29 @@ void privateUmask() {
   DynamicLibrary.process().lookupFunction<_UmaskC, _Umask>('umask')(63); // 077
 }
 
-/// path_provider's answers on desktop, all inside [root]
+/// a folder in memory for what lives only while the app runs: the
+/// session's tmpfs ($XDG_RUNTIME_DIR), else /dev/shm. null when neither is
+/// there
+String? desktopRuntimeDir({Map<String, String>? env, int? uid}) {
+  if (Platform.isWindows) return null;
+  final e = env ?? Platform.environment;
+  final run = e['XDG_RUNTIME_DIR'];
+  if (run != null && p.isAbsolute(run) && Directory(run).existsSync()) {
+    return p.join(run, 'kryfo');
+  }
+  if (Directory('/dev/shm').existsSync()) {
+    return '/dev/shm/kryfo-${uid ?? 0}';
+  }
+  return null;
+}
+
+/// path_provider's answers on desktop, all inside [root]. the temporary
+/// folder is [runtime] when given: a picked photo, a take, a file on its
+/// way to a save are plain there, in memory and never on the disk
 class DesktopPaths extends PathProviderPlatform {
-  DesktopPaths(this.root);
+  DesktopPaths(this.root, {this.runtime});
   final String root;
+  final String? runtime;
 
   String _dir(String name) {
     final d = p.join(root, name);
@@ -69,7 +88,15 @@ class DesktopPaths extends PathProviderPlatform {
   }
 
   @override
-  Future<String?> getTemporaryPath() async => _dir('tmp');
+  Future<String?> getTemporaryPath() async {
+    final r = runtime;
+    if (r == null) return _dir('tmp');
+    makePrivateDir(r);
+    final d = p.join(r, 'tmp');
+    makePrivateDir(d);
+    return d;
+  }
+
   @override
   Future<String?> getApplicationSupportPath() async => _dir('support');
   @override

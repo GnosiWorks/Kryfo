@@ -2,7 +2,7 @@
 // identity containers: each one is a database under its own key, its own
 // media folders and its own slice of settings
 
-import 'desktop/desktop_mode.dart' show onDesktop;
+import 'desktop/desktop_mode.dart' show containersSwept, onDesktop;
 import 'dart:io';
 import 'secure_store.dart';
 import 'dart:math';
@@ -259,6 +259,7 @@ Future<void> sweepContainers(
     if (mayOpen) continue;
     if (await c.onDisk()) await c.wipeFiles();
   }
+  containersSwept?.call();
 }
 
 // an identity's own settings: a decoy starts without them and keeps its own.

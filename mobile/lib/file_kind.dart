@@ -7,14 +7,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'dart:isolate';
-
 import 'package:flutter/foundation.dart' show ValueNotifier;
 
 import 'file_name.dart';
 import 'image_strip.dart' show PictureKind, pictureHead, pictureKind;
 import 'mp4_strip.dart' show videoNameNeedsStrip;
 import 'open_file.dart' show nameSaysVideo;
+import 'desktop/desktop_mode.dart' show runIsolated;
 
 export 'file_name.dart' show shownFileName;
 
@@ -510,7 +509,7 @@ Future<ZipDir> zipDirOf(String path) async {
   } finally {
     await raf.close();
   }
-  final names = await Isolate.run(() {
+  final names = await runIsolated(() {
     final f = File(path).openSync();
     try {
       f.setPositionSync(dirAt);

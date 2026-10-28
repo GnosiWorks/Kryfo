@@ -12,6 +12,9 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 
+import 'sealed_io.dart' show SealedIO;
+import 'sealed_native.dart';
+
 /// one player's pipeline, behind a seam for the tests
 abstract class AudioPipe {
   /// the file set and ready to play: its length, null when it would not load
@@ -202,6 +205,8 @@ class GstPipe implements AudioPipe {
   Pointer<Void> _bus = nullptr;
   Pointer<Void> _vol = nullptr;
   double _volume = 1;
+  // a sealed note's plaintext, in memory while it plays
+  MemFile? _mem;
   String? _failed;
   bool _gone = false;
 
@@ -231,6 +236,8 @@ class GstPipe implements AudioPipe {
     if (_bus != nullptr) _gst._unref(_bus);
     _gst._unref(_el);
     _el = _bus = _vol = nullptr;
+    _mem?.close();
+    _mem = null;
   }
 
   /// the pipeline for [path], or false when its bytes are neither kind
@@ -271,7 +278,20 @@ class GstPipe implements AudioPipe {
       _drop();
       return false;
     }
-    _setOn(src, 'location', path);
+    // gstreamer reads by path: a sealed note is handed over as memory
+    var at = path;
+    final io = IOOverrides.current;
+    if (io is SealedIO && io.areas.sealedPlace(path)) {
+      try {
+        _mem = memCopyOf(path);
+      } catch (_) {
+        _gst._unref(src);
+        _drop();
+        return false;
+      }
+      at = _mem!.path;
+    }
+    _setOn(src, 'location', at);
     _gst._unref(src);
     _vol = _named('vol');
     volume(_volume);

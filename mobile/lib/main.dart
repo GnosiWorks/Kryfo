@@ -2,7 +2,8 @@
 
 import 'dart:async';
 import 'secure_store.dart';
-import 'desktop/desktop_mode.dart' show onDesktop;
+import 'desktop/desktop_mode.dart'
+    show containerClosed, containerOpened, onDesktop;
 import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';

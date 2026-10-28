@@ -44,6 +44,8 @@ import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
 import 'l10n/l10n.dart';
+import 'desktop/desktop_mode.dart'
+    show containerClosed, containerOpened, runIsolated;
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -1315,7 +1317,7 @@ class _Job {
 }
 
 Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
-    Isolate.run(() => job(j));
+    runIsolated(() => job(j));
 
 Future<Object?> _exportJob(_Job j) async {
   final lib = _engineLib();
@@ -1564,6 +1566,7 @@ Future<void> landHidden(
   HaloContainer into = HaloContainer.vault,
 }) async {
   _restoredKey = null;
+  HaloContainer? keyed;
   try {
     // an open vault on the files about to go takes nothing more: an arrival
     // stored there would be acknowledged and gone at the restart
@@ -1575,6 +1578,10 @@ Future<void> landHidden(
     if (key == null || from == null) return;
     if (!await File(p.join(from, 'halo_v.db')).exists()) return;
     final c = into;
+    // on desktop the hidden chats' files are sealed under their own key on
+    // the way in, before anything opens their database
+    containerOpened?.call(c.id, c.suffix, "x'$key'");
+    keyed = c;
     for (final f in manifest['files'] as List) {
       final rest = hiddenPart((f as Map<String, dynamic>)['name'] as String);
       if (rest == null) continue;
@@ -1593,6 +1600,7 @@ Future<void> landHidden(
     _restoredKey = key;
     _restoredInto = c;
   } finally {
+    if (keyed != null) containerClosed?.call(keyed.id);
     try {
       if (from != null) await shredTree(from);
     } catch (_) {

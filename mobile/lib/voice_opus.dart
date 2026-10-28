@@ -14,6 +14,7 @@ import 'dlog.dart';
 import 'engine_strings.dart';
 import 'shred.dart' show shredFile;
 import 'voice_format.dart';
+import 'desktop/desktop_mode.dart' show withNativeFiles;
 
 typedef _TwoC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _PeaksC = Pointer<Utf8> Function(Pointer<Utf8>, Int32);
@@ -33,12 +34,22 @@ String _two(String symbol, String a, String b) {
   }
 }
 
-// only strings cross to the isolate
-Future<String> _engineOgg(String wav, String ogg) =>
-    Isolate.run(() => _two('HaloVoiceOgg', wav, ogg));
+// only strings cross to the isolate. the engine reads and writes by path:
+// on desktop a sealed note reaches it through memory
+Future<String> _engineOgg(
+  String wav,
+  String ogg, [
+  void Function(String engineOut)? out,
+]) => withNativeFiles([wav], [ogg], (i, o) {
+  out?.call(o[0]);
+  return Isolate.run(() => _two('HaloVoiceOgg', i[0], o[0]));
+});
 
-Future<String> _engineWav(String ogg, String wav) =>
-    Isolate.run(() => _two('HaloVoiceWav', ogg, wav));
+Future<String> _engineWav(String ogg, String wav) => withNativeFiles(
+  [ogg],
+  [wav],
+  (i, o) => Isolate.run(() => _two('HaloVoiceWav', i[0], o[0])),
+);
 
 /// stands in for the engine in tests: what HaloVoiceOgg would answer
 @visibleForTesting
@@ -87,18 +98,20 @@ Future<int?> _encodeInTurn(String wav, String ogg, bool Function()? stop) {
   final run = before.then((_) async {
     if (stop?.call() ?? false) return null;
     var stopped = false;
+    // the path the engine writes to, which a stop names: in memory on desktop
+    var engineOut = ogg;
     final watch = stop == null
         ? null
         : Timer.periodic(const Duration(milliseconds: 50), (_) {
             if (stopped || !stop()) return;
             stopped = true;
-            _engineStop(ogg);
+            _engineStop(engineOut);
           });
     try {
       final hook = voiceOggForTest;
       final said = hook != null
           ? await hook(wav, ogg)
-          : await _engineOgg(wav, ogg);
+          : await _engineOgg(wav, ogg, (o) => engineOut = o);
       final m = RegExp(r'^ok (\d+) (\d+)$').firstMatch(said);
       if (m != null) return int.parse(m.group(1)!);
       dlog('voice: not opus ($said)');

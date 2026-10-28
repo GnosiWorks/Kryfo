@@ -3,6 +3,7 @@
 // network watch and notifications put in place, then the vault's passphrase,
 // and only then the app itself
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
@@ -24,6 +25,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
 import 'desktop_audio.dart';
+import '../container.dart' show HaloContainer;
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
@@ -34,6 +36,10 @@ import 'desktop_platform.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
 import 'desktop_vault.dart';
+import 'sealed_format.dart' show EngineChunkCrypto;
+import 'sealed_io.dart';
+import 'sealed_native.dart' show nativeFilesSealed;
+import 'sealed_setup.dart';
 
 /// the binding whose messenger answers the android channels
 class DesktopBinding extends WidgetsFlutterBinding {
@@ -183,7 +189,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
 
-  final paths = DesktopPaths(root);
+  final runtime = desktopRuntimeDir(uid: getuid());
+  final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
   host.destroyKeys = vault.destroy;
@@ -219,10 +226,86 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
       onOpen: () {
         if (started) return;
         started = true;
-        unawaited(appMain());
+        unawaited(() async {
+          await openSeal(
+            root: root,
+            runtime: runtime,
+            vault: vault,
+            host: host,
+            paths: paths,
+          );
+          await appMain();
+        }());
       },
     ),
   );
+}
+
+/// the seal over kryfo's files, once the vault is open: every file the
+/// app reads and writes from here on goes through it
+Future<void> openSeal({
+  required String root,
+  required String? runtime,
+  required DesktopVault vault,
+  required DesktopHost host,
+  required DesktopPaths paths,
+}) async {
+  final docs = (await paths.getApplicationDocumentsPath())!;
+  final support = (await paths.getApplicationSupportPath())!;
+  final areas = SealedAreas(docs: docs, support: support)
+    ..filesKey = await filesKeyFrom(vault);
+  final io = SealedIO(areas, const EngineChunkCrypto());
+  IOOverrides.global = io;
+  isolateRunner = <R>(FutureOr<R> Function() f) => runSealed(f);
+  nativeFiles =
+      <T>(
+        List<String> ins,
+        List<String> outs,
+        Future<T> Function(List<String>, List<String>) run,
+      ) => nativeFilesSealed(areas, ins, outs, run);
+  // a container's plain leftovers are sealed once its key is here
+  final keys = ContainerKeys(
+    areas,
+    onOpened: (suffix) {
+      for (final f in ['media', 'wallpapers']) {
+        final dir = p.join(docs, '$f$suffix');
+        unawaited(
+          runSealed(() => sealPlainUnder(dir)).then((_) {}, onError: (_) {}),
+        );
+      }
+    },
+  );
+  containerOpened = keys.opened;
+  containerClosed = keys.closed;
+  areas.lateKey = (suffix) {
+    for (final c in [HaloContainer.everyday, HaloContainer.decoy]) {
+      if (c.suffix != suffix) continue;
+      final k = vault.read(c.keyName!);
+      return k == null ? null : mediaKeyOf(k, c.id);
+    }
+    return null;
+  };
+  unawaited(
+    runSealed(() => sealPlainUnder(support)).then((_) {}, onError: (_) {}),
+  );
+  makePlaceholders(docs);
+  containersSwept = () => makePlaceholders(docs);
+  if (runtime != null) {
+    final onion = OnionKeyLink(docs: docs, runtime: runtime, vault: vault);
+    await onion.place();
+    onion.watch();
+    final vaultGone = host.destroyKeys;
+    host.destroyKeys = () {
+      onion.destroy();
+      vaultGone?.call();
+      // what was plain in memory goes with the rest
+      rawFileAccess(() {
+        try {
+          Directory(runtime).deleteSync(recursive: true);
+        } catch (_) {}
+      });
+    };
+  }
 }
 
 /// held so the listener lives as long as the app

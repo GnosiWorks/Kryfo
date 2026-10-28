@@ -5,7 +5,6 @@
 // anything is refused, never passed on half clean. anything else is not
 // media and is left exactly as it is.
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -17,6 +16,7 @@ import 'meta/file_source.dart';
 import 'meta/meta_reader.dart';
 import 'mp4_strip.dart';
 import 'shred.dart';
+import 'desktop/desktop_mode.dart' show runIsolated;
 
 enum MediaClean { clean, notMedia, refused }
 
@@ -36,7 +36,7 @@ Future<MediaCleaned> cleanMediaFile(
   bool raw = false,
 }) async {
   try {
-    return await Isolate.run(
+    return await runIsolated(
       () => cleanMediaFileHere(path, name: name, raw: raw),
     );
   } catch (_) {
