@@ -9820,7 +9820,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Birkaç dakika sonra mesajlar Tor üzerinden herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
+      'Birkaç dakika sonra, Tor bağlanınca mesajlar herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
 
   @override
   String get homeUsePrivate => 'Özel’i kullan';

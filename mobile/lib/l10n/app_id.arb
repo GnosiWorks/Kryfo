@@ -2584,7 +2584,7 @@
   "homeMergedGotIt": "Mengerti",
   "homeMergedUsePrivate": "Pakai Privat saja",
   "homeOursDownTitle": "Server kami tidak menjawab",
-  "homeOursDownLine": "Setelah beberapa menit pesan juga lewat relay publik melalui Tor, dan kembali lewat server kami begitu salah satunya menjawab.",
+  "homeOursDownLine": "Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.",
   "homeUsePrivate": "Pakai Privat",
   "homeSwitchedToPrivate": "Pindah ke Privat",
   "homeUseFast": "Pakai Cepat",

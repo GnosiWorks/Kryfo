@@ -9791,7 +9791,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Setelah beberapa menit pesan juga lewat relay publik melalui Tor, dan kembali lewat server kami begitu salah satunya menjawab.';
+      'Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.';
 
   @override
   String get homeUsePrivate => 'Pakai Privat';

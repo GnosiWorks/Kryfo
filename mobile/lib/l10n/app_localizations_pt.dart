@@ -9868,7 +9868,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Depois de alguns minutos as mensagens também passam por retransmissores públicos pelo Tor, e voltam aos nossos servidores assim que um responde.';
+      'Depois de alguns minutos, quando o Tor consegue passar, as mensagens também vão por retransmissores públicos, e voltam aos nossos servidores assim que um responde.';
 
   @override
   String get homeUsePrivate => 'Usar Privado';

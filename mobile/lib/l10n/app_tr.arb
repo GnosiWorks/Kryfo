@@ -2584,7 +2584,7 @@
   "homeMergedGotIt": "Anladım",
   "homeMergedUsePrivate": "Bunun yerine Özel’i kullan",
   "homeOursDownTitle": "Sunucularımız yanıt vermiyor",
-  "homeOursDownLine": "Birkaç dakika sonra mesajlar Tor üzerinden herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.",
+  "homeOursDownLine": "Birkaç dakika sonra, Tor bağlanınca mesajlar herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.",
   "homeUsePrivate": "Özel’i kullan",
   "homeSwitchedToPrivate": "Özel’e geçildi",
   "homeUseFast": "Hızlı’yı kullan",

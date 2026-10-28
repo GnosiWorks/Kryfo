@@ -25,8 +25,8 @@ put you in danger, read all of it.
   in fast mode, our two relays see your ip address, never what you say. each
   of them sees which mailboxes one ip address reads and writes, and when both
   people in a chat use fast mode, it can see that two ip addresses share a
-  mailbox. the app never shows this to anyone. while the first relay is down,
-  fast mode also reaches public relays, through tor, never directly.
+  mailbox. while the first relay is down, fast mode also reaches public
+  relays, through tor, never directly.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, the app can

@@ -2584,7 +2584,7 @@
   "homeMergedGotIt": "فهمت",
   "homeMergedUsePrivate": "استخدم الخاص بدلًا من ذلك",
   "homeOursDownTitle": "خوادمنا لا ترد",
-  "homeOursDownLine": "بعد دقائق قليلة تمر الرسائل أيضًا عبر مُرحِّلات عامة من خلال Tor، وتعود عبر خوادمنا حالما يرد أحدها.",
+  "homeOursDownLine": "بعد دقائق قليلة، حين يتصل Tor، تمر الرسائل أيضًا عبر مُرحِّلات عامة، وتعود عبر خوادمنا حالما يرد أحدها.",
   "homeUsePrivate": "استخدم الخاص",
   "homeSwitchedToPrivate": "تم التبديل إلى الخاص",
   "homeUseFast": "استخدم السريع",

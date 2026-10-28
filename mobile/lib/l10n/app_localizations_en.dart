@@ -9785,7 +9785,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.';
+      'After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.';
 
   @override
   String get homeUsePrivate => 'Use Private';

@@ -15788,7 +15788,7 @@ abstract class AppLocalizations {
   /// home card while neither server answers on Fast
   ///
   /// In en, this message translates to:
-  /// **'After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.'**
+  /// **'After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.'**
   String get homeOursDownLine;
 
   /// button that switches to the Tor route

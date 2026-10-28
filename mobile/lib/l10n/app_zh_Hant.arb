@@ -2584,7 +2584,7 @@
   "homeMergedGotIt": "知道了",
   "homeMergedUsePrivate": "改用私密",
   "homeOursDownTitle": "我們的伺服器沒有回應",
-  "homeOursDownLine": "幾分鐘後，訊息也會經 Tor 走公共中繼，我們任一台伺服器一回應就換回來。",
+  "homeOursDownLine": "幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。",
   "homeUsePrivate": "使用私密",
   "homeSwitchedToPrivate": "已切換到私密",
   "homeUseFast": "使用快速",

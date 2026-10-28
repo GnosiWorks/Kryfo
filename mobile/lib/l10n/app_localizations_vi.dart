@@ -9781,7 +9781,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Sau vài phút, tin nhắn cũng đi qua relay công cộng bằng Tor, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
+      'Sau vài phút, khi Tor kết nối được, tin nhắn cũng đi qua relay công cộng, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
 
   @override
   String get homeUsePrivate => 'Dùng Riêng tư';

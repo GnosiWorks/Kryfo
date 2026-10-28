@@ -9314,7 +9314,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeOursDownTitle => '我们的服务器没有响应';
 
   @override
-  String get homeOursDownLine => '几分钟后，消息也会经 Tor 走公共中继，我们任意一台服务器一响应就换回来。';
+  String get homeOursDownLine => '几分钟后，只要 Tor 能连通，消息也会走公共中继，我们任意一台服务器一响应就换回来。';
 
   @override
   String get homeUsePrivate => '使用私密';
@@ -18553,7 +18553,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeOursDownTitle => '我們的伺服器沒有回應';
 
   @override
-  String get homeOursDownLine => '幾分鐘後，訊息也會經 Tor 走公共中繼，我們任一台伺服器一回應就換回來。';
+  String get homeOursDownLine => '幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。';
 
   @override
   String get homeUsePrivate => '使用私密';

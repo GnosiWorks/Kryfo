@@ -66,7 +66,7 @@ void main() {
     expect(l.homeOursDownTitle, "Our servers aren't answering");
     expect(
       l.homeOursDownLine,
-      "After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.",
+      "After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.",
     );
     expect(l.homeUsePrivate, "Use Private");
     expect(l.homeSwitchedToPrivate, "Switched to Private");

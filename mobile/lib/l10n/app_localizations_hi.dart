@@ -9798,7 +9798,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'कुछ मिनट बाद संदेश Tor के ज़रिए सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
+      'कुछ मिनट बाद, जब Tor जुड़ जाए, संदेश सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
 
   @override
   String get homeUsePrivate => 'प्राइवेट चुनें';

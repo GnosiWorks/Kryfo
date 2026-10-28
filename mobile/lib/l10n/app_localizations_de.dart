@@ -9895,7 +9895,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Nach ein paar Minuten gehen Nachrichten auch über öffentliche Relais via Tor, und wieder über unsere Server, sobald einer antwortet.';
+      'Nach ein paar Minuten, sobald Tor durchkommt, gehen Nachrichten auch über öffentliche Relais, und wieder über unsere Server, sobald einer antwortet.';
 
   @override
   String get homeUsePrivate => 'Privat nutzen';

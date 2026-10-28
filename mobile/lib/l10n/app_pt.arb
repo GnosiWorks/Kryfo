@@ -2584,7 +2584,7 @@
   "homeMergedGotIt": "Entendi",
   "homeMergedUsePrivate": "Usar Privado no lugar",
   "homeOursDownTitle": "Nossos servidores não respondem",
-  "homeOursDownLine": "Depois de alguns minutos as mensagens também passam por retransmissores públicos pelo Tor, e voltam aos nossos servidores assim que um responde.",
+  "homeOursDownLine": "Depois de alguns minutos, quando o Tor consegue passar, as mensagens também vão por retransmissores públicos, e voltam aos nossos servidores assim que um responde.",
   "homeUsePrivate": "Usar Privado",
   "homeSwitchedToPrivate": "Mudou para Privado",
   "homeUseFast": "Usar Rápido",

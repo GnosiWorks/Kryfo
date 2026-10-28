@@ -9928,7 +9928,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'بعد دقائق قليلة تمر الرسائل أيضًا عبر مُرحِّلات عامة من خلال Tor، وتعود عبر خوادمنا حالما يرد أحدها.';
+      'بعد دقائق قليلة، حين يتصل Tor، تمر الرسائل أيضًا عبر مُرحِّلات عامة، وتعود عبر خوادمنا حالما يرد أحدها.';
 
   @override
   String get homeUsePrivate => 'استخدم الخاص';
