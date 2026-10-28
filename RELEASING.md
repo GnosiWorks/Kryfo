@@ -137,8 +137,11 @@ the card a release pins is made by the developer's phone itself, from its first 
 release's own code:
 1. build a release candidate: `KRYFO_RC=1 ./repro/release.sh --rc`. it is the final code with the
    old card still pinned; `KRYFO_RC=1 KRYFO_RELEASE=1 flutter test test/dev_key_test.dart` skips only
-   the card check. release.sh refuses a final while KRYFO_RC is set, and a candidate without it.
-2. verify the candidate like a release (verify.sh). it goes on the developer's phone as an update
+   the card check. release.sh refuses a final while KRYFO_RC is set, and a candidate without it. the
+   candidate goes to repro/out/rc/, every file named -rc, its version name `<version>-rc`; it is never
+   uploaded anywhere.
+2. verify the candidate like a release (`HALO_BUILD_NAME=<version>-rc ./verify.sh ...`). it goes on
+   the developer's phone as an update
    (`pm install -r`, same key, data kept), as close to release day as possible: from its first start
    0.5.x phones can no longer start a new dev chat.
 3. after that first start: open the own link (My Kryfo, share), read the card off it, check it with
@@ -147,7 +150,9 @@ release's own code:
    bundle (same key id).
 4. remind Mario to make an encrypted backup of the developer's phone right away: the pinned keys live
    only there. never reset its invite link, regenerate its identity or restore an older backup on it.
-5. build and verify the final from the pinned commit (without KRYFO_RC), and install it on the
+5. build and verify the final from the pinned commit (without KRYFO_RC), with
+   `KRYFO_RELEASE=1 flutter test test/dev_key_test.dart` passing (the card's signatures and a pq
+   session on it; release.sh only checks the kyber fields are there), and install it on the
    developer's phone over the candidate.
 6. publish the signed version.json on release day, not before: it is what tells 0.5.x phones to
    update.

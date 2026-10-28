@@ -504,6 +504,15 @@ void main() {
     final sh = File('../repro/release.sh').readAsStringSync();
     expect(sh, contains('a final release is never built with it'));
     expect(sh, contains('scripts/check-dev-card.sh'));
+    // a candidate lands in out/rc, named and versioned -rc, signed only so
+    expect(sh, contains('OUT=out/rc'));
+    expect(sh, contains(r'BUILD_NAME="$version-rc"'));
+    expect(sh, contains(r'mv "$f" "${f%.apk}-rc.apk"'));
+    expect(sh, contains('refusing to sign a candidate'));
+    expect(
+      File('../repro/build-repro.sh').readAsStringSync(),
+      contains('--build-name "\$HALO_BUILD_NAME"'),
+    );
     final r = Process.runSync(
       'bash',
       ['../repro/release.sh', '--unsigned'],

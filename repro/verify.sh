@@ -211,7 +211,8 @@ build_at() {
   # cgo opens more files at once building tor and openssl than the 1024 a
   # container gets by default
   docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
-    -e "HALO_SRC=$srcpath" -w "$srcpath" "${mounts[@]}" "$IMAGE"
+    -e "HALO_SRC=$srcpath" ${HALO_BUILD_NAME:+-e "HALO_BUILD_NAME=$HALO_BUILD_NAME"} \
+    -w "$srcpath" "${mounts[@]}" "$IMAGE"
 }
 
 build_at "$FDROID_PATH" primary
