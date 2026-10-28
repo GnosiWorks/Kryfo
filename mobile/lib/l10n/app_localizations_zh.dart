@@ -3009,20 +3009,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · Tor 仍在连接',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
@@ -4174,10 +4160,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoKnowsPhoto => '照片';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => '这段视频知道什么';
+  String get photoKnowsVideoCleaner => '视频清理';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => '这张照片知道什么';
+  String get photoKnowsPhotoCleaner => '照片清理';
 
   @override
   String get photoKnowsRemoveAllOfIt => '全部移除';
@@ -4989,9 +4975,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsConnecting => '正在连接';
-
-  @override
   String get settingsOffMode => '关 · 中继模式';
 
   @override
@@ -5215,10 +5198,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
 
   @override
-  String get toolsWhatDoesThisPhoto => '这张照片知道些什么？';
+  String get toolsPhotoCleaner => '照片清理';
 
   @override
-  String get toolsPlacePhoneTime => '地点 · 手机 · 时间';
+  String get toolsRemovesHiddenInfo => '清除地点、时间和手机型号等隐藏信息（元数据）';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -8713,6 +8696,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCopyLinkHint => '复制链接';
 
   @override
+  String get appRelayNotAnswering => '中继无响应';
+
+  @override
+  String get motionNoRelayYet => '暂无中继';
+
+  @override
+  String get motionTheRouteIsUp => '路线已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中继通过这条路线响应，消息就会发出。';
+
+  @override
+  String get motionOffline => '离线';
+
+  @override
+  String get motionNoNetwork => '没有网络';
+
+  @override
+  String get motionTorPicksUpAgain => '没有网络时什么都发不出去。网络恢复后，Tor 会继续。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条待发送 · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsIconAndNotifications => '图标和通知';
 
   @override
@@ -11847,20 +11866,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · Tor 仍在連線',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => '還沒有 Kryfo 聯絡人。';
 
   @override
@@ -13012,10 +13017,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get photoKnowsPhoto => '照片';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => '這段影片知道什麼';
+  String get photoKnowsVideoCleaner => '影片清理';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => '這張照片知道什麼';
+  String get photoKnowsPhotoCleaner => '照片清理';
 
   @override
   String get photoKnowsRemoveAllOfIt => '全部移除';
@@ -13827,9 +13832,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsConnecting => '連線中';
-
-  @override
   String get settingsOffMode => '關閉 · 中繼模式';
 
   @override
@@ -14053,10 +14055,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
 
   @override
-  String get toolsWhatDoesThisPhoto => '這張照片知道些什麼？';
+  String get toolsPhotoCleaner => '照片清理';
 
   @override
-  String get toolsPlacePhoneTime => '地點 · 手機 · 時間';
+  String get toolsRemovesHiddenInfo => '清除地點、時間和手機型號等隱藏資訊（中繼資料）';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -17430,6 +17432,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsCopyLinkHint => '複製連結';
+
+  @override
+  String get appRelayNotAnswering => '中繼無回應';
+
+  @override
+  String get motionNoRelayYet => '尚無中繼';
+
+  @override
+  String get motionTheRouteIsUp => '路線已建好';
+
+  @override
+  String get motionMessagesGoOnceARelay => '一旦有中繼透過這條路線回應，訊息就會送出。';
+
+  @override
+  String get motionOffline => '離線';
+
+  @override
+  String get motionNoNetwork => '沒有網路';
+
+  @override
+  String get motionTorPicksUpAgain => '沒有網路時什麼都送不出去。網路恢復後，Tor 會繼續。';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 則等待中 · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => '圖示和通知';

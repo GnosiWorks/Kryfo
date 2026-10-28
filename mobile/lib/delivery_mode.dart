@@ -81,6 +81,9 @@ DeliveryStatus deliveryStatus({
   required DeliveryMode mode,
   required bool connected,
   required bool connecting,
+  // the connection's words while it is not connected (link_view.dart), so
+  // this line says what the home pill says
+  String? state,
   // a check-in is running right now: woken by the job or by a knock
   bool checking = false,
   required int lastCheckMs,
@@ -94,9 +97,10 @@ DeliveryStatus deliveryStatus({
         return DeliveryStatus(l10n.deliveryModeConnected, live: true);
       }
       return DeliveryStatus(
-        connecting
-            ? l10n.deliveryModeConnecting
-            : l10n.deliveryModeNotConnected,
+        state ??
+            (connecting
+                ? l10n.deliveryModeConnecting
+                : l10n.deliveryModeNotConnected),
       );
     case DeliveryMode.checkins:
       if (checking) {
@@ -109,6 +113,9 @@ DeliveryStatus deliveryStatus({
       // shows: this screen is only ever read with kryfo open
       if (connected) {
         return DeliveryStatus(l10n.deliveryModeConnectedNow(last), live: true);
+      }
+      if (state != null) {
+        return DeliveryStatus(l10n.deliveryModeStateLast(state, last));
       }
       if (connecting) return DeliveryStatus(l10n.deliveryModeConnecting2(last));
       if (lastCheckMs <= 0) {

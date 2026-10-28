@@ -68,6 +68,10 @@ bool motionStill(BuildContext context) =>
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
+/// what the route picture shows over tor's own stage: nothing, a route no
+/// relay has answered through, or no network
+enum GraphHold { none, relay, offline }
+
 enum PrivacyMode { fast, normal, private }
 
 // the shared screen transition: a short rise and fade. with reduced motion
@@ -140,15 +144,19 @@ int parseRouteGen(String raw) {
 // ---- tor warmup graph ----
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
 // tor progresses, the active onion glows with expanding rings, and on
-// reachable everything turns green and pulses in sequence.
+// reachable everything turns green and pulses in sequence. a hold says what
+// tor's stage alone does not: a route up that no relay has answered through
+// stays amber, and with no network the picture rests
 
 class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
   final int bootstrapPct;
+  final GraphHold hold;
   const TorWarmupGraph({
     super.key,
     required this.status,
     this.bootstrapPct = 0,
+    this.hold = GraphHold.none,
   });
   @override
   State<TorWarmupGraph> createState() => _TorWarmupGraphState();
@@ -166,15 +174,36 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    );
     _phase = _targetPhase(widget.status);
+  }
+
+  // with reduced motion the picture rests: no glow running round, and a
+  // new stage shows at once
+  bool _rest = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _rest = motionStill(context);
+    if (_rest) {
+      _ctl.stop();
+      _phaseTimer?.cancel();
+      _phase = _targetPhase(widget.status);
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat();
+    }
   }
 
   @override
   void didUpdateWidget(TorWarmupGraph old) {
     super.didUpdateWidget(old);
     final target = _targetPhase(widget.status);
-    if (target != _phase) _walkTo(target);
+    if (_rest) {
+      _phase = target;
+    } else if (target != _phase) {
+      _walkTo(target);
+    }
   }
 
   @override
@@ -247,6 +276,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _label {
+    if (widget.hold == GraphHold.relay) return l10n.motionNoRelayYet;
+    if (widget.hold == GraphHold.offline) return l10n.motionOffline;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionStandby;
@@ -262,6 +293,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _italic {
+    if (widget.hold == GraphHold.relay) return l10n.motionTheRouteIsUp;
+    if (widget.hold == GraphHold.offline) return l10n.motionNoNetwork;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionPreparingToConnect;
@@ -277,6 +310,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _help {
+    if (widget.hold == GraphHold.relay) return l10n.motionMessagesGoOnceARelay;
+    if (widget.hold == GraphHold.offline) return l10n.motionTorPicksUpAgain;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionTorIsStartingIn;
@@ -292,6 +327,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _circuit {
+    if (widget.hold == GraphHold.relay) return l10n.motionOpen;
+    if (widget.hold == GraphHold.offline) return '\u2014';
     switch (widget.status) {
       case TorStatus.off:
         return '\u2014';
@@ -323,8 +360,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     }
   }
 
-  bool get _green => widget.status == TorStatus.reachable;
-  bool get _standby => _phase == 0;
+  bool get _held => widget.hold != GraphHold.none;
+  bool get _green => widget.status == TorStatus.reachable && !_held;
+  bool get _standby => _phase == 0 || widget.hold == GraphHold.offline;
   // dark keeps its pale grey; light needs real ink
   Color get _still =>
       HaloColors.isLight ? HaloColors.text3 : const Color(0xFFE5E5E5);
