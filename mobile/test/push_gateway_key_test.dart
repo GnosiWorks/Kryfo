@@ -18,6 +18,17 @@ void main() {
     );
   });
 
+  // the play release build refuses the development key on its own
+  // (android/app/build.gradle.kts): its pattern still finds it here
+  test('a play release build would refuse the development key', () {
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    expect(gradle, contains('kPushGatewayDevPub'));
+    expect(gradle, contains('variant.buildType.name == "release"'));
+    final src = File('lib/google_push.dart').readAsStringSync();
+    final dev = RegExp(r'const\s+kPushGatewayPub\s*=\s*kPushGatewayDevPub\s*;');
+    expect(dev.hasMatch(src), kPushGatewayPub == kPushGatewayDevPub);
+  });
+
   test(
     'the gateway key is the server\'s, not the development one',
     () => expect(kPushGatewayPub, isNot(kPushGatewayDevPub)),

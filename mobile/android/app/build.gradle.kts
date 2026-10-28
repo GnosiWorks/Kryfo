@@ -20,6 +20,13 @@ val keystoreProperties = Properties().apply {
 
 // the play build was a dart define once. a script that still passes it would
 // get a foss bundle under play's name, so it stops here
+if ((project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.any { String(Base64.getDecoder().decode(it)).startsWith("KRYFO_STORE=") } == true
+) {
+    throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
+}
+
 // google push in the play build: the firebase project's google-services.json
 // lives outside the repo (BUILDING.md), and only its few public values go into
 // the play build's resources, which FirebaseApp reads. no google-services
@@ -67,13 +74,6 @@ fun firebaseValuesOf(f: File, pkg: String): Map<String, String> {
         if (!Regex("[A-Za-z0-9:_.-]+").matches(it!!)) throw GradleException("${f.name} holds a value no resource can")
     }
     return out.mapValues { it.value!! }
-}
-
-if ((project.findProperty("dart-defines") as String?)
-        ?.split(",")
-        ?.any { String(Base64.getDecoder().decode(it)).startsWith("KRYFO_STORE=") } == true
-) {
-    throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
 }
 
 android {
@@ -284,6 +284,24 @@ android.applicationVariants.configureEach {
     if (variant.flavorName == "play") {
         variant.preBuildProvider.configure {
             doFirst { firebaseValues.getOrThrow() }
+        }
+    }
+    // a play release seals to the gateway's own key, never the development
+    // one: with it every endpoint would answer 404. KRYFO_DEV_GATEWAY=1 lets
+    // a test release through
+    if (variant.flavorName == "play" && variant.buildType.name == "release") {
+        variant.preBuildProvider.configure {
+            doFirst {
+                val src = rootProject.file("../lib/google_push.dart").readText()
+                val dev = Regex("""const\s+kPushGatewayPub\s*=\s*kPushGatewayDevPub\s*;""")
+                if (dev.containsMatchIn(src) && System.getenv("KRYFO_DEV_GATEWAY") != "1") {
+                    throw GradleException(
+                        "the play release pins the development push gateway key.\n" +
+                            "pin the server's key in mobile/lib/google_push.dart " +
+                            "(kPushGatewayPub, from kryfo-push pubkey on the server)."
+                    )
+                }
+            }
         }
     }
 }
