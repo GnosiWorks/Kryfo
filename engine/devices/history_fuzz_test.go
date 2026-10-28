@@ -83,15 +83,15 @@ func FuzzHistoryTake(f *testing.F) {
 	f.Add(uint8(text), byte(recBody), mediaRec(MinChunk, &Media{At: 1, Size: 3, Name: "x"}))
 	f.Add(uint8(text+1), byte(recGone), make([]byte, goneSize))
 	f.Add(uint8(len(recs)-1), byte(recEnd), []byte{})
-	keys, _ := newStreamKeys(w.key, w.bind)
+	keys, _ := newStreamKeys(w.key, w.bind, w.s.ID())
 	f.Fuzz(func(t *testing.T, at uint8, typ byte, p []byte) {
 		if len(p) > MaxRecord {
 			return
 		}
-		r, _ := NewReceiver(w.key, w.bind, w.id.pub)
+		r, _ := NewReceiver(w.key, w.bind, w.s.ID(), w.id.pub)
 		k := newSink()
 		upto := 1 + uint64(at)%uint64(len(recs)-1)
-		pump(t, recs, r, k, w.sh, upto)
+		pump(t, recs, r, k, upto)
 		ev, err := r.Take(keys.seal(upto, typ, p))
 		if err != nil {
 			return
@@ -108,12 +108,12 @@ func FuzzHistoryResume(f *testing.F) {
 	w.send()
 	recs := w.all()
 	r := w.recv()
-	pump(f, recs, r, newSink(), w.sh, w.s.head.Text+2)
+	pump(f, recs, r, newSink(), w.s.head.Text+2)
 	plan, _ := r.Plan()
 	st, _ := r.State()
 	f.Add(plan, st)
 	f.Fuzz(func(t *testing.T, plan, st []byte) {
-		r, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, st)
+		r, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, st)
 		if err != nil {
 			return
 		}
@@ -134,7 +134,7 @@ func FuzzHistoryTally(f *testing.F) {
 	recs := w.all()
 	r := w.recv()
 	k := newSink()
-	pump(f, recs, r, k, w.sh, uint64(len(recs)))
+	pump(f, recs, r, k, uint64(len(recs)))
 	tl, _ := r.Tally(k.counts())
 	f.Add(tl)
 	f.Add(tallyPlain(s.head.encode(), k.counts()))

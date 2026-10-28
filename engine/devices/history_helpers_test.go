@@ -107,7 +107,7 @@ func (w *histWorld) send() *Sender {
 			}
 		}
 	}
-	if err := s.Sign(w.id); err != nil {
+	if err := s.Plan(); err != nil {
 		w.t.Fatal(err)
 	}
 	w.s = s
@@ -117,7 +117,12 @@ func (w *histWorld) send() *Sender {
 
 func (w *histWorld) recv() *Receiver {
 	w.t.Helper()
-	r, err := NewReceiver(w.key, w.bind, w.id.pub)
+	return w.recvFor(w.s.ID())
+}
+
+func (w *histWorld) recvFor(id [IDSize]byte) *Receiver {
+	w.t.Helper()
+	r, err := NewReceiver(w.key, w.bind, id, w.id.pub)
 	if err != nil {
 		w.t.Fatal(err)
 	}
@@ -221,19 +226,13 @@ func (k *histSink) counts() []Count {
 	return out
 }
 
-// takes records from r's next index until upto (exclusive), trusting the
-// head as it comes
-func pump(t testing.TB, recs [][]byte, r *Receiver, k *histSink, v Verifier, upto uint64) {
+// takes records from r's next index until upto (exclusive)
+func pump(t testing.TB, recs [][]byte, r *Receiver, k *histSink, upto uint64) {
 	t.Helper()
 	for i := r.Next(); i < upto; i++ {
 		ev, err := r.Take(recs[i])
 		if err != nil {
 			t.Fatalf("record %d: %v", i, err)
-		}
-		if ev.Kind == EvHead {
-			if err := r.Trust(v); err != nil {
-				t.Fatalf("trust: %v", err)
-			}
 		}
 		k.apply(t, ev)
 	}
@@ -284,12 +283,14 @@ type forged struct {
 
 func forgeStream(t testing.TB, w *histWorld, chats []Count, text [][]byte, media []*Media, chunks [][]byte, skip bool) *forged {
 	t.Helper()
-	keys, err := newStreamKeys(w.key, w.bind)
+	var id [IDSize]byte
+	rand.Read(id[:])
+	keys, err := newStreamKeys(w.key, w.bind, id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	chunk := uint32(MinChunk)
-	h := &Head{Identity: w.id.pub, Bind: w.bind, SkipMedia: skip, Chunk: chunk, Text: uint64(len(text)), Chats: chats}
+	h := &Head{Identity: w.id.pub, Bind: w.bind, ID: id, SkipMedia: skip, Chunk: chunk, Text: uint64(len(text)), Chats: chats}
 	th := newTextHash()
 	tb := uint64(0)
 	for i, p := range text {
@@ -307,11 +308,6 @@ func forgeStream(t testing.TB, w *histWorld, chats []Count, text [][]byte, media
 	}
 	h.Records = h.Text + data + 2
 	h.Bytes = bytes
-	sig, err := w.id.Sign(ContextHistory, h.Body())
-	if err != nil {
-		t.Fatalf("sign forged head: %v", err)
-	}
-	h.Sig = sig
 	f := &forged{keys: keys, head: h}
 	f.add(recHead, h.encode())
 	for _, p := range text {
@@ -357,16 +353,10 @@ func mediaRec(chunk uint32, list ...*Media) []byte {
 // takes a forged stream until the first refusal, which it returns
 func takeForged(t testing.TB, w *histWorld, f *forged) error {
 	t.Helper()
-	r := w.recv()
+	r := w.recvFor(f.head.ID)
 	for i, rec := range f.recs {
-		ev, err := r.Take(rec)
-		if err != nil {
+		if _, err := r.Take(rec); err != nil {
 			return fmt.Errorf("record %d: %w", i, err)
-		}
-		if ev.Kind == EvHead {
-			if err := r.Trust(w.sh); err != nil {
-				return fmt.Errorf("trust: %w", err)
-			}
 		}
 	}
 	if !r.Done() {

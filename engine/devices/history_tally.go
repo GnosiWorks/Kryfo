@@ -12,6 +12,10 @@ import (
 // sealed back to the phone under a key of the same stream, so the phone
 // shows a mismatch too. a random nonce, as a device may send it twice.
 
+// TallyMax is the longest tally there can be: nonce, tag, magic, the
+// head's hash, the count and every chat
+const TallyMax = 12 + tagSize + 4 + 32 + 4 + tallyCount*MaxChats
+
 func tallyPlain(head []byte, got []Count) []byte {
 	sum := sha256.Sum256(head)
 	b := append([]byte(tallyMagic), sum[:]...)
@@ -43,17 +47,17 @@ func (r *Receiver) Tally(got []Count) ([]byte, error) {
 }
 
 // CheckTally opens the device's tally and compares it with the head this
-// phone signed. every chat that differs is returned.
+// phone sent. every chat that differs is returned.
 func (s *Sender) CheckTally(b []byte) ([]Mismatch, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed {
 		return nil, errClosed
 	}
-	if !s.signed {
+	if !s.planned() {
 		return nil, ErrState
 	}
-	if len(b) < 12+tagSize || len(b) > 12+tagSize+4+32+4+countSize*MaxChats {
+	if len(b) < 12+tagSize || len(b) > TallyMax {
 		return nil, ErrTally
 	}
 	p, err := s.keys.tally.Open(nil, b[:12], b[12:], []byte(tallyMagic))
@@ -61,7 +65,7 @@ func (s *Sender) CheckTally(b []byte) ([]Mismatch, error) {
 		return nil, ErrTally
 	}
 	want := s.head.Chats
-	if len(p) != 4+32+4+countSize*len(want) {
+	if len(p) != 4+32+4+tallyCount*len(want) {
 		return nil, ErrTally
 	}
 	sum := sha256.Sum256(s.head.encode())
@@ -77,7 +81,7 @@ func (s *Sender) CheckTally(b []byte) ([]Mismatch, error) {
 			Media:      binary.BigEndian.Uint32(p[at+4:]),
 			MediaBytes: binary.BigEndian.Uint64(p[at+8:]),
 		}
-		at += countSize
+		at += tallyCount
 	}
 	return compareCounts(want, got)
 }

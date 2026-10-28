@@ -54,9 +54,9 @@ type Receiver struct {
 	keys      *streamKeys
 	identity  Key
 	bind      [32]byte
+	id        [IDSize]byte
 	head      *Head
 	headPlain []byte
-	trusted   bool
 	next      uint64
 	text      hash.Hash
 	textBytes uint64
@@ -70,15 +70,17 @@ type Receiver struct {
 	broken    error
 }
 
-func NewReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key) (*Receiver, error) {
+// NewReceiver takes the stream of the sender whose stream id is id, as the
+// phone gives it with its first answer.
+func NewReceiver(key *[StreamKeySize]byte, bind [32]byte, id [IDSize]byte, identity Key) (*Receiver, error) {
 	if _, err := ParseKey(identity[:]); err != nil {
 		return nil, err
 	}
-	keys, err := newStreamKeys(key, bind)
+	keys, err := newStreamKeys(key, bind, id)
 	if err != nil {
 		return nil, err
 	}
-	return &Receiver{keys: keys, identity: identity, bind: bind, text: newTextHash().(hash.Hash), names: map[string]bool{}}, nil
+	return &Receiver{keys: keys, identity: identity, bind: bind, id: id, text: newTextHash().(hash.Hash), names: map[string]bool{}}, nil
 }
 
 // Next is the index the receiver takes next: where a cut transfer resumes.
@@ -129,9 +131,6 @@ func (r *Receiver) Take(rec []byte) (*Event, error) {
 	if r.done {
 		return nil, ErrDone
 	}
-	if r.head != nil && !r.trusted {
-		return nil, ErrTrust
-	}
 	typ, p, err := r.keys.open(r.next, rec)
 	if err != nil {
 		return nil, err
@@ -155,7 +154,7 @@ func (r *Receiver) Take(rec []byte) (*Event, error) {
 		return nil, r.fail(err)
 	}
 	r.next++
-	if r.head != nil && r.next == r.head.Text+1 && ev.Kind != EvHead {
+	if r.head != nil && r.next == r.head.Text+1 {
 		if err := r.finishText(); err != nil {
 			return nil, r.fail(err)
 		}
@@ -172,7 +171,7 @@ func (r *Receiver) takeHead(typ byte, p []byte, ev *Event) error {
 	if err != nil {
 		return err
 	}
-	if h.Identity != r.identity || h.Bind != r.bind {
+	if h.Identity != r.identity || h.Bind != r.bind || h.ID != r.id {
 		return ErrHead
 	}
 	r.head, r.headPlain = h, append([]byte(nil), p...)
@@ -180,35 +179,6 @@ func (r *Receiver) takeHead(typ byte, p []byte, ev *Event) error {
 	hc := *h
 	hc.Chats = append([]Count(nil), h.Chats...)
 	ev.Head = &hc
-	return nil
-}
-
-// Trust checks the head's signature under the identity the welcome named.
-// nothing after the head is taken before it holds.
-func (r *Receiver) Trust(v Verifier) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.broken != nil {
-		return r.broken
-	}
-	if r.head == nil || r.trusted {
-		return ErrState
-	}
-	if err := r.head.Verify(v); err != nil {
-		return r.fail(err)
-	}
-	r.trusted = true
-	// a stream with no text is whole in its head
-	if r.head.Text == 0 {
-		return r.finishTextLocked()
-	}
-	return nil
-}
-
-func (r *Receiver) finishTextLocked() error {
-	if err := r.finishText(); err != nil {
-		return r.fail(err)
-	}
 	return nil
 }
 
@@ -246,9 +216,6 @@ func (r *Receiver) takeText(typ byte, p []byte, ev *Event) error {
 		r.curMsgs += uint32(len(rows))
 		ev.Kind, ev.Chat, ev.Rows = EvMessages, chat, rows
 	case kindMedia:
-		if h.SkipMedia {
-			return ErrRecord
-		}
 		list, err := parseMediaRecord(p, h.Chunk)
 		if err != nil {
 			return err
@@ -329,7 +296,7 @@ func (r *Receiver) finishText() error {
 		got[m.Chat].MediaBytes += m.Size
 	}
 	for i := range got {
-		if got[i] != h.Chats[i] {
+		if !got[i].sameAs(h.Chats[i]) {
 			return ErrText
 		}
 	}
@@ -409,9 +376,8 @@ func (r *Receiver) Plan() ([]byte, error) {
 }
 
 const (
-	hsTrusted = 1
-	hsFailed  = 2
-	hsDone    = 4
+	hsFailed = 2
+	hsDone   = 4
 )
 
 // State is the receiver's place in the stream, small enough to store with
@@ -427,9 +393,6 @@ func (r *Receiver) State() ([]byte, error) {
 		return nil, err
 	}
 	var f byte
-	if r.trusted {
-		f |= hsTrusted
-	}
 	if r.failed {
 		f |= hsFailed
 	}
@@ -448,8 +411,8 @@ func (r *Receiver) State() ([]byte, error) {
 
 // ResumeReceiver takes up a stream where State left it, with the Plan kept
 // beside it. both are checked as strictly as the records were.
-func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan, state []byte) (*Receiver, error) {
-	r, err := NewReceiver(key, bind, identity)
+func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, id [IDSize]byte, identity Key, plan, state []byte) (*Receiver, error) {
+	r, err := NewReceiver(key, bind, id, identity)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +425,7 @@ func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan,
 		return nil, ErrState
 	}
 	h, err := ParseHead(rest[:hl])
-	if err != nil || h.Identity != identity || h.Bind != bind {
+	if err != nil || h.Identity != identity || h.Bind != bind || h.ID != id {
 		return nil, ErrState
 	}
 	r.head, r.headPlain = h, append([]byte(nil), rest[:hl]...)
@@ -472,7 +435,7 @@ func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan,
 	}
 	nm := binary.BigEndian.Uint32(rest)
 	rest = rest[4:]
-	if uint64(nm) > uint64(h.Files) || (h.SkipMedia && nm != 0) {
+	if uint64(nm) > uint64(h.Files) {
 		return nil, ErrState
 	}
 	list := make([]*Media, 0, nm)
@@ -497,10 +460,9 @@ func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan,
 		return nil, ErrState
 	}
 	f := state[4]
-	if f&^(hsTrusted|hsFailed|hsDone) != 0 {
+	if f&^(hsFailed|hsDone) != 0 {
 		return nil, ErrState
 	}
-	r.trusted = f&hsTrusted != 0
 	r.failed = f&hsFailed != 0
 	r.done = f&hsDone != 0
 	r.next = binary.BigEndian.Uint64(state[5:])
@@ -519,8 +481,6 @@ func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan,
 	switch {
 	case r.next < 1 || r.next > h.Records || (r.done != (r.next == h.Records)):
 		return nil, ErrState
-	case !r.trusted && r.next != 1:
-		return nil, ErrState
 	case int(r.chats) > len(h.Chats) || (r.chats > 0 && r.curMsgs > h.Chats[r.chats-1].Messages) || (r.chats == 0 && r.curMsgs != 0):
 		return nil, ErrState
 	case r.next <= h.Text && r.failed:
@@ -529,10 +489,8 @@ func ResumeReceiver(key *[StreamKeySize]byte, bind [32]byte, identity Key, plan,
 		return nil, ErrState
 	}
 	if r.next > h.Text {
-		if r.trusted || h.Text == 0 {
-			if err := r.finishText(); err != nil {
-				return nil, ErrState
-			}
+		if err := r.finishText(); err != nil {
+			return nil, ErrState
 		}
 	}
 	return r, nil
@@ -545,8 +503,9 @@ type Mismatch struct {
 }
 
 // Check compares what the app counts in its database once the stream is
-// whole with what the head promised, chat by chat. every difference is
-// returned; none means nothing was lost or doubled.
+// whole with what the head promised, chat by chat: messages, files and
+// their bytes. every difference is returned; none means nothing was lost
+// or doubled on the way. what the phone left out is in the head's counts.
 func (r *Receiver) Check(got []Count) ([]Mismatch, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -562,7 +521,7 @@ func compareCounts(want, got []Count) ([]Mismatch, error) {
 	}
 	var out []Mismatch
 	for i := range want {
-		if want[i] != got[i] {
+		if !want[i].sameAs(got[i]) {
 			out = append(out, Mismatch{Chat: uint32(i), Want: want[i], Got: got[i]})
 		}
 	}

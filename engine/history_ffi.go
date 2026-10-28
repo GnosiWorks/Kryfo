@@ -16,9 +16,7 @@ import (
 
 // the history stream for dart: a sender on the phone and a receiver on the
 // new device, each behind a handle. binary data goes through raw buffers;
-// keys, the transcript and the identity come as hex. the identity's
-// signature is made and checked by the shim on the dart side, which hands
-// the engine the signature and its verdict.
+// keys, the transcript, the stream id and the identity come as hex.
 
 var hist = struct {
 	sync.Mutex
@@ -35,6 +33,16 @@ type histRecv struct {
 
 // the most any one record takes on the wire
 const histMaxRecord = devices.MaxRecord + 5 + 16
+
+func histID(cID *C.char) ([devices.IDSize]byte, bool) {
+	var id [devices.IDSize]byte
+	b, err := hex.DecodeString(goStr(cID))
+	if err != nil || len(b) != len(id) {
+		return id, false
+	}
+	copy(id[:], b)
+	return id, true
+}
 
 func histKeys(cKey, cBind, cIdentity *C.char) (*[devices.StreamKeySize]byte, [32]byte, devices.Key, error) {
 	var key [devices.StreamKeySize]byte
@@ -133,7 +141,8 @@ func HaloHistSendNew(cKey, cBind, cIdentity, cSpool, cRoot *C.char, skip, chunk 
 	return histAdd(s, nil)
 }
 
-// starts a chat with its row, a json object. its number, or -1.
+// starts a chat with its row, a json object. its number; -2 when it could
+// not go and is counted as left out (its messages then go nowhere); -1.
 //
 //export HaloHistSendChat
 func HaloHistSendChat(h C.longlong, meta *C.uchar, n C.int) C.int {
@@ -143,37 +152,79 @@ func HaloHistSendChat(h C.longlong, meta *C.uchar, n C.int) C.int {
 		return -1
 	}
 	c, err := s.Chat(b)
+	if errors.Is(err, devices.ErrLeft) {
+		return -2
+	}
 	if err != nil {
 		return -1
 	}
 	return C.int(c)
 }
 
-// a message of the chat started last. 0, or -1.
+// leftOr is 1 for a row or file left out and counted, -1 for a refusal
+func leftOr(err error) C.int {
+	switch {
+	case err == nil:
+		return 0
+	case errors.Is(err, devices.ErrLeft):
+		return 1
+	}
+	return -1
+}
+
+// a message of the chat started last. 0; 1 when it was left out and
+// counted; -1.
 //
 //export HaloHistSendMessage
 func HaloHistSendMessage(h C.longlong, row *C.uchar, n C.int) C.int {
 	s := histSender(h)
-	b, ok := histBytes(row, n, devices.MaxRecord)
-	if s == nil || !ok || s.Message(b) != nil {
+	if s == nil || n < 0 {
 		return -1
 	}
-	return 0
+	// a row too big to copy in is not a row: counted as left out
+	b, ok := histBytes(row, n, 2*devices.MaxRecord)
+	if !ok {
+		b = []byte("{")
+	}
+	return leftOr(s.Message(b))
 }
 
-// a file under root for chat, at its time in ms. 0, or -1.
+// a file under root for chat, at its time in ms. 0; 1 when its name could
+// not be one and it is counted as left out; -1.
 //
 //export HaloHistSendMedia
 func HaloHistSendMedia(h C.longlong, chat C.int, at C.longlong, cName *C.char) C.int {
 	s := histSender(h)
-	if s == nil || chat < 0 || s.Media(uint32(chat), int64(at), goStr(cName)) != nil {
+	if s == nil || chat < 0 {
+		return -1
+	}
+	return leftOr(s.Media(uint32(chat), int64(at), goStr(cName)))
+}
+
+// a file of chat the app could not hand over, counted as left out. 0, or -1.
+//
+//export HaloHistSendLeft
+func HaloHistSendLeft(h C.longlong, chat C.int) C.int {
+	s := histSender(h)
+	if s == nil || chat < 0 || s.Left(uint32(chat)) != nil {
 		return -1
 	}
 	return 0
 }
 
-// closes the text and reads the files: the head's body, as hex, for the
-// identity to sign with ks_sign under "history-counts".
+// the sender's stream id as hex, for the device with the first answer.
+//
+//export HaloHistSendID
+func HaloHistSendID(h C.longlong) *C.char {
+	s := histSender(h)
+	if s == nil {
+		return histErr(errors.New("no sender"))
+	}
+	id := s.ID()
+	return C.CString(hex.EncodeToString(id[:]))
+}
+
+// closes the text, reads the files once and seals the head. "" or "error: ...".
 //
 //export HaloHistSendPlan
 func HaloHistSendPlan(h C.longlong) *C.char {
@@ -181,35 +232,24 @@ func HaloHistSendPlan(h C.longlong) *C.char {
 	if s == nil {
 		return histErr(errors.New("no sender"))
 	}
-	body, err := s.Plan()
-	if err != nil {
+	if err := s.Plan(); err != nil {
 		return histErr(err)
 	}
-	return C.CString(hex.EncodeToString(body))
-}
-
-// the signature over the body. 0, or -1.
-//
-//export HaloHistSendSigned
-func HaloHistSendSigned(h C.longlong, sig *C.uchar, n C.int) C.int {
-	s := histSender(h)
-	b, ok := histBytes(sig, n, devices.SigSize)
-	if s == nil || !ok || s.Signed(b) != nil {
-		return -1
-	}
-	return 0
+	return C.CString("")
 }
 
 type histCountJSON struct {
-	M uint32 `json:"m"`
-	F uint32 `json:"f"`
-	B uint64 `json:"b"`
+	M  uint32 `json:"m"`
+	F  uint32 `json:"f"`
+	B  uint64 `json:"b"`
+	LR uint32 `json:"lr,omitempty"`
+	LF uint32 `json:"lf,omitempty"`
 }
 
 func countsJSON(c []devices.Count) []histCountJSON {
 	out := make([]histCountJSON, len(c))
 	for i, x := range c {
-		out[i] = histCountJSON{x.Messages, x.Media, x.MediaBytes}
+		out[i] = histCountJSON{x.Messages, x.Media, x.MediaBytes, x.LeftRows, x.LeftFiles}
 	}
 	return out
 }
@@ -227,19 +267,17 @@ func countsFrom(s string) ([]devices.Count, error) {
 }
 
 type histHeadJSON struct {
-	Records uint64          `json:"records"`
-	Bytes   uint64          `json:"bytes"`
-	Text    uint64          `json:"text"`
-	Files   uint32          `json:"files"`
-	Skip    bool            `json:"skip"`
-	Chats   []histCountJSON `json:"chats"`
-	Skipped int             `json:"skipped,omitempty"`
-	Body    string          `json:"body,omitempty"`
-	Sig     string          `json:"sig,omitempty"`
+	Records   uint64          `json:"records"`
+	Bytes     uint64          `json:"bytes"`
+	Text      uint64          `json:"text"`
+	Files     uint32          `json:"files"`
+	Skip      bool            `json:"skip"`
+	LeftChats uint32          `json:"leftChats"`
+	Chats     []histCountJSON `json:"chats"`
 }
 
 func headJSON(h *devices.Head) histHeadJSON {
-	return histHeadJSON{Records: h.Records, Bytes: h.Bytes, Text: h.Text, Files: h.Files, Skip: h.SkipMedia, Chats: countsJSON(h.Chats)}
+	return histHeadJSON{Records: h.Records, Bytes: h.Bytes, Text: h.Text, Files: h.Files, Skip: h.SkipMedia, LeftChats: h.LeftChats, Chats: countsJSON(h.Chats)}
 }
 
 // what the planned stream holds: sizes and the counts chat by chat.
@@ -254,9 +292,7 @@ func HaloHistSendHead(h C.longlong) *C.char {
 	if err != nil {
 		return histErr(err)
 	}
-	j := headJSON(&hd)
-	j.Skipped = s.Skipped
-	return histJSON(j)
+	return histJSON(headJSON(&hd))
 }
 
 // record index into out. its length; below -1 when out is too small (the
@@ -299,7 +335,7 @@ func mismatchJSON(mm []devices.Mismatch) []histMismatchJSON {
 //export HaloHistSendTally
 func HaloHistSendTally(h C.longlong, in *C.uchar, n C.int) *C.char {
 	s := histSender(h)
-	b, ok := histBytes(in, n, 64+16*devices.MaxChats)
+	b, ok := histBytes(in, n, devices.TallyMax)
 	if s == nil || !ok {
 		return histErr(errors.New("no tally"))
 	}
@@ -323,16 +359,21 @@ func HaloHistSendClose(h C.longlong) {
 	}
 }
 
-// a new receiver for the stream the welcome's key opens. 0 when refused.
+// a new receiver for the stream the welcome's key opens, from the sender
+// whose stream id the phone gave. 0 when refused.
 //
 //export HaloHistRecvNew
-func HaloHistRecvNew(cKey, cBind, cIdentity *C.char) C.longlong {
-	key, bind, id, err := histKeys(cKey, cBind, cIdentity)
+func HaloHistRecvNew(cKey, cBind, cID, cIdentity *C.char) C.longlong {
+	key, bind, ident, err := histKeys(cKey, cBind, cIdentity)
 	if err != nil {
 		return 0
 	}
 	defer clear(key[:])
-	r, err := devices.NewReceiver(key, bind, id)
+	sid, ok := histID(cID)
+	if !ok {
+		return 0
+	}
+	r, err := devices.NewReceiver(key, bind, sid, ident)
 	if err != nil {
 		return 0
 	}
@@ -342,18 +383,22 @@ func HaloHistRecvNew(cKey, cBind, cIdentity *C.char) C.longlong {
 // a receiver taken up from its stored plan and state. 0 when refused.
 //
 //export HaloHistRecvResume
-func HaloHistRecvResume(cKey, cBind, cIdentity *C.char, plan *C.uchar, pn C.int, state *C.uchar, sn C.int) C.longlong {
-	key, bind, id, err := histKeys(cKey, cBind, cIdentity)
+func HaloHistRecvResume(cKey, cBind, cID, cIdentity *C.char, plan *C.uchar, pn C.int, state *C.uchar, sn C.int) C.longlong {
+	key, bind, ident, err := histKeys(cKey, cBind, cIdentity)
 	if err != nil {
 		return 0
 	}
 	defer clear(key[:])
+	sid, ok := histID(cID)
+	if !ok {
+		return 0
+	}
 	p, ok1 := histBytes(plan, pn, 64<<20)
 	st, ok2 := histBytes(state, sn, 1<<10)
 	if !ok1 || !ok2 {
 		return 0
 	}
-	r, err := devices.ResumeReceiver(key, bind, id, p, st)
+	r, err := devices.ResumeReceiver(key, bind, sid, ident, p, st)
 	if err != nil {
 		return 0
 	}
@@ -407,8 +452,6 @@ func encodeEvent(ev *devices.Event) ([]byte, error) {
 	}
 	if ev.Head != nil {
 		hj := headJSON(ev.Head)
-		hj.Body = hex.EncodeToString(ev.Head.Body())
-		hj.Sig = hex.EncodeToString(ev.Head.Sig)
 		j.Head = &hj
 	}
 	b, err := json.Marshal(j)
@@ -456,25 +499,19 @@ func HaloHistRecvEvent(h C.longlong, out *C.uchar, cap C.int) C.int {
 	return histOut(out, cap, x.ev)
 }
 
-type verdict bool
-
-func (v verdict) Verify(devices.Key, string, []byte, []byte) error {
-	if !v {
-		return devices.ErrSignature
-	}
-	return nil
-}
-
-// the shim's verdict on the head's signature, ks_verify_ctx over the body
-// and signature the head event gave. 0 when the stream may go on.
+// the head taken, as json, or "error: ..." before it.
 //
-//export HaloHistRecvTrust
-func HaloHistRecvTrust(h C.longlong, ok C.int) C.int {
+//export HaloHistRecvHead
+func HaloHistRecvHead(h C.longlong) *C.char {
 	x := histReceiver(h)
-	if x == nil || x.r.Trust(verdict(ok == 1)) != nil {
-		return -1
+	if x == nil {
+		return histErr(errors.New("no receiver"))
 	}
-	return 0
+	hd := x.r.Head()
+	if hd == nil {
+		return histErr(devices.ErrState)
+	}
+	return histJSON(headJSON(hd))
 }
 
 // the receiver's state into out, to store with the record just taken. its

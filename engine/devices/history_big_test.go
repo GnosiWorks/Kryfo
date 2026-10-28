@@ -76,10 +76,10 @@ func TestHistoryLargerThanMemory(t *testing.T) {
 			}
 		}
 	}()
-	if err := s.Sign(w.id); err != nil {
+	if err := s.Plan(); err != nil {
 		t.Fatal(err)
 	}
-	r := w.recv()
+	r := w.recvFor(s.ID())
 	zero := make([]byte, MaxChunk)
 	var got uint64
 	for i := uint64(0); i < s.head.Records; i++ {
@@ -92,10 +92,6 @@ func TestHistoryLargerThanMemory(t *testing.T) {
 			t.Fatalf("record %d: %v", i, err)
 		}
 		switch ev.Kind {
-		case EvHead:
-			if err := r.Trust(w.sh); err != nil {
-				t.Fatal(err)
-			}
 		case EvData:
 			if ev.Offset != got || !bytes.Equal(ev.Bytes, zero[:len(ev.Bytes)]) {
 				t.Fatalf("chunk at %d", ev.Offset)

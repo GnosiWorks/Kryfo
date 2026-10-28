@@ -2,6 +2,7 @@
 package devices
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
@@ -14,8 +15,9 @@ import (
 
 // SendOptions says where the sender keeps its text and reads its media.
 type SendOptions struct {
-	// Spool is a new file for the sealed text records, so a resent record
-	// is the same bytes and memory stays flat
+	// Spool is where the sealed text records go, so a resent record is the
+	// same bytes and memory stays flat: a fixed name in the app's private
+	// no-backup folder. whatever a crash left there goes first
 	Spool string
 	// Root is the folder media names are read under
 	Root      string
@@ -31,6 +33,7 @@ type Sender struct {
 	keys     *streamKeys
 	identity Key
 	bind     [32]byte
+	id       [IDSize]byte
 	opt      SendOptions
 	chunk    uint32
 
@@ -55,15 +58,36 @@ type Sender struct {
 	// first data record of each file, by its place in the list
 	starts []uint64
 
+	leftChats uint32
+
 	head    *Head
 	sealed0 []byte
-	signed  bool
 	closed  bool
-	// Skipped counts files the phone could not read while planning
-	Skipped int
 }
 
 var errClosed = errors.New("devices: history sender closed")
+
+// ErrLeft says a chat, row or file could not go and is counted as left out;
+// the stream goes on without it
+var ErrLeft = errors.New("devices: left out of the history")
+
+// every stream key and transcript a sender of this process took. a second
+// sender on one of them is refused, whatever its stream id
+var usedKeys = struct {
+	sync.Mutex
+	m map[[32]byte]bool
+}{m: map[[32]byte]bool{}}
+
+func takeKey(key *[StreamKeySize]byte, bind [32]byte) bool {
+	k := sha256.Sum256(append(append([]byte(labelSalt), key[:]...), bind[:]...))
+	usedKeys.Lock()
+	defer usedKeys.Unlock()
+	if usedKeys.m[k] {
+		return false
+	}
+	usedKeys.m[k] = true
+	return true
+}
 
 func NewSender(key *[StreamKeySize]byte, bind [32]byte, identity Key, opt SendOptions) (*Sender, error) {
 	if _, err := ParseKey(identity[:]); err != nil {
@@ -76,8 +100,21 @@ func NewSender(key *[StreamKeySize]byte, bind [32]byte, identity Key, opt SendOp
 	if chunk < MinChunk || chunk > MaxChunk || opt.Spool == "" {
 		return nil, ErrUsable
 	}
-	keys, err := newStreamKeys(key, bind)
+	if key == nil {
+		return nil, ErrUsable
+	}
+	var id [IDSize]byte
+	if _, err := io.ReadFull(rand.Reader, id[:]); err != nil {
+		return nil, err
+	}
+	keys, err := newStreamKeys(key, bind, id)
 	if err != nil {
+		return nil, err
+	}
+	if !takeKey(key, bind) {
+		return nil, ErrUsed
+	}
+	if err := os.Remove(opt.Spool); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 	f, err := os.OpenFile(opt.Spool, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)
@@ -85,10 +122,14 @@ func NewSender(key *[StreamKeySize]byte, bind [32]byte, identity Key, opt SendOp
 		return nil, err
 	}
 	return &Sender{
-		keys: keys, identity: identity, bind: bind, opt: opt, chunk: uint32(chunk),
+		keys: keys, identity: identity, bind: bind, id: id, opt: opt, chunk: uint32(chunk),
 		spool: f, next: 1, text: newTextHash(), cur: -1, names: map[string]bool{},
 	}, nil
 }
+
+// ID is the stream id the device needs, with the stream key and the
+// transcript, to open this sender's records.
+func (s *Sender) ID() [IDSize]byte { return s.id }
 
 func (s *Sender) planned() bool { return s.head != nil }
 
@@ -131,11 +172,14 @@ func (s *Sender) Chat(meta []byte) (uint32, error) {
 	if s.planned() {
 		return 0, ErrPlanned
 	}
-	if !rowOK(meta, MaxMeta) || len(s.counts) >= MaxChats {
-		return 0, ErrUsable
-	}
 	if err := s.flush(); err != nil {
 		return 0, err
+	}
+	if !rowOK(meta, MaxMeta) || len(s.counts) >= MaxChats {
+		// its messages have no chat to go with
+		s.cur = -1
+		s.leftChats++
+		return 0, ErrLeft
 	}
 	n := uint32(len(s.counts))
 	p := append([]byte{kindChat}, binary.BigEndian.AppendUint32(nil, n)...)
@@ -160,8 +204,12 @@ func (s *Sender) Message(row []byte) error {
 	if s.planned() {
 		return ErrPlanned
 	}
-	if s.cur < 0 || !rowOK(row, maxRow) || s.counts[s.cur].Messages == ^uint32(0) {
+	if s.cur < 0 {
 		return ErrUsable
+	}
+	if !rowOK(row, maxRow) || s.counts[s.cur].Messages == ^uint32(0) {
+		s.counts[s.cur].LeftRows++
+		return ErrLeft
 	}
 	// a full batch goes before the row that would overfill it
 	if s.nrows > 0 && (len(s.batch)+4+len(row) > int(s.chunk) || s.nrows == 0xffff) {
@@ -182,7 +230,7 @@ func (s *Sender) Message(row []byte) error {
 }
 
 // Media adds a file under Root to go with a chat; at orders the files,
-// newest first. refused when the stream skips media.
+// newest first. a name that cannot be one is counted as left out.
 func (s *Sender) Media(chat uint32, at int64, name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -192,11 +240,27 @@ func (s *Sender) Media(chat uint32, at int64, name string) error {
 	if s.planned() {
 		return ErrPlanned
 	}
-	if s.opt.SkipMedia || int(chat) >= len(s.counts) || !safeName(name) || s.names[name] {
+	if int(chat) >= len(s.counts) || s.names[name] {
 		return ErrUsable
+	}
+	if !safeName(name) {
+		s.counts[chat].LeftFiles++
+		return ErrLeft
 	}
 	s.names[name] = true
 	s.media = append(s.media, &Media{Chat: chat, At: at, Name: name})
+	return nil
+}
+
+// Left counts a file of chat the app could not hand over, one outside its
+// media folder say.
+func (s *Sender) Left(chat uint32) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed || s.planned() || int(chat) >= len(s.counts) {
+		return ErrUsable
+	}
+	s.counts[chat].LeftFiles++
 	return nil
 }
 
@@ -244,19 +308,19 @@ func chunkLen(size uint64, chunk uint32, i uint64) int {
 }
 
 // Plan closes the text, reads each file once for its hashes, seals the
-// media list newest first, and gives the head's body for the identity to
-// sign. files that cannot be read are left out and counted in Skipped.
-func (s *Sender) Plan() ([]byte, error) {
+// media list newest first and then the head. files that cannot be read
+// are left out and counted.
+func (s *Sender) Plan() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
-		return nil, errClosed
+		return errClosed
 	}
 	if s.planned() {
-		return nil, ErrPlanned
+		return ErrPlanned
 	}
 	if err := s.flush(); err != nil {
-		return nil, err
+		return err
 	}
 	buf := make([]byte, s.chunk)
 	kept := s.media[:0]
@@ -264,7 +328,7 @@ func (s *Sender) Plan() ([]byte, error) {
 		if s.measure(m, buf) {
 			kept = append(kept, m)
 		} else {
-			s.Skipped++
+			s.counts[m.Chat].LeftFiles++
 		}
 	}
 	s.media = kept
@@ -284,7 +348,7 @@ func (s *Sender) Plan() ([]byte, error) {
 	for _, m := range s.media {
 		if n > 0 && (len(rec)+mediaSize(m) > int(s.chunk) || n == 0xffff) {
 			if err := flushList(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 		if n == 0 {
@@ -294,14 +358,15 @@ func (s *Sender) Plan() ([]byte, error) {
 		n++
 	}
 	if err := flushList(); err != nil {
-		return nil, err
+		return err
 	}
 	if err := s.spool.Sync(); err != nil {
-		return nil, err
+		return err
 	}
 	h := &Head{
-		Identity: s.identity, Bind: s.bind, SkipMedia: s.opt.SkipMedia, Chunk: s.chunk,
-		Text: s.next - 1, Files: uint32(len(s.media)), Chats: append([]Count(nil), s.counts...),
+		Identity: s.identity, Bind: s.bind, ID: s.id, SkipMedia: s.opt.SkipMedia, Chunk: s.chunk,
+		Text: s.next - 1, Files: uint32(len(s.media)), LeftChats: s.leftChats,
+		Chats: append([]Count(nil), s.counts...),
 	}
 	copy(h.TextHash[:], s.text.Sum(nil))
 	data := uint64(0)
@@ -317,39 +382,8 @@ func (s *Sender) Plan() ([]byte, error) {
 	h.Records = h.Text + data + 2
 	h.Bytes = bytes
 	s.head = h
-	return h.Body(), nil
-}
-
-// Signed takes the identity's signature over the body Plan gave.
-func (s *Sender) Signed(sig []byte) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.closed {
-		return errClosed
-	}
-	if !s.planned() || s.signed || len(sig) != SigSize {
-		return ErrState
-	}
-	s.head.Sig = append([]byte(nil), sig...)
-	s.sealed0 = s.keys.seal(0, recHead, s.head.encode())
-	s.signed = true
+	s.sealed0 = s.keys.seal(0, recHead, h.encode())
 	return nil
-}
-
-// Sign plans and signs in one go, for a signer the engine holds.
-func (s *Sender) Sign(sg Signer) error {
-	if sg.Public() != s.identity {
-		return ErrWrongIdentity
-	}
-	body, err := s.Plan()
-	if err != nil {
-		return err
-	}
-	sig, err := sg.Sign(ContextHistory, body)
-	if err != nil {
-		return err
-	}
-	return s.Signed(sig)
 }
 
 // Head is a copy of the planned head.
@@ -361,7 +395,6 @@ func (s *Sender) Head() (Head, error) {
 	}
 	h := *s.head
 	h.Chats = append([]Count(nil), h.Chats...)
-	h.Sig = append([]byte(nil), h.Sig...)
 	return h, nil
 }
 
@@ -374,7 +407,7 @@ func (s *Sender) Record(i uint64) ([]byte, error) {
 	if s.closed {
 		return nil, errClosed
 	}
-	if !s.signed {
+	if !s.planned() {
 		return nil, ErrState
 	}
 	h := s.head

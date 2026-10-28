@@ -13,13 +13,6 @@ import (
 	"github.com/halo/engine/devices"
 )
 
-type zeroSigner struct{ pub devices.Key }
-
-func (z zeroSigner) Public() devices.Key { return z.pub }
-func (z zeroSigner) Sign(string, []byte) ([]byte, error) {
-	return make([]byte, devices.SigSize), nil
-}
-
 // a history record is a backup record: the backup's own cipher opens it
 // under the stream's record key, at its index, with its type
 func TestHistoryRecordsOpenAsBackupRecords(t *testing.T) {
@@ -40,10 +33,10 @@ func TestHistoryRecordsOpenAsBackupRecords(t *testing.T) {
 	s.Chat([]byte(`{"halo_id":"a"}`))
 	s.Message([]byte(`{"plaintext":"hi"}`))
 	s.Media(0, 1, "a.jpg")
-	if err := s.Sign(zeroSigner{id}); err != nil {
+	if err := s.Plan(); err != nil {
 		t.Fatal(err)
 	}
-	rk, _ := devices.RecordKey(key, bind)
+	rk, _ := devices.RecordKey(key, bind, s.ID())
 	gcm, err := backupGCM(hex.EncodeToString(rk))
 	if err != nil {
 		t.Fatal(err)

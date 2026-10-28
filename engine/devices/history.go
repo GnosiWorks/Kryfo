@@ -15,16 +15,15 @@ import (
 // the history stream a phone sends a newly linked device. records are the
 // backup file's: type 1, length 4, then aes-256-gcm with the record's index
 // as its nonce and its type as additional data. the key comes from the
-// link's stream key and transcript, so a record opens only in its own link
-// and at its own place.
+// link's stream key and transcript and the sender's own stream id, so a
+// record opens only in its own link, from its own sender, at its own place.
+// nothing in it is signed: the stream key already says it is the phone's,
+// and only the two ends hold it
 //
-//	0          head: what follows and its counts, signed by the identity
+//	0          head: what follows and its counts
 //	1..text    chats, their messages, then the media list
 //	..end-1    media chunks, newest file first
 //	end        empty
-
-// ContextHistory is the shim's signature context for a head body.
-const ContextHistory = "history-counts"
 
 const (
 	headMagic      = "KHC1"
@@ -55,7 +54,7 @@ const (
 	// MaxMeta is the most a chat's own row may take
 	MaxMeta = 64 << 10
 	// MaxChats keeps the head inside one record
-	MaxChats = 60000
+	MaxChats = 40000
 	// MaxName is the longest media file name
 	MaxName = 255
 
@@ -63,10 +62,15 @@ const (
 	tagSize       = 16
 	hashSize      = 32
 
-	headFixed = 4 + 1 + KeySize + 32 + 1 + 4 + 8 + 8 + 8 + hashSize + 4 + 4
-	countSize = 4 + 4 + 8
-	dataHead  = 1 + 4 + 8
-	goneSize  = 4 + 8
+	// IDSize is a sender's stream id
+	IDSize = 32
+
+	headFixed = 4 + 1 + KeySize + 32 + IDSize + 1 + 4 + 8 + 8 + 8 + hashSize + 4 + 4 + 4
+	countSize = 4 + 4 + 8 + 4 + 4
+	// what the tally carries per chat
+	tallyCount = 4 + 4 + 8
+	dataHead   = 1 + 4 + 8
+	goneSize   = 4 + 8
 	// a media entry before its name and chunk hashes
 	mediaFixed = 4 + 8 + 8 + 1
 
@@ -74,6 +78,7 @@ const (
 	labelGone    = "kryfo-history-v1 gone"
 	labelTally   = "kryfo-history-v1 tally"
 	labelText    = "kryfo-history-v1 text"
+	labelSalt    = "kryfo-history-v1 salt"
 
 	flagSkipMedia = 1
 )
@@ -82,25 +87,38 @@ var (
 	ErrRecord  = errors.New("devices: history record out of place or changed")
 	ErrHead    = errors.New("devices: history head does not hold")
 	ErrText    = errors.New("devices: history text does not match its head")
-	ErrTrust   = errors.New("devices: history head not yet checked")
 	ErrDone    = errors.New("devices: history stream already whole")
 	ErrUsable  = errors.New("devices: history source not usable")
 	ErrPlanned = errors.New("devices: history already planned")
 	ErrTally   = errors.New("devices: tally does not open or fit")
+	ErrUsed    = errors.New("devices: a stream key serves one sender only")
 )
 
 // Count is one chat's share of a stream: its messages, its media files
-// and their bytes.
+// and their bytes, and what the phone left out of it.
 type Count struct {
 	Messages   uint32
 	Media      uint32
 	MediaBytes uint64
+	// rows and files the phone could not send: too big, unreadable, a name
+	// that cannot be one, a file outside its media folder
+	LeftRows  uint32
+	LeftFiles uint32
+}
+
+// what both ends count after an import: the left-out counts are the
+// phone's word, not something the device can count again
+func (c Count) sameAs(o Count) bool {
+	return c.Messages == o.Messages && c.Media == o.Media && c.MediaBytes == o.MediaBytes
 }
 
 // Head is record 0: everything the device checks the rest against.
 type Head struct {
-	Identity  Key
-	Bind      [32]byte
+	Identity Key
+	Bind     [32]byte
+	// ID is the sender's own random stream id
+	ID [IDSize]byte
+	// SkipMedia says the person chose to leave photos, videos and files out
 	SkipMedia bool
 	Chunk     uint32
 	// Records counts every record, head and end included
@@ -111,8 +129,9 @@ type Head struct {
 	Text     uint64
 	TextHash [32]byte
 	Files    uint32
-	Chats    []Count
-	Sig      []byte
+	// LeftChats counts chats the phone could not send at all
+	LeftChats uint32
+	Chats     []Count
 }
 
 // Media is one file in the media list.
@@ -137,13 +156,13 @@ func chunksOf(size uint64, chunk uint32) uint64 {
 
 func sealedSize(plain int) uint64 { return uint64(recHeaderSize + plain + tagSize) }
 
-// Body is the head without its signature: what the identity signs.
-func (h *Head) Body() []byte {
-	b := make([]byte, 0, headFixed+countSize*len(h.Chats))
+func (h *Head) encode() []byte {
+	b := make([]byte, 0, headSize(len(h.Chats)))
 	b = append(b, headMagic...)
 	b = append(b, historyVersion)
 	b = append(b, h.Identity[:]...)
 	b = append(b, h.Bind[:]...)
+	b = append(b, h.ID[:]...)
 	var f byte
 	if h.SkipMedia {
 		f |= flagSkipMedia
@@ -155,23 +174,24 @@ func (h *Head) Body() []byte {
 	b = binary.BigEndian.AppendUint64(b, h.Text)
 	b = append(b, h.TextHash[:]...)
 	b = binary.BigEndian.AppendUint32(b, h.Files)
+	b = binary.BigEndian.AppendUint32(b, h.LeftChats)
 	b = binary.BigEndian.AppendUint32(b, uint32(len(h.Chats)))
 	for _, c := range h.Chats {
 		b = binary.BigEndian.AppendUint32(b, c.Messages)
 		b = binary.BigEndian.AppendUint32(b, c.Media)
 		b = binary.BigEndian.AppendUint64(b, c.MediaBytes)
+		b = binary.BigEndian.AppendUint32(b, c.LeftRows)
+		b = binary.BigEndian.AppendUint32(b, c.LeftFiles)
 	}
 	return b
 }
 
-func (h *Head) encode() []byte { return append(h.Body(), h.Sig...) }
-
-func headSize(chats int) int { return headFixed + countSize*chats + SigSize }
+func headSize(chats int) int { return headFixed + countSize*chats }
 
 // ParseHead reads a head's plaintext strictly: one encoding only, counts
-// that add up, and a chunk size in bounds. it checks no signature.
+// that add up, and a chunk size in bounds.
 func ParseHead(b []byte) (*Head, error) {
-	if len(b) < headFixed+SigSize || string(b[:4]) != headMagic || b[4] != historyVersion {
+	if len(b) < headFixed || string(b[:4]) != headMagic || b[4] != historyVersion {
 		return nil, ErrHead
 	}
 	h := &Head{}
@@ -184,6 +204,8 @@ func ParseHead(b []byte) (*Head, error) {
 	at += KeySize
 	copy(h.Bind[:], b[at:at+32])
 	at += 32
+	copy(h.ID[:], b[at:at+IDSize])
+	at += IDSize
 	f := b[at]
 	at++
 	if f&^flagSkipMedia != 0 {
@@ -202,6 +224,8 @@ func ParseHead(b []byte) (*Head, error) {
 	at += hashSize
 	h.Files = binary.BigEndian.Uint32(b[at:])
 	at += 4
+	h.LeftChats = binary.BigEndian.Uint32(b[at:])
+	at += 4
 	n := binary.BigEndian.Uint32(b[at:])
 	at += 4
 	if n > MaxChats || len(b) != headSize(int(n)) {
@@ -217,15 +241,15 @@ func ParseHead(b []byte) (*Head, error) {
 		c.Messages = binary.BigEndian.Uint32(b[at:])
 		c.Media = binary.BigEndian.Uint32(b[at+4:])
 		c.MediaBytes = binary.BigEndian.Uint64(b[at+8:])
+		c.LeftRows = binary.BigEndian.Uint32(b[at+16:])
+		c.LeftFiles = binary.BigEndian.Uint32(b[at+20:])
 		at += countSize
 		files += uint64(c.Media)
 		if c.Media == 0 && c.MediaBytes != 0 {
 			return nil, ErrHead
 		}
 	}
-	h.Sig = append([]byte(nil), b[at:]...)
-	// a stream with no media says so in its counts too
-	if files != uint64(h.Files) || (h.SkipMedia && h.Files != 0) {
+	if files != uint64(h.Files) {
 		return nil, ErrHead
 	}
 	// head, text, at least a chunk a file, end. chats and files need text
@@ -242,14 +266,6 @@ func ParseHead(b []byte) (*Head, error) {
 	return h, nil
 }
 
-// Verify checks the head's signature under its own identity.
-func (h *Head) Verify(v Verifier) error {
-	if len(h.Sig) != SigSize {
-		return ErrSignature
-	}
-	return v.Verify(h.Identity, ContextHistory, h.Body(), h.Sig)
-}
-
 // the keys a stream key and its link's transcript give
 type streamKeys struct {
 	records cipher.AEAD
@@ -257,8 +273,11 @@ type streamKeys struct {
 	tally   cipher.AEAD
 }
 
-func keyFor(key *[StreamKeySize]byte, bind [32]byte, label string) ([]byte, error) {
-	return hkdf.Key(sha256.New, key[:], bind[:], label, 32)
+// the salt binds the link's transcript and this sender's stream id, so two
+// senders on one stream key never share a key
+func keyFor(key *[StreamKeySize]byte, bind [32]byte, id [IDSize]byte, label string) ([]byte, error) {
+	salt := sha256.Sum256(append(append([]byte(labelSalt), bind[:]...), id[:]...))
+	return hkdf.Key(sha256.New, key[:], salt[:], label, 32)
 }
 
 func aeadOf(k []byte) (cipher.AEAD, error) {
@@ -270,7 +289,7 @@ func aeadOf(k []byte) (cipher.AEAD, error) {
 	return cipher.NewGCM(c)
 }
 
-func newStreamKeys(key *[StreamKeySize]byte, bind [32]byte) (*streamKeys, error) {
+func newStreamKeys(key *[StreamKeySize]byte, bind [32]byte, id [IDSize]byte) (*streamKeys, error) {
 	if key == nil {
 		return nil, ErrUsable
 	}
@@ -279,7 +298,7 @@ func newStreamKeys(key *[StreamKeySize]byte, bind [32]byte) (*streamKeys, error)
 		label string
 		to    *cipher.AEAD
 	}{{labelRecords, &out.records}, {labelGone, &out.gone}, {labelTally, &out.tally}} {
-		k, err := keyFor(key, bind, p.label)
+		k, err := keyFor(key, bind, id, p.label)
 		if err != nil {
 			return nil, err
 		}
@@ -294,8 +313,8 @@ func newStreamKeys(key *[StreamKeySize]byte, bind [32]byte) (*streamKeys, error)
 
 // RecordKey is the key the records are sealed under, as the backup's
 // record cipher takes it. for tests that hold the two formats together.
-func RecordKey(key *[StreamKeySize]byte, bind [32]byte) ([]byte, error) {
-	return keyFor(key, bind, labelRecords)
+func RecordKey(key *[StreamKeySize]byte, bind [32]byte, id [IDSize]byte) ([]byte, error) {
+	return keyFor(key, bind, id, labelRecords)
 }
 
 // the backup's nonce: the record's index, big-endian in twelve bytes

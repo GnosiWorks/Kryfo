@@ -4,6 +4,7 @@ package devices
 import (
 	"bytes"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/binary"
 	"errors"
 	"os"
@@ -21,7 +22,7 @@ func TestHistoryRoundTrip(t *testing.T) {
 	recs := w.all()
 	r := w.recv()
 	k := newSink()
-	pump(t, recs, r, k, w.sh, uint64(len(recs)))
+	pump(t, recs, r, k, uint64(len(recs)))
 	w.same(t, k)
 	if !r.Done() {
 		t.Fatal("not done")
@@ -57,7 +58,7 @@ func TestHistoryOrder(t *testing.T) {
 	w.send()
 	recs := w.all()
 	k := newSink()
-	pump(t, recs, w.recv(), k, w.sh, uint64(len(recs)))
+	pump(t, recs, w.recv(), k, uint64(len(recs)))
 	seenData := false
 	for _, kind := range k.kinds {
 		switch kind {
@@ -108,11 +109,11 @@ func TestHistoryCutAtEveryRecordThenResume(t *testing.T) {
 	w.send()
 	recs := w.all()
 	whole := newSink()
-	pump(t, recs, w.recv(), whole, w.sh, uint64(len(recs)))
+	pump(t, recs, w.recv(), whole, uint64(len(recs)))
 	for cut := 0; cut <= len(recs); cut++ {
 		r := w.recv()
 		k := newSink()
-		pump(t, recs, r, k, w.sh, uint64(cut))
+		pump(t, recs, r, k, uint64(cut))
 		if cut > 0 {
 			plan, err := r.Plan()
 			if err != nil {
@@ -122,7 +123,7 @@ func TestHistoryCutAtEveryRecordThenResume(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			r, err = ResumeReceiver(w.key, w.bind, w.id.pub, plan, st)
+			r, err = ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, st)
 			if err != nil {
 				t.Fatalf("resume at %d: %v", cut, err)
 			}
@@ -130,7 +131,7 @@ func TestHistoryCutAtEveryRecordThenResume(t *testing.T) {
 				t.Fatalf("resumed at %d, cut at %d", r.Next(), cut)
 			}
 		}
-		pump(t, recs, r, k, w.sh, uint64(len(recs)))
+		pump(t, recs, r, k, uint64(len(recs)))
 		w.same(t, k)
 		if !reflect.DeepEqual(k.kinds, whole.kinds) {
 			t.Fatalf("cut at %d: other events", cut)
@@ -150,7 +151,7 @@ func TestHistoryCutBetweenRecordAndState(t *testing.T) {
 	for cut := 1; cut < len(recs); cut++ {
 		r := w.recv()
 		k := newSink()
-		pump(t, recs, r, k, w.sh, uint64(cut))
+		pump(t, recs, r, k, uint64(cut))
 		plan, _ := r.Plan()
 		st, _ := r.State()
 		committed := len(k.kinds)
@@ -158,12 +159,12 @@ func TestHistoryCutBetweenRecordAndState(t *testing.T) {
 		if _, err := r.Take(recs[cut]); err != nil {
 			t.Fatal(err)
 		}
-		r2, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, st)
+		r2, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, st)
 		if err != nil {
 			t.Fatal(err)
 		}
 		k.kinds = k.kinds[:committed]
-		pump(t, recs, r2, k, w.sh, uint64(len(recs)))
+		pump(t, recs, r2, k, uint64(len(recs)))
 		w.same(t, k)
 	}
 }
@@ -184,7 +185,7 @@ func TestHistoryRefusesRecordsOutOfPlace(t *testing.T) {
 	for i := range recs {
 		r := w.recv()
 		k := newSink()
-		pump(t, recs, r, k, w.sh, uint64(i))
+		pump(t, recs, r, k, uint64(i))
 		bad := map[string][]byte{
 			"from another stream": foreign[min(i, len(foreign)-1)],
 			"from another link":   rebound[min(i, len(rebound)-1)],
@@ -213,7 +214,7 @@ func TestHistoryRefusesRecordsOutOfPlace(t *testing.T) {
 			}
 		}
 		// nothing refused moved it: the right record is still taken
-		pump(t, recs, r, k, w.sh, uint64(len(recs)))
+		pump(t, recs, r, k, uint64(len(recs)))
 		w.same(t, k)
 	}
 }
@@ -238,7 +239,7 @@ func TestHistoryEveryFlippedBitRefused(t *testing.T) {
 				t.Fatalf("record %d bit %d flipped and taken", i, bit)
 			}
 		}
-		pump(t, recs, r, k, w.sh, uint64(i+1))
+		pump(t, recs, r, k, uint64(i+1))
 	}
 	w.same(t, k)
 }
@@ -251,7 +252,7 @@ func TestHistoryCorruptedChunkSentAgain(t *testing.T) {
 	r := w.recv()
 	k := newSink()
 	at := w.s.head.Text + 2
-	pump(t, recs, r, k, w.sh, at)
+	pump(t, recs, r, k, at)
 	b := bytes.Clone(recs[at])
 	b[len(b)/2] ^= 0x40
 	if _, err := r.Take(b); !errors.Is(err, ErrRecord) {
@@ -261,78 +262,102 @@ func TestHistoryCorruptedChunkSentAgain(t *testing.T) {
 	if err != nil || !bytes.Equal(again, recs[at]) {
 		t.Fatal("a record sent again is other bytes")
 	}
-	pump(t, recs, r, k, w.sh, uint64(len(recs)))
+	pump(t, recs, r, k, uint64(len(recs)))
 	w.same(t, k)
 }
 
-func TestHistoryHeadMustBeSignedByTheIdentity(t *testing.T) {
+// the head is sealed like every record and signed by nothing: what opens
+// it is the stream key, which only the phone and the device hold
+func TestHistoryHeadIsSealedNotSigned(t *testing.T) {
 	w := newHistWorld(t, smallShape)
-	w.send()
+	s := w.send()
+	h, _ := s.Head()
+	if len(h.encode()) != headSize(len(h.Chats)) || headSize(0) != headFixed {
+		t.Fatal("the head carries more than its counts")
+	}
 	recs := w.all()
+	// the stand-in shim is never asked for a signature
+	if len(w.sh.secrets) != 1 {
+		t.Fatal("another key was made")
+	}
 	r := w.recv()
 	if _, err := r.Take(recs[0]); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Take(recs[1]); !errors.Is(err, ErrTrust) {
-		t.Fatalf("text before the head was checked: %v", err)
-	}
-	// a verifier that knows no such key
-	if err := r.Trust(newShim()); !errors.Is(err, ErrSignature) {
-		t.Fatalf("trust under a stranger's shim: %v", err)
-	}
-	if _, err := r.Take(recs[1]); err == nil {
-		t.Fatal("a stream whose head failed goes on")
-	}
-
-	// another identity's signature over the same body
-	s2, err := NewSender(w.key, w.bind, w.id.pub, SendOptions{Spool: filepath.Join(w.dir, "s2"), Root: w.root, Chunk: MinChunk})
-	if err != nil {
+	// text follows the head at once
+	if _, err := r.Take(recs[1]); err != nil {
 		t.Fatal(err)
 	}
-	defer s2.Close()
-	body, err := s2.Plan()
-	if err != nil {
-		t.Fatal(err)
-	}
-	mallory := w.sh.identity(t)
-	if _, err := mallory.Sign(ContextHistory, body); err == nil {
-		t.Fatal("the stand-in signs a head that names another identity")
-	}
-	if err := s2.Sign(mallory); !errors.Is(err, ErrWrongIdentity) {
-		t.Fatalf("sign with another identity: %v", err)
-	}
-	sig, _ := w.id.Sign(ContextHistory, body)
-	sig[3] ^= 1
-	if err := s2.Signed(sig); err != nil {
-		t.Fatal(err)
-	}
-	rec, _ := s2.Record(0)
-	r2 := w.recv()
-	if _, err := r2.Take(rec); err != nil {
-		t.Fatal(err)
-	}
-	if err := r2.Trust(w.sh); !errors.Is(err, ErrSignature) {
-		t.Fatalf("a changed signature: %v", err)
-	}
-
 	// a head that names another identity than the welcome did
-	r3, _ := NewReceiver(w.key, w.bind, mallory.pub)
+	mallory := w.sh.identity(t)
+	r3, _ := NewReceiver(w.key, w.bind, s.ID(), mallory.pub)
 	if _, err := r3.Take(recs[0]); !errors.Is(err, ErrHead) {
 		t.Fatalf("head for another identity: %v", err)
 	}
-
-	// nothing is served before it is signed
-	s3, _ := NewSender(w.key, w.bind, w.id.pub, SendOptions{Spool: filepath.Join(w.dir, "s3"), Root: w.root, Chunk: MinChunk})
+	// nothing is served before the plan
+	w2 := newHistWorld(t, smallShape)
+	s3, _ := NewSender(w2.key, w2.bind, w2.id.pub, w2.opt)
 	defer s3.Close()
 	if _, err := s3.Record(0); !errors.Is(err, ErrState) {
-		t.Fatalf("unsigned record 0: %v", err)
+		t.Fatalf("record 0 before the plan: %v", err)
 	}
-	s3.Plan()
-	if _, err := s3.Record(0); !errors.Is(err, ErrState) {
-		t.Fatalf("planned but unsigned record 0: %v", err)
+}
+
+// a second sender on a stream key and transcript is refused in the
+// process, and even one made elsewhere has a stream id of its own, so its
+// records never share a key and nonce with the first's
+func TestHistoryOneSenderPerStreamKey(t *testing.T) {
+	w := newHistWorld(t, smallShape)
+	s := w.send()
+	if _, err := NewSender(w.key, w.bind, w.id.pub, SendOptions{Spool: filepath.Join(w.dir, "again"), Root: w.root}); !errors.Is(err, ErrUsed) {
+		t.Fatalf("a second sender on one key: %v", err)
 	}
-	if err := s3.Signed(make([]byte, 10)); err == nil {
-		t.Fatal("a short signature taken")
+	// another process: the refusal is per process, the stream id is not
+	usedKeys.Lock()
+	clear(usedKeys.m)
+	usedKeys.Unlock()
+	mk := func(spool, row string) (*Sender, []byte) {
+		sn, err := NewSender(w.key, w.bind, w.id.pub, SendOptions{Spool: filepath.Join(w.dir, spool), Root: w.root})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { sn.Close() })
+		sn.Chat([]byte(`{"id":"ana"}`))
+		sn.Message([]byte(row))
+		if err := sn.Plan(); err != nil {
+			t.Fatal(err)
+		}
+		r, _ := sn.Record(2)
+		return sn, r
+	}
+	usedKeys.Lock()
+	clear(usedKeys.m)
+	usedKeys.Unlock()
+	sa, a := mk("s1", `{"plaintext":"meet at nine"}`)
+	usedKeys.Lock()
+	clear(usedKeys.m)
+	usedKeys.Unlock()
+	sb, b := mk("s2", `{"plaintext":"meet at ten!"}`)
+	if sa.ID() == sb.ID() || sa.ID() == s.ID() {
+		t.Fatal("two senders share a stream id")
+	}
+	if len(a) != len(b) {
+		t.Fatalf("lengths %d %d", len(a), len(b))
+	}
+	// the review's reuse: the xor of the ciphertexts no longer gives the
+	// xor of the rows
+	x := make([]byte, len(a)-5-16)
+	subtle.XORBytes(x, a[5:len(a)-16], b[5:len(b)-16])
+	want := make([]byte, len(`{"plaintext":"meet at nine"}`))
+	subtle.XORBytes(want, []byte(`{"plaintext":"meet at nine"}`), []byte(`{"plaintext":"meet at ten!"}`))
+	if bytes.Contains(x, want) {
+		t.Fatal("two senders on one key reuse a nonce")
+	}
+	// and a record of one sender does not open as the other's
+	ra := w.recvFor(sb.ID())
+	r0, _ := sa.Record(0)
+	if _, err := ra.Take(r0); !errors.Is(err, ErrRecord) {
+		t.Fatalf("another sender's head opened: %v", err)
 	}
 }
 
@@ -341,12 +366,9 @@ func TestHistorySkipMedia(t *testing.T) {
 	sh.skip = true
 	w := newHistWorld(t, sh)
 	s := w.send()
-	if err := s.Media(0, 1, "c0/f0.jpg"); err == nil {
-		t.Fatal("a file added to a stream that skips media")
-	}
 	recs := w.all()
 	k := newSink()
-	pump(t, recs, w.recv(), k, w.sh, uint64(len(recs)))
+	pump(t, recs, w.recv(), k, uint64(len(recs)))
 	w.same(t, k)
 	h, _ := s.Head()
 	if !h.SkipMedia || h.Files != 0 || h.Records != h.Text+2 {
@@ -374,11 +396,32 @@ func TestHistorySkipMedia(t *testing.T) {
 			}
 		}
 	}
-	// a forged stream that says skip and lists a file anyway
-	m := &Media{Chat: 0, At: 1, Size: 10, Name: "a.jpg"}
-	f := forgeStream(t, w, []Count{{}}, [][]byte{chatRec(0, `{}`), mediaRec(MinChunk, m)}, nil, nil, true)
-	if err := takeForged(t, w, f); err == nil {
-		t.Fatal("a skip stream with a media list")
+}
+
+// the person's choice travels in the head; what goes with it is the app's
+// (voice notes go whatever it is)
+func TestHistorySkipStillCarriesWhatTheAppSends(t *testing.T) {
+	sh := smallShape
+	sh.skip = true
+	w := newHistWorld(t, sh)
+	s, err := NewSender(w.key, w.bind, w.id.pub, w.opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	s.Chat(w.chats[1].meta)
+	if err := s.Media(0, 5, w.chats[1].files[0]); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Plan(); err != nil {
+		t.Fatal(err)
+	}
+	w.s = s
+	recs := w.all()
+	k := newSink()
+	pump(t, recs, w.recv(), k, uint64(len(recs)))
+	if !k.head.SkipMedia || len(k.media) != 1 || !k.ok[0] {
+		t.Fatal("a skip stream lost the file the app sent")
 	}
 }
 
@@ -467,7 +510,6 @@ func TestHistoryHeadHoldsTheText(t *testing.T) {
 		g := *f
 		h := *f.head
 		change(&h)
-		h.Sig, _ = w.id.Sign(ContextHistory, h.Body())
 		g.recs = append([][]byte{f.keys.seal(0, recHead, h.encode())}, f.recs[1:]...)
 		err := takeForged(t, w, &g)
 		if err == nil {
@@ -508,7 +550,7 @@ func TestHistoryFileChangedAfterThePlan(t *testing.T) {
 	for i := range recs {
 		fresh[i], _ = s.Record(uint64(i))
 	}
-	pump(t, fresh, r, k, w.sh, uint64(len(recs)))
+	pump(t, fresh, r, k, uint64(len(recs)))
 	if !k.gone[0] || !k.gone[1] || k.ok[0] || k.ok[1] {
 		t.Fatal("lost files not reported")
 	}
@@ -539,7 +581,7 @@ func TestHistoryCountCheckOnBothSides(t *testing.T) {
 	if _, err := r.Check(nil); !errors.Is(err, ErrState) {
 		t.Fatal("a check before the stream is whole")
 	}
-	pump(t, recs, r, k, w.sh, uint64(len(recs)))
+	pump(t, recs, r, k, uint64(len(recs)))
 	for _, change := range []func(c []Count){
 		func(c []Count) { c[1].Messages-- },
 		func(c []Count) { c[2].Messages++ },
@@ -614,10 +656,17 @@ func TestHistoryBuildRules(t *testing.T) {
 	if _, err := mk(SendOptions{}); err == nil {
 		t.Fatal("no spool taken")
 	}
-	os.WriteFile(filepath.Join(w.dir, "held"), []byte("x"), 0o600)
-	if _, err := mk(SendOptions{Spool: filepath.Join(w.dir, "held")}); err == nil {
-		t.Fatal("a spool over a file taken")
+	// what a crash left at the spool's name goes first
+	os.WriteFile(filepath.Join(w.dir, "held"), []byte("stale"), 0o600)
+	held, err := mk(SendOptions{Spool: filepath.Join(w.dir, "held"), Chunk: MinChunk})
+	if err != nil {
+		t.Fatalf("a stale spool kept the sender out: %v", err)
 	}
+	if b, _ := os.ReadFile(filepath.Join(w.dir, "held")); len(b) != 0 {
+		t.Fatal("the stale spool stayed")
+	}
+	held.Close()
+	w = newHistWorld(t, smallShape)
 	if _, err := NewSender(nil, w.bind, w.id.pub, SendOptions{Spool: filepath.Join(w.dir, "y")}); err == nil {
 		t.Fatal("no key taken")
 	}
@@ -628,15 +677,23 @@ func TestHistoryBuildRules(t *testing.T) {
 	if err := s.Message([]byte(`{}`)); err == nil {
 		t.Fatal("a message before any chat")
 	}
-	if _, err := s.Chat([]byte(`not json`)); err == nil {
+	if err := s.Message([]byte(`{}`)); err == nil {
+		t.Fatal("a message before any chat")
+	}
+	if _, err := s.Chat([]byte(`not json`)); !errors.Is(err, ErrLeft) {
 		t.Fatal("a chat row that is not json")
+	}
+	// the messages of a chat that could not go have nowhere to land
+	if err := s.Message([]byte(`{}`)); err == nil || errors.Is(err, ErrLeft) {
+		t.Fatal("a message after a left chat")
 	}
 	if _, err := s.Chat([]byte(`{}`)); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"", "/abs", "a/../b", "a//b", "a\\b", "a\x01", "./a", "a/", string([]byte{0xff})} {
-		if err := s.Media(0, 1, name); err == nil {
-			t.Fatalf("name %q taken", name)
+	bad := []string{"", "/abs", "a/../b", "a//b", "a\\b", "a\x01", "./a", "a/", string([]byte{0xff})}
+	for _, name := range bad {
+		if err := s.Media(0, 1, name); !errors.Is(err, ErrLeft) {
+			t.Fatalf("name %q: %v", name, err)
 		}
 	}
 	if err := s.Media(3, 1, "c0/f0.jpg"); err == nil {
@@ -651,16 +708,20 @@ func TestHistoryBuildRules(t *testing.T) {
 	if err := s.Media(0, 2, "missing.jpg"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Plan(); err != nil {
+	if err := s.Left(0); err != nil {
 		t.Fatal(err)
 	}
-	if s.Skipped != 1 {
-		t.Fatalf("skipped %d", s.Skipped)
+	if err := s.Plan(); err != nil {
+		t.Fatal(err)
+	}
+	// the bad names, the missing file and the one the app could not hand over
+	if h, _ := s.Head(); h.Chats[0].LeftFiles != uint32(len(bad))+2 || h.Files != 1 {
+		t.Fatalf("left %d, files %d", h.Chats[0].LeftFiles, h.Files)
 	}
 	if _, err := s.Chat([]byte(`{}`)); !errors.Is(err, ErrPlanned) {
 		t.Fatal("a chat after the plan")
 	}
-	if _, err := s.Plan(); !errors.Is(err, ErrPlanned) {
+	if err := s.Plan(); !errors.Is(err, ErrPlanned) {
 		t.Fatal("planned twice")
 	}
 	s.Close()
@@ -689,8 +750,31 @@ func TestHistoryEdges(t *testing.T) {
 	w.send()
 	recs := w.all()
 	k := newSink()
-	pump(t, recs, w.recv(), k, w.sh, uint64(len(recs)))
+	pump(t, recs, w.recv(), k, uint64(len(recs)))
 	w.same(t, k)
+
+	// an odd chat or row is counted and the stream goes on
+	o := newHistWorld(t, histShape{chunk: MinChunk})
+	so, _ := NewSender(o.key, o.bind, o.id.pub, o.opt)
+	defer so.Close()
+	huge := append([]byte(`{"members":"`), bytes.Repeat([]byte("m"), MaxMeta)...)
+	if _, err := so.Chat(append(huge, `"}`...)); !errors.Is(err, ErrLeft) {
+		t.Fatalf("an oversized chat row: %v", err)
+	}
+	so.Chat([]byte(`{"k":2}`))
+	long := append([]byte(`{"plaintext":"`), bytes.Repeat([]byte("z"), MaxRecord)...)
+	if err := so.Message(append(long, `"}`...)); !errors.Is(err, ErrLeft) {
+		t.Fatalf("an oversized row: %v", err)
+	}
+	so.Message([]byte(`{"a":1}`))
+	so.Plan()
+	o.s = so
+	recs = o.all()
+	k = newSink()
+	pump(t, recs, o.recv(), k, uint64(len(recs)))
+	if h := k.head; h.LeftChats != 1 || h.Chats[0].LeftRows != 1 || h.Chats[0].Messages != 1 {
+		t.Fatalf("left out %+v", k.head)
+	}
 
 	e := newHistWorld(t, histShape{chunk: MinChunk})
 	e.send()
@@ -700,7 +784,7 @@ func TestHistoryEdges(t *testing.T) {
 	}
 	k = newSink()
 	r := e.recv()
-	pump(t, recs, r, k, e.sh, 2)
+	pump(t, recs, r, k, 2)
 	if mm, err := r.Check(nil); err != nil || len(mm) != 0 {
 		t.Fatal("an empty stream's check")
 	}
@@ -715,37 +799,37 @@ func TestHistoryResumeRefusesBadState(t *testing.T) {
 		t.Fatal("a state before the head")
 	}
 	k := newSink()
-	pump(t, recs, r, k, w.sh, w.s.head.Text+2)
+	pump(t, recs, r, k, w.s.head.Text+2)
 	plan, _ := r.Plan()
 	st, _ := r.State()
-	if _, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, st); err != nil {
+	if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, st); err != nil {
 		t.Fatal(err)
 	}
 	other := w.sh.identity(t)
-	if _, err := ResumeReceiver(w.key, w.bind, other.pub, plan, st); err == nil {
+	if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), other.pub, plan, st); err == nil {
 		t.Fatal("resumed under another identity")
 	}
 	b2 := w.bind
 	b2[0] ^= 1
-	if _, err := ResumeReceiver(w.key, b2, w.id.pub, plan, st); err == nil {
+	if _, err := ResumeReceiver(w.key, b2, w.s.ID(), w.id.pub, plan, st); err == nil {
 		t.Fatal("resumed under another link")
 	}
 	far := bytes.Clone(st)
 	binary.BigEndian.PutUint64(far[5:], w.s.head.Records+1)
-	if _, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, far); err == nil {
+	if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, far); err == nil {
 		t.Fatal("resumed past the end")
 	}
 	hash := bytes.Clone(st)
 	hash[len(hash)-1] ^= 1
-	if _, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, hash); err == nil {
+	if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, hash); err == nil {
 		t.Fatal("resumed with a text hash that no longer matches")
 	}
 	short := plan[:len(plan)-1]
-	if _, err := ResumeReceiver(w.key, w.bind, w.id.pub, short, st); err == nil {
+	if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, short, st); err == nil {
 		t.Fatal("resumed with a plan cut short")
 	}
 	for i := 0; i < len(st); i++ {
-		if _, err := ResumeReceiver(w.key, w.bind, w.id.pub, plan, st[:i]); err == nil {
+		if _, err := ResumeReceiver(w.key, w.bind, w.s.ID(), w.id.pub, plan, st[:i]); err == nil {
 			t.Fatalf("resumed with %d bytes of state", i)
 		}
 	}
