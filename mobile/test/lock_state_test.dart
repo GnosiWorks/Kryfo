@@ -352,9 +352,24 @@ void main() {
           store.log.clear();
           engine.calls.clear();
           expect(await lock.verifyPin(pin), want, reason: why);
-          expect(store.log, ['w halo.lock.state'], reason: why);
+          await Future<void>.delayed(Duration.zero);
+          // an old app hash beside the same app pin goes once the app pin
+          // opened, after the reveal: only that open writes more
+          final cleanup = {
+            'w halo.lock.set.app',
+            'd halo.lock.pin_hash',
+            'd halo.lock.pin_salt',
+          };
+          final opened = legacy && !held && pin == '1234';
+          expect(store.log.where((l) => opened ? !cleanup.contains(l) : true), [
+            'w halo.lock.state',
+          ], reason: why);
           expect(engine.calls, ['check'], reason: why);
           lock.lock();
+        }
+        if (legacy && !held) {
+          await Future<void>.delayed(Duration.zero);
+          expect(store.m.containsKey('halo.lock.pin_hash'), isFalse);
         }
       }
     }
