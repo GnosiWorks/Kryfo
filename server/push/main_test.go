@@ -714,7 +714,7 @@ func TestJunkCannotLockPhonesOut(t *testing.T) {
 	r.g.fcm = stub
 	everyone = newLimiter(1e9, 1e9)
 	for i := 0; i < floorKept; i++ {
-		r.g.knock(junkToken(i))
+		r.g.knock(junkToken(i), "s:"+junkToken(i))
 	}
 	r.g.mu.Lock()
 	rows, gones := len(r.g.floor), len(r.g.gone)
@@ -725,12 +725,12 @@ func TestJunkCannotLockPhonesOut(t *testing.T) {
 	if gones > goneKept {
 		t.Fatalf("%d gone rows, the cap is %d", gones, goneKept)
 	}
-	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+	if code, _ := r.g.knock(phoneToken, "s:"+phoneToken); code != http.StatusCreated {
 		t.Fatalf("a real phone after the junk: %d", code)
 	}
 	// a day on, still: nothing junk left behind blocks it
 	r.clock = r.clock.Add(25 * time.Hour)
-	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+	if code, _ := r.g.knock(phoneToken, "s:"+phoneToken); code != http.StatusCreated {
 		t.Fatalf("a real phone a day on: %d", code)
 	}
 }
@@ -742,7 +742,7 @@ func TestRefusedKnocksHoldNothing(t *testing.T) {
 	everyone = newLimiter(0.0001, 1)
 	everyone.allow()
 	for i := 0; i < 50_000; i++ {
-		if code, _ := r.g.knock(junkToken(i)); code != http.StatusTooManyRequests {
+		if code, _ := r.g.knock(junkToken(i), "s:"+junkToken(i)); code != http.StatusTooManyRequests {
 			t.Fatalf("junk %d past an empty pace: %d", i, code)
 		}
 	}
@@ -753,7 +753,7 @@ func TestRefusedKnocksHoldNothing(t *testing.T) {
 		t.Fatalf("refused junk holds %d rows and %d gone", rows, gones)
 	}
 	everyone = newLimiter(1000, 1000)
-	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+	if code, _ := r.g.knock(phoneToken, "s:"+phoneToken); code != http.StatusCreated {
 		t.Fatalf("the phone once the pace is back: %d", code)
 	}
 }
@@ -770,7 +770,7 @@ func TestFullTableIsNotSweptPerKnock(t *testing.T) {
 		r.g.floor[h] = &phone{last: r.clock, hourStart: r.clock}
 	}
 	r.g.mu.Unlock()
-	if code, _ := r.g.knock(junkToken(1)); code != http.StatusTooManyRequests {
+	if code, _ := r.g.knock(junkToken(1), "s:"+junkToken(1)); code != http.StatusTooManyRequests {
 		t.Fatalf("a full table: %d", code)
 	}
 	r.g.mu.Lock()
@@ -778,7 +778,7 @@ func TestFullTableIsNotSweptPerKnock(t *testing.T) {
 	r.g.mu.Unlock()
 	start := time.Now()
 	for i := 2; i < 2000; i++ {
-		r.g.knock(junkToken(i))
+		r.g.knock(junkToken(i), "s:"+junkToken(i))
 	}
 	if took := time.Since(start); took > time.Second {
 		t.Fatalf("2000 knocks on a full table took %v", took)
@@ -807,5 +807,60 @@ func TestGoneTableKeepsItsCap(t *testing.T) {
 	}
 	if _, ok := r.g.gone[r.g.hash(junkToken(goneKept+499))]; !ok {
 		t.Fatal("the newest went")
+	}
+}
+
+// one install sealing its token over and over cannot fill the relay: past
+// 32 seals of one token seen within a day, a new one is no endpoint
+func TestSealsPerTokenAreCapped(t *testing.T) {
+	r := newRig(t)
+	r.g.fcm = &stubFCM{phone: phoneToken, junk: sent}
+	everyone = newLimiter(1e9, 1e9)
+	seals := make([]string, sealsPerToken)
+	for i := range seals {
+		seals[i] = r.endpoint(t, phoneToken)
+		w := r.post(t, seals[i], nil)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("seal %d: %d", i, w.Code)
+		}
+		// past the floor, and under thirty an hour
+		r.clock = r.clock.Add(3 * time.Minute)
+	}
+	if w := r.post(t, r.endpoint(t, phoneToken), nil); w.Code != http.StatusNotFound {
+		t.Fatalf("seal %d of one token: %d, want 404", sealsPerToken+1, w.Code)
+	}
+	// the ones it has keep working
+	r.clock = r.clock.Add(floorGap)
+	if w := r.post(t, seals[3], nil); w.Code != http.StatusCreated {
+		t.Fatalf("a known seal: %d", w.Code)
+	}
+	// another phone is not held by this one's count
+	if w := r.post(t, r.endpoint(t, "otherPhone:APA91b_another_test_token_0123456789"), nil); w.Code != http.StatusCreated {
+		t.Fatalf("other phone: %d", w.Code)
+	}
+	// seals unseen for a day make room again
+	r.clock = r.clock.Add(sealSeenFor)
+	if w := r.post(t, r.endpoint(t, phoneToken), nil); w.Code != http.StatusCreated {
+		t.Fatalf("a new seal a day on: %d", w.Code)
+	}
+}
+
+// a token whose first push fails holds no row: junk that fcm only fails
+// on cannot fill the table of phones
+func TestFailedFirstPushLeavesNoRow(t *testing.T) {
+	r := newRig(t)
+	r.g.fcm = &stubFCM{phone: phoneToken, junk: failed}
+	everyone = newLimiter(1e9, 1e9)
+	for i := 0; i < 1000; i++ {
+		if code, _ := r.g.knock(junkToken(i), "s"); code != http.StatusBadGateway {
+			t.Fatalf("junk %d: %d", i, code)
+		}
+	}
+	r.g.knock(phoneToken, "s")
+	r.g.mu.Lock()
+	rows := len(r.g.floor)
+	r.g.mu.Unlock()
+	if rows != 1 {
+		t.Fatalf("%d rows, want only the phone's", rows)
 	}
 }

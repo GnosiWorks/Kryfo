@@ -50,9 +50,15 @@ const (
 	// junk sealed by anyone can never crowd out a phone
 	goneKept = 20_000
 	// a full table is swept at most this often, never on every knock
-	sweepEvery  = 10 * time.Second
-	maxBody     = 4 << 10
-	maxInFlight = 128
+	sweepEvery = 10 * time.Second
+	// a phone seals its one token once per slot, sixteen, and anew when a
+	// slot is renewed. more seals of one token than this, each seen within
+	// a day, are someone filling the relay with copies: answered as no
+	// endpoint, so the relay lets them go
+	sealsPerToken = 32
+	sealSeenFor   = 24 * time.Hour
+	maxBody       = 4 << 10
+	maxInFlight   = 128
 	// the relay gives a post three seconds: answer within that, and let a
 	// slow fcm finish on its own
 	answerBy = 2500 * time.Millisecond
@@ -149,6 +155,35 @@ type phone struct {
 	hourStart time.Time
 	inHour    int
 	trailing  bool
+	// made by a push whose answer is not in yet: a failed first push
+	// leaves no row
+	fresh bool
+	// keyed hashes of this token's seals, and when each was last knocked
+	seals map[[8]byte]time.Time
+}
+
+// whether a seal of this token may knock: one already seen, or a new one
+// while the token has room
+func (p *phone) sealOK(s [8]byte, now time.Time) bool {
+	if _, ok := p.seals[s]; ok {
+		p.seals[s] = now
+		return true
+	}
+	if len(p.seals) >= sealsPerToken {
+		for k, at := range p.seals {
+			if now.Sub(at) >= sealSeenFor {
+				delete(p.seals, k)
+			}
+		}
+		if len(p.seals) >= sealsPerToken {
+			return false
+		}
+	}
+	if p.seals == nil {
+		p.seals = map[[8]byte]time.Time{}
+	}
+	p.seals[s] = now
+	return true
 }
 
 func newGateway(k hpke.PrivateKey, f pusher) *gateway {
@@ -220,7 +255,7 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no such endpoint", http.StatusNotFound)
 		return
 	}
-	code, wait := g.knock(token)
+	code, wait := g.knock(token, sealed)
 	if wait > 0 {
 		w.Header().Set("Retry-After", strconv.Itoa(int((wait+time.Second-1)/time.Second)))
 	}
@@ -230,8 +265,11 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // one knock for a token: now, folded into the one after the floor, or
 // refused for the hour. a row in the table is made only for a push that is
 // let through: a refused knock holds nothing and counts toward nothing
-func (g *gateway) knock(token string) (int, time.Duration) {
+func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 	h := g.hash(token)
+	var sh [8]byte
+	full := g.hash(sealed)
+	copy(sh[:], full[:8])
 	now := g.now()
 	g.mu.Lock()
 	if until, ok := g.gone[h]; ok {
@@ -244,6 +282,11 @@ func (g *gateway) knock(token string) (int, time.Duration) {
 	}
 	p := g.floor[h]
 	if p != nil {
+		if !p.sealOK(sh, now) {
+			g.mu.Unlock()
+			g.st.refused.Add(1)
+			return http.StatusNotFound, 0
+		}
 		if now.Sub(p.hourStart) >= time.Hour || now.Before(p.hourStart) {
 			p.hourStart, p.inHour = now, 0
 		}
@@ -284,7 +327,7 @@ func (g *gateway) knock(token string) (int, time.Duration) {
 		return code, wait
 	}
 	if p == nil {
-		p = &phone{hourStart: now}
+		p = &phone{hourStart: now, fresh: true, seals: map[[8]byte]time.Time{sh: now}}
 		g.floor[h] = p
 	}
 	p.last = now
@@ -368,6 +411,11 @@ func (g *gateway) noted(h [16]byte, o outcome) {
 	switch o {
 	case sent:
 		g.st.sent.Add(1)
+		g.mu.Lock()
+		if p := g.floor[h]; p != nil {
+			p.fresh = false
+		}
+		g.mu.Unlock()
 	case gone:
 		g.st.gone.Add(1)
 		// asked again only after a day: the relay drops the endpoint anyway.
@@ -380,6 +428,12 @@ func (g *gateway) noted(h [16]byte, o outcome) {
 		g.st.limited.Add(1)
 	default:
 		g.st.failed.Add(1)
+		// a token never pushed to, whose first push failed, holds no row
+		g.mu.Lock()
+		if p := g.floor[h]; p != nil && p.fresh && !p.trailing {
+			delete(g.floor, h)
+		}
+		g.mu.Unlock()
 	}
 }
 
