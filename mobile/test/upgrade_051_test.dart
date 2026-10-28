@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/file_drop.dart' show dropColumns;
 import 'package:kryfo/main.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 87;
+const _version = 88;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -54,6 +55,10 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   85: (wallpaperTable, 'CREATE TABLE IF NOT EXISTS wallpapers'),
   86: (draftsTable, 'CREATE TABLE IF NOT EXISTS drafts'),
   87: (opusColumns, 'ALTER TABLE contacts ADD COLUMN opus_can'),
+  88: (
+    (db) => dropColumns(db, addColumn),
+    'ALTER TABLE contacts ADD COLUMN files_can',
+  ),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
@@ -75,6 +80,7 @@ const _added = {
   'messages': ['album_id', 'album_n', 'album_i'],
   'wallpapers': ['chat', 'atmo', 'photo'],
   'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
+  'file_fetches': ['msg_uid', 'sender', 'wire', 'path', 'state'],
 };
 const _indexes = [
   'idx_media_chunks_group',

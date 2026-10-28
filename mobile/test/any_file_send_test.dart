@@ -4,6 +4,7 @@
 // cleaned, and a big file of a kind that is not cleaned says it goes as it
 // is. the menus offer a save for every file, and no share for an app
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/file_drop.dart' show kOldFileBytes;
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/media_resend.dart' show kMaxFileSlices;
@@ -38,12 +39,15 @@ void main() {
   test('a file over the limit is refused with both sizes', () {
     screens.forEach((file, sig) {
       final send = bodyOf(sourceOf(file), sig.$2);
-      final over = send.indexOf('if (!fileFits(size)) {');
+      // the chat's own limit: 15 mb while a phone in it is on a version
+      // before the files service
+      expect(send, contains('final most = await appState.fileLimitFor'));
+      final over = send.indexOf('if (!fileFits(size, most)) {');
       expect(over, greaterThan(0), reason: file);
       final refusal = send.substring(over, send.indexOf('return', over));
       expect(
         refusal,
-        contains('showHaloToast(context, fileTooBigLine(size))'),
+        contains('showHaloToast(context, fileTooBigLine(size, most))'),
         reason: file,
       );
       // before anything is copied
@@ -52,30 +56,40 @@ void main() {
     });
   });
 
-  test('15 mb goes, one byte more does not', () {
-    expect(kMaxFileBytes, 15 * 1024 * 1024);
-    expect(fileFits(15 * 1024 * 1024), isTrue);
-    expect(fileFits(15 * 1024 * 1024 + 1), isFalse);
+  test('50 mb goes, one byte more does not, and 15 to an older phone', () {
+    expect(kMaxFileBytes, 50 * 1024 * 1024);
+    expect(fileFits(50 * 1024 * 1024), isTrue);
+    expect(fileFits(50 * 1024 * 1024 + 1), isFalse);
     expect(fileFits(1), isTrue);
+    expect(fileFits(15 * 1024 * 1024, 15 * 1024 * 1024), isTrue);
+    expect(fileFits(15 * 1024 * 1024 + 1, 15 * 1024 * 1024), isFalse);
   });
 
   test('the limit reads as a person would say it', () {
     expect(
-      fileTooBigLine(20 * 1024 * 1024),
-      'This file is 20.0 mb. Files can be up to 15.0 mb.',
+      fileTooBigLine(60 * 1024 * 1024),
+      'This file is 60.0 mb. Files can be up to 50.0 mb.',
     );
     // just over reads in whole kb, so the two numbers never match
     expect(
-      fileTooBigLine(15 * 1024 * 1024 + 1),
-      'This file is 15,361 kb. Files can be up to 15,360 kb.',
+      fileTooBigLine(50 * 1024 * 1024 + 1),
+      'This file is 51,201 kb. Files can be up to 51,200 kb.',
     );
     expect(
-      fileTooBigLine(15 * 1024 * 1024 + 40 * 1024),
-      'This file is 15,400 kb. Files can be up to 15,360 kb.',
+      fileTooBigLine(50 * 1024 * 1024 + 60 * 1024),
+      'This file is 50.1 mb. Files can be up to 50.0 mb.',
+    );
+    // a chat with a phone not yet updated says what it waits on
+    const old = 15 * 1024 * 1024;
+    expect(
+      fileTooBigLine(20 * 1024 * 1024, old),
+      'This file is 20.0 mb. This chat takes files up to 15.0 mb until '
+      'everyone in it updates Kryfo.',
     );
     expect(
-      fileTooBigLine(15 * 1024 * 1024 + 60 * 1024),
-      'This file is 15.1 mb. Files can be up to 15.0 mb.',
+      fileTooBigLine(old + 40 * 1024, old),
+      'This file is 15,400 kb. This chat takes files up to 15,360 kb until '
+      'everyone in it updates Kryfo.',
     );
   });
 
@@ -83,7 +97,7 @@ void main() {
     final cam = sourceOf('lib/screens/camera_screen.dart');
     expect(cam, isNot(contains('8 * 1024 * 1024')));
     expect('!fileFits(_clipBytes)'.allMatches(cam), hasLength(2));
-    expect(l10n.cameraTooLongForA, 'Too long for a message · 15 MB max');
+    expect(l10n.cameraTooLongForA, 'Too long for a message · 50 MB max');
   });
 
   test('a video is cleaned by its bytes as well as its name', () {
@@ -170,8 +184,9 @@ void main() {
   });
 
   test('a receiver keeps no file bigger than any kryfo sends', () {
-    // the largest file is whole slices of 12288 bytes, with room to spare
-    expect((kMaxFileBytes + 12287) ~/ 12288, 1280);
+    // the largest file that goes in slices of 12288 bytes, with room to
+    // spare: one past it goes through the files service or not at all
+    expect((kOldFileBytes + 12287) ~/ 12288, 1280);
     expect(kMaxFileSlices, greaterThanOrEqualTo(1280));
     expect(kMaxFileSlices, lessThan(1400));
     final recv = sourceOf('lib/app/state.dart');

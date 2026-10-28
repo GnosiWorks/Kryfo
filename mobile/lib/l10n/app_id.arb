@@ -415,7 +415,7 @@
   "cameraTheRecordingWasLost": "Rekamannya hilang",
   "cameraACopyIsIn": "Salinannya ada di galerimu",
   "cameraCouldNotSaveA": "Gagal menyimpan salinan di ponsel ini",
-  "cameraTooLongForA": "Terlalu panjang untuk pesan · maks 15 MB",
+  "cameraTooLongForA": "Terlalu panjang untuk pesan · maks 50 MB",
   "cameraNeverSavedToYour": "Tidak pernah disimpan ke galerimu",
   "cameraNoExifNeverSaved": "Tanpa EXIF, tidak pernah disimpan ke galerimu",
   "cameraRec": "Rekam",

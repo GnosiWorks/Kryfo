@@ -1290,7 +1290,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'تعذّر حفظ نسخة على هذا الهاتف';
 
   @override
-  String get cameraTooLongForA => 'أطول من أن يُرسل · ١٥ م.ب كحد أقصى';
+  String get cameraTooLongForA => 'أطول من أن يُرسل · ٥٠ م.ب كحد أقصى';
 
   @override
   String get cameraNeverSavedToYour => 'لا يُحفظ أبدًا في صورك';

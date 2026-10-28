@@ -1258,7 +1258,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Konnte keine Kopie auf diesem Handy speichern';
 
   @override
-  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 15 MB';
+  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nie in deinen Fotos gespeichert';

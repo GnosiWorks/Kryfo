@@ -1261,7 +1261,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Demasiado largo para un mensaje · máx. 15 MB';
+      'Demasiado largo para un mensaje · máx. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nunca se guarda en tus fotos';
