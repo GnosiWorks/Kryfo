@@ -1290,7 +1290,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'تعذّر حفظ نسخة على هذا الهاتف';
 
   @override
-  String get cameraTooLongForA => 'أطول من أن يُرسل · ١٥ م.ب كحد أقصى';
+  String get cameraTooLongForA => 'أطول من أن يُرسل · ٥٠ م.ب كحد أقصى';
 
   @override
   String get cameraNeverSavedToYour => 'لا يُحفظ أبدًا في صورك';
@@ -9642,6 +9642,128 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
+
+  @override
+  String get fileServerTryLater =>
+      'خادم الملفات ممتلئ حاليًا. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم هذا الملف ⁨$size⁩. في هذه المحادثة يمكن إرسال ملفات حتى ⁨$max⁩ إلى أن يحدّث الجميع Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'أرسلت اليوم ملفات كبيرة كثيرة. حاول مرة أخرى غدًا.';
+
+  @override
+  String get mediaProgressPreparing => 'جارٍ التحضير · أبقِ التطبيق مفتوحًا';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'يمنع لقطات الشاشة وتسجيل الشاشة على كل هاتف في هذه المجموعة، ونسخ رسائل بعضكم أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
+
+  @override
+  String get groupShotsStartsWhenAll => 'بانتظار أن يحدّث الجميع هنا Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'مفعّل للجميع هنا';
+
+  @override
+  String get groupShotsOffAdminOnly => 'متوقف. المشرف وحده يستطيع تغيير هذا';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'بانتظار أن يحدّث الجميع هنا Kryfo. المشرف وحده يستطيع تغيير هذا';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'مفعّل للجميع هنا. المشرف وحده يستطيع تغيير هذا';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بانتظار ⁨$countString⁩ شخص',
+      many: 'بانتظار ⁨$countString⁩ شخصًا',
+      few: 'بانتظار ⁨$countString⁩ أشخاص',
+      two: 'بانتظار شخصين',
+      one: 'بانتظار شخص واحد',
+      zero: 'بانتظار ⁨$countString⁩ شخص',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'لم يحدّثوا بعد';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'يشمل منع لقطات الشاشة الجميع حين يحدّث هؤلاء Kryfo. المس أحدهم لإزالته من المجموعة.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'عليه تحديث Kryfo، أو لم يتصل منذ ذلك الحين';
+
+  @override
+  String get groupShotsBlockedByYou => 'حظرته';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'فعّلت منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'منع لقطات الشاشة مفعّل للجميع هنا. نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف أيضًا.';
+
+  @override
+  String get groupShotsPaused =>
+      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة بعد. سيشمل الجميع مجددًا حين يحدّث Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'لا يستطيع منع لقطات الشاشة بعد';
+
+  @override
+  String get groupShotsAddTitle => 'إضافة على أي حال؟';
+
+  @override
+  String get groupShotsAddPauses =>
+      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يحدّث Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays => 'يبقى منع لقطات الشاشة كما هو.';
+
+  @override
+  String get groupShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المجموعة';
+
+  @override
+  String get groupShotsMenuNote =>
+      'نسخ رسائل الآخرين وإعادة توجيهها وحفظها متوقف في هذه المجموعة';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'فتح ملفات الآخرين في تطبيقات أخرى متوقف في هذه المجموعة';
+
+  @override
+  String get groupShotsOldNotice =>
+      'فعّلت منع لقطات الشاشة في هذه المجموعة. لا يستطيع Kryfo لديك فعل ذلك بعد، فحدّثه من فضلك.';
+
+  @override
+  String get captureShotTaken => 'التُقطت لقطة شاشة. لم يُبلَّغ أي شخص آخر.';
+
+  @override
+  String get captureRecording =>
+      'يجري تسجيل هذه الشاشة. لم يُبلَّغ أي شخص آخر.';
 
   @override
   String get settingsDevices => 'الأجهزة';

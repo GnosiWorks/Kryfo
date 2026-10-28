@@ -1258,7 +1258,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Konnte keine Kopie auf diesem Handy speichern';
 
   @override
-  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 15 MB';
+  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nie in deinen Fotos gespeichert';
@@ -9607,6 +9607,128 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.';
+
+  @override
+  String get fileServerTryLater =>
+      'Der Dateiserver ist gerade voll. Versuch es etwas später noch einmal.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Diese Datei hat $size. In diesem Chat gehen Dateien bis $max, bis alle hier Kryfo aktualisiert haben.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Du hast heute schon viele große Dateien gesendet. Versuch es morgen wieder.';
+
+  @override
+  String get mediaProgressPreparing => 'Wird vorbereitet · lass die App offen';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Blockiert Screenshots und Bildschirmaufnahmen auf jedem Handy in dieser Gruppe und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Wartet, bis alle hier Kryfo aktualisiert haben';
+
+  @override
+  String get groupShotsOnForAll => 'An für alle hier';
+
+  @override
+  String get groupShotsOffAdminOnly => 'Aus. Nur der Admin kann das ändern';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Wartet, bis alle hier Kryfo aktualisiert haben. Nur der Admin kann das ändern';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'An für alle hier. Nur der Admin kann das ändern';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wartet auf $countString Personen',
+      one: 'Wartet auf $countString Person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Noch nicht aktualisiert';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Das Blockieren von Screenshots gilt für alle, sobald diese Personen Kryfo aktualisieren. Tippe auf jemanden, um die Person aus der Gruppe zu entfernen.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Muss Kryfo aktualisieren oder war seitdem nicht online';
+
+  @override
+  String get groupShotsBlockedByYou => 'Von dir blockiert';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Du hast das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name hat das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Das Blockieren von Screenshots ist für alle hier an. Kopieren, Weiterleiten und Speichern der Nachrichten der anderen ist ebenfalls aus.';
+
+  @override
+  String get groupShotsPaused =>
+      'Jemand hier kann Screenshots noch nicht blockieren. Es gilt wieder für alle, sobald die Person Kryfo aktualisiert.';
+
+  @override
+  String get groupShotsCantYet => 'Kann Screenshots noch nicht blockieren';
+
+  @override
+  String get groupShotsAddTitle => 'Trotzdem hinzufügen?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Das Blockieren von Screenshots gilt erst wieder für alle hier, wenn die Person Kryfo aktualisiert.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Das Blockieren von Screenshots bleibt, wie es ist.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo blockiert Screenshots in dieser Gruppe';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Kopieren, Weiterleiten und Speichern der Nachrichten anderer ist in dieser Gruppe aus';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Dateien anderer in anderen Apps zu öffnen ist in dieser Gruppe aus';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Ich habe das Blockieren von Screenshots in dieser Gruppe eingeschaltet. Dein Kryfo kann das noch nicht, bitte aktualisiere es.';
+
+  @override
+  String get captureShotTaken =>
+      'Screenshot erstellt. Sonst wurde niemand benachrichtigt.';
+
+  @override
+  String get captureRecording =>
+      'Dieser Bildschirm wird aufgenommen. Sonst wurde niemand benachrichtigt.';
 
   @override
   String get settingsDevices => 'Geräte';

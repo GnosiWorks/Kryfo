@@ -42,7 +42,8 @@ extension AppStateVault on AppState {
         env.preview != null &&
         env.message.isEmpty &&
         env.imageB64 == null &&
-        env.fileB64 == null;
+        env.fileB64 == null &&
+        env.drop == null;
     final ticks =
         env.groupId == null &&
         uid != null &&
@@ -78,6 +79,10 @@ extension AppStateVault on AppState {
       dlog('seal: not kept');
       return;
     }
+    // its file comes now and stays sealed until the hidden chats open, so
+    // the service's week runs out on nothing this phone was sent
+    final drop = env.drop;
+    if (drop != null) unawaited(_holdDrop(drop));
     if (ticks && await whole()) unawaited(_sendDeliveryReceipt(sender, uid));
   }
 

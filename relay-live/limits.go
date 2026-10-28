@@ -48,6 +48,9 @@ const (
 	// below this much free space the relay stops taking wraps, so a flood
 	// cannot fill the disk the other services write to
 	minFreeBytes = 2 << 30
+	// below this the relay stops taking file slices, so text keeps the
+	// last few gigabytes
+	minFreeBigBytes = 5 << 30
 	// free space is read again after this much is taken, not only on the
 	// poll, so the floor holds however fast wraps come in
 	diskRecheck = 32 << 20
@@ -116,6 +119,8 @@ type limits struct {
 	stored  *bucket
 	dataDir string
 	diskLow atomic.Bool
+	// under minFreeBigBytes: text only
+	diskTight atomic.Bool
 	// bytes taken since free space was last read
 	written atomic.Int64
 	// the helper app mode's registrations, nil when off
@@ -278,7 +283,7 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if ev.CreatedAt.Time().Before(now.Add(-wrapTTL)) {
 		return true, "invalid: older than this relay keeps"
 	}
-	if l.diskLow.Load() {
+	if l.diskLow.Load() || (isBig(ev) && l.diskTight.Load()) {
 		return true, "error: the relay is full, try later"
 	}
 	size := storedSize(ev)
@@ -304,7 +309,13 @@ func (l *limits) noteWritten(n int) {
 		return
 	}
 	l.written.Store(0)
-	l.diskLow.Store(freeBytes(l.dataDir) < minFreeBytes)
+	l.readDisk(l.dataDir)
+}
+
+func (l *limits) readDisk(dir string) {
+	free := freeBytes(dir)
+	l.diskLow.Store(free < minFreeBytes)
+	l.diskTight.Store(free < minFreeBigBytes)
 }
 
 // khatru answers a limit 0 req with a live subscription and never runs
@@ -373,7 +384,7 @@ func isKey(s string) bool {
 func (l *limits) watchDisk(dir string) {
 	for {
 		l.written.Store(0)
-		l.diskLow.Store(freeBytes(dir) < minFreeBytes)
+		l.readDisk(dir)
 		time.Sleep(30 * time.Second)
 	}
 }

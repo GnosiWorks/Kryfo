@@ -2101,6 +2101,8 @@ void main() {
     ) async {
       me(t);
       _use(t, _Db()..adminId = 'me');
+      // the admin's page runs past a phone's height: all of it in view
+      t.view.physicalSize = const Size(1080, 4500);
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
       final row = find.text(l10n.groupInfoEndGroup);

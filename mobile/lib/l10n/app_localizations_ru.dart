@@ -1283,7 +1283,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Слишком длинно для сообщения · максимум 15 МБ';
+      'Слишком длинно для сообщения · максимум 50 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Никогда не сохраняется в галерею';
@@ -9676,6 +9676,128 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Включите блокировку экрана на телефоне, чтобы эта защита действовала и тогда, когда он заблокирован.';
+
+  @override
+  String get fileServerTryLater =>
+      'Файловый сервер сейчас заполнен. Попробуй чуть позже.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Этот файл весит $size. В этом чате можно отправлять файлы до $max, пока все не обновят Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Сегодня ты уже отправил много больших файлов. Попробуй завтра.';
+
+  @override
+  String get mediaProgressPreparing => 'Подготовка · не закрывай приложение';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Запрещает скриншоты и запись экрана на каждом телефоне в этой группе, а также копировать, пересылать и сохранять сообщения друг друга. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
+
+  @override
+  String get groupShotsStartsWhenAll => 'Ждёт, пока все здесь обновят Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Включено для всех здесь';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Выключено. Изменить это может только админ';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Ждёт, пока все здесь обновят Kryfo. Изменить это может только админ';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Включено для всех здесь. Изменить это может только админ';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ждёт $countString человека',
+      many: 'Ждёт $countString человек',
+      few: 'Ждёт $countString человек',
+      one: 'Ждёт $countString человека',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Ещё не обновили';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Запрет скриншотов заработает для всех, как только эти люди обновят Kryfo. Нажми на человека, чтобы удалить его из группы.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Нужно обновить Kryfo, или не был(а) в сети с тех пор';
+
+  @override
+  String get groupShotsBlockedByYou => 'Заблокирован(а) тобой';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ты включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Запрет скриншотов включён для всех здесь. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+
+  @override
+  String get groupShotsPaused =>
+      'Кто-то здесь пока не может запрещать скриншоты. Запрет снова будет для всех, когда этот человек обновит Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Пока не может запрещать скриншоты';
+
+  @override
+  String get groupShotsAddTitle => 'Всё равно добавить?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Запрет скриншотов не будет действовать для всех здесь, пока этот человек не обновит Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays => 'Запрет скриншотов останется как есть.';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo запрещает скриншоты в этой группе';
+
+  @override
+  String get groupShotsMenuNote =>
+      'В этой группе нельзя копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'В этой группе нельзя открывать чужие файлы в других приложениях';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Я включил(а) запрет скриншотов в этой группе. Твой Kryfo пока так не умеет, пожалуйста, обнови его.';
+
+  @override
+  String get captureShotTaken =>
+      'Сделан скриншот. Больше никто об этом не узнал.';
+
+  @override
+  String get captureRecording =>
+      'Этот экран записывается. Больше никто об этом не узнал.';
 
   @override
   String get settingsDevices => 'Устройства';

@@ -455,6 +455,7 @@ Future<void> appSchemaOn(SqliteMem db) async {
   final added = <String>[];
   for (final f in const [
     'lib/app/database.dart',
+    'lib/file_drop.dart',
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',

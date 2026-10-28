@@ -663,6 +663,75 @@ class HaloEngine {
     what: 'gif',
   );
 
+  // the files service (file_drop.dart): a send or a fetch runs on an
+  // isolate for as long as the file takes; its progress and its stop are
+  // asked for here, by "s:<message id>" or "f:<file id>"
+  Future<String> fileSend(String job) => _ffiOnIsolate(
+    'HaloFileSend',
+    [job],
+    wait: const Duration(hours: 2),
+    what: 'files',
+  );
+
+  Future<String> fileFetch(String job) => _ffiOnIsolate(
+    'HaloFileFetch',
+    [job],
+    wait: const Duration(hours: 2),
+    what: 'files',
+  );
+
+  Future<String> fileGot(String host, String id, String token) => _ffiOnIsolate(
+    'HaloFileGot',
+    [host, id, token],
+    wait: const Duration(minutes: 3),
+    what: 'files',
+  );
+
+  Future<String> fileValues(String job) => _ffiOnIsolate(
+    'HaloFileValues',
+    [job],
+    wait: const Duration(minutes: 1),
+    what: 'files',
+  );
+
+  Future<String> fileTakeBack(String job) => _ffiOnIsolate(
+    'HaloFileDrop',
+    [job],
+    wait: const Duration(minutes: 3),
+    what: 'files',
+  );
+
+  late final OneArgFnDart _fileProgress = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFileProgress');
+  late final OneArgFnDart _fileCancel = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFileCancel');
+
+  /// (done, total) bytes of a transfer under way, or null
+  (int, int)? fileProgress(String key) {
+    final p = fileProgressOf(key);
+    return p == null ? null : (p.done, p.total);
+  }
+
+  /// the same, and whether a send is still doing its work, before any
+  /// byte goes
+  ({int done, int total, bool preparing})? fileProgressOf(String key) {
+    final k = key.toNativeUtf8();
+    try {
+      return parseFileProgress(engineTake(_fileProgress(k)));
+    } finally {
+      malloc.free(k);
+    }
+  }
+
+  void fileCancel(String key) {
+    final k = key.toNativeUtf8();
+    try {
+      engineTake(_fileCancel(k));
+    } finally {
+      malloc.free(k);
+    }
+  }
+
   // what the relays delivered, one entry per event (relay_poll.dart). room
   // frames in it are plaintext, so it is zeroed on the way back
   RelayBatch nostrPoll() => parseRelayPoll(engineTakeSecret(_nostrPoll()));
