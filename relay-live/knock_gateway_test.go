@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -78,7 +79,7 @@ func TestKnockGatewayHasItsOwnShare(t *testing.T) {
 	if name != "kryfo.app" {
 		t.Fatalf("the gateway counts in share %q", name)
 	}
-	if sh.eps != 16 || sh.epCap != knockPushHostEPs {
+	if sh.eps != 16 || sh.epCap != knockGatewayEPs {
 		t.Fatalf("share holds %d of %d", sh.eps, sh.epCap)
 	}
 	if _, common := tk.shares[""]; common && tk.shares[""].eps != 0 {
@@ -162,5 +163,49 @@ func TestKnockGatewaySendSkipsTheLookup(t *testing.T) {
 	tk.mu.Unlock()
 	if !delivered {
 		t.Fatal("a 201 from the gateway did not count as delivered")
+	}
+}
+
+// the gateway's share is sized for many play phones, sixteen endpoints each
+func TestKnockGatewayShareIsSizedForPhones(t *testing.T) {
+	tk := newTestKnocks(t)
+	tk.mu.Lock()
+	defer tk.mu.Unlock()
+	_, gw := tk.shareOf("kryfo.app")
+	_, ntfy := tk.shareOf("ntfy.sh")
+	if gw.epCap != knockGatewayEPs || gw.epCap < 16*10000 {
+		t.Fatalf("the gateway's share holds %d endpoints", gw.epCap)
+	}
+	if ntfy.epCap != knockPushHostEPs {
+		t.Fatalf("ntfy's share changed to %d", ntfy.epCap)
+	}
+}
+
+// on our box the relay reaches the gateway on loopback by default, and a
+// setting that is not loopback leaves lookup and post the usual way alike
+func TestKnockGatewayLocalDefaults(t *testing.T) {
+	for _, c := range []struct {
+		set   bool
+		v, gw string
+		want  string
+	}{
+		{false, "", "relay.kryfo.app", "127.0.0.1:3340"},
+		{true, "", "relay.kryfo.app", "127.0.0.1:3340"},
+		{true, "127.0.0.1:4000", "relay.kryfo.app", "127.0.0.1:4000"},
+		{true, "off", "relay.kryfo.app", ""},
+		{true, "8.8.8.8:3340", "relay.kryfo.app", ""},
+		{false, "", "push.example.org", ""},
+		{true, "127.0.0.1:3340", "", ""},
+	} {
+		if c.set {
+			t.Setenv("RELAY_KNOCK_GATEWAY_LOCAL", c.v)
+		} else {
+			// set first, so the test puts back what was there
+			t.Setenv("RELAY_KNOCK_GATEWAY_LOCAL", "")
+			os.Unsetenv("RELAY_KNOCK_GATEWAY_LOCAL")
+		}
+		if got := knockGatewayLocal(c.gw); got != c.want {
+			t.Errorf("%+v: %q", c, got)
+		}
 	}
 }

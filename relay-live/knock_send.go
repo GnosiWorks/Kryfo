@@ -13,7 +13,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -753,9 +752,6 @@ func knockPoster(c *http.Client) func(ctx context.Context, endpoint string) (int
 // local is a loopback host:port, anything else leaves the posts as they are
 func knockPosterVia(post func(ctx context.Context, endpoint string) (int, error), gateway, local string) func(ctx context.Context, endpoint string) (int, error) {
 	if gateway == "" || !knockLoopback(local) {
-		if local != "" {
-			log.Printf("knock: RELAY_KNOCK_GATEWAY_LOCAL is not a loopback host:port, left unused")
-		}
 		return post
 	}
 	d := &net.Dialer{Timeout: knockPostTimeout}
