@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,15 +32,15 @@ import (
 // a file as it is kept on disk
 type dropDisk struct {
 	ID    string   `json:"id"`
-	Size  int64    `json:"size"`
-	Parts []bool   `json:"parts"`
-	Ended bool     `json:"ended"`
+	Size  int64    `json:"size,omitempty"`
+	Parts []bool   `json:"parts,omitempty"`
+	Ended bool     `json:"ended,omitempty"`
 	Gone  bool     `json:"gone,omitempty"`
 	Got   []string `json:"got,omitempty"`
 	Taken []bool   `json:"taken,omitempty"`
-	Own   string   `json:"own"`
+	Own   string   `json:"own,omitempty"`
 	At    int64    `json:"at"`
-	Last  int64    `json:"last"`
+	Last  int64    `json:"last,omitempty"`
 }
 
 // a file as it is held in memory
@@ -59,10 +60,18 @@ type drop struct {
 	last int64
 	// bytes of its parts in, counted once a part
 	written int64
-	// downloads from the start: past twice its recipients it is gone
-	fresh int
-	// a part being written: one writer a file
-	writing bool
+	// bytes served to each recipient's token: past three times the file,
+	// nobody is fetching it for themselves
+	served map[[32]byte]int64
+	// the part being written: one writer a file, and the owner's next PUT
+	// takes over from one that stalled
+	w *writer
+}
+
+// a part being written, and how to stop it: its request's body is cut
+type writer struct {
+	kill func()
+	done chan struct{}
 }
 
 func (d *drop) have() []int {
@@ -76,6 +85,10 @@ func (d *drop) have() []int {
 }
 
 func (d *drop) toDisk() dropDisk {
+	// a file every recipient has keeps its id and its day, and nothing else
+	if d.gone {
+		return dropDisk{ID: d.id, Gone: true, At: d.at / 86400 * 86400}
+	}
 	out := dropDisk{
 		ID: d.id, Size: d.size, Parts: d.parts, Ended: d.ended, Gone: d.gone,
 		Taken: d.taken, Own: hex.EncodeToString(d.own[:]), At: d.at, Last: d.last,
@@ -97,6 +110,12 @@ func unhash(s string) ([32]byte, bool) {
 }
 
 func fromDisk(r dropDisk) (*drop, bool) {
+	if r.Gone {
+		if !idShape.MatchString(r.ID) {
+			return nil, false
+		}
+		return &drop{id: r.ID, gone: true, at: r.At}, true
+	}
 	own, ok := unhash(r.Own)
 	if !ok || !idShape.MatchString(r.ID) || r.Size <= 0 || r.Size%chunkSealed != 0 {
 		return nil, false
@@ -146,14 +165,18 @@ type config struct {
 	// a file whose parts never all came goes after this
 	unfinished time.Duration
 	// and one that has sent no part for this long, so a begin with nothing
-	// behind it holds its room for minutes, not a day
-	idle time.Duration
-	// records kept, and files still coming, at most
-	maxFiles      int
-	maxUnfinished int
+	// behind it holds its room for minutes, not a day. a file of one part
+	// sends it at once or not at all
+	idle      time.Duration
+	idleSmall time.Duration
+	// records kept at most, a hard cap: each is memory
+	maxFiles int
+	// bytes still coming at which the work starts to rise
+	maxComing int64
 	// the work an upload costs: this many bits for a file under 1 MB, one
-	// more for each doubling
-	powBase int
+	// more for each doubling, at most powCap. past half of any cap the
+	// service asks one more bit for each tenth over
+	powBase, powCap int
 }
 
 type counts struct {
@@ -350,10 +373,27 @@ func (r newReq) valid(cfg config) error {
 	if r.Size > maxSealed(cfg.maxPlain) {
 		return errBig
 	}
-	if !powOK(r.ID, r.Size, r.Pow, powBits(cfg.powBase, r.Size)) {
-		return errWork
-	}
 	return nil
+}
+
+// work asked of a begin: the bits it needs now
+type errMoreWork struct{ bits int }
+
+func (e errMoreWork) Error() string { return "work" }
+
+// the bits a new file of [size] needs now: its own, and more the fuller the
+// service is. a flood pays for itself, twice for each bit
+func (s *service) bitsNow(size int64) int {
+	b := min(powBits(s.cfg.powBase, size), s.cfg.powCap)
+	load := max(
+		float64(len(s.drops))/float64(s.cfg.maxFiles),
+		float64(s.todayFiles)/float64(s.cfg.dayFiles),
+		float64(s.coming)/float64(s.cfg.maxComing),
+	)
+	if load > 0.5 {
+		b += int(math.Ceil((load-0.5)*10 - 1e-9))
+	}
+	return min(b, 40)
 }
 
 // what a begin answers: the parts in, whether it is whole, whether every
@@ -373,20 +413,28 @@ func (s *service) begin(r newReq) (begun, error) {
 	own, _ := unhash(r.Own)
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// one already here goes on with no work: a resume, a resend, a group's
+	// owed members
 	if d := s.drops[r.ID]; d != nil {
+		if d.gone {
+			return begun{gone: true}, nil
+		}
 		if d.size != r.Size || d.own != own {
 			return begun{}, errClash
 		}
 		return begun{d.have(), d.ended, d.gone}, nil
 	}
-	if len(s.drops) >= s.cfg.maxFiles || s.open >= s.cfg.maxUnfinished {
+	if len(s.drops) >= s.cfg.maxFiles {
 		s.c.busy++
 		return begun{}, errBusy
 	}
 	s.rollDay(now)
-	if s.today+r.Size > s.cfg.dayBytes || s.todayFiles+1 > s.cfg.dayFiles {
+	if s.today+r.Size > s.cfg.dayBytes {
 		s.c.busy++
 		return begun{}, errBusy
+	}
+	if need := s.bitsNow(r.Size); !powOK(r.ID, r.Size, r.Pow, need) {
+		return begun{}, errMoreWork{need}
 	}
 	if !s.roomFor(r.Size) {
 		s.c.full++
@@ -437,57 +485,78 @@ func ownOf(d *drop, token string) bool {
 }
 
 // the part's length the file expects, its writer taken. only the sender
-// writes, and one writer a file
-func (s *service) partSlot(id string, n int, own string) (int64, error) {
+// writes, one writer a file. a writer still on the file is a PUT whose
+// circuit died: the owner's new one stops it, waits for it to let go, and
+// takes over
+func (s *service) partSlot(id string, n int, own string, kill func()) (int64, *writer, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	d := s.drops[id]
-	if d == nil || d.gone {
-		return 0, errGone
+	for try := 0; ; try++ {
+		d := s.drops[id]
+		if d == nil || d.gone {
+			return 0, nil, errGone
+		}
+		if !ownOf(d, own) {
+			return 0, nil, errWork
+		}
+		if d.ended {
+			return 0, nil, errClash
+		}
+		if n < 0 || n >= len(d.parts) {
+			return 0, nil, errShape
+		}
+		if d.w == nil {
+			w := &writer{kill: kill, done: make(chan struct{})}
+			d.w = w
+			return partLen(d.size, n), w, nil
+		}
+		if try > 0 {
+			return 0, nil, errBusy
+		}
+		old := d.w
+		s.mu.Unlock()
+		old.kill()
+		select {
+		case <-old.done:
+		case <-time.After(5 * time.Second):
+		}
+		s.mu.Lock()
 	}
-	if !ownOf(d, own) {
-		return 0, errWork
-	}
-	if d.ended {
-		return 0, errClash
-	}
-	if n < 0 || n >= len(d.parts) {
-		return 0, errShape
-	}
-	if d.writing {
-		return 0, errBusy
-	}
-	d.writing = true
-	return partLen(d.size, n), nil
 }
 
 // lets go of a writer taken for a part that never came
-func (s *service) release(id string) {
+func (s *service) release(id string, w *writer) {
 	s.mu.Lock()
-	if d := s.drops[id]; d != nil {
-		d.writing = false
+	if d := s.drops[id]; d != nil && d.w == w {
+		d.w = nil
 	}
 	s.mu.Unlock()
+	close(w.done)
 }
 
 // the part from the body straight to its place on disk. what came counts
 // toward the day as it comes; a file that went while it came takes its
 // bytes with it
-func (s *service) putPart(id string, n int, body io.Reader, want int64) error {
+func (s *service) putPart(id string, n int, body io.Reader, want int64, w *writer) error {
 	err := s.store.writePart(id, n, body, want)
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	defer close(w.done)
 	d := s.drops[id]
 	if d == nil || d.gone || d.ended {
 		// dropped or swept while the part came in
 		if d == nil {
 			_ = s.store.remove(id)
-		} else {
-			d.writing = false
+		} else if d.w == w {
+			d.w = nil
 		}
 		return errGone
 	}
-	d.writing = false
+	if d.w != w {
+		// stopped for the owner's next PUT, which writes this part again
+		return errBusy
+	}
+	d.w = nil
 	if err != nil {
 		if !errors.Is(err, errShort) {
 			log.Printf("files: a part was not written: %s", errKind(err))
@@ -571,9 +640,10 @@ func (d *drop) names(token string) bool {
 	return false
 }
 
-// a whole file, for one of its recipients. a download from the start
-// counts: past twice the recipients, nobody is fetching it for themselves
-func (s *service) whole(id, token string, fromStart bool) (int64, error) {
+// a whole file, for one of its recipients. each token is served three
+// times the file at most, ranges and all: enough for every resume and
+// refetch, not for fetching it again and again
+func (s *service) whole(id, token string) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d := s.drops[id]
@@ -583,13 +653,27 @@ func (s *service) whole(id, token string, fromStart bool) (int64, error) {
 	if !d.names(token) {
 		return 0, errWork
 	}
-	if fromStart {
-		d.fresh++
-		if d.fresh > 2*len(d.got) {
-			return 0, errGone
-		}
+	h, _ := unhash(hashHex(token))
+	if d.served[h] >= 3*d.size {
+		return 0, errGone
 	}
 	return d.size, nil
+}
+
+// what a download served, on its token's count
+func (s *service) servedTo(id, token string, n int64) {
+	h, ok := unhash(hashHex(token))
+	if !ok {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if d := s.drops[id]; d != nil && !d.gone {
+		if d.served == nil {
+			d.served = map[[32]byte]int64{}
+		}
+		d.served[h] += n
+	}
 }
 
 // one recipient has the whole file. once every recipient has said so, its
@@ -623,8 +707,8 @@ func (s *service) taken(id, token string) error {
 	}
 	if left == 0 {
 		s.letBytesGo(d)
-		d.gone = true
-		d.got, d.taken = nil, nil
+		// its id and its day stay, so a send of it again sends no file
+		*d = drop{id: d.id, gone: true, at: d.at / 86400 * 86400}
 		s.c.gone++
 	}
 	if err := s.save(d); err != nil {
@@ -657,7 +741,11 @@ func (s *service) expired(d *drop, now time.Time) bool {
 	if d.ended || d.gone {
 		return false
 	}
-	return age > s.cfg.unfinished || now.Sub(time.Unix(d.last, 0)) > s.cfg.idle
+	idle := s.cfg.idle
+	if len(d.parts) == 1 {
+		idle = s.cfg.idleSmall
+	}
+	return age > s.cfg.unfinished || now.Sub(time.Unix(d.last, 0)) > idle
 }
 
 // files past their week, and uploads that stopped or never finished
@@ -667,7 +755,7 @@ func (s *service) sweep() int {
 	defer s.mu.Unlock()
 	n := 0
 	for id, d := range s.drops {
-		if !d.writing && s.expired(d, now) {
+		if d.w == nil && s.expired(d, now) {
 			s.forget(id)
 			n++
 		}

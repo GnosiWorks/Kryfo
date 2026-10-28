@@ -47,8 +47,8 @@ var (
 	keyShape = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )
 
-// each upload costs a little work, bound to that file: its id and its size,
-// more for a bigger file. nothing in it is the sender's, so two uploads from
+// each new upload costs a little work, bound to that file: its id and its
+// size, more for a bigger file, up to the cap (bitsNow adds for load). nothing in it is the sender's, so two uploads from
 // one person share nothing the service can see
 func powBits(base int, size int64) int {
 	return base + bits.Len64(uint64(size>>20))

@@ -67,17 +67,19 @@ func envInt(k string, d int64) int64 {
 
 func configFromEnv() config {
 	return config{
-		maxPlain:      envInt("FILES_MAX_MB", 50) << 20,
-		floor:         uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
-		quota:         envInt("FILES_QUOTA_GB", 0) << 30,
-		dayBytes:      envInt("FILES_DAY_GB", 150) << 30,
-		dayFiles:      int(envInt("FILES_DAY_FILES", 20000)),
-		keep:          time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
-		unfinished:    24 * time.Hour,
-		idle:          time.Duration(envInt("FILES_IDLE_MIN", 15)) * time.Minute,
-		maxFiles:      int(envInt("FILES_MAX_FILES", 50000)),
-		maxUnfinished: int(envInt("FILES_MAX_COMING", 500)),
-		powBase:       int(envInt("FILES_POW_BASE", 18)),
+		maxPlain:   envInt("FILES_MAX_MB", 50) << 20,
+		floor:      uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
+		quota:      envInt("FILES_QUOTA_GB", 0) << 30,
+		dayBytes:   envInt("FILES_DAY_GB", 150) << 30,
+		dayFiles:   int(envInt("FILES_DAY_FILES", 20000)),
+		keep:       time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
+		unfinished: 24 * time.Hour,
+		idle:       time.Duration(envInt("FILES_IDLE_MIN", 15)) * time.Minute,
+		maxFiles:   int(envInt("FILES_MAX_FILES", 50000)),
+		idleSmall:  2 * time.Minute,
+		maxComing:  envInt("FILES_MAX_COMING_GB", 20) << 30,
+		powBase:    int(envInt("FILES_POW_BASE", 16)),
+		powCap:     int(envInt("FILES_POW_CAP", 20)),
 	}
 }
 
@@ -118,6 +120,12 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 
 // the words the engine reads, one per refusal
 func fail(w http.ResponseWriter, err error) {
+	var more errMoreWork
+	if errors.As(err, &more) {
+		// the work asked now: the sender works again and asks again
+		writeJSON(w, http.StatusTooManyRequests, map[string]any{"e": "work", "bits": more.bits})
+		return
+	}
 	code, word := http.StatusBadRequest, "bad"
 	switch {
 	case errors.Is(err, errBig):
@@ -180,17 +188,20 @@ func (s *service) handlePart(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	want, err := s.partSlot(id, n, r.Header.Get(ownHeader))
+	// a later PUT of the owner's stops this one by cutting its body
+	rc := http.NewResponseController(w)
+	kill := func() { _ = rc.SetReadDeadline(time.Now()) }
+	want, wr, err := s.partSlot(id, n, r.Header.Get(ownHeader), kill)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	if r.ContentLength != want {
-		s.release(id)
+		s.release(id, wr)
 		fail(w, errShape)
 		return
 	}
-	if err := s.putPart(id, n, http.MaxBytesReader(w, r.Body, want), want); err != nil {
+	if err := s.putPart(id, n, http.MaxBytesReader(w, r.Body, want), want, wr); err != nil {
 		fail(w, err)
 		return
 	}
@@ -237,9 +248,8 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	rg := r.Header.Get("Range")
-	fromStart := rg == "" || strings.HasPrefix(rg, "bytes=0-")
-	size, err := s.whole(id, r.Header.Get(tokenHeader), fromStart)
+	token := r.Header.Get(tokenHeader)
+	size, err := s.whole(id, token)
 	if err != nil {
 		fail(w, err)
 		return
@@ -256,6 +266,7 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 	// no time and no name: nothing about the file but its bytes
 	http.ServeContent(cw, r, "", time.Time{}, io.NewSectionReader(readerAt{f}, 0, size))
 	s.countOut(cw.n)
+	s.servedTo(id, token, cw.n)
 }
 
 type countingWriter struct {
