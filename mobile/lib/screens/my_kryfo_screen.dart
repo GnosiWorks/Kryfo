@@ -617,7 +617,7 @@ class _Way3Card extends StatelessWidget {
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         counterText: '',
-                        hintText: l10n.handleWren,
+                        hintText: l10n.handleHintName,
                         hintStyle: HaloType.mono(
                           size: 14,
                           color: HaloColors.text3,

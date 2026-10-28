@@ -511,7 +511,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appScanTheirCode => 'Quét mã của họ';
 
   @override
-  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @wren';
+  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @name';
 
   @override
   String get appAddThem => 'Thêm họ';
@@ -2909,7 +2909,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không bắt buộc. Ba từ của bạn vẫn hoạt động dù thế nào.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Một dòng về bạn · không bắt buộc';
@@ -3877,6 +3877,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy thêm ít nhất một liên hệ trước khi tạo nhóm.';
 
   @override
+  String get newGroupNeedsContacts => 'Nhóm được tạo với các liên hệ của bạn';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Hãy thêm ai đó trước. Phòng không cần liên hệ: ai có liên kết đều có thể vào.';
+
+  @override
   String get notesDeleteThisNote => 'Xóa ghi chú này?';
 
   @override
@@ -4419,6 +4426,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Tắt khi đã đặt mã PIN ngụy trang: ngón tay chỉ mở phần ngụy trang.';
 
   @override
   String get pinsWipePin => 'Mã PIN xóa sạch';
@@ -6361,6 +6372,36 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Đóng và mở lại Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Nếu thử lại vẫn không được';
+
+  @override
+  String get bootFailedRestoreBackup => 'Khôi phục bản sao lưu';
+
+  @override
+  String get bootFailedStartFresh => 'Bắt đầu lại từ đầu';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Bắt đầu lại từ đầu?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Thao tác này xóa sạch mọi thứ Kryfo lưu trên điện thoại này: cuộc trò chuyện, liên hệ, tệp phương tiện, cuộc trò chuyện ẩn và ba từ của bạn. Tệp sao lưu lưu ở nơi khác không bị ảnh hưởng.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Tiếp tục';
+
+  @override
+  String get bootFailedStartFreshSure =>
+      'Xóa sạch mọi thứ trên điện thoại này?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Không thể hoàn tác. Kryfo sẽ đóng và mở lại như mới cài đặt.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Xóa sạch và bắt đầu lại';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo không đọc được liên kết đó';

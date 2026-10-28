@@ -518,7 +518,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appScanTheirCode => 'Scan their code';
 
   @override
-  String get appAKryfoLinkA => 'A Kryfo link, a room link or @wren';
+  String get appAKryfoLinkA => 'A Kryfo link, a room link or @name';
 
   @override
   String get appAddThem => 'Add them';
@@ -2914,7 +2914,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional. Your three words keep working either way.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'A line about you · optional';
@@ -3885,6 +3885,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add at least one contact first before creating a group.';
 
   @override
+  String get newGroupNeedsContacts => 'Groups are made with your contacts';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Add someone first. A room needs no contacts: anyone with its link can join.';
+
+  @override
   String get notesDeleteThisNote => 'Delete this note?';
 
   @override
@@ -4427,6 +4434,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Off while a decoy PIN is set: a finger opens only the decoy.';
 
   @override
   String get pinsWipePin => 'Wipe PIN';
@@ -6371,6 +6382,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Close and reopen Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'If trying again does not help';
+
+  @override
+  String get bootFailedRestoreBackup => 'Restore a backup';
+
+  @override
+  String get bootFailedStartFresh => 'Start fresh';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Start fresh?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continue';
+
+  @override
+  String get bootFailedStartFreshSure => 'Delete everything on this phone?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'This cannot be undone. Kryfo closes and opens again as a new install.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Delete and start fresh';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>

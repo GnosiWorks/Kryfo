@@ -521,7 +521,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appScanTheirCode => 'Scansiona il suo codice';
 
   @override
-  String get appAKryfoLinkA => 'Un link Kryfo, il link di una stanza o @merlo';
+  String get appAKryfoLinkA => 'Un link Kryfo, il link di una stanza o @name';
 
   @override
   String get appAddThem => 'Aggiungi';
@@ -2949,7 +2949,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Facoltativo. Le tue tre parole funzionano comunque.';
 
   @override
-  String get handleWren => 'merlo';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Una riga su di te · facoltativa';
@@ -3930,6 +3930,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Prima di creare un gruppo, aggiungi almeno un contatto.';
 
   @override
+  String get newGroupNeedsContacts => 'I gruppi si fanno con i tuoi contatti';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Prima aggiungi qualcuno. Una stanza non ha bisogno di contatti: chiunque abbia il link può entrare.';
+
+  @override
   String get notesDeleteThisNote => 'Eliminare questa nota?';
 
   @override
@@ -4476,6 +4483,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Sblocca con l\'impronta';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Disattivato finché è impostato un PIN esca: un dito apre solo l\'esca.';
 
   @override
   String get pinsWipePin => 'PIN di cancellazione';
@@ -6439,6 +6450,35 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Chiudi e riapri Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Se riprovare non basta';
+
+  @override
+  String get bootFailedRestoreBackup => 'Ripristina un backup';
+
+  @override
+  String get bootFailedStartFresh => 'Ricomincia da zero';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Ricominciare da zero?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Questo cancella tutto ciò che Kryfo tiene su questo telefono: chat, contatti, media, chat nascoste e le tue tre parole. Un file di backup salvato altrove non viene toccato.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continua';
+
+  @override
+  String get bootFailedStartFreshSure => 'Cancellare tutto su questo telefono?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Non si può annullare. Kryfo si chiude e si riapre come appena installato.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Cancella e ricomincia';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo non sa leggere questo link';

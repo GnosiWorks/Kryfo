@@ -537,7 +537,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Посилання Kryfo, посилання на кімнату або @sova';
+      'Посилання Kryfo, посилання на кімнату або @name';
 
   @override
   String get appAddThem => 'Додати';
@@ -2985,7 +2985,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Необов’язково. Твої три слова працюють у будь-якому разі.';
 
   @override
-  String get handleWren => 'sova';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Рядок про тебе · необов’язково';
@@ -3973,6 +3973,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Щоб створити групу, спершу додай хоча б один контакт.';
 
   @override
+  String get newGroupNeedsContacts => 'Групи створюються з твоїх контактів';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Спершу додай когось. Кімнаті контакти не потрібні: увійти може будь-хто, хто має посилання.';
+
+  @override
   String get notesDeleteThisNote => 'Видалити цю нотатку?';
 
   @override
@@ -4519,6 +4526,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Розблокування відбитком';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Вимкнено, поки встановлено PIN-приманку: палець відкриває лише приманку.';
 
   @override
   String get pinsWipePin => 'PIN для стирання';
@@ -6495,6 +6506,35 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Закрити й знову відкрити Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Якщо повторна спроба не допомагає';
+
+  @override
+  String get bootFailedRestoreBackup => 'Відновити з копії';
+
+  @override
+  String get bootFailedStartFresh => 'Почати заново';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Почати заново?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Це зітре все, що Kryfo зберігає на цьому телефоні: чати, контакти, медіа, приховані чати й твої три слова. Файл резервної копії, збережений деінде, не постраждає.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Продовжити';
+
+  @override
+  String get bootFailedStartFreshSure => 'Стерти все на цьому телефоні?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Це не можна скасувати. Kryfo закриється й відкриється як після нового встановлення.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Стерти й почати заново';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>

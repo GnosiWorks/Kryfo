@@ -519,7 +519,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Bir Kryfo bağlantısı, oda bağlantısı ya da @wren';
+      'Bir Kryfo bağlantısı, oda bağlantısı ya da @name';
 
   @override
   String get appAddThem => 'Ekle';
@@ -2922,7 +2922,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'İsteğe bağlı. Üç kelimen her durumda çalışmaya devam eder.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Hakkında bir satır · isteğe bağlı';
@@ -3902,6 +3902,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Grup oluşturmadan önce en az bir kişi ekle.';
 
   @override
+  String get newGroupNeedsContacts => 'Gruplar kişilerinle kurulur';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Önce birini ekle. Oda için kişi gerekmez: bağlantısı olan herkes katılabilir.';
+
+  @override
   String get notesDeleteThisNote => 'Bu not silinsin mi?';
 
   @override
@@ -4447,6 +4454,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Yem PIN’i ayarlıyken kapalı: parmak yalnızca yemi açar.';
 
   @override
   String get pinsWipePin => 'Silme PIN’i';
@@ -6394,6 +6405,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Kryfo’yu kapat ve yeniden aç';
+
+  @override
+  String get bootFailedStillStuck => 'Yeniden denemek işe yaramazsa';
+
+  @override
+  String get bootFailedRestoreBackup => 'Yedekten geri yükle';
+
+  @override
+  String get bootFailedStartFresh => 'Sıfırdan başla';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Sıfırdan başlansın mı?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Bu, Kryfo’nun bu telefonda tuttuğu her şeyi siler: sohbetler, kişiler, medya, gizli sohbetler ve üç kelimen. Başka bir yere kaydedilmiş yedek dosyasına dokunulmaz.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Devam et';
+
+  @override
+  String get bootFailedStartFreshSure => 'Bu telefondaki her şey silinsin mi?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Bu geri alınamaz. Kryfo kapanır ve yeni kurulmuş gibi yeniden açılır.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Sil ve sıfırdan başla';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>

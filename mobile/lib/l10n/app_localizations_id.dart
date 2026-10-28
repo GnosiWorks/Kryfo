@@ -512,7 +512,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appScanTheirCode => 'Pindai kodenya';
 
   @override
-  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @wren';
+  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @name';
 
   @override
   String get appAddThem => 'Tambahkan';
@@ -2913,7 +2913,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Opsional. Tiga katamu tetap berfungsi apa pun pilihanmu.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Satu baris tentangmu · opsional';
@@ -3882,6 +3882,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tambahkan minimal satu kontak dulu sebelum membuat grup.';
 
   @override
+  String get newGroupNeedsContacts => 'Grup dibuat bersama kontakmu';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Tambahkan seseorang dulu. Ruang tidak butuh kontak: siapa pun yang punya tautannya bisa bergabung.';
+
+  @override
   String get notesDeleteThisNote => 'Hapus catatan ini?';
 
   @override
@@ -4427,6 +4434,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Mati selama PIN umpan dipasang: jari hanya membuka umpan.';
 
   @override
   String get pinsWipePin => 'PIN penghapus';
@@ -6372,6 +6383,35 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Tutup dan buka lagi Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Jika mencoba lagi tidak membantu';
+
+  @override
+  String get bootFailedRestoreBackup => 'Pulihkan cadangan';
+
+  @override
+  String get bootFailedStartFresh => 'Mulai dari awal';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Mulai dari awal?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Ini menghapus total semua yang disimpan Kryfo di ponsel ini: obrolan, kontak, media, obrolan tersembunyi, dan tiga katamu. File cadangan yang disimpan di tempat lain tidak tersentuh.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Lanjut';
+
+  @override
+  String get bootFailedStartFreshSure => 'Hapus total semua di ponsel ini?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Ini tidak bisa dibatalkan. Kryfo tertutup dan terbuka lagi seperti baru dipasang.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Hapus total dan mulai dari awal';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Tautan itu tidak bisa dibaca Kryfo';

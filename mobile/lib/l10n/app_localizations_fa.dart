@@ -518,7 +518,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appScanTheirCode => 'اسکن کد او';
 
   @override
-  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@bolbol';
+  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@name';
 
   @override
   String get appAddThem => 'افزودن';
@@ -2925,7 +2925,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'اختیاری است. سه واژه‌ی شما در هر حال کار می‌کند.';
 
   @override
-  String get handleWren => 'bolbol';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'یک خط درباره‌ی شما · اختیاری';
@@ -3899,6 +3899,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیش از ساختن گروه، دست‌کم یک مخاطب اضافه کنید.';
 
   @override
+  String get newGroupNeedsContacts => 'گروه‌ها با مخاطبان شما ساخته می‌شوند';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'اول یک نفر را اضافه کنید. اتاق به مخاطب نیازی ندارد: هر کس پیوندش را داشته باشد می‌تواند وارد شود.';
+
+  @override
   String get notesDeleteThisNote => 'این یادداشت حذف شود؟';
 
   @override
@@ -4443,6 +4450,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'تا وقتی PIN فریب تنظیم شده خاموش است: انگشت فقط فریب را باز می‌کند.';
 
   @override
   String get pinsWipePin => 'PIN پاک‌سازی';
@@ -6384,6 +6395,35 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'بستن و باز کردن دوبارهٔ Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'اگر تلاش دوباره کمکی نکرد';
+
+  @override
+  String get bootFailedRestoreBackup => 'بازیابی نسخه‌ی پشتیبان';
+
+  @override
+  String get bootFailedStartFresh => 'شروع از نو';
+
+  @override
+  String get bootFailedStartFreshTitle => 'از نو شروع شود؟';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'این کار هر چه Kryfo روی این گوشی نگه می‌دارد را پاک می‌کند: گفت‌وگوها، مخاطبان، رسانه‌ها، گفت‌وگوهای پنهان و سه واژه‌ی شما. فایل پشتیبانی که جای دیگری ذخیره شده دست‌نخورده می‌ماند.';
+
+  @override
+  String get bootFailedStartFreshNext => 'ادامه';
+
+  @override
+  String get bootFailedStartFreshSure => 'همه‌چیز روی این گوشی پاک شود؟';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'این کار برگشت‌پذیر نیست. Kryfo بسته می‌شود و مثل یک نصب تازه دوباره باز می‌شود.';
+
+  @override
+  String get bootFailedStartFreshYes => 'پاک کن و از نو شروع کن';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>

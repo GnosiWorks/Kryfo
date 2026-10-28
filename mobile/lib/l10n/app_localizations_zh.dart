@@ -501,7 +501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appScanTheirCode => '扫描对方的二维码';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @name';
 
   @override
   String get appAddThem => '添加对方';
@@ -2794,7 +2794,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleOptionalYourThreeWords => '可选。不管有没有，你的三个词都照常可用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句话介绍自己 · 可选';
@@ -3724,6 +3724,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newGroupAddAtLeastOne => '创建群组之前，请先添加至少一位联系人。';
 
   @override
+  String get newGroupNeedsContacts => '群组由你的联系人组成';
+
+  @override
+  String get newGroupAddSomeoneFirst => '请先添加联系人。聊天室不需要联系人：有链接的人都能加入。';
+
+  @override
   String get notesDeleteThisNote => '删除这条笔记？';
 
   @override
@@ -4225,6 +4231,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
+
+  @override
+  String get pinsFingerOpensDecoy => '设置伪装 PIN 后关闭：手指只会打开伪装。';
 
   @override
   String get pinsWipePin => '抹除 PIN';
@@ -6103,6 +6112,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
+
+  @override
+  String get bootFailedStillStuck => '如果重试也没用';
+
+  @override
+  String get bootFailedRestoreBackup => '从备份恢复';
+
+  @override
+  String get bootFailedStartFresh => '重新开始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新开始吗？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+
+  @override
+  String get bootFailedStartFreshNext => '继续';
+
+  @override
+  String get bootFailedStartFreshSure => '抹掉这台手机上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作无法撤销。Kryfo 会关闭，再次打开时如同新安装。';
+
+  @override
+  String get bootFailedStartFreshYes => '抹掉并重新开始';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => '这个链接 Kryfo 读不了';
@@ -9512,7 +9549,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appScanTheirCode => '掃描對方的 QR 碼';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @name';
 
   @override
   String get appAddThem => '新增對方';
@@ -11805,7 +11842,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleOptionalYourThreeWords => '非必填。無論如何，你的三個詞都能繼續使用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句關於你的介紹 · 非必填';
@@ -12736,6 +12773,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get newGroupAddAtLeastOne => '建立群組前，請先新增至少一位聯絡人。';
 
   @override
+  String get newGroupNeedsContacts => '群組由你的聯絡人組成';
+
+  @override
+  String get newGroupAddSomeoneFirst => '請先新增聯絡人。聊天室不需要聯絡人：有連結的人都能加入。';
+
+  @override
   String get notesDeleteThisNote => '要刪除這則筆記嗎？';
 
   @override
@@ -13237,6 +13280,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
+
+  @override
+  String get pinsFingerOpensDecoy => '設定偽裝 PIN 後關閉：手指只會開啟偽裝。';
 
   @override
   String get pinsWipePin => '抹除 PIN';
@@ -15115,6 +15161,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
+
+  @override
+  String get bootFailedStillStuck => '如果重試也沒用';
+
+  @override
+  String get bootFailedRestoreBackup => '從備份還原';
+
+  @override
+  String get bootFailedStartFresh => '重新開始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新開始嗎？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+
+  @override
+  String get bootFailedStartFreshNext => '繼續';
+
+  @override
+  String get bootFailedStartFreshSure => '清除這支手機上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作無法復原。Kryfo 會關閉，再次開啟時就像剛安裝。';
+
+  @override
+  String get bootFailedStartFreshYes => '清除並重新開始';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => '這個連結不是 Kryfo 能讀取的';

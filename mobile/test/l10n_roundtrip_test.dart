@@ -277,7 +277,7 @@ void main() {
       "Scan their code, or paste what they gave you: a link, an @handle, or a room link.",
     );
     expect(l.appScanTheirCode, "Scan their code");
-    expect(l.appAKryfoLinkA, "A Kryfo link, a room link or @wren");
+    expect(l.appAKryfoLinkA, "A Kryfo link, a room link or @name");
     expect(l.appAddThem, "Add them");
     expect(l.appEveryWayToAdd, "Every way to add someone");
     expect(
@@ -1274,7 +1274,7 @@ void main() {
       l.handleOptionalYourThreeWords,
       "Optional. Your three words keep working either way.",
     );
-    expect(l.handleWren, "wren");
+    expect(l.handleHintName, "name");
     expect(l.handleALineAboutYou, "A line about you · optional");
     expect(l.handleClaiming, "Claiming…");
     expect(l.handleClaimThisHandle, "Claim this handle");

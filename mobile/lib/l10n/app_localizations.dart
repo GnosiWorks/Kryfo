@@ -816,7 +816,7 @@ abstract class AppLocalizations {
   /// app/shell.dart
   ///
   /// In en, this message translates to:
-  /// **'A Kryfo link, a room link or @wren'**
+  /// **'A Kryfo link, a room link or @name'**
   String get appAKryfoLinkA;
 
   /// app/shell.dart
@@ -4632,8 +4632,8 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'wren'**
-  String get handleWren;
+  /// **'name'**
+  String get handleHintName;
 
   /// screens/handle_screen.dart
   ///
@@ -6159,6 +6159,18 @@ abstract class AppLocalizations {
   /// **'Add at least one contact first before creating a group.'**
   String get newGroupAddAtLeastOne;
 
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Groups are made with your contacts'**
+  String get newGroupNeedsContacts;
+
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone first. A room needs no contacts: anyone with its link can join.'**
+  String get newGroupAddSomeoneFirst;
+
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
@@ -7106,6 +7118,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock with fingerprint'**
   String get pinsUnlockWithFingerprint;
+
+  /// screens/pins_screen.dart: under the fingerprint switch, which stays off in the everyday app while a decoy PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Off while a decoy PIN is set: a finger opens only the decoy.'**
+  String get pinsFingerOpensDecoy;
 
   /// screens/pins_screen.dart
   ///
@@ -10227,6 +10245,60 @@ abstract class AppLocalizations {
   /// **'Close and reopen Kryfo'**
   String get bootFailedCloseAndReopen;
 
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'If trying again does not help'**
+  String get bootFailedStillStuck;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get bootFailedRestoreBackup;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get bootFailedStartFresh;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh?'**
+  String get bootFailedStartFreshTitle;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.'**
+  String get bootFailedStartFreshLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get bootFailedStartFreshNext;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything on this phone?'**
+  String get bootFailedStartFreshSure;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Kryfo closes and opens again as a new install.'**
+  String get bootFailedStartFreshSureLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and start fresh'**
+  String get bootFailedStartFreshYes;
+
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
@@ -12381,7 +12453,7 @@ abstract class AppLocalizations {
   /// **'Adding…'**
   String get peopleAdding;
 
-  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren
+  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @name
   ///
   /// In en, this message translates to:
   /// **'Nobody has claimed {handle}'**

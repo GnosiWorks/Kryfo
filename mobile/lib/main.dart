@@ -99,6 +99,7 @@ import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
+import 'screens/restore_screen.dart' show RestoreScreen;
 import 'pin_gate.dart';
 import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';

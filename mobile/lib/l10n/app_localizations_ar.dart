@@ -549,7 +549,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appScanTheirCode => 'اقرأ رمزه';
 
   @override
-  String get appAKryfoLinkA => 'رابط Kryfo أو رابط غرفة أو ‎@wren';
+  String get appAKryfoLinkA => 'رابط Kryfo أو رابط غرفة أو ‎@name';
 
   @override
   String get appAddThem => 'أضِفه';
@@ -3002,7 +3002,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختياري. كلماتك الثلاث تبقى صالحة في كل الأحوال.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'سطر عنك · اختياري';
@@ -3994,6 +3994,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'أضف جهة اتصال واحدة على الأقل قبل إنشاء مجموعة.';
 
   @override
+  String get newGroupNeedsContacts => 'تُنشأ المجموعات مع جهات اتصالك';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'أضف شخصًا أولًا. لا تحتاج الغرفة إلى جهات اتصال: يمكن لأي شخص لديه رابطها الانضمام.';
+
+  @override
   String get notesDeleteThisNote => 'حذف هذه الملاحظة؟';
 
   @override
@@ -4530,6 +4537,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'متوقف ما دام رمز PIN للتمويه مضبوطًا: الإصبع يفتح التمويه فقط.';
 
   @override
   String get pinsWipePin => 'رمز PIN للمسح';
@@ -6498,6 +6509,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'إغلاق Kryfo وإعادة فتحه';
+
+  @override
+  String get bootFailedStillStuck => 'إذا لم تنفع إعادة المحاولة';
+
+  @override
+  String get bootFailedRestoreBackup => 'استعادة نسخة احتياطية';
+
+  @override
+  String get bootFailedStartFresh => 'البدء من جديد';
+
+  @override
+  String get bootFailedStartFreshTitle => 'البدء من جديد؟';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'سيمسح هذا كل ما يحفظه Kryfo على هذا الهاتف: المحادثات وجهات الاتصال والوسائط والمحادثات المخفية وكلماتك الثلاث. لن يُمسّ ملف النسخة الاحتياطية المحفوظ في مكان آخر.';
+
+  @override
+  String get bootFailedStartFreshNext => 'متابعة';
+
+  @override
+  String get bootFailedStartFreshSure => 'مسح كل شيء على هذا الهاتف؟';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'لا يمكن التراجع عن هذا. سيُغلق Kryfo ثم يفتح من جديد كأنه مثبّت للتو.';
+
+  @override
+  String get bootFailedStartFreshYes => 'امسح وابدأ من جديد';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'لا يستطيع Kryfo قراءة هذا الرابط';
