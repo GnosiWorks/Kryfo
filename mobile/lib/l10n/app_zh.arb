@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "关闭应用锁？",
   "pinsThePinGoesAnd": "PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。",
   "pinsUnlockWithFingerprint": "用指纹解锁",
+  "pinsFingerOpensDecoy": "设置伪装 PIN 后关闭：手指只会打开伪装。",
   "pinsWipePin": "抹除 PIN",
   "pinsNeedsAPinFirst": "需要先设置 PIN 码",
   "pinsSet": "已设置",

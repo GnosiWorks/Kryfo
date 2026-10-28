@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Désactiver le verrouillage ?",
   "pinsThePinGoesAnd": "Le code PIN disparaît, et avec lui le code d’effacement et toutes les discussions masquées. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.",
   "pinsUnlockWithFingerprint": "Déverrouiller par empreinte",
+  "pinsFingerOpensDecoy": "Désactivé tant qu’un code leurre est défini : un doigt n’ouvre que le leurre.",
   "pinsWipePin": "Code d’effacement",
   "pinsNeedsAPinFirst": "Code PIN requis",
   "pinsSet": "Défini",

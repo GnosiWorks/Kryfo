@@ -4446,6 +4446,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Off while a decoy PIN is set: a finger opens only the decoy.';
+
+  @override
   String get pinsWipePin => 'Wipe PIN';
 
   @override

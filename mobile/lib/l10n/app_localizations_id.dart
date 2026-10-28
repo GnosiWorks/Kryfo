@@ -4446,6 +4446,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Mati selama PIN umpan dipasang: jari hanya membuka umpan.';
+
+  @override
   String get pinsWipePin => 'PIN penghapus';
 
   @override

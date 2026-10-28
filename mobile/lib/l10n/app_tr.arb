@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Uygulama kilidi kapatılsın mı?",
   "pinsThePinGoesAnd": "PIN kaldırılır, silme PIN’i ve varsa gizli sohbetler de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.",
   "pinsUnlockWithFingerprint": "Parmak iziyle kilidi aç",
+  "pinsFingerOpensDecoy": "Yem PIN’i ayarlıyken kapalı: parmak yalnızca yemi açar.",
   "pinsWipePin": "Silme PIN’i",
   "pinsNeedsAPinFirst": "Önce PIN gerekir",
   "pinsSet": "Belirlendi",

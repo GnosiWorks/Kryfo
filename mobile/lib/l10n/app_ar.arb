@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "إيقاف قفل التطبيق؟",
   "pinsThePinGoesAnd": "يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.",
   "pinsUnlockWithFingerprint": "فتح القفل بالبصمة",
+  "pinsFingerOpensDecoy": "متوقف ما دام رمز PIN للتمويه مضبوطًا: الإصبع يفتح التمويه فقط.",
   "pinsWipePin": "رمز PIN للمسح",
   "pinsNeedsAPinFirst": "يلزم رمز PIN أولًا",
   "pinsSet": "تم التعيين",

@@ -4483,6 +4483,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Desbloquear com a digital';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Desligado enquanto houver um PIN de disfarce: um dedo só abre o disfarce.';
+
+  @override
   String get pinsWipePin => 'PIN de apagamento';
 
   @override

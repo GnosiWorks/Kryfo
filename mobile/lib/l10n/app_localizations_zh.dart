@@ -4242,6 +4242,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsUnlockWithFingerprint => '用指纹解锁';
 
   @override
+  String get pinsFingerOpensDecoy => '设置伪装 PIN 后关闭：手指只会打开伪装。';
+
+  @override
   String get pinsWipePin => '抹除 PIN';
 
   @override
@@ -13187,6 +13190,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
+
+  @override
+  String get pinsFingerOpensDecoy => '設定偽裝 PIN 後關閉：手指只會開啟偽裝。';
 
   @override
   String get pinsWipePin => '抹除 PIN';

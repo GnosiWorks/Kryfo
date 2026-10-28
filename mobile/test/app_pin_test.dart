@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pin on the App lock card, inside and outside a decoy
 import 'package:flutter/material.dart' hide LockState;
+import 'dart:ui' show Tristate;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -8,6 +9,7 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/screens/lock_setup_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
+import 'package:kryfo/widgets/halo_switch.dart';
 
 import 'pin_flow_fakes.dart';
 
@@ -155,10 +157,28 @@ void main() {
     expect(await lock.state.confirmPin(_decoyWipePin), PinResult.normal);
   });
 
-  testWidgets('while a decoy pin is set only the decoy shows the fingerprint '
-      'switch, and the everyday one comes back off once the decoy goes', (
-    t,
-  ) async {
+  // the fingerprint row on App lock, as it reads: its switch, whether it
+  // can be used, and the line under it
+  (bool, bool, bool) fingerRow(WidgetTester t) {
+    final sw = t.widget<HaloSwitch>(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text(l10n.pinsUnlockWithFingerprint),
+          matching: find.byType(Row),
+        ),
+        matching: find.byType(HaloSwitch),
+      ),
+    );
+    return (
+      sw.value,
+      sw.onChanged != null,
+      find.text(l10n.pinsFingerOpensDecoy).evaluate().isNotEmpty,
+    );
+  }
+
+  testWidgets('while a decoy pin is set the everyday switch stays, off, with '
+      'the reason under it; the decoy shows its own, and the everyday one '
+      'works again once the decoy goes', (t) async {
     phone(t);
     _finger();
     final lock = await makeLock(_withDecoy, bio: SealBio());
@@ -167,18 +187,67 @@ void main() {
     expect(s.decoySet, isTrue);
     await _card(t, lock);
     expect(find.text(l10n.pinsYourPin), findsOneWidget);
-    expect(find.text(l10n.pinsUnlockWithFingerprint), findsNothing);
+    expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
+    expect(fingerRow(t), (false, false, true));
+    // a tap on it turns nothing on
+    await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
+    await t.pumpAndSettle();
+    expect(s.biometric, isFalse);
+    expect(fingerRow(t), (false, false, true));
+    // read out as a switch that is off and cannot be used, with its reason
+    final node = t.getSemantics(
+      find
+          .ancestor(
+            of: find.text(l10n.pinsUnlockWithFingerprint),
+            matching: find.byType(MergeSemantics),
+          )
+          .first,
+    );
+    expect(node.label, contains(l10n.pinsFingerOpensDecoy));
+    expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+    expect(node.flagsCollection.isToggled, Tristate.isFalse);
+
+    // inside the decoy: its own switch, and nothing about the everyday app
     s.inDecoy = true;
     await t.pumpAndSettle();
     expect(find.text(l10n.pinsYourPin), findsOneWidget);
     expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
+    expect(fingerRow(t), (false, true, false));
 
     s.inDecoy = false;
     await s.clearDecoyPins();
     await t.pumpAndSettle();
     expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
+    expect(fingerRow(t), (false, true, false));
     expect(s.biometric, isFalse);
   });
+
+  for (final lang in ['de', 'ar']) {
+    testWidgets('the reason fits under the switch in $lang at a large font', (
+      t,
+    ) async {
+      phone(t);
+      _finger();
+      setL10nLocale(Locale(lang));
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      final lock = await makeLock(_withDecoy, bio: SealBio());
+      await t.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          child: app(
+            PinsScreen(
+              lock: lock.state,
+              host: FakeHost(lock: lock.state),
+            ),
+            locale: Locale(lang),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(t.takeException(), isNull);
+      expect(find.text(l10n.pinsFingerOpensDecoy), findsOneWidget);
+    });
+  }
 
   for (final (name, pins, decoy, offered) in [
     ('with no decoy', appOnly, false, true),

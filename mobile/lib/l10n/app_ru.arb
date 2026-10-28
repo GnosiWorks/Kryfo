@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Выключить блокировку?",
   "pinsThePinGoesAnd": "PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.",
   "pinsUnlockWithFingerprint": "Разблокировка отпечатком",
+  "pinsFingerOpensDecoy": "Выключено, пока задана PIN-приманка: палец открывает только приманку.",
   "pinsWipePin": "PIN для стирания",
   "pinsNeedsAPinFirst": "Сначала нужен PIN-код",
   "pinsSet": "Задано",

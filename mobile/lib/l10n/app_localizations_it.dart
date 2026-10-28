@@ -4495,6 +4495,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Sblocca con l\'impronta';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Disattivato finché è impostato un PIN esca: un dito apre solo l\'esca.';
+
+  @override
   String get pinsWipePin => 'PIN di cancellazione';
 
   @override

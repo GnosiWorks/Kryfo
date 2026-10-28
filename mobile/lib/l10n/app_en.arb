@@ -5530,6 +5530,10 @@
   "@pinsUnlockWithFingerprint": {
     "description": "screens/pins_screen.dart"
   },
+  "pinsFingerOpensDecoy": "Off while a decoy PIN is set: a finger opens only the decoy.",
+  "@pinsFingerOpensDecoy": {
+    "description": "screens/pins_screen.dart: under the fingerprint switch, which stays off in the everyday app while a decoy PIN is set"
+  },
   "pinsWipePin": "Wipe PIN",
   "@pinsWipePin": {
     "description": "screens/pins_screen.dart"

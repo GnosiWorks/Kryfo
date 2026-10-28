@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Matikan kunci aplikasi?",
   "pinsThePinGoesAnd": "PIN dihapus, begitu juga PIN penghapus dan obrolan tersembunyi yang ada. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.",
   "pinsUnlockWithFingerprint": "Buka kunci dengan sidik jari",
+  "pinsFingerOpensDecoy": "Mati selama PIN umpan dipasang: jari hanya membuka umpan.",
   "pinsWipePin": "PIN penghapus",
   "pinsNeedsAPinFirst": "Perlu PIN dulu",
   "pinsSet": "Aktif",

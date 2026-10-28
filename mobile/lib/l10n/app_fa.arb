@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "قفل برنامه خاموش شود؟",
   "pinsThePinGoesAnd": "PIN حذف می‌شود، و PIN پاک‌سازی و هر گفت‌وگوی پنهانی هم با آن. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.",
   "pinsUnlockWithFingerprint": "باز کردن قفل با اثر انگشت",
+  "pinsFingerOpensDecoy": "تا وقتی PIN فریب تنظیم شده خاموش است: انگشت فقط فریب را باز می‌کند.",
   "pinsWipePin": "PIN پاک‌سازی",
   "pinsNeedsAPinFirst": "اول یک PIN لازم است",
   "pinsSet": "تعیین‌شده",

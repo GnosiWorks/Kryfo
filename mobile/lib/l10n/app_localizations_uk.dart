@@ -4538,6 +4538,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Розблокування відбитком';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Вимкнено, поки встановлено PIN-приманку: палець відкриває лише приманку.';
+
+  @override
   String get pinsWipePin => 'PIN для стирання';
 
   @override

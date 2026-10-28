@@ -4462,6 +4462,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'تا وقتی PIN فریب تنظیم شده خاموش است: انگشت فقط فریب را باز می‌کند.';
+
+  @override
   String get pinsWipePin => 'PIN پاک‌سازی';
 
   @override

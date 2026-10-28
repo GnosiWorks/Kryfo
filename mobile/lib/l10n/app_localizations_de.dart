@@ -4505,6 +4505,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Mit Fingerabdruck entsperren';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Aus, solange eine Tarn-PIN gesetzt ist: Ein Finger öffnet nur die Tarnung.';
+
+  @override
   String get pinsWipePin => 'Lösch-PIN';
 
   @override

@@ -7137,6 +7137,12 @@ abstract class AppLocalizations {
   /// **'Unlock with fingerprint'**
   String get pinsUnlockWithFingerprint;
 
+  /// screens/pins_screen.dart: under the fingerprint switch, which stays off in the everyday app while a decoy PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Off while a decoy PIN is set: a finger opens only the decoy.'**
+  String get pinsFingerOpensDecoy;
+
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:

@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "App-Sperre ausschalten?",
   "pinsThePinGoesAnd": "Die PIN wird entfernt, und mit ihr die Lösch-PIN und alle versteckten Chats. Wer dein Handy in der Hand hat, öffnet Kryfo als du.",
   "pinsUnlockWithFingerprint": "Mit Fingerabdruck entsperren",
+  "pinsFingerOpensDecoy": "Aus, solange eine Tarn-PIN gesetzt ist: Ein Finger öffnet nur die Tarnung.",
   "pinsWipePin": "Lösch-PIN",
   "pinsNeedsAPinFirst": "Braucht zuerst eine PIN",
   "pinsSet": "Festgelegt",

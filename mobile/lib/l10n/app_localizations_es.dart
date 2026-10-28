@@ -4495,6 +4495,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Desbloquear con huella';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Desactivado mientras haya un PIN señuelo: un dedo solo abre el señuelo.';
+
+  @override
   String get pinsWipePin => 'PIN de borrado';
 
   @override

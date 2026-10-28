@@ -4438,6 +4438,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Tắt khi đã đặt mã PIN ngụy trang: ngón tay chỉ mở phần ngụy trang.';
+
+  @override
   String get pinsWipePin => 'Mã PIN xóa sạch';
 
   @override

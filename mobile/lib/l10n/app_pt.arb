@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Desativar o bloqueio do app?",
   "pinsThePinGoesAnd": "O PIN sai, e junto com ele o PIN de apagamento e qualquer conversa oculta. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.",
   "pinsUnlockWithFingerprint": "Desbloquear com a digital",
+  "pinsFingerOpensDecoy": "Desligado enquanto houver um PIN de disfarce: um dedo só abre o disfarce.",
   "pinsWipePin": "PIN de apagamento",
   "pinsNeedsAPinFirst": "Precisa de um PIN",
   "pinsSet": "Definido",

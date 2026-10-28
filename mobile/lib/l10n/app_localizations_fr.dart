@@ -4501,6 +4501,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Déverrouiller par empreinte';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Désactivé tant qu’un code leurre est défini : un doigt n’ouvre que le leurre.';
+
+  @override
   String get pinsWipePin => 'Code d’effacement';
 
   @override

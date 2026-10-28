@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Вимкнути блокування Kryfo?",
   "pinsThePinGoesAnd": "PIN-код зникне, а разом із ним і PIN для стирання та всі приховані чати. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.",
   "pinsUnlockWithFingerprint": "Розблокування відбитком",
+  "pinsFingerOpensDecoy": "Вимкнено, поки встановлено PIN-приманку: палець відкриває лише приманку.",
   "pinsWipePin": "PIN для стирання",
   "pinsNeedsAPinFirst": "Спершу потрібен PIN-код",
   "pinsSet": "Задано",

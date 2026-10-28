@@ -4549,6 +4549,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'متوقف ما دام رمز PIN للتمويه مضبوطًا: الإصبع يفتح التمويه فقط.';
+
+  @override
   String get pinsWipePin => 'رمز PIN للمسح';
 
   @override

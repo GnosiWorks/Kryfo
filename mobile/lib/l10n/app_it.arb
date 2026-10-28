@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Disattivare il blocco app?",
   "pinsThePinGoesAnd": "Il PIN viene rimosso, e con lui il PIN di cancellazione e tutte le chat nascoste. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.",
   "pinsUnlockWithFingerprint": "Sblocca con l'impronta",
+  "pinsFingerOpensDecoy": "Disattivato finché è impostato un PIN esca: un dito apre solo l'esca.",
   "pinsWipePin": "PIN di cancellazione",
   "pinsNeedsAPinFirst": "Prima serve un PIN",
   "pinsSet": "Impostato",

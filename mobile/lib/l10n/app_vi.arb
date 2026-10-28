@@ -1273,6 +1273,7 @@
   "pinsTurnOffTheApp": "Tắt khóa ứng dụng?",
   "pinsThePinGoesAnd": "Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.",
   "pinsUnlockWithFingerprint": "Mở khóa bằng vân tay",
+  "pinsFingerOpensDecoy": "Tắt khi đã đặt mã PIN ngụy trang: ngón tay chỉ mở phần ngụy trang.",
   "pinsWipePin": "Mã PIN xóa sạch",
   "pinsNeedsAPinFirst": "Cần đặt mã PIN trước",
   "pinsSet": "Đã đặt",

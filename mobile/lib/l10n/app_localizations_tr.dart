@@ -4466,6 +4466,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Yem PIN’i ayarlıyken kapalı: parmak yalnızca yemi açar.';
+
+  @override
   String get pinsWipePin => 'Silme PIN’i';
 
   @override
