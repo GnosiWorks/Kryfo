@@ -527,9 +527,10 @@ func TestAutoMoatOverTheWire(t *testing.T) {
 }
 
 func TestAutoSetconfNeverAnswers(t *testing.T) {
-	oldD, oldW := ctrlDeadline, autoSetconfWait
-	ctrlDeadline, autoSetconfWait = 5*time.Second, 300*time.Millisecond
-	defer func() { ctrlDeadline, autoSetconfWait = oldD, oldW }()
+	setCtrlDeadline(t, 5*time.Second)
+	oldW := autoSetconfWait
+	autoSetconfWait = 300 * time.Millisecond
+	defer func() { autoSetconfWait = oldW }()
 	fc := newFakeControl(t, 100)
 	fc.slow.Store(int64(3 * time.Second))
 	fakeTor(t, fc.port())
@@ -550,8 +551,8 @@ func TestAutoSetconfNeverAnswers(t *testing.T) {
 	t0 := time.Now()
 	r := pass(t, modeOpts{})
 	took := time.Since(t0)
-	// wait out the reconnects left behind, so the next test finds the slot free
-	time.Sleep(8 * time.Second)
+	// the reconnects left behind are over before what they read goes back
+	waitTorIdle(t, 20*time.Second)
 	if took > 3*time.Second {
 		t.Fatalf("an attempt waited %s on a SETCONF that never answered", took)
 	}

@@ -37,12 +37,12 @@ import (
 )
 
 var (
-	mu           sync.Mutex
-	startMu      sync.Mutex
-	torNode      *tor.Tor
-	listener     net.Listener
-	myAddr       string
-	inbox        []string
+	mu       sync.Mutex
+	startMu  sync.Mutex
+	torNode  *tor.Tor
+	listener net.Listener
+	myAddr   string
+	inbox    []string
 
 	myEdPriv ed25519.PrivateKey
 	myEdPub  ed25519.PublicKey
@@ -645,6 +645,9 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
 			break
 		}
+		if !torStill(t) {
+			return
+		}
 		statusMu.RLock()
 		stillPub := torStatus == "publishing" || torStatus == "starting"
 		statusMu.RUnlock()
@@ -787,6 +790,10 @@ var stuckAfter = 2 * time.Minute
 // how many reconnects got past the guards, for the tests that count storms
 var reconnectRuns atomic.Int64
 
+// reconnects claimed and not yet released, replaced ones too, so a test
+// can see them all out before it puts back what they read
+var reconnectsLive atomic.Int32
+
 // one reconnect at a time, ever. the owner, the running flags and the done
 // channel of the one running change together under reconnectMu: a reconnect
 // that takes over makes itself the owner and waits for the one it replaced
@@ -861,6 +868,7 @@ func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string)
 	reconnectDone = done
 	atomic.StoreInt32(&torRestarting, 1)
 	reconnectRuns.Add(1)
+	reconnectsLive.Add(1)
 	return me, prev, done, ""
 }
 
@@ -881,6 +889,7 @@ func reconnectRelease(me int64, done chan struct{}) {
 	}
 	reconnectMu.Unlock()
 	close(done)
+	reconnectsLive.Add(-1)
 }
 
 func reconnectTorAs(force bool, why string) string { return reconnectTorBy(force, false, why) }
@@ -1552,12 +1561,23 @@ func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, in
 // our descriptor is uploaded, or false after 120s. most networks upload
 // within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
+	// a watcher for a tor that is gone gives up its slot
+	look := time.NewTicker(publishLook)
+	defer look.Stop()
+	timeout := time.After(120 * time.Second)
 	if t == nil || t.Control == nil || !subbed {
-		time.Sleep(120 * time.Second)
-		return false
+		for {
+			select {
+			case <-look.C:
+				if !torStill(t) {
+					return false
+				}
+			case <-timeout:
+				return false
+			}
+		}
 	}
 
-	timeout := time.After(120 * time.Second)
 	// how many hsdirs we have handed the descriptor to. the hashring is six
 	// per replica, so three is a comfortable majority of one replica and the
 	// descriptor is fetchable well before that.
@@ -1595,11 +1615,24 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
 				return true
 			}
+		case <-look.C:
+			if !torStill(t) {
+				return false
+			}
 		case <-timeout:
 			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
 			return false
 		}
 	}
+}
+
+// how often the publish watcher checks its tor is still this process's
+const publishLook = time.Second
+
+func torStill(t *tor.Tor) bool {
+	mu.Lock()
+	defer mu.Unlock()
+	return torNode == t
 }
 
 // polls tor for real bootstrap progress. tor.Start only means the process

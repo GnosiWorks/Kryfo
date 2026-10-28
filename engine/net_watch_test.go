@@ -708,9 +708,7 @@ func TestAStuckBridgeConfigSaysSo(t *testing.T) {
 		t.Fatal(r)
 	}
 	f := overlapRig(t)
-	old := ctrlDeadline
-	ctrlDeadline = 300 * time.Millisecond
-	t.Cleanup(func() { ctrlDeadline = old })
+	setCtrlDeadline(t, 300*time.Millisecond)
 	f.slow.Store(int64(time.Second))
 	r := reconnectNow()
 	if !strings.HasPrefix(r, "error: control port timeout") {
