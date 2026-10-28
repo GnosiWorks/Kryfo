@@ -1386,20 +1386,30 @@ func HaloDrainInbox() *C.char {
 
 //export HaloSendTo
 func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
-	addr := goStr(cAddr)
-	msg := goStr(cMsg)
+	return C.CString(sendDirect(goStr(cAddr), goStr(cMsg)))
+}
 
+// what HaloSendTo answers before our onion is published. callers take the
+// relay at once, as for a direct route that is down
+const errNotPublished = "error: not published yet"
+
+// the direct route joins once our onion is published: until then a send
+// goes by the relays alone instead of waiting on a dial beside the publish
+func sendDirect(addr, msg string) string {
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
 	if t == nil {
-		return C.CString("error: tor not started")
+		return "error: tor not started"
+	}
+	if torStatusNow() != "reachable" {
+		return errNotPublished
 	}
 	if err := sendTo(t, addr, msg); err != nil {
-		return C.CString("error: " + err.Error())
+		return "error: " + err.Error()
 	}
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
-	return C.CString("ok")
+	return "ok"
 }
 
 // the door answers "ack\n" and nothing else. only that many bytes are read,
