@@ -22,6 +22,9 @@
 #                             network)
 #   ./release.sh --offline    fetch if cache/ is not for this commit, then
 #                             build with the container's network cut
+#   ./release.sh --rc         a release candidate (with KRYFO_RC=1): the one
+#                             build the developer's phone takes before the
+#                             final, whose dev card it has not made yet
 set -e
 cd "$(dirname "$0")"
 
@@ -30,18 +33,31 @@ IMAGE=${KRYFO_REPRO_IMAGE:-kryfo-repro}
 REF=HEAD
 SIGN=1
 MODE=
+RC=
 while [ $# -gt 0 ]; do
   case "$1" in
+    --rc) RC=1; shift ;;
     --ref) REF="$2"; shift 2 ;;
     --unsigned) SIGN=; shift ;;
     --fetch) MODE=fetch; shift ;;
     --offline) MODE=offline; shift ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 # fetching builds nothing that ships, so there is nothing to sign
 [ "$MODE" = fetch ] && SIGN=
+# a final pins the developer card the candidate's first start made on his
+# phone. KRYFO_RC=1 is for the candidate alone: a final is never built
+# with it set, and a candidate is never built without it
+if [ -n "${KRYFO_RC:-}" ] && [ -z "$RC" ]; then
+  echo "KRYFO_RC is set: a final release is never built with it (--rc for a candidate)" >&2
+  exit 2
+fi
+if [ -n "$RC" ] && [ "${KRYFO_RC:-}" != 1 ]; then
+  echo "--rc needs KRYFO_RC=1" >&2
+  exit 2
+fi
 
 command -v docker >/dev/null || { echo "docker is not installed" >&2; exit 2; }
 docker info >/dev/null 2>&1 || { echo "the docker daemon is not running" >&2; exit 2; }
@@ -59,6 +75,12 @@ fi
 if [ -n "$SIGN" ]; then
   git -C "$REPO" show "$COMMIT:mobile/lib/update_check.dart" |
     "$REPO/scripts/check-version-key.sh" - >/dev/null || exit 2
+fi
+if [ -n "$RC" ]; then
+  echo "== release candidate: the dev card is not checked"
+elif [ "$MODE" != fetch ]; then
+  git -C "$REPO" show "$COMMIT:mobile/lib/devchat/dev_key.dart" |
+    "$REPO/scripts/check-dev-card.sh" - || exit 2
 fi
 echo "== release build of $REF ($COMMIT)"
 

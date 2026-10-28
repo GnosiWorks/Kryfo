@@ -457,17 +457,84 @@ void main() {
     expect('KRYFO_DEV_CARD'.allMatches(code), hasLength(1));
   });
 
+  test('release.sh refuses a final whose current card has no kyber '
+      'prekey', () async {
+    final card = await _card('kyber-test-card');
+    final kyber = parseHaloUri(card.link)!['bundle']!;
+    final j = jsonDecode(utf8.decode(base64Decode(kyber))) as Map
+      ..remove('kyberPreKeyId')
+      ..remove('kyberPreKeyPublic')
+      ..remove('kyberPreKeySignature');
+    final classic = base64Encode(utf8.encode(jsonEncode(j)));
+    String file(List<(String, String?)> keys) =>
+        'const kDevKeys = <DevKey>[\n'
+        '${[for (final (b, st) in keys) "  DevKey(\n    keyId: 'x',\n    bundle:\n        '$b',\n${st == null ? '' : '    status: DevKeyStatus.$st,\n'}  ),\n"].join()}'
+        '];\n';
+    Future<ProcessResult> check(String src) async {
+      final p = await Process.start('bash', [
+        '../scripts/check-dev-card.sh',
+        '-',
+      ]);
+      p.stdin.write(src);
+      await p.stdin.close();
+      final out = await p.stdout.transform(utf8.decoder).join();
+      final err = await p.stderr.transform(utf8.decoder).join();
+      return ProcessResult(p.pid, await p.exitCode, out, err);
+    }
+
+    expect((await check(file([(kyber, null)]))).exitCode, 0);
+    final old = await check(file([(classic, null)]));
+    expect(old.exitCode, isNot(0));
+    expect('${old.stderr}', contains('no kyber prekey'));
+    // a classic card kept as the previous one is fine
+    expect(
+      (await check(file([(classic, 'previous'), (kyber, null)]))).exitCode,
+      0,
+    );
+    expect(
+      (await check(file([(kyber, null), (kyber, null)]))).exitCode,
+      isNot(0),
+    );
+    // the script reads the app's own list the same way
+    final real = File('lib/devchat/dev_key.dart').readAsStringSync();
+    expect(real, contains('const kDevKeys = <DevKey>['));
+  });
+
+  test('release.sh never builds a final with the candidate switch set', () {
+    final sh = File('../repro/release.sh').readAsStringSync();
+    expect(sh, contains('a final release is never built with it'));
+    expect(sh, contains('scripts/check-dev-card.sh'));
+    final r = Process.runSync(
+      'bash',
+      ['../repro/release.sh', '--unsigned'],
+      environment: {'KRYFO_RC': '1', 'PATH': Platform.environment['PATH']!},
+    );
+    expect(r.exitCode, 2);
+    expect('${r.stderr}', contains('never built with it'));
+    final rc = Process.runSync(
+      'bash',
+      ['../repro/release.sh', '--rc', '--unsigned'],
+      environment: {'PATH': Platform.environment['PATH']!},
+    );
+    expect(rc.exitCode, 2);
+    expect('${rc.stderr}', contains('--rc needs KRYFO_RC=1'));
+  });
+
   // the release check: a release whose current pinned card a new dev chat
   // cannot start on does not ship. KRYFO_RELEASE=1 flutter test
-  // test/dev_key_test.dart
+  // test/dev_key_test.dart. a release candidate (KRYFO_RC=1) skips it, and
+  // release.sh refuses a final built with KRYFO_RC set
   test(
     'the current pinned card carries the kyber prekey',
     () {
       final k = kDevKeys.firstWhere((k) => k.status == DevKeyStatus.current);
       expect(devCardStarts(k), isTrue, reason: k.keyId);
     },
-    skip: Platform.environment['KRYFO_RELEASE'] == '1'
-        ? false
-        : 'release check: KRYFO_RELEASE=1',
+    skip: Platform.environment['KRYFO_RELEASE'] != '1'
+        ? 'release check: KRYFO_RELEASE=1'
+        : Platform.environment['KRYFO_RC'] == '1'
+        ? 'release candidate: its first start on the developer\'s phone '
+              'makes the card the final pins'
+        : false,
   );
 }

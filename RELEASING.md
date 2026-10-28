@@ -24,7 +24,8 @@ a feature goes into a release finished or not at all.
 - a fresh clone resolves the lockfile: `flutter pub get --enforce-lockfile`
 - the update key is pinned: `KRYFO_RELEASE=1 flutter test test/update_key_test.dart`
 - the dev chat's current pinned card carries a kyber prekey, so a new dev chat can start:
-  `KRYFO_RELEASE=1 flutter test test/dev_key_test.dart`
+  `KRYFO_RELEASE=1 flutter test test/dev_key_test.dart` (release.sh checks the ref's card too,
+  scripts/check-dev-card.sh)
 - each apk's signal shim was built from the libsignal and spqr Cargo.lock pins (release.sh runs it):
   `repro/shim-check.sh out/app-*.apk`
 - a phone on 0.5.3 and this version still talk both ways: in mobile/tool/peer053,
@@ -129,3 +130,25 @@ agree with the release:
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints
 
 then check the tag is up: `git ls-remote --tags origin | grep vX.Y.Z`
+
+## the developer card (0.6, and whenever the card changes)
+
+the card a release pins is made by the developer's phone itself, from its first start on the
+release's own code:
+1. build a release candidate: `KRYFO_RC=1 ./repro/release.sh --rc`. it is the final code with the
+   old card still pinned; `KRYFO_RC=1 KRYFO_RELEASE=1 flutter test test/dev_key_test.dart` skips only
+   the card check. release.sh refuses a final while KRYFO_RC is set, and a candidate without it.
+2. verify the candidate like a release (verify.sh). it goes on the developer's phone as an update
+   (`pm install -r`, same key, data kept), as close to release day as possible: from its first start
+   0.5.x phones can no longer start a new dev chat.
+3. after that first start: open the own link (My Kryfo, share), read the card off it, check it with
+   the dev card self-check (`flutter test test/dev_key_test.dart` with the card as the current key,
+   both prekey signatures under his key, a pq session builds), and pin it as the current key's
+   bundle (same key id).
+4. remind Mario to make an encrypted backup of the developer's phone right away: the pinned keys live
+   only there. never reset its invite link, regenerate its identity or restore an older backup on it.
+5. build and verify the final from the pinned commit (without KRYFO_RC), and install it on the
+   developer's phone over the candidate.
+6. publish the signed version.json on release day, not before: it is what tells 0.5.x phones to
+   update.
+
