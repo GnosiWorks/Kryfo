@@ -204,6 +204,14 @@ Future<List<double>?> voicePeaks(String path) {
   return done;
 }
 
+/// every wave known forgotten, and the queue of reads begun again: each
+/// test's clock is its own
+@visibleForTesting
+void forgetVoicePeaks() {
+  _waves.clear();
+  _reading = Future.value();
+}
+
 /// what is known of a note's wave without reading it
 List<double>? voicePeaksNow(String path) => _waves[path];
 

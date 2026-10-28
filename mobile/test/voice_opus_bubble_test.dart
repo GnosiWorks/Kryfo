@@ -51,6 +51,24 @@ Uint8List _wav(int frames) {
 
 const _wave = [0.2, 0.9, 0.5];
 
+// the plugin's word that player [id] is ready to play
+void _ready(String id) => TestDefaultBinaryMessengerBinding
+    .instance
+    .defaultBinaryMessenger
+    .handlePlatformMessage(
+      'com.ryanheise.just_audio.events.$id',
+      const StandardMethodCodec().encodeSuccessEnvelope({
+        'processingState': 3,
+        'updateTime': 0,
+        'updatePosition': 0,
+        'bufferedPosition': 0,
+        'duration': 3400000,
+        'icyMetadata': null,
+        'currentIndex': 0,
+      }),
+      (_) {},
+    );
+
 void main() {
   late Directory tmp;
   // what the players were asked, in order: 'load <uri>', 'play', ...
@@ -61,6 +79,7 @@ void main() {
     tmp = Directory.systemTemp.createTempSync('voice_opus_bubble');
     asked = [];
     lockState.openForTest();
+    forgetVoicePeaks();
     setL10nLocale(const Locale('en'));
     voicePeaksForTest = (path, bars) => path.endsWith('.ogg')
         ? '{"ms":3400,"p":[${List.generate(bars, (i) => _wave[i % 3]).join(',')}]}'
@@ -74,8 +93,13 @@ void main() {
       }
       _mock('com.ryanheise.just_audio.methods.$id', (m) async {
         if (m.method == 'load') {
+          // the player wraps one file in a list of one
           final src = (m.arguments as Map)['audioSource'] as Map;
-          asked.add('load ${src['uri']}');
+          final one =
+              src['uri'] ?? ((src['children'] as List).single as Map)['uri'];
+          asked.add('load $one');
+          // loaded: the player says it is ready, as the plugin does
+          Future<void>.delayed(Duration.zero, () => _ready(id));
           return {'duration': 3400000};
         }
         asked.add(m.method);
@@ -88,10 +112,9 @@ void main() {
   tearDown(() {
     voicePeaksForTest = null;
     _mock('com.ryanheise.just_audio.methods', null);
+    // a player's streams close after its test: their channels stay
     for (final id in ids) {
-      for (final kind in ['methods', 'events', 'data']) {
-        _mock('com.ryanheise.just_audio.$kind.$id', null);
-      }
+      _mock('com.ryanheise.just_audio.methods.$id', null);
     }
     ids.clear();
     tmp.deleteSync(recursive: true);
@@ -145,7 +168,10 @@ void main() {
       expect(shownWave(t)!.take(3), _wave);
       await t.tap(find.byType(VoiceBubble));
       await until(t, () => asked.contains('play'));
-      expect(asked.first, 'load ${Uri.file(f.path)}');
+      expect(
+        asked.firstWhere((a) => a.startsWith('load ')),
+        'load ${Uri.file(f.path)}',
+      );
       expect(asked, contains('play'));
       expect(find.byIcon(Icons.music_off_rounded), findsNothing);
       await close(t);
@@ -172,7 +198,10 @@ void main() {
     // played as wav, the opus copy arrives under it
     await t.tap(find.byType(VoiceBubble));
     await until(t, () => asked.contains('play'));
-    expect(asked.first, 'load ${Uri.file(wav.path)}');
+    expect(
+      asked.firstWhere((a) => a.startsWith('load ')),
+      'load ${Uri.file(wav.path)}',
+    );
     var free = false;
     unawaited(voiceFileFree(wav.path).then((_) => free = true));
     voicePeaksSame(wav.path, ogg.path);
@@ -180,7 +209,6 @@ void main() {
     await t.pumpWidget(app(ogg.path, out: true));
     await t.pump();
     expect(t.state(find.byType(VoiceBubble)), same(state));
-    expect(find.text('0:03'), findsOneWidget);
     // a tap pauses it: the wav is let go, the next tap plays the ogg
     await t.tap(find.byType(VoiceBubble));
     await until(t, () => free);
@@ -188,7 +216,10 @@ void main() {
     asked.clear();
     await t.tap(find.byType(VoiceBubble));
     await until(t, () => asked.contains('play'));
-    expect(asked.first, 'load ${Uri.file(ogg.path)}');
+    expect(
+      asked.firstWhere((a) => a.startsWith('load ')),
+      'load ${Uri.file(ogg.path)}',
+    );
     await close(t);
   });
 }

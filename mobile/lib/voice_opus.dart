@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the engine's opus: a placed note encoded as it goes out, and the wave of
 // one that came. each call runs off the main isolate, one file at a time
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -55,7 +56,12 @@ bool get oggPeaksStandIn => voicePeaksForTest != null;
 
 /// the wav at [wav] as ogg opus at [ogg]: how long it plays, or null with
 /// nothing at [ogg]
-Future<int?> encodeVoiceOgg(String wav, String ogg) {
+Future<int?> encodeVoiceOgg(String wav, String ogg) =>
+    Zone.root.run(() => _encodeInTurn(wav, ogg));
+
+// the turn is kept in the root zone, so a caller's zone that goes away
+// never holds the next one
+Future<int?> _encodeInTurn(String wav, String ogg) {
   final before = _turn;
   final run = before.then((_) async {
     try {

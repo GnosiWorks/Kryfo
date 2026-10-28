@@ -212,13 +212,15 @@ void main() {
     });
 
     test('to a phone that plays it, the opus copy', () async {
+      String? read;
       voiceOggForTest = (from, to) async {
-        expect(from, wav);
+        read = from;
         File(to).writeAsBytesSync(_note);
         return 'ok 3400 ${_note.length}';
       };
       final (path, name) = await voiceForWire(wav, opus: true);
       expect((path, name), ('${tmp.path}/vn_u1.ogg', 'voice.ogg'));
+      expect(read, wav);
       expect(File(path).readAsBytesSync(), _note);
       // the wav is the caller's to let go
       expect(File(wav).existsSync(), isTrue);

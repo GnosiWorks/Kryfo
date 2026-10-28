@@ -51,6 +51,7 @@ import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/voice_format.dart' show takePeerOpus;
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 import 'package:kryfo/voice_opus.dart' show voiceOggForTest;
 import 'package:kryfo/widgets/media_bubbles.dart'
     show VoiceBubble, VoiceMakingBubble;
@@ -77,6 +78,12 @@ class _SpyEngine implements HaloEngine {
 }
 
 // a phone's database as the chat screen reads and writes it, kept in maps
+class _OpenDb extends _ChatDb {
+  _OpenDb(super.mem, [super.container]);
+  @override
+  Future<Database> open() async => mem;
+}
+
 class _ChatDb extends DevTestDb {
   _ChatDb(super.mem, [super.container]);
 
@@ -283,14 +290,19 @@ late Directory _tmp;
 
 // a phone with the dev chat fresh, the everyday one or a decoy's. a decoy
 // keeps what is sent in it, so nothing past the seal needs the engine
-Future<void> _world({HaloContainer container = HaloContainer.everyday}) async {
+// [opens]: its rows open as a database too, for what keeps a table of its
+// own (voice_format.dart)
+Future<void> _world({
+  HaloContainer container = HaloContainer.everyday,
+  bool opens = false,
+}) async {
   forgetDevChoices();
   // an opener grinds its proof of work in an isolate, which a widget test's
   // clock never waits for
   grindPowForTest = (_) => 0;
   _mem = MemDb(except: {'devchat'});
   await devChatTables(_mem, now: _made);
-  final db = _ChatDb(_mem, container);
+  final db = opens ? _OpenDb(_mem, container) : _ChatDb(_mem, container);
   if (container.quiet) {
     final everyday = MemDb(except: {'devchat'});
     await devChatTables(everyday);
@@ -1228,7 +1240,7 @@ void main() {
     testWidgets('to a phone that has not said it plays opus: the wav', (
       t,
     ) async {
-      await _world(container: HaloContainer.decoy);
+      await _world(container: HaloContainer.decoy, opens: true);
       await _open(t);
       await _speak(t, () => _sent().isNotEmpty);
       final note = _sent().single;
@@ -1239,7 +1251,7 @@ void main() {
     });
 
     testWidgets('to one that has: opus, and the wav goes', (t) async {
-      await _world(container: HaloContainer.decoy);
+      await _world(container: HaloContainer.decoy, opens: true);
       await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
       await _open(t);
       await _speak(t, () => _sent().isNotEmpty);
@@ -1265,7 +1277,7 @@ void main() {
     testWidgets('one that went back to an older version: the wav again', (
       t,
     ) async {
-      await _world(container: HaloContainer.decoy);
+      await _world(container: HaloContainer.decoy, opens: true);
       await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
       await takePeerOpus(_mem, _dev, carried: false, counts: true, written: 2);
       await _open(t);
@@ -1279,7 +1291,7 @@ void main() {
       t,
     ) async {
       voiceOggForTest = (_, _) async => 'error: rate';
-      await _world(container: HaloContainer.decoy);
+      await _world(container: HaloContainer.decoy, opens: true);
       await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
       await _open(t);
       await _speak(t, () => _sent().isNotEmpty);

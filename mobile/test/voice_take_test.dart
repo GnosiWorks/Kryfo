@@ -414,7 +414,8 @@ void main() {
     final out = bodyOf(body, 'Future<void> lockedOut(');
     expect(out, contains('unpend();'));
     expect(out, contains('say(l10n.voiceLockedNotSent)'));
-    expect('if (locked) return lockedOut('.allMatches(body).length, 2);
+    // after the disguise, after the placing and after the opus encode
+    expect('if (locked) return lockedOut('.allMatches(body).length, 3);
     // nothing said waits on the screen being there
     expect(body, isNot(contains('showHaloToast(context')));
     expect(body, contains('showHaloToastAnywhere('));
