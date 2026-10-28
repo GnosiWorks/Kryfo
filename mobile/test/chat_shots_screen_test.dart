@@ -418,9 +418,20 @@ void main() {
         ),
       ),
     );
-    unawaited(
-      openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true, room: true),
-    );
+    // the file is read for what it is first, which is real io the fake
+    // clock never finishes, so the open starts on the real one
+    await t.runAsync(() async {
+      unawaited(
+        openReceivedFile(
+          ctx,
+          '/x/plan.pdf',
+          'plan.pdf',
+          kept: true,
+          room: true,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
     await t.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n.roomShotsKeptOpen), findsOneWidget);
     expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
@@ -442,7 +453,10 @@ void main() {
         ),
       ),
     );
-    unawaited(openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true));
+    await t.runAsync(() async {
+      unawaited(openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
     await t.pump(const Duration(milliseconds: 300));
     expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
     expect(find.text(l10n.chatShotsKeptOpen), findsOneWidget);

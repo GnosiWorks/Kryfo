@@ -15,7 +15,9 @@ import '../main.dart'
         AppStateScreen,
         AppStateBridges,
         AppStateSession,
-        AppStateDevchat;
+        AppStateDevchat,
+        LinkViewBuilder;
+import '../link_view.dart';
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
@@ -68,7 +70,16 @@ class ProtectionLine extends StatefulWidget {
   final String label;
   final bool on;
   final String state;
-  const ProtectionLine(this.label, this.on, this.state, {super.key});
+  // what makes a new state rather than new words in the same one: a
+  // climbing percent changes in place
+  final Object? stateKey;
+  const ProtectionLine(
+    this.label,
+    this.on,
+    this.state, {
+    this.stateKey,
+    super.key,
+  });
   @override
   State<ProtectionLine> createState() => _ProtectionLineState();
 }
@@ -178,7 +189,7 @@ class _ProtectionLineState extends State<ProtectionLine>
                 ),
                 child: Text(
                   widget.state,
-                  key: ValueKey(widget.state),
+                  key: ValueKey(widget.stateKey ?? widget.state),
                   textAlign: TextAlign.end,
                   style: HaloType.mono(
                     size: 10,
@@ -390,91 +401,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
           32 + MediaQuery.paddingOf(context).bottom,
         ),
         children: staggerAll([
-          ListenableBuilder(
-            listenable: Listenable.merge([appState, lockState]),
-            builder: (_, _) {
-              // the same predicate the home pill uses, or the two screens
-              // disagree about the same tor
-              final tor = appState.torUsable;
-              // relay and fast modes never use tor, so "connecting" there
-              // would be a promise nothing is trying to keep
-              final onTor = appState.sendMode == 'private';
-              final torOn = onTor && tor;
-              // the app lock covers every screen, and so does the old
-              // switch until home's card about it is answered. without
-              // them each chat has its own switch
-              final shots =
-                  appState.screenSecureByLock || appState.shotsCardCovers;
-              // as the App lock screen reads it: a lock turned off in a
-              // decoy session is off
-              final lock = lockState.lockOn;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: HaloColors.line, width: 0.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.settingsYourProtections,
-                              style: HaloType.mono(
-                                size: 11,
-                                color: HaloColors.amberText,
+          LinkViewBuilder(
+            builder: (_, link) => ListenableBuilder(
+              listenable: lockState,
+              builder: (_, _) {
+                // the reading the home pill and the tor sheet show, grace and
+                // words alike, or the screens disagree about the same tor.
+                // relay and fast modes never use tor, so a state there would
+                // be a promise nothing is trying to keep
+                final onTor = appState.sendMode == 'private';
+                final torOn = onTor && link.kind == LinkKind.ready;
+                // the app lock covers every screen, and so does the old
+                // switch until home's card about it is answered. without
+                // them each chat has its own switch
+                final shots =
+                    appState.screenSecureByLock || appState.shotsCardCovers;
+                // as the App lock screen reads it: a lock turned off in a
+                // decoy session is off
+                final lock = lockState.lockOn;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.settingsYourProtections,
+                                style: HaloType.mono(
+                                  size: 11,
+                                  color: HaloColors.amberText,
+                                ),
                               ),
                             ),
-                          ),
-                          ProtectionMeter([torOn, shots, lock]),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ProtectionLine(
-                      l10n.settingsTorRouting,
-                      torOn,
-                      torOn
-                          ? l10n.settingsConnected
-                          : onTor
-                          ? l10n.settingsConnecting
-                          : appState.sendMode == 'fast'
-                          ? l10n.settingsOffFastMode
-                          : l10n.settingsOffMode,
-                    ),
-                    ProtectionLine(
-                      l10n.settingsScreenshots,
-                      shots,
-                      shots ? l10n.settingsBlocked2 : l10n.settingsPerChat,
-                    ),
-                    ProtectionLine(
-                      l10n.settingsAppLock,
-                      lock,
-                      lock ? l10n.settingsOn : l10n.settingsOff,
-                    ),
-                    // only when android is blocking them: a line that says
-                    // so outlives the home banner, which can be dismissed
-                    FutureBuilder<bool>(
-                      future: _notifs,
-                      builder: (_, snap) => Unfold(
-                        open: snap.data == false,
-                        child: ProtectionLine(
-                          l10n.settingsNotifications,
-                          false,
-                          l10n.settingsBlockedByAndroid,
+                            ProtectionMeter([torOn, shots, lock]),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      const SizedBox(height: 8),
+                      ProtectionLine(
+                        l10n.settingsTorRouting,
+                        stateKey: (onTor, link.kind),
+                        torOn,
+                        torOn
+                            ? l10n.settingsConnected
+                            : onTor
+                            ? link.text
+                            : appState.sendMode == 'fast'
+                            ? l10n.settingsOffFastMode
+                            : l10n.settingsOffMode,
+                      ),
+                      ProtectionLine(
+                        l10n.settingsScreenshots,
+                        shots,
+                        shots ? l10n.settingsBlocked2 : l10n.settingsPerChat,
+                      ),
+                      ProtectionLine(
+                        l10n.settingsAppLock,
+                        lock,
+                        lock ? l10n.settingsOn : l10n.settingsOff,
+                      ),
+                      // only when android is blocking them: a line that says
+                      // so outlives the home banner, which can be dismissed
+                      FutureBuilder<bool>(
+                        future: _notifs,
+                        builder: (_, snap) => Unfold(
+                          open: snap.data == false,
+                          child: ProtectionLine(
+                            l10n.settingsNotifications,
+                            false,
+                            l10n.settingsBlockedByAndroid,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
 
           HaloGroup(
