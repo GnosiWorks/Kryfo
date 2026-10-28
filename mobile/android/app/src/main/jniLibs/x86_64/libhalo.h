@@ -45,6 +45,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 #line 1 "cgo-generated-wrapper"
 
+
 #line 8 "quiet.go"
 
 #include <stdlib.h>
@@ -62,11 +63,13 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 #line 9 "vault.go"
 
 #include <stdlib.h>
 
 #line 1 "cgo-generated-wrapper"
+
 
 
 /* End of preamble from import "C" comments.  */
@@ -202,6 +205,7 @@ extern char* HaloNostrSubscribe(char* cPeerXPubHex);
 extern char* HaloNostrSubscribeNew(char* cPeerXPubHex);
 extern char* HaloNostrLetHeld(char* cPeerXPubHex, char* cHow);
 extern char* HaloNostrMarkHeld(char* cPeersJSON);
+extern char* HaloNostrPinned(char* cPeersJSON);
 extern char* HaloNostrUnsubscribe(char* cPeerXPubHex);
 extern char* HaloFirstContactPk(int counter);
 extern int HaloFirstContactRelays(void);
@@ -223,6 +227,7 @@ extern char* HaloPinSetup(char* cPin, char* cTable, char* cLegacy, int index, in
 extern char* HaloPinRewrap(char* cOld, char* cNew, char* cTable, char* cLegacy, int index);
 extern char* HaloPinUpgrade(char* cTable);
 extern char* HaloPinClear(char* cTable, int index);
+extern char* HaloPushSeal(char* cPub, char* cToken);
 extern char* HaloQuietIdentity(void);
 extern char* HaloQuietDescribe(char* cEd, char* cX, char* cOnion);
 extern char* HaloQuietFirstContactPk(char* cX, int counter);
@@ -240,6 +245,13 @@ extern char* HaloTransportMode(void);
 extern char* HaloGifPost(char* cUrl, char* cBody);
 extern char* HaloGifGet(char* cUrl);
 extern char* HaloGifGetFile(char* cUrl, char* cPath);
+extern char* HaloTranslateCatalog(void);
+extern char* HaloTranslateFetch(char* cLang, char* cDir);
+extern char* HaloTranslateProgress(char* cLang);
+extern char* HaloTranslateCancel(char* cLang);
+extern char* HaloTranslateInstalled(char* cLang, char* cDir);
+extern char* HaloTranslateRemove(char* cLang, char* cDir);
+extern char* HaloTranslateConfig(char* cFrom, char* cTo, char* cDir);
 extern char* HaloTransportState(void);
 extern char* HaloNostrFirst(char* cTag);
 extern char* HaloUpdateGet(char* cUrl);
@@ -247,6 +259,12 @@ extern char* HaloVaultKeys(void);
 extern char* HaloVaultSeal(char* cPub, char* cB64);
 extern char* HaloVaultOpen(char* cPriv, char* cB64);
 extern char* HaloVaultOpenMany(char* cPriv, char* cJSON);
+extern char* HaloVoiceModels(void);
+extern char* HaloVoiceFetch(char* cID, char* cDir);
+extern char* HaloVoiceProgress(char* cID);
+extern char* HaloVoiceCancel(char* cID);
+extern char* HaloVoiceCheck(char* cID, char* cDir);
+extern char* HaloVoiceRemove(char* cID, char* cDir);
 
 #ifdef __cplusplus
 }
