@@ -2289,6 +2289,45 @@ class AppLocalizationsFa extends AppLocalizations {
   String get donateBadgesStartAt20 => 'نشان‌ها از ۲۰ دلار';
 
   @override
+  String get donateShowTheAddress => 'نمایش نشانی';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount با bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'نشان چه به شما می‌دهد';
+
+  @override
+  String get donateGivesMark =>
+      'علامتی کنار نامتان. شما انتخاب می‌کنید چه کسی آن را ببیند، یا هیچ‌کس.';
+
+  @override
+  String get donateGivesReceipt =>
+      'رسیدی امضاشده که روی همین گوشی می‌ماند. نشان را بدون هیچ حسابی ثابت می‌کند.';
+
+  @override
+  String get donateGivesFree =>
+      'همهٔ قابلیت‌های حریم خصوصی رایگان می‌مانند، با نشان یا بی‌نشان.';
+
+  @override
+  String get donateAddressOnTap =>
+      'نشانی فقط وقتی ساخته می‌شود که پایین را لمس کنید. تا یک ساعت مال شماست، پس اگر برگردید همان را می‌گیرید.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin الان شلوغ است. بعداً دوباره امتحان کنید یا با کارت پرداخت کنید.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'هنوز می‌توانید bitcoin را به نشانی زیر بفرستید، فقط نشان باز نمی‌کند.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'این همان نشانی‌ای است که پیش‌تر باز کردید. اگر فرستاده‌اید، همین‌جا منتظر بمانید.';
+
+  @override
   String get donateReachingThePaymentService =>
       'در حال رسیدن به سرویس پرداخت از راه Tor…';
 
@@ -2381,6 +2420,21 @@ class AppLocalizationsFa extends AppLocalizations {
           'روی زنجیره تأیید شد. حالا شما نگهبان هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
       'other':
           'روی زنجیره تأیید شد. حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
+      'patron':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان حامی شما سر جایش می‌ماند.',
+      'guardian':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان نگهبان شما سر جایش می‌ماند.',
+      'other':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
     });
     return '$_temp0';
   }

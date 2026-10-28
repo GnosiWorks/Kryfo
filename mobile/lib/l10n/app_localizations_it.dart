@@ -2312,6 +2312,45 @@ class AppLocalizationsIt extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Badge a partire da \$20';
 
   @override
+  String get donateShowTheAddress => 'Mostra l\'indirizzo';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount da pagare in bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Cosa dà il badge';
+
+  @override
+  String get donateGivesMark =>
+      'Un segno accanto al tuo nome. Scegli tu chi lo vede, se qualcuno.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Una ricevuta firmata salvata su questo telefono. Prova il badge senza alcun account.';
+
+  @override
+  String get donateGivesFree =>
+      'Ogni funzione per la privacy resta gratuita, con o senza badge.';
+
+  @override
+  String get donateAddressOnTap =>
+      'L\'indirizzo viene creato quando tocchi qui sotto. Resta tuo per un\'ora, quindi se torni ritrovi lo stesso.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin è sovraccarico in questo momento. Riprova più tardi o paga con carta.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Puoi comunque inviare bitcoin all\'indirizzo qui sotto. Non dà il badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'È l\'indirizzo che hai aperto prima. Se hai già inviato, aspetta qui.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Contatto il servizio di pagamento via Tor…';
 
@@ -2404,6 +2443,21 @@ class AppLocalizationsIt extends AppLocalizations {
           'Verificato on-chain. Ora sei tra i custodi. Nessuno può togliertelo.',
       'other':
           'Verificato on-chain. Ora sei tra i sostenitori. Nessuno può togliertelo.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da sostenitore resta.',
+      'patron':
+          'Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da mecenate resta.',
+      'guardian':
+          'Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da custode resta.',
+      'other':
+          'Verificato on-chain. Grazie di aver donato ancora. Il tuo badge da sostenitore resta.',
     });
     return '$_temp0';
   }

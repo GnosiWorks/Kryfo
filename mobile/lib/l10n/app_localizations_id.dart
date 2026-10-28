@@ -2282,6 +2282,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Lencana mulai dari \$20';
 
   @override
+  String get donateShowTheAddress => 'Tampilkan alamat';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount dalam bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Yang kamu dapat dari lencana';
+
+  @override
+  String get donateGivesMark =>
+      'Tanda di samping namamu. Kamu yang memilih siapa yang melihatnya, atau tidak ada sama sekali.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Tanda terima bertanda tangan yang tersimpan di ponsel ini. Ini membuktikan lencana tanpa akun apa pun.';
+
+  @override
+  String get donateGivesFree =>
+      'Semua fitur privasi tetap gratis, dengan atau tanpa lencana.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Alamat baru dibuat saat kamu mengetuk di bawah. Alamat itu milikmu selama satu jam, jadi saat kembali kamu mendapat yang sama.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Kamu tetap bisa mengirim bitcoin ke alamat di bawah. Alamat ini tidak memberi lencana.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Ini alamat yang kamu buka tadi. Kalau sudah mengirim, tunggu di sini.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Menghubungi layanan pembayaran lewat Tor…';
 
@@ -2374,6 +2413,21 @@ class AppLocalizationsId extends AppLocalizations {
           'Terverifikasi on-chain. Sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.',
       'other':
           'Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
+      'patron':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana patron kamu tetap milikmu.',
+      'guardian':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana penjaga kamu tetap milikmu.',
+      'other':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
     });
     return '$_temp0';
   }

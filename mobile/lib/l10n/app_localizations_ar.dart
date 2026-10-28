@@ -2351,6 +2351,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'تبدأ الشارات من ٢٠ دولارًا';
 
   @override
+  String get donateShowTheAddress => 'أظهر العنوان';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount بـ bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'ما تمنحك إياه الشارة';
+
+  @override
+  String get donateGivesMark =>
+      'علامة بجانب اسمك. أنت تختار من يراها، أو لا أحد.';
+
+  @override
+  String get donateGivesReceipt =>
+      'إيصال موقَّع محفوظ على هذا الهاتف. يثبت الشارة دون أي حساب.';
+
+  @override
+  String get donateGivesFree =>
+      'تبقى كل ميزات الخصوصية مجانية، بشارة أو بدونها.';
+
+  @override
+  String get donateAddressOnTap =>
+      'لا يُنشأ العنوان إلا حين تنقر في الأسفل. يبقى لك لمدة ساعة، فإن عدت تحصل على العنوان نفسه.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin مشغول الآن. حاول لاحقًا أو ادفع بالبطاقة.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'لا يزال بإمكانك إرسال bitcoin إلى العنوان أدناه. لا يمنح شارة.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'هذا هو العنوان الذي فتحته من قبل. إن كنت قد أرسلت، فانتظر هنا.';
+
+  @override
   String get donateReachingThePaymentService =>
       'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 
@@ -2441,6 +2480,21 @@ class AppLocalizationsAr extends AppLocalizations {
           'تم التحقق على السلسلة. أنت الآن حارس. لا أحد يستطيع أن ينزع ذلك منك.',
       'other':
           'تم التحقق على السلسلة. أنت الآن داعم. لا أحد يستطيع أن ينزع ذلك منك.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
+      'patron':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الراعي.',
+      'guardian':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الحارس.',
+      'other':
+          'تم التحقق على السلسلة. شكرًا لعطائك مرة أخرى. تبقى لك شارة الداعم.',
     });
     return '$_temp0';
   }
