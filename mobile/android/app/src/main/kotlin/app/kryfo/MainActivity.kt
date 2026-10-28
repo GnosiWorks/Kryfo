@@ -487,7 +487,7 @@ open class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "openNotificationSettings" -> {
-                        result.success(openNotificationSettings())
+                        result.success(openNotificationSettings(call.argument<String>("channel")))
                     }
                     "openWifiSettings" -> {
                         result.success(openWifiSettings())
@@ -1029,7 +1029,25 @@ open class MainActivity : FlutterFragmentActivity() {
 
     // android's own notification page for kryfo. the permission dialog is
     // gone for good once the answer is final, so this is the only way back.
-    private fun openNotificationSettings(): Boolean {
+    // with [channel], that channel's page: its sound and vibration are
+    // android's to change once it is made, not the app's
+    private fun openNotificationSettings(channel: String? = null): Boolean {
+        if (channel != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(android.app.NotificationManager::class.java)
+            if (nm?.getNotificationChannel(channel) != null) {
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                            putExtra(Settings.EXTRA_CHANNEL_ID, channel)
+                        }
+                    )
+                    return true
+                } catch (e: Exception) {
+                    // the app's page below has every channel on it
+                }
+            }
+        }
         // the per-app notification page arrives in api 26. below that, and
         // on a build that does not carry it, the app details page has the
         // same switch one tap deeper.

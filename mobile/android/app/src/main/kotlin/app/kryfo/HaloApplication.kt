@@ -8,7 +8,8 @@ import io.flutter.plugin.common.MethodChannel
 
 // one flutter engine for the life of the process, not the life of a screen,
 // so tor and the poll timer keep running while the app is in the background.
-class HaloApplication : Application() {
+// open for the play build, which adds google push (src/play)
+open class HaloApplication : Application() {
     companion object {
         const val ENGINE_ID = "halo_engine"
     }

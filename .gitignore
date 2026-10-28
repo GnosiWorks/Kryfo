@@ -17,9 +17,11 @@
 **/Flutter.framework
 **/Pods/
 **/build/
+**/google-services.json
 **/jniLibs/**/*.so
 **/jniLibs/**/*.stamp
 **/local.properties
+mobile/android/app/src/play/google-services.json
 *.bak
 *.jks
 *.key
