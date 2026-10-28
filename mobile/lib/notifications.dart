@@ -82,6 +82,10 @@ Future<void> nameNotificationChannel() async {
 
 const _messagesChannel = 'halo_messages_v2';
 
+/// the channel new messages come on now: plain notifications have their own
+Future<String> messageChannelId() async =>
+    (_plainKnown ?? await loadNotifPlain()) ? _plainChannel : _messagesChannel;
+
 // plain notifications: a channel of its own, since android fixes a
 // channel's vibration when it is made and kryfo's two taps would tell. the
 // phone's own sound and buzz, and a name that says nothing

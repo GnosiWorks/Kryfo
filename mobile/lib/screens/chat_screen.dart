@@ -28,7 +28,12 @@ import 'introduce_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
-    show VoiceBubble, VoiceMakingBubble, fileCard, fileTooBigLine;
+    show
+        VoiceBubble,
+        VoiceMakingBubble,
+        fileCard,
+        fileTooBigLine,
+        voiceLengthKnown;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../widgets/confirm_sheet.dart';
@@ -114,6 +119,7 @@ import '../main.dart'
         AppStateVault,
         AppStateContacts,
         AppStateSession,
+        AppStateVoice,
         AppStateDevchat,
         AppStatePairing,
         AppStateRefresh;
@@ -185,6 +191,10 @@ import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
 import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
+import '../voice_format.dart' show isVoiceName, kVoiceWav;
+import '../voice_length.dart' show voiceFileMs;
+import '../voice_opus.dart' show voiceForWire;
+import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -1326,11 +1336,7 @@ class _ChatScreenState extends State<ChatScreen>
     session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
-    session.getContact(widget.peerHaloId).then((c) {
-      if (mounted) {
-        setState(() => _peerBadge = c?['supporter_badge'] as String?);
-      }
-    });
+    unawaited(_loadBadge());
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     final barReads = <Future<void>>[
@@ -1515,6 +1521,8 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      // their badge rides their messages: one that came now may change it
+      unawaited(_loadBadge());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -1530,6 +1538,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Object? _devSeen;
+
+  Future<void> _loadBadge() async {
+    final c = await session.getContact(widget.peerHaloId);
+    final b = c?['supporter_badge'] as String?;
+    if (mounted && b != _peerBadge) setState(() => _peerBadge = b);
+  }
 
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since is no longer named.
@@ -2054,7 +2068,7 @@ class _ChatScreenState extends State<ChatScreen>
         shareOn != null &&
         !_keptHere(shareOn) &&
         shareOn.filePath != null &&
-        shareOn.fileName != 'voice.wav';
+        !isVoiceName(shareOn.fileName);
     final going = album == null
         ? target.sending &&
               (target.mediaPath != null || target.filePath != null)
@@ -2101,7 +2115,7 @@ class _ChatScreenState extends State<ChatScreen>
         : (canTranslate ? 4 : 3) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
-              (target.filePath != null && target.fileName != 'voice.wav'
+              (target.filePath != null && !isVoiceName(target.fileName)
                   ? 1
                   : 0) +
               (out && !media && target.sticker == null ? 1 : 0) -
@@ -2381,7 +2395,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 _keptHere(shareOn) ||
                                 shareOn.filePath == null ||
                                 shareOn.fileName == null ||
-                                shareOn.fileName == 'voice.wav'
+                                isVoiceName(shareOn.fileName)
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -3549,7 +3563,7 @@ class _ChatScreenState extends State<ChatScreen>
       path: path,
       msgUid: msgUid,
       fileName: msg.fileName!,
-      voice: msg.fileName == 'voice.wav',
+      voice: isVoiceName(msg.fileName),
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
       secure: msg.secure,
@@ -3774,7 +3788,7 @@ class _ChatScreenState extends State<ChatScreen>
           sending: true,
           msgUid: msgUid,
           replyTo: replyToUid,
-          fileName: 'voice.wav',
+          fileName: kVoiceWav,
           voiceDisguised: true,
           burnSecs: _ghost ? _burnSeconds : null,
         )..making = making.progress;
@@ -3838,7 +3852,7 @@ class _ChatScreenState extends State<ChatScreen>
             sending: true,
             msgUid: msgUid,
             replyTo: replyToUid,
-            fileName: 'voice.wav',
+            fileName: kVoiceWav,
             voiceDisguised: disguise,
             burnSecs: _ghost ? _burnSeconds : null,
             burnAt: null,
@@ -3861,6 +3875,26 @@ class _ChatScreenState extends State<ChatScreen>
       // from here a lock takes it off the screen as one still being made
       pending = msg;
       await _answerSupport();
+      // what goes: opus to a phone that plays it, else the wav. the bubble
+      // shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: filePath);
+      // a lock under way stops the encode, and both files go
+      final (wirePath, wireName) = await voiceForWire(
+        filePath,
+        opus: await appState.opusFor(peer),
+        stop: () => locked,
+      );
+      if (wirePath != filePath) {
+        voicePeaksSame(filePath, wirePath);
+        final ms = await voiceFileMs(wirePath);
+        if (ms != null) voiceLengthKnown(wirePath, ms);
+        msg
+          ..filePath = wirePath
+          ..fileName = wireName;
+        if (mounted) setState(() {});
+        unawaited(voiceFileFree(filePath).then((_) => shredFile(filePath)));
+      }
+      if (locked) return lockedOut(null, placed: wirePath);
       // the bubble, the row and the wire all say when it was begun
       final writtenAt = msg.when.millisecondsSinceEpoch;
       var kept = false;
@@ -3875,8 +3909,8 @@ class _ChatScreenState extends State<ChatScreen>
             wasAccepted: wasAccepted,
             writtenAt: writtenAt,
             replyTo: replyToUid,
-            filePath: filePath,
-            fileName: 'voice.wav',
+            filePath: wirePath,
+            fileName: wireName,
             voiceDisguised: disguise,
             burnAt: msg.burnAt,
             burnSecs: msg.burnSecs,
@@ -3886,10 +3920,10 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         dlog('voice: row not kept (${e.runtimeType})');
       }
-      if (!kept && locked) return lockedOut(null, placed: filePath);
+      if (!kept && locked) return lockedOut(null, placed: wirePath);
       if (!kept) {
         if (mounted) setState(() => _messages.remove(msg));
-        await shredFile(filePath);
+        await shredFile(wirePath);
         say(l10n.voiceNotSent);
         return;
       }
@@ -3898,9 +3932,9 @@ class _ChatScreenState extends State<ChatScreen>
       // left while it was made: the screen showing the chat now hears of it
       if (!mounted) appState.chatChanged(peer);
       _sendChunkedMedia(
-        path: filePath,
+        path: wirePath,
         msgUid: msgUid,
-        fileName: 'voice.wav',
+        fileName: wireName,
         voice: true,
         voiceDisguised: disguise,
         burnSeconds: msg.burnSecs,
@@ -5086,7 +5120,7 @@ class _ChatScreenState extends State<ChatScreen>
         (m.preparing ||
             m.mediaPath != null ||
             (m.filePath != null &&
-                m.fileName != 'voice.wav' &&
+                !isVoiceName(m.fileName) &&
                 fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
             (m.direction == 'in' && m.filePath == null)),
   );
@@ -5195,7 +5229,7 @@ class _ChatScreenState extends State<ChatScreen>
           quoted = l10n.albumQuoted;
         } else if (original.mediaPath != null) {
           quoted = l10n.chatQuotedPhoto;
-        } else if (original.fileName == 'voice.wav') {
+        } else if (isVoiceName(original.fileName)) {
           quoted = l10n.chatVoiceMessage;
         } else if (original.fileName != null) {
           quoted = original.fileName;
@@ -5678,7 +5712,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             // both phones or neither: off, with the reason, until theirs
             // knows the block. someone blocked is not offered
-            if (!_blocked && !widget.support)
+            if (!_blocked && !widget.support && !_isDev)
               MenuSheetRow(
                 icon: Icons.phonelink_lock_outlined,
                 label: l10n.chatBlockScreenshots,
@@ -5778,6 +5812,7 @@ class _ChatScreenState extends State<ChatScreen>
           peerXPub: widget.peerXPub,
           face: _peerFace,
           nickname: _nickname,
+          support: widget.support,
         ),
       ),
     );
@@ -7844,7 +7879,7 @@ class _Bubble extends StatelessWidget {
   // drawn by the name alone is drawn again then
   @override
   Widget build(BuildContext context) =>
-      msg.filePath == null || msg.fileName == 'voice.wav'
+      msg.filePath == null || isVoiceName(msg.fileName)
       ? _build(context)
       : ValueListenableBuilder<int>(
           valueListenable: fileFactsRead,
@@ -7865,7 +7900,7 @@ class _Bubble extends StatelessWidget {
     final isVideo =
         msg.filePath != null &&
         msg.text.isEmpty &&
-        msg.fileName != 'voice.wav' &&
+        !isVoiceName(msg.fileName) &&
         shape == FileShape.video;
     final frameless = isImage || isVideo;
     final failedShown = _sendLooksFailed(msg);
@@ -8136,14 +8171,16 @@ class _Bubble extends StatelessWidget {
                                           isOut: isOut,
                                         ),
                                       )
-                                    else if (msg.fileName == 'voice.wav' &&
+                                    else if (isVoiceName(msg.fileName) &&
                                         msg.filePath != null)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 2,
                                         ),
                                         child: VoiceBubble(
-                                          key: ValueKey('vb_${msg.filePath}'),
+                                          key: ValueKey(
+                                            'vb_${msg.msgUid ?? msg.filePath}',
+                                          ),
                                           path: msg.filePath!,
                                           isOut: isOut,
                                           disguised: msg.voiceDisguised,

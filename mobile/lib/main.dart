@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'secure_store.dart';
+import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
@@ -69,9 +70,10 @@ import 'drafts.dart'
         settleDrafts,
         sweepDrafts,
         writeDraftNow;
+import 'google_push.dart';
 import 'helper_delivery.dart';
 import 'helper_push.dart';
-import 'screens/getting_messages_screen.dart';
+import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -97,6 +99,7 @@ import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
+import 'screens/restore_screen.dart' show RestoreScreen;
 import 'pin_gate.dart';
 import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';
@@ -116,6 +119,7 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'voice_choice.dart';
+import 'voice_format.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
@@ -214,6 +218,7 @@ part 'app/state_screen.dart';
 part 'app/state_search.dart';
 part 'app/state_session.dart';
 part 'app/state_vault.dart';
+part 'app/state_voice.dart';
 
 void main() async {
   dlog('launch main');

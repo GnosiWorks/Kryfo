@@ -55,7 +55,7 @@ import '../widgets/swipe_actions.dart';
 import '../notif_permission.dart';
 import '../seen_timers.dart';
 import '../delivery_mode.dart';
-import 'getting_messages_screen.dart';
+import 'notifications_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
@@ -463,6 +463,7 @@ class _ChatsTab extends StatelessWidget {
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _HelperGoneCard(),
+          const _GooglePushCard(),
           const _NotificationsBlockedHint(),
           const UpdateHint(),
           const _ShotsCard(),
@@ -525,6 +526,9 @@ class _ChatsTab extends StatelessWidget {
                       dev: devShown,
                       onOpenDev: onOpenDevChat,
                       onAdd: onAddContact,
+                      onNewGroup: onNewGroup,
+                      onNewRoom: onNewRoom,
+                      expiredRoomName: expiredRoomName,
                     )
                   : _ContactList(
                       key: const ValueKey('list'),
@@ -1061,6 +1065,8 @@ class _HelperGoneCard extends StatelessWidget {
         tint: HaloColors.amber,
         title: appState.helperRelayStopped
             ? l10n.homeHelperRelayTitle
+            : appState.helperGoneWasGoogle
+            ? l10n.homeGoogleGoneTitle
             : l10n.homeHelperGoneTitle,
         line: l10n.homeHelperGoneLine,
         lineColor: HaloColors.warm,
@@ -1071,7 +1077,7 @@ class _HelperGoneCard extends StatelessWidget {
               unawaited(appState.helperGoneAnswered());
               Navigator.of(
                 context,
-              ).push(haloRoute(const GettingMessagesScreen()));
+              ).push(haloRoute(const NotificationsScreen()));
             },
             fill: HaloColors.amber,
             ink: HaloColors.onAmber,
@@ -1079,6 +1085,67 @@ class _HelperGoneCard extends StatelessWidget {
           CardAction(
             label: l10n.homeNotNow,
             onTap: () => appState.helperGoneAnswered(),
+            ink: HaloColors.warm,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// a play build updated from before google push: one calm card offering it,
+// once. never in a decoy (googleCardDue)
+class _GooglePushCard extends StatefulWidget {
+  const _GooglePushCard();
+
+  @override
+  State<_GooglePushCard> createState() => _GooglePushCardState();
+}
+
+class _GooglePushCardState extends State<_GooglePushCard> {
+  bool _busy = false;
+
+  Future<void> _use() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final ok = await appState.useGoogle();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) {
+      HapticFeedback.lightImpact();
+      showHaloToast(context, l10n.homeGoogleOn);
+    } else {
+      // the card stays, so it can be tried again
+      HapticFeedback.heavyImpact();
+      showHaloToast(context, l10n.notificationsGoogleNoStart);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) => _HomeCard(
+        show: appState.googleCardDue,
+        id: 'google-push',
+        tint: HaloColors.amber,
+        wash: true,
+        title: l10n.homeGoogleTitle,
+        line: l10n.homeGoogleLine,
+        lineColor: HaloColors.warm,
+        actions: [
+          CardAction(
+            label: _busy
+                ? l10n.notificationsGoogleStarting
+                : l10n.homeGoogleUse,
+            onTap: _busy ? null : _use,
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
+            swap: true,
+          ),
+          CardAction(
+            label: l10n.homeNotNow,
+            onTap: _busy ? null : () => appState.googleCardAnswered(),
             ink: HaloColors.warm,
           ),
         ],
@@ -1527,17 +1594,24 @@ class _OfflineStrip extends StatelessWidget {
 
 // ---- empty state ----
 
-// no chats yet: the developer chat's row on top, and under it the page
-// still asks to add someone. short phones and big fonts scroll it
+// no chats yet: the developer chat's row on top, the groups heading under
+// it, and the page still asks to add someone. short phones and big fonts
+// scroll it
 class _EmptyWithDev extends StatelessWidget {
   final DevRow? dev;
   final void Function(String chatId) onOpenDev;
   final VoidCallback onAdd;
+  final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
   const _EmptyWithDev({
     super.key,
     required this.dev,
     required this.onOpenDev,
     required this.onAdd,
+    required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
   });
 
   @override
@@ -1556,6 +1630,14 @@ class _EmptyWithDev extends StatelessWidget {
                     index: 0,
                     child: _DevSwipeRow(d: d, onTap: () => onOpenDev(d.chatId)),
                   ),
+          ),
+        ),
+        // a room needs no contacts, so the way to one is here too
+        SliverToBoxAdapter(
+          child: _GroupsHead(
+            onNewGroup: onNewGroup,
+            onNewRoom: onNewRoom,
+            expiredRoomName: expiredRoomName,
           ),
         ),
         SliverFillRemaining(
@@ -1718,13 +1800,17 @@ class _EmptyStateState extends State<_EmptyState>
                       color: HaloColors.onAmber,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      l10n.homeAddSomeone,
-                      style: HaloType.sans(
-                        size: 13.5,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                        height: 1,
+                    // a large font wraps the label instead of cutting it
+                    Flexible(
+                      child: Text(
+                        l10n.homeAddSomeone,
+                        textAlign: TextAlign.center,
+                        style: HaloType.sans(
+                          size: 13.5,
+                          weight: FontWeight.w600,
+                          color: HaloColors.onAmber,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ],
@@ -1922,43 +2008,10 @@ class _ContactListState extends State<_ContactList> {
           for (final (n, d) in top.indexed) _row(_top, d, n),
           // the groups heading is always there: it is where a group or a
           // room is made, even with none yet
-          _SectionHead(
-            label: l10n.homeGroups,
-            actions: [
-              _HeadAction(
-                icon: Icons.timer_outlined,
-                label: l10n.homeRoom,
-                color: HaloColors.violet,
-                onTap: widget.onNewRoom,
-              ),
-              _HeadAction(
-                icon: Icons.add_rounded,
-                label: l10n.homeNew,
-                color: HaloColors.amber,
-                onTap: widget.onNewGroup,
-              ),
-            ],
-          ),
-          // a room that just ended: one quiet line that opens under the
-          // heading and folds away a few seconds later
-          GrowSwap(
-            alignment: Alignment.topCenter,
-            child: widget.expiredRoomName == null
-                ? const SizedBox(key: ValueKey('no-expired'), width: 1)
-                : Padding(
-                    key: ValueKey('expired-${widget.expiredRoomName}'),
-                    padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                        l10n.homeRoomExpired(widget.expiredRoomName!),
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.violet,
-                        ),
-                      ),
-                    ),
-                  ),
+          _GroupsHead(
+            onNewGroup: widget.onNewGroup,
+            onNewRoom: widget.onNewRoom,
+            expiredRoomName: widget.expiredRoomName,
           ),
           for (final (n, g) in groups.indexed) _row(_groups, g, n),
           if (chats.isNotEmpty) ...[
@@ -1969,6 +2022,63 @@ class _ContactListState extends State<_ContactList> {
           ],
         ],
       ),
+    );
+  }
+}
+
+// the groups heading with its two ways in, and under it the line for a
+// room that just ended, which opens and folds away a few seconds later.
+// the empty home shows it too: a room needs no contacts
+class _GroupsHead extends StatelessWidget {
+  final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
+  const _GroupsHead({
+    required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final expired = expiredRoomName;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SectionHead(
+          label: l10n.homeGroups,
+          actions: [
+            _HeadAction(
+              icon: Icons.timer_outlined,
+              label: l10n.homeRoom,
+              color: HaloColors.violet,
+              onTap: onNewRoom,
+            ),
+            _HeadAction(
+              icon: Icons.add_rounded,
+              label: l10n.homeNew,
+              color: HaloColors.amber,
+              onTap: onNewGroup,
+            ),
+          ],
+        ),
+        GrowSwap(
+          alignment: Alignment.topCenter,
+          child: expired == null
+              ? const SizedBox(key: ValueKey('no-expired'), width: 1)
+              : Padding(
+                  key: ValueKey('expired-$expired'),
+                  padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      l10n.homeRoomExpired(expired),
+                      style: HaloType.mono(size: 10, color: HaloColors.violet),
+                    ),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

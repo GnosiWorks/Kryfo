@@ -77,6 +77,25 @@ String _freshWallLeaf() {
   return 'wp_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}.jpg';
 }
 
+/// the media files of [d] no row names, for the shred. the decoy's, with
+/// a vault of its own on disk, waits for that vault's open ([vaultOpen]),
+/// as its wallpapers do: a hide cut short drops the rows before it moves
+/// the files, so a file there may be named by the shut vault's rows alone
+@visibleForTesting
+Future<List<File>> sweepableMedia(
+  HaloDb d, {
+  required DateTime before,
+  bool vaultOpen = false,
+}) async {
+  if (restoreRunning || backupRunning) return const [];
+  if (d.container == HaloContainer.decoy &&
+      !vaultOpen &&
+      await HaloContainer.decoyVault.onDisk()) {
+    return const [];
+  }
+  return d.unnamedMedia(before: before);
+}
+
 /// a container's wallpapers put right while it is open and settled: names
 /// that say whose chat it is go random, then what no row names is listed
 /// for the shred. the decoy's, with a vault of its own on disk, waits for

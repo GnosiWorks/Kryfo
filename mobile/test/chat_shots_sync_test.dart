@@ -193,6 +193,29 @@ void main() {
     },
   );
 
+  test(
+    'a message through the developer chat says nothing of their phone',
+    () async {
+      // bob's phone knows the block: his chat said so
+      await text(bob, amy, 'b1');
+      expect(amy.shots('bob').peerCan, isTrue);
+      final was = amy.shots('bob').can;
+      // later he writes to amy's developer chat, whose frames are rebuilt
+      // without the word but with the support marker
+      bob.use();
+      final w = await wrapMessage(
+        'hi from the dev chat',
+        msgUid: 'b2',
+        supportMarker: 1,
+        sender: asSender(bob.me),
+        writtenAt: DateTime.now().millisecondsSinceEpoch + 5000,
+      );
+      await amy.take('bob', [w]);
+      expect(amy.shots('bob').peerCan, isTrue);
+      expect(amy.shots('bob').can, was);
+    },
+  );
+
   test('an older word arriving late changes nothing', () async {
     await text(bob, amy, 'b1');
     await text(amy, bob, 'a1');

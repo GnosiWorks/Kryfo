@@ -189,14 +189,25 @@ void main() {
       );
     });
 
-    test('names every go module, go, tor and its c libraries', () {
+    test('names every go module, go, tor, its c libraries and libopus', () {
       final e = parseEngineLicences(_engineAsset.readAsStringSync());
       final names = {for (final p in e.parts) p.name};
       final mods = _goModules();
       expect(mods, isNotEmpty);
       expect(names, containsAll(mods));
-      expect(names, containsAll(['Go', 'tor', 'OpenSSL', 'libevent', 'zlib']));
-      expect(names.length, mods.length + 5);
+      expect(
+        names,
+        containsAll(['Go', 'tor', 'OpenSSL', 'libevent', 'zlib', 'libopus']),
+      );
+      expect(names.length, mods.length + 6);
+      // the libopus in engine/opus, as vendor.sh left it
+      final opus = e.parts.singleWhere((p) => p.name == 'libopus');
+      expect(
+        opus.version,
+        File('../engine/opus/libopus/VERSION').readAsStringSync().trim(),
+        reason: stale,
+      );
+      expect(opus.licence, 'BSD-3-Clause');
       for (final p in e.parts) {
         expect(p.texts, isNotEmpty, reason: p.name);
         expect(p.licence, isNotEmpty, reason: p.name);

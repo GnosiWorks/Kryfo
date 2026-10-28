@@ -1143,6 +1143,8 @@ extension AppStateArrivals on AppState {
         if (!fits) album = null;
       }
     }
+    // past the gates: what it says of their phone is kept on their own row
+    await _takeOpus(senderHaloId, env, db);
     await db.saveMessage(
       senderHaloId,
       'in',

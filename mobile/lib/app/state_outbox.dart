@@ -916,7 +916,7 @@ extension AppStateOutbox on AppState {
       msgUid: uid,
       caption: (r['plaintext'] as String?) ?? '',
       fileName: fileName,
-      voice: fileName == 'voice.wav',
+      voice: isVoiceName(fileName),
       voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,

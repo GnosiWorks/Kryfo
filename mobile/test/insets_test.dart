@@ -23,7 +23,7 @@ import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/clean_screen.dart';
 import 'package:kryfo/screens/contact_screen.dart' show showRenameSheet;
 import 'package:kryfo/screens/donate_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/screens/lock_file_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
@@ -226,7 +226,7 @@ void main() {
       'settings': () => const SettingsScreen(),
       'bridges': () => const BridgesScreen(),
       'modes': () => const ModesScreen(),
-      'getting messages': () => const GettingMessagesScreen(),
+      'getting messages': () => const NotificationsScreen(),
       'blocked': () => const BlockedScreen(),
       'transport': () => const TransportScreen(),
       'backup': () => const BackupScreen(),

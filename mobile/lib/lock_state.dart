@@ -895,6 +895,10 @@ class LockState extends ChangeNotifier {
   bool get bioSupported => _bioSupported;
   bool get panicEnabled => _inDecoy ? _dWipe && !_dWipeHidden : _panicEnabled;
   bool get fingerOffered => _bioSupported && _fingerMine;
+  // the everyday app while a decoy pin is set: its switch stays, off, with
+  // the reason under it, so a finger that opens nothing here is not taken
+  // for a broken one. the decoy never shows it
+  bool get fingerToDecoy => _bioSupported && !_inDecoy && _decoyListed;
   bool get _fingerMine => _inDecoy ? !_dDecoy : !_decoyListed;
   // the lock screen offers a finger. which side it opens is in the seal,
   // known only once a finger opened it

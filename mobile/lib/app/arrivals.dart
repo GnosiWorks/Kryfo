@@ -22,7 +22,7 @@ String? shippedPreview(Map<String, String>? pv, {required bool accepted}) {
 /// what a notification says for a message with no text: what kind of
 /// file it is, never the name a voice note or a camera clip was saved under
 String notifMediaLine(String? fileName, String? mediaPath) {
-  if (fileName == 'voice.wav') return l10n.appVoiceMessage;
+  if (isVoiceName(fileName)) return l10n.appVoiceMessage;
   if (nameSaysVideo(fileName)) return l10n.chatVideo;
   return fileName ?? (mediaPath != null ? l10n.appPhoto : '');
 }

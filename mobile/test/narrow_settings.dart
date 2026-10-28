@@ -22,7 +22,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
@@ -252,7 +252,7 @@ void narrowSettings({
   });
 
   testWidgets('getting messages', (t) async {
-    await sweep(t, () async => const GettingMessagesScreen());
+    await sweep(t, () async => const NotificationsScreen());
   });
 
   testWidgets('app lock, off', (t) async {

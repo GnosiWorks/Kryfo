@@ -950,6 +950,10 @@ extension AppStateGroups on AppState {
     String name,
     List<String> memberHaloIds,
   ) async {
+    // a group of only yourself is never made, whatever the screen let by
+    if (!memberHaloIds.any((m) => m != sessionId)) {
+      throw StateError('a group needs someone besides you');
+    }
     final groupId = newMsgUid();
     final full = [sessionId, ...memberHaloIds];
     if (full.length > AppState.kGroupMemberCap) throw const GroupFull();

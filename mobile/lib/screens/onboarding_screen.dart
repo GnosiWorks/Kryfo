@@ -2,8 +2,11 @@
 // onboarding, shown once. three things in the first minute, everything else
 // when it is needed: your name is three words, nobody gets in unless you let
 // them, the first connection takes a minute.
-// the steps: welcome, identity, face, transport, three things, notification, add
+// the steps: welcome, identity, face, transport, three things, notification, add.
+// play builds ask how messages reach the phone after the three things, and
+// show the notification step only for always on, the mode that has one
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -22,7 +25,8 @@ import '../main.dart'
         AppStateBridges,
         AppStateSession,
         AppStateRefresh,
-        AppStateIdentity;
+        AppStateIdentity,
+        AppStateDelivery;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
@@ -34,6 +38,9 @@ import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart' show twoDigits;
 import '../widgets/language_sheet.dart';
+import '../delivery_mode.dart';
+import '../store.dart' show playBuild;
+import 'helper_sheet.dart' show showHelperSheet;
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -48,7 +55,10 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const _steps = 7;
+  // as many as the last build made
+  int _steps = 7;
+  // what the play step picked: its notification step follows for always on
+  DeliveryMode _delivery = DeliveryMode.always;
   final _ctrl = PageController();
   int _page = 0;
   // the step being moved to: it settles in while the one left fades out
@@ -84,6 +94,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // whether the phone has play services, known by the time its step comes
+    if (playBuild) unawaited(appState.lookForGoogle());
+  }
+
+  @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
@@ -91,6 +108,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final play = playBuild;
+    final notifAt = play ? 6 : 5;
     final steps = <Widget>[
       _WelcomeScreen(onContinue: _next, enter: !_seen.contains(1)),
       _IdentityScreen(
@@ -101,9 +120,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _PickFaceScreen(onContinue: _next),
       _TransportScreen(onContinue: _next),
       _ThreeThingsScreen(onContinue: _next),
-      _NotificationScreen(onContinue: _next, enter: !_seen.contains(6)),
+      if (play)
+        _DeliveryScreen(
+          onPicked: (m) => setState(() => _delivery = m),
+          onContinue: _next,
+        ),
+      if (!play || _delivery == DeliveryMode.always)
+        _NotificationScreen(
+          onContinue: _next,
+          enter: !_seen.contains(notifAt + 1),
+        ),
       _AddSomeoneScreen(onComplete: widget.onComplete),
     ];
+    _steps = steps.length;
     return PopScope(
       canPop: _page == 0,
       onPopInvokedWithResult: (done, _) {
@@ -1302,16 +1331,24 @@ class _TransportScreenState extends State<_TransportScreen> {
 class _ModeCard extends StatelessWidget {
   final String title;
   final String cost;
-  final String gain;
+  // null: one line says it all
+  final String? gain;
+  // a word beside the title: the one most people want
+  final String? tag;
   final bool on;
   // null: the only way, shown as a card with no radio
   final VoidCallback? onTap;
+  // there, but not on this route: faded, its line says why
+  final bool dim;
   const _ModeCard({
+    super.key,
     required this.title,
     required this.cost,
-    required this.gain,
+    this.gain,
+    this.tag,
     this.on = false,
     this.onTap,
+    this.dim = false,
   });
 
   @override
@@ -1356,9 +1393,35 @@ class _ModeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: HaloType.serif(size: 18, color: HaloColors.text),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: HaloType.serif(size: 18, color: HaloColors.text),
+                    ),
+                    if (tag != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: HaloColors.amber.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          tag!,
+                          style: HaloType.mono(
+                            size: 10,
+                            letter: 0.06,
+                            color: HaloColors.amberText,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 5),
                 // the cost first, then what it buys: a card that lists
@@ -1371,21 +1434,35 @@ class _ModeCard extends StatelessWidget {
                     height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  gain,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: HaloColors.text2,
-                    height: 1.45,
+                if (gain != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    gain!,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: dim ? HaloColors.amberText : HaloColors.text2,
+                      height: 1.45,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
         ],
       ),
     );
+    if (dim) {
+      return MergeSemantics(
+        child: Semantics(
+          enabled: false,
+          child: AnimatedOpacity(
+            opacity: 0.5,
+            duration: Duration.zero,
+            child: card,
+          ),
+        ),
+      );
+    }
     if (tap == null) return MergeSemantics(child: card);
     // read as one radio: the title, the cost, the gain, and whether it is on
     return MergeSemantics(
@@ -1431,6 +1508,148 @@ class _Radio extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ---- how messages reach you, play builds ----
+//
+// google push first and picked already: instant and light, with what
+// google sees said plainly. the other ways are a tap away here and later
+// in notifications. phones without play services do not see it.
+
+/// the ways the step lists, in order
+List<DeliveryMode> onboardingModes({required bool google}) => [
+  if (google) DeliveryMode.google,
+  DeliveryMode.always,
+  DeliveryMode.checkins,
+  DeliveryMode.helper,
+];
+
+/// what the step starts on: google push where it can be used now. it and
+/// the helper app register over the onion route only
+DeliveryMode onboardingPick({required bool google, required bool onion}) =>
+    google && onion ? DeliveryMode.google : DeliveryMode.always;
+
+class _DeliveryScreen extends StatefulWidget {
+  final ValueChanged<DeliveryMode> onPicked;
+  final VoidCallback onContinue;
+  const _DeliveryScreen({required this.onPicked, required this.onContinue});
+  @override
+  State<_DeliveryScreen> createState() => _DeliveryScreenState();
+}
+
+class _DeliveryScreenState extends State<_DeliveryScreen> {
+  // null until a card is tapped: the step's own pick holds till then
+  DeliveryMode? _chosen;
+  bool _busy = false;
+
+  DeliveryMode get _pick =>
+      _chosen ??
+      onboardingPick(
+        google: appState.googleOffered,
+        onion: appState.sendMode == 'private',
+      );
+
+  Future<void> _go() async {
+    if (_busy) return;
+    final m = _pick;
+    setState(() => _busy = true);
+    var ok = true;
+    switch (m) {
+      case DeliveryMode.google:
+        ok = await appState.useGoogle();
+        if (!ok && mounted) {
+          HapticFeedback.heavyImpact();
+          showHaloToast(context, l10n.notificationsGoogleNoStart);
+        }
+      case DeliveryMode.helper:
+        // set up by the sheet once a helper app answers; none, and the step
+        // stays
+        ok = await showHelperSheet(context) != null;
+      case DeliveryMode.always:
+      case DeliveryMode.checkins:
+        await appState.setDeliveryMode(m);
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) return;
+    widget.onPicked(m);
+    widget.onContinue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        final onion = appState.sendMode == 'private';
+        final modes = onboardingModes(google: appState.googleOffered);
+        Widget card(DeliveryMode m) {
+          final needsOnion =
+              (m == DeliveryMode.google || m == DeliveryMode.helper) && !onion;
+          final (title, body, tag) = switch (m) {
+            DeliveryMode.google => (
+              l10n.deliveryModeGooglePush,
+              l10n.notificationsGoogleBody,
+              l10n.notificationsRecommended,
+            ),
+            DeliveryMode.always => (
+              l10n.gettingMessagesAlwaysOn,
+              l10n.gettingMessagesMessagesArriveInstantlyNothing,
+              null,
+            ),
+            DeliveryMode.checkins => (
+              l10n.gettingMessagesCheckIns,
+              l10n.gettingMessagesKryfoLooksForMessages,
+              null,
+            ),
+            DeliveryMode.helper => (
+              l10n.deliveryModeThroughAHelperApp,
+              l10n.gettingMessagesHelperBody,
+              null,
+            ),
+          };
+          return _ModeCard(
+            key: ValueKey('deliveryCard-${m.name}'),
+            title: title,
+            cost: body,
+            tag: tag,
+            gain: needsOnion ? l10n.gettingMessagesHelperOnionOnly : null,
+            dim: needsOnion,
+            on: _pick == m,
+            onTap: needsOnion
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _chosen = m);
+                  },
+          );
+        }
+
+        return _StepPage(
+          footer: [
+            _Cta(
+              label: _busy
+                  ? l10n.notificationsGoogleStarting
+                  : l10n.onboardingContinue,
+              onTap: _go,
+            ),
+          ],
+          children: [
+            _Headline(l10n.onboardingDeliveryHeadline),
+            const SizedBox(height: 12),
+            _lead(l10n.onboardingDeliveryLead),
+            const SizedBox(height: 24),
+            ...staggerAll([
+              for (var i = 0; i < modes.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                card(modes[i]),
+              ],
+            ]),
+          ],
+        );
+      },
     );
   }
 }

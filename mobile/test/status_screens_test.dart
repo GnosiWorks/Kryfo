@@ -25,7 +25,7 @@ import 'package:kryfo/main.dart'
         appState,
         useEngineForTest;
 import 'package:kryfo/pill_grace.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -238,12 +238,12 @@ void main() {
 
   group('getting messages', () {
     Finder line(String words) => find.descendant(
-      of: find.byType(GettingMessagesScreen),
+      of: find.byType(NotificationsScreen),
       matching: find.text(words),
     );
 
     testWidgets('always on follows the pill through a sequence', (t) async {
-      await show(t, const GettingMessagesScreen());
+      await show(t, const NotificationsScreen());
 
       appState.torTryingSinceForTest = _ago(40);
       await poll(t, 'starting|45|0|0|1');
@@ -280,7 +280,7 @@ void main() {
 
     testWidgets('relay mode says when its relay does not answer', (t) async {
       appState.sendModeForTest = 'balanced';
-      await show(t, const GettingMessagesScreen());
+      await show(t, const NotificationsScreen());
       await poll(t, 'off|0|0|1|0');
       expect(_inPill(l10n.appViaRelay), findsOneWidget);
       expect(line(l10n.deliveryModeConnected), findsOneWidget);
@@ -294,12 +294,12 @@ void main() {
 
     testWidgets('check-ins put the state before the last check-in', (t) async {
       appState.deliveryModeForTest = DeliveryMode.checkins;
-      await show(t, const GettingMessagesScreen());
+      await show(t, const NotificationsScreen());
       await poll(t, 'reachable|100|1|0|1');
       expect(_inPill(l10n.appWaitingForARelay), findsOneWidget);
       expect(
         find.descendant(
-          of: find.byType(GettingMessagesScreen),
+          of: find.byType(NotificationsScreen),
           matching: find.textContaining(l10n.appWaitingForARelay),
         ),
         findsOneWidget,
