@@ -168,12 +168,9 @@ func kickChan() chan struct{} {
 	return kickCh
 }
 
-// sleep that a kick ends early. true when it was kicked. a runner waiting
-// out a failed dial still hears the job's kick this way.
-func sleepOrKick(d time.Duration) bool { return sleepOrKickOn(kickChan(), d) }
-
-// as sleepOrKick, on a kick channel taken before the check that led here, so
-// a kick between the two is not missed
+// sleep that a kick ends early, true when it was kicked, on a kick channel
+// taken before the check that led here, so a kick between the two is not
+// missed. a runner waiting out a failed dial still hears the job's kick
 func sleepOrKickOn(kc chan struct{}, d time.Duration) bool {
 	return sleepOrKickCtx(context.Background(), kc, d)
 }
@@ -2152,7 +2149,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// delay, see kickSpread.
 						//
 						// a runner with no live subscription never gets here:
-						// it is asleep in sleepOrKick and still reconnects at
+						// it is asleep in its nap and still reconnects at
 						// once, which is the case the kick exists for.
 						if kickC == nil {
 							kickT = time.NewTimer(kickDelay())
