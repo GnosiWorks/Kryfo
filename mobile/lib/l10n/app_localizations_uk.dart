@@ -636,9 +636,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appSpeedPrivacy => 'Швидкість і приватність →';
 
   @override
-  String get appGettingMessages => 'Отримання повідомлень →';
-
-  @override
   String get appDisableAppLock => 'Вимкнути блокування Kryfo?';
 
   @override
@@ -2445,13 +2442,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Просто хочу допомогти';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Отримання повідомлень';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Як нові повідомлення потрапляють на цей телефон. Змінити можна будь-коли.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Завжди на зв’язку';
@@ -5343,9 +5333,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 вузли';
-
-  @override
-  String get settingsGettingMessages => 'Отримання повідомлень';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9419,4 +9406,92 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Поки ввімкнено простий значок, нові фото, відео й файли зберігаються зі звичайними назвами у звичайні папки телефона. Те, що вже збережено, лишається на місці.';
+
+  @override
+  String get deliveryModeGooglePush => 'Пуш від Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Як нові повідомлення потрапляють на цей телефон, як звучать і що показують. Це можна змінити будь-коли.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Як до тебе доходять повідомлення';
+
+  @override
+  String get notificationsRecommended => 'Радимо';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Одразу й легко. Google бачить, коли телефон будять, але не хто написав і що сказано.';
+
+  @override
+  String get notificationsGoogleStarting => 'Вмикаємо…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Пуш від Google не запустився. Перевір з’єднання і спробуй ще раз.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'До справжніх пробуджень домішуються фальшиві, тож Google важче зрозуміти, коли приходять справжні повідомлення. Наш ретранслятор отримує для кожної твоєї поштової скриньки окрему запечатану адресу і не може пов’язати їх між собою. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Наш ретранслятор зараз не приймає частину реєстрацій цього телефона. Ці чати приходять із перевіркою кожні 15 хвилин, а Kryfo пробує далі.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Звук і вібрація';
+
+  @override
+  String get notificationsSoundHint => 'У налаштуваннях самого Android';
+
+  @override
+  String get notificationsEachShows => 'Сповіщення показує';
+
+  @override
+  String get notificationsBatteryTips => 'Поради щодо батареї';
+
+  @override
+  String get notificationsBatteryAllowed => 'Дозволено';
+
+  @override
+  String get notificationsBatteryNotYet => 'Не дозволено';
+
+  @override
+  String get notificationsMakerSwitch => 'Перемикач виробника';
+
+  @override
+  String get onboardingDeliveryHeadline =>
+      'Як до тебе *доходять* повідомлення.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Це можна змінити будь-коли в розділі «Сповіщення».';
+
+  @override
+  String get homeGoogleTitle => 'Пуш від Google уже тут';
+
+  @override
+  String get homeGoogleLine =>
+      'Одразу й ощадливо для батареї. Google бачить, коли телефон будять, але не хто написав і що сказано.';
+
+  @override
+  String get homeGoogleUse => 'Увімкнути';
+
+  @override
+  String get homeGoogleOn => 'Пуш від Google увімкнено';
+
+  @override
+  String get homeGoogleGoneTitle => 'Пуш від Google недоступний';
+
+  @override
+  String get appNotificationsLink => 'Сповіщення →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Пуші Google $got · знижено $low';
+  }
 }

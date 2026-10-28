@@ -10,7 +10,7 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useEngineForTest, AppStateRoute;
 import 'package:kryfo/notifications.dart' show forgetNotifPlain;
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,7 +44,7 @@ Future<void> _open(
   t.view.physicalSize = const Size(400, 2400);
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.reset);
-  await t.pumpWidget(devApp(const GettingMessagesScreen()));
+  await t.pumpWidget(devApp(const NotificationsScreen()));
   for (var i = 0; i < 3; i++) {
     await t.pump(const Duration(seconds: 1));
   }

@@ -305,11 +305,12 @@ extension AppStateDelivery on AppState {
     }
   }
 
-  Future<void> setDeliveryMode(DeliveryMode m) async {
+  // [left]: what woke the phone in the mode before was let go already
+  Future<void> setDeliveryMode(DeliveryMode m, {bool left = false}) async {
     if (m == _deliveryMode) return;
     final was = _deliveryMode;
     _deliveryMode = m;
-    if (was == DeliveryMode.helper) unawaited(helperOff());
+    if (knockMode(was) && !left) unawaited(helperOff(from: _pushOf(was)));
     await saveDeliveryMode(m);
     try {
       await AppState._platformChannel.invokeMethod('applyDeliveryMode');
@@ -327,6 +328,93 @@ extension AppStateDelivery on AppState {
   }
 
   bool get helperRelaySaidNo => _relaySaidNo;
+
+  // what hands out the slots' endpoints in a mode
+  HelperPush _pushOf(DeliveryMode m) =>
+      m == DeliveryMode.google ? GooglePush.instance : HelperPush.instance;
+
+  /// google push can be picked: a play build, on a phone with play services
+  bool get googleOffered => playBuild && _googleAvailable;
+  @visibleForTesting
+  set googleAvailableForTest(bool v) => _googleAvailable = v;
+
+  /// the card that offers google push once, to a phone set up before it
+  /// came. never in a decoy, and only on the onion route it needs
+  bool get googleCardDue =>
+      googleOffered &&
+      _googleOffer == 'due' &&
+      !inDecoyView &&
+      _sendMode == 'private' &&
+      _deliveryMode != DeliveryMode.google;
+  @visibleForTesting
+  set googleOfferForTest(String v) => _googleOffer = v;
+
+  Future<void> googleCardAnswered() async {
+    if (_googleOffer == 'said') return;
+    _googleOffer = 'said';
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kGoogleOfferKey, 'said');
+    } catch (_) {
+      // at worst the card is offered once more
+    }
+  }
+
+  /// asks android whether play services are there, for onboarding's step
+  Future<bool> lookForGoogle() async {
+    if (!playBuild) return false;
+    final was = _googleAvailable;
+    _googleAvailable = await GooglePush.instance.available();
+    if (was != _googleAvailable) notifyListeners();
+    return _googleAvailable;
+  }
+
+  // play services on the phone, and whether the card is owed: a phone set
+  // up before google push came gets it once, a new one is asked in its
+  // onboarding instead
+  Future<void> _loadGoogle() async {
+    if (!playBuild) return;
+    _googleAvailable = await GooglePush.instance.available();
+    final prefs = await SharedPreferences.getInstance();
+    var offer = prefs.getString(kGoogleOfferKey);
+    if (offer == null && onboardingComplete) {
+      offer = 'due';
+      await prefs.setString(kGoogleOfferKey, offer);
+    }
+    _googleOffer = offer ?? '';
+  }
+
+  /// google push picked: firebase starts, the token is sealed once for
+  /// each of the sixteen slots, the mode, then the relay. the helper app,
+  /// if that was the mode, lets go first. false when no token came
+  Future<bool> useGoogle() => _helperOp(() async {
+    if (!googleOffered) return false;
+    final was = _deliveryMode;
+    if (was == DeliveryMode.google) return true;
+    if (was == DeliveryMode.helper) {
+      await helper.stop(from: HelperPush.instance);
+      _helperName = null;
+    }
+    helper.usePush(GooglePush.instance);
+    if (!await helper.setUp(kGooglePackage)) {
+      // no token: nothing of google push is left behind
+      await GooglePush.instance.unregister();
+      helper.usePush(HelperPush.instance);
+      if (was == DeliveryMode.helper) {
+        await setDeliveryMode(DeliveryMode.checkins, left: true);
+      }
+      return false;
+    }
+    _helperGone = '';
+    _googleOffer = 'said';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(kHelperGoneKey);
+    await prefs.setString(kGoogleOfferKey, 'said');
+    await setDeliveryMode(DeliveryMode.google, left: true);
+    _helperSoon();
+    return true;
+  });
 
   Future<T> _helperOp<T>(Future<T> Function() f) {
     final run = _helperQueue.then((_) => f());
@@ -350,6 +438,9 @@ extension AppStateDelivery on AppState {
   bool get helperGoneDue => _helperGone.startsWith('due:') && !sessionQuiet;
   // why the card shows: the helper app is gone, or the relay stopped
   bool get helperRelayStopped => _helperGone.startsWith('due:relay:');
+  // google push that the phone can no longer use: play services went
+  bool get helperGoneWasGoogle =>
+      _helperGone.startsWith('due:gone:$kGooglePackage');
   @visibleForTesting
   set relayKnocksForTest(bool v) => _relayKnocks = v;
   @visibleForTesting
@@ -366,7 +457,8 @@ extension AppStateDelivery on AppState {
       _helperRefused = await helper.refusedLasting();
       final prefs = await SharedPreferences.getInstance();
       _helperGone = prefs.getString(kHelperGoneKey) ?? '';
-      if (_deliveryMode == DeliveryMode.helper) await _lookAtHelper();
+      await _loadGoogle();
+      if (knockMode(_deliveryMode)) await _lookAtHelper();
       notifyListeners();
     } catch (e) {
       dlog('helper: not loaded (${e.runtimeType})');
@@ -386,7 +478,7 @@ extension AppStateDelivery on AppState {
     } catch (e) {
       dlog('helper: relay not asked (${e.runtimeType})');
     }
-    if (was && !_relayKnocks && _deliveryMode == DeliveryMode.helper) {
+    if (was && !_relayKnocks && knockMode(_deliveryMode)) {
       await _helperFallBack('relay', '-');
     }
     if (was != _relayKnocks || wasNo != _relaySaidNo) notifyListeners();
@@ -396,9 +488,11 @@ extension AppStateDelivery on AppState {
   // the phone. gone, the phone goes back to check-ins, the relay forgets
   // its registrations, and the home screen says so once
   Future<void> _lookAtHelper() async {
-    final pkg = await HelperPush.instance.chosen();
+    final push = _pushOf(_deliveryMode);
+    final pkg = await push.chosen();
     if (pkg == null) return;
-    final apps = await HelperPush.instance.apps();
+    if (push is GooglePush) push.forgetAvailable();
+    final apps = await push.apps();
     final app = apps.where((a) => a.package == pkg).firstOrNull;
     _helperName = app?.name;
     if (app == null) await _helperFallBack('gone', pkg);
@@ -411,7 +505,7 @@ extension AppStateDelivery on AppState {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(kHelperGoneKey, _helperGone);
     }
-    if (_deliveryMode == DeliveryMode.helper) {
+    if (knockMode(_deliveryMode)) {
       await setDeliveryMode(DeliveryMode.checkins);
     }
     notifyListeners();
@@ -444,7 +538,7 @@ extension AppStateDelivery on AppState {
     var more = false;
     try {
       var sent = false;
-      if (_deliveryMode == DeliveryMode.helper && _sendMode == 'private') {
+      if (knockMode(_deliveryMode) && _sendMode == 'private') {
         n = await _helperOp(() => helper.sync());
         more = helper.more;
         sent = helper.sent;
@@ -472,21 +566,32 @@ extension AppStateDelivery on AppState {
   /// the helper app chosen: sixteen registrations with it, the mode, then
   /// the relay. false when the helper app handed back no endpoint
   Future<bool> useHelper(HelperApp app) => _helperOp(() async {
-    if (!await helper.setUp(app.package)) return false;
+    final was = _deliveryMode;
+    // google push lets go first: its token is deleted
+    if (was == DeliveryMode.google) {
+      await helper.stop(from: GooglePush.instance);
+    }
+    helper.usePush(HelperPush.instance);
+    if (!await helper.setUp(app.package)) {
+      if (was == DeliveryMode.google) {
+        await setDeliveryMode(DeliveryMode.checkins, left: true);
+      }
+      return false;
+    }
     _helperName = app.name;
     _helperGone = '';
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(kHelperGoneKey);
-    await setDeliveryMode(DeliveryMode.helper);
+    await setDeliveryMode(DeliveryMode.helper, left: true);
     _helperSoon();
     return true;
   });
 
-  // leaving the mode: the helper app lets go now, the relay's copies are
-  // forgotten a round at a time
-  Future<void> helperOff() => _helperOp(() async {
+  // leaving the mode: the helper app or google push ([from]) lets go now,
+  // the relay's copies are forgotten a round at a time
+  Future<void> helperOff({HelperPush? from}) => _helperOp(() async {
     try {
-      await helper.stop();
+      await helper.stop(from: from);
     } catch (e) {
       dlog('helper: stop (${e.runtimeType})');
     }
@@ -504,7 +609,7 @@ extension AppStateDelivery on AppState {
       unawaited(_tidy(live));
       if (sessionQuiet) unawaited(_tidy(_session.primary));
     }
-    if (front && _deliveryMode == DeliveryMode.helper) {
+    if (front && knockMode(_deliveryMode)) {
       unawaited(_lookAtHelper().catchError((Object _) {}));
       unawaited(refreshHelperOffer());
     }

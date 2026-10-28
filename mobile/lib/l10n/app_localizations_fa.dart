@@ -617,9 +617,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appSpeedPrivacy => 'سرعت و حریم خصوصی ←';
 
   @override
-  String get appGettingMessages => 'دریافت پیام‌ها ←';
-
-  @override
   String get appDisableAppLock => 'قفل برنامه غیرفعال شود؟';
 
   @override
@@ -2393,13 +2390,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'فقط خوشحالم که کمک کردم';
-
-  @override
-  String get gettingMessagesGettingMessages => 'دریافت پیام‌ها';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'پیام‌های تازه چطور به این گوشی می‌رسند. هر وقت خواستید می‌توانید عوضش کنید.';
 
   @override
   String get gettingMessagesAlwaysOn => 'همیشه روشن';
@@ -5259,9 +5249,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · سه گام';
-
-  @override
-  String get settingsGettingMessages => 'دریافت پیام‌ها';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9276,4 +9263,91 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'تا وقتی یک نماد ساده روشن است، عکس‌ها، ویدیوها و فایل‌های تازه با نام‌های معمولی در پوشه‌های همیشگی گوشی‌تان ذخیره می‌شوند. آنچه از قبل ذخیره شده سر جایش می‌ماند.';
+
+  @override
+  String get deliveryModeGooglePush => 'اعلان فوری گوگل';
+
+  @override
+  String get deliveryModeGoogle => 'گوگل';
+
+  @override
+  String get notificationsLead =>
+      'پیام‌های تازه چطور به این گوشی می‌رسند، چه صدایی دارند و چه نشان می‌دهند. هر وقت خواستید می‌توانید عوضش کنید.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'پیام‌ها چطور به شما می‌رسند';
+
+  @override
+  String get notificationsRecommended => 'پیشنهادی';
+
+  @override
+  String get notificationsGoogleBody =>
+      'فوری و سبک. گوگل می‌تواند ببیند گوشی‌تان کِی بیدار می‌شود، هرگز نه اینکه چه کسی نوشته یا چه گفته شده.';
+
+  @override
+  String get notificationsGoogleStarting => 'در حال روشن شدن…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'اعلان فوری گوگل راه نیفتاد. اتصال را بررسی کنید و دوباره امتحان کنید.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما برای هر کدام از صندوق‌هایتان یک نشانی مهرشده‌ی جدا می‌گیرد، پس نمی‌تواند آن‌ها را به هم ربط دهد. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'رله‌ی ما فعلاً بعضی از ثبت‌های این گوشی را نمی‌پذیرد. آن گفتگوها با سرکشی هر ۱۵ دقیقه می‌رسند و Kryfo همچنان تلاش می‌کند.';
+
+  @override
+  String get notificationsSoundAndVibration => 'صدا و لرزش';
+
+  @override
+  String get notificationsSoundHint => 'در تنظیمات خود اندروید';
+
+  @override
+  String get notificationsEachShows => 'هر اعلان نشان می‌دهد';
+
+  @override
+  String get notificationsBatteryTips => 'نکته‌های باتری';
+
+  @override
+  String get notificationsBatteryAllowed => 'مجاز';
+
+  @override
+  String get notificationsBatteryNotYet => 'مجاز نیست';
+
+  @override
+  String get notificationsMakerSwitch => 'کلید سازنده‌ی گوشی‌تان';
+
+  @override
+  String get onboardingDeliveryHeadline => 'پیام‌ها چطور *به شما می‌رسند*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'هر وقت بخواهید می‌توانید این را در «اعلان‌ها» عوض کنید.';
+
+  @override
+  String get homeGoogleTitle => 'اعلان فوری گوگل آمد';
+
+  @override
+  String get homeGoogleLine =>
+      'فوری و کم‌مصرف. گوگل می‌تواند ببیند گوشی‌تان کِی بیدار می‌شود، هرگز نه اینکه چه کسی نوشته یا چه گفته شده.';
+
+  @override
+  String get homeGoogleUse => 'استفاده کنید';
+
+  @override
+  String get homeGoogleOn => 'اعلان فوری گوگل روشن است';
+
+  @override
+  String get homeGoogleGoneTitle => 'اعلان فوری گوگل در دسترس نیست';
+
+  @override
+  String get appNotificationsLink => 'اعلان‌ها ←';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'اعلان‌های گوگل $got · پایین‌آمده $low';
+  }
 }

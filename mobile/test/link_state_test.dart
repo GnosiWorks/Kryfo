@@ -18,7 +18,7 @@ import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show TorHalo, appState, AppStateRoute, AppStateDelivery;
 import 'package:kryfo/media_send.dart' show mediaInflight;
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -225,7 +225,7 @@ void main() {
     testWidgets('getting messages says connected in relay mode', (t) async {
       phone(t);
       _set('balanced', TorStatus.starting);
-      await t.pumpWidget(app(const GettingMessagesScreen()));
+      await t.pumpWidget(app(const NotificationsScreen()));
       await t.pump(const Duration(seconds: 2));
       expect(appState.deliveryMode, DeliveryMode.always);
       expect(find.text(l10n.deliveryModeConnected), findsOneWidget);
@@ -236,7 +236,7 @@ void main() {
         'through', (t) async {
       phone(t);
       _set('private', TorStatus.publishing, route: false);
-      await t.pumpWidget(app(const GettingMessagesScreen()));
+      await t.pumpWidget(app(const NotificationsScreen()));
       await t.pump(const Duration(seconds: 2));
       expect(find.text(l10n.deliveryModeConnected), findsNothing);
       expect(find.text(l10n.deliveryModeConnecting), findsOneWidget);

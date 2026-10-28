@@ -759,10 +759,6 @@
   "@appSpeedPrivacy": {
     "description": "app/dev_screen.dart"
   },
-  "appGettingMessages": "Getting messages →",
-  "@appGettingMessages": {
-    "description": "app/dev_screen.dart"
-  },
   "appDisableAppLock": "Disable app lock?",
   "@appDisableAppLock": {
     "description": "app/dev_screen.dart"
@@ -1222,7 +1218,7 @@
   },
   "commonBack": "Back",
   "@commonBack": {
-    "description": "screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/getting_messages_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart"
+    "description": "screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/notifications_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart"
   },
   "archivedArchived": "Archived",
   "@archivedArchived": {
@@ -2994,49 +2990,41 @@
   "@donateJustGladToHelp": {
     "description": "screens/donate_screen.dart"
   },
-  "gettingMessagesGettingMessages": "Getting messages",
-  "@gettingMessagesGettingMessages": {
-    "description": "screens/getting_messages_screen.dart"
-  },
-  "gettingMessagesHowNewMessagesReach": "How new messages reach this phone. You can change it whenever you like.",
-  "@gettingMessagesHowNewMessagesReach": {
-    "description": "screens/getting_messages_screen.dart"
-  },
   "gettingMessagesAlwaysOn": "Always on",
   "@gettingMessagesAlwaysOn": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesMostPrivate": "Most private",
   "@gettingMessagesMostPrivate": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesMessagesArriveInstantlyNothing": "Messages arrive instantly. Nothing leaves Tor. Uses the most battery.",
   "@gettingMessagesMessagesArriveInstantlyNothing": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesCheckIns": "Check-ins",
   "@gettingMessagesCheckIns": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesLightest": "Lightest",
   "@gettingMessagesLightest": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesKryfoLooksForMessages": "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
   "@gettingMessagesKryfoLooksForMessages": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesAGenericAlertWith": "A generic alert, with no sender and no message text",
   "@gettingMessagesAGenericAlertWith": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesShowsMessageTextIn": "Shows message text in notifications, even while Kryfo is locked.",
   "@gettingMessagesShowsMessageTextIn": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "gettingMessagesWhenThePhoneSits": "When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.",
   "@gettingMessagesWhenThePhoneSits": {
-    "description": "screens/getting_messages_screen.dart"
+    "description": "screens/notifications_screen.dart"
   },
   "groupChatJumpToTheNewest": "Jump to the newest",
   "@groupChatJumpToTheNewest": {
@@ -6516,7 +6504,7 @@
   "@settingsAppLock": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsBlockedByAndroid": "Blocked by android",
+  "settingsBlockedByAndroid": "Blocked by Android",
   "@settingsBlockedByAndroid": {
     "description": "screens/settings_screen.dart"
   },
@@ -6534,10 +6522,6 @@
   },
   "settingsOnion3Hops": "Onion · 3 hops",
   "@settingsOnion3Hops": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsGettingMessages": "Getting messages",
-  "@settingsGettingMessages": {
     "description": "screens/settings_screen.dart"
   },
   "settingsPreviewHidden": "{deliveryModeName} · preview hidden",
@@ -10933,31 +10917,31 @@
   },
   "gettingMessagesHelperBody": "Instant and light. Its server sees your IP and when messages come, never what they say.",
   "@gettingMessagesHelperBody": {
-    "description": "screens/getting_messages_screen.dart: the helper app card"
+    "description": "screens/notifications_screen.dart: the helper app card"
   },
   "gettingMessagesHelperUseOnion": "Switch to Onion",
   "@gettingMessagesHelperUseOnion": {
-    "description": "screens/getting_messages_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion"
+    "description": "screens/notifications_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion"
   },
   "gettingMessagesHelperSetUp": "Set up",
   "@gettingMessagesHelperSetUp": {
-    "description": "screens/getting_messages_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app"
+    "description": "screens/notifications_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app"
   },
   "gettingMessagesHelperNote": "Fake wake-ups are mixed in, which makes it harder for the helper's server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
   "@gettingMessagesHelperNote": {
-    "description": "screens/getting_messages_screen.dart: under the status line in helper app mode"
+    "description": "screens/notifications_screen.dart: under the status line in helper app mode"
   },
   "gettingMessagesHelperOnionOnly": "Available on the Onion route",
   "@gettingMessagesHelperOnionOnly": {
-    "description": "screens/getting_messages_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion"
+    "description": "screens/notifications_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion"
   },
   "gettingMessagesHelperChecking": "Checking…",
   "@gettingMessagesHelperChecking": {
-    "description": "screens/getting_messages_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner"
+    "description": "screens/notifications_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner"
   },
   "gettingMessagesHelperRelayNotYet": "Our relay does not offer this yet",
   "@gettingMessagesHelperRelayNotYet": {
-    "description": "screens/getting_messages_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps"
+    "description": "screens/notifications_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps"
   },
   "helperSheetNeedTitle": "You need a helper app",
   "@helperSheetNeedTitle": {
@@ -11019,7 +11003,7 @@
   },
   "gettingMessagesHelperRefused": "Our relay is not taking some of this phone's registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying. Choosing another helper app or server can help too.",
   "@gettingMessagesHelperRefused": {
-    "description": "screens/getting_messages_screen.dart: in helper app mode, when our relay keeps refusing some registrations"
+    "description": "screens/notifications_screen.dart: in helper app mode, when our relay keeps refusing some registrations"
   },
   "albumLabel": "Album, {count} items",
   "@albumLabel": {
@@ -11625,7 +11609,7 @@
   },
   "gettingMessagesWhatShows": "What notifications show",
   "@gettingMessagesWhatShows": {
-    "description": "screens/getting_messages_screen.dart: the row into the notification choices"
+    "description": "screens/notifications_screen.dart: the row into the notification choices"
   },
   "iconSheetChangesTitle": "What changes",
   "@iconSheetChangesTitle": {
@@ -11690,5 +11674,117 @@
   "iconSheetSaves": "While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.",
   "@iconSheetSaves": {
     "description": "screens/icon_screen.dart: the sheet, where new saves go while a plain icon is on"
+  },
+  "deliveryModeGooglePush": "Google push",
+  "@deliveryModeGooglePush": {
+    "description": "delivery_mode.dart: the mode name, google push (play builds)"
+  },
+  "deliveryModeGoogle": "Google",
+  "@deliveryModeGoogle": {
+    "description": "delivery_mode.dart: who wakes the phone in google push, in \"Woken by Google\""
+  },
+  "notificationsLead": "How new messages reach this phone, how they sound and what they show. You can change it whenever you like.",
+  "@notificationsLead": {
+    "description": "screens/notifications_screen.dart: under the title"
+  },
+  "notificationsHowTheyReachYou": "How messages reach you",
+  "@notificationsHowTheyReachYou": {
+    "description": "screens/notifications_screen.dart: section over the ways messages arrive"
+  },
+  "notificationsRecommended": "Recommended",
+  "@notificationsRecommended": {
+    "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: tag on google push"
+  },
+  "notificationsGoogleBody": "Instant and light. Google can see when your phone is woken, never who wrote or what was said.",
+  "@notificationsGoogleBody": {
+    "description": "google push card: what it does and what google sees"
+  },
+  "notificationsGoogleStarting": "Turning on…",
+  "@notificationsGoogleStarting": {
+    "description": "google push is starting"
+  },
+  "notificationsGoogleNoStart": "Google push could not start. Check the connection and try again.",
+  "@notificationsGoogleNoStart": {
+    "description": "toast: no token came from google"
+  },
+  "notificationsGoogleNote": "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay gets a sealed address for each of your mailboxes, so it cannot tie them together. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
+  "@notificationsGoogleNote": {
+    "description": "screens/notifications_screen.dart: note under google push"
+  },
+  "notificationsGoogleRefused": "Our relay is not taking some of this phone's registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying.",
+  "@notificationsGoogleRefused": {
+    "description": "screens/notifications_screen.dart: google push, the relay refuses some registrations"
+  },
+  "notificationsSoundAndVibration": "Sound and vibration",
+  "@notificationsSoundAndVibration": {
+    "description": "screens/notifications_screen.dart: section"
+  },
+  "notificationsSoundHint": "Set in Android’s own settings",
+  "@notificationsSoundHint": {
+    "description": "screens/notifications_screen.dart: the row opens android's settings for the messages channel"
+  },
+  "notificationsEachShows": "Each notification shows",
+  "@notificationsEachShows": {
+    "description": "screens/notifications_screen.dart: row, opens what notifications show"
+  },
+  "notificationsBatteryTips": "Battery tips",
+  "@notificationsBatteryTips": {
+    "description": "screens/notifications_screen.dart: section"
+  },
+  "notificationsBatteryAllowed": "Allowed",
+  "@notificationsBatteryAllowed": {
+    "description": "screens/notifications_screen.dart: kryfo may run in the background"
+  },
+  "notificationsBatteryNotYet": "Not allowed",
+  "@notificationsBatteryNotYet": {
+    "description": "screens/notifications_screen.dart: kryfo may not run in the background yet"
+  },
+  "notificationsMakerSwitch": "Your phone maker’s switch",
+  "@notificationsMakerSwitch": {
+    "description": "screens/notifications_screen.dart: row, the maker's own background switch"
+  },
+  "onboardingDeliveryHeadline": "How messages *reach you*.",
+  "@onboardingDeliveryHeadline": {
+    "description": "screens/onboarding_screen.dart: play builds, the step that asks how messages arrive. *marked* words are italic"
+  },
+  "onboardingDeliveryLead": "You can change this any time in Notifications.",
+  "@onboardingDeliveryLead": {
+    "description": "screens/onboarding_screen.dart: under the headline"
+  },
+  "homeGoogleTitle": "Google push is here",
+  "@homeGoogleTitle": {
+    "description": "screens/home_screen.dart: card offering google push after the update"
+  },
+  "homeGoogleLine": "Instant and easy on the battery. Google can see when your phone is woken, never who wrote or what was said.",
+  "@homeGoogleLine": {
+    "description": "screens/home_screen.dart: the card's line"
+  },
+  "homeGoogleUse": "Use it",
+  "@homeGoogleUse": {
+    "description": "screens/home_screen.dart: button, turns google push on"
+  },
+  "homeGoogleOn": "Google push is on",
+  "@homeGoogleOn": {
+    "description": "screens/home_screen.dart: toast"
+  },
+  "homeGoogleGoneTitle": "Google push is not available",
+  "@homeGoogleGoneTitle": {
+    "description": "screens/home_screen.dart: play services went, the phone checks in"
+  },
+  "appNotificationsLink": "Notifications →",
+  "@appNotificationsLink": {
+    "description": "app/dev_screen.dart: link to the notifications screen"
+  },
+  "devGooglePushes": "Google pushes {got} · lowered {low}",
+  "@devGooglePushes": {
+    "description": "app/dev_screen.dart: pushes come, and how many android lowered from high priority",
+    "placeholders": {
+      "got": {
+        "type": "int"
+      },
+      "low": {
+        "type": "int"
+      }
+    }
   }
 }

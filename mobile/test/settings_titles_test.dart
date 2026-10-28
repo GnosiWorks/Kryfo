@@ -24,7 +24,7 @@ import 'package:kryfo/main.dart'
         AppStateBridges;
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/icon_screen.dart';
 import 'package:kryfo/screens/licences_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
@@ -62,7 +62,7 @@ const _settingsFiles = {
   'hide_picker',
   'backup_screen',
   'restore_screen',
-  'getting_messages_screen',
+  'notifications_screen',
   'icon_screen',
   'helper_sheet',
   'follow_section',
@@ -221,9 +221,14 @@ final _pages = [
     },
   ),
   _Page(
-    'getting messages',
-    () => const GettingMessagesScreen(),
-    () => [l10n.settingsNotifications],
+    'notifications',
+    () => const NotificationsScreen(),
+    () => [
+      l10n.notificationsHowTheyReachYou,
+      l10n.notificationsSoundAndVibration,
+      l10n.gettingMessagesWhatShows,
+      l10n.notificationsBatteryTips,
+    ],
   ),
   _Page(
     'icon and notifications',

@@ -620,9 +620,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appSpeedPrivacy => 'Velocidade e privacidade →';
 
   @override
-  String get appGettingMessages => 'Receber mensagens →';
-
-  @override
   String get appDisableAppLock => 'Desativar o bloqueio?';
 
   @override
@@ -2411,13 +2408,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Fico feliz só de ajudar';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Receber mensagens';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Como as novas mensagens chegam a este celular. Você pode mudar quando quiser.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Sempre ativo';
@@ -5285,9 +5275,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 saltos';
-
-  @override
-  String get settingsGettingMessages => 'Receber mensagens';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9331,4 +9318,91 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Enquanto um ícone neutro estiver ativo, novas fotos, vídeos e arquivos são salvos com nomes comuns nas pastas de sempre do seu celular. O que já foi salvo continua onde está.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push do Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Como as mensagens novas chegam a este celular, como soam e o que mostram. Você pode mudar quando quiser.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Como as mensagens chegam a você';
+
+  @override
+  String get notificationsRecommended => 'Recomendado';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Na hora e leve. O Google pode ver quando seu celular é acordado, nunca quem escreveu nem o que foi dito.';
+
+  @override
+  String get notificationsGoogleStarting => 'Ativando…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'O push do Google não conseguiu começar. Confira a conexão e tente de novo.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Despertares falsos são misturados, o que dificulta para o Google saber quando chegam as mensagens de verdade. Nosso retransmissor recebe um endereço selado diferente para cada uma das suas caixas, então não consegue ligá-las entre si. Conversas ocultas, salas além das primeiras e, de vez em quando, um contato comum, cerca de um mês em cada cinco, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Nosso retransmissor não está aceitando alguns registros deste celular no momento. Essas conversas chegam com a consulta a cada 15 minutos, e o Kryfo continua tentando.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Som e vibração';
+
+  @override
+  String get notificationsSoundHint => 'Nas configurações do próprio Android';
+
+  @override
+  String get notificationsEachShows => 'Cada notificação mostra';
+
+  @override
+  String get notificationsBatteryTips => 'Dicas de bateria';
+
+  @override
+  String get notificationsBatteryAllowed => 'Permitido';
+
+  @override
+  String get notificationsBatteryNotYet => 'Não permitido';
+
+  @override
+  String get notificationsMakerSwitch => 'O botão do fabricante do celular';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Como as mensagens *chegam a você*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Você pode mudar isso quando quiser em Notificações.';
+
+  @override
+  String get homeGoogleTitle => 'O push do Google chegou';
+
+  @override
+  String get homeGoogleLine =>
+      'Na hora e poupa a bateria. O Google pode ver quando seu celular é acordado, nunca quem escreveu nem o que foi dito.';
+
+  @override
+  String get homeGoogleUse => 'Usar';
+
+  @override
+  String get homeGoogleOn => 'O push do Google está ligado';
+
+  @override
+  String get homeGoogleGoneTitle => 'O push do Google não está disponível';
+
+  @override
+  String get appNotificationsLink => 'Notificações →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Pushes do Google $got · rebaixados $low';
+  }
 }

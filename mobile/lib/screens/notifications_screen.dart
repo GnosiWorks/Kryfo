@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// how new messages reach this phone, in words a person who has never heard
-// of tor can choose between.
+// notifications: how new messages reach this phone, in words a person who
+// has never heard of tor can choose between, then how they sound, what
+// they show, and what the battery needs for them.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../battery_brand.dart' show BrandGuide;
 import '../delivery_mode.dart';
 import '../lock_state.dart';
 import '../main.dart'
@@ -17,6 +20,7 @@ import '../main.dart'
         AppStateBridges,
         AppStateSession;
 import '../miui_autostart.dart';
+import '../notif_permission.dart';
 import '../notifications.dart';
 import '../ready_edge.dart';
 import '../seen_timers.dart';
@@ -38,20 +42,30 @@ import '../dlog.dart';
 @visibleForTesting
 Future<void> Function(String mode)? setRouteForTest;
 
-class GettingMessagesScreen extends StatefulWidget {
-  const GettingMessagesScreen({super.key});
+// android's page for the messages channel, a stand-in in tests
+@visibleForTesting
+Future<bool> Function()? openSoundForTest;
+
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
 
   @override
-  State<GettingMessagesScreen> createState() => _GettingMessagesScreenState();
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
+class _NotificationsScreenState extends State<NotificationsScreen>
+    with WidgetsBindingObserver {
   final _timers = SeenTimers();
   bool _busy = false;
+  // google push is starting: firebase asked for its token
+  bool _starting = false;
   // what a notification shows: how messages arrive and what they say when
   // they do are the same question. null until read, so the row never opens
   // on a default
   NotifShow? _show;
+  // the battery exemption, and the phone maker's own switch where it has one
+  bool? _exempt;
+  BrandGuide? _guide;
   late final ReadyEdge _torUp;
 
   // no .then() without a catch: a throw here must not break the page
@@ -63,14 +77,31 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
           }
         })
         .catchError((Object e) {
-          dlog('getting messages: notification setting (${e.runtimeType})');
+          dlog('notifications: setting (${e.runtimeType})');
+        });
+  }
+
+  void _readBattery() {
+    Future.wait([batteryExempt(), makerGuide()])
+        .then((v) {
+          if (mounted) {
+            setState(() {
+              _exempt = v[0] as bool;
+              _guide = v[1] as BrandGuide?;
+            });
+          }
+        })
+        .catchError((Object e) {
+          dlog('notifications: battery (${e.runtimeType})');
         });
   }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _readShow();
+    _readBattery();
     appState.addListener(_changed);
     // the helper app is offered once our relay says it can knock. tor is
     // often still coming up as the page opens, so it is asked again each
@@ -85,6 +116,12 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     _timers.every(const Duration(seconds: 20), _changed);
   }
 
+  // back from android's battery or channel page: what it says now
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _readBattery();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -93,6 +130,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timers.dispose();
     _torUp.dispose();
     appState.removeListener(_changed);
@@ -106,6 +144,22 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   Future<void> _pick(DeliveryMode m) async {
     if (_busy || m == appState.deliveryMode) return;
     setState(() => _busy = true);
+    if (m == DeliveryMode.google) {
+      setState(() => _starting = true);
+      final ok = await appState.useGoogle();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _starting = false;
+      });
+      if (!ok) {
+        HapticFeedback.heavyImpact();
+        showHaloToast(context, l10n.notificationsGoogleNoStart);
+      } else {
+        HapticFeedback.lightImpact();
+      }
+      return;
+    }
     if (m == DeliveryMode.helper) {
       // the mode is set by the sheet, once the helper app has answered
       final app = await showHelperSheet(context);
@@ -124,9 +178,9 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     }
   }
 
-  // the helper app goes over tor or not at all, so its card offers the
-  // onion route first. the same switch as speed and privacy, which asks
-  // nothing before onion
+  // the helper app and google push go over tor or not at all, so their
+  // cards offer the onion route first. the same switch as speed and
+  // privacy, which asks nothing before onion
   Future<void> _toOnion() async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -141,11 +195,37 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     if (!saved) showHaloToast(context, l10n.modesNotChanged);
   }
 
+  // android keeps a channel's sound once it is made, so its own page is
+  // where sound and vibration are set
+  Future<void> _openSound() async {
+    final opened =
+        await (openSoundForTest ??
+            () async =>
+                openNotificationSettings(channel: await messageChannelId()))();
+    if (!opened && mounted) showHaloToast(context, l10n.homeCouldnTOpenIt);
+  }
+
+  Widget _note(String text, {bool open = true}) => Unfold(
+    open: open,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+      child: Text(
+        text,
+        style: HaloType.sans(size: 12.5, height: 1.5, color: HaloColors.warm),
+      ),
+    ),
+  );
+
+  Widget _section(String label) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 22),
+    child: HaloSection(label, flush: true),
+  );
+
   @override
   Widget build(BuildContext context) {
     final mode = appState.deliveryMode;
-    // why the helper app cannot be picked yet, or null when it can
     final onOnion = appState.sendMode == 'private';
+    // why the helper app cannot be picked yet, or null when it can
     final offered = mode == DeliveryMode.helper || appState.helperOffered;
     // on onion, not offered yet: checking until the relay itself says no
     final checking = !offered && onOnion && !appState.helperRelaySaidNo;
@@ -156,6 +236,14 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
         : checking
         ? l10n.gettingMessagesHelperChecking
         : l10n.gettingMessagesHelperRelayNotYet;
+    // google push needs the onion route, as the helper app does, and says
+    // so while it starts
+    final google = appState.googleOffered || mode == DeliveryMode.google;
+    final String? googleWait = _starting
+        ? l10n.notificationsGoogleStarting
+        : mode == DeliveryMode.google || onOnion
+        ? null
+        : l10n.gettingMessagesHelperOnionOnly;
     // the app's one meaning of connected, the same the home screen shows
     final connecting = appState.linkComing;
     final status = deliveryStatus(
@@ -177,6 +265,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
         : appState.autoStruggling
         ? appState.bridgeLine.head
         : null;
+    final guide = _guide;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -202,17 +291,23 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.gettingMessagesGettingMessages,
-                      style: HaloType.serif(size: 30, weight: FontWeight.w400),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        l10n.settingsNotifications,
+                        style: HaloType.serif(
+                          size: 30,
+                          weight: FontWeight.w400,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      l10n.gettingMessagesHowNewMessagesReach,
+                      l10n.notificationsLead,
                       style: HaloType.sans(
                         size: 13,
                         height: 1.45,
@@ -222,6 +317,28 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ],
                 ),
               ),
+              _section(l10n.notificationsHowTheyReachYou),
+              const SizedBox(height: 8),
+              // play builds on a phone with play services: google push
+              // first, the one most people want
+              if (google)
+                _ModeCard(
+                  key: const ValueKey('googleCard'),
+                  title: l10n.deliveryModeGooglePush,
+                  tag: l10n.notificationsRecommended,
+                  body: l10n.notificationsGoogleBody,
+                  on: mode == DeliveryMode.google,
+                  wait: googleWait,
+                  checking: _starting,
+                  action: mode == DeliveryMode.google || onOnion || _starting
+                      ? null
+                      : l10n.gettingMessagesHelperUseOnion,
+                  onTap: _starting
+                      ? null
+                      : onOnion || mode == DeliveryMode.google
+                      ? () => _pick(DeliveryMode.google)
+                      : _toOnion,
+                ),
               _ModeCard(
                 title: l10n.gettingMessagesAlwaysOn,
                 tag: l10n.gettingMessagesMostPrivate,
@@ -258,47 +375,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                     : _toOnion,
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                child: HaloSection(l10n.settingsNotifications, flush: true),
-              ),
-              // what they say is chosen in one place, with the icon: this
-              // row goes there
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: HaloGroup(
-                  children: [
-                    HaloRow(
-                      icon: Icons.notifications_none_rounded,
-                      label: l10n.gettingMessagesWhatShows,
-                      value: _show == null ? null : notifShowName(_show!),
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          haloRoute(const IconScreen(toNotifications: true)),
-                        );
-                        _readShow();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              // a pin turns previews off. if someone turns them back on,
-              // say what that gives away, in the warning's own colour
-              Unfold(
-                open: lockState.lockOn && _show == NotifShow.all,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
-                  child: Text(
-                    l10n.gettingMessagesShowsMessageTextIn,
-                    style: HaloType.sans(
-                      size: 12,
-                      color: HaloColors.rose,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
                 child: Row(
                   children: [
                     // it pulses only while tor is on its way, and holds
@@ -307,7 +384,9 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       BreathDot(color: HaloColors.amber, size: 6)
                     else
                       AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
+                        duration: reduceMotion(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 300),
                         width: 6,
                         height: 6,
                         decoration: BoxDecoration(
@@ -353,50 +432,112 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ),
                 ),
               ),
-              // the check-ins note grows in and folds away, so the page
-              // never jumps under a finger
-              Unfold(
+              // each mode's note grows in and folds away, so the page never
+              // jumps under a finger
+              _note(
+                l10n.gettingMessagesWhenThePhoneSits,
                 open: mode == DeliveryMode.checkins,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                  child: Text(
-                    l10n.gettingMessagesWhenThePhoneSits,
-                    style: HaloType.sans(
-                      size: 12.5,
-                      height: 1.5,
-                      color: HaloColors.warm,
-                    ),
-                  ),
-                ),
               ),
               // some registration the relay keeps refusing: a plain line,
               // the check-ins carry those chats meanwhile
-              Unfold(
+              _note(
+                l10n.gettingMessagesHelperRefused,
                 open: mode == DeliveryMode.helper && appState.helperRefused,
+              ),
+              _note(
+                l10n.notificationsGoogleRefused,
+                open: mode == DeliveryMode.google && appState.helperRefused,
+              ),
+              _note(
+                l10n.gettingMessagesHelperNote,
+                open: mode == DeliveryMode.helper,
+              ),
+              _note(
+                l10n.notificationsGoogleNote,
+                open: mode == DeliveryMode.google,
+              ),
+              const SizedBox(height: 10),
+              _section(l10n.notificationsSoundAndVibration),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: HaloGroup(
+                  children: [
+                    HaloRow(
+                      key: const ValueKey('soundRow'),
+                      icon: Icons.volume_up_outlined,
+                      label: l10n.notificationsChannelName,
+                      hint: l10n.notificationsSoundHint,
+                      onTap: _openSound,
+                    ),
+                  ],
+                ),
+              ),
+              _section(l10n.gettingMessagesWhatShows),
+              // what they say is chosen in one place, with the icon: this
+              // row goes there
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: HaloGroup(
+                  children: [
+                    HaloRow(
+                      icon: Icons.notifications_none_rounded,
+                      label: l10n.notificationsEachShows,
+                      value: _show == null ? null : notifShowName(_show!),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          haloRoute(const IconScreen(toNotifications: true)),
+                        );
+                        _readShow();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // a pin turns previews off. if someone turns them back on,
+              // say what that gives away, in the warning's own colour
+              Unfold(
+                open: lockState.lockOn && _show == NotifShow.all,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
                   child: Text(
-                    l10n.gettingMessagesHelperRefused,
+                    l10n.gettingMessagesShowsMessageTextIn,
                     style: HaloType.sans(
-                      size: 12.5,
-                      height: 1.5,
-                      color: HaloColors.warm,
+                      size: 12,
+                      color: HaloColors.rose,
+                      height: 1.35,
                     ),
                   ),
                 ),
               ),
-              Unfold(
-                open: mode == DeliveryMode.helper,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                  child: Text(
-                    l10n.gettingMessagesHelperNote,
-                    style: HaloType.sans(
-                      size: 12.5,
-                      height: 1.5,
-                      color: HaloColors.warm,
+              _section(l10n.notificationsBatteryTips),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: HaloGroup(
+                  children: [
+                    HaloRow(
+                      key: const ValueKey('batteryRow'),
+                      icon: Icons.battery_saver,
+                      label: l10n.settingsRunInBackground,
+                      hint: l10n.settingsSoMessagesArrive,
+                      value: _exempt == null
+                          ? null
+                          : _exempt!
+                          ? l10n.notificationsBatteryAllowed
+                          : l10n.notificationsBatteryNotYet,
+                      onTap: () async {
+                        await askBatteryExemption(context);
+                        _readBattery();
+                      },
                     ),
-                  ),
+                    if (guide != null)
+                      HaloRow(
+                        key: const ValueKey('makerRow'),
+                        icon: Icons.phone_android_outlined,
+                        label: l10n.notificationsMakerSwitch,
+                        hint: guide.title,
+                        onTap: () => showMakerGuide(context),
+                      ),
+                  ],
                 ),
               ),
             ]),
@@ -419,6 +560,7 @@ class _ModeCard extends StatelessWidget {
   final String? action;
   final VoidCallback? onTap;
   const _ModeCard({
+    super.key,
     required this.title,
     this.tag,
     required this.body,
@@ -442,7 +584,9 @@ class _ModeCard extends StatelessWidget {
           scale: 0.98,
           child: ExcludeSemantics(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: reduceMotion(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
               decoration: BoxDecoration(

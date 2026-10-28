@@ -599,9 +599,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSpeedPrivacy => '速度与隐私 →';
 
   @override
-  String get appGettingMessages => '接收消息 →';
-
-  @override
   String get appDisableAppLock => '关闭应用锁？';
 
   @override
@@ -2287,12 +2284,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => '能帮上忙就好';
-
-  @override
-  String get gettingMessagesGettingMessages => '接收消息';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach => '新消息如何到达这部手机。你随时可以更改。';
 
   @override
   String get gettingMessagesAlwaysOn => '始终在线';
@@ -5014,9 +5005,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
-
-  @override
-  String get settingsGettingMessages => '接收消息';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -8839,6 +8827,89 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       '使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。';
+
+  @override
+  String get deliveryModeGooglePush => '谷歌推送';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead => '新消息如何送达这部手机、提示音如何、显示什么。你可以随时更改。';
+
+  @override
+  String get notificationsHowTheyReachYou => '消息如何送达';
+
+  @override
+  String get notificationsRecommended => '推荐';
+
+  @override
+  String get notificationsGoogleBody =>
+      '即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+
+  @override
+  String get notificationsGoogleStarting => '正在开启…';
+
+  @override
+  String get notificationsGoogleNoStart => '谷歌推送没能启动。请检查网络后再试一次。';
+
+  @override
+  String get notificationsGoogleNote =>
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继为你的每个信箱拿到一个不同的密封地址，因此无法把它们联系在一起。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+
+  @override
+  String get notificationsGoogleRefused =>
+      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。';
+
+  @override
+  String get notificationsSoundAndVibration => '声音和振动';
+
+  @override
+  String get notificationsSoundHint => '在 Android 自己的设置里';
+
+  @override
+  String get notificationsEachShows => '每条通知显示';
+
+  @override
+  String get notificationsBatteryTips => '省电提示';
+
+  @override
+  String get notificationsBatteryAllowed => '已允许';
+
+  @override
+  String get notificationsBatteryNotYet => '未允许';
+
+  @override
+  String get notificationsMakerSwitch => '手机厂商的开关';
+
+  @override
+  String get onboardingDeliveryHeadline => '消息如何*送达*。';
+
+  @override
+  String get onboardingDeliveryLead => '你可以随时在“通知”里更改。';
+
+  @override
+  String get homeGoogleTitle => '谷歌推送来了';
+
+  @override
+  String get homeGoogleLine => '即时又省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+
+  @override
+  String get homeGoogleUse => '使用';
+
+  @override
+  String get homeGoogleOn => '谷歌推送已开启';
+
+  @override
+  String get homeGoogleGoneTitle => '谷歌推送不可用';
+
+  @override
+  String get appNotificationsLink => '通知 →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return '谷歌推送 $got · 被降级 $low';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9434,9 +9505,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appSpeedPrivacy => '速度與隱私 →';
-
-  @override
-  String get appGettingMessages => '接收訊息 →';
 
   @override
   String get appDisableAppLock => '要停用應用程式鎖嗎？';
@@ -11123,12 +11191,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateJustGladToHelp => '能幫上忙就好';
-
-  @override
-  String get gettingMessagesGettingMessages => '接收訊息';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach => '新訊息如何送到這支手機。你隨時都可以更改。';
 
   @override
   String get gettingMessagesAlwaysOn => '始終在線';
@@ -13852,9 +13914,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
-
-  @override
-  String get settingsGettingMessages => '接收訊息';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -17559,4 +17618,87 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get iconSheetSaves =>
       '使用簡潔圖示時，新的照片、影片和檔案會以普通的名稱存進手機常用的資料夾。之前儲存的內容留在原處。';
+
+  @override
+  String get deliveryModeGooglePush => 'Google 推播';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead => '新訊息如何送達這支手機、提示音如何、顯示什麼。你可以隨時更改。';
+
+  @override
+  String get notificationsHowTheyReachYou => '訊息如何送達';
+
+  @override
+  String get notificationsRecommended => '推薦';
+
+  @override
+  String get notificationsGoogleBody =>
+      '即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+
+  @override
+  String get notificationsGoogleStarting => '正在開啟…';
+
+  @override
+  String get notificationsGoogleNoStart => 'Google 推播沒能啟動。請檢查網路後再試一次。';
+
+  @override
+  String get notificationsGoogleNote =>
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼為你的每個信箱拿到一個不同的密封位址，因此無法把它們連在一起。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+
+  @override
+  String get notificationsGoogleRefused =>
+      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。';
+
+  @override
+  String get notificationsSoundAndVibration => '聲音和震動';
+
+  @override
+  String get notificationsSoundHint => '在 Android 自己的設定中';
+
+  @override
+  String get notificationsEachShows => '每則通知顯示';
+
+  @override
+  String get notificationsBatteryTips => '省電提示';
+
+  @override
+  String get notificationsBatteryAllowed => '已允許';
+
+  @override
+  String get notificationsBatteryNotYet => '未允許';
+
+  @override
+  String get notificationsMakerSwitch => '手機廠商的開關';
+
+  @override
+  String get onboardingDeliveryHeadline => '訊息如何*送達*。';
+
+  @override
+  String get onboardingDeliveryLead => '你可以隨時在「通知」中更改。';
+
+  @override
+  String get homeGoogleTitle => 'Google 推播來了';
+
+  @override
+  String get homeGoogleLine => '即時又省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+
+  @override
+  String get homeGoogleUse => '使用';
+
+  @override
+  String get homeGoogleOn => 'Google 推播已開啟';
+
+  @override
+  String get homeGoogleGoneTitle => 'Google 推播無法使用';
+
+  @override
+  String get appNotificationsLink => '通知 →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Google 推播 $got · 被降級 $low';
+  }
 }

@@ -257,6 +257,13 @@ extension AppStateBoot on AppState {
     // set. an endpoint that arrives is registered with the relay
     HelperPush.instance.onChange = () => _helperSoon();
     HelperPush.instance.listen();
+    // google push hands the slots their endpoints in its mode (play only)
+    GooglePush.instance.seal ??= engine.pushSeal;
+    GooglePush.instance.onChange = () => _helperSoon();
+    if (playBuild) GooglePush.instance.listen();
+    if (_deliveryMode == DeliveryMode.google) {
+      helper.usePush(GooglePush.instance);
+    }
     unawaited(_loadHelper());
     await _loadDeliveryTimes();
     // start tor last: nothing above needs it, and earlier it stalls the main

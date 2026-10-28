@@ -610,9 +610,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appSpeedPrivacy => 'Tốc độ & riêng tư →';
 
   @override
-  String get appGettingMessages => 'Nhận tin nhắn →';
-
-  @override
   String get appDisableAppLock => 'Tắt khóa ứng dụng?';
 
   @override
@@ -2382,13 +2379,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Vui vì giúp được';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Nhận tin nhắn';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cách tin nhắn mới đến điện thoại này. Bạn có thể đổi bất cứ lúc nào.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Luôn bật';
@@ -5243,9 +5233,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 chặng';
-
-  @override
-  String get settingsGettingMessages => 'Nhận tin nhắn';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9249,4 +9236,91 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Khi đang dùng biểu tượng đơn giản, ảnh, video và tệp mới được lưu với tên bình thường vào các thư mục quen thuộc của điện thoại. Những gì đã lưu trước đó vẫn ở nguyên chỗ cũ.';
+
+  @override
+  String get deliveryModeGooglePush => 'Thông báo đẩy Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Tin nhắn mới đến điện thoại này thế nào, kêu ra sao và hiện gì. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cách tin nhắn đến với bạn';
+
+  @override
+  String get notificationsRecommended => 'Nên dùng';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Đến ngay và nhẹ. Google có thể thấy khi nào điện thoại của bạn được đánh thức, không bao giờ biết ai viết hay viết gì.';
+
+  @override
+  String get notificationsGoogleStarting => 'Đang bật…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Không bật được thông báo đẩy Google. Hãy kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi nhận một địa chỉ niêm phong riêng cho từng hộp thư của bạn, nên không thể nối chúng với nhau. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Hiện relay của chúng tôi chưa nhận một số đăng ký của điện thoại này. Các cuộc trò chuyện đó đến với lần kiểm tra mỗi 15 phút, và Kryfo vẫn tiếp tục thử.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Âm thanh và rung';
+
+  @override
+  String get notificationsSoundHint => 'Trong cài đặt của chính Android';
+
+  @override
+  String get notificationsEachShows => 'Mỗi thông báo hiện';
+
+  @override
+  String get notificationsBatteryTips => 'Mẹo về pin';
+
+  @override
+  String get notificationsBatteryAllowed => 'Đã cho phép';
+
+  @override
+  String get notificationsBatteryNotYet => 'Chưa cho phép';
+
+  @override
+  String get notificationsMakerSwitch => 'Công tắc của hãng điện thoại';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cách tin nhắn *đến với bạn*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Bạn có thể đổi điều này bất cứ lúc nào trong Thông báo.';
+
+  @override
+  String get homeGoogleTitle => 'Đã có thông báo đẩy Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Đến ngay và đỡ tốn pin. Google có thể thấy khi nào điện thoại của bạn được đánh thức, không bao giờ biết ai viết hay viết gì.';
+
+  @override
+  String get homeGoogleUse => 'Dùng ngay';
+
+  @override
+  String get homeGoogleOn => 'Thông báo đẩy Google đã bật';
+
+  @override
+  String get homeGoogleGoneTitle => 'Không dùng được thông báo đẩy Google';
+
+  @override
+  String get appNotificationsLink => 'Thông báo →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Đẩy Google $got · bị hạ $low';
+  }
 }

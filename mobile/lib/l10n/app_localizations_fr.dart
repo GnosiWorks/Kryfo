@@ -621,9 +621,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSpeedPrivacy => 'Vitesse & confidentialité →';
 
   @override
-  String get appGettingMessages => 'Réception des messages →';
-
-  @override
   String get appDisableAppLock => 'Désactiver le verrouillage ?';
 
   @override
@@ -2414,13 +2411,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Aider me suffit';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Réception des messages';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Comment les nouveaux messages arrivent sur ce téléphone. Vous pouvez changer quand vous voulez.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Toujours actif';
@@ -5307,9 +5297,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 sauts';
-
-  @override
-  String get settingsGettingMessages => 'Réception des messages';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9357,4 +9344,93 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Tant qu’une icône neutre est active, les nouvelles photos, vidéos et fichiers sont enregistrés sous des noms ordinaires dans les dossiers habituels de votre téléphone. Ce qui est déjà enregistré reste où il est.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Comment les nouveaux messages arrivent sur ce téléphone, leur son et ce qu’ils montrent. Vous pouvez changer cela quand vous voulez.';
+
+  @override
+  String get notificationsHowTheyReachYou =>
+      'Comment les messages vous parviennent';
+
+  @override
+  String get notificationsRecommended => 'Recommandé';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Instantané et léger. Google peut voir quand votre téléphone est réveillé, jamais qui a écrit ni ce qui a été dit.';
+
+  @override
+  String get notificationsGoogleStarting => 'Activation…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Le push Google n’a pas pu démarrer. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais reçoit une adresse scellée différente pour chacune de vos boîtes, il ne peut donc pas les relier entre elles. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Notre relais n’accepte pas certaines inscriptions de ce téléphone pour le moment. Ces discussions arrivent avec le relevé toutes les 15 minutes, et Kryfo continue d’essayer.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Son et vibration';
+
+  @override
+  String get notificationsSoundHint => 'Dans les paramètres d’Android';
+
+  @override
+  String get notificationsEachShows => 'Chaque notification montre';
+
+  @override
+  String get notificationsBatteryTips => 'Conseils batterie';
+
+  @override
+  String get notificationsBatteryAllowed => 'Autorisé';
+
+  @override
+  String get notificationsBatteryNotYet => 'Non autorisé';
+
+  @override
+  String get notificationsMakerSwitch => 'L’interrupteur du fabricant';
+
+  @override
+  String get onboardingDeliveryHeadline =>
+      'Comment les messages *vous parviennent*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Vous pouvez changer cela à tout moment dans Notifications.';
+
+  @override
+  String get homeGoogleTitle => 'Le push Google est là';
+
+  @override
+  String get homeGoogleLine =>
+      'Instantané et doux pour la batterie. Google peut voir quand votre téléphone est réveillé, jamais qui a écrit ni ce qui a été dit.';
+
+  @override
+  String get homeGoogleUse => 'L’utiliser';
+
+  @override
+  String get homeGoogleOn => 'Le push Google est activé';
+
+  @override
+  String get homeGoogleGoneTitle => 'Le push Google n’est pas disponible';
+
+  @override
+  String get appNotificationsLink => 'Notifications →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push Google $got · rétrogradés $low';
+  }
 }
