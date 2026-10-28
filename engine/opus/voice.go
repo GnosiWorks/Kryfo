@@ -21,9 +21,14 @@ const (
 	frameMs = 20
 )
 
-// the longest note either side reads: past the mic's 30 minutes, short of
-// what would fill a phone
-const maxNote = 2 * 60 * 60
+// the longest note either side reads, in seconds: the mic's 30 minutes
+// and a little over
+const maxNote = 31 * 60
+
+// the least file a second of decoded audio needs, in bytes: 1 kbit/s. the
+// encoder here never goes under about 3.8 kbit/s, even for silence, so
+// only a stream made to claim long audio from a small file stops on it
+const leastPerSec = 125
 
 var (
 	// ErrNotWav is input that is not 16-bit pcm wav
@@ -32,8 +37,11 @@ var (
 	ErrRate = errors.New("wav: rate")
 	// ErrEmpty is a note with no samples
 	ErrEmpty = errors.New("voice: no samples")
-	// ErrLong is a note longer than any the app records
+	// ErrLong is a note longer than any the app records, or one that
+	// claims far more audio than its file could hold
 	ErrLong = errors.New("voice: too long")
+	// ErrStopped is an encode asked to stop
+	ErrStopped = errors.New("voice: stopped")
 )
 
 type wavHead struct {
@@ -136,6 +144,15 @@ func (c *counter) Write(b []byte) (int, error) {
 // EncodeWav writes the 16-bit pcm wav in [in] to [out] as ogg opus. a
 // stereo wav is mixed down to mono
 func EncodeWav(in io.Reader, out io.Writer) (Note, error) {
+	return EncodeWavStop(in, out, nil)
+}
+
+// how often, in frames, an encode asks whether it should stop: a second
+const stopEvery = 50
+
+// EncodeWavStop is [EncodeWav] that gives up with ErrStopped once [stop]
+// says so. nil never stops
+func EncodeWavStop(in io.Reader, out io.Writer, stop func() bool) (Note, error) {
 	r := bufio.NewReaderSize(in, 64*1024)
 	head, err := readWavHead(r)
 	if err != nil {
@@ -188,6 +205,9 @@ func EncodeWav(in io.Reader, out io.Writer) (Note, error) {
 	var n int64
 	eof := false
 	for k := uint64(1); ; k++ {
+		if stop != nil && k%stopEvery == 1 && stop() {
+			return Note{}, ErrStopped
+		}
 		got := 0
 		if !eof {
 			want := len(raw)
@@ -277,8 +297,8 @@ func Decode(in io.Reader, rate int, sink func([]int16) error) (Note, error) {
 	defer dec.Close()
 	down := uint64(48000 / rate)
 	skip := int(preskip / down)
-	most := maxNote * rate
-	given := 0
+	most := int64(maxNote) * int64(rate)
+	given := int64(0)
 	var granule uint64
 	for {
 		p, err := o.next()
@@ -297,8 +317,9 @@ func Decode(in io.Reader, rate int, sink func([]int16) error) (Note, error) {
 			cut := min(skip, len(pcm))
 			pcm, skip = pcm[cut:], skip-cut
 		}
-		given += len(pcm)
-		if given > most {
+		given += int64(len(pcm))
+		// a second's grace, then no more audio than its bytes could carry
+		if given > most || given > o.read*int64(rate)/leastPerSec+int64(rate) {
 			return Note{}, ErrLong
 		}
 		if len(pcm) > 0 {
@@ -307,14 +328,24 @@ func Decode(in io.Reader, rate int, sink func([]int16) error) (Note, error) {
 			}
 		}
 	}
-	samples := given
-	if granule >= preskip {
-		samples = min(given, int((granule-preskip)/down))
-	}
-	if samples == 0 {
+	samples := noteSamples(given, granule, preskip, down)
+	if samples <= 0 {
 		return Note{}, ErrEmpty
 	}
-	return Note{Samples: samples, Rate: rate}, nil
+	return Note{Samples: int(samples), Rate: rate}, nil
+}
+
+// the samples a stream says it holds, never more than [given] were
+// decoded. in uint64 first: on a 32-bit phone a granule made up past what
+// int holds would turn negative
+func noteSamples(given int64, granule, preskip, down uint64) int64 {
+	if granule < preskip || given <= 0 {
+		return given
+	}
+	if s := (granule - preskip) / down; s < uint64(given) {
+		return int64(s)
+	}
+	return given
 }
 
 // the rate notes are decoded at for their wave and for transcripts
@@ -347,7 +378,7 @@ func Peaks(in io.Reader, bars int) ([]float64, Note, error) {
 		return nil, Note{}, err
 	}
 	// the padding past the last sample is no part of the wave
-	keep := (note.Samples + block - 1) / block
+	keep := max((note.Samples+block-1)/block, 0)
 	sums, counts = sums[:min(keep, len(sums))], counts[:min(keep, len(counts))]
 	out := make([]float64, bars)
 	frames := len(sums)
@@ -378,13 +409,13 @@ func Peaks(in io.Reader, bars int) ([]float64, Note, error) {
 
 // EncodeFile writes the wav at [in] to [out] as ogg opus. nothing is left
 // at [out] when it fails
-func EncodeFile(in, out string) (Note, error) {
+func EncodeFile(in, out string, stop func() bool) (Note, error) {
 	f, err := os.Open(in)
 	if err != nil {
 		return Note{}, err
 	}
 	defer f.Close()
-	return writeFile(out, func(w io.Writer) (Note, error) { return EncodeWav(f, w) })
+	return writeFile(out, func(w io.Writer) (Note, error) { return EncodeWavStop(f, w, stop) })
 }
 
 // DecodeFile writes the ogg opus at [in] to [out] as 16 khz 16-bit mono
@@ -470,10 +501,29 @@ func writeFile(out string, write func(io.Writer) (Note, error)) (Note, error) {
 		err = cerr
 	}
 	if err != nil {
-		os.Remove(out)
+		shredOut(out)
 		return Note{}, err
 	}
 	return note, nil
+}
+
+// what a failed write left is zeroed before it goes: speech half encoded
+// or decoded stays nowhere on the disk
+func shredOut(out string) {
+	if f, err := os.OpenFile(out, os.O_WRONLY, 0); err == nil {
+		if st, err := f.Stat(); err == nil {
+			zero := make([]byte, 64*1024)
+			for at := int64(0); at < st.Size(); at += int64(len(zero)) {
+				n := min(int64(len(zero)), st.Size()-at)
+				if _, err := f.WriteAt(zero[:n], at); err != nil {
+					break
+				}
+			}
+			f.Sync()
+		}
+		f.Close()
+	}
+	os.Remove(out)
 }
 
 // PeaksFile is [Peaks] of the ogg opus at [path]

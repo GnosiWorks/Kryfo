@@ -131,6 +131,8 @@ type oggReader struct {
 	seg     int
 	granule uint64
 	last    bool
+	// the bytes of the pages read so far
+	read int64
 }
 
 // page reads the next page, skipping any of another stream
@@ -174,6 +176,7 @@ func (o *oggReader) page() error {
 		} else if serial != o.serial {
 			continue
 		}
+		o.read += int64(27 + n + size)
 		o.segs, o.body, o.seg, o.at = segs, body, 0, 0
 		o.granule = binary.LittleEndian.Uint64(h[6:])
 		o.last = h[5]&pageEOS != 0

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // something like speech: a voiced buzz whose pitch and loudness move, in
@@ -301,7 +302,7 @@ func TestFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	ogg := filepath.Join(dir, "vn_1.ogg")
-	note, err := EncodeFile(in, ogg)
+	note, err := EncodeFile(in, ogg, nil)
 	if err != nil || note.Ms() != 5000 {
 		t.Fatalf("%+v %v", note, err)
 	}
@@ -314,10 +315,10 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("wav of %d bytes, head %x", len(b), b[:44])
 	}
 	// what fails leaves nothing behind
-	if _, err := EncodeFile(filepath.Join(dir, "none.wav"), filepath.Join(dir, "x.ogg")); err == nil {
+	if _, err := EncodeFile(filepath.Join(dir, "none.wav"), filepath.Join(dir, "x.ogg"), nil); err == nil {
 		t.Fatal("encoded nothing")
 	}
-	if _, err := EncodeFile(ogg, filepath.Join(dir, "y.ogg")); err == nil {
+	if _, err := EncodeFile(ogg, filepath.Join(dir, "y.ogg"), nil); err == nil {
 		t.Fatal("encoded an ogg")
 	}
 	if _, err := DecodeFile(in, filepath.Join(dir, "z.wav")); err == nil {
@@ -369,5 +370,174 @@ func FuzzDecode(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
 		Decode(bytes.NewReader(b), DecodeRate, func([]int16) error { return nil })
 		Peaks(bytes.NewReader(b), 30)
+	})
+}
+
+// the last page of [ogg] given [granule], its crc made again
+func withLastGranule(t *testing.T, ogg []byte, granule uint64) []byte {
+	t.Helper()
+	b := bytes.Clone(ogg)
+	last := bytes.LastIndex(b, []byte("OggS"))
+	binary.LittleEndian.PutUint64(b[last+6:], granule)
+	binary.LittleEndian.PutUint32(b[last+22:], 0)
+	binary.LittleEndian.PutUint32(b[last+22:], crcOf(b[last:]))
+	return b
+}
+
+func TestAGranulePastWhatIntHolds(t *testing.T) {
+	ogg, _ := encode(t, wavOf(speech(2, 16000), 16000, 1))
+	preskip := uint64(binary.LittleEndian.Uint16(ogg[28+10:]))
+	for _, g := range []uint64{3<<31 + preskip, 1<<63 + preskip, ^uint64(0)} {
+		b := withLastGranule(t, ogg, g)
+		got, note := decode(t, b)
+		if note.Samples <= 0 || note.Samples > 32000+16000 || len(got) != note.Samples {
+			t.Fatalf("granule %d: %d samples", g, note.Samples)
+		}
+		p, n, err := Peaks(bytes.NewReader(b), 30)
+		if err != nil || len(p) != 30 || n.Samples != note.Samples {
+			t.Fatalf("granule %d: peaks %v %+v %v", g, p, n, err)
+		}
+	}
+	// the clamp itself, as a 32-bit phone runs it: what comes out always
+	// fits an int32 and is never more than was decoded
+	for _, c := range []struct{ given, granule, preskip uint64 }{
+		{32000, 3<<31 + 312, 312},
+		{32000, 1<<63 + 312, 312},
+		{32000, ^uint64(0), 312},
+		{32000, 100, 312},
+		{32000, 312 + 3*16000, 312},
+	} {
+		got := noteSamples(int64(c.given), c.granule, c.preskip, 3)
+		if got < 0 || got > int64(c.given) || int64(int32(got)) != got {
+			t.Fatalf("%+v: %d", c, got)
+		}
+	}
+	if got := noteSamples(32000, 312+3*16000, 312, 3); got != 16000 {
+		t.Fatalf("a true granule trims to %d", got)
+	}
+}
+
+// packets that hold nothing but say they are 120 ms each
+func lostFrames(t *testing.T, packets int) []byte {
+	t.Helper()
+	var out bytes.Buffer
+	o := &oggWriter{w: &out, serial: 7}
+	oh := make([]byte, 19)
+	copy(oh, "OpusHead")
+	oh[8], oh[9] = 1, 1
+	binary.LittleEndian.PutUint32(oh[12:], 16000)
+	if err := o.header(oh); err != nil {
+		t.Fatal(err)
+	}
+	tags := make([]byte, 16)
+	copy(tags, "OpusTags")
+	if err := o.header(tags); err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i <= packets; i++ {
+		if err := o.add([]byte{9<<3 | 3, 6}, uint64(i)*5760); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := o.flush(true); err != nil {
+		t.Fatal(err)
+	}
+	return out.Bytes()
+}
+
+func TestASmallFileThatClaimsHours(t *testing.T) {
+	b := lostFrames(t, 60000)
+	if len(b) > 250*1024 {
+		t.Fatalf("%d bytes", len(b))
+	}
+	start := time.Now()
+	_, err := Decode(bytes.NewReader(b), DecodeRate, func([]int16) error { return nil })
+	if !errors.Is(err, ErrLong) {
+		t.Fatalf("decoded: %v", err)
+	}
+	if _, _, err := Peaks(bytes.NewReader(b), 30); !errors.Is(err, ErrLong) {
+		t.Fatalf("peaks: %v", err)
+	}
+	if d := time.Since(start); d > 2*time.Second {
+		t.Fatalf("took %v to refuse", d)
+	}
+	// a real note of silence is far above the floor
+	silent := make([]int16, 60*16000)
+	ogg, _ := encode(t, wavOf(silent, 16000, 1))
+	if _, back := decode(t, ogg); back.Ms() != 60000 {
+		t.Fatalf("a minute of silence: %d ms", back.Ms())
+	}
+}
+
+func TestAnEncodeStops(t *testing.T) {
+	dir := t.TempDir()
+	in := filepath.Join(dir, "vn_1.wav")
+	os.WriteFile(in, wavOf(speech(10, 16000), 16000, 1), 0o600)
+	out := filepath.Join(dir, "vn_1.ogg")
+	asked := 0
+	_, err := EncodeFile(in, out, func() bool { asked++; return asked > 3 })
+	if !errors.Is(err, ErrStopped) || asked != 4 {
+		t.Fatalf("%v after %d asks", err, asked)
+	}
+	if _, err := os.Stat(out); err == nil {
+		t.Fatal("a stopped encode left its file")
+	}
+}
+
+func TestWhatFailsIsZeroedFirst(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "vn_1.ogg")
+	other := filepath.Join(dir, "seen")
+	_, err := writeFile(out, func(w io.Writer) (Note, error) {
+		w.Write(bytes.Repeat([]byte("speech"), 30000))
+		// a second name on the same bytes sees what is left of them
+		if err := os.Link(out, other); err != nil {
+			t.Fatal(err)
+		}
+		return Note{}, errors.New("cut")
+	})
+	if err == nil {
+		t.Fatal("no error")
+	}
+	if _, err := os.Stat(out); err == nil {
+		t.Fatal("left behind")
+	}
+	b, _ := os.ReadFile(other)
+	if len(b) != 180000 || bytes.Count(b, []byte{0}) != len(b) {
+		t.Fatalf("%d bytes left, not zeroed", len(b))
+	}
+}
+
+// the fuzzer's bytes as packets and granules of a stream whose pages and
+// crcs are right, so they reach libopus rather than the crc check
+func FuzzPackets(f *testing.F) {
+	f.Add([]byte{9<<3 | 3, 6, 0xff, 1, 2, 3}, uint64(5760))
+	f.Add([]byte{0xfc, 0xff, 0xfe}, uint64(3<<31))
+	f.Fuzz(func(t *testing.T, b []byte, granule uint64) {
+		var out bytes.Buffer
+		o := &oggWriter{w: &out, serial: 1}
+		oh := make([]byte, 19)
+		copy(oh, "OpusHead")
+		oh[8], oh[9] = 1, 1
+		binary.LittleEndian.PutUint32(oh[12:], 16000)
+		tags := make([]byte, 16)
+		copy(tags, "OpusTags")
+		if o.header(oh) != nil || o.header(tags) != nil {
+			t.Skip()
+		}
+		for i := 0; len(b) > 0 && i < 200; i++ {
+			n := min(int(b[0])%64+1, len(b))
+			if o.add(b[:n], granule+uint64(i)*960) != nil {
+				t.Skip()
+			}
+			b = b[n:]
+		}
+		if o.flush(true) != nil {
+			t.Skip()
+		}
+		_, note, err := Peaks(bytes.NewReader(out.Bytes()), 30)
+		if err == nil && note.Samples <= 0 {
+			t.Fatalf("%d samples", note.Samples)
+		}
 	})
 }

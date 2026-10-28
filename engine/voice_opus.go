@@ -12,7 +12,9 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"math"
+	"sync"
 
 	"github.com/halo/engine/opus"
 )
@@ -30,15 +32,45 @@ func voiceWord(err error) string {
 		return "error: empty"
 	case errors.Is(err, opus.ErrLong):
 		return "error: long"
+	case errors.Is(err, opus.ErrStopped):
+		return "error: stopped"
 	case errors.Is(err, fs.ErrNotExist):
 		return "error: gone"
 	}
 	return "error: io"
 }
 
+// the encodes asked to stop, by the path they write. a stop may come
+// before its encode starts; paths are a message's own, never reused
+var (
+	voiceStopMu sync.Mutex
+	voiceStops  = map[string]bool{}
+)
+
+func voiceStopped(out string) bool {
+	voiceStopMu.Lock()
+	defer voiceStopMu.Unlock()
+	return voiceStops[out]
+}
+
+// what a crafted file might still make go wrong in here answers as an
+// error, never takes the app down
+func voiceSafe(ret *string) {
+	if p := recover(); p != nil {
+		log.Printf("voice: panicked: %v", p)
+		*ret = "error: io"
+	}
+}
+
 // "ok <ms> <bytes>" once the wav at [in] is ogg opus at [out]
-func voiceToOgg(in, out string) string {
-	n, err := opus.EncodeFile(in, out)
+func voiceToOgg(in, out string) (ret string) {
+	defer voiceSafe(&ret)
+	defer func() {
+		voiceStopMu.Lock()
+		delete(voiceStops, out)
+		voiceStopMu.Unlock()
+	}()
+	n, err := opus.EncodeFile(in, out, func() bool { return voiceStopped(out) })
 	if err != nil {
 		return voiceWord(err)
 	}
@@ -46,7 +78,8 @@ func voiceToOgg(in, out string) string {
 }
 
 // "ok <ms>" once the ogg opus at [in] is a 16 khz wav at [out]
-func voiceToWav(in, out string) string {
+func voiceToWav(in, out string) (ret string) {
+	defer voiceSafe(&ret)
 	n, err := opus.DecodeFile(in, out)
 	if err != nil {
 		return voiceWord(err)
@@ -55,7 +88,8 @@ func voiceToWav(in, out string) string {
 }
 
 // {"ms":..,"p":[..]}: how long the ogg opus at [path] plays and its wave
-func voicePeaks(path string, bars int) string {
+func voicePeaks(path string, bars int) (ret string) {
+	defer voiceSafe(&ret)
 	p, n, err := opus.PeaksFile(path, bars)
 	if err != nil {
 		return voiceWord(err)
@@ -94,4 +128,14 @@ func HaloVoiceWav(inPath, outPath *C.char) *C.char {
 //export HaloVoicePeaks
 func HaloVoicePeaks(path *C.char, bars C.int) *C.char {
 	return C.CString(voicePeaks(goStr(path), int(bars)))
+}
+
+// HaloVoiceStop stops the encode writing outPath, now or as it starts
+//
+//export HaloVoiceStop
+func HaloVoiceStop(outPath *C.char) {
+	out := goStr(outPath)
+	voiceStopMu.Lock()
+	voiceStops[out] = true
+	voiceStopMu.Unlock()
 }

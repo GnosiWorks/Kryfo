@@ -91,3 +91,35 @@ func TestVoiceExportsSayOneWord(t *testing.T) {
 		}
 	}
 }
+
+func TestVoiceStopBeforeItStarts(t *testing.T) {
+	dir := t.TempDir()
+	wav := filepath.Join(dir, "vn_2.wav")
+	voiceWav(t, wav, 5)
+	ogg := filepath.Join(dir, "vn_2.ogg")
+	voiceStopMu.Lock()
+	voiceStops[ogg] = true
+	voiceStopMu.Unlock()
+	if got := voiceToOgg(wav, ogg); got != "error: stopped" {
+		t.Fatalf("said %q", got)
+	}
+	if _, err := os.Stat(ogg); err == nil {
+		t.Fatal("a stopped encode left its file")
+	}
+	// the stop went with its encode
+	if voiceStopped(ogg) {
+		t.Fatal("the stop stayed")
+	}
+}
+
+func TestVoicePanicIsAnError(t *testing.T) {
+	got := func() (ret string) {
+		defer voiceSafe(&ret)
+		var m map[string]int
+		m["x"]++
+		return "ok"
+	}()
+	if got != "error: io" {
+		t.Fatalf("said %q", got)
+	}
+}
