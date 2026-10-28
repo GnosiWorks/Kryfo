@@ -1653,12 +1653,64 @@ var (
 	bootPoll     = 2 * time.Second
 	bootPollSlow = 15 * time.Second
 	bootFast     = 10 * time.Minute
+	// a burst of tor's events is one look
+	bootWakeGap = 150 * time.Millisecond
 )
+
+// tor tells each bootstrap step as an event: it wakes the watcher, which
+// then asks as before, so 100% is read as it happens and not up to a poll
+// later. set up beside the first poll, never ahead of it, and drained until
+// it is off the list, so the event pump never waits on it
+func bootWake(t *tor.Tor) (<-chan struct{}, func()) {
+	wake := make(chan struct{}, 1)
+	quit := make(chan struct{})
+	go func() {
+		c, err := eventConn(t)
+		if err != nil {
+			return
+		}
+		ch := make(chan control.Event, 8)
+		if c.AddEventListener(ch, control.EventCodeStatusClient) != nil {
+			return
+		}
+		stop, removed := quit, make(chan struct{})
+		for {
+			select {
+			case ev := <-ch:
+				// a step forward, not one of its warnings, which can come
+				// many a second behind a censor
+				if e, ok := ev.(*control.StatusEvent); !ok || e.Action != "BOOTSTRAP" || e.Severity != "NOTICE" {
+					continue
+				}
+				select {
+				case wake <- struct{}{}:
+				default:
+				}
+			case <-stop:
+				stop = nil
+				go func() {
+					c.RemoveEventListener(ch, control.EventCodeStatusClient)
+					close(removed)
+				}()
+			case <-removed:
+				return
+			}
+		}
+	}()
+	var once sync.Once
+	return wake, func() { once.Do(func() { close(quit) }) }
+}
 
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	gen := routeGeneration()
 	began := time.Now()
+	var wake <-chan struct{}
+	if t != nil && t.Control != nil {
+		w, stop := bootWake(t)
+		defer stop()
+		wake = w
+	}
 	for {
 		if t == nil || t.Control == nil || torIsPaused() {
 			return
@@ -1707,7 +1759,13 @@ func watchBootstrap(t *tor.Tor) {
 		if time.Since(began) > bootFast || netAway() {
 			wait = bootPollSlow
 		}
-		time.Sleep(wait)
+		tm := time.NewTimer(wait)
+		select {
+		case <-tm.C:
+		case <-wake:
+			tm.Stop()
+			time.Sleep(bootWakeGap)
+		}
 	}
 }
 
