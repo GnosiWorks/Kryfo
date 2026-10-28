@@ -9600,4 +9600,175 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get captureRecording =>
       'Màn hình này đang bị quay. Không ai khác được báo.';
+
+  @override
+  String get settingsDevices => 'Thiết bị';
+
+  @override
+  String get devicesLinkedDevices => 'Thiết bị đã liên kết';
+
+  @override
+  String get devicesThisPhoneOnly => 'Chỉ điện thoại này';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Điện thoại này';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Chỉ điện thoại này mới liên kết hoặc gỡ được thiết bị';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Liên kết ngày $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Dùng hôm nay';
+
+  @override
+  String get devicesUsedThisWeek => 'Dùng trong tuần này';
+
+  @override
+  String get devicesUsedThisMonth => 'Dùng trong tháng này';
+
+  @override
+  String get devicesNotUsedYet => 'Chưa dùng lần nào';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Sẽ hủy liên kết sau $daysString ngày nếu bạn không mở',
+      one: 'Sẽ hủy liên kết ngày mai nếu bạn không mở',
+      zero: 'Sẽ hủy liên kết hôm nay nếu bạn không mở',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo trên máy tính của bạn';
+
+  @override
+  String get devicesEmptyLine =>
+      'Liên kết một máy tính để đọc và gửi tin nhắn trên đó. Tối đa năm thiết bị ngoài điện thoại này.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Ứng dụng của danh bạ bạn không hiển thị thiết bị của bạn.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Thiết bị bạn không mở trong 30 ngày sẽ tự hủy liên kết và xóa các cuộc trò chuyện trên đó.';
+
+  @override
+  String get devicesFull =>
+      'Đã liên kết năm thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.';
+
+  @override
+  String get devicesLinkADevice => 'Liên kết thiết bị';
+
+  @override
+  String get devicesRemoveAll => 'Gỡ mọi thiết bị khác';
+
+  @override
+  String get devicesRemoveAllTitle => 'Gỡ mọi thiết bị khác?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, các thiết bị đó sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Điện thoại này giữ lại mọi thứ.';
+
+  @override
+  String get devicesRemoveAllYes => 'Gỡ tất cả';
+
+  @override
+  String get devicesRemovedAll => 'Giờ chỉ còn điện thoại này';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Gỡ $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, thiết bị sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Nó tự xóa các cuộc trò chuyện của bạn vào lần trực tuyến tới. Thiết bị đã bị ai đó can thiệp có thể giữ lại những gì nó đã có.';
+
+  @override
+  String get devicesRemove => 'Gỡ bỏ';
+
+  @override
+  String devicesRemoved(Object name) {
+    return 'Đã gỡ $name';
+  }
+
+  @override
+  String get devicesRename => 'Đổi tên';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Đổi tên $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Chỉ bạn thấy tên này. Danh bạ của bạn không bao giờ thấy.';
+
+  @override
+  String get devicesNameComputer => 'Máy tính';
+
+  @override
+  String get devicesDeviceCode => 'Mã thiết bị';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Mã giống hệt hiện trên chính thiết bị đó, trong Cài đặt.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Mở Kryfo trên máy tính. Ứng dụng sẽ hiện một mã.';
+
+  @override
+  String get devicesLinkStep2 => 'Quét mã bằng điện thoại này.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Kiểm tra cả hai màn hình hiện cùng sáu chữ số.';
+
+  @override
+  String get devicesHistory => 'Lịch sử';
+
+  @override
+  String get devicesHistoryCopy => 'Sao chép các cuộc trò chuyện';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.';
+
+  @override
+  String get devicesHistoryNone => 'Bắt đầu không có lịch sử';
+
+  @override
+  String get devicesHistoryNoneHint => 'Chỉ tin nhắn mới đến thiết bị.';
+
+  @override
+  String get devicesSkipMedia => 'Bỏ qua ảnh và video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Chỉ chép phần chữ. Nhanh hơn và ít dữ liệu lưu trên thiết bị hơn.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.';
+
+  @override
+  String get devicesScanCode => 'Quét mã';
 }

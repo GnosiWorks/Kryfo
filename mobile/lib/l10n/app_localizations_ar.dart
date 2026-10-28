@@ -9748,4 +9748,173 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get captureRecording =>
       'يجري تسجيل هذه الشاشة. لم يُبلَّغ أي شخص آخر.';
+
+  @override
+  String get settingsDevices => 'الأجهزة';
+
+  @override
+  String get devicesLinkedDevices => 'الأجهزة المرتبطة';
+
+  @override
+  String get devicesThisPhoneOnly => 'هذا الهاتف فقط';
+
+  @override
+  String get devicesNameSeparator => '، ';
+
+  @override
+  String get devicesThisPhone => 'هذا الهاتف';
+
+  @override
+  String get devicesOnlyThisPhone => 'هذا الهاتف وحده يربط الأجهزة أو يزيلها';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'رُبط في ⁨$date⁩';
+  }
+
+  @override
+  String get devicesUsedToday => 'استُخدم اليوم';
+
+  @override
+  String get devicesUsedThisWeek => 'استُخدم هذا الأسبوع';
+
+  @override
+  String get devicesUsedThisMonth => 'استُخدم هذا الشهر';
+
+  @override
+  String get devicesNotUsedYet => 'لم يُستخدم بعد';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'يُفصل بعد ⁨$daysString⁩ يوم إن لم تفتحه',
+      many: 'يُفصل بعد ⁨$daysString⁩ يومًا إن لم تفتحه',
+      few: 'يُفصل بعد ⁨$daysString⁩ أيام إن لم تفتحه',
+      two: 'يُفصل بعد يومين إن لم تفتحه',
+      one: 'يُفصل غدًا إن لم تفتحه',
+      zero: 'يُفصل اليوم إن لم تفتحه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo على حاسوبك';
+
+  @override
+  String get devicesEmptyLine =>
+      'اربط حاسوبًا لتقرأ رسائلك وترسلها منه. حتى خمسة أجهزة إضافةً إلى هذا الهاتف.';
+
+  @override
+  String get devicesContactsSeeNothing => 'تطبيقات جهات اتصالك لا تعرض أجهزتك.';
+
+  @override
+  String get devicesUnusedRule =>
+      'الجهاز الذي لا تفتحه 30 يومًا يفصل نفسه ويمسح محادثاتك منه.';
+
+  @override
+  String get devicesFull => 'خمسة أجهزة مرتبطة. أزِل واحدًا لتربط غيره.';
+
+  @override
+  String get devicesLinkADevice => 'ربط جهاز';
+
+  @override
+  String get devicesRemoveAll => 'إزالة كل الأجهزة الأخرى';
+
+  @override
+  String get devicesRemoveAllTitle => 'أتزيل كل الأجهزة الأخرى؟';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'بعد أن تتلقى تطبيقات جهات اتصالك التغيير، تتوقف عن تلقي رسائل جديدة ولا يمكنها الإرسال باسمك. هذا الهاتف يحتفظ بكل شيء.';
+
+  @override
+  String get devicesRemoveAllYes => 'إزالة الكل';
+
+  @override
+  String get devicesRemovedAll => 'هذا الهاتف وحده الآن';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'أتزيل ⁨$name⁩؟';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'بعد أن تتلقى تطبيقات جهات اتصالك التغيير، يتوقف عن تلقي رسائل جديدة ولا يمكنه الإرسال باسمك. يمسح محادثاتك من نفسه في المرة القادمة التي يتصل فيها. الجهاز الذي عبث به أحد قد يحتفظ بما لديه أصلًا.';
+
+  @override
+  String get devicesRemove => 'إزالة';
+
+  @override
+  String devicesRemoved(Object name) {
+    return 'أُزيل ⁨$name⁩';
+  }
+
+  @override
+  String get devicesRename => 'إعادة تسمية';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'إعادة تسمية ⁨$name⁩';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'أنت وحدك ترى هذا الاسم. جهات اتصالك لا تراه أبدًا.';
+
+  @override
+  String get devicesNameComputer => 'حاسوب';
+
+  @override
+  String get devicesDeviceCode => 'رمز الجهاز';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'يظهر الرمز نفسه على الجهاز ذاته، في الإعدادات.';
+
+  @override
+  String get devicesLinkStep1 => 'افتح Kryfo على حاسوبك. سيعرض رمزًا.';
+
+  @override
+  String get devicesLinkStep2 => 'اقرأ الرمز بكاميرا هذا الهاتف.';
+
+  @override
+  String get devicesLinkStep3 => 'تأكد أن الشاشتين تعرضان الأرقام الستة نفسها.';
+
+  @override
+  String get devicesHistory => 'السجل';
+
+  @override
+  String get devicesHistoryCopy => 'نسخ محادثاتي';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'كل رسائلك، مع الصور والفيديوهات من آخر 30 يومًا.';
+
+  @override
+  String get devicesHistoryNone => 'البدء دون سجل';
+
+  @override
+  String get devicesHistoryNoneHint => 'تصل الرسائل الجديدة فقط إلى الجهاز.';
+
+  @override
+  String get devicesSkipMedia => 'تخطي الصور والفيديوهات';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'يُنقل النص فقط. أسرع، وأقل ما يُحفظ على الجهاز.';
+
+  @override
+  String get devicesHiddenStay =>
+      'تبقى المحادثات المخفية والتمويه على هذا الهاتف.';
+
+  @override
+  String get devicesScanCode => 'قراءة الرمز';
 }

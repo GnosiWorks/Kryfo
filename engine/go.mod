@@ -5,6 +5,7 @@ go 1.26.9
 require (
 	fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee
 	filippo.io/age v1.3.2
+	filippo.io/edwards25519 v1.2.0
 	github.com/alexballas/go-libtor v1.0.8
 	github.com/cretz/bine v0.2.0
 	github.com/mailru/easyjson v0.9.2
@@ -59,7 +60,6 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3 // indirect
 	github.com/alexballas/bine v0.0.0-20260617175114-f63422fc9667 // indirect

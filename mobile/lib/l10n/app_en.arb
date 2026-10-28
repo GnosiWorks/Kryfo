@@ -12116,5 +12116,211 @@
   "captureRecording": "This screen is being recorded. Nobody else was told.",
   "@captureRecording": {
     "description": "widgets/shots_line.dart: the same when android says the screen is being recorded"
+  },
+  "settingsDevices": "Devices",
+  "@settingsDevices": {
+    "description": "screens/settings_screen.dart: the section over the linked devices row"
+  },
+  "devicesLinkedDevices": "Linked devices",
+  "@devicesLinkedDevices": {
+    "description": "screens/linked_devices_screen.dart and settings: the page of your own linked devices"
+  },
+  "devicesThisPhoneOnly": "This phone only",
+  "@devicesThisPhoneOnly": {
+    "description": "screens/linked_devices_screen.dart: the settings row value when nothing else is linked"
+  },
+  "devicesNameSeparator": ", ",
+  "@devicesNameSeparator": {
+    "description": "screens/linked_devices_screen.dart: goes between device names on the settings row"
+  },
+  "devicesThisPhone": "This phone",
+  "@devicesThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the name of the phone in hand on the list"
+  },
+  "devicesOnlyThisPhone": "Only this phone can link or remove devices",
+  "@devicesOnlyThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the line under this phone on the list"
+  },
+  "devicesLinkedOn": "Linked {date}",
+  "@devicesLinkedOn": {
+    "description": "screens/linked_devices_screen.dart: when a device was linked, a day",
+    "placeholders": {
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesUsedToday": "Used today",
+  "@devicesUsedToday": {
+    "description": "screens/linked_devices_screen.dart: a device was used today, after the linked day"
+  },
+  "devicesUsedThisWeek": "Used this week",
+  "@devicesUsedThisWeek": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last seven days"
+  },
+  "devicesUsedThisMonth": "Used this month",
+  "@devicesUsedThisMonth": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last thirty days"
+  },
+  "devicesNotUsedYet": "Not used yet",
+  "@devicesNotUsedYet": {
+    "description": "screens/linked_devices_screen.dart: a linked device that was never opened since"
+  },
+  "devicesUnlinksSoon": "{days, plural, =0{Unlinks today unless you open it} =1{Unlinks tomorrow unless you open it} other{Unlinks in {days} days unless you open it}}",
+  "@devicesUnlinksSoon": {
+    "description": "screens/linked_devices_screen.dart: in amber, under a device close to the 30 days unused",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "devicesEmptyTitle": "Kryfo on your computer",
+  "@devicesEmptyTitle": {
+    "description": "screens/linked_devices_screen.dart: over the empty list, only this phone"
+  },
+  "devicesEmptyLine": "Link a computer to read and send your messages there. Up to five devices besides this phone.",
+  "@devicesEmptyLine": {
+    "description": "screens/linked_devices_screen.dart: under the empty title"
+  },
+  "devicesContactsSeeNothing": "Your contacts' apps don't show your devices.",
+  "@devicesContactsSeeNothing": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, about what contacts see"
+  },
+  "devicesUnusedRule": "A device you don't open for 30 days unlinks itself and wipes your chats from it.",
+  "@devicesUnusedRule": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, the 30 day rule"
+  },
+  "devicesFull": "Five devices are linked. Remove one to link another.",
+  "@devicesFull": {
+    "description": "screens/linked_devices_screen.dart: over the link button when five are linked"
+  },
+  "devicesLinkADevice": "Link a device",
+  "@devicesLinkADevice": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens"
+  },
+  "devicesRemoveAll": "Remove all other devices",
+  "@devicesRemoveAll": {
+    "description": "screens/linked_devices_screen.dart: the rose row at the foot of the list"
+  },
+  "devicesRemoveAllTitle": "Remove all other devices?",
+  "@devicesRemoveAllTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks"
+  },
+  "devicesRemoveAllLine": "Once your contacts' apps get the change, they stop getting new messages and can't send as you. This phone keeps everything.",
+  "@devicesRemoveAllLine": {
+    "description": "screens/linked_devices_screen.dart: under the question"
+  },
+  "devicesRemoveAllYes": "Remove all",
+  "@devicesRemoveAllYes": {
+    "description": "screens/linked_devices_screen.dart: the rose button that removes them"
+  },
+  "devicesRemovedAll": "Only this phone now",
+  "@devicesRemovedAll": {
+    "description": "screens/linked_devices_screen.dart: the toast once they are removed"
+  },
+  "devicesRemoveTitle": "Remove {name}?",
+  "@devicesRemoveTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks before one device goes",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRemoveLine": "Once your contacts' apps get the change, it stops getting new messages and can't send as you. It wipes your chats from itself the next time it's online. A device someone has tampered with may keep what it already has.",
+  "@devicesRemoveLine": {
+    "description": "screens/linked_devices_screen.dart: under the question; the last sentence is the honest part"
+  },
+  "devicesRemove": "Remove",
+  "@devicesRemove": {
+    "description": "screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it"
+  },
+  "devicesRemoved": "{name} removed",
+  "@devicesRemoved": {
+    "description": "screens/linked_devices_screen.dart: the toast once a device is removed",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRename": "Rename",
+  "@devicesRename": {
+    "description": "screens/linked_devices_screen.dart: a row in a device sheet"
+  },
+  "devicesRenameTitle": "Rename {name}",
+  "@devicesRenameTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet with the name field",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRenameLine": "Only you see this name. Your contacts never do.",
+  "@devicesRenameLine": {
+    "description": "screens/linked_devices_screen.dart: under the rename title"
+  },
+  "devicesNameComputer": "Computer",
+  "@devicesNameComputer": {
+    "description": "screens/linked_devices_screen.dart: the hint in an empty name field"
+  },
+  "devicesDeviceCode": "Device code",
+  "@devicesDeviceCode": {
+    "description": "screens/linked_devices_screen.dart: over the device code in a device sheet"
+  },
+  "devicesDeviceCodeLine": "The same code shows on the device itself, in Settings.",
+  "@devicesDeviceCodeLine": {
+    "description": "screens/linked_devices_screen.dart: under the device code"
+  },
+  "devicesLinkStep1": "Open Kryfo on your computer. It shows a code.",
+  "@devicesLinkStep1": {
+    "description": "screens/linked_devices_screen.dart: the first step on the link page"
+  },
+  "devicesLinkStep2": "Scan the code with this phone.",
+  "@devicesLinkStep2": {
+    "description": "screens/linked_devices_screen.dart: the second step on the link page"
+  },
+  "devicesLinkStep3": "Check that both screens show the same six numbers.",
+  "@devicesLinkStep3": {
+    "description": "screens/linked_devices_screen.dart: the third step on the link page"
+  },
+  "devicesHistory": "History",
+  "@devicesHistory": {
+    "description": "screens/linked_devices_screen.dart: the section over the history choices"
+  },
+  "devicesHistoryCopy": "Copy my chats",
+  "@devicesHistoryCopy": {
+    "description": "screens/linked_devices_screen.dart: the first history choice, picked to start"
+  },
+  "devicesHistoryCopyHint": "All your messages, with photos and videos from the last 30 days.",
+  "@devicesHistoryCopyHint": {
+    "description": "screens/linked_devices_screen.dart: under the first history choice"
+  },
+  "devicesHistoryNone": "Start with no history",
+  "@devicesHistoryNone": {
+    "description": "screens/linked_devices_screen.dart: the second history choice"
+  },
+  "devicesHistoryNoneHint": "Only new messages reach the device.",
+  "@devicesHistoryNoneHint": {
+    "description": "screens/linked_devices_screen.dart: under the second history choice"
+  },
+  "devicesSkipMedia": "Skip photos and videos",
+  "@devicesSkipMedia": {
+    "description": "screens/linked_devices_screen.dart: the switch under the first history choice"
+  },
+  "devicesSkipMediaHint": "Only the text comes over. Quicker, and less to keep on the device.",
+  "@devicesSkipMediaHint": {
+    "description": "screens/linked_devices_screen.dart: under the switch"
+  },
+  "devicesHiddenStay": "Hidden chats and the decoy stay on this phone.",
+  "@devicesHiddenStay": {
+    "description": "screens/linked_devices_screen.dart: a note on the link page"
+  },
+  "devicesScanCode": "Scan the code",
+  "@devicesScanCode": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
   }
 }

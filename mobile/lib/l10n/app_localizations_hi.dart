@@ -9617,4 +9617,175 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get captureRecording =>
       'यह स्क्रीन रिकॉर्ड हो रही है। किसी और को नहीं बताया गया।';
+
+  @override
+  String get settingsDevices => 'डिवाइस';
+
+  @override
+  String get devicesLinkedDevices => 'जुड़े हुए डिवाइस';
+
+  @override
+  String get devicesThisPhoneOnly => 'सिर्फ़ यह फ़ोन';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'यह फ़ोन';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'सिर्फ़ यही फ़ोन डिवाइस जोड़ या हटा सकता है';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date को जोड़ा गया';
+  }
+
+  @override
+  String get devicesUsedToday => 'आज इस्तेमाल हुआ';
+
+  @override
+  String get devicesUsedThisWeek => 'इस हफ़्ते इस्तेमाल हुआ';
+
+  @override
+  String get devicesUsedThisMonth => 'इस महीने इस्तेमाल हुआ';
+
+  @override
+  String get devicesNotUsedYet => 'अभी तक इस्तेमाल नहीं हुआ';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'न खोलने पर $daysString दिन में अलग हो जाएगा',
+      one: 'न खोलने पर कल अलग हो जाएगा',
+      zero: 'न खोलने पर आज अलग हो जाएगा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'आपके कंप्यूटर पर Kryfo';
+
+  @override
+  String get devicesEmptyLine =>
+      'कंप्यूटर जोड़ें और वहीं से अपने मैसेज पढ़ें और भेजें। इस फ़ोन के अलावा ज़्यादा से ज़्यादा पाँच डिवाइस।';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'आपके संपर्कों के ऐप में आपके डिवाइस नहीं दिखते।';
+
+  @override
+  String get devicesUnusedRule =>
+      'जिस डिवाइस को आप 30 दिन तक नहीं खोलते, वह खुद अलग हो जाता है और अपने ऊपर से आपकी चैट मिटा देता है।';
+
+  @override
+  String get devicesFull =>
+      'पाँच डिवाइस जुड़े हैं। दूसरा जोड़ने के लिए एक हटाएँ।';
+
+  @override
+  String get devicesLinkADevice => 'डिवाइस जोड़ें';
+
+  @override
+  String get devicesRemoveAll => 'बाकी सभी डिवाइस हटाएँ';
+
+  @override
+  String get devicesRemoveAllTitle => 'बाकी सभी डिवाइस हटाएँ?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'जब आपके संपर्कों के ऐप तक यह बदलाव पहुँच जाएगा, तब उन्हें नए मैसेज नहीं मिलेंगे और वे आपके नाम से नहीं भेज पाएँगे। इस फ़ोन पर सब कुछ रहेगा।';
+
+  @override
+  String get devicesRemoveAllYes => 'सभी हटाएँ';
+
+  @override
+  String get devicesRemovedAll => 'अब सिर्फ़ यह फ़ोन';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '$name हटाएँ?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'जब आपके संपर्कों के ऐप तक यह बदलाव पहुँच जाएगा, तब इसे नए मैसेज नहीं मिलेंगे और यह आपके नाम से नहीं भेज पाएगा। अगली बार ऑनलाइन होने पर यह अपने ऊपर से आपकी चैट मिटा देगा। जिस डिवाइस से किसी ने छेड़छाड़ की हो, वह पहले से मौजूद चीज़ें अपने पास रख सकता है।';
+
+  @override
+  String get devicesRemove => 'हटाएँ';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name हटाया गया';
+  }
+
+  @override
+  String get devicesRename => 'नाम बदलें';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '$name का नाम बदलें';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'यह नाम सिर्फ़ आपको दिखता है। आपके संपर्कों को कभी नहीं।';
+
+  @override
+  String get devicesNameComputer => 'कंप्यूटर';
+
+  @override
+  String get devicesDeviceCode => 'डिवाइस कोड';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'यही कोड उस डिवाइस पर भी, सेटिंग में, दिखता है।';
+
+  @override
+  String get devicesLinkStep1 =>
+      'अपने कंप्यूटर पर Kryfo खोलें। उस पर एक कोड दिखेगा।';
+
+  @override
+  String get devicesLinkStep2 => 'इस फ़ोन से वह कोड स्कैन करें।';
+
+  @override
+  String get devicesLinkStep3 =>
+      'देखें कि दोनों स्क्रीन पर वही छह अंक दिख रहे हैं।';
+
+  @override
+  String get devicesHistory => 'पुरानी चैट';
+
+  @override
+  String get devicesHistoryCopy => 'मेरी चैट कॉपी करें';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'आपके सारे मैसेज, पिछले 30 दिन की फ़ोटो और वीडियो के साथ।';
+
+  @override
+  String get devicesHistoryNone => 'बिना पुरानी चैट के शुरू करें';
+
+  @override
+  String get devicesHistoryNoneHint => 'डिवाइस पर सिर्फ़ नए मैसेज आएँगे।';
+
+  @override
+  String get devicesSkipMedia => 'फ़ोटो और वीडियो छोड़ दें';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'सिर्फ़ टेक्स्ट आएगा। जल्दी होगा, और डिवाइस पर कम जगह लगेगी।';
+
+  @override
+  String get devicesHiddenStay =>
+      'छिपी चैट और नकली Kryfo इसी फ़ोन पर रहते हैं।';
+
+  @override
+  String get devicesScanCode => 'कोड स्कैन करें';
 }
