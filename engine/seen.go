@@ -149,7 +149,7 @@ func dropAddressFiles(rcvPk string) {
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
-	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
+	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, storeLastPath(lastPath, storeSecond), heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
 		goneFiles.Store(p, struct{}{})
 		os.Remove(p)
 	}
@@ -459,6 +459,22 @@ func (s *seenIDs) handed(id nostr.ID) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.opened.has(id)
+}
+
+// opened here and kept, or still on its way to the app, or left on the relay
+// by it: a copy another of our stores hands over may move that store's
+// anchor too, as the app has the first copy or will
+func (s *seenIDs) taken(id nostr.ID) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.opened.has(id) {
+		return true
+	}
+	if _, ok := s.queued[id]; ok {
+		return true
+	}
+	_, ok := s.held[id]
+	return ok
 }
 
 // an event that did not open: remembered now, it will never be handed over

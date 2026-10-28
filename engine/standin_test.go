@@ -89,6 +89,8 @@ type relayStandIn struct {
 	// a req is taken and the socket closed with no answer, as a listener
 	// with nothing behind it does
 	hangUp bool
+	// before a publish's ok goes back, as from a relay far away
+	okDelay time.Duration
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -239,7 +241,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if refuse == "" {
 				s.accepted++
 			}
+			okDelay := s.okDelay
 			s.mu.Unlock()
+			if okDelay > 0 {
+				time.Sleep(okDelay)
+			}
 			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: refuse == "", Reason: refuse}.MarshalJSON()
 			if conn.Write(ctx, ws.MessageText, b) != nil {
 				return
@@ -588,6 +594,9 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		atomic.StoreInt32(&pinnedSocks, oldPin)
 		setSavedDataDir(oldDir)
 		setRelays(oldRelays)
+		setBackups(nil)
+		topupForget()
+		relayMsClear()
 		nostrResetClient()
 		relayClearBenches()
 		wakeReset()
@@ -596,6 +605,9 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	// addresses a test before this one left registered would crowd the cap
 	liveReset()
 	wakeReset()
+	setBackups(nil)
+	topupForget()
+	relayMsClear()
 	transportMode.Store(mode)
 	if socks != nil {
 		atomic.StoreInt32(&pinnedSocks, int32(socks.port()))

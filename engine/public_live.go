@@ -310,6 +310,9 @@ func ownRelayAnswered() {
 // an attempt on an entry of our relay failed
 func ownRelayFailed() {
 	wakeCheck()
+	// asked before liveMu: their own locks are never taken under it
+	fast := len(backupsNow()) > 0
+	torWorks := fast && torCarriesNow() && !netAway()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()
@@ -317,15 +320,25 @@ func ownRelayFailed() {
 		ownKnown, ownAnsweredAt = true, now
 	}
 	// with no public relay answering either, it is the route or a wake, not
-	// ours: the span starts again once one does
-	if pubAnsweredAt == 0 || now-pubAnsweredAt > pubAnswerRecent {
+	// ours: the span starts again once one does. on fast the public relays
+	// are the backups, read only once ours are down, through tor: tor able
+	// to carry is the proof there
+	works := pubAnsweredAt != 0 && now-pubAnsweredAt <= pubAnswerRecent
+	if fast && !works {
+		works = torWorks
+	}
+	if !works {
 		ownFailedAt = 0
 		return
 	}
 	if ownFailedAt == 0 {
 		ownFailedAt = now
 	}
-	if !ownDown && now-ownAnsweredAt >= ownDownAfter && now-ownFailedAt >= ownFailSpan {
+	after, span := ownDownAfter, ownFailSpan
+	if fast {
+		after, span = fastDownAfter, fastFailSpan
+	}
+	if !ownDown && now-ownAnsweredAt >= after && now-ownFailedAt >= span {
 		ownDown = true
 		log.Println("nostr: our relay is down, public relays read more often")
 		liveWakeLocked()
@@ -339,6 +352,13 @@ func liveSlept() (cut bool) {
 	cut, ownFailedAt = ownFailedAt != 0, 0
 	liveMu.Unlock()
 	return cut
+}
+
+// closed when the round changes: our relay down or back
+func liveWakeChan() <-chan struct{} {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	return liveWakeC
 }
 
 // whether the round now is the one for our relay down
