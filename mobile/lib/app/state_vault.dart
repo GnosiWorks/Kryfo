@@ -3,6 +3,9 @@
 
 part of '../main.dart';
 
+// marks the zone of a vault job, so one never waits on its own chain
+const _kVaultJob = #kryfoVaultJob;
+
 extension AppStateVault on AppState {
   // an arrival for a hidden chat while the vault is shut: sealed to the
   // vault as it came, and nothing else happens. a 1:1 message still gets
@@ -242,12 +245,30 @@ extension AppStateVault on AppState {
     }
   }
 
-  /// [work] with no chat hidden or unhidden meanwhile: a history copy
-  /// reads the chats under it
-  Future<void> withVaultStill(Future<void> Function() work) => _serial(work);
+  /// [work] with no chat hidden, unhidden or removed meanwhile: a history
+  /// copy reads the chats under it. a vault opening, closing or reading its
+  /// cards never waits on it, so a hidden chats PIN answers as fast as any
+  Future<void> withVaultStill(Future<void> Function() work) {
+    // neither chain lets a job wait on itself
+    if (Zone.current[_kVaultJob] == true) {
+      throw StateError('a history copy cannot start inside vault work');
+    }
+    return _movingChats(work);
+  }
+
+  // hide, unhide, remove and destroy take this first, then _serial
+  Future<T> _movingChats<T>(Future<T> Function() work) {
+    final r = _chatMoves.then(
+      (_) => runZoned(work, zoneValues: {_kVaultJob: true}),
+    );
+    _chatMoves = r.then((_) {}, onError: (_) {});
+    return r;
+  }
 
   Future<T> _serial<T>(Future<T> Function() work) {
-    final r = _vaultWork.then((_) => work());
+    final r = _vaultWork.then(
+      (_) => runZoned(work, zoneValues: {_kVaultJob: true}),
+    );
     // the caller gets any error from r; the chain only keeps the order
     _vaultWork = r.then((_) {}, onError: (_) {});
     return r;
@@ -325,7 +346,8 @@ extension AppStateVault on AppState {
   // replace, or the lock turned off: the entry first, then the list (its
   // people stay as a drop list), the files last. never from inside a vault,
   // and only the identity on screen's
-  Future<void> destroyVault() => _serial(() => _destroy(_ownVault));
+  Future<void> destroyVault() =>
+      _movingChats(() => _serial(() => _destroy(_ownVault)));
 
   Future<void> _destroy(HaloContainer c) async {
     if (_session.vault != null) throw StateError('the vault is open');
@@ -347,87 +369,97 @@ extension AppStateVault on AppState {
   Future<int> hideChats({
     Iterable<String> people = const [],
     Iterable<String> groups = const [],
-  }) => _serial(() async {
-    final v = _session.vault ?? _madeVault;
-    if (v == null) throw StateError('no vault at hand');
-    final chats = _refs(people, groups);
-    if (chats.isEmpty) return 0;
-    final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
-    // what could still name them outside the vault, and what they showed.
-    // the decoy keeps no one outside and never shows anything
-    if (AppState._everyday(v)) {
-      await _forgetPeers(_router.ids);
-      if (went.isNotEmpty) {
-        await _host.clearShade([
-          for (final c in went) c.group ? 'group:${c.id}' : c.id,
-        ]);
+  }) => _movingChats(
+    () => _serial(() async {
+      final v = _session.vault ?? _madeVault;
+      if (v == null) throw StateError('no vault at hand');
+      final chats = _refs(people, groups);
+      if (chats.isEmpty) return 0;
+      final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
+      // a copy open to a new device may already hold their rows: it ends
+      if (went.isNotEmpty) endHistoryCopies();
+      // what could still name them outside the vault, and what they showed.
+      // the decoy keeps no one outside and never shows anything
+      if (AppState._everyday(v)) {
+        await _forgetPeers(_router.ids);
+        if (went.isNotEmpty) {
+          await _host.clearShade([
+            for (final c in went) c.group ? 'group:${c.id}' : c.id,
+          ]);
+        }
       }
-    }
-    await refreshContacts();
-    await refreshGroups();
-    return went.length;
-  });
+      await refreshContacts();
+      await refreshGroups();
+      return went.length;
+    }),
+  );
 
   // hidden chats back in the chat list, from inside the vault. how many
   // came back
   Future<int> unhideChats({
     Iterable<String> people = const [],
     Iterable<String> groups = const [],
-  }) => _serial(() async {
-    final v = _session.vault ?? _madeVault;
-    if (v == null) throw StateError('no vault at hand');
-    final chats = _refs(people, groups);
-    if (chats.isEmpty) return 0;
-    final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
-    await refreshContacts();
-    await refreshGroups();
-    return n;
-  });
+  }) => _movingChats(
+    () => _serial(() async {
+      final v = _session.vault ?? _madeVault;
+      if (v == null) throw StateError('no vault at hand');
+      final chats = _refs(people, groups);
+      if (chats.isEmpty) return 0;
+      final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
+      await refreshContacts();
+      await refreshGroups();
+      return n;
+    }),
+  );
 
   // remove hidden chats, from inside the vault: every chat it holds comes
   // back first, then the pin entry goes, then its key and files. a crash
   // part way leaves the rest hidden behind the same pin
-  Future<void> removeVault() => _serial(() async {
-    final v = _session.vault ?? _madeVault;
-    if (v == null) throw StateError('no vault at hand');
-    final everyday = AppState._everyday(v);
-    // every chat it holds, so each comes back alike: as the list names them
-    // on the everyday side, as its own rows do on the decoy's
-    final List<ChatRef> all;
-    if (everyday) {
-      await _attached(v, _recard);
-      all = [for (final (id, g) in _router.hiddenChats) ChatRef(id, group: g)];
-    } else {
-      all = await _attached(
-        v,
-        (m) async => [
-          for (final MapEntry(key: id, value: (kind, _))
-              in (await m.vaultCards()).entries)
-            ChatRef(id, group: kind == kHiddenGroup),
-        ],
-      );
-    }
-    await _move(v, all, (m) => _unhide(m, v, all), out: true);
-    if (everyday) {
-      // what is still listed the vault no longer holds: deleted inside it
-      await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
-    }
-    // its blocked keys and let-go words stay, on the side its chats went to
-    await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());
-    await _host.clearEntry(v.container);
-    if (everyday) await _router.retire();
-    if (identical(_session.vault, v)) {
-      _session = Session(_session.primary);
-      lockState.inVault = false;
-      _forgetVaultSide();
-      _vaultShade.clear();
-    }
-    if (identical(_madeVault, v)) _madeVault = null;
-    await v.close();
-    await _host.wipeVault(v.container);
-    await refreshContacts();
-    await refreshGroups();
-  });
+  Future<void> removeVault() => _movingChats(
+    () => _serial(() async {
+      final v = _session.vault ?? _madeVault;
+      if (v == null) throw StateError('no vault at hand');
+      final everyday = AppState._everyday(v);
+      // every chat it holds, so each comes back alike: as the list names them
+      // on the everyday side, as its own rows do on the decoy's
+      final List<ChatRef> all;
+      if (everyday) {
+        await _attached(v, _recard);
+        all = [
+          for (final (id, g) in _router.hiddenChats) ChatRef(id, group: g),
+        ];
+      } else {
+        all = await _attached(
+          v,
+          (m) async => [
+            for (final MapEntry(key: id, value: (kind, _))
+                in (await m.vaultCards()).entries)
+              ChatRef(id, group: kind == kHiddenGroup),
+          ],
+        );
+      }
+      await _move(v, all, (m) => _unhide(m, v, all), out: true);
+      if (everyday) {
+        // what is still listed the vault no longer holds: deleted inside it
+        await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
+      }
+      // its blocked keys and let-go words stay, on the side its chats went to
+      await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());
+      await _host.clearEntry(v.container);
+      if (everyday) await _router.retire();
+      if (identical(_session.vault, v)) {
+        _session = Session(_session.primary);
+        lockState.inVault = false;
+        _forgetVaultSide();
+        _vaultShade.clear();
+      }
+      if (identical(_madeVault, v)) _madeVault = null;
+      await v.close();
+      await _host.wipeVault(v.container);
+      await refreshContacts();
+      await refreshGroups();
+    }),
+  );
 
   // for a vault just opened, before its session is built: its side of a
   // move a crash cut short is put right

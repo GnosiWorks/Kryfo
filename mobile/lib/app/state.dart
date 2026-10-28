@@ -585,6 +585,9 @@ class AppState extends ChangeNotifier {
   HaloDb? _madeVault;
   // one change to the vault at a time
   Future<void> _vaultWork = Future<void>.value();
+  // what changes which chats are hidden, one at a time; a history copy
+  // reads the chats under it, and a vault opening never waits on it
+  Future<void> _chatMoves = Future<void>.value();
   // the chats being moved and the people they reach
   final Set<String> _moving = {};
   Completer<void>? _moveDone;
