@@ -620,9 +620,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appSpeedPrivacy => 'Velocità e privacy →';
 
   @override
-  String get appGettingMessages => 'Ricezione messaggi →';
-
-  @override
   String get appDisableAppLock => 'Disattivare il blocco app?';
 
   @override
@@ -2416,13 +2413,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Felice di aiutare';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Ricezione messaggi';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Come arrivano i nuovi messaggi su questo telefono. Puoi cambiarlo quando vuoi.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Sempre attivo';
@@ -5270,7 +5260,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsAppLock => 'Blocco app';
 
   @override
-  String get settingsBlockedByAndroid => 'Bloccate da android';
+  String get settingsBlockedByAndroid => 'Bloccate da Android';
 
   @override
   String get settingsSpeedPrivacy => 'Velocità e privacy';
@@ -5283,9 +5273,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 salti';
-
-  @override
-  String get settingsGettingMessages => 'Ricezione messaggi';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9360,6 +9347,93 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Finché è attiva un\'icona neutra, le nuove foto, i video e i file vengono salvati con nomi comuni nelle cartelle abituali del telefono. Ciò che è già salvato resta dov\'è.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push di Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Come arrivano i nuovi messaggi su questo telefono, come suonano e cosa mostrano. Puoi cambiarlo quando vuoi.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Come ti arrivano i messaggi';
+
+  @override
+  String get notificationsRecommended => 'Consigliato';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Immediato e leggero. Google può vedere quando il tuo telefono viene svegliato, mai chi ha scritto o cosa è stato detto.';
+
+  @override
+  String get notificationsGoogleStarting => 'Attivazione…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Il push di Google non è partito. Controlla la connessione e riprova.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sullo stesso server e potrebbe collegarli, quindi potrebbe farlo anche chi gestisce o sequestra il nostro server. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Il nostro relay al momento non accetta alcune registrazioni di questo telefono. Quelle chat arrivano con il controllo ogni 15 minuti, e Kryfo continua a provare.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Suono e vibrazione';
+
+  @override
+  String get notificationsSoundHint => 'Nelle impostazioni di Android';
+
+  @override
+  String get notificationsEachShows => 'Ogni notifica mostra';
+
+  @override
+  String get notificationsBatteryTips => 'Consigli per la batteria';
+
+  @override
+  String get notificationsBatteryAllowed => 'Consentito';
+
+  @override
+  String get notificationsBatteryNotYet => 'Non consentito';
+
+  @override
+  String get notificationsMakerSwitch => 'L’interruttore del produttore';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Come ti *arrivano* i messaggi.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Puoi cambiarlo quando vuoi in Notifiche.';
+
+  @override
+  String get homeGoogleTitle => 'È arrivato il push di Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Immediato e leggero sulla batteria. Google può vedere quando il tuo telefono viene svegliato, mai chi ha scritto o cosa è stato detto.';
+
+  @override
+  String get homeGoogleUse => 'Usalo';
+
+  @override
+  String get homeGoogleOn => 'Il push di Google è attivo';
+
+  @override
+  String get homeGoogleGoneTitle => 'Il push di Google non è disponibile';
+
+  @override
+  String get appNotificationsLink => 'Notifiche →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push di Google $got · declassati $low';
+  }
 
   @override
   String get passFieldLabel => 'Passphrase';

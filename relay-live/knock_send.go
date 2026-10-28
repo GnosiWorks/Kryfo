@@ -418,7 +418,9 @@ func (q *knockQueue) send(ctx context.Context, ep *knockEP, decoy bool) bool {
 	host := strings.ToLower(u.Hostname())
 	ipKey := host
 	var ips []net.IP
-	if !strings.HasSuffix(host, ".onion") {
+	// our gateway on this box is posted to on loopback, no name to look up
+	local := k.gatewayLocal != "" && host == k.gateway
+	if !local && !strings.HasSuffix(host, ".onion") {
 		rctx, cancel := context.WithTimeout(ctx, knockPostTimeout)
 		ips, err = q.resolve(rctx, host)
 		cancel()
@@ -743,4 +745,33 @@ func knockPoster(c *http.Client) func(ctx context.Context, endpoint string) (int
 		resp.Body.Close()
 		return resp.StatusCode, nil
 	}
+}
+
+// our own gateway, on this box: its knocks go to it on loopback, plain
+// http, the same path. every other endpoint naming this box stays refused.
+// local is a loopback host:port, anything else leaves the posts as they are
+func knockPosterVia(post func(ctx context.Context, endpoint string) (int, error), gateway, local string) func(ctx context.Context, endpoint string) (int, error) {
+	if gateway == "" || !knockLoopback(local) {
+		return post
+	}
+	d := &net.Dialer{Timeout: knockPostTimeout}
+	direct := knockPoster(knockClientWith(func(ctx context.Context, _, _ string) (net.Conn, error) {
+		return d.DialContext(ctx, "tcp", local)
+	}))
+	return func(ctx context.Context, endpoint string) (int, error) {
+		u, err := url.Parse(endpoint)
+		if err != nil || strings.ToLower(u.Hostname()) != gateway {
+			return post(ctx, endpoint)
+		}
+		return direct(ctx, "http://"+local+u.EscapedPath())
+	}
+}
+
+func knockLoopback(hostPort string) bool {
+	h, p, err := net.SplitHostPort(hostPort)
+	if err != nil || p == "" {
+		return false
+	}
+	ip := net.ParseIP(h)
+	return ip != nil && ip.IsLoopback()
 }

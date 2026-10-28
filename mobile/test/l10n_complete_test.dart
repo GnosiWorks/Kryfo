@@ -57,6 +57,7 @@ const _names = {
   'f',
   'droid',
   'unifiedpush',
+  'google',
   'ntfy',
   'pro',
   'natural',

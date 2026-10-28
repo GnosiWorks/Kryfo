@@ -647,9 +647,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appSpeedPrivacy => 'السرعة والخصوصية ←';
 
   @override
-  String get appGettingMessages => 'استلام الرسائل ←';
-
-  @override
   String get appDisableAppLock => 'تعطيل قفل التطبيق؟';
 
   @override
@@ -2453,13 +2450,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'يكفيني أني ساعدت';
-
-  @override
-  String get gettingMessagesGettingMessages => 'استلام الرسائل';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'كيف تصل الرسائل الجديدة إلى هذا الهاتف. يمكنك تغيير ذلك متى شئت.';
 
   @override
   String get gettingMessagesAlwaysOn => 'متصل دائمًا';
@@ -5320,9 +5310,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · ثلاث قفزات';
-
-  @override
-  String get settingsGettingMessages => 'استلام الرسائل';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9418,6 +9405,93 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'ما دامت أيقونة بسيطة مفعّلة، تُحفظ الصور والفيديوهات والملفات الجديدة بأسماء عادية في مجلدات هاتفك المعتادة. وما حُفظ من قبل يبقى في مكانه.';
+
+  @override
+  String get deliveryModeGooglePush => 'إشعارات Google الفورية';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'كيف تصل الرسائل الجديدة إلى هذا الهاتف، وما صوتها وما تعرضه. يمكنك تغيير ذلك متى شئت.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'كيف تصلك الرسائل';
+
+  @override
+  String get notificationsRecommended => 'مُوصى به';
+
+  @override
+  String get notificationsGoogleBody =>
+      'فوري وخفيف. يمكن لـ Google أن ترى متى يُوقَظ هاتفك، ولا ترى أبدًا من كتب أو ماذا قيل.';
+
+  @override
+  String get notificationsGoogleStarting => 'جارٍ التشغيل…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'تعذّر تشغيل إشعارات Google الفورية. تحقّق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على الخادم نفسه ويمكنها الربط بينها، لذا يستطيع ذلك أيضًا من يدير خادمنا أو يصادره. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'لا يقبل مُرحِّلنا الآن بعض تسجيلات هذا الهاتف. تصل تلك المحادثات مع التفقّد كل ١٥ دقيقة، ويواصل Kryfo المحاولة.';
+
+  @override
+  String get notificationsSoundAndVibration => 'الصوت والاهتزاز';
+
+  @override
+  String get notificationsSoundHint => 'في إعدادات أندرويد نفسه';
+
+  @override
+  String get notificationsEachShows => 'يعرض كل إشعار';
+
+  @override
+  String get notificationsBatteryTips => 'نصائح للبطارية';
+
+  @override
+  String get notificationsBatteryAllowed => 'مسموح';
+
+  @override
+  String get notificationsBatteryNotYet => 'غير مسموح';
+
+  @override
+  String get notificationsMakerSwitch => 'مفتاح الشركة المصنّعة لهاتفك';
+
+  @override
+  String get onboardingDeliveryHeadline => 'كيف *تصلك* الرسائل.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'يمكنك تغيير ذلك في أي وقت من «الإشعارات».';
+
+  @override
+  String get homeGoogleTitle => 'وصلت إشعارات Google الفورية';
+
+  @override
+  String get homeGoogleLine =>
+      'فورية ورفيقة بالبطارية. يمكن لـ Google أن ترى متى يُوقَظ هاتفك، ولا ترى أبدًا من كتب أو ماذا قيل.';
+
+  @override
+  String get homeGoogleUse => 'استخدمها';
+
+  @override
+  String get homeGoogleOn => 'إشعارات Google الفورية مفعّلة';
+
+  @override
+  String get homeGoogleGoneTitle => 'إشعارات Google الفورية غير متاحة';
+
+  @override
+  String get appNotificationsLink => 'الإشعارات ←';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'إشعارات Google ‏$got · خُفّضت $low';
+  }
 
   @override
   String get passFieldLabel => 'عبارة المرور';

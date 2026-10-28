@@ -58,6 +58,13 @@ foss is the build f-droid, github and the site ship, with no google code,
 and the one a build that names no flavor gets. the google play bundle is
 `flutter build appbundle --release --flavor play`.
 
+the play build has google push, so it needs the firebase project's
+`google-services.json`, which is never in git: put it at
+`~/.kryfo-secrets/play/google-services.json`, or name it in
+`KRYFO_GOOGLE_SERVICES`. a play build without it stops and says so. only its
+public ids go into the bundle's resources (android/app/build.gradle.kts), and
+a foss build never opens it.
+
 gradle runs offline. a fresh machine needs one online run first:
 
     cd mobile/android && ./gradlew :app:lintFossDebug

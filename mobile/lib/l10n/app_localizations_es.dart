@@ -620,9 +620,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appSpeedPrivacy => 'Velocidad y privacidad →';
 
   @override
-  String get appGettingMessages => 'Recibir mensajes →';
-
-  @override
   String get appDisableAppLock => '¿Desactivar el bloqueo?';
 
   @override
@@ -2417,13 +2414,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Solo quiero ayudar';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Recibir mensajes';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cómo llegan los mensajes nuevos a este teléfono. Puedes cambiarlo cuando quieras.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Siempre activo';
@@ -5281,9 +5271,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 saltos';
-
-  @override
-  String get settingsGettingMessages => 'Recibir mensajes';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9356,6 +9343,93 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Mientras un icono neutro esté activo, las fotos, los vídeos y los archivos nuevos se guardan con nombres corrientes en las carpetas habituales de tu teléfono. Lo que ya se guardó se queda donde está.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push de Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Cómo llegan los mensajes nuevos a este teléfono, cómo suenan y qué muestran. Puedes cambiarlo cuando quieras.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cómo te llegan los mensajes';
+
+  @override
+  String get notificationsRecommended => 'Recomendado';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Al instante y ligero. Google puede ver cuándo se despierta tu teléfono, nunca quién escribió ni qué se dijo.';
+
+  @override
+  String get notificationsGoogleStarting => 'Activando…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'El push de Google no pudo empezar. Revisa la conexión y vuelve a intentarlo.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor solo guarda direcciones que no puede unir entre sí. El servicio de push funciona en el mismo servidor y podría unirlas, así que quien gestione o incaute nuestro servidor también podría. Si eso te importa, elige otra forma. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Nuestro repetidor no está aceptando algunos registros de este teléfono por ahora. Esos chats llegan con la consulta cada 15 minutos, y Kryfo sigue intentándolo.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Sonido y vibración';
+
+  @override
+  String get notificationsSoundHint => 'En los ajustes de Android';
+
+  @override
+  String get notificationsEachShows => 'Cada notificación muestra';
+
+  @override
+  String get notificationsBatteryTips => 'Consejos de batería';
+
+  @override
+  String get notificationsBatteryAllowed => 'Permitido';
+
+  @override
+  String get notificationsBatteryNotYet => 'No permitido';
+
+  @override
+  String get notificationsMakerSwitch => 'El interruptor de tu fabricante';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cómo *te llegan* los mensajes.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Puedes cambiarlo cuando quieras en Notificaciones.';
+
+  @override
+  String get homeGoogleTitle => 'Ya está el push de Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Al instante y cuida la batería. Google puede ver cuándo se despierta tu teléfono, nunca quién escribió ni qué se dijo.';
+
+  @override
+  String get homeGoogleUse => 'Usarlo';
+
+  @override
+  String get homeGoogleOn => 'El push de Google está activado';
+
+  @override
+  String get homeGoogleGoneTitle => 'El push de Google no está disponible';
+
+  @override
+  String get appNotificationsLink => 'Notificaciones →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push de Google $got · rebajados $low';
+  }
 
   @override
   String get passFieldLabel => 'Frase de contraseña';

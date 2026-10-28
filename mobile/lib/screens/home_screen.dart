@@ -55,7 +55,7 @@ import '../widgets/swipe_actions.dart';
 import '../notif_permission.dart';
 import '../seen_timers.dart';
 import '../delivery_mode.dart';
-import 'getting_messages_screen.dart';
+import 'notifications_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
@@ -463,6 +463,7 @@ class _ChatsTab extends StatelessWidget {
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _HelperGoneCard(),
+          const _GooglePushCard(),
           const _NotificationsBlockedHint(),
           const UpdateHint(),
           const _ShotsCard(),
@@ -1061,6 +1062,8 @@ class _HelperGoneCard extends StatelessWidget {
         tint: HaloColors.amber,
         title: appState.helperRelayStopped
             ? l10n.homeHelperRelayTitle
+            : appState.helperGoneWasGoogle
+            ? l10n.homeGoogleGoneTitle
             : l10n.homeHelperGoneTitle,
         line: l10n.homeHelperGoneLine,
         lineColor: HaloColors.warm,
@@ -1071,7 +1074,7 @@ class _HelperGoneCard extends StatelessWidget {
               unawaited(appState.helperGoneAnswered());
               Navigator.of(
                 context,
-              ).push(haloRoute(const GettingMessagesScreen()));
+              ).push(haloRoute(const NotificationsScreen()));
             },
             fill: HaloColors.amber,
             ink: HaloColors.onAmber,
@@ -1079,6 +1082,67 @@ class _HelperGoneCard extends StatelessWidget {
           CardAction(
             label: l10n.homeNotNow,
             onTap: () => appState.helperGoneAnswered(),
+            ink: HaloColors.warm,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// a play build updated from before google push: one calm card offering it,
+// once. never in a decoy (googleCardDue)
+class _GooglePushCard extends StatefulWidget {
+  const _GooglePushCard();
+
+  @override
+  State<_GooglePushCard> createState() => _GooglePushCardState();
+}
+
+class _GooglePushCardState extends State<_GooglePushCard> {
+  bool _busy = false;
+
+  Future<void> _use() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final ok = await appState.useGoogle();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) {
+      HapticFeedback.lightImpact();
+      showHaloToast(context, l10n.homeGoogleOn);
+    } else {
+      // the card stays, so it can be tried again
+      HapticFeedback.heavyImpact();
+      showHaloToast(context, l10n.notificationsGoogleNoStart);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) => _HomeCard(
+        show: appState.googleCardDue,
+        id: 'google-push',
+        tint: HaloColors.amber,
+        wash: true,
+        title: l10n.homeGoogleTitle,
+        line: l10n.homeGoogleLine,
+        lineColor: HaloColors.warm,
+        actions: [
+          CardAction(
+            label: _busy
+                ? l10n.notificationsGoogleStarting
+                : l10n.homeGoogleUse,
+            onTap: _busy ? null : _use,
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
+            swap: true,
+          ),
+          CardAction(
+            label: l10n.homeNotNow,
+            onTap: _busy ? null : () => appState.googleCardAnswered(),
             ink: HaloColors.warm,
           ),
         ],

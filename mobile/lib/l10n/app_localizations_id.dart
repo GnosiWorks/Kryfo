@@ -611,9 +611,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get appSpeedPrivacy => 'Kecepatan & privasi →';
 
   @override
-  String get appGettingMessages => 'Menerima pesan →';
-
-  @override
   String get appDisableAppLock => 'Matikan kunci aplikasi?';
 
   @override
@@ -2386,13 +2383,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateJustGladToHelp => 'Senang bisa membantu';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Menerima pesan';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cara pesan baru sampai ke ponsel ini. Kamu bisa mengubahnya kapan saja.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Selalu aktif';
@@ -5231,9 +5221,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
-
-  @override
-  String get settingsGettingMessages => 'Menerima pesan';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -9278,6 +9265,93 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Bagaimana pesan baru sampai ke ponsel ini, bunyinya, dan apa yang ditampilkan. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cara pesan sampai padamu';
+
+  @override
+  String get notificationsRecommended => 'Disarankan';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Seketika dan ringan. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get notificationsGoogleStarting => 'Menyalakan…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Push Google tidak bisa dimulai. Periksa koneksi lalu coba lagi.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang dengan cek setiap 15 menit, dan Kryfo terus mencoba.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Suara dan getar';
+
+  @override
+  String get notificationsSoundHint => 'Di pengaturan Android sendiri';
+
+  @override
+  String get notificationsEachShows => 'Setiap notifikasi menampilkan';
+
+  @override
+  String get notificationsBatteryTips => 'Tips baterai';
+
+  @override
+  String get notificationsBatteryAllowed => 'Diizinkan';
+
+  @override
+  String get notificationsBatteryNotYet => 'Tidak diizinkan';
+
+  @override
+  String get notificationsMakerSwitch => 'Tombol dari pembuat ponselmu';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cara pesan *sampai padamu*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Kamu bisa mengubahnya kapan saja di Notifikasi.';
+
+  @override
+  String get homeGoogleTitle => 'Push Google sudah ada';
+
+  @override
+  String get homeGoogleLine =>
+      'Seketika dan hemat baterai. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get homeGoogleUse => 'Pakai';
+
+  @override
+  String get homeGoogleOn => 'Push Google menyala';
+
+  @override
+  String get homeGoogleGoneTitle => 'Push Google tidak tersedia';
+
+  @override
+  String get appNotificationsLink => 'Notifikasi →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push Google $got · diturunkan $low';
+  }
 
   @override
   String get passFieldLabel => 'Frasa sandi';

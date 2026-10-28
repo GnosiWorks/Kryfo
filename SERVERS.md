@@ -19,6 +19,7 @@ boxes means two seizures and two providers.
 | handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | no |
 | badge service (`server/badge/`) | its own onion | relay box | no |
 | gif relay (`server/gif/`) | `https://relay.kryfo.app/gif/*` | relay box | no |
+| push gateway (`server/push/`) | the relay only, on loopback (endpoints read `https://relay.kryfo.app/push/*`) | relay box | no |
 
 the handle registry and the badge service move. the gif relay runs on the relay box too; where it
 goes is not decided yet.
@@ -42,6 +43,22 @@ this needs a release, the hostname is in the app.
 3. the old box redirects `relay.kryfo.app/@name` to the new name for good.
 4. the old box keeps serving `/handle/*` until the last release that calls it
    is gone.
+
+## the push gateway
+
+google push in the play build. a relay posts an empty knock to
+`/push/<sealed token>`; the gateway opens the token (a phone's fcm token
+sealed to the gateway's key, a different seal for each of the phone's
+sixteen endpoints) and asks fcm to wake the phone with an empty
+high-priority message. what it could log: nothing per token. it keeps no
+table and writes no file; in ram it holds a keyed hash of a token with the
+times of its last pushes for an hour, to keep one push per phone every 45
+seconds and thirty an hour, a keyed hash of a token fcm calls no phone's for
+a day, and a held-back push's token for up to 45 seconds. once an hour it
+logs counts. google sees the install and when it
+is woken, never by whom or with what. it has no public route: only our relay
+posts to it, on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`, 127.0.0.1:3340 by
+default), and the app never talks to it.
 
 ## watching them
 

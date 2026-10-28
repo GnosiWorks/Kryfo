@@ -18,10 +18,13 @@ Future<bool> notificationsEnabled() async {
 }
 
 // false when neither android's notification page nor the app details page
-// would open, and the caller has to say so
-Future<bool> openNotificationSettings() async {
+// would open, and the caller has to say so. [channel]: that channel's own
+// page, where its sound and vibration are set
+Future<bool> openNotificationSettings({String? channel}) async {
   try {
-    return await _channel.invokeMethod<bool>('openNotificationSettings') ??
+    return await _channel.invokeMethod<bool>('openNotificationSettings', {
+          'channel': channel,
+        }) ??
         false;
   } catch (_) {
     return false;

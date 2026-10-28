@@ -312,7 +312,6 @@ void main() {
     expect(l.appEncryptSend, "Encrypt + send");
     expect(l.appStatus("<status>"), "Status: <status>");
     expect(l.appSpeedPrivacy, "Speed & privacy →");
-    expect(l.appGettingMessages, "Getting messages →");
     expect(l.appDisableAppLock, "Disable app lock?");
     expect(
       l.appThePinWillBe,
@@ -1068,11 +1067,6 @@ void main() {
     );
     expect(l.donateWearMyBadge, "Wear my badge");
     expect(l.donateJustGladToHelp, "Just glad to help");
-    expect(l.gettingMessagesGettingMessages, "Getting messages");
-    expect(
-      l.gettingMessagesHowNewMessagesReach,
-      "How new messages reach this phone. You can change it whenever you like.",
-    );
     expect(l.gettingMessagesAlwaysOn, "Always on");
     expect(l.gettingMessagesMostPrivate, "Most private");
     expect(
@@ -2428,12 +2422,11 @@ void main() {
     expect(l.settingsOffMode, "Off · relay mode");
     expect(l.settingsOffFastMode, "Off · fast mode");
     expect(l.settingsAppLock, "App lock");
-    expect(l.settingsBlockedByAndroid, "Blocked by android");
+    expect(l.settingsBlockedByAndroid, "Blocked by Android");
     expect(l.settingsSpeedPrivacy, "Speed & privacy");
     expect(l.settingsFast, "Fast");
     expect(l.settingsRelay1Hop, "Relay · 1 hop");
     expect(l.settingsOnion3Hops, "Onion · 3 hops");
-    expect(l.settingsGettingMessages, "Getting messages");
     expect(
       l.settingsPreviewHidden("<deliveryModeName>"),
       "<deliveryModeName> · preview hidden",
@@ -3897,5 +3890,52 @@ void main() {
       l.iconSheetSaves,
       "While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.",
     );
+    expect(l.deliveryModeGooglePush, "Google push");
+    expect(l.deliveryModeGoogle, "Google");
+    expect(
+      l.notificationsLead,
+      "How new messages reach this phone, how they sound and what they show. You can change it whenever you like.",
+    );
+    expect(l.notificationsHowTheyReachYou, "How messages reach you");
+    expect(l.notificationsRecommended, "Recommended");
+    expect(
+      l.notificationsGoogleBody,
+      "Instant and light. Google can see when your phone is woken, never who wrote or what was said.",
+    );
+    expect(l.notificationsGoogleStarting, "Turning on…");
+    expect(
+      l.notificationsGoogleNoStart,
+      "Google push could not start. Check the connection and try again.",
+    );
+    expect(
+      l.notificationsGoogleNote,
+      "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
+    );
+    expect(
+      l.notificationsGoogleRefused,
+      "Our relay is not taking some of this phone's registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying.",
+    );
+    expect(l.notificationsSoundAndVibration, "Sound and vibration");
+    expect(l.notificationsSoundHint, "Set in Android’s own settings");
+    expect(l.notificationsEachShows, "Each notification shows");
+    expect(l.notificationsBatteryTips, "Battery tips");
+    expect(l.notificationsBatteryAllowed, "Allowed");
+    expect(l.notificationsBatteryNotYet, "Not allowed");
+    expect(l.notificationsMakerSwitch, "Your phone maker’s switch");
+    expect(l.onboardingDeliveryHeadline, "How messages *reach you*.");
+    expect(
+      l.onboardingDeliveryLead,
+      "You can change this any time in Notifications.",
+    );
+    expect(l.homeGoogleTitle, "Google push is here");
+    expect(
+      l.homeGoogleLine,
+      "Instant and easy on the battery. Google can see when your phone is woken, never who wrote or what was said.",
+    );
+    expect(l.homeGoogleUse, "Use it");
+    expect(l.homeGoogleOn, "Google push is on");
+    expect(l.homeGoogleGoneTitle, "Google push is not available");
+    expect(l.appNotificationsLink, "Notifications →");
+    expect(l.devGooglePushes(3, 1), "Google pushes 3 · lowered 1");
   });
 }
