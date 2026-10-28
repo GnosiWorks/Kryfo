@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "بدون عکس و ویدیو",
   "devicesSkipMediaHint": "فقط متن منتقل می‌شود. سریع‌تر، و چیز کمتری روی دستگاه می‌ماند.",
   "devicesHiddenStay": "گفت‌وگوهای پنهان و فریب روی همین گوشی می‌مانند.",
-  "devicesScanCode": "اسکن کد"
+  "devicesScanCode": "اسکن کد",
+  "historyChatStaysShots": "این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است."
 }

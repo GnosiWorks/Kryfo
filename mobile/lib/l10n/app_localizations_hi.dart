@@ -9804,4 +9804,8 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'कोड स्कैन करें';
+
+  @override
+  String get historyChatStaysShots =>
+      'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 }

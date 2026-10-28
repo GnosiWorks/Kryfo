@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "略過照片和影片",
   "devicesSkipMediaHint": "只複製文字。更快，裝置上存的也更少。",
   "devicesHiddenStay": "隱藏聊天和偽裝都留在這支手機上。",
-  "devicesScanCode": "掃描 QR 碼"
+  "devicesScanCode": "掃描 QR 碼",
+  "historyChatStaysShots": "此聊天禁止截圖，所以只留在你的手機上。"
 }

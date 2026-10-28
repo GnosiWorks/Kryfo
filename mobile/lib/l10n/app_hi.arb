@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "फ़ोटो और वीडियो छोड़ दें",
   "devicesSkipMediaHint": "सिर्फ़ टेक्स्ट आएगा। जल्दी होगा, और डिवाइस पर कम जगह लगेगी।",
   "devicesHiddenStay": "छिपी चैट और नकली Kryfo इसी फ़ोन पर रहते हैं।",
-  "devicesScanCode": "कोड स्कैन करें"
+  "devicesScanCode": "कोड स्कैन करें",
+  "historyChatStaysShots": "यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।"
 }

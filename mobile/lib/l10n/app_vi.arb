@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Bỏ qua ảnh và video",
   "devicesSkipMediaHint": "Chỉ chép phần chữ. Nhanh hơn và ít dữ liệu lưu trên thiết bị hơn.",
   "devicesHiddenStay": "Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.",
-  "devicesScanCode": "Quét mã"
+  "devicesScanCode": "Quét mã",
+  "historyChatStaysShots": "Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó."
 }

@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Fotos und Videos auslassen",
   "devicesSkipMediaHint": "Nur der Text kommt rüber. Schneller, und weniger auf dem Gerät.",
   "devicesHiddenStay": "Versteckte Chats und die Tarnung bleiben auf diesem Handy.",
-  "devicesScanCode": "Code scannen"
+  "devicesScanCode": "Code scannen",
+  "historyChatStaysShots": "Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind."
 }

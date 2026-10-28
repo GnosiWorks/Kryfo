@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Salta foto e video",
   "devicesSkipMediaHint": "Arriva solo il testo. Più veloce, e meno da tenere sul dispositivo.",
   "devicesHiddenStay": "Le chat nascoste e l’esca restano su questo telefono.",
-  "devicesScanCode": "Scansiona il codice"
+  "devicesScanCode": "Scansiona il codice",
+  "historyChatStaysShots": "Questa chat resta sul tuo telefono perché qui gli screenshot sono bloccati."
 }

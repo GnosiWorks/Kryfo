@@ -9797,4 +9797,8 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Pindai kode';
+
+  @override
+  String get historyChatStaysShots =>
+      'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
 }

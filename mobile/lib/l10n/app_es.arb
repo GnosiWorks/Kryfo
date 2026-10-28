@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Omitir fotos y videos",
   "devicesSkipMediaHint": "Solo pasa el texto. Más rápido y con menos que guardar en el dispositivo.",
   "devicesHiddenStay": "Los chats ocultos y el señuelo se quedan en este teléfono.",
-  "devicesScanCode": "Escanear el código"
+  "devicesScanCode": "Escanear el código",
+  "historyChatStaysShots": "Este chat se queda en tu teléfono porque las capturas están bloqueadas en él."
 }

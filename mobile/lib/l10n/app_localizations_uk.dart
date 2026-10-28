@@ -9963,4 +9963,8 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканувати код';
+
+  @override
+  String get historyChatStaysShots =>
+      'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
 }

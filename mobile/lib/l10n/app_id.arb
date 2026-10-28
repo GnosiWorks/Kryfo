@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Lewati foto dan video",
   "devicesSkipMediaHint": "Hanya teksnya yang disalin. Lebih cepat, dan lebih sedikit yang disimpan di perangkat.",
   "devicesHiddenStay": "Obrolan tersembunyi dan umpan tetap di ponsel ini.",
-  "devicesScanCode": "Pindai kode"
+  "devicesScanCode": "Pindai kode",
+  "historyChatStaysShots": "Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini."
 }

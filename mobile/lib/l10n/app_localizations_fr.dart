@@ -9901,4 +9901,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scanner le code';
+
+  @override
+  String get historyChatStaysShots =>
+      'Cette discussion reste sur votre téléphone, car les captures d’écran y sont bloquées.';
 }

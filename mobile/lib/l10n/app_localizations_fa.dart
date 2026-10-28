@@ -9818,4 +9818,8 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'اسکن کد';
+
+  @override
+  String get historyChatStaysShots =>
+      'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 }

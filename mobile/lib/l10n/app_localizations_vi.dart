@@ -9787,4 +9787,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get historyChatStaysShots =>
+      'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 }

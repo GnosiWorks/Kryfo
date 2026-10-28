@@ -15832,6 +15832,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan the code'**
   String get devicesScanCode;
+
+  /// devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it
+  ///
+  /// In en, this message translates to:
+  /// **'This chat stays on your phone because screenshots are blocked in it.'**
+  String get historyChatStaysShots;
 }
 
 class _AppLocalizationsDelegate

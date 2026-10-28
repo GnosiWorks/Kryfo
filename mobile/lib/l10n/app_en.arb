@@ -12346,5 +12346,9 @@
   "devicesScanCode": "Scan the code",
   "@devicesScanCode": {
     "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
+  },
+  "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
+  "@historyChatStaysShots": {
+    "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   }
 }

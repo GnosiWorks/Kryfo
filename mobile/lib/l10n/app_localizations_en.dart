@@ -9790,4 +9790,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scan the code';
+
+  @override
+  String get historyChatStaysShots =>
+      'This chat stays on your phone because screenshots are blocked in it.';
 }

@@ -9933,4 +9933,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get historyChatStaysShots =>
+      'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 }

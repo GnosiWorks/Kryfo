@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Fotoğraf ve videoları atla",
   "devicesSkipMediaHint": "Yalnızca metin aktarılır. Daha hızlı ve cihazda daha az şey kalır.",
   "devicesHiddenStay": "Gizli sohbetler ve yem bu telefonda kalır.",
-  "devicesScanCode": "Kodu tara"
+  "devicesScanCode": "Kodu tara",
+  "historyChatStaysShots": "Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli."
 }

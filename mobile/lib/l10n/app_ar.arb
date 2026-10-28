@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "تخطي الصور والفيديوهات",
   "devicesSkipMediaHint": "يُنقل النص فقط. أسرع، وأقل ما يُحفظ على الجهاز.",
   "devicesHiddenStay": "تبقى المحادثات المخفية والتمويه على هذا الهاتف.",
-  "devicesScanCode": "قراءة الرمز"
+  "devicesScanCode": "قراءة الرمز",
+  "historyChatStaysShots": "تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها."
 }

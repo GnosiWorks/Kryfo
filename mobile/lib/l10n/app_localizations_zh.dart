@@ -9333,6 +9333,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18547,4 +18550,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
 }

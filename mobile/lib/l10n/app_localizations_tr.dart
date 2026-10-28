@@ -9826,4 +9826,8 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Kodu tara';
+
+  @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 }

@@ -2591,5 +2591,6 @@
   "devicesSkipMedia": "Ignorer les photos et vidéos",
   "devicesSkipMediaHint": "Seul le texte est copié. Plus rapide, et moins de choses sur l’appareil.",
   "devicesHiddenStay": "Les discussions masquées et le leurre restent sur ce téléphone.",
-  "devicesScanCode": "Scanner le code"
+  "devicesScanCode": "Scanner le code",
+  "historyChatStaysShots": "Cette discussion reste sur votre téléphone, car les captures d’écran y sont bloquées."
 }

@@ -9873,4 +9873,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Escanear o código';
+
+  @override
+  String get historyChatStaysShots =>
+      'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
 }

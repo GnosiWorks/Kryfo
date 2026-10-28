@@ -9972,4 +9972,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканировать код';
+
+  @override
+  String get historyChatStaysShots =>
+      'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
 }
