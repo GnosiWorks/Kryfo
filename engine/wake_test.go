@@ -14,15 +14,18 @@ import (
 func fakeSleep(t *testing.T) func(time.Duration) {
 	t.Helper()
 	var ahead atomic.Int64
-	old := ownClock
-	ownClock = func() time.Duration { return old() + time.Duration(ahead.Load()) }
+	t.Cleanup(wakeReset)
+	setOwnClock(t, func() time.Duration { return bootClock() + time.Duration(ahead.Load()) })
 	wakeReset()
 	wakeCheck()
-	t.Cleanup(func() {
-		ownClock = old
-		wakeReset()
-	})
 	return func(d time.Duration) { ahead.Add(int64(d)) }
+}
+
+// a clock of the test's own in place of the boot clock, the real one back after
+func setOwnClock(t *testing.T, f func() time.Duration) {
+	t.Helper()
+	ownClockFn.Store(&f)
+	t.Cleanup(func() { ownClockFn.Store(nil) })
 }
 
 // the room each socket gets at a wake, and the grace after it
@@ -80,6 +83,11 @@ func TestAWakeIsTheBootClockRunningAhead(t *testing.T) {
 	sleep(30 * time.Second)
 	if wakeCheck() {
 		t.Fatal("half a minute asleep was taken for a wake")
+	}
+	// sockets live through a suspend of a couple of minutes
+	sleep(2 * time.Minute)
+	if wakeCheck() {
+		t.Fatal("two minutes asleep was taken for a wake")
 	}
 	if _, _, ok := wakeNow(); ok {
 		t.Fatal("turns with no wake")
@@ -148,9 +156,15 @@ func TestAWakeSpreadsTheRedials(t *testing.T) {
 	if ours[0] > 2400*time.Millisecond+500*time.Millisecond {
 		t.Fatalf("our relay's first redial came %s after the wake", ours[0])
 	}
-	if theirs[0] < ours[len(ours)-1] {
-		t.Fatalf("a public relay was dialled at %s, before ours were all back at %s",
-			theirs[0], ours[len(ours)-1])
+	// the public window begins somewhere in the last fifth of ours
+	early := 0
+	for _, d := range theirs {
+		if d < ours[len(ours)-1] {
+			early++
+		}
+	}
+	if early > len(theirs)/4 || theirs[0] < ours[len(ours)/2] {
+		t.Fatalf("%d public redials before ours were all back, the first at %s", early, theirs[0])
 	}
 	all := append(append([]time.Duration(nil), ours...), theirs...)
 	sort.Slice(all, func(i, j int) bool { return all[i] < all[j] })
@@ -363,5 +377,157 @@ func TestReadsDueInASleepAreSpreadOverTheWake(t *testing.T) {
 	}
 	if reads[0] < w.own/2 {
 		t.Fatalf("a public read %s after the wake, inside our relay's window of %s", reads[0], w.own)
+	}
+}
+
+// a check-in under way, its job begun now: its turns end in 15 s
+func underCheckIn(t *testing.T) {
+	t.Helper()
+	checkInMu.Lock()
+	old := checkInUntil
+	checkInUntil = time.Now().Add(checkInMax)
+	checkInMu.Unlock()
+	noteCheckIn(1)
+	t.Cleanup(func() {
+		checkInMu.Lock()
+		checkInUntil = old
+		checkInMu.Unlock()
+		noteCheckIn(0)
+	})
+}
+
+// sockets counted as a big inbox's runners would be, for the windows
+func countSockets(t *testing.T, own, pub int32) {
+	t.Helper()
+	ownSockets.Add(own)
+	pubSockets.Add(pub)
+	t.Cleanup(func() {
+		ownSockets.Add(-own)
+		pubSockets.Add(-pub)
+	})
+}
+
+// in a check-in the wake's windows shrink to its 10 s, in order. scaled
+// by a product of two nanosecond counts they overflowed and every turn
+// fell under a second, half of them at once
+func TestACheckInWakeKeepsItsTurnsInOrder(t *testing.T) {
+	underCheckIn(t)
+	for _, c := range []struct{ own, pub int }{{100, 150}, {542, 1084}} {
+		w := wakeTurns{time.Duration(c.own) * wakeGap, time.Duration(c.pub) * wakeGap}
+		limit := checkInSpread
+		ownEnd := time.Duration(float64(limit) * float64(w.own) / float64(w.own+w.pub))
+		var oursHi, theirsLo, theirsHi time.Duration
+		theirsLo = time.Hour
+		zero := 0
+		for i := 0; i < 5000; i++ {
+			o, p := w.turn(true, autoNow()), w.turn(false, autoNow())
+			if o < 0 || o > ownEnd {
+				t.Fatalf("%d+%d: a turn of ours at %s, want within %s", c.own, c.pub, o, ownEnd)
+			}
+			if p <= 0 {
+				zero++
+			}
+			oursHi, theirsLo, theirsHi = max(oursHi, o), min(theirsLo, p), max(theirsHi, p)
+		}
+		if zero > 0 || theirsLo < ownEnd*4/5 || theirsHi > limit {
+			t.Fatalf("%d+%d: public turns from %s to %s, %d at once, want %s to %s",
+				c.own, c.pub, theirsLo, theirsHi, zero, ownEnd*4/5, limit)
+		}
+		if oursHi < ownEnd/2 || theirsHi < limit*9/10 {
+			t.Fatalf("%d+%d: turns end at %s and %s, not spread over %s", c.own, c.pub, oursHi, theirsHi, limit)
+		}
+	}
+	// a live socket answering the job's kick in a wake takes the same turns
+	countSockets(t, 542, 1084)
+	sleep := fakeSleep(t)
+	sleep(2 * time.Hour)
+	if !wakeCheck() {
+		t.Fatal("no wake")
+	}
+	var lo, hi time.Duration = time.Hour, 0
+	for i := 0; i < 2000; i++ {
+		d := kickDelayFor(false)
+		lo, hi = min(lo, d), max(hi, d)
+	}
+	if lo < time.Second || hi > checkInSpread {
+		t.Fatalf("a public kick in a check-in's wake from %s to %s", lo, hi)
+	}
+}
+
+// in a check-in nothing is excused past its turns: the app stops waiting
+// at 120 s, and a grace of the full windows covered all of it
+func TestACheckInsGraceEndsWithItsTurns(t *testing.T) {
+	underCheckIn(t)
+	countSockets(t, 542, 1084)
+	sleep := fakeSleep(t)
+	sleep(2 * time.Hour)
+	if !wakeCheck() {
+		t.Fatal("no wake")
+	}
+	wakeMu.Lock()
+	grace := wakeGraceTill.Sub(wakeAt)
+	wakeMu.Unlock()
+	if most := checkInTurnsBy + wakeGraceExtra + time.Second; grace > most {
+		t.Fatalf("failures excused for %s after a check-in's wake, want %s at most", grace, most)
+	}
+}
+
+// a refusal is the relay's own answer through a route that works: it
+// counts in a wake's first stretch too
+func TestARefusalCountsInAWake(t *testing.T) {
+	pub := newRefuserStandIn(t)
+	useStandIns(t, modeBalanced, nil)
+	setRelays([]string{"ws://own.invalid", pub.url()})
+	setFailBurst(t, 0)
+	setWakeGap(t, 0, time.Hour)
+	sleep := fakeSleep(t)
+	sleep(2 * time.Hour)
+	if !wakeCheck() {
+		t.Fatal("no wake")
+	}
+	for i := 0; i < 10; i++ {
+		relayRefused(pub.url(), time.Now(), nil)
+	}
+	if n := failsOf(pub.url()); n != 10 {
+		t.Fatalf("%d of 10 refusals counted in the wake's stretch", n)
+	}
+}
+
+// a phone with the screen off runs in short bursts and sleeps between
+// them, so nearly every look of the route watch sees a sleep. a dead tor
+// must still be rescued: one grace per route that carried, not one per
+// look
+func TestALightSleepStillRescuesADeadRoute(t *testing.T) {
+	for _, gap := range []time.Duration{70 * time.Second, 4 * time.Minute} {
+		t.Run(gap.String(), func(t *testing.T) {
+			useStandIns(t, modePrivate, nil)
+			relays := []string{ownOnion, "wss://pub1.example", "wss://pub2.example"}
+			setRelays(relays)
+			resetRoute(t, "publishing", 100)
+			setFailBurst(t, 0)
+			setWakeGap(t, 0, 0)
+			routeNoteOK()
+			for _, u := range relays {
+				routeAnswered(u, -1)
+			}
+			sleep := fakeSleep(t)
+			t0 := time.Now()
+			// a route tick every 10 s of awake time, gap asleep before each
+			for i := 1; i <= 60; i++ {
+				sleep(gap)
+				began := time.Now()
+				for _, u := range relays {
+					relayFailed(u, began)
+				}
+				if why := routeNeedsRescue(t0.Add(time.Duration(i) * 10 * time.Second)); why != "" {
+					t.Logf("rescued after %d ticks: %s", i, why)
+					if failsOf(ownOnion) == 0 {
+						t.Fatal("no failure counted")
+					}
+					return
+				}
+			}
+			t.Fatal("a dead route was never rescued with the phone sleeping between looks")
+		})
 	}
 }

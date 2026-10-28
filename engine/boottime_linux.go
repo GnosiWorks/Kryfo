@@ -12,9 +12,8 @@ import (
 var bootLast atomic.Int64
 
 // time since boot, sleep included: go's monotonic clock stops while the
-// phone sleeps, and an outage slept through is time that counts. never 0.
-// a var for the tests
-var ownClock = func() time.Duration {
+// phone sleeps, and an outage slept through is time that counts. never 0
+func bootClock() time.Duration {
 	var ts unix.Timespec
 	if unix.ClockGettime(unix.CLOCK_BOOTTIME, &ts) != nil {
 		// one clock throughout: the last good value, not the wall clock

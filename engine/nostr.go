@@ -855,6 +855,7 @@ const ownRelayCeiling = 20 * time.Second
 const ownUpRecent = 10 * time.Minute
 
 func relayUp(u string) {
+	wakeRouteProven()
 	relayHealthMu.Lock()
 	relayUpAt[u] = time.Now()
 	relayHealthMu.Unlock()
@@ -946,8 +947,9 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	if modeNeedsTor() && !torReadyNow() {
 		return
 	}
-	// nor can a sleep, or the first stretch of the wake after it
-	if wakeExcuses(began) {
+	// nor can a sleep, or the first stretch of the wake after it. a refusal
+	// is the relay's own answer and counts
+	if route && wakeExcuses(began) {
 		return
 	}
 	if modeNeedsTor() && route {
@@ -1014,6 +1016,7 @@ func kickRelays() {
 }
 
 func relayOK(u string) {
+	wakeRouteProven()
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
 	relayUpAt[u] = time.Now()

@@ -8,7 +8,7 @@ package main
 // as the boot clock running ahead of the monotonic one. from there the
 // redials take turns, our relay first and the public relays after it, and
 // what failed across the sleep or in the wake's first stretch counts
-// against no relay and no route.
+// against no relay and no route, once per route that carried.
 
 import (
 	"log"
@@ -18,11 +18,22 @@ import (
 	"time"
 )
 
-// a sleep at least this long is a wake. a var for the tests
-var wakeJump = time.Minute
+// the clock the outage round and the reads keep their times on: the boot
+// clock, unless a test puts its own in
+var ownClockFn atomic.Pointer[func() time.Duration]
 
-// go's monotonic clock, which stops while the phone sleeps. a var for the tests
-var awakeClock = func() time.Duration { return time.Since(awakeBase) }
+func ownClock() time.Duration {
+	if f := ownClockFn.Load(); f != nil {
+		return (*f)()
+	}
+	return bootClock()
+}
+
+// a sleep at least this long is a wake: sockets live through a short one
+var wakeJump = 3 * time.Minute
+
+// go's monotonic clock, which stops while the phone sleeps
+func awakeClock() time.Duration { return time.Since(awakeBase) }
 
 var awakeBase = time.Now()
 
@@ -49,20 +60,28 @@ var (
 	// both clocks at the last look
 	wakeBoot, wakeAwake time.Duration
 	wakeLooked          bool
-	// the latest wake, monotonic, and how many were seen
-	wakeAt time.Time
-	wakeN  int64
-	// failures before this count for nothing
+	// the latest wake's turns, monotonic, and how many wakes were seen
+	wakeTurnsAt time.Time
+	wakeN       int64
+	// the wake that reset and excused, and until when failures count for
+	// nothing. once a route has carried again the next wake may do it again:
+	// a phone that sleeps in short bursts must not excuse a dead tor for good
+	wakeAt        time.Time
 	wakeGraceTill time.Time
+	wakeSpent     bool
 	// our relay's first redial after the wake was made, with no turn
 	wakeFirstGone bool
+	// this wake's widths, in thousandths: a fifth either way, so the length
+	// of the burst a relay sees does not give the inbox's size away
+	wakeOwnK, wakePubK int64 = 1000, 1000
 )
 
 // looks for a sleep since the last look. true when this look found one
 func wakeCheck() bool {
-	boot, awake := ownClock(), awakeClock()
 	wakeMu.Lock()
 	defer wakeMu.Unlock()
+	// read under the lock, so no look puts an older baseline back
+	boot, awake := ownClock(), awakeClock()
 	if !wakeLooked {
 		wakeBoot, wakeAwake, wakeLooked = boot, awake, true
 		return false
@@ -70,11 +89,8 @@ func wakeCheck() bool {
 	back := boot < wakeBoot || awake < wakeAwake
 	slept := (boot - wakeBoot) - (awake - wakeAwake)
 	wakeBoot, wakeAwake = boot, awake
-	if back {
-		// a clock put back, or a look that read before the last one did
-		return false
-	}
-	if slept < wakeJump {
+	if back || slept < wakeJump {
+		// a clock put back is no sleep
 		return false
 	}
 	wokeLocked(slept)
@@ -84,12 +100,24 @@ func wakeCheck() bool {
 // under wakeMu. the other locks are taken inside it, never the other way
 func wokeLocked(slept time.Duration) {
 	now := time.Now()
-	w := wakeWindows()
-	wakeAt, wakeFirstGone = now, false
 	wakeN++
-	wakeGraceTill = now.Add(w.own + w.pub + wakeGraceExtra)
-	log.Printf("halo: woke after %s asleep, redials spread: ours over %s, the public relays after it over %s",
-		slept.Round(time.Second), w.own.Round(time.Millisecond), w.pub.Round(time.Millisecond))
+	wakeTurnsAt, wakeFirstGone = now, false
+	wakeOwnK, wakePubK = 800+mrand.Int64N(401), 800+mrand.Int64N(401)
+	w := wakeWindowsLocked()
+	span := w.own + w.pub
+	// in a check-in the turns are over when its turns are
+	if end, ok := checkInTurnsEnd(); ok {
+		span = min(span, max(end.Sub(autoNow()), 0))
+	}
+	if wakeSpent {
+		// no route has carried since the last wake: its grace was the one
+		log.Printf("halo: woke after %s asleep, no relay answered since the last wake", slept.Round(time.Second))
+		return
+	}
+	wakeSpent, wakeAt = true, now
+	wakeGraceTill = now.Add(span + wakeGraceExtra)
+	log.Printf("halo: woke after %s asleep, redials spread over %s, ours first",
+		slept.Round(time.Second), span.Round(time.Millisecond))
 	// a bench or a streak from before the sleep says nothing of now
 	relayClearBenches()
 	routeSlept()
@@ -97,16 +125,24 @@ func wokeLocked(slept time.Duration) {
 	liveSlept()
 }
 
+// a relay answered: the next wake may reset and excuse again
+func wakeRouteProven() {
+	wakeMu.Lock()
+	wakeSpent = false
+	wakeMu.Unlock()
+}
+
 // forgets every wake and looks afresh, for the tests
 func wakeReset() {
 	wakeMu.Lock()
 	wakeLooked, wakeAt, wakeGraceTill, wakeFirstGone = false, time.Time{}, time.Time{}, false
+	wakeTurnsAt, wakeSpent = time.Time{}, false
 	wakeMu.Unlock()
 }
 
-// a failure of an attempt begun before the latest wake, or in its first
-// stretch, says nothing of the relay or the route: tor is still finding
-// its circuits again
+// a failure of an attempt begun before the wake, or in its first stretch,
+// says nothing of the relay or the route: tor is still finding its
+// circuits again
 func wakeExcuses(began time.Time) bool {
 	wakeCheck()
 	wakeMu.Lock()
@@ -120,24 +156,31 @@ func wakeExcuses(began time.Time) bool {
 // how wide a wake's turns are now
 type wakeTurns struct{ own, pub time.Duration }
 
+// under wakeMu
+func wakeWindowsLocked() wakeTurns {
+	own := time.Duration(max(ownSockets.Load(), 0)) * wakeGap * time.Duration(wakeOwnK) / 1000
+	pub := time.Duration(max(pubSockets.Load(), 0)) * wakeGap * time.Duration(wakePubK) / 1000
+	own = min(own, wakeOwnMost, wakeMost)
+	return wakeTurns{own, min(pub, wakeMost-own)}
+}
+
 func wakeWindows() wakeTurns {
-	own := min(time.Duration(max(ownSockets.Load(), 0))*wakeGap, wakeOwnMost, wakeMost)
-	pub := min(time.Duration(max(pubSockets.Load(), 0))*wakeGap, wakeMost-own)
-	return wakeTurns{own, pub}
+	wakeMu.Lock()
+	defer wakeMu.Unlock()
+	return wakeWindowsLocked()
 }
 
 // the wake under way, if its turns still hold: its number and windows
 func wakeNow() (int64, wakeTurns, bool) {
 	wakeMu.Lock()
-	at, n := wakeAt, wakeN
-	wakeMu.Unlock()
-	if at.IsZero() {
+	defer wakeMu.Unlock()
+	if wakeTurnsAt.IsZero() {
 		return 0, wakeTurns{}, false
 	}
-	if d := time.Since(at); d < 0 || d >= wakeHold {
+	if d := time.Since(wakeTurnsAt); d < 0 || d >= wakeHold {
 		return 0, wakeTurns{}, false
 	}
-	return n, wakeWindows(), true
+	return wakeN, wakeWindowsLocked(), true
 }
 
 // true for our relay's first redial in wake n: it goes at once, so the
@@ -153,11 +196,15 @@ func takeWakeFirst(n int64) bool {
 }
 
 // a socket's turn at a wake: ours anywhere in the first window, the public
-// relays' in the one after it. in a check-in both shrink to fit its turns
+// relays' in the one after it, which begins somewhere in ours' last fifth.
+// in a check-in both shrink to fit its turns, in the same order
 func (w wakeTurns) turn(own bool, now time.Time) time.Duration {
 	lo, span := time.Duration(0), w.own
 	if !own {
-		lo, span = w.own, w.pub
+		lo, span = w.own*4/5, w.pub
+		if w.own > 0 {
+			lo += time.Duration(mrand.Int64N(int64(w.own/5) + 1))
+		}
 	}
 	if end, ok := checkInTurnsEnd(); ok {
 		all := w.own + w.pub
@@ -166,8 +213,9 @@ func (w wakeTurns) turn(own bool, now time.Time) time.Duration {
 			return 0
 		}
 		if all > limit {
-			lo = time.Duration(int64(lo) * int64(limit) / int64(all))
-			span = time.Duration(int64(span) * int64(limit) / int64(all))
+			// in floats: two nanosecond counts multiplied overflow int64
+			f := float64(limit) / float64(all)
+			lo, span = time.Duration(float64(lo)*f), time.Duration(float64(span)*f)
 		}
 	}
 	if span <= 0 {

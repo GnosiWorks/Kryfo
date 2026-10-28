@@ -1070,13 +1070,11 @@ func TestOurRelayDownCountsTheTimeAsleep(t *testing.T) {
 		at += d
 		mu.Unlock()
 	}
-	old := ownClock
-	ownClock = func() time.Duration {
+	setOwnClock(t, func() time.Duration {
 		mu.Lock()
 		defer mu.Unlock()
 		return at
-	}
-	t.Cleanup(func() { ownClock = old })
+	})
 	// failures every 5 s from w to w+d; pub: a public relay answers from
 	// that far into them on, nil for none
 	wake := func(d time.Duration, pub *time.Duration) {
@@ -1349,9 +1347,7 @@ func TestALateJoinTakesAFreePlaceOnly(t *testing.T) {
 func TestReadsKeepTheirTimesOnTheBootClock(t *testing.T) {
 	setLiveCap(t, 1, 1000*time.Hour)
 	var ahead atomic.Int64
-	old := ownClock
-	ownClock = func() time.Duration { return old() + time.Duration(ahead.Load()) }
-	t.Cleanup(func() { ownClock = old })
+	setOwnClock(t, func() time.Duration { return bootClock() + time.Duration(ahead.Load()) })
 	own := newRelayStandIn(t, 0)
 	pub := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own, pub)

@@ -287,6 +287,7 @@ func liveHeard(rcvPk string, at int64) {
 
 // a public relay answered: the route works
 func pubRelayAnswered() {
+	wakeRouteProven()
 	liveMu.Lock()
 	pubAnsweredAt = ownClock()
 	liveMu.Unlock()
@@ -294,6 +295,7 @@ func pubRelayAnswered() {
 
 // an entry of our relay answered: an eose, an event or a probe's reply
 func ownRelayAnswered() {
+	wakeRouteProven()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
