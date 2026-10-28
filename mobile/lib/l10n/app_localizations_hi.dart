@@ -5279,6 +5279,23 @@ class AppLocalizationsHi extends AppLocalizations {
       'सिर्फ़ आपके फ़ोन पर जाँचा जाता है, कुछ भी बाहर नहीं जाता';
 
   @override
+  String get typingNow => 'टाइप कर रहे हैं';
+
+  @override
+  String get settingsTypingIndicator => 'टाइपिंग संकेत';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'आप दोनों देखते हैं कि दूसरा कब टाइप कर रहा है। यह Tor से सीधे उन तक जाता है, कभी किसी रिले से नहीं।';
+
+  @override
+  String get settingsTypingOnionOnly => 'Onion रूट पर उपलब्ध';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'ब्रिज इस्तेमाल होने तक बंद: आपके कनेक्शन पर नज़र रखने वाला कोई टाइपिंग संकेतों को मिला सकता है। ब्रिज बंद होते ही यह अपने आप वापस आ जाता है।';
+
+  @override
   String get settingsLightTheme => 'हल्की थीम';
 
   @override
@@ -5882,8 +5899,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'कुछ भी लीक नहीं होता';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'पढ़ने की रसीद या टाइप करने के संकेत किसी को नहीं दिए जाते, कोई संपर्क सूची अपलोड नहीं होती। ज़्यादातर ऐप मेटाडेटा लीक करते हैं। Kryfo ऐसा न करने के लिए बना है।';
+  String get whyKryfoNoReceiptsTyping =>
+      'न पढ़ने की रसीदें, न संपर्क सूची अपलोड। टाइपिंग सिर्फ़ उसी व्यक्ति को दिखती है जिसे आप लिख रहे हैं, सीधे Tor से, कभी किसी सर्वर से नहीं। ज़्यादातर ऐप मेटाडेटा लीक करते हैं। Kryfo ऐसा न करने के लिए बना है।';
 
   @override
   String get whyKryfoVerifyItIsReally => 'पक्का करें कि सच में वही हैं';
