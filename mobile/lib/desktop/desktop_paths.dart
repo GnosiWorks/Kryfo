@@ -7,6 +7,7 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
+import 'desktop_posix.dart' as posix show ownerOf;
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
@@ -56,20 +57,60 @@ void privateUmask() {
   DynamicLibrary.process().lookupFunction<_UmaskC, _Umask>('umask')(63); // 077
 }
 
-/// a folder in memory for what lives only while the app runs: the
-/// session's tmpfs ($XDG_RUNTIME_DIR), else /dev/shm. null when neither is
-/// there
-String? desktopRuntimeDir({Map<String, String>? env, int? uid}) {
+/// a folder in memory for what lives only while the app runs: kryfo's own
+/// one in the session's tmpfs ($XDG_RUNTIME_DIR), else in /dev/shm. one
+/// found there is taken only when it is no link, this user's, and 0700;
+/// otherwise a new one with a random name is made beside it. null when no
+/// memory folder can be had, and the caller keeps temporary files in its
+/// own folder on the disk
+String? desktopRuntimeDir({
+  Map<String, String>? env,
+  required int uid,
+  int? Function(String path)? owner,
+  int? Function(String path)? mode,
+}) {
   if (Platform.isWindows) return null;
   final e = env ?? Platform.environment;
+  final ownerOf_ = owner ?? _ownerOf;
+  final modeOf = mode ?? _modeOf;
+  final bases = <(String, String)>[];
   final run = e['XDG_RUNTIME_DIR'];
   if (run != null && p.isAbsolute(run) && Directory(run).existsSync()) {
-    return p.join(run, 'kryfo');
+    bases.add((run, 'kryfo'));
   }
-  if (Directory('/dev/shm').existsSync()) {
-    return '/dev/shm/kryfo-${uid ?? 0}';
+  if (Directory('/dev/shm').existsSync()) bases.add(('/dev/shm', 'kryfo-$uid'));
+  for (final (base, name) in bases) {
+    final d = p.join(base, name);
+    final type = FileSystemEntity.typeSync(d, followLinks: false);
+    if (type == FileSystemEntityType.notFound) {
+      try {
+        Directory(d).createSync();
+      } catch (_) {}
+    }
+    if (FileSystemEntity.typeSync(d, followLinks: false) ==
+            FileSystemEntityType.directory &&
+        ownerOf_(d) == uid) {
+      makePrivateDir(d);
+      if (modeOf(d) == 448) return d;
+    }
+    // someone else's, a link, or open to others: one of our own, by chance
+    try {
+      final t = Directory(base).createTempSync('kryfo-');
+      if (ownerOf_(t.path) == uid && modeOf(t.path) == 448) return t.path;
+      t.deleteSync();
+    } catch (_) {}
   }
   return null;
+}
+
+int? _ownerOf(String path) => posix.ownerOf(path);
+
+int? _modeOf(String path) {
+  try {
+    return FileStat.statSync(path).mode & 511;
+  } catch (_) {
+    return null;
+  }
 }
 
 /// path_provider's answers on desktop, all inside [root]. the temporary
