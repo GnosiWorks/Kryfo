@@ -6996,14 +6996,14 @@ abstract class AppLocalizations {
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What this video knows'**
-  String get photoKnowsWhatThisVideoKnows;
+  /// **'Video cleaner'**
+  String get photoKnowsVideoCleaner;
 
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What this photo knows'**
-  String get photoKnowsWhatThisPhotoKnows;
+  /// **'Photo cleaner'**
+  String get photoKnowsPhotoCleaner;
 
   /// screens/photo_knows_screen.dart
   ///
@@ -8862,14 +8862,14 @@ abstract class AppLocalizations {
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What does this photo know?'**
-  String get toolsWhatDoesThisPhoto;
+  /// **'Photo cleaner'**
+  String get toolsPhotoCleaner;
 
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Place · phone · time'**
-  String get toolsPlacePhoneTime;
+  /// **'Removes hidden info (metadata) like place, time and phone model'**
+  String get toolsRemovesHiddenInfo;
 
   /// screens/tools_screen.dart
   ///

@@ -4174,10 +4174,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoKnowsPhoto => '照片';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => '这段视频知道什么';
+  String get photoKnowsVideoCleaner => '视频清理';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => '这张照片知道什么';
+  String get photoKnowsPhotoCleaner => '照片清理';
 
   @override
   String get photoKnowsRemoveAllOfIt => '全部移除';
@@ -5215,10 +5215,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
 
   @override
-  String get toolsWhatDoesThisPhoto => '这张照片知道些什么？';
+  String get toolsPhotoCleaner => '照片清理';
 
   @override
-  String get toolsPlacePhoneTime => '地点 · 手机 · 时间';
+  String get toolsRemovesHiddenInfo => '清除地点、时间和手机型号等隐藏信息（元数据）';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -13012,10 +13012,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get photoKnowsPhoto => '照片';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => '這段影片知道什麼';
+  String get photoKnowsVideoCleaner => '影片清理';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => '這張照片知道什麼';
+  String get photoKnowsPhotoCleaner => '照片清理';
 
   @override
   String get photoKnowsRemoveAllOfIt => '全部移除';
@@ -14053,10 +14053,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
 
   @override
-  String get toolsWhatDoesThisPhoto => '這張照片知道些什麼？';
+  String get toolsPhotoCleaner => '照片清理';
 
   @override
-  String get toolsPlacePhoneTime => '地點 · 手機 · 時間';
+  String get toolsRemovesHiddenInfo => '清除地點、時間和手機型號等隱藏資訊（中繼資料）';
 
   @override
   String get toolsPickAPhotoAnd =>

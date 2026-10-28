@@ -1989,8 +1989,8 @@ void main() {
     expect(l.photoKnowsEverythingInside, "Everything inside");
     expect(l.photoKnowsVideo, "Video");
     expect(l.photoKnowsPhoto, "Photo");
-    expect(l.photoKnowsWhatThisVideoKnows, "What this video knows");
-    expect(l.photoKnowsWhatThisPhotoKnows, "What this photo knows");
+    expect(l.photoKnowsVideoCleaner, "Video cleaner");
+    expect(l.photoKnowsPhotoCleaner, "Photo cleaner");
     expect(l.photoKnowsRemoveAllOfIt, "Remove all of it");
     expect(l.photoKnowsKeepItAsIt, "Keep it as it is");
     expect(
@@ -2515,8 +2515,11 @@ void main() {
       l.toolsEverythingHereHappensOn,
       "Everything here happens on this phone. Nothing is uploaded, and nobody else has to be on Kryfo.",
     );
-    expect(l.toolsWhatDoesThisPhoto, "What does this photo know?");
-    expect(l.toolsPlacePhoneTime, "Place · phone · time");
+    expect(l.toolsPhotoCleaner, "Photo cleaner");
+    expect(
+      l.toolsRemovesHiddenInfo,
+      "Removes hidden info (metadata) like place, time and phone model",
+    );
     expect(
       l.toolsPickAPhotoAnd,
       "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",

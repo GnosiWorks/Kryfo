@@ -4482,10 +4482,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get photoKnowsPhoto => 'Фото';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Что знает это видео';
+  String get photoKnowsVideoCleaner => 'Очистка видео';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Что знает это фото';
+  String get photoKnowsPhotoCleaner => 'Очистка фото';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Удалить всё';
@@ -5568,10 +5568,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Всё здесь происходит на этом телефоне. Ничего не загружается, и никому больше не нужно быть в Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Что знает это фото?';
+  String get toolsPhotoCleaner => 'Очистка фото';
 
   @override
-  String get toolsPlacePhoneTime => 'Место · телефон · время';
+  String get toolsRemovesHiddenInfo =>
+      'Удаляет скрытые данные (метаданные): место, время и модель телефона';
 
   @override
   String get toolsPickAPhotoAnd =>

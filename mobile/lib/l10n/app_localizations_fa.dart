@@ -4390,10 +4390,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get photoKnowsPhoto => 'عکس';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'این ویدیو چه می‌داند';
+  String get photoKnowsVideoCleaner => 'تمیز کردن ویدیو';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'این عکس چه می‌داند';
+  String get photoKnowsPhotoCleaner => 'تمیز کردن عکس';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'حذف همه‌اش';
@@ -5469,10 +5469,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌چیز این‌جا روی همین گوشی انجام می‌شود. هیچ چیز بارگذاری نمی‌شود، و لازم نیست کس دیگری Kryfo داشته باشد.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'این عکس چه می‌داند؟';
+  String get toolsPhotoCleaner => 'تمیز کردن عکس';
 
   @override
-  String get toolsPlacePhoneTime => 'مکان · گوشی · زمان';
+  String get toolsRemovesHiddenInfo =>
+      'اطلاعات پنهان (فراداده) مثل مکان، زمان و مدل گوشی را پاک می‌کند';
 
   @override
   String get toolsPickAPhotoAnd =>

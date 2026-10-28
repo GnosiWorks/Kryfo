@@ -103,8 +103,6 @@ enum HaloAccent {
       Color(0xFFFFFBF4),
       Color(0xFF824900),
     ),
-    bright: Color(0xFFE8960B),
-    brightDeep: Color(0xFFCC7006),
   ),
   grey(
     dark: AccentTones(
@@ -192,22 +190,9 @@ enum HaloAccent {
   );
 
   final AccentTones dark, light;
-  final Color? _bright, _brightDeep;
-  const HaloAccent({
-    required this.dark,
-    required this.light,
-    Color? bright,
-    Color? brightDeep,
-  }) : _bright = bright,
-       _brightDeep = brightDeep;
+  const HaloAccent({required this.dark, required this.light});
 
   AccentTones tones(bool light) => light ? this.light : dark;
-
-  // the bright card in tools, the same in both themes: the dark theme's
-  // tones unless the accent has its own
-  Color get bright => _bright ?? dark.accent;
-  Color get brightDeep => _brightDeep ?? dark.deep;
-  Color get onBright => dark.on;
 
   static HaloAccent byName(String? name) {
     for (final a in values) {
@@ -266,9 +251,6 @@ class HaloColors {
   // the accent's words on its own on colour (a chip or a button inside your
   // bubble): the accent itself, 4.5:1 there as its on colour is to it
   static Color get amberOnOn => _a.accent;
-  static Color get amberBright => _accent.bright;
-  static Color get amberBrightDeep => _accent.brightDeep;
-  static Color get onAmberBright => _accent.onBright;
 
   // the yellow, whatever the accent: avatars and the gold tier are
   // someone's look, not the app's

@@ -209,8 +209,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
           children: [
             ToolBar(
               title: video
-                  ? l10n.photoKnowsWhatThisVideoKnows
-                  : l10n.photoKnowsWhatThisPhotoKnows,
+                  ? l10n.photoKnowsVideoCleaner
+                  : l10n.photoKnowsPhotoCleaner,
               sub: report == null ? name : '$name · ${prettySize(_bytes)}',
               leading: _inPath == null || report == null
                   ? null
@@ -715,7 +715,10 @@ class _NothingFound extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
                     child: Text(
                       l10n.photoKnowsLookedFor,
-                      style: HaloType.mono(size: 11, color: HaloColors.amberText),
+                      style: HaloType.mono(
+                        size: 11,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   ),
                   for (var i = 0; i < fields.length; i++)

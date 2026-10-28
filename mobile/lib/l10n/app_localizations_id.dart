@@ -4374,10 +4374,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Yang diketahui video ini';
+  String get photoKnowsVideoCleaner => 'Pembersih video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Yang diketahui foto ini';
+  String get photoKnowsPhotoCleaner => 'Pembersih foto';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Hapus semuanya';
@@ -5461,10 +5461,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua di sini terjadi di ponsel ini. Tidak ada yang diunggah, dan orang lain tidak perlu memakai Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Apa yang diketahui foto ini?';
+  String get toolsPhotoCleaner => 'Pembersih foto';
 
   @override
-  String get toolsPlacePhoneTime => 'Tempat · ponsel · waktu';
+  String get toolsRemovesHiddenInfo =>
+      'Menghapus info tersembunyi (metadata) seperti tempat, waktu, dan model ponsel';
 
   @override
   String get toolsPickAPhotoAnd =>
