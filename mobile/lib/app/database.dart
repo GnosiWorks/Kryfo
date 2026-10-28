@@ -291,6 +291,7 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
+            shots_nudged INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )

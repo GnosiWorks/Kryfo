@@ -18,6 +18,9 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateGroupLanes,
         AppStateGroupShots,
+        groupCapsGap,
+        groupShotsEvery,
+        AppStateScreen,
         AppStateVault,
         AppStateSession,
         AppStateReceive;
@@ -33,6 +36,7 @@ const _h = 'hidden-wreck-tone'; // the hidden group's admin
 const _g = 'grp000000001';
 const _g2 = 'g2hidden0001'; // _h runs it
 const _g3 = 'g3hidden0001'; // this phone runs it, with _h
+const _g4 = 'g4hidden0001'; // _h runs it too
 
 class _World {
   final live = ArrivalRows(HaloContainer.everyday);
@@ -90,6 +94,15 @@ class _World {
     await app.ctlPassForTest;
   }
 
+  // the answers a hidden group waits to send, once their time is up
+  Future<void> later() async {
+    for (var i = 0; i < 20 && app.capsLaterForTest > 0; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await app.ctlPassForTest;
+  }
+
   void shut() => useDatabasesForTest(live, Session(live));
 
   List<UnwrappedMessage> to(String member) => [
@@ -111,6 +124,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
+    groupCapsGap = () => Duration.zero;
+    groupShotsEvery = Duration.zero;
   });
 
   test('a shut vault seals the state and answers nothing; on its opening '
@@ -136,6 +151,7 @@ void main() {
     final s = GroupShots.ofRow(w.vault.groupRows[_g2]);
     expect(s.on, isTrue);
     expect(s.blocking, isTrue);
+    await w.later();
     // one answer, from the vault: for the state and the update alike
     final caps = w.ctls(_h, 'caps');
     expect(caps, hasLength(1));
@@ -144,6 +160,48 @@ void main() {
     // the everyday side keeps nothing of it
     expect(w.live.rowWrites.where((c) => c.contains(_g2)), isEmpty);
     expect(w.live.groupRows.containsKey(_g2), isFalse);
+  });
+
+  test('at the opening nothing goes at once: the answers wait their '
+      'turn, one after another', () async {
+    final w = await _World.make();
+    groupCapsGap = () => const Duration(milliseconds: 150);
+    w.vault.group(_g4, ['me', _h], admin: _h);
+    await w.store.putHidden(_g4, kHiddenGroup, groupCard(const []), 1);
+    await w.open();
+    expect(w.ctls(_h, 'caps'), isEmpty);
+    expect(w.app.capsLaterForTest, 2);
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    await w.app.ctlPassForTest;
+    expect(w.ctls(_h, 'caps'), hasLength(1));
+    expect(w.app.capsLaterForTest, 1);
+    // the vault shuts before the next: it waits for the next opening
+    w.shut();
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    await w.app.ctlPassForTest;
+    expect(w.ctls(_h, 'caps'), hasLength(1));
+    expect(w.app.capsLaterForTest, 0);
+  });
+
+  test('an admin already told through an everyday group, or a 1:1 frame, '
+      'hears nothing from a hidden group at the opening', () async {
+    final w = await _World.make();
+    w.live.person(_h, onion: 'o-$_h', xpub: 'x-$_h');
+    w.live.group('gl', ['me', _h], admin: _h);
+    w.live.groupRows['gl']!['shots_told'] = 1;
+    await w.open();
+    await w.later();
+    expect(w.ctls(_h, 'caps'), isEmpty);
+    expect(w.app.capsLaterForTest, 0);
+    expect(GroupShots.ofRow(w.vault.groupRows[_g2]).told, 1);
+  });
+
+  test('a 1:1 frame to the admin counts as told', () async {
+    final w = await _World.make();
+    await w.app.shotsOnWire(_h, 'halo/1:{"m":"hi","w":5}');
+    await w.open();
+    await w.later();
+    expect(w.ctls(_h, 'caps'), isEmpty);
   });
 
   test('a group this phone runs in the vault counts again only once it '

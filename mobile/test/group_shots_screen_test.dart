@@ -768,6 +768,18 @@ void main() {
       expect(find.text(l10n.captureShotTaken), findsNothing);
     });
 
+    testWidgets('a group that blocks screenshots says nothing of one: its '
+        'window gave a black picture', (t) async {
+      _use(t, _theirs(shots: _waiting));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await _settle(t);
+      expect(appState.windowSecure, isTrue);
+      captureWatch.take('shot');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.captureShotTaken), findsNothing);
+      await _close(t);
+    });
+
     testWidgets('fits in fa at twice the text', (t) async {
       final now = DateTime.now().millisecondsSinceEpoch;
       _use(

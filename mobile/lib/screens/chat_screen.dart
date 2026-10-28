@@ -1232,6 +1232,9 @@ class _ChatScreenState extends State<ChatScreen>
   VoidCallback? _unwatchCaptures;
   void _captured(Capture what) {
     if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
     if (ModalRoute.of(context)?.isCurrent == false) return;
     showHaloToast(context, captureLine(what));
   }

@@ -25,6 +25,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateGroupLanes,
         AppStateGroupShots,
+        groupCapsGap,
+        groupShotsEvery,
         AppStateGroups,
         AppStateReceive,
         AppStateRefresh,
@@ -113,6 +115,8 @@ void main() {
 
   setUp(() async {
     if (skip != null) return;
+    groupShotsEvery = Duration.zero;
+    groupCapsGap = () => Duration.zero;
     docs = Directory.systemTemp.createTempSync('group_shots');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
@@ -533,6 +537,72 @@ void main() {
       );
       await app.setGroupShots(_mine, true);
       expect((await shotsOf(_mine)).forAll, isTrue);
+    }, skip: skip);
+  });
+
+  group('what the admin sends, and how often', () {
+    test('a member flipping their list moves the word once a window, as '
+        'the newest state, and a move back sends nothing', () async {
+      groupShotsEvery = const Duration(seconds: 2);
+      await canBlock('bob');
+      await app.setGroupShots(_mine, true);
+      await app.ctlPassForTest;
+      expect(io.ctls('bob', 'shots'), hasLength(1));
+      // carol can, then cannot, then can again, inside the window
+      await comes(
+        'carol',
+        await ctl(
+          const GroupControl(type: 'caps'),
+          by: 'carol',
+          g: _mine,
+        ),
+      );
+      await comes('carol', old(await said('c1', by: 'carol', g: _mine)));
+      await comes('carol', await said('c2', by: 'carol', g: _mine));
+      await app.ctlPassForTest;
+      expect(io.ctls('bob', 'shots'), hasLength(1));
+      // the window ends: the newest state goes, once
+      await Future<void>.delayed(const Duration(milliseconds: 2200));
+      await app.ctlPassForTest;
+      final words = io.ctls('bob', 'shots');
+      expect(words, hasLength(2));
+      expect(words.last.shots!.all, isTrue);
+      // back to not all and back again inside the next window: nothing
+      await comes('carol', old(await said('c3', by: 'carol', g: _mine)));
+      await comes('carol', await said('c4', by: 'carol', g: _mine));
+      await Future<void>.delayed(const Duration(milliseconds: 2200));
+      await app.ctlPassForTest;
+      expect(io.ctls('bob', 'shots'), hasLength(2));
+    }, skip: skip);
+
+    test(
+      'the old-version words go once to each member, not on every turn',
+      () async {
+        await app.setGroupShots(_mine, true);
+        await app.setGroupShots(_mine, false);
+        await app.setGroupShots(_mine, true);
+        await app.ctlPassForTest;
+        expect(io.nudges('carol'), hasLength(1));
+        expect(io.nudges('bob'), hasLength(1));
+      },
+      skip: skip,
+    );
+
+    test('a list written more than a day ahead is not taken', () async {
+      final ahead = DateTime.now()
+          .add(const Duration(days: 2))
+          .millisecondsSinceEpoch;
+      await comes(
+        'carol',
+        await wrapMessage(
+          'from the future',
+          msgUid: 'f1',
+          groupId: _mine,
+          sender: asSender('carol'),
+          writtenAt: ahead,
+        ),
+      );
+      expect(await capsOf('carol'), '');
     }, skip: skip);
   });
 }

@@ -27,6 +27,9 @@ const kMyCaps = [kCapGroupShots, kCapTyping];
 // a list longer than this is no phone's, and is read as none
 const kCapsMost = 16;
 
+/// a list written further ahead of this clock is not taken
+const kCapsAheadMost = Duration(days: 1);
+
 /// at most one frame to a chat this often
 const kTypingEvery = Duration(seconds: 5);
 
@@ -74,15 +77,22 @@ Set<String> capsOfText(String? s) => {
 /// none. [counts]: a message of theirs, which every phone with the list
 /// puts it on. [at] is when the row last changed by their clock, negative
 /// when that frame came without a list, so a late older frame changes
-/// nothing. the row is written only when what it says changes
+/// nothing. the row is written only when what it says changes. a frame
+/// written more than [kCapsAheadMost] past [now] by their clock is not
+/// taken: it would hold their list until that day
 ({String caps, int at})? capsAfter(
   String was,
   int at, {
   required List<String>? carried,
   required bool counts,
   int? written,
+  int? now,
 }) {
   if (carried == null && !counts) return null;
+  final clock = now ?? DateTime.now().millisecondsSinceEpoch;
+  if (written != null && written > clock + kCapsAheadMost.inMilliseconds) {
+    return null;
+  }
   final next = carried == null ? '' : capsText(carried);
   if (written == null || written <= 0) {
     // a version from before 'w' has no list either

@@ -3,6 +3,7 @@
 // signal and the engine as the app calls them, and a database kept in maps
 // that notes every call. anything else they are asked fails the test
 import 'dart:async';
+import 'dart:math' show max;
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -2238,15 +2239,39 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<List<({String groupId, String admin})>> capsUntold() async => [
+  Future<List<({String groupId, String admin, int at})>> capsUntold() async => [
     for (final r in groupRows.values)
-      if (((r['shots_told'] as int?) ?? 0) == 0 &&
-          r['is_admin'] != 1 &&
+      if (r['is_admin'] != 1 &&
           r['room_pub'] == null &&
           r['ended_at'] == null &&
           r['admin_id'] != null)
-        (groupId: r['group_id'] as String, admin: r['admin_id'] as String),
+        if (GroupShots.ofRow(r) case final g
+            when g.told == 0 || groupShotsOwesCaps(g))
+          (
+            groupId: r['group_id'] as String,
+            admin: r['admin_id'] as String,
+            at: g.told == 0 ? (g.on ? max(1, g.at) : 1) : g.at,
+          ),
   ];
+
+  @override
+  Future<bool> capsToldVia(String admin) async => [
+    for (final r in groupRows.values)
+      if (r['admin_id'] == admin &&
+          ((r['shots_told'] as int?) ?? 0) > 0 &&
+          r['room_pub'] == null)
+        r,
+  ].isNotEmpty;
+
+  // the members each group's old-version words went to
+  final nudged = <String, Set<String>>{};
+  @override
+  Future<Set<String>> shotsNudged(String groupId) async => {
+    ...?nudged[groupId],
+  };
+  @override
+  Future<void> noteShotsNudged(String groupId, List<String> members) async =>
+      (nudged[groupId] ??= {}).addAll(members);
 
   @override
   Future<List<String>> shotsRunHere(String me, {String? member}) async => [

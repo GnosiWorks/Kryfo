@@ -396,8 +396,8 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
-    await _takeCaps(senderHaloId, env, db);
-    await _memberCaps(senderHaloId, env, db);
+    final capsMoved = await _takeCaps(senderHaloId, env, db);
+    await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger

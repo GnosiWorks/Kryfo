@@ -110,20 +110,73 @@ mixin _GroupShotsRows {
   }
 
   // the groups this phone is a member of whose admin has not heard its
-  // bits since the update: no rooms, none it runs, none ended
-  Future<List<({String groupId, String admin})>> capsUntold() async {
+  // list since the update, or waits on it for a newer state: no rooms,
+  // none it runs, none ended. [at] is the stamp the answer is for
+  Future<List<({String groupId, String admin, int at})>> capsUntold() async {
     final db = await open();
     final rows = await db.query(
       'groups',
-      columns: const ['group_id', 'admin_id'],
+      columns: const [
+        'group_id',
+        'admin_id',
+        'shots_on',
+        'shots_at',
+        'shots_told',
+      ],
       where:
-          'shots_told = 0 AND is_admin = 0 AND room_pub IS NULL AND '
+          '(shots_told = 0 OR (shots_on = 1 AND shots_all = 0 AND '
+          'shots_told < shots_at)) AND is_admin = 0 AND room_pub IS NULL AND '
           'ended_at IS NULL AND admin_id IS NOT NULL',
     );
     return [
       for (final r in rows)
-        (groupId: r['group_id'] as String, admin: r['admin_id'] as String),
+        (
+          groupId: r['group_id'] as String,
+          admin: r['admin_id'] as String,
+          at: (r['shots_told'] as int) == 0
+              ? max(1, (r['shots_on'] == 1 ? r['shots_at'] as int : 1))
+              : r['shots_at'] as int,
+        ),
     ];
+  }
+
+  // [admin] already heard this phone's list through a group here: what
+  // they keep is per person, so no other group needs to tell them
+  Future<bool> capsToldVia(String admin) async {
+    final db = await open();
+    final rows = await db.query(
+      'groups',
+      columns: const ['group_id'],
+      where: 'admin_id = ? AND shots_told > 0 AND room_pub IS NULL',
+      whereArgs: [admin],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  // the members of [groupId] the old-version words already went to
+  Future<Set<String>> shotsNudged(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'group_members',
+      columns: const ['halo_id'],
+      where: 'group_id = ? AND shots_nudged = 1',
+      whereArgs: [groupId],
+    );
+    return {for (final r in rows) r['halo_id'] as String};
+  }
+
+  Future<void> noteShotsNudged(String groupId, List<String> members) async {
+    if (members.isEmpty) return;
+    final db = await open();
+    await db.update(
+      'group_members',
+      {'shots_nudged': 1},
+      where:
+          'group_id = ? AND halo_id IN '
+          '(${List.filled(members.length, '?').join(', ')})',
+      whereArgs: [groupId, ...members],
+    );
   }
 
   // the groups this phone runs whose block is on: who can is worked out
@@ -209,7 +262,8 @@ mixin _GroupShotsRows {
   }
 }
 
-// the upgrade to 89: a group's block
+// the upgrade to 89: a group's block, and which members its old-version
+// words went to
 Future<void> groupShotsColumns(DatabaseExecutor db) async {
   for (final col in GroupShots.columns) {
     await addColumn(
@@ -217,4 +271,9 @@ Future<void> groupShotsColumns(DatabaseExecutor db) async {
       'ALTER TABLE groups ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
     );
   }
+  await addColumn(
+    db,
+    'ALTER TABLE group_members ADD COLUMN shots_nudged INTEGER NOT NULL '
+    'DEFAULT 0',
+  );
 }
