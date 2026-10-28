@@ -26,7 +26,7 @@ import 'helper_push.dart';
 const kPushGateway = 'https://relay.kryfo.app/push/';
 // the gateway's public key, pinned like the version key. the private half
 // is made on the server with `kryfo-push keygen` and never leaves it
-const kPushGatewayPub = kPushGatewayDevPub;
+const kPushGatewayPub = 'e6OQLuf2OdSzSLpVUWuPEp-HpBZ3Hur3LNHSDNCjY0Y';
 // the development key: test/push_gateway_key_test.dart refuses it for a
 // release
 const kPushGatewayDevPub = 'QRglUlzqI_cAwOAFO7vVY52Kpw7xO9xePWnMIldDhW0';
