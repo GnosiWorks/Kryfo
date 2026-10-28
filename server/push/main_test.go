@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -863,4 +864,33 @@ func TestFailedFirstPushLeavesNoRow(t *testing.T) {
 	if rows != 1 {
 		t.Fatalf("%d rows, want only the phone's", rows)
 	}
+}
+
+// a full table of phones, each with its sixteen seal hashes, stays well
+// inside the unit's MemoryMax=256M
+func TestFullTableFitsTheUnitsMemory(t *testing.T) {
+	if testing.Short() {
+		t.Skip("fills the whole table")
+	}
+	r := newRig(t)
+	runtime.GC()
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	r.g.mu.Lock()
+	for i := 0; i < floorKept; i++ {
+		p := &phone{last: r.clock, hourStart: r.clock, seals: map[[8]byte]time.Time{}}
+		for s := 0; s < 16; s++ {
+			p.seals[[8]byte{byte(i), byte(i >> 8), byte(i >> 16), byte(s)}] = r.clock
+		}
+		r.g.floor[r.g.hash(junkToken(i))] = p
+	}
+	r.g.mu.Unlock()
+	runtime.GC()
+	runtime.ReadMemStats(&after)
+	held := int64(after.HeapAlloc) - int64(before.HeapAlloc)
+	if held > 180<<20 {
+		t.Fatalf("a full table holds %d MB, the unit has 256", held>>20)
+	}
+	t.Logf("a full table of %d phones: %d MB", floorKept, held>>20)
+	runtime.KeepAlive(r.g.floor)
 }

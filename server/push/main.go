@@ -44,7 +44,9 @@ const (
 	// goes when the floor is up
 	floorGap  = 45 * time.Second
 	floorHour = 30
-	floorKept = 200_000
+	// a full table of phones with their seal hashes must fit the unit's
+	// MemoryMax=256M with room: about 110 MB at this size
+	floorKept = 80_000
 	goneFor   = 24 * time.Hour
 	// gone tokens have a table of their own, the oldest let go first, so
 	// junk sealed by anyone can never crowd out a phone
