@@ -3161,20 +3161,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString en attente · Tor se connecte encore',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Pas encore de Kryfos.';
 
   @override
@@ -4419,10 +4405,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get photoKnowsPhoto => 'Photo';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Ce que sait cette vidéo';
+  String get photoKnowsVideoCleaner => 'Nettoyeur de vidéos';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Ce que sait cette photo';
+  String get photoKnowsPhotoCleaner => 'Nettoyeur de photos';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Tout retirer';
@@ -5272,9 +5258,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTorRouting => 'Routage Tor';
 
   @override
-  String get settingsConnecting => 'Connexion';
-
-  @override
   String get settingsOffMode => 'Désactivé · mode Relais';
 
   @override
@@ -5506,10 +5489,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tout ici se passe sur ce téléphone. Rien n’est mis en ligne, et personne d’autre n’a besoin d’être sur Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Que sait cette photo ?';
+  String get toolsPhotoCleaner => 'Nettoyeur de photos';
 
   @override
-  String get toolsPlacePhoneTime => 'Lieu · téléphone · heure';
+  String get toolsRemovesHiddenInfo =>
+      'Supprime les infos cachées (métadonnées) comme le lieu, l’heure et le modèle de téléphone';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9205,6 +9189,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copier le lien';
+
+  @override
+  String get appRelayNotAnswering => 'Relais muet';
+
+  @override
+  String get motionNoRelayYet => 'PAS ENCORE DE RELAIS';
+
+  @override
+  String get motionTheRouteIsUp => 'La route est tracée';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Les messages partent dès qu’un relais répond par cette route.';
+
+  @override
+  String get motionOffline => 'HORS LIGNE';
+
+  @override
+  String get motionNoNetwork => 'Pas de réseau';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Rien ne part sans réseau. Tor reprend dès que le réseau revient.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count en attente · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icône et notifications';

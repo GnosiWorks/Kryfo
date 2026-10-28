@@ -635,8 +635,14 @@ class AppState extends ChangeNotifier {
   // never asks for anything
   static const backInFrontStall = Duration(minutes: 4);
 
+  // polls a change asked for waits for the engine's bounce to begin
+  static const routeOnPurposePolls = 15;
+
   // when the status poll last saw the route carry, for the pill's grace
   DateTime? _usableAt;
+  // a route changed on purpose: the engine's next generation is not held.
+  // counted in polls, so a change the engine turned down lets go
+  int _routeOnPurpose = 0;
 
   static const offlineAfter = Duration(minutes: 5);
   // when tor first started trying this session. a network that

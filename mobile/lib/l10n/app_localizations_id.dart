@@ -3122,20 +3122,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString menunggu · Tor masih menghubungkan',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Belum ada Kryfo.';
 
   @override
@@ -4364,10 +4350,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Yang diketahui video ini';
+  String get photoKnowsVideoCleaner => 'Pembersih video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Yang diketahui foto ini';
+  String get photoKnowsPhotoCleaner => 'Pembersih foto';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Hapus semuanya';
@@ -5213,9 +5199,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTorRouting => 'Perutean Tor';
 
   @override
-  String get settingsConnecting => 'Menghubungkan';
-
-  @override
   String get settingsOffMode => 'Mati · mode relay';
 
   @override
@@ -5448,10 +5431,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua di sini terjadi di ponsel ini. Tidak ada yang diunggah, dan orang lain tidak perlu memakai Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Apa yang diketahui foto ini?';
+  String get toolsPhotoCleaner => 'Pembersih foto';
 
   @override
-  String get toolsPlacePhoneTime => 'Tempat · ponsel · waktu';
+  String get toolsRemovesHiddenInfo =>
+      'Menghapus info tersembunyi (metadata) seperti tempat, waktu, dan model ponsel';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9104,6 +9088,44 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Salin tautan';
+
+  @override
+  String get appRelayNotAnswering => 'Relay diam';
+
+  @override
+  String get motionNoRelayYet => 'BELUM ADA RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Rute sudah terbentuk';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Pesan terkirim begitu ada relay yang menjawab lewat rute ini.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Tidak ada jaringan';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count menunggu · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Ikon dan notifikasi';

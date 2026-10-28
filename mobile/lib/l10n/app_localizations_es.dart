@@ -3161,20 +3161,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString en espera · Tor sigue conectando',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Aún no hay Kryfos.';
 
   @override
@@ -4412,10 +4398,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Lo que sabe este video';
+  String get photoKnowsVideoCleaner => 'Limpiador de videos';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Lo que sabe esta foto';
+  String get photoKnowsPhotoCleaner => 'Limpiador de fotos';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Quitarlo todo';
@@ -5263,9 +5249,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTorRouting => 'Enrutamiento Tor';
 
   @override
-  String get settingsConnecting => 'Conectando';
-
-  @override
   String get settingsOffMode => 'Apagado · modo Repetidor';
 
   @override
@@ -5497,10 +5480,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todo aquí ocurre en este teléfono. No se sube nada, y nadie más tiene que estar en Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => '¿Qué sabe esta foto?';
+  String get toolsPhotoCleaner => 'Limpiador de fotos';
 
   @override
-  String get toolsPlacePhoneTime => 'Lugar · teléfono · hora';
+  String get toolsRemovesHiddenInfo =>
+      'Quita la información oculta (metadatos) como el lugar, la hora y el modelo del teléfono';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9182,6 +9166,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copiar enlace';
+
+  @override
+  String get appRelayNotAnswering => 'Repetidor no responde';
+
+  @override
+  String get motionNoRelayYet => 'AÚN SIN REPETIDOR';
+
+  @override
+  String get motionTheRouteIsUp => 'La ruta está abierta';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Los mensajes salen en cuanto un repetidor responda por esta ruta.';
+
+  @override
+  String get motionOffline => 'SIN CONEXIÓN';
+
+  @override
+  String get motionNoNetwork => 'Sin red';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Sin red no sale nada. Tor sigue en cuanto vuelva la red.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count en espera · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Icono y notificaciones';

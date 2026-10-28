@@ -249,7 +249,7 @@ void main() {
       'lock a file': () => const LockFileScreen(file: _file),
       'open a locked file': () => const OpenLockedScreen(file: _age),
       'clean': () => const CleanScreen(file: _file),
-      'what a photo knows': () => const PhotoKnowsScreen(file: _file),
+      'photo cleaner': () => const PhotoKnowsScreen(file: _file),
     };
     for (final e in pages.entries) {
       testWidgets(e.key, (t) async {

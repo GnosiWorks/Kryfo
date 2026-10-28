@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -12,15 +13,19 @@ import 'package:kryfo/screens/photo_knows_screen.dart';
 import 'package:kryfo/screens/tools_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
+import 'package:kryfo/widgets/tool_parts.dart';
 
 import 'meta_fixtures.dart';
 
-Widget framed(Widget home) => MaterialApp(
+Widget framed(Widget home, {Locale? locale, double scale = 1}) => MaterialApp(
   theme: buildHaloTheme(),
+  locale: locale,
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (ctx, child) => MediaQuery(
-    data: MediaQuery.of(ctx).copyWith(disableAnimations: true),
+    data: MediaQuery.of(
+      ctx,
+    ).copyWith(disableAnimations: true, textScaler: TextScaler.linear(scale)),
     child: child!,
   ),
   home: home,
@@ -64,6 +69,7 @@ Future<void> settle(WidgetTester t, Finder until) async {
 Future<void> readThenRemove(
   WidgetTester t,
   PickedFile file, {
+  String? title,
   List<String> shows = const [],
   List<String> hides = const [],
 }) async {
@@ -74,6 +80,7 @@ Future<void> readThenRemove(
   // everything it gives away first, with the one button under it
   await settle(t, find.text(l10n.photoKnowsRemoveAllOfIt));
   expect(find.byType(CleanScreen), findsNothing);
+  if (title != null) expect(find.text(title), findsOneWidget);
   await t.tap(find.text(l10n.photoKnowsRemoveAllOfIt));
   await t.pump();
   await t.pump(const Duration(milliseconds: 400));
@@ -128,6 +135,7 @@ void main() {
         size: 100,
         mime: 'image/jpeg',
       ),
+      title: 'Photo cleaner',
     );
   });
 
@@ -142,6 +150,81 @@ void main() {
         size: 100,
         mime: 'video/mp4',
       ),
+      title: 'Video cleaner',
+    );
+  });
+
+  for (final (lang, scale) in [('ar', 1.0), ('en', 2.0), ('fa', 2.0)]) {
+    testWidgets('the screen is the photo cleaner, $lang at ${scale}x', (
+      t,
+    ) async {
+      setL10nLocale(Locale(lang));
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      // a phone's width; the test font draws every letter as wide as it is
+      // tall, so the title needs more room than a real one
+      t.view.physicalSize = Size(scale > 1 ? 1200 : 720, 1600);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      // no place in it: the map data loads once per run and is the photo's.
+      // a name of its own: a path read in an earlier test is gone
+      const x = '<x:xmpmeta><rdf:Description hdrgm:Version="1.0"/></x:xmpmeta>';
+      world(t, '$lang.jpg', jpeg(xmp: x, mpf: true, trailer: jpeg()));
+      await t.pumpWidget(
+        framed(
+          PhotoKnowsScreen(
+            file: PickedFile(
+              uri: 'content://test/$lang.jpg',
+              name: '$lang.jpg',
+              size: 100,
+              mime: 'image/jpeg',
+            ),
+          ),
+          locale: Locale(lang),
+          scale: scale,
+        ),
+      );
+      await settle(t, find.text(l10n.photoKnowsRemoveAllOfIt));
+      final title = find.text(l10n.photoKnowsPhotoCleaner);
+      expect(title, findsOneWidget);
+      expect(
+        l10n.photoKnowsPhotoCleaner,
+        lang == 'en' ? 'Photo cleaner' : isNot('Photo cleaner'),
+      );
+      // the whole title, never cut short with "…"
+      expect(t.renderObject<RenderParagraph>(title).didExceedMaxLines, isFalse);
+      if (lang != 'en') {
+        expect(Directionality.of(t.element(title)), TextDirection.rtl);
+      }
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+  }
+
+  testWidgets('large text: a tool button takes a second line, never cut', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      framed(
+        Center(
+          child: SizedBox(
+            width: 300,
+            child: ToolWideButton(
+              label: 'Remove all of it',
+              filled: true,
+              onTap: () {},
+            ),
+          ),
+        ),
+        scale: 1.5,
+      ),
+    );
+    expect(t.takeException(), isNull);
+    final p = t.renderObject<RenderParagraph>(find.text('Remove all of it'));
+    expect(p.didExceedMaxLines, isFalse);
+    final words = t.getSize(find.text('Remove all of it'));
+    expect(
+      t.getSize(find.byType(ToolWideButton)).height,
+      greaterThan(words.height),
     );
   });
 

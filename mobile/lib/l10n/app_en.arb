@@ -3877,16 +3877,6 @@
       }
     }
   },
-  "homeWaitingTorIsStill": "{count, plural, other{{count} waiting · Tor is still connecting}}",
-  "@homeWaitingTorIsStill": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "homeNoKryfosYet": "No Kryfos yet.",
   "@homeNoKryfosYet": {
     "description": "screens/home_screen.dart"
@@ -5410,12 +5400,12 @@
   "@photoKnowsPhoto": {
     "description": "screens/photo_knows_screen.dart"
   },
-  "photoKnowsWhatThisVideoKnows": "What this video knows",
-  "@photoKnowsWhatThisVideoKnows": {
+  "photoKnowsVideoCleaner": "Video cleaner",
+  "@photoKnowsVideoCleaner": {
     "description": "screens/photo_knows_screen.dart"
   },
-  "photoKnowsWhatThisPhotoKnows": "What this photo knows",
-  "@photoKnowsWhatThisPhotoKnows": {
+  "photoKnowsPhotoCleaner": "Photo cleaner",
+  "@photoKnowsPhotoCleaner": {
     "description": "screens/photo_knows_screen.dart"
   },
   "photoKnowsRemoveAllOfIt": "Remove all of it",
@@ -6488,10 +6478,6 @@
   "@settingsTorRouting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsConnecting": "Connecting",
-  "@settingsConnecting": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOffMode": "Off · relay mode",
   "@settingsOffMode": {
     "description": "screens/settings_screen.dart"
@@ -6787,12 +6773,12 @@
   "@toolsEverythingHereHappensOn": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsWhatDoesThisPhoto": "What does this photo know?",
-  "@toolsWhatDoesThisPhoto": {
+  "toolsPhotoCleaner": "Photo cleaner",
+  "@toolsPhotoCleaner": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsPlacePhoneTime": "Place · phone · time",
-  "@toolsPlacePhoneTime": {
+  "toolsRemovesHiddenInfo": "Removes hidden info (metadata) like place, time and phone model",
+  "@toolsRemovesHiddenInfo": {
     "description": "screens/tools_screen.dart"
   },
   "toolsPickAPhotoAnd": "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",
@@ -11492,6 +11478,58 @@
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
+  },
+  "appRelayNotAnswering": "Relay not answering",
+  "@appRelayNotAnswering": {
+    "description": "app/gates.dart: the home pill in relay mode while its relay has not answered for a while"
+  },
+  "motionNoRelayYet": "NO RELAY YET",
+  "@motionNoRelayYet": {
+    "description": "widgets/motion.dart: the tor sheet's route label, all caps, while tor's route is up and no relay has answered through it"
+  },
+  "motionTheRouteIsUp": "The route is up",
+  "@motionTheRouteIsUp": {
+    "description": "widgets/motion.dart: the tor sheet's large italic line while tor's route is up and no relay has answered through it"
+  },
+  "motionMessagesGoOnceARelay": "Messages go out as soon as a relay answers through this route.",
+  "@motionMessagesGoOnceARelay": {
+    "description": "widgets/motion.dart: the tor sheet's small line under that"
+  },
+  "motionOffline": "OFFLINE",
+  "@motionOffline": {
+    "description": "widgets/motion.dart: the tor sheet's route label, all caps, while the phone has no network"
+  },
+  "motionNoNetwork": "No network",
+  "@motionNoNetwork": {
+    "description": "widgets/motion.dart: the tor sheet's large italic line while the phone has no network"
+  },
+  "motionTorPicksUpAgain": "Nothing goes out without a network. Tor picks up again when one is back.",
+  "@motionTorPicksUpAgain": {
+    "description": "widgets/motion.dart: the tor sheet's small line under that"
+  },
+  "deliveryModeStateLast": "{state} · {last}",
+  "@deliveryModeStateLast": {
+    "description": "delivery_mode.dart: the check-ins line while not connected: the connection's words as the home pill shows them, then the last check-in",
+    "placeholders": {
+      "state": {
+        "type": "String"
+      },
+      "last": {
+        "type": "Object"
+      }
+    }
+  },
+  "homeWaitingState": "{count, plural, other{{count} waiting · {state}}}",
+  "@homeWaitingState": {
+    "description": "screens/home_screen.dart: the strip over the chats while the phone cannot send: how many wait, then the connection's words as the home pill shows them",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
   },
   "settingsIconAndNotifications": "Icon and notifications",
   "@settingsIconAndNotifications": {

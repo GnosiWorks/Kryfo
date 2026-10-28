@@ -3136,20 +3136,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ در انتظار · Tor هنوز در حال اتصال است',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'هنوز هیچ مخاطبی نیست.';
 
   @override
@@ -4380,10 +4366,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get photoKnowsPhoto => 'عکس';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'این ویدیو چه می‌داند';
+  String get photoKnowsVideoCleaner => 'تمیز کردن ویدیو';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'این عکس چه می‌داند';
+  String get photoKnowsPhotoCleaner => 'تمیز کردن عکس';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'حذف همه‌اش';
@@ -5224,9 +5210,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsTorRouting => 'مسیریابی Tor';
 
   @override
-  String get settingsConnecting => 'در حال اتصال';
-
-  @override
   String get settingsOffMode => 'خاموش · حالت رله';
 
   @override
@@ -5456,10 +5439,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌چیز این‌جا روی همین گوشی انجام می‌شود. هیچ چیز بارگذاری نمی‌شود، و لازم نیست کس دیگری Kryfo داشته باشد.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'این عکس چه می‌داند؟';
+  String get toolsPhotoCleaner => 'تمیز کردن عکس';
 
   @override
-  String get toolsPlacePhoneTime => 'مکان · گوشی · زمان';
+  String get toolsRemovesHiddenInfo =>
+      'اطلاعات پنهان (فراداده) مثل مکان، زمان و مدل گوشی را پاک می‌کند';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9124,6 +9108,44 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'کپی پیوند';
+
+  @override
+  String get appRelayNotAnswering => 'رله ساکت است';
+
+  @override
+  String get motionNoRelayYet => 'هنوز رله‌ای نیست';
+
+  @override
+  String get motionTheRouteIsUp => 'مسیر برقرار است';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'پیام‌ها به محض اینکه رله‌ای از این مسیر پاسخ دهد فرستاده می‌شوند.';
+
+  @override
+  String get motionOffline => 'آفلاین';
+
+  @override
+  String get motionNoNetwork => 'شبکه‌ای نیست';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'بدون شبکه چیزی فرستاده نمی‌شود. Tor به محض برگشتن شبکه ادامه می‌دهد.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '⁨$state⁩ · ⁨$last⁩';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ در انتظار · ⁨$state⁩',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'نماد و اعلان‌ها';
