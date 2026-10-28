@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'l10n/numbers.dart';
+import 'voice_format.dart' show isOggPath, oggFileMs;
 
 /// the longest note the mic records. a receiver keeps no voice file longer
 /// than this (kMaxVoiceSlices)
@@ -68,6 +69,10 @@ Future<int?> wavFileMs(String path) async {
     await f?.close();
   }
 }
+
+/// how long a note's file plays, wav or opus
+Future<int?> voiceFileMs(String path) =>
+    isOggPath(path) ? oggFileMs(path) : wavFileMs(path);
 
 /// the recorder's file has samples in it: its head alone is 44 bytes
 bool samplesIn(String path) {

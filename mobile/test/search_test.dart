@@ -116,7 +116,7 @@ void main() {
     expect(kindWhere(SearchKind.all), '');
     expect(kindWhere(SearchKind.photos), contains('media_path'));
     expect(kindWhere(SearchKind.videos), contains("'%.mp4'"));
-    expect(kindWhere(SearchKind.files), contains("!= 'voice.wav'"));
+    expect(kindWhere(SearchKind.files), contains("NOT IN ('voice.wav'"));
     expect(kindWhere(SearchKind.links), contains('preview'));
   });
 }

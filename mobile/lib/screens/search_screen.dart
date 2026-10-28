@@ -45,6 +45,7 @@ import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
 import '../msg_order.dart' show rowWrittenAt;
 import '../widgets/shift_tap_guard.dart';
+import '../voice_format.dart' show isVoiceName;
 
 /// home's search button grows into the field here
 const kSearchHero = 'home-search';
@@ -416,7 +417,7 @@ class _SearchScreenState extends State<SearchScreen> {
           sender: out ? l10n.groupChatYou : _nameOfPeer(peer),
           when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           mediaPath: r['media_path'] as String?,
-          fileName: fileName == 'voice.wav' ? null : fileName,
+          fileName: isVoiceName(fileName) ? null : fileName,
           poll: poll != null,
           video:
               fileName != null &&
@@ -1589,7 +1590,9 @@ class _PersonSheetState extends State<_PersonSheet>
                       style: HaloType.sans(
                         size: 15,
                         weight: FontWeight.w600,
-                        color: _adding ? HaloColors.amberText : HaloColors.onAmber,
+                        color: _adding
+                            ? HaloColors.amberText
+                            : HaloColors.onAmber,
                       ),
                     ),
                   ),

@@ -11,6 +11,7 @@ import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
+import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = 'halo/1:';
 
@@ -59,6 +60,8 @@ class UnwrappedMessage {
   // 'ge': an ended group's words for versions that cannot read its end.
   // they show it as a message, this version never keeps it
   final bool endNotice;
+  // 'op': the sender's phone plays opus voice notes (voice_format.dart)
+  final bool playsOpus;
   final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
@@ -114,6 +117,7 @@ class UnwrappedMessage {
     this.album,
     this.writtenAt,
     this.endNotice = false,
+    this.playsOpus = false,
   });
 }
 
@@ -360,6 +364,7 @@ Future<String> wrapMessage(
 }) async {
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
+  body[kOpusWire] = 1;
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
   if (endNotice) body['ge'] = 1;
@@ -570,6 +575,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         _ => null,
       },
       endNotice: json['ge'] == 1,
+      playsOpus: json[kOpusWire] == 1,
     );
   } catch (e) {
     dlog(

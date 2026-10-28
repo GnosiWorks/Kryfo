@@ -116,6 +116,7 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'voice_choice.dart';
+import 'voice_format.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
@@ -214,6 +215,7 @@ part 'app/state_screen.dart';
 part 'app/state_search.dart';
 part 'app/state_session.dart';
 part 'app/state_vault.dart';
+part 'app/state_voice.dart';
 
 void main() async {
   dlog('launch main');

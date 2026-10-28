@@ -147,7 +147,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 86,
+      version: 87,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -190,7 +190,8 @@ class HaloDb
             shots_at INTEGER NOT NULL DEFAULT 0,
             shots_can INTEGER NOT NULL DEFAULT 0,
             shots_by INTEGER NOT NULL DEFAULT 0,
-            shots_when INTEGER NOT NULL DEFAULT 0
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            opus_can INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -279,6 +280,7 @@ class HaloDb
             group_id TEXT NOT NULL,
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
+            opus_can INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -860,6 +862,10 @@ class HaloDb
           // unsent words, kept per chat so a stopped process keeps them
           await draftsTable(db);
         }
+        if (oldV < 87) {
+          // which phones play opus voice notes (voice_format.dart)
+          await opusColumns(db);
+        }
       },
     );
     // a backup reading the folder or a restore replacing it keeps them:
@@ -1114,6 +1120,18 @@ Future<void> shotsColumns(DatabaseExecutor db) async {
     await addColumn(
       db,
       'ALTER TABLE contacts ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
+    );
+  }
+}
+
+// the upgrade to 87: a contact's or a member's word that their phone plays
+// opus voice notes, beside the rest of the chat's state, so it moves, ends
+// and goes with it
+Future<void> opusColumns(DatabaseExecutor db) async {
+  for (final table in const ['contacts', 'group_members']) {
+    await addColumn(
+      db,
+      'ALTER TABLE $table ADD COLUMN $kOpusCol INTEGER NOT NULL DEFAULT 0',
     );
   }
 }

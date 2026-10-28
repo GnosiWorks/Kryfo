@@ -369,6 +369,10 @@ void openFullImage(
   double radius = 0,
 }) => openPhoto(context, path, tag: tag, radius: radius);
 
+/// the note at [path] plays [ms]: known as it is made, never read again
+void voiceLengthKnown(String path, int ms) =>
+    VoiceBubbleState._durCache[path] = Duration(milliseconds: ms);
+
 class VoiceBubble extends StatefulWidget {
   final String path;
   final bool isOut;
@@ -411,17 +415,15 @@ class VoiceBubbleState extends State<VoiceBubble> {
       // the position back.
       if (st.processingState == ProcessingState.idle) {
         _ready = false;
+        _letFileGo();
       }
       if (st.processingState == ProcessingState.completed) {
         VoiceTurn.letGo(this);
         _player.seek(Duration.zero);
         _player.pause();
-        if (mounted) {
-          setState(() {
-            _playing = false;
-            _pos = Duration.zero;
-          });
-        }
+        _playing = false;
+        _swapIfMoved();
+        if (mounted) setState(() => _pos = Duration.zero);
       }
     });
     // rebuild on position ticks only while playing: idle bubbles rebuilding
@@ -432,9 +434,39 @@ class VoiceBubbleState extends State<VoiceBubble> {
   }
 
   // flag missing files, and read the clip length once per file: from the
-  // wav's head, or else with a throwaway player, disposed right after so no
-  // bubble holds a codec handle
+  // wav's head or the ogg's last page, or else with a throwaway player,
+  // disposed right after so no bubble holds a codec handle
   static final Map<String, Duration> _durCache = {};
+
+  // the file the player has open, held so it is not shredded under it
+  String? _open;
+
+  void _letFileGo() {
+    final o = _open;
+    _open = null;
+    if (o != null) letVoiceFileGo(o);
+  }
+
+  // the note moved to another file (its opus copy) while this one played:
+  // the player lets the old one go once it stops, and the next tap loads
+  // the new one where this one was
+  void _swapIfMoved() {
+    if (_open == null || _open == widget.path || _playing) return;
+    _ready = false;
+    _player.stop();
+    _letFileGo();
+  }
+
+  @override
+  void didUpdateWidget(VoiceBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path == widget.path) return;
+    _missing = false;
+    _peaks = voicePeaksNow(widget.path) ?? _peaks;
+    final d = _durCache[oldWidget.path];
+    if (d != null) _durCache.putIfAbsent(widget.path, () => d);
+    _swapIfMoved();
+  }
 
   Future<void> _checkExists() async {
     if (!await File(widget.path).exists()) {
@@ -452,7 +484,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
       return;
     }
     // the samples in the file, sent or received: no length rides the wire
-    final ms = await wavFileMs(widget.path);
+    final ms = await voiceFileMs(widget.path);
     if (ms != null) {
       final d = Duration(milliseconds: ms);
       _durCache[widget.path] = d;
@@ -487,9 +519,12 @@ class VoiceBubbleState extends State<VoiceBubble> {
     // or a just-recorded note is not flushed yet, so it gets a few tries
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        final d = await _player.setFilePath(widget.path);
+        final path = widget.path;
+        final d = await _player.setFilePath(path);
+        _letFileGo();
+        holdVoiceFile(_open = path);
         // the length read from the head stays: the number does not jump
-        _dur = _durCache[widget.path] ?? d ?? Duration.zero;
+        _dur = _durCache[path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);
         return;
       } catch (_) {
@@ -505,7 +540,12 @@ class VoiceBubbleState extends State<VoiceBubble> {
   void dispose() {
     VoiceTurn.letGo(this);
     _unguard?.call();
-    _player.dispose();
+    // a player let go while it was still coming up can fail to close its
+    // streams: the bubble is gone either way
+    _player.dispose().catchError(
+      (Object e) => dlog('voice: player not let go (${e.runtimeType})'),
+    );
+    _letFileGo();
     super.dispose();
   }
 
@@ -544,6 +584,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
     _unguard?.call();
     _unguard = null;
     _player.pause();
+    _playing = false;
+    _swapIfMoved();
   }
 
   String _fmt(Duration d) => voiceClock(d.inMilliseconds);
