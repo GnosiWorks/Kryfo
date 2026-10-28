@@ -10,9 +10,15 @@ package main
 
 import (
 	"context"
+	"log"
+	mrand "math/rand/v2"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
+
+	"fiatjaf.com/nostr"
 )
 
 const (
@@ -24,18 +30,54 @@ const (
 // stand-in
 var secondRelayHost = "relay2.kryfo.app"
 
-// the store u reaches in urls, "" for a relay that is not ours. the first
-// entry is the first store whatever its name, as in private mode its onion
+// our stores' onions. a relay is ours by its name alone, never by where it
+// sits in a list: one that is not ours is never dialled in the clear
+var (
+	ownOnionHost    = "z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion"
+	secondOnionHost = "cvwpee5zgbargtxd5wtbtnc6lkbgzxj5byfig3e53ic4t7su7r45n4yd.onion"
+)
+
+// the day the second store went live, 2026-10-28 00:00 utc: it holds nothing
+// older, so its first walk starts there and not fourteen days back
+const secondLiveAt = 1793145600
+
+// the second store's first walks spread over this. a var for the tests
+var secondFirstSpread = time.Minute
+
+func secondFirstWalk() time.Duration {
+	return time.Duration(mrand.Int64N(int64(secondFirstSpread) + 1))
+}
+
+// the store u reaches, "" for a relay that is not ours. by its name; an
+// onion first in the list is the first store too, as an onion is reached
+// through tor alone and nothing about it can go in the clear
 func storeOf(urls []string, u string) string {
 	switch {
-	case relayHostIs(u, secondRelayHost):
+	case relayHostIs(u, secondRelayHost), relayHostIs(u, secondOnionHost):
 		return storeSecond
-	case relayHostIs(u, ownRelayHost):
+	case relayHostIs(u, ownRelayHost), relayHostIs(u, ownOnionHost), otherFirstHost(u):
 		return storeFirst
-	case len(urls) > 0 && urls[0] == u:
+	case len(urls) > 0 && urls[0] == u && isOnion(u):
 		return storeFirst
 	}
 	return ""
+}
+
+// more names of the first store, for the tests' stand-ins. none in the app
+var otherFirstHosts sync.Map
+
+func otherFirstHost(u string) bool {
+	p, err := url.Parse(u)
+	if err != nil {
+		return false
+	}
+	_, ok := otherFirstHosts.Load(strings.ToLower(p.Host))
+	return ok
+}
+
+func isOnion(u string) bool {
+	p, err := url.Parse(u)
+	return err == nil && strings.HasSuffix(strings.ToLower(p.Hostname()), ".onion")
 }
 
 // the stores named in urls, the first one first
@@ -160,6 +202,10 @@ func oursAllGoneLocked(urls []string, u string) bool {
 	return woke
 }
 
+// woken because none of ours answers, a runner waits up to this first, so
+// every socket of ours does not redial in one instant. a var for the tests
+var goneSpread = 3 * time.Second
+
 // sleeps d, over early on a kick, on ours all gone when own, or with ctx
 func napFor(ctx context.Context, d time.Duration, own bool) {
 	kc := kickChan()
@@ -173,6 +219,12 @@ func napFor(ctx context.Context, d time.Duration, own bool) {
 	case <-t.C:
 	case <-kc:
 	case <-gone:
+		spread := time.NewTimer(time.Duration(mrand.Int64N(int64(goneSpread) + 1)))
+		defer spread.Stop()
+		select {
+		case <-spread.C:
+		case <-ctx.Done():
+		}
 	case <-ctx.Done():
 	}
 }
@@ -263,16 +315,44 @@ func isBackup(u string) bool {
 	return containsStr(nostrBackups, u)
 }
 
-// how long none of our stores may answer on fast before the backups are
-// read: a short outage waits in the outbox, a long one goes the long way
+// how long our first store may go without answering on fast before the
+// backups are read and written: a blip waits, an outage goes the long way.
+// it is the one every version before the second store reads
 var fastDownAfter = 2 * time.Minute
 
-// and how long ours keep failing meanwhile, with tor able to carry
+// and how long its attempts keep failing meanwhile, with tor able to carry
 var fastFailSpan = time.Minute
 
-// how often a backup waiting for ours to go down looks again, for tor
-// coming up meanwhile
-var backupLook = 30 * time.Second
+// how long a backup waiting for its turn sleeps when nothing wakes it: the
+// round changing and tor's status both do
+var backupLook = 5 * time.Minute
+
+// closed whenever tor's status changes, so a backup waiting for tor looks
+// again at once
+var (
+	torWakeMu sync.Mutex
+	torWakeC  = make(chan struct{})
+)
+
+func torWakeChan() <-chan struct{} {
+	torWakeMu.Lock()
+	defer torWakeMu.Unlock()
+	return torWakeC
+}
+
+func torStatusMoved() {
+	torWakeMu.Lock()
+	close(torWakeC)
+	torWakeC = make(chan struct{})
+	torWakeMu.Unlock()
+}
+
+// ours answer again: the publish sockets kept on the backups go too
+func backupsLetGo() {
+	for _, u := range backupsNow() {
+		pubCloseURL(u)
+	}
+}
 
 // tor carries, whatever the route. on fast the backups need it
 func torCarriesNow() bool {
@@ -287,16 +367,27 @@ func backupClientFor(lane string) (*http.Client, error) {
 	return torClientFor(lane)
 }
 
-// the client for relay u: a backup always goes through tor
+// the client for relay u. off the private route only our own stores are
+// dialled in the clear: a backup, or any relay that is not ours, always goes
+// through tor. the old fast mode, which no setting reaches any more, is left
+// as it was
 func relayClientFor(lane, u string) (*http.Client, error) {
 	if isBackup(u) {
 		return backupClientFor(lane)
+	}
+	if m := currentMode(); m == modeBalanced {
+		nostrMu.Lock()
+		urls := nostrRelays
+		nostrMu.Unlock()
+		if storeOf(urls, u) == "" {
+			return backupClientFor(lane)
+		}
 	}
 	return torNostrClientFor(lane)
 }
 
 // the relays a send or a one-shot ask goes to now: the list, and the
-// backups while neither of our stores answers and tor can carry them
+// backups while our first store is down and tor can carry them
 func relaysInUse(ctx context.Context) []string {
 	urls := relaysWhenSet(ctx)
 	if b := backupsNow(); len(b) > 0 && backupsOn() {
@@ -305,8 +396,31 @@ func relaysInUse(ctx context.Context) []string {
 	return urls
 }
 
-// the backups are read: our stores are down, as the round for capped
-// public reads says, and tor can carry
+// ev to every backup through tor, on the fast route, while tor carries: a
+// send our first store missed
+func publishToBackups(lane string, ev nostr.Event, routeC <-chan struct{}) {
+	if currentMode() != modeBalanced || !torCarriesNow() || torIsPaused() {
+		return
+	}
+	for _, u := range backupsNow() {
+		go func(u string) {
+			client, err := backupClientFor(lane)
+			if err != nil || routeGone(routeC) {
+				return
+			}
+			ctx, cancel := onRoute(context.Background(), routeC)
+			defer cancel()
+			pctx, pcancel := context.WithTimeout(ctx, publishWait)
+			defer pcancel()
+			if err := publishTo(pctx, lane, u, client, ev); err != nil && !relayHasIt(err) {
+				log.Printf("nostr: backup %s did not take what our first relay missed: %v", u, err)
+			}
+		}(u)
+	}
+}
+
+// the backups are read and written: our first store is down, and tor can
+// carry them
 func backupsOn() bool {
-	return ownRelayDown() && torCarriesNow() && !torIsPaused()
+	return firstStoreDown() && torCarriesNow() && !torIsPaused()
 }

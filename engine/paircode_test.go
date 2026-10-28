@@ -30,7 +30,7 @@ func TestPairCodeOneInvite(t *testing.T) {
 	a := newRelayStandIn(t, 0)
 	b := newRelayStandIn(t, 0)
 	a.keep, b.keep = true, true
-	useStandIns(t, modeBalanced, nil, a, b)
+	useStandIns(t, modeFast, nil, a, b)
 
 	const code = "482913"
 	const invite = "kryfo://share?id=the-sharer"
@@ -68,7 +68,7 @@ func TestPairCodeRefusesTwoInvites(t *testing.T) {
 	t.Run("one relay", func(t *testing.T) {
 		r := newRelayStandIn(t, 0)
 		r.keep = true
-		useStandIns(t, modeBalanced, nil, r)
+		useStandIns(t, modeFast, nil, r)
 		if res := pairCodePublish(code, sharer); res != "ok" {
 			t.Fatalf("share: %s", res)
 		}
@@ -81,7 +81,7 @@ func TestPairCodeRefusesTwoInvites(t *testing.T) {
 	t.Run("one on each relay", func(t *testing.T) {
 		a := newRelayStandIn(t, 0)
 		b := newRelayStandIn(t, 0)
-		useStandIns(t, modeBalanced, nil, a, b)
+		useStandIns(t, modeFast, nil, a, b)
 		a.store(pairEventAt(t, code, sharer, time.Now()))
 		b.store(pairEventAt(t, code, other, time.Now()))
 		if got := pairCodeFetch(code); got != "twice" {
@@ -93,7 +93,7 @@ func TestPairCodeRefusesTwoInvites(t *testing.T) {
 		a := newRelayStandIn(t, 0)
 		b := newRelayStandIn(t, 0)
 		b.reqDelay = time.Second
-		useStandIns(t, modeBalanced, nil, a, b)
+		useStandIns(t, modeFast, nil, a, b)
 		a.store(pairEventAt(t, code, sharer, time.Now()))
 		b.store(pairEventAt(t, code, other, time.Now()))
 		if got := pairCodeFetch(code); got != "twice" {
@@ -118,7 +118,7 @@ func TestPairCodeCountsOnlyLiveInvites(t *testing.T) {
 	}
 
 	r := newRelayStandIn(t, 0)
-	useStandIns(t, modeBalanced, nil, r)
+	useStandIns(t, modeFast, nil, r)
 	r.store(pairEventAt(t, code, "kryfo://share?id=last-week", now.Add(-7*24*time.Hour)))
 	r.store(pairEventAt(t, code, "kryfo://share?id=the-sharer", now))
 	if got := pairCodeFetch(code); got != "kryfo://share?id=the-sharer" {
@@ -134,7 +134,7 @@ func TestPairCodeOneEventOnManyRelays(t *testing.T) {
 		relays[i] = newRelayStandIn(t, 0)
 		relays[i].keep = true
 	}
-	useStandIns(t, modeBalanced, nil, relays...)
+	useStandIns(t, modeFast, nil, relays...)
 
 	const code = "482913"
 	const invite = "kryfo://share?id=the-sharer"
@@ -187,7 +187,7 @@ func TestPairCodeRefusesNewerEvents(t *testing.T) {
 		t.Run(fmt.Sprintf("%d newer on every relay", n), func(t *testing.T) {
 			a := newRelayStandIn(t, 0)
 			b := newRelayStandIn(t, 0)
-			useStandIns(t, modeBalanced, nil, a, b)
+			useStandIns(t, modeFast, nil, a, b)
 			first := pairEventAt(t, code, sharer, at)
 			a.store(first)
 			b.store(first)
@@ -208,7 +208,7 @@ func TestPairCodeRefusesNewerEvents(t *testing.T) {
 func TestPairCodeRefusesAFullAnswer(t *testing.T) {
 	const code = "482913"
 	r := newRelayStandIn(t, 0)
-	useStandIns(t, modeBalanced, nil, r)
+	useStandIns(t, modeFast, nil, r)
 	ev := pairEventAt(t, code, "kryfo://share?id=the-sharer", time.Now())
 	for i := 0; i < pairQueryLimit; i++ {
 		r.store(ev)
@@ -256,7 +256,7 @@ func TestPairCodeEventHasItsOwnAuthor(t *testing.T) {
 // for an empty code to read as empty
 func TestPairCodeRefusedRelaysAreUnreached(t *testing.T) {
 	a := newRelayStandIn(t, 0)
-	useStandIns(t, modeBalanced, nil, a)
+	useStandIns(t, modeFast, nil, a)
 	down, _ := refusingRelay(t)
 	other, _ := refusingRelay(t)
 	nostrMu.Lock()
@@ -281,7 +281,7 @@ func TestPairCodeUnreachedIsNotEmpty(t *testing.T) {
 	t.Run("no relay answers", func(t *testing.T) {
 		a := newRelayStandIn(t, 0)
 		b := newRelayStandIn(t, 0)
-		useStandIns(t, modeBalanced, nil, a, b)
+		useStandIns(t, modeFast, nil, a, b)
 		a.srv.Close()
 		b.srv.Close()
 		if got := pairCodeFetch(code); got != pairUnreached {
@@ -295,7 +295,7 @@ func TestPairCodeUnreachedIsNotEmpty(t *testing.T) {
 	t.Run("one answers with nothing", func(t *testing.T) {
 		a := newRelayStandIn(t, 0)
 		b := newRelayStandIn(t, 0)
-		useStandIns(t, modeBalanced, nil, a, b)
+		useStandIns(t, modeFast, nil, a, b)
 		b.srv.Close()
 		if got := pairCodeFetch(code); got != "empty" {
 			t.Fatalf("the joiner got %q", got)
@@ -303,7 +303,7 @@ func TestPairCodeUnreachedIsNotEmpty(t *testing.T) {
 	})
 
 	t.Run("none configured", func(t *testing.T) {
-		useStandIns(t, modeBalanced, nil)
+		useStandIns(t, modeFast, nil)
 		if got := pairCodeFetch(code); got != pairUnreached {
 			t.Fatalf("the joiner got %q", got)
 		}
@@ -321,7 +321,7 @@ func TestPairCodeWaitsForTheFirstAnswer(t *testing.T) {
 	const invite = "kryfo://share?id=the-sharer"
 	r := newRelayStandIn(t, 0)
 	r.upgradeDelay = time.Second
-	useStandIns(t, modeBalanced, nil, r)
+	useStandIns(t, modeFast, nil, r)
 	r.store(pairEventAt(t, code, invite, time.Now()))
 	if got := pairCodeFetch(code); got != invite {
 		t.Fatalf("the joiner got %q", got)
@@ -340,7 +340,7 @@ func TestPairCodeLateAnswerEndsTheWait(t *testing.T) {
 	slow.upgradeDelay = time.Second
 	silent := newRelayStandIn(t, 0)
 	silent.upgradeDelay = 8 * time.Second
-	useStandIns(t, modeBalanced, nil, slow, silent)
+	useStandIns(t, modeFast, nil, slow, silent)
 	start := time.Now()
 	if got := pairCodeFetch(code); got != "empty" {
 		t.Fatalf("the joiner got %q", got)

@@ -225,6 +225,24 @@ func pubCloseAll(lane string) {
 	}
 }
 
+// every kept socket to relay u goes
+func pubCloseURL(u string) {
+	pubMu.Lock()
+	defer pubMu.Unlock()
+	for k, s := range pubSocks {
+		if k.url != u {
+			continue
+		}
+		delete(pubSocks, k)
+		if s.idle != nil {
+			s.idle.Stop()
+		}
+		if s.r != nil {
+			s.r.Close()
+		}
+	}
+}
+
 // one wrap to one relay: on the burst's socket for its address, once more on
 // a new one when the kept socket turns out dead. a wrap without a single
 // recipient gets a socket of its own.

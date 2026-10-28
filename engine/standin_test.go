@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -567,6 +568,19 @@ func (s *socksStandIn) countAs(name string) int {
 	return s.byName[name]
 }
 
+// the tests' lists name our relay first, as the app's do, under names of
+// their own: the first entry is taken as ours unless it is ours by name
+func init() {
+	relaysSetHook = func(urls []string) {
+		if len(urls) == 0 || storeOf(urls, urls[0]) != "" {
+			return
+		}
+		if p, err := url.Parse(urls[0]); err == nil && p.Host != "" {
+			otherFirstHosts.Store(strings.ToLower(p.Host), true)
+		}
+	}
+}
+
 // the engine's relay state pointed at the stand-ins, put back afterwards.
 // in private mode tor is the socks stand-in: a pinned port answers without
 // asking tor anything.
@@ -582,6 +596,10 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
 	oldDir := savedDataDir()
+	oldHost := ownRelayHost
+	// every test starts from the app's names
+	ownRelayHost = "relay.kryfo.app"
+	otherFirstHosts.Clear()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
@@ -593,7 +611,9 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
 		setSavedDataDir(oldDir)
+		ownRelayHost = oldHost
 		setRelays(oldRelays)
+		otherFirstHosts.Clear()
 		setBackups(nil)
 		topupForget()
 		relayMsClear()
@@ -620,6 +640,10 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		urls = append(urls, r.url())
 	}
 	setRelays(urls)
+	// the first stand-in is our relay, by its name as the app's is
+	if len(relays) > 0 {
+		ownRelayHost = strings.TrimPrefix(relays[0].url(), "ws://")
+	}
 	me := newXid(t)
 	mu.Lock()
 	myXPriv, myXPub = me.priv, me.pub

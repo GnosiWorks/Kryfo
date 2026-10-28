@@ -135,7 +135,13 @@ func endRoute() {
 	routeEndMu.Unlock()
 }
 
+// called with every list set, for the tests
+var relaysSetHook func([]string)
+
 func setRelays(urls []string) {
+	if h := relaysSetHook; h != nil {
+		h(urls)
+	}
 	nostrMu.Lock()
 	nostrRelays = urls
 	nostrRelaysStale = false
@@ -1255,7 +1261,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	// which stores took it, and whether anyone did, for the top-up
 	var tookMu sync.Mutex
 	took := map[string]bool{}
-	anyTook := false
+	anyTook, tookPublic := false, false
 	stores := storesIn(all)
 	for _, url := range urls {
 		go func(u string) {
@@ -1272,10 +1278,18 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 							missed = append(missed, st)
 						}
 					}
+					public := tookPublic
 					tookMu.Unlock()
 					if !routeGone(routeC) {
 						for _, st := range missed {
 							topupAdd(st, lane, ev)
+						}
+						// on fast, a send our first store missed also goes to
+						// the public relays through tor, as a private sender's
+						// does: private readers and versions before the second
+						// store read the first store and those alone
+						if containsStr(missed, storeFirst) && !public {
+							go publishToBackups(lane, ev, routeC)
 						}
 					}
 				}
@@ -1321,6 +1335,8 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 			anyTook = true
 			if st := storeOf(all, u); st != "" {
 				took[st] = true
+			} else {
+				tookPublic = true
 			}
 			tookMu.Unlock()
 			relayOK(u)
@@ -1423,6 +1439,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		onDisk int64
 		path   string
 		keys   []string
+		// no file yet: its first walk is the whole store
+		fresh bool
 	}
 	stores := storesIn(urls)
 	if len(stores) == 0 {
@@ -1450,9 +1468,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					a.onDisk = v
 					a.saved = anchorNow(v, time.Now())
 				}
+			} else if st == storeSecond {
+				// the second store with no file yet walks all it holds, which
+				// is nothing from before the day it went live: what it alone
+				// took before this phone first read it is in there
+				a.fresh = true
+				a.saved = anchorNow(secondLiveAt, time.Now())
 			}
-			// a store with no file yet walks all it holds: what it alone
-			// took before this phone first read it is in there
 		}
 	}
 	firstKey := stores[0]
@@ -1657,6 +1679,19 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// a wait a kick ends early, and so does the runner's end. ours
 			// also wake when none of ours answers any more
 			nap := func(d time.Duration) { napFor(ctx, d, ownEntry) }
+			// the second store's first walk of every address, at its own
+			// time: an update does not walk all of it for everyone at once
+			if ownEntry && storeLead(urls, u) && anchors[anchorKey].fresh {
+				if d := secondFirstWalk(); d > 0 {
+					t := time.NewTimer(d)
+					select {
+					case <-ctx.Done():
+						t.Stop()
+						return
+					case <-t.C:
+					}
+				}
+			}
 			if tag == laneFirstContact {
 				fcRelaysLive.Add(1)
 				defer fcRelaysLive.Add(-1)
@@ -1714,6 +1749,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			ownMiss := func() {
 				if ownEntry && !(modeNeedsTor() && !torReadyNow()) {
 					ownRelayFailed()
+					storeFailed(anchorKey)
 				}
 			}
 			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry}
@@ -1728,16 +1764,18 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				default:
 				}
 				sweeping = false
-				// a backup is read only while none of ours answers. the wait
-				// ends when that changes, the round's channel says so
+				// a backup is read only while our first store is down and tor
+				// carries. the wait ends when either changes
 				if backup {
-					if wake := liveWakeChan(); !backupsOn() {
+					wake, torMoved := liveWakeChan(), torWakeChan()
+					if !backupsOn() {
 						t := time.NewTimer(backupLook)
 						select {
 						case <-ctx.Done():
 							t.Stop()
 							return
 						case <-wake:
+						case <-torMoved:
 						case <-t.C:
 						}
 						t.Stop()
@@ -1989,6 +2027,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if ownEntry {
 						spoke = true
 						ownRelayAnswered()
+						storeAnswered(anchorKey)
 					} else {
 						pubRelayAnswered()
 					}
@@ -2228,6 +2267,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if ownEntry {
 							spoke = true
 							ownRelayAnswered()
+							storeAnswered(anchorKey)
 						} else {
 							pubRelayAnswered()
 						}
@@ -2294,7 +2334,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							backupWake = liveWakeChan()
 							continue
 						}
-						log.Printf("nostr: our relays answer again, %s closed", u)
+						log.Printf("nostr: our first relay answers again, %s closed", u)
 						idle.Stop()
 						stopKick()
 						r.Close()
@@ -2725,6 +2765,10 @@ func nostrUnsubscribe(peerHex string) error {
 	nostrMu.Unlock()
 	if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
 		dropAddressFiles(rcvPk)
+	}
+	// what waits to reach them goes with them
+	if _, dst, err := nip17DeriveRole(peer, nip17RcvInfo, peerHex); err == nil {
+		topupPurgeAddr(dst)
 	}
 	return nil
 }

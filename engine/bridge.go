@@ -115,6 +115,7 @@ func setStatus(s string) {
 			notePublished()
 		}
 		torStatus = s
+		torStatusMoved()
 	}
 }
 
@@ -666,6 +667,7 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	if torStatus == "publishing" {
 		log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 		torStatus = "reachable"
+		torStatusMoved()
 		notePublished()
 		go func() {
 			for _, lane := range mainLanes() {

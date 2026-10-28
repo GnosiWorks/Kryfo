@@ -53,6 +53,7 @@ func liveReset() {
 	livePicks, liveTaken, liveJoinedAt = map[string]livePick{}, 0, time.Time{}
 	liveRunAt, liveJoinRun = time.Time{}, map[string]int{}
 	ownDown, ownKnown, ownAnsweredAt, ownFailedAt, pubAnsweredAt = false, false, 0, 0, 0
+	firstDown, firstKnown, firstAnsweredAt, firstFailedAt = false, false, 0, 0
 	liveMu.Unlock()
 }
 

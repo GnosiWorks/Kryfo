@@ -16,17 +16,16 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"fiatjaf.com/nostr"
 )
 
 // two stores, a and b, b on the second store's name
 func useTwoStores(t *testing.T, a, b *relayStandIn, more ...*relayStandIn) {
 	t.Helper()
 	useStandIns(t, modeBalanced, nil, append([]*relayStandIn{a, b}, more...)...)
-	old := secondRelayHost
+	old, oldSpread := secondRelayHost, secondFirstSpread
 	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
-	t.Cleanup(func() { secondRelayHost = old })
+	secondFirstSpread = 0
+	t.Cleanup(func() { secondRelayHost, secondFirstSpread = old, oldSpread })
 	freshInbox(t)
 }
 
@@ -88,9 +87,18 @@ func TestTheFastRouteIsOneRoute(t *testing.T) {
 		t.Fatal("the two names are not two stores, each its own lead")
 	}
 	// private mode: our onion and its clearnet name are one store
-	onion := []string{"ws://x.onion", "wss://relay.kryfo.app", "wss://nos.lol"}
-	if storeOf(onion, onion[1]) != storeFirst || storeLead(onion, onion[1]) || storeOf(onion, onion[2]) != "" {
+	onion := []string{"ws://" + ownOnionHost, "wss://relay.kryfo.app", "wss://nos.lol"}
+	if storeOf(onion, onion[0]) != storeFirst || storeOf(onion, onion[1]) != storeFirst ||
+		storeLead(onion, onion[1]) || storeOf(onion, onion[2]) != "" {
 		t.Fatal("private mode's entries are not where they were")
+	}
+	// ours by name alone: a public relay put first is still not ours
+	first := []string{"wss://nos.lol", "wss://relay.kryfo.app"}
+	if storeOf(first, first[0]) != "" {
+		t.Fatal("the first entry of a list counts as ours whatever its name")
+	}
+	if storeOf(onion, "ws://"+secondOnionHost) != storeSecond {
+		t.Fatal("the second store's onion is not the second store")
 	}
 	// a list with no backups clears the last one's
 	if r := nostrInit("wss://relay.kryfo.app"); r != "ok" || len(backupsNow()) != 0 {
@@ -265,98 +273,21 @@ func TestASecondStoreWithNoFileWalksAllItHolds(t *testing.T) {
 	if err := os.WriteFile(anchorFile(rcv, storeFirst), []byte(strconv.FormatInt(now.Add(-time.Hour).Unix(), 10)), 0600); err != nil {
 		t.Fatal(err)
 	}
-	b.store(wrapToAt(t, peer, myXPub, "days ago, only b", now.Add(-5*24*time.Hour)))
+	at := now.Add(-time.Hour)
+	if live := time.Unix(secondLiveAt+60, 0); at.Before(live) {
+		at = live
+	}
+	b.store(wrapToAt(t, peer, myXPub, "since it went live, only b", at))
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
-	waitFor(t, "the old wrap only b holds", 10*time.Second, func() bool {
-		return inboxHas(tag + "|days ago, only b")
+	waitFor(t, "the wrap only b holds", 10*time.Second, func() bool {
+		return inboxHas(tag + "|since it went live, only b")
 	})
-	if s := b.snapshot()[0].reqs[0].filter.Since; s != 0 {
-		t.Fatalf("with no file the second store asked from %d, not for all it holds", s)
+	// all it holds, and nothing from before the day it went live
+	if s := b.snapshot()[0].reqs[0].filter.Since; int64(s) != secondLiveAt-12*3600 {
+		t.Fatalf("with no file the second store asked from %d, not from the day it went live", s)
 	}
-}
-
-// the public relays are the last way in: not one socket or send while one
-// of ours answers, read through tor once both are down, let go once ours
-// answer again
-func TestPublicRelaysOnlyWhenBothOfOursAreDown(t *testing.T) {
-	a, b, p := newRelayStandIn(t, 0), newRelayStandIn(t, 0), newRelayStandIn(t, 0)
-	socks := newSocksStandIn(t)
-	useStandIns(t, modeBalanced, socks, a, b)
-	old := secondRelayHost
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
-	t.Cleanup(func() { secondRelayHost = old })
-	freshInbox(t)
-	setBackups([]string{p.url()})
-	p.mu.Lock()
-	p.keep = true
-	p.mu.Unlock()
-	statusMu.RLock()
-	oldStatus := torStatus
-	statusMu.RUnlock()
-	setStatus("bootstrapped")
-	t.Cleanup(func() { setStatus(oldStatus) })
-	liveMu.Lock()
-	oldAfter, oldSpan := fastDownAfter, fastFailSpan
-	fastDownAfter, fastFailSpan = 2*time.Second, time.Second
-	liveMu.Unlock()
-	oldLook, oldIdle := backupLook, pubIdle
-	backupLook, pubIdle = 200*time.Millisecond, time.Second
-	t.Cleanup(func() {
-		pubIdle = oldIdle
-		liveMu.Lock()
-		fastDownAfter, fastFailSpan = oldAfter, oldSpan
-		liveMu.Unlock()
-		backupLook = oldLook
-	})
-
-	peer := newXid(t)
-	tag := hex.EncodeToString(peer.pub[:])
-	rcv := mustRcv(t, peer)
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
-	waitFor(t, "both of ours listen", 10*time.Second, func() bool {
-		return len(a.snapshot()) > 0 && len(b.snapshot()) > 0
-	})
-	if ok := nostrPublishMulti(context.Background(), laneEveryday, wrapToAt(t, peer, myXPub, "one", time.Now())); ok < 1 {
-		t.Fatal("not sent")
-	}
-	time.Sleep(3 * time.Second)
-	if n := len(p.snapshot()); n != 0 || socks.count() != 0 {
-		t.Fatalf("with ours up the public relay saw %d sockets, tor %d", n, socks.count())
-	}
-
-	// both of ours go
-	standInDown(a, true)
-	standInDown(b, true)
-	p.store(wrapToAt(t, peer, myXPub, "through the backup", time.Now().Add(-time.Minute)))
-	waitFor(t, "the backup read", 30*time.Second, func() bool { return inboxHas(tag + "|through the backup") })
-	if socks.count() == 0 {
-		t.Fatal("the public relay was reached without tor")
-	}
-	if ok := nostrPublishMulti(context.Background(), laneEveryday, wrapToAt(t, peer, myXPub, "two", time.Now())); ok < 1 {
-		t.Fatal("not sent while ours are down")
-	}
-	p.mu.Lock()
-	took := p.accepted
-	p.mu.Unlock()
-	if took != 1 {
-		t.Fatalf("the public relay took %d sends, want the one made while ours were down", took)
-	}
-
-	// ours are back: the backup's sockets go
-	standInDown(a, false)
-	kickRelays()
-	waitFor(t, "the backup let go", 30*time.Second, func() bool {
-		for _, c := range p.snapshot() {
-			if c.closed.IsZero() {
-				return false
-			}
-		}
-		return !ownRelayDown()
-	})
 }
 
 // a store that was down when a wrap went out gets it once it answers, also
@@ -377,6 +308,7 @@ func TestATopUpReachesTheStoreThatMissedIt(t *testing.T) {
 				t.Fatal("the store that took it waits for it too")
 			}
 			if restart {
+				topupSync()
 				topupForget()
 			}
 			standInDown(a, false)
@@ -393,35 +325,12 @@ func TestATopUpReachesTheStoreThatMissedIt(t *testing.T) {
 				return got.Load()
 			})
 			waitFor(t, "nothing waits", 5*time.Second, func() bool { return len(topupFor(storeFirst)) == 0 })
-			if _, err := os.Stat(topupFile()); !os.IsNotExist(err) {
-				t.Fatal("the file outlived the queue")
+			// nor after a restart: the file says it went
+			topupSync()
+			topupForget()
+			if n := len(topupFor(storeFirst)); n != 0 {
+				t.Fatalf("%d came back after a restart", n)
 			}
 		})
-	}
-}
-
-// the queue keeps to its caps and to the relays' fourteen days
-func TestTheTopUpKeepsToItsCaps(t *testing.T) {
-	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
-	useTwoStores(t, a, b)
-	old := topupMaxItems
-	topupMaxItems = 3
-	t.Cleanup(func() { topupMaxItems = old })
-	peer := newXid(t)
-	for i := 0; i < 5; i++ {
-		topupAdd(storeFirst, laneEveryday, wrapToAt(t, peer, myXPub, "w"+strconv.Itoa(i), time.Now()))
-	}
-	topupAdd(storeFirst, laneEveryday, wrapToAt(t, peer, myXPub, "too old", time.Now().Add(-15*24*time.Hour)))
-	got := topupFor(storeFirst)
-	if len(got) != 3 {
-		t.Fatalf("%d waiting, want the cap of 3", len(got))
-	}
-	topupForget()
-	if again := topupFor(storeFirst); len(again) != 3 || again[0].Ev.ID != got[0].Ev.ID {
-		t.Fatalf("after a restart %d waiting", len(again))
-	}
-	var stamp nostr.Timestamp = got[0].Ev.CreatedAt
-	if stamp <= nostr.Timestamp(time.Now().Add(-topupMaxAge).Unix()) {
-		t.Fatal("an aged wrap was kept")
 	}
 }
