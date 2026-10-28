@@ -19,27 +19,27 @@ func TestARemovedDeviceCannotPlantAnOldList(t *testing.T) {
 	old := a.wire
 	a.unlink(t, desk.ID)
 
-	fresh := NewKnown(a.id.pub)
-	if _, _, err := fresh.Accept(old, FromSession(desk.Key), s); !errors.Is(err, ErrSource) {
+	fresh := newKnown(a.id.pub)
+	if _, _, err := fresh.take(old, FromSession(desk.Key), s); !errors.Is(err, ErrSource) {
 		t.Fatalf("an old list from the removed desktop: %v", err)
 	}
-	if fresh.Current() != nil {
+	if fresh.cur != nil {
 		t.Fatal("a list was kept")
 	}
 	// a third party's session carries no list for a
 	b := newAccount(t, s)
-	if _, _, err := fresh.Accept(a.wire, FromSession(b.id.pub), s); !errors.Is(err, ErrSource) {
+	if _, _, err := fresh.take(a.wire, FromSession(b.id.pub), s); !errors.Is(err, ErrSource) {
 		t.Fatalf("a's list in b's session: %v", err)
 	}
 	// a contact holding the new list refuses the old one, from anywhere
-	k := NewKnown(a.id.pub)
-	if _, _, err := k.Accept(a.wire, FromSession(a.id.pub), s); err != nil {
+	k := newKnown(a.id.pub)
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := k.Accept(old, FromSession(a.id.pub), s); !errors.Is(err, ErrRollback) {
+	if _, _, err := k.take(old, FromSession(a.id.pub), s); !errors.Is(err, ErrRollback) {
 		t.Fatalf("the old list after the removal: %v", err)
 	}
-	if k.Vouches(desk.Key) {
+	if k.vouches(desk.Key) {
 		t.Fatal("the removed desktop still vouches")
 	}
 }
@@ -50,12 +50,12 @@ func TestNoClockLocksOutLaterLists(t *testing.T) {
 	s := newShim()
 	a := newAccount(t, s)
 	backup := clone(a.list)
-	k := NewKnown(a.id.pub)
+	k := newKnown(a.id.pub)
 	for range 50 {
 		a.link(t)
 		a.unlink(t, a.list.Devices[len(a.list.Devices)-1].ID)
 	}
-	if _, _, err := k.Accept(a.wire, FromSession(a.id.pub), s); err != nil {
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	// three restores from that old backup in a row
@@ -69,28 +69,28 @@ func TestNoClockLocksOutLaterLists(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, out, err := k.Accept(w, FromSession(a.id.pub), s); err != nil || out != Changed {
+		if _, out, err := k.take(w, FromSession(a.id.pub), s); err != nil || out != Changed {
 			t.Fatalf("restore %d: %v %v", i, out, err)
 		}
 		cur = r
 	}
 	// a version past the window, as a root thief would sign it
-	far := clone(k.Current())
+	far := clone(k.cur)
 	far.Version += VersionWindow + 1
 	w, err := far.Sign(a.id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := k.Accept(w, FromSession(a.id.pub), s); !errors.Is(err, ErrJump) {
+	if _, _, err := k.take(w, FromSession(a.id.pub), s); !errors.Is(err, ErrJump) {
 		t.Fatalf("a jump past the window: %v", err)
 	}
-	edge := clone(k.Current())
+	edge := clone(k.cur)
 	edge.Version += VersionWindow
 	w, err = edge.Sign(a.id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := k.Accept(w, FromSession(a.id.pub), s); err != nil {
+	if _, _, err := k.take(w, FromSession(a.id.pub), s); err != nil {
 		t.Fatalf("a jump at the window: %v", err)
 	}
 }
@@ -235,8 +235,8 @@ func TestEquivocationComparesBodies(t *testing.T) {
 	s := newShim()
 	a := newAccount(t, s)
 	a.link(t)
-	k := NewKnown(a.id.pub)
-	if _, _, err := k.Accept(a.wire, FromSession(a.id.pub), s); err != nil {
+	k := newKnown(a.id.pub)
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	resigned, err := a.list.Sign(a.id)
@@ -246,7 +246,7 @@ func TestEquivocationComparesBodies(t *testing.T) {
 	if bytes.Equal(resigned, a.wire) {
 		t.Fatal("the stand-in signs like ed25519, not xeddsa")
 	}
-	if _, out, err := k.Accept(resigned, FromSession(a.id.pub), s); err != nil || out != Same {
+	if _, out, err := k.take(resigned, FromSession(a.id.pub), s); err != nil || out != Same {
 		t.Fatalf("one body, a second signature: %v %v", out, err)
 	}
 	other := clone(a.list)
@@ -255,11 +255,120 @@ func TestEquivocationComparesBodies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	held := k.Current()
-	if _, _, err := k.Accept(w, FromSession(a.id.pub), s); !errors.Is(err, ErrEquivocation) {
+	held := k.cur
+	if _, _, err := k.take(w, FromSession(a.id.pub), s); !errors.Is(err, ErrEquivocation) {
 		t.Fatalf("two bodies at one version: %v", err)
 	}
-	if k.Current() != held {
+	if k.cur != held {
 		t.Fatal("the alarm moved the list held")
+	}
+}
+
+// two phones restored from one backup: the second lands below the first
+// half the time. the contact sends back the list it holds, the second
+// phone signs above it and is shown the device the other copy linked
+func TestASecondRestoreClimbsAboveTheFirst(t *testing.T) {
+	s := newShim()
+	a := newAccount(t, s)
+	backup := clone(a.list)
+	k := newKnown(a.id.pub)
+	r1, err := backup.Restored(constReader(0xff))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// the first copy links a desktop
+	dk, _ := newKey(t)
+	r1d, err := r1.Add(Entry{ID: 30, Key: dk, Reg: 7}, rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w1, _ := r1d.Sign(a.id)
+	if _, _, err := k.take(w1, FromSession(a.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	r2, _ := backup.Restored(constReader(0x01))
+	w2, _ := r2.Sign(a.id)
+	_, _, err = k.take(w2, FromSession(a.id.pub), s)
+	var rb *RollbackError
+	if !errors.As(err, &rb) || !errors.Is(err, ErrRollback) {
+		t.Fatalf("the second restore: %v", err)
+	}
+	// the second phone checks what came back under its own key
+	held, err := ReadList(rb.Held, s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	up, unknown, err := r2.Above(held, rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unknown) != 1 || unknown[0].Key != dk {
+		t.Fatalf("unknown devices %v", unknown)
+	}
+	if !SameBody(&List{Identity: up.Identity, Version: up.Version, Devices: r2.Devices}, up) {
+		t.Fatal("above changed the devices")
+	}
+	wu, _ := up.Sign(a.id)
+	if _, out, err := k.take(wu, FromSession(a.id.pub), s); err != nil || out != Changed {
+		t.Fatalf("the list above: %v %v", out, err)
+	}
+	if k.vouches(dk) {
+		t.Fatal("the other copy's desktop is still on the list")
+	}
+	// another identity's list is not a base
+	b := newAccount(t, s)
+	if _, _, err := r2.Above(b.list, rand.Reader); !errors.Is(err, ErrWrongIdentity) {
+		t.Fatalf("another identity's list: %v", err)
+	}
+}
+
+// only the identity's own phone is told what is held
+func TestTheHeldListGoesOnlyToThePhone(t *testing.T) {
+	s := newShim()
+	a := newAccount(t, s)
+	desk := a.link(t)
+	old := a.wire
+	k := newKnown(a.id.pub)
+	a.link(t)
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := k.take(old, FromSession(desk.Key), s)
+	var rb *RollbackError
+	if !errors.Is(err, ErrRollback) || errors.As(err, &rb) {
+		t.Fatalf("an old list through the desktop: %v", err)
+	}
+}
+
+// a second body at the version held is the alarm whoever carries it
+func TestEquivocationFromAnyCarrier(t *testing.T) {
+	s := newShim()
+	a, other := newAccount(t, s), newAccount(t, s)
+	k := newKnown(a.id.pub)
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	held := k.cur
+	fork := clone(a.list)
+	nk, _ := newKey(t)
+	fork.Devices = append(fork.Devices, Entry{ID: 50, Key: nk, Reg: 3})
+	w, _ := fork.Sign(a.id)
+	for name, from := range map[string]From{
+		"a third party": FromSession(other.id.pub),
+		"an invite":     FromInvite(),
+	} {
+		if _, _, err := k.take(w, from, s); !errors.Is(err, ErrEquivocation) {
+			t.Fatalf("%s: %v", name, err)
+		}
+	}
+	if k.cur != held {
+		t.Fatal("the alarm moved the list held")
+	}
+	// and through the book
+	book := NewBook()
+	book.Add(a.id.pub)
+	book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s)
+	if _, _, err := book.Accept(a.id.pub, w, FromSession(other.id.pub), s); !errors.Is(err, ErrEquivocation) {
+		t.Fatalf("through the book: %v", err)
 	}
 }

@@ -213,7 +213,39 @@ func TestTheRestoreJump(t *testing.T) {
 		t.Fatal("the jump is too small")
 	}
 	if !SameBody(&List{Identity: r.Identity, Version: r.Version, Devices: a.list.Devices}, r) {
-		t.Fatal("a restore changed the devices")
+		t.Fatal("a restore changed the phone")
+	}
+}
+
+// a backup made while a laptop was linked, the laptop stolen and removed,
+// then the phone restored from that backup: the laptop is not back
+func TestARestoreListsThePhoneAlone(t *testing.T) {
+	s := newShim()
+	a := newAccount(t, s)
+	desk := a.link(t)
+	a.link(t)
+	backup := clone(a.list)
+	k := newKnown(a.id.pub)
+	a.unlink(t, desk.ID)
+	if _, _, err := k.take(a.wire, FromSession(a.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	r, err := backup.Restored(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r.Devices) != 1 || !r.Devices[0].Phone || r.Devices[0].Key != a.id.pub {
+		t.Fatalf("the restore lists %d devices", len(r.Devices))
+	}
+	w, err := r.Sign(a.id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, out, err := k.take(w, FromSession(a.id.pub), s); err != nil || out != Changed {
+		t.Fatalf("the restore list: %v %v", out, err)
+	}
+	if k.vouches(desk.Key) {
+		t.Fatal("the removed laptop is back")
 	}
 }
 
@@ -221,7 +253,7 @@ func TestTheLastVersionDoesNotWrap(t *testing.T) {
 	s := newShim()
 	a := newAccount(t, s)
 	top := clone(a.list)
-	top.Version = math.MaxUint64 - 10
+	top.Version = MaxVersion - 10
 	k, _ := newKey(t)
 	if _, err := top.Add(Entry{ID: 9, Key: k, Reg: 1}, constReader(0xff)); !errors.Is(err, ErrVersion) {
 		t.Fatalf("add past the top: %v", err)
@@ -229,8 +261,21 @@ func TestTheLastVersionDoesNotWrap(t *testing.T) {
 	if _, err := top.Restored(rand.Reader); !errors.Is(err, ErrVersion) {
 		t.Fatalf("restore past the top: %v", err)
 	}
-	if _, err := top.Add(Entry{ID: 9, Key: k, Reg: 1}, constReader(5)); err != nil {
+	n, err := top.Add(Entry{ID: 9, Key: k, Reg: 1}, constReader(5))
+	if err != nil || n.Version != MaxVersion-4 {
 		t.Fatalf("a step that fits: %v", err)
+	}
+	// a step onto 2^63 itself is refused, as the shim refuses that list
+	if _, err := top.Add(Entry{ID: 9, Key: k, Reg: 1}, constReader(9)); !errors.Is(err, ErrVersion) {
+		t.Fatalf("a step onto 2^63: %v", err)
+	}
+	high := clone(a.list)
+	high.Version = MaxVersion
+	if _, err := ParseList(forge(high)); err == nil {
+		t.Fatal("a list at 2^63 read")
+	}
+	if _, err := high.Sign(a.id); err == nil {
+		t.Fatal("a list at 2^63 signed")
 	}
 }
 

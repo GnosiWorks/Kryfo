@@ -56,7 +56,7 @@ func FuzzParseBundle(f *testing.F) {
 		ky := bytes.Clone(kyber)
 		ky[int(off)%len(ky)] ^= val
 		p := append(append(bytes.Clone(head), ky...), tail...)
-		b, err := ParseBundle(p)
+		b, err := ParseBundle(p, fixedKey(t, 0x11))
 		if err != nil {
 			return
 		}
@@ -81,14 +81,14 @@ func FuzzKnown(f *testing.F) {
 	f.Add(seeds[2], seeds[0], seeds[1], true)
 	id := a.id.pub
 	f.Fuzz(func(t *testing.T, x, y, z []byte, invite bool) {
-		k := NewKnown(id)
+		k := newKnown(id)
 		var last uint64
 		for _, b := range [][]byte{x, y, z} {
 			from := FromSession(id)
 			if invite {
 				from = FromInvite()
 			}
-			l, _, err := k.Accept(b, from, yes{})
+			l, _, err := k.take(b, from, yes{})
 			if err != nil {
 				continue
 			}
@@ -114,13 +114,14 @@ func vectorListF(f *testing.F) *List {
 
 func testBlockF(f *testing.F, key *Key, ec bool) *Block {
 	b := &Block{
-		Reg: 3, Device: 2, SpkID: 1, Spk: fixedKey(f, 6),
+		Reg: 3, Device: PhoneID, SpkID: 1, Spk: fixedKey(f, 6),
 		SpkSig:   bytes.Repeat([]byte{1}, SigSize),
 		KyberID:  2,
 		Kyber:    append([]byte{0x08}, bytes.Repeat([]byte{2}, KyberSize-1)...),
 		KyberSig: bytes.Repeat([]byte{3}, SigSize),
 	}
 	if key != nil {
+		b.Device = 2
 		b.HasKey, b.Key = true, *key
 	}
 	if ec {

@@ -71,6 +71,15 @@ func (b *Block) check() error {
 	if b.Reg == 0 || b.Device < PhoneID || b.Device > MaxID {
 		return ErrMalformed
 	}
+	// the phone is device 1 and runs on the identity itself; every other
+	// device has a key of its own
+	if b.HasKey == (b.Device == PhoneID) {
+		return ErrMalformed
+	}
+	// a one-time prekey that is the signed prekey would be one key twice
+	if b.HasEC && b.EC == b.Spk {
+		return ErrMalformed
+	}
 	keys := []Key{b.Spk}
 	if b.HasKey {
 		keys = append(keys, b.Key)
@@ -133,36 +142,18 @@ func EncodeBundle(b *Block) ([]byte, error) {
 	return append(append([]byte(bundleMagic), bundleVersion), b.Encode()...), nil
 }
 
-// ParseBundle reads a KDB1.
-func ParseBundle(p []byte) (*Block, error) {
+// ParseBundle reads a KDB1 of identity's device. a block on the identity
+// has one form, no key, so a key equal to it is refused.
+func ParseBundle(p []byte, identity Key) (*Block, error) {
 	if len(p) < len(bundleMagic)+1+BlockSize || string(p[:4]) != bundleMagic || p[4] != bundleVersion {
 		return nil, ErrMalformed
 	}
-	return ParseBlock(p[5:])
-}
-
-// TakeBundle reads a KDB1 that came inside a session, for a device on the
-// list held: same device id, same registration id, and on the device's own
-// key, or on the identity for the phone.
-func (k *Known) TakeBundle(p []byte, from From) (*Block, error) {
-	if from.Invite || !k.Vouches(from.Remote) {
-		return nil, ErrSource
-	}
-	b, err := ParseBundle(p)
+	b, err := ParseBlock(p[5:])
 	if err != nil {
 		return nil, err
 	}
-	if k.cur == nil {
-		return nil, ErrNotListed
-	}
-	e, ok := k.cur.Find(b.Device)
-	if !ok || e.Reg != b.Reg {
-		return nil, ErrNotListed
-	}
-	// the phone's bundle runs on the identity; any other on its own key,
-	// so one bundle has one form
-	if e.Phone == b.HasKey || (b.HasKey && b.Key != e.Key) {
-		return nil, ErrNotListed
+	if b.HasKey && b.Key == identity {
+		return nil, ErrMalformed
 	}
 	return b, nil
 }

@@ -223,3 +223,12 @@ func clone(l *List) *List {
 	n.sig = nil
 	return &n
 }
+
+// a list read and verified, then offered to k as Book.Accept would
+func (k *known) take(b []byte, from From, v Verifier) (*List, Outcome, error) {
+	l, err := ReadList(b, v)
+	if err != nil {
+		return nil, 0, err
+	}
+	return k.accept(l, from)
+}

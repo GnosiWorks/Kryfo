@@ -44,6 +44,30 @@ func pointOfU(t *testing.T, u []byte) *edwards25519.Point {
 	return p
 }
 
+// the first n u values from 2 up whose curve equation has no root
+func twists(t *testing.T, n int) [][]byte {
+	a := new(field.Element)
+	ab := make([]byte, 32)
+	ab[0], ab[1], ab[2] = 0x06, 0x6d, 0x07 // 486662
+	if _, err := a.SetBytes(ab); err != nil {
+		t.Fatal(err)
+	}
+	var out [][]byte
+	for v := 2; len(out) < n; v++ {
+		b := make([]byte, 32)
+		b[0], b[1] = byte(v), byte(v>>8)
+		u, _ := new(field.Element).SetBytes(b)
+		u2 := new(field.Element).Square(u)
+		rhs := new(field.Element).Multiply(u2, u)
+		rhs.Add(rhs, new(field.Element).Multiply(a, u2))
+		rhs.Add(rhs, u)
+		if _, sq := new(field.Element).SqrtRatio(rhs, new(field.Element).One()); sq == 0 {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
 func buildVectors(t *testing.T) vectorFile {
 	var vf vectorFile
 	key := func(name string, b []byte, ok bool) {
@@ -71,11 +95,18 @@ func buildVectors(t *testing.T) vectorFile {
 	key("one", keyOf(one), false)
 	key("order 8", keyOf(order8), false)
 	key("generator plus order 8", keyOf(uOf(mixed)), false)
+	k22 := fixedKey(t, 0x22)
+	mixed22 := new(edwards25519.Point).Add(pointOfU(t, k22[1:]), pointOfU(t, order8))
+	key("x25519 public b plus order 8", keyOf(uOf(mixed22)), false)
+	for i, u := range twists(t, 3) {
+		key("twist point "+string(rune('a'+i)), keyOf(u), false)
+	}
 	k11 := fixedKey(t, 0x11)
 	key("type 0x06", append([]byte{0x06}, k11[1:]...), false)
 	key("trailing byte", append(k11[:], 0), false)
 
-	sig := bytes.Repeat([]byte{0xa5}, SigSize)
+	// a signature the shim's parser takes as a shape: zero is below the order
+	sig := make([]byte, SigSize)
 	list := func(name string, l *List, ok bool) {
 		vf.KDL2 = append(vf.KDL2, vector{name, hex.EncodeToString(append(l.Body(), sig...)), ok})
 	}
@@ -93,6 +124,9 @@ func buildVectors(t *testing.T) vectorFile {
 		six.Devices = append(six.Devices, Entry{ID: uint8(10 + i), Key: fixedKey(t, byte(0x40+i)), Reg: uint32(100 + i)})
 	}
 	list("six devices, the largest list", six, true)
+	list("the last version", mk(MaxVersion-1, phone, desk), true)
+	list("version 2^63", mk(MaxVersion, phone, desk), false)
+	list("version 2^64 - 1", mk(1<<64-1, phone, desk), false)
 	list("phone not device 1", mk(1, Entry{ID: 2, Key: id, Reg: 1, Phone: true}), false)
 	list("no phone", mk(1, desk), false)
 	two := desk
@@ -131,7 +165,7 @@ func buildVectors(t *testing.T) vectorFile {
 		vf.KDB1 = append(vf.KDB1, vector{name, hex.EncodeToString(b), ok})
 	}
 	blk := &Block{
-		Reg: 0x01020304, Device: 0x2a, SpkID: 7, Spk: fixedKey(t, 0x61),
+		Reg: 0x01020304, Device: PhoneID, SpkID: 7, Spk: fixedKey(t, 0x61),
 		SpkSig: bytes.Repeat([]byte{0x5a}, SigSize), KyberID: 8,
 		Kyber:    append([]byte{0x08}, bytes.Repeat([]byte{0x33}, KyberSize-1)...),
 		KyberSig: bytes.Repeat([]byte{0x6b}, SigSize),
@@ -139,7 +173,7 @@ func buildVectors(t *testing.T) vectorFile {
 	enc := func(b *Block) []byte { return append(append([]byte(bundleMagic), bundleVersion), b.Encode()...) }
 	bundle("on the identity", enc(blk), true)
 	wk := *blk
-	wk.HasKey, wk.Key = true, fixedKey(t, 0x22)
+	wk.Device, wk.HasKey, wk.Key = 0x2a, true, fixedKey(t, 0x22)
 	bundle("on a device key", enc(&wk), true)
 	we := wk
 	we.HasEC, we.ECID, we.EC = true, 9, fixedKey(t, 0x62)
@@ -160,6 +194,19 @@ func buildVectors(t *testing.T) vectorFile {
 	d0 := *blk
 	d0.Device = 0
 	bundle("device id 0", enc(&d0), false)
+	// the bundles below read against the identity of key 0x11
+	ki := wk
+	ki.Key = fixedKey(t, 0x11)
+	bundle("key is the identity", enc(&ki), false)
+	es := we
+	es.EC = es.Spk
+	bundle("ec prekey is the spk", enc(&es), false)
+	kp := wk
+	kp.Device = PhoneID
+	bundle("a key on device 1", enc(&kp), false)
+	nk := *blk
+	nk.Device = 0x2a
+	bundle("no key on device 0x2a", enc(&nk), false)
 	return vf
 }
 
@@ -179,7 +226,7 @@ func TestVectors(t *testing.T) {
 	}
 	for _, v := range vf.KDB1 {
 		b, _ := hex.DecodeString(v.Hex)
-		if _, err := ParseBundle(b); (err == nil) != v.OK {
+		if _, err := ParseBundle(b, fixedKey(t, 0x11)); (err == nil) != v.OK {
 			t.Errorf("kdb1 %s: %v", v.Name, err)
 		}
 	}

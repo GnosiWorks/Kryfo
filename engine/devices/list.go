@@ -41,6 +41,9 @@ const (
 	// VersionWindow is the most a contact takes above the version it holds:
 	// 256 restores while it was away, and no counter run to the top
 	VersionWindow = 1 << 48
+	// MaxVersion is the first version no list may have: the top half
+	// reads as negative in dart and no counter gets near it
+	MaxVersion = 1 << 63
 )
 
 var (
@@ -92,7 +95,7 @@ func Genesis(identity Key, phoneReg uint32, r io.Reader) (*List, error) {
 
 // the next list with devs, a random step on. unsigned
 func (l *List) next(devs []Entry, step uint64) (*List, error) {
-	if l.Version > math.MaxUint64-step {
+	if l.Version >= MaxVersion || step >= MaxVersion-l.Version {
 		return nil, ErrVersion
 	}
 	n := &List{Identity: l.Identity, Version: l.Version + step, Devices: devs}
@@ -162,15 +165,54 @@ func (l *List) Settled(r io.Reader) (*List, error) {
 	return l.next(devs, step)
 }
 
-// Restored is the list a phone restored from a backup signs first. it does
-// not know the last version it signed after the backup, and steps are at
-// most 256, so the jump clears every one of them.
+// Restored is the list a phone restored from a backup signs first: the
+// phone alone, since a device in the backup may have been removed since.
+// the others come back through Add once they reach the restored phone and
+// the owner confirms. it does not know the last version it signed after
+// the backup, and steps are at most 256, so the jump clears every one.
 func (l *List) Restored(r io.Reader) (*List, error) {
 	var b [4]byte
 	if _, err := io.ReadFull(r, b[:]); err != nil {
 		return nil, err
 	}
-	return l.next(slices.Clone(l.Devices), versionRestore+uint64(binary.BigEndian.Uint32(b[:])))
+	var phone []Entry
+	for _, e := range l.Devices {
+		if e.Phone {
+			phone = append(phone, e)
+		}
+	}
+	return l.next(phone, versionRestore+uint64(binary.BigEndian.Uint32(b[:])))
+}
+
+// Above is the list with l's devices at a version past held, a list of
+// this identity that a contact sent back when it refused l as a rollback
+// (another copy of the phone signed it). held must already be verified
+// under the identity's own key. unknown is every device held names that
+// l does not: another copy of the phone linked it, and the owner is shown
+// each one before anything else.
+func (l *List) Above(held *List, r io.Reader) (next *List, unknown []Entry, err error) {
+	if held.Identity != l.Identity {
+		return nil, nil, ErrWrongIdentity
+	}
+	if err := held.check(); err != nil {
+		return nil, nil, err
+	}
+	for _, e := range held.Devices {
+		if _, ok := l.FindKey(e.Key); !ok {
+			unknown = append(unknown, e)
+		}
+	}
+	step, err := randStep(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	base := *l
+	base.Version = max(l.Version, held.Version)
+	next, err = base.next(slices.Clone(l.Devices), step)
+	if err != nil {
+		return nil, nil, err
+	}
+	return next, unknown, nil
 }
 
 // Find is the entry for id.
@@ -213,7 +255,7 @@ func (l *List) check() error {
 	if n < 1 || n > MaxDevices {
 		return ErrTooMany
 	}
-	if !canonicalU(l.Identity[1:]) || l.Identity[0] != 0x05 {
+	if l.Version >= MaxVersion || !canonicalU(l.Identity[1:]) || l.Identity[0] != 0x05 {
 		return ErrMalformed
 	}
 	phones, answers := 0, 0
@@ -273,7 +315,10 @@ func (l *List) Body() []byte {
 	return b
 }
 
-// Sign is the list in its wire form, signed by the identity it names.
+// Sign is the list in its wire form, signed by the identity it names. the
+// caller stores these bytes before the first send and resends the same
+// bytes after a crash: a fresh signature at a fresh step could land below
+// or beside what some contacts already hold.
 func (l *List) Sign(s Signer) ([]byte, error) {
 	if s.Public() != l.Identity {
 		return nil, ErrWrongIdentity
