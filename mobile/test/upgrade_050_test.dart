@@ -285,7 +285,7 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 87 with the schema of a new install', () async {
+    test('$f opens at 90 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();

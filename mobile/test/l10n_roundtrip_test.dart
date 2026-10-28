@@ -545,7 +545,7 @@ void main() {
     expect(l.cameraTheRecordingWasLost, "The recording was lost");
     expect(l.cameraACopyIsIn, "A copy is in your photos");
     expect(l.cameraCouldNotSaveA, "Could not save a copy on this phone");
-    expect(l.cameraTooLongForA, "Too long for a message · 15 MB max");
+    expect(l.cameraTooLongForA, "Too long for a message · 50 MB max");
     expect(l.cameraNeverSavedToYour, "Never saved to your photos");
     expect(l.cameraNoExifNeverSaved, "No EXIF, never saved to your photos");
     expect(l.cameraRec, "Rec");

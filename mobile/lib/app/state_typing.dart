@@ -193,10 +193,11 @@ extension AppStateTyping on AppState {
 
   /// what a 1:1 frame says of the sender's phone, on an accepted
   /// contact's row in the container that holds the chat
-  Future<void> _takeCaps(String peer, UnwrappedMessage env, HaloDb db) async {
-    if (env.groupId != null || isDevId(peer)) return;
+  /// true when their list changed
+  Future<bool> _takeCaps(String peer, UnwrappedMessage env, HaloDb db) async {
+    if (env.groupId != null || isDevId(peer)) return false;
     try {
-      await db.takeCaps(
+      return await db.takeCaps(
         peer,
         caps: env.caps,
         counts: AppState._dataFrame(env) && env.msgUid != null,
@@ -204,6 +205,7 @@ extension AppStateTyping on AppState {
       );
     } catch (e) {
       dlog('typing: caps not taken (${e.runtimeType})');
+      return false;
     }
   }
 }

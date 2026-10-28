@@ -427,7 +427,7 @@ void main() {
           '/x/plan.pdf',
           'plan.pdf',
           kept: true,
-          room: true,
+          where: KeptIn.room,
         ),
       );
       await Future<void>.delayed(const Duration(milliseconds: 200));

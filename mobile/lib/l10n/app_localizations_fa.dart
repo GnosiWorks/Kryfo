@@ -1250,7 +1250,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'برای یک پیام زیادی طولانی است · حداکثر ۱۵ مگابایت';
+      'برای یک پیام زیادی طولانی است · حداکثر ۵۰ مگابایت';
 
   @override
   String get cameraNeverSavedToYour => 'هرگز در عکس‌هایتان ذخیره نمی‌شود';
@@ -9528,4 +9528,299 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
+
+  @override
+  String get fileServerTryLater =>
+      'سرور فایل فعلاً پر است. کمی بعد دوباره امتحان کن.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم این فایل ⁨$size⁩ است. در این گفتگو تا وقتی همه Kryfo را به‌روز نکرده‌اند، فایل‌ها حداکثر می‌توانند ⁨$max⁩ باشند.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'امروز فایل‌های بزرگ زیادی فرستاده‌ای. فردا دوباره امتحان کن.';
+
+  @override
+  String get mediaProgressPreparing =>
+      'در حال آماده‌سازی · برنامه را باز نگه دار';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'جلوی اسکرین‌شات و ضبط صفحه را در همه‌ی گوشی‌های این گروه می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
+
+  @override
+  String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'خاموش. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'برای همه‌ی اعضا روشن است. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'در انتظار ⁨$countString⁩ نفر',
+      one: 'در انتظار ⁨$countString⁩ نفر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'هنوز به‌روز نکرده‌اند';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'وقتی این افراد Kryfo را به‌روز کنند، جلوگیری از اسکرین‌شات همه را در بر می‌گیرد. برای حذف کسی از گروه، روی او بزنید.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'باید Kryfo را به‌روز کند، یا از آن موقع آنلاین نشده';
+
+  @override
+  String get groupShotsBlockedByYou => 'شما مسدودش کرده‌اید';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'شما جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'جلوگیری از اسکرین‌شات برای همه‌ی اعضا روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
+  String get groupShotsPaused =>
+      'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
+
+  @override
+  String get groupShotsCantYet => 'هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد';
+
+  @override
+  String get groupShotsAddTitle => 'باز هم افزوده شود؟';
+
+  @override
+  String get groupShotsAddPauses =>
+      'تا وقتی Kryfo را به‌روز نکند، جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'جلوگیری از اسکرین‌شات همان‌طور که هست می‌ماند.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo در این گروه جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get groupShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های دیگران در این گروه خاموش است';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'باز کردن فایل‌های دیگران در برنامه‌های دیگر در این گروه خاموش است';
+
+  @override
+  String get groupShotsOldNotice =>
+      'جلوگیری از اسکرین‌شات را در این گروه روشن کردم. Kryfo شما هنوز این کار را نمی‌کند، لطفاً به‌روزش کنید.';
+
+  @override
+  String get captureShotTaken =>
+      'اسکرین‌شات گرفته شد. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
+  String get captureRecording =>
+      'این صفحه در حال ضبط است. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
+  String get settingsDevices => 'دستگاه‌ها';
+
+  @override
+  String get devicesLinkedDevices => 'دستگاه‌های پیوندخورده';
+
+  @override
+  String get devicesThisPhoneOnly => 'فقط همین گوشی';
+
+  @override
+  String get devicesNameSeparator => '، ';
+
+  @override
+  String get devicesThisPhone => 'همین گوشی';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'فقط همین گوشی می‌تواند دستگاه پیوند دهد یا حذف کند';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'پیوند در ⁨$date⁩';
+  }
+
+  @override
+  String get devicesUsedToday => 'امروز استفاده شده';
+
+  @override
+  String get devicesUsedThisWeek => 'این هفته استفاده شده';
+
+  @override
+  String get devicesUsedThisMonth => 'این ماه استفاده شده';
+
+  @override
+  String get devicesNotUsedYet => 'هنوز استفاده نشده';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'اگر بازش نکنید ⁨$daysString⁩ روز دیگر جدا می‌شود',
+      one: 'اگر بازش نکنید فردا جدا می‌شود',
+      zero: 'اگر بازش نکنید امروز جدا می‌شود',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo روی رایانه‌تان';
+
+  @override
+  String get devicesEmptyLine =>
+      'یک رایانه را پیوند دهید تا پیام‌هایتان را آن‌جا بخوانید و بفرستید. تا پنج دستگاه به‌جز همین گوشی.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'برنامه‌ی مخاطبانتان دستگاه‌های شما را نشان نمی‌دهد.';
+
+  @override
+  String get devicesUnusedRule =>
+      'دستگاهی که ۳۰ روز بازش نکنید خودش جدا می‌شود و گفت‌وگوهایتان را از روی خودش پاک می‌کند.';
+
+  @override
+  String get devicesFull =>
+      'پنج دستگاه پیوند خورده‌اند. یکی را حذف کنید تا دستگاه دیگری را پیوند دهید.';
+
+  @override
+  String get devicesLinkADevice => 'پیوند دادن دستگاه';
+
+  @override
+  String get devicesRemoveAll => 'حذف همه‌ی دستگاه‌های دیگر';
+
+  @override
+  String get devicesRemoveAllTitle => 'همه‌ی دستگاه‌های دیگر حذف شوند؟';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'وقتی برنامه‌ی مخاطبانتان این تغییر را بگیرد، دیگر پیام تازه نمی‌گیرند و نمی‌توانند به نام شما بفرستند. همه‌چیز روی همین گوشی می‌ماند.';
+
+  @override
+  String get devicesRemoveAllYes => 'حذف همه';
+
+  @override
+  String get devicesRemovedAll => 'حالا فقط همین گوشی';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '⁨$name⁩ حذف شود؟';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'وقتی برنامه‌ی مخاطبانتان این تغییر را بگیرد، دیگر پیام تازه نمی‌گیرد و نمی‌تواند به نام شما بفرستد. دفعه‌ی بعد که آنلاین شود گفت‌وگوهایتان را از روی خودش پاک می‌کند. دستگاهی که کسی در آن دست برده ممکن است آنچه را از قبل دارد نگه دارد.';
+
+  @override
+  String get devicesRemove => 'حذف';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '⁨$name⁩ حذف شد';
+  }
+
+  @override
+  String get devicesRename => 'تغییر نام';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'تغییر نام ⁨$name⁩';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'این نام را فقط شما می‌بینید. مخاطبانتان هرگز نمی‌بینند.';
+
+  @override
+  String get devicesNameComputer => 'رایانه';
+
+  @override
+  String get devicesDeviceCode => 'کد دستگاه';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'همین کد روی خود دستگاه هم، در تنظیمات، دیده می‌شود.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Kryfo را روی رایانه‌تان باز کنید. یک کد نشان می‌دهد.';
+
+  @override
+  String get devicesLinkStep2 => 'کد را با همین گوشی اسکن کنید.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'بررسی کنید هر دو صفحه همان شش رقم را نشان دهند.';
+
+  @override
+  String get devicesHistory => 'تاریخچه';
+
+  @override
+  String get devicesHistoryCopy => 'کپی گفت‌وگوهایم';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'همه‌ی پیام‌هایتان، با عکس‌ها و ویدیوهای ۳۰ روز گذشته.';
+
+  @override
+  String get devicesHistoryNone => 'شروع بدون تاریخچه';
+
+  @override
+  String get devicesHistoryNoneHint => 'فقط پیام‌های تازه به دستگاه می‌رسد.';
+
+  @override
+  String get devicesSkipMedia => 'بدون عکس و ویدیو';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'فقط متن منتقل می‌شود. سریع‌تر، و چیز کمتری روی دستگاه می‌ماند.';
+
+  @override
+  String get devicesHiddenStay =>
+      'گفت‌وگوهای پنهان و فریب روی همین گوشی می‌مانند.';
+
+  @override
+  String get devicesScanCode => 'اسکن کد';
 }

@@ -98,7 +98,7 @@ void main() {
     await old.close();
   });
 
-  test('it opens at 87 with the schema of a new install', () async {
+  test('it opens at 90 with the schema of a new install', () async {
     if (skip()) return;
     final fresh = Directory.systemTemp.createTempSync('upgrade_042_fresh');
     m.setMockMethodCallHandler(paths, (_) async => fresh.path);

@@ -1257,7 +1257,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impossibile salvare una copia su questo telefono';
 
   @override
-  String get cameraTooLongForA => 'Troppo lungo per un messaggio · max 15 MB';
+  String get cameraTooLongForA => 'Troppo lungo per un messaggio · max 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Non finisce mai nelle tue foto';
@@ -9590,4 +9590,298 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Imposta un blocco schermo sul telefono, così questa protezione regge anche quando è bloccato.';
+
+  @override
+  String get fileServerTryLater =>
+      'Il server dei file è pieno al momento. Riprova tra un po\'.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Questo file pesa $size. In questa chat i file possono arrivare a $max finché tutti non aggiornano Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Oggi hai già inviato molti file grandi. Riprova domani.';
+
+  @override
+  String get mediaProgressPreparing => 'Preparazione · tieni l\'app aperta';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Blocca screenshot e registrazione dello schermo su ogni telefono di questo gruppo, e anche copiare, inoltrare o salvare i messaggi degli altri. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'In attesa che tutti qui aggiornino Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Attivo per tutti qui';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Disattivato. Solo l\'admin può cambiarlo';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'In attesa che tutti qui aggiornino Kryfo. Solo l\'admin può cambiarlo';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Attivo per tutti qui. Solo l\'admin può cambiarlo';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In attesa di $countString persone',
+      one: 'In attesa di $countString persona',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Ancora da aggiornare';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Il blocco degli screenshot vale per tutti appena queste persone aggiornano Kryfo. Tocca qualcuno per rimuoverlo dal gruppo.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Deve aggiornare Kryfo, o non è stato online da allora';
+
+  @override
+  String get groupShotsBlockedByYou => 'Bloccato da te';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Hai attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ha attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Il blocco degli screenshot è attivo per tutti qui. Anche copiare, inoltrare e salvare i messaggi degli altri è disattivato.';
+
+  @override
+  String get groupShotsPaused =>
+      'Qualcuno qui non può ancora bloccare gli screenshot. Varrà di nuovo per tutti appena aggiorna Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Non può ancora bloccare gli screenshot';
+
+  @override
+  String get groupShotsAddTitle => 'Aggiungere comunque?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Il blocco degli screenshot non varrà per tutti qui finché non aggiorna Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays => 'Il blocco degli screenshot resta com\'è.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo blocca gli screenshot in questo gruppo';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Copiare, inoltrare e salvare i messaggi degli altri è disattivato in questo gruppo';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Aprire i file degli altri in altre app è disattivato in questo gruppo';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Ho attivato il blocco degli screenshot in questo gruppo. Il tuo Kryfo non può ancora farlo, quindi aggiornalo, per favore.';
+
+  @override
+  String get captureShotTaken =>
+      'Screenshot fatto. Nessun altro è stato avvisato.';
+
+  @override
+  String get captureRecording =>
+      'Questo schermo è in registrazione. Nessun altro è stato avvisato.';
+
+  @override
+  String get settingsDevices => 'Dispositivi';
+
+  @override
+  String get devicesLinkedDevices => 'Dispositivi collegati';
+
+  @override
+  String get devicesThisPhoneOnly => 'Solo questo telefono';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Questo telefono';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Solo questo telefono può collegare o rimuovere dispositivi';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Collegato il $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Usato oggi';
+
+  @override
+  String get devicesUsedThisWeek => 'Usato questa settimana';
+
+  @override
+  String get devicesUsedThisMonth => 'Usato questo mese';
+
+  @override
+  String get devicesNotUsedYet => 'Non ancora usato';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Si scollega tra $daysString giorni se non lo apri',
+      one: 'Si scollega domani se non lo apri',
+      zero: 'Si scollega oggi se non lo apri',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo sul tuo computer';
+
+  @override
+  String get devicesEmptyLine =>
+      'Collega un computer per leggere e mandare lì i tuoi messaggi. Fino a cinque dispositivi oltre a questo telefono.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Le app dei tuoi contatti non mostrano i tuoi dispositivi.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Un dispositivo che non apri per 30 giorni si scollega da solo e cancella le tue chat.';
+
+  @override
+  String get devicesFull =>
+      'Ci sono cinque dispositivi collegati. Rimuovine uno per collegarne un altro.';
+
+  @override
+  String get devicesLinkADevice => 'Collega un dispositivo';
+
+  @override
+  String get devicesRemoveAll => 'Rimuovi tutti gli altri dispositivi';
+
+  @override
+  String get devicesRemoveAllTitle => 'Rimuovere tutti gli altri dispositivi?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Quando le app dei tuoi contatti ricevono la modifica, smettono di ricevere nuovi messaggi e non possono inviare a nome tuo. Questo telefono tiene tutto.';
+
+  @override
+  String get devicesRemoveAllYes => 'Rimuovi tutti';
+
+  @override
+  String get devicesRemovedAll => 'Ora solo questo telefono';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Rimuovere $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Quando le app dei tuoi contatti ricevono la modifica, smette di ricevere nuovi messaggi e non può inviare a nome tuo. Cancella le tue chat la prossima volta che è online. Un dispositivo manomesso da qualcuno può tenere ciò che ha già.';
+
+  @override
+  String get devicesRemove => 'Rimuovi';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name rimosso';
+  }
+
+  @override
+  String get devicesRename => 'Rinomina';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Rinomina $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Solo tu vedi questo nome. I tuoi contatti mai.';
+
+  @override
+  String get devicesNameComputer => 'Computer';
+
+  @override
+  String get devicesDeviceCode => 'Codice del dispositivo';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Lo stesso codice compare sul dispositivo stesso, in Impostazioni.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Apri Kryfo sul tuo computer. Mostra un codice.';
+
+  @override
+  String get devicesLinkStep2 => 'Scansiona il codice con questo telefono.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Controlla che i due schermi mostrino gli stessi sei numeri.';
+
+  @override
+  String get devicesHistory => 'Cronologia';
+
+  @override
+  String get devicesHistoryCopy => 'Copia le mie chat';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tutti i tuoi messaggi, con foto e video degli ultimi 30 giorni.';
+
+  @override
+  String get devicesHistoryNone => 'Inizia senza cronologia';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Sul dispositivo arrivano solo i nuovi messaggi.';
+
+  @override
+  String get devicesSkipMedia => 'Salta foto e video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Arriva solo il testo. Più veloce, e meno da tenere sul dispositivo.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Le chat nascoste e l’esca restano su questo telefono.';
+
+  @override
+  String get devicesScanCode => 'Scansiona il codice';
 }

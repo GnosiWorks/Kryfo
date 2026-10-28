@@ -87,11 +87,16 @@ extension AppStateBoot on AppState {
     bool vaultOpen = false,
   ]) async {
     try {
-      final gone = await sweepableMedia(
-        d ?? live,
-        before: before,
-        vaultOpen: vaultOpen,
-      );
+      final gone = [
+        ...await sweepableMedia(
+          d ?? live,
+          before: before,
+          vaultOpen: vaultOpen,
+        ),
+        // and what a fetch dropped while the app was gone left in its
+        // folder, held back as the media is
+        ...await _strayFetches(d ?? live, vaultOpen),
+      ];
       if (gone.isEmpty) return;
       dlog('media: ${gone.length} files no message names');
       unawaited(() async {
@@ -102,6 +107,25 @@ extension AppStateBoot on AppState {
     } catch (e) {
       dlog('media: not swept (${e.runtimeType})');
     }
+  }
+
+  Future<List<File>> _strayFetches(HaloDb d, bool vaultOpen) async {
+    if (restoreRunning || backupRunning) return const [];
+    if (d.container == HaloContainer.decoy &&
+        !vaultOpen &&
+        await HaloContainer.decoyVault.onDisk()) {
+      return const [];
+    }
+    final db = await d.open();
+    final named = {
+      for (final r in await db.query('file_fetches', columns: const ['path']))
+        r['path'] as String,
+    };
+    final media = await d.container.mediaDir();
+    return [
+      ...await strayFetchFiles(media, named),
+      ...await staleHeldFiles(media, DateTime.now()),
+    ];
   }
 
   // as for media: settled here, zeroed in the background
@@ -396,6 +420,8 @@ extension AppStateBoot on AppState {
       }
     });
     listenAtStart();
+    // once after the update: each group's admin hears what this app can
+    unawaited(_announceCaps(live));
     // what the removed ntfy mode left behind in the prefs
     unawaited(forgetNtfy());
 

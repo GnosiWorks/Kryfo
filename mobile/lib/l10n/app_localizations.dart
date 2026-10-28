@@ -1994,7 +1994,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 15 MB max'**
+  /// **'Too long for a message · 50 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -15394,6 +15394,450 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
   String get keyLineScreenLock;
+
+  /// chat and group: toast when the files service has no room for a big file right now. calm, says to try later
+  ///
+  /// In en, this message translates to:
+  /// **'The file server is full for now. Try again a little later.'**
+  String get fileServerTryLater;
+
+  /// chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.'**
+  String fileTooBigUntilUpdate(String size, String max);
+
+  /// chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent a lot of big files today. Try again tomorrow.'**
+  String get fileDayLimit;
+
+  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing · keep the app open'**
+  String get mediaProgressPreparing;
+
+  /// screens/group_info_screen.dart: the admin's switch while it is off: what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
+  String get groupShotsBlocksAll;
+
+  /// screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for everyone here to update Kryfo'**
+  String get groupShotsStartsWhenAll;
+
+  /// screens/group_info_screen.dart: the admin's switch, on for every member
+  ///
+  /// In en, this message translates to:
+  /// **'On for everyone here'**
+  String get groupShotsOnForAll;
+
+  /// screens/group_info_screen.dart: a member's read-only row, off
+  ///
+  /// In en, this message translates to:
+  /// **'Off. Only the admin can change this'**
+  String get groupShotsOffAdminOnly;
+
+  /// screens/group_info_screen.dart: a member's read-only row, on but waiting on someone
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for everyone here to update Kryfo. Only the admin can change this'**
+  String get groupShotsWaitAdminOnly;
+
+  /// screens/group_info_screen.dart: a member's read-only row, on for every member
+  ///
+  /// In en, this message translates to:
+  /// **'On for everyone here. Only the admin can change this'**
+  String get groupShotsOnAdminOnly;
+
+  /// screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Waiting for {count} person} other{Waiting for {count} people}}'**
+  String groupShotsWaitingFor(int count);
+
+  /// widgets/group_shots_sheet.dart: the title of that list
+  ///
+  /// In en, this message translates to:
+  /// **'Still to update'**
+  String get groupShotsWaitingTitle;
+
+  /// widgets/group_shots_sheet.dart: the line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.'**
+  String get groupShotsWaitingHint;
+
+  /// widgets/group_shots_sheet.dart: under a member's name
+  ///
+  /// In en, this message translates to:
+  /// **'Needs to update Kryfo, or hasn’t been online since'**
+  String get groupShotsNeedsUpdate;
+
+  /// widgets/group_shots_sheet.dart: under a member you blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by you'**
+  String get groupShotsBlockedByYou;
+
+  /// widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  String get groupShotsYouTurnedOnWait;
+
+  /// widgets/shots_line.dart: the same, turned on by the admin
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  String groupShotsTheyTurnedOnWait(String name);
+
+  /// widgets/shots_line.dart: every member's app can block now
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.'**
+  String get groupShotsStarted;
+
+  /// widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app
+  ///
+  /// In en, this message translates to:
+  /// **'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.'**
+  String get groupShotsPaused;
+
+  /// screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t block screenshots yet'**
+  String get groupShotsCantYet;
+
+  /// screens/group_info_screen.dart: confirm title when adding such a person
+  ///
+  /// In en, this message translates to:
+  /// **'Add anyway?'**
+  String get groupShotsAddTitle;
+
+  /// screens/group_info_screen.dart: confirm line when adding such a person
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking won’t cover everyone here until they update Kryfo.'**
+  String get groupShotsAddPauses;
+
+  /// screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking stays as it is.'**
+  String get groupShotsLeaveStays;
+
+  /// screens/group_chat_screen.dart: screen reader label of the lock in the header
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks screenshots in this group'**
+  String get groupShotsBlockedHere;
+
+  /// screens/group_chat_screen.dart: note in the message menu
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving others’ messages is off in this group'**
+  String get groupShotsMenuNote;
+
+  /// widgets/video_bubble.dart: a file of someone else's in a group that blocks
+  ///
+  /// In en, this message translates to:
+  /// **'Opening others’ files in other apps is off in this group'**
+  String get groupShotsKeptOpen;
+
+  /// app/state_group_shots.dart: the message older versions show when the admin turns it on
+  ///
+  /// In en, this message translates to:
+  /// **'I turned on screenshot blocking in this group. Your Kryfo can’t do it yet, so please update.'**
+  String get groupShotsOldNotice;
+
+  /// widgets/shots_line.dart: one quiet line on this phone when android says the chat was screenshotted. nothing is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot taken. Nobody else was told.'**
+  String get captureShotTaken;
+
+  /// widgets/shots_line.dart: the same when android says the screen is being recorded
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is being recorded. Nobody else was told.'**
+  String get captureRecording;
+
+  /// screens/settings_screen.dart: the section over the linked devices row
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get settingsDevices;
+
+  /// screens/linked_devices_screen.dart and settings: the page of your own linked devices
+  ///
+  /// In en, this message translates to:
+  /// **'Linked devices'**
+  String get devicesLinkedDevices;
+
+  /// screens/linked_devices_screen.dart: the settings row value when nothing else is linked
+  ///
+  /// In en, this message translates to:
+  /// **'This phone only'**
+  String get devicesThisPhoneOnly;
+
+  /// screens/linked_devices_screen.dart: goes between device names on the settings row
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get devicesNameSeparator;
+
+  /// screens/linked_devices_screen.dart: the name of the phone in hand on the list
+  ///
+  /// In en, this message translates to:
+  /// **'This phone'**
+  String get devicesThisPhone;
+
+  /// screens/linked_devices_screen.dart: the line under this phone on the list
+  ///
+  /// In en, this message translates to:
+  /// **'Only this phone can link or remove devices'**
+  String get devicesOnlyThisPhone;
+
+  /// screens/linked_devices_screen.dart: when a device was linked, a day
+  ///
+  /// In en, this message translates to:
+  /// **'Linked {date}'**
+  String devicesLinkedOn(Object date);
+
+  /// screens/linked_devices_screen.dart: a device was used today, after the linked day
+  ///
+  /// In en, this message translates to:
+  /// **'Used today'**
+  String get devicesUsedToday;
+
+  /// screens/linked_devices_screen.dart: a device was used in the last seven days
+  ///
+  /// In en, this message translates to:
+  /// **'Used this week'**
+  String get devicesUsedThisWeek;
+
+  /// screens/linked_devices_screen.dart: a device was used in the last thirty days
+  ///
+  /// In en, this message translates to:
+  /// **'Used this month'**
+  String get devicesUsedThisMonth;
+
+  /// screens/linked_devices_screen.dart: a linked device that was never opened since
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet'**
+  String get devicesNotUsedYet;
+
+  /// screens/linked_devices_screen.dart: in amber, under a device close to the 30 days unused
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{Unlinks today unless you open it} =1{Unlinks tomorrow unless you open it} other{Unlinks in {days} days unless you open it}}'**
+  String devicesUnlinksSoon(int days);
+
+  /// screens/linked_devices_screen.dart: over the empty list, only this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo on your computer'**
+  String get devicesEmptyTitle;
+
+  /// screens/linked_devices_screen.dart: under the empty title
+  ///
+  /// In en, this message translates to:
+  /// **'Link a computer to read and send your messages there. Up to five devices besides this phone.'**
+  String get devicesEmptyLine;
+
+  /// screens/linked_devices_screen.dart: a note under the list, about what contacts see
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts\' apps don\'t show your devices.'**
+  String get devicesContactsSeeNothing;
+
+  /// screens/linked_devices_screen.dart: a note under the list, the 30 day rule
+  ///
+  /// In en, this message translates to:
+  /// **'A device you don\'t open for 30 days unlinks itself and wipes your chats from it.'**
+  String get devicesUnusedRule;
+
+  /// screens/linked_devices_screen.dart: over the link button when five are linked
+  ///
+  /// In en, this message translates to:
+  /// **'Five devices are linked. Remove one to link another.'**
+  String get devicesFull;
+
+  /// screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens
+  ///
+  /// In en, this message translates to:
+  /// **'Link a device'**
+  String get devicesLinkADevice;
+
+  /// screens/linked_devices_screen.dart: the rose row at the foot of the list
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all other devices'**
+  String get devicesRemoveAll;
+
+  /// screens/linked_devices_screen.dart: the sheet that asks
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all other devices?'**
+  String get devicesRemoveAllTitle;
+
+  /// screens/linked_devices_screen.dart: under the question
+  ///
+  /// In en, this message translates to:
+  /// **'Once your contacts\' apps get the change, they stop getting new messages and can\'t send as you. This phone keeps everything.'**
+  String get devicesRemoveAllLine;
+
+  /// screens/linked_devices_screen.dart: the rose button that removes them
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all'**
+  String get devicesRemoveAllYes;
+
+  /// screens/linked_devices_screen.dart: the toast once they are removed
+  ///
+  /// In en, this message translates to:
+  /// **'Only this phone now'**
+  String get devicesRemovedAll;
+
+  /// screens/linked_devices_screen.dart: the sheet that asks before one device goes
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String devicesRemoveTitle(Object name);
+
+  /// screens/linked_devices_screen.dart: under the question; the last sentence is the honest part
+  ///
+  /// In en, this message translates to:
+  /// **'Once your contacts\' apps get the change, it stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.'**
+  String get devicesRemoveLine;
+
+  /// screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get devicesRemove;
+
+  /// screens/linked_devices_screen.dart: the toast once a device is removed
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed'**
+  String devicesRemoved(Object name);
+
+  /// screens/linked_devices_screen.dart: a row in a device sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get devicesRename;
+
+  /// screens/linked_devices_screen.dart: the sheet with the name field
+  ///
+  /// In en, this message translates to:
+  /// **'Rename {name}'**
+  String devicesRenameTitle(Object name);
+
+  /// screens/linked_devices_screen.dart: under the rename title
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see this name. Your contacts never do.'**
+  String get devicesRenameLine;
+
+  /// screens/linked_devices_screen.dart: the hint in an empty name field
+  ///
+  /// In en, this message translates to:
+  /// **'Computer'**
+  String get devicesNameComputer;
+
+  /// screens/linked_devices_screen.dart: over the device code in a device sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Device code'**
+  String get devicesDeviceCode;
+
+  /// screens/linked_devices_screen.dart: under the device code
+  ///
+  /// In en, this message translates to:
+  /// **'The same code shows on the device itself, in Settings.'**
+  String get devicesDeviceCodeLine;
+
+  /// screens/linked_devices_screen.dart: the first step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo on your computer. It shows a code.'**
+  String get devicesLinkStep1;
+
+  /// screens/linked_devices_screen.dart: the second step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code with this phone.'**
+  String get devicesLinkStep2;
+
+  /// screens/linked_devices_screen.dart: the third step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Check that both screens show the same six numbers.'**
+  String get devicesLinkStep3;
+
+  /// screens/linked_devices_screen.dart: the section over the history choices
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get devicesHistory;
+
+  /// screens/linked_devices_screen.dart: the first history choice, picked to start
+  ///
+  /// In en, this message translates to:
+  /// **'Copy my chats'**
+  String get devicesHistoryCopy;
+
+  /// screens/linked_devices_screen.dart: under the first history choice
+  ///
+  /// In en, this message translates to:
+  /// **'All your messages, with photos and videos from the last 30 days.'**
+  String get devicesHistoryCopyHint;
+
+  /// screens/linked_devices_screen.dart: the second history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Start with no history'**
+  String get devicesHistoryNone;
+
+  /// screens/linked_devices_screen.dart: under the second history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Only new messages reach the device.'**
+  String get devicesHistoryNoneHint;
+
+  /// screens/linked_devices_screen.dart: the switch under the first history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Skip photos and videos'**
+  String get devicesSkipMedia;
+
+  /// screens/linked_devices_screen.dart: under the switch
+  ///
+  /// In en, this message translates to:
+  /// **'Only the text comes over. Quicker, and less to keep on the device.'**
+  String get devicesSkipMediaHint;
+
+  /// screens/linked_devices_screen.dart: a note on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats and the decoy stay on this phone.'**
+  String get devicesHiddenStay;
+
+  /// screens/linked_devices_screen.dart: the button at the foot of the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code'**
+  String get devicesScanCode;
 }
 
 class _AppLocalizationsDelegate

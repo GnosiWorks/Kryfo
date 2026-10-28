@@ -396,7 +396,8 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
-    await _takeCaps(senderHaloId, env, db);
+    final capsMoved = await _takeCaps(senderHaloId, env, db);
+    await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -464,6 +465,11 @@ extension AppStateArrivals on AppState {
     // show them, this one shows the end itself
     if (env.endNotice) {
       dlog('group: an end notice, dropped');
+      return to;
+    }
+    // and so are its words on a block this version reads for itself
+    if (env.shotsNudge) {
+      dlog('group: a shots notice, dropped');
       return to;
     }
     if (await _endRefuses(senderHaloId, env.groupId, env, db)) return to;
@@ -678,6 +684,8 @@ extension AppStateArrivals on AppState {
       if (await db.dropMediaChunks(env.unsend!, from: senderHaloId) > 0) {
         incomingMediaDone(db.container.chatKey(env.groupId ?? senderHaloId));
       }
+      // and a file still coming from the files service stops coming
+      await _dropFetchTakenBack(senderHaloId, env.unsend!, db);
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back. home shows the count too
       await refreshContacts();
@@ -775,6 +783,12 @@ extension AppStateArrivals on AppState {
         }
       }
     }
+    // the admin's word on the group's screenshot block heals as the
+    // roster does, from the admin alone
+    final heard = env.groupShots;
+    if (isGroup && heard != null && !support.on) {
+      await _takeGroupShots(env.groupId!, senderHaloId, heard, db);
+    }
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
     // a sender a friend introduced is not a stranger: no pow, no cap. they
     // still land in requests and still need an accept to get a reply.
@@ -799,7 +813,8 @@ extension AppStateArrivals on AppState {
           : await db.countMessagesFrom(senderHaloId) +
                 await db.filesInFlightFrom(
                   senderHaloId,
-                  except: AppState._sliced(env) ? env.mediaId : null,
+                  // a file from the files service is its message's own
+                  except: AppState._sliced(env) ? env.mediaId : env.msgUid,
                 );
       if (strangerCapHolds(
         accepted: false,
@@ -1004,7 +1019,8 @@ extension AppStateArrivals on AppState {
           env.preview != null &&
           env.message.isEmpty &&
           env.imageB64 == null &&
-          env.fileB64 == null;
+          env.fileB64 == null &&
+          env.drop == null;
       if (previewOnly) return to;
       if (known) {
         // already have it, but a re-send means our receipt never landed. ack
@@ -1022,6 +1038,39 @@ extension AppStateArrivals on AppState {
       }
       _inflightUids.add(uid);
       claims.add(uid);
+      if (env.drop != null) {
+        // a room's files go in slices, told by their bytes: a frame there
+        // carries none
+        if (isGroup && await _roomOf(env.groupId!, db) != null) {
+          dlog('room: a files service frame, dropped');
+          _inflightUids.remove(uid);
+          return to;
+        }
+        final got = await _dropArrived(
+          senderHaloId,
+          env,
+          db,
+          wire: wire,
+          fromBackPair: fromBackPair,
+        );
+        if (got == null) {
+          // here, its file still on the way: the sender can stop sending
+          // the frame, and the chat shows it once the file is in
+          _inflightUids.remove(uid);
+          claims.remove(uid);
+          if (!isGroup && !unsealing && senderHaloId != myId) {
+            unawaited(_sendDeliveryReceipt(senderHaloId, uid));
+          }
+          return to;
+        }
+        if (got.isEmpty) {
+          unsaved = true;
+        } else if (fileName != null) {
+          filePath = got;
+        } else {
+          mediaPath = got;
+        }
+      }
     }
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
@@ -1054,6 +1103,7 @@ extension AppStateArrivals on AppState {
     final bare =
         env.imageB64 == null &&
         env.fileB64 == null &&
+        env.drop == null &&
         env.fileName == null &&
         env.mediaId == null &&
         env.poll == null;
@@ -1123,7 +1173,10 @@ extension AppStateArrivals on AppState {
     // alone and rings for itself. one of an album that burned already
     // joins nothing and burns as it lands
     var album =
-        env.imageB64 != null || env.fileB64 != null || AppState._sliced(env)
+        env.imageB64 != null ||
+            env.fileB64 != null ||
+            env.drop != null ||
+            AppState._sliced(env)
         ? env.album
         : null;
     var albumSeen = false;
@@ -1275,10 +1328,9 @@ extension AppStateArrivals on AppState {
         await _wipeAgain(env.groupId!, db);
         return to;
       }
-      // a room always blocks: not even its name in the shade
-      notifTitle = g?['room_pub'] != null
-          ? 'Kryfo'
-          : (g?['name'] as String?) ?? l10n.appGroup2;
+      // a room always blocks, a group may: not even its name in the shade
+      final hush = GroupShots.ofRow(g).blocking;
+      notifTitle = hush ? 'Kryfo' : (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = sticker != null
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null
@@ -1292,10 +1344,8 @@ extension AppStateArrivals on AppState {
       final who = looksLikeRoomKey(senderHaloId)
           ? l10n.notificationsSomeone
           : named;
-      // a room always blocks: none of it in the shade
-      notifBody = g?['room_pub'] != null
-          ? l10n.notificationsNewMessage
-          : '$who: $gBody';
+      // none of it in the shade either
+      notifBody = hush ? l10n.notificationsNewMessage : '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = reading;
     } else if (!senderAccepted) {

@@ -17,6 +17,7 @@ import 'press_scale.dart';
 import 'remembered_height.dart';
 import 'swap.dart';
 import '../l10n/l10n.dart';
+import 'shots_line.dart' show KeptIn, keptOpenLine;
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
@@ -31,8 +32,8 @@ Future<void> openReceivedFile(
   String path,
   String? name, {
   bool kept = false,
-  // a room's, which says so in its own words
-  bool room = false,
+  // a group's or a room's, which say so in their own words
+  KeptIn where = KeptIn.chat,
 }) async {
   final facts = await readFileFacts(path, name);
   if (!context.mounted) return;
@@ -43,10 +44,7 @@ Future<void> openReceivedFile(
     return;
   }
   if (kept) {
-    showHaloToast(
-      context,
-      room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
-    );
+    showHaloToast(context, keptOpenLine(where));
     return;
   }
   if (facts.installer) {

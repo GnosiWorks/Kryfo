@@ -19,7 +19,8 @@ class HaloDb
         _MediaRows,
         _GroupOwedRows,
         _NotifRows,
-        _DraftRows
+        _DraftRows,
+        _GroupShotsRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -274,7 +275,14 @@ class HaloDb
             door_was TEXT,
             voice_disguise INTEGER,
             ended_at INTEGER,
-            ended_by TEXT
+            ended_by TEXT,
+            shots_on INTEGER NOT NULL DEFAULT 0,
+            shots_at INTEGER NOT NULL DEFAULT 0,
+            shots_all INTEGER NOT NULL DEFAULT 0,
+            shots_by INTEGER NOT NULL DEFAULT 0,
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            shots_line INTEGER NOT NULL DEFAULT 0,
+            shots_told INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -283,6 +291,7 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
+            shots_nudged INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -312,6 +321,7 @@ class HaloDb
         await _pinsTable(db);
         await _framesTable(db);
         await _mediaWantsTable(db);
+        await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
         await _pollTables(db);
@@ -337,7 +347,7 @@ class HaloDb
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 88
+        // they add. 66 runs after it: it reads what they all make. 67 to 89
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -872,7 +882,15 @@ class HaloDb
           // what a contact's phone understands (typing.dart)
           await capsColumns(db);
         }
-        // 89 and 90 are taken by other branches
+        if (oldV < 89) {
+          // a group's screenshot block (group_shots.dart)
+          await groupShotsColumns(db);
+        }
+        if (oldV < 90) {
+          // the files on their way in from the files service, and the ids
+          // of the ones already here (file_drop.dart)
+          await dropFetchTable(db);
+        }
         if (oldV < 91) {
           // the post-quantum prekeys the shim keeps (signal_stores.dart)
           await kyberTables(db);

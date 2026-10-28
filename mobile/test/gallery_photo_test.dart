@@ -148,7 +148,10 @@ void main() {
       sourceOf('lib/app/state.dart'),
       'Future<String> sendMediaToGroup(',
     );
-    expect(body, contains('photo: fileName == null && !voice,'));
+    expect(
+      body,
+      contains('photo: drop == null && fileName == null && !voice,'),
+    );
   });
 
   // every photo lane ends in one of these two: the gallery, one or many,
