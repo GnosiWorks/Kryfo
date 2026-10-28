@@ -1556,6 +1556,8 @@ void main() {
       'sessions',
       'peer_identities',
       'signal_meta',
+      'kyber_prekeys',
+      'kyber_used',
       'search_meta',
       'hidden_chats',
       'vault_meta',

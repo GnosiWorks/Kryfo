@@ -147,7 +147,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 88,
+      version: 91,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -871,6 +871,11 @@ class HaloDb
         if (oldV < 88) {
           // what a contact's phone understands (typing.dart)
           await capsColumns(db);
+        }
+        // 89 and 90 are taken by other branches
+        if (oldV < 91) {
+          // the post-quantum prekeys the shim keeps (signal_stores.dart)
+          await kyberTables(db);
         }
       },
     );
@@ -1893,6 +1898,26 @@ Future<void> _signalTables(Database db, {String prefix = ''}) async {
   await db.execute(
     'CREATE TABLE IF NOT EXISTS ${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
   );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, last_resort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)',
+  );
+  // a last resort kyber key outlives its use: the base keys it opened for,
+  // so a replayed opener does not build a second session on it
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (kyber_id, base_key))',
+  );
+}
+
+/// one signal store's tables under [prefix], for a store kept in a file of
+/// its own
+Future<void> signalStoreTables(Database db, {String prefix = ''}) =>
+    _signalTables(db, prefix: prefix);
+
+/// the kyber prekey tables of the everyday store and the dev chat's, with
+/// whatever else of either store a file lacks (version 91)
+Future<void> kyberTables(Database db) async {
+  await _signalTables(db);
+  await _devSignalTables(db);
 }
 
 // wrapped like the dev chat's row: without them an anonymous start fails
