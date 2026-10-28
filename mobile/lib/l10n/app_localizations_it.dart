@@ -9434,4 +9434,95 @@ class AppLocalizationsIt extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return 'Push di Google $got · declassati $low';
   }
+
+  @override
+  String get passFieldLabel => 'Passphrase';
+
+  @override
+  String get padUseLetters => 'Usa le lettere';
+
+  @override
+  String get padUseDigits => 'Usa le cifre';
+
+  @override
+  String get passWeak => 'Debole';
+
+  @override
+  String get passFair => 'Discreta';
+
+  @override
+  String get passStrong => 'Forte';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Forza: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Il chip di sicurezza del telefono è occupato. Riprova tra un momento.';
+
+  @override
+  String get lockKeyLocked =>
+      'Sblocca una volta il telefono con il suo PIN, poi riprova.';
+
+  @override
+  String get lockKeyWaiting =>
+      'Il chip di sicurezza del telefono sta ancora controllando';
+
+  @override
+  String get lockKeyLost =>
+      'Questo telefono ha perso la chiave che controlla i tuoi PIN, quindi alcuni PIN potrebbero non aprire. Puoi reimpostare Kryfo e ripristinare un backup.';
+
+  @override
+  String get lockKeyReset => 'Reimposta Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Reimpostare Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Tutto ciò che Kryfo ha su questo telefono viene eliminato e Kryfo si chiude. Poi puoi ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Non si può annullare';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Tutte le chat, le chiavi e le impostazioni di Kryfo su questo telefono spariscono adesso.';
+
+  @override
+  String get lockKeyResetSure => 'Elimina tutto';
+
+  @override
+  String get flowVaultPassLine =>
+      'Almeno 12 caratteri. La tastiera del telefono vede ciò che scrivi, quindi usane una che non impara e non sincronizza le parole.';
+
+  @override
+  String get flowVaultPassAgain => 'La stessa passphrase di nuovo';
+
+  @override
+  String get cardTitle => 'Completa l’aggiornamento di sicurezza';
+
+  @override
+  String get cardLine => 'Se usi altri PIN, scrivili qui una volta.';
+
+  @override
+  String get cardType => 'Scrivi un PIN';
+
+  @override
+  String get cardAnswer =>
+      'Fatto. Scrivine un altro, o tocca Fatto quando hai finito.';
+
+  @override
+  String get keyLine =>
+      'I tuoi PIN funzionano solo su questo telefono. Se il telefono perde la chiave che li controlla, dovrai reimpostare Kryfo e ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get keyLineUnlocked =>
+      'I tuoi PIN funzionano solo su questo telefono, e solo mentre è sbloccato. Se il telefono perde la chiave che li controlla, dovrai reimpostare Kryfo e ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Imposta un blocco schermo sul telefono, così questa protezione regge anche quando è bloccato.';
 }

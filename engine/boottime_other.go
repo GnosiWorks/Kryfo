@@ -5,5 +5,5 @@ package main
 
 import "time"
 
-// the wall clock where there is no boot clock. a var for the tests
-var ownClock = func() time.Duration { return time.Duration(time.Now().UnixNano()) }
+// the wall clock where there is no boot clock
+func bootClock() time.Duration { return time.Duration(time.Now().UnixNano()) }

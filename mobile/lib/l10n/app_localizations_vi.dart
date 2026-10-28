@@ -9345,4 +9345,95 @@ class AppLocalizationsVi extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return 'Đẩy Google $got · bị hạ $low';
   }
+
+  @override
+  String get passFieldLabel => 'Cụm mật khẩu';
+
+  @override
+  String get padUseLetters => 'Dùng chữ';
+
+  @override
+  String get padUseDigits => 'Dùng số';
+
+  @override
+  String get passWeak => 'Yếu';
+
+  @override
+  String get passFair => 'Khá';
+
+  @override
+  String get passStrong => 'Mạnh';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Độ mạnh: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Chip bảo mật của điện thoại đang bận. Hãy thử lại sau giây lát.';
+
+  @override
+  String get lockKeyLocked =>
+      'Hãy mở khóa điện thoại một lần bằng mã PIN của chính nó, rồi thử lại.';
+
+  @override
+  String get lockKeyWaiting => 'Chip bảo mật của điện thoại vẫn đang kiểm tra';
+
+  @override
+  String get lockKeyLost =>
+      'Điện thoại này đã mất khóa dùng để kiểm tra mã PIN của bạn, nên một số mã PIN có thể không mở được. Bạn có thể đặt lại Kryfo và khôi phục bản sao lưu.';
+
+  @override
+  String get lockKeyReset => 'Đặt lại Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Đặt lại Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Mọi thứ của Kryfo trên điện thoại này sẽ bị xóa và Kryfo sẽ đóng. Sau đó bạn có thể khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Không thể hoàn tác';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Mọi cuộc trò chuyện, khóa và cài đặt của Kryfo trên điện thoại này sẽ bị xóa ngay.';
+
+  @override
+  String get lockKeyResetSure => 'Xóa tất cả';
+
+  @override
+  String get flowVaultPassLine =>
+      'Ít nhất 12 ký tự. Bàn phím của điện thoại thấy những gì bạn gõ, nên hãy dùng bàn phím không học hay đồng bộ từ.';
+
+  @override
+  String get flowVaultPassAgain => 'Nhập lại cụm mật khẩu đó';
+
+  @override
+  String get cardTitle => 'Hoàn tất bản cập nhật bảo mật';
+
+  @override
+  String get cardLine =>
+      'Nếu bạn dùng các mã PIN khác, hãy nhập mỗi mã một lần ở đây.';
+
+  @override
+  String get cardType => 'Nhập mã PIN';
+
+  @override
+  String get cardAnswer =>
+      'Xong. Nhập mã khác, hoặc chạm Xong khi bạn đã hoàn tất.';
+
+  @override
+  String get keyLine =>
+      'Mã PIN của bạn chỉ dùng được trên điện thoại này. Nếu một ngày điện thoại mất khóa dùng để kiểm tra chúng, bạn sẽ phải đặt lại Kryfo và khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Mã PIN của bạn chỉ dùng được trên điện thoại này, và chỉ khi điện thoại đang mở khóa. Nếu một ngày điện thoại mất khóa dùng để kiểm tra chúng, bạn sẽ phải đặt lại Kryfo và khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Hãy đặt khóa màn hình cho điện thoại để lớp bảo vệ này vẫn giữ được khi máy bị khóa.';
 }

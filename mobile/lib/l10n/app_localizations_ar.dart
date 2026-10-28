@@ -9492,4 +9492,94 @@ class AppLocalizationsAr extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return 'إشعارات Google ‏$got · خُفّضت $low';
   }
+
+  @override
+  String get passFieldLabel => 'عبارة المرور';
+
+  @override
+  String get padUseLetters => 'استخدام الحروف';
+
+  @override
+  String get padUseDigits => 'استخدام الأرقام';
+
+  @override
+  String get passWeak => 'ضعيفة';
+
+  @override
+  String get passFair => 'مقبولة';
+
+  @override
+  String get passStrong => 'قوية';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'القوة: ⁨$level⁩';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'شريحة الأمان في هاتفك مشغولة الآن. حاول مرة أخرى بعد لحظة.';
+
+  @override
+  String get lockKeyLocked =>
+      'افتح قفل هاتفك مرة واحدة برمز PIN الخاص به، ثم حاول مرة أخرى.';
+
+  @override
+  String get lockKeyWaiting => 'ما زالت شريحة الأمان في الهاتف تتحقق';
+
+  @override
+  String get lockKeyLost =>
+      'فقد هذا الهاتف المفتاح الذي يتحقق من رموز PIN الخاصة بك، لذا قد لا تفتح بعض الرموز. يمكن إعادة ضبط Kryfo واستعادة نسخة احتياطية.';
+
+  @override
+  String get lockKeyReset => 'إعادة ضبط Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'إعادة ضبط Kryfo؟';
+
+  @override
+  String get lockKeyResetLine =>
+      'يُحذف كل ما في Kryfo على هذا الهاتف ويُغلق Kryfo. بعد ذلك يمكنك استعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+
+  @override
+  String get lockKeyResetSureTitle => 'لا يمكن التراجع عن هذا';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'تُحذف الآن كل المحادثات والمفاتيح والإعدادات في Kryfo على هذا الهاتف.';
+
+  @override
+  String get lockKeyResetSure => 'حذف كل شيء';
+
+  @override
+  String get flowVaultPassLine =>
+      '١٢ حرفًا على الأقل. لوحة مفاتيح الهاتف ترى ما تكتبه، لذا استخدم لوحة لا تتعلم الكلمات ولا تزامنها.';
+
+  @override
+  String get flowVaultPassAgain => 'عبارة المرور نفسها مرة أخرى';
+
+  @override
+  String get cardTitle => 'أكمِل تحديث الأمان';
+
+  @override
+  String get cardLine =>
+      'إن كنت تستخدم رموز PIN أخرى، فاكتب كل رمز منها هنا مرة واحدة.';
+
+  @override
+  String get cardType => 'اكتب رمز PIN';
+
+  @override
+  String get cardAnswer => 'تم. اكتب رمزًا آخر، أو اضغط تم عندما تنتهي.';
+
+  @override
+  String get keyLine =>
+      'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+
+  @override
+  String get keyLineUnlocked =>
+      'تعمل رموز PIN الخاصة بك على هذا الهاتف فقط، وفقط ما دام قفله مفتوحًا. إن فقد الهاتف يومًا المفتاح الذي يتحقق منها، فسيلزمك إعادة ضبط Kryfo واستعادة نسخة احتياطية. لا تعود المحادثات المخفية إلا من نسخة احتياطية أُنشئت وهي مفتوحة.';
+
+  @override
+  String get keyLineScreenLock =>
+      'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
 }

@@ -9427,4 +9427,96 @@ class AppLocalizationsPt extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return 'Pushes do Google $got · rebaixados $low';
   }
+
+  @override
+  String get passFieldLabel => 'Frase-senha';
+
+  @override
+  String get padUseLetters => 'Usar letras';
+
+  @override
+  String get padUseDigits => 'Usar números';
+
+  @override
+  String get passWeak => 'Fraca';
+
+  @override
+  String get passFair => 'Razoável';
+
+  @override
+  String get passStrong => 'Forte';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Força: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'O chip de segurança do celular está ocupado. Tente de novo daqui a pouco.';
+
+  @override
+  String get lockKeyLocked =>
+      'Desbloqueie o celular uma vez com o PIN dele e tente de novo.';
+
+  @override
+  String get lockKeyWaiting =>
+      'O chip de segurança do celular ainda está verificando';
+
+  @override
+  String get lockKeyLost =>
+      'Este celular perdeu a chave que confere seus PINs, então alguns PINs podem não abrir. Dá para redefinir o Kryfo e restaurar um backup.';
+
+  @override
+  String get lockKeyReset => 'Redefinir o Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Redefinir o Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Tudo o que o Kryfo tem neste celular é apagado e o Kryfo fecha. Depois você pode restaurar um backup. As conversas ocultas só voltam de um backup feito enquanto estavam abertas.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Isso não pode ser desfeito';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Todas as conversas, chaves e ajustes do Kryfo neste celular somem agora.';
+
+  @override
+  String get lockKeyResetSure => 'Apagar tudo';
+
+  @override
+  String get flowVaultPassLine =>
+      'Pelo menos 12 caracteres. O teclado do celular vê o que você digita, então use um que não aprenda nem sincronize palavras.';
+
+  @override
+  String get flowVaultPassAgain => 'A mesma frase-senha de novo';
+
+  @override
+  String get cardTitle => 'Conclua a atualização de segurança';
+
+  @override
+  String get cardLine =>
+      'Se você usa outros PINs, digite cada um aqui uma vez.';
+
+  @override
+  String get cardType => 'Digitar um PIN';
+
+  @override
+  String get cardAnswer =>
+      'Pronto. Digite outro, ou toque em Pronto quando terminar.';
+
+  @override
+  String get keyLine =>
+      'Seus PINs só funcionam neste celular. Se o celular um dia perder a chave que os confere, será preciso redefinir o Kryfo e restaurar um backup. As conversas ocultas só voltam de um backup feito enquanto estavam abertas.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Seus PINs só funcionam neste celular, e só enquanto ele está desbloqueado. Se o celular um dia perder a chave que os confere, será preciso redefinir o Kryfo e restaurar um backup. As conversas ocultas só voltam de um backup feito enquanto estavam abertas.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Ative um bloqueio de tela no celular para que esta proteção valha também quando ele estiver bloqueado.';
 }

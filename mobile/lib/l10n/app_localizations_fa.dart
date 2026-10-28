@@ -9372,4 +9372,95 @@ class AppLocalizationsFa extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return 'اعلان‌های گوگل $got · پایین‌آمده $low';
   }
+
+  @override
+  String get passFieldLabel => 'عبارت عبور';
+
+  @override
+  String get padUseLetters => 'استفاده از حروف';
+
+  @override
+  String get padUseDigits => 'استفاده از ارقام';
+
+  @override
+  String get passWeak => 'ضعیف';
+
+  @override
+  String get passFair => 'متوسط';
+
+  @override
+  String get passStrong => 'قوی';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'قدرت: ⁨$level⁩';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'تراشهٔ امنیتی گوشی الان مشغول است. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get lockKeyLocked =>
+      'یک بار قفل گوشی را با PIN خود گوشی باز کنید، بعد دوباره امتحان کنید.';
+
+  @override
+  String get lockKeyWaiting => 'تراشهٔ امنیتی گوشی هنوز در حال بررسی است';
+
+  @override
+  String get lockKeyLost =>
+      'این گوشی کلیدی را که PINهای شما را بررسی می‌کند از دست داده، برای همین ممکن است بعضی PINها باز نکنند. می‌توانید Kryfo را بازنشانی کنید و یک پشتیبان را بازگردانید.';
+
+  @override
+  String get lockKeyReset => 'بازنشانی Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Kryfo بازنشانی شود؟';
+
+  @override
+  String get lockKeyResetLine =>
+      'همه‌چیز Kryfo روی این گوشی پاک می‌شود و Kryfo بسته می‌شود. بعد می‌توانید یک پشتیبان را بازگردانید. گفت‌وگوهای پنهان فقط از پشتیبانی برمی‌گردند که وقتی باز بودند گرفته شده باشد.';
+
+  @override
+  String get lockKeyResetSureTitle => 'این کار برگشت‌پذیر نیست';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'همهٔ گفت‌وگوها، کلیدها و تنظیمات Kryfo روی این گوشی همین حالا پاک می‌شوند.';
+
+  @override
+  String get lockKeyResetSure => 'پاک کردن همه‌چیز';
+
+  @override
+  String get flowVaultPassLine =>
+      'دست‌کم ۱۲ کاراکتر. صفحه‌کلید گوشی آنچه را تایپ می‌کنید می‌بیند، پس از صفحه‌کلیدی استفاده کنید که واژه‌ها را یاد نمی‌گیرد و همگام نمی‌کند.';
+
+  @override
+  String get flowVaultPassAgain => 'همان عبارت عبور را دوباره بنویسید';
+
+  @override
+  String get cardTitle => 'به‌روزرسانی امنیتی را تمام کنید';
+
+  @override
+  String get cardLine =>
+      'اگر از PINهای دیگری استفاده می‌کنید، هر کدام را یک بار اینجا بنویسید.';
+
+  @override
+  String get cardType => 'نوشتن PIN';
+
+  @override
+  String get cardAnswer =>
+      'انجام شد. یکی دیگر بنویسید، یا وقتی تمام شد روی تمام بزنید.';
+
+  @override
+  String get keyLine =>
+      'PINهای شما فقط روی این گوشی کار می‌کنند. اگر گوشی روزی کلیدی را که آن‌ها را بررسی می‌کند از دست بدهد، باید Kryfo را بازنشانی کنید و یک پشتیبان را بازگردانید. گفت‌وگوهای پنهان فقط از پشتیبانی برمی‌گردند که وقتی باز بودند گرفته شده باشد.';
+
+  @override
+  String get keyLineUnlocked =>
+      'PINهای شما فقط روی این گوشی کار می‌کنند، و فقط وقتی قفل آن باز است. اگر گوشی روزی کلیدی را که آن‌ها را بررسی می‌کند از دست بدهد، باید Kryfo را بازنشانی کنید و یک پشتیبان را بازگردانید. گفت‌وگوهای پنهان فقط از پشتیبانی برمی‌گردند که وقتی باز بودند گرفته شده باشد.';
+
+  @override
+  String get keyLineScreenLock =>
+      'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
 }

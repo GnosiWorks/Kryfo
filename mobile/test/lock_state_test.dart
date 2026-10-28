@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
+
+import 'pin_key_fakes.dart' show fakeX;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeStore implements LockStore {
@@ -86,8 +88,11 @@ class FakeEngine implements PinEngine {
   Future<Map<String, dynamic>> check(
     String pin,
     String table,
-    String legacy,
-  ) async {
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     calls.add('check');
     final e = _t(table)['e'] as Map<String, dynamic>;
     final l = jsonDecode(legacy) as Map<String, dynamic>;
@@ -124,8 +129,11 @@ class FakeEngine implements PinEngine {
     int index,
     int kind,
     String container,
-    String wrapPlain,
-  ) async {
+    String wrapPlain, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     calls.add('setup');
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
@@ -143,8 +151,14 @@ class FakeEngine implements PinEngine {
     String newPin,
     String table,
     String legacy,
-    int index,
-  ) async {
+    int index, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) {
+      await mac(fakeX(oldPin));
+      await mac(fakeX(newPin));
+    }
     calls.add('rewrap');
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
@@ -338,9 +352,24 @@ void main() {
           store.log.clear();
           engine.calls.clear();
           expect(await lock.verifyPin(pin), want, reason: why);
-          expect(store.log, ['w halo.lock.state'], reason: why);
+          await Future<void>.delayed(Duration.zero);
+          // an old app hash beside the same app pin goes once the app pin
+          // opened, after the reveal: only that open writes more
+          final cleanup = {
+            'w halo.lock.set.app',
+            'd halo.lock.pin_hash',
+            'd halo.lock.pin_salt',
+          };
+          final opened = legacy && !held && pin == '1234';
+          expect(store.log.where((l) => opened ? !cleanup.contains(l) : true), [
+            'w halo.lock.state',
+          ], reason: why);
           expect(engine.calls, ['check'], reason: why);
           lock.lock();
+        }
+        if (legacy && !held) {
+          await Future<void>.delayed(Duration.zero);
+          expect(store.m.containsKey('halo.lock.pin_hash'), isFalse);
         }
       }
     }
@@ -526,6 +555,8 @@ void main() {
         store.m['halo.lock.pin_hash'] = FakeEngine.legacyHash('2468', 'YQ==');
         store.m['halo.lock.panic_salt'] = 'Yg==';
         store.m['halo.lock.panic_hash'] = FakeEngine.legacyHash('1357', 'Yg==');
+        // a set the old app finished: its switch was written last
+        store.m['halo.lock.panic_enabled'] = 'true';
         final lock = await open();
         await lock.verifyPin('2468');
         await Future<void>.delayed(Duration.zero);
@@ -1031,6 +1062,7 @@ void main() {
       // a wipe pin still the legacy kind
       store.m['halo.lock.panic_salt'] = 'Yg==';
       store.m['halo.lock.panic_hash'] = FakeEngine.legacyHash('1357', 'Yg==');
+      store.m['halo.lock.panic_enabled'] = 'true';
       final v1 = store.m['halo.lock.table'];
 
       Future<void> samePins(LockState lock) async {
@@ -1060,8 +1092,10 @@ void main() {
       store.log.clear();
       engine.calls.clear();
       lock = await make();
+      // and the update card is due: the table is from before the pin key
       expect(store.log.where((l) => !l.startsWith('r ')), [
         'w halo.lock.table',
+        'w halo.lock.card',
       ]);
       expect(engine.calls.where((c) => c == 'upgrade'), hasLength(1));
       expect(jsonDecode(store.m['halo.lock.table']!)['v'], 2);

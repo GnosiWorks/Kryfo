@@ -8929,6 +8929,90 @@ class AppLocalizationsZh extends AppLocalizations {
   String devGooglePushes(int got, int low) {
     return '谷歌推送 $got · 被降级 $low';
   }
+
+  @override
+  String get passFieldLabel => '密码短语';
+
+  @override
+  String get padUseLetters => '使用字母';
+
+  @override
+  String get padUseDigits => '使用数字';
+
+  @override
+  String get passWeak => '弱';
+
+  @override
+  String get passFair => '中';
+
+  @override
+  String get passStrong => '强';
+
+  @override
+  String passStrengthIs(Object level) {
+    return '强度：$level';
+  }
+
+  @override
+  String get lockKeyBusy => '手机的安全芯片正忙。请稍后再试。';
+
+  @override
+  String get lockKeyLocked => '请先用手机自己的 PIN 码解锁一次，再试一次。';
+
+  @override
+  String get lockKeyWaiting => '手机的安全芯片仍在检查';
+
+  @override
+  String get lockKeyLost =>
+      '这部手机丢失了用来检查你 PIN 码的密钥，所以有些 PIN 码可能打不开。可以重置 Kryfo 并恢复备份。';
+
+  @override
+  String get lockKeyReset => '重置 Kryfo';
+
+  @override
+  String get lockKeyResetTitle => '要重置 Kryfo 吗？';
+
+  @override
+  String get lockKeyResetLine =>
+      '这部手机上 Kryfo 的所有内容都会被删除，Kryfo 会关闭。之后你可以恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+
+  @override
+  String get lockKeyResetSureTitle => '此操作无法撤销';
+
+  @override
+  String get lockKeyResetSureLine => '这部手机上 Kryfo 的所有聊天、密钥和设置会立即删除。';
+
+  @override
+  String get lockKeyResetSure => '全部删除';
+
+  @override
+  String get flowVaultPassLine => '至少 12 个字符。手机键盘能看到你输入的内容，所以请使用不会学习或同步词语的键盘。';
+
+  @override
+  String get flowVaultPassAgain => '再输入一次同样的密码短语';
+
+  @override
+  String get cardTitle => '完成安全更新';
+
+  @override
+  String get cardLine => '如果你还使用其他 PIN 码，请在这里各输入一次。';
+
+  @override
+  String get cardType => '输入 PIN 码';
+
+  @override
+  String get cardAnswer => '好了。再输入一个，或在完成后点“完成”。';
+
+  @override
+  String get keyLine =>
+      '你的 PIN 码只能在这部手机上使用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+
+  @override
+  String get keyLineUnlocked =>
+      '你的 PIN 码只能在这部手机上使用，而且只在手机解锁时可用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+
+  @override
+  String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17739,4 +17823,88 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String devGooglePushes(int got, int low) {
     return 'Google 推播 $got · 被降級 $low';
   }
+
+  @override
+  String get passFieldLabel => '密碼短語';
+
+  @override
+  String get padUseLetters => '使用字母';
+
+  @override
+  String get padUseDigits => '使用數字';
+
+  @override
+  String get passWeak => '弱';
+
+  @override
+  String get passFair => '中';
+
+  @override
+  String get passStrong => '強';
+
+  @override
+  String passStrengthIs(Object level) {
+    return '強度：$level';
+  }
+
+  @override
+  String get lockKeyBusy => '手機的安全晶片正忙。請稍後再試。';
+
+  @override
+  String get lockKeyLocked => '請先用手機本身的 PIN 碼解鎖一次，再試一次。';
+
+  @override
+  String get lockKeyWaiting => '手機的安全晶片仍在檢查';
+
+  @override
+  String get lockKeyLost =>
+      '這支手機遺失了用來檢查你 PIN 碼的金鑰，所以有些 PIN 碼可能打不開。可以重設 Kryfo 並還原備份。';
+
+  @override
+  String get lockKeyReset => '重設 Kryfo';
+
+  @override
+  String get lockKeyResetTitle => '要重設 Kryfo 嗎？';
+
+  @override
+  String get lockKeyResetLine =>
+      '這支手機上 Kryfo 的所有內容都會被刪除，Kryfo 會關閉。之後你可以還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+
+  @override
+  String get lockKeyResetSureTitle => '此操作無法復原';
+
+  @override
+  String get lockKeyResetSureLine => '這支手機上 Kryfo 的所有聊天、金鑰和設定會立即刪除。';
+
+  @override
+  String get lockKeyResetSure => '全部刪除';
+
+  @override
+  String get flowVaultPassLine => '至少 12 個字元。手機鍵盤看得到你輸入的內容，所以請使用不會學習或同步字詞的鍵盤。';
+
+  @override
+  String get flowVaultPassAgain => '再輸入一次同樣的密碼短語';
+
+  @override
+  String get cardTitle => '完成安全性更新';
+
+  @override
+  String get cardLine => '如果你還使用其他 PIN 碼，請在這裡各輸入一次。';
+
+  @override
+  String get cardType => '輸入 PIN 碼';
+
+  @override
+  String get cardAnswer => '好了。再輸入一個，或在完成後點「完成」。';
+
+  @override
+  String get keyLine =>
+      '你的 PIN 碼只能在這支手機上使用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+
+  @override
+  String get keyLineUnlocked =>
+      '你的 PIN 碼只能在這支手機上使用，而且只在手機解鎖時可用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+
+  @override
+  String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
 }
